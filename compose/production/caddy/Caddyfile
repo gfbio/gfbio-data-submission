@@ -1,7 +1,3 @@
-www.{$DOMAIN_NAME} {
-    redir https://submissions.gfbio.org
-}
-
 {$DOMAIN_NAME} {
     proxy / django:5000 {
         header_upstream Host {host}
