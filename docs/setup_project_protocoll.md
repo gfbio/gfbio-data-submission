@@ -210,4 +210,46 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
 - sudo apt-get install supervisor
 - sudo apt-get  install lftp
 
+#### Prepare for application
+
+- cd /var/
+- sudo mkdir www
+- cd www/
+- sudo git clone https://maweber@colab.mpi-bremen.de/stash/scm/gfbio/gfbio_submissions.git
+- cd gfbio_submissions/
+- sudo git fetch
+- git checkout feature/GFBIO-2165-adapt-and-deploy-submission-code 
+- sudo git checkout feature/GFBIO-2165-adapt-and-deploy-submission-code 
+- sudo git pull origin feature/GFBIO-2165-adapt-and-deploy-submission-code 
+- sudo gpg -o .env encrypted.env.gpg
+ 
+- pwd -> /var/www
+- sudo mkdir gfbio-submission-auditing
+- cd gfbio-submission-auditing/
+- sudo git init
+- git remote add origin https://gfbio_broker@colab.mpi-bremen.de/stash/scm/~gfbio_broker/gfbio-submission-auditing.git
+- cd ..
+- sudo chmod -R 775 gfbio-submission-auditing
+- sudo chgrp docker gfbio-submission-auditing/
+
+
+#### Docker
+
+- http://cookiecutter-django.readthedocs.io/en/latest/deployment-with-docker.html
+- for setting everything up and debugging:
+        
+        cloud@mastodon:/var/www/gfbio_submissions$ pwd
+            /var/www/gfbio_submissions
+ 
+         git branch 
+            * feature/GFBIO-2165-adapt-and-deploy-submission-code
+
+- sudo docker-compose -f production.yml build
+- sudo docker-compose -f production.yml up (pulls missing images)
+- sudo docker-compose -f production.yml run --rm django python manage.py migrate
+- sudo docker-compose -f production.yml run --rm django python manage.py collectstatic
+- docker-compose -f production.yml run --rm django python manage.py createsuperuser
+- docker-compose -f production.yml run --rm django python manage.py raven test
+
+
 
