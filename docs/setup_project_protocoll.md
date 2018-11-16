@@ -49,6 +49,9 @@
         Choose from 1, 2, 3, 4, 5 [1]:
        
 ### General local setup
+
+compare http://cookiecutter-django.readthedocs.io/en/latest/developing-locally-docker.html
+
 - pwd
 
         /home/maweber/devel/gfbio_submissions
@@ -79,6 +82,33 @@
 
 - docker-compose -f local.yml up
 - docker-compose -f local.yml down
+
+
+##### run locally
+
+    docker-compose -f local.yml up
+    docker-compose -f local.yml run --rm django python manage.py migrate
+    docker-compose -f local.yml run --rm django python manage.py createsuperuser
+    docker-compose -f local.yml run --rm django python manage.py makemigrations
+    docker-compose -f local.yml run --rm django python manage.py collectstatic
+    
+##### Migrate Brokerage App only
+
+    docker-compose -f local.yml run --rm django python manage.py makemigrations brokerage
+
+    
+- maweber:test1234
+
+#### delete local database within postgres container
+
+- docker exec -it gfbio_submissions_postgres_1 psql -U postgres
+
+        psql (10.4 (Debian 10.4-2.pgdg90+1))
+        Type "help" for help.
+        
+        postgres=# DROP DATABASE test_gfbio_submissions;
+        DROP DATABASE
+        postgres=# \q
 
 
 
