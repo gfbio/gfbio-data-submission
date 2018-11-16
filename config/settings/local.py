@@ -22,6 +22,9 @@ TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 # Note: This key only used for development and testing.
 SECRET_KEY = env('DJANGO_SECRET_KEY', default='%J@Q31Fl^}QK7-#Q?-*z)F`@Y*!QmIK#Gmy7(]J}Rb*R-+%*ok')
 
+
+ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['submissions.gfbio.org', '0.0.0.0'])
+
 # Mail settings
 # ------------------------------------------------------------------------------
 

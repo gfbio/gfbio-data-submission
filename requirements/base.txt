@@ -6,7 +6,7 @@ wheel==0.30.0
 
 
 # Conservative Django
-django==1.11.10 # pyup: <2.0
+django==1.11.16 # pyup: <2.0
 
 # Configuration
 django-environ==0.4.4
@@ -14,20 +14,20 @@ whitenoise==3.3.1
 
 
 # Forms
-django-crispy-forms==1.7.0
+django-crispy-forms==1.7.2
 
 # Models
-django-model-utils==3.1.1
+django-model-utils==3.1.2
 
 # Images
-Pillow==5.0.0
+Pillow==5.1.0
 
 # Password storage
 argon2-cffi==18.1.0
 
 # For user registration, either via email or social
 # Well-built with regular release cycles!
-django-allauth==0.34.0
+django-allauth==0.36.0
 
 
 # Python-PostgreSQL Database Adapter
@@ -37,16 +37,30 @@ psycopg2==2.7.3.2
 awesome-slugify==1.6.5
 
 # Time zones support
-pytz==2017.3
+pytz==2018.4
 
 # Redis support
-django-redis==4.8.0
+django-redis==4.9.0
 redis>=2.10.5
 
 
-celery==3.1.25
-
-
+celery==4.1.1
 
 
 # Your custom requirements go here
+
+
+# brokerage related
+dpath==1.4.2
+dicttoxml==1.7.4
+jsonschema==2.6.0
+
+djangorestframework==3.8.2
+django-cors-headers==2.4.0
+
+requests==2.19.1
+
+# mocking requests
+responses==0.9.0
+
+gitpython>=2.1.11
