@@ -111,6 +111,42 @@ compare http://cookiecutter-django.readthedocs.io/en/latest/developing-locally-d
         postgres=# \q
 
 
+#### Mail setup
+
+    EMAIL_USE_TLS = True
+    EMAIL_HOST = 'mail.sd-datasolutions.de'
+    EMAIL_HOST_USER = 'gfbio-broker'
+    EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+    EMAIL_PORT = 587
+
+- user: gfbio-broker
+- password -> passwordmanager/.env
+- webmail: https://mail.sd-datasolutions.de
+
+        Spam ist aktiv, kannst aber eigene regeln und imap folder anlegen
+        imap (beides SSL und startls) via selben hostnamen. 
+        Mail versenden auch via SUBMISSION über startls.
+        Achtung:@gfbio.org hat in den Mails als SPF drinnen dass nur mails von 
+        bestimmten servern kommen, wenn du direkt mails von dem gwdg ding senden
+        willst, muss ich es eintragen. aber alternativ via submission an den
+        obigen mailserver derzeit dürfen nur die mail versenden: 
+        TXT v=spf1 a:mailout.sd-datasolutions.de a:pangaea-mw2.marum.de 
+        a:pangaea-pm.marum.de ptr:mpi-bremen.de -all
+
+#### Environment Variables
+
+- encrypted (!) .env file under Version Control
+- NEVER add decrypted version of this File to Version Control 
+- after changes encrypt with 
+
+        gpg -vco encrypted.env.gpg .env
+        
+- decrypt this to .env on production system
+
+        gpg -o .env encrypted.env.gpg 
+
+- password in password manager
+
 
 ## GWDG Cloud Server
 
