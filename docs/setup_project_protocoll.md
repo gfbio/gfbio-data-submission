@@ -251,5 +251,29 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
 - docker-compose -f production.yml run --rm django python manage.py createsuperuser
 - docker-compose -f production.yml run --rm django python manage.py raven test
 
+        If you need a shell, run:
+        
+        docker-compose -f production.yml run --rm django python manage.py shell
+        To check the logs out, run:
+        
+        docker-compose -f production.yml logs
+        If you want to scale your application, run:
+        
+        docker-compose -f production.yml scale django=4
+        docker-compose -f production.yml scale celeryworker=2
+        Warning
+        
+        don’t try to scale postgres, celerybeat, or caddy.
+        
+        To see how your containers are doing run:
+        
+        docker-compose -f production.yml ps
+        
+        To see how your containers are doing run:
+    
+        docker-compose -f production.yml ps
+
+
+
 
 
