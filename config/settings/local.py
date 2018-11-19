@@ -20,10 +20,11 @@ TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 # ------------------------------------------------------------------------------
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 # Note: This key only used for development and testing.
-SECRET_KEY = env('DJANGO_SECRET_KEY', default='%J@Q31Fl^}QK7-#Q?-*z)F`@Y*!QmIK#Gmy7(]J}Rb*R-+%*ok')
+SECRET_KEY = env('DJANGO_SECRET_KEY',
+                 default='%J@Q31Fl^}QK7-#Q?-*z)F`@Y*!QmIK#Gmy7(]J}Rb*R-+%*ok')
 
-
-ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['submissions.gfbio.org', '0.0.0.0'])
+ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS',
+                         default=['submissions.gfbio.org', '0.0.0.0'])
 
 # Mail settings
 # ------------------------------------------------------------------------------
@@ -33,7 +34,6 @@ EMAIL_PORT = 1025
 EMAIL_HOST = 'localhost'
 EMAIL_BACKEND = env('DJANGO_EMAIL_BACKEND',
                     default='django.core.mail.backends.console.EmailBackend')
-
 
 # CACHING
 # ------------------------------------------------------------------------------
@@ -51,9 +51,9 @@ INSTALLED_APPS += ['debug_toolbar', ]
 
 INTERNAL_IPS = ['127.0.0.1', '10.0.2.2', ]
 
-
 import socket
 import os
+
 # tricks to have debug toolbar when developing with docker
 if os.environ.get('USE_DOCKER') == 'yes':
     ip = socket.gethostbyname(socket.gethostname())
@@ -81,3 +81,58 @@ CELERY_ALWAYS_EAGER = True
 
 # Your local stuff: Below this line define 3rd party library settings
 # ------------------------------------------------------------------------------
+
+########## LOGGING
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'root': {
+        'level': 'DEBUG',
+        'handlers': ['console'],
+    },
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s '
+                      '%(process)d %(thread)d %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
+        # 'console-info': {
+        #     'level': 'INFO',
+        #     'class': 'logging.StreamHandler',
+        #     'formatter': 'verbose'
+        # }
+    },
+    'loggers': {
+        'django': {
+            'level': 'INFO',
+            'handlers': ['console', ],
+            'propagate': True,
+        },
+        'django.db.backends': {
+            'level': 'INFO',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'raven': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'sentry.errors': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'django.security.DisallowedHost': {
+            'level': 'ERROR',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+    },
+}
