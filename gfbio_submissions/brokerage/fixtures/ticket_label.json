@@ -1,0 +1,30 @@
+[
+    {
+        "pk": 1,
+        "model": "brokerage.ticketLabel",
+        "fields": {
+            "site_configuration": 1,
+            "label_type": "P",
+            "label": "label_1"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "brokerage.ticketLabel",
+        "fields": {
+            "site_configuration": 1,
+            "label_type": "G",
+            "label": "label_2"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "brokerage.ticketLabel",
+        "fields": {
+            "site_configuration": 1,
+            "label_type": "P",
+            "label": "label_3"
+        }
+    }
+
+]

@@ -1,0 +1,110 @@
+{
+    "sample": {
+        "samples": [
+            {
+                "sample_title": "one",
+                "taxon_id": 1
+            },
+            {
+                "sample_title": "two",
+                "taxon_id": 2
+            },
+            {
+                "sample_title": "three",
+                "taxon_id": 3,
+                "gcdjson": {
+                    "project_name": "p_name",
+                    "assembly": {
+                        "assembly_method": "Celeraallalla",
+                        "calulcation_method": "met",
+                        "estimated_error_rate": 22
+                    },
+                    "submitted_to_insdc": true,
+                    "seq_meth": "s_met",
+                    "collection_date": "2015-03-06T12:00:40+01:00",
+                    "env_package": "air",
+                    "env_biome": "desert",
+                    "investigation_type": "virus",
+                    "geo_loc_name": "Germany:Sylt:Westerland",
+                    "env_material": "mat",
+                    "lat_lon": {
+                        "latitude": 34.02,
+                        "longitude": 0.99
+                    },
+                    "alt": {
+                        "value": 344,
+                        "unit": "m"
+                    },
+                    "checklist": "me",
+                    "package": "air"
+                }
+            },
+            {
+                "sample_title": "four",
+                "taxon_id": 4,
+                "gcdjson": {
+                    "env_feature": "feat",
+                    "project_name": "p_name",
+                    "assembly": {
+                        "assembly_method": "Celera",
+                        "calulcation_method": "met",
+                        "estimated_error_rate": 22
+                    },
+                    "submitted_to_insdc": true,
+                    "seq_meth": "s_met",
+                    "collection_date": "2015-03-06T12:00:40+01:00",
+                    "env_package": "air",
+                    "env_biome": "desert",
+                    "investigation_type": "virus",
+                    "geo_loc_name": "Germany:Sylt:Westerland",
+                    "env_material": "mat",
+                    "lat_lon": {
+                        "latitude": 34.02,
+                        "longitude": 0.99
+                    },
+                    "alt": {
+                        "value": 344,
+                        "unit": "m"
+                    },
+                    "checklist": "me",
+                    "package": "air"
+                }
+            },
+            {
+                "sample_title": "five",
+                "taxon_id": 5,
+                "gcdjson": {}
+            },
+            {
+                "sample_title": "six",
+                "taxon_id": 6,
+                "gcdjson": {
+                    "project_name": "p_name",
+                    "assembly": {
+                        "assembly_method": "Celera",
+                        "calulcation_method": "met",
+                        "estimated_error_rate": 22
+                    },
+                    "submitted_to_insdc": true,
+                    "seq_meth": "s_met",
+                    "collection_date": "2015-03-06T12:00:40+01:00",
+                    "env_package": "air",
+                    "env_biome": "desert",
+                    "investigation_type": "virus",
+                    "geo_loc_name": "Germany:Sylt:Westerland",
+                    "env_material": "mat",
+                    "lat_lon": {
+                        "latitude": 34.02,
+                        "longitude": 0.99
+                    },
+                    "alt": {
+                        "value": 344,
+                        "unit": "m"
+                    },
+                    "checklist": "me",
+                    "package": "air"
+                }
+            }
+        ]
+    }
+}

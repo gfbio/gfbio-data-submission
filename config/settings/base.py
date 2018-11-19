@@ -66,6 +66,7 @@ LOCAL_APPS = [
     # custom users app
     'gfbio_submissions.users.apps.UsersConfig',
     # Your stuff: custom apps go here
+    'gfbio_submissions.brokerage',
 ]
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
