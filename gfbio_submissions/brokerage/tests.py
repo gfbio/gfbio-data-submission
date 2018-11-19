@@ -23,7 +23,7 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.db.utils import IntegrityError
 from django.test import TestCase
-from django.utils.encoding import smart_bytes
+from django.utils.encoding import smart_bytes, smart_text
 from mock import patch
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -1731,14 +1731,14 @@ class EnalizerTest(TestCase):
         data = ena.prepare_submission_data()
         k, study_xml = data.get('STUDY')
         self.assertEqual('study.xml', k)
-        self.assertIn(b'<STUDY_SET>', study_xml)
-        self.assertIn(b'<STUDY', study_xml)
-        self.assertIn(b'<DESCRIPTOR>', study_xml)
-        self.assertIn(b'<STUDY_TYPE', study_xml)
-        self.assertIn(b'<STUDY_TITLE>', study_xml)
-        self.assertIn(b'<STUDY_ABSTRACT>', study_xml)
+        self.assertIn('<STUDY_SET>', study_xml)
+        self.assertIn('<STUDY', study_xml)
+        self.assertIn('<DESCRIPTOR>', study_xml)
+        self.assertIn('<STUDY_TYPE', study_xml)
+        self.assertIn('<STUDY_TITLE>', study_xml)
+        self.assertIn('<STUDY_ABSTRACT>', study_xml)
         study_xml_standalone = ena.create_study_xml()
-        self.assertEqual(study_xml, study_xml_standalone)
+        self.assertEqual(study_xml, smart_text(study_xml_standalone))
 
     def test_study_xml_center_name(self):
         sub = self._get_submission_with_testdata()
@@ -1750,9 +1750,9 @@ class EnalizerTest(TestCase):
         data = ena.prepare_submission_data()
         k, study_xml = data.get('STUDY')
         self.assertEqual('study.xml', k)
-        self.assertIn(b'center_name="CustomCenter"', study_xml)
+        self.assertIn('center_name="CustomCenter"', study_xml)
         study_xml_standalone = ena.create_study_xml()
-        self.assertEqual(study_xml, study_xml_standalone)
+        self.assertEqual(study_xml, smart_text(study_xml_standalone))
 
     def test_sample_xml(self):
         # BrokerObject.objects.all().delete()
@@ -1769,29 +1769,29 @@ class EnalizerTest(TestCase):
         # self.assertIn(bytes('<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="GFBIO"><TITLE>Sample No. 1</TITLE><SAMPLE_NAME><TAXON_ID>1234</TAXON_ID></SAMPLE_NAME><DESCRIPTION>A description, with commmas, ...</DESCRIPTION><SAMPLE_ATTRIBUTES><SAMPLE_ATTRIBUTE><TAG>submitted to insdc</TAG><VALUE>true</VALUE></SAMPLE_ATTRIBUTE><SAMPLE_ATTRIBUTE><TAG>sequencing method</TAG><VALUE>Illumina HiSeq 1000</VALUE></SAMPLE_ATTRIBUTE></SAMPLE_ATTRIBUTES>'
         #               '</SAMPLE>'.format(submission_samples[0].pk), 'utf-8'), sample_xml)
         # works
-        self.assertIn(smart_bytes(
+        self.assertIn(
             '<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="GFBIO"><TITLE>Sample No. 1</TITLE><SAMPLE_NAME><TAXON_ID>1234</TAXON_ID></SAMPLE_NAME><DESCRIPTION>A description, with commmas, ...</DESCRIPTION><SAMPLE_ATTRIBUTES><SAMPLE_ATTRIBUTE><TAG>submitted to insdc</TAG><VALUE>true</VALUE></SAMPLE_ATTRIBUTE><SAMPLE_ATTRIBUTE><TAG>sequencing method</TAG><VALUE>Illumina HiSeq 1000</VALUE></SAMPLE_ATTRIBUTE></SAMPLE_ATTRIBUTES>'
-            '</SAMPLE>'.format(submission_samples[0].pk), encoding='utf-8'),
+            '</SAMPLE>'.format(submission_samples[0].pk),
             sample_xml)
 
-        self.assertIn(smart_bytes(
+        self.assertIn(
             '<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="GFBIO"><TITLE>Sample No. 2</TITLE><SAMPLE_NAME><TAXON_ID>1234</TAXON_ID></SAMPLE_NAME><DESCRIPTION /><SAMPLE_ATTRIBUTES><SAMPLE_ATTRIBUTE><TAG>submitted to insdc</TAG><VALUE>true</VALUE></SAMPLE_ATTRIBUTE><SAMPLE_ATTRIBUTE><TAG>sequencing method</TAG><VALUE>Illumina HiSeq 1000</VALUE></SAMPLE_ATTRIBUTE></SAMPLE_ATTRIBUTES>'
-            '</SAMPLE>'.format(submission_samples[1].pk), encoding='utf-8'),
+            '</SAMPLE>'.format(submission_samples[1].pk),
             sample_xml)
 
-        self.assertIn(smart_bytes(
+        self.assertIn(
             '<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="GFBIO"><TITLE>Sample No. 3</TITLE><SAMPLE_NAME><TAXON_ID>1234</TAXON_ID></SAMPLE_NAME><DESCRIPTION>A description, with commmas, ...</DESCRIPTION><SAMPLE_ATTRIBUTES><SAMPLE_ATTRIBUTE><TAG>submitted to insdc</TAG><VALUE>true</VALUE></SAMPLE_ATTRIBUTE><SAMPLE_ATTRIBUTE><TAG>sequencing method</TAG><VALUE>Illumina HiSeq 1000</VALUE></SAMPLE_ATTRIBUTE></SAMPLE_ATTRIBUTES>'
-            '</SAMPLE>'.format(submission_samples[2].pk), encoding='utf-8'),
+            '</SAMPLE>'.format(submission_samples[2].pk),
             sample_xml)
 
-        self.assertIn(smart_bytes(
+        self.assertIn(
             '<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="GFBIO"><TITLE>Sample No. 4</TITLE><SAMPLE_NAME><TAXON_ID>1234</TAXON_ID></SAMPLE_NAME><DESCRIPTION>A description, with commmas, ...</DESCRIPTION><SAMPLE_ATTRIBUTES><SAMPLE_ATTRIBUTE><TAG>submitted to insdc</TAG><VALUE>true</VALUE></SAMPLE_ATTRIBUTE><SAMPLE_ATTRIBUTE><TAG>sequencing method</TAG><VALUE>Illumina HiSeq 1000</VALUE></SAMPLE_ATTRIBUTE></SAMPLE_ATTRIBUTES>'
-            '</SAMPLE>'.format(submission_samples[3].pk), encoding='utf-8'),
+            '</SAMPLE>'.format(submission_samples[3].pk),
             sample_xml)
 
-        self.assertIn(smart_bytes(
+        self.assertIn(
             '<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="GFBIO"><TITLE>Sample No. 5</TITLE><SAMPLE_NAME><TAXON_ID>1234</TAXON_ID></SAMPLE_NAME><DESCRIPTION>A description, with commmas, ...</DESCRIPTION><SAMPLE_ATTRIBUTES><SAMPLE_ATTRIBUTE><TAG>submitted to insdc</TAG><VALUE>true</VALUE></SAMPLE_ATTRIBUTE><SAMPLE_ATTRIBUTE><TAG>sequencing method</TAG><VALUE>Illumina HiSeq 1000</VALUE></SAMPLE_ATTRIBUTE></SAMPLE_ATTRIBUTES>'
-            '</SAMPLE>'.format(submission_samples[4].pk), encoding='utf-8'),
+            '</SAMPLE>'.format(submission_samples[4].pk),
             sample_xml)
 
     def test_sample_xml_center_name(self):
@@ -1806,7 +1806,7 @@ class EnalizerTest(TestCase):
         k, sample_xml = data.get('SAMPLE')
         sxml = xml.dom.minidom.parseString(sample_xml)
         self.assertEqual('sample.xml', k)
-        self.assertIn(b'center_name="CustomCenter"', sample_xml)
+        self.assertIn('center_name="CustomCenter"', sample_xml)
 
     def test_sample_xml_checklist_mapping(self):
         sub = self._get_submission_with_testdata(add_sample_attributes=True)
@@ -1816,10 +1816,10 @@ class EnalizerTest(TestCase):
         sxml = xml.dom.minidom.parseString(sample_xml)
         s = sxml.toprettyxml()
         self.assertIn(
-            b'<SAMPLE_ATTRIBUTE><TAG>ENA-CHECKLIST</TAG><VALUE>ERC000024</VALUE></SAMPLE_ATTRIBUTE>',
+            '<SAMPLE_ATTRIBUTE><TAG>ENA-CHECKLIST</TAG><VALUE>ERC000024</VALUE></SAMPLE_ATTRIBUTE>',
             sample_xml)
         self.assertIn(
-            b'<SAMPLE_ATTRIBUTE><TAG>ENA-CHECKLIST</TAG><VALUE>ERC000023</VALUE></SAMPLE_ATTRIBUTE>',
+            '<SAMPLE_ATTRIBUTE><TAG>ENA-CHECKLIST</TAG><VALUE>ERC000023</VALUE></SAMPLE_ATTRIBUTE>',
             sample_xml)
 
     def test_additional_renamed_checklist_attribute(self):
@@ -1827,9 +1827,9 @@ class EnalizerTest(TestCase):
         ena = Enalizer(sub, 'test-enalizer-sample')
         data = ena.prepare_submission_data()
         k, sample_xml = data.get('SAMPLE')
-        self.assertIn(b'<TAG>water environmental package</TAG>', sample_xml)
+        self.assertIn('<TAG>water environmental package</TAG>', sample_xml)
         self.assertIn(
-            b'<TAG>wastewater sludge environmental package</TAG>',
+            '<TAG>wastewater sludge environmental package</TAG>',
             sample_xml
         )
 
@@ -1840,16 +1840,16 @@ class EnalizerTest(TestCase):
         k, sample_xml = data.get('SAMPLE')
         sxml = xml.dom.minidom.parseString(sample_xml)
         s = sxml.toprettyxml()
-        self.assertNotIn(b'<TAG>ENA-CHECKLIST</TAG>', sample_xml)
+        self.assertNotIn('<TAG>ENA-CHECKLIST</TAG>', sample_xml)
 
     def test_additional_no_renamed_checklist_attribute(self):
         sub = self._get_submission_with_testdata(add_sample_attributes=False)
         ena = Enalizer(sub, 'test-enalizer-sample')
         data = ena.prepare_submission_data()
         k, sample_xml = data.get('SAMPLE')
-        self.assertNotIn(b'<TAG>water environmental package</TAG>', sample_xml)
+        self.assertNotIn('<TAG>water environmental package</TAG>', sample_xml)
         self.assertNotIn(
-            b'<TAG>wastewater sludge environmental package</TAG>',
+            '<TAG>wastewater sludge environmental package</TAG>',
             sample_xml
         )
 
@@ -1860,7 +1860,7 @@ class EnalizerTest(TestCase):
         k, sample_xml = data.get('SAMPLE')
         sxml = xml.dom.minidom.parseString(sample_xml)
         s = sxml.toprettyxml()
-        self.assertNotIn(b'<TAG>ENA-CHECKLIST</TAG>', sample_xml)
+        self.assertNotIn('<TAG>ENA-CHECKLIST</TAG>', sample_xml)
 
     def test_add_insdc_attribute(self):
         sub = self._get_submission_with_testdata()
@@ -1868,7 +1868,7 @@ class EnalizerTest(TestCase):
         data = ena.prepare_submission_data()
         k, sample_xml = data.get('SAMPLE')
         self.assertEqual(5, sample_xml.count(
-            b'<SAMPLE_ATTRIBUTE><TAG>submitted to insdc</TAG><VALUE>true</VALUE>'))
+            '<SAMPLE_ATTRIBUTE><TAG>submitted to insdc</TAG><VALUE>true</VALUE>'))
 
     def test_experiment_xml(self):
         sub = self._get_submission_with_testdata()
@@ -1884,12 +1884,10 @@ class EnalizerTest(TestCase):
         submission_samples = sub.brokerobject_set.filter(type='sample')
         for i in range(4):
             self.assertIn(
-                smart_bytes(
-                    '<EXPERIMENT alias="{0}:test-enalizer-experiment" broker_name="GFBIO" center_name="GFBIO"><STUDY_REF refname="{1}:test-enalizer-experiment" /><DESIGN><DESIGN_DESCRIPTION /><SAMPLE_DESCRIPTOR refname="{2}:test-enalizer-experiment" /><LIBRARY_DESCRIPTOR><LIBRARY_STRATEGY>AMPLICON</LIBRARY_STRATEGY><LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE><LIBRARY_SELECTION>PCR</LIBRARY_SELECTION><LIBRARY_LAYOUT><PAIRED NOMINAL_LENGTH="420" /></LIBRARY_LAYOUT></LIBRARY_DESCRIPTOR></DESIGN><PLATFORM><ILLUMINA><INSTRUMENT_MODEL>Illumina HiSeq 1000</INSTRUMENT_MODEL></ILLUMINA></PLATFORM>'
-                    '</EXPERIMENT>'.format(submission_experiments[i].pk,
-                                           submission_study.pk,
-                                           submission_samples[i].pk),
-                    encoding='utf-8'),
+                '<EXPERIMENT alias="{0}:test-enalizer-experiment" broker_name="GFBIO" center_name="GFBIO"><STUDY_REF refname="{1}:test-enalizer-experiment" /><DESIGN><DESIGN_DESCRIPTION /><SAMPLE_DESCRIPTOR refname="{2}:test-enalizer-experiment" /><LIBRARY_DESCRIPTOR><LIBRARY_STRATEGY>AMPLICON</LIBRARY_STRATEGY><LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE><LIBRARY_SELECTION>PCR</LIBRARY_SELECTION><LIBRARY_LAYOUT><PAIRED NOMINAL_LENGTH="420" /></LIBRARY_LAYOUT></LIBRARY_DESCRIPTOR></DESIGN><PLATFORM><ILLUMINA><INSTRUMENT_MODEL>Illumina HiSeq 1000</INSTRUMENT_MODEL></ILLUMINA></PLATFORM>'
+                '</EXPERIMENT>'.format(submission_experiments[i].pk,
+                                       submission_study.pk,
+                                       submission_samples[i].pk),
                 experiment_xml)
 
         self.assertTrue(ena.experiments_contain_files)
@@ -1906,7 +1904,7 @@ class EnalizerTest(TestCase):
         k, experiment_xml = data.get('EXPERIMENT')
         sxml = xml.dom.minidom.parseString(experiment_xml)
         self.assertEqual('experiment.xml', k)
-        self.assertIn(b'center_name="CustomCenter"', experiment_xml)
+        self.assertIn('center_name="CustomCenter"', experiment_xml)
         self.assertTrue(ena.experiments_contain_files)
 
     def test_add_experiment_platform_as_sample_attribute(self):
@@ -1916,11 +1914,11 @@ class EnalizerTest(TestCase):
         k, experiment_xml = data.get('EXPERIMENT')
         k, sample_xml = data.get('SAMPLE')
         self.assertIn(
-            b'<PLATFORM><ILLUMINA><INSTRUMENT_MODEL>Illumina HiSeq 1000</INSTRUMENT_MODEL></ILLUMINA></PLATFORM>',
+            '<PLATFORM><ILLUMINA><INSTRUMENT_MODEL>Illumina HiSeq 1000</INSTRUMENT_MODEL></ILLUMINA></PLATFORM>',
             experiment_xml)
 
         self.assertIn(
-            b'<SAMPLE_ATTRIBUTE><TAG>sequencing method</TAG><VALUE>Illumina HiSeq 1000</VALUE></SAMPLE_ATTRIBUTE>',
+            '<SAMPLE_ATTRIBUTE><TAG>sequencing method</TAG><VALUE>Illumina HiSeq 1000</VALUE></SAMPLE_ATTRIBUTE>',
             sample_xml)
 
     def test_add_experiment_platform_without_initial_sample_attributes(self):
@@ -1930,10 +1928,10 @@ class EnalizerTest(TestCase):
         k, experiment_xml = data.get('EXPERIMENT')
         k, sample_xml = data.get('SAMPLE')
         self.assertIn(
-            b'<PLATFORM><ILLUMINA><INSTRUMENT_MODEL>Illumina HiSeq 1000</INSTRUMENT_MODEL></ILLUMINA></PLATFORM>',
+            '<PLATFORM><ILLUMINA><INSTRUMENT_MODEL>Illumina HiSeq 1000</INSTRUMENT_MODEL></ILLUMINA></PLATFORM>',
             experiment_xml)
         self.assertIn(
-            b'<SAMPLE_ATTRIBUTE><TAG>sequencing method</TAG><VALUE>Illumina HiSeq 1000</VALUE></SAMPLE_ATTRIBUTE>',
+            '<SAMPLE_ATTRIBUTE><TAG>sequencing method</TAG><VALUE>Illumina HiSeq 1000</VALUE></SAMPLE_ATTRIBUTE>',
             sample_xml)
 
     def test_run_xml_with_files_in_experiment(self):

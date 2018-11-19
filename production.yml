@@ -4,6 +4,7 @@ volumes:
   postgres_data: {}
   postgres_backup: {}
   caddy: {}
+  django_media: {}
 
 services:
   django: &django
@@ -14,6 +15,10 @@ services:
       - postgres
       - redis
     env_file: .env
+    volumes:
+      - django_media:/app/gfbio_services/media
+      # git has to be initialized, remote origin has to be set.
+      - /var/www/gfbio-submission-auditing:/gfbio-submission-auditing
     command: /gunicorn.sh
 
   postgres:
