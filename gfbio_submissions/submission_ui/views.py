@@ -64,8 +64,8 @@ class EnaWidgetDeliverSchemaView(APIView):
             text = open(os.path.join(settings.STATIC_ROOT, sub_path),
                         'rb').read()
         except IOError as e:
-            text = '{}'
-        return Response(json.loads(text,
+            text = b'{}'
+        return Response(json.loads(text.decode('utf-8'),
                                    object_pairs_hook=collections.OrderedDict))
 
 
@@ -78,8 +78,8 @@ class EnaWidgetDeliverOptionsView(APIView):
             text = open(os.path.join(settings.STATIC_ROOT, sub_path),
                         'rb').read()
         except IOError as e:
-            text = '{}'
-        return Response(json.loads(text,
+            text = b'{}'
+        return Response(json.loads(text.decode('utf-8'),
                                    object_pairs_hook=collections.OrderedDict))
 
 # class DummyConfigView(APIView):
