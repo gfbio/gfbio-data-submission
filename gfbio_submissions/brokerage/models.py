@@ -171,7 +171,7 @@ class CenterName(models.Model):
         return '{0}'.format(self.center_name)
 
 
-class Submission(TimeStampedModel):
+class Submission(models.Model):
     OPEN = 'OPEN'
     SUBMITTED = 'SUBMITTED'
     CANCELLED = 'CANCELLED'
@@ -325,7 +325,7 @@ class Submission(TimeStampedModel):
 
 
 # TODO: ARGH ! this needs discussion ! all changes may have some impact !
-class BrokerObject(TimeStampedModel):
+class BrokerObject(models.Model):
     ENTITY_TYPES = (
         ('study', 'study'),
         ('sample', 'sample'),
@@ -374,7 +374,7 @@ class BrokerObject(TimeStampedModel):
     #     unique_together = (('type', 'site', 'site_project_id', 'site_object_id'),)
 
 
-class PersistentIdentifier(TimeStampedModel):
+class PersistentIdentifier(models.Model):
     ARCHIVES = (
         ('ENA', 'ENA'),
         ('PAN', 'Pangea'),
@@ -399,7 +399,7 @@ class PersistentIdentifier(TimeStampedModel):
         return '{}'.format(self.pid)
 
 
-class RequestLog(TimeStampedModel):
+class RequestLog(models.Model):
     INCOMING = '0'
     OUTGOING = '1'
     REQUEST_TYPES = (
@@ -491,7 +491,7 @@ class AdditionalReference(models.Model):
         return '{}'.format(self.reference_key)
 
 
-class TaskProgressReport(TimeStampedModel):
+class TaskProgressReport(models.Model):
     RUNNING = 'RUNNING'
     CANCELLED = 'CANCELLED'
     submission = models.ForeignKey(Submission, null=True, blank=True,
@@ -524,7 +524,7 @@ class TaskProgressReport(TimeStampedModel):
             return 'unnamed_task'
 
 
-class SubmissionFileUpload(TimeStampedModel):
+class SubmissionFileUpload(models.Model):
     submission = models.ForeignKey(
         Submission, null=True,
         blank=True,
@@ -537,7 +537,7 @@ class SubmissionFileUpload(TimeStampedModel):
     changed = models.DateTimeField(auto_now=True)
 
 
-class PrimaryDataFile(TimeStampedModel):
+class PrimaryDataFile(models.Model):
     submission = models.ForeignKey(
         Submission,
         null=False,
@@ -582,7 +582,7 @@ class PrimaryDataFile(TimeStampedModel):
         )
 
 
-class AuditableTextData(TimeStampedModel):
+class AuditableTextData(models.Model):
     data_id = models.UUIDField(primary_key=False, default=uuid.uuid4)
     name = models.CharField(max_length=128)
     submission = models.ForeignKey(
