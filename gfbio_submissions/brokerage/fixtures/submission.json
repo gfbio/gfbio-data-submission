@@ -5,6 +5,8 @@
         "fields": {
             "site": 1,
             "broker_submission_id": "4ceeae16-c114-4d3f-ba0b-225b9d5e4abf",
+            "created": "2015-07-15 22:16:04",
+            "changed": "2015-07-15 22:16:04",
             "status": "OPEN",
             "submitting_user": "jonDoe",
             "site_project_id": "prj001A",
@@ -73,6 +75,8 @@
         "fields": {
             "site": 1,
             "broker_submission_id": "ece31348-6249-4a27-b876-7faba6c2487b",
+            "created": "2015-07-15 22:16:04",
+            "changed": "2015-07-15 22:16:04",
             "status": "CLOSED"
         }
     },
@@ -81,7 +85,9 @@
         "model": "brokerage.submission",
         "fields": {
             "site": 2,
-            "broker_submission_id": "6d405258-9d42-43e6-83bb-372ed3efa643"
+            "broker_submission_id": "6d405258-9d42-43e6-83bb-372ed3efa643",
+            "created": "2015-07-15 22:16:04",
+            "changed": "2015-07-15 22:16:04"
         }
     },
     {
@@ -89,7 +95,9 @@
         "model": "brokerage.submission",
         "fields": {
             "site": 3,
-            "broker_submission_id": "a77d67df-511c-41a7-b7fb-280d0d0a678f"
+            "broker_submission_id": "a77d67df-511c-41a7-b7fb-280d0d0a678f",
+            "created": "2015-07-15 22:16:04",
+            "changed": "2015-07-15 22:16:04"
         }
     },
     {
@@ -98,6 +106,8 @@
         "fields": {
             "site": 3,
             "broker_submission_id": "e931072e-61c2-42e4-923a-39b6ab255a9f",
+            "created": "2015-07-15 22:16:04",
+            "changed": "2015-07-15 22:16:04",
             "status": "SUBMITTED"
         }
     }
