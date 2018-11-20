@@ -278,6 +278,44 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
 
 ### Manual release
 
+#### Local commands
+
+- prerequisite: feature branch(s) finished/merged back to develop
+- release while on branch develop
+
+- start release:
+    
+        git flow release start <VERSION_NUMBER>
+        git flow release start 0.0.2
+
+- check content of .env 
+- checke that .env IS NOT under version control and/or part of the next commit
+- encrypt .env (use password from password-manager)
+        
+        gpg -vco encrypted.env.gpg .env
+        
+            gpg: pinentry launched (20395 gnome3 1.1.0 /dev/pts/1 rxvt-unicode-256color :0)
+            gpg: pinentry launched (20405 gnome3 1.1.0 /dev/pts/1 rxvt-unicode-256color :0)
+            gpg: benutze Cipher AES256
+            Datei 'encrypted.env.gpg' existiert bereits. Überschreiben (j/N)? j
+            gpg: Schreiben nach 'encrypted.env.gpg'
+
+- bump VERSION constant in base.py
+- commit and comment respectively
+
+        git commit -a
+        
+- finish release, add tag, save merge comments
+
+        git flow release finish <VERSION_NUMBER>
+        git flow release finish 0.0.2
+
+- push everything to remote
+
+        git push origin master develop --tags
+
+#### Remote commands
+
 - login to remote server
         
         ssh -l cloud 141.5.106.43
@@ -316,7 +354,7 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
               develop
               master
 
-#### Encrypted .env
+##### Encrypted .env
 
 - decrypt .env , use password from passwordmanager
 
@@ -342,7 +380,7 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
             gpg: encrypted with 1 passphrase
             File `.env' exists. Overwrite? (y/N) y
 
-### Docker
+##### Docker
 
 
 - build docker images (in case requirement have been updated, etc.). may take a few minutes.
@@ -367,5 +405,98 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
 
 
 ### Scripted release
+
+## Move production database
+
+### Commands
+
+#### 141.5.103.171 (genomicsdataservices)
+
+- ssh -l root 141.5.103.171
+- cd /var/www/gds_docker/
+- cd genomicsdataservices/
+- docker-compose run postgres backup
+
+        creating backup
+        ---------------
+        successfully created backup backup_2018_11_20T20_06_53.sql.gz
+
+
+- docker ps
+
+        CONTAINER ID        IMAGE                               COMMAND                  CREATED             STATUS              PORTS                                      NAMES
+        (...)
+        8941e03d0bcd        genomicsdataservices_postgres       "docker-entrypoint..."   4 weeks ago         Up 4 weeks          5432/tcp                                   genomicsdataservices_postgres_1
+        (...)
+
+- docker cp 8941e03d0bcd:/backups/backup_2018_11_20T20_06_53.sql.gz /var/www/gds_docker/backups2/
+
+#### 141.5.106.43 (submissions.gfbio.org)
+
+- ssh -l cloud 141.5.106.43
+- cd /var/www/gfbio_submissions/
+- sudo mkdir _prod_backup
+
+- cd ~
+- pwd
+
+        /home/cloud
+
+- scp root@141.5.103.171:/var/www/gds_docker/backups2/backup_2018_11_20T20_06_53.sql.gz .
+
+        root@141.5.103.171's password: ('real' root password -> passwordmanager)
+
+- sudo mv backup_2018_11_20T20_06_53.sql.gz /var/www/gfbio_submissions/_prod_backup/
+
+##### Restore Backup
+
+- cd /var/www/gfbio_submissions/_prod_backup/
+- ll
+
+        total 8492
+        drwxr-xr-x  2 root  root     4096 Nov 20 21:21 ./
+        drwxr-xr-x 11 root  root     4096 Nov 20 21:16 ../
+        -rw-r--r--  1 cloud cloud 8687504 Nov 20 21:21 backup_2018_11_20T20_06_53.sql.gz
+
+- pwd
+
+        /var/www/gfbio_submissions
+  
+- docker ps
+
+        CONTAINER ID        IMAGE                            COMMAND                  CREATED             STATUS              PORTS                                                NAMES
+        (...)
+        21b155a1cd50        gfbio_submissions_postgres       "docker-entrypoint.s…"   4 days ago          Up 4 days           5432/tcp                                             gfbio_submissions_postgres_1_a68a0cc45263
+        (...)
+
+- docker cp _prod_backup/backup_2018_11_20T20_06_53.sql.gz 21b155a1cd50:/backups/
+- docker-compose -f production.yml run postgres list-backups
+
+        listing available backups
+        -------------------------
+        backup_2018_11_20T11_32_05.sql.gz  backup_2018_11_20T20_06_53.sql.gz
+        backup_2018_11_20T11_47_22.sql.gz  backup_2018_11_20T20_28_44.sql.gz
+        backup_2018_11_20T13_13_43.sql.gz
+
+
+#####  ... Current Work in progress
+
+
+1. This causes errors due to missing fields
+
+        docker-compose -f production.yml run --rm postgres restore backup_2018_11_20T20_06_53.sql.gz
+
+1. re-set to backup from naked system 
+    
+        docker-compose -f production.yml run --rm postgres restore backup_2018_11_20T20_28_44.sql.gz
+    
+1.  just to get sure:
+
+        sudo supervisorctl stop gfbio_submissions
+        sudo supervisorctl start gfbio_submissions
+
+1. system running again ...
+
+### "The Plan"
 
 
