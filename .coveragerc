@@ -1,0 +1,5 @@
+[run]
+include = gfbio_submissions/*
+omit = *migrations*, *tests*
+plugins =
+    django_coverage_plugin

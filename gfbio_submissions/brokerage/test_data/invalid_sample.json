@@ -1,0 +1,38 @@
+{
+    "study": {
+        "study_alias": "study_alias",
+        "center_name": "center_name",
+        "center_project_name": "project_name",
+        "study_title": "study_title",
+        "study_abstract": "study_abstract",
+        "study_type": "Metagenomics",
+        "study_attributes": [
+            {
+                "tag": "a_tag",
+                "value": "a_value",
+                "units": "a_unit"
+            }
+        ]
+    },
+    "sample": {
+        "samples": [
+            {
+                "sample_title": "eins",
+                "taxon_id": 1
+            },
+            {
+                "sample_title": "zwei",
+                "taxon_id": 2
+            },
+            {
+                "sample_title": "drei"
+            },
+            {
+                "taxon_id": 4
+            },
+            {
+                "nothing": "here"
+            }
+        ]
+    }
+}

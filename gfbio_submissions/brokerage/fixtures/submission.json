@@ -1,0 +1,104 @@
+[
+    {
+        "pk": 1,
+        "model": "brokerage.submission",
+        "fields": {
+            "site": 1,
+            "broker_submission_id": "4ceeae16-c114-4d3f-ba0b-225b9d5e4abf",
+            "status": "OPEN",
+            "submitting_user": "jonDoe",
+            "site_project_id": "prj001A",
+            "target": "ENA",
+            "release": false,
+            "data": {
+                "requirements": {
+                    "title": "MinTitle1",
+                    "description": "MinDescription1",
+                    "study_type": "Metagenomics",
+                    "study_alias": "study1",
+                    "download_url": "http://www.google.de",
+                    "samples": [
+                        {
+                            "sample_alias": "sample1",
+                            "sample_title": "stitle",
+                            "taxon_id": 1234
+                        },
+                        {
+                            "sample_alias": "sample2",
+                            "sample_title": "stitleagain",
+                            "taxon_id": 1234
+                        }
+                    ],
+                    "experiments": [
+                        {
+                            "experiment_alias": "experiment1",
+                            "platform": "AB 3730xL Genetic Analyzer",
+                            "design": {
+                                "sample_descriptor": "sample2",
+                                "design_description": "",
+                                "library_descriptor": {
+                                    "library_strategy": "AMPLICON",
+                                    "library_source": "METAGENOMIC",
+                                    "library_selection": "PCR",
+                                    "library_layout": {
+                                        "type": "paired",
+                                        "nominal_length": 450
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "runs": [
+                        {
+                            "experiment_ref": "experiment1",
+                            "data_block": {
+                                "files": [
+                                    {
+                                        "filename": "aFile",
+                                        "filetype": "fastq",
+                                        "checksum_method": "MD5",
+                                        "checksum": "12345"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "pk": 2,
+        "model": "brokerage.submission",
+        "fields": {
+            "site": 1,
+            "broker_submission_id": "ece31348-6249-4a27-b876-7faba6c2487b",
+            "status": "CLOSED"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "brokerage.submission",
+        "fields": {
+            "site": 2,
+            "broker_submission_id": "6d405258-9d42-43e6-83bb-372ed3efa643"
+        }
+    },
+    {
+        "pk": 4,
+        "model": "brokerage.submission",
+        "fields": {
+            "site": 3,
+            "broker_submission_id": "a77d67df-511c-41a7-b7fb-280d0d0a678f"
+        }
+    },
+    {
+        "pk": 5,
+        "model": "brokerage.submission",
+        "fields": {
+            "site": 3,
+            "broker_submission_id": "e931072e-61c2-42e4-923a-39b6ab255a9f",
+            "status": "SUBMITTED"
+        }
+    }
+]

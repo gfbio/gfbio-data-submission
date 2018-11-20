@@ -1,0 +1,24 @@
+[
+    {
+        "pk": 1,
+        "model": "brokerage.persistentIdentifier",
+        "fields": {
+            "archive": "ENA",
+            "pid_type": "ACC",
+            "pid": "ACC_1234",
+            "broker_object": 1,
+            "outgoing_request_id": "da76ebec-7cde-4f11-a7bd-35ef8ebe5b85"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "brokerage.persistentIdentifier",
+        "fields": {
+            "archive": "ENA",
+            "pid_type": "PRJ",
+            "pid": "PRJEB20411",
+            "broker_object": 1,
+            "outgoing_request_id": "da76ebec-7cde-4f11-a7bd-35ef8ebe5b85"
+        }
+    }
+]
