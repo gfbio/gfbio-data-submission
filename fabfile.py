@@ -94,7 +94,7 @@ def local_release(version_number):
 @task(hide=True)
 def is_service_running():
     output = run('sudo supervisorctl status')
-    return output.count('gfbio_submissions                   RUNNING') == 1
+    return output.count('gfbio_submissions                RUNNING') == 1
 
 
 @task(hide=True)
