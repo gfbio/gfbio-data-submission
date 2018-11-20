@@ -274,6 +274,12 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
         docker-compose -f production.yml ps
 
 
+## Release
 
+### Manual release
+
+
+
+### Scripted release
 
 
