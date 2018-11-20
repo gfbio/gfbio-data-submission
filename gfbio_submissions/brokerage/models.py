@@ -228,6 +228,10 @@ class Submission(TimeStampedModel):
     data = JsonDictField(default=dict)
     embargo = models.DateField(null=True, blank=True)
 
+    # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
+    created = models.DateTimeField(auto_now_add=True)
+    changed = models.DateTimeField(auto_now=True)
+
     objects = SubmissionManager()
 
     def get_json_with_aliases(self, alias_postfix):
@@ -448,6 +452,10 @@ class RequestLog(TimeStampedModel):
         help_text='This may contain meta-information regarding this request'
     )
 
+    # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
+    created = models.DateTimeField(auto_now_add=True)
+    changed = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return '{}'.format(self.request_id)
 
@@ -503,6 +511,10 @@ class TaskProgressReport(TimeStampedModel):
     task_args = models.TextField(default='')
     task_kwargs = models.TextField(default='')
 
+    # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
+    created = models.DateTimeField(auto_now_add=True)
+    changed = models.DateTimeField(auto_now=True)
+
     objects = TaskProgressReportManager()
 
     def __str__(self):
@@ -519,6 +531,10 @@ class SubmissionFileUpload(TimeStampedModel):
         help_text='Submission this File belongs to.')
     site = models.ForeignKey(AUTH_USER_MODEL, related_name='submissionupload')
     file = models.FileField(upload_to=submission_file_upload_path)
+
+    # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
+    created = models.DateTimeField(auto_now_add=True)
+    changed = models.DateTimeField(auto_now=True)
 
 
 class PrimaryDataFile(TimeStampedModel):
@@ -541,6 +557,10 @@ class PrimaryDataFile(TimeStampedModel):
         default='',
         blank=True,
         help_text='Any comments or useful information regarding this file')
+
+    # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
+    created = models.DateTimeField(auto_now_add=True)
+    changed = models.DateTimeField(auto_now=True)
 
     class NoTicketAvailableError(Exception):
         pass
@@ -582,6 +602,10 @@ class AuditableTextData(TimeStampedModel):
         help_text='Free text. Any comments or useful information regarding this object'
     )
 
+    # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
+    created = models.DateTimeField(auto_now_add=True)
+    changed = models.DateTimeField(auto_now=True)
+
     objects = AuditableTextDataManager()
 
     def save(self, *args, **kwargs):
@@ -599,36 +623,36 @@ class AuditableTextData(TimeStampedModel):
 
         serialized_file_path = os.path.join(repo.working_tree_dir,
                                             serialized_file_name)
-        logger.info(
-            '\n\n\n###########\tsave auditable -> write file\t##########\n')
-        logger.info('\nserialized {}'.format(serialized))
-        logger.info('\ntype serialized {}'.format(type(serialized)))
-        logger.info('\nfile name {}'.format(serialized_file_name))
-        logger.info('\nrepo {}'.format(repo))
-        logger.info('\npath {}'.format(serialized_file_path))
-        # logger.info('\ntry to load ')
-        # logger.info(json.loads(serialized.decode('utf-8')))
-        logger.info('try to load old way')
-        loaded = json.loads(serialized)
-        logger.info('type loads {}'.format(type(loaded)))
-        logger.info('\n')
-        logger.info('textdata\n')
-        logger.info(
-            '\n{}'.format(loaded[0]['fields'].get('text_data', 'NO_TEXT_DATA')))
-        logger.info('\ntype textdata {}'.format(
-            type(loaded[0]['fields'].get('text_data', 'NO_TEXT_DATA'))))
-        # logger.info('\ndo smart_text')
-        # loaded[0]['fields']['text_data'] = smart_text(
-        #     loaded[0]['fields']['text_data'])
+        # logger.info(
+        #     '\n\n\n###########\tsave auditable -> write file\t##########\n')
+        # logger.info('\nserialized {}'.format(serialized))
+        # logger.info('\ntype serialized {}'.format(type(serialized)))
+        # logger.info('\nfile name {}'.format(serialized_file_name))
+        # logger.info('\nrepo {}'.format(repo))
+        # logger.info('\npath {}'.format(serialized_file_path))
+        # # logger.info('\ntry to load ')
+        # # logger.info(json.loads(serialized.decode('utf-8')))
+        # logger.info('try to load old way')
+        # loaded = json.loads(serialized)
+        # logger.info('type loads {}'.format(type(loaded)))
+        # logger.info('\n')
+        # logger.info('textdata\n')
+        # logger.info(
+        #     '\n{}'.format(loaded[0]['fields'].get('text_data', 'NO_TEXT_DATA')))
         # logger.info('\ntype textdata {}'.format(
         #     type(loaded[0]['fields'].get('text_data', 'NO_TEXT_DATA'))))
-
-        # logger.info('{}'.format(json.loads(serialized)))
-        logger.info('\ndump ..')
+        # # logger.info('\ndo smart_text')
+        # # loaded[0]['fields']['text_data'] = smart_text(
+        # #     loaded[0]['fields']['text_data'])
+        # # logger.info('\ntype textdata {}'.format(
+        # #     type(loaded[0]['fields'].get('text_data', 'NO_TEXT_DATA'))))
+        #
+        # # logger.info('{}'.format(json.loads(serialized)))
+        # logger.info('\ndump ..')
         dumped = json.dumps(smart_text(serialized), indent=4,
                             sort_keys=True)
-        logger.info('\nnew style dumped {}'.format(dumped))
-        logger.info('\ntype  {}'.format(type(dumped)))
+        # logger.info('\nnew style dumped {}'.format(dumped))
+        # logger.info('\ntype  {}'.format(type(dumped)))
         with open(serialized_file_path, 'w') as serialization_file:
             serialization_file.write(
                 dumped
@@ -643,7 +667,7 @@ class AuditableTextData(TimeStampedModel):
             msg = 'update AuditableTextData serialization {0}'.format(
                 serialized_file_name)
         index.commit(msg)
-        logger.info('AFTER COMMIT \n\n\n')
+        # logger.info('AFTER COMMIT \n\n\n')
 
     def __str__(self):
         return 'AuditableTextData_{0}'.format(self.data_id)
