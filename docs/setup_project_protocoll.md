@@ -497,6 +497,27 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
 
 1. system running again ...
 
+1. apply code changes to ensure backward compatibility
+
+1. load prod db dump again 
+
+        docker-compose -f production.yml run --rm postgres restore backup_2018_11_20T20_06_53.sql.gz
+
+1. db looks good, but some error still popping up
+        
+        CREATE TABLE
+        ERROR:  role "gds_docker_db" does not exist
+        
+        ALTER TABLE
+        REVOKE
+        ERROR:  role "postgres" does not exist
+        ERROR:  role "postgres" does not exist
+        GRANT
+
+TODO: compare dockerfiles and env for these role
+TODO: look into BOTH dumps prod db & naked sys dump
+TODO: test migrating old db state to TimeBasedModel version (prepare)
+
 ### "The Plan"
 
 
