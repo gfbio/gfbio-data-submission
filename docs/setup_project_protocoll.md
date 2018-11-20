@@ -56,7 +56,7 @@ compare http://cookiecutter-django.readthedocs.io/en/latest/developing-locally-d
 
         /home/maweber/devel/gfbio_submissions
 
-- cp ../gfbio_services/.gitignore .
+- cp ../gfbio_submissions/.gitignore .
 - git init
 - git flow init
 - git add --all
@@ -277,6 +277,92 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
 ## Release
 
 ### Manual release
+
+- login to remote server
+        
+        ssh -l cloud 141.5.106.43
+
+- cd to working directory
+
+        cd /var/www/gfbio_submissions/
+        
+        pwd 
+            /var/www/gfbio_submissions
+        
+- create postgres backup first, docker containers have to be up
+
+        sudo supervisorctl status
+            gfbio_submissions                   RUNNING   pid 25091, uptime 0:01:16
+        
+        sudo docker-compose -f production.yml run --rm postgres backup
+            creating backup
+            ---------------
+            successfully created backup backup_2018_08_29T20_23_57.sql.gz
+
+
+- stop docker containers via supervisor process manager
+        
+        sudo supervisorctl stop gfbio_submissions
+
+- fetch latest changes from repository and checkout latest tag        
+        
+        sudo git fetch
+        
+        sudo git checkout <VERSION_NUMBER>
+        sudo git checkout 0.0.2
+        
+        sudo git branch 
+            * (HEAD detached at 0.0.2)
+              develop
+              master
+
+#### Encrypted .env
+
+- decrypt .env , use password from passwordmanager
+
+- UPDATE: 
+    echo 'THE_PASSWORD' | sudo gpg --batch --yes --passphrase-fd 0 encrypted.env.gpg
+ 
+- since sudoing this freezes during execution:
+
+         sudo gpg -o .env encrypted.env.gpg
+        gpg: WARNING: unsafe ownership on homedir '/home/cloud/.gnupg'
+        gpg: WARNING: no command supplied.  Trying to guess what you mean ...
+        gpg: AES256 encrypted data
+        ^C
+        gpg: signal Interrupt caught ... exiting
+
+
+- PREVIOUS VERSION:            
+        sudo gpg -o .env encrypted.env.gpg
+
+            gpg: WARNING: unsafe ownership on configuration file `/home/cloud/.gnupg/gpg.conf'
+            gpg: AES256 encrypted data
+            gpg: gpg-agent is not available in this session
+            gpg: encrypted with 1 passphrase
+            File `.env' exists. Overwrite? (y/N) y
+
+### Docker
+
+
+- build docker images (in case requirement have been updated, etc.). may take a few minutes.
+
+        sudo docker-compose -f production.yml build
+
+- apply migrations
+
+        sudo docker-compose -f production.yml run --rm django python manage.py migrate
+
+- copy static files
+
+        sudo docker-compose -f production.yml run --rm django python manage.py collectstatic
+
+- start docker containers via supervisor
+
+        sudo supervisorctl start gfbio_submissions
+        
+        sudo supervisorctl status
+            gfbio_submissions                   RUNNING   pid 26660, uptime 0:05:59
 
 
 
