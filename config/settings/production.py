@@ -11,9 +11,7 @@ Production settings for GFBio Submissions project.
 
 """
 
-
 import logging
-
 
 from .base import *  # noqa
 
@@ -22,7 +20,6 @@ from .base import *  # noqa
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 # Raises ImproperlyConfigured exception if DJANGO_SECRET_KEY not in os.environ
 SECRET_KEY = env('DJANGO_SECRET_KEY')
-
 
 # This ensures that Django will be able to detect a secure connection
 # properly on Heroku.
@@ -35,9 +32,9 @@ INSTALLED_APPS += ['raven.contrib.django.raven_compat', ]
 # See: https://whitenoise.readthedocs.io/
 WHITENOISE_MIDDLEWARE = ['whitenoise.middleware.WhiteNoiseMiddleware', ]
 MIDDLEWARE = WHITENOISE_MIDDLEWARE + MIDDLEWARE
-RAVEN_MIDDLEWARE = ['raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware']
+RAVEN_MIDDLEWARE = [
+    'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware']
 MIDDLEWARE = RAVEN_MIDDLEWARE + MIDDLEWARE
-
 
 # SECURITY CONFIGURATION
 # ------------------------------------------------------------------------------
@@ -62,11 +59,11 @@ X_FRAME_OPTIONS = 'DENY'
 # ------------------------------------------------------------------------------
 # Hosts/domain names that are valid for this site
 # See https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['submissions.gfbio.org', ])
+ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS',
+                         default=['submissions.gfbio.org', ])
 # END SITE CONFIGURATION
 
 INSTALLED_APPS += ['gunicorn', ]
-
 
 # STORAGE CONFIGURATION
 # ------------------------------------------------------------------------------
@@ -97,26 +94,31 @@ AWS_HEADERS = {
 MEDIA_URL = 'https://s3.amazonaws.com/%s/' % AWS_STORAGE_BUCKET_NAME
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
-
 # Static Assets
 # ------------------------
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-
 # EMAIL
 # ------------------------------------------------------------------------------
 DEFAULT_FROM_EMAIL = env('DJANGO_DEFAULT_FROM_EMAIL',
-                         default='GFBio Submissions <noreply@submissions.gfbio.org>')
-EMAIL_SUBJECT_PREFIX = env('DJANGO_EMAIL_SUBJECT_PREFIX', default='[GFBio Submissions]')
+                         default='GFBio Submissions <brokeragent@gfbio.org>')
+EMAIL_SUBJECT_PREFIX = env('DJANGO_EMAIL_SUBJECT_PREFIX',
+                           default='[GFBio Submissions]')
 SERVER_EMAIL = env('DJANGO_SERVER_EMAIL', default=DEFAULT_FROM_EMAIL)
 
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'mail.sd-datasolutions.de'
+EMAIL_HOST_USER = 'gfbio-broker'
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = 587
+
 # Anymail with Mailgun
-INSTALLED_APPS += ['anymail', ]
-ANYMAIL = {
-    'MAILGUN_API_KEY': env('DJANGO_MAILGUN_API_KEY'),
-    'MAILGUN_SENDER_DOMAIN': env('MAILGUN_SENDER_DOMAIN')
-}
-EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
+# INSTALLED_APPS += ['anymail', ]
+# ANYMAIL = {
+#     'MAILGUN_API_KEY': env('DJANGO_MAILGUN_API_KEY'),
+#     'MAILGUN_SENDER_DOMAIN': env('MAILGUN_SENDER_DOMAIN')
+# }
+# EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
 
 # TEMPLATE CONFIGURATION
 # ------------------------------------------------------------------------------
@@ -124,7 +126,8 @@ EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
 # https://docs.djangoproject.com/en/dev/ref/templates/api/#django.template.loaders.cached.Loader
 TEMPLATES[0]['OPTIONS']['loaders'] = [
     ('django.template.loaders.cached.Loader', [
-        'django.template.loaders.filesystem.Loader', 'django.template.loaders.app_directories.Loader', ]),
+        'django.template.loaders.filesystem.Loader',
+        'django.template.loaders.app_directories.Loader', ]),
 ]
 
 # DATABASE CONFIGURATION
@@ -135,10 +138,10 @@ TEMPLATES[0]['OPTIONS']['loaders'] = [
 DATABASES['default'] = env.db('DATABASE_URL')
 DATABASES['default']['CONN_MAX_AGE'] = env.int('CONN_MAX_AGE', default=60)
 
-
 # CACHING
 # ------------------------------------------------------------------------------
-REDIS_LOCATION = '{0}/{1}'.format(env('REDIS_URL', default='redis://127.0.0.1:6379'), 0)
+REDIS_LOCATION = '{0}/{1}'.format(
+    env('REDIS_URL', default='redis://127.0.0.1:6379'), 0)
 
 # Heroku URL does not pass the DB number, so we parse it in
 CACHES = {
@@ -148,15 +151,15 @@ CACHES = {
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
             'IGNORE_EXCEPTIONS': True,  # mimics memcache behavior.
-                                        # http://niwinz.github.io/django-redis/latest/#_memcached_exceptions_behavior
+            # http://niwinz.github.io/django-redis/latest/#_memcached_exceptions_behavior
         }
     }
 }
 
-
 # Sentry Configuration
 SENTRY_DSN = env('DJANGO_SENTRY_DSN')
-SENTRY_CLIENT = env('DJANGO_SENTRY_CLIENT', default='raven.contrib.django.raven_compat.DjangoClient')
+SENTRY_CLIENT = env('DJANGO_SENTRY_CLIENT',
+                    default='raven.contrib.django.raven_compat.DjangoClient')
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
@@ -215,3 +218,14 @@ ADMIN_URL = env('DJANGO_ADMIN_URL')
 
 # Your production stuff: Below this line define 3rd party library settings
 # ------------------------------------------------------------------------------
+
+# TODO: compare CORS_ALLOW_HEADERS, because white_list is not working https://github.com/ottoyiu/django-cors-headers
+CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ORIGIN_WHITELIST = (
+#     'https://gfbio-dev1.inf-bb.uni-jena.de/',  # dev1
+#     'https://gfbio-pub2.inf-bb.uni-jena.de/',  # pub2
+#     'https://www.gfbio.org',  # pub1
+# )
+
+# TODO: this is needed ??
+CORS_ALLOW_CREDENTIALS = True

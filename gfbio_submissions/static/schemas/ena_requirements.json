@@ -1,0 +1,29 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "file:///app/staticfiles/schemas/ena_requirements.json",
+    "type": "object",
+    "properties": {
+        "requirements": {
+            "allOf": [
+                {
+                    "$ref": "common_requirements_definitions.json#/minimal_requirements"
+                },
+                {
+                    "$ref": "ena_study_definitions.json#/study"
+                },
+                {
+                    "$ref": "ena_sample_definitions.json#/sample_array"
+                },
+                {
+                    "$ref": "ena_experiment_definitions.json#/experiment_array"
+                },
+                {
+                    "$ref": "ena_run_definitions.json#/run_array"
+                }
+            ]
+        }
+    },
+    "required": [
+        "requirements"
+    ]
+}

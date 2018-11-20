@@ -9,7 +9,12 @@ https://docs.djangoproject.com/en/dev/ref/settings/
 """
 import environ
 
-ROOT_DIR = environ.Path(__file__) - 3  # (gfbio_submissions/config/settings/base.py - 3 = gfbio_submissions/)
+# VERSION NUMBER
+# ------------------------------------------------------------------------------#
+VERSION = '1.58.2'
+
+ROOT_DIR = environ.Path(
+    __file__) - 3  # (gfbio_submissions/config/settings/base.py - 3 = gfbio_submissions/)
 APPS_DIR = ROOT_DIR.path('gfbio_submissions')
 
 # Load operating system environment variables and then prepare to use them
@@ -49,6 +54,11 @@ THIRD_PARTY_APPS = [
     'allauth',  # registration
     'allauth.account',  # registration
     'allauth.socialaccount',  # registration
+    'allauth.socialaccount.providers.github',  # github
+    'allauth.socialaccount.providers.orcid',  # orcid
+    'rest_framework',  # Django REST framework
+    'rest_framework.authtoken',  # token authentication
+    'corsheaders',  # django cors headers
 ]
 
 # Apps specific for this project go here.
@@ -56,6 +66,8 @@ LOCAL_APPS = [
     # custom users app
     'gfbio_submissions.users.apps.UsersConfig',
     # Your stuff: custom apps go here
+    'gfbio_submissions.brokerage',
+    'gfbio_submissions.submission_ui',
 ]
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -66,6 +78,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -93,7 +106,8 @@ FIXTURE_DIRS = (
 
 # EMAIL CONFIGURATION
 # ------------------------------------------------------------------------------
-EMAIL_BACKEND = env('DJANGO_EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_BACKEND = env('DJANGO_EMAIL_BACKEND',
+                    default='django.core.mail.backends.smtp.EmailBackend')
 
 # MANAGER CONFIGURATION
 # ------------------------------------------------------------------------------
@@ -115,14 +129,13 @@ DATABASES = {
 }
 DATABASES['default']['ATOMIC_REQUESTS'] = True
 
-
 # GENERAL CONFIGURATION
 # ------------------------------------------------------------------------------
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
 # In a Windows environment this must be set to your system time zone.
-TIME_ZONE = 'CEST'
+TIME_ZONE = 'UTC'
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#language-code
 LANGUAGE_CODE = 'en-us'
@@ -282,3 +295,11 @@ ADMIN_URL = r'^admin/'
 
 # Your common stuff: Below this line define 3rd party library settings
 # ------------------------------------------------------------------------------
+
+# TODO: add folders, init git. locally, remote and in env etc..
+########## Access AuditableTextData
+LOCAL_REPOSITORY = env('LOCAL_REPOSITORY',
+                       default='/gfbio-submission-auditing-tests')
+REMOTE_REPOSITORY = env('REMOTE_REPOSITORY',
+                        default='https://maweber@colab.mpi-bremen.de/stash/scm/gfbio/gfbio-submission-auditing-tests.git')
+########## END Access AuditableTextData

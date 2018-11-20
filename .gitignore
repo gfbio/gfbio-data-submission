@@ -73,6 +73,6 @@ stats.json
 .env
 
 # User-uploaded media
-gfbio_services/media/*
+gfbio_submissions/media/*
 
 staticfiles/

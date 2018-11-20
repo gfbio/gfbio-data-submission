@@ -1,0 +1,146 @@
+[
+    {
+        "model": "users.User",
+        "pk": 1,
+        "fields": {
+            "username": "noob",
+            "password": "pbkdf2_sha256$30000$JWYok3oS2xPJ$8vSb7AO48DWEw6SAcsGOw6uMesOZW0fHEdRsXr9mV9Y=",
+            "first_name": "",
+            "last_name": "",
+            "name": "Marc Weber",
+            "is_active": true,
+            "is_staff": true,
+            "is_superuser": true,
+            "user_permissions": [],
+            "email": "maweber@mpi-bremen.de",
+            "date_joined": "2016-04-21T13:06:18.939Z",
+            "last_login": "2016-04-22T10:43:43.374Z",
+            "groups": []
+        }
+    },
+    {
+        "model": "users.User",
+        "pk": 2,
+        "fields": {
+            "username": "test_checker",
+            "password": "pbkdf2_sha256$30000$JWYok3oS2xPJ$8vSb7AO48DWEw6SAcsGOw6uMesOZW0fHEdRsXr9mV9Y=",
+            "first_name": "",
+            "last_name": "",
+            "name": "Marc Weber",
+            "is_active": true,
+            "is_staff": true,
+            "is_superuser": false,
+            "user_permissions": [
+                [
+                    "add_submission",
+                    "brokerage",
+                    "submission"
+                ],
+                [
+                    "change_submission",
+                    "brokerage",
+                    "submission"
+                ],
+                [
+                    "add_submissionfileupload",
+                    "brokerage",
+                    "submissionfileupload"
+                ],
+                [
+                    "add_primarydatafile",
+                    "brokerage",
+                    "primarydatafile"
+                ],
+                [
+                    "change_primarydatafile",
+                    "brokerage",
+                    "primarydatafile"
+                ]
+            ],
+            "email": "maweber@mpi-bremen.de",
+            "date_joined": "2016-04-21T13:06:18.939Z",
+            "last_login": "2016-04-22T10:43:43.374Z",
+            "groups": []
+        }
+    },
+    {
+        "model": "users.User",
+        "pk": 3,
+        "fields": {
+            "username": "horst",
+            "password": "pbkdf2_sha256$30000$JWYok3oS2xPJ$8vSb7AO48DWEw6SAcsGOw6uMesOZW0fHEdRsXr9mV9Y=",
+            "first_name": "",
+            "last_name": "",
+            "name": "Marc Weber",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "user_permissions": [
+                [
+                    "add_submission",
+                    "brokerage",
+                    "submission"
+                ],
+                [
+                    "change_submission",
+                    "brokerage",
+                    "submission"
+                ],
+                [
+                    "delete_submission",
+                    "brokerage",
+                    "submission"
+                ]
+            ],
+            "email": "maweber@mpi-bremen.de",
+            "date_joined": "2016-04-21T13:06:18.939Z",
+            "last_login": "2016-04-22T10:43:43.374Z",
+            "groups": []
+        }
+    },
+    {
+        "model": "users.User",
+        "pk": 4,
+        "fields": {
+            "username": "sonOfNoob",
+            "password": "pbkdf2_sha256$30000$JWYok3oS2xPJ$8vSb7AO48DWEw6SAcsGOw6uMesOZW0fHEdRsXr9mV9Y=",
+            "first_name": "",
+            "last_name": "",
+            "name": "Marc Weber",
+            "is_active": false,
+            "is_staff": false,
+            "is_superuser": false,
+            "user_permissions": [
+                [
+                    "add_submission",
+                    "brokerage",
+                    "submission"
+                ]
+            ],
+            "email": "maweber@mpi-bremen.de",
+            "date_joined": "2016-04-21T13:06:18.939Z",
+            "last_login": "2016-04-22T10:43:43.374Z",
+            "groups": []
+        }
+    },
+    {
+        "model": "users.User",
+        "pk": 5,
+        "fields": {
+            "username": "nobody",
+            "password": "pbkdf2_sha256$30000$JWYok3oS2xPJ$8vSb7AO48DWEw6SAcsGOw6uMesOZW0fHEdRsXr9mV9Y=",
+            "first_name": "",
+            "last_name": "",
+            "name": "Marc Weber",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "user_permissions": [
+            ],
+            "email": "maweber@mpi-bremen.de",
+            "date_joined": "2016-04-21T13:06:18.939Z",
+            "last_login": "2016-04-22T10:43:43.374Z",
+            "groups": []
+        }
+    }
+]
