@@ -368,4 +368,79 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
 
 ### Scripted release
 
+## Move production database
+
+### Commands
+
+#### 141.5.103.171 (genomicsdataservices)
+
+- ssh -l root 141.5.103.171
+- cd /var/www/gds_docker/
+- cd genomicsdataservices/
+- docker-compose run postgres backup
+
+        creating backup
+        ---------------
+        successfully created backup backup_2018_11_20T20_06_53.sql.gz
+
+
+- docker ps
+
+        CONTAINER ID        IMAGE                               COMMAND                  CREATED             STATUS              PORTS                                      NAMES
+        (...)
+        8941e03d0bcd        genomicsdataservices_postgres       "docker-entrypoint..."   4 weeks ago         Up 4 weeks          5432/tcp                                   genomicsdataservices_postgres_1
+        (...)
+
+- docker cp 8941e03d0bcd:/backups/backup_2018_11_20T20_06_53.sql.gz /var/www/gds_docker/backups2/
+
+#### 141.5.106.43 (submissions.gfbio.org)
+
+- ssh -l cloud 141.5.106.43
+- cd /var/www/gfbio_submissions/
+- sudo mkdir _prod_backup
+
+- cd ~
+- pwd
+
+        /home/cloud
+
+- scp root@141.5.103.171:/var/www/gds_docker/backups2/backup_2018_11_20T20_06_53.sql.gz .
+
+        root@141.5.103.171's password: ('real' root password -> passwordmanager)
+
+- sudo mv backup_2018_11_20T20_06_53.sql.gz /var/www/gfbio_submissions/_prod_backup/
+
+##### Restore Backup
+
+- cd /var/www/gfbio_submissions/_prod_backup/
+- ll
+
+        total 8492
+        drwxr-xr-x  2 root  root     4096 Nov 20 21:21 ./
+        drwxr-xr-x 11 root  root     4096 Nov 20 21:16 ../
+        -rw-r--r--  1 cloud cloud 8687504 Nov 20 21:21 backup_2018_11_20T20_06_53.sql.gz
+
+- pwd
+
+        /var/www/gfbio_submissions
+  
+- docker ps
+
+        CONTAINER ID        IMAGE                            COMMAND                  CREATED             STATUS              PORTS                                                NAMES
+        (...)
+        21b155a1cd50        gfbio_submissions_postgres       "docker-entrypoint.s…"   4 days ago          Up 4 days           5432/tcp                                             gfbio_submissions_postgres_1_a68a0cc45263
+        (...)
+
+- docker cp _prod_backup/backup_2018_11_20T20_06_53.sql.gz 21b155a1cd50:/backups/
+- docker-compose -f production.yml run postgres list-backups
+
+        listing available backups
+        -------------------------
+        backup_2018_11_20T11_32_05.sql.gz  backup_2018_11_20T20_06_53.sql.gz
+        backup_2018_11_20T11_47_22.sql.gz  backup_2018_11_20T20_28_44.sql.gz
+        backup_2018_11_20T13_13_43.sql.gz
+
+
+### "The Plan"
+
 
