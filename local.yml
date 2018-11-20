@@ -14,7 +14,7 @@ services:
       - postgres
     volumes:
       - .:/app
-      - django_media:/app/gfbio_services/media
+      - django_media:/app/gfbio_submissions/media
       # git has to be initialized, remote origin has to be set.
       - /home/maweber/devel/git-python-test:/gfbio-submission-auditing-tests
     environment:
