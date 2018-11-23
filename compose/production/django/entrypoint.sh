@@ -15,6 +15,9 @@ cmd="$@"
 # does all this for us.
 export REDIS_URL=redis://redis:6379
 
+# TODO: 23.11.2018: from gds src. I comment this for comparision. Redis should be sufficient as broker.
+# export RABBIT_URL=amqp://$RABBITMQ_DEFAULT_USER:$RABBITMQ_DEFAULT_PASS@rabbit:5672//
+
 # the official postgres image uses 'postgres' as default user if not set explictly.
 if [ -z "$POSTGRES_USER" ]; then
     export POSTGRES_USER=postgres
@@ -23,6 +26,8 @@ fi
 export DATABASE_URL=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:5432/$POSTGRES_USER
 
 export CELERY_BROKER_URL=$REDIS_URL/0
+# TODO: 23.11.2018: from gds src. I comment this for comparision. Redis should be sufficient as broker.
+# export CELERY_BROKER_URL=$RABBIT_URL
 
 
 function postgres_ready(){
