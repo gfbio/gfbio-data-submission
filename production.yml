@@ -14,6 +14,8 @@ services:
     depends_on:
       - postgres
       - redis
+      # TODO: 23.11.2018: from gds src. I comment this for comparision. Redis should be sufficient as broker.
+      # - rabbit
     env_file: .env
     volumes:
       - django_media:/app/gfbio_submissions/media
@@ -46,11 +48,23 @@ services:
   redis:
     image: redis:3.0
 
+  # TODO: 23.11.2018: from gds src. I comment this for comparision. Redis should be sufficient as broker.
+  # https://stackoverflow.com/questions/43264838/celery-when-should-you-choose-redis-as-a-message-broker-over-rabbitmq
+  #  rabbit:
+  #    hostname: rabbit
+  #    image: rabbitmq:latest
+  #    env_file: .env
+  #    #    ports:
+  #    #      - "5672"  # we forward this port because it's useful for debugging
+  #    #      - "15672"  # here, we can access rabbitmq management plugin
+
   celeryworker:
     <<: *django
     depends_on:
-     - postgres
-     - redis
+      - postgres
+      - redis
+      # TODO: 23.11.2018: from gds src. I comment this for comparision. Redis should be sufficient as broker.
+      # - rabbit
     command: /start-celeryworker.sh
 
   celerybeat:
@@ -58,5 +72,7 @@ services:
     depends_on:
       - postgres
       - redis
+      # TODO: 23.11.2018: from gds src. I comment this for comparision. Redis should be sufficient as broker.
+      # - rabbit
     command: /start-celerybeat.sh
 

@@ -8,10 +8,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/dev/ref/settings/
 """
 import environ
+from celery.schedules import crontab
 
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
-VERSION = '1.60.0'
+VERSION = '1.60.1'
 
 ROOT_DIR = environ.Path(
     __file__) - 3  # (gfbio_submissions/config/settings/base.py - 3 = gfbio_submissions/)
@@ -114,6 +115,7 @@ EMAIL_BACKEND = env('DJANGO_EMAIL_BACKEND',
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#admins
 ADMINS = [
     ("""Marc Weber""", 'maweber@mpi-bremen.de'),
+    ("""Ivaylo Kostadinov""", 'ikostadi@mpi-bremen.de'),
 ]
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#managers
@@ -135,7 +137,7 @@ DATABASES['default']['ATOMIC_REQUESTS'] = True
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
 # In a Windows environment this must be set to your system time zone.
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Berlin'
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#language-code
 LANGUAGE_CODE = 'en-us'
@@ -283,10 +285,29 @@ AUTOSLUG_SLUGIFY_FUNCTION = 'slugify.slugify'
 ########## CELERY
 INSTALLED_APPS += ['gfbio_submissions.taskapp.celery.CeleryConfig']
 CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='django://')
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['application/json']
+
+# FROM gds common settings, why ? not in .env of gds
+# CELERY_RESULT_BACKEND = env('REDIS_URL')
+
 if CELERY_BROKER_URL == 'django://':
     CELERY_RESULT_BACKEND = 'redis://'
 else:
     CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+
+# FIXME: add more stable way to retrieve config/resource_credential_id than id or pk
+CELERYBEAT_SCHEDULE = {
+    # Executes every 12 Hours (midnight, 12 PM)
+    'fetch-dois-from-pangaea': {
+        'task': 'tasks.check_for_pangaea_doi_task',
+        'schedule': crontab(minute=0, hour='*/12'),
+        'kwargs': {
+            'resource_credential_id': 6
+        },
+    },
+}
+
 ########## END CELERY
 
 
