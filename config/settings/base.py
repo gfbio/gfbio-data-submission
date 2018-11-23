@@ -8,6 +8,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/dev/ref/settings/
 """
 import environ
+from celery.schedules import crontab
 
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
@@ -284,6 +285,8 @@ AUTOSLUG_SLUGIFY_FUNCTION = 'slugify.slugify'
 ########## CELERY
 INSTALLED_APPS += ['gfbio_submissions.taskapp.celery.CeleryConfig']
 CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='django://')
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['application/json']
 
 # FROM gds common settings, why ? not in .env of gds
 # CELERY_RESULT_BACKEND = env('REDIS_URL')
