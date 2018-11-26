@@ -297,12 +297,12 @@ else:
     CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 
 # FIXME: add more stable way to retrieve config/resource_credential_id than id or pk
+# TODO: follow newer approch: http://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html
 CELERYBEAT_SCHEDULE = {
     # Executes every 12 Hours (midnight, 12 PM)
     'fetch-dois-from-pangaea': {
         'task': 'tasks.check_for_pangaea_doi_task',
-        # 'schedule': crontab(minute=0, hour='*/12'),
-        'schedule': crontab(minute='50,53,56,59'),
+        'schedule': crontab(minute=0, hour='*/12'),
         'kwargs': {
             'resource_credential_id': 6
         },
