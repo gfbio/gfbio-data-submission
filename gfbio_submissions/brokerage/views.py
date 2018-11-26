@@ -58,7 +58,7 @@ class SubmissionsView(mixins.ListModelMixin,
 
         from gfbio_submissions.brokerage.tasks import \
             trigger_submission_transfer
-
+        print("ADD VIEW before trigger ")
         trigger_submission_transfer.apply_async(
             kwargs={
                 'submission_id': submission.pk,

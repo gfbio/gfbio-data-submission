@@ -12,7 +12,7 @@ from celery.schedules import crontab
 
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
-VERSION = '1.60.2'
+VERSION = '1.60.3'
 
 ROOT_DIR = environ.Path(
     __file__) - 3  # (gfbio_submissions/config/settings/base.py - 3 = gfbio_submissions/)
@@ -297,6 +297,7 @@ else:
     CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 
 # FIXME: add more stable way to retrieve config/resource_credential_id than id or pk
+# TODO: follow newer approch: http://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html
 CELERYBEAT_SCHEDULE = {
     # Executes every 12 Hours (midnight, 12 PM)
     'fetch-dois-from-pangaea': {

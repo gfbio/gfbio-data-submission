@@ -66,6 +66,9 @@ services:
       # TODO: 23.11.2018: from gds src. I comment this for comparision. Redis should be sufficient as broker.
       # - rabbit
     command: /start-celeryworker.sh
+    volumes:
+      - django_media:/app/gfbio_submissions/media
+      - /var/www/gfbio-submission-auditing:/gfbio-submission-auditing
 
   celerybeat:
     <<: *django
