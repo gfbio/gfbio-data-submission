@@ -285,8 +285,8 @@ AUTOSLUG_SLUGIFY_FUNCTION = 'slugify.slugify'
 ########## CELERY
 INSTALLED_APPS += ['gfbio_submissions.taskapp.celery.CeleryConfig']
 CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='django://')
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_ACCEPT_CONTENT = ['application/json']
+# CELERY_TASK_SERIALIZER = 'json'
+# CELERY_ACCEPT_CONTENT = ['application/json']
 
 # FROM gds common settings, why ? not in .env of gds
 # CELERY_RESULT_BACKEND = env('REDIS_URL')
@@ -301,7 +301,8 @@ CELERYBEAT_SCHEDULE = {
     # Executes every 12 Hours (midnight, 12 PM)
     'fetch-dois-from-pangaea': {
         'task': 'tasks.check_for_pangaea_doi_task',
-        'schedule': crontab(minute=0, hour='*/12'),
+        # 'schedule': crontab(minute=0, hour='*/12'),
+        'schedule': crontab(minute='50,53,56,59'),
         'kwargs': {
             'resource_credential_id': 6
         },

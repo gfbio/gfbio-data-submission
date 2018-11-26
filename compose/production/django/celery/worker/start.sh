@@ -5,4 +5,4 @@ set -o pipefail
 set -o nounset
 
 
-celery -A gfbio_submissions.taskapp worker -l INFO
+celery -A gfbio_submissions.taskapp worker -l DEBUG

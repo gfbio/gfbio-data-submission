@@ -66,6 +66,7 @@ class SubmissionTask(Task):
 
 @celery.task(name='tasks.trigger_submission_transfer', base=SubmissionTask)
 def trigger_submission_transfer(submission_id=None):
+    print("\trigger_submission_transfer")
     logger.info(
         msg='trigger_submission_transfer. get submission with pk={}.'.format(
             submission_id)
