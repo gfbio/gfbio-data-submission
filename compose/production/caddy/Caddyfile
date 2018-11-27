@@ -1,4 +1,4 @@
-{$DOMAIN_NAME_1}, {$DOMAIN_NAME_2}, {$DOMAIN_NAME_3} {
+{$DOMAIN_NAME_1}, {$DOMAIN_NAME_2} {
     proxy / django:5000 {
         header_upstream Host {host}
         header_upstream X-Real-IP {remote}
