@@ -110,6 +110,20 @@ compare http://cookiecutter-django.readthedocs.io/en/latest/developing-locally-d
         DROP DATABASE
         postgres=# \q
 
+#### access database on production
+
+- access database on production system
+
+        docker exec -it 8923a80dbe17 psql -U gds_docker_db
+
+#### Reset migrations
+
+- follow this: https://simpleisbetterthancomplex.com/tutorial/2016/07/26/how-to-reset-migrations.html
+- BUT: do this locally with local.yaml settings
+- keep in mind that you need to build to copy files to docker (or do it manually)
+- once done: commit and release
+- then build, restart production system using new initial migrations
+- this had to be applied after loading a dump from old GDS to new "submissions" server ...
 
 #### Mail setup
 
