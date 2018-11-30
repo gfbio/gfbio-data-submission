@@ -402,9 +402,13 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
         sudo supervisorctl status
             gfbio_submissions                   RUNNING   pid 26660, uptime 0:05:59
 
+- access database on production system
 
+        docker exec -it 8923a80dbe17 psql -U gds_docker_db
 
 ### Scripted release
+
+
 
 ## Move production database
 

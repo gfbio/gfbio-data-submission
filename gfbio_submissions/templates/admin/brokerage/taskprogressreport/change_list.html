@@ -1,0 +1,9 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls static admin_list %}
+{% block search %}
+    <p>Search by submitting parts, or the whole <b>broker_submission_id</b> or a
+        <b>task_name</b>
+        ...</p>
+    <p></p>
+    {% search_form cl %}
+{% endblock %}

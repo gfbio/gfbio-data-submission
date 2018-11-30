@@ -1453,7 +1453,7 @@ class FullWorkflowTest(TestCase):
                 'Content-Type': 'application/json'}
         )
 
-    @skip('test against GWDG')
+    # @skip('test against GWDG')
     def test_https_post_to_gfbio_submissions_server(self):
         # study = {"study_alias": "study_alias_0", "study_title": "stitle",
         #          "center_name": "cname", "study_abstract": "abstr",
@@ -1567,7 +1567,7 @@ class FullWorkflowTest(TestCase):
         test_data['requirements'].pop('runs')
         pprint.pprint(test_data)
         response = requests.post(
-            url='https://submissions.gfbio.org/api/submissions/',
+            url='https://submission.gfbio.org/api/submissions/',
             # url='https://services.gfbio.org/api/submissions/',
             data=json.dumps(
                 {
@@ -1577,7 +1577,7 @@ class FullWorkflowTest(TestCase):
                 }
             ),
             headers={
-                'Authorization': 'Token 22498708528ffd20dc163d449156bb02a5d8632a',
+                'Authorization': 'Token 0df34a33fc12b18432830ea81aa3af2cab2e532a',
                 # 'Authorization':
                 #    'Token 167ed8501cb0a3e7770f09df6d3e3e14a3489475',
                 'Content-Type': 'application/json'}

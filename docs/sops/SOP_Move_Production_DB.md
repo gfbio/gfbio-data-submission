@@ -73,7 +73,7 @@
             e.g.:
             docker cp 8941e03d0bcd:/backups/backup_2018_11_20T20_06_53.sql.gz /var/www/gds_docker/
             
-            
+            backup_2018_11_28T10_13_31.sql.gz
 1. Load database dump
 
     1. ssh login on other system
