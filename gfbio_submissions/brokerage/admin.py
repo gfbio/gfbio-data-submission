@@ -133,6 +133,7 @@ class AuditableTextDataInlineAdmin(admin.StackedInline):
 
 
 class SubmissionAdmin(admin.ModelAdmin):
+    # form = SubmissionAdminForm
     list_display = ('broker_submission_id',
                     'submitting_user', 'site', 'status',)
     date_hierarchy = 'created'
