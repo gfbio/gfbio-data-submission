@@ -5801,20 +5801,17 @@ class TestHelpDeskTicketMethods(TestCase):
 
     @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
     def test_attach_template_to_helpdesk_ticket(self, mock_requests):
-        sub = Submission.objects.all().first()
         sc = SiteConfiguration.objects.get(pk=1)
-        url = reverse('brokerage:submissions_primary_data', kwargs={
-            'broker_submission_id': sub.broker_submission_id})
-        data = TestPrimaryDataFile._create_test_data(
-            '/tmp/test_primary_data_file')
-        token = Token.objects.create(user=User.objects.get(pk=2))
-
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        response = client.post(url, data, format='multipart')
 
         sub = Submission.objects.all().first()
+        pd = PrimaryDataFile()
+        pd.submission = sub
+        pd.site = sub.site
+        pd.comment = 'lorem ipsum'
+        pd.save(attach=False)
+
         primary_data_files = PrimaryDataFile.objects.all()
+
         request_logs = RequestLog.objects.all()
         self.assertEqual(0, len(request_logs))
         mock_requests.post.return_value.status_code = 200
