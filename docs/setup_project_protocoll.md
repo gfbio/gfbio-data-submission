@@ -115,6 +115,10 @@ compare http://cookiecutter-django.readthedocs.io/en/latest/developing-locally-d
 - access database on production system
 
         docker exec -it 8923a80dbe17 psql -U gds_docker_db
+        
+#### access container as user root
+
+- docker exec -u 0 -it 0fb80266fd74 bash
 
 #### Reset migrations
 
