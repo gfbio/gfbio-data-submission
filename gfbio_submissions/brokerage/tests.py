@@ -1453,7 +1453,7 @@ class FullWorkflowTest(TestCase):
                 'Content-Type': 'application/json'}
         )
 
-    # @skip('test against GWDG')
+    @skip('test against GWDG')
     def test_https_post_to_gfbio_submissions_server(self):
         # study = {"study_alias": "study_alias_0", "study_title": "stitle",
         #          "center_name": "cname", "study_abstract": "abstr",
