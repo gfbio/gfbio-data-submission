@@ -5835,7 +5835,6 @@ class TestHelpDeskTicketMethods(TestCase):
         sub.submitting_user = None
         sub.save()
 
-        print('sub.ssubmitting user ', sub.submitting_user)
         request_logs = RequestLog.objects.all()
         self.assertEqual(0, len(request_logs))
 
@@ -5849,6 +5848,7 @@ class TestHelpDeskTicketMethods(TestCase):
         self.assertEqual(200, response.status_code)
         request_logs = RequestLog.objects.all()
         self.assertEqual(1, len(request_logs))
+        self.assertEqual('', request_logs.first().site_user)
 
 
 class TestTaskProgressReport(TestCase):

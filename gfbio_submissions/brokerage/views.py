@@ -49,7 +49,7 @@ class SubmissionsView(mixins.ListModelMixin,
         with transaction.atomic():
             RequestLog.objects.create(
                 type=RequestLog.INCOMING,
-                site_user=submission.submitting_user,
+                site_user=submission.submitting_user if submission.submitting_user is not None else '',
                 submission_id=submission.broker_submission_id,
                 response_content=submission.data,
                 response_status=201,
