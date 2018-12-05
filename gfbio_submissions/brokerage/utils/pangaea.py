@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 
 import requests
 from django.db import transaction
+from django.utils.encoding import smart_text
 from requests.structures import CaseInsensitiveDict
 
 from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY, \
@@ -293,7 +294,7 @@ def check_for_pangaea_doi(ticket_key, login_token, submission):
         )
     content = None
     try:
-        content = json.loads(response.content)
+        content = json.loads(smart_text(response.content))
     except ValueError as e:
         pass
     if content and PANGAEA_ISSUE_DOI_FIELD_NAME in content.get('fields',
