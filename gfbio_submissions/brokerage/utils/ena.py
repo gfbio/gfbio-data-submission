@@ -637,7 +637,7 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data):
         except RequestLog.DoesNotExist:
             logger.error('No incoming request for submission_id {}'.format(
                 submission.broker_submission_id))
-        site_user = submission.submitting_user if submission.submitting_user is not None else 'site_user_not_available'
+        site_user = submission.submitting_user if submission.submitting_user is not None else '',
         req_log = RequestLog(
             request_id=outgoing_request_id,
             type=RequestLog.OUTGOING,
