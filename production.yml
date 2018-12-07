@@ -50,6 +50,8 @@ services:
 
   redis:
     image: redis:3.0
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
 
   # TODO: 23.11.2018: from gds src. I comment this for comparision. Redis should be sufficient as broker.
   # https://stackoverflow.com/questions/43264838/celery-when-should-you-choose-redis-as-a-message-broker-over-rabbitmq
