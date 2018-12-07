@@ -376,9 +376,13 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
 
 - decrypt .env , use password from passwordmanager
 
+TODO: needs improvements :
 - UPDATE: 
-    echo 'THE_PASSWORD' | sudo gpg --batch --yes --passphrase-fd 0 encrypted.env.gpg
- 
+    
+        echo 'THE_PASSWORD' | sudo gpg --batch --yes --passphrase-fd 0 encrypted.env.gpg
+        rm .env 
+        mv encrypted.env .env
+
 - since sudoing this freezes during execution:
 
          sudo gpg -o .env encrypted.env.gpg
@@ -403,15 +407,15 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
 
 - build docker images (in case requirement have been updated, etc.). may take a few minutes.
 
-        sudo docker-compose -f production.yml build
+        docker-compose -f production.yml build
 
 - apply migrations
 
-        sudo docker-compose -f production.yml run --rm django python manage.py migrate
+        docker-compose -f production.yml run --rm django python manage.py migrate
 
 - copy static files
 
-        sudo docker-compose -f production.yml run --rm django python manage.py collectstatic
+        docker-compose -f production.yml run --rm django python manage.py collectstatic
 
 - start docker containers via supervisor
 
