@@ -13,6 +13,7 @@ services:
     depends_on:
       - postgres
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - .:/app
       - django_media:/app/gfbio_submissions/media
       # git has to be initialized, remote origin has to be set.
@@ -29,6 +30,7 @@ services:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - postgres_data_local:/var/lib/postgresql/data
       - postgres_backup_local:/backups
     environment:
