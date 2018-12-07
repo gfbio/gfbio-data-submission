@@ -18,6 +18,7 @@ services:
       # - rabbit
     env_file: .env
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - django_media:/app/gfbio_submissions/media
       # git has to be initialized, remote origin has to be set.
       - /var/www/gfbio-submission-auditing:/gfbio-submission-auditing
@@ -28,6 +29,7 @@ services:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - postgres_data:/var/lib/postgresql/data
       - postgres_backup:/backups
     env_file: .env
@@ -39,6 +41,7 @@ services:
     depends_on:
       - django
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - caddy:/root/.caddy
     env_file: .env
     ports:
@@ -67,6 +70,7 @@ services:
       # - rabbit
     command: /start-celeryworker.sh
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - django_media:/app/gfbio_submissions/media
       - /var/www/gfbio-submission-auditing:/gfbio-submission-auditing
 

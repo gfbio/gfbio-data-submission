@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 
 import requests
 from django.db import transaction
+from django.utils.encoding import smart_text
 from requests.structures import CaseInsensitiveDict
 
 from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY, \
@@ -169,7 +170,7 @@ def create_pangaea_jira_ticket(login_token, site_configuration, submission):
             type=RequestLog.OUTGOING,
             url=url,
             data=data,
-            site_user=submission.submitting_user,
+            site_user=submission.submitting_user if submission.submitting_user is not None else '',
             submission_id=submission.broker_submission_id,
             response_status=response.status_code,
             response_content=response.content,
@@ -206,7 +207,7 @@ def attach_file_to_pangaea_ticket(login_token, ticket_key, file_name,
             type=RequestLog.OUTGOING,
             url=url,
             data=files,
-            site_user=submission.submitting_user,
+            site_user=submission.submitting_user if submission.submitting_user is not None else '',
             submission_id=submission.broker_submission_id,
             response_status=response.status_code,
             response_content=response.content,
@@ -247,7 +248,7 @@ def comment_on_pangaea_ticket(login_token, ticket_key, comment_body='',
             type=RequestLog.OUTGOING,
             url=url,
             data=data,
-            site_user=submission.submitting_user,
+            site_user=submission.submitting_user if submission.submitting_user is not None else '',
             submission_id=submission.broker_submission_id,
             response_status=response.status_code,
             response_content=response.content,
@@ -281,7 +282,7 @@ def check_for_pangaea_doi(ticket_key, login_token, submission):
             request_id=uuid.uuid4(),
             type=RequestLog.OUTGOING,
             url=url,
-            site_user=submission.submitting_user,
+            site_user=submission.submitting_user if submission.submitting_user is not None else '',
             submission_id=submission.broker_submission_id,
             response_status=response.status_code,
             response_content=response.content,
@@ -293,7 +294,7 @@ def check_for_pangaea_doi(ticket_key, login_token, submission):
         )
     content = None
     try:
-        content = json.loads(response.content)
+        content = json.loads(smart_text(response.content))
     except ValueError as e:
         pass
     if content and PANGAEA_ISSUE_DOI_FIELD_NAME in content.get('fields',

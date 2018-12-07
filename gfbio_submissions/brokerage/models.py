@@ -570,16 +570,17 @@ class PrimaryDataFile(models.Model):
         if no_of_helpdesk_tickets == 0:
             raise self.NoTicketAvailableError
 
-    def save(self, *args, **kwargs):
+    def save(self, attach=True, *args, **kwargs):
         super(PrimaryDataFile, self).save(*args, **kwargs)
-        from .tasks import \
-            attach_file_to_helpdesk_ticket_task
-        attach_file_to_helpdesk_ticket_task.apply_async(
-            kwargs={
-                'submission_id': '{0}'.format(self.submission.pk),
-            },
-            countdown=PRIMARY_DATA_FILE_DELAY
-        )
+        if attach:
+            from .tasks import \
+                attach_file_to_helpdesk_ticket_task
+            attach_file_to_helpdesk_ticket_task.apply_async(
+                kwargs={
+                    'submission_id': '{0}'.format(self.submission.pk),
+                },
+                countdown=PRIMARY_DATA_FILE_DELAY
+            )
 
 
 class AuditableTextData(models.Model):

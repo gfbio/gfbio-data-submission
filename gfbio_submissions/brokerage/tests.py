@@ -1453,7 +1453,7 @@ class FullWorkflowTest(TestCase):
                 'Content-Type': 'application/json'}
         )
 
-    # @skip('test against GWDG')
+    @skip('test against GWDG')
     def test_https_post_to_gfbio_submissions_server(self):
         # study = {"study_alias": "study_alias_0", "study_title": "stitle",
         #          "center_name": "cname", "study_abstract": "abstr",
@@ -5038,6 +5038,41 @@ class TestCeleryTasks(TestCase):
         self.assertEqual('DOI', pid.pid_type)
         self.assertEqual('doi:10.1594/PANGAEA.786576', pid.pid)
 
+    @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
+    def test_check_for_pangaea_doi_task_success_bytestring(self, mock_requests):
+        access = ResourceCredential()
+        access.username = 'gfbio-broker'
+        access.password = 'xxx'
+        access.url = 'https://ws.pangaea.de/ws/services/PanLogin'
+        access.save()
+
+        persistent_identifiers = PersistentIdentifier.objects.all()
+        self.assertEqual(0, len(persistent_identifiers))
+
+        mock_requests.post.return_value.status_code = 200
+        mock_requests.post.return_value.ok = True
+        mock_requests.post.return_value.content = textwrap.dedent(
+            """<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Body><ns1:loginResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="urn:java:de.pangaea.login.PanLogin"><loginReturn xsi:type="xsd:string">f3d7aca208aaec8954d45bebc2f59ba1522264db</loginReturn></ns1:loginResponse></soapenv:Body></soapenv:Envelope>""")
+
+        mock_requests.get.return_value.status_code = 200
+        mock_requests.get.return_value.ok = True
+        mock_requests.get.return_value.content = b'{"expand":"renderedFields,names,schema,transitions,operations,editmeta,changelog","id":"33002","self":"https://issues.pangaea.de/rest/api/2/issue/33002","key":"PDI-12428","fields":{"issuetype":{"self":"https://issues.pangaea.de/rest/api/2/issuetype/6","id":"6","description":"Submission of data to PANGAEA","iconUrl":"https://issues.pangaea.de/images/icons/issuetypes/newfeature.png","name":"Data Submission","subtask":false},"timespent":null,"timeoriginalestimate":null,"description":null,"project":{"self":"https://issues.pangaea.de/rest/api/2/project/10010","id":"10010","key":"PDI","name":"PANGAEA Data Archiving & Publication","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/projectavatar?avatarId=10011","24x24":"https://issues.pangaea.de/secure/projectavatar?size=small&avatarId=10011","16x16":"https://issues.pangaea.de/secure/projectavatar?size=xsmall&avatarId=10011","32x32":"https://issues.pangaea.de/secure/projectavatar?size=medium&avatarId=10011"}},"aggregatetimespent":null,"resolution":null,"timetracking":{},"attachment":[{"self":"https://issues.pangaea.de/rest/api/2/attachment/53276","id":"53276","filename":"contextual_data.csv","author":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"created":"2016-06-02T10:38:06.000+0000","size":1502,"content":"https://issues.pangaea.de/secure/attachment/53276/contextual_data.csv"}],"aggregatetimeestimate":null,"resolutiondate":null,"workratio":-1,"summary":"Automated request by GFBio BrokerAgent","lastViewed":"2016-06-02T12:06:25.250+0000","watches":{"self":"https://issues.pangaea.de/rest/api/2/issue/PDI-12428/watchers","watchCount":0,"isWatching":false},"creator":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"subtasks":[],"created":"2016-06-02T10:37:50.000+0000","reporter":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"customfield_10120":null,"customfield_10220":null,"aggregateprogress":{"progress":0,"total":0},"priority":{"self":"https://issues.pangaea.de/rest/api/2/priority/3","iconUrl":"https://issues.pangaea.de/images/icons/priorities/major.png","name":"Major","id":"3"},"customfield_10122":null,"customfield_10320":null,"customfield_10002":"gfbio-broker","customfield_10420":null,"customfield_10003":{"self":"https://issues.pangaea.de/rest/api/2/customFieldOption/10000","value":"CC-BY: Creative Commons Attribution 3.0 Unported","id":"10000"},"customfield_10421":null,"customfield_10520":"doi:10.1594/PANGAEA.786576","labels":[],"customfield_10004":null,"timeestimate":null,"aggregatetimeoriginalestimate":null,"progress":{"progress":0,"total":0},"comment":{"startAt":0,"maxResults":1,"total":1,"comments":[{"self":"https://issues.pangaea.de/rest/api/2/issue/33002/comment/77173","id":"77173","author":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"body":"ENA Accession No. of study ERP015860. broker_submission_id: 9cb23074-689e-4058-a9e9-ccba1fe2ab1d. ","updateAuthor":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"created":"2016-06-02T10:38:22.000+0000","updated":"2016-06-02T10:38:22.000+0000"}]},"issuelinks":[],"worklog":{"startAt":0,"maxResults":20,"total":0,"worklogs":[]},"assignee":{"self":"https://issues.pangaea.de/rest/api/2/user?username=jfelden","name":"jfelden","key":"jfelden","emailAddress":"jfelden@marum.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10067","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10067","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10067","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10067"},"displayName":"Janine Felden","active":true,"timeZone":"Europe/Berlin"},"updated":"2016-06-02T12:03:16.000+0000","status":{"self":"https://issues.pangaea.de/rest/api/2/status/1","description":"The issue is open and ready for the assignee to start work on it.","iconUrl":"https://issues.pangaea.de/images/icons/statuses/open.png","name":"Open","id":"1","statusCategory":{"self":"https://issues.pangaea.de/rest/api/2/statuscategory/2","id":2,"key":"new","colorName":"blue-gray","name":"To Do"}}}}'
+
+        result = check_for_pangaea_doi_task.apply_async(
+            kwargs={
+                'resource_credential_id': access.pk
+            }
+        )
+        self.assertTrue(result.successful())
+
+        persistent_identifiers = PersistentIdentifier.objects.all()
+        self.assertEqual(1, len(persistent_identifiers))
+
+        pid = persistent_identifiers.first()
+        self.assertEqual('PAN', pid.archive)
+        self.assertEqual('DOI', pid.pid_type)
+        self.assertEqual('doi:10.1594/PANGAEA.786576', pid.pid)
+
     # ---------------- CHAIN TESTS ---------------------------------------------
 
     @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
@@ -5801,20 +5836,15 @@ class TestHelpDeskTicketMethods(TestCase):
 
     @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
     def test_attach_template_to_helpdesk_ticket(self, mock_requests):
-        sub = Submission.objects.all().first()
         sc = SiteConfiguration.objects.get(pk=1)
-        url = reverse('brokerage:submissions_primary_data', kwargs={
-            'broker_submission_id': sub.broker_submission_id})
-        data = TestPrimaryDataFile._create_test_data(
-            '/tmp/test_primary_data_file')
-        token = Token.objects.create(user=User.objects.get(pk=2))
-
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        response = client.post(url, data, format='multipart')
 
         sub = Submission.objects.all().first()
-        primary_data_files = PrimaryDataFile.objects.all()
+        pd = PrimaryDataFile()
+        pd.submission = sub
+        pd.site = sub.site
+        pd.comment = 'lorem ipsum'
+        pd.save(attach=False)
+
         request_logs = RequestLog.objects.all()
         self.assertEqual(0, len(request_logs))
         mock_requests.post.return_value.status_code = 200
@@ -5827,6 +5857,33 @@ class TestHelpDeskTicketMethods(TestCase):
         self.assertEqual(200, response.status_code)
         request_logs = RequestLog.objects.all()
         self.assertEqual(1, len(request_logs))
+
+    @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
+    def test_attach_template_without_submitting_user(self, mock_requests):
+        sc = SiteConfiguration.objects.get(pk=1)
+        sub = Submission.objects.all().first()
+        pd = PrimaryDataFile()
+        pd.submission = sub
+        pd.site = sub.site
+        pd.comment = 'lorem ipsum'
+        pd.save(attach=False)
+        sub.submitting_user = None
+        sub.save()
+
+        request_logs = RequestLog.objects.all()
+        self.assertEqual(0, len(request_logs))
+
+        mock_requests.post.return_value.status_code = 200
+        mock_requests.post.return_value.ok = True
+        mock_requests.post.return_value.content = '[{"self": "https://helpdesk.gfbio.org/rest/api/2/attachment/10814", "id": "10814", "filename": "test_primary_data_file_TE4k513", "author": { "self": "https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent", "name": "brokeragent", "key": "brokeragent@gfbio.org", "emailAddress": "brokeragent@gfbio.org", "avatarUrls": { "48x48": "https://helpdesk.gfbio.org/secure/useravatar?avatarId=10349", "24x24": "https://helpdesk.gfbio.org/secure/useravatar?size=small&avatarId=10349", "16x16": "https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&avatarId=10349", "32x32": "https://helpdesk.gfbio.org/secure/useravatar?size=medium&avatarId=10349"}, "displayName": "Broker Agent", "active": true, "timeZone": "Europe/Berlin"}, "created": "2017-06-19T09:23:43.000+0000", "size": 8, "content": "https://helpdesk.gfbio.org/secure/attachment/10814/test_primary_data_file_TE4k513"}]'
+        pd = sub.primarydatafile_set.first()
+        response = gfbio_helpdesk_attach_file_to_ticket(sc, 'SAND-959',
+                                                        pd.data_file, sub)
+
+        self.assertEqual(200, response.status_code)
+        request_logs = RequestLog.objects.all()
+        self.assertEqual(1, len(request_logs))
+        self.assertEqual('', request_logs.first().site_user)
 
 
 class TestTaskProgressReport(TestCase):
