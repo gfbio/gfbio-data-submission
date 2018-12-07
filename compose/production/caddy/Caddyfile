@@ -1,16 +1,4 @@
-{$DOMAIN_NAME_1}, {$DOMAIN_NAME_3} {
-    redir / https://www.gfbio.org/data/submit 307
-    # proxy / django:5000 {
-    #     header_upstream Host {host}
-    #     header_upstream X-Real-IP {remote}
-    #     header_upstream X-Forwarded-Proto {scheme}
-    # }
-    log stdout
-    errors stdout
-    gzip
-}
-
-{$DOMAIN_NAME_2} {
+{$DOMAIN_NAME_1}, {$DOMAIN_NAME_2}, {$DOMAIN_NAME_3} {
     proxy / django:5000 {
         header_upstream Host {host}
         header_upstream X-Real-IP {remote}
