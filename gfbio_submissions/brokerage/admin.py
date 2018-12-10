@@ -94,7 +94,7 @@ def download_auditable_text_data(modeladmin, request, queryset):
     for obj in queryset:
         submission = Submission.objects.get(pk=obj.pk)
         temp = tempfile.TemporaryFile()
-        archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
+        archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_STORED)
 
         for a in submission.auditabletextdata_set.all():
             f = tempfile.NamedTemporaryFile(mode='wb')
