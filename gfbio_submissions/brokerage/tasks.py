@@ -12,6 +12,7 @@ from django.db.utils import IntegrityError
 from django.utils.encoding import smart_text
 from requests import ConnectionError, Response
 
+from gfbio_submissions.brokerage.configuration.settings import ENA
 from .configuration.settings import BASE_HOST_NAME, \
     PRIMARY_DATA_FILE_MAX_RETRIES, PRIMARY_DATA_FILE_DELAY, \
     SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY, PANGAEA_ISSUE_VIEW_URL
@@ -681,7 +682,7 @@ def comment_helpdesk_ticket_task(prev_task_result=None, comment_body=None,
         existing_tickets = submission.additionalreference_set.filter(
             Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
         if prev_task_result is True:
-            if target_archive == Submission.ENA:
+            if target_archive == ENA:
                 study_pid = submission.brokerobject_set.filter(type='study'). \
                     first().persistentidentifier_set.filter(
                     pid_type='PRJ').first()

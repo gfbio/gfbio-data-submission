@@ -30,6 +30,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase, APIClient
 
 from config.settings.base import MEDIA_URL
+from gfbio_submissions.brokerage.admin import download_auditable_text_data
 from gfbio_submissions.brokerage.configuration.settings import \
     HELPDESK_API_SUB_URL, HELPDESK_COMMENT_SUB_URL
 from gfbio_submissions.users.models import User
@@ -5647,6 +5648,19 @@ class TestAuditableTextData(TestCase):
         res = AuditableTextData.objects.assemble_ena_submission_data(
             submission=sub2)
         self.assertDictEqual({}, res)
+
+    def test_admin_download(self):
+        sub = FullWorkflowTest._prepare()
+        data = prepare_ena_data(sub)
+        store_ena_data_as_auditable_text_data(sub, data)
+        data = AuditableTextData.objects.filter(submission=sub)
+        print(data)
+
+        response = download_auditable_text_data(
+            None, None,
+            Submission.objects.filter(
+                broker_submission_id=sub.broker_submission_id))
+        self.assertEqual(200, response.status_code)
 
         # def test_serialization(self):
     #     sub = Submission.objects.first()
