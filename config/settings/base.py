@@ -10,6 +10,7 @@ https://docs.djangoproject.com/en/dev/ref/settings/
 import environ
 from celery.schedules import crontab
 
+
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
 VERSION = '1.64.0'
