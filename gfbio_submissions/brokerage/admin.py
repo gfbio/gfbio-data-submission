@@ -5,6 +5,7 @@ from wsgiref.util import FileWrapper
 
 from django.contrib import admin
 from django.http import HttpResponse
+from django.utils.encoding import smart_bytes
 
 from .configuration.settings import SUBMISSION_DELAY
 from .models import PersistentIdentifier, \
@@ -93,20 +94,18 @@ def download_auditable_text_data(modeladmin, request, queryset):
     for obj in queryset:
         submission = Submission.objects.get(pk=obj.pk)
         temp = tempfile.TemporaryFile()
-        archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
+        archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_STORED)
 
         for a in submission.auditabletextdata_set.all():
             f = tempfile.NamedTemporaryFile(mode='wb')
-            f.write('{}'.format(a.text_data))
+            f.write(smart_bytes('{}'.format(a.text_data)))
             f.seek(0)
             archive.write(f.name, '{}'.format(a.name))
-
         archive.close()
         temp.seek(0)
         wrapper = FileWrapper(temp)
         response = HttpResponse(wrapper, content_type='application/zip')
         response['Content-Disposition'] = 'attachment; filename=test.zip'
-        response['Content-Length'] = temp.tell()
         temp.close()
         return response
 
