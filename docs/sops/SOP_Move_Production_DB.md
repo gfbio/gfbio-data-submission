@@ -123,6 +123,41 @@
 1. Check database consistency
 
 1. Release widget version where API root is pointing to "https://submissions.gfbio.org"
+    
+    1. enter git root of ena-widget on local computer
+    
+    1. git flow release start _x.y.z_
+    
+    1. change API_ROOT in app/containers/TemplateSubmission/api.js
+    
+    1. create new build
+        
+            npm run build
+            git add build/
+    
+    1. commit changes 
+                
+            git commit -an
+    
+    1. finish release
+    
+            git flow release finish _x.y.z_
+    
+    1. checkout latest release an copy sources to server
+    
+            git checkout _x.y.z_
+            scp -r build/ IP_OF_SERVER:/var/www/gfbio_submissions/gfbio_submissions/static/ui/molecular_app
+    
+    1. enable widget
+        
+            ssh -l root 141.5.103.171
+            cd /var/www/gds_docker/genomicsdataservices/genomicsdataservices/static/ui
+            ln -s molecular_app molecular
+            cd /var/www/gds_docker/genomicsdataservices
+            supervisorctl stop genomicsdataservices
+            docker-compose build
+            supervisorctl start genomicsdataservices
+            
 
 1. Disable ENA-Widget maintenance message mode
 
