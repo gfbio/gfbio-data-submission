@@ -145,6 +145,65 @@ entered in local shell are available here: logs/localhost.log.txt.
     root@monstermagnet:/var/www/gds_docker/genomicsdataservices# supervisorctl start genomicsdataservices
 
 
+## Update with additional steps needed to complete moving
+
+### copy media files (submission data)
+
+#### 141.5.106.43
+
+    scp root@141.5.103.171:/var/www/gds_docker/media_gds* .
+    
+    sudo mv media_gds_02Dec2018.tar.gz /var/www/
+    
+    cd /var/www/
+    
+    sudo tar -xzvf media_gds_02Dec2018.tar.gz 
+ 
+    sudo mv media/ gds_media/
+ 
+    sudo rm media_gds_02Dec2018.tar.gz
+    
+    sudo chgrp -R docker gds_media/
+   
+    sudo chown -R docker gds_media/ 
+    
+    cd gfbio_submissions/
+    
+    docker cp ../gds_media/ 0fb80266fd74:/app/gfbio_submissions/
+ 
+Login to django docker container as root
+ 
+    docker exec -u 0 -it 0fb80266fd74 bash
+
+In container set all permissions and groups and owners for media/.
+This is only necessary for files and folders copied from the previous 
+system, which are not created by the django instance on the actual server.
+should look like this:
+    
+    drwxr-xr-x 80 django root   4096 Dec 11 13:44 media
+    
+and 
+    
+    (...)
+    drwxr-xr-x  3 django django 12288 Dec  2 22:27 033546d0-6ba5-4769-905f-4cb58ecfc09f
+    (...)
 
 
+### set correct permissions etc for auditing trail
+
+    maweber@makrele:~$ ssh -l cloud 141.5.106.43
+
+    sudo su -
+ 
+    cd /var/www/
+   
+    cd gfbio-submission-auditing/
+   
+    chgrp -R docker .git/
+   
+    cd ..
+   
+    cd gfbio_submissions/
+   
+    docker-compose -f production.yml build
 
