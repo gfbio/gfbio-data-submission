@@ -69,16 +69,16 @@ from .utils.submission_transfer import \
     SubmissionTransferHandler
 
 
-class ResourceCredentialTest(TestCase):
-    fixtures = ('user', 'broker_object', 'submission', 'resource_credential',)
-
-    def test_instance(self):
-        resource_credentiales = ResourceCredential.objects.all()
-        self.assertIsInstance(resource_credentiales[0], ResourceCredential)
-
-    def test_str(self):
-        resource_credential = ResourceCredential.objects.all().first()
-        self.assertEqual('The-Test', resource_credential.__str__())
+# class ResourceCredentialTest(TestCase):
+#     fixtures = ('user', 'broker_object', 'submission', 'resource_credential',)
+#
+#     def test_instance(self):
+#         resource_credentiales = ResourceCredential.objects.all()
+#         self.assertIsInstance(resource_credentiales[0], ResourceCredential)
+#
+#     def test_str(self):
+#         resource_credential = ResourceCredential.objects.all().first()
+#         self.assertEqual('The-Test', resource_credential.__str__())
 
 
 class SiteConfigurationTest(TestCase):
