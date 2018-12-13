@@ -153,32 +153,32 @@ from .utils.submission_transfer import \
 #             self.assertTrue(isinstance(l, str))
 
 
-class TicketLabelTest(TestCase):
-    fixtures = ('user', 'resource_credential', 'site_configuration',)
-
-    def test_instance(self):
-        labels = TicketLabel.objects.all()
-        self.assertEqual(0, len(labels))
-        l = TicketLabel()
-        l.site_configuration = SiteConfiguration.objects.get(pk=1)
-        l.label_type = 'P'
-        l.label = 'Label this !'
-        l.save()
-        labels = TicketLabel.objects.all()
-        self.assertEqual(1, len(labels))
-
-    def test_site_configuration_labels(self):
-        sc = SiteConfiguration.objects.get(pk=1)
-
-        l = TicketLabel()
-        l.site_configuration = sc
-        l.label_type = 'P'
-        l.label = 'Label this !'
-        l.save()
-
-        self.assertEqual(1, len(sc.ticketlabel_set.all()))
-        sc = SiteConfiguration.objects.get(pk=2)
-        self.assertEqual(0, len(sc.ticketlabel_set.all()))
+# class TicketLabelTest(TestCase):
+#     fixtures = ('user', 'resource_credential', 'site_configuration',)
+#
+#     def test_instance(self):
+#         labels = TicketLabel.objects.all()
+#         self.assertEqual(0, len(labels))
+#         l = TicketLabel()
+#         l.site_configuration = SiteConfiguration.objects.get(pk=1)
+#         l.label_type = 'P'
+#         l.label = 'Label this !'
+#         l.save()
+#         labels = TicketLabel.objects.all()
+#         self.assertEqual(1, len(labels))
+#
+#     def test_site_configuration_labels(self):
+#         sc = SiteConfiguration.objects.get(pk=1)
+#
+#         l = TicketLabel()
+#         l.site_configuration = sc
+#         l.label_type = 'P'
+#         l.label = 'Label this !'
+#         l.save()
+#
+#         self.assertEqual(1, len(sc.ticketlabel_set.all()))
+#         sc = SiteConfiguration.objects.get(pk=2)
+#         self.assertEqual(0, len(sc.ticketlabel_set.all()))
 
 
 class BrokerObjectTest(TestCase):
