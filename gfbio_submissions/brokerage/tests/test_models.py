@@ -3,7 +3,7 @@
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.models import ResourceCredential, \
-    SiteConfiguration, TicketLabel
+    SiteConfiguration, TicketLabel, BrokerObject
 from gfbio_submissions.users.models import User
 
 
@@ -177,3 +177,48 @@ class TicketLabelTest(TestCase):
         self.assertEqual(1, len(site_config.ticketlabel_set.all()))
         other_site_config = SiteConfiguration.objects.last()
         self.assertEqual(0, len(other_site_config.ticketlabel_set.all()))
+
+
+class BrokerObjectTest(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        user = User.objects.create(
+            username="user1"
+        )
+        # resource_cred = ResourceCredential.objects.create(
+        #     title='Resource Title',
+        #     url='https://www.example.com',
+        #     authentication_string='letMeIn'
+        # )
+        # site_config = SiteConfiguration.objects.create(
+        #     title='Title',
+        #     site=user,
+        #     ena_server=resource_cred,
+        #     pangaea_server=resource_cred,
+        #     gfbio_server=resource_cred,
+        #     helpdesk_server=resource_cred,
+        #     comment='Comment',
+        # )
+        BrokerObject.objects.create(
+            type='study',
+            site=user,
+            site_project_id='prj001xxx',
+            site_object_id='obj001',
+            data={
+                'center_name': 'GFBIO',
+                'study_type': 'Metagenomics',
+                'study_abstract': 'abstract',
+                'study_title': 'title',
+                'study_alias': 'alias',
+                'site_object_id': 'from_data_01'
+            }
+        )
+
+    def test_instance(self):
+        se = BrokerObject()
+        self.assertTrue(isinstance(se, BrokerObject))
+
+    def test_str(self):
+        broker_object = BrokerObject.objects.first()
+        self.assertEqual('obj001_study', broker_object.__str__())

@@ -253,14 +253,17 @@ class BrokerObjectTest(TestCase):
                     'ena_data_full_no_runs.json'), 'r') as test_data_file:
                 return json.load(test_data_file)
 
+    # done
     def test_instance(self):
         se = BrokerObject()
         self.assertTrue(isinstance(se, BrokerObject))
 
+    # done
     def test_str(self):
         bo = BrokerObject.objects.all().first()
         self.assertEqual('obj001_study', bo.__str__())
 
+    # done - delete
     def test_save(self):
         all_entities = BrokerObject.objects.all()
         self.assertEqual(6, len(all_entities))
@@ -273,6 +276,7 @@ class BrokerObjectTest(TestCase):
         all_entities = BrokerObject.objects.all()
         self.assertEqual(7, len(all_entities))
 
+    # done
     def test_manager_add_entity(self):
         all_entities = BrokerObject.objects.all()
         self.assertEqual(6, len(all_entities))
@@ -297,6 +301,7 @@ class BrokerObjectTest(TestCase):
         self.assertEqual(7, len(all_entities))
         self.assertEqual('study', all_entities.last().type)
 
+    # done
     def test_manager_add_submission_data_std_serializer(self):
         ena_data = self._get_ena_full_data()
         serializer = SubmissionSerializer(
