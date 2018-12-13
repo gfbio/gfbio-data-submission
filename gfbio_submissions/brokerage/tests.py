@@ -81,76 +81,76 @@ from .utils.submission_transfer import \
 #         self.assertEqual('The-Test', resource_credential.__str__())
 
 
-class SiteConfigurationTest(TestCase):
-    fixtures = (
-        'user', 'resource_credential', 'site_configuration', 'ticket_label',)
-
-    def test_create(self):
-        conf = SiteConfiguration.objects.create(
-            title='Title',
-            site=User.objects.get(pk=1),
-            ena_server=ResourceCredential.objects.get(pk=1),
-            pangaea_server=ResourceCredential.objects.get(pk=2),
-            gfbio_server=ResourceCredential.objects.get(pk=1),
-            helpdesk_server=ResourceCredential.objects.get(pk=2),
-            comment='Comment'
-        )
-        self.assertIsInstance(conf, SiteConfiguration)
-        self.assertIsInstance(conf.site, User)
-        self.assertIsInstance(conf.ena_server, ResourceCredential)
-        self.assertIsInstance(conf.pangaea_server, ResourceCredential)
-        self.assertIsInstance(conf.gfbio_server, ResourceCredential)
-        self.assertIsInstance(conf.helpdesk_server, ResourceCredential)
-        self.assertFalse(conf.release_submissions)
-
-    def test_str(self):
-        conf = SiteConfiguration.objects.create(
-            title='Title',
-            site=User.objects.get(pk=1),
-            ena_server=ResourceCredential.objects.get(pk=1),
-            pangaea_server=ResourceCredential.objects.get(pk=2),
-            gfbio_server=ResourceCredential.objects.get(pk=1),
-            helpdesk_server=ResourceCredential.objects.get(pk=2),
-            comment='Comment'
-        )
-        self.assertEqual('Title', conf.__str__())
-
-    def test_fixture(self):
-        conf = SiteConfiguration.objects.get(pk=1)
-        self.assertEqual('fixture1', conf.title)
-
-    def test_get_site_configuration_for_task(self):
-        site_config = SiteConfiguration.objects.get_site_configuration_for_task(
-            site=User.objects.get(pk=1)
-        )
-        self.assertEqual('fixture1', site_config.title)
-        self.assertFalse(site_config.release_submissions)
-
-    # FIXME: add fixture to be imported on fresh db via manage.py
-    def test_get_site_config_without_site(self):
-        site_config = SiteConfiguration.objects.get_site_configuration_for_task(
-            site=None
-        )
-        self.assertEqual('default', site_config.title)
-        self.assertFalse(site_config.release_submissions)
-        self.assertIsNone(site_config.site)
-
-    def test_get_site_config_without_site_or_default(self):
-        site_config = SiteConfiguration.objects.get(pk=2)
-        site_config.delete()
-        with self.assertRaises(SiteConfiguration.DoesNotExist) as exc:
-            site_config = SiteConfiguration.objects.get_site_configuration_for_task(
-                site=None
-            )
-
-    def test_get_ticket_labels(self):
-        site_config = SiteConfiguration.objects.get(pk=1)
-        labels = site_config.get_ticket_labels(
-            label_type=TicketLabel.PANGAEA_JIRA)
-        self.assertEqual(2, len(labels))
-        self.assertTrue(isinstance(labels, list))
-        for l in labels:
-            self.assertTrue(isinstance(l, str))
+# class SiteConfigurationTest(TestCase):
+#     fixtures = (
+#         'user', 'resource_credential', 'site_configuration', 'ticket_label',)
+#
+#     def test_create(self):
+#         conf = SiteConfiguration.objects.create(
+#             title='Title',
+#             site=User.objects.get(pk=1),
+#             ena_server=ResourceCredential.objects.get(pk=1),
+#             pangaea_server=ResourceCredential.objects.get(pk=2),
+#             gfbio_server=ResourceCredential.objects.get(pk=1),
+#             helpdesk_server=ResourceCredential.objects.get(pk=2),
+#             comment='Comment'
+#         )
+#         self.assertIsInstance(conf, SiteConfiguration)
+#         self.assertIsInstance(conf.site, User)
+#         self.assertIsInstance(conf.ena_server, ResourceCredential)
+#         self.assertIsInstance(conf.pangaea_server, ResourceCredential)
+#         self.assertIsInstance(conf.gfbio_server, ResourceCredential)
+#         self.assertIsInstance(conf.helpdesk_server, ResourceCredential)
+#         self.assertFalse(conf.release_submissions)
+#
+#     def test_str(self):
+#         conf = SiteConfiguration.objects.create(
+#             title='Title',
+#             site=User.objects.get(pk=1),
+#             ena_server=ResourceCredential.objects.get(pk=1),
+#             pangaea_server=ResourceCredential.objects.get(pk=2),
+#             gfbio_server=ResourceCredential.objects.get(pk=1),
+#             helpdesk_server=ResourceCredential.objects.get(pk=2),
+#             comment='Comment'
+#         )
+#         self.assertEqual('Title', conf.__str__())
+#
+#     def test_fixture(self):
+#         conf = SiteConfiguration.objects.get(pk=1)
+#         self.assertEqual('fixture1', conf.title)
+#
+#     def test_get_site_configuration_for_task(self):
+#         site_config = SiteConfiguration.objects.get_site_configuration_for_task(
+#             site=User.objects.get(pk=1)
+#         )
+#         self.assertEqual('fixture1', site_config.title)
+#         self.assertFalse(site_config.release_submissions)
+#
+#     # FIXME: add fixture to be imported on fresh db via manage.py
+#     def test_get_site_config_without_site(self):
+#         site_config = SiteConfiguration.objects.get_site_configuration_for_task(
+#             site=None
+#         )
+#         self.assertEqual('default', site_config.title)
+#         self.assertFalse(site_config.release_submissions)
+#         self.assertIsNone(site_config.site)
+#
+#     def test_get_site_config_without_site_or_default(self):
+#         site_config = SiteConfiguration.objects.get(pk=2)
+#         site_config.delete()
+#         with self.assertRaises(SiteConfiguration.DoesNotExist) as exc:
+#             site_config = SiteConfiguration.objects.get_site_configuration_for_task(
+#                 site=None
+#             )
+#
+#     def test_get_ticket_labels(self):
+#         site_config = SiteConfiguration.objects.get(pk=1)
+#         labels = site_config.get_ticket_labels(
+#             label_type=TicketLabel.PANGAEA_JIRA)
+#         self.assertEqual(2, len(labels))
+#         self.assertTrue(isinstance(labels, list))
+#         for l in labels:
+#             self.assertTrue(isinstance(l, str))
 
 
 class TicketLabelTest(TestCase):
