@@ -459,6 +459,7 @@ class BrokerObjectTest(TestCase):
         broker_objects = BrokerObject.objects.all()
         self.assertEqual(6, len(broker_objects))
 
+    # done
     def test_manager_add_submission_data_detail_serializer(self):
         serializer = SubmissionDetailSerializer(
             data={
@@ -488,6 +489,7 @@ class BrokerObjectTest(TestCase):
         self.assertEqual(1, len(
             BrokerObject.objects.filter(site_project_id='').filter(type='run')))
 
+    # done
     def test_add_submission_data_detail_serializer_min_validation_full_data(
             self):
         broker_objects = BrokerObject.objects.all()
@@ -506,6 +508,7 @@ class BrokerObjectTest(TestCase):
         broker_objects = BrokerObject.objects.all()
         self.assertEqual(6, len(broker_objects))
 
+    # done
     def test_add_submission_data_detail_serializer_min_validation_min_data(
             self):
         broker_objects = BrokerObject.objects.all()
@@ -529,6 +532,7 @@ class BrokerObjectTest(TestCase):
         broker_objects = BrokerObject.objects.all()
         self.assertEqual(6, len(broker_objects))
 
+    # done
     def test_manager_add_submission_data_without_ids(self):
         serializer = SubmissionSerializer(data={
             'target': 'ENA',
@@ -547,6 +551,7 @@ class BrokerObjectTest(TestCase):
         for b in broker_objects:
             self.assertEqual('{}_{}'.format(b.site, b.pk), b.site_object_id)
 
+    # done
     def test_manager_double_add_submission_data_without_ids(self):
         serializer = SubmissionSerializer(data={
             'target': 'ENA',
@@ -572,6 +577,7 @@ class BrokerObjectTest(TestCase):
             site_project_id='')))
         broker_objects = BrokerObject.objects.filter(site_project_id='')
 
+    # done
     def test_manager_add_submission_data_invalid_aliases(self):
         data = copy.deepcopy(TestAddSubmissionView.new_data)
         data['requirements']['experiments'][0]['design'][

@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
+import copy
 import json
 import os
 
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.models import Submission, BrokerObject
-from gfbio_submissions.brokerage.serializers import SubmissionSerializer
+from gfbio_submissions.brokerage.serializers import SubmissionSerializer, \
+    SubmissionDetailSerializer
 from gfbio_submissions.users.models import User
 
 
@@ -141,7 +143,7 @@ class TestBrokerObjectManager(TestCase):
         broker_objects = BrokerObject.objects.all()
         self.assertEqual(0, len(broker_objects))
 
-    def test_add_submission_data_min_validation_min_data(self):
+    def test_add_submission_min_validation_min_data(self):
         serializer = SubmissionSerializer(
             data={
                 'target': 'ENA',
@@ -160,3 +162,123 @@ class TestBrokerObjectManager(TestCase):
         BrokerObject.objects.add_submission_data(submission)
         broker_objects = BrokerObject.objects.all()
         self.assertEqual(0, len(broker_objects))
+
+    def test_add_submission_detail_serializer(self):
+        data = self._get_ena_data(simple=True)
+        serializer = SubmissionDetailSerializer(
+            data={
+                'target': 'ENA',
+                'release': True,
+                'data': data
+            }
+        )
+        self.assertTrue(serializer.is_valid())
+        submission = serializer.save(site=User.objects.first())
+        BrokerObject.objects.add_submission_data(submission)
+
+        broker_objects = BrokerObject.objects.all()
+        self.assertEqual(5, len(broker_objects))
+        self.assertEqual(5,
+                         len(BrokerObject.objects.filter(site_project_id='')))
+        self.assertEqual(1, len(
+            BrokerObject.objects.filter(site_project_id='').filter(
+                type='study')))
+        self.assertEqual(2, len(
+            BrokerObject.objects.filter(site_project_id='').filter(
+                type='sample')))
+        self.assertEqual(1, len(
+            BrokerObject.objects.filter(site_project_id='').filter(
+                type='experiment')))
+        self.assertEqual(1, len(
+            BrokerObject.objects.filter(site_project_id='').filter(type='run')))
+
+    def test_add_submission_detail_serializer_min_validation_full_data(self):
+        data = self._get_ena_data(simple=True)
+        serializer = SubmissionDetailSerializer(
+            data={
+                'target': 'ENA',
+                'release': False,
+                'data': data
+            }
+        )
+        self.assertTrue(serializer.is_valid())
+        submission = serializer.save(site=User.objects.first())
+        BrokerObject.objects.add_submission_data(submission)
+        broker_objects = BrokerObject.objects.all()
+        self.assertEqual(0, len(broker_objects))
+
+    def test_add_submission_detail_serializer_min_validation_min_data(self):
+        serializer = SubmissionDetailSerializer(
+            data={
+                'target': 'ENA',
+                'release': False,
+                'data': {
+                    'requirements': {
+                        'title': 'A Title',
+                        'description': 'A Description'
+                    }
+                }
+            }
+        )
+        self.assertTrue(serializer.is_valid())
+        submission = serializer.save(site=User.objects.first())
+        BrokerObject.objects.add_submission_data(submission)
+        broker_objects = BrokerObject.objects.all()
+        self.assertEqual(0, len(broker_objects))
+
+    def test_manager_add_submission_without_ids(self):
+        data = self._get_ena_data(simple=True)
+        serializer = SubmissionSerializer(data={
+            'target': 'ENA',
+            'release': True,
+            'data': data
+        })
+        serializer.is_valid()
+        submission = serializer.save(site=User.objects.first())
+        BrokerObject.objects.add_submission_data(submission)
+        broker_objects = BrokerObject.objects.all()
+        self.assertEqual(5, len(broker_objects))
+        self.assertEqual(5, len(BrokerObject.objects.filter(
+            site_project_id='')))
+        broker_objects = BrokerObject.objects.filter(site_project_id='')
+        for b in broker_objects:
+            self.assertEqual('{}_{}'.format(b.site, b.pk), b.site_object_id)
+
+    def test_manager_double_add_submission_without_ids(self):
+        data = self._get_ena_data(simple=True)
+        serializer = SubmissionSerializer(data={
+            'target': 'ENA',
+            'release': True,
+            'data': data
+        })
+        serializer.is_valid()
+        submission = serializer.save(site=User.objects.first())
+
+        BrokerObject.objects.add_submission_data(submission)
+        broker_objects = BrokerObject.objects.all()
+        self.assertEqual(5, len(broker_objects))
+        self.assertEqual(5, len(BrokerObject.objects.filter(
+            site_project_id='')))
+
+        BrokerObject.objects.add_submission_data(submission)
+        broker_objects = BrokerObject.objects.all()
+        self.assertEqual(5, len(broker_objects))
+        self.assertEqual(5, len(BrokerObject.objects.filter(
+            site_project_id='')))
+
+    def test_manager_add_submission_data_invalid_aliases(self):
+        data = self._get_ena_data(simple=True)
+        data['requirements']['experiments'][0]['design'][
+            'sample_descriptor'] = 'xxx'
+
+        serializer = SubmissionSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+
+        data['requirements']['experiments'][0]['study_ref'] = 'xxx'
+        serializer = SubmissionSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+
+        data['requirements']['runs'][0]['experiment_ref'] = 'xxx'
+        serializer = SubmissionSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+
