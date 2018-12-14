@@ -331,6 +331,7 @@ class BrokerObjectTest(TestCase):
         self.assertEqual(5, len(
             BrokerObject.objects.filter(site_project_id='').filter(type='run')))
 
+    # done
     def test_manager_double_add_submission_data_std_serializer(self):
         ena_data = self._get_ena_full_data()
         serializer = SubmissionSerializer(
@@ -356,6 +357,7 @@ class BrokerObjectTest(TestCase):
         self.assertEqual(16,
                          len(BrokerObject.objects.filter(site_project_id='')))
 
+    # omit - redundant
     def test_manager_add_submission_data_std_serializer_including_run_block(
             self):
         ena_data = self._get_ena_full_data(runs=True)
@@ -387,6 +389,7 @@ class BrokerObjectTest(TestCase):
         self.assertEqual(6, len(
             BrokerObject.objects.filter(site_project_id='').filter(type='run')))
 
+    # omit - redundant
     def test_manager_double_add_submission_data_std_serializer_including_run_block(
             self):
         ena_data = self._get_ena_full_data(runs=True)
@@ -415,6 +418,7 @@ class BrokerObjectTest(TestCase):
         self.assertEqual(17,
                          len(BrokerObject.objects.filter(site_project_id='')))
 
+    # done
     def test_add_submission_data_min_validation_full_data(self):
         broker_objects = BrokerObject.objects.all()
         self.assertEqual(6, len(broker_objects))
@@ -432,6 +436,7 @@ class BrokerObjectTest(TestCase):
         broker_objects = BrokerObject.objects.all()
         self.assertEqual(6, len(broker_objects))
 
+    # done
     def test_add_submission_data_min_validation_min_data(self):
         broker_objects = BrokerObject.objects.all()
         self.assertEqual(6, len(broker_objects))

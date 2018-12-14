@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-import pprint
 
 from django.test import TestCase
 
@@ -33,7 +32,13 @@ class TestBrokerObjectManager(TestCase):
             os.getcwd(), os.sep, )
 
     @classmethod
-    def _get_ena_data(cls):
+    def _get_ena_data(cls, simple=False):
+        if simple:
+            with open(os.path.join(
+                    cls._get_test_data_dir_path(),
+                    'ena_data.json'), 'r') as data_file:
+                return json.load(data_file)
+
         with open(os.path.join(
                 cls._get_test_data_dir_path(),
                 'ena_data_runs.json'), 'r') as data_file:
@@ -99,3 +104,59 @@ class TestBrokerObjectManager(TestCase):
             len(BrokerObject.objects.filter(
                 site_project_id='').filter(type='run'))
         )
+
+    def test_double_add_submission_std_serializer(self):
+        data = self._get_ena_data()
+        serializer = SubmissionSerializer(
+            data={
+                'target': 'ENA',
+                'release': True,
+                'data': data
+            }
+        )
+        serializer.is_valid()
+        submission = serializer.save(site=User.objects.first())
+
+        BrokerObject.objects.add_submission_data(submission)
+        broker_objects = BrokerObject.objects.all()
+        self.assertEqual(17, len(broker_objects))
+
+        BrokerObject.objects.add_submission_data(submission)
+        broker_objects = BrokerObject.objects.all()
+        self.assertEqual(17, len(broker_objects))
+
+    def test_add_submission_min_validation_full_data(self):
+        data = self._get_ena_data(simple=True)
+        serializer = SubmissionSerializer(
+            data={
+                'target': 'ENA',
+                'release': False,
+                'data': data
+            }
+        )
+        self.assertTrue(serializer.is_valid())
+        submission = serializer.save(site=User.objects.first())
+        self.assertEqual('OPEN', submission.status)
+        BrokerObject.objects.add_submission_data(submission)
+        broker_objects = BrokerObject.objects.all()
+        self.assertEqual(0, len(broker_objects))
+
+    def test_add_submission_data_min_validation_min_data(self):
+        serializer = SubmissionSerializer(
+            data={
+                'target': 'ENA',
+                'release': False,
+                'data': {
+                    'requirements': {
+                        'title': 'A Title',
+                        'description': 'A Description'
+                    }
+                }
+            }
+        )
+        self.assertTrue(serializer.is_valid())
+        submission = serializer.save(site=User.objects.first())
+        self.assertEqual('OPEN', submission.status)
+        BrokerObject.objects.add_submission_data(submission)
+        broker_objects = BrokerObject.objects.all()
+        self.assertEqual(0, len(broker_objects))
