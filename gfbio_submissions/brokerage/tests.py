@@ -9,7 +9,7 @@ import pprint
 import textwrap
 import uuid
 import xml
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict
 from json import JSONDecodeError
 from unittest import skip
 from urllib.parse import urlparse
@@ -21,7 +21,6 @@ import responses
 from celery import chain
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.utils.encoding import smart_text
 from mock import patch
@@ -39,10 +38,9 @@ from .configuration.settings import PANGAEA_ISSUE_BASE_URL, \
 from .models import Submission, \
     ResourceCredential, BrokerObject, RequestLog, PersistentIdentifier, \
     SiteConfiguration, AdditionalReference, TaskProgressReport, \
-    TicketLabel, SubmissionFileUpload, PrimaryDataFile, AuditableTextData, \
+    SubmissionFileUpload, PrimaryDataFile, AuditableTextData, \
     CenterName
-from .serializers import SubmissionSerializer, \
-    SubmissionDetailSerializer
+from .serializers import SubmissionSerializer
 from .tasks import create_helpdesk_ticket_task, \
     create_broker_objects_from_submission_data_task, \
     transfer_data_to_ena_task, process_ena_response_task, \
@@ -181,614 +179,614 @@ from .utils.submission_transfer import \
 #         self.assertEqual(0, len(sc.ticketlabel_set.all()))
 
 
-class BrokerObjectTest(TestCase):
-    fixtures = ('user', 'broker_object', 'submission', 'resource_credential')
-
-    @classmethod
-    def _get_broker_object_test_data(cls):
-        return {
-            'requirements': {
-                'title': '123456',
-                'description': '123456',
-                'study_type': 'Metagenomics',
-                'samples': [
-                    {
-                        'sample_alias': 'sample1',
-                        'sample_title': 'stitle',
-                        'taxon_id': 1234
-                    },
-                    {
-                        'sample_alias': 'sample2',
-                        'sample_title': 'stitleagain',
-                        'taxon_id': 1234
-                    }
-                ],
-                "experiments": [
-                    {
-                        'experiment_alias': 'experiment1',
-                        'platform': 'AB 3730xL Genetic Analyzer',
-                        'design': {
-                            'sample_descriptor': 'sample2',
-                            'design_description': '',
-                            'library_descriptor': {
-                                'library_strategy': 'AMPLICON',
-                                'library_source': 'METAGENOMIC',
-                                'library_selection': 'PCR',
-                                'library_layout': {
-                                    'layout_type': 'paired',
-                                    'nominal_length': 450
-                                }
-                            }
-                        }
-                    }
-                ],
-                'runs': [
-                    {
-                        'experiment_ref': 'experiment1',
-                        'data_block': {
-                            'files': [
-                                {
-                                    'filename': 'aFile',
-                                    'filetype': 'fastq',
-                                    'checksum_method': 'MD5',
-                                    'checksum': '12345'
-                                }
-                            ]
-                        }
-                    }
-                ]
-            }
-        }
-
-    @classmethod
-    def _get_ena_full_data(cls, runs=False):
-        if runs:
-            with open(os.path.join(
-                    'gfbio_submissions/brokerage/test_data/',
-                    'ena_data_full_with_runs.json'), 'r') as test_data_file:
-                return json.load(test_data_file)
-        else:
-            with open(os.path.join(
-                    'gfbio_submissions/brokerage/test_data/',
-                    'ena_data_full_no_runs.json'), 'r') as test_data_file:
-                return json.load(test_data_file)
-
-    # done
-    def test_instance(self):
-        se = BrokerObject()
-        self.assertTrue(isinstance(se, BrokerObject))
-
-    # done
-    def test_str(self):
-        bo = BrokerObject.objects.all().first()
-        self.assertEqual('obj001_study', bo.__str__())
-
-    # done - delete
-    def test_save(self):
-        all_entities = BrokerObject.objects.all()
-        self.assertEqual(6, len(all_entities))
-        se = BrokerObject()
-        se.type = 'study'
-        se.site = User.objects.get(pk=1)
-        se.site_project_id = 'prj00001'
-        se.site_object_id = 'obj0000122'
-        se.save()
-        all_entities = BrokerObject.objects.all()
-        self.assertEqual(7, len(all_entities))
-
-    # done
-    def test_manager_add_entity(self):
-        all_entities = BrokerObject.objects.all()
-        self.assertEqual(6, len(all_entities))
-
-        BrokerObject.objects.add_entity(
-            Submission.objects.get(pk=1),
-            'study',
-            User.objects.get(pk=1),
-            'prj0002',
-            'obj00099999',
-            {
-                "center_name": "c",
-                "study_type": "Metagenomics",
-                "study_abstract": "abs",
-                "study_title": "t",
-                "study_alias": "a",
-                "site_object_id": "study_obj_1"
-            }
-        )
-
-        all_entities = BrokerObject.objects.all()
-        self.assertEqual(7, len(all_entities))
-        self.assertEqual('study', all_entities.last().type)
-
-    # done
-    def test_manager_add_submission_data_std_serializer(self):
-        ena_data = self._get_ena_full_data()
-        serializer = SubmissionSerializer(
-            data={
-                'target': 'ENA',
-                'release': True,
-                'data': ena_data
-            }
-        )
-        self.assertTrue(serializer.is_valid())
-        submission = serializer.save(site=User.objects.get(pk=1))
-        BrokerObject.objects.add_submission_data(submission)
-
-        broker_objects = BrokerObject.objects.all()
-        self.assertEqual(22, len(broker_objects))
-        self.assertEqual(16,
-                         len(BrokerObject.objects.filter(site_project_id='')))
-        self.assertEqual(1, len(
-            BrokerObject.objects.filter(site_project_id='').filter(
-                type='study')))
-        self.assertEqual(5, len(
-            BrokerObject.objects.filter(site_project_id='').filter(
-                type='sample')))
-        self.assertEqual(5, len(
-            BrokerObject.objects.filter(site_project_id='').filter(
-                type='experiment')))
-        self.assertEqual(5, len(
-            BrokerObject.objects.filter(site_project_id='').filter(type='run')))
-
-    # done
-    def test_manager_double_add_submission_data_std_serializer(self):
-        ena_data = self._get_ena_full_data()
-        serializer = SubmissionSerializer(
-            data={
-                'target': 'ENA',
-                'release': True,
-                'data': ena_data
-            }
-        )
-        self.assertTrue(serializer.is_valid())
-        submission = serializer.save(site=User.objects.get(pk=1))
-        BrokerObject.objects.add_submission_data(submission)
-
-        broker_objects = BrokerObject.objects.all()
-        self.assertEqual(22, len(broker_objects))
-        self.assertEqual(16,
-                         len(BrokerObject.objects.filter(site_project_id='')))
-
-        BrokerObject.objects.add_submission_data(submission)
-
-        broker_objects = BrokerObject.objects.all()
-        self.assertEqual(22, len(broker_objects))
-        self.assertEqual(16,
-                         len(BrokerObject.objects.filter(site_project_id='')))
-
-    # omit - redundant
-    def test_manager_add_submission_data_std_serializer_including_run_block(
-            self):
-        ena_data = self._get_ena_full_data(runs=True)
-        serializer = SubmissionSerializer(
-            data={
-                'target': 'ENA',
-                'release': True,
-                'data': ena_data
-            }
-        )
-        self.assertTrue(serializer.is_valid())
-        submission = serializer.save(site=User.objects.get(pk=1))
-        BrokerObject.objects.add_submission_data(submission)
-
-        broker_objects = BrokerObject.objects.all()
-        # 19 directly, plus 4 experiements tha contain 2 files each, resulting in 4 more run objects (with 2 files in data_block)
-        self.assertEqual(23, len(broker_objects))
-        self.assertEqual(17,
-                         len(BrokerObject.objects.filter(site_project_id='')))
-        self.assertEqual(1, len(
-            BrokerObject.objects.filter(site_project_id='').filter(
-                type='study')))
-        self.assertEqual(5, len(
-            BrokerObject.objects.filter(site_project_id='').filter(
-                type='sample')))
-        self.assertEqual(5, len(
-            BrokerObject.objects.filter(site_project_id='').filter(
-                type='experiment')))
-        self.assertEqual(6, len(
-            BrokerObject.objects.filter(site_project_id='').filter(type='run')))
-
-    # omit - redundant
-    def test_manager_double_add_submission_data_std_serializer_including_run_block(
-            self):
-        ena_data = self._get_ena_full_data(runs=True)
-        serializer = SubmissionSerializer(
-            data={
-                'target': 'ENA',
-                'release': True,
-                'data': ena_data
-            }
-        )
-        self.assertTrue(serializer.is_valid())
-        submission = serializer.save(site=User.objects.get(pk=1))
-        BrokerObject.objects.add_submission_data(submission)
-
-        broker_objects = BrokerObject.objects.all()
-        # 19 directly, plus 4 experiements tha contain 2 files each, resulting in 4 more run objects (with 2 files in data_block)
-        self.assertEqual(23, len(broker_objects))
-        self.assertEqual(17,
-                         len(BrokerObject.objects.filter(site_project_id='')))
-
-        BrokerObject.objects.add_submission_data(submission)
-
-        broker_objects = BrokerObject.objects.all()
-        # 19 directly, plus 4 experiements tha contain 2 files each, resulting in 4 more run objects (with 2 files in data_block)
-        self.assertEqual(23, len(broker_objects))
-        self.assertEqual(17,
-                         len(BrokerObject.objects.filter(site_project_id='')))
-
-    # done
-    def test_add_submission_data_min_validation_full_data(self):
-        broker_objects = BrokerObject.objects.all()
-        self.assertEqual(6, len(broker_objects))
-
-        serializer = SubmissionSerializer(
-            data={
-                'target': 'ENA',
-                'release': False,
-                'data': TestAddSubmissionView.new_data
-            }
-        )
-        self.assertTrue(serializer.is_valid())
-        submission = serializer.save(site=User.objects.get(pk=1))
-        BrokerObject.objects.add_submission_data(submission)
-        broker_objects = BrokerObject.objects.all()
-        self.assertEqual(6, len(broker_objects))
-
-    # done
-    def test_add_submission_data_min_validation_min_data(self):
-        broker_objects = BrokerObject.objects.all()
-        self.assertEqual(6, len(broker_objects))
-
-        serializer = SubmissionSerializer(
-            data={
-                'target': 'ENA',
-                'release': False,
-                'data': {
-                    'requirements': {
-                        'title': 'A Title',
-                        'description': 'A Description'
-                    }
-                }
-            }
-        )
-        self.assertTrue(serializer.is_valid())
-        submission = serializer.save(site=User.objects.get(pk=1))
-        BrokerObject.objects.add_submission_data(submission)
-        broker_objects = BrokerObject.objects.all()
-        self.assertEqual(6, len(broker_objects))
-
-    # done
-    def test_manager_add_submission_data_detail_serializer(self):
-        serializer = SubmissionDetailSerializer(
-            data={
-                'target': 'ENA',
-                'release': True,
-                'data': TestAddSubmissionView.new_data
-            }
-        )
-        serializer.is_valid()
-        self.assertTrue(serializer.is_valid())
-        submission = serializer.save(site=User.objects.get(pk=1))
-        BrokerObject.objects.add_submission_data(submission)
-
-        broker_objects = BrokerObject.objects.all()
-        self.assertEqual(11, len(broker_objects))
-        self.assertEqual(5,
-                         len(BrokerObject.objects.filter(site_project_id='')))
-        self.assertEqual(1, len(
-            BrokerObject.objects.filter(site_project_id='').filter(
-                type='study')))
-        self.assertEqual(2, len(
-            BrokerObject.objects.filter(site_project_id='').filter(
-                type='sample')))
-        self.assertEqual(1, len(
-            BrokerObject.objects.filter(site_project_id='').filter(
-                type='experiment')))
-        self.assertEqual(1, len(
-            BrokerObject.objects.filter(site_project_id='').filter(type='run')))
-
-    # done
-    def test_add_submission_data_detail_serializer_min_validation_full_data(
-            self):
-        broker_objects = BrokerObject.objects.all()
-        self.assertEqual(6, len(broker_objects))
-
-        serializer = SubmissionDetailSerializer(
-            data={
-                'target': 'ENA',
-                'release': False,
-                'data': TestAddSubmissionView.new_data
-            }
-        )
-        self.assertTrue(serializer.is_valid())
-        submission = serializer.save(site=User.objects.get(pk=1))
-        BrokerObject.objects.add_submission_data(submission)
-        broker_objects = BrokerObject.objects.all()
-        self.assertEqual(6, len(broker_objects))
-
-    # done
-    def test_add_submission_data_detail_serializer_min_validation_min_data(
-            self):
-        broker_objects = BrokerObject.objects.all()
-        self.assertEqual(6, len(broker_objects))
-
-        serializer = SubmissionDetailSerializer(
-            data={
-                'target': 'ENA',
-                'release': False,
-                'data': {
-                    'requirements': {
-                        'title': 'A Title',
-                        'description': 'A Description'
-                    }
-                }
-            }
-        )
-        self.assertTrue(serializer.is_valid())
-        submission = serializer.save(site=User.objects.get(pk=1))
-        BrokerObject.objects.add_submission_data(submission)
-        broker_objects = BrokerObject.objects.all()
-        self.assertEqual(6, len(broker_objects))
-
-    # done
-    def test_manager_add_submission_data_without_ids(self):
-        serializer = SubmissionSerializer(data={
-            'target': 'ENA',
-            'release': True,
-            'data': self._get_broker_object_test_data()
-        })
-        serializer.is_valid()
-        submission = serializer.save(site=User.objects.get(pk=1))
-        BrokerObject.objects.add_submission_data(submission)
-        broker_objects = BrokerObject.objects.all()
-        self.assertEqual(11, len(broker_objects))
-        self.assertEqual(5, len(BrokerObject.objects.filter(
-            site_project_id='')))
-        broker_objects = BrokerObject.objects.filter(site_project_id='')
-
-        for b in broker_objects:
-            self.assertEqual('{}_{}'.format(b.site, b.pk), b.site_object_id)
-
-    # done
-    def test_manager_double_add_submission_data_without_ids(self):
-        serializer = SubmissionSerializer(data={
-            'target': 'ENA',
-            'release': True,
-            'data': self._get_broker_object_test_data()
-        })
-        serializer.is_valid()
-        submission = serializer.save(site=User.objects.get(pk=1))
-
-        BrokerObject.objects.add_submission_data(submission)
-        broker_objects = BrokerObject.objects.all()
-        self.assertEqual(11, len(broker_objects))
-        self.assertEqual(5, len(BrokerObject.objects.filter(
-            site_project_id='')))
-        broker_objects = BrokerObject.objects.filter(site_project_id='')
-        for b in broker_objects:
-            self.assertEqual('{}_{}'.format(b.site, b.pk), b.site_object_id)
-
-        BrokerObject.objects.add_submission_data(submission)
-        broker_objects = BrokerObject.objects.all()
-        self.assertEqual(11, len(broker_objects))
-        self.assertEqual(5, len(BrokerObject.objects.filter(
-            site_project_id='')))
-        broker_objects = BrokerObject.objects.filter(site_project_id='')
-
-    # done
-    def test_manager_add_submission_data_invalid_aliases(self):
-        data = copy.deepcopy(TestAddSubmissionView.new_data)
-        data['requirements']['experiments'][0]['design'][
-            'sample_descriptor'] = 'xxx'
-
-        serializer = SubmissionSerializer(data=data)
-        self.assertFalse(serializer.is_valid())
-
-        data['requirements']['experiments'][0]['study_ref'] = 'xxx'
-        serializer = SubmissionSerializer(data=data)
-        self.assertFalse(serializer.is_valid())
-
-        data['requirements']['runs'][0]['experiment_ref'] = 'xxx'
-        serializer = SubmissionSerializer(data=data)
-        self.assertFalse(serializer.is_valid())
-
-    # done
-    def test_double_add_empty_site_object_id(self):
-        all_entities = BrokerObject.objects.all()
-        self.assertEqual(6, len(all_entities))
-        obj = BrokerObject.objects.add_entity(
-            Submission.objects.get(pk=1),
-            'study',
-            User.objects.get(pk=1),
-            'prj0002',
-            '',
-            {
-                "center_name": "no_valid_center",
-                "study_type": "Metagenomics",
-                "study_abstract": "abs",
-                "study_title": "t",
-                "study_alias": "a",
-                "site_object_id": "study_obj_1"
-            }
-        )
-        all_entities = BrokerObject.objects.all()
-        self.assertEqual(7, len(all_entities))
-        BrokerObject.objects.add_entity(
-            Submission.objects.get(pk=1),
-            'study',
-            User.objects.get(pk=1),
-            'prj0002',
-            obj.site_object_id,
-            {
-                "center_name": "nice_valid_center",
-                "study_type": "Metagenomics",
-                "study_abstract": "abs",
-                "study_title": "t",
-                "study_alias": "a",
-                "site_object_id": "study_obj_1"
-            }
-        )
-        all_entities = BrokerObject.objects.all()
-        self.assertEqual(7, len(all_entities))
-
-    # done
-    def test_double_add_same_site_object_id(self):
-        obj = BrokerObject.objects.add_entity(
-            Submission.objects.get(pk=1),
-            'study',
-            User.objects.get(pk=1),
-            'prj0002',
-            'obj00099999',
-            {
-                "center_name": "no_valid_center",
-                "study_type": "Metagenomics",
-                "study_abstract": "abs",
-                "study_title": "t",
-                "study_alias": "a",
-                "site_object_id": "study_obj_1"
-            }
-        )
-        all_entities = BrokerObject.objects.all()
-        self.assertEqual(7, len(all_entities))
-        obj = BrokerObject.objects.add_entity(
-            Submission.objects.get(pk=1),
-            'study',
-            User.objects.get(pk=1),
-            'prj0002',
-            'obj00099999',
-            {
-                "center_name": "nice_valid_center",
-                "study_type": "Metagenomics",
-                "study_abstract": "abs",
-                "study_title": "t",
-                "study_alias": "a",
-                "site_object_id": "study_obj_1"
-            }
-        )
-        all_entities = BrokerObject.objects.all()
-        self.assertEqual(7, len(all_entities))
-
-    # omit -delete
-    @skip('right now there is no natural-key and unique constraint available')
-    def test_unique_natural_keys(self):
-        se = BrokerObject()
-        se.type = 'study'
-        se.site = User.objects.get(pk=1)
-        se.site_project_id = 'prj00001'
-        se.site_object_id = 'obj0000122'
-        se.save()
-        all_entities = BrokerObject.objects.all()
-        self.assertEqual(6, len(all_entities))
-
-        se2 = BrokerObject()
-        se2.type = 'study'
-        se2.site = User.objects.get(pk=1)
-        se2.site_project_id = 'prj00001'
-        se2.site_object_id = 'obj0000122'
-        with self.assertRaises(IntegrityError) as exc:
-            se2.save()
-
-    # omit delete
-    @skip('right now there is no natural-key and unique constraint available')
-    def test_get_by_natural_key(self):
-        se = BrokerObject()
-        se.type = 'study'
-        se.site = User.objects.get(pk=1)
-        se.site_project_id = 'prj00001'
-        se.site_object_id = 'obj0000122'
-        se.save()
-
-        se = BrokerObject()
-        se.type = 'study'
-        se.site = User.objects.get(pk=1)
-        se.site_project_id = 'prj00001'
-        se.site_object_id = 'obj0000123'
-        se.save()
-
-        obj = BrokerObject.objects.get_by_natural_key(
-            type='study',
-            site=User.objects.get(pk=1),
-            site_project_id='prj00001',
-            site_object_id='obj0000123'
-        )
-
-        self.assertEqual(se.id, obj.pk)
-
-    def test_append_persistent_identifier(self):
-        bo = BrokerObject.objects.all().first()
-        self.assertEqual(0, len(bo.persistentidentifier_set.all()))
-        study = {
-            'accession': 'ERP013438',
-            'alias': '1:f844738b-3304-4db7-858d-b7e47b293bb2',
-            'holdUntilDate': '2016-03-05Z',
-            'status': 'PRIVATE'
-        }
-        obj = BrokerObject.objects.append_persistent_identifier(
-            study, 'ENA', 'ACC')
-        self.assertEqual(1, len(bo.persistentidentifier_set.all()))
-
-    def test_append_pid_with_corrupt_alias(self):
-        bo = BrokerObject.objects.all().first()
-        self.assertEqual(0, len(bo.persistentidentifier_set.all()))
-        study = {
-            'accession': 'ERP013438',
-            'alias': '666:f844738b-3304-4db7-858d-b7e47b293bb2',
-            'holdUntilDate': '2016-03-05Z',
-            'status': 'PRIVATE'
-        }
-        obj = BrokerObject.objects.append_persistent_identifier(
-            study, 'ENA', 'ACC')
-        self.assertIsNone(obj)
-        self.assertEqual(0, len(bo.persistentidentifier_set.all()))
-
-    def test_append_pids_from_ena_response(self):
-        parsed = {'errors': [],
-                  'experiments': [{'accession': 'ERX1228437',
-                                   'alias': '4:f844738b-3304-4db7-858d-b7e47b293bb2',
-                                   'status': 'PRIVATE'}],
-                  'infos': [
-                      'ADD action for the following XML: study.xml sample.xml            experiment.xml run.xml'],
-                  'receipt_date': '2015-12-01T11:54:55.723Z',
-                  'runs': [{'accession': 'ERR1149402',
-                            'alias': '5:f844738b-3304-4db7-858d-b7e47b293bb2',
-                            'status': 'PRIVATE'}],
-                  'samples': [{'accession': 'ERS989691',
-                               'alias': '2:f844738b-3304-4db7-858d-b7e47b293bb2',
-                               'ext_ids': [{'accession': 'SAMEA3682542',
-                                            'type': 'biosample'},
-                                           {'accession': 'SAMEA3682543-666',
-                                            'type': 'sample-this'}],
-                               'status': 'PRIVATE'},
-                              {'accession': 'ERS989692',
-                               'alias': '3:f844738b-3304-4db7-858d-b7e47b293bb2',
-                               'ext_ids': [{'accession': 'SAMEA3682543',
-                                            'type': 'biosample'}],
-                               'status': 'PRIVATE'}],
-                  'study': {'accession': 'ERP013438',
-                            'alias': '1:f844738b-3304-4db7-858d-b7e47b293bb2',
-                            'holdUntilDate': '2016-03-05Z',
-                            'status': 'PRIVATE'},
-                  'success': 'true'}
-        objs = BrokerObject.objects.append_pids_from_ena_response(parsed)
-        self.assertEqual(8, len(objs))
-        d = defaultdict(int)
-        for o in objs:
-            d[o.pid_type] += 1
-        self.assertEqual(5, d['ACC'])
-        self.assertEqual(3, d['BSA'])
-
-    def test_add_pids_from_submitted_run_files(self):
-        study = BrokerObject.objects.filter(type='study').first()
-        self.assertEqual(0, len(study.persistentidentifier_set.all()))
-        with open(os.path.join(
-                'gfbio_submissions/brokerage/test_data/',
-                'short_submitted_run_files.txt'), 'r') as test_data_file:
-            res = BrokerObject.objects.add_downloaded_pids_to_existing_broker_objects(
-                study_pid='ERP019479', decompressed_file=test_data_file)
-        study = BrokerObject.objects.filter(type='study').first()
-        self.assertEqual(1, len(study.persistentidentifier_set.all()))
+# class BrokerObjectTest(TestCase):
+#     fixtures = ('user', 'broker_object', 'submission', 'resource_credential')
+#
+#     @classmethod
+#     def _get_broker_object_test_data(cls):
+#         return {
+#             'requirements': {
+#                 'title': '123456',
+#                 'description': '123456',
+#                 'study_type': 'Metagenomics',
+#                 'samples': [
+#                     {
+#                         'sample_alias': 'sample1',
+#                         'sample_title': 'stitle',
+#                         'taxon_id': 1234
+#                     },
+#                     {
+#                         'sample_alias': 'sample2',
+#                         'sample_title': 'stitleagain',
+#                         'taxon_id': 1234
+#                     }
+#                 ],
+#                 "experiments": [
+#                     {
+#                         'experiment_alias': 'experiment1',
+#                         'platform': 'AB 3730xL Genetic Analyzer',
+#                         'design': {
+#                             'sample_descriptor': 'sample2',
+#                             'design_description': '',
+#                             'library_descriptor': {
+#                                 'library_strategy': 'AMPLICON',
+#                                 'library_source': 'METAGENOMIC',
+#                                 'library_selection': 'PCR',
+#                                 'library_layout': {
+#                                     'layout_type': 'paired',
+#                                     'nominal_length': 450
+#                                 }
+#                             }
+#                         }
+#                     }
+#                 ],
+#                 'runs': [
+#                     {
+#                         'experiment_ref': 'experiment1',
+#                         'data_block': {
+#                             'files': [
+#                                 {
+#                                     'filename': 'aFile',
+#                                     'filetype': 'fastq',
+#                                     'checksum_method': 'MD5',
+#                                     'checksum': '12345'
+#                                 }
+#                             ]
+#                         }
+#                     }
+#                 ]
+#             }
+#         }
+#
+#     @classmethod
+#     def _get_ena_full_data(cls, runs=False):
+#         if runs:
+#             with open(os.path.join(
+#                     'gfbio_submissions/brokerage/test_data/',
+#                     'ena_data_full_with_runs.json'), 'r') as test_data_file:
+#                 return json.load(test_data_file)
+#         else:
+#             with open(os.path.join(
+#                     'gfbio_submissions/brokerage/test_data/',
+#                     'ena_data_full_no_runs.json'), 'r') as test_data_file:
+#                 return json.load(test_data_file)
+#
+#     # done
+#     def test_instance(self):
+#         se = BrokerObject()
+#         self.assertTrue(isinstance(se, BrokerObject))
+#
+#     # done
+#     def test_str(self):
+#         bo = BrokerObject.objects.all().first()
+#         self.assertEqual('obj001_study', bo.__str__())
+#
+#     # done - delete
+#     def test_save(self):
+#         all_entities = BrokerObject.objects.all()
+#         self.assertEqual(6, len(all_entities))
+#         se = BrokerObject()
+#         se.type = 'study'
+#         se.site = User.objects.get(pk=1)
+#         se.site_project_id = 'prj00001'
+#         se.site_object_id = 'obj0000122'
+#         se.save()
+#         all_entities = BrokerObject.objects.all()
+#         self.assertEqual(7, len(all_entities))
+#
+#     # done
+#     def test_manager_add_entity(self):
+#         all_entities = BrokerObject.objects.all()
+#         self.assertEqual(6, len(all_entities))
+#
+#         BrokerObject.objects.add_entity(
+#             Submission.objects.get(pk=1),
+#             'study',
+#             User.objects.get(pk=1),
+#             'prj0002',
+#             'obj00099999',
+#             {
+#                 "center_name": "c",
+#                 "study_type": "Metagenomics",
+#                 "study_abstract": "abs",
+#                 "study_title": "t",
+#                 "study_alias": "a",
+#                 "site_object_id": "study_obj_1"
+#             }
+#         )
+#
+#         all_entities = BrokerObject.objects.all()
+#         self.assertEqual(7, len(all_entities))
+#         self.assertEqual('study', all_entities.last().type)
+#
+#     # done
+#     def test_manager_add_submission_data_std_serializer(self):
+#         ena_data = self._get_ena_full_data()
+#         serializer = SubmissionSerializer(
+#             data={
+#                 'target': 'ENA',
+#                 'release': True,
+#                 'data': ena_data
+#             }
+#         )
+#         self.assertTrue(serializer.is_valid())
+#         submission = serializer.save(site=User.objects.get(pk=1))
+#         BrokerObject.objects.add_submission_data(submission)
+#
+#         broker_objects = BrokerObject.objects.all()
+#         self.assertEqual(22, len(broker_objects))
+#         self.assertEqual(16,
+#                          len(BrokerObject.objects.filter(site_project_id='')))
+#         self.assertEqual(1, len(
+#             BrokerObject.objects.filter(site_project_id='').filter(
+#                 type='study')))
+#         self.assertEqual(5, len(
+#             BrokerObject.objects.filter(site_project_id='').filter(
+#                 type='sample')))
+#         self.assertEqual(5, len(
+#             BrokerObject.objects.filter(site_project_id='').filter(
+#                 type='experiment')))
+#         self.assertEqual(5, len(
+#             BrokerObject.objects.filter(site_project_id='').filter(type='run')))
+#
+#     # done
+#     def test_manager_double_add_submission_data_std_serializer(self):
+#         ena_data = self._get_ena_full_data()
+#         serializer = SubmissionSerializer(
+#             data={
+#                 'target': 'ENA',
+#                 'release': True,
+#                 'data': ena_data
+#             }
+#         )
+#         self.assertTrue(serializer.is_valid())
+#         submission = serializer.save(site=User.objects.get(pk=1))
+#         BrokerObject.objects.add_submission_data(submission)
+#
+#         broker_objects = BrokerObject.objects.all()
+#         self.assertEqual(22, len(broker_objects))
+#         self.assertEqual(16,
+#                          len(BrokerObject.objects.filter(site_project_id='')))
+#
+#         BrokerObject.objects.add_submission_data(submission)
+#
+#         broker_objects = BrokerObject.objects.all()
+#         self.assertEqual(22, len(broker_objects))
+#         self.assertEqual(16,
+#                          len(BrokerObject.objects.filter(site_project_id='')))
+#
+#     # omit - redundant
+#     def test_manager_add_submission_data_std_serializer_including_run_block(
+#             self):
+#         ena_data = self._get_ena_full_data(runs=True)
+#         serializer = SubmissionSerializer(
+#             data={
+#                 'target': 'ENA',
+#                 'release': True,
+#                 'data': ena_data
+#             }
+#         )
+#         self.assertTrue(serializer.is_valid())
+#         submission = serializer.save(site=User.objects.get(pk=1))
+#         BrokerObject.objects.add_submission_data(submission)
+#
+#         broker_objects = BrokerObject.objects.all()
+#         # 19 directly, plus 4 experiements tha contain 2 files each, resulting in 4 more run objects (with 2 files in data_block)
+#         self.assertEqual(23, len(broker_objects))
+#         self.assertEqual(17,
+#                          len(BrokerObject.objects.filter(site_project_id='')))
+#         self.assertEqual(1, len(
+#             BrokerObject.objects.filter(site_project_id='').filter(
+#                 type='study')))
+#         self.assertEqual(5, len(
+#             BrokerObject.objects.filter(site_project_id='').filter(
+#                 type='sample')))
+#         self.assertEqual(5, len(
+#             BrokerObject.objects.filter(site_project_id='').filter(
+#                 type='experiment')))
+#         self.assertEqual(6, len(
+#             BrokerObject.objects.filter(site_project_id='').filter(type='run')))
+#
+#     # omit - redundant
+#     def test_manager_double_add_submission_data_std_serializer_including_run_block(
+#             self):
+#         ena_data = self._get_ena_full_data(runs=True)
+#         serializer = SubmissionSerializer(
+#             data={
+#                 'target': 'ENA',
+#                 'release': True,
+#                 'data': ena_data
+#             }
+#         )
+#         self.assertTrue(serializer.is_valid())
+#         submission = serializer.save(site=User.objects.get(pk=1))
+#         BrokerObject.objects.add_submission_data(submission)
+#
+#         broker_objects = BrokerObject.objects.all()
+#         # 19 directly, plus 4 experiements tha contain 2 files each, resulting in 4 more run objects (with 2 files in data_block)
+#         self.assertEqual(23, len(broker_objects))
+#         self.assertEqual(17,
+#                          len(BrokerObject.objects.filter(site_project_id='')))
+#
+#         BrokerObject.objects.add_submission_data(submission)
+#
+#         broker_objects = BrokerObject.objects.all()
+#         # 19 directly, plus 4 experiements tha contain 2 files each, resulting in 4 more run objects (with 2 files in data_block)
+#         self.assertEqual(23, len(broker_objects))
+#         self.assertEqual(17,
+#                          len(BrokerObject.objects.filter(site_project_id='')))
+#
+#     # done
+#     def test_add_submission_data_min_validation_full_data(self):
+#         broker_objects = BrokerObject.objects.all()
+#         self.assertEqual(6, len(broker_objects))
+#
+#         serializer = SubmissionSerializer(
+#             data={
+#                 'target': 'ENA',
+#                 'release': False,
+#                 'data': TestAddSubmissionView.new_data
+#             }
+#         )
+#         self.assertTrue(serializer.is_valid())
+#         submission = serializer.save(site=User.objects.get(pk=1))
+#         BrokerObject.objects.add_submission_data(submission)
+#         broker_objects = BrokerObject.objects.all()
+#         self.assertEqual(6, len(broker_objects))
+#
+#     # done
+#     def test_add_submission_data_min_validation_min_data(self):
+#         broker_objects = BrokerObject.objects.all()
+#         self.assertEqual(6, len(broker_objects))
+#
+#         serializer = SubmissionSerializer(
+#             data={
+#                 'target': 'ENA',
+#                 'release': False,
+#                 'data': {
+#                     'requirements': {
+#                         'title': 'A Title',
+#                         'description': 'A Description'
+#                     }
+#                 }
+#             }
+#         )
+#         self.assertTrue(serializer.is_valid())
+#         submission = serializer.save(site=User.objects.get(pk=1))
+#         BrokerObject.objects.add_submission_data(submission)
+#         broker_objects = BrokerObject.objects.all()
+#         self.assertEqual(6, len(broker_objects))
+#
+#     # done
+#     def test_manager_add_submission_data_detail_serializer(self):
+#         serializer = SubmissionDetailSerializer(
+#             data={
+#                 'target': 'ENA',
+#                 'release': True,
+#                 'data': TestAddSubmissionView.new_data
+#             }
+#         )
+#         serializer.is_valid()
+#         self.assertTrue(serializer.is_valid())
+#         submission = serializer.save(site=User.objects.get(pk=1))
+#         BrokerObject.objects.add_submission_data(submission)
+#
+#         broker_objects = BrokerObject.objects.all()
+#         self.assertEqual(11, len(broker_objects))
+#         self.assertEqual(5,
+#                          len(BrokerObject.objects.filter(site_project_id='')))
+#         self.assertEqual(1, len(
+#             BrokerObject.objects.filter(site_project_id='').filter(
+#                 type='study')))
+#         self.assertEqual(2, len(
+#             BrokerObject.objects.filter(site_project_id='').filter(
+#                 type='sample')))
+#         self.assertEqual(1, len(
+#             BrokerObject.objects.filter(site_project_id='').filter(
+#                 type='experiment')))
+#         self.assertEqual(1, len(
+#             BrokerObject.objects.filter(site_project_id='').filter(type='run')))
+#
+#     # done
+#     def test_add_submission_data_detail_serializer_min_validation_full_data(
+#             self):
+#         broker_objects = BrokerObject.objects.all()
+#         self.assertEqual(6, len(broker_objects))
+#
+#         serializer = SubmissionDetailSerializer(
+#             data={
+#                 'target': 'ENA',
+#                 'release': False,
+#                 'data': TestAddSubmissionView.new_data
+#             }
+#         )
+#         self.assertTrue(serializer.is_valid())
+#         submission = serializer.save(site=User.objects.get(pk=1))
+#         BrokerObject.objects.add_submission_data(submission)
+#         broker_objects = BrokerObject.objects.all()
+#         self.assertEqual(6, len(broker_objects))
+#
+#     # done
+#     def test_add_submission_data_detail_serializer_min_validation_min_data(
+#             self):
+#         broker_objects = BrokerObject.objects.all()
+#         self.assertEqual(6, len(broker_objects))
+#
+#         serializer = SubmissionDetailSerializer(
+#             data={
+#                 'target': 'ENA',
+#                 'release': False,
+#                 'data': {
+#                     'requirements': {
+#                         'title': 'A Title',
+#                         'description': 'A Description'
+#                     }
+#                 }
+#             }
+#         )
+#         self.assertTrue(serializer.is_valid())
+#         submission = serializer.save(site=User.objects.get(pk=1))
+#         BrokerObject.objects.add_submission_data(submission)
+#         broker_objects = BrokerObject.objects.all()
+#         self.assertEqual(6, len(broker_objects))
+#
+#     # done
+#     def test_manager_add_submission_data_without_ids(self):
+#         serializer = SubmissionSerializer(data={
+#             'target': 'ENA',
+#             'release': True,
+#             'data': self._get_broker_object_test_data()
+#         })
+#         serializer.is_valid()
+#         submission = serializer.save(site=User.objects.get(pk=1))
+#         BrokerObject.objects.add_submission_data(submission)
+#         broker_objects = BrokerObject.objects.all()
+#         self.assertEqual(11, len(broker_objects))
+#         self.assertEqual(5, len(BrokerObject.objects.filter(
+#             site_project_id='')))
+#         broker_objects = BrokerObject.objects.filter(site_project_id='')
+#
+#         for b in broker_objects:
+#             self.assertEqual('{}_{}'.format(b.site, b.pk), b.site_object_id)
+#
+#     # done
+#     def test_manager_double_add_submission_data_without_ids(self):
+#         serializer = SubmissionSerializer(data={
+#             'target': 'ENA',
+#             'release': True,
+#             'data': self._get_broker_object_test_data()
+#         })
+#         serializer.is_valid()
+#         submission = serializer.save(site=User.objects.get(pk=1))
+#
+#         BrokerObject.objects.add_submission_data(submission)
+#         broker_objects = BrokerObject.objects.all()
+#         self.assertEqual(11, len(broker_objects))
+#         self.assertEqual(5, len(BrokerObject.objects.filter(
+#             site_project_id='')))
+#         broker_objects = BrokerObject.objects.filter(site_project_id='')
+#         for b in broker_objects:
+#             self.assertEqual('{}_{}'.format(b.site, b.pk), b.site_object_id)
+#
+#         BrokerObject.objects.add_submission_data(submission)
+#         broker_objects = BrokerObject.objects.all()
+#         self.assertEqual(11, len(broker_objects))
+#         self.assertEqual(5, len(BrokerObject.objects.filter(
+#             site_project_id='')))
+#         broker_objects = BrokerObject.objects.filter(site_project_id='')
+#
+#     # done
+#     def test_manager_add_submission_data_invalid_aliases(self):
+#         data = copy.deepcopy(TestAddSubmissionView.new_data)
+#         data['requirements']['experiments'][0]['design'][
+#             'sample_descriptor'] = 'xxx'
+#
+#         serializer = SubmissionSerializer(data=data)
+#         self.assertFalse(serializer.is_valid())
+#
+#         data['requirements']['experiments'][0]['study_ref'] = 'xxx'
+#         serializer = SubmissionSerializer(data=data)
+#         self.assertFalse(serializer.is_valid())
+#
+#         data['requirements']['runs'][0]['experiment_ref'] = 'xxx'
+#         serializer = SubmissionSerializer(data=data)
+#         self.assertFalse(serializer.is_valid())
+#
+#     # done
+#     def test_double_add_empty_site_object_id(self):
+#         all_entities = BrokerObject.objects.all()
+#         self.assertEqual(6, len(all_entities))
+#         obj = BrokerObject.objects.add_entity(
+#             Submission.objects.get(pk=1),
+#             'study',
+#             User.objects.get(pk=1),
+#             'prj0002',
+#             '',
+#             {
+#                 "center_name": "no_valid_center",
+#                 "study_type": "Metagenomics",
+#                 "study_abstract": "abs",
+#                 "study_title": "t",
+#                 "study_alias": "a",
+#                 "site_object_id": "study_obj_1"
+#             }
+#         )
+#         all_entities = BrokerObject.objects.all()
+#         self.assertEqual(7, len(all_entities))
+#         BrokerObject.objects.add_entity(
+#             Submission.objects.get(pk=1),
+#             'study',
+#             User.objects.get(pk=1),
+#             'prj0002',
+#             obj.site_object_id,
+#             {
+#                 "center_name": "nice_valid_center",
+#                 "study_type": "Metagenomics",
+#                 "study_abstract": "abs",
+#                 "study_title": "t",
+#                 "study_alias": "a",
+#                 "site_object_id": "study_obj_1"
+#             }
+#         )
+#         all_entities = BrokerObject.objects.all()
+#         self.assertEqual(7, len(all_entities))
+#
+#     # done
+#     def test_double_add_same_site_object_id(self):
+#         obj = BrokerObject.objects.add_entity(
+#             Submission.objects.get(pk=1),
+#             'study',
+#             User.objects.get(pk=1),
+#             'prj0002',
+#             'obj00099999',
+#             {
+#                 "center_name": "no_valid_center",
+#                 "study_type": "Metagenomics",
+#                 "study_abstract": "abs",
+#                 "study_title": "t",
+#                 "study_alias": "a",
+#                 "site_object_id": "study_obj_1"
+#             }
+#         )
+#         all_entities = BrokerObject.objects.all()
+#         self.assertEqual(7, len(all_entities))
+#         obj = BrokerObject.objects.add_entity(
+#             Submission.objects.get(pk=1),
+#             'study',
+#             User.objects.get(pk=1),
+#             'prj0002',
+#             'obj00099999',
+#             {
+#                 "center_name": "nice_valid_center",
+#                 "study_type": "Metagenomics",
+#                 "study_abstract": "abs",
+#                 "study_title": "t",
+#                 "study_alias": "a",
+#                 "site_object_id": "study_obj_1"
+#             }
+#         )
+#         all_entities = BrokerObject.objects.all()
+#         self.assertEqual(7, len(all_entities))
+#
+#     # omit -delete
+#     @skip('right now there is no natural-key and unique constraint available')
+#     def test_unique_natural_keys(self):
+#         se = BrokerObject()
+#         se.type = 'study'
+#         se.site = User.objects.get(pk=1)
+#         se.site_project_id = 'prj00001'
+#         se.site_object_id = 'obj0000122'
+#         se.save()
+#         all_entities = BrokerObject.objects.all()
+#         self.assertEqual(6, len(all_entities))
+#
+#         se2 = BrokerObject()
+#         se2.type = 'study'
+#         se2.site = User.objects.get(pk=1)
+#         se2.site_project_id = 'prj00001'
+#         se2.site_object_id = 'obj0000122'
+#         with self.assertRaises(IntegrityError) as exc:
+#             se2.save()
+#
+#     # omit delete
+#     @skip('right now there is no natural-key and unique constraint available')
+#     def test_get_by_natural_key(self):
+#         se = BrokerObject()
+#         se.type = 'study'
+#         se.site = User.objects.get(pk=1)
+#         se.site_project_id = 'prj00001'
+#         se.site_object_id = 'obj0000122'
+#         se.save()
+#
+#         se = BrokerObject()
+#         se.type = 'study'
+#         se.site = User.objects.get(pk=1)
+#         se.site_project_id = 'prj00001'
+#         se.site_object_id = 'obj0000123'
+#         se.save()
+#
+#         obj = BrokerObject.objects.get_by_natural_key(
+#             type='study',
+#             site=User.objects.get(pk=1),
+#             site_project_id='prj00001',
+#             site_object_id='obj0000123'
+#         )
+#
+#         self.assertEqual(se.id, obj.pk)
+#
+#     def test_append_persistent_identifier(self):
+#         bo = BrokerObject.objects.all().first()
+#         self.assertEqual(0, len(bo.persistentidentifier_set.all()))
+#         study = {
+#             'accession': 'ERP013438',
+#             'alias': '1:f844738b-3304-4db7-858d-b7e47b293bb2',
+#             'holdUntilDate': '2016-03-05Z',
+#             'status': 'PRIVATE'
+#         }
+#         obj = BrokerObject.objects.append_persistent_identifier(
+#             study, 'ENA', 'ACC')
+#         self.assertEqual(1, len(bo.persistentidentifier_set.all()))
+#
+#     def test_append_pid_with_corrupt_alias(self):
+#         bo = BrokerObject.objects.all().first()
+#         self.assertEqual(0, len(bo.persistentidentifier_set.all()))
+#         study = {
+#             'accession': 'ERP013438',
+#             'alias': '666:f844738b-3304-4db7-858d-b7e47b293bb2',
+#             'holdUntilDate': '2016-03-05Z',
+#             'status': 'PRIVATE'
+#         }
+#         obj = BrokerObject.objects.append_persistent_identifier(
+#             study, 'ENA', 'ACC')
+#         self.assertIsNone(obj)
+#         self.assertEqual(0, len(bo.persistentidentifier_set.all()))
+#
+#     def test_append_pids_from_ena_response(self):
+#         parsed = {'errors': [],
+#                   'experiments': [{'accession': 'ERX1228437',
+#                                    'alias': '4:f844738b-3304-4db7-858d-b7e47b293bb2',
+#                                    'status': 'PRIVATE'}],
+#                   'infos': [
+#                       'ADD action for the following XML: study.xml sample.xml            experiment.xml run.xml'],
+#                   'receipt_date': '2015-12-01T11:54:55.723Z',
+#                   'runs': [{'accession': 'ERR1149402',
+#                             'alias': '5:f844738b-3304-4db7-858d-b7e47b293bb2',
+#                             'status': 'PRIVATE'}],
+#                   'samples': [{'accession': 'ERS989691',
+#                                'alias': '2:f844738b-3304-4db7-858d-b7e47b293bb2',
+#                                'ext_ids': [{'accession': 'SAMEA3682542',
+#                                             'type': 'biosample'},
+#                                            {'accession': 'SAMEA3682543-666',
+#                                             'type': 'sample-this'}],
+#                                'status': 'PRIVATE'},
+#                               {'accession': 'ERS989692',
+#                                'alias': '3:f844738b-3304-4db7-858d-b7e47b293bb2',
+#                                'ext_ids': [{'accession': 'SAMEA3682543',
+#                                             'type': 'biosample'}],
+#                                'status': 'PRIVATE'}],
+#                   'study': {'accession': 'ERP013438',
+#                             'alias': '1:f844738b-3304-4db7-858d-b7e47b293bb2',
+#                             'holdUntilDate': '2016-03-05Z',
+#                             'status': 'PRIVATE'},
+#                   'success': 'true'}
+#         objs = BrokerObject.objects.append_pids_from_ena_response(parsed)
+#         self.assertEqual(8, len(objs))
+#         d = defaultdict(int)
+#         for o in objs:
+#             d[o.pid_type] += 1
+#         self.assertEqual(5, d['ACC'])
+#         self.assertEqual(3, d['BSA'])
+#
+#     def test_add_pids_from_submitted_run_files(self):
+#         study = BrokerObject.objects.filter(type='study').first()
+#         self.assertEqual(0, len(study.persistentidentifier_set.all()))
+#         with open(os.path.join(
+#                 'gfbio_submissions/brokerage/test_data/',
+#                 'short_submitted_run_files.txt'), 'r') as test_data_file:
+#             res = BrokerObject.objects.add_downloaded_pids_to_existing_broker_objects(
+#                 study_pid='ERP019479', decompressed_file=test_data_file)
+#         study = BrokerObject.objects.filter(type='study').first()
+#         self.assertEqual(1, len(study.persistentidentifier_set.all()))
 
 
 class CenterNameTest(TestCase):
