@@ -6,7 +6,7 @@ settings = {}
 BASE_HOST_NAME = getattr(
     settings,
     'BASE_HOST_NAME',
-    'c103-171.cloud.gwdg.de'
+    'submission.gfbio.org'
 )
 
 BASIC_TYPE = getattr(
