@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import copy
 import json
 import os
 
@@ -266,7 +265,7 @@ class TestBrokerObjectManager(TestCase):
         self.assertEqual(5, len(BrokerObject.objects.filter(
             site_project_id='')))
 
-    def test_manager_add_submission_data_invalid_aliases(self):
+    def test_manager_add_submission_invalid_aliases(self):
         data = self._get_ena_data(simple=True)
         data['requirements']['experiments'][0]['design'][
             'sample_descriptor'] = 'xxx'
@@ -282,3 +281,76 @@ class TestBrokerObjectManager(TestCase):
         serializer = SubmissionSerializer(data=data)
         self.assertFalse(serializer.is_valid())
 
+    def test_double_add_empty_site_object_id(self):
+        # all_entities = BrokerObject.objects.all()
+        # self.assertEqual(6, len(all_entities))
+        obj = BrokerObject.objects.add_entity(
+            Submission.objects.first(),
+            'study',
+            User.objects.first(),
+            'prj0002',
+            '',
+            {
+                "center_name": "no_valid_center",
+                "study_type": "Metagenomics",
+                "study_abstract": "abs",
+                "study_title": "t",
+                "study_alias": "a",
+                "site_object_id": "study_obj_1"
+            }
+        )
+        broker_objects = BrokerObject.objects.all()
+        self.assertEqual(1, len(broker_objects))
+        BrokerObject.objects.add_entity(
+            Submission.objects.first(),
+            'study',
+            User.objects.first(),
+            'prj0002',
+            obj.site_object_id,
+            {
+                "center_name": "nice_valid_center",
+                "study_type": "Metagenomics",
+                "study_abstract": "abs",
+                "study_title": "t",
+                "study_alias": "a",
+                "site_object_id": "study_obj_1"
+            }
+        )
+        broker_objects = BrokerObject.objects.all()
+        self.assertEqual(1, len(broker_objects))
+
+    def test_double_add_same_site_object_id(self):
+        BrokerObject.objects.add_entity(
+            Submission.objects.first(),
+            'study',
+            User.objects.first(),
+            'prj0002',
+            'obj00099999',
+            {
+                "center_name": "no_valid_center",
+                "study_type": "Metagenomics",
+                "study_abstract": "abs",
+                "study_title": "t",
+                "study_alias": "a",
+                "site_object_id": "study_obj_1"
+            }
+        )
+        broker_objects = BrokerObject.objects.all()
+        self.assertEqual(1, len(broker_objects))
+        BrokerObject.objects.add_entity(
+            Submission.objects.first(),
+            'study',
+            User.objects.first(),
+            'prj0002',
+            'obj00099999',
+            {
+                "center_name": "nice_valid_center",
+                "study_type": "Metagenomics",
+                "study_abstract": "abs",
+                "study_title": "t",
+                "study_alias": "a",
+                "site_object_id": "study_obj_1"
+            }
+        )
+        broker_objects = BrokerObject.objects.all()
+        self.assertEqual(1, len(broker_objects))

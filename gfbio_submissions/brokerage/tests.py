@@ -594,6 +594,7 @@ class BrokerObjectTest(TestCase):
         serializer = SubmissionSerializer(data=data)
         self.assertFalse(serializer.is_valid())
 
+    # done
     def test_double_add_empty_site_object_id(self):
         all_entities = BrokerObject.objects.all()
         self.assertEqual(6, len(all_entities))
@@ -632,6 +633,7 @@ class BrokerObjectTest(TestCase):
         all_entities = BrokerObject.objects.all()
         self.assertEqual(7, len(all_entities))
 
+    # done
     def test_double_add_same_site_object_id(self):
         obj = BrokerObject.objects.add_entity(
             Submission.objects.get(pk=1),
@@ -668,6 +670,7 @@ class BrokerObjectTest(TestCase):
         all_entities = BrokerObject.objects.all()
         self.assertEqual(7, len(all_entities))
 
+    # omit -delete
     @skip('right now there is no natural-key and unique constraint available')
     def test_unique_natural_keys(self):
         se = BrokerObject()
@@ -687,6 +690,7 @@ class BrokerObjectTest(TestCase):
         with self.assertRaises(IntegrityError) as exc:
             se2.save()
 
+    # omit delete
     @skip('right now there is no natural-key and unique constraint available')
     def test_get_by_natural_key(self):
         se = BrokerObject()
