@@ -4,6 +4,8 @@ from django.test import TestCase
 
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, TicketLabel, BrokerObject, CenterName, Submission
+from gfbio_submissions.brokerage.serializers import SubmissionSerializer
+from gfbio_submissions.brokerage.tests.utils import _get_ena_data_without_runs
 from gfbio_submissions.users.models import User
 
 
@@ -260,6 +262,18 @@ class SubmissionTest(TestCase):
         #     comment='Default configuration',
         # )
 
+    @classmethod
+    def _create_submission_via_serializer(cls):
+        serializer = SubmissionSerializer(data={
+            'target': 'ENA',
+            'release': True,
+            'data': _get_ena_data_without_runs()
+        })
+        serializer.is_valid()
+        submission = serializer.save(site=User.objects.first())
+        BrokerObject.objects.add_submission_data(submission)
+        return submission
+
     def test_create_empty_submission(self):
         submission = Submission()
         submission.site = User.objects.first()
@@ -291,3 +305,16 @@ class SubmissionTest(TestCase):
         submissions = Submission.objects.all()
         post_save_count = len(submissions)
         self.assertEqual(post_save_count, submission_count + 1)
+
+    def test_get_study_json(self):
+        json_data = _get_ena_data_without_runs()
+        submission = self._create_submission_via_serializer()
+        ena_study = {
+            'study_title': json_data.get('requirements')[
+                'title'],
+            'study_abstract': json_data.get('requirements')[
+                'description'],
+            'study_type': json_data.get('requirements')[
+                'study_type']
+        }
+        self.assertDictEqual(ena_study, submission.get_study_json())

@@ -1001,6 +1001,7 @@ class SubmissionTest(TestCase):
         post_save_count = len(all_submissions)
         self.assertEqual(post_save_count, submission_count + 1)
 
+    #  done
     def test_get_study_json(self):
         sub = self._prepare_entities_without_runs()
         ena_study = {

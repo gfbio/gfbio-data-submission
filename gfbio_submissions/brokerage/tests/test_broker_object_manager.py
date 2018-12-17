@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import json
 import os
 from collections import defaultdict
 
@@ -9,6 +8,8 @@ from gfbio_submissions.brokerage.models import Submission, BrokerObject, \
     PersistentIdentifier
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer, \
     SubmissionDetailSerializer
+from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
+    _get_parsed_ena_response, _get_test_data_dir_path
 from gfbio_submissions.users.models import User
 
 
@@ -30,30 +31,6 @@ class TestBrokerObjectManager(TestCase):
         )
 
     @classmethod
-    def _get_test_data_dir_path(cls):
-        return '{0}{1}gfbio_submissions{1}brokerage{1}tests{1}test_data'.format(
-            os.getcwd(), os.sep, )
-
-    @classmethod
-    def _get_ena_data(cls, simple=False):
-        if simple:
-            with open(os.path.join(
-                    cls._get_test_data_dir_path(),
-                    'ena_data.json'), 'r') as data_file:
-                return json.load(data_file)
-
-        with open(os.path.join(
-                cls._get_test_data_dir_path(),
-                'ena_data_runs.json'), 'r') as data_file:
-            return json.load(data_file)
-
-    @classmethod
-    def _get_parsed_ena_response(cls):
-        with open(os.path.join(cls._get_test_data_dir_path(),
-                               'ena_response.json'), 'r') as data_file:
-            return json.load(data_file)
-
-    @classmethod
     def _create_broker_object(cls):
         return BrokerObject.objects.add_entity(
             submission=Submission.objects.first(),
@@ -73,7 +50,7 @@ class TestBrokerObjectManager(TestCase):
 
     @classmethod
     def _create_multiple_broker_objects(cls):
-        data = cls._get_ena_data()
+        data = _get_ena_data()
         serializer = SubmissionSerializer(
             data={
                 'target': 'ENA',
@@ -114,7 +91,7 @@ class TestBrokerObjectManager(TestCase):
         self.assertEqual('study', broker_objects.first().type)
 
     def test_add_submission_std_serializer(self):
-        data = self._get_ena_data()
+        data = _get_ena_data()
         serializer = SubmissionSerializer(
             data={
                 'target': 'ENA',
@@ -152,7 +129,7 @@ class TestBrokerObjectManager(TestCase):
         )
 
     def test_double_add_submission_std_serializer(self):
-        data = self._get_ena_data()
+        data = _get_ena_data()
         serializer = SubmissionSerializer(
             data={
                 'target': 'ENA',
@@ -172,7 +149,7 @@ class TestBrokerObjectManager(TestCase):
         self.assertEqual(17, len(broker_objects))
 
     def test_add_submission_min_validation_full_data(self):
-        data = self._get_ena_data(simple=True)
+        data = _get_ena_data(simple=True)
         serializer = SubmissionSerializer(
             data={
                 'target': 'ENA',
@@ -208,7 +185,7 @@ class TestBrokerObjectManager(TestCase):
         self.assertEqual(0, len(broker_objects))
 
     def test_add_submission_detail_serializer(self):
-        data = self._get_ena_data(simple=True)
+        data = _get_ena_data(simple=True)
         serializer = SubmissionDetailSerializer(
             data={
                 'target': 'ENA',
@@ -237,7 +214,7 @@ class TestBrokerObjectManager(TestCase):
             BrokerObject.objects.filter(site_project_id='').filter(type='run')))
 
     def test_add_submission_detail_serializer_min_validation_full_data(self):
-        data = self._get_ena_data(simple=True)
+        data = _get_ena_data(simple=True)
         serializer = SubmissionDetailSerializer(
             data={
                 'target': 'ENA',
@@ -271,7 +248,7 @@ class TestBrokerObjectManager(TestCase):
         self.assertEqual(0, len(broker_objects))
 
     def test_manager_add_submission_without_ids(self):
-        data = self._get_ena_data(simple=True)
+        data = _get_ena_data(simple=True)
         serializer = SubmissionSerializer(data={
             'target': 'ENA',
             'release': True,
@@ -289,7 +266,7 @@ class TestBrokerObjectManager(TestCase):
             self.assertEqual('{}_{}'.format(b.site, b.pk), b.site_object_id)
 
     def test_manager_double_add_submission_without_ids(self):
-        data = self._get_ena_data(simple=True)
+        data = _get_ena_data(simple=True)
         serializer = SubmissionSerializer(data={
             'target': 'ENA',
             'release': True,
@@ -311,7 +288,7 @@ class TestBrokerObjectManager(TestCase):
             site_project_id='')))
 
     def test_manager_add_submission_invalid_aliases(self):
-        data = self._get_ena_data(simple=True)
+        data = _get_ena_data(simple=True)
         data['requirements']['experiments'][0]['design'][
             'sample_descriptor'] = 'xxx'
 
@@ -410,9 +387,6 @@ class TestBrokerObjectManager(TestCase):
         persistent_identifier = \
             BrokerObject.objects.append_persistent_identifier(
                 study, 'ENA', 'ACC')
-        print('broker_object', broker_object)
-        print(broker_object.id)
-        print('pid_set ', broker_object.persistentidentifier_set.all())
         self.assertEqual(1, len(broker_object.persistentidentifier_set.all()))
         self.assertEqual(
             PersistentIdentifier.objects.first().pid,
@@ -435,7 +409,7 @@ class TestBrokerObjectManager(TestCase):
 
     def test_append_pids_from_ena_response(self):
         self._create_multiple_broker_objects()
-        parsed_response = self._get_parsed_ena_response()
+        parsed_response = _get_parsed_ena_response()
         persistent_identifiers = BrokerObject.objects.append_pids_from_ena_response(
             parsed_response)
         self.assertEqual(8, len(persistent_identifiers))
@@ -449,7 +423,7 @@ class TestBrokerObjectManager(TestCase):
         self._create_multiple_broker_objects()
         study = BrokerObject.objects.filter(type='study').first()
         with open(os.path.join(
-                self._get_test_data_dir_path(),
+                _get_test_data_dir_path(),
                 'submitted_run_files.txt'), 'r') as data:
             BrokerObject.objects.add_downloaded_pids_to_existing_broker_objects(
                 study_pid='ERP019479',
