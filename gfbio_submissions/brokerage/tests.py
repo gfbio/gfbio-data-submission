@@ -23,7 +23,7 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.db.utils import IntegrityError
 from django.test import TestCase
-from django.utils.encoding import smart_bytes, smart_text
+from django.utils.encoding import smart_text
 from mock import patch
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -1601,7 +1601,8 @@ class PersistentIdentifierTest(TestCase):
 
 
 class RequestLogTest(TestCase):
-    fixtures = ('user', 'submission', 'resource_credential')
+    fixtures = (
+    'user', 'submission', 'resource_credential', 'site_configuration')
 
     def test_add_request_log_entry(self):
         submission = Submission.objects.all().first()
@@ -1629,6 +1630,55 @@ class RequestLogTest(TestCase):
             response_content='Whatever we return',
         )
         self.assertIsInstance(request_log.__str__(), str)
+
+    # TODO: combine of refactor, since duplicating an Enalizer test
+    @responses.activate
+    def test_send_site_user_type(self):
+        sub = FullWorkflowTest._prepare()
+        sub.submitting_user = '666'
+        conf = SiteConfiguration.objects.get(title='default')
+        responses.add(
+            responses.POST, conf.ena_server.url, status=200,
+            body=textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?> <?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
+                     <RECEIPT receiptDate="2015-12-01T11:54:55.723Z" submissionFile="submission.xml"
+                              success="true">
+                         <EXPERIMENT accession="ERX1228437" alias="4:f844738b-3304-4db7-858d-b7e47b293bb2"
+                                     status="PRIVATE"/>
+                         <RUN accession="ERR1149402" alias="5:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"/>
+                         <SAMPLE accession="ERS989691" alias="2:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
+                             <EXT_ID accession="SAMEA3682542" type="biosample"/>
+                             <EXT_ID accession="SAMEA3682543-666" type="sample-this"/>
+                         </SAMPLE>
+                         <SAMPLE accession="ERS989692" alias="3:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
+                             <EXT_ID accession="SAMEA3682543" type="biosample"/>
+                         </SAMPLE>
+                         <STUDY accession="ERP013438" alias="1:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"
+                                holdUntilDate="2016-03-05Z"/>
+                         <SUBMISSION accession="ERA540869" alias="NGS_March_original2"/>
+                         <MESSAGES>
+                             <INFO>ADD action for the following XML: study.xml sample.xml
+                                 experiment.xml run.xml
+                             </INFO>
+                         </MESSAGES>
+                         <ACTIONS>ADD</ACTIONS>
+                         <ACTIONS>ADD</ACTIONS>
+                         <ACTIONS>ADD</ACTIONS>
+                         <ACTIONS>ADD</ACTIONS>
+                         <ACTIONS>HOLD</ACTIONS>
+                     </RECEIPT>"""))
+
+        ena_submission_data = prepare_ena_data(
+            submission=sub)
+        response, req_log_request_id = send_submission_to_ena(
+            submission=sub,
+            archive_access=conf.ena_server,
+            ena_submission_data=ena_submission_data,
+        )
+
+        request_log = RequestLog.objects.get(
+            request_id=req_log_request_id)
+        self.assertEqual(sub.submitting_user, request_log.site_user)
+        self.assertFalse(isinstance(request_log.site_user, tuple))
 
 
 class EnalizerTest(TestCase):
