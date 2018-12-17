@@ -2,6 +2,7 @@
 import uuid
 
 from django.test import TestCase
+from mock import patch
 
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, TicketLabel, BrokerObject, CenterName, Submission
@@ -240,30 +241,7 @@ class SubmissionTest(TestCase):
         user = User.objects.create(
             username="user1"
         )
-        submission = Submission.objects.create(site=user)
-        # resource_cred = ResourceCredential.objects.create(
-        #     title='Resource Title',
-        #     url='https://www.example.com',
-        #     authentication_string='letMeIn'
-        # )
-        # SiteConfiguration.objects.create(
-        #     title='Title',
-        #     site=user,
-        #     ena_server=resource_cred,
-        #     pangaea_server=resource_cred,
-        #     gfbio_server=resource_cred,
-        #     helpdesk_server=resource_cred,
-        #     comment='Comment',
-        # )
-        # SiteConfiguration.objects.create(
-        #     title='Default',
-        #     site=None,
-        #     ena_server=resource_cred,
-        #     pangaea_server=resource_cred,
-        #     gfbio_server=resource_cred,
-        #     helpdesk_server=resource_cred,
-        #     comment='Default configuration',
-        # )
+        Submission.objects.create(site=user)
 
     @classmethod
     def _create_submission_via_serializer(cls, runs=False):
@@ -276,6 +254,13 @@ class SubmissionTest(TestCase):
         submission = serializer.save(site=User.objects.first())
         BrokerObject.objects.add_submission_data(submission)
         return submission
+
+    def test_str(self):
+        submission = Submission.objects.first()
+        self.assertEqual(
+            '1_{0}'.format(submission.broker_submission_id),
+            submission.__str__()
+        )
 
     def test_create_empty_submission(self):
         submission = Submission()
@@ -410,3 +395,13 @@ class SubmissionTest(TestCase):
         for r in run_experiment_refs:
             self.assertIn(r, experiment_aliases)
             self.assertTrue(2, len(r.split(':')))
+
+    def test_queuing_of_closed_submissions(self):
+        with patch('gfbio_submissions.brokerage.tasks.'
+                   'trigger_submission_transfer.apply_async') as trigger_mock:
+            sub = Submission()
+            sub.site = User.objects.first()
+            sub.status = Submission.CLOSED
+            sub.save()
+            self.assertEqual(Submission.CLOSED, sub.status)
+            trigger_mock.assert_not_called()

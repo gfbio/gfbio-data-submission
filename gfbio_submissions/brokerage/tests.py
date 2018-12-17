@@ -812,386 +812,391 @@ from .utils.submission_transfer import \
 # https://code.djangoproject.com/ticket/27675
 # https://bitbucket.org/schinckel/django-jsonfield/issues/57/cannot-use-in-the-same-project-as-djangos
 # https://code.djangoproject.com/ticket/27183
-class SubmissionTest(TestCase):
-    fixtures = (
-        'user', 'submission', 'resource_credential', 'site_configuration',
-    )
-
-    content_without_runs = {
-        'requirements': {
-            'title': '123456',
-            'description': '123456',
-            'study_type': 'Metagenomics',
-            'samples': [
-                {
-                    'sample_alias': 'sample1',
-                    'sample_title': 'stitle',
-                    'taxon_id': 530564
-                },
-                {
-                    'sample_alias': 'sample2',
-                    'sample_title': 'stitleagain',
-                    'taxon_id': 530564
-                }
-            ],
-            "experiments": [
-                {
-                    'experiment_alias': 'experiment1',
-                    'platform': 'AB 3730xL Genetic Analyzer',
-                    'design': {
-                        'sample_descriptor': 'sample2',
-                        'design_description': '',
-                        'library_descriptor': {
-                            'library_strategy': 'AMPLICON',
-                            'library_source': 'METAGENOMIC',
-                            'library_selection': 'PCR',
-                            'library_layout': {
-                                'layout_type': 'paired',
-                                'nominal_length': 450
-                            }
-                        }
-                    },
-                    "files": {
-                        "forward_read_file_name": "File3.forward.fastq.gz",
-                        "reverse_read_file_name": "File3.reverse.fastq.gz",
-                        "forward_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1",
-                        "reverse_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1"
-                    }
-                }
-            ]
-        }
-    }
-
-    content_with_runs = {
-        'requirements': {
-            'title': '123456',
-            'description': '123456',
-            'study_type': 'Metagenomics',
-            'samples': [
-                {
-                    'sample_alias': 'sample1',
-                    'sample_title': 'stitle',
-                    'taxon_id': 530564
-                },
-                {
-                    'sample_alias': 'sample2',
-                    'sample_title': 'stitleagain',
-                    'taxon_id': 530564
-                }
-            ],
-            "experiments": [
-                {
-                    'experiment_alias': 'experiment1',
-                    'platform': 'AB 3730xL Genetic Analyzer',
-                    'design': {
-                        'sample_descriptor': 'sample2',
-                        'design_description': '',
-                        'library_descriptor': {
-                            'library_strategy': 'AMPLICON',
-                            'library_source': 'METAGENOMIC',
-                            'library_selection': 'PCR',
-                            'library_layout': {
-                                'layout_type': 'paired',
-                                'nominal_length': 450
-                            }
-                        }
-                    },
-                    "files": {
-                        "forward_read_file_name": "File3.forward.fastq.gz",
-                        "reverse_read_file_name": "File3.reverse.fastq.gz",
-                        "forward_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1",
-                        "reverse_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1"
-                    }
-                },
-                {
-                    'experiment_alias': 'experiment2',
-                    'platform': 'AB 3730xL Genetic Analyzer',
-                    'design': {
-                        'sample_descriptor': 'sample1',
-                        'design_description': '',
-                        'library_descriptor': {
-                            'library_strategy': 'AMPLICON',
-                            'library_source': 'METAGENOMIC',
-                            'library_selection': 'PCR',
-                            'library_layout': {
-                                'layout_type': 'paired',
-                                'nominal_length': 450
-                            }
-                        }
-                    }
-                }
-            ],
-            "runs": [
-                {
-                    "experiment_ref": "experiment2",
-                    "data_block": {
-                        "files": [
-                            {
-                                "filename": "aFile",
-                                "filetype": "fastq",
-                                "checksum_method": "MD5",
-                                "checksum": "12345"
-                            }
-                        ]
-                    }
-                }
-            ]
-        }
-    }
-
-    def _prepare_entities_without_runs(self, create_broker_objects=True):
-        serializer = SubmissionSerializer(data={
-            'target': 'ENA',
-            'release': True,
-            'data': self.content_without_runs
-        })
-        serializer.is_valid()
-        submission = serializer.save(site=User.objects.get(pk=1))
-        if create_broker_objects:
-            BrokerObject.objects.add_submission_data(submission)
-        return submission
-
-    @classmethod
-    def _prepare_entities_with_runs(cls, create_broker_objects=True):
-        serializer = SubmissionSerializer(data={
-            'target': 'ENA',
-            'release': True,
-            'data': cls.content_with_runs
-        })
-        serializer.is_valid()
-        submission = serializer.save(site=User.objects.get(pk=1))
-        if create_broker_objects:
-            BrokerObject.objects.add_submission_data(submission)
-        return submission
-
-    # done
-    def test_create_empty_submission(self):
-        all_submissions = Submission.objects.all()
-        self.assertEqual(5, len(all_submissions))
-        sub = Submission()
-        sub.site = User.objects.get(pk=1)
-        sub.save()
-        all_submissions = Submission.objects.all()
-        self.assertEqual(6, len(all_submissions))
-
-    # done
-    def test_centername_none(self):
-        sub = Submission.objects.first()
-        self.assertIsNone(sub.center_name)
-
-    # done
-    def test_centername(self):
-        cn, created = CenterName.objects.get_or_create(center_name='ABCD')
-        sub = Submission.objects.first()
-        sub.center_name = cn
-        sub.save()
-        self.assertEqual(cn, sub.center_name)
-        self.assertEqual('ABCD', sub.center_name.center_name)
-
-    # done
-    def test_ids_on_empty_submission(self):
-        all_submissions = Submission.objects.all()
-        submission_count = len(all_submissions)
-        sub = Submission()
-        pre_save_bsi = sub.broker_submission_id
-        sub.save()
-        self.assertEqual(pre_save_bsi, sub.broker_submission_id)
-        self.assertEqual(sub.pk, sub.id)
-        all_submissions = Submission.objects.all()
-        post_save_count = len(all_submissions)
-        self.assertEqual(post_save_count, submission_count + 1)
-
-    #  done
-    def test_get_study_json(self):
-        sub = self._prepare_entities_without_runs()
-        ena_study = {
-            'study_title': self.content_without_runs.get('requirements')[
-                'title'],
-            'study_abstract': self.content_without_runs.get('requirements')[
-                'description'],
-            'study_type': self.content_without_runs.get('requirements')[
-                'study_type']
-        }
-        self.assertDictEqual(ena_study, sub.get_study_json())
-
-    # done
-    def test_get_sample_json(self):
-        sub = self._prepare_entities_without_runs()
-        content_samples = self.content_without_runs.get('requirements').get(
-            'samples')
-        for s in sub.get_sample_json().get('samples'):
-            self.assertIn(s, content_samples)
-
-    # done
-    def test_get_experiment_json_with_files(self):
-        sub = self._prepare_entities_without_runs()
-        content_experiments = self.content_without_runs.get('requirements').get(
-            'experiments')
-        # pop out "new" site_object_ids from
-        [c.pop('site_object_id') for c in content_experiments]
-        for s in sub.get_experiment_json().get('experiments'):
-            self.assertIn(s, content_experiments)
-            self.assertTrue('files' in s.keys())
-
-    # done
-    def test_get_experiment_json_with_files_and_run(self):
-        sub = self._prepare_entities_with_runs()
-        content_experiments = self.content_with_runs.get('requirements').get(
-            'experiments')
-        # pop out "new" site_object_ids from
-        [c.pop('site_object_id') for c in content_experiments]
-        for s in sub.get_experiment_json().get('experiments'):
-            s.pop('site_object_id')
-            self.assertIn(s, content_experiments)
-            if s['experiment_alias'] == 'experiment1':
-                self.assertTrue('files' in s.keys())
-            else:
-                self.assertFalse('files' in s.keys())
-
-    # done
-    def test_get_run_json_with_files_in_experiment(self):
-        sub = self._prepare_entities_without_runs()
-        content_runs = self.content_without_runs.get('requirements').get('runs',
-                                                                         [])
-        self.assertEqual(0, len(content_runs))
-        self.assertEqual(1, len(sub.get_run_json().get('runs')))
-
-    # done
-    def test_get_run_json_with_additional_files_in_experiment(self):
-        sub = self._prepare_entities_with_runs()
-        content_runs = self.content_with_runs.get('requirements').get('runs')
-        self.assertEqual(1, len(content_runs))
-        self.assertEqual(2, len(sub.get_run_json().get('runs')))
-
-    # done
-    def test_get_json_with_aliases_with_file_in_experiment(self):
-        sub = self._prepare_entities_without_runs()
-        request_id_fake = uuid.UUID('71d59109-695d-4172-a8be-df6fb3283857')
-        study, samples, experiments, runs = sub.get_json_with_aliases(
-            alias_postfix=request_id_fake)
-        study_alias = study.get('study_alias', None)
-        sample_aliases = [s.get('sample_alias', '') for s in
-                          samples]
-        experiment_aliases = [e.get('experiment_alias', '') for e in
-                              experiments]
-        experiment_sample_descriptors = [
-            e.get('design', {}).get('sample_descriptor', '') for e in
-            experiments]
-        experiment_study_refs = [e.get('study_ref', '') for e in
-                                 experiments]
-        run_experiment_refs = [r.get('experiment_ref') for r in
-                               runs]
-
-        for e in experiment_sample_descriptors:
-            self.assertIn(e, sample_aliases)
-            self.assertTrue(2, len(e.split(':')))
-        for e in experiment_study_refs:
-            self.assertEqual(e, study_alias)
-            self.assertTrue(2, len(e.split(':')))
-        self.assertEqual(1, len(experiment_aliases))
-        self.assertEqual(1, len(run_experiment_refs))
-
-    # done
-    def test_get_json_with_aliases_with_additional_files_in_experiment(self):
-        sub = self._prepare_entities_with_runs()
-        request_id_fake = uuid.UUID('71d59109-695d-4172-a8be-df6fb3283857')
-        study, samples, experiments, runs = sub.get_json_with_aliases(
-            alias_postfix=request_id_fake)
-        study_alias = study.get('study_alias', None)
-        sample_aliases = [s.get('sample_alias', '') for s in
-                          samples]
-        experiment_aliases = [e.get('experiment_alias', '') for e in
-                              experiments]
-        experiment_sample_descriptors = [
-            e.get('design', {}).get('sample_descriptor', '') for e in
-            experiments]
-        experiment_study_refs = [e.get('study_ref', '') for e in
-                                 experiments]
-        run_experiment_refs = [r.get('experiment_ref') for r in
-                               runs]
-
-        for e in experiment_sample_descriptors:
-            self.assertIn(e, sample_aliases)
-            self.assertTrue(2, len(e.split(':')))
-        for e in experiment_study_refs:
-            self.assertEqual(e, study_alias)
-            self.assertTrue(2, len(e.split(':')))
-        self.assertEqual(2, len(experiment_aliases))
-        self.assertEqual(2, len(run_experiment_refs))
-        for r in run_experiment_refs:
-            self.assertIn(r, experiment_aliases)
-            self.assertTrue(2, len(e.split(':')))
-
-    def test_get_submission_instance(self):
-        submission_bsis = Submission.objects.all().values_list(
-            'broker_submission_id')
-        submission = Submission.objects.get_submission_instance(
-            '4ceeae16-c114-4d3f-ba0b-225b9d5e4abf')
-        self.assertIn((submission.broker_submission_id,), submission_bsis)
-
-        submission = Submission.objects.get_submission_instance(
-            '4ceeae16-c114-4d3f-ba0b-225b9d5e4fff')
-        self.assertIsInstance(submission, Submission)
-        self.assertNotIn((submission.broker_submission_id,), submission_bsis)
-
-    def test_str(self):
-        submission = Submission.objects.all().first()
-        self.assertEqual('1_{0}'.format(submission.broker_submission_id),
-                         submission.__str__())
-
-    def test_status_after_trigger_submission(self):
-        conf = SiteConfiguration.objects.get(site=User.objects.get(pk=1))
-        conf.release_submissions = True
-        conf.save()
-
-        sub = Submission.objects.get(pk=1)
-        old_status = sub.status
-        result = trigger_submission_transfer.apply_async(
-            kwargs={
-                'submission_id': sub.pk,
-            },
-            countdown=SUBMISSION_DELAY
-        )
-        sub = Submission.objects.get(pk=1)
-        # TODO: refactor or delete this test, trigger task is not manipulating submission
-        self.assertEqual(old_status, sub.status)
-
-    def test_queuing_of_closed_submissions(self):
-        with patch(
-                'gfbio_submissions.brokerage.tasks.trigger_submission_transfer.apply_async') as trigger_mock:
-            sub = Submission()
-            sub.site = User.objects.get(pk=1)
-            sub.status = Submission.CLOSED
-            sub.save()
-            self.assertEqual(Submission.CLOSED, sub.status)
-            trigger_mock.assert_not_called()
-
-    def test_get_submission_for_task(self):
-        sub = Submission()
-        sub.site = User.objects.get(pk=1)
-        sub.save()
-        id = sub.pk
-        self.assertEqual(Submission.OPEN, sub.status)
-        sub = Submission.objects.get_submission_for_task(id=id)
-        self.assertEqual(Submission.OPEN, sub.status)
-
-        sub.status = Submission.CLOSED
-        sub.save()
-
-        with self.assertRaises(Submission.DoesNotExist) as exc:
-            sub = Submission.objects.get_submission_for_task(id=id)
-
-        sub = Submission.objects.get(pk=id)
-        sub.status = Submission.ERROR
-        sub.save()
-        with self.assertRaises(Submission.DoesNotExist) as exc:
-            sub = Submission.objects.get_submission_for_task(id=id)
-
-        sub = Submission.objects.get(pk=id)
-        sub.status = Submission.OPEN
-        sub.save()
-        with self.assertRaises(Submission.DoesNotExist) as exc:
-            sub = Submission.objects.get_submission_for_task(id=id + 12)
+# class SubmissionTest(TestCase):
+#     fixtures = (
+#         'user', 'submission', 'resource_credential', 'site_configuration',
+#     )
+#
+#     content_without_runs = {
+#         'requirements': {
+#             'title': '123456',
+#             'description': '123456',
+#             'study_type': 'Metagenomics',
+#             'samples': [
+#                 {
+#                     'sample_alias': 'sample1',
+#                     'sample_title': 'stitle',
+#                     'taxon_id': 530564
+#                 },
+#                 {
+#                     'sample_alias': 'sample2',
+#                     'sample_title': 'stitleagain',
+#                     'taxon_id': 530564
+#                 }
+#             ],
+#             "experiments": [
+#                 {
+#                     'experiment_alias': 'experiment1',
+#                     'platform': 'AB 3730xL Genetic Analyzer',
+#                     'design': {
+#                         'sample_descriptor': 'sample2',
+#                         'design_description': '',
+#                         'library_descriptor': {
+#                             'library_strategy': 'AMPLICON',
+#                             'library_source': 'METAGENOMIC',
+#                             'library_selection': 'PCR',
+#                             'library_layout': {
+#                                 'layout_type': 'paired',
+#                                 'nominal_length': 450
+#                             }
+#                         }
+#                     },
+#                     "files": {
+#                         "forward_read_file_name": "File3.forward.fastq.gz",
+#                         "reverse_read_file_name": "File3.reverse.fastq.gz",
+#                         "forward_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1",
+#                         "reverse_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1"
+#                     }
+#                 }
+#             ]
+#         }
+#     }
+#
+#     content_with_runs = {
+#         'requirements': {
+#             'title': '123456',
+#             'description': '123456',
+#             'study_type': 'Metagenomics',
+#             'samples': [
+#                 {
+#                     'sample_alias': 'sample1',
+#                     'sample_title': 'stitle',
+#                     'taxon_id': 530564
+#                 },
+#                 {
+#                     'sample_alias': 'sample2',
+#                     'sample_title': 'stitleagain',
+#                     'taxon_id': 530564
+#                 }
+#             ],
+#             "experiments": [
+#                 {
+#                     'experiment_alias': 'experiment1',
+#                     'platform': 'AB 3730xL Genetic Analyzer',
+#                     'design': {
+#                         'sample_descriptor': 'sample2',
+#                         'design_description': '',
+#                         'library_descriptor': {
+#                             'library_strategy': 'AMPLICON',
+#                             'library_source': 'METAGENOMIC',
+#                             'library_selection': 'PCR',
+#                             'library_layout': {
+#                                 'layout_type': 'paired',
+#                                 'nominal_length': 450
+#                             }
+#                         }
+#                     },
+#                     "files": {
+#                         "forward_read_file_name": "File3.forward.fastq.gz",
+#                         "reverse_read_file_name": "File3.reverse.fastq.gz",
+#                         "forward_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1",
+#                         "reverse_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1"
+#                     }
+#                 },
+#                 {
+#                     'experiment_alias': 'experiment2',
+#                     'platform': 'AB 3730xL Genetic Analyzer',
+#                     'design': {
+#                         'sample_descriptor': 'sample1',
+#                         'design_description': '',
+#                         'library_descriptor': {
+#                             'library_strategy': 'AMPLICON',
+#                             'library_source': 'METAGENOMIC',
+#                             'library_selection': 'PCR',
+#                             'library_layout': {
+#                                 'layout_type': 'paired',
+#                                 'nominal_length': 450
+#                             }
+#                         }
+#                     }
+#                 }
+#             ],
+#             "runs": [
+#                 {
+#                     "experiment_ref": "experiment2",
+#                     "data_block": {
+#                         "files": [
+#                             {
+#                                 "filename": "aFile",
+#                                 "filetype": "fastq",
+#                                 "checksum_method": "MD5",
+#                                 "checksum": "12345"
+#                             }
+#                         ]
+#                     }
+#                 }
+#             ]
+#         }
+#     }
+#
+#     def _prepare_entities_without_runs(self, create_broker_objects=True):
+#         serializer = SubmissionSerializer(data={
+#             'target': 'ENA',
+#             'release': True,
+#             'data': self.content_without_runs
+#         })
+#         serializer.is_valid()
+#         submission = serializer.save(site=User.objects.get(pk=1))
+#         if create_broker_objects:
+#             BrokerObject.objects.add_submission_data(submission)
+#         return submission
+#
+#     @classmethod
+#     def _prepare_entities_with_runs(cls, create_broker_objects=True):
+#         serializer = SubmissionSerializer(data={
+#             'target': 'ENA',
+#             'release': True,
+#             'data': cls.content_with_runs
+#         })
+#         serializer.is_valid()
+#         submission = serializer.save(site=User.objects.get(pk=1))
+#         if create_broker_objects:
+#             BrokerObject.objects.add_submission_data(submission)
+#         return submission
+#
+#     # done
+#     def test_create_empty_submission(self):
+#         all_submissions = Submission.objects.all()
+#         self.assertEqual(5, len(all_submissions))
+#         sub = Submission()
+#         sub.site = User.objects.get(pk=1)
+#         sub.save()
+#         all_submissions = Submission.objects.all()
+#         self.assertEqual(6, len(all_submissions))
+#
+#     # done
+#     def test_centername_none(self):
+#         sub = Submission.objects.first()
+#         self.assertIsNone(sub.center_name)
+#
+#     # done
+#     def test_centername(self):
+#         cn, created = CenterName.objects.get_or_create(center_name='ABCD')
+#         sub = Submission.objects.first()
+#         sub.center_name = cn
+#         sub.save()
+#         self.assertEqual(cn, sub.center_name)
+#         self.assertEqual('ABCD', sub.center_name.center_name)
+#
+#     # done
+#     def test_ids_on_empty_submission(self):
+#         all_submissions = Submission.objects.all()
+#         submission_count = len(all_submissions)
+#         sub = Submission()
+#         pre_save_bsi = sub.broker_submission_id
+#         sub.save()
+#         self.assertEqual(pre_save_bsi, sub.broker_submission_id)
+#         self.assertEqual(sub.pk, sub.id)
+#         all_submissions = Submission.objects.all()
+#         post_save_count = len(all_submissions)
+#         self.assertEqual(post_save_count, submission_count + 1)
+#
+#     #  done
+#     def test_get_study_json(self):
+#         sub = self._prepare_entities_without_runs()
+#         ena_study = {
+#             'study_title': self.content_without_runs.get('requirements')[
+#                 'title'],
+#             'study_abstract': self.content_without_runs.get('requirements')[
+#                 'description'],
+#             'study_type': self.content_without_runs.get('requirements')[
+#                 'study_type']
+#         }
+#         self.assertDictEqual(ena_study, sub.get_study_json())
+#
+#     # done
+#     def test_get_sample_json(self):
+#         sub = self._prepare_entities_without_runs()
+#         content_samples = self.content_without_runs.get('requirements').get(
+#             'samples')
+#         for s in sub.get_sample_json().get('samples'):
+#             self.assertIn(s, content_samples)
+#
+#     # done
+#     def test_get_experiment_json_with_files(self):
+#         sub = self._prepare_entities_without_runs()
+#         content_experiments = self.content_without_runs.get('requirements').get(
+#             'experiments')
+#         # pop out "new" site_object_ids from
+#         [c.pop('site_object_id') for c in content_experiments]
+#         for s in sub.get_experiment_json().get('experiments'):
+#             self.assertIn(s, content_experiments)
+#             self.assertTrue('files' in s.keys())
+#
+#     # done
+#     def test_get_experiment_json_with_files_and_run(self):
+#         sub = self._prepare_entities_with_runs()
+#         content_experiments = self.content_with_runs.get('requirements').get(
+#             'experiments')
+#         # pop out "new" site_object_ids from
+#         [c.pop('site_object_id') for c in content_experiments]
+#         for s in sub.get_experiment_json().get('experiments'):
+#             s.pop('site_object_id')
+#             self.assertIn(s, content_experiments)
+#             if s['experiment_alias'] == 'experiment1':
+#                 self.assertTrue('files' in s.keys())
+#             else:
+#                 self.assertFalse('files' in s.keys())
+#
+#     # done
+#     def test_get_run_json_with_files_in_experiment(self):
+#         sub = self._prepare_entities_without_runs()
+#         content_runs = self.content_without_runs.get('requirements').get('runs',
+#                                                                          [])
+#         self.assertEqual(0, len(content_runs))
+#         self.assertEqual(1, len(sub.get_run_json().get('runs')))
+#
+#     # done
+#     def test_get_run_json_with_additional_files_in_experiment(self):
+#         sub = self._prepare_entities_with_runs()
+#         content_runs = self.content_with_runs.get('requirements').get('runs')
+#         self.assertEqual(1, len(content_runs))
+#         self.assertEqual(2, len(sub.get_run_json().get('runs')))
+#
+#     # done
+#     def test_get_json_with_aliases_with_file_in_experiment(self):
+#         sub = self._prepare_entities_without_runs()
+#         request_id_fake = uuid.UUID('71d59109-695d-4172-a8be-df6fb3283857')
+#         study, samples, experiments, runs = sub.get_json_with_aliases(
+#             alias_postfix=request_id_fake)
+#         study_alias = study.get('study_alias', None)
+#         sample_aliases = [s.get('sample_alias', '') for s in
+#                           samples]
+#         experiment_aliases = [e.get('experiment_alias', '') for e in
+#                               experiments]
+#         experiment_sample_descriptors = [
+#             e.get('design', {}).get('sample_descriptor', '') for e in
+#             experiments]
+#         experiment_study_refs = [e.get('study_ref', '') for e in
+#                                  experiments]
+#         run_experiment_refs = [r.get('experiment_ref') for r in
+#                                runs]
+#
+#         for e in experiment_sample_descriptors:
+#             self.assertIn(e, sample_aliases)
+#             self.assertTrue(2, len(e.split(':')))
+#         for e in experiment_study_refs:
+#             self.assertEqual(e, study_alias)
+#             self.assertTrue(2, len(e.split(':')))
+#         self.assertEqual(1, len(experiment_aliases))
+#         self.assertEqual(1, len(run_experiment_refs))
+#
+#     # done
+#     def test_get_json_with_aliases_with_additional_files_in_experiment(self):
+#         sub = self._prepare_entities_with_runs()
+#         request_id_fake = uuid.UUID('71d59109-695d-4172-a8be-df6fb3283857')
+#         study, samples, experiments, runs = sub.get_json_with_aliases(
+#             alias_postfix=request_id_fake)
+#         study_alias = study.get('study_alias', None)
+#         sample_aliases = [s.get('sample_alias', '') for s in
+#                           samples]
+#         experiment_aliases = [e.get('experiment_alias', '') for e in
+#                               experiments]
+#         experiment_sample_descriptors = [
+#             e.get('design', {}).get('sample_descriptor', '') for e in
+#             experiments]
+#         experiment_study_refs = [e.get('study_ref', '') for e in
+#                                  experiments]
+#         run_experiment_refs = [r.get('experiment_ref') for r in
+#                                runs]
+#
+#         for e in experiment_sample_descriptors:
+#             self.assertIn(e, sample_aliases)
+#             self.assertTrue(2, len(e.split(':')))
+#         for e in experiment_study_refs:
+#             self.assertEqual(e, study_alias)
+#             self.assertTrue(2, len(e.split(':')))
+#         self.assertEqual(2, len(experiment_aliases))
+#         self.assertEqual(2, len(run_experiment_refs))
+#         for r in run_experiment_refs:
+#             self.assertIn(r, experiment_aliases)
+#             self.assertTrue(2, len(e.split(':')))
+#
+#     # done
+#     def test_get_submission_instance(self):
+#         submission_bsis = Submission.objects.all().values_list(
+#             'broker_submission_id')
+#         submission = Submission.objects.get_submission_instance(
+#             '4ceeae16-c114-4d3f-ba0b-225b9d5e4abf')
+#         self.assertIn((submission.broker_submission_id,), submission_bsis)
+#
+#         submission = Submission.objects.get_submission_instance(
+#             '4ceeae16-c114-4d3f-ba0b-225b9d5e4fff')
+#         self.assertIsInstance(submission, Submission)
+#         self.assertNotIn((submission.broker_submission_id,), submission_bsis)
+#
+#     # done
+#     def test_str(self):
+#         submission = Submission.objects.all().first()
+#         self.assertEqual('1_{0}'.format(submission.broker_submission_id),
+#                          submission.__str__())
+#
+#     # done - omit
+#     def test_status_after_trigger_submission(self):
+#         conf = SiteConfiguration.objects.get(site=User.objects.get(pk=1))
+#         conf.release_submissions = True
+#         conf.save()
+#
+#         sub = Submission.objects.get(pk=1)
+#         old_status = sub.status
+#         result = trigger_submission_transfer.apply_async(
+#             kwargs={
+#                 'submission_id': sub.pk,
+#             },
+#             countdown=SUBMISSION_DELAY
+#         )
+#         sub = Submission.objects.get(pk=1)
+#         # TODO: refactor or delete this test, trigger task is not manipulating submission
+#         self.assertEqual(old_status, sub.status)
+#
+#     # done
+#     def test_queuing_of_closed_submissions(self):
+#         with patch(
+#                 'gfbio_submissions.brokerage.tasks.trigger_submission_transfer.apply_async') as trigger_mock:
+#             sub = Submission()
+#             sub.site = User.objects.get(pk=1)
+#             sub.status = Submission.CLOSED
+#             sub.save()
+#             self.assertEqual(Submission.CLOSED, sub.status)
+#             trigger_mock.assert_not_called()
+#
+#     # done
+#     def test_get_submission_for_task(self):
+#         sub = Submission()
+#         sub.site = User.objects.get(pk=1)
+#         sub.save()
+#         id = sub.pk
+#         self.assertEqual(Submission.OPEN, sub.status)
+#         sub = Submission.objects.get_submission_for_task(id=id)
+#         self.assertEqual(Submission.OPEN, sub.status)
+#
+#         sub.status = Submission.CLOSED
+#         sub.save()
+#
+#         with self.assertRaises(Submission.DoesNotExist) as exc:
+#             sub = Submission.objects.get_submission_for_task(id=id)
+#
+#         sub = Submission.objects.get(pk=id)
+#         sub.status = Submission.ERROR
+#         sub.save()
+#         with self.assertRaises(Submission.DoesNotExist) as exc:
+#             sub = Submission.objects.get_submission_for_task(id=id)
+#
+#         sub = Submission.objects.get(pk=id)
+#         sub.status = Submission.OPEN
+#         sub.save()
+#         with self.assertRaises(Submission.DoesNotExist) as exc:
+#             sub = Submission.objects.get_submission_for_task(id=id + 12)
 
 
 # TODO: clean or remove this mess. most is obsolete
