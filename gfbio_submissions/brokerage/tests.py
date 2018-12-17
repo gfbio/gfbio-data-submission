@@ -964,6 +964,7 @@ class SubmissionTest(TestCase):
             BrokerObject.objects.add_submission_data(submission)
         return submission
 
+    # done
     def test_create_empty_submission(self):
         all_submissions = Submission.objects.all()
         self.assertEqual(5, len(all_submissions))
@@ -973,10 +974,12 @@ class SubmissionTest(TestCase):
         all_submissions = Submission.objects.all()
         self.assertEqual(6, len(all_submissions))
 
+    # done
     def test_centername_none(self):
         sub = Submission.objects.first()
         self.assertIsNone(sub.center_name)
 
+    # done
     def test_centername(self):
         cn, created = CenterName.objects.get_or_create(center_name='ABCD')
         sub = Submission.objects.first()
@@ -985,6 +988,7 @@ class SubmissionTest(TestCase):
         self.assertEqual(cn, sub.center_name)
         self.assertEqual('ABCD', sub.center_name.center_name)
 
+    # done
     def test_ids_on_empty_submission(self):
         all_submissions = Submission.objects.all()
         submission_count = len(all_submissions)

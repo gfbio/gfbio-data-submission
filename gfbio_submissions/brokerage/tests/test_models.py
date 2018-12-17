@@ -3,7 +3,7 @@
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.models import ResourceCredential, \
-    SiteConfiguration, TicketLabel, BrokerObject, CenterName
+    SiteConfiguration, TicketLabel, BrokerObject, CenterName, Submission
 from gfbio_submissions.users.models import User
 
 
@@ -226,3 +226,68 @@ class CenterNameTest(TestCase):
     def test_str(self):
         cn, created = CenterName.objects.get_or_create(center_name='ABC')
         self.assertEqual('ABC', cn.__str__())
+
+
+class SubmissionTest(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        user = User.objects.create(
+            username="user1"
+        )
+        submission = Submission.objects.create(site=user)
+        # resource_cred = ResourceCredential.objects.create(
+        #     title='Resource Title',
+        #     url='https://www.example.com',
+        #     authentication_string='letMeIn'
+        # )
+        # SiteConfiguration.objects.create(
+        #     title='Title',
+        #     site=user,
+        #     ena_server=resource_cred,
+        #     pangaea_server=resource_cred,
+        #     gfbio_server=resource_cred,
+        #     helpdesk_server=resource_cred,
+        #     comment='Comment',
+        # )
+        # SiteConfiguration.objects.create(
+        #     title='Default',
+        #     site=None,
+        #     ena_server=resource_cred,
+        #     pangaea_server=resource_cred,
+        #     gfbio_server=resource_cred,
+        #     helpdesk_server=resource_cred,
+        #     comment='Default configuration',
+        # )
+
+    def test_create_empty_submission(self):
+        submission = Submission()
+        submission.site = User.objects.first()
+        submission.save()
+        submissions = Submission.objects.all()
+        self.assertEqual(2, len(submissions))
+
+    def test_center_name_is_none(self):
+        submission = Submission.objects.first()
+        self.assertIsNone(submission.center_name)
+
+    def test_center_name(self):
+        center_name, created = CenterName.objects.get_or_create(
+            center_name='ABCD')
+        sub = Submission.objects.first()
+        sub.center_name = center_name
+        sub.save()
+        self.assertEqual(center_name, sub.center_name)
+        self.assertEqual('ABCD', sub.center_name.center_name)
+
+    def test_ids_on_empty_submission(self):
+        submissions = Submission.objects.all()
+        submission_count = len(submissions)
+        submission = Submission()
+        pre_save_bsi = submission.broker_submission_id
+        submission.save()
+        self.assertEqual(pre_save_bsi, submission.broker_submission_id)
+        self.assertEqual(submission.pk, submission.id)
+        submissions = Submission.objects.all()
+        post_save_count = len(submissions)
+        self.assertEqual(post_save_count, submission_count + 1)
