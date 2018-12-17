@@ -5,7 +5,8 @@ from django.test import TestCase
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, TicketLabel, BrokerObject, CenterName, Submission
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
-from gfbio_submissions.brokerage.tests.utils import _get_ena_data_without_runs
+from gfbio_submissions.brokerage.tests.utils import _get_ena_data_without_runs, \
+    _get_ena_data
 from gfbio_submissions.users.models import User
 
 
@@ -234,6 +235,7 @@ class SubmissionTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
+        cls.data = _get_ena_data_without_runs()
         user = User.objects.create(
             username="user1"
         )
@@ -263,11 +265,11 @@ class SubmissionTest(TestCase):
         # )
 
     @classmethod
-    def _create_submission_via_serializer(cls):
+    def _create_submission_via_serializer(cls, runs=False):
         serializer = SubmissionSerializer(data={
             'target': 'ENA',
             'release': True,
-            'data': _get_ena_data_without_runs()
+            'data': _get_ena_data() if runs else _get_ena_data_without_runs()
         })
         serializer.is_valid()
         submission = serializer.save(site=User.objects.first())
@@ -307,14 +309,40 @@ class SubmissionTest(TestCase):
         self.assertEqual(post_save_count, submission_count + 1)
 
     def test_get_study_json(self):
-        json_data = _get_ena_data_without_runs()
+        # json_data = _get_ena_data_without_runs()
         submission = self._create_submission_via_serializer()
         ena_study = {
-            'study_title': json_data.get('requirements')[
+            'study_title': self.data.get('requirements')[
                 'title'],
-            'study_abstract': json_data.get('requirements')[
+            'study_abstract': self.data.get('requirements')[
                 'description'],
-            'study_type': json_data.get('requirements')[
+            'study_type': self.data.get('requirements')[
                 'study_type']
         }
         self.assertDictEqual(ena_study, submission.get_study_json())
+
+    def test_get_sample_json(self):
+        # json_data = _get_ena_data_without_runs()
+        submission = self._create_submission_via_serializer()
+        content_samples = self.data.get('requirements').get('samples')
+        for s in submission.get_sample_json().get('samples'):
+            self.assertIn(s, content_samples)
+
+    def test_get_experiment_json_with_files(self):
+        # self.data = _get_ena_data_without_runs()
+        submission = self._create_submission_via_serializer()
+        content_experiments = self.data.get('requirements').get('experiments')
+        for s in submission.get_experiment_json().get('experiments'):
+            self.assertIn(s, content_experiments)
+            self.assertTrue('files' in s.keys())
+
+    def test_get_experiment_json_with_files_and_run(self):
+        json_data = _get_ena_data()
+        submission = self._create_submission_via_serializer(runs=True)
+        content_experiments = json_data.get('requirements').get('experiments')
+        for s in submission.get_experiment_json().get('experiments'):
+            self.assertIn(s, content_experiments)
+            if s['experiment_alias'] == 'experiment_no_file_block':
+                self.assertFalse('files' in s.keys())
+            else:
+                self.assertTrue('files' in s.keys())

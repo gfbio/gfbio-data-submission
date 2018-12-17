@@ -1014,6 +1014,7 @@ class SubmissionTest(TestCase):
         }
         self.assertDictEqual(ena_study, sub.get_study_json())
 
+    # done
     def test_get_sample_json(self):
         sub = self._prepare_entities_without_runs()
         content_samples = self.content_without_runs.get('requirements').get(
@@ -1021,6 +1022,7 @@ class SubmissionTest(TestCase):
         for s in sub.get_sample_json().get('samples'):
             self.assertIn(s, content_samples)
 
+    # done
     def test_get_experiment_json_with_files(self):
         sub = self._prepare_entities_without_runs()
         content_experiments = self.content_without_runs.get('requirements').get(

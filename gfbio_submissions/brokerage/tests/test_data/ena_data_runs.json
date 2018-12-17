@@ -138,12 +138,12 @@
                     }
                 },
                 "platform": "Illumina HiSeq 1000",
-                "experiment_alias": "experiment_j09gp7ei"
+                "experiment_alias": "experiment_no_file_block"
             }
         ],
         "runs": [
             {
-                "experiment_ref": "experiment_j09gp7ei",
+                "experiment_ref": "experiment_no_file_block",
                 "data_block": {
                     "files": [
                         {
@@ -156,7 +156,7 @@
                 }
             },
             {
-                "experiment_ref": "experiment_j09gp7ei",
+                "experiment_ref": "experiment_no_file_block",
                 "data_block": {
                     "files": [
                         {
