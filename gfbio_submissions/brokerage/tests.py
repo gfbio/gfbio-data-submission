@@ -1033,6 +1033,7 @@ class SubmissionTest(TestCase):
             self.assertIn(s, content_experiments)
             self.assertTrue('files' in s.keys())
 
+    # done
     def test_get_experiment_json_with_files_and_run(self):
         sub = self._prepare_entities_with_runs()
         content_experiments = self.content_with_runs.get('requirements').get(
@@ -1047,6 +1048,7 @@ class SubmissionTest(TestCase):
             else:
                 self.assertFalse('files' in s.keys())
 
+    # done
     def test_get_run_json_with_files_in_experiment(self):
         sub = self._prepare_entities_without_runs()
         content_runs = self.content_without_runs.get('requirements').get('runs',
@@ -1054,12 +1056,14 @@ class SubmissionTest(TestCase):
         self.assertEqual(0, len(content_runs))
         self.assertEqual(1, len(sub.get_run_json().get('runs')))
 
+    # done
     def test_get_run_json_with_additional_files_in_experiment(self):
         sub = self._prepare_entities_with_runs()
         content_runs = self.content_with_runs.get('requirements').get('runs')
         self.assertEqual(1, len(content_runs))
         self.assertEqual(2, len(sub.get_run_json().get('runs')))
 
+    # done
     def test_get_json_with_aliases_with_file_in_experiment(self):
         sub = self._prepare_entities_without_runs()
         request_id_fake = uuid.UUID('71d59109-695d-4172-a8be-df6fb3283857')
@@ -1087,6 +1091,7 @@ class SubmissionTest(TestCase):
         self.assertEqual(1, len(experiment_aliases))
         self.assertEqual(1, len(run_experiment_refs))
 
+    # done
     def test_get_json_with_aliases_with_additional_files_in_experiment(self):
         sub = self._prepare_entities_with_runs()
         request_id_fake = uuid.UUID('71d59109-695d-4172-a8be-df6fb3283857')

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import uuid
 
 from django.test import TestCase
 
@@ -309,7 +310,6 @@ class SubmissionTest(TestCase):
         self.assertEqual(post_save_count, submission_count + 1)
 
     def test_get_study_json(self):
-        # json_data = _get_ena_data_without_runs()
         submission = self._create_submission_via_serializer()
         ena_study = {
             'study_title': self.data.get('requirements')[
@@ -322,14 +322,12 @@ class SubmissionTest(TestCase):
         self.assertDictEqual(ena_study, submission.get_study_json())
 
     def test_get_sample_json(self):
-        # json_data = _get_ena_data_without_runs()
         submission = self._create_submission_via_serializer()
         content_samples = self.data.get('requirements').get('samples')
         for s in submission.get_sample_json().get('samples'):
             self.assertIn(s, content_samples)
 
     def test_get_experiment_json_with_files(self):
-        # self.data = _get_ena_data_without_runs()
         submission = self._create_submission_via_serializer()
         content_experiments = self.data.get('requirements').get('experiments')
         for s in submission.get_experiment_json().get('experiments'):
@@ -346,3 +344,69 @@ class SubmissionTest(TestCase):
                 self.assertFalse('files' in s.keys())
             else:
                 self.assertTrue('files' in s.keys())
+
+    def test_get_run_json_with_files_in_experiment(self):
+        submission = self._create_submission_via_serializer()
+        # 1x files in experiments. 0x run.
+        self.assertEqual(1, len(submission.get_run_json().get('runs')))
+
+    def test_get_run_json_with_additional_files_in_experiment(self):
+        submission = self._create_submission_via_serializer(runs=True)
+        # 4x files in experiments. 2x run.
+        self.assertEqual(6, len(submission.get_run_json().get('runs')))
+
+    def test_get_json_with_aliases_with_file_in_experiment(self):
+        submission = self._create_submission_via_serializer()
+        request_id_fake = uuid.UUID('71d59109-695d-4172-a8be-df6fb3283857')
+        study, samples, experiments, runs = submission.get_json_with_aliases(
+            alias_postfix=request_id_fake)
+        study_alias = study.get('study_alias', None)
+        sample_aliases = [s.get('sample_alias', '') for s in samples]
+        experiment_aliases = [
+            e.get('experiment_alias', '') for e in experiments
+        ]
+        experiment_sample_descriptors = [
+            e.get('design', {}).get('sample_descriptor', '')
+            for e in experiments
+        ]
+        experiment_study_refs = [e.get('study_ref', '') for e in experiments]
+        run_experiment_refs = [r.get('experiment_ref') for r in runs]
+
+        for e in experiment_sample_descriptors:
+            self.assertIn(e, sample_aliases)
+            self.assertTrue(2, len(e.split(':')))
+        for e in experiment_study_refs:
+            self.assertEqual(e, study_alias)
+            self.assertTrue(2, len(e.split(':')))
+        self.assertEqual(1, len(experiment_aliases))
+        self.assertEqual(1, len(run_experiment_refs))
+
+    def test_get_json_with_aliases_with_additional_files_in_experiment(self):
+        submission = self._create_submission_via_serializer(runs=True)
+        request_id_fake = uuid.UUID('71d59109-695d-4172-a8be-df6fb3283857')
+        study, samples, experiments, runs = submission.get_json_with_aliases(
+            alias_postfix=request_id_fake)
+        study_alias = study.get('study_alias', None)
+        sample_aliases = [s.get('sample_alias', '') for s in samples]
+        experiment_aliases = [
+            e.get('experiment_alias', '')
+            for e in experiments
+        ]
+        experiment_sample_descriptors = [
+            e.get('design', {}).get('sample_descriptor', '')
+            for e in experiments
+        ]
+        experiment_study_refs = [e.get('study_ref', '') for e in experiments]
+        run_experiment_refs = [r.get('experiment_ref') for r in runs]
+
+        for e in experiment_sample_descriptors:
+            self.assertIn(e, sample_aliases)
+            self.assertTrue(2, len(e.split(':')))
+        for e in experiment_study_refs:
+            self.assertEqual(e, study_alias)
+            self.assertTrue(2, len(e.split(':')))
+        self.assertEqual(5, len(experiment_aliases))
+        self.assertEqual(6, len(run_experiment_refs))
+        for r in run_experiment_refs:
+            self.assertIn(r, experiment_aliases)
+            self.assertTrue(2, len(r.split(':')))
