@@ -789,24 +789,24 @@ from .utils.submission_transfer import \
 #         self.assertEqual(1, len(study.persistentidentifier_set.all()))
 
 
-class CenterNameTest(TestCase):
-
-    def test_instance(self):
-        cn = CenterName()
-        cn.center_name = 'A Center'
-        cn.save()
-        self.assertEqual('A Center', cn.center_name)
-        self.assertEqual(1, len(CenterName.objects.all()))
-
-    def test_default(self):
-        cn = CenterName()
-        self.assertEqual('GFBIO', cn.center_name)
-
-    def test_str(self):
-        cn, created = CenterName.objects.get_or_create(center_name='ABC')
-        self.assertTrue(created)
-        self.assertEqual(1, len(CenterName.objects.all()))
-        self.assertEqual('ABC', cn.__str__())
+# class CenterNameTest(TestCase):
+#
+#     def test_instance(self):
+#         cn = CenterName()
+#         cn.center_name = 'A Center'
+#         cn.save()
+#         self.assertEqual('A Center', cn.center_name)
+#         self.assertEqual(1, len(CenterName.objects.all()))
+#
+#     def test_default(self):
+#         cn = CenterName()
+#         self.assertEqual('GFBIO', cn.center_name)
+#
+#     def test_str(self):
+#         cn, created = CenterName.objects.get_or_create(center_name='ABC')
+#         self.assertTrue(created)
+#         self.assertEqual(1, len(CenterName.objects.all()))
+#         self.assertEqual('ABC', cn.__str__())
 
 
 # https://code.djangoproject.com/ticket/27675

@@ -3,7 +3,7 @@
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.models import ResourceCredential, \
-    SiteConfiguration, TicketLabel, BrokerObject
+    SiteConfiguration, TicketLabel, BrokerObject, CenterName
 from gfbio_submissions.users.models import User
 
 
@@ -186,20 +186,6 @@ class BrokerObjectTest(TestCase):
         user = User.objects.create(
             username="user1"
         )
-        # resource_cred = ResourceCredential.objects.create(
-        #     title='Resource Title',
-        #     url='https://www.example.com',
-        #     authentication_string='letMeIn'
-        # )
-        # site_config = SiteConfiguration.objects.create(
-        #     title='Title',
-        #     site=user,
-        #     ena_server=resource_cred,
-        #     pangaea_server=resource_cred,
-        #     gfbio_server=resource_cred,
-        #     helpdesk_server=resource_cred,
-        #     comment='Comment',
-        # )
         BrokerObject.objects.create(
             type='study',
             site=user,
@@ -222,3 +208,21 @@ class BrokerObjectTest(TestCase):
     def test_str(self):
         broker_object = BrokerObject.objects.first()
         self.assertEqual('obj001_study', broker_object.__str__())
+
+
+class CenterNameTest(TestCase):
+
+    def test_instance(self):
+        cn = CenterName()
+        cn.center_name = 'A Center'
+        cn.save()
+        self.assertEqual('A Center', cn.center_name)
+        self.assertEqual(1, len(CenterName.objects.all()))
+
+    def test_default_name(self):
+        cn = CenterName()
+        self.assertEqual('GFBIO', cn.center_name)
+
+    def test_str(self):
+        cn, created = CenterName.objects.get_or_create(center_name='ABC')
+        self.assertEqual('ABC', cn.__str__())
