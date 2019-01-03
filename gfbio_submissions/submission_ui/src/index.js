@@ -4,7 +4,7 @@ import './index.css';
 import App from './App';
 // import registerServiceWorker from './registerServiceWorker';
 
-let myComponent =  document.getElementById('root')
+let myComponent =  document.getElementById('submission-ui')
 if (myComponent !== null){
     ReactDOM.render(<App />,myComponent);
 }

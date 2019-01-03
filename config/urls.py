@@ -18,6 +18,7 @@ urlpatterns = [
 
     # Your stuff: custom urls includes go here
     url(r'^api/', include('gfbio_submissions.brokerage.urls', namespace='brokerage')),
+    url(r'^ui/', include('gfbio_submissions.submission_ui.urls', namespace='userinterface')),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
