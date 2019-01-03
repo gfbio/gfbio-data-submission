@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
+import textwrap
 import uuid
 
 from django.test import TestCase
 from mock import patch
+import responses
 
 from gfbio_submissions.brokerage.models import ResourceCredential, \
-    SiteConfiguration, TicketLabel, BrokerObject, CenterName, Submission
+    SiteConfiguration, TicketLabel, BrokerObject, CenterName, Submission, \
+    PersistentIdentifier, RequestLog
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data_without_runs, \
     _get_ena_data
@@ -405,3 +408,139 @@ class SubmissionTest(TestCase):
             sub.save()
             self.assertEqual(Submission.CLOSED, sub.status)
             trigger_mock.assert_not_called()
+
+
+class PersistentIdentifierTest(TestCase):
+
+    def setUp(self):
+        user = User.objects.create(
+            username="user1"
+        )
+        broker_object = BrokerObject.objects.create(
+            type='study',
+            site=user,
+            site_project_id='prj001xxx',
+            site_object_id='obj001',
+            data={
+                'center_name': 'GFBIO',
+                'study_type': 'Metagenomics',
+                'study_abstract': 'abstract',
+                'study_title': 'title',
+                'study_alias': 'alias',
+                'site_object_id': 'from_data_01'
+            }
+        )
+        PersistentIdentifier.objects.get_or_create(
+            archive='ENA',
+            pid_type='ACC',
+            broker_object=broker_object,
+            pid='ACC_1234',
+            outgoing_request_id='da76ebec-7cde-4f11-a7bd-35ef8ebe5b85'
+        )
+
+    def test_str(self):
+        p = PersistentIdentifier.objects.all().first()
+        self.assertEqual('ACC_1234', p.__str__())
+
+
+class RequestLogTest(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        user = User.objects.create(
+            username="user1"
+        )
+        Submission.objects.create(site=user)
+        resource_cred = ResourceCredential.objects.create(
+            title='Resource Title',
+            url='https://www.example.com',
+            authentication_string='letMeIn'
+        )
+
+        SiteConfiguration.objects.create(
+            title='Default',
+            site=None,
+            ena_server=resource_cred,
+            pangaea_server=resource_cred,
+            gfbio_server=resource_cred,
+            helpdesk_server=resource_cred,
+            comment='Default configuration',
+        )
+
+    def test_create_request_log(self):
+        submission = Submission.objects.first()
+        RequestLog.objects.create(
+            type=RequestLog.INCOMING,
+            data='{"some_data": 12345}',
+            site_user='jdoe',
+            submission_id=submission.broker_submission_id,
+            response_status=200,
+            response_content='Whatever we return',
+        )
+        self.assertEqual(1, len(RequestLog.objects.all()))
+
+    def test_str(self):
+        submission = Submission.objects.first()
+        request_log = RequestLog.objects.create(
+            type=RequestLog.INCOMING,
+            data='{"some_data": 12345}',
+            site_user='jdoe',
+            submission_id=submission.broker_submission_id,
+            response_status=200,
+            response_content='Whatever we return',
+        )
+        self.assertEqual(str(request_log.request_id), request_log.__str__())
+
+        @responses.activate
+        def test_send_site_user_type(self):
+            submission = Submission.objects.first()
+            submission.submitting_user = '666'
+            submission.save()
+            conf = SiteConfiguration.objects.first()
+
+
+
+
+            TODO: use file
+            responses.add(
+                responses.POST, conf.ena_server.url, status=200,
+                body=textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?> <?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
+                         <RECEIPT receiptDate="2015-12-01T11:54:55.723Z" submissionFile="submission.xml"
+                                  success="true">
+                             <EXPERIMENT accession="ERX1228437" alias="4:f844738b-3304-4db7-858d-b7e47b293bb2"
+                                         status="PRIVATE"/>
+                             <RUN accession="ERR1149402" alias="5:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"/>
+                             <SAMPLE accession="ERS989691" alias="2:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
+                                 <EXT_ID accession="SAMEA3682542" type="biosample"/>
+                                 <EXT_ID accession="SAMEA3682543-666" type="sample-this"/>
+                             </SAMPLE>
+                             <SAMPLE accession="ERS989692" alias="3:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
+                                 <EXT_ID accession="SAMEA3682543" type="biosample"/>
+                             </SAMPLE>
+                             <STUDY accession="ERP013438" alias="1:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"
+                                    holdUntilDate="2016-03-05Z"/>
+                             <SUBMISSION accession="ERA540869" alias="NGS_March_original2"/>
+                             <MESSAGES>
+                                 <INFO>ADD action for the following XML: study.xml sample.xml
+                                     experiment.xml run.xml
+                                 </INFO>
+                             </MESSAGES>
+                             <ACTIONS>ADD</ACTIONS>
+                             <ACTIONS>ADD</ACTIONS>
+                             <ACTIONS>ADD</ACTIONS>
+                             <ACTIONS>ADD</ACTIONS>
+                             <ACTIONS>HOLD</ACTIONS>
+                         </RECEIPT>"""))
+
+            ena_submission_data = prepare_ena_data(
+                submission=submission)
+            response, req_log_request_id = send_submission_to_ena(
+                submission=submission,
+                archive_access=conf.ena_server,
+                ena_submission_data=ena_submission_data,
+            )
+
+            request_log = RequestLog.objects.get(
+                request_id=req_log_request_id)
+            self.assertEqual(submission.submitting_user, request_log.site_user)
+            self.assertFalse(isinstance(request_log.site_user, tuple))

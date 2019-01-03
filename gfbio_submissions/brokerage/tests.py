@@ -1627,18 +1627,20 @@ class FullWorkflowTest(TestCase):
         print(response.status_code)
 
 
-class PersistentIdentifierTest(TestCase):
-    fixtures = ('user', 'submission', 'broker_object', 'persistent_identifier',)
-
-    def test_str(self):
-        p = PersistentIdentifier.objects.all().first()
-        self.assertEqual('ACC_1234', p.__str__())
+# done
+# class PersistentIdentifierTest(TestCase):
+#     fixtures = ('user', 'submission', 'broker_object', 'persistent_identifier',)
+#
+#     def test_str(self):
+#         p = PersistentIdentifier.objects.all().first()
+#         self.assertEqual('ACC_1234', p.__str__())
 
 
 class RequestLogTest(TestCase):
     fixtures = (
     'user', 'submission', 'resource_credential', 'site_configuration')
 
+    # done
     def test_add_request_log_entry(self):
         submission = Submission.objects.all().first()
         all_entries = RequestLog.objects.all()
