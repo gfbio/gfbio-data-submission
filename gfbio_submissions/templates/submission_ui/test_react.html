@@ -3,7 +3,7 @@
 
 {% block content %}
     <h1>Test app below</h1>
-    <div id='submission-ui'>
+    <div id='app'>
         ... Loading
     </div>
 {% endblock content %}
@@ -36,9 +36,9 @@
      this needs to be configured via webpack. compare ena_redux config.
 
      -->
-    {#    <script src="{% static 'js/runtime~main.bc11b462e5a4ec769953.js' %}"></script>#}
-    {#    <script src="{% static 'js/vendor.7d31ab1286fb322a0443.chunk.js' %}"></script>#}
-    {#    <script src="{% static 'js/main.456f601ff120dd9bbcd8.chunk.js' %}"></script>#}
+        <script src="{% static 'js/runtime~main.dbc0c879bc9ad569df0c.js' %}"></script>
+        <script src="{% static 'js/vendor.ccb1b766c1923d0980c2.chunk.js' %}"></script>
+        <script src="{% static 'js/main.d539b438cf879b537b39.chunk.js' %}"></script>
 
     <!-- ######################################################################### -->
 
@@ -50,18 +50,24 @@
 
     -->
 
-    <script src="{% static 'js/runtime~main.229c360f.js' %}"></script>
-    <script src="{% static 'js/1.c64aed0e.chunk.js' %}"></script>
-    <script src="{% static 'js/main.4d83d21c.chunk.js' %}"></script>
+    {#    <script src="{% static 'js/runtime~main.229c360f.js' %}"></script>#}
+    {#    <script src="{% static 'js/1.c64aed0e.chunk.js' %}"></script>#}
+    {#    <script src="{% static 'js/main.4d83d21c.chunk.js' %}"></script>#}
 
     <!-- ######################################################################### -->
 
     <!--
         TODO: setup react boilerplate properly for submisison_ui
+
         TODO: setup webpack public path to load chunks for localhost
+            - path in webpack prod settings should also work on production system (app on same django server)
+            - app running, but not found route is shown (seems familiar -angular and first react app)
+                    - do like first react app or catch specific url in urls.py and hardcode in react
+
         TODO: django template test with built app. compare tutorial workflow
         TODO: implement rename, copy, collectstatic npm script. take care of references
-        TODO: setup basic example skeleton of an app with router
+        TODO: setup basic example skeleton of an app with router DONE - Test_1 as second route
+        TODO: remove .htaccess generation ?
         TODO: try updating boilerplate packages. stop if problems occur and wait for updated by boilerplate
         TODO: configure gitignore properly. no build dir etc, but other ui stuff
         TODO: axios instead of whatwg fetch
