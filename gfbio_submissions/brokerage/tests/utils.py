@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import os
+import textwrap
 
 
 def _get_test_data_dir_path():
@@ -38,3 +39,9 @@ def _get_parsed_ena_response():
     with open(os.path.join(
             _get_test_data_dir_path(), 'ena_response.json'), 'r') as data_file:
         return json.load(data_file)
+
+
+def _get_ena_xml_response():
+    with open(os.path.join(
+            _get_test_data_dir_path(), 'ena_response.xml'), 'r') as data_file:
+        return textwrap.dedent(data_file.read())
