@@ -240,14 +240,6 @@ class CenterNameTest(TestCase):
 class SubmissionTest(TestCase):
 
     @classmethod
-    def setUpTestData(cls):
-        cls.data = _get_ena_data_without_runs()
-        user = User.objects.create(
-            username="user1"
-        )
-        Submission.objects.create(site=user)
-
-    @classmethod
     def _create_submission_via_serializer(cls, runs=False):
         serializer = SubmissionSerializer(data={
             'target': 'ENA',
@@ -259,10 +251,18 @@ class SubmissionTest(TestCase):
         BrokerObject.objects.add_submission_data(submission)
         return submission
 
+    @classmethod
+    def setUpTestData(cls):
+        cls.data = _get_ena_data_without_runs()
+        user = User.objects.create(
+            username="user1"
+        )
+        Submission.objects.create(site=user)
+
     def test_str(self):
         submission = Submission.objects.first()
         self.assertEqual(
-            '1_{0}'.format(submission.broker_submission_id),
+            '{0}_{1}'.format(submission.pk, submission.broker_submission_id),
             submission.__str__()
         )
 
@@ -467,6 +467,9 @@ class RequestLogTest(TestCase):
             helpdesk_server=resource_cred,
             comment='Default configuration',
         )
+
+    def tearDown(self):
+        Submission.objects.all().delete()
 
     def test_create_request_log(self):
         submission = Submission.objects.first()

@@ -39,6 +39,9 @@ class EnalizerTest(TestCase):
             comment='Default configuration',
         )
 
+    def tearDown(self):
+        Submission.objects.all().delete()
+
     def test_with_files_in_experiments(self):
         submission = Submission.objects.first()
         enalizer = Enalizer(submission=submission, alias_postfix='test')
