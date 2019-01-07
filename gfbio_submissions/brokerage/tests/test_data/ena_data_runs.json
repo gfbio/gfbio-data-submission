@@ -8,7 +8,21 @@
                 "taxon_id": 530564,
                 "description": "Pirellula staleyi DSM 6068, ...",
                 "sample_alias": "sample_j09gp7e9",
-                "sample_title": "Sample No. 1"
+                "sample_title": "Sample No. 1",
+                "sample_attributes": [
+                    {
+                        "tag": "investigation type",
+                        "value": "mimarks-survey"
+                    },
+                    {
+                        "tag": "environmental package",
+                        "value": "coffee"
+                    },
+                    {
+                        "tag": "collection date",
+                        "value": "2014-11"
+                    }
+                ]
             },
             {
                 "taxon_id": 1081887,
