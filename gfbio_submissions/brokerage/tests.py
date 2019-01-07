@@ -2383,63 +2383,63 @@ class FullWorkflowTest(TestCase):
 #         self.assertEqual('PDI-0815', ref.reference_key)
 
 
-class AdditionalReferenceTest(TestCase):
-    fixtures = (
-        'user', 'submission', 'resource_credential', 'additional_reference',
-        'site_configuration', 'ticket_label',)
-
-    def test_instance(self):
-        reference = AdditionalReference(
-            type=AdditionalReference.PANGAEA_JIRA_TICKET,
-            submission=Submission.objects.get(pk=1)
-        )
-        reference.save()
-        self.assertFalse(reference.primary)
-        self.assertTrue(isinstance(reference, AdditionalReference))
-
-    def test_save_primary(self):
-        sub = Submission.objects.get(pk=1)
-        self.assertEqual(3, len(sub.additionalreference_set.all()))
-        for ref in sub.additionalreference_set.all():
-            if ref.pk == 1:
-                self.assertTrue(ref.primary)
-            else:
-                self.assertFalse(ref.primary)
-
-        pangeae_references = sub.additionalreference_set.filter(
-            type=AdditionalReference.PANGAEA_JIRA_TICKET)
-        self.assertEqual(2, len(pangeae_references))
-        ref = pangeae_references.first()
-        ref.primary = True
-        ref.save()
-        reference_changed = ref.reference_key
-
-        pangeae_references = sub.additionalreference_set.filter(
-            type=AdditionalReference.PANGAEA_JIRA_TICKET)
-        primary_references = pangeae_references.filter(primary=True)
-        self.assertEqual(1, len(primary_references))
-        self.assertEqual(reference_changed,
-                         primary_references.first().reference_key)
-        non_primary = pangeae_references.filter(primary=False)
-        self.assertEqual(1, len(non_primary))
-        self.assertNotEqual(reference_changed,
-                            non_primary.first().reference_key)
-
-        ref = non_primary.first()
-        reference_changed = ref.reference_key
-        ref.primary = True
-        ref.save()
-
-        pangeae_references = sub.additionalreference_set.filter(
-            type=AdditionalReference.PANGAEA_JIRA_TICKET)
-        primary_references = pangeae_references.filter(primary=True)
-        self.assertEqual(1, len(primary_references))
-        self.assertEqual(reference_changed,
-                         primary_references.first().reference_key)
-        non_primary = pangeae_references.filter(primary=False)
-        self.assertEqual(1, len(non_primary))
-        self.assertNotEqual(reference_changed,
-                            non_primary.first().reference_key)
+# class AdditionalReferenceTest(TestCase):
+#     fixtures = (
+#         'user', 'submission', 'resource_credential', 'additional_reference',
+#         'site_configuration', 'ticket_label',)
+#
+#     def test_instance(self):
+#         reference = AdditionalReference(
+#             type=AdditionalReference.PANGAEA_JIRA_TICKET,
+#             submission=Submission.objects.get(pk=1)
+#         )
+#         reference.save()
+#         self.assertFalse(reference.primary)
+#         self.assertTrue(isinstance(reference, AdditionalReference))
+#
+#     def test_save_primary(self):
+#         sub = Submission.objects.get(pk=1)
+#         self.assertEqual(3, len(sub.additionalreference_set.all()))
+#         for ref in sub.additionalreference_set.all():
+#             if ref.pk == 1:
+#                 self.assertTrue(ref.primary)
+#             else:
+#                 self.assertFalse(ref.primary)
+#
+#         pangeae_references = sub.additionalreference_set.filter(
+#             type=AdditionalReference.PANGAEA_JIRA_TICKET)
+#         self.assertEqual(2, len(pangeae_references))
+#         ref = pangeae_references.first()
+#         ref.primary = True
+#         ref.save()
+#         reference_changed = ref.reference_key
+#
+#         pangeae_references = sub.additionalreference_set.filter(
+#             type=AdditionalReference.PANGAEA_JIRA_TICKET)
+#         primary_references = pangeae_references.filter(primary=True)
+#         self.assertEqual(1, len(primary_references))
+#         self.assertEqual(reference_changed,
+#                          primary_references.first().reference_key)
+#         non_primary = pangeae_references.filter(primary=False)
+#         self.assertEqual(1, len(non_primary))
+#         self.assertNotEqual(reference_changed,
+#                             non_primary.first().reference_key)
+#
+#         ref = non_primary.first()
+#         reference_changed = ref.reference_key
+#         ref.primary = True
+#         ref.save()
+#
+#         pangeae_references = sub.additionalreference_set.filter(
+#             type=AdditionalReference.PANGAEA_JIRA_TICKET)
+#         primary_references = pangeae_references.filter(primary=True)
+#         self.assertEqual(1, len(primary_references))
+#         self.assertEqual(reference_changed,
+#                          primary_references.first().reference_key)
+#         non_primary = pangeae_references.filter(primary=False)
+#         self.assertEqual(1, len(non_primary))
+#         self.assertNotEqual(reference_changed,
+#                             non_primary.first().reference_key)
 
 
 def fake_trigger_submission_transfer(submission_id=None):
