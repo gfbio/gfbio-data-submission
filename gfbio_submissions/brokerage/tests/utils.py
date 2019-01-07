@@ -45,3 +45,17 @@ def _get_ena_xml_response():
     with open(os.path.join(
             _get_test_data_dir_path(), 'ena_response.xml'), 'r') as data_file:
         return textwrap.dedent(data_file.read())
+
+
+def _get_pangaea_soap_body():
+    with open(os.path.join(
+            _get_test_data_dir_path(),
+            'pangaea_soap_body.xml'), 'r') as data_file:
+        return textwrap.dedent(data_file.read())
+
+
+def _get_pangaea_soap_response():
+    with open(os.path.join(
+            _get_test_data_dir_path(),
+            'pangaea_soap_response.xml'), 'r') as data_file:
+        return textwrap.dedent(data_file.read().replace('\n', ''))

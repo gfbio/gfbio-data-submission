@@ -2225,156 +2225,162 @@ class FullWorkflowTest(TestCase):
     #     self.assertIn('<VALIDATE', xml)
 
 
-class PangaeaTicketTest(TestCase):
-    fixtures = (
-        'user', 'submission', 'resource_credential', 'additional_reference',
-        'site_configuration', 'ticket_label',)
-
-    @skip('request to PANGAEA server')
-    def test_basic_soap_call_for_token(self):
-        username = 'gfbio-broker'
-        password = 'h_qB-RxCY)7y'
-        url = 'https://ws.pangaea.de/ws/services/PanLogin'
-        headers = {
-            'Accept': 'text/xml',
-            'SOAPAction': 'login'
-        }
-        body = textwrap.dedent("""<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:java:de.pangaea.login.PanLogin">
-  <soapenv:Header/>
-  <soapenv:Body>
-    <urn:login>
-      <urn:username>{0}</urn:username>
-      <urn:password>{1}</urn:password>
-    </urn:login>
-  </soapenv:Body>
-</soapenv:Envelope>""".format(username, password))
-        response = requests.post(url=url, data=body, headers=headers)
-
-        # 22.02.2016 returned :
-        # status:  200
-        # content:  <?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Body><ns1:loginResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="urn:java:de.pangaea.login.PanLogin"><loginReturn xsi:type="xsd:string">f3d7aca208aaec8954d45bebc2f59ba1522264db</loginReturn></ns1:loginResponse></soapenv:Body></soapenv:Envelope>
-
-    @skip('request to PANGAEA server')
-    def test_request_pangaea_login_token(self):
-        access = ResourceCredential()
-        access.username = 'gfbio-broker'
-        access.password = 'h_qB-RxCY)7y'
-        access.url = 'https://ws.pangaea.de/ws/services/PanLogin'
-        access.save()
-        response = request_pangaea_login_token(resource_credential=access)
-        self.assertTrue(200, response.status_code)
-        self.assertIn(
-            'xmlns:ns1="urn:java:de.pangaea.login.PanLogin">'
-            '<loginReturn xsi:type="xsd:string">', response.content
-        )
-
-    def test_parse_pangaea_soap_response(self):
-        # compare test above
-        expected_token = 'f3d7aca208aaec8954d45bebc2f59ba1522264db'
-        response = requests.models.Response()
-        response.status_code = 200
-        response._content = '<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope ' \
-                            'xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' \
-                            'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ' \
-                            'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' \
-                            '<soapenv:Body><ns1:loginResponse ' \
-                            'soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" ' \
-                            'xmlns:ns1="urn:java:de.pangaea.login.PanLogin">' \
-                            '<loginReturn xsi:type="xsd:string">{}' \
-                            '</loginReturn></ns1:loginResponse></soapenv:Body>' \
-                            '</soapenv:Envelope>'.format(expected_token)
-        with patch('requests.post', return_value=response):
-            parsed_token = parse_pangaea_login_token_response(response)
-            self.assertEqual(expected_token, parsed_token)
-
-    def test_get_pangaea_login_token(self):
-        access = ResourceCredential()
-        access.username = 'gfbio-broker'
-        access.password = 'blabla'
-        access.save()
-        expected_token = 'f3d7aca208aaec8954d45bebc2f59ba1522264db'
-        response = requests.models.Response()
-        response.status_code = 200
-        response._content = '<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope ' \
-                            'xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' \
-                            'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ' \
-                            'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' \
-                            '<soapenv:Body><ns1:loginResponse ' \
-                            'soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" ' \
-                            'xmlns:ns1="urn:java:de.pangaea.login.PanLogin">' \
-                            '<loginReturn xsi:type="xsd:string">{}' \
-                            '</loginReturn></ns1:loginResponse></soapenv:Body>' \
-                            '</soapenv:Envelope>'.format(expected_token)
-        with patch('requests.post', return_value=response):
-            self.assertTrue(expected_token, get_pangaea_login_token(access))
-
-    # TODO: clarify how to proceed with pangaea and or contetual data
-    @skip('Currently no gcdj in testdata ...')
-    def test_get_csv_from_sample(self):
-        sub = FullWorkflowTest._prepare()
-        # get samples related to submission as done in send_to_pangaea
-        samples = sub.brokerobject_set.filter(type='sample')
-        # GCDJ ?                  yes                          no                          yes
-        # <QuerySet [<BrokerObject: obj1_sample>, <BrokerObject: obj2_sample>, <BrokerObject: obj3_sample>]>
-        contains_gcdjson, csv = get_csv_from_sample(samples[1].data)
-        self.assertFalse(contains_gcdjson)
-        self.assertEqual({}, csv)
-        contains_gcdjson, csv = get_csv_from_sample(samples.last().data)
-        self.assertTrue(contains_gcdjson)
-        self.assertTrue(isinstance(csv, OrderedDict))
-        csv = get_csv_from_samples(sub)
-        self.assertLess(0, len(csv))
-        self.assertIn('"gcdjson.', csv)
-        self.assertEqual(4, csv.count('\r\n'))
-
-    @skip('request to PANGAEA server')
-    def test_create_pangaea_ticket(self):
-        resource_credential = ResourceCredential()
-        resource_credential.username = 'gfbio-broker'
-        resource_credential.password = 'h_qB-RxCY)7y'
-        resource_credential.url = 'https://ws.pangaea.de/ws/services/PanLogin'
-        resource_credential.save()
-
-        site_config = SiteConfiguration.objects.get(pk=1)
-        site_config.pangaea_server = resource_credential
-        site_config.save()
-
-        login_token = get_pangaea_login_token(resource_credential)
-        response = create_pangaea_jira_ticket(login_token,
-                                              site_configuration=site_config)
-
-    @skip('request to PANGAEA server')
-    def test_doi_parsing(self):
-        access = ResourceCredential()
-        access.username = 'gfbio-broker'
-        access.password = 'h_qB-RxCY)7y'
-        access.url = 'https://ws.pangaea.de/ws/services/PanLogin'
-        access.save()
-        login_token = get_pangaea_login_token(access)
-        ticket_key = 'PDI-12428'
-        url = '{0}{1}'.format(PANGAEA_ISSUE_BASE_URL, ticket_key)
-        cookies = dict(PanLoginID=login_token)
-        headers = {
-            'Content-Type': 'application/json'
-        }
-        response = requests.get(
-            url=url,
-            headers=headers,
-            cookies=cookies,
-        )
-
-    def test_filter_for_submission_additional_reference(self):
-        s = Submission.objects.filter(status=Submission.OPEN).filter(
-            additionalreference__type=AdditionalReference.PANGAEA_JIRA_TICKET)
-        subs = Submission.objects.all()
-
-        self.assertEqual(2, len(s))
-        self.assertEqual(3, len(s[0].additionalreference_set.all()))
-        self.assertEqual(2, len(s[0].additionalreference_set.filter(
-            type=AdditionalReference.PANGAEA_JIRA_TICKET)))
-        ref = s[0].additionalreference_set.filter(
-            type=AdditionalReference.PANGAEA_JIRA_TICKET).first()
-        self.assertEqual('PDI-0815', ref.reference_key)
+# class PangaeaTicketTest(TestCase):
+#     fixtures = (
+#         'user', 'submission', 'resource_credential', 'additional_reference',
+#         'site_configuration', 'ticket_label',)
+#
+#     # done, do not move
+# #     @skip('request to PANGAEA server')
+# #     def test_basic_soap_call_for_token(self):
+# #         username = 'gfbio-broker'
+# #         password = 'h_qB-RxCY)7y'
+# #         url = 'https://ws.pangaea.de/ws/services/PanLogin'
+# #         headers = {
+# #             'Accept': 'text/xml',
+# #             'SOAPAction': 'login'
+# #         }
+# #         body = textwrap.dedent("""<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:java:de.pangaea.login.PanLogin">
+# #   <soapenv:Header/>
+# #   <soapenv:Body>
+# #     <urn:login>
+# #       <urn:username>{0}</urn:username>
+# #       <urn:password>{1}</urn:password>
+# #     </urn:login>
+# #   </soapenv:Body>
+# # </soapenv:Envelope>""".format(username, password))
+# #         response = requests.post(url=url, data=body, headers=headers)
+# #
+# #         # 22.02.2016 returned :
+# #         # status:  200
+# #         # content:  <?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Body><ns1:loginResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="urn:java:de.pangaea.login.PanLogin"><loginReturn xsi:type="xsd:string">f3d7aca208aaec8954d45bebc2f59ba1522264db</loginReturn></ns1:loginResponse></soapenv:Body></soapenv:Envelope>
+#
+#     # @skip('request to PANGAEA server')
+#     # def test_request_pangaea_login_token(self):
+#     #     access = ResourceCredential()
+#     #     access.username = 'gfbio-broker'
+#     #     access.password = 'h_qB-RxCY)7y'
+#     #     access.url = 'https://ws.pangaea.de/ws/services/PanLogin'
+#     #     access.save()
+#     #     response = request_pangaea_login_token(resource_credential=access)
+#     #     self.assertTrue(200, response.status_code)
+#     #     self.assertIn(
+#     #         'xmlns:ns1="urn:java:de.pangaea.login.PanLogin">'
+#     #         '<loginReturn xsi:type="xsd:string">', response.content
+#     #     )
+#
+#     # done
+#     def test_parse_pangaea_soap_response(self):
+#         # compare test above
+#         expected_token = 'f3d7aca208aaec8954d45bebc2f59ba1522264db'
+#         response = requests.models.Response()
+#         response.status_code = 200
+#         response._content = '<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope ' \
+#                             'xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' \
+#                             'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ' \
+#                             'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' \
+#                             '<soapenv:Body><ns1:loginResponse ' \
+#                             'soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" ' \
+#                             'xmlns:ns1="urn:java:de.pangaea.login.PanLogin">' \
+#                             '<loginReturn xsi:type="xsd:string">{}' \
+#                             '</loginReturn></ns1:loginResponse></soapenv:Body>' \
+#                             '</soapenv:Envelope>'.format(expected_token)
+#         with patch('requests.post', return_value=response):
+#             parsed_token = parse_pangaea_login_token_response(response)
+#             self.assertEqual(expected_token, parsed_token)
+#
+#     # done
+#     def test_get_pangaea_login_token(self):
+#         access = ResourceCredential()
+#         access.username = 'gfbio-broker'
+#         access.password = 'blabla'
+#         access.save()
+#         expected_token = 'f3d7aca208aaec8954d45bebc2f59ba1522264db'
+#         response = requests.models.Response()
+#         response.status_code = 200
+#         response._content = '<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope ' \
+#                             'xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' \
+#                             'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ' \
+#                             'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' \
+#                             '<soapenv:Body><ns1:loginResponse ' \
+#                             'soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" ' \
+#                             'xmlns:ns1="urn:java:de.pangaea.login.PanLogin">' \
+#                             '<loginReturn xsi:type="xsd:string">{}' \
+#                             '</loginReturn></ns1:loginResponse></soapenv:Body>' \
+#                             '</soapenv:Envelope>'.format(expected_token)
+#         with patch('requests.post', return_value=response):
+#             self.assertTrue(expected_token, get_pangaea_login_token(access))
+#
+#     # done, omit
+#     # TODO: clarify how to proceed with pangaea and or contetual data
+#     @skip('Currently no gcdj in testdata ...')
+#     def test_get_csv_from_sample(self):
+#         sub = FullWorkflowTest._prepare()
+#         # get samples related to submission as done in send_to_pangaea
+#         samples = sub.brokerobject_set.filter(type='sample')
+#         # GCDJ ?                  yes                          no                          yes
+#         # <QuerySet [<BrokerObject: obj1_sample>, <BrokerObject: obj2_sample>, <BrokerObject: obj3_sample>]>
+#         contains_gcdjson, csv = get_csv_from_sample(samples[1].data)
+#         self.assertFalse(contains_gcdjson)
+#         self.assertEqual({}, csv)
+#         contains_gcdjson, csv = get_csv_from_sample(samples.last().data)
+#         self.assertTrue(contains_gcdjson)
+#         self.assertTrue(isinstance(csv, OrderedDict))
+#         csv = get_csv_from_samples(sub)
+#         self.assertLess(0, len(csv))
+#         self.assertIn('"gcdjson.', csv)
+#         self.assertEqual(4, csv.count('\r\n'))
+#
+#     # done
+#     @skip('request to PANGAEA server')
+#     def test_create_pangaea_ticket(self):
+#         resource_credential = ResourceCredential()
+#         resource_credential.username = 'gfbio-broker'
+#         resource_credential.password = 'h_qB-RxCY)7y'
+#         resource_credential.url = 'https://ws.pangaea.de/ws/services/PanLogin'
+#         resource_credential.save()
+#
+#         site_config = SiteConfiguration.objects.get(pk=1)
+#         site_config.pangaea_server = resource_credential
+#         site_config.save()
+#
+#         login_token = get_pangaea_login_token(resource_credential)
+#         response = create_pangaea_jira_ticket(login_token,
+#                                               site_configuration=site_config)
+#
+#     # done
+#     @skip('request to PANGAEA server')
+#     def test_doi_parsing(self):
+#         access = ResourceCredential()
+#         access.username = 'gfbio-broker'
+#         access.password = 'h_qB-RxCY)7y'
+#         access.url = 'https://ws.pangaea.de/ws/services/PanLogin'
+#         access.save()
+#         login_token = get_pangaea_login_token(access)
+#         ticket_key = 'PDI-12428'
+#         url = '{0}{1}'.format(PANGAEA_ISSUE_BASE_URL, ticket_key)
+#         cookies = dict(PanLoginID=login_token)
+#         headers = {
+#             'Content-Type': 'application/json'
+#         }
+#         response = requests.get(
+#             url=url,
+#             headers=headers,
+#             cookies=cookies,
+#         )
+#
+#     def test_filter_for_submission_additional_reference(self):
+#         s = Submission.objects.filter(status=Submission.OPEN).filter(
+#             additionalreference__type=AdditionalReference.PANGAEA_JIRA_TICKET)
+#         subs = Submission.objects.all()
+#
+#         self.assertEqual(2, len(s))
+#         self.assertEqual(3, len(s[0].additionalreference_set.all()))
+#         self.assertEqual(2, len(s[0].additionalreference_set.filter(
+#             type=AdditionalReference.PANGAEA_JIRA_TICKET)))
+#         ref = s[0].additionalreference_set.filter(
+#             type=AdditionalReference.PANGAEA_JIRA_TICKET).first()
+#         self.assertEqual('PDI-0815', ref.reference_key)
 
 
 class AdditionalReferenceTest(TestCase):
