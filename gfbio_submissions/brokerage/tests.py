@@ -1790,6 +1790,7 @@ class EnalizerTest(TestCase):
         BrokerObject.objects.add_submission_data(submission)
         return submission
 
+    # done
     def test_instance_with_files_in_experiments(self):
         sub = self._get_submission_with_testdata()
         e = Enalizer(sub, alias_postfix='test')
@@ -1798,6 +1799,7 @@ class EnalizerTest(TestCase):
         self.assertEqual(e.study_alias, e.experiment[0]['study_ref'])
         self.assertEqual(5, len(e.run))
 
+    # done
     def test_instance_with_additional_files_in_experiments(self):
         sub = self._get_submission_with_testdata(runs=True)
         e = Enalizer(sub, alias_postfix='test-runs')
@@ -1806,6 +1808,7 @@ class EnalizerTest(TestCase):
         self.assertEqual(e.study_alias, e.experiment[0]['study_ref'])
         self.assertEqual(6, len(e.run))
 
+    # done
     def test_instance_center_name(self):
         sub = self._get_submission_with_testdata()
         e = Enalizer(sub, alias_postfix='test')
@@ -1819,6 +1822,7 @@ class EnalizerTest(TestCase):
         e2 = Enalizer(sub, alias_postfix='test')
         self.assertEqual('CustomCenter', e2.center_name)
 
+    # done
     def test_study_xml(self):
         sub = self._get_submission_with_testdata()
         ena = Enalizer(sub, 'test-enalizer-study')
@@ -1834,6 +1838,7 @@ class EnalizerTest(TestCase):
         study_xml_standalone = ena.create_study_xml()
         self.assertEqual(study_xml, smart_text(study_xml_standalone))
 
+    # done
     def test_study_xml_center_name(self):
         sub = self._get_submission_with_testdata()
         center_name, created = CenterName.objects.get_or_create(
@@ -1848,6 +1853,7 @@ class EnalizerTest(TestCase):
         study_xml_standalone = ena.create_study_xml()
         self.assertEqual(study_xml, smart_text(study_xml_standalone))
 
+    # done
     def test_sample_xml(self):
         # BrokerObject.objects.all().delete()
         sub = self._get_submission_with_testdata()
@@ -1888,6 +1894,7 @@ class EnalizerTest(TestCase):
             '</SAMPLE>'.format(submission_samples[4].pk),
             sample_xml)
 
+    # done
     def test_sample_xml_center_name(self):
         sub = self._get_submission_with_testdata()
         center_name, created = CenterName.objects.get_or_create(
@@ -1902,6 +1909,7 @@ class EnalizerTest(TestCase):
         self.assertEqual('sample.xml', k)
         self.assertIn('center_name="CustomCenter"', sample_xml)
 
+    # done
     def test_sample_xml_checklist_mapping(self):
         sub = self._get_submission_with_testdata(add_sample_attributes=True)
         ena = Enalizer(sub, 'test-enalizer-sample')

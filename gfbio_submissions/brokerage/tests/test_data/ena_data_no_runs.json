@@ -7,12 +7,32 @@
             {
                 "sample_alias": "sample1",
                 "sample_title": "sample title",
-                "taxon_id": 530564
+                "taxon_id": 530564,
+                "sample_attributes": [
+                    {
+                        "tag": "investigation type",
+                        "value": "mimarks-survey"
+                    },
+                    {
+                        "tag": "environmental package",
+                        "value": "water"
+                    },
+                    {
+                        "tag": "collection date",
+                        "value": "2014-11"
+                    }
+                ]
             },
             {
                 "sample_alias": "sample2",
                 "sample_title": "sample title 2",
-                "taxon_id": 530564
+                "taxon_id": 530564,
+                "sample_attributes": [
+                    {
+                        "tag": "environmental package",
+                        "value": "wastewater sludge"
+                    }
+                ]
             }
         ],
         "experiments": [
