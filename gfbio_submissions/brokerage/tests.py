@@ -8,8 +8,6 @@ import os
 import pprint
 import textwrap
 import uuid
-import xml
-from collections import OrderedDict
 from json import JSONDecodeError
 from unittest import skip
 from urllib.parse import urlparse
@@ -22,7 +20,6 @@ from celery import chain
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.test import TestCase
-from django.utils.encoding import smart_text
 from mock import patch
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -33,13 +30,11 @@ from gfbio_submissions.brokerage.admin import download_auditable_text_data
 from gfbio_submissions.brokerage.configuration.settings import \
     HELPDESK_API_SUB_URL, HELPDESK_COMMENT_SUB_URL
 from gfbio_submissions.users.models import User
-from .configuration.settings import PANGAEA_ISSUE_BASE_URL, \
-    SUBMISSION_DELAY
+from .configuration.settings import PANGAEA_ISSUE_BASE_URL
 from .models import Submission, \
     ResourceCredential, BrokerObject, RequestLog, PersistentIdentifier, \
     SiteConfiguration, AdditionalReference, TaskProgressReport, \
-    SubmissionFileUpload, PrimaryDataFile, AuditableTextData, \
-    CenterName
+    SubmissionFileUpload, PrimaryDataFile, AuditableTextData
 from .serializers import SubmissionSerializer
 from .tasks import create_helpdesk_ticket_task, \
     create_broker_objects_from_submission_data_task, \
@@ -51,18 +46,14 @@ from .tasks import create_helpdesk_ticket_task, \
     add_pangaealink_to_helpdesk_ticket_task, trigger_submission_transfer, \
     check_on_hold_status_task, get_gfbio_user_email_task, \
     prepare_ena_submission_data_task, attach_file_to_helpdesk_ticket_task
-from .utils.ena import send_submission_to_ena, \
-    download_submitted_run_files_to_stringIO, prepare_ena_data, \
-    store_ena_data_as_auditable_text_data, Enalizer
+from .utils.ena import download_submitted_run_files_to_stringIO, \
+    prepare_ena_data, \
+    store_ena_data_as_auditable_text_data
 from .utils.gfbio import \
     gfbio_assemble_research_object_id_json, gfbio_site_object_ids_service, \
     gfbio_helpdesk_create_ticket, \
     gfbio_helpdesk_comment_on_ticket, gfbio_get_user_by_id, \
     gfbio_helpdesk_attach_file_to_ticket
-from .utils.pangaea import \
-    request_pangaea_login_token, parse_pangaea_login_token_response, \
-    get_pangaea_login_token, get_csv_from_sample, get_csv_from_samples, \
-    create_pangaea_jira_ticket
 from .utils.submission_transfer import \
     SubmissionTransferHandler
 
@@ -179,78 +170,78 @@ from .utils.submission_transfer import \
 #         self.assertEqual(0, len(sc.ticketlabel_set.all()))
 
 
-# class BrokerObjectTest(TestCase):
-#     fixtures = ('user', 'broker_object', 'submission', 'resource_credential')
-#
-#     @classmethod
-#     def _get_broker_object_test_data(cls):
-#         return {
-#             'requirements': {
-#                 'title': '123456',
-#                 'description': '123456',
-#                 'study_type': 'Metagenomics',
-#                 'samples': [
-#                     {
-#                         'sample_alias': 'sample1',
-#                         'sample_title': 'stitle',
-#                         'taxon_id': 1234
-#                     },
-#                     {
-#                         'sample_alias': 'sample2',
-#                         'sample_title': 'stitleagain',
-#                         'taxon_id': 1234
-#                     }
-#                 ],
-#                 "experiments": [
-#                     {
-#                         'experiment_alias': 'experiment1',
-#                         'platform': 'AB 3730xL Genetic Analyzer',
-#                         'design': {
-#                             'sample_descriptor': 'sample2',
-#                             'design_description': '',
-#                             'library_descriptor': {
-#                                 'library_strategy': 'AMPLICON',
-#                                 'library_source': 'METAGENOMIC',
-#                                 'library_selection': 'PCR',
-#                                 'library_layout': {
-#                                     'layout_type': 'paired',
-#                                     'nominal_length': 450
-#                                 }
-#                             }
-#                         }
-#                     }
-#                 ],
-#                 'runs': [
-#                     {
-#                         'experiment_ref': 'experiment1',
-#                         'data_block': {
-#                             'files': [
-#                                 {
-#                                     'filename': 'aFile',
-#                                     'filetype': 'fastq',
-#                                     'checksum_method': 'MD5',
-#                                     'checksum': '12345'
-#                                 }
-#                             ]
-#                         }
-#                     }
-#                 ]
-#             }
-#         }
-#
-#     @classmethod
-#     def _get_ena_full_data(cls, runs=False):
-#         if runs:
-#             with open(os.path.join(
-#                     'gfbio_submissions/brokerage/test_data/',
-#                     'ena_data_full_with_runs.json'), 'r') as test_data_file:
-#                 return json.load(test_data_file)
-#         else:
-#             with open(os.path.join(
-#                     'gfbio_submissions/brokerage/test_data/',
-#                     'ena_data_full_no_runs.json'), 'r') as test_data_file:
-#                 return json.load(test_data_file)
-#
+class BrokerObjectTest(TestCase):
+    fixtures = ('user', 'broker_object', 'submission', 'resource_credential')
+
+    @classmethod
+    def _get_broker_object_test_data(cls):
+        return {
+            'requirements': {
+                'title': '123456',
+                'description': '123456',
+                'study_type': 'Metagenomics',
+                'samples': [
+                    {
+                        'sample_alias': 'sample1',
+                        'sample_title': 'stitle',
+                        'taxon_id': 1234
+                    },
+                    {
+                        'sample_alias': 'sample2',
+                        'sample_title': 'stitleagain',
+                        'taxon_id': 1234
+                    }
+                ],
+                "experiments": [
+                    {
+                        'experiment_alias': 'experiment1',
+                        'platform': 'AB 3730xL Genetic Analyzer',
+                        'design': {
+                            'sample_descriptor': 'sample2',
+                            'design_description': '',
+                            'library_descriptor': {
+                                'library_strategy': 'AMPLICON',
+                                'library_source': 'METAGENOMIC',
+                                'library_selection': 'PCR',
+                                'library_layout': {
+                                    'layout_type': 'paired',
+                                    'nominal_length': 450
+                                }
+                            }
+                        }
+                    }
+                ],
+                'runs': [
+                    {
+                        'experiment_ref': 'experiment1',
+                        'data_block': {
+                            'files': [
+                                {
+                                    'filename': 'aFile',
+                                    'filetype': 'fastq',
+                                    'checksum_method': 'MD5',
+                                    'checksum': '12345'
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+
+    @classmethod
+    def _get_ena_full_data(cls, runs=False):
+        if runs:
+            with open(os.path.join(
+                    'gfbio_submissions/brokerage/test_data/',
+                    'ena_data_full_with_runs.json'), 'r') as test_data_file:
+                return json.load(test_data_file)
+        else:
+            with open(os.path.join(
+                    'gfbio_submissions/brokerage/test_data/',
+                    'ena_data_full_no_runs.json'), 'r') as test_data_file:
+                return json.load(test_data_file)
+
 #     # done
 #     def test_instance(self):
 #         se = BrokerObject()
@@ -812,158 +803,158 @@ from .utils.submission_transfer import \
 # https://code.djangoproject.com/ticket/27675
 # https://bitbucket.org/schinckel/django-jsonfield/issues/57/cannot-use-in-the-same-project-as-djangos
 # https://code.djangoproject.com/ticket/27183
-# class SubmissionTest(TestCase):
-#     fixtures = (
-#         'user', 'submission', 'resource_credential', 'site_configuration',
-#     )
-#
-#     content_without_runs = {
-#         'requirements': {
-#             'title': '123456',
-#             'description': '123456',
-#             'study_type': 'Metagenomics',
-#             'samples': [
-#                 {
-#                     'sample_alias': 'sample1',
-#                     'sample_title': 'stitle',
-#                     'taxon_id': 530564
-#                 },
-#                 {
-#                     'sample_alias': 'sample2',
-#                     'sample_title': 'stitleagain',
-#                     'taxon_id': 530564
-#                 }
-#             ],
-#             "experiments": [
-#                 {
-#                     'experiment_alias': 'experiment1',
-#                     'platform': 'AB 3730xL Genetic Analyzer',
-#                     'design': {
-#                         'sample_descriptor': 'sample2',
-#                         'design_description': '',
-#                         'library_descriptor': {
-#                             'library_strategy': 'AMPLICON',
-#                             'library_source': 'METAGENOMIC',
-#                             'library_selection': 'PCR',
-#                             'library_layout': {
-#                                 'layout_type': 'paired',
-#                                 'nominal_length': 450
-#                             }
-#                         }
-#                     },
-#                     "files": {
-#                         "forward_read_file_name": "File3.forward.fastq.gz",
-#                         "reverse_read_file_name": "File3.reverse.fastq.gz",
-#                         "forward_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1",
-#                         "reverse_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1"
-#                     }
-#                 }
-#             ]
-#         }
-#     }
-#
-#     content_with_runs = {
-#         'requirements': {
-#             'title': '123456',
-#             'description': '123456',
-#             'study_type': 'Metagenomics',
-#             'samples': [
-#                 {
-#                     'sample_alias': 'sample1',
-#                     'sample_title': 'stitle',
-#                     'taxon_id': 530564
-#                 },
-#                 {
-#                     'sample_alias': 'sample2',
-#                     'sample_title': 'stitleagain',
-#                     'taxon_id': 530564
-#                 }
-#             ],
-#             "experiments": [
-#                 {
-#                     'experiment_alias': 'experiment1',
-#                     'platform': 'AB 3730xL Genetic Analyzer',
-#                     'design': {
-#                         'sample_descriptor': 'sample2',
-#                         'design_description': '',
-#                         'library_descriptor': {
-#                             'library_strategy': 'AMPLICON',
-#                             'library_source': 'METAGENOMIC',
-#                             'library_selection': 'PCR',
-#                             'library_layout': {
-#                                 'layout_type': 'paired',
-#                                 'nominal_length': 450
-#                             }
-#                         }
-#                     },
-#                     "files": {
-#                         "forward_read_file_name": "File3.forward.fastq.gz",
-#                         "reverse_read_file_name": "File3.reverse.fastq.gz",
-#                         "forward_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1",
-#                         "reverse_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1"
-#                     }
-#                 },
-#                 {
-#                     'experiment_alias': 'experiment2',
-#                     'platform': 'AB 3730xL Genetic Analyzer',
-#                     'design': {
-#                         'sample_descriptor': 'sample1',
-#                         'design_description': '',
-#                         'library_descriptor': {
-#                             'library_strategy': 'AMPLICON',
-#                             'library_source': 'METAGENOMIC',
-#                             'library_selection': 'PCR',
-#                             'library_layout': {
-#                                 'layout_type': 'paired',
-#                                 'nominal_length': 450
-#                             }
-#                         }
-#                     }
-#                 }
-#             ],
-#             "runs": [
-#                 {
-#                     "experiment_ref": "experiment2",
-#                     "data_block": {
-#                         "files": [
-#                             {
-#                                 "filename": "aFile",
-#                                 "filetype": "fastq",
-#                                 "checksum_method": "MD5",
-#                                 "checksum": "12345"
-#                             }
-#                         ]
-#                     }
-#                 }
-#             ]
-#         }
-#     }
-#
-#     def _prepare_entities_without_runs(self, create_broker_objects=True):
-#         serializer = SubmissionSerializer(data={
-#             'target': 'ENA',
-#             'release': True,
-#             'data': self.content_without_runs
-#         })
-#         serializer.is_valid()
-#         submission = serializer.save(site=User.objects.get(pk=1))
-#         if create_broker_objects:
-#             BrokerObject.objects.add_submission_data(submission)
-#         return submission
-#
-#     @classmethod
-#     def _prepare_entities_with_runs(cls, create_broker_objects=True):
-#         serializer = SubmissionSerializer(data={
-#             'target': 'ENA',
-#             'release': True,
-#             'data': cls.content_with_runs
-#         })
-#         serializer.is_valid()
-#         submission = serializer.save(site=User.objects.get(pk=1))
-#         if create_broker_objects:
-#             BrokerObject.objects.add_submission_data(submission)
-#         return submission
-#
+class SubmissionTest(TestCase):
+    fixtures = (
+        'user', 'submission', 'resource_credential', 'site_configuration',
+    )
+
+    content_without_runs = {
+        'requirements': {
+            'title': '123456',
+            'description': '123456',
+            'study_type': 'Metagenomics',
+            'samples': [
+                {
+                    'sample_alias': 'sample1',
+                    'sample_title': 'stitle',
+                    'taxon_id': 530564
+                },
+                {
+                    'sample_alias': 'sample2',
+                    'sample_title': 'stitleagain',
+                    'taxon_id': 530564
+                }
+            ],
+            "experiments": [
+                {
+                    'experiment_alias': 'experiment1',
+                    'platform': 'AB 3730xL Genetic Analyzer',
+                    'design': {
+                        'sample_descriptor': 'sample2',
+                        'design_description': '',
+                        'library_descriptor': {
+                            'library_strategy': 'AMPLICON',
+                            'library_source': 'METAGENOMIC',
+                            'library_selection': 'PCR',
+                            'library_layout': {
+                                'layout_type': 'paired',
+                                'nominal_length': 450
+                            }
+                        }
+                    },
+                    "files": {
+                        "forward_read_file_name": "File3.forward.fastq.gz",
+                        "reverse_read_file_name": "File3.reverse.fastq.gz",
+                        "forward_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1",
+                        "reverse_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1"
+                    }
+                }
+            ]
+        }
+    }
+
+    content_with_runs = {
+        'requirements': {
+            'title': '123456',
+            'description': '123456',
+            'study_type': 'Metagenomics',
+            'samples': [
+                {
+                    'sample_alias': 'sample1',
+                    'sample_title': 'stitle',
+                    'taxon_id': 530564
+                },
+                {
+                    'sample_alias': 'sample2',
+                    'sample_title': 'stitleagain',
+                    'taxon_id': 530564
+                }
+            ],
+            "experiments": [
+                {
+                    'experiment_alias': 'experiment1',
+                    'platform': 'AB 3730xL Genetic Analyzer',
+                    'design': {
+                        'sample_descriptor': 'sample2',
+                        'design_description': '',
+                        'library_descriptor': {
+                            'library_strategy': 'AMPLICON',
+                            'library_source': 'METAGENOMIC',
+                            'library_selection': 'PCR',
+                            'library_layout': {
+                                'layout_type': 'paired',
+                                'nominal_length': 450
+                            }
+                        }
+                    },
+                    "files": {
+                        "forward_read_file_name": "File3.forward.fastq.gz",
+                        "reverse_read_file_name": "File3.reverse.fastq.gz",
+                        "forward_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1",
+                        "reverse_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1"
+                    }
+                },
+                {
+                    'experiment_alias': 'experiment2',
+                    'platform': 'AB 3730xL Genetic Analyzer',
+                    'design': {
+                        'sample_descriptor': 'sample1',
+                        'design_description': '',
+                        'library_descriptor': {
+                            'library_strategy': 'AMPLICON',
+                            'library_source': 'METAGENOMIC',
+                            'library_selection': 'PCR',
+                            'library_layout': {
+                                'layout_type': 'paired',
+                                'nominal_length': 450
+                            }
+                        }
+                    }
+                }
+            ],
+            "runs": [
+                {
+                    "experiment_ref": "experiment2",
+                    "data_block": {
+                        "files": [
+                            {
+                                "filename": "aFile",
+                                "filetype": "fastq",
+                                "checksum_method": "MD5",
+                                "checksum": "12345"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    }
+
+    def _prepare_entities_without_runs(self, create_broker_objects=True):
+        serializer = SubmissionSerializer(data={
+            'target': 'ENA',
+            'release': True,
+            'data': self.content_without_runs
+        })
+        serializer.is_valid()
+        submission = serializer.save(site=User.objects.get(pk=1))
+        if create_broker_objects:
+            BrokerObject.objects.add_submission_data(submission)
+        return submission
+
+    @classmethod
+    def _prepare_entities_with_runs(cls, create_broker_objects=True):
+        serializer = SubmissionSerializer(data={
+            'target': 'ENA',
+            'release': True,
+            'data': cls.content_with_runs
+        })
+        serializer.is_valid()
+        submission = serializer.save(site=User.objects.get(pk=1))
+        if create_broker_objects:
+            BrokerObject.objects.add_submission_data(submission)
+        return submission
+
 #     # done
 #     def test_create_empty_submission(self):
 #         all_submissions = Submission.objects.all()
@@ -2101,128 +2092,128 @@ class FullWorkflowTest(TestCase):
 #         # e = exml.toprettyxml()
 #         # print e
 
-    # def test_submission_data_content(self):
-    #     sub = self._get_submission_with_testdata(runs=False)
-    #     ena = Enalizer(submission=sub, alias_postfix='outgoing-uuid')
-    #     ena_submission_data = ena.prepare_submission_data(
-    #         broker_submission_id=sub.broker_submission_id)  # ADD
-    #     self.assertListEqual(sorted(['RUN', 'SAMPLE', 'STUDY', 'EXPERIMENT']),
-    #                          sorted(list(ena_submission_data.keys())))
-    #     self.assertNotIn('SUBMISSION', ena_submission_data.keys())
-    #
-    # def test_submission_alias(self):
-    #     sub = self._get_submission_with_testdata(runs=False)
-    #     ena = Enalizer(submission=sub, alias_postfix='outgoing-uuid')
-    #     test_id = uuid4()
-    #     submission_xml = ena.prepare_submission_xml_for_sending(
-    #         action='ADD',
-    #         outgoing_request_id=test_id)
-    #     k, v = submission_xml
-    #     self.assertEqual('submission.xml', k)
-    #     self.assertIn('alias="{0}"'.format(test_id), v)
-    #
-    # @responses.activate
-    # def test_send_submission_to_ena(self):
-    #     sub = FullWorkflowTest._prepare()
-    #     conf = SiteConfiguration.objects.get(title='default')
-    #     responses.add(
-    #         responses.POST, conf.ena_server.url, status=200,
-    #         body=textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?> <?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
-    #              <RECEIPT receiptDate="2015-12-01T11:54:55.723Z" submissionFile="submission.xml"
-    #                       success="true">
-    #                  <EXPERIMENT accession="ERX1228437" alias="4:f844738b-3304-4db7-858d-b7e47b293bb2"
-    #                              status="PRIVATE"/>
-    #                  <RUN accession="ERR1149402" alias="5:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"/>
-    #                  <SAMPLE accession="ERS989691" alias="2:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
-    #                      <EXT_ID accession="SAMEA3682542" type="biosample"/>
-    #                      <EXT_ID accession="SAMEA3682543-666" type="sample-this"/>
-    #                  </SAMPLE>
-    #                  <SAMPLE accession="ERS989692" alias="3:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
-    #                      <EXT_ID accession="SAMEA3682543" type="biosample"/>
-    #                  </SAMPLE>
-    #                  <STUDY accession="ERP013438" alias="1:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"
-    #                         holdUntilDate="2016-03-05Z"/>
-    #                  <SUBMISSION accession="ERA540869" alias="NGS_March_original2"/>
-    #                  <MESSAGES>
-    #                      <INFO>ADD action for the following XML: study.xml sample.xml
-    #                          experiment.xml run.xml
-    #                      </INFO>
-    #                  </MESSAGES>
-    #                  <ACTIONS>ADD</ACTIONS>
-    #                  <ACTIONS>ADD</ACTIONS>
-    #                  <ACTIONS>ADD</ACTIONS>
-    #                  <ACTIONS>ADD</ACTIONS>
-    #                  <ACTIONS>HOLD</ACTIONS>
-    #              </RECEIPT>"""))
-    #
-    #     ena_submission_data = prepare_ena_data(
-    #         submission=sub)
-    #     response, req_log_request_id = send_submission_to_ena(
-    #         submission=sub,
-    #         archive_access=conf.ena_server,
-    #         ena_submission_data=ena_submission_data,
-    #     )
-    #     self.assertEqual(req_log_request_id, RequestLog.objects.get(
-    #         request_id=req_log_request_id).request_id)
-    #     self.assertEqual(200, response.status_code)
-    #
-    # @responses.activate
-    # def test_send_submission_to_ena_without_run_or_experiment(self):
-    #     sub = FullWorkflowTest._prepare()
-    #     conf = SiteConfiguration.objects.get(title='default')
-    #     responses.add(
-    #         responses.POST, conf.ena_server.url, status=200,
-    #         body=textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?> <?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
-    #                  <RECEIPT receiptDate="2015-12-01T11:54:55.723Z" submissionFile="submission.xml"
-    #                           success="true">
-    #                      <SAMPLE accession="ERS989691" alias="2:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
-    #                          <EXT_ID accession="SAMEA3682542" type="biosample"/>
-    #                          <EXT_ID accession="SAMEA3682543-666" type="sample-this"/>
-    #                      </SAMPLE>
-    #                      <SAMPLE accession="ERS989692" alias="3:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
-    #                          <EXT_ID accession="SAMEA3682543" type="biosample"/>
-    #                      </SAMPLE>
-    #                      <STUDY accession="ERP013438" alias="1:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"
-    #                             holdUntilDate="2016-03-05Z"/>
-    #                      <SUBMISSION accession="ERA540869" alias="NGS_March_original2"/>
-    #                      <MESSAGES>
-    #                          <INFO>ADD action for the following XML: study.xml sample.xml
-    #                          </INFO>
-    #                      </MESSAGES>
-    #                      <ACTIONS>ADD</ACTIONS>
-    #                      <ACTIONS>ADD</ACTIONS>
-    #                      <ACTIONS>ADD</ACTIONS>
-    #                      <ACTIONS>ADD</ACTIONS>
-    #                      <ACTIONS>HOLD</ACTIONS>
-    #                  </RECEIPT>"""))
-    #
-    #     ena_submission_data = prepare_ena_data(
-    #         submission=sub)
-    #     ena_submission_data.pop('EXPERIMENT')
-    #     ena_submission_data.pop('RUN')
-    #     response, req_log_request_id = send_submission_to_ena(
-    #         submission=sub,
-    #         archive_access=conf.ena_server,
-    #         ena_submission_data=ena_submission_data,
-    #     )
-    #     self.assertEqual(req_log_request_id, RequestLog.objects.get(
-    #         request_id=req_log_request_id).request_id)
-    #     self.assertEqual(200, response.status_code)
-    #
-    # def test_prepare_ena_data_add(self):
-    #     sub = FullWorkflowTest._prepare()
-    #     enalizer = Enalizer(submission=sub,
-    #                         alias_postfix=sub.broker_submission_id)
-    #     file_name, xml = enalizer.prepare_submission_xml_for_sending(
-    #         action='ADD')
-    #     self.assertIn('<ADD', xml)
-    #
-    # def test_prepare_ena_data_validate(self):
-    #     sub = FullWorkflowTest._prepare()
-    #     enalizer = Enalizer(submission=sub,
-    #                         alias_postfix=sub.broker_submission_id)
-    #     file_name, xml = enalizer.prepare_submission_xml_for_sending()
-    #     self.assertIn('<VALIDATE', xml)
+# def test_submission_data_content(self):
+#     sub = self._get_submission_with_testdata(runs=False)
+#     ena = Enalizer(submission=sub, alias_postfix='outgoing-uuid')
+#     ena_submission_data = ena.prepare_submission_data(
+#         broker_submission_id=sub.broker_submission_id)  # ADD
+#     self.assertListEqual(sorted(['RUN', 'SAMPLE', 'STUDY', 'EXPERIMENT']),
+#                          sorted(list(ena_submission_data.keys())))
+#     self.assertNotIn('SUBMISSION', ena_submission_data.keys())
+#
+# def test_submission_alias(self):
+#     sub = self._get_submission_with_testdata(runs=False)
+#     ena = Enalizer(submission=sub, alias_postfix='outgoing-uuid')
+#     test_id = uuid4()
+#     submission_xml = ena.prepare_submission_xml_for_sending(
+#         action='ADD',
+#         outgoing_request_id=test_id)
+#     k, v = submission_xml
+#     self.assertEqual('submission.xml', k)
+#     self.assertIn('alias="{0}"'.format(test_id), v)
+#
+# @responses.activate
+# def test_send_submission_to_ena(self):
+#     sub = FullWorkflowTest._prepare()
+#     conf = SiteConfiguration.objects.get(title='default')
+#     responses.add(
+#         responses.POST, conf.ena_server.url, status=200,
+#         body=textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?> <?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
+#              <RECEIPT receiptDate="2015-12-01T11:54:55.723Z" submissionFile="submission.xml"
+#                       success="true">
+#                  <EXPERIMENT accession="ERX1228437" alias="4:f844738b-3304-4db7-858d-b7e47b293bb2"
+#                              status="PRIVATE"/>
+#                  <RUN accession="ERR1149402" alias="5:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"/>
+#                  <SAMPLE accession="ERS989691" alias="2:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
+#                      <EXT_ID accession="SAMEA3682542" type="biosample"/>
+#                      <EXT_ID accession="SAMEA3682543-666" type="sample-this"/>
+#                  </SAMPLE>
+#                  <SAMPLE accession="ERS989692" alias="3:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
+#                      <EXT_ID accession="SAMEA3682543" type="biosample"/>
+#                  </SAMPLE>
+#                  <STUDY accession="ERP013438" alias="1:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"
+#                         holdUntilDate="2016-03-05Z"/>
+#                  <SUBMISSION accession="ERA540869" alias="NGS_March_original2"/>
+#                  <MESSAGES>
+#                      <INFO>ADD action for the following XML: study.xml sample.xml
+#                          experiment.xml run.xml
+#                      </INFO>
+#                  </MESSAGES>
+#                  <ACTIONS>ADD</ACTIONS>
+#                  <ACTIONS>ADD</ACTIONS>
+#                  <ACTIONS>ADD</ACTIONS>
+#                  <ACTIONS>ADD</ACTIONS>
+#                  <ACTIONS>HOLD</ACTIONS>
+#              </RECEIPT>"""))
+#
+#     ena_submission_data = prepare_ena_data(
+#         submission=sub)
+#     response, req_log_request_id = send_submission_to_ena(
+#         submission=sub,
+#         archive_access=conf.ena_server,
+#         ena_submission_data=ena_submission_data,
+#     )
+#     self.assertEqual(req_log_request_id, RequestLog.objects.get(
+#         request_id=req_log_request_id).request_id)
+#     self.assertEqual(200, response.status_code)
+#
+# @responses.activate
+# def test_send_submission_to_ena_without_run_or_experiment(self):
+#     sub = FullWorkflowTest._prepare()
+#     conf = SiteConfiguration.objects.get(title='default')
+#     responses.add(
+#         responses.POST, conf.ena_server.url, status=200,
+#         body=textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?> <?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
+#                  <RECEIPT receiptDate="2015-12-01T11:54:55.723Z" submissionFile="submission.xml"
+#                           success="true">
+#                      <SAMPLE accession="ERS989691" alias="2:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
+#                          <EXT_ID accession="SAMEA3682542" type="biosample"/>
+#                          <EXT_ID accession="SAMEA3682543-666" type="sample-this"/>
+#                      </SAMPLE>
+#                      <SAMPLE accession="ERS989692" alias="3:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
+#                          <EXT_ID accession="SAMEA3682543" type="biosample"/>
+#                      </SAMPLE>
+#                      <STUDY accession="ERP013438" alias="1:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"
+#                             holdUntilDate="2016-03-05Z"/>
+#                      <SUBMISSION accession="ERA540869" alias="NGS_March_original2"/>
+#                      <MESSAGES>
+#                          <INFO>ADD action for the following XML: study.xml sample.xml
+#                          </INFO>
+#                      </MESSAGES>
+#                      <ACTIONS>ADD</ACTIONS>
+#                      <ACTIONS>ADD</ACTIONS>
+#                      <ACTIONS>ADD</ACTIONS>
+#                      <ACTIONS>ADD</ACTIONS>
+#                      <ACTIONS>HOLD</ACTIONS>
+#                  </RECEIPT>"""))
+#
+#     ena_submission_data = prepare_ena_data(
+#         submission=sub)
+#     ena_submission_data.pop('EXPERIMENT')
+#     ena_submission_data.pop('RUN')
+#     response, req_log_request_id = send_submission_to_ena(
+#         submission=sub,
+#         archive_access=conf.ena_server,
+#         ena_submission_data=ena_submission_data,
+#     )
+#     self.assertEqual(req_log_request_id, RequestLog.objects.get(
+#         request_id=req_log_request_id).request_id)
+#     self.assertEqual(200, response.status_code)
+#
+# def test_prepare_ena_data_add(self):
+#     sub = FullWorkflowTest._prepare()
+#     enalizer = Enalizer(submission=sub,
+#                         alias_postfix=sub.broker_submission_id)
+#     file_name, xml = enalizer.prepare_submission_xml_for_sending(
+#         action='ADD')
+#     self.assertIn('<ADD', xml)
+#
+# def test_prepare_ena_data_validate(self):
+#     sub = FullWorkflowTest._prepare()
+#     enalizer = Enalizer(submission=sub,
+#                         alias_postfix=sub.broker_submission_id)
+#     file_name, xml = enalizer.prepare_submission_xml_for_sending()
+#     self.assertIn('<VALIDATE', xml)
 
 
 # class PangaeaTicketTest(TestCase):

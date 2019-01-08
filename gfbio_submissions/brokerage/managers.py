@@ -2,6 +2,7 @@
 import csv
 import json
 import logging
+from pprint import pprint
 
 from django.db import models, transaction
 from django.db.models import Q
@@ -66,59 +67,6 @@ class SubmissionManager(models.Manager):
 
 
 class BrokerObjectManager(models.Manager):
-    broker_object_test_data = {
-        'requirements': {
-            'title': '123456',
-            'description': '123456',
-            'study_type': 'Metagenomics',
-            'samples': [
-                {
-                    'sample_alias': 'sample1',
-                    'sample_title': 'stitle',
-                    'taxon_id': 1234
-                },
-                {
-                    'sample_alias': 'sample2',
-                    'sample_title': 'stitleagain',
-                    'taxon_id': 1234
-                }
-            ],
-            "experiments": [
-                {
-                    'experiment_alias': 'experiment1',
-                    'platform': 'AB 3730xL Genetic Analyzer',
-                    'design': {
-                        'sample_descriptor': 'sample2',
-                        'design_description': '',
-                        'library_descriptor': {
-                            'library_strategy': 'AMPLICON',
-                            'library_source': 'METAGENOMIC',
-                            'library_selection': 'PCR',
-                            'library_layout': {
-                                'layout_type': 'paired',
-                                'nominal_length': 450
-                            }
-                        }
-                    }
-                }
-            ],
-            'runs': [
-                {
-                    'experiment_ref': 'experiment1',
-                    'data_block': {
-                        'files': [
-                            {
-                                'filename': 'aFile',
-                                'filetype': 'fastq',
-                                'checksum_method': 'MD5',
-                                'checksum': '12345'
-                            }
-                        ]
-                    }
-                }
-            ]
-        }
-    }
 
     def add_downloaded_pids_to_existing_broker_objects(
             self, study_pid, decompressed_file):
@@ -316,6 +264,8 @@ class BrokerObjectManager(models.Manager):
 
         submission.data = data
         submission.save()
+        print('\n\nSUBMISSIION DATA after add ena data in BO Manager')
+        pprint(submission.data)
 
     # TODO: rename, since this here is mostly ena specific
     # TODO: refactor for generic solution

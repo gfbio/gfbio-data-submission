@@ -59,3 +59,17 @@ def _get_pangaea_soap_response():
             _get_test_data_dir_path(),
             'pangaea_soap_response.xml'), 'r') as data_file:
         return textwrap.dedent(data_file.read().replace('\n', ''))
+
+
+def _get_submission_request_data():
+    with open(os.path.join(
+            _get_test_data_dir_path(),
+            'submission_request_data.json'), 'r') as data_file:
+        return json.load(data_file)
+
+
+def _get_submission_post_response():
+    with open(os.path.join(
+            _get_test_data_dir_path(),
+            'submission_post_response.json'), 'r') as data_file:
+        return json.load(data_file)
