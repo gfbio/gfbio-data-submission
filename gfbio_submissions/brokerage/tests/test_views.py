@@ -45,6 +45,11 @@ class TestAddSubmissionView(TestCase):
         user = User.objects.create_user(
             username='horst', email='horst@horst.de', password='password')
         user.user_permissions.add(*permissions)
+        user = User.objects.create_user(
+            username='kevin', email='kevin@kevin.de', password='secret')
+        user.user_permissions.add(*permissions)
+        admin = User.objects.create_superuser(
+            username='admin', email='admin@admin.de', password='psst')
         cls.factory = APIRequestFactory()
         resource_cred = ResourceCredential.objects.create(
             title='Resource Title',
@@ -67,6 +72,12 @@ class TestAddSubmissionView(TestCase):
                 b'horst:password').decode('utf-8')
         )
         cls.api_client = client
+        other_client = APIClient()
+        other_client.credentials(
+            HTTP_AUTHORIZATION='Basic ' + base64.b64encode(
+                b'kevin:secret').decode('utf-8')
+        )
+        cls.other_api_client = other_client
         # responses.add(
         #     responses.POST,
         #     '{0}{1}'.format(
@@ -86,6 +97,16 @@ class TestAddSubmissionView(TestCase):
             ),
             status=200,
             body=json.dumps({'mocked_response': True})
+        )
+
+    def _post_submission(self):
+        return self.api_client.post(
+            '/api/submissions/',
+            {'target': 'ENA', 'release': False, 'data': {
+                'requirements': {
+                    'title': 'A Title',
+                    'description': 'A Description'}}},
+            format='json'
         )
 
     # def setUp(self):
@@ -202,14 +223,7 @@ class TestAddSubmissionView(TestCase):
     def test_valid_explicit_min_post(self):
         self._add_create_ticket_response()
         self.assertEqual(0, len(Submission.objects.all()))
-        response = self.api_client.post(
-            '/api/submissions/',
-            {'target': 'ENA', 'release': False, 'data': {
-                'requirements': {
-                    'title': 'A Title',
-                    'description': 'A Description'}}},
-            format='json'
-        )
+        response = self._post_submission()
         content = json.loads(response.content.decode('utf-8'))
         expected = {
             'broker_submission_id': content['broker_submission_id'],
@@ -288,129 +302,100 @@ class TestAddSubmissionView(TestCase):
         expected = _get_submission_post_response()
         expected['broker_submission_id'] = content['broker_submission_id']
         self.assertDictEqual(expected, content)
+        self.assertNotIn('download_url', content['data']['requirements'].keys())
         self.assertEqual(1, len(Submission.objects.all()))
         submission = Submission.objects.first()
         self.assertEqual(UUID(expected['broker_submission_id']),
                          submission.broker_submission_id)
         self.assertEqual(Submission.SUBMITTED,
                          content.get('status', 'NOPE'))
+        self.assertEqual('', submission.download_url)
 
-    # def test_valid_max_post_with_data_url(self):
-    #     VALID_USER = {
-    #         'HTTP_AUTHORIZATION':
-    #             'Basic %s' % base64.b64encode(b'horst:password').decode(
-    #                 'utf-8')
-    #     }
-    #     self.assertEqual(5, len(Submission.objects.all()))
-    #     response = self.client.post('/api/submissions/',
-    #                                 content_type='application/json',
-    #                                 data=json.dumps({
-    #                                     'target': 'ENA',
-    #                                     'release': True,
-    #                                     'data': self.new_data
-    #                                 }),
-    #                                 **VALID_USER)
-    #     content = json.loads(response.content.decode('utf-8'))
-    #     self.assertEqual(201, response.status_code)
-    #     self.assertEqual(6, len(Submission.objects.all()))
-    #     self.assertNotIn('download_url',
-    #                      content['data']['requirements'].keys())
-    #     sub = Submission.objects.last()
-    #     self.assertEqual('', sub.download_url)
-    #
-    #     url = 'https://www.google.de'
-    #     new_data_copy = copy.deepcopy(self.new_data)
-    #     response = self.client.post('/api/submissions/',
-    #                                 content_type='application/json',
-    #                                 data=json.dumps({
-    #                                     'target': 'ENA',
-    #                                     'release': False,
-    #                                     'download_url': url,
-    #                                     'data': new_data_copy
-    #                                 }),
-    #                                 **VALID_USER)
-    #     self.assertEqual(201, response.status_code)
-    #     self.assertEqual(7, len(Submission.objects.all()))
-    #     sub = Submission.objects.last()
-    #     self.assertEqual(url, sub.download_url)
-    #
-    #     response = self.client.put(
-    #         '/api/submissions/{0}/'.format(
-    #             sub.broker_submission_id),
-    #         content_type='application/json',
-    #         data=json.dumps({
-    #             'target': 'ENA',
-    #             'data': new_data_copy,
-    #             'download_url': '{0}/{1}'.format(url, 'download'),
-    #         }), **VALID_USER)
-    #     self.assertEqual(200, response.status_code)
-    #     self.assertEqual(7, len(Submission.objects.all()))
-    #     sub = Submission.objects.last()
-    #     self.assertEqual('{0}/{1}'.format(url, 'download'),
-    #                      sub.download_url)
-    #
-    # def test_valid_max_post_with_invalid_min_data(self):
-    #     VALID_USER = {
-    #         'HTTP_AUTHORIZATION':
-    #             'Basic %s' % base64.b64encode(b'horst:password').decode(
-    #                 'utf-8')
-    #     }
-    #     self.assertEqual(5, len(Submission.objects.all()))
-    #     data = copy.deepcopy(self.new_data)
-    #     data['requirements'].pop('description')
-    #     response = self.client.post('/api/submissions/',
-    #                                 content_type='application/json',
-    #                                 data=json.dumps({
-    #                                     'target': 'ENA',
-    #                                     'release': True,
-    #                                     'data': data
-    #                                 }),
-    #                                 **VALID_USER
-    #                                 )
-    #     self.assertEqual(400, response.status_code)
-    #     self.assertIn('description', response.content.decode('utf-8'))
-    #     self.assertEqual(5, len(Submission.objects.all()))
-    #
-    # def test_get_submissions(self):
-    #     VALID_USER, response = self._post_submission()
-    #     response = self.client.get('/api/submissions/', **VALID_USER)
-    #     content = json.loads(response.content.decode('utf-8'))
-    #     self.assertEqual(200, response.status_code)
-    #     self.assertEqual(6, len(Submission.objects.all()))
-    #     # two for this user (1 in fixture, 1 by post above)
-    #     self.assertEqual(3, len(content))
-    #
-    # def test_get_submissions_for_user(self):
-    #     USER = {'HTTP_AUTHORIZATION': 'Basic %s' % base64.b64encode(
-    #         b'horst:password').decode('utf-8')}
-    #     ADMIN = {'HTTP_AUTHORIZATION': 'Basic %s' % base64.b64encode(
-    #         b'noob:password').decode('utf-8')}
-    #
-    #     all_subs = Submission.objects.all()
-    #     self.assertEqual(5, len(all_subs))
-    #
-    #     response = self.client.get('/api/submissions/', **USER)
-    #     content = json.loads(response.content.decode('utf-8'))
-    #     self.assertEqual(2, len(content))
-    #
-    #     # FIXME: unicode issues with test client
-    #     # response = self.client.get('/api/submissions/', **ADMIN)
-    #     # content = json.loads(response.content)
-    #     # self.assertEqual(2, len(content))
-    #
-    # def test_get_submission(self):
-    #     VALID_USER, response = self._post_submission()
-    #     submission = Submission.objects.last()
-    #     response = self.client.get(
-    #         '/api/submissions/{0}/'.format(
-    #             submission.broker_submission_id),
-    #         **VALID_USER
-    #     )
-    #     content = json.loads(response.content.decode('utf-8'))
-    #     self.assertEqual(200, response.status_code)
-    #     self.assertTrue(isinstance(content, dict))
-    #     self.assertEqual('horst', content['site'])
-    #
+    @responses.activate
+    def test_valid_max_post_with_data_url(self):
+        self._add_create_ticket_response()
+        self.assertEqual(0, len(Submission.objects.all()))
+        url = 'https://www.google.de'
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'ENA', 'release': True,
+             'data': _get_submission_request_data(),
+             'download_url': url},
+            format='json'
+        )
+        self.assertEqual(201, response.status_code)
+        self.assertEqual(1, len(Submission.objects.all()))
+        submission = Submission.objects.first()
+        self.assertEqual(url, submission.download_url)
+
+        # FIXME: Why extra PUT in this POST test ? Regression Test ?
+        # response = self.client.put(
+        #     '/api/submissions/{0}/'.format(
+        #         sub.broker_submission_id),
+        #     content_type='application/json',
+        #     data=json.dumps({
+        #         'target': 'ENA',
+        #         'data': new_data_copy,
+        #         'download_url': '{0}/{1}'.format(url, 'download'),
+        #     }), **VALID_USER)
+        # self.assertEqual(200, response.status_code)
+        # self.assertEqual(7, len(Submission.objects.all()))
+        # sub = Submission.objects.last()
+        # self.assertEqual('{0}/{1}'.format(url, 'download'),
+        #                  sub.download_url)
+
+    def test_valid_max_post_with_invalid_min_data(self):
+        self.assertEqual(0, len(Submission.objects.all()))
+        data = _get_submission_request_data()
+        data['requirements'].pop('description')
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'ENA', 'release': True, 'data': data},
+            format='json'
+        )
+        self.assertEqual(400, response.status_code)
+        self.assertIn('description', response.content.decode('utf-8'))
+        self.assertEqual(0, len(Submission.objects.all()))
+
+    @responses.activate
+    def test_get_submissions(self):
+        self._add_create_ticket_response()
+        self._post_submission()
+        response = self.api_client.get('/api/submissions/')
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, len(Submission.objects.all()))
+        self.assertEqual(1, len(content))
+
+    @responses.activate
+    def test_get_submissions_for_user(self):
+        self._add_create_ticket_response()
+        self._post_submission()
+        self.other_api_client.post(
+            '/api/submissions/',
+            {'target': 'ENA', 'release': False, 'data': {
+                'requirements': {
+                    'title': 'A Title',
+                    'description': 'A Description'}}},
+            format='json'
+        )
+        self.assertEqual(2, len(Submission.objects.all()))
+        response = self.api_client.get('/api/submissions/')
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(1, len(content))
+
+    @responses.activate
+    def test_get_submission(self):
+        self._add_create_ticket_response()
+        self._post_submission()
+        submission = Submission.objects.first()
+        response = self.api_client.get(
+            '/api/submissions/{0}/'.format(submission.broker_submission_id))
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(isinstance(content, dict))
+        self.assertEqual('horst', content['site'])
+
     # def test_no_submission_for_id(self):
     #     VALID_USER, response = self._post_submission()
     #     response = self.client.get(

@@ -264,8 +264,6 @@ class BrokerObjectManager(models.Manager):
 
         submission.data = data
         submission.save()
-        print('\n\nSUBMISSIION DATA after add ena data in BO Manager')
-        pprint(submission.data)
 
     # TODO: rename, since this here is mostly ena specific
     # TODO: refactor for generic solution
