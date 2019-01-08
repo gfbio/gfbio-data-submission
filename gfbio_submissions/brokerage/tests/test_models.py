@@ -42,7 +42,7 @@ class SiteConfigurationTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         user = User.objects.create(
-            username="user1"
+            username='user1'
         )
         resource_cred = ResourceCredential.objects.create(
             title='Resource Title',
@@ -139,7 +139,7 @@ class TicketLabelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         user = User.objects.create(
-            username="user1"
+            username='user1'
         )
         resource_cred = ResourceCredential.objects.create(
             title='Resource Title',
@@ -193,7 +193,7 @@ class BrokerObjectTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         user = User.objects.create(
-            username="user1"
+            username='user1'
         )
         BrokerObject.objects.create(
             type='study',
@@ -255,7 +255,7 @@ class SubmissionTest(TestCase):
     def setUpTestData(cls):
         cls.data = _get_ena_data_without_runs()
         user = User.objects.create(
-            username="user1"
+            username='user1'
         )
         Submission.objects.create(site=user)
 
@@ -415,7 +415,7 @@ class PersistentIdentifierTest(TestCase):
 
     def setUp(self):
         user = User.objects.create(
-            username="user1"
+            username='user1'
         )
         broker_object = BrokerObject.objects.create(
             type='study',
@@ -449,7 +449,7 @@ class RequestLogTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         User.objects.create(
-            username="user1"
+            username='user1'
         )
         SubmissionTest._create_submission_via_serializer()
         resource_cred = ResourceCredential.objects.create(
@@ -527,7 +527,7 @@ class AdditionalReferenceTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         user = User.objects.create(
-            username="user1"
+            username='user1'
         )
         submission_1 = Submission.objects.create(site=user)
         submission_2 = Submission.objects.create(site=user)
