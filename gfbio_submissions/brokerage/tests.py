@@ -169,78 +169,78 @@ from .utils.submission_transfer import \
 #         sc = SiteConfiguration.objects.get(pk=2)
 #         self.assertEqual(0, len(sc.ticketlabel_set.all()))
 
-
-class BrokerObjectTest(TestCase):
-    fixtures = ('user', 'broker_object', 'submission', 'resource_credential')
-
-    @classmethod
-    def _get_broker_object_test_data(cls):
-        return {
-            'requirements': {
-                'title': '123456',
-                'description': '123456',
-                'study_type': 'Metagenomics',
-                'samples': [
-                    {
-                        'sample_alias': 'sample1',
-                        'sample_title': 'stitle',
-                        'taxon_id': 1234
-                    },
-                    {
-                        'sample_alias': 'sample2',
-                        'sample_title': 'stitleagain',
-                        'taxon_id': 1234
-                    }
-                ],
-                "experiments": [
-                    {
-                        'experiment_alias': 'experiment1',
-                        'platform': 'AB 3730xL Genetic Analyzer',
-                        'design': {
-                            'sample_descriptor': 'sample2',
-                            'design_description': '',
-                            'library_descriptor': {
-                                'library_strategy': 'AMPLICON',
-                                'library_source': 'METAGENOMIC',
-                                'library_selection': 'PCR',
-                                'library_layout': {
-                                    'layout_type': 'paired',
-                                    'nominal_length': 450
-                                }
-                            }
-                        }
-                    }
-                ],
-                'runs': [
-                    {
-                        'experiment_ref': 'experiment1',
-                        'data_block': {
-                            'files': [
-                                {
-                                    'filename': 'aFile',
-                                    'filetype': 'fastq',
-                                    'checksum_method': 'MD5',
-                                    'checksum': '12345'
-                                }
-                            ]
-                        }
-                    }
-                ]
-            }
-        }
-
-    @classmethod
-    def _get_ena_full_data(cls, runs=False):
-        if runs:
-            with open(os.path.join(
-                    'gfbio_submissions/brokerage/test_data/',
-                    'ena_data_full_with_runs.json'), 'r') as test_data_file:
-                return json.load(test_data_file)
-        else:
-            with open(os.path.join(
-                    'gfbio_submissions/brokerage/test_data/',
-                    'ena_data_full_no_runs.json'), 'r') as test_data_file:
-                return json.load(test_data_file)
+#
+# class BrokerObjectTest(TestCase):
+#     fixtures = ('user', 'broker_object', 'submission', 'resource_credential')
+#
+#     @classmethod
+#     def _get_broker_object_test_data(cls):
+#         return {
+#             'requirements': {
+#                 'title': '123456',
+#                 'description': '123456',
+#                 'study_type': 'Metagenomics',
+#                 'samples': [
+#                     {
+#                         'sample_alias': 'sample1',
+#                         'sample_title': 'stitle',
+#                         'taxon_id': 1234
+#                     },
+#                     {
+#                         'sample_alias': 'sample2',
+#                         'sample_title': 'stitleagain',
+#                         'taxon_id': 1234
+#                     }
+#                 ],
+#                 "experiments": [
+#                     {
+#                         'experiment_alias': 'experiment1',
+#                         'platform': 'AB 3730xL Genetic Analyzer',
+#                         'design': {
+#                             'sample_descriptor': 'sample2',
+#                             'design_description': '',
+#                             'library_descriptor': {
+#                                 'library_strategy': 'AMPLICON',
+#                                 'library_source': 'METAGENOMIC',
+#                                 'library_selection': 'PCR',
+#                                 'library_layout': {
+#                                     'layout_type': 'paired',
+#                                     'nominal_length': 450
+#                                 }
+#                             }
+#                         }
+#                     }
+#                 ],
+#                 'runs': [
+#                     {
+#                         'experiment_ref': 'experiment1',
+#                         'data_block': {
+#                             'files': [
+#                                 {
+#                                     'filename': 'aFile',
+#                                     'filetype': 'fastq',
+#                                     'checksum_method': 'MD5',
+#                                     'checksum': '12345'
+#                                 }
+#                             ]
+#                         }
+#                     }
+#                 ]
+#             }
+#         }
+#
+#     @classmethod
+#     def _get_ena_full_data(cls, runs=False):
+#         if runs:
+#             with open(os.path.join(
+#                     'gfbio_submissions/brokerage/test_data/',
+#                     'ena_data_full_with_runs.json'), 'r') as test_data_file:
+#                 return json.load(test_data_file)
+#         else:
+#             with open(os.path.join(
+#                     'gfbio_submissions/brokerage/test_data/',
+#                     'ena_data_full_no_runs.json'), 'r') as test_data_file:
+#                 return json.load(test_data_file)
 
 #     # done
 #     def test_instance(self):
@@ -1190,432 +1190,432 @@ class SubmissionTest(TestCase):
 #             sub = Submission.objects.get_submission_for_task(id=id + 12)
 
 
-# TODO: clean or remove this mess. most is obsolete
-class FullWorkflowTest(TestCase):
-    fixtures = ('user', 'submission', 'resource_credential')
-
-    # TODO: use existing Taxon: Pirellula staleyi DSM 6068 (no rank) 530564
-    # curl -v -X POST -d 'account=maweber&submitting_user=HORST&site_project_id=p1&sample={"samples": [{"taxon_id": 1, "sample_alias": "sample_alias_1", "sample_title": "x", "site_object_id": "sample_obj_1"}, {"taxon_id": 2, "sample_alias": "sample_alias_2", "sample_title": "xx", "site_object_id": "sample_obj_2"}]}&study={"center_name": "c", "study_type": "Metagenomics", "study_abstract": "abs", "study_title": "t", "study_alias": "a", "site_object_id": "study_obj_1"}&experiment={"experiments":[{"experiment_alias":"experiment_alias_1", "study_ref": "a", "experiment_title":"exp1", "design":{"sample_descriptor": "sample_alias_1", "library_descriptor":{"library_strategy":"WGS - Whole Genome Sequencing - random sequencing of the whole genome (see pubmed 10731132 for details)", "library_source":"METAGENOMIC - Mixed material from metagenome.", "library_selection": "RANDOM - No selection or random selection.", "library_layout": "Single"}},"platform":{}, "site_object_id": "experiment_obj_1"}]}&run={}' "http://maweber:test@127.0.0.1:8000/brokerage/submissions/ena"
-    @classmethod
-    def _prepare(self):
-        serializer = SubmissionSerializer(data={
-            'target': 'ENA',
-            'release': True,
-            'data': BrokerObjectTest._get_ena_full_data()
-        })
-        serializer.is_valid()
-        submission = serializer.save(site=User.objects.get(pk=1))
-        BrokerObject.objects.add_submission_data(submission)
-
-        return submission
-
-    def test_prepare(self):
-        sub = self._prepare()
-        self.assertIsInstance(sub, Submission)
-
-    # FIXME: this test works when started alone, relying on broker object ids
-    # 1,2,3,4,5 but when started with other tests of this file the ids range
-    # from 6 - 10 because one testrun created one database where autoincremented
-    # ids are taking the next highest number available, even if lower number
-    # are free at this point of time.
-    @skip(
-        'this test works when started alone, relying on broker object ids. fix this')
-    def test_full_workflow(self):
-        sub = self._prepare()
-        submissions = Submission.objects.all()
-
-        broker_objects = BrokerObject.objects.all()
-        persistent_identifiers = PersistentIdentifier.objects.all()
-        request_logs = RequestLog.objects.all()
-
-        # associated_transfers = AssociatedTransfer.objects.all()
-        # 5 from fixture, 1 from _prepare_entities
-        self.assertEqual(6, len(submissions))
-        # FullWorkflowTest._prepare has release set to true, thus submitted
-        self.assertEqual('SUBMITTED', sub.status)
-        # 1 study, 3 samples, 1 experiment, 1 run from _prepare_entities
-        # New: 1 study 5 samples 5 experimente, 0 runs but files in each experiemnt = 5
-        self.assertEqual(16, len(broker_objects))
-        # 0 because no submission yet
-        self.assertEqual(0, len(persistent_identifiers))
-        # 0 requests yet, not even incoming since we do _prepare_entities
-        self.assertEqual(0, len(request_logs))
-        # 0 associated transfers because no submission yes
-        # self.assertEqual(0, len(associated_transfers))
-
-        response = requests.models.Response()
-        response.status_code = 200
-        response._content = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?> <?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
-            <RECEIPT receiptDate="2015-12-01T11:54:55.723Z" submissionFile="submission.xml"
-                     success="true">
-                <EXPERIMENT accession="ERX1228437" alias="4:f844738b-3304-4db7-858d-b7e47b293bb2"
-                            status="PRIVATE"/>
-                <RUN accession="ERR1149402" alias="5:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"/>
-                <SAMPLE accession="ERS989691" alias="2:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
-                    <EXT_ID accession="SAMEA3682542" type="biosample"/>
-                    <EXT_ID accession="SAMEA3682543-666" type="sample-this"/>
-                </SAMPLE>
-                <SAMPLE accession="ERS989692" alias="3:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
-                    <EXT_ID accession="SAMEA3682543" type="biosample"/>
-                </SAMPLE>
-                <STUDY accession="ERP013438" alias="1:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"
-                       holdUntilDate="2016-03-05Z"/>
-                <SUBMISSION accession="ERA540869" alias="NGS_March_original2"/>
-                <MESSAGES>
-                    <INFO>ADD action for the following XML: study.xml sample.xml
-                        experiment.xml run.xml
-                    </INFO>
-                </MESSAGES>
-                <ACTIONS>ADD</ACTIONS>
-                <ACTIONS>ADD</ACTIONS>
-                <ACTIONS>ADD</ACTIONS>
-                <ACTIONS>ADD</ACTIONS>
-                <ACTIONS>HOLD</ACTIONS>
-            </RECEIPT>""")
-        with patch('requests.get', return_value=response) as r:
-            pass
-            # transfer = SubmissionTransfer.objects.get(pk=2)
-            # same instance in db but with ena specific python code
-            # transfer = EnaSubmissionTransfer.objects.get(pk=2)
-            # transfer.execute(sub)
-            # r.assert_called_with('http://www.example.com')
-
-        submissions = Submission.objects.all()
-        broker_objects = BrokerObject.objects.all()
-        persistent_identifiers = PersistentIdentifier.objects.all()
-        request_logs = RequestLog.objects.all()
-        # associated_transfers = AssociatedTransfer.objects.all()
-        # 5 from fixture, 1 from _prepare_entities
-        self.assertEqual(6, len(submissions))
-        # 1 study, 3 samples, 1 experiment, 1 run from _prepare_entities
-        # New: 1 study 5 samples 5 experimente, 0 runs but files in each experiemnt = 5
-        self.assertEqual(16, len(broker_objects))
-
-        # FIXME: mocked xml response is not corresponding to new testdata
-        # 5 acc (1 study, 2 samples, 1 experiment, 1 run) plus 3 biosample
-        self.assertEqual(8, len(persistent_identifiers))
-        # 1 request for sending data only to one archive, with successful response
-        self.assertEqual(1, len(request_logs))
-        # 1 associated transfers for sending to one archive
-        # self.assertEqual(1, len(associated_transfers))
-
-        self.assertEqual('closed', sub.status)
-
-    # TODO: this test needs some adaptions, mock_response and celery-eager
-    @skip('obsolete, needs modifications')
-    def test_ena_response_with_errors(self):
-        sub = self._prepare()
-        self.assertEqual('open', sub.status)
-        response = requests.models.Response()
-        response.status_code = 200
-        response._content = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
-<RECEIPT receiptDate="2015-12-09T10:14:46.195Z" submissionFile="submission.xml" success="false"><SUBMISSION alias="ADD_SUBMISSION_ALIAS"/><MESSAGES><ERROR> Submission with name ADD_SUBMISSION_ALIAS already exists</ERROR><INFO> ADD action for the following XML: study.xml sample.xml experiment.xml run.xml       </INFO></MESSAGES><ACTIONS>ADD</ACTIONS><ACTIONS>ADD</ACTIONS><ACTIONS>ADD</ACTIONS><ACTIONS>ADD</ACTIONS><ACTIONS>HOLD</ACTIONS></RECEIPT>""")
-        with patch('requests.get', return_value=response) as r:
-            transfer = SubmissionTransferHandler(submission_id=sub.pk)
-            transfer.execute()
-            r.assert_called_with('http://www.example.com')
-        self.assertEqual('open', sub.status)
-        request_log = RequestLog.objects.all().first()
-        self.assertIn('parsed_ena_response', request_log.request_details.keys())
-
-    @skip('request against testserver')
-    def test_send_submission_to_ena(self):
-        study = {"study_alias": "study_alias_0", "study_title": "stitle",
-                 "center_name": "cname", "study_abstract": "abstr",
-                 "study_type": "Metagenomics", 'study_alias': 'sref', }
-        sample = {
-            'samples': [
-                {
-                    'gcdjson_key': 'gcdjson_12',
-                    'sample_alias': 'sample_alias_1',
-                    'scientific_name': 'sc name',
-                    'sample_description': 'blbbllblllalllblalbla',
-                    'common_name': 'c name', 'individual_name': 'in name',
-                    'gcdjson': {'env_feature': 'feat', 'project_name': 'p_name',
-                                'assembly': {'assembly_method': 'Celera',
-                                             'calculation_method': 'met',
-                                             'estimated_error_rate': 22},
-                                'submitted_to_insdc': True, 'seq_meth': 's_met',
-                                'package': 'air',
-                                'collection_date': '2015-03-06T12:00:40+01:00',
-                                'checklist': 'me', 'env_package': 'air',
-                                'env_biome': 'desert',
-                                'filter_type': ['chemical air filter', 'HEPA'],
-                                'investigation_type': 'virus',
-                                'gcdj_version': '0.0.0',
-                                'geo_loc_name': 'Germany:Sylt:Westerland',
-                                'alt': {'unit': 'm', 'value': 344},
-                                'env_material': 'mat',
-                                'lat_lon': {'latitude': 34.02,
-                                            'longitude': 0.99}},
-                    'site_object_id': 'obj1', 'taxon_id': 1,
-                    'sample_title': 'title', 'sample_attributes': [
-                    {'units': 'u1', 'tag': 't1', 'value': 'v1'},
-                    {'units': 'u2', 'tag': 't2', 'value': 'v2'},
-                    {'units': 'u3', 'tag': 't3', 'value': 'v3'}],
-                    'anonymized_name': 'a name'},
-
-                {'taxon_id': 2, 'sample_title': 'zwei',
-                 'site_object_id': 'obj2', 'sample_alias': 'sample_alias_2'},
-
-                {'taxon_id': 3, 'sample_title': 'drei',
-                 'site_object_id': 'obj3', 'sample_alias': 'sample_alias_2',
-                 'gcdjson': {'env_feature': 'feat', 'project_name': 'p_name',
-                             'assembly': {'assembly_method': 'Celera',
-                                          'calculation_method': 'met',
-                                          'estimated_error_rate': 22},
-                             'submitted_to_insdc': True, 'seq_meth': 's_met',
-                             'package': 'air',
-                             'collection_date': '2015-03-06T12:00:40+01:00',
-                             'checklist': 'me', 'env_package': 'air',
-                             'env_biome': 'desert',
-                             'filter_type': ['chemical air filter', 'HEPA'],
-                             'investigation_type': 'virus',
-                             'gcdj_version': '0.0.0',
-                             'geo_loc_name': 'Germany:Sylt:Westerland',
-                             'alt': {'unit': 'm', 'value': 344},
-                             'env_material': 'mat',
-                             'lat_lon': {'latitude': 34.02, 'longitude': 0.99}}}
-            ]}
-
-        # from widget with "new" experiment schema
-        # manually modified study_ref+sample_ref to match study_alias above
-        experiment = {
-            "experiments": [
-                {
-                    "experiment_alias": "experiment_alias_1",
-                    "title": "exp_adv1",
-                    "design": {
-                        "sample_descriptor": "sample_alias_1",
-                        "design_description": "desc1",
-                        "library_descriptor": {
-                            "library_strategy": "WGS",
-                            "library_source": "METAGENOMIC",
-                            "library_selection": "RANDOM",
-                            "library_layout": "Single"}
-                    },
-                    # TODO: schema4 would allow better checks for model
-                    # TODO: find a way to perform a platform specific check on model, especially in widget
-                    "platform": {
-                        "platform_type": "LS454",
-                        "ls454": "454 GS 20"
-                    },
-                    "study_ref": "sref"
-                }
-            ]
-        }
-        run = {
-            "runs": [
-                {
-                    "title": "rtitle1",
-                    "experiment_ref": "experiment_alias_1",
-                    "run_alias": "run_alias_1"
-                }
-            ]
-        }
-
-        data = {
-            'submitting_user': 'aUser',
-            'site_project_id': 'prjX',
-            'study': study,
-            'sample': sample,
-            'experiment': experiment,
-            'run': run
-        }
-
-        # validate and save submission data
-        serializer = SubmissionSerializer(data=data)
-        valid = serializer.is_valid()
-        # self.assertTrue(valid)
-
-        submission = serializer.save(site=User.objects.get(pk=1))
-
-        resource_credential = ResourceCredential()
-        resource_credential.title = 'test-srv'
-        resource_credential.url = 'https://www-test.ebi.ac.uk/ena/submit/drop-box/submit/'
-        resource_credential.authentication = 'ENA Webin-40945 aKS5hJ_Vj-Uacwd5'
-        resource_credential.save()
-        # --------- above delievers submission and submission data objects as in view
-        # TODO: execute this to check !
-        sth = SubmissionTransferHandler(submission_id=submission.pk)
-        sth.execute_submission_to_ena()
-
-    # NEW: curl -v -X POST -d 'account=maweber&submitting_user=HORST&site_project_id=p1&sample={"samples": [{"taxon_id": 1, "sample_alias": "sample_alias_1", "sample_title": "x", "site_object_id": "sample_obj_1"}, {"taxon_id": 2, "sample_alias": "sample_alias_2", "sample_title": "xx", "site_object_id": "sample_obj_2"}]}&study={"center_name": "c", "study_type": "Metagenomics", "study_abstract": "abs", "study_title": "t", "study_alias": "a", "site_object_id": "study_obj_1"}&experiment={"experiments":[{"experiment_alias":"experiment_alias_1", "study_ref": "a", "experiment_title":"exp1", "design":{"sample_descriptor": "sample_alias_1", "library_descriptor":{"library_strategy":"WGS - Whole Genome Sequencing - random sequencing of the whole genome (see pubmed 10731132 for details)", "library_source":"METAGENOMIC - Mixed material from metagenome.", "library_selection": "RANDOM - No selection or random selection.", "library_layout": "Single"}},"platform":{}, "site_object_id": "experiment_obj_1"}]}&run={}' "http://maweber:test@127.0.0.1:8000/brokerage/submissions/ena"
-    # for local test start celery deamon/worker, beat, cam, then rename celery.py and run test
-    @skip('test against debug server, that needs to be up and running')
-    def test_post_to_debug_server_ena_submission(self):
-        # let form validation fail
-        # self.content['sample'] = 2
-        # access existing submission
-        # self.content['broker_submission_id'] = 'cdd73460-eec7-40a3-9a1f-f0a314f821f3'
-        # change site_project_id
-        # self.content['site_project_id'] = 'p8'
-
-        # explicit error for testing, change in submission data via admin before release on hold
-        # platform = FAIL
-
-        response = requests.post(
-            url='http://127.0.0.1:8000/brokerage/submissions/ena',
-            data=json.dumps(self.content),
-            headers={
-                'Authorization': 'Token e4501de7f37d3044778f7939155f90cfb1625c6e',
-                'Content-Type': 'application/json'}
-        )
-
-    @skip('test against GWDG')
-    def test_post_to_gwdg_server(self):
-        # let form validation fail
-        # self.content['sample'] = 2
-        # access existing submission
-        # self.content['broker_submission_id'] = 'cdd73460-eec7-40a3-9a1f-f0a314f821f3'
-        # change site_project_id
-        # self.content['site_project_id'] = 'p8'
-
-        response = requests.post(
-            url='http://c103-170.cloud.gwdg.de/brokerage/submissions/ena',
-            data=json.dumps(self.content),
-            headers={
-                'Authorization': 'Token 95bf481b2262df60953c31604a585450445880af',
-                'Content-Type': 'application/json'}
-        )
-
-    @skip('test against GWDG')
-    def test_https_post_to_gfbio_submissions_server(self):
-        # study = {"study_alias": "study_alias_0", "study_title": "stitle",
-        #          "center_name": "cname", "study_abstract": "abstr",
-        #          "study_type": "Metagenomics", 'study_alias': 'sref', }
-        # sample = {
-        #     'samples': [
-        #         {
-        #             'gcdjson_key': 'gcdjson_12',
-        #             'sample_alias': 'sample_alias_1',
-        #             'scientific_name': 'sc name',
-        #             'sample_description': 'blbbllblllalllblalbla',
-        #             'common_name': 'c name', 'individual_name': 'in name',
-        #             'gcdjson': {'env_feature': 'feat', 'project_name': 'p_name',
-        #                         'assembly': {'assembly_method': 'Celera',
-        #                                      'calculation_method': 'met',
-        #                                      'estimated_error_rate': 22},
-        #                         'submitted_to_insdc': True, 'seq_meth': 's_met',
-        #                         'package': 'air',
-        #                         'collection_date': '2015-03-06T12:00:40+01:00',
-        #                         'checklist': 'me', 'env_package': 'air',
-        #                         'env_biome': 'desert',
-        #                         'filter_type': ['chemical air filter', 'HEPA'],
-        #                         'investigation_type': 'virus',
-        #                         'gcdj_version': '0.0.0',
-        #                         'geo_loc_name': 'Germany:Sylt:Westerland',
-        #                         'alt': {'unit': 'm', 'value': 344},
-        #                         'env_material': 'mat',
-        #                         'lat_lon': {'latitude': 34.02,
-        #                                     'longitude': 0.99}},
-        #             'site_object_id': 'obj1', 'taxon_id': 412755,
-        #             'sample_title': 'title', 'sample_attributes': [
-        #             {'units': 'u1', 'tag': 't1', 'value': 'v1'},
-        #             {'units': 'u2', 'tag': 't2', 'value': 'v2'},
-        #             {'units': 'u3', 'tag': 't3', 'value': 'v3'}],
-        #             'anonymized_name': 'a name'},
-        #
-        #         {'taxon_id': 412755, 'sample_title': 'zwei',
-        #          'site_object_id': 'obj2', 'sample_alias': 'sample_alias_2'},
-        #
-        #         {'taxon_id': 412755, 'sample_title': 'drei',
-        #          'site_object_id': 'obj3', 'sample_alias': 'sample_alias_2',
-        #          'gcdjson': {'env_feature': 'feat', 'project_name': 'p_name',
-        #                      'assembly': {'assembly_method': 'Celera',
-        #                                   'calculation_method': 'met',
-        #                                   'estimated_error_rate': 22},
-        #                      'submitted_to_insdc': True, 'seq_meth': 's_met',
-        #                      'package': 'air',
-        #                      'collection_date': '2015-03-06T12:00:40+01:00',
-        #                      'checklist': 'me', 'env_package': 'air',
-        #                      'env_biome': 'desert',
-        #                      'filter_type': ['chemical air filter', 'HEPA'],
-        #                      'investigation_type': 'virus',
-        #                      'gcdj_version': '0.0.0',
-        #                      'geo_loc_name': 'Germany:Sylt:Westerland',
-        #                      'alt': {'unit': 'm', 'value': 344},
-        #                      'env_material': 'mat',
-        #                      'lat_lon': {'latitude': 34.02, 'longitude': 0.99}}}
-        #     ]}
-
-        # from widget with "new" experiment schema
-        # manually modified study_ref+sample_ref to match study_alias above
-        # experiment = {
-        #     "experiments": [
-        #         {
-        #             "experiment_alias": "experiment_alias_1",
-        #             "title": "exp_adv1",
-        #             "design": {
-        #                 "sample_descriptor": "sample_alias_1",
-        #                 "design_description": "desc1",
-        #                 "library_descriptor": {
-        #                     "library_strategy": "WGS",
-        #                     "library_source": "METAGENOMIC",
-        #                     "library_selection": "RANDOM",
-        #                     "library_layout": "Single"}
-        #             },
-        #             # TODO: schema4 would allow better checks for model
-        #             # TODO: find a way to perform a platform specific check on model, especially in widget
-        #             "platform": {
-        #                 "platform_type": "LS454",
-        #                 "ls454": "454 GS 20"
-        #             },
-        #             "study_ref": "sref"
-        #         }
-        #     ]
-        # }
-        # run = {
-        #     "runs": [
-        #         {
-        #             "title": "rtitle1",
-        #             "experiment_ref": "experiment_alias_1",
-        #             "run_alias": "run_alias_1"
-        #         }
-        #     ]
-        # }
-        #
-        # data = {
-        #     'submitting_user': 'maweber',
-        #     'site_project_id': 'prjX',
-        #     'study': study,
-        #     'sample': sample,
-        #     'experiment': experiment,
-        #     'run': run
-        # }
-
-        # TODO: this crashes on production server
-        # stop supervisor, start server  with regular command for output, run this test -> json expeption
-        # sentry: https://sentry.io/jacobs-university-bremen/gfbioservices/issues/729833620/?query=is:unresolved
-        # docs https://docs.djangoproject.com/en/1.11/ref/request-response/#django.http.HttpResponse.content
-        test_data = copy.deepcopy(TestAddSubmissionView.new_data)
-        pprint.pprint(test_data)
-        test_data['requirements'].pop('runs')
-        pprint.pprint(test_data)
-        response = requests.post(
-            url='https://submission.gfbio.org/api/submissions/',
-            # url='https://services.gfbio.org/api/submissions/',
-            data=json.dumps(
-                {
-                    'target': 'ENA_PANGAEA',
-                    'release': True,
-                    'data': test_data
-                }
-            ),
-            headers={
-                'Authorization': 'Token 0df34a33fc12b18432830ea81aa3af2cab2e532a',
-                # 'Authorization':
-                #    'Token 167ed8501cb0a3e7770f09df6d3e3e14a3489475',
-                'Content-Type': 'application/json'}
-        )
-
-        print(response.content)
-        try:
-            pprint.pprint(json.loads(response.content.decode('utf-8')))
-        except JSONDecodeError as e:
-            print('Error ', e)
-        print(response.status_code)
+# # TODO: clean or remove this mess. most is obsolete
+# class FullWorkflowTest(TestCase):
+#     fixtures = ('user', 'submission', 'resource_credential')
+#
+#     # TODO: use existing Taxon: Pirellula staleyi DSM 6068 (no rank) 530564
+#     # curl -v -X POST -d 'account=maweber&submitting_user=HORST&site_project_id=p1&sample={"samples": [{"taxon_id": 1, "sample_alias": "sample_alias_1", "sample_title": "x", "site_object_id": "sample_obj_1"}, {"taxon_id": 2, "sample_alias": "sample_alias_2", "sample_title": "xx", "site_object_id": "sample_obj_2"}]}&study={"center_name": "c", "study_type": "Metagenomics", "study_abstract": "abs", "study_title": "t", "study_alias": "a", "site_object_id": "study_obj_1"}&experiment={"experiments":[{"experiment_alias":"experiment_alias_1", "study_ref": "a", "experiment_title":"exp1", "design":{"sample_descriptor": "sample_alias_1", "library_descriptor":{"library_strategy":"WGS - Whole Genome Sequencing - random sequencing of the whole genome (see pubmed 10731132 for details)", "library_source":"METAGENOMIC - Mixed material from metagenome.", "library_selection": "RANDOM - No selection or random selection.", "library_layout": "Single"}},"platform":{}, "site_object_id": "experiment_obj_1"}]}&run={}' "http://maweber:test@127.0.0.1:8000/brokerage/submissions/ena"
+#     @classmethod
+#     def _prepare(self):
+#         serializer = SubmissionSerializer(data={
+#             'target': 'ENA',
+#             'release': True,
+#             'data': BrokerObjectTest._get_ena_full_data()
+#         })
+#         serializer.is_valid()
+#         submission = serializer.save(site=User.objects.get(pk=1))
+#         BrokerObject.objects.add_submission_data(submission)
+#
+#         return submission
+#
+#     def test_prepare(self):
+#         sub = self._prepare()
+#         self.assertIsInstance(sub, Submission)
+#
+#     # FIXME: this test works when started alone, relying on broker object ids
+#     # 1,2,3,4,5 but when started with other tests of this file the ids range
+#     # from 6 - 10 because one testrun created one database where autoincremented
+#     # ids are taking the next highest number available, even if lower number
+#     # are free at this point of time.
+#     @skip(
+#         'this test works when started alone, relying on broker object ids. fix this')
+#     def test_full_workflow(self):
+#         sub = self._prepare()
+#         submissions = Submission.objects.all()
+#
+#         broker_objects = BrokerObject.objects.all()
+#         persistent_identifiers = PersistentIdentifier.objects.all()
+#         request_logs = RequestLog.objects.all()
+#
+#         # associated_transfers = AssociatedTransfer.objects.all()
+#         # 5 from fixture, 1 from _prepare_entities
+#         self.assertEqual(6, len(submissions))
+#         # FullWorkflowTest._prepare has release set to true, thus submitted
+#         self.assertEqual('SUBMITTED', sub.status)
+#         # 1 study, 3 samples, 1 experiment, 1 run from _prepare_entities
+#         # New: 1 study 5 samples 5 experimente, 0 runs but files in each experiemnt = 5
+#         self.assertEqual(16, len(broker_objects))
+#         # 0 because no submission yet
+#         self.assertEqual(0, len(persistent_identifiers))
+#         # 0 requests yet, not even incoming since we do _prepare_entities
+#         self.assertEqual(0, len(request_logs))
+#         # 0 associated transfers because no submission yes
+#         # self.assertEqual(0, len(associated_transfers))
+#
+#         response = requests.models.Response()
+#         response.status_code = 200
+#         response._content = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?> <?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
+#             <RECEIPT receiptDate="2015-12-01T11:54:55.723Z" submissionFile="submission.xml"
+#                      success="true">
+#                 <EXPERIMENT accession="ERX1228437" alias="4:f844738b-3304-4db7-858d-b7e47b293bb2"
+#                             status="PRIVATE"/>
+#                 <RUN accession="ERR1149402" alias="5:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"/>
+#                 <SAMPLE accession="ERS989691" alias="2:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
+#                     <EXT_ID accession="SAMEA3682542" type="biosample"/>
+#                     <EXT_ID accession="SAMEA3682543-666" type="sample-this"/>
+#                 </SAMPLE>
+#                 <SAMPLE accession="ERS989692" alias="3:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
+#                     <EXT_ID accession="SAMEA3682543" type="biosample"/>
+#                 </SAMPLE>
+#                 <STUDY accession="ERP013438" alias="1:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"
+#                        holdUntilDate="2016-03-05Z"/>
+#                 <SUBMISSION accession="ERA540869" alias="NGS_March_original2"/>
+#                 <MESSAGES>
+#                     <INFO>ADD action for the following XML: study.xml sample.xml
+#                         experiment.xml run.xml
+#                     </INFO>
+#                 </MESSAGES>
+#                 <ACTIONS>ADD</ACTIONS>
+#                 <ACTIONS>ADD</ACTIONS>
+#                 <ACTIONS>ADD</ACTIONS>
+#                 <ACTIONS>ADD</ACTIONS>
+#                 <ACTIONS>HOLD</ACTIONS>
+#             </RECEIPT>""")
+#         with patch('requests.get', return_value=response) as r:
+#             pass
+#             # transfer = SubmissionTransfer.objects.get(pk=2)
+#             # same instance in db but with ena specific python code
+#             # transfer = EnaSubmissionTransfer.objects.get(pk=2)
+#             # transfer.execute(sub)
+#             # r.assert_called_with('http://www.example.com')
+#
+#         submissions = Submission.objects.all()
+#         broker_objects = BrokerObject.objects.all()
+#         persistent_identifiers = PersistentIdentifier.objects.all()
+#         request_logs = RequestLog.objects.all()
+#         # associated_transfers = AssociatedTransfer.objects.all()
+#         # 5 from fixture, 1 from _prepare_entities
+#         self.assertEqual(6, len(submissions))
+#         # 1 study, 3 samples, 1 experiment, 1 run from _prepare_entities
+#         # New: 1 study 5 samples 5 experimente, 0 runs but files in each experiemnt = 5
+#         self.assertEqual(16, len(broker_objects))
+#
+#         # FIXME: mocked xml response is not corresponding to new testdata
+#         # 5 acc (1 study, 2 samples, 1 experiment, 1 run) plus 3 biosample
+#         self.assertEqual(8, len(persistent_identifiers))
+#         # 1 request for sending data only to one archive, with successful response
+#         self.assertEqual(1, len(request_logs))
+#         # 1 associated transfers for sending to one archive
+#         # self.assertEqual(1, len(associated_transfers))
+#
+#         self.assertEqual('closed', sub.status)
+#
+#     # TODO: this test needs some adaptions, mock_response and celery-eager
+#     @skip('obsolete, needs modifications')
+#     def test_ena_response_with_errors(self):
+#         sub = self._prepare()
+#         self.assertEqual('open', sub.status)
+#         response = requests.models.Response()
+#         response.status_code = 200
+#         response._content = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?>
+# <?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
+# <RECEIPT receiptDate="2015-12-09T10:14:46.195Z" submissionFile="submission.xml" success="false"><SUBMISSION alias="ADD_SUBMISSION_ALIAS"/><MESSAGES><ERROR> Submission with name ADD_SUBMISSION_ALIAS already exists</ERROR><INFO> ADD action for the following XML: study.xml sample.xml experiment.xml run.xml       </INFO></MESSAGES><ACTIONS>ADD</ACTIONS><ACTIONS>ADD</ACTIONS><ACTIONS>ADD</ACTIONS><ACTIONS>ADD</ACTIONS><ACTIONS>HOLD</ACTIONS></RECEIPT>""")
+#         with patch('requests.get', return_value=response) as r:
+#             transfer = SubmissionTransferHandler(submission_id=sub.pk)
+#             transfer.execute()
+#             r.assert_called_with('http://www.example.com')
+#         self.assertEqual('open', sub.status)
+#         request_log = RequestLog.objects.all().first()
+#         self.assertIn('parsed_ena_response', request_log.request_details.keys())
+#
+#     @skip('request against testserver')
+#     def test_send_submission_to_ena(self):
+#         study = {"study_alias": "study_alias_0", "study_title": "stitle",
+#                  "center_name": "cname", "study_abstract": "abstr",
+#                  "study_type": "Metagenomics", 'study_alias': 'sref', }
+#         sample = {
+#             'samples': [
+#                 {
+#                     'gcdjson_key': 'gcdjson_12',
+#                     'sample_alias': 'sample_alias_1',
+#                     'scientific_name': 'sc name',
+#                     'sample_description': 'blbbllblllalllblalbla',
+#                     'common_name': 'c name', 'individual_name': 'in name',
+#                     'gcdjson': {'env_feature': 'feat', 'project_name': 'p_name',
+#                                 'assembly': {'assembly_method': 'Celera',
+#                                              'calculation_method': 'met',
+#                                              'estimated_error_rate': 22},
+#                                 'submitted_to_insdc': True, 'seq_meth': 's_met',
+#                                 'package': 'air',
+#                                 'collection_date': '2015-03-06T12:00:40+01:00',
+#                                 'checklist': 'me', 'env_package': 'air',
+#                                 'env_biome': 'desert',
+#                                 'filter_type': ['chemical air filter', 'HEPA'],
+#                                 'investigation_type': 'virus',
+#                                 'gcdj_version': '0.0.0',
+#                                 'geo_loc_name': 'Germany:Sylt:Westerland',
+#                                 'alt': {'unit': 'm', 'value': 344},
+#                                 'env_material': 'mat',
+#                                 'lat_lon': {'latitude': 34.02,
+#                                             'longitude': 0.99}},
+#                     'site_object_id': 'obj1', 'taxon_id': 1,
+#                     'sample_title': 'title', 'sample_attributes': [
+#                     {'units': 'u1', 'tag': 't1', 'value': 'v1'},
+#                     {'units': 'u2', 'tag': 't2', 'value': 'v2'},
+#                     {'units': 'u3', 'tag': 't3', 'value': 'v3'}],
+#                     'anonymized_name': 'a name'},
+#
+#                 {'taxon_id': 2, 'sample_title': 'zwei',
+#                  'site_object_id': 'obj2', 'sample_alias': 'sample_alias_2'},
+#
+#                 {'taxon_id': 3, 'sample_title': 'drei',
+#                  'site_object_id': 'obj3', 'sample_alias': 'sample_alias_2',
+#                  'gcdjson': {'env_feature': 'feat', 'project_name': 'p_name',
+#                              'assembly': {'assembly_method': 'Celera',
+#                                           'calculation_method': 'met',
+#                                           'estimated_error_rate': 22},
+#                              'submitted_to_insdc': True, 'seq_meth': 's_met',
+#                              'package': 'air',
+#                              'collection_date': '2015-03-06T12:00:40+01:00',
+#                              'checklist': 'me', 'env_package': 'air',
+#                              'env_biome': 'desert',
+#                              'filter_type': ['chemical air filter', 'HEPA'],
+#                              'investigation_type': 'virus',
+#                              'gcdj_version': '0.0.0',
+#                              'geo_loc_name': 'Germany:Sylt:Westerland',
+#                              'alt': {'unit': 'm', 'value': 344},
+#                              'env_material': 'mat',
+#                              'lat_lon': {'latitude': 34.02, 'longitude': 0.99}}}
+#             ]}
+#
+#         # from widget with "new" experiment schema
+#         # manually modified study_ref+sample_ref to match study_alias above
+#         experiment = {
+#             "experiments": [
+#                 {
+#                     "experiment_alias": "experiment_alias_1",
+#                     "title": "exp_adv1",
+#                     "design": {
+#                         "sample_descriptor": "sample_alias_1",
+#                         "design_description": "desc1",
+#                         "library_descriptor": {
+#                             "library_strategy": "WGS",
+#                             "library_source": "METAGENOMIC",
+#                             "library_selection": "RANDOM",
+#                             "library_layout": "Single"}
+#                     },
+#                     # TODO: schema4 would allow better checks for model
+#                     # TODO: find a way to perform a platform specific check on model, especially in widget
+#                     "platform": {
+#                         "platform_type": "LS454",
+#                         "ls454": "454 GS 20"
+#                     },
+#                     "study_ref": "sref"
+#                 }
+#             ]
+#         }
+#         run = {
+#             "runs": [
+#                 {
+#                     "title": "rtitle1",
+#                     "experiment_ref": "experiment_alias_1",
+#                     "run_alias": "run_alias_1"
+#                 }
+#             ]
+#         }
+#
+#         data = {
+#             'submitting_user': 'aUser',
+#             'site_project_id': 'prjX',
+#             'study': study,
+#             'sample': sample,
+#             'experiment': experiment,
+#             'run': run
+#         }
+#
+#         # validate and save submission data
+#         serializer = SubmissionSerializer(data=data)
+#         valid = serializer.is_valid()
+#         # self.assertTrue(valid)
+#
+#         submission = serializer.save(site=User.objects.get(pk=1))
+#
+#         resource_credential = ResourceCredential()
+#         resource_credential.title = 'test-srv'
+#         resource_credential.url = 'https://www-test.ebi.ac.uk/ena/submit/drop-box/submit/'
+#         resource_credential.authentication = 'ENA Webin-40945 aKS5hJ_Vj-Uacwd5'
+#         resource_credential.save()
+#         # --------- above delievers submission and submission data objects as in view
+#         # TODO: execute this to check !
+#         sth = SubmissionTransferHandler(submission_id=submission.pk)
+#         sth.execute_submission_to_ena()
+#
+#     # NEW: curl -v -X POST -d 'account=maweber&submitting_user=HORST&site_project_id=p1&sample={"samples": [{"taxon_id": 1, "sample_alias": "sample_alias_1", "sample_title": "x", "site_object_id": "sample_obj_1"}, {"taxon_id": 2, "sample_alias": "sample_alias_2", "sample_title": "xx", "site_object_id": "sample_obj_2"}]}&study={"center_name": "c", "study_type": "Metagenomics", "study_abstract": "abs", "study_title": "t", "study_alias": "a", "site_object_id": "study_obj_1"}&experiment={"experiments":[{"experiment_alias":"experiment_alias_1", "study_ref": "a", "experiment_title":"exp1", "design":{"sample_descriptor": "sample_alias_1", "library_descriptor":{"library_strategy":"WGS - Whole Genome Sequencing - random sequencing of the whole genome (see pubmed 10731132 for details)", "library_source":"METAGENOMIC - Mixed material from metagenome.", "library_selection": "RANDOM - No selection or random selection.", "library_layout": "Single"}},"platform":{}, "site_object_id": "experiment_obj_1"}]}&run={}' "http://maweber:test@127.0.0.1:8000/brokerage/submissions/ena"
+#     # for local test start celery deamon/worker, beat, cam, then rename celery.py and run test
+#     @skip('test against debug server, that needs to be up and running')
+#     def test_post_to_debug_server_ena_submission(self):
+#         # let form validation fail
+#         # self.content['sample'] = 2
+#         # access existing submission
+#         # self.content['broker_submission_id'] = 'cdd73460-eec7-40a3-9a1f-f0a314f821f3'
+#         # change site_project_id
+#         # self.content['site_project_id'] = 'p8'
+#
+#         # explicit error for testing, change in submission data via admin before release on hold
+#         # platform = FAIL
+#
+#         response = requests.post(
+#             url='http://127.0.0.1:8000/brokerage/submissions/ena',
+#             data=json.dumps(self.content),
+#             headers={
+#                 'Authorization': 'Token e4501de7f37d3044778f7939155f90cfb1625c6e',
+#                 'Content-Type': 'application/json'}
+#         )
+#
+#     @skip('test against GWDG')
+#     def test_post_to_gwdg_server(self):
+#         # let form validation fail
+#         # self.content['sample'] = 2
+#         # access existing submission
+#         # self.content['broker_submission_id'] = 'cdd73460-eec7-40a3-9a1f-f0a314f821f3'
+#         # change site_project_id
+#         # self.content['site_project_id'] = 'p8'
+#
+#         response = requests.post(
+#             url='http://c103-170.cloud.gwdg.de/brokerage/submissions/ena',
+#             data=json.dumps(self.content),
+#             headers={
+#                 'Authorization': 'Token 95bf481b2262df60953c31604a585450445880af',
+#                 'Content-Type': 'application/json'}
+#         )
+#
+#     @skip('test against GWDG')
+#     def test_https_post_to_gfbio_submissions_server(self):
+#         # study = {"study_alias": "study_alias_0", "study_title": "stitle",
+#         #          "center_name": "cname", "study_abstract": "abstr",
+#         #          "study_type": "Metagenomics", 'study_alias': 'sref', }
+#         # sample = {
+#         #     'samples': [
+#         #         {
+#         #             'gcdjson_key': 'gcdjson_12',
+#         #             'sample_alias': 'sample_alias_1',
+#         #             'scientific_name': 'sc name',
+#         #             'sample_description': 'blbbllblllalllblalbla',
+#         #             'common_name': 'c name', 'individual_name': 'in name',
+#         #             'gcdjson': {'env_feature': 'feat', 'project_name': 'p_name',
+#         #                         'assembly': {'assembly_method': 'Celera',
+#         #                                      'calculation_method': 'met',
+#         #                                      'estimated_error_rate': 22},
+#         #                         'submitted_to_insdc': True, 'seq_meth': 's_met',
+#         #                         'package': 'air',
+#         #                         'collection_date': '2015-03-06T12:00:40+01:00',
+#         #                         'checklist': 'me', 'env_package': 'air',
+#         #                         'env_biome': 'desert',
+#         #                         'filter_type': ['chemical air filter', 'HEPA'],
+#         #                         'investigation_type': 'virus',
+#         #                         'gcdj_version': '0.0.0',
+#         #                         'geo_loc_name': 'Germany:Sylt:Westerland',
+#         #                         'alt': {'unit': 'm', 'value': 344},
+#         #                         'env_material': 'mat',
+#         #                         'lat_lon': {'latitude': 34.02,
+#         #                                     'longitude': 0.99}},
+#         #             'site_object_id': 'obj1', 'taxon_id': 412755,
+#         #             'sample_title': 'title', 'sample_attributes': [
+#         #             {'units': 'u1', 'tag': 't1', 'value': 'v1'},
+#         #             {'units': 'u2', 'tag': 't2', 'value': 'v2'},
+#         #             {'units': 'u3', 'tag': 't3', 'value': 'v3'}],
+#         #             'anonymized_name': 'a name'},
+#         #
+#         #         {'taxon_id': 412755, 'sample_title': 'zwei',
+#         #          'site_object_id': 'obj2', 'sample_alias': 'sample_alias_2'},
+#         #
+#         #         {'taxon_id': 412755, 'sample_title': 'drei',
+#         #          'site_object_id': 'obj3', 'sample_alias': 'sample_alias_2',
+#         #          'gcdjson': {'env_feature': 'feat', 'project_name': 'p_name',
+#         #                      'assembly': {'assembly_method': 'Celera',
+#         #                                   'calculation_method': 'met',
+#         #                                   'estimated_error_rate': 22},
+#         #                      'submitted_to_insdc': True, 'seq_meth': 's_met',
+#         #                      'package': 'air',
+#         #                      'collection_date': '2015-03-06T12:00:40+01:00',
+#         #                      'checklist': 'me', 'env_package': 'air',
+#         #                      'env_biome': 'desert',
+#         #                      'filter_type': ['chemical air filter', 'HEPA'],
+#         #                      'investigation_type': 'virus',
+#         #                      'gcdj_version': '0.0.0',
+#         #                      'geo_loc_name': 'Germany:Sylt:Westerland',
+#         #                      'alt': {'unit': 'm', 'value': 344},
+#         #                      'env_material': 'mat',
+#         #                      'lat_lon': {'latitude': 34.02, 'longitude': 0.99}}}
+#         #     ]}
+#
+#         # from widget with "new" experiment schema
+#         # manually modified study_ref+sample_ref to match study_alias above
+#         # experiment = {
+#         #     "experiments": [
+#         #         {
+#         #             "experiment_alias": "experiment_alias_1",
+#         #             "title": "exp_adv1",
+#         #             "design": {
+#         #                 "sample_descriptor": "sample_alias_1",
+#         #                 "design_description": "desc1",
+#         #                 "library_descriptor": {
+#         #                     "library_strategy": "WGS",
+#         #                     "library_source": "METAGENOMIC",
+#         #                     "library_selection": "RANDOM",
+#         #                     "library_layout": "Single"}
+#         #             },
+#         #             # TODO: schema4 would allow better checks for model
+#         #             # TODO: find a way to perform a platform specific check on model, especially in widget
+#         #             "platform": {
+#         #                 "platform_type": "LS454",
+#         #                 "ls454": "454 GS 20"
+#         #             },
+#         #             "study_ref": "sref"
+#         #         }
+#         #     ]
+#         # }
+#         # run = {
+#         #     "runs": [
+#         #         {
+#         #             "title": "rtitle1",
+#         #             "experiment_ref": "experiment_alias_1",
+#         #             "run_alias": "run_alias_1"
+#         #         }
+#         #     ]
+#         # }
+#         #
+#         # data = {
+#         #     'submitting_user': 'maweber',
+#         #     'site_project_id': 'prjX',
+#         #     'study': study,
+#         #     'sample': sample,
+#         #     'experiment': experiment,
+#         #     'run': run
+#         # }
+#
+#         # TODO: this crashes on production server
+#         # stop supervisor, start server  with regular command for output, run this test -> json expeption
+#         # sentry: https://sentry.io/jacobs-university-bremen/gfbioservices/issues/729833620/?query=is:unresolved
+#         # docs https://docs.djangoproject.com/en/1.11/ref/request-response/#django.http.HttpResponse.content
+#         test_data = copy.deepcopy(TestAddSubmissionView.new_data)
+#         pprint.pprint(test_data)
+#         test_data['requirements'].pop('runs')
+#         pprint.pprint(test_data)
+#         response = requests.post(
+#             url='https://submission.gfbio.org/api/submissions/',
+#             # url='https://services.gfbio.org/api/submissions/',
+#             data=json.dumps(
+#                 {
+#                     'target': 'ENA_PANGAEA',
+#                     'release': True,
+#                     'data': test_data
+#                 }
+#             ),
+#             headers={
+#                 'Authorization': 'Token 0df34a33fc12b18432830ea81aa3af2cab2e532a',
+#                 # 'Authorization':
+#                 #    'Token 167ed8501cb0a3e7770f09df6d3e3e14a3489475',
+#                 'Content-Type': 'application/json'}
+#         )
+#
+#         print(response.content)
+#         try:
+#             pprint.pprint(json.loads(response.content.decode('utf-8')))
+#         except JSONDecodeError as e:
+#             print('Error ', e)
+#         print(response.status_code)
 
 
 # done
@@ -2437,991 +2437,991 @@ def fake_trigger_submission_transfer(submission_id=None):
     return True
 
 
-class TestAddSubmissionView(TestCase):
-    fixtures = (
-        'user', 'resource_credential', 'submission', 'site_configuration')
-
-    new_data = {
-        'requirements': {
-            'title': '123456',
-            'description': '123456',
-            'study_type': 'Metagenomics',
-            'samples': [
-                {
-                    'sample_alias': 'sample1',
-                    'sample_title': 'stitle',
-                    'taxon_id': 1234
-                },
-                {
-                    'sample_alias': 'sample2',
-                    'sample_title': 'stitleagain',
-                    'taxon_id': 1234
-                }
-            ],
-            "experiments": [
-                {
-                    'experiment_alias': 'experiment1',
-                    'platform': 'AB 3730xL Genetic Analyzer',
-                    'design': {
-                        'sample_descriptor': 'sample2',
-                        'design_description': '',
-                        'library_descriptor': {
-                            'library_strategy': 'AMPLICON',
-                            'library_source': 'METAGENOMIC',
-                            'library_selection': 'PCR',
-                            'library_layout': {
-                                'layout_type': 'paired',
-                                'nominal_length': 450
-                            }
-                        }
-                    }
-                }
-            ],
-            'runs': [
-                {
-                    'experiment_ref': 'experiment1',
-                    'data_block': {
-                        'files': [
-                            {
-                                'filename': 'aFile',
-                                'filetype': 'fastq',
-                                'checksum_method': 'MD5',
-                                'checksum': '12345'
-                            }
-                        ]
-                    }
-                }
-            ]
-        }
-    }
-
-    def _create_test_file(self, path):
-        self._delete_test_data()
-        f = open(path, 'w')
-        f.write('test123\n')
-        f.close()
-        f = open(path, 'rb')
-        return {
-            'file': f,
-        }
-
-    @staticmethod
-    def _delete_test_data():
-        SubmissionFileUpload.objects.all().delete()
-
-    # TODO: modify to use new endpoints
-    # --------------------------------------------------------------------------
-    @skip('test against debug server, that needs to be up and running')
-    def test_post_to_debug_server_full_submission(self):
-        response = requests.post(
-            url='http://127.0.0.1:8000/brokerage/submissions/full',
-            data=json.dumps(FullWorkflowTest.content),
-            headers={
-                'Authorization': 'Token e4501de7f37d3044778f7939155f90cfb1625c6e',
-                'Content-Type': 'application/json'}
-        )
-
-    @skip('test against GWDG')
-    def test_post_to_gwdg_server(self):
-        # let form validation fail
-        # self.content['sample'] = 2
-        # access existing submission
-        # self.content['broker_submission_id'] = 'cdd73460-eec7-40a3-9a1f-f0a314f821f3'
-        # change site_project_id
-        # self.content['site_project_id'] = 'p8'
-
-        response = requests.post(
-            url='http://c103-170.cloud.gwdg.de/brokerage/submissions/full',
-            data=json.dumps(FullWorkflowTest.content),
-            headers={
-                'Authorization': 'Token 95bf481b2262df60953c31604a585450445880af',
-                'Content-Type': 'application/json'}
-        )
-
-    @skip('test against c103-171.cloud.gwdg.de (docker)')
-    def test_post_to_gwdg_docker_server(self):
-        response = requests.post(
-            url='https://c103-171.cloud.gwdg.de/brokerage/submissions/full',
-            data=json.dumps(FullWorkflowTest.content),
-            headers={
-                'Authorization': 'Token 8b63a9874f6188bf65987a56dd5b6ab5da7ec23a',
-                'Content-Type': 'application/json'}
-        )
-
-    # @skip('test against services.gfbio.org (docker)')
-    # def test_post_to_gwdg_docker_server_2(self):
-    #     response = requests.post(
-    #         url='https://https://services.gfbio.org/api/submissions/',
-    #         data=json.dumps(FullWorkflowTest.content),
-    #         headers={
-    #             'Authorization': 'Token f411f893264e2fe3c153a8998fe2c9c75944cb89',
-    #             'Content-Type': 'application/json'}
-    #     )
-
-    def _post_submission(self):
-        VALID_USER = {'HTTP_AUTHORIZATION': 'Basic %s' % base64.b64encode(
-            b'horst:password').decode('utf-8')}
-        return VALID_USER, self.client.post('/api/submissions/',
-                                            content_type='application/json',
-                                            data=json.dumps({
-                                                'target': 'ENA',
-                                                'data': {
-                                                    'requirements': {
-                                                        'title': 'A Title',
-                                                        'description': 'A Description'
-                                                    }
-                                                }
-                                            }), **VALID_USER)
-
-    def test_submissions_get_request(self):
-        response = self.client.get('/api/submissions/')
-        self.assertEqual(401, response.status_code)
-
-    def test_empty_min_post(self):
-        VALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
-        }
-        self.assertEqual(5, len(Submission.objects.all()))
-        response = self.client.post('/api/submissions/',
-                                    content_type='application/json',
-                                    data=json.dumps({}),
-                                    **VALID_USER)
-        self.assertEqual(400, response.status_code)
-
-        keys = json.loads(response.content.decode('utf-8')).keys()
-        self.assertIn('target', keys)
-        self.assertIn('data', keys)
-        self.assertEqual(5, len(Submission.objects.all()))
-
-    def test_invalid_min_post(self):
-        VALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
-        }
-        self.assertEqual(5, len(Submission.objects.all()))
-        response = self.client.post('/api/submissions/',
-                                    content_type='application/json',
-                                    data=json.dumps({
-                                        'target': 'ENA',
-                                        'data': {}
-                                    }),
-                                    **VALID_USER)
-        self.assertEqual(400, response.status_code)
-        keys = json.loads(response.content.decode('utf-8')).keys()
-        self.assertIn('optional_validation', keys)
-        self.assertIn('data', keys)
-        self.assertEqual(5, len(Submission.objects.all()))
-
-    def test_schema_error_min_post(self):
-        VALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
-        }
-        self.assertEqual(5, len(Submission.objects.all()))
-        response = self.client.post('/api/submissions/',
-                                    content_type='application/json',
-                                    data=json.dumps({
-                                        'target': 'ENA',
-                                        'data': {
-                                            'requirements': {}
-                                        }
-                                    }),
-                                    **VALID_USER)
-        content = json.loads(response.content.decode('utf-8'))
-        self.assertEqual(400, response.status_code)
-        self.assertIn('data', content.keys())
-        self.assertListEqual(
-            ["requirements : 'title' is a required property",
-             "requirements : 'description' is a required property"],
-            content['data'])
-        self.assertEqual(5, len(Submission.objects.all()))
-
-    def test_valid_min_post(self):
-        VALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
-        }
-        self.assertEqual(5, len(Submission.objects.all()))
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(0, len(request_logs))
-
-        response = self.client.post('/api/submissions/',
-                                    content_type='application/json',
-                                    data=json.dumps({
-                                        'target': 'ENA',
-                                        'data': {
-                                            'requirements': {
-                                                'title': 'A Title',
-                                                'description': 'A Description'
-                                            }
-                                        }
-                                    }),
-                                    **VALID_USER)
-        content = json.loads(response.content.decode('utf-8'))
-        expected = {
-            'broker_submission_id': content['broker_submission_id'],
-            'data': {'optional_validation': [
-                "requirements : 'study_type' is a required property",
-                "requirements : 'samples' is a required property",
-                "requirements : 'experiments' is a required property"],
-                'requirements': {'description': 'A Description',
-                                 'title': 'A Title'}},
-            'embargo': None,
-            'download_url': '',
-            'release': False,
-            'site': 'horst',
-            'site_project_id': '',
-            'status': 'OPEN',
-            'submitting_user': '',
-            'target': 'ENA'}
-        self.assertEqual(201, response.status_code)
-        self.assertDictEqual(expected, content)
-        self.assertEqual(6, len(Submission.objects.all()))
-
-        submission = Submission.objects.last()
-        self.assertEqual(UUID(content['broker_submission_id']),
-                         submission.broker_submission_id)
-        self.assertIsNone(submission.embargo)
-        self.assertFalse(submission.release)
-        self.assertEqual(0, len(submission.site_project_id))
-        self.assertEqual(Submission.OPEN, submission.status)
-        self.assertEqual(0, len(submission.submitting_user))
-        self.assertEqual(0, len(submission.submitting_user_common_information))
-        self.assertEqual('ENA', submission.target)
-
-        request_logs = RequestLog.objects.filter(type=RequestLog.INCOMING)
-        self.assertEqual(1, len(request_logs))
-
-    def test_valid_explicit_min_post(self):
-        VALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic ' + base64.b64encode(b'horst:password').decode('utf-8')
-        }
-
-        # Alternative: use DRF APIClient for requests:
-        # client = APIClient()
-        # client.credentials(HTTP_AUTHORIZATION='Basic {}'.format(
-        #     base64.b64encode(b'horst:password').decode("utf-8")))
-        # response = client.post('/api/submissions/', data={
-        #     'target': 'ENA',
-        #     'release': False,
-        #     'data': {
-        #         'requirements': {
-        #             'title': 'A Title',
-        #             'description': 'A Description'
-        #         }
-        #     }
-        # }, format='json')
-        # print('RESP ', response.content)
-
-        self.assertEqual(5, len(Submission.objects.all()))
-        response = self.client.post('/api/submissions/',
-                                    content_type='application/json',
-                                    data=json.dumps({
-                                        'target': 'ENA',
-                                        'release': False,
-                                        'data': {
-                                            'requirements': {
-                                                'title': 'A Title',
-                                                'description': 'A Description'
-                                            }
-                                        }
-                                    }),
-                                    **VALID_USER
-                                    )
-        content = json.loads(response.content.decode('utf-8'))
-
-        expected = {
-            'broker_submission_id': content['broker_submission_id'],
-            'data': {'optional_validation': [
-                u"requirements : 'study_type' is a required property",
-                u"requirements : 'samples' is a required property",
-                u"requirements : 'experiments' is a required property"],
-                'requirements': {'description': 'A Description',
-                                 'title': 'A Title'}},
-            'embargo': None,
-            'download_url': '',
-            'release': False,
-            'site': 'horst',
-            'site_project_id': '',
-            'status': 'OPEN',
-            'submitting_user': '',
-            'target': 'ENA'}
-        self.assertEqual(201, response.status_code)
-        self.assertDictEqual(expected, content)
-        self.assertEqual(6, len(Submission.objects.all()))
-        submission = Submission.objects.last()
-        self.assertEqual(UUID(expected['broker_submission_id']),
-                         submission.broker_submission_id)
-
-    def test_min_post_without_target(self):
-        VALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
-        }
-        self.assertEqual(5, len(Submission.objects.all()))
-        response = self.client.post('/api/submissions/',
-                                    content_type='application/json',
-                                    data=json.dumps({
-                                        'release': False,
-                                        'target': 'nonsense',
-                                        'data': {
-                                            'requirements': {
-                                                'title': 'A Title',
-                                                'description': 'A Description'
-                                            }
-                                        }
-                                    }),
-                                    **VALID_USER)
-        self.assertEqual(400, response.status_code)
-        self.assertIn(b'target', response.content)
-        self.assertEqual(5, len(Submission.objects.all()))
-
-    def test_empty_max_post(self):
-        VALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
-        }
-        self.assertEqual(5, len(Submission.objects.all()))
-        response = self.client.post('/api/submissions/',
-                                    content_type='application/json',
-                                    data=json.dumps({
-                                        'target': 'ENA',
-                                        'release': True,
-                                        'data': {
-                                            'requirements': {
-                                                'title': 'A Title',
-                                                'description': 'A Description'
-                                            }
-                                        }
-                                    }),
-                                    **VALID_USER)
-        self.assertEqual(400, response.status_code)
-        self.assertNotIn(b'study_alias', response.content)
-        self.assertIn(b'study_type', response.content)
-        self.assertIn(b'samples', response.content)
-        self.assertIn(b'experiments', response.content)
-        self.assertEqual(5, len(Submission.objects.all()))
-
-    # FIXME: in unit tests: "id": "file:///opt/project/staticfiles/schemas/minimal_requirements.json",
-    # FIXME: when running docker-compose with dev.yml
-    # FIXME: id to /app/staticfiles/schemas/ena_requirements.json
-    # FIXME: since id determins root for looking up included files
-    def test_valid_max_post(self):
-        VALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
-        }
-        self.assertEqual(5, len(Submission.objects.all()))
-        response = self.client.post('/api/submissions/',
-                                    content_type='application/json',
-                                    data=json.dumps({
-                                        'target': 'ENA',
-                                        'release': True,
-                                        'data': self.new_data
-                                    }),
-                                    **VALID_USER)
-        content = json.loads(response.content.decode('utf-8'))
-        expected = {
-            'broker_submission_id': '721117ae-cb8d-468b-bec9-aa92aff834d5',
-            'data': {
-                'requirements': {
-                    'description': '123456',
-                    'experiments': [
-                        {'design': {'design_description': '',
-                                    'library_descriptor': {
-                                        'library_layout': {
-                                            'layout_type': 'paired',
-                                            'nominal_length': 450},
-                                        'library_selection': 'PCR',
-                                        'library_source': 'METAGENOMIC',
-                                        'library_strategy': 'AMPLICON'},
-                                    'sample_descriptor': 'sample2'},
-                         'experiment_alias': 'experiment1',
-                         'platform': 'AB 3730xL Genetic '
-                                     'Analyzer',
-                         'site_object_id': 'noob_13'}],
-                    'runs': [{'data_block': {
-                        'files': [{'checksum': '12345',
-                                   'checksum_method': 'MD5',
-                                   'filename': 'aFile',
-                                   'filetype': 'fastq'}]},
-                        'experiment_ref': 'experiment1',
-                        'site_object_id': 'noob_14'}],
-                    'samples': [{'sample_alias': 'sample1',
-                                 'sample_title': 'stitle',
-                                 'site_object_id': 'noob_11',
-                                 'taxon_id': 1234},
-                                {'sample_alias': 'sample2',
-                                 'sample_title': 'stitleagain',
-                                 'site_object_id': 'noob_12',
-                                 'taxon_id': 1234}],
-                    'site_object_id': 'noob_10',
-                    'study_type': 'Metagenomics',
-                    'title': '123456'}},
-            'download_url': '',
-            'embargo': None,
-            'release': True,
-            'site': 'horst',
-            'site_project_id': '',
-            'status': 'SUBMITTED',
-            'submitting_user': '',
-            'target': 'ENA'
-        }
-        self.assertEqual(201, response.status_code)
-        expected['broker_submission_id'] = content['broker_submission_id']
-        self.assertDictEqual(expected, content)
-        self.assertEqual(6, len(Submission.objects.all()))
-        submission = Submission.objects.last()
-
-        self.assertEqual(UUID(expected['broker_submission_id']),
-                         submission.broker_submission_id)
-        self.assertEqual(Submission.SUBMITTED, content.get('status', 'NOPE'))
-
-    def test_valid_max_post_with_data_url(self):
-        VALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
-        }
-        self.assertEqual(5, len(Submission.objects.all()))
-        response = self.client.post('/api/submissions/',
-                                    content_type='application/json',
-                                    data=json.dumps({
-                                        'target': 'ENA',
-                                        'release': True,
-                                        'data': self.new_data
-                                    }),
-                                    **VALID_USER)
-        content = json.loads(response.content.decode('utf-8'))
-        self.assertEqual(201, response.status_code)
-        self.assertEqual(6, len(Submission.objects.all()))
-        self.assertNotIn('download_url', content['data']['requirements'].keys())
-        sub = Submission.objects.last()
-        self.assertEqual('', sub.download_url)
-
-        url = 'https://www.google.de'
-        new_data_copy = copy.deepcopy(self.new_data)
-        response = self.client.post('/api/submissions/',
-                                    content_type='application/json',
-                                    data=json.dumps({
-                                        'target': 'ENA',
-                                        'release': False,
-                                        'download_url': url,
-                                        'data': new_data_copy
-                                    }),
-                                    **VALID_USER)
-        self.assertEqual(201, response.status_code)
-        self.assertEqual(7, len(Submission.objects.all()))
-        sub = Submission.objects.last()
-        self.assertEqual(url, sub.download_url)
-
-        response = self.client.put(
-            '/api/submissions/{0}/'.format(
-                sub.broker_submission_id),
-            content_type='application/json',
-            data=json.dumps({
-                'target': 'ENA',
-                'data': new_data_copy,
-                'download_url': '{0}/{1}'.format(url, 'download'),
-            }), **VALID_USER)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(7, len(Submission.objects.all()))
-        sub = Submission.objects.last()
-        self.assertEqual('{0}/{1}'.format(url, 'download'), sub.download_url)
-
-    def test_valid_max_post_with_invalid_min_data(self):
-        VALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
-        }
-        self.assertEqual(5, len(Submission.objects.all()))
-        data = copy.deepcopy(self.new_data)
-        data['requirements'].pop('description')
-        response = self.client.post('/api/submissions/',
-                                    content_type='application/json',
-                                    data=json.dumps({
-                                        'target': 'ENA',
-                                        'release': True,
-                                        'data': data
-                                    }),
-                                    **VALID_USER
-                                    )
-        self.assertEqual(400, response.status_code)
-        self.assertIn('description', response.content.decode('utf-8'))
-        self.assertEqual(5, len(Submission.objects.all()))
-
-    def test_get_submissions(self):
-        VALID_USER, response = self._post_submission()
-        response = self.client.get('/api/submissions/', **VALID_USER)
-        content = json.loads(response.content.decode('utf-8'))
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(6, len(Submission.objects.all()))
-        # two for this user (1 in fixture, 1 by post above)
-        self.assertEqual(3, len(content))
-
-    def test_get_submissions_for_user(self):
-        USER = {'HTTP_AUTHORIZATION': 'Basic %s' % base64.b64encode(
-            b'horst:password').decode('utf-8')}
-        ADMIN = {'HTTP_AUTHORIZATION': 'Basic %s' % base64.b64encode(
-            b'noob:password').decode('utf-8')}
-
-        all_subs = Submission.objects.all()
-        self.assertEqual(5, len(all_subs))
-
-        response = self.client.get('/api/submissions/', **USER)
-        content = json.loads(response.content.decode('utf-8'))
-        self.assertEqual(2, len(content))
-
-        # FIXME: unicode issues with test client
-        # response = self.client.get('/api/submissions/', **ADMIN)
-        # content = json.loads(response.content)
-        # self.assertEqual(2, len(content))
-
-    def test_get_submission(self):
-        VALID_USER, response = self._post_submission()
-        submission = Submission.objects.last()
-        response = self.client.get(
-            '/api/submissions/{0}/'.format(
-                submission.broker_submission_id),
-            **VALID_USER
-        )
-        content = json.loads(response.content.decode('utf-8'))
-        self.assertEqual(200, response.status_code)
-        self.assertTrue(isinstance(content, dict))
-        self.assertEqual('horst', content['site'])
-
-    def test_no_submission_for_id(self):
-        VALID_USER, response = self._post_submission()
-        response = self.client.get(
-            '/api/submissions/{0}/'.format(
-                uuid4()),
-            **VALID_USER
-        )
-        self.assertEqual(404, response.status_code)
-
-    def test_put_submission(self):
-        VALID_USER, response = self._post_submission()
-        self.assertEqual(6, len(Submission.objects.all()))
-        submission = Submission.objects.last()
-        response = self.client.put(
-            '/api/submissions/{0}/'.format(
-                submission.broker_submission_id),
-            content_type='application/json',
-            data=json.dumps({
-                'target': 'ENA',
-                'data': {
-                    'requirements': {
-                        'title': 'A Title 0815',
-                        'description': 'A Description 2'}
-                }
-            }), **VALID_USER)
-        content = json.loads(response.content.decode('utf-8'))
-        self.assertEqual(200, response.status_code)
-        self.assertTrue(isinstance(content, dict))
-        self.assertIn('0815', content['data']['requirements']['title'])
-        self.assertEqual(6, len(Submission.objects.all()))
-
-    def test_putpost_submission(self):
-        VALID_USER, response = self._post_submission()
-        self.assertEqual(6, len(Submission.objects.all()))
-        submission = Submission.objects.last()
-        response = self.client.post(
-            '/api/submissions/{0}/'.format(
-                submission.broker_submission_id),
-            content_type='application/json',
-            data=json.dumps({
-                'target': 'ENA',
-                'data': {
-                    'requirements': {
-                        'title': 'A Title 0815',
-                        'description': 'A Description 2'}
-                }
-            }), **VALID_USER)
-        self.assertEqual(405, response.status_code)
-        self.assertEqual('{"detail":"Method \\"POST\\" not allowed."}',
-                         response.content.decode('utf-8'))
-
-    def test_put_submission_min_validation(self):
-        VALID_USER, response = self._post_submission()
-        submission = Submission.objects.last()
-        response = self.client.put(
-            '/api/submissions/{0}/'.format(
-                submission.broker_submission_id),
-            content_type='application/json',
-            data=json.dumps({
-                'target': 'ENA',
-                'data': {
-                    'requirements': {
-                        'title': 'A Title 0815',
-                        'description': 'A Description 2'}
-                }
-            }), **VALID_USER)
-        content = json.loads(response.content.decode('utf-8'))
-        submission = Submission.objects.last()
-        self.assertEqual(Submission.OPEN, submission.status)
-        self.assertEqual(200, response.status_code)
-        self.assertIn('optional_validation', content['data'].keys())
-        self.assertIn('optional_validation', submission.data)
-
-        response = self.client.put(
-            '/api/submissions/{0}/'.format(
-                submission.broker_submission_id),
-            content_type='application/json',
-            data=json.dumps({
-                'target': 'ENA',
-                'data': {
-                    'requirements': {
-                    }
-                }
-            }), **VALID_USER)
-        content = json.loads(response.content.decode('utf-8'))
-        submission = Submission.objects.first()
-        self.assertEqual(Submission.OPEN, submission.status)
-        self.assertEqual(400, response.status_code)
-        self.assertIn('optional_validation', content.keys())
-
-    def test_put_submission_valid_max_validation(self):
-        VALID_USER, response = self._post_submission()
-        submission = Submission.objects.last()
-        response = self.client.put(
-            '/api/submissions/{0}/'.format(
-                submission.broker_submission_id),
-            content_type='application/json',
-            data=json.dumps({
-                'target': 'ENA',
-                'release': True,
-                'data': self.new_data
-            }), **VALID_USER)
-        content = json.loads(response.content.decode('utf-8'))
-        submission = Submission.objects.last()
-        self.assertEqual(200, response.status_code)
-        self.assertFalse('optional_validation' in content['data'].keys())
-        self.assertFalse('optional_validation' in submission.data)
-
-        submission = Submission.objects.last()
-        self.assertEqual(Submission.SUBMITTED,
-                         content.get('status', 'NOPE'))
-        self.assertEqual(Submission.SUBMITTED, submission.status)
-
-    def test_put_submission_invalid_max_validation(self):
-        VALID_USER, response = self._post_submission()
-        submission = Submission.objects.last()
-        data = copy.deepcopy(self.new_data)
-        data['requirements'].pop('samples')
-        response = self.client.put(
-            '/api/submissions/{0}/'.format(
-                submission.broker_submission_id),
-            content_type='application/json',
-            data=json.dumps({
-                'target': 'ENA',
-                'release': True,
-                'data': data
-            }), **VALID_USER)
-        content = json.loads(response.content.decode('utf-8'))
-
-        self.assertEqual(400, response.status_code)
-        self.assertIn("'samples' is a required property",
-                      response.content.decode('utf-8'))
-        self.assertFalse(
-            'optional_validation' in response.content.decode('utf-8'))
-
-        submission = Submission.objects.last()
-        self.assertEqual(Submission.OPEN, submission.status)
-
-    def test_put_submission_max_validation_without_release(self):
-        VALID_USER, response = self._post_submission()
-        submission = Submission.objects.last()
-        response = self.client.put(
-            '/api/submissions/{0}/'.format(
-                submission.broker_submission_id),
-            content_type='application/json',
-            data=json.dumps({
-                'target': 'ENA',
-                'release': False,
-                'data': self.new_data
-            }), **VALID_USER)
-        content = json.loads(response.content.decode('utf-8'))
-        submission = Submission.objects.last()
-        self.assertEqual(200, response.status_code)
-        self.assertFalse('optional_validation' in content['data'].keys())
-        self.assertFalse('optional_validation' in submission.data)
-        submission = Submission.objects.first()
-        self.assertEqual(Submission.OPEN,
-                         content.get('status', 'NOPE'))
-        self.assertEqual(Submission.OPEN, submission.status)
-
-    def test_put_on_submitted_submission(self):
-        VALID_USER = {'HTTP_AUTHORIZATION': 'Basic %s' % base64.b64encode(
-            b'horst:password').decode('utf-8')}
-        submission = Submission.objects.get(
-            broker_submission_id=UUID('e931072e-61c2-42e4-923a-39b6ab255a9f'))
-        self.assertEqual(Submission.SUBMITTED, submission.status)
-        response = self.client.put(
-            '/api/submissions/{0}/'.format(
-                submission.broker_submission_id),
-            content_type='application/json',
-            data=json.dumps({
-                'target': 'ENA',
-                'release': False,
-                'data': self.new_data
-            }), **VALID_USER)
-        self.assertTrue(400, response.status_code)
-        content = response.content.decode('utf-8')
-        self.assertIn('"status":"SUBMITTED"', content)
-        self.assertIn(
-            '"broker_submission_id":"e931072e-61c2-42e4-923a-39b6ab255a9f"',
-            content)
-        self.assertIn('"error":"no modifications allowed with current status"',
-                      content)
-
-    def test_put_on_cancelled_submission(self):
-        VALID_USER = {'HTTP_AUTHORIZATION': 'Basic %s' % base64.b64encode(
-            b'horst:password').decode('utf-8')}
-        submission = Submission.objects.get(
-            broker_submission_id=UUID('e931072e-61c2-42e4-923a-39b6ab255a9f'))
-        submission.status = Submission.CANCELLED
-        submission.save()
-        self.assertEqual(Submission.CANCELLED, submission.status)
-        response = self.client.put(
-            '/api/submissions/{0}/'.format(
-                submission.broker_submission_id),
-            content_type='application/json',
-            data=json.dumps({
-                'target': 'ENA',
-                'release': False,
-                'data': self.new_data
-            }), **VALID_USER)
-        self.assertTrue(400, response.status_code)
-        content = response.content.decode('utf-8')
-        self.assertIn('"status":"CANCELLED"', content)
-        self.assertIn(
-            '"broker_submission_id":"e931072e-61c2-42e4-923a-39b6ab255a9f"',
-            content)
-        self.assertIn('"error":"no modifications allowed with current status"',
-                      content)
-
-    def test_put_on_error_submission(self):
-        VALID_USER = {'HTTP_AUTHORIZATION': 'Basic %s' % base64.b64encode(
-            b'horst:password').decode('utf-8')}
-        submission = Submission.objects.get(
-            broker_submission_id=UUID('e931072e-61c2-42e4-923a-39b6ab255a9f'))
-        submission.status = Submission.ERROR
-        submission.save()
-        self.assertEqual(Submission.ERROR, submission.status)
-        response = self.client.put(
-            '/api/submissions/{0}/'.format(
-                submission.broker_submission_id),
-            content_type='application/json',
-            data=json.dumps({
-                'target': 'ENA',
-                'release': False,
-                'data': self.new_data
-            }), **VALID_USER)
-        self.assertTrue(400, response.status_code)
-        content = response.content.decode('utf-8')
-        self.assertIn('"status":"ERROR"', content)
-        self.assertIn(
-            '"broker_submission_id":"e931072e-61c2-42e4-923a-39b6ab255a9f"',
-            content)
-        self.assertIn('"error":"no modifications allowed with current status"',
-                      content)
-
-    def test_put_on_closed_submission(self):
-        VALID_USER = {'HTTP_AUTHORIZATION': 'Basic %s' % base64.b64encode(
-            b'horst:password').decode('utf-8')}
-        submission = Submission.objects.get(
-            broker_submission_id=UUID('e931072e-61c2-42e4-923a-39b6ab255a9f'))
-        submission.status = Submission.CLOSED
-        submission.save()
-        self.assertEqual(Submission.CLOSED, submission.status)
-        response = self.client.put(
-            '/api/submissions/{0}/'.format(
-                submission.broker_submission_id),
-            content_type='application/json',
-            data=json.dumps({
-                'target': 'ENA',
-                'release': False,
-                'data': self.new_data
-            }), **VALID_USER)
-        self.assertTrue(400, response.status_code)
-        content = response.content.decode('utf-8')
-        self.assertIn('"status":"CLOSED"', content)
-        self.assertIn('"error":"no modifications allowed with current status"',
-                      content)
-        self.assertIn(
-            '"broker_submission_id":"e931072e-61c2-42e4-923a-39b6ab255a9f"',
-            content)
-
-    def test_post_on_submission_detail_view(self):
-        VALID_USER, response = self._post_submission()
-        submission = Submission.objects.first()
-        response = self.client.post(
-            '/api/submissions/{}/'.format(submission.pk),
-            content_type='application/json',
-            data=json.dumps({
-                'target': 'ENA',
-                'data': {
-                    'requirements': {
-                        'title': 'A Title 0815',
-                        'description': 'A Description 2'}
-                }
-            }), **VALID_USER)
-        self.assertEqual(405, response.status_code)
-
-    def test_delete_submission(self):
-        VALID_USER, response = self._post_submission()
-        self.assertEqual(6, len(Submission.objects.all()))
-
-        submission = Submission.objects.last()
-        response = self.client.delete(
-            '/api/submissions/{0}/'.format(
-                submission.broker_submission_id),
-            **VALID_USER
-        )
-
-        self.assertEqual(204, response.status_code)
-        self.assertEqual(6, len(Submission.objects.all()))
-        sub = Submission.objects.last()
-        self.assertEqual(Submission.CANCELLED, sub.status)
-        submission = Submission.objects.last()
-        self.assertEqual(Submission.CANCELLED, submission.status)
-
-    def test_patch_submission(self):
-        VALID_USER, response = self._post_submission()
-        response = self.client.patch('/api/submissions/1/',
-                                     content_type='application/json',
-                                     data=json.dumps({
-                                         'target': 'ENA_PANGAEA'
-                                     }), **VALID_USER)
-        self.assertEqual(405, response.status_code)
-
-    def test_no_credentials(self):
-        response = self.client.post('/api/submissions/')
-        self.assertEqual(401, response.status_code)
-
-    def test_get_no_credentials(self):
-        response = self.client.get('/api/submissions/')
-        self.assertEqual(401, response.status_code)
-
-    def test_get_submission_no_credentials(self):
-        response = self.client.get('/api/submissions/{0}/'.format(uuid4()))
-        self.assertEqual(401, response.status_code)
-
-    def test_get_with_credentials(self):
-        VALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
-        }
-        response = self.client.get('/api/submissions/', **VALID_USER)
-        self.assertEqual(200, response.status_code)
-
-    def test_invalid_basic_auth(self):
-        INVALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'horst:WRONG').decode('utf-8')
-        }
-        response = self.client.post('/api/submissions/',
-                                    {"some": "data"},
-                                    **INVALID_USER)
-        self.assertEqual(401, response.status_code)
-
-    def test_detail_invalid_basic_auth(self):
-        INVALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'horst:WRONG').decode('utf-8')
-        }
-        response = self.client.get('/api/submissions/{0}/'.format(uuid4()),
-                                   **INVALID_USER)
-        self.assertEqual(401, response.status_code)
-
-    def test_valid_basic_auth(self):
-        VALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
-        }
-        response = self.client.post('/api/submissions/',
-                                    {"some": "data"},
-                                    **VALID_USER)
-        self.assertNotEqual(401, response.status_code)
-        self.assertEqual(400, response.status_code)
-
-    def test_super_user(self):
-        VALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'noob:password').decode('utf-8')
-        }
-        response = self.client.post('/api/submissions/', **VALID_USER)
-
-        self.assertNotEqual(401, response.status_code)
-        self.assertEqual(400, response.status_code)
-
-    def test_staff_user(self):
-        VALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'test_checker:password').decode(
-                    'utf-8')
-        }
-        response = self.client.post('/api/submissions/', **VALID_USER)
-        self.assertNotEqual(401, response.status_code)
-        self.assertEqual(400, response.status_code)
-
-    def test_active_user(self):
-        VALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
-        }
-        response = self.client.post('/api/submissions/', **VALID_USER)
-        self.assertNotEqual(401, response.status_code)
-        self.assertEqual(400, response.status_code)
-
-    def test_inactive_user(self):
-        INVALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'sonOfNoob:password').decode(
-                    'utf-8')
-        }
-        response = self.client.post('/api/submissions/',
-                                    **INVALID_USER)
-        self.assertEqual(401, response.status_code)
-
-    def test_active_user_without_permissions(self):
-        INVALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'nobody:password').decode(
-                    'utf-8')
-        }
-        response = self.client.post('/api/submissions/',
-                                    **INVALID_USER)
-        self.assertEqual(403, response.status_code)
-
-    def test_invalid_token_authentication(self):
-        INVALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Token %s' % 'afafff4f3f3f77faff2f71f'
-        }
-        response = self.client.post('/api/submissions/',
-                                    {"some": "data"},
-                                    **INVALID_USER)
-        self.assertEqual(401, response.status_code)
-
-    def test_valid_token_authentication(self):
-        token = Token.objects.create(user=User.objects.get(username='horst'))
-        VALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Token %s' % token.key
-        }
-        response = self.client.post('/api/submissions/',
-                                    {
-                                        'site_project_id': 'p1',
-                                        'submitting_user': 'johnDoe',
-                                        'site_object_id': 'o1',
-                                        'study': '{}'
-                                    },
-                                    **VALID_USER)
-        self.assertNotEqual(401, response.status_code)
-        self.assertEqual(400, response.status_code)
+# class TestAddSubmissionView(TestCase):
+#     fixtures = (
+#         'user', 'resource_credential', 'submission', 'site_configuration')
+#
+#     new_data = {
+#         'requirements': {
+#             'title': '123456',
+#             'description': '123456',
+#             'study_type': 'Metagenomics',
+#             'samples': [
+#                 {
+#                     'sample_alias': 'sample1',
+#                     'sample_title': 'stitle',
+#                     'taxon_id': 1234
+#                 },
+#                 {
+#                     'sample_alias': 'sample2',
+#                     'sample_title': 'stitleagain',
+#                     'taxon_id': 1234
+#                 }
+#             ],
+#             "experiments": [
+#                 {
+#                     'experiment_alias': 'experiment1',
+#                     'platform': 'AB 3730xL Genetic Analyzer',
+#                     'design': {
+#                         'sample_descriptor': 'sample2',
+#                         'design_description': '',
+#                         'library_descriptor': {
+#                             'library_strategy': 'AMPLICON',
+#                             'library_source': 'METAGENOMIC',
+#                             'library_selection': 'PCR',
+#                             'library_layout': {
+#                                 'layout_type': 'paired',
+#                                 'nominal_length': 450
+#                             }
+#                         }
+#                     }
+#                 }
+#             ],
+#             'runs': [
+#                 {
+#                     'experiment_ref': 'experiment1',
+#                     'data_block': {
+#                         'files': [
+#                             {
+#                                 'filename': 'aFile',
+#                                 'filetype': 'fastq',
+#                                 'checksum_method': 'MD5',
+#                                 'checksum': '12345'
+#                             }
+#                         ]
+#                     }
+#                 }
+#             ]
+#         }
+#     }
+#
+#     def _create_test_file(self, path):
+#         self._delete_test_data()
+#         f = open(path, 'w')
+#         f.write('test123\n')
+#         f.close()
+#         f = open(path, 'rb')
+#         return {
+#             'file': f,
+#         }
+#
+#     @staticmethod
+#     def _delete_test_data():
+#         SubmissionFileUpload.objects.all().delete()
+#
+#     # TODO: modify to use new endpoints
+#     # --------------------------------------------------------------------------
+#     @skip('test against debug server, that needs to be up and running')
+#     def test_post_to_debug_server_full_submission(self):
+#         response = requests.post(
+#             url='http://127.0.0.1:8000/brokerage/submissions/full',
+#             data=json.dumps(FullWorkflowTest.content),
+#             headers={
+#                 'Authorization': 'Token e4501de7f37d3044778f7939155f90cfb1625c6e',
+#                 'Content-Type': 'application/json'}
+#         )
+#
+#     @skip('test against GWDG')
+#     def test_post_to_gwdg_server(self):
+#         # let form validation fail
+#         # self.content['sample'] = 2
+#         # access existing submission
+#         # self.content['broker_submission_id'] = 'cdd73460-eec7-40a3-9a1f-f0a314f821f3'
+#         # change site_project_id
+#         # self.content['site_project_id'] = 'p8'
+#
+#         response = requests.post(
+#             url='http://c103-170.cloud.gwdg.de/brokerage/submissions/full',
+#             data=json.dumps(FullWorkflowTest.content),
+#             headers={
+#                 'Authorization': 'Token 95bf481b2262df60953c31604a585450445880af',
+#                 'Content-Type': 'application/json'}
+#         )
+#
+#     @skip('test against c103-171.cloud.gwdg.de (docker)')
+#     def test_post_to_gwdg_docker_server(self):
+#         response = requests.post(
+#             url='https://c103-171.cloud.gwdg.de/brokerage/submissions/full',
+#             data=json.dumps(FullWorkflowTest.content),
+#             headers={
+#                 'Authorization': 'Token 8b63a9874f6188bf65987a56dd5b6ab5da7ec23a',
+#                 'Content-Type': 'application/json'}
+#         )
+#
+#     # @skip('test against services.gfbio.org (docker)')
+#     # def test_post_to_gwdg_docker_server_2(self):
+#     #     response = requests.post(
+#     #         url='https://https://services.gfbio.org/api/submissions/',
+#     #         data=json.dumps(FullWorkflowTest.content),
+#     #         headers={
+#     #             'Authorization': 'Token f411f893264e2fe3c153a8998fe2c9c75944cb89',
+#     #             'Content-Type': 'application/json'}
+#     #     )
+#
+#     def _post_submission(self):
+#         VALID_USER = {'HTTP_AUTHORIZATION': 'Basic %s' % base64.b64encode(
+#             b'horst:password').decode('utf-8')}
+#         return VALID_USER, self.client.post('/api/submissions/',
+#                                             content_type='application/json',
+#                                             data=json.dumps({
+#                                                 'target': 'ENA',
+#                                                 'data': {
+#                                                     'requirements': {
+#                                                         'title': 'A Title',
+#                                                         'description': 'A Description'
+#                                                     }
+#                                                 }
+#                                             }), **VALID_USER)
+#
+#     def test_submissions_get_request(self):
+#         response = self.client.get('/api/submissions/')
+#         self.assertEqual(401, response.status_code)
+#
+#     def test_empty_min_post(self):
+#         VALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
+#         }
+#         self.assertEqual(5, len(Submission.objects.all()))
+#         response = self.client.post('/api/submissions/',
+#                                     content_type='application/json',
+#                                     data=json.dumps({}),
+#                                     **VALID_USER)
+#         self.assertEqual(400, response.status_code)
+#
+#         keys = json.loads(response.content.decode('utf-8')).keys()
+#         self.assertIn('target', keys)
+#         self.assertIn('data', keys)
+#         self.assertEqual(5, len(Submission.objects.all()))
+#
+#     def test_invalid_min_post(self):
+#         VALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
+#         }
+#         self.assertEqual(5, len(Submission.objects.all()))
+#         response = self.client.post('/api/submissions/',
+#                                     content_type='application/json',
+#                                     data=json.dumps({
+#                                         'target': 'ENA',
+#                                         'data': {}
+#                                     }),
+#                                     **VALID_USER)
+#         self.assertEqual(400, response.status_code)
+#         keys = json.loads(response.content.decode('utf-8')).keys()
+#         self.assertIn('optional_validation', keys)
+#         self.assertIn('data', keys)
+#         self.assertEqual(5, len(Submission.objects.all()))
+#
+#     def test_schema_error_min_post(self):
+#         VALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
+#         }
+#         self.assertEqual(5, len(Submission.objects.all()))
+#         response = self.client.post('/api/submissions/',
+#                                     content_type='application/json',
+#                                     data=json.dumps({
+#                                         'target': 'ENA',
+#                                         'data': {
+#                                             'requirements': {}
+#                                         }
+#                                     }),
+#                                     **VALID_USER)
+#         content = json.loads(response.content.decode('utf-8'))
+#         self.assertEqual(400, response.status_code)
+#         self.assertIn('data', content.keys())
+#         self.assertListEqual(
+#             ["requirements : 'title' is a required property",
+#              "requirements : 'description' is a required property"],
+#             content['data'])
+#         self.assertEqual(5, len(Submission.objects.all()))
+#
+#     def test_valid_min_post(self):
+#         VALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
+#         }
+#         self.assertEqual(5, len(Submission.objects.all()))
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(0, len(request_logs))
+#
+#         response = self.client.post('/api/submissions/',
+#                                     content_type='application/json',
+#                                     data=json.dumps({
+#                                         'target': 'ENA',
+#                                         'data': {
+#                                             'requirements': {
+#                                                 'title': 'A Title',
+#                                                 'description': 'A Description'
+#                                             }
+#                                         }
+#                                     }),
+#                                     **VALID_USER)
+#         content = json.loads(response.content.decode('utf-8'))
+#         expected = {
+#             'broker_submission_id': content['broker_submission_id'],
+#             'data': {'optional_validation': [
+#                 "requirements : 'study_type' is a required property",
+#                 "requirements : 'samples' is a required property",
+#                 "requirements : 'experiments' is a required property"],
+#                 'requirements': {'description': 'A Description',
+#                                  'title': 'A Title'}},
+#             'embargo': None,
+#             'download_url': '',
+#             'release': False,
+#             'site': 'horst',
+#             'site_project_id': '',
+#             'status': 'OPEN',
+#             'submitting_user': '',
+#             'target': 'ENA'}
+#         self.assertEqual(201, response.status_code)
+#         self.assertDictEqual(expected, content)
+#         self.assertEqual(6, len(Submission.objects.all()))
+#
+#         submission = Submission.objects.last()
+#         self.assertEqual(UUID(content['broker_submission_id']),
+#                          submission.broker_submission_id)
+#         self.assertIsNone(submission.embargo)
+#         self.assertFalse(submission.release)
+#         self.assertEqual(0, len(submission.site_project_id))
+#         self.assertEqual(Submission.OPEN, submission.status)
+#         self.assertEqual(0, len(submission.submitting_user))
+#         self.assertEqual(0, len(submission.submitting_user_common_information))
+#         self.assertEqual('ENA', submission.target)
+#
+#         request_logs = RequestLog.objects.filter(type=RequestLog.INCOMING)
+#         self.assertEqual(1, len(request_logs))
+#
+#     def test_valid_explicit_min_post(self):
+#         VALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic ' + base64.b64encode(b'horst:password').decode('utf-8')
+#         }
+#
+#         # Alternative: use DRF APIClient for requests:
+#         # client = APIClient()
+#         # client.credentials(HTTP_AUTHORIZATION='Basic {}'.format(
+#         #     base64.b64encode(b'horst:password').decode("utf-8")))
+#         # response = client.post('/api/submissions/', data={
+#         #     'target': 'ENA',
+#         #     'release': False,
+#         #     'data': {
+#         #         'requirements': {
+#         #             'title': 'A Title',
+#         #             'description': 'A Description'
+#         #         }
+#         #     }
+#         # }, format='json')
+#         # print('RESP ', response.content)
+#
+#         self.assertEqual(5, len(Submission.objects.all()))
+#         response = self.client.post('/api/submissions/',
+#                                     content_type='application/json',
+#                                     data=json.dumps({
+#                                         'target': 'ENA',
+#                                         'release': False,
+#                                         'data': {
+#                                             'requirements': {
+#                                                 'title': 'A Title',
+#                                                 'description': 'A Description'
+#                                             }
+#                                         }
+#                                     }),
+#                                     **VALID_USER
+#                                     )
+#         content = json.loads(response.content.decode('utf-8'))
+#
+#         expected = {
+#             'broker_submission_id': content['broker_submission_id'],
+#             'data': {'optional_validation': [
+#                 u"requirements : 'study_type' is a required property",
+#                 u"requirements : 'samples' is a required property",
+#                 u"requirements : 'experiments' is a required property"],
+#                 'requirements': {'description': 'A Description',
+#                                  'title': 'A Title'}},
+#             'embargo': None,
+#             'download_url': '',
+#             'release': False,
+#             'site': 'horst',
+#             'site_project_id': '',
+#             'status': 'OPEN',
+#             'submitting_user': '',
+#             'target': 'ENA'}
+#         self.assertEqual(201, response.status_code)
+#         self.assertDictEqual(expected, content)
+#         self.assertEqual(6, len(Submission.objects.all()))
+#         submission = Submission.objects.last()
+#         self.assertEqual(UUID(expected['broker_submission_id']),
+#                          submission.broker_submission_id)
+#
+#     def test_min_post_without_target(self):
+#         VALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
+#         }
+#         self.assertEqual(5, len(Submission.objects.all()))
+#         response = self.client.post('/api/submissions/',
+#                                     content_type='application/json',
+#                                     data=json.dumps({
+#                                         'release': False,
+#                                         'target': 'nonsense',
+#                                         'data': {
+#                                             'requirements': {
+#                                                 'title': 'A Title',
+#                                                 'description': 'A Description'
+#                                             }
+#                                         }
+#                                     }),
+#                                     **VALID_USER)
+#         self.assertEqual(400, response.status_code)
+#         self.assertIn(b'target', response.content)
+#         self.assertEqual(5, len(Submission.objects.all()))
+#
+#     def test_empty_max_post(self):
+#         VALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
+#         }
+#         self.assertEqual(5, len(Submission.objects.all()))
+#         response = self.client.post('/api/submissions/',
+#                                     content_type='application/json',
+#                                     data=json.dumps({
+#                                         'target': 'ENA',
+#                                         'release': True,
+#                                         'data': {
+#                                             'requirements': {
+#                                                 'title': 'A Title',
+#                                                 'description': 'A Description'
+#                                             }
+#                                         }
+#                                     }),
+#                                     **VALID_USER)
+#         self.assertEqual(400, response.status_code)
+#         self.assertNotIn(b'study_alias', response.content)
+#         self.assertIn(b'study_type', response.content)
+#         self.assertIn(b'samples', response.content)
+#         self.assertIn(b'experiments', response.content)
+#         self.assertEqual(5, len(Submission.objects.all()))
+#
+#     # FIXME: in unit tests: "id": "file:///opt/project/staticfiles/schemas/minimal_requirements.json",
+#     # FIXME: when running docker-compose with dev.yml
+#     # FIXME: id to /app/staticfiles/schemas/ena_requirements.json
+#     # FIXME: since id determins root for looking up included files
+#     def test_valid_max_post(self):
+#         VALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
+#         }
+#         self.assertEqual(5, len(Submission.objects.all()))
+#         response = self.client.post('/api/submissions/',
+#                                     content_type='application/json',
+#                                     data=json.dumps({
+#                                         'target': 'ENA',
+#                                         'release': True,
+#                                         'data': self.new_data
+#                                     }),
+#                                     **VALID_USER)
+#         content = json.loads(response.content.decode('utf-8'))
+#         expected = {
+#             'broker_submission_id': '721117ae-cb8d-468b-bec9-aa92aff834d5',
+#             'data': {
+#                 'requirements': {
+#                     'description': '123456',
+#                     'experiments': [
+#                         {'design': {'design_description': '',
+#                                     'library_descriptor': {
+#                                         'library_layout': {
+#                                             'layout_type': 'paired',
+#                                             'nominal_length': 450},
+#                                         'library_selection': 'PCR',
+#                                         'library_source': 'METAGENOMIC',
+#                                         'library_strategy': 'AMPLICON'},
+#                                     'sample_descriptor': 'sample2'},
+#                          'experiment_alias': 'experiment1',
+#                          'platform': 'AB 3730xL Genetic '
+#                                      'Analyzer',
+#                          'site_object_id': 'noob_13'}],
+#                     'runs': [{'data_block': {
+#                         'files': [{'checksum': '12345',
+#                                    'checksum_method': 'MD5',
+#                                    'filename': 'aFile',
+#                                    'filetype': 'fastq'}]},
+#                         'experiment_ref': 'experiment1',
+#                         'site_object_id': 'noob_14'}],
+#                     'samples': [{'sample_alias': 'sample1',
+#                                  'sample_title': 'stitle',
+#                                  'site_object_id': 'noob_11',
+#                                  'taxon_id': 1234},
+#                                 {'sample_alias': 'sample2',
+#                                  'sample_title': 'stitleagain',
+#                                  'site_object_id': 'noob_12',
+#                                  'taxon_id': 1234}],
+#                     'site_object_id': 'noob_10',
+#                     'study_type': 'Metagenomics',
+#                     'title': '123456'}},
+#             'download_url': '',
+#             'embargo': None,
+#             'release': True,
+#             'site': 'horst',
+#             'site_project_id': '',
+#             'status': 'SUBMITTED',
+#             'submitting_user': '',
+#             'target': 'ENA'
+#         }
+#         self.assertEqual(201, response.status_code)
+#         expected['broker_submission_id'] = content['broker_submission_id']
+#         self.assertDictEqual(expected, content)
+#         self.assertEqual(6, len(Submission.objects.all()))
+#         submission = Submission.objects.last()
+#
+#         self.assertEqual(UUID(expected['broker_submission_id']),
+#                          submission.broker_submission_id)
+#         self.assertEqual(Submission.SUBMITTED, content.get('status', 'NOPE'))
+#
+#     def test_valid_max_post_with_data_url(self):
+#         VALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
+#         }
+#         self.assertEqual(5, len(Submission.objects.all()))
+#         response = self.client.post('/api/submissions/',
+#                                     content_type='application/json',
+#                                     data=json.dumps({
+#                                         'target': 'ENA',
+#                                         'release': True,
+#                                         'data': self.new_data
+#                                     }),
+#                                     **VALID_USER)
+#         content = json.loads(response.content.decode('utf-8'))
+#         self.assertEqual(201, response.status_code)
+#         self.assertEqual(6, len(Submission.objects.all()))
+#         self.assertNotIn('download_url', content['data']['requirements'].keys())
+#         sub = Submission.objects.last()
+#         self.assertEqual('', sub.download_url)
+#
+#         url = 'https://www.google.de'
+#         new_data_copy = copy.deepcopy(self.new_data)
+#         response = self.client.post('/api/submissions/',
+#                                     content_type='application/json',
+#                                     data=json.dumps({
+#                                         'target': 'ENA',
+#                                         'release': False,
+#                                         'download_url': url,
+#                                         'data': new_data_copy
+#                                     }),
+#                                     **VALID_USER)
+#         self.assertEqual(201, response.status_code)
+#         self.assertEqual(7, len(Submission.objects.all()))
+#         sub = Submission.objects.last()
+#         self.assertEqual(url, sub.download_url)
+#
+#         response = self.client.put(
+#             '/api/submissions/{0}/'.format(
+#                 sub.broker_submission_id),
+#             content_type='application/json',
+#             data=json.dumps({
+#                 'target': 'ENA',
+#                 'data': new_data_copy,
+#                 'download_url': '{0}/{1}'.format(url, 'download'),
+#             }), **VALID_USER)
+#         self.assertEqual(200, response.status_code)
+#         self.assertEqual(7, len(Submission.objects.all()))
+#         sub = Submission.objects.last()
+#         self.assertEqual('{0}/{1}'.format(url, 'download'), sub.download_url)
+#
+#     def test_valid_max_post_with_invalid_min_data(self):
+#         VALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
+#         }
+#         self.assertEqual(5, len(Submission.objects.all()))
+#         data = copy.deepcopy(self.new_data)
+#         data['requirements'].pop('description')
+#         response = self.client.post('/api/submissions/',
+#                                     content_type='application/json',
+#                                     data=json.dumps({
+#                                         'target': 'ENA',
+#                                         'release': True,
+#                                         'data': data
+#                                     }),
+#                                     **VALID_USER
+#                                     )
+#         self.assertEqual(400, response.status_code)
+#         self.assertIn('description', response.content.decode('utf-8'))
+#         self.assertEqual(5, len(Submission.objects.all()))
+#
+#     def test_get_submissions(self):
+#         VALID_USER, response = self._post_submission()
+#         response = self.client.get('/api/submissions/', **VALID_USER)
+#         content = json.loads(response.content.decode('utf-8'))
+#         self.assertEqual(200, response.status_code)
+#         self.assertEqual(6, len(Submission.objects.all()))
+#         # two for this user (1 in fixture, 1 by post above)
+#         self.assertEqual(3, len(content))
+#
+#     def test_get_submissions_for_user(self):
+#         USER = {'HTTP_AUTHORIZATION': 'Basic %s' % base64.b64encode(
+#             b'horst:password').decode('utf-8')}
+#         ADMIN = {'HTTP_AUTHORIZATION': 'Basic %s' % base64.b64encode(
+#             b'noob:password').decode('utf-8')}
+#
+#         all_subs = Submission.objects.all()
+#         self.assertEqual(5, len(all_subs))
+#
+#         response = self.client.get('/api/submissions/', **USER)
+#         content = json.loads(response.content.decode('utf-8'))
+#         self.assertEqual(2, len(content))
+#
+#         # FIXME: unicode issues with test client
+#         # response = self.client.get('/api/submissions/', **ADMIN)
+#         # content = json.loads(response.content)
+#         # self.assertEqual(2, len(content))
+#
+#     def test_get_submission(self):
+#         VALID_USER, response = self._post_submission()
+#         submission = Submission.objects.last()
+#         response = self.client.get(
+#             '/api/submissions/{0}/'.format(
+#                 submission.broker_submission_id),
+#             **VALID_USER
+#         )
+#         content = json.loads(response.content.decode('utf-8'))
+#         self.assertEqual(200, response.status_code)
+#         self.assertTrue(isinstance(content, dict))
+#         self.assertEqual('horst', content['site'])
+#
+#     def test_no_submission_for_id(self):
+#         VALID_USER, response = self._post_submission()
+#         response = self.client.get(
+#             '/api/submissions/{0}/'.format(
+#                 uuid4()),
+#             **VALID_USER
+#         )
+#         self.assertEqual(404, response.status_code)
+#
+#     def test_put_submission(self):
+#         VALID_USER, response = self._post_submission()
+#         self.assertEqual(6, len(Submission.objects.all()))
+#         submission = Submission.objects.last()
+#         response = self.client.put(
+#             '/api/submissions/{0}/'.format(
+#                 submission.broker_submission_id),
+#             content_type='application/json',
+#             data=json.dumps({
+#                 'target': 'ENA',
+#                 'data': {
+#                     'requirements': {
+#                         'title': 'A Title 0815',
+#                         'description': 'A Description 2'}
+#                 }
+#             }), **VALID_USER)
+#         content = json.loads(response.content.decode('utf-8'))
+#         self.assertEqual(200, response.status_code)
+#         self.assertTrue(isinstance(content, dict))
+#         self.assertIn('0815', content['data']['requirements']['title'])
+#         self.assertEqual(6, len(Submission.objects.all()))
+#
+#     def test_putpost_submission(self):
+#         VALID_USER, response = self._post_submission()
+#         self.assertEqual(6, len(Submission.objects.all()))
+#         submission = Submission.objects.last()
+#         response = self.client.post(
+#             '/api/submissions/{0}/'.format(
+#                 submission.broker_submission_id),
+#             content_type='application/json',
+#             data=json.dumps({
+#                 'target': 'ENA',
+#                 'data': {
+#                     'requirements': {
+#                         'title': 'A Title 0815',
+#                         'description': 'A Description 2'}
+#                 }
+#             }), **VALID_USER)
+#         self.assertEqual(405, response.status_code)
+#         self.assertEqual('{"detail":"Method \\"POST\\" not allowed."}',
+#                          response.content.decode('utf-8'))
+#
+#     def test_put_submission_min_validation(self):
+#         VALID_USER, response = self._post_submission()
+#         submission = Submission.objects.last()
+#         response = self.client.put(
+#             '/api/submissions/{0}/'.format(
+#                 submission.broker_submission_id),
+#             content_type='application/json',
+#             data=json.dumps({
+#                 'target': 'ENA',
+#                 'data': {
+#                     'requirements': {
+#                         'title': 'A Title 0815',
+#                         'description': 'A Description 2'}
+#                 }
+#             }), **VALID_USER)
+#         content = json.loads(response.content.decode('utf-8'))
+#         submission = Submission.objects.last()
+#         self.assertEqual(Submission.OPEN, submission.status)
+#         self.assertEqual(200, response.status_code)
+#         self.assertIn('optional_validation', content['data'].keys())
+#         self.assertIn('optional_validation', submission.data)
+#
+#         response = self.client.put(
+#             '/api/submissions/{0}/'.format(
+#                 submission.broker_submission_id),
+#             content_type='application/json',
+#             data=json.dumps({
+#                 'target': 'ENA',
+#                 'data': {
+#                     'requirements': {
+#                     }
+#                 }
+#             }), **VALID_USER)
+#         content = json.loads(response.content.decode('utf-8'))
+#         submission = Submission.objects.first()
+#         self.assertEqual(Submission.OPEN, submission.status)
+#         self.assertEqual(400, response.status_code)
+#         self.assertIn('optional_validation', content.keys())
+#
+#     def test_put_submission_valid_max_validation(self):
+#         VALID_USER, response = self._post_submission()
+#         submission = Submission.objects.last()
+#         response = self.client.put(
+#             '/api/submissions/{0}/'.format(
+#                 submission.broker_submission_id),
+#             content_type='application/json',
+#             data=json.dumps({
+#                 'target': 'ENA',
+#                 'release': True,
+#                 'data': self.new_data
+#             }), **VALID_USER)
+#         content = json.loads(response.content.decode('utf-8'))
+#         submission = Submission.objects.last()
+#         self.assertEqual(200, response.status_code)
+#         self.assertFalse('optional_validation' in content['data'].keys())
+#         self.assertFalse('optional_validation' in submission.data)
+#
+#         submission = Submission.objects.last()
+#         self.assertEqual(Submission.SUBMITTED,
+#                          content.get('status', 'NOPE'))
+#         self.assertEqual(Submission.SUBMITTED, submission.status)
+#
+#     def test_put_submission_invalid_max_validation(self):
+#         VALID_USER, response = self._post_submission()
+#         submission = Submission.objects.last()
+#         data = copy.deepcopy(self.new_data)
+#         data['requirements'].pop('samples')
+#         response = self.client.put(
+#             '/api/submissions/{0}/'.format(
+#                 submission.broker_submission_id),
+#             content_type='application/json',
+#             data=json.dumps({
+#                 'target': 'ENA',
+#                 'release': True,
+#                 'data': data
+#             }), **VALID_USER)
+#         content = json.loads(response.content.decode('utf-8'))
+#
+#         self.assertEqual(400, response.status_code)
+#         self.assertIn("'samples' is a required property",
+#                       response.content.decode('utf-8'))
+#         self.assertFalse(
+#             'optional_validation' in response.content.decode('utf-8'))
+#
+#         submission = Submission.objects.last()
+#         self.assertEqual(Submission.OPEN, submission.status)
+#
+#     def test_put_submission_max_validation_without_release(self):
+#         VALID_USER, response = self._post_submission()
+#         submission = Submission.objects.last()
+#         response = self.client.put(
+#             '/api/submissions/{0}/'.format(
+#                 submission.broker_submission_id),
+#             content_type='application/json',
+#             data=json.dumps({
+#                 'target': 'ENA',
+#                 'release': False,
+#                 'data': self.new_data
+#             }), **VALID_USER)
+#         content = json.loads(response.content.decode('utf-8'))
+#         submission = Submission.objects.last()
+#         self.assertEqual(200, response.status_code)
+#         self.assertFalse('optional_validation' in content['data'].keys())
+#         self.assertFalse('optional_validation' in submission.data)
+#         submission = Submission.objects.first()
+#         self.assertEqual(Submission.OPEN,
+#                          content.get('status', 'NOPE'))
+#         self.assertEqual(Submission.OPEN, submission.status)
+#
+#     def test_put_on_submitted_submission(self):
+#         VALID_USER = {'HTTP_AUTHORIZATION': 'Basic %s' % base64.b64encode(
+#             b'horst:password').decode('utf-8')}
+#         submission = Submission.objects.get(
+#             broker_submission_id=UUID('e931072e-61c2-42e4-923a-39b6ab255a9f'))
+#         self.assertEqual(Submission.SUBMITTED, submission.status)
+#         response = self.client.put(
+#             '/api/submissions/{0}/'.format(
+#                 submission.broker_submission_id),
+#             content_type='application/json',
+#             data=json.dumps({
+#                 'target': 'ENA',
+#                 'release': False,
+#                 'data': self.new_data
+#             }), **VALID_USER)
+#         self.assertTrue(400, response.status_code)
+#         content = response.content.decode('utf-8')
+#         self.assertIn('"status":"SUBMITTED"', content)
+#         self.assertIn(
+#             '"broker_submission_id":"e931072e-61c2-42e4-923a-39b6ab255a9f"',
+#             content)
+#         self.assertIn('"error":"no modifications allowed with current status"',
+#                       content)
+#
+#     def test_put_on_cancelled_submission(self):
+#         VALID_USER = {'HTTP_AUTHORIZATION': 'Basic %s' % base64.b64encode(
+#             b'horst:password').decode('utf-8')}
+#         submission = Submission.objects.get(
+#             broker_submission_id=UUID('e931072e-61c2-42e4-923a-39b6ab255a9f'))
+#         submission.status = Submission.CANCELLED
+#         submission.save()
+#         self.assertEqual(Submission.CANCELLED, submission.status)
+#         response = self.client.put(
+#             '/api/submissions/{0}/'.format(
+#                 submission.broker_submission_id),
+#             content_type='application/json',
+#             data=json.dumps({
+#                 'target': 'ENA',
+#                 'release': False,
+#                 'data': self.new_data
+#             }), **VALID_USER)
+#         self.assertTrue(400, response.status_code)
+#         content = response.content.decode('utf-8')
+#         self.assertIn('"status":"CANCELLED"', content)
+#         self.assertIn(
+#             '"broker_submission_id":"e931072e-61c2-42e4-923a-39b6ab255a9f"',
+#             content)
+#         self.assertIn('"error":"no modifications allowed with current status"',
+#                       content)
+#
+#     def test_put_on_error_submission(self):
+#         VALID_USER = {'HTTP_AUTHORIZATION': 'Basic %s' % base64.b64encode(
+#             b'horst:password').decode('utf-8')}
+#         submission = Submission.objects.get(
+#             broker_submission_id=UUID('e931072e-61c2-42e4-923a-39b6ab255a9f'))
+#         submission.status = Submission.ERROR
+#         submission.save()
+#         self.assertEqual(Submission.ERROR, submission.status)
+#         response = self.client.put(
+#             '/api/submissions/{0}/'.format(
+#                 submission.broker_submission_id),
+#             content_type='application/json',
+#             data=json.dumps({
+#                 'target': 'ENA',
+#                 'release': False,
+#                 'data': self.new_data
+#             }), **VALID_USER)
+#         self.assertTrue(400, response.status_code)
+#         content = response.content.decode('utf-8')
+#         self.assertIn('"status":"ERROR"', content)
+#         self.assertIn(
+#             '"broker_submission_id":"e931072e-61c2-42e4-923a-39b6ab255a9f"',
+#             content)
+#         self.assertIn('"error":"no modifications allowed with current status"',
+#                       content)
+#
+#     def test_put_on_closed_submission(self):
+#         VALID_USER = {'HTTP_AUTHORIZATION': 'Basic %s' % base64.b64encode(
+#             b'horst:password').decode('utf-8')}
+#         submission = Submission.objects.get(
+#             broker_submission_id=UUID('e931072e-61c2-42e4-923a-39b6ab255a9f'))
+#         submission.status = Submission.CLOSED
+#         submission.save()
+#         self.assertEqual(Submission.CLOSED, submission.status)
+#         response = self.client.put(
+#             '/api/submissions/{0}/'.format(
+#                 submission.broker_submission_id),
+#             content_type='application/json',
+#             data=json.dumps({
+#                 'target': 'ENA',
+#                 'release': False,
+#                 'data': self.new_data
+#             }), **VALID_USER)
+#         self.assertTrue(400, response.status_code)
+#         content = response.content.decode('utf-8')
+#         self.assertIn('"status":"CLOSED"', content)
+#         self.assertIn('"error":"no modifications allowed with current status"',
+#                       content)
+#         self.assertIn(
+#             '"broker_submission_id":"e931072e-61c2-42e4-923a-39b6ab255a9f"',
+#             content)
+#
+#     def test_post_on_submission_detail_view(self):
+#         VALID_USER, response = self._post_submission()
+#         submission = Submission.objects.first()
+#         response = self.client.post(
+#             '/api/submissions/{}/'.format(submission.pk),
+#             content_type='application/json',
+#             data=json.dumps({
+#                 'target': 'ENA',
+#                 'data': {
+#                     'requirements': {
+#                         'title': 'A Title 0815',
+#                         'description': 'A Description 2'}
+#                 }
+#             }), **VALID_USER)
+#         self.assertEqual(405, response.status_code)
+#
+#     def test_delete_submission(self):
+#         VALID_USER, response = self._post_submission()
+#         self.assertEqual(6, len(Submission.objects.all()))
+#
+#         submission = Submission.objects.last()
+#         response = self.client.delete(
+#             '/api/submissions/{0}/'.format(
+#                 submission.broker_submission_id),
+#             **VALID_USER
+#         )
+#
+#         self.assertEqual(204, response.status_code)
+#         self.assertEqual(6, len(Submission.objects.all()))
+#         sub = Submission.objects.last()
+#         self.assertEqual(Submission.CANCELLED, sub.status)
+#         submission = Submission.objects.last()
+#         self.assertEqual(Submission.CANCELLED, submission.status)
+#
+#     def test_patch_submission(self):
+#         VALID_USER, response = self._post_submission()
+#         response = self.client.patch('/api/submissions/1/',
+#                                      content_type='application/json',
+#                                      data=json.dumps({
+#                                          'target': 'ENA_PANGAEA'
+#                                      }), **VALID_USER)
+#         self.assertEqual(405, response.status_code)
+#
+#     def test_no_credentials(self):
+#         response = self.client.post('/api/submissions/')
+#         self.assertEqual(401, response.status_code)
+#
+#     def test_get_no_credentials(self):
+#         response = self.client.get('/api/submissions/')
+#         self.assertEqual(401, response.status_code)
+#
+#     def test_get_submission_no_credentials(self):
+#         response = self.client.get('/api/submissions/{0}/'.format(uuid4()))
+#         self.assertEqual(401, response.status_code)
+#
+#     def test_get_with_credentials(self):
+#         VALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
+#         }
+#         response = self.client.get('/api/submissions/', **VALID_USER)
+#         self.assertEqual(200, response.status_code)
+#
+#     def test_invalid_basic_auth(self):
+#         INVALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'horst:WRONG').decode('utf-8')
+#         }
+#         response = self.client.post('/api/submissions/',
+#                                     {"some": "data"},
+#                                     **INVALID_USER)
+#         self.assertEqual(401, response.status_code)
+#
+#     def test_detail_invalid_basic_auth(self):
+#         INVALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'horst:WRONG').decode('utf-8')
+#         }
+#         response = self.client.get('/api/submissions/{0}/'.format(uuid4()),
+#                                    **INVALID_USER)
+#         self.assertEqual(401, response.status_code)
+#
+#     def test_valid_basic_auth(self):
+#         VALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
+#         }
+#         response = self.client.post('/api/submissions/',
+#                                     {"some": "data"},
+#                                     **VALID_USER)
+#         self.assertNotEqual(401, response.status_code)
+#         self.assertEqual(400, response.status_code)
+#
+#     def test_super_user(self):
+#         VALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'noob:password').decode('utf-8')
+#         }
+#         response = self.client.post('/api/submissions/', **VALID_USER)
+#
+#         self.assertNotEqual(401, response.status_code)
+#         self.assertEqual(400, response.status_code)
+#
+#     def test_staff_user(self):
+#         VALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'test_checker:password').decode(
+#                     'utf-8')
+#         }
+#         response = self.client.post('/api/submissions/', **VALID_USER)
+#         self.assertNotEqual(401, response.status_code)
+#         self.assertEqual(400, response.status_code)
+#
+#     def test_active_user(self):
+#         VALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
+#         }
+#         response = self.client.post('/api/submissions/', **VALID_USER)
+#         self.assertNotEqual(401, response.status_code)
+#         self.assertEqual(400, response.status_code)
+#
+#     def test_inactive_user(self):
+#         INVALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'sonOfNoob:password').decode(
+#                     'utf-8')
+#         }
+#         response = self.client.post('/api/submissions/',
+#                                     **INVALID_USER)
+#         self.assertEqual(401, response.status_code)
+#
+#     def test_active_user_without_permissions(self):
+#         INVALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'nobody:password').decode(
+#                     'utf-8')
+#         }
+#         response = self.client.post('/api/submissions/',
+#                                     **INVALID_USER)
+#         self.assertEqual(403, response.status_code)
+#
+#     def test_invalid_token_authentication(self):
+#         INVALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Token %s' % 'afafff4f3f3f77faff2f71f'
+#         }
+#         response = self.client.post('/api/submissions/',
+#                                     {"some": "data"},
+#                                     **INVALID_USER)
+#         self.assertEqual(401, response.status_code)
+#
+#     def test_valid_token_authentication(self):
+#         token = Token.objects.create(user=User.objects.get(username='horst'))
+#         VALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Token %s' % token.key
+#         }
+#         response = self.client.post('/api/submissions/',
+#                                     {
+#                                         'site_project_id': 'p1',
+#                                         'submitting_user': 'johnDoe',
+#                                         'site_object_id': 'o1',
+#                                         'study': '{}'
+#                                     },
+#                                     **VALID_USER)
+#         self.assertNotEqual(401, response.status_code)
+#         self.assertEqual(400, response.status_code)
 
 
 class TestInitialChainTasks(TestCase):
