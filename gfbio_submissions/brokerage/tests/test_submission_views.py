@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 import base64
 import json
-from pprint import pprint
 from uuid import UUID, uuid4
-from rest_framework.authtoken.models import Token
 
 import responses
 from django.contrib.auth.models import Permission
 from django.test import TestCase
+from rest_framework.authtoken.models import Token
 from rest_framework.test import APIRequestFactory, APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
@@ -21,23 +20,6 @@ from gfbio_submissions.users.models import User
 
 class TestAddSubmissionView(TestCase):
 
-    # 1. force auth, permission set in setUpClass. working
-    # request = self.factory.post('/api/submissions/', data={}, format='json')
-    # force_authenticate(request, user=self.user)
-    # response = SubmissionsView.as_view()(request)
-    # # print(response.data)
-    # response.render()
-    # print(response)
-    # print(response.content)
-
-    # 2. request using dfr api client, auth explictly. override self.client ?
-    # client = APIClient()
-    # client.credentials(HTTP_AUTHORIZATION='Basic ' + base64.b64encode(
-    #     b'horst:password').decode('utf-8'))
-    # response = client.post('/api/submissions/', {}, format='json')
-    # print(response)s
-    # print(response.content)
-
     @classmethod
     def setUpTestData(cls):
         cls.permissions = Permission.objects.filter(
@@ -50,7 +32,7 @@ class TestAddSubmissionView(TestCase):
             username='kevin', email='kevin@kevin.de', password='secret',
             is_staff=True)
         user.user_permissions.add(*cls.permissions)
-        admin = User.objects.create_superuser(
+        User.objects.create_superuser(
             username='admin', email='admin@admin.de', password='psst')
         cls.factory = APIRequestFactory()
         resource_cred = ResourceCredential.objects.create(
@@ -80,15 +62,6 @@ class TestAddSubmissionView(TestCase):
                 b'kevin:secret').decode('utf-8')
         )
         cls.other_api_client = other_client
-        # responses.add(
-        #     responses.POST,
-        #     '{0}{1}'.format(
-        #         cls.site_config.helpdesk_server.url,
-        #         HELPDESK_API_SUB_URL
-        #     ),
-        #     status=200,
-        #     body=json.dumps({'mocked_response': True})
-        # )
 
     def _add_create_ticket_response(self):
         responses.add(
@@ -110,25 +83,6 @@ class TestAddSubmissionView(TestCase):
                     'description': 'A Description'}}},
             format='json'
         )
-
-    # def setUp(self):
-    #     # content_type = ContentType.objects.get(app_label='brokerage',
-    #     #                                        model='submission')
-    #     # permission = Permission.objects.create(codename='add_submission',
-    #     #                                        name='Add Submissions',
-    #     #                                        content_type=content_type)
-    #     # print(Permission.objects.all())
-    #     permissions = Permission.objects.filter(
-    #         content_type__app_label='brokerage',
-    #         codename__endswith='submission')
-    #     # for a in permissions:
-    #     #     print(a)
-    #     # u.user_permissions.add(permission)
-    #     self.user = User.objects.create_user(
-    #         username='horst', email='horst@horst.de', password='password')
-    #     self.user.user_permissions.add(*permissions)
-    #
-    #     self.factory = APIRequestFactory()
 
     def test_submissions_get_request(self):
         response = self.client.get('/api/submissions/')
@@ -792,7 +746,9 @@ class TestAddSubmissionView(TestCase):
         self.assertNotEqual(401, response.status_code)
         self.assertEqual(400, response.status_code)
 
+    # TODO: move to integration-test file
     # TODO: modify to use new endpoints
+
     # --------------------------------------------------------------------------
     # @skip('test against debug server, that needs to be up and running')
     # def test_post_to_debug_server_full_submission(self):
