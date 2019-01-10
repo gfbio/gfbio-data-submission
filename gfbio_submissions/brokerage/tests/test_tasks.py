@@ -700,49 +700,48 @@ class TestCeleryTasks(TestCase):
         )
         self.assertTrue(result.successful())
 
-    # @responses.activate
-    # def test_add_pangaealink_to_helpdesk_ticket_task_client_error(self):
-    #     sc = SiteConfiguration.objects.get(pk=1)
-    #     submission = Submission.objects.get(pk=1)
-    #     submission.additionalreference_set.create(
-    #         type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-    #         reference_key='FAKE_KEY',
-    #         primary=True
-    #     )
-    #     url = '{0}{1}/{2}/{3}'.format(
-    #         sc.helpdesk_server.url,
-    #         HELPDESK_API_SUB_URL,
-    #         'FAKE_KEY',
-    #         HELPDESK_COMMENT_SUB_URL,
-    #     )
-    #     responses.add(responses.POST, url, status=400, json={"bla": "blubb"})
-    #     result = add_pangaealink_to_helpdesk_ticket_task.apply_async(
-    #         kwargs={
-    #             'submission_id': 1,
-    #         }
-    #     )
-    #     self.assertTrue(result.successful())
+    @responses.activate
+    def test_add_pangaealink_to_helpdesk_ticket_task_client_error(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        url = '{0}{1}/{2}/{3}'.format(
+            site_config.helpdesk_server.url,
+            HELPDESK_API_SUB_URL,
+            'FAKE_KEY',
+            HELPDESK_COMMENT_SUB_URL,
+        )
+        responses.add(responses.POST, url, status=400, json={"bla": "blubb"})
+        result = add_pangaealink_to_helpdesk_ticket_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertTrue(result.successful())
 
-    # @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
-    # def test_add_pangaealink_to_helpdesk_ticket_task_server_error(self,
-    #                                                               mock_requests):
-    #     submission = Submission.objects.get(pk=1)
-    #     submission.additionalreference_set.create(
-    #         type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-    #         reference_key='FAKE_KEY',
-    #         primary=True
-    #     )
-    #     mock_requests.post.return_value.status_code = 500
-    #     mock_requests.post.return_value.ok = False
-    #     mock_requests.post.return_value.content = '{"bla": "blubb"}'
-    #     submission = Submission.objects.get(pk=1)
-    #     result = add_pangaealink_to_helpdesk_ticket_task.apply_async(
-    #         kwargs={
-    #             'submission_id': 1,
-    #         }
-    #     )
-    #     self.assertFalse(result.successful())
-    #
+    # FIXME: what about retries ? are they executed ?
+    @responses.activate
+    def test_add_pangaealink_to_helpdesk_ticket_task_server_error(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        # mock_requests.post.return_value.status_code = 500
+        # mock_requests.post.return_value.ok = False
+        # mock_requests.post.return_value.content = '{"bla": "blubb"}'
+        # submission = Submission.objects.get(pk=1)
+        url = '{0}{1}/{2}/{3}'.format(
+            site_config.helpdesk_server.url,
+            HELPDESK_API_SUB_URL,
+            'FAKE_KEY',
+            HELPDESK_COMMENT_SUB_URL,
+        )
+        print(url)
+        responses.add(responses.POST, url, status=500, json={"bla": "blubb"})
+        result = add_pangaealink_to_helpdesk_ticket_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertFalse(result.successful())
+
     # @responses.activate
     # def test_create_helpdesk_ticket_task_client_error(self):
     #     submission = Submission.objects.get(pk=1)
