@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import base64
 import json
+import textwrap
 
 import responses
 from celery import chain
@@ -15,13 +16,14 @@ from gfbio_submissions.brokerage.configuration.settings import \
     HELPDESK_API_SUB_URL, HELPDESK_COMMENT_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, Submission, AuditableTextData, PersistentIdentifier, \
-    BrokerObject, TaskProgressReport, AdditionalReference, PrimaryDataFile
+    BrokerObject, TaskProgressReport, AdditionalReference, PrimaryDataFile, \
+    RequestLog
 from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, \
     transfer_data_to_ena_task, process_ena_response_task, \
     create_broker_objects_from_submission_data_task, check_on_hold_status_task, \
     get_gfbio_user_email_task, create_helpdesk_ticket_task, \
     comment_helpdesk_ticket_task, attach_file_to_helpdesk_ticket_task, \
-    add_pangaealink_to_helpdesk_ticket_task
+    add_pangaealink_to_helpdesk_ticket_task, request_pangaea_login_token_task
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_ena_xml_response, \
@@ -747,11 +749,6 @@ class TestCeleryTasks(TestCase):
                             HELPDESK_API_SUB_URL),
             json={},
             status=400)
-        # responses.add(responses.POST,
-        #               url,
-        #               json={},
-        #               status=400)
-
         result = create_helpdesk_ticket_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
@@ -759,57 +756,67 @@ class TestCeleryTasks(TestCase):
         )
         self.assertTrue(result.successful())
 
-    # @responses.activate
-    # def test_create_helpdesk_ticket_task_server_error(self):
-    #     sc = SiteConfiguration.objects.get(pk=1)
-    #     url = '{0}{1}'.format(
-    #         sc.helpdesk_server.url,
-    #         HELPDESK_API_SUB_URL
-    #     )
-    #     responses.add(responses.POST, url, status=500,
-    #                   json={"bla": "blubb"})
-    #     result = create_helpdesk_ticket_task.apply_async(
-    #         kwargs={
-    #             'submission_id': 1,
-    #             'summary': 'Test',
-    #             'description': 'Test'
-    #
-    #         }
-    #     )
-    #     self.assertFalse(result.successful())
-    #
-    # # ---------------------- Pangaea tasks -------------------------------------
-    #
+    @responses.activate
+    def test_create_helpdesk_ticket_task_server_error(self):
+        submission = Submission.objects.last()
+        site_config = SiteConfiguration.objects.first()
+        responses.add(
+            responses.POST,
+            '{0}{1}'.format(site_config.helpdesk_server.url,
+                            HELPDESK_API_SUB_URL),
+            json={},
+            status=500)
+        result = create_helpdesk_ticket_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+                'summary': 'Test',
+                'description': 'Test'
+
+            }
+        )
+        self.assertFalse(result.successful())
+
+    # ---------------------- Pangaea tasks -------------------------------------
+
     # @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
-    # def test_request_pangaea_login_token_task_success(self, mock_requests):
-    #     access = ResourceCredential()
-    #     access.username = 'gfbio-broker'
-    #     access.password = 'h_qB-RxCY)7y'
-    #     access.url = 'https://ws.pangaea.de/ws/services/PanLogin'
-    #     access.save()
-    #
-    #     request_logs = RequestLog.objects.all()
-    #     self.assertEqual(0, len(request_logs))
-    #
-    #     mock_requests.post.return_value.status_code = 200
-    #     mock_requests.post.return_value.ok = True
-    #     mock_requests.post.return_value.content = textwrap.dedent(
-    #         """<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Body><ns1:loginResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="urn:java:de.pangaea.login.PanLogin"><loginReturn xsi:type="xsd:string">f3d7aca208aaec8954d45bebc2f59ba1522264db</loginReturn></ns1:loginResponse></soapenv:Body></soapenv:Envelope>""")
-    #     result = request_pangaea_login_token_task.apply_async(
-    #         kwargs={
-    #             'submission_id': 1,
-    #         }
-    #     )
-    #     self.assertTrue(result.successful())
-    #     self.assertEqual('f3d7aca208aaec8954d45bebc2f59ba1522264db',
-    #                      result.get())
-    #
-    #     request_logs = RequestLog.objects.all()
-    #     self.assertEqual(1, len(request_logs))
-    #     self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-    #     self.assertEqual('http://www.example2.com',
-    #                      request_logs.first().url)
-    #
+    @responses.activate
+    def test_request_pangaea_login_token_task_success(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        responses.add(
+            responses.POST,
+            site_config.pangaea_server.url,
+            body=textwrap.dedent(
+                """<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Body><ns1:loginResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="urn:java:de.pangaea.login.PanLogin"><loginReturn xsi:type="xsd:string">f3d7aca208aaec8954d45bebc2f59ba1522264db</loginReturn></ns1:loginResponse></soapenv:Body></soapenv:Envelope>"""),
+            status=200)
+        # access = ResourceCredential()
+        # access.username = 'gfbio-broker'
+        # access.password = 'h_qB-RxCY)7y'
+        # access.url = 'https://ws.pangaea.de/ws/services/PanLogin'
+        # access.save()
+
+        request_logs = RequestLog.objects.all()
+        self.assertEqual(0, len(request_logs))
+
+        # mock_requests.post.return_value.status_code = 200
+        # mock_requests.post.return_value.ok = True
+        # mock_requests.post.return_value.content = textwrap.dedent(
+        #     """<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Body><ns1:loginResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="urn:java:de.pangaea.login.PanLogin"><loginReturn xsi:type="xsd:string">f3d7aca208aaec8954d45bebc2f59ba1522264db</loginReturn></ns1:loginResponse></soapenv:Body></soapenv:Envelope>""")
+        result = request_pangaea_login_token_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertTrue(result.successful())
+        self.assertEqual('f3d7aca208aaec8954d45bebc2f59ba1522264db',
+                         result.get())
+
+        request_logs = RequestLog.objects.all()
+        self.assertEqual(1, len(request_logs))
+        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+        self.assertEqual('https://www.example.com',
+                         request_logs.first().url)
+
     # @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
     # def test_request_pangaea_login_token_task_client_error(self, mock_requests):
     #     access = ResourceCredential()

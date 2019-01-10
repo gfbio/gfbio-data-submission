@@ -4040,1227 +4040,1227 @@ def fake_trigger_submission_transfer(submission_id=None):
 #         #  u'updated': u'2016-01-26T14:00:06.449+0000'}
 #
 
-class TestCeleryTasks(TestCase):
-    # 'persistent_identifier',
-    fixtures = ('user', 'submission', 'broker_object',
-                'resource_credential', 'additional_reference',
-                'site_configuration')
-
-    # def test_close_submission_task(self):
-    #     sub = FullWorkflowTest._prepare()
-    #     self.assertEqual(Submission.OPEN, sub.status)
-    #     with patch('config.celeryconfig.CELERY_ALWAYS_EAGER', True,
-    #                create=True):
-    #         result = close_submission_task.apply_async(
-    #             kwargs={
-    #                 'submission_id': sub.pk
-    #             }
-    #         )
-    #         self.assertTrue(result.successful())
-    #         sub = Submission.objects.get(pk=sub.pk)
-    #         self.assertEqual(Submission.CLOSED, sub.status)
-
-    def test_prepare_ena_submission_data_task(self):
-        sub = FullWorkflowTest._prepare()
-        atds = AuditableTextData.objects.all()
-        self.assertEqual(0, len(atds))
-        result = prepare_ena_submission_data_task.apply_async(
-            kwargs={
-                'submission_id': sub.pk
-            }
-        )
-        ret_val = result.get()
-        self.assertTrue(result.successful())
-        ret_val = result.get()
-        self.assertTrue(isinstance(ret_val, dict))
-        self.assertIn('SAMPLE', ret_val.keys())
-        atds = AuditableTextData.objects.all()
-        self.assertEqual(4, len(atds))
-
-    @patch('gfbio_submissions.brokerage.utils.ena.requests')
-    def test_transfer_to_ena_task_successful(self, mock_requests):
-        sub = FullWorkflowTest._prepare()
-        mock_requests.post.return_value.status_code = 200
-        mock_requests.post.return_value.ok = True
-        mock_requests.post.return_value.content = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?> <?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
-        <RECEIPT receiptDate="2015-12-01T11:54:55.723Z" submissionFile="submission.xml"
-                 success="true">
-            <EXPERIMENT accession="ERX1228437" alias="4:f844738b-3304-4db7-858d-b7e47b293bb2"
-                        status="PRIVATE"/>
-            <RUN accession="ERR1149402" alias="5:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"/>
-            <SAMPLE accession="ERS989691" alias="2:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
-                <EXT_ID accession="SAMEA3682542" type="biosample"/>
-                <EXT_ID accession="SAMEA3682543-666" type="sample-this"/>
-            </SAMPLE>
-            <SAMPLE accession="ERS989692" alias="3:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
-                <EXT_ID accession="SAMEA3682543" type="biosample"/>
-            </SAMPLE>
-            <STUDY accession="ERP013438" alias="1:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"
-                   holdUntilDate="2016-03-05Z"/>
-            <SUBMISSION accession="ERA540869" alias="NGS_March_original2"/>
-            <MESSAGES>
-                <INFO>ADD action for the following XML: study.xml sample.xml
-                    experiment.xml run.xml
-                </INFO>
-            </MESSAGES>
-            <ACTIONS>ADD</ACTIONS>
-            <ACTIONS>ADD</ACTIONS>
-            <ACTIONS>ADD</ACTIONS>
-            <ACTIONS>ADD</ACTIONS>
-            <ACTIONS>HOLD</ACTIONS>
-        </RECEIPT>""")
-
-        result = chain(
-            prepare_ena_submission_data_task.s(
-                submission_id=sub.pk
-            ),
-            transfer_data_to_ena_task.s(
-                submission_id=sub.pk
-            )
-        )()
-
-        text_data = AuditableTextData.objects.filter(submission=sub)
-        self.assertEqual(4, len(text_data))
-        self.assertTrue(result.successful())
-        ret_val = result.get()
-        self.assertTrue(isinstance(ret_val, tuple))
-
-    @patch('gfbio_submissions.brokerage.utils.ena.requests')
-    def test_transfer_to_ena_task_client_error(self, mock_requests):
-        sub = FullWorkflowTest._prepare()
-        mock_requests.post.return_value.status_code = 400
-        mock_requests.post.return_value.ok = False
-        mock_requests.post.return_value.content = \
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<?xml-stylesheet " \
-            "type=\"text/xsl\" href=\"receipt.xsl\"?>\n<RECEIPT " \
-            "receiptDate=\"2015-08-04T11:50:22.438+01:00\" " \
-            "submissionFile=\"submission.xml\" success=\"false\"><STUDY " \
-            "alias=\"a\" status=\"PUBLIC\"/><SUBMISSION alias=\"ADD_SUBMISSION_ALIAS\"" \
-            "/><MESSAGES><ERROR>Please provide an abstract to describe your" \
-            " study(null) in details</ERROR><INFO> VALIDATE action for the " \
-            "following XML: study.xml sample.xml         </INFO></MESSAGES>" \
-            "<ACTIONS>VALIDATE</ACTIONS><ACTIONS>VALIDATE</ACTIONS><ACTIONS>HOLD" \
-            "</ACTIONS></RECEIPT>"
-        result = chain(
-            prepare_ena_submission_data_task.s(
-                submission_id=sub.pk
-            ),
-            transfer_data_to_ena_task.s(
-                submission_id=sub.pk
-            )
-        )()
-        ret_val = result.get()
-        self.assertTrue(result.successful())
-        ret_val = result.get()
-        self.assertTrue(isinstance(ret_val, tuple))
-
-    @patch('gfbio_submissions.brokerage.utils.ena.requests')
-    def test_transfer_to_ena_task_server_error(self, mock_requests):
-        sub = FullWorkflowTest._prepare()
-        mock_requests.post.return_value.status_code = 500
-        mock_requests.post.return_value.ok = False
-        mock_requests.post.return_value.content = '{}'
-        result = chain(
-            prepare_ena_submission_data_task.s(
-                submission_id=sub.pk
-            ),
-            transfer_data_to_ena_task.s(
-                submission_id=sub.pk
-            )
-        )()
-
-        ret_val = result.get()
-        self.assertFalse(result.successful())
-        self.assertIsNone(ret_val)
-
-    @patch('gfbio_submissions.brokerage.utils.ena.requests')
-    def test_process_ena_response_task_successful(self, mock_requests):
-        sub = FullWorkflowTest._prepare()
-        mock_requests.post.return_value.status_code = 200
-        mock_requests.post.return_value.ok = True
-        mock_requests.post.return_value.content = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?> <?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
-        <RECEIPT receiptDate="2015-12-01T11:54:55.723Z" submissionFile="submission.xml"
-                 success="true">
-                        status="PRIVATE"/>
-            <RUN accession="ERR1149402" alias="5:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"/>
-            <SAMPLE accession="ERS989691" alias="2:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
-                <EXT_ID accession="SAMEA3682542" type="biosample"/>
-                <EXT_ID accession="SAMEA3682543-666" type="sample-this"/>
-            </SAMPLE>
-            <SAMPLE accession="ERS989692" alias="3:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
-                <EXT_ID accession="SAMEA3682543" type="biosample"/>
-            </SAMPLE>
-            <STUDY accession="ERP013438" alias="1:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"
-                   holdUntilDate="2016-03-05Z">
-                <EXT_ID accession="PRJEB20411" type="Project"/>
-            </STUDY>
-            <SUBMISSION accession="ERA540869" alias="NGS_March_original2"/>
-            <MESSAGES>
-                <INFO>ADD action for the following XML: study.xml sample.xml
-                    experiment.xml run.xml
-                </INFO>
-            </MESSAGES>
-            <ACTIONS>ADD</ACTIONS>
-            <ACTIONS>ADD</ACTIONS>
-            <ACTIONS>ADD</ACTIONS>
-            <ACTIONS>ADD</ACTIONS>
-            <ACTIONS>HOLD</ACTIONS>
-        </RECEIPT>""")
-        result = chain(
-            prepare_ena_submission_data_task.s(
-                submission_id=sub.pk
-            ),
-            transfer_data_to_ena_task.s(
-                submission_id=sub.pk
-            ),
-            process_ena_response_task.s(
-                submission_id=sub.pk
-            )
-        )()
-
-        ret_val = result.get()
-        self.assertTrue(result.successful())
-        self.assertTrue(ret_val)
-
-    def test_create_broker_objects_from_submission_data_task(self):
-        broker_objects = BrokerObject.objects.all()
-        self.assertEqual(6, len(broker_objects))
-        sub = Submission.objects.get(pk=1)
-        sub.release = True
-        sub.status = Submission.SUBMITTED
-        sub.save()
-
-        # without task to debug
-        # BrokerObject.objects.add_submission_data(sub,
-        #                                          submission_data)
-
-        result = create_broker_objects_from_submission_data_task.apply_async(
-            kwargs={
-                'submission_id': 1
-            },
-        )
-        self.assertTrue(result.successful())
-        broker_objects = BrokerObject.objects.all()
-        self.assertEqual(11, len(broker_objects))
-
-    def test_check_on_hold_status_task(self):
-        result = check_on_hold_status_task.apply_async(
-            kwargs={
-                'submission_id': 1
-            }
-        )
-        self.assertTrue(result.successful())
-
-    # @patch('gfbio_submissions.brokerage.models.logger')
-    # def test_log(self, mock_logger):
-    #     submission = Submission.objects.all().first()
-    #     submission.log()
-    #     self.assertTrue(mock_logger.info.called)
-
-    @patch('gfbio_submissions.brokerage.tasks.logger')
-    def test_check_on_hold_proceed_without_email(self, mock_logger):
-        sub = Submission.objects.get(pk=1)
-        conf = SiteConfiguration.objects.get(site=sub.site)
-        conf.release_submissions = True
-        conf.save()
-        result = check_on_hold_status_task.apply_async(
-            kwargs={
-                'submission_id': 1
-            }
-        )
-        self.assertTrue(mock_logger.info.called)
-        reports = TaskProgressReport.objects.all()
-        task_names = [r.task_name for r in reports]
-        self.assertTrue('tasks.check_on_hold_status_task' in task_names)
-
-    # TODO: this one below
-    # TODO: check all test, even if passing, for json exceptions that need repsonse mock
-
-    @responses.activate
-    def test_get_gfbio_user_email_task_success(self):
-        sub = Submission.objects.get(pk=1)
-        sub.submitting_user = '16250'
-        sub.save()
-
-        config = SiteConfiguration.objects.get(pk=1)
-        config.use_gfbio_services = True
-        config.gfbio_server.username = 'HORST'
-        config.gfbio_server.password = 'PASS'
-        config.gfbio_server.save()
-        config.save()
-        data = json.dumps({
-            'userid': 16250
-        })
-        url = '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'.format(
-            config.gfbio_server.url, data)
-        responses.add(responses.GET,
-                      'http://www.example1.com/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/%7B%22userid%22:%2016250%7D',
-                      status=200,
-                      headers={
-                          'Accept': 'application/json'
-                      },
-                      json={"firstname": "Marc", "middlename": "",
-                            "emailaddress": "maweber@mpi-bremen.de",
-                            "fullname": "Marc Weber",
-                            "screenname": "maweber", "userid": 16250,
-                            "lastname": "Weber"})
-
-        result = get_gfbio_user_email_task.apply_async(
-            kwargs={
-                'submission_id': 1
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertEqual({'first_name': 'Marc', 'last_name': 'Weber',
-                          'user_email': 'maweber@mpi-bremen.de',
-                          'user_full_name': 'Marc Weber'}, result.get())
-
-    @responses.activate
-    def test_get_gfbio_user_email_task_no_gfbio_services(self):
-        sub = Submission.objects.get(pk=1)
-        sub.submitting_user = '16250'
-        sub.save()
-        config = SiteConfiguration.objects.get(pk=1)
-        config.use_gfbio_services = False
-        config.save()
-        data = json.dumps({
-            'userid': 16250
-        })
-        url = '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'.format(
-            config.gfbio_server.url, data)
-        responses.add(responses.GET, url, status=200,
-                      json={})
-        result = get_gfbio_user_email_task.apply_async(
-            kwargs={
-                'submission_id': 1
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertEqual({'first_name': '', 'last_name': '',
-                          'user_email': 'kevin@horstmeier.de',
-                          'user_full_name': ''}, result.get())
-
-    @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
-    def test_get_gfbio_user_email_task_error_response(self, mock_requests):
-        mock_requests.post.return_value.status_code = 200
-        mock_requests.post.return_value.ok = True
-        response_data = '{"exception": "java.lang.RuntimeException", "message": ' \
-                        '"No JSON web service action associated with path ' \
-                        '/userextension/get-user-by-id and method POST for ' \
-                        '//GFBioProject-portlet"}'
-        mock_requests.post.return_value.content = json.dumps(response_data)
-        sub = Submission.objects.get(pk=1)
-        sub.submitting_user = '16250'
-        sub.save()
-        config = SiteConfiguration.objects.get(pk=1)
-        config.use_gfbio_services = False
-        config.save()
-        result = get_gfbio_user_email_task.apply_async(
-            kwargs={
-                'submission_id': 1
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertEqual({'first_name': '', 'last_name': '',
-                          'user_email': 'kevin@horstmeier.de',
-                          'user_full_name': ''}, result.get())
-
-    @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
-    def test_get_gfbio_user_email_task_corrupt_response(self, mock_requests):
-        mock_requests.post.return_value.status_code = 200
-        mock_requests.post.return_value.ok = True
-        response_data = 'xyz'
-        mock_requests.post.return_value.content = json.dumps(response_data)
-        sub = Submission.objects.get(pk=1)
-        sub.submitting_user = '16250'
-        sub.save()
-        config = SiteConfiguration.objects.get(pk=1)
-        config.use_gfbio_services = False
-        config.save()
-        result = get_gfbio_user_email_task.apply_async(
-            kwargs={
-                'submission_id': 1
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertEqual({'first_name': '', 'last_name': '',
-                          'user_email': 'kevin@horstmeier.de',
-                          'user_full_name': ''}, result.get())
-
-    @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
-    def test_get_gfbio_user_email_task_400_response(self, mock_requests):
-        mock_requests.post.return_value.status_code = 400
-        mock_requests.post.return_value.ok = False
-        response_data = ''
-        mock_requests.post.return_value.content = json.dumps(response_data)
-        sub = Submission.objects.get(pk=1)
-        sub.submitting_user = '16250'
-        sub.save()
-        config = SiteConfiguration.objects.get(pk=1)
-        config.use_gfbio_services = False
-        config.save()
-        result = get_gfbio_user_email_task.apply_async(
-            kwargs={
-                'submission_id': 1
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertEqual({'first_name': '', 'last_name': '',
-                          'user_email': 'kevin@horstmeier.de',
-                          'user_full_name': ''}, result.get())
-
-    @responses.activate
-    def test_create_helpdesk_ticket_task_success(self):
-        sc = SiteConfiguration.objects.get(pk=1)
-        submission = Submission.objects.get(pk=1)
-
-        responses.add(responses.POST,
-                      '{0}{1}'.format(sc.helpdesk_server.url,
-                                      HELPDESK_API_SUB_URL
-                                      ),
-                      json={"bla": "blubb"},
-                      status=200)
-
-        self.assertEqual(3, len(submission.additionalreference_set.all()))
-        result = create_helpdesk_ticket_task.apply_async(
-            kwargs={
-                'submission_id': 1,
-            }
-        )
-
-        self.assertTrue(result.successful())
-        submission = Submission.objects.get(pk=1)
-        self.assertEqual(4, len(submission.additionalreference_set.all()))
-
-    @responses.activate
-    def test_create_helpdesk_ticket_task_unicode_text(self):
-        sc = SiteConfiguration.objects.get(pk=1)
-        submission = Submission.objects.get(pk=1)
-
-        self.assertEqual(3, len(submission.additionalreference_set.all()))
-        responses.add(responses.POST,
-                      '{0}{1}'.format(sc.helpdesk_server.url,
-                                      HELPDESK_API_SUB_URL
-                                      ),
-                      json={"bla": "blubb"},
-                      status=200)
-        result = create_helpdesk_ticket_task.apply_async(
-            kwargs={
-                'submission_id': 1,
-            }
-        )
-
-        self.assertTrue(result.successful())
-        submission = Submission.objects.get(pk=1)
-        self.assertEqual(4, len(submission.additionalreference_set.all()))
-
-    @responses.activate
-    def test_comment_helpdesk_ticket_task_success(self):
-        sc = SiteConfiguration.objects.get(pk=1)
-        url = '{0}{1}/{2}/{3}'.format(
-            sc.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
-            'FAKE_KEY',
-            HELPDESK_COMMENT_SUB_URL,
-        )
-        responses.add(responses.POST,
-                      url,
-                      json={"bla": "blubb"},
-                      status=200)
-        submission = Submission.objects.get(pk=1)
-        submission.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='FAKE_KEY',
-            primary=True
-        )
-        submission = Submission.objects.get(pk=1)
-        result = comment_helpdesk_ticket_task.apply_async(
-            kwargs={
-                'submission_id': submission.pk,
-                'comment_body': 'test-comment'
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertFalse(result.get())
-
-    @responses.activate
-    def test_comment_helpdesk_ticket_task(self):
-        submission = Submission.objects.get(pk=1)
-        submission.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='FAKE_KEY',
-            primary=True
-        )
-        sc = SiteConfiguration.objects.get(pk=1)
-        url = '{0}{1}/{2}/{3}'.format(
-            sc.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
-            'FAKE_KEY',
-            HELPDESK_COMMENT_SUB_URL,
-        )
-        responses.add(responses.POST,
-                      url,
-                      json={"bla": "blubb"},
-                      status=200)
-        submission = Submission.objects.get(pk=1)
-        result = comment_helpdesk_ticket_task.apply_async(
-            kwargs={
-                'submission_id': submission.pk,
-                'comment_body': 'test-comment'
-            }
-        )
-        self.assertTrue(result.successful())
-
-    @responses.activate
-    def test_attach_to_helpdesk_ticket_task_no_primarydatafile(self):
-        submission = Submission.objects.get(pk=1)
-        submission.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='FAKE_KEY',
-            primary=True
-        )
-        sc = SiteConfiguration.objects.get(pk=1)
-        url = '{0}{1}/{2}/{3}'.format(
-            sc.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
-            'FAKE_KEY',
-            HELPDESK_COMMENT_SUB_URL,
-        )
-        responses.add(responses.POST,
-                      url,
-                      json=[{
-                          "self": "https://helpdesk.gfbio.org/rest/api/2/attachment/10814",
-                          "id": "10814",
-                          "filename": "test_primary_data_file_TE4k513",
-                          "author": {
-                              "self": "https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent",
-                              "name": "brokeragent",
-                              "key": "brokeragent@gfbio.org",
-                              "emailAddress": "brokeragent@gfbio.org",
-                              "avatarUrls": {
-                                  "48x48": "https://helpdesk.gfbio.org/secure/useravatar?avatarId=10349",
-                                  "24x24": "https://helpdesk.gfbio.org/secure/useravatar?size=small&avatarId=10349",
-                                  "16x16": "https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&avatarId=10349",
-                                  "32x32": "https://helpdesk.gfbio.org/secure/useravatar?size=medium&avatarId=10349"},
-                              "displayName": "Broker Agent", "active": True,
-                              "timeZone": "Europe/Berlin"},
-                          "created": "2017-06-19T09:23:43.000+0000", "size": 8,
-                          "content": "https://helpdesk.gfbio.org/secure/attachment/10814/test_primary_data_file_TE4k513"}],
-                      status=200)
-        submission = Submission.objects.get(pk=1)
-        result = attach_file_to_helpdesk_ticket_task.apply_async(
-            kwargs={
-                'submission_id': submission.pk,
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertFalse(result.get())
-
-    @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
-    def test_attach_to_helpdesk_ticket_task_with_primarydatafile(self,
-                                                                 mock_requests):
-        mock_requests.post.return_value.status_code = 200
-        mock_requests.post.return_value.ok = True
-        mock_requests.post.return_value.content = '{"bla": "blubb"}'
-        submission = Submission.objects.get(pk=1)
-        submission.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='FAKE_KEY',
-            primary=True
-        )
-
-        url = reverse('brokerage:submissions_primary_data', kwargs={
-            'broker_submission_id': submission.broker_submission_id})
-
-        data = TestPrimaryDataFile._create_test_data(
-            '/tmp/test_primary_data_file')
-        token = Token.objects.create(user=submission.site)
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        response = client.post(url, data, format='multipart')
-        mock_requests.post.return_value.content = '[{"self": "https://helpdesk.gfbio.org/rest/api/2/attachment/10814", "id": "10814", "filename": "test_primary_data_file_TE4k513", "author": { "self": "https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent", "name": "brokeragent", "key": "brokeragent@gfbio.org", "emailAddress": "brokeragent@gfbio.org", "avatarUrls": { "48x48": "https://helpdesk.gfbio.org/secure/useravatar?avatarId=10349", "24x24": "https://helpdesk.gfbio.org/secure/useravatar?size=small&avatarId=10349", "16x16": "https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&avatarId=10349", "32x32": "https://helpdesk.gfbio.org/secure/useravatar?size=medium&avatarId=10349"}, "displayName": "Broker Agent", "active": true, "timeZone": "Europe/Berlin"}, "created": "2017-06-19T09:23:43.000+0000", "size": 8, "content": "https://helpdesk.gfbio.org/secure/attachment/10814/test_primary_data_file_TE4k513"}]'
-        submission = Submission.objects.get(pk=1)
-        result = attach_file_to_helpdesk_ticket_task.apply_async(
-            kwargs={
-                'submission_id': submission.pk,
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertTrue(result.get())
-
-    @patch(
-        'gfbio_submissions.brokerage.tasks.apply_timebased_task_retry_policy')
-    def test_attach_primarydatafile_without_ticket(self, mock):
-        submission = Submission.objects.get(pk=1)
-        result = attach_file_to_helpdesk_ticket_task.apply_async(
-            kwargs={
-                'submission_id': submission.pk,
-            }
-        )
-        self.assertTrue(mock.called)
-
-    @responses.activate
-    def test_add_pangaealink_to_helpdesk_ticket_task_success(self):
-        submission = Submission.objects.get(pk=1)
-        submission.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='FAKE_KEY',
-            primary=True
-        )
-        sc = SiteConfiguration.objects.get(pk=1)
-        url = '{0}{1}/{2}/{3}'.format(
-            sc.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
-            'FAKE_KEY',
-            HELPDESK_COMMENT_SUB_URL,
-        )
-        responses.add(responses.POST, url,
-                      json={"bla": "blubb"},
-                      status=200)
-        submission = Submission.objects.get(pk=1)
-        result = add_pangaealink_to_helpdesk_ticket_task.apply_async(
-            kwargs={
-                'submission_id': 1,
-            }
-        )
-        self.assertTrue(result.successful())
-
-    @responses.activate
-    def test_add_pangaealink_to_helpdesk_ticket_task_client_error(self):
-        sc = SiteConfiguration.objects.get(pk=1)
-        submission = Submission.objects.get(pk=1)
-        submission.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='FAKE_KEY',
-            primary=True
-        )
-        url = '{0}{1}/{2}/{3}'.format(
-            sc.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
-            'FAKE_KEY',
-            HELPDESK_COMMENT_SUB_URL,
-        )
-        responses.add(responses.POST, url, status=400, json={"bla": "blubb"})
-        result = add_pangaealink_to_helpdesk_ticket_task.apply_async(
-            kwargs={
-                'submission_id': 1,
-            }
-        )
-        self.assertTrue(result.successful())
-
-    @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
-    def test_add_pangaealink_to_helpdesk_ticket_task_server_error(self,
-                                                                  mock_requests):
-        submission = Submission.objects.get(pk=1)
-        submission.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='FAKE_KEY',
-            primary=True
-        )
-        mock_requests.post.return_value.status_code = 500
-        mock_requests.post.return_value.ok = False
-        mock_requests.post.return_value.content = '{"bla": "blubb"}'
-        submission = Submission.objects.get(pk=1)
-        result = add_pangaealink_to_helpdesk_ticket_task.apply_async(
-            kwargs={
-                'submission_id': 1,
-            }
-        )
-        self.assertFalse(result.successful())
-
-    @responses.activate
-    def test_create_helpdesk_ticket_task_client_error(self):
-        submission = Submission.objects.get(pk=1)
-        sc = SiteConfiguration.objects.get(pk=1)
-        url = '{0}{1}'.format(
-            sc.helpdesk_server.url,
-            HELPDESK_API_SUB_URL
-        )
-        responses.add(responses.POST,
-                      url,
-                      json={},
-                      status=400)
-
-        result = create_helpdesk_ticket_task.apply_async(
-            kwargs={
-                'submission_id': 1,
-            }
-        )
-        self.assertTrue(result.successful())
-
-    @responses.activate
-    def test_create_helpdesk_ticket_task_server_error(self):
-        sc = SiteConfiguration.objects.get(pk=1)
-        url = '{0}{1}'.format(
-            sc.helpdesk_server.url,
-            HELPDESK_API_SUB_URL
-        )
-        responses.add(responses.POST, url, status=500,
-                      json={"bla": "blubb"})
-        result = create_helpdesk_ticket_task.apply_async(
-            kwargs={
-                'submission_id': 1,
-                'summary': 'Test',
-                'description': 'Test'
-
-            }
-        )
-        self.assertFalse(result.successful())
-
-    # ---------------------- Pangaea tasks -------------------------------------
-
-    @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
-    def test_request_pangaea_login_token_task_success(self, mock_requests):
-        access = ResourceCredential()
-        access.username = 'gfbio-broker'
-        access.password = 'h_qB-RxCY)7y'
-        access.url = 'https://ws.pangaea.de/ws/services/PanLogin'
-        access.save()
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(0, len(request_logs))
-
-        mock_requests.post.return_value.status_code = 200
-        mock_requests.post.return_value.ok = True
-        mock_requests.post.return_value.content = textwrap.dedent(
-            """<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Body><ns1:loginResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="urn:java:de.pangaea.login.PanLogin"><loginReturn xsi:type="xsd:string">f3d7aca208aaec8954d45bebc2f59ba1522264db</loginReturn></ns1:loginResponse></soapenv:Body></soapenv:Envelope>""")
-        result = request_pangaea_login_token_task.apply_async(
-            kwargs={
-                'submission_id': 1,
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertEqual('f3d7aca208aaec8954d45bebc2f59ba1522264db',
-                         result.get())
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(1, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual('http://www.example2.com',
-                         request_logs.first().url)
-
-    @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
-    def test_request_pangaea_login_token_task_client_error(self, mock_requests):
-        access = ResourceCredential()
-        access.username = 'gfbio-broker'
-        access.password = 'h_qB-RxCY)7y'
-        access.url = 'https://ws.pangaea.de/ws/services/PanLogin'
-        access.save()
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(0, len(request_logs))
-
-        mock_requests.post.return_value.status_code = 400
-        mock_requests.post.return_value.ok = False
-        mock_requests.post.return_value.content = ''
-        result = request_pangaea_login_token_task.apply_async(
-            kwargs={
-                'submission_id': 1,
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertEqual('', result.get())
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(1, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual('http://www.example2.com',
-                         request_logs.first().url)
-
-    @responses.activate
-    def test_request_pangaea_login_token_task_server_error(self):
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(0, len(request_logs))
-        sc = SiteConfiguration.objects.get(pk=1)
-        responses.add(responses.POST, sc.pangaea_server.url, status=500,
-                      body='')
-        result = request_pangaea_login_token_task.apply_async(
-            kwargs={
-                'submission_id': 1,
-            }
-        )
-        self.assertFalse(result.successful())
-
-        request_logs = RequestLog.objects.all()
-        # 3 logentries for 3 retries
-        self.assertEqual(3, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual('http://www.example2.com',
-                         request_logs.first().url)
-
-    @responses.activate
-    def test_create_pangaea_jira_ticket_task_success(self):
-        submission = Submission.objects.get(pk=1)
-
-        self.assertEqual(3, len(submission.additionalreference_set.all()))
-        login_token = 'f3d7aca208aaec8954d45bebc2f59ba1522264db'
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(0, len(request_logs))
-        responses.add(responses.POST,
-                      PANGAEA_ISSUE_BASE_URL,
-                      json={"id": "31444", "key": "PDI-11735",
-                            "self": "http://issues.pangaea.de/rest/api/2/issue/31444"},
-                      status=201)
-        result = create_pangaea_jira_ticket_task.apply_async(
-            kwargs={
-                'submission_id': submission.pk,
-                'login_token': login_token
-            }
-        )
-        res = result.get()
-        self.assertTrue(result.successful())
-        self.assertDictEqual(
-            {'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
-             'ticket_key': 'PDI-11735'}, res)
-        additional_references = submission.additionalreference_set.all()
-        self.assertEqual(4, len(additional_references))
-        ref = additional_references.last()
-        self.assertEqual('PDI-11735', ref.reference_key)
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(1, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual('https://issues.pangaea.de/rest/api/2/issue/',
-                         request_logs.first().url)
-
-    @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
-    def test_create_pangaea_jira_ticket_task_client_error(self, mock_requests):
-        submission = Submission.objects.get(pk=1)
-
-        self.assertEqual(3, len(submission.additionalreference_set.all()))
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(0, len(request_logs))
-
-        mock_requests.post.return_value.status_code = 400
-        mock_requests.post.return_value.ok = False
-        mock_requests.post.return_value.content = ''
-        result = create_pangaea_jira_ticket_task.apply_async(
-            kwargs={
-                'submission_id': submission.pk,
-                'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db'
-
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertIsNone(result.get())
-        additional_references = submission.additionalreference_set.all()
-        self.assertEqual(3, len(additional_references))
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(1, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual('https://issues.pangaea.de/rest/api/2/issue/',
-                         request_logs.first().url)
-
-    @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
-    def test_create_pangaea_jira_ticket_task_server_error(self, mock_requests):
-        submission = Submission.objects.get(pk=1)
-
-        self.assertEqual(3, len(submission.additionalreference_set.all()))
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(0, len(request_logs))
-
-        mock_requests.post.return_value.status_code = 500
-        mock_requests.post.return_value.ok = False
-        mock_requests.post.return_value.content = ''
-        result = create_pangaea_jira_ticket_task.apply_async(
-            kwargs={
-                'submission_id': submission.pk,
-                'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db'
-
-            }
-        )
-        self.assertFalse(result.successful())
-        additional_references = submission.additionalreference_set.all()
-        self.assertEqual(3, len(additional_references))
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(3, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual('https://issues.pangaea.de/rest/api/2/issue/',
-                         request_logs.first().url)
-
-    @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
-    def test_attach_file_to_pangaea_ticket_task_success(self, mock_requests):
-        sub = FullWorkflowTest._prepare()
-        sub.submitting_user = 'gfbio'
-        sub.save()
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(0, len(request_logs))
-
-        mock_requests.post.return_value.status_code = 200
-        mock_requests.post.return_value.ok = True
-        mock_requests.post.return_value.content = '[{"self":"http://issues.pangaea.de/rest/api/2/attachment/49860","id":"49860","filename":"report.csv","author":{"self":"http://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"http://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"http://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"http://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"http://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"created":"2016-02-26T14:47:46.000+0000","size":38,"content":"http://issues.pangaea.de/secure/attachment/49860/report.csv"}]'
-        result = attach_file_to_pangaea_ticket_task.apply_async(
-            kwargs={
-                'submission_id': sub.pk,
-                'kwargs': {
-                    'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
-                    'ticket_key': 'PDI-11735'
-                }
-            }
-        )
-        res = result.get()
-        self.assertTrue(result.successful())
-        self.assertDictEqual(
-            {'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
-             'ticket_key': 'PDI-11735'}, res)
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(1, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual(
-            'https://issues.pangaea.de/rest/api/2/issue/PDI-11735/attachments',
-            request_logs.first().url)
-
-    @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
-    def test_attach_file_to_pangaea_ticket_task_client_error(self,
-                                                             mock_requests):
-        sub = FullWorkflowTest._prepare()
-        sub.submitting_user = 'gfbio'
-        sub.save()
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(0, len(request_logs))
-
-        mock_requests.post.return_value.status_code = 400
-        mock_requests.post.return_value.ok = False
-        mock_requests.post.return_value.content = ''
-        result = attach_file_to_pangaea_ticket_task.apply_async(
-            kwargs={
-                'submission_id': sub.pk,
-                'kwargs': {
-                    'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
-                    'ticket_key': 'PDI-11735'
-                }
-            }
-        )
-        res = result.get()
-        self.assertTrue(result.successful())
-        self.assertDictEqual(
-            {'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
-             'ticket_key': 'PDI-11735'}, res)
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(1, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual(
-            'https://issues.pangaea.de/rest/api/2/issue/PDI-11735/attachments',
-            request_logs.first().url)
-
-    @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
-    def test_attach_file_to_pangaea_ticket_task_server_error(self,
-                                                             mock_requests):
-        sub = FullWorkflowTest._prepare()
-        sub.submitting_user = 'gfbio'
-        sub.save()
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(0, len(request_logs))
-
-        mock_requests.post.return_value.status_code = 500
-        mock_requests.post.return_value.ok = False
-        mock_requests.post.return_value.content = ''
-        result = attach_file_to_pangaea_ticket_task.apply_async(
-            kwargs={
-                'submission_id': sub.pk,
-                'kwargs': {
-                    'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
-                    'ticket_key': 'PDI-11735'
-                }
-            }
-        )
-        self.assertFalse(result.successful())
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(3, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual(
-            'https://issues.pangaea.de/rest/api/2/issue/PDI-11735/attachments',
-            request_logs.first().url)
-
-    @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
-    def test_comment_on_pangaea_ticket_task_success(self, mock_requests):
-        sub = FullWorkflowTest._prepare()
-        sub.submitting_user = 'gfbio'
-        sub.save()
-        sub.brokerobject_set.filter(
-            type='study').first().persistentidentifier_set.create(
-            archive='ENA',
-            pid_type='PRJ',
-            pid='PRJEB20411',
-            outgoing_request_id=uuid.uuid4()
-        )
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(0, len(request_logs))
-
-        mock_requests.post.return_value.status_code = 200
-        mock_requests.post.return_value.ok = True
-        mock_requests.post.return_value.content = '{"self":"http://issues.pangaea.de/rest/api/2/issue/31444/comment/72996","id":"72996","author":{"self":"http://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"http://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"http://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"http://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"http://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"body":"This should be some descripitive text regarding attached files, containing ENA-Accession numbers","updateAuthor":{"self":"http://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"http://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"http://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"http://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"http://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"created":"2016-02-26T14:47:46.982+0000","updated":"2016-02-26T14:47:46.982+0000"}'
-        result = comment_on_pangaea_ticket_task.apply_async(
-            kwargs={
-                'submission_id': sub.pk,
-                'kwargs': {
-                    'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
-                    'ticket_key': 'PDI-11735'
-                },
-                'comment_body': 'ACC 12345'
-            }
-        )
-        res = result.get()
-        self.assertTrue(result.successful())
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(1, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual(
-            'https://issues.pangaea.de/rest/api/2/issue/PDI-11735/comment',
-            request_logs.first().url)
-
-    @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
-    def test_comment_on_pangaea_ticket_task_client_error(self, mock_requests):
-        sub = FullWorkflowTest._prepare()
-        sub.submitting_user = 'gfbio'
-        sub.save()
-        sub.brokerobject_set.filter(
-            type='study').first().persistentidentifier_set.create(
-            archive='ENA',
-            pid_type='PRJ',
-            pid='PRJEB20411',
-            outgoing_request_id=uuid.uuid4()
-        )
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(0, len(request_logs))
-
-        mock_requests.post.return_value.status_code = 400
-        mock_requests.post.return_value.ok = False
-        mock_requests.post.return_value.content = ''
-        result = comment_on_pangaea_ticket_task.apply_async(
-            kwargs={
-                'submission_id': sub.pk,
-                'kwargs': {
-                    'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
-                    'ticket_key': 'PDI-11735'
-                },
-                'comment_body': 'ACC 12345'
-            }
-        )
-        # expects resuls from previous chain element
-        self.assertTrue(result.successful())
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(1, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual(
-            'https://issues.pangaea.de/rest/api/2/issue/PDI-11735/comment',
-            request_logs.first().url)
-
-    @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
-    def test_comment_on_pangaea_ticket_task_server_error(self, mock_requests):
-        sub = FullWorkflowTest._prepare()
-        sub.submitting_user = 'gfbio'
-        sub.save()
-        sub.brokerobject_set.filter(
-            type='study').first().persistentidentifier_set.create(
-            archive='ENA',
-            pid_type='PRJ',
-            pid='PRJEB20411',
-            outgoing_request_id=uuid.uuid4()
-        )
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(0, len(request_logs))
-
-        mock_requests.post.return_value.status_code = 500
-        mock_requests.post.return_value.ok = False
-        mock_requests.post.return_value.content = ''
-        result = comment_on_pangaea_ticket_task.apply_async(
-            kwargs={
-                'submission_id': sub.pk,
-                'kwargs': {
-                    'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
-                    'ticket_key': 'PDI-11735'
-                },
-                'comment_body': 'ACC 12345'
-            }
-        )
-        self.assertFalse(result.successful())
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(3, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual(
-            'https://issues.pangaea.de/rest/api/2/issue/PDI-11735/comment',
-            request_logs.first().url)
-
-    @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
-    def test_check_for_pangaea_doi_task_success(self, mock_requests):
-        access = ResourceCredential()
-        access.username = 'gfbio-broker'
-        access.password = 'xxx'
-        access.url = 'https://ws.pangaea.de/ws/services/PanLogin'
-        access.save()
-
-        persistent_identifiers = PersistentIdentifier.objects.all()
-        self.assertEqual(0, len(persistent_identifiers))
-
-        mock_requests.post.return_value.status_code = 200
-        mock_requests.post.return_value.ok = True
-        mock_requests.post.return_value.content = textwrap.dedent(
-            """<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Body><ns1:loginResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="urn:java:de.pangaea.login.PanLogin"><loginReturn xsi:type="xsd:string">f3d7aca208aaec8954d45bebc2f59ba1522264db</loginReturn></ns1:loginResponse></soapenv:Body></soapenv:Envelope>""")
-
-        mock_requests.get.return_value.status_code = 200
-        mock_requests.get.return_value.ok = True
-        mock_requests.get.return_value.content = '{"expand":"renderedFields,names,schema,transitions,operations,editmeta,changelog","id":"33002","self":"https://issues.pangaea.de/rest/api/2/issue/33002","key":"PDI-12428","fields":{"issuetype":{"self":"https://issues.pangaea.de/rest/api/2/issuetype/6","id":"6","description":"Submission of data to PANGAEA","iconUrl":"https://issues.pangaea.de/images/icons/issuetypes/newfeature.png","name":"Data Submission","subtask":false},"timespent":null,"timeoriginalestimate":null,"description":null,"project":{"self":"https://issues.pangaea.de/rest/api/2/project/10010","id":"10010","key":"PDI","name":"PANGAEA Data Archiving & Publication","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/projectavatar?avatarId=10011","24x24":"https://issues.pangaea.de/secure/projectavatar?size=small&avatarId=10011","16x16":"https://issues.pangaea.de/secure/projectavatar?size=xsmall&avatarId=10011","32x32":"https://issues.pangaea.de/secure/projectavatar?size=medium&avatarId=10011"}},"aggregatetimespent":null,"resolution":null,"timetracking":{},"attachment":[{"self":"https://issues.pangaea.de/rest/api/2/attachment/53276","id":"53276","filename":"contextual_data.csv","author":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"created":"2016-06-02T10:38:06.000+0000","size":1502,"content":"https://issues.pangaea.de/secure/attachment/53276/contextual_data.csv"}],"aggregatetimeestimate":null,"resolutiondate":null,"workratio":-1,"summary":"Automated request by GFBio BrokerAgent","lastViewed":"2016-06-02T12:06:25.250+0000","watches":{"self":"https://issues.pangaea.de/rest/api/2/issue/PDI-12428/watchers","watchCount":0,"isWatching":false},"creator":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"subtasks":[],"created":"2016-06-02T10:37:50.000+0000","reporter":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"customfield_10120":null,"customfield_10220":null,"aggregateprogress":{"progress":0,"total":0},"priority":{"self":"https://issues.pangaea.de/rest/api/2/priority/3","iconUrl":"https://issues.pangaea.de/images/icons/priorities/major.png","name":"Major","id":"3"},"customfield_10122":null,"customfield_10320":null,"customfield_10002":"gfbio-broker","customfield_10420":null,"customfield_10003":{"self":"https://issues.pangaea.de/rest/api/2/customFieldOption/10000","value":"CC-BY: Creative Commons Attribution 3.0 Unported","id":"10000"},"customfield_10421":null,"customfield_10520":"doi:10.1594/PANGAEA.786576","labels":[],"customfield_10004":null,"timeestimate":null,"aggregatetimeoriginalestimate":null,"progress":{"progress":0,"total":0},"comment":{"startAt":0,"maxResults":1,"total":1,"comments":[{"self":"https://issues.pangaea.de/rest/api/2/issue/33002/comment/77173","id":"77173","author":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"body":"ENA Accession No. of study ERP015860. broker_submission_id: 9cb23074-689e-4058-a9e9-ccba1fe2ab1d. ","updateAuthor":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"created":"2016-06-02T10:38:22.000+0000","updated":"2016-06-02T10:38:22.000+0000"}]},"issuelinks":[],"worklog":{"startAt":0,"maxResults":20,"total":0,"worklogs":[]},"assignee":{"self":"https://issues.pangaea.de/rest/api/2/user?username=jfelden","name":"jfelden","key":"jfelden","emailAddress":"jfelden@marum.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10067","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10067","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10067","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10067"},"displayName":"Janine Felden","active":true,"timeZone":"Europe/Berlin"},"updated":"2016-06-02T12:03:16.000+0000","status":{"self":"https://issues.pangaea.de/rest/api/2/status/1","description":"The issue is open and ready for the assignee to start work on it.","iconUrl":"https://issues.pangaea.de/images/icons/statuses/open.png","name":"Open","id":"1","statusCategory":{"self":"https://issues.pangaea.de/rest/api/2/statuscategory/2","id":2,"key":"new","colorName":"blue-gray","name":"To Do"}}}}'
-
-        result = check_for_pangaea_doi_task.apply_async(
-            kwargs={
-                'resource_credential_id': access.pk
-            }
-        )
-        self.assertTrue(result.successful())
-
-        persistent_identifiers = PersistentIdentifier.objects.all()
-        self.assertEqual(1, len(persistent_identifiers))
-
-        pid = persistent_identifiers.first()
-        self.assertEqual('PAN', pid.archive)
-        self.assertEqual('DOI', pid.pid_type)
-        self.assertEqual('doi:10.1594/PANGAEA.786576', pid.pid)
-
-    @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
-    def test_check_for_pangaea_doi_task_success_bytestring(self, mock_requests):
-        access = ResourceCredential()
-        access.username = 'gfbio-broker'
-        access.password = 'xxx'
-        access.url = 'https://ws.pangaea.de/ws/services/PanLogin'
-        access.save()
-
-        persistent_identifiers = PersistentIdentifier.objects.all()
-        self.assertEqual(0, len(persistent_identifiers))
-
-        mock_requests.post.return_value.status_code = 200
-        mock_requests.post.return_value.ok = True
-        mock_requests.post.return_value.content = textwrap.dedent(
-            """<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Body><ns1:loginResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="urn:java:de.pangaea.login.PanLogin"><loginReturn xsi:type="xsd:string">f3d7aca208aaec8954d45bebc2f59ba1522264db</loginReturn></ns1:loginResponse></soapenv:Body></soapenv:Envelope>""")
-
-        mock_requests.get.return_value.status_code = 200
-        mock_requests.get.return_value.ok = True
-        mock_requests.get.return_value.content = b'{"expand":"renderedFields,names,schema,transitions,operations,editmeta,changelog","id":"33002","self":"https://issues.pangaea.de/rest/api/2/issue/33002","key":"PDI-12428","fields":{"issuetype":{"self":"https://issues.pangaea.de/rest/api/2/issuetype/6","id":"6","description":"Submission of data to PANGAEA","iconUrl":"https://issues.pangaea.de/images/icons/issuetypes/newfeature.png","name":"Data Submission","subtask":false},"timespent":null,"timeoriginalestimate":null,"description":null,"project":{"self":"https://issues.pangaea.de/rest/api/2/project/10010","id":"10010","key":"PDI","name":"PANGAEA Data Archiving & Publication","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/projectavatar?avatarId=10011","24x24":"https://issues.pangaea.de/secure/projectavatar?size=small&avatarId=10011","16x16":"https://issues.pangaea.de/secure/projectavatar?size=xsmall&avatarId=10011","32x32":"https://issues.pangaea.de/secure/projectavatar?size=medium&avatarId=10011"}},"aggregatetimespent":null,"resolution":null,"timetracking":{},"attachment":[{"self":"https://issues.pangaea.de/rest/api/2/attachment/53276","id":"53276","filename":"contextual_data.csv","author":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"created":"2016-06-02T10:38:06.000+0000","size":1502,"content":"https://issues.pangaea.de/secure/attachment/53276/contextual_data.csv"}],"aggregatetimeestimate":null,"resolutiondate":null,"workratio":-1,"summary":"Automated request by GFBio BrokerAgent","lastViewed":"2016-06-02T12:06:25.250+0000","watches":{"self":"https://issues.pangaea.de/rest/api/2/issue/PDI-12428/watchers","watchCount":0,"isWatching":false},"creator":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"subtasks":[],"created":"2016-06-02T10:37:50.000+0000","reporter":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"customfield_10120":null,"customfield_10220":null,"aggregateprogress":{"progress":0,"total":0},"priority":{"self":"https://issues.pangaea.de/rest/api/2/priority/3","iconUrl":"https://issues.pangaea.de/images/icons/priorities/major.png","name":"Major","id":"3"},"customfield_10122":null,"customfield_10320":null,"customfield_10002":"gfbio-broker","customfield_10420":null,"customfield_10003":{"self":"https://issues.pangaea.de/rest/api/2/customFieldOption/10000","value":"CC-BY: Creative Commons Attribution 3.0 Unported","id":"10000"},"customfield_10421":null,"customfield_10520":"doi:10.1594/PANGAEA.786576","labels":[],"customfield_10004":null,"timeestimate":null,"aggregatetimeoriginalestimate":null,"progress":{"progress":0,"total":0},"comment":{"startAt":0,"maxResults":1,"total":1,"comments":[{"self":"https://issues.pangaea.de/rest/api/2/issue/33002/comment/77173","id":"77173","author":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"body":"ENA Accession No. of study ERP015860. broker_submission_id: 9cb23074-689e-4058-a9e9-ccba1fe2ab1d. ","updateAuthor":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"created":"2016-06-02T10:38:22.000+0000","updated":"2016-06-02T10:38:22.000+0000"}]},"issuelinks":[],"worklog":{"startAt":0,"maxResults":20,"total":0,"worklogs":[]},"assignee":{"self":"https://issues.pangaea.de/rest/api/2/user?username=jfelden","name":"jfelden","key":"jfelden","emailAddress":"jfelden@marum.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10067","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10067","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10067","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10067"},"displayName":"Janine Felden","active":true,"timeZone":"Europe/Berlin"},"updated":"2016-06-02T12:03:16.000+0000","status":{"self":"https://issues.pangaea.de/rest/api/2/status/1","description":"The issue is open and ready for the assignee to start work on it.","iconUrl":"https://issues.pangaea.de/images/icons/statuses/open.png","name":"Open","id":"1","statusCategory":{"self":"https://issues.pangaea.de/rest/api/2/statuscategory/2","id":2,"key":"new","colorName":"blue-gray","name":"To Do"}}}}'
-
-        result = check_for_pangaea_doi_task.apply_async(
-            kwargs={
-                'resource_credential_id': access.pk
-            }
-        )
-        self.assertTrue(result.successful())
-
-        persistent_identifiers = PersistentIdentifier.objects.all()
-        self.assertEqual(1, len(persistent_identifiers))
-
-        pid = persistent_identifiers.first()
-        self.assertEqual('PAN', pid.archive)
-        self.assertEqual('DOI', pid.pid_type)
-        self.assertEqual('doi:10.1594/PANGAEA.786576', pid.pid)
-
-    # ---------------- CHAIN TESTS ---------------------------------------------
-
-    @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
-    def test_pangaea_chain(self, mock_requests):
-        access = ResourceCredential()
-        access.username = 'gfbio-broker'
-        access.password = 'h_qB-RxCY)7y'
-        access.url = 'https://ws.pangaea.de/ws/services/PanLogin'
-        access.save()
-        # with patch('config.celeryconfig.CELERY_ALWAYS_EAGER', True,
-        #           create=True):
-        # Test chain first transition
-        # Result: token handed over correctly
-        # mock_requests.post.return_value.status_code = 200
-        # mock_requests.post.return_value.ok = True
-        # mock_requests.post.return_value.content = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Body><ns1:loginResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="urn:java:de.pangaea.login.PanLogin"><loginReturn xsi:type="xsd:string">f3d7aca208aaec8954d45bebc2f59ba1522264db</loginReturn></ns1:loginResponse></soapenv:Body></soapenv:Envelope>""")
-        # result = chain(
-        #         request_pangaea_login_token_task.s(
-        #                 submission_id=1,
-        #                 resource_credential_id=access.pk),
-        #         create_pangaea_jira_ticket_task.s(
-        #             submission_id=1,
-        #         )
-        #
-        # )()
-        #
-        # Result: attach file  works with kwargs ...
-        mock_requests.post.return_value.status_code = 201
-        mock_requests.post.return_value.ok = True
-        mock_requests.post.return_value.content = '{"id":"31444","key":"PDI-11735","self":"http://issues.pangaea.de/rest/api/2/issue/31444"}'
-
-        submission = Submission.objects.get(pk=1)
-
-        result = chain(
-            create_pangaea_jira_ticket_task.s(
-                submission_id=1,
-                login_token='f3d7aca208aaec8954d45bebc2f59ba1522264db'
-            ),
-            attach_file_to_pangaea_ticket_task.s(
-                submission_id=1,
-            )
-
-        )()
-
-    @responses.activate
-    def test_initiate_submission_chain_success(self):
-        len_auditable_text_datas = len(AuditableTextData.objects.all())
-        sc = SiteConfiguration.objects.get(pk=1)
-        data = json.dumps({
-            'userid': 23
-        })
-        url = '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'.format(
-            sc.gfbio_server.url, data)
-
-        comment_url = '{0}{1}/{2}/{3}'.format(
-            sc.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
-            'no_key_available',
-            HELPDESK_COMMENT_SUB_URL,
-        )
-
-        responses.add(responses.POST, url, status=200,
-                      json={"firstname": "Marc", "middlename": "",
-                            "emailaddress": "maweber@mpi-bremen.de",
-                            "fullname": "Marc Weber",
-                            "screenname": "maweber", "userid": 16250,
-                            "lastname": "Weber"})
-        responses.add(responses.POST,
-                      '{0}{1}'.format(sc.helpdesk_server.url,
-                                      HELPDESK_API_SUB_URL
-                                      ),
-                      json={"bla": "blubb"},
-                      status=200)
-        responses.add(responses.POST,
-                      comment_url,
-                      json={"bla": "blubb"},
-                      status=200)
-        sub = FullWorkflowTest._prepare()
-        sub.release = False
-        sub.save()
-
-        trigger_submission_transfer(submission_id=sub.id)
-
-        self.assertEqual(len(AuditableTextData.objects.all()),
-                         len_auditable_text_datas)
-
-        sub.release = True
-        sub.save()
-
-        trigger_submission_transfer(submission_id=sub.id)
-        self.assertGreater(len(AuditableTextData.objects.all()),
-                           len_auditable_text_datas)
+# class TestCeleryTasks(TestCase):
+#     # 'persistent_identifier',
+#     fixtures = ('user', 'submission', 'broker_object',
+#                 'resource_credential', 'additional_reference',
+#                 'site_configuration')
+#
+#     # def test_close_submission_task(self):
+#     #     sub = FullWorkflowTest._prepare()
+#     #     self.assertEqual(Submission.OPEN, sub.status)
+#     #     with patch('config.celeryconfig.CELERY_ALWAYS_EAGER', True,
+#     #                create=True):
+#     #         result = close_submission_task.apply_async(
+#     #             kwargs={
+#     #                 'submission_id': sub.pk
+#     #             }
+#     #         )
+#     #         self.assertTrue(result.successful())
+#     #         sub = Submission.objects.get(pk=sub.pk)
+#     #         self.assertEqual(Submission.CLOSED, sub.status)
+#
+#     def test_prepare_ena_submission_data_task(self):
+#         sub = FullWorkflowTest._prepare()
+#         atds = AuditableTextData.objects.all()
+#         self.assertEqual(0, len(atds))
+#         result = prepare_ena_submission_data_task.apply_async(
+#             kwargs={
+#                 'submission_id': sub.pk
+#             }
+#         )
+#         ret_val = result.get()
+#         self.assertTrue(result.successful())
+#         ret_val = result.get()
+#         self.assertTrue(isinstance(ret_val, dict))
+#         self.assertIn('SAMPLE', ret_val.keys())
+#         atds = AuditableTextData.objects.all()
+#         self.assertEqual(4, len(atds))
+#
+#     @patch('gfbio_submissions.brokerage.utils.ena.requests')
+#     def test_transfer_to_ena_task_successful(self, mock_requests):
+#         sub = FullWorkflowTest._prepare()
+#         mock_requests.post.return_value.status_code = 200
+#         mock_requests.post.return_value.ok = True
+#         mock_requests.post.return_value.content = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?> <?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
+#         <RECEIPT receiptDate="2015-12-01T11:54:55.723Z" submissionFile="submission.xml"
+#                  success="true">
+#             <EXPERIMENT accession="ERX1228437" alias="4:f844738b-3304-4db7-858d-b7e47b293bb2"
+#                         status="PRIVATE"/>
+#             <RUN accession="ERR1149402" alias="5:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"/>
+#             <SAMPLE accession="ERS989691" alias="2:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
+#                 <EXT_ID accession="SAMEA3682542" type="biosample"/>
+#                 <EXT_ID accession="SAMEA3682543-666" type="sample-this"/>
+#             </SAMPLE>
+#             <SAMPLE accession="ERS989692" alias="3:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
+#                 <EXT_ID accession="SAMEA3682543" type="biosample"/>
+#             </SAMPLE>
+#             <STUDY accession="ERP013438" alias="1:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"
+#                    holdUntilDate="2016-03-05Z"/>
+#             <SUBMISSION accession="ERA540869" alias="NGS_March_original2"/>
+#             <MESSAGES>
+#                 <INFO>ADD action for the following XML: study.xml sample.xml
+#                     experiment.xml run.xml
+#                 </INFO>
+#             </MESSAGES>
+#             <ACTIONS>ADD</ACTIONS>
+#             <ACTIONS>ADD</ACTIONS>
+#             <ACTIONS>ADD</ACTIONS>
+#             <ACTIONS>ADD</ACTIONS>
+#             <ACTIONS>HOLD</ACTIONS>
+#         </RECEIPT>""")
+#
+#         result = chain(
+#             prepare_ena_submission_data_task.s(
+#                 submission_id=sub.pk
+#             ),
+#             transfer_data_to_ena_task.s(
+#                 submission_id=sub.pk
+#             )
+#         )()
+#
+#         text_data = AuditableTextData.objects.filter(submission=sub)
+#         self.assertEqual(4, len(text_data))
+#         self.assertTrue(result.successful())
+#         ret_val = result.get()
+#         self.assertTrue(isinstance(ret_val, tuple))
+#
+#     @patch('gfbio_submissions.brokerage.utils.ena.requests')
+#     def test_transfer_to_ena_task_client_error(self, mock_requests):
+#         sub = FullWorkflowTest._prepare()
+#         mock_requests.post.return_value.status_code = 400
+#         mock_requests.post.return_value.ok = False
+#         mock_requests.post.return_value.content = \
+#             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<?xml-stylesheet " \
+#             "type=\"text/xsl\" href=\"receipt.xsl\"?>\n<RECEIPT " \
+#             "receiptDate=\"2015-08-04T11:50:22.438+01:00\" " \
+#             "submissionFile=\"submission.xml\" success=\"false\"><STUDY " \
+#             "alias=\"a\" status=\"PUBLIC\"/><SUBMISSION alias=\"ADD_SUBMISSION_ALIAS\"" \
+#             "/><MESSAGES><ERROR>Please provide an abstract to describe your" \
+#             " study(null) in details</ERROR><INFO> VALIDATE action for the " \
+#             "following XML: study.xml sample.xml         </INFO></MESSAGES>" \
+#             "<ACTIONS>VALIDATE</ACTIONS><ACTIONS>VALIDATE</ACTIONS><ACTIONS>HOLD" \
+#             "</ACTIONS></RECEIPT>"
+#         result = chain(
+#             prepare_ena_submission_data_task.s(
+#                 submission_id=sub.pk
+#             ),
+#             transfer_data_to_ena_task.s(
+#                 submission_id=sub.pk
+#             )
+#         )()
+#         ret_val = result.get()
+#         self.assertTrue(result.successful())
+#         ret_val = result.get()
+#         self.assertTrue(isinstance(ret_val, tuple))
+#
+#     @patch('gfbio_submissions.brokerage.utils.ena.requests')
+#     def test_transfer_to_ena_task_server_error(self, mock_requests):
+#         sub = FullWorkflowTest._prepare()
+#         mock_requests.post.return_value.status_code = 500
+#         mock_requests.post.return_value.ok = False
+#         mock_requests.post.return_value.content = '{}'
+#         result = chain(
+#             prepare_ena_submission_data_task.s(
+#                 submission_id=sub.pk
+#             ),
+#             transfer_data_to_ena_task.s(
+#                 submission_id=sub.pk
+#             )
+#         )()
+#
+#         ret_val = result.get()
+#         self.assertFalse(result.successful())
+#         self.assertIsNone(ret_val)
+#
+#     @patch('gfbio_submissions.brokerage.utils.ena.requests')
+#     def test_process_ena_response_task_successful(self, mock_requests):
+#         sub = FullWorkflowTest._prepare()
+#         mock_requests.post.return_value.status_code = 200
+#         mock_requests.post.return_value.ok = True
+#         mock_requests.post.return_value.content = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?> <?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
+#         <RECEIPT receiptDate="2015-12-01T11:54:55.723Z" submissionFile="submission.xml"
+#                  success="true">
+#                         status="PRIVATE"/>
+#             <RUN accession="ERR1149402" alias="5:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"/>
+#             <SAMPLE accession="ERS989691" alias="2:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
+#                 <EXT_ID accession="SAMEA3682542" type="biosample"/>
+#                 <EXT_ID accession="SAMEA3682543-666" type="sample-this"/>
+#             </SAMPLE>
+#             <SAMPLE accession="ERS989692" alias="3:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE">
+#                 <EXT_ID accession="SAMEA3682543" type="biosample"/>
+#             </SAMPLE>
+#             <STUDY accession="ERP013438" alias="1:f844738b-3304-4db7-858d-b7e47b293bb2" status="PRIVATE"
+#                    holdUntilDate="2016-03-05Z">
+#                 <EXT_ID accession="PRJEB20411" type="Project"/>
+#             </STUDY>
+#             <SUBMISSION accession="ERA540869" alias="NGS_March_original2"/>
+#             <MESSAGES>
+#                 <INFO>ADD action for the following XML: study.xml sample.xml
+#                     experiment.xml run.xml
+#                 </INFO>
+#             </MESSAGES>
+#             <ACTIONS>ADD</ACTIONS>
+#             <ACTIONS>ADD</ACTIONS>
+#             <ACTIONS>ADD</ACTIONS>
+#             <ACTIONS>ADD</ACTIONS>
+#             <ACTIONS>HOLD</ACTIONS>
+#         </RECEIPT>""")
+#         result = chain(
+#             prepare_ena_submission_data_task.s(
+#                 submission_id=sub.pk
+#             ),
+#             transfer_data_to_ena_task.s(
+#                 submission_id=sub.pk
+#             ),
+#             process_ena_response_task.s(
+#                 submission_id=sub.pk
+#             )
+#         )()
+#
+#         ret_val = result.get()
+#         self.assertTrue(result.successful())
+#         self.assertTrue(ret_val)
+#
+#     def test_create_broker_objects_from_submission_data_task(self):
+#         broker_objects = BrokerObject.objects.all()
+#         self.assertEqual(6, len(broker_objects))
+#         sub = Submission.objects.get(pk=1)
+#         sub.release = True
+#         sub.status = Submission.SUBMITTED
+#         sub.save()
+#
+#         # without task to debug
+#         # BrokerObject.objects.add_submission_data(sub,
+#         #                                          submission_data)
+#
+#         result = create_broker_objects_from_submission_data_task.apply_async(
+#             kwargs={
+#                 'submission_id': 1
+#             },
+#         )
+#         self.assertTrue(result.successful())
+#         broker_objects = BrokerObject.objects.all()
+#         self.assertEqual(11, len(broker_objects))
+#
+#     def test_check_on_hold_status_task(self):
+#         result = check_on_hold_status_task.apply_async(
+#             kwargs={
+#                 'submission_id': 1
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#
+#     # @patch('gfbio_submissions.brokerage.models.logger')
+#     # def test_log(self, mock_logger):
+#     #     submission = Submission.objects.all().first()
+#     #     submission.log()
+#     #     self.assertTrue(mock_logger.info.called)
+#
+#     @patch('gfbio_submissions.brokerage.tasks.logger')
+#     def test_check_on_hold_proceed_without_email(self, mock_logger):
+#         sub = Submission.objects.get(pk=1)
+#         conf = SiteConfiguration.objects.get(site=sub.site)
+#         conf.release_submissions = True
+#         conf.save()
+#         result = check_on_hold_status_task.apply_async(
+#             kwargs={
+#                 'submission_id': 1
+#             }
+#         )
+#         self.assertTrue(mock_logger.info.called)
+#         reports = TaskProgressReport.objects.all()
+#         task_names = [r.task_name for r in reports]
+#         self.assertTrue('tasks.check_on_hold_status_task' in task_names)
+#
+#     # TODO: this one below
+#     # TODO: check all test, even if passing, for json exceptions that need repsonse mock
+#
+#     @responses.activate
+#     def test_get_gfbio_user_email_task_success(self):
+#         sub = Submission.objects.get(pk=1)
+#         sub.submitting_user = '16250'
+#         sub.save()
+#
+#         config = SiteConfiguration.objects.get(pk=1)
+#         config.use_gfbio_services = True
+#         config.gfbio_server.username = 'HORST'
+#         config.gfbio_server.password = 'PASS'
+#         config.gfbio_server.save()
+#         config.save()
+#         data = json.dumps({
+#             'userid': 16250
+#         })
+#         url = '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'.format(
+#             config.gfbio_server.url, data)
+#         responses.add(responses.GET,
+#                       'http://www.example1.com/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/%7B%22userid%22:%2016250%7D',
+#                       status=200,
+#                       headers={
+#                           'Accept': 'application/json'
+#                       },
+#                       json={"firstname": "Marc", "middlename": "",
+#                             "emailaddress": "maweber@mpi-bremen.de",
+#                             "fullname": "Marc Weber",
+#                             "screenname": "maweber", "userid": 16250,
+#                             "lastname": "Weber"})
+#
+#         result = get_gfbio_user_email_task.apply_async(
+#             kwargs={
+#                 'submission_id': 1
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#         self.assertEqual({'first_name': 'Marc', 'last_name': 'Weber',
+#                           'user_email': 'maweber@mpi-bremen.de',
+#                           'user_full_name': 'Marc Weber'}, result.get())
+#
+#     @responses.activate
+#     def test_get_gfbio_user_email_task_no_gfbio_services(self):
+#         sub = Submission.objects.get(pk=1)
+#         sub.submitting_user = '16250'
+#         sub.save()
+#         config = SiteConfiguration.objects.get(pk=1)
+#         config.use_gfbio_services = False
+#         config.save()
+#         data = json.dumps({
+#             'userid': 16250
+#         })
+#         url = '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'.format(
+#             config.gfbio_server.url, data)
+#         responses.add(responses.GET, url, status=200,
+#                       json={})
+#         result = get_gfbio_user_email_task.apply_async(
+#             kwargs={
+#                 'submission_id': 1
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#         self.assertEqual({'first_name': '', 'last_name': '',
+#                           'user_email': 'kevin@horstmeier.de',
+#                           'user_full_name': ''}, result.get())
+#
+#     @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
+#     def test_get_gfbio_user_email_task_error_response(self, mock_requests):
+#         mock_requests.post.return_value.status_code = 200
+#         mock_requests.post.return_value.ok = True
+#         response_data = '{"exception": "java.lang.RuntimeException", "message": ' \
+#                         '"No JSON web service action associated with path ' \
+#                         '/userextension/get-user-by-id and method POST for ' \
+#                         '//GFBioProject-portlet"}'
+#         mock_requests.post.return_value.content = json.dumps(response_data)
+#         sub = Submission.objects.get(pk=1)
+#         sub.submitting_user = '16250'
+#         sub.save()
+#         config = SiteConfiguration.objects.get(pk=1)
+#         config.use_gfbio_services = False
+#         config.save()
+#         result = get_gfbio_user_email_task.apply_async(
+#             kwargs={
+#                 'submission_id': 1
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#         self.assertEqual({'first_name': '', 'last_name': '',
+#                           'user_email': 'kevin@horstmeier.de',
+#                           'user_full_name': ''}, result.get())
+#
+#     @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
+#     def test_get_gfbio_user_email_task_corrupt_response(self, mock_requests):
+#         mock_requests.post.return_value.status_code = 200
+#         mock_requests.post.return_value.ok = True
+#         response_data = 'xyz'
+#         mock_requests.post.return_value.content = json.dumps(response_data)
+#         sub = Submission.objects.get(pk=1)
+#         sub.submitting_user = '16250'
+#         sub.save()
+#         config = SiteConfiguration.objects.get(pk=1)
+#         config.use_gfbio_services = False
+#         config.save()
+#         result = get_gfbio_user_email_task.apply_async(
+#             kwargs={
+#                 'submission_id': 1
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#         self.assertEqual({'first_name': '', 'last_name': '',
+#                           'user_email': 'kevin@horstmeier.de',
+#                           'user_full_name': ''}, result.get())
+#
+#     @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
+#     def test_get_gfbio_user_email_task_400_response(self, mock_requests):
+#         mock_requests.post.return_value.status_code = 400
+#         mock_requests.post.return_value.ok = False
+#         response_data = ''
+#         mock_requests.post.return_value.content = json.dumps(response_data)
+#         sub = Submission.objects.get(pk=1)
+#         sub.submitting_user = '16250'
+#         sub.save()
+#         config = SiteConfiguration.objects.get(pk=1)
+#         config.use_gfbio_services = False
+#         config.save()
+#         result = get_gfbio_user_email_task.apply_async(
+#             kwargs={
+#                 'submission_id': 1
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#         self.assertEqual({'first_name': '', 'last_name': '',
+#                           'user_email': 'kevin@horstmeier.de',
+#                           'user_full_name': ''}, result.get())
+#
+#     @responses.activate
+#     def test_create_helpdesk_ticket_task_success(self):
+#         sc = SiteConfiguration.objects.get(pk=1)
+#         submission = Submission.objects.get(pk=1)
+#
+#         responses.add(responses.POST,
+#                       '{0}{1}'.format(sc.helpdesk_server.url,
+#                                       HELPDESK_API_SUB_URL
+#                                       ),
+#                       json={"bla": "blubb"},
+#                       status=200)
+#
+#         self.assertEqual(3, len(submission.additionalreference_set.all()))
+#         result = create_helpdesk_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': 1,
+#             }
+#         )
+#
+#         self.assertTrue(result.successful())
+#         submission = Submission.objects.get(pk=1)
+#         self.assertEqual(4, len(submission.additionalreference_set.all()))
+#
+#     @responses.activate
+#     def test_create_helpdesk_ticket_task_unicode_text(self):
+#         sc = SiteConfiguration.objects.get(pk=1)
+#         submission = Submission.objects.get(pk=1)
+#
+#         self.assertEqual(3, len(submission.additionalreference_set.all()))
+#         responses.add(responses.POST,
+#                       '{0}{1}'.format(sc.helpdesk_server.url,
+#                                       HELPDESK_API_SUB_URL
+#                                       ),
+#                       json={"bla": "blubb"},
+#                       status=200)
+#         result = create_helpdesk_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': 1,
+#             }
+#         )
+#
+#         self.assertTrue(result.successful())
+#         submission = Submission.objects.get(pk=1)
+#         self.assertEqual(4, len(submission.additionalreference_set.all()))
+#
+#     @responses.activate
+#     def test_comment_helpdesk_ticket_task_success(self):
+#         sc = SiteConfiguration.objects.get(pk=1)
+#         url = '{0}{1}/{2}/{3}'.format(
+#             sc.helpdesk_server.url,
+#             HELPDESK_API_SUB_URL,
+#             'FAKE_KEY',
+#             HELPDESK_COMMENT_SUB_URL,
+#         )
+#         responses.add(responses.POST,
+#                       url,
+#                       json={"bla": "blubb"},
+#                       status=200)
+#         submission = Submission.objects.get(pk=1)
+#         submission.additionalreference_set.create(
+#             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+#             reference_key='FAKE_KEY',
+#             primary=True
+#         )
+#         submission = Submission.objects.get(pk=1)
+#         result = comment_helpdesk_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': submission.pk,
+#                 'comment_body': 'test-comment'
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#         self.assertFalse(result.get())
+#
+#     @responses.activate
+#     def test_comment_helpdesk_ticket_task(self):
+#         submission = Submission.objects.get(pk=1)
+#         submission.additionalreference_set.create(
+#             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+#             reference_key='FAKE_KEY',
+#             primary=True
+#         )
+#         sc = SiteConfiguration.objects.get(pk=1)
+#         url = '{0}{1}/{2}/{3}'.format(
+#             sc.helpdesk_server.url,
+#             HELPDESK_API_SUB_URL,
+#             'FAKE_KEY',
+#             HELPDESK_COMMENT_SUB_URL,
+#         )
+#         responses.add(responses.POST,
+#                       url,
+#                       json={"bla": "blubb"},
+#                       status=200)
+#         submission = Submission.objects.get(pk=1)
+#         result = comment_helpdesk_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': submission.pk,
+#                 'comment_body': 'test-comment'
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#
+#     @responses.activate
+#     def test_attach_to_helpdesk_ticket_task_no_primarydatafile(self):
+#         submission = Submission.objects.get(pk=1)
+#         submission.additionalreference_set.create(
+#             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+#             reference_key='FAKE_KEY',
+#             primary=True
+#         )
+#         sc = SiteConfiguration.objects.get(pk=1)
+#         url = '{0}{1}/{2}/{3}'.format(
+#             sc.helpdesk_server.url,
+#             HELPDESK_API_SUB_URL,
+#             'FAKE_KEY',
+#             HELPDESK_COMMENT_SUB_URL,
+#         )
+#         responses.add(responses.POST,
+#                       url,
+#                       json=[{
+#                           "self": "https://helpdesk.gfbio.org/rest/api/2/attachment/10814",
+#                           "id": "10814",
+#                           "filename": "test_primary_data_file_TE4k513",
+#                           "author": {
+#                               "self": "https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent",
+#                               "name": "brokeragent",
+#                               "key": "brokeragent@gfbio.org",
+#                               "emailAddress": "brokeragent@gfbio.org",
+#                               "avatarUrls": {
+#                                   "48x48": "https://helpdesk.gfbio.org/secure/useravatar?avatarId=10349",
+#                                   "24x24": "https://helpdesk.gfbio.org/secure/useravatar?size=small&avatarId=10349",
+#                                   "16x16": "https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&avatarId=10349",
+#                                   "32x32": "https://helpdesk.gfbio.org/secure/useravatar?size=medium&avatarId=10349"},
+#                               "displayName": "Broker Agent", "active": True,
+#                               "timeZone": "Europe/Berlin"},
+#                           "created": "2017-06-19T09:23:43.000+0000", "size": 8,
+#                           "content": "https://helpdesk.gfbio.org/secure/attachment/10814/test_primary_data_file_TE4k513"}],
+#                       status=200)
+#         submission = Submission.objects.get(pk=1)
+#         result = attach_file_to_helpdesk_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': submission.pk,
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#         self.assertFalse(result.get())
+#
+#     @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
+#     def test_attach_to_helpdesk_ticket_task_with_primarydatafile(self,
+#                                                                  mock_requests):
+#         mock_requests.post.return_value.status_code = 200
+#         mock_requests.post.return_value.ok = True
+#         mock_requests.post.return_value.content = '{"bla": "blubb"}'
+#         submission = Submission.objects.get(pk=1)
+#         submission.additionalreference_set.create(
+#             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+#             reference_key='FAKE_KEY',
+#             primary=True
+#         )
+#
+#         url = reverse('brokerage:submissions_primary_data', kwargs={
+#             'broker_submission_id': submission.broker_submission_id})
+#
+#         data = TestPrimaryDataFile._create_test_data(
+#             '/tmp/test_primary_data_file')
+#         token = Token.objects.create(user=submission.site)
+#         client = APIClient()
+#         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+#         response = client.post(url, data, format='multipart')
+#         mock_requests.post.return_value.content = '[{"self": "https://helpdesk.gfbio.org/rest/api/2/attachment/10814", "id": "10814", "filename": "test_primary_data_file_TE4k513", "author": { "self": "https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent", "name": "brokeragent", "key": "brokeragent@gfbio.org", "emailAddress": "brokeragent@gfbio.org", "avatarUrls": { "48x48": "https://helpdesk.gfbio.org/secure/useravatar?avatarId=10349", "24x24": "https://helpdesk.gfbio.org/secure/useravatar?size=small&avatarId=10349", "16x16": "https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&avatarId=10349", "32x32": "https://helpdesk.gfbio.org/secure/useravatar?size=medium&avatarId=10349"}, "displayName": "Broker Agent", "active": true, "timeZone": "Europe/Berlin"}, "created": "2017-06-19T09:23:43.000+0000", "size": 8, "content": "https://helpdesk.gfbio.org/secure/attachment/10814/test_primary_data_file_TE4k513"}]'
+#         submission = Submission.objects.get(pk=1)
+#         result = attach_file_to_helpdesk_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': submission.pk,
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#         self.assertTrue(result.get())
+#
+#     @patch(
+#         'gfbio_submissions.brokerage.tasks.apply_timebased_task_retry_policy')
+#     def test_attach_primarydatafile_without_ticket(self, mock):
+#         submission = Submission.objects.get(pk=1)
+#         result = attach_file_to_helpdesk_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': submission.pk,
+#             }
+#         )
+#         self.assertTrue(mock.called)
+#
+#     @responses.activate
+#     def test_add_pangaealink_to_helpdesk_ticket_task_success(self):
+#         submission = Submission.objects.get(pk=1)
+#         submission.additionalreference_set.create(
+#             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+#             reference_key='FAKE_KEY',
+#             primary=True
+#         )
+#         sc = SiteConfiguration.objects.get(pk=1)
+#         url = '{0}{1}/{2}/{3}'.format(
+#             sc.helpdesk_server.url,
+#             HELPDESK_API_SUB_URL,
+#             'FAKE_KEY',
+#             HELPDESK_COMMENT_SUB_URL,
+#         )
+#         responses.add(responses.POST, url,
+#                       json={"bla": "blubb"},
+#                       status=200)
+#         submission = Submission.objects.get(pk=1)
+#         result = add_pangaealink_to_helpdesk_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': 1,
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#
+#     @responses.activate
+#     def test_add_pangaealink_to_helpdesk_ticket_task_client_error(self):
+#         sc = SiteConfiguration.objects.get(pk=1)
+#         submission = Submission.objects.get(pk=1)
+#         submission.additionalreference_set.create(
+#             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+#             reference_key='FAKE_KEY',
+#             primary=True
+#         )
+#         url = '{0}{1}/{2}/{3}'.format(
+#             sc.helpdesk_server.url,
+#             HELPDESK_API_SUB_URL,
+#             'FAKE_KEY',
+#             HELPDESK_COMMENT_SUB_URL,
+#         )
+#         responses.add(responses.POST, url, status=400, json={"bla": "blubb"})
+#         result = add_pangaealink_to_helpdesk_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': 1,
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#
+#     @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
+#     def test_add_pangaealink_to_helpdesk_ticket_task_server_error(self,
+#                                                                   mock_requests):
+#         submission = Submission.objects.get(pk=1)
+#         submission.additionalreference_set.create(
+#             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+#             reference_key='FAKE_KEY',
+#             primary=True
+#         )
+#         mock_requests.post.return_value.status_code = 500
+#         mock_requests.post.return_value.ok = False
+#         mock_requests.post.return_value.content = '{"bla": "blubb"}'
+#         submission = Submission.objects.get(pk=1)
+#         result = add_pangaealink_to_helpdesk_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': 1,
+#             }
+#         )
+#         self.assertFalse(result.successful())
+#
+#     @responses.activate
+#     def test_create_helpdesk_ticket_task_client_error(self):
+#         submission = Submission.objects.get(pk=1)
+#         sc = SiteConfiguration.objects.get(pk=1)
+#         url = '{0}{1}'.format(
+#             sc.helpdesk_server.url,
+#             HELPDESK_API_SUB_URL
+#         )
+#         responses.add(responses.POST,
+#                       url,
+#                       json={},
+#                       status=400)
+#
+#         result = create_helpdesk_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': 1,
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#
+#     @responses.activate
+#     def test_create_helpdesk_ticket_task_server_error(self):
+#         sc = SiteConfiguration.objects.get(pk=1)
+#         url = '{0}{1}'.format(
+#             sc.helpdesk_server.url,
+#             HELPDESK_API_SUB_URL
+#         )
+#         responses.add(responses.POST, url, status=500,
+#                       json={"bla": "blubb"})
+#         result = create_helpdesk_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': 1,
+#                 'summary': 'Test',
+#                 'description': 'Test'
+#
+#             }
+#         )
+#         self.assertFalse(result.successful())
+#
+#     # ---------------------- Pangaea tasks -------------------------------------
+#
+#     @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
+#     def test_request_pangaea_login_token_task_success(self, mock_requests):
+#         access = ResourceCredential()
+#         access.username = 'gfbio-broker'
+#         access.password = 'h_qB-RxCY)7y'
+#         access.url = 'https://ws.pangaea.de/ws/services/PanLogin'
+#         access.save()
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(0, len(request_logs))
+#
+#         mock_requests.post.return_value.status_code = 200
+#         mock_requests.post.return_value.ok = True
+#         mock_requests.post.return_value.content = textwrap.dedent(
+#             """<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Body><ns1:loginResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="urn:java:de.pangaea.login.PanLogin"><loginReturn xsi:type="xsd:string">f3d7aca208aaec8954d45bebc2f59ba1522264db</loginReturn></ns1:loginResponse></soapenv:Body></soapenv:Envelope>""")
+#         result = request_pangaea_login_token_task.apply_async(
+#             kwargs={
+#                 'submission_id': 1,
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#         self.assertEqual('f3d7aca208aaec8954d45bebc2f59ba1522264db',
+#                          result.get())
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(1, len(request_logs))
+#         self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+#         self.assertEqual('http://www.example2.com',
+#                          request_logs.first().url)
+#
+#     @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
+#     def test_request_pangaea_login_token_task_client_error(self, mock_requests):
+#         access = ResourceCredential()
+#         access.username = 'gfbio-broker'
+#         access.password = 'h_qB-RxCY)7y'
+#         access.url = 'https://ws.pangaea.de/ws/services/PanLogin'
+#         access.save()
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(0, len(request_logs))
+#
+#         mock_requests.post.return_value.status_code = 400
+#         mock_requests.post.return_value.ok = False
+#         mock_requests.post.return_value.content = ''
+#         result = request_pangaea_login_token_task.apply_async(
+#             kwargs={
+#                 'submission_id': 1,
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#         self.assertEqual('', result.get())
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(1, len(request_logs))
+#         self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+#         self.assertEqual('http://www.example2.com',
+#                          request_logs.first().url)
+#
+#     @responses.activate
+#     def test_request_pangaea_login_token_task_server_error(self):
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(0, len(request_logs))
+#         sc = SiteConfiguration.objects.get(pk=1)
+#         responses.add(responses.POST, sc.pangaea_server.url, status=500,
+#                       body='')
+#         result = request_pangaea_login_token_task.apply_async(
+#             kwargs={
+#                 'submission_id': 1,
+#             }
+#         )
+#         self.assertFalse(result.successful())
+#
+#         request_logs = RequestLog.objects.all()
+#         # 3 logentries for 3 retries
+#         self.assertEqual(3, len(request_logs))
+#         self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+#         self.assertEqual('http://www.example2.com',
+#                          request_logs.first().url)
+#
+#     @responses.activate
+#     def test_create_pangaea_jira_ticket_task_success(self):
+#         submission = Submission.objects.get(pk=1)
+#
+#         self.assertEqual(3, len(submission.additionalreference_set.all()))
+#         login_token = 'f3d7aca208aaec8954d45bebc2f59ba1522264db'
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(0, len(request_logs))
+#         responses.add(responses.POST,
+#                       PANGAEA_ISSUE_BASE_URL,
+#                       json={"id": "31444", "key": "PDI-11735",
+#                             "self": "http://issues.pangaea.de/rest/api/2/issue/31444"},
+#                       status=201)
+#         result = create_pangaea_jira_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': submission.pk,
+#                 'login_token': login_token
+#             }
+#         )
+#         res = result.get()
+#         self.assertTrue(result.successful())
+#         self.assertDictEqual(
+#             {'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
+#              'ticket_key': 'PDI-11735'}, res)
+#         additional_references = submission.additionalreference_set.all()
+#         self.assertEqual(4, len(additional_references))
+#         ref = additional_references.last()
+#         self.assertEqual('PDI-11735', ref.reference_key)
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(1, len(request_logs))
+#         self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+#         self.assertEqual('https://issues.pangaea.de/rest/api/2/issue/',
+#                          request_logs.first().url)
+#
+#     @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
+#     def test_create_pangaea_jira_ticket_task_client_error(self, mock_requests):
+#         submission = Submission.objects.get(pk=1)
+#
+#         self.assertEqual(3, len(submission.additionalreference_set.all()))
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(0, len(request_logs))
+#
+#         mock_requests.post.return_value.status_code = 400
+#         mock_requests.post.return_value.ok = False
+#         mock_requests.post.return_value.content = ''
+#         result = create_pangaea_jira_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': submission.pk,
+#                 'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db'
+#
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#         self.assertIsNone(result.get())
+#         additional_references = submission.additionalreference_set.all()
+#         self.assertEqual(3, len(additional_references))
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(1, len(request_logs))
+#         self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+#         self.assertEqual('https://issues.pangaea.de/rest/api/2/issue/',
+#                          request_logs.first().url)
+#
+#     @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
+#     def test_create_pangaea_jira_ticket_task_server_error(self, mock_requests):
+#         submission = Submission.objects.get(pk=1)
+#
+#         self.assertEqual(3, len(submission.additionalreference_set.all()))
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(0, len(request_logs))
+#
+#         mock_requests.post.return_value.status_code = 500
+#         mock_requests.post.return_value.ok = False
+#         mock_requests.post.return_value.content = ''
+#         result = create_pangaea_jira_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': submission.pk,
+#                 'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db'
+#
+#             }
+#         )
+#         self.assertFalse(result.successful())
+#         additional_references = submission.additionalreference_set.all()
+#         self.assertEqual(3, len(additional_references))
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(3, len(request_logs))
+#         self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+#         self.assertEqual('https://issues.pangaea.de/rest/api/2/issue/',
+#                          request_logs.first().url)
+#
+#     @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
+#     def test_attach_file_to_pangaea_ticket_task_success(self, mock_requests):
+#         sub = FullWorkflowTest._prepare()
+#         sub.submitting_user = 'gfbio'
+#         sub.save()
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(0, len(request_logs))
+#
+#         mock_requests.post.return_value.status_code = 200
+#         mock_requests.post.return_value.ok = True
+#         mock_requests.post.return_value.content = '[{"self":"http://issues.pangaea.de/rest/api/2/attachment/49860","id":"49860","filename":"report.csv","author":{"self":"http://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"http://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"http://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"http://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"http://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"created":"2016-02-26T14:47:46.000+0000","size":38,"content":"http://issues.pangaea.de/secure/attachment/49860/report.csv"}]'
+#         result = attach_file_to_pangaea_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': sub.pk,
+#                 'kwargs': {
+#                     'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
+#                     'ticket_key': 'PDI-11735'
+#                 }
+#             }
+#         )
+#         res = result.get()
+#         self.assertTrue(result.successful())
+#         self.assertDictEqual(
+#             {'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
+#              'ticket_key': 'PDI-11735'}, res)
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(1, len(request_logs))
+#         self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+#         self.assertEqual(
+#             'https://issues.pangaea.de/rest/api/2/issue/PDI-11735/attachments',
+#             request_logs.first().url)
+#
+#     @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
+#     def test_attach_file_to_pangaea_ticket_task_client_error(self,
+#                                                              mock_requests):
+#         sub = FullWorkflowTest._prepare()
+#         sub.submitting_user = 'gfbio'
+#         sub.save()
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(0, len(request_logs))
+#
+#         mock_requests.post.return_value.status_code = 400
+#         mock_requests.post.return_value.ok = False
+#         mock_requests.post.return_value.content = ''
+#         result = attach_file_to_pangaea_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': sub.pk,
+#                 'kwargs': {
+#                     'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
+#                     'ticket_key': 'PDI-11735'
+#                 }
+#             }
+#         )
+#         res = result.get()
+#         self.assertTrue(result.successful())
+#         self.assertDictEqual(
+#             {'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
+#              'ticket_key': 'PDI-11735'}, res)
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(1, len(request_logs))
+#         self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+#         self.assertEqual(
+#             'https://issues.pangaea.de/rest/api/2/issue/PDI-11735/attachments',
+#             request_logs.first().url)
+#
+#     @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
+#     def test_attach_file_to_pangaea_ticket_task_server_error(self,
+#                                                              mock_requests):
+#         sub = FullWorkflowTest._prepare()
+#         sub.submitting_user = 'gfbio'
+#         sub.save()
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(0, len(request_logs))
+#
+#         mock_requests.post.return_value.status_code = 500
+#         mock_requests.post.return_value.ok = False
+#         mock_requests.post.return_value.content = ''
+#         result = attach_file_to_pangaea_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': sub.pk,
+#                 'kwargs': {
+#                     'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
+#                     'ticket_key': 'PDI-11735'
+#                 }
+#             }
+#         )
+#         self.assertFalse(result.successful())
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(3, len(request_logs))
+#         self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+#         self.assertEqual(
+#             'https://issues.pangaea.de/rest/api/2/issue/PDI-11735/attachments',
+#             request_logs.first().url)
+#
+#     @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
+#     def test_comment_on_pangaea_ticket_task_success(self, mock_requests):
+#         sub = FullWorkflowTest._prepare()
+#         sub.submitting_user = 'gfbio'
+#         sub.save()
+#         sub.brokerobject_set.filter(
+#             type='study').first().persistentidentifier_set.create(
+#             archive='ENA',
+#             pid_type='PRJ',
+#             pid='PRJEB20411',
+#             outgoing_request_id=uuid.uuid4()
+#         )
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(0, len(request_logs))
+#
+#         mock_requests.post.return_value.status_code = 200
+#         mock_requests.post.return_value.ok = True
+#         mock_requests.post.return_value.content = '{"self":"http://issues.pangaea.de/rest/api/2/issue/31444/comment/72996","id":"72996","author":{"self":"http://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"http://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"http://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"http://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"http://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"body":"This should be some descripitive text regarding attached files, containing ENA-Accession numbers","updateAuthor":{"self":"http://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"http://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"http://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"http://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"http://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"created":"2016-02-26T14:47:46.982+0000","updated":"2016-02-26T14:47:46.982+0000"}'
+#         result = comment_on_pangaea_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': sub.pk,
+#                 'kwargs': {
+#                     'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
+#                     'ticket_key': 'PDI-11735'
+#                 },
+#                 'comment_body': 'ACC 12345'
+#             }
+#         )
+#         res = result.get()
+#         self.assertTrue(result.successful())
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(1, len(request_logs))
+#         self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+#         self.assertEqual(
+#             'https://issues.pangaea.de/rest/api/2/issue/PDI-11735/comment',
+#             request_logs.first().url)
+#
+#     @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
+#     def test_comment_on_pangaea_ticket_task_client_error(self, mock_requests):
+#         sub = FullWorkflowTest._prepare()
+#         sub.submitting_user = 'gfbio'
+#         sub.save()
+#         sub.brokerobject_set.filter(
+#             type='study').first().persistentidentifier_set.create(
+#             archive='ENA',
+#             pid_type='PRJ',
+#             pid='PRJEB20411',
+#             outgoing_request_id=uuid.uuid4()
+#         )
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(0, len(request_logs))
+#
+#         mock_requests.post.return_value.status_code = 400
+#         mock_requests.post.return_value.ok = False
+#         mock_requests.post.return_value.content = ''
+#         result = comment_on_pangaea_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': sub.pk,
+#                 'kwargs': {
+#                     'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
+#                     'ticket_key': 'PDI-11735'
+#                 },
+#                 'comment_body': 'ACC 12345'
+#             }
+#         )
+#         # expects resuls from previous chain element
+#         self.assertTrue(result.successful())
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(1, len(request_logs))
+#         self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+#         self.assertEqual(
+#             'https://issues.pangaea.de/rest/api/2/issue/PDI-11735/comment',
+#             request_logs.first().url)
+#
+#     @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
+#     def test_comment_on_pangaea_ticket_task_server_error(self, mock_requests):
+#         sub = FullWorkflowTest._prepare()
+#         sub.submitting_user = 'gfbio'
+#         sub.save()
+#         sub.brokerobject_set.filter(
+#             type='study').first().persistentidentifier_set.create(
+#             archive='ENA',
+#             pid_type='PRJ',
+#             pid='PRJEB20411',
+#             outgoing_request_id=uuid.uuid4()
+#         )
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(0, len(request_logs))
+#
+#         mock_requests.post.return_value.status_code = 500
+#         mock_requests.post.return_value.ok = False
+#         mock_requests.post.return_value.content = ''
+#         result = comment_on_pangaea_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': sub.pk,
+#                 'kwargs': {
+#                     'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
+#                     'ticket_key': 'PDI-11735'
+#                 },
+#                 'comment_body': 'ACC 12345'
+#             }
+#         )
+#         self.assertFalse(result.successful())
+#
+#         request_logs = RequestLog.objects.all()
+#         self.assertEqual(3, len(request_logs))
+#         self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+#         self.assertEqual(
+#             'https://issues.pangaea.de/rest/api/2/issue/PDI-11735/comment',
+#             request_logs.first().url)
+#
+#     @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
+#     def test_check_for_pangaea_doi_task_success(self, mock_requests):
+#         access = ResourceCredential()
+#         access.username = 'gfbio-broker'
+#         access.password = 'xxx'
+#         access.url = 'https://ws.pangaea.de/ws/services/PanLogin'
+#         access.save()
+#
+#         persistent_identifiers = PersistentIdentifier.objects.all()
+#         self.assertEqual(0, len(persistent_identifiers))
+#
+#         mock_requests.post.return_value.status_code = 200
+#         mock_requests.post.return_value.ok = True
+#         mock_requests.post.return_value.content = textwrap.dedent(
+#             """<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Body><ns1:loginResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="urn:java:de.pangaea.login.PanLogin"><loginReturn xsi:type="xsd:string">f3d7aca208aaec8954d45bebc2f59ba1522264db</loginReturn></ns1:loginResponse></soapenv:Body></soapenv:Envelope>""")
+#
+#         mock_requests.get.return_value.status_code = 200
+#         mock_requests.get.return_value.ok = True
+#         mock_requests.get.return_value.content = '{"expand":"renderedFields,names,schema,transitions,operations,editmeta,changelog","id":"33002","self":"https://issues.pangaea.de/rest/api/2/issue/33002","key":"PDI-12428","fields":{"issuetype":{"self":"https://issues.pangaea.de/rest/api/2/issuetype/6","id":"6","description":"Submission of data to PANGAEA","iconUrl":"https://issues.pangaea.de/images/icons/issuetypes/newfeature.png","name":"Data Submission","subtask":false},"timespent":null,"timeoriginalestimate":null,"description":null,"project":{"self":"https://issues.pangaea.de/rest/api/2/project/10010","id":"10010","key":"PDI","name":"PANGAEA Data Archiving & Publication","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/projectavatar?avatarId=10011","24x24":"https://issues.pangaea.de/secure/projectavatar?size=small&avatarId=10011","16x16":"https://issues.pangaea.de/secure/projectavatar?size=xsmall&avatarId=10011","32x32":"https://issues.pangaea.de/secure/projectavatar?size=medium&avatarId=10011"}},"aggregatetimespent":null,"resolution":null,"timetracking":{},"attachment":[{"self":"https://issues.pangaea.de/rest/api/2/attachment/53276","id":"53276","filename":"contextual_data.csv","author":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"created":"2016-06-02T10:38:06.000+0000","size":1502,"content":"https://issues.pangaea.de/secure/attachment/53276/contextual_data.csv"}],"aggregatetimeestimate":null,"resolutiondate":null,"workratio":-1,"summary":"Automated request by GFBio BrokerAgent","lastViewed":"2016-06-02T12:06:25.250+0000","watches":{"self":"https://issues.pangaea.de/rest/api/2/issue/PDI-12428/watchers","watchCount":0,"isWatching":false},"creator":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"subtasks":[],"created":"2016-06-02T10:37:50.000+0000","reporter":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"customfield_10120":null,"customfield_10220":null,"aggregateprogress":{"progress":0,"total":0},"priority":{"self":"https://issues.pangaea.de/rest/api/2/priority/3","iconUrl":"https://issues.pangaea.de/images/icons/priorities/major.png","name":"Major","id":"3"},"customfield_10122":null,"customfield_10320":null,"customfield_10002":"gfbio-broker","customfield_10420":null,"customfield_10003":{"self":"https://issues.pangaea.de/rest/api/2/customFieldOption/10000","value":"CC-BY: Creative Commons Attribution 3.0 Unported","id":"10000"},"customfield_10421":null,"customfield_10520":"doi:10.1594/PANGAEA.786576","labels":[],"customfield_10004":null,"timeestimate":null,"aggregatetimeoriginalestimate":null,"progress":{"progress":0,"total":0},"comment":{"startAt":0,"maxResults":1,"total":1,"comments":[{"self":"https://issues.pangaea.de/rest/api/2/issue/33002/comment/77173","id":"77173","author":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"body":"ENA Accession No. of study ERP015860. broker_submission_id: 9cb23074-689e-4058-a9e9-ccba1fe2ab1d. ","updateAuthor":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"created":"2016-06-02T10:38:22.000+0000","updated":"2016-06-02T10:38:22.000+0000"}]},"issuelinks":[],"worklog":{"startAt":0,"maxResults":20,"total":0,"worklogs":[]},"assignee":{"self":"https://issues.pangaea.de/rest/api/2/user?username=jfelden","name":"jfelden","key":"jfelden","emailAddress":"jfelden@marum.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10067","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10067","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10067","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10067"},"displayName":"Janine Felden","active":true,"timeZone":"Europe/Berlin"},"updated":"2016-06-02T12:03:16.000+0000","status":{"self":"https://issues.pangaea.de/rest/api/2/status/1","description":"The issue is open and ready for the assignee to start work on it.","iconUrl":"https://issues.pangaea.de/images/icons/statuses/open.png","name":"Open","id":"1","statusCategory":{"self":"https://issues.pangaea.de/rest/api/2/statuscategory/2","id":2,"key":"new","colorName":"blue-gray","name":"To Do"}}}}'
+#
+#         result = check_for_pangaea_doi_task.apply_async(
+#             kwargs={
+#                 'resource_credential_id': access.pk
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#
+#         persistent_identifiers = PersistentIdentifier.objects.all()
+#         self.assertEqual(1, len(persistent_identifiers))
+#
+#         pid = persistent_identifiers.first()
+#         self.assertEqual('PAN', pid.archive)
+#         self.assertEqual('DOI', pid.pid_type)
+#         self.assertEqual('doi:10.1594/PANGAEA.786576', pid.pid)
+#
+#     @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
+#     def test_check_for_pangaea_doi_task_success_bytestring(self, mock_requests):
+#         access = ResourceCredential()
+#         access.username = 'gfbio-broker'
+#         access.password = 'xxx'
+#         access.url = 'https://ws.pangaea.de/ws/services/PanLogin'
+#         access.save()
+#
+#         persistent_identifiers = PersistentIdentifier.objects.all()
+#         self.assertEqual(0, len(persistent_identifiers))
+#
+#         mock_requests.post.return_value.status_code = 200
+#         mock_requests.post.return_value.ok = True
+#         mock_requests.post.return_value.content = textwrap.dedent(
+#             """<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Body><ns1:loginResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="urn:java:de.pangaea.login.PanLogin"><loginReturn xsi:type="xsd:string">f3d7aca208aaec8954d45bebc2f59ba1522264db</loginReturn></ns1:loginResponse></soapenv:Body></soapenv:Envelope>""")
+#
+#         mock_requests.get.return_value.status_code = 200
+#         mock_requests.get.return_value.ok = True
+#         mock_requests.get.return_value.content = b'{"expand":"renderedFields,names,schema,transitions,operations,editmeta,changelog","id":"33002","self":"https://issues.pangaea.de/rest/api/2/issue/33002","key":"PDI-12428","fields":{"issuetype":{"self":"https://issues.pangaea.de/rest/api/2/issuetype/6","id":"6","description":"Submission of data to PANGAEA","iconUrl":"https://issues.pangaea.de/images/icons/issuetypes/newfeature.png","name":"Data Submission","subtask":false},"timespent":null,"timeoriginalestimate":null,"description":null,"project":{"self":"https://issues.pangaea.de/rest/api/2/project/10010","id":"10010","key":"PDI","name":"PANGAEA Data Archiving & Publication","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/projectavatar?avatarId=10011","24x24":"https://issues.pangaea.de/secure/projectavatar?size=small&avatarId=10011","16x16":"https://issues.pangaea.de/secure/projectavatar?size=xsmall&avatarId=10011","32x32":"https://issues.pangaea.de/secure/projectavatar?size=medium&avatarId=10011"}},"aggregatetimespent":null,"resolution":null,"timetracking":{},"attachment":[{"self":"https://issues.pangaea.de/rest/api/2/attachment/53276","id":"53276","filename":"contextual_data.csv","author":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"created":"2016-06-02T10:38:06.000+0000","size":1502,"content":"https://issues.pangaea.de/secure/attachment/53276/contextual_data.csv"}],"aggregatetimeestimate":null,"resolutiondate":null,"workratio":-1,"summary":"Automated request by GFBio BrokerAgent","lastViewed":"2016-06-02T12:06:25.250+0000","watches":{"self":"https://issues.pangaea.de/rest/api/2/issue/PDI-12428/watchers","watchCount":0,"isWatching":false},"creator":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"subtasks":[],"created":"2016-06-02T10:37:50.000+0000","reporter":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"customfield_10120":null,"customfield_10220":null,"aggregateprogress":{"progress":0,"total":0},"priority":{"self":"https://issues.pangaea.de/rest/api/2/priority/3","iconUrl":"https://issues.pangaea.de/images/icons/priorities/major.png","name":"Major","id":"3"},"customfield_10122":null,"customfield_10320":null,"customfield_10002":"gfbio-broker","customfield_10420":null,"customfield_10003":{"self":"https://issues.pangaea.de/rest/api/2/customFieldOption/10000","value":"CC-BY: Creative Commons Attribution 3.0 Unported","id":"10000"},"customfield_10421":null,"customfield_10520":"doi:10.1594/PANGAEA.786576","labels":[],"customfield_10004":null,"timeestimate":null,"aggregatetimeoriginalestimate":null,"progress":{"progress":0,"total":0},"comment":{"startAt":0,"maxResults":1,"total":1,"comments":[{"self":"https://issues.pangaea.de/rest/api/2/issue/33002/comment/77173","id":"77173","author":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"body":"ENA Accession No. of study ERP015860. broker_submission_id: 9cb23074-689e-4058-a9e9-ccba1fe2ab1d. ","updateAuthor":{"self":"https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker","name":"gfbio-broker","key":"gfbio-broker","emailAddress":"i.kostadinov@jacobs-university.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10072","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"},"displayName":"GFBio broker account","active":true,"timeZone":"Etc/UTC"},"created":"2016-06-02T10:38:22.000+0000","updated":"2016-06-02T10:38:22.000+0000"}]},"issuelinks":[],"worklog":{"startAt":0,"maxResults":20,"total":0,"worklogs":[]},"assignee":{"self":"https://issues.pangaea.de/rest/api/2/user?username=jfelden","name":"jfelden","key":"jfelden","emailAddress":"jfelden@marum.de","avatarUrls":{"48x48":"https://issues.pangaea.de/secure/useravatar?avatarId=10067","24x24":"https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10067","16x16":"https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10067","32x32":"https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10067"},"displayName":"Janine Felden","active":true,"timeZone":"Europe/Berlin"},"updated":"2016-06-02T12:03:16.000+0000","status":{"self":"https://issues.pangaea.de/rest/api/2/status/1","description":"The issue is open and ready for the assignee to start work on it.","iconUrl":"https://issues.pangaea.de/images/icons/statuses/open.png","name":"Open","id":"1","statusCategory":{"self":"https://issues.pangaea.de/rest/api/2/statuscategory/2","id":2,"key":"new","colorName":"blue-gray","name":"To Do"}}}}'
+#
+#         result = check_for_pangaea_doi_task.apply_async(
+#             kwargs={
+#                 'resource_credential_id': access.pk
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#
+#         persistent_identifiers = PersistentIdentifier.objects.all()
+#         self.assertEqual(1, len(persistent_identifiers))
+#
+#         pid = persistent_identifiers.first()
+#         self.assertEqual('PAN', pid.archive)
+#         self.assertEqual('DOI', pid.pid_type)
+#         self.assertEqual('doi:10.1594/PANGAEA.786576', pid.pid)
+#
+#     # ---------------- CHAIN TESTS ---------------------------------------------
+#
+#     @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
+#     def test_pangaea_chain(self, mock_requests):
+#         access = ResourceCredential()
+#         access.username = 'gfbio-broker'
+#         access.password = 'h_qB-RxCY)7y'
+#         access.url = 'https://ws.pangaea.de/ws/services/PanLogin'
+#         access.save()
+#         # with patch('config.celeryconfig.CELERY_ALWAYS_EAGER', True,
+#         #           create=True):
+#         # Test chain first transition
+#         # Result: token handed over correctly
+#         # mock_requests.post.return_value.status_code = 200
+#         # mock_requests.post.return_value.ok = True
+#         # mock_requests.post.return_value.content = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Body><ns1:loginResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="urn:java:de.pangaea.login.PanLogin"><loginReturn xsi:type="xsd:string">f3d7aca208aaec8954d45bebc2f59ba1522264db</loginReturn></ns1:loginResponse></soapenv:Body></soapenv:Envelope>""")
+#         # result = chain(
+#         #         request_pangaea_login_token_task.s(
+#         #                 submission_id=1,
+#         #                 resource_credential_id=access.pk),
+#         #         create_pangaea_jira_ticket_task.s(
+#         #             submission_id=1,
+#         #         )
+#         #
+#         # )()
+#         #
+#         # Result: attach file  works with kwargs ...
+#         mock_requests.post.return_value.status_code = 201
+#         mock_requests.post.return_value.ok = True
+#         mock_requests.post.return_value.content = '{"id":"31444","key":"PDI-11735","self":"http://issues.pangaea.de/rest/api/2/issue/31444"}'
+#
+#         submission = Submission.objects.get(pk=1)
+#
+#         result = chain(
+#             create_pangaea_jira_ticket_task.s(
+#                 submission_id=1,
+#                 login_token='f3d7aca208aaec8954d45bebc2f59ba1522264db'
+#             ),
+#             attach_file_to_pangaea_ticket_task.s(
+#                 submission_id=1,
+#             )
+#
+#         )()
+#
+#     @responses.activate
+#     def test_initiate_submission_chain_success(self):
+#         len_auditable_text_datas = len(AuditableTextData.objects.all())
+#         sc = SiteConfiguration.objects.get(pk=1)
+#         data = json.dumps({
+#             'userid': 23
+#         })
+#         url = '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'.format(
+#             sc.gfbio_server.url, data)
+#
+#         comment_url = '{0}{1}/{2}/{3}'.format(
+#             sc.helpdesk_server.url,
+#             HELPDESK_API_SUB_URL,
+#             'no_key_available',
+#             HELPDESK_COMMENT_SUB_URL,
+#         )
+#
+#         responses.add(responses.POST, url, status=200,
+#                       json={"firstname": "Marc", "middlename": "",
+#                             "emailaddress": "maweber@mpi-bremen.de",
+#                             "fullname": "Marc Weber",
+#                             "screenname": "maweber", "userid": 16250,
+#                             "lastname": "Weber"})
+#         responses.add(responses.POST,
+#                       '{0}{1}'.format(sc.helpdesk_server.url,
+#                                       HELPDESK_API_SUB_URL
+#                                       ),
+#                       json={"bla": "blubb"},
+#                       status=200)
+#         responses.add(responses.POST,
+#                       comment_url,
+#                       json={"bla": "blubb"},
+#                       status=200)
+#         sub = FullWorkflowTest._prepare()
+#         sub.release = False
+#         sub.save()
+#
+#         trigger_submission_transfer(submission_id=sub.id)
+#
+#         self.assertEqual(len(AuditableTextData.objects.all()),
+#                          len_auditable_text_datas)
+#
+#         sub.release = True
+#         sub.save()
+#
+#         trigger_submission_transfer(submission_id=sub.id)
+#         self.assertGreater(len(AuditableTextData.objects.all()),
+#                            len_auditable_text_datas)
 
 
 class TestSubmissionTransferHandler(TestCase):
