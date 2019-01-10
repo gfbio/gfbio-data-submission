@@ -47,6 +47,13 @@ def _get_ena_xml_response():
         return textwrap.dedent(data_file.read())
 
 
+def _get_ena_error_xml_response():
+    with open(os.path.join(
+            _get_test_data_dir_path(), 'ena_error_response.xml'),
+            'r') as data_file:
+        return textwrap.dedent(data_file.read())
+
+
 def _get_pangaea_soap_body():
     with open(os.path.join(
             _get_test_data_dir_path(),
@@ -73,3 +80,16 @@ def _get_submission_post_response():
             _get_test_data_dir_path(),
             'submission_post_response.json'), 'r') as data_file:
         return json.load(data_file)
+
+
+def _get_jira_response():
+    with open(os.path.join(
+            _get_test_data_dir_path(), 'jira_response.json'), 'r') as data_file:
+        return json.load(data_file)
+
+
+def _get_jira_attach_response():
+    with open(os.path.join(
+            _get_test_data_dir_path(), 'jira_attach_response.json'), 'r') as data_file:
+        return json.load(data_file)
+

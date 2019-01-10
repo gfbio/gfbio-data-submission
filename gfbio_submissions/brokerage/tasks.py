@@ -590,7 +590,9 @@ def get_gfbio_user_email_task(submission_id=None):
                                             site_configuration, submission)
             try:
                 # content = json.loads(response.content)
-                content = response.json()
+                response_json = response.json()
+                content = response_json if isinstance(response_json,
+                                                      dict) else {}
                 res['user_email'] = content.get('emailaddress',
                                                 site_configuration.contact)
                 res['user_full_name'] = content.get('fullname', '')
