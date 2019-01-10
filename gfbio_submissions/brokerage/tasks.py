@@ -185,8 +185,11 @@ def apply_timebased_task_retry_policy(task, submission, no_of_tickets):
 # TODO: refactor/move to submission_transfer_handler
 def apply_default_task_retry_policy(response, task, submission):
     try:
+        print('\nRETRY POLICY')
+        print(response)
         SubmissionTransferHandler.raise_response_exceptions(response)
     except SubmissionTransferHandler.TransferServerError as e:
+        print('EXCEPT SERVER ERROR ', e)
         logger.warning(
             msg='{} SubmissionTransfer.TransferServerError {}'.format(
                 task.name, e)
@@ -196,6 +199,7 @@ def apply_default_task_retry_policy(response, task, submission):
                 ''.format(task.name, task.request.retries)
         )
         if task.request.retries == SUBMISSION_MAX_RETRIES:
+            print('EXCEPT SERVER ERROR MAX')
             logger.info(
                 msg='{} SubmissionTransfer.TransferServerError mail_admins max_retries={}'
                     ''.format(task.name, SUBMISSION_MAX_RETRIES)
@@ -208,11 +212,19 @@ def apply_default_task_retry_policy(response, task, submission):
                     submission.broker_submission_id, e),
             )
         else:
+            print('EXCEPT SERVER ERROR Retry')
+            print(e)
+
+            logger.info(
+                msg='{} SubmissionTransfer.TransferServerError retry after delay'
+                    ''.format(task.name)
+            )
             raise task.retry(
                 exc=e,
                 countdown=(task.request.retries + 1) * SUBMISSION_RETRY_DELAY,
             )
     except SubmissionTransferHandler.TransferClientError as e:
+        print('EXCEPT CLIENT ERROR ', e)
         logger.warning(
             msg='{} SubmissionTransfer.TransferClientError {}'.format(
                 task.name, e)
@@ -223,6 +235,7 @@ def apply_default_task_retry_policy(response, task, submission):
             message='TransferClientError. refer to submission with broker_submission_id '
                     '{} \nError:\n{}'.format(
                 submission.broker_submission_id, e), )
+    print('AFTER EXCEPTS')
 
 
 # NEW PREP WORKFLOW BO CREATION AND SOID CREATION ------------------------------
@@ -794,7 +807,7 @@ def generic_comment_helpdesk_ticket_task(prev_task_result=None,
                 submission=submission,
             )
             apply_default_task_retry_policy(response,
-                                            comment_helpdesk_ticket_task,
+                                            generic_comment_helpdesk_ticket_task,
                                             submission)
     else:
         return TaskProgressReport.CANCELLED
@@ -817,6 +830,7 @@ def generic_comment_helpdesk_ticket_task(prev_task_result=None,
              )
 def add_pangaealink_to_helpdesk_ticket_task(prev_task_result=None,
                                             submission_id=None):
+    print('PREV RES ', prev_task_result)
     submission, site_configuration = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
         submission_id=submission_id,
         task=add_pangaealink_to_helpdesk_ticket_task,
@@ -844,8 +858,8 @@ def add_pangaealink_to_helpdesk_ticket_task(prev_task_result=None,
                 submission=submission,
             )
 
-            apply_default_task_retry_policy(response,
-                                            comment_helpdesk_ticket_task,
+            apply_default_task_^(response,
+                                            add_pangaealink_to_helpdesk_ticket_task,
                                             submission)
     else:
         return TaskProgressReport.CANCELLED

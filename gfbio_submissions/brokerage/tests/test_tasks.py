@@ -723,17 +723,12 @@ class TestCeleryTasks(TestCase):
     def test_add_pangaealink_to_helpdesk_ticket_task_server_error(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
-        # mock_requests.post.return_value.status_code = 500
-        # mock_requests.post.return_value.ok = False
-        # mock_requests.post.return_value.content = '{"bla": "blubb"}'
-        # submission = Submission.objects.get(pk=1)
         url = '{0}{1}/{2}/{3}'.format(
             site_config.helpdesk_server.url,
             HELPDESK_API_SUB_URL,
             'FAKE_KEY',
             HELPDESK_COMMENT_SUB_URL,
         )
-        print(url)
         responses.add(responses.POST, url, status=500, json={"bla": "blubb"})
         result = add_pangaealink_to_helpdesk_ticket_task.apply_async(
             kwargs={
@@ -742,26 +737,28 @@ class TestCeleryTasks(TestCase):
         )
         self.assertFalse(result.successful())
 
-    # @responses.activate
-    # def test_create_helpdesk_ticket_task_client_error(self):
-    #     submission = Submission.objects.get(pk=1)
-    #     sc = SiteConfiguration.objects.get(pk=1)
-    #     url = '{0}{1}'.format(
-    #         sc.helpdesk_server.url,
-    #         HELPDESK_API_SUB_URL
-    #     )
-    #     responses.add(responses.POST,
-    #                   url,
-    #                   json={},
-    #                   status=400)
-    #
-    #     result = create_helpdesk_ticket_task.apply_async(
-    #         kwargs={
-    #             'submission_id': 1,
-    #         }
-    #     )
-    #     self.assertTrue(result.successful())
-    #
+    @responses.activate
+    def test_create_helpdesk_ticket_task_client_error(self):
+        submission = Submission.objects.last()
+        site_config = SiteConfiguration.objects.first()
+        responses.add(
+            responses.POST,
+            '{0}{1}'.format(site_config.helpdesk_server.url,
+                            HELPDESK_API_SUB_URL),
+            json={},
+            status=400)
+        # responses.add(responses.POST,
+        #               url,
+        #               json={},
+        #               status=400)
+
+        result = create_helpdesk_ticket_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertTrue(result.successful())
+
     # @responses.activate
     # def test_create_helpdesk_ticket_task_server_error(self):
     #     sc = SiteConfiguration.objects.get(pk=1)
