@@ -3424,620 +3424,621 @@ def fake_trigger_submission_transfer(submission_id=None):
 #         self.assertEqual(400, response.status_code)
 
 
-class TestInitialChainTasks(TestCase):
-    fixtures = (
-        'user', 'resource_credential', 'site_configuration', 'submission')
-
-    def _post_submission_data(self):
-        VALID_USER = {'HTTP_AUTHORIZATION': 'Basic %s' % base64.encodebytes(
-            b'horst:password')}
-        return VALID_USER, self.client.post(
-            '/api/submissions/',
-            content_type='application/json',
-            data=json.dumps({
-                'target': 'ENA',
-                'data': {
-                    'requirements': {
-                        'title': 'A Title',
-                        'description': 'A Description'
-                    }
-                }
-            }), **VALID_USER)
-
-    @staticmethod
-    def fake_user_email_task(submission_id=None):
-        # self.email_called = True
-        return True
-
-    @staticmethod
-    def fake_create_ticket_task(prev_task_result=None, submission_id=None,
-                                summary=None,
-                                description=None):
-        return True
-
-        # @staticmethod
-        # def fake_check_on_hold():
-        #     return True
-
-        # @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
-        # def test_gfbio_get_user_by_id(self, mock_requests):
-        #     mock_requests.post.return_value.status_code = 200
-        #     mock_requests.post.return_value.ok = True
-        #     response_data = {"firstname": "Marc", "middlename": "",
-        #                      "emailaddress": "maweber@mpi-bremen.de",
-        #                      "fullname": "Marc Weber",
-        #                      "screenname": "maweber", "userid": 16250,
-        #                      "lastname": "Weber"}
-        #     mock_requests.post.return_value.content = json.dumps(response_data)
-
-    @responses.activate
-    def test_min_post_initial_chain(self):
-        VALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
-        }
-        sc = SiteConfiguration.objects.get(pk=1)
-        responses.add(responses.POST,
-                      '{0}{1}'.format(sc.helpdesk_server.url,
-                                      HELPDESK_API_SUB_URL
-                                      ),
-                      json={"firstname": "Marc", "middlename": "",
-                            "emailaddress": "maweber@mpi-bremen.de",
-                            "fullname": "Marc Weber",
-                            "screenname": "maweber", "userid": 16250,
-                            "lastname": "Weber"},
-                      status=200)
-        min_response = self.client.post(
-            '/api/submissions/',
-            content_type='application/json',
-            data=json.dumps({
-                'target': 'ENA',
-                'data': {
-                    'requirements': {
-                        'title': 'A Title',
-                        'description': 'A Description'
-                    }
-                }
-            }),
-            **VALID_USER)
-        self.assertEqual(201, min_response.status_code)
-
-    @responses.activate
-    def test_max_post_with_release_initial_chain(self):
-        sc = SiteConfiguration.objects.get(pk=1)
-        responses.add(responses.POST,
-                      '{0}{1}'.format(sc.helpdesk_server.url,
-                                      HELPDESK_API_SUB_URL
-                                      ),
-                      json={"firstname": "Marc", "middlename": "",
-                            "emailaddress": "maweber@mpi-bremen.de",
-                            "fullname": "Marc Weber",
-                            "screenname": "maweber", "userid": 16250,
-                            "lastname": "Weber"},
-                      status=200)
-        VALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
-        }
-        max_response = self.client.post(
-            '/api/submissions/',
-            content_type='application/json',
-            data=json.dumps({
-                'target': 'ENA',
-                'release': True,
-                'data': TestAddSubmissionView.new_data
-            }),
-            **VALID_USER)
-        self.assertEqual(201, max_response.status_code)
-
-    @responses.activate
-    def test_max_post_without_release_initial_chain(self):
-        sc = SiteConfiguration.objects.get(pk=1)
-        responses.add(responses.POST,
-                      '{0}{1}'.format(sc.helpdesk_server.url,
-                                      HELPDESK_API_SUB_URL
-                                      ),
-                      json={"firstname": "Marc", "middlename": "",
-                            "emailaddress": "maweber@mpi-bremen.de",
-                            "fullname": "Marc Weber",
-                            "screenname": "maweber", "userid": 16250,
-                            "lastname": "Weber"},
-                      status=200)
-        VALID_USER = {
-            'HTTP_AUTHORIZATION':
-                'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
-        }
-        max_response = self.client.post(
-            '/api/submissions/',
-            content_type='application/json',
-            data=json.dumps({
-                'target': 'ENA',
-                'release': False,
-                'data': TestAddSubmissionView.new_data
-            }),
-            **VALID_USER)
-        self.assertEqual(201, max_response.status_code)
-
-    @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
-    def test_put_initial_chain_no_release(self, mock_requests):
-        VALID_USER, response = self._post_submission_data()
-        mock_requests.post.return_value.status_code = 200
-        mock_requests.post.return_value.ok = True
-        response_data = {"firstname": "Marc", "middlename": "",
-                         "emailaddress": "maweber@mpi-bremen.de",
-                         "fullname": "Marc Weber",
-                         "screenname": "maweber", "userid": 16250,
-                         "lastname": "Weber"}
-        mock_requests.post.return_value.content = json.dumps(response_data)
-
-        submission = Submission.objects.last()
-
-        response = self.client.put(
-            '/api/submissions/{0}/'.format(
-                submission.broker_submission_id),
-            content_type='application/json',
-            data=json.dumps({
-                'target': 'ENA',
-                'release': False,
-                'data': {
-                    'requirements': {
-                        'title': 'A Title 0815',
-                        'description': 'A Description 2'}
-                }
-            }), **VALID_USER)
-
-
-class TestServiceMethods(TestCase):
-    fixtures = ('user', 'submission', 'resource_credential',
-                'site_configuration', 'broker_object')
-
-    def test_assemble_research_object_json(self):
-        submission = FullWorkflowTest._prepare()
-        prepared_json, broker_object_pks = gfbio_assemble_research_object_id_json(
-            submission.brokerobject_set)
-        self.assertTrue(isinstance(prepared_json, str))
-        self.assertTrue(isinstance(broker_object_pks, list))
-        json_result = json.loads(prepared_json)
-        self.assertTrue(isinstance(json_result[0]['extendeddata'], str))
-
-    def test_gfbio_assign_research_object_ids(self):
-        submission = FullWorkflowTest._prepare()
-        response = requests.models.Response()
-
-        # 200 [{"brokerobjectid":129,"researchobjectversion":1,"researchobjectid":803},{"brokerobjectid":133,"researchobjectversion":1,"researchobjectid":804}]
-        response.status_code = 200
-        response._content = '[{"brokerobjectid":13,"researchobjectversion":1,' \
-                            '"researchobjectid":803},{"brokerobjectid":14,' \
-                            '"researchobjectversion":1,"researchobjectid":804},' \
-                            '{"brokerobjectid":15,"researchobjectversion":1,' \
-                            '"researchobjectid":805},{"brokerobjectid":16,' \
-                            '"researchobjectversion":1,"researchobjectid":806},' \
-                            '{"brokerobjectid":17,"researchobjectversion":1,"researchobjectid":807}, ' \
-                            '{"brokerobjectid":18,"researchobjectversion":1,"researchobjectid":808}]'
-
-        with patch('requests.post', return_value=response) as r:
-            res = gfbio_site_object_ids_service(submission,
-                                                SiteConfiguration.objects.get(
-                                                    pk=1))
-            self.assertEqual(200, response.status_code)
-
-    # TODO/FIXME: do a request to server to get repsonse, then use it to mock for testing
-    # @skip('request to WP1 server')
-    # def test_create_research_object_ids(self):
-    #     submission_data = SubmissionData.objects.all().last()
-    #     response = gfbio_create_research_object_ids(submission_data)
-    #     self.assertEqual(200, response.status_code)
-    #     self.assertTrue(isinstance(json.loads(response.content), list))
-
-    @skip('request to WP1 server')
-    def test_create_single_research_object(self):
-        sub = Submission.objects.get(pk=1)
-        study = sub.brokerobject_set.filter(type='study').first()
-        # FIXME: hardcoded values
-        # name = study_alias aus study.data
-        data = [{
-            'name': 'study_katy_hoffmann_2016',
-            'label': 'study_katy_hoffmann_2016',
-            'description': 'Response of Arctic benthic bacterial deep-sea '
-                           'communities to different detritus composition',
-            'extendeddata': json.dumps({
-                'study_type': 'Metagenomics',
-                'center_name': 'MPI-BREM',
-                'study_abstract': 'In a multidisciplinary ex situ experiment, benthic bacterial deep-sea communities from 2,500 m water depth at the Long-Term Ecological Research Observatory HAUSGARTEN (stationPS93/050-5 and 6), were retrieved using a TV-guided multiple corer. Surface sediments (0 - 2 cm) of 16 cores were mixed with sterile filtered deep-sea water to a final sediment dilution of 3.5 fold. The slurries were split and supplemented with five different types of habitat-related detritus: chitin, as the most abundant biopolymer in the oceans, and four different naturally occurring Arctic algae species, i.e. Thalassiosira weissflogii, Emiliania huxleyi, Bacillaria sp. and Melosira arctica. Incubations were performed in five replicates, at in situ temperature and at atmospheric pressure, as well as at in situ pressure of 250 atm. At the start of the incubation and after 23 days, changes in key community functions, i.e. extracellular enzymatic activity, oxygen respiration and secondary production of biomass (bacterial cell numbers and biomass), were assessed along with changes in the bacterial community composition based on 16S rRNA gene and 16S rRNA Illumina sequencing. In summary, differences in community structure and in the uptake and remineralization of carbon in the different treatments suggest an effect of organic matter quality on bacterial diversity as well as on carbon turnover at the seafloor. The work is part of the ERC Advanced Investigator Grant ABYSS (no. 294757) to Antje Boetius.',
-                'study_title': 'Response of Arctic benthic bacterial deep-sea communities to different detritus composition',
-                'study_alias': 'study_katy_hoffmann_2016'
-            }),
-            'researchobjecttype': 'study',
-            'brokerobjectid': '25',
-            'userid': 70001,
-        }]
-
-    @skip('get request to wp1 pub2 servers, readonly')
-    def test_gfbio_get_user_by_id_utils(self):
-        req_logs = RequestLog.objects.all()
-        site_config = SiteConfiguration.objects.get(pk=1)
-        pub2 = ResourceCredential()
-        pub2.title = 'test-pub2'
-        pub2.url = 'https://gfbio-pub2.inf-bb.uni-jena.de'
-        pub2.authentication_string = '-'
-        pub2.username = 'broker.agent@gfbio.org'
-        pub2.password = 'AgentPhase2'
-        pub2.comment = 'comment'
-        pub2.save()
-        site_config.gfbio_server = pub2
-        site_config.save()
-        response = gfbio_get_user_by_id(user_id='70001',
-                                        site_configuration=site_config)
-        req_logs = RequestLog.objects.all()
-
-    @skip('get request to wp1 servers, readonly')
-    def test_get_user_by_id_ws(self):
-        # url =  url = 'http://gfbio-pub2.inf-bb.uni-jena.de:8080/api/jsonws/' \
-        #       'GFBioProject-portlet.researchobject/create-research-object/' \
-        #       'request-json/{}'.format(json.dumps(test_data))
-        data = {
-            'userid': 16250
-        }
-        #                                       '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'
-        url = 'https://gfbio-pub2.inf-bb.uni-jena.de/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/'
-        # response = requests.post(
-        #     url=url,
-        #     headers={'Accept': 'application/json'},
-        #     auth=('broker.agent@gfbio.org', 'AgentPhase2'),
-        #     data=data
-        # )
-        # 200
-        # {"exception": "java.lang.RuntimeException",
-        #  "message": "No JSON web service action associated with path /userextension/get-user-by-id and method POST for //GFBioProject-portlet"}
-
-        url += 'request-json/{0}'.format(json.dumps(data))
-        response = requests.get(
-            url=url,
-            headers={'Accept': 'application/json'},
-            auth=('broker.agent@gfbio.org', 'AgentPhase2'),
-        )
-
-        content_dict = json.loads(response.content)
-        # 'userid': 16250
-        # 200
-        # {"firstname": "Marc", "middlename": "",
-        #  "^": "maweber@mpi-bremen.de", "fullname": "Marc Weber",
-        #  "screenname": "maweber", "userid": 16250, "lastname": "Weber"}
-
-        # 'userid': 16926
-        # 200
-        # {"ERROR": {"cause": null,
-        # "localizedMessage": "No User exists with the primary key 16926",
-        # "message": "No User exists with the primary key 16926",
-        # "ourStackTrace": [{
-        #                       "className": "com.liferay.portal.service.persistence.UserPersistenceImpl",
-        #                       "fileName": "UserPersistenceImpl.java",
-        #                       "lineNumber": 7199, ... COMPLETE STACKTRACE ...
-
-    @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
-    def test_gfbio_get_user_by_id(self, mock_requests):
-        mock_requests.get.return_value.status_code = 200
-        mock_requests.get.return_value.ok = True
-        response_data = {"firstname": "Marc", "middlename": "",
-                         "emailaddress": "maweber@mpi-bremen.de",
-                         "fullname": "Marc Weber",
-                         "screenname": "maweber", "userid": 16250,
-                         "lastname": "Weber"}
-        mock_requests.get.return_value.content = json.dumps(response_data)
-        conf = SiteConfiguration.objects.create(
-            title='Title',
-            site=User.objects.get(pk=1),
-            ena_server=ResourceCredential.objects.get(pk=1),
-            pangaea_server=ResourceCredential.objects.get(pk=2),
-            gfbio_server=ResourceCredential.objects.get(pk=1),
-            helpdesk_server=ResourceCredential.objects.get(pk=2),
-            comment='Comment'
-        )
-        submission = Submission.objects.first()
-        response = gfbio_get_user_by_id(16250, conf, submission=submission)
-        self.assertEqual(200, response.status_code)
-        content = json.loads(response.content)
-        self.assertDictEqual(response_data, content)
-
-        response = gfbio_get_user_by_id('16250', conf, submission=submission)
-        self.assertEqual(200, response.status_code)
-        content = json.loads(response.content)
-        self.assertDictEqual(response_data, content)
-
-    @skip('request to WP1 server')
-    def test_simple_request_to_wp1Ws(self):
-        # old style: no brokerobjecids
-        test_data = [
-            {
-                "name": "PID-TEST2",
-                "label": "PID-TEST-LABEL2",
-                "extendeddata": "{'metadata':'all_information_2'}",
-                "researchobjecttype": "sample",
-            },
-            {
-                "name": "PID-TEST3",
-                "label": "PID-TEST-LABEL3",
-                "extendeddata": "{'metadata':'all_information_3'}",
-                "researchobjecttype": "experiment",
-            }
-        ]
-        url = 'http://gfbio-pub2.inf-bb.uni-jena.de:8080/api/jsonws/' \
-              'GFBioProject-portlet.researchobject/create-research-object/' \
-              'request-json/{}'.format(json.dumps(test_data))
-
-        response = requests.get(
-            url=url,
-            auth=('broker.agent@gfbio.org', 'AgentPhase2'),
-            headers={
-                'Accept': 'application/json'
-            }
-        )
-
-        # 200 [{"researchobjectversion":1,"researchobjectid":801},{"researchobjectversion":1,"researchobjectid":802}]
-
-        # ----------------------------------------------------------------------
-        # new style: with brokerobjecids
-        test_data = [
-            {
-                "name": "PID-TEST2",
-                "label": "PID-TEST-LABEL2",
-                "extendeddata": "{'metadata':'all_information_2'}",
-                "researchobjecttype": "sample",
-                "brokerobjectid": 129
-            },
-            {
-                "name": "PID-TEST3",
-                "label": "PID-TEST-LABEL3",
-                "extendeddata": "{'metadata':'all_information_3'}",
-                "researchobjecttype": "experiment",
-                "brokerobjectid": 133
-            }
-        ]
-        url = 'http://gfbio-pub2.inf-bb.uni-jena.de:8080/api/jsonws/' \
-              'GFBioProject-portlet.researchobject/create-research-object/' \
-              'request-json/{}'.format(json.dumps(test_data))
-
-        response = requests.post(
-            url=url,
-            auth=('broker.agent@gfbio.org', 'AgentPhase2'),
-            headers={
-                'Accept': 'application/json'
-            }
-        )
-
-        # 200 [{"brokerobjectid":129,"researchobjectversion":1,"researchobjectid":803},{"brokerobjectid":133,"researchobjectversion":1,"researchobjectid":804}]
-
-    @skip('comparing output')
-    def test_dummy_id_view(self):
-        response = self.client.post('/brokerage/id/dummy/', {})
-        response = self.client.get('/brokerage/id/dummy/')
+# class TestInitialChainTasks(TestCase):
+#     fixtures = (
+#         'user', 'resource_credential', 'site_configuration', 'submission')
+#
+#     def _post_submission_data(self):
+#         VALID_USER = {'HTTP_AUTHORIZATION': 'Basic %s' % base64.encodebytes(
+#             b'horst:password')}
+#         return VALID_USER, self.client.post(
+#             '/api/submissions/',
+#             content_type='application/json',
+#             data=json.dumps({
+#                 'target': 'ENA',
+#                 'data': {
+#                     'requirements': {
+#                         'title': 'A Title',
+#                         'description': 'A Description'
+#                     }
+#                 }
+#             }), **VALID_USER)
+#
+#     @staticmethod
+#     def fake_user_email_task(submission_id=None):
+#         # self.email_called = True
+#         return True
+#
+#     @staticmethod
+#     def fake_create_ticket_task(prev_task_result=None, submission_id=None,
+#                                 summary=None,
+#                                 description=None):
+#         return True
+#
+#         # @staticmethod
+#         # def fake_check_on_hold():
+#         #     return True
+#
+#         # @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
+#         # def test_gfbio_get_user_by_id(self, mock_requests):
+#         #     mock_requests.post.return_value.status_code = 200
+#         #     mock_requests.post.return_value.ok = True
+#         #     response_data = {"firstname": "Marc", "middlename": "",
+#         #                      "emailaddress": "maweber@mpi-bremen.de",
+#         #                      "fullname": "Marc Weber",
+#         #                      "screenname": "maweber", "userid": 16250,
+#         #                      "lastname": "Weber"}
+#         #     mock_requests.post.return_value.content = json.dumps(response_data)
+#
+#     @responses.activate
+#     def test_min_post_initial_chain(self):
+#         VALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
+#         }
+#         sc = SiteConfiguration.objects.get(pk=1)
+#         responses.add(responses.POST,
+#                       '{0}{1}'.format(sc.helpdesk_server.url,
+#                                       HELPDESK_API_SUB_URL
+#                                       ),
+#                       json={"firstname": "Marc", "middlename": "",
+#                             "emailaddress": "maweber@mpi-bremen.de",
+#                             "fullname": "Marc Weber",
+#                             "screenname": "maweber", "userid": 16250,
+#                             "lastname": "Weber"},
+#                       status=200)
+#         min_response = self.client.post(
+#             '/api/submissions/',
+#             content_type='application/json',
+#             data=json.dumps({
+#                 'target': 'ENA',
+#                 'data': {
+#                     'requirements': {
+#                         'title': 'A Title',
+#                         'description': 'A Description'
+#                     }
+#                 }
+#             }),
+#             **VALID_USER)
+#         self.assertEqual(201, min_response.status_code)
+#
+#     @responses.activate
+#     def test_max_post_with_release_initial_chain(self):
+#         sc = SiteConfiguration.objects.get(pk=1)
+#         responses.add(responses.POST,
+#                       '{0}{1}'.format(sc.helpdesk_server.url,
+#                                       HELPDESK_API_SUB_URL
+#                                       ),
+#                       json={"firstname": "Marc", "middlename": "",
+#                             "emailaddress": "maweber@mpi-bremen.de",
+#                             "fullname": "Marc Weber",
+#                             "screenname": "maweber", "userid": 16250,
+#                             "lastname": "Weber"},
+#                       status=200)
+#         VALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
+#         }
+#         max_response = self.client.post(
+#             '/api/submissions/',
+#             content_type='application/json',
+#             data=json.dumps({
+#                 'target': 'ENA',
+#                 'release': True,
+#                 'data': TestAddSubmissionView.new_data
+#             }),
+#             **VALID_USER)
+#         self.assertEqual(201, max_response.status_code)
+#
+#     @responses.activate
+#     def test_max_post_without_release_initial_chain(self):
+#         sc = SiteConfiguration.objects.get(pk=1)
+#         responses.add(responses.POST,
+#                       '{0}{1}'.format(sc.helpdesk_server.url,
+#                                       HELPDESK_API_SUB_URL
+#                                       ),
+#                       json={"firstname": "Marc", "middlename": "",
+#                             "emailaddress": "maweber@mpi-bremen.de",
+#                             "fullname": "Marc Weber",
+#                             "screenname": "maweber", "userid": 16250,
+#                             "lastname": "Weber"},
+#                       status=200)
+#         VALID_USER = {
+#             'HTTP_AUTHORIZATION':
+#                 'Basic %s' % base64.b64encode(b'horst:password').decode('utf-8')
+#         }
+#         max_response = self.client.post(
+#             '/api/submissions/',
+#             content_type='application/json',
+#             data=json.dumps({
+#                 'target': 'ENA',
+#                 'release': False,
+#                 'data': TestAddSubmissionView.new_data
+#             }),
+#             **VALID_USER)
+#         self.assertEqual(201, max_response.status_code)
+#
+#     @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
+#     def test_put_initial_chain_no_release(self, mock_requests):
+#         VALID_USER, response = self._post_submission_data()
+#         mock_requests.post.return_value.status_code = 200
+#         mock_requests.post.return_value.ok = True
+#         response_data = {"firstname": "Marc", "middlename": "",
+#                          "emailaddress": "maweber@mpi-bremen.de",
+#                          "fullname": "Marc Weber",
+#                          "screenname": "maweber", "userid": 16250,
+#                          "lastname": "Weber"}
+#         mock_requests.post.return_value.content = json.dumps(response_data)
+#
+#         submission = Submission.objects.last()
+#
+#         response = self.client.put(
+#             '/api/submissions/{0}/'.format(
+#                 submission.broker_submission_id),
+#             content_type='application/json',
+#             data=json.dumps({
+#                 'target': 'ENA',
+#                 'release': False,
+#                 'data': {
+#                     'requirements': {
+#                         'title': 'A Title 0815',
+#                         'description': 'A Description 2'}
+#                 }
+#             }), **VALID_USER)
 
 
-@skip('completly skip this unil real use-case is defined')
-class TestGFBioSubmissionRegistryAccess(TestCase):
-    @skip('request to WP1 server')
-    def test_portal_create_submission_registry_ws(self):
-        # marcel: http://gfbio-pub2.inf-bb.uni-jena.de:8080/api/jsonws/GFBioProject-portlet.submission/create-submision".concat("/request-json/").concat(requestArray.toString())
-        data = json.dumps([
-            {
-                "userid": 15926,
-                "researchobjectid": 401,
-                "researchobjectversion": 1,
-                "archive": "PANGAEA",
-                "brokersubmissionid": "E7DAA13C-1AA7-40E7-AFCA-D0986F0AAC97"
-            }
-        ]).replace('\\"', '\'')
+# class TestServiceMethods(TestCase):
+#     fixtures = ('user', 'submission', 'resource_credential',
+#                 'site_configuration', 'broker_object')
+#
+#     def test_assemble_research_object_json(self):
+#         submission = FullWorkflowTest._prepare()
+#         prepared_json, broker_object_pks = gfbio_assemble_research_object_id_json(
+#             submission.brokerobject_set)
+#         self.assertTrue(isinstance(prepared_json, str))
+#         self.assertTrue(isinstance(broker_object_pks, list))
+#         json_result = json.loads(prepared_json)
+#         self.assertTrue(isinstance(json_result[0]['extendeddata'], str))
+#
+#     def test_gfbio_assign_research_object_ids(self):
+#         submission = FullWorkflowTest._prepare()
+#         response = requests.models.Response()
+#
+#         # 200 [{"brokerobjectid":129,"researchobjectversion":1,"researchobjectid":803},{"brokerobjectid":133,"researchobjectversion":1,"researchobjectid":804}]
+#         response.status_code = 200
+#         response._content = '[{"brokerobjectid":13,"researchobjectversion":1,' \
+#                             '"researchobjectid":803},{"brokerobjectid":14,' \
+#                             '"researchobjectversion":1,"researchobjectid":804},' \
+#                             '{"brokerobjectid":15,"researchobjectversion":1,' \
+#                             '"researchobjectid":805},{"brokerobjectid":16,' \
+#                             '"researchobjectversion":1,"researchobjectid":806},' \
+#                             '{"brokerobjectid":17,"researchobjectversion":1,"researchobjectid":807}, ' \
+#                             '{"brokerobjectid":18,"researchobjectversion":1,"researchobjectid":808}]'
+#
+#         with patch('requests.post', return_value=response) as r:
+#             res = gfbio_site_object_ids_service(submission,
+#                                                 SiteConfiguration.objects.get(
+#                                                     pk=1))
+#             self.assertEqual(200, response.status_code)
+#
+#     # TODO/FIXME: do a request to server to get repsonse, then use it to mock for testing
+#     # @skip('request to WP1 server')
+#     # def test_create_research_object_ids(self):
+#     #     submission_data = SubmissionData.objects.all().last()
+#     #     response = gfbio_create_research_object_ids(submission_data)
+#     #     self.assertEqual(200, response.status_code)
+#     #     self.assertTrue(isinstance(json.loads(response.content), list))
+#
+#     @skip('request to WP1 server')
+#     def test_create_single_research_object(self):
+#         sub = Submission.objects.get(pk=1)
+#         study = sub.brokerobject_set.filter(type='study').first()
+#         # FIXME: hardcoded values
+#         # name = study_alias aus study.data
+#         data = [{
+#             'name': 'study_katy_hoffmann_2016',
+#             'label': 'study_katy_hoffmann_2016',
+#             'description': 'Response of Arctic benthic bacterial deep-sea '
+#                            'communities to different detritus composition',
+#             'extendeddata': json.dumps({
+#                 'study_type': 'Metagenomics',
+#                 'center_name': 'MPI-BREM',
+#                 'study_abstract': 'In a multidisciplinary ex situ experiment, benthic bacterial deep-sea communities from 2,500 m water depth at the Long-Term Ecological Research Observatory HAUSGARTEN (stationPS93/050-5 and 6), were retrieved using a TV-guided multiple corer. Surface sediments (0 - 2 cm) of 16 cores were mixed with sterile filtered deep-sea water to a final sediment dilution of 3.5 fold. The slurries were split and supplemented with five different types of habitat-related detritus: chitin, as the most abundant biopolymer in the oceans, and four different naturally occurring Arctic algae species, i.e. Thalassiosira weissflogii, Emiliania huxleyi, Bacillaria sp. and Melosira arctica. Incubations were performed in five replicates, at in situ temperature and at atmospheric pressure, as well as at in situ pressure of 250 atm. At the start of the incubation and after 23 days, changes in key community functions, i.e. extracellular enzymatic activity, oxygen respiration and secondary production of biomass (bacterial cell numbers and biomass), were assessed along with changes in the bacterial community composition based on 16S rRNA gene and 16S rRNA Illumina sequencing. In summary, differences in community structure and in the uptake and remineralization of carbon in the different treatments suggest an effect of organic matter quality on bacterial diversity as well as on carbon turnover at the seafloor. The work is part of the ERC Advanced Investigator Grant ABYSS (no. 294757) to Antje Boetius.',
+#                 'study_title': 'Response of Arctic benthic bacterial deep-sea communities to different detritus composition',
+#                 'study_alias': 'study_katy_hoffmann_2016'
+#             }),
+#             'researchobjecttype': 'study',
+#             'brokerobjectid': '25',
+#             'userid': 70001,
+#         }]
+#
+#     @skip('get request to wp1 pub2 servers, readonly')
+#     def test_gfbio_get_user_by_id_utils(self):
+#         req_logs = RequestLog.objects.all()
+#         site_config = SiteConfiguration.objects.get(pk=1)
+#         pub2 = ResourceCredential()
+#         pub2.title = 'test-pub2'
+#         pub2.url = 'https://gfbio-pub2.inf-bb.uni-jena.de'
+#         pub2.authentication_string = '-'
+#         pub2.username = 'broker.agent@gfbio.org'
+#         pub2.password = 'AgentPhase2'
+#         pub2.comment = 'comment'
+#         pub2.save()
+#         site_config.gfbio_server = pub2
+#         site_config.save()
+#         response = gfbio_get_user_by_id(user_id='70001',
+#                                         site_configuration=site_config)
+#         req_logs = RequestLog.objects.all()
+#
+#     @skip('get request to wp1 servers, readonly')
+#     def test_get_user_by_id_ws(self):
+#         # url =  url = 'http://gfbio-pub2.inf-bb.uni-jena.de:8080/api/jsonws/' \
+#         #       'GFBioProject-portlet.researchobject/create-research-object/' \
+#         #       'request-json/{}'.format(json.dumps(test_data))
+#         data = {
+#             'userid': 16250
+#         }
+#         #                                       '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'
+#         url = 'https://gfbio-pub2.inf-bb.uni-jena.de/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/'
+#         # response = requests.post(
+#         #     url=url,
+#         #     headers={'Accept': 'application/json'},
+#         #     auth=('broker.agent@gfbio.org', 'AgentPhase2'),
+#         #     data=data
+#         # )
+#         # 200
+#         # {"exception": "java.lang.RuntimeException",
+#         #  "message": "No JSON web service action associated with path /userextension/get-user-by-id and method POST for //GFBioProject-portlet"}
+#
+#         url += 'request-json/{0}'.format(json.dumps(data))
+#         response = requests.get(
+#             url=url,
+#             headers={'Accept': 'application/json'},
+#             auth=('broker.agent@gfbio.org', 'AgentPhase2'),
+#         )
+#
+#         content_dict = json.loads(response.content)
+#         # 'userid': 16250
+#         # 200
+#         # {"firstname": "Marc", "middlename": "",
+#         #  "^": "maweber@mpi-bremen.de", "fullname": "Marc Weber",
+#         #  "screenname": "maweber", "userid": 16250, "lastname": "Weber"}
+#
+#         # 'userid': 16926
+#         # 200
+#         # {"ERROR": {"cause": null,
+#         # "localizedMessage": "No User exists with the primary key 16926",
+#         # "message": "No User exists with the primary key 16926",
+#         # "ourStackTrace": [{
+#         #                       "className": "com.liferay.portal.service.persistence.UserPersistenceImpl",
+#         #                       "fileName": "UserPersistenceImpl.java",
+#         #                       "lineNumber": 7199, ... COMPLETE STACKTRACE ...
+#
+#     @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
+#     def test_gfbio_get_user_by_id(self, mock_requests):
+#         mock_requests.get.return_value.status_code = 200
+#         mock_requests.get.return_value.ok = True
+#         response_data = {"firstname": "Marc", "middlename": "",
+#                          "emailaddress": "maweber@mpi-bremen.de",
+#                          "fullname": "Marc Weber",
+#                          "screenname": "maweber", "userid": 16250,
+#                          "lastname": "Weber"}
+#         mock_requests.get.return_value.content = json.dumps(response_data)
+#         conf = SiteConfiguration.objects.create(
+#             title='Title',
+#             site=User.objects.get(pk=1),
+#             ena_server=ResourceCredential.objects.get(pk=1),
+#             pangaea_server=ResourceCredential.objects.get(pk=2),
+#             gfbio_server=ResourceCredential.objects.get(pk=1),
+#             helpdesk_server=ResourceCredential.objects.get(pk=2),
+#             comment='Comment'
+#         )
+#         submission = Submission.objects.first()
+#         response = gfbio_get_user_by_id(16250, conf, submission=submission)
+#         self.assertEqual(200, response.status_code)
+#         content = json.loads(response.content)
+#         self.assertDictEqual(response_data, content)
+#
+#         response = gfbio_get_user_by_id('16250', conf, submission=submission)
+#         self.assertEqual(200, response.status_code)
+#         content = json.loads(response.content)
+#         self.assertDictEqual(response_data, content)
+#
+#     @skip('request to WP1 server')
+#     def test_simple_request_to_wp1Ws(self):
+#         # old style: no brokerobjecids
+#         test_data = [
+#             {
+#                 "name": "PID-TEST2",
+#                 "label": "PID-TEST-LABEL2",
+#                 "extendeddata": "{'metadata':'all_information_2'}",
+#                 "researchobjecttype": "sample",
+#             },
+#             {
+#                 "name": "PID-TEST3",
+#                 "label": "PID-TEST-LABEL3",
+#                 "extendeddata": "{'metadata':'all_information_3'}",
+#                 "researchobjecttype": "experiment",
+#             }
+#         ]
+#         url = 'http://gfbio-pub2.inf-bb.uni-jena.de:8080/api/jsonws/' \
+#               'GFBioProject-portlet.researchobject/create-research-object/' \
+#               'request-json/{}'.format(json.dumps(test_data))
+#
+#         response = requests.get(
+#             url=url,
+#             auth=('broker.agent@gfbio.org', 'AgentPhase2'),
+#             headers={
+#                 'Accept': 'application/json'
+#             }
+#         )
+#
+#         # 200 [{"researchobjectversion":1,"researchobjectid":801},{"researchobjectversion":1,"researchobjectid":802}]
+#
+#         # ----------------------------------------------------------------------
+#         # new style: with brokerobjecids
+#         test_data = [
+#             {
+#                 "name": "PID-TEST2",
+#                 "label": "PID-TEST-LABEL2",
+#                 "extendeddata": "{'metadata':'all_information_2'}",
+#                 "researchobjecttype": "sample",
+#                 "brokerobjectid": 129
+#             },
+#             {
+#                 "name": "PID-TEST3",
+#                 "label": "PID-TEST-LABEL3",
+#                 "extendeddata": "{'metadata':'all_information_3'}",
+#                 "researchobjecttype": "experiment",
+#                 "brokerobjectid": 133
+#             }
+#         ]
+#         url = 'http://gfbio-pub2.inf-bb.uni-jena.de:8080/api/jsonws/' \
+#               'GFBioProject-portlet.researchobject/create-research-object/' \
+#               'request-json/{}'.format(json.dumps(test_data))
+#
+#         response = requests.post(
+#             url=url,
+#             auth=('broker.agent@gfbio.org', 'AgentPhase2'),
+#             headers={
+#                 'Accept': 'application/json'
+#             }
+#         )
+#
+#         # 200 [{"brokerobjectid":129,"researchobjectversion":1,"researchobjectid":803},{"brokerobjectid":133,"researchobjectversion":1,"researchobjectid":804}]
+#
+#     @skip('comparing output')
+#     def test_dummy_id_view(self):
+#         response = self.client.post('/brokerage/id/dummy/', {})
+#         response = self.client.get('/brokerage/id/dummy/')
+#
 
-        url = 'http://gfbio-pub2.inf-bb.uni-jena.de:8080/' \
-              'api/jsonws/GFBioProject-portlet.submission/create-submision/' \
-              'request-json/{}'.format(data)
+# dont do, omit
+# @skip('completly skip this unil real use-case is defined')
+# class TestGFBioSubmissionRegistryAccess(TestCase):
+#     @skip('request to WP1 server')
+#     def test_portal_create_submission_registry_ws(self):
+#         # marcel: http://gfbio-pub2.inf-bb.uni-jena.de:8080/api/jsonws/GFBioProject-portlet.submission/create-submision".concat("/request-json/").concat(requestArray.toString())
+#         data = json.dumps([
+#             {
+#                 "userid": 15926,
+#                 "researchobjectid": 401,
+#                 "researchobjectversion": 1,
+#                 "archive": "PANGAEA",
+#                 "brokersubmissionid": "E7DAA13C-1AA7-40E7-AFCA-D0986F0AAC97"
+#             }
+#         ]).replace('\\"', '\'')
+#
+#         url = 'http://gfbio-pub2.inf-bb.uni-jena.de:8080/' \
+#               'api/jsonws/GFBioProject-portlet.submission/create-submision/' \
+#               'request-json/{}'.format(data)
+#
+#         headers = {
+#             'Accept': 'application/json'
+#         }
+#         response = requests.post(
+#             url=url,
+#             auth=('broker.agent@gfbio.org', 'AgentPhase2'),
+#             headers=headers,
+#             # data=data
+#         )
+#
+#     @skip('request to WP1 server')
+#     def test_portal_get_submission_registry_entries_via_bsi(self):
+#         data = json.dumps(
+#             {
+#                 "brokersubmissionid": "E7DAA13C-1AA7-40E7-AFCA-D0986F0AAC97"
+#             }
+#         ).replace('\\"', '\'')
+#
+#         url = 'http://gfbio-pub2.inf-bb.uni-jena.de:8080/api/jsonws/' \
+#               'GFBioProject-portlet.submission/get-submisions-by-broker-' \
+#               'submission-id/request-json/{}'.format(data)
+#
+#         headers = {
+#             'Accept': 'application/json'
+#         }
+#         response = requests.post(
+#             url=url,
+#             auth=('broker.agent@gfbio.org', 'AgentPhase2'),
+#             headers=headers,
+#             # data=data
+#         )
+#         content = json.loads(response.content)
+#         #     status:  200
+#         # [{u'archive': u'PANGAEA                                                                    ',
+#         #   u'archivepid': u'testPID1',
+#         #   u'archivepidtype': 1268,
+#         #   u'brokersubmissionid': u'E7DAA13C-1AA7-40E7-AFCA-D0986F0AAC97                                       ',
+#         #   u'ispublic': False,
+#         #   u'lastchanged': u'2016-03-01 11:02:43.572',
+#         #   u'publicafter': u'2016-08-16 00:00:00.0',
+#         #   u'researchobjectid': 301,
+#         #   u'researchobjectversion': 1,
+#         #   u'status': u'sent',
+#         #   u'userid': 15926}, (...) ]
+#
+#     @skip('request to WP1 server')
+#     def test_portal_get_submission_registry_entries_via_roid(self):
+#         data = json.dumps(
+#             {
+#                 'researchobjectid': 401
+#             }
+#         ).replace('\\"', '\'')
+#
+#         url = 'http://gfbio-pub2.inf-bb.uni-jena.de:8080/api/jsonws/' \
+#               'GFBioProject-portlet.submission/get-submisions-by-research-object-id/' \
+#               'request-json/{}'.format(data)
+#
+#         headers = {
+#             'Accept': 'application/json'
+#         }
+#         response = requests.post(
+#             url=url,
+#             auth=('broker.agent@gfbio.org', 'AgentPhase2'),
+#             headers=headers,
+#             # data=data
+#         )
+#         content = json.loads(response.content)
+#         # status:  200
+#         # [{u'archive': u'PANGAEA                                                                    ',
+#         #   u'archivepid': u'',
+#         #   u'archivepidtype': 1268,
+#         #   u'brokersubmissionid': u'E7DAA13C-1AA7-40E7-AFCA-D0986F0AAC97                                       ',
+#         #   u'ispublic': False,
+#         #   u'lastchanged': u'2016-03-07 15:35:46.225',
+#         #   u'publicafter': u'',
+#
+#         # TODO: this will be Brokerobject site_object_id
+#         #   u'researchobjectid': 401,
+#         #   u'researchobjectversion': 1,
+#         #   u'status': u'sent',
+#
+#         # TODO: this will be Submission submitting user
+#         #   u'userid': 15926}]
+#
+#     @skip('request to WP1 server')
+#     def test_portal_update_submission_registry_update(self):
+#         data = json.dumps([
+#             {
+#                 'researchobjectid': 401,
+#                 'brokersubmissionid': 'E7DAA13C-1AA7-40E7-AFCA-D0986F0AAC97',
+#                 'archive': 'PANGAEA',
+#                 'archivepid': 'ACC4711',
+#                 'userid': 15926
+#             }
+#         ])
+#
+#         data2 = json.dumps([
+#             {
+#                 "researchobjectid": 401,
+#                 "brokersubmissionid": "E7DAA13C-1AA7-40E7-AFCA-D0986F0AAC97",
+#                 "archive": "PANGAEA",
+#                 "archivepid": "ACC4711",
+#                 "userid": 15926
+#             }
+#         ])
+#
+#         url = 'http://gfbio-pub2.inf-bb.uni-jena.de:8080/api/jsonws/' \
+#               'GFBioProject-portlet.submission/update-submision/request-json/{}'.format(
+#             data)
+#
+#         headers = {
+#             'Accept': 'application/json'
+#         }
+#         response = requests.post(
+#             url=url,
+#             auth=('broker.agent@gfbio.org', 'AgentPhase2'),
+#             headers=headers,
+#         )
+#         content = json.loads(response.content)
+#
+#         # status:  200
+#         # [{u'archive': u'PANGAEA',
+#         #   u'researchobjectid': 401,
+#         #   u'researchobjectversion': 1}]
+#         #
 
-        headers = {
-            'Accept': 'application/json'
-        }
-        response = requests.post(
-            url=url,
-            auth=('broker.agent@gfbio.org', 'AgentPhase2'),
-            headers=headers,
-            # data=data
-        )
 
-    @skip('request to WP1 server')
-    def test_portal_get_submission_registry_entries_via_bsi(self):
-        data = json.dumps(
-            {
-                "brokersubmissionid": "E7DAA13C-1AA7-40E7-AFCA-D0986F0AAC97"
-            }
-        ).replace('\\"', '\'')
-
-        url = 'http://gfbio-pub2.inf-bb.uni-jena.de:8080/api/jsonws/' \
-              'GFBioProject-portlet.submission/get-submisions-by-broker-' \
-              'submission-id/request-json/{}'.format(data)
-
-        headers = {
-            'Accept': 'application/json'
-        }
-        response = requests.post(
-            url=url,
-            auth=('broker.agent@gfbio.org', 'AgentPhase2'),
-            headers=headers,
-            # data=data
-        )
-        content = json.loads(response.content)
-        #     status:  200
-        # [{u'archive': u'PANGAEA                                                                    ',
-        #   u'archivepid': u'testPID1',
-        #   u'archivepidtype': 1268,
-        #   u'brokersubmissionid': u'E7DAA13C-1AA7-40E7-AFCA-D0986F0AAC97                                       ',
-        #   u'ispublic': False,
-        #   u'lastchanged': u'2016-03-01 11:02:43.572',
-        #   u'publicafter': u'2016-08-16 00:00:00.0',
-        #   u'researchobjectid': 301,
-        #   u'researchobjectversion': 1,
-        #   u'status': u'sent',
-        #   u'userid': 15926}, (...) ]
-
-    @skip('request to WP1 server')
-    def test_portal_get_submission_registry_entries_via_roid(self):
-        data = json.dumps(
-            {
-                'researchobjectid': 401
-            }
-        ).replace('\\"', '\'')
-
-        url = 'http://gfbio-pub2.inf-bb.uni-jena.de:8080/api/jsonws/' \
-              'GFBioProject-portlet.submission/get-submisions-by-research-object-id/' \
-              'request-json/{}'.format(data)
-
-        headers = {
-            'Accept': 'application/json'
-        }
-        response = requests.post(
-            url=url,
-            auth=('broker.agent@gfbio.org', 'AgentPhase2'),
-            headers=headers,
-            # data=data
-        )
-        content = json.loads(response.content)
-        # status:  200
-        # [{u'archive': u'PANGAEA                                                                    ',
-        #   u'archivepid': u'',
-        #   u'archivepidtype': 1268,
-        #   u'brokersubmissionid': u'E7DAA13C-1AA7-40E7-AFCA-D0986F0AAC97                                       ',
-        #   u'ispublic': False,
-        #   u'lastchanged': u'2016-03-07 15:35:46.225',
-        #   u'publicafter': u'',
-
-        # TODO: this will be Brokerobject site_object_id
-        #   u'researchobjectid': 401,
-        #   u'researchobjectversion': 1,
-        #   u'status': u'sent',
-
-        # TODO: this will be Submission submitting user
-        #   u'userid': 15926}]
-
-    @skip('request to WP1 server')
-    def test_portal_update_submission_registry_update(self):
-        data = json.dumps([
-            {
-                'researchobjectid': 401,
-                'brokersubmissionid': 'E7DAA13C-1AA7-40E7-AFCA-D0986F0AAC97',
-                'archive': 'PANGAEA',
-                'archivepid': 'ACC4711',
-                'userid': 15926
-            }
-        ])
-
-        data2 = json.dumps([
-            {
-                "researchobjectid": 401,
-                "brokersubmissionid": "E7DAA13C-1AA7-40E7-AFCA-D0986F0AAC97",
-                "archive": "PANGAEA",
-                "archivepid": "ACC4711",
-                "userid": 15926
-            }
-        ])
-
-        url = 'http://gfbio-pub2.inf-bb.uni-jena.de:8080/api/jsonws/' \
-              'GFBioProject-portlet.submission/update-submision/request-json/{}'.format(
-            data)
-
-        headers = {
-            'Accept': 'application/json'
-        }
-        response = requests.post(
-            url=url,
-            auth=('broker.agent@gfbio.org', 'AgentPhase2'),
-            headers=headers,
-        )
-        content = json.loads(response.content)
-
-        # status:  200
-        # [{u'archive': u'PANGAEA',
-        #   u'researchobjectid': 401,
-        #   u'researchobjectversion': 1}]
-        #
-
-
-class TestGFBioJira(TestCase):
-    base_url = 'http://helpdesk.gfbio.org'
-    api_sub_url = '/rest/api/2/issue'
-
-    # TODO: get credential dynamically e.g. env or elsewhere
-    @skip('Test against helpdesk server')
-    def test_create_request(self):
-        url = 'http://helpdesk.gfbio.org/rest/api/2/issue/'
-        response = requests.post(
-            url=url,
-            auth=('brokeragent', 'puN;7_k[-"_,ZiJi'),
-            headers={
-                'Content-Type': 'application/json'
-            },
-            data=json.dumps({
-                'fields': {
-                    'project': {
-                        'key': 'SAND'
-                    },
-                    'summary': 'Testing REST API programmatic',
-                    'description': 'Generating JIRA issues via django unit-test.',
-                    'issuetype': {
-                        'name': 'IT Help'
-                    },
-                    'reporter': {
-                        'name': 'testuser1'
-                    },
-                    'customfield_10010': 'sand/data-submission'
-                }
-            })
-        )
-
-    @skip('Test against helpdesk server')
-    def test_comment_existing_ticket(self):
-        ticket_key = 'SAND-38'
-        ticket_action = 'comment'
-        url = '{0}{1}/{2}/{3}'.format(self.base_url, self.api_sub_url,
-                                      ticket_key, ticket_action)
-        response = requests.post(
-            url=url,
-            auth=('brokeragent', 'puN;7_k[-"_,ZiJi'),
-            headers={
-                'Content-Type': 'application/json'
-            },
-            data=json.dumps({
-                'body': 'programmatic update of ticket {}'.format(ticket_key)
-            })
-        )
-        # working (compate test above)! -> output:
-        # response.status  201
-        # content
-        # {u'author': {u'active': True,
-        #              u'avatarUrls': {u'16x16': u'http://helpdesk.gfbio.org/secure/useravatar?size=xsmall&avatarId=10122',
-        #                              u'24x24': u'http://helpdesk.gfbio.org/secure/useravatar?size=small&avatarId=10122',
-        #                              u'32x32': u'http://helpdesk.gfbio.org/secure/useravatar?size=medium&avatarId=10122',
-        #                              u'48x48': u'http://helpdesk.gfbio.org/secure/useravatar?avatarId=10122'},
-        #              u'displayName': u'Broker Agent',
-        #              u'emailAddress': u'brokeragent@gfbio.org',
-        #              u'key': u'brokeragent@gfbio.org',
-        #              u'name': u'brokeragent',
-        #              u'self': u'http://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent',
-        #              u'timeZone': u'Etc/UTC'},
-        #  u'body': u'programmatic update of ticket SAND-38',
-        #  u'created': u'2016-01-26T14:00:06.449+0000',
-        #  u'id': u'10111',
-        #  u'self': u'http://helpdesk.gfbio.org/rest/api/2/issue/10129/comment/10111',
-        #  u'updateAuthor': {u'active': True,
-        #                    u'avatarUrls': {u'16x16': u'http://helpdesk.gfbio.org/secure/useravatar?size=xsmall&avatarId=10122',
-        #                                    u'24x24': u'http://helpdesk.gfbio.org/secure/useravatar?size=small&avatarId=10122',
-        #                                    u'32x32': u'http://helpdesk.gfbio.org/secure/useravatar?size=medium&avatarId=10122',
-        #                                    u'48x48': u'http://helpdesk.gfbio.org/secure/useravatar?avatarId=10122'},
-        #                    u'displayName': u'Broker Agent',
-        #                    u'emailAddress': u'brokeragent@gfbio.org',
-        #                    u'key': u'brokeragent@gfbio.org',
-        #                    u'name': u'brokeragent',
-        #                    u'self': u'http://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent',
-        #                    u'timeZone': u'Etc/UTC'},
-        #  u'updated': u'2016-01-26T14:00:06.449+0000'}
-
+# class TestGFBioJira(TestCase):
+#     base_url = 'http://helpdesk.gfbio.org'
+#     api_sub_url = '/rest/api/2/issue'
+#
+#     # TODO: get credential dynamically e.g. env or elsewhere
+#     @skip('Test against helpdesk server')
+#     def test_create_request(self):
+#         url = 'http://helpdesk.gfbio.org/rest/api/2/issue/'
+#         response = requests.post(
+#             url=url,
+#             auth=('brokeragent', 'puN;7_k[-"_,ZiJi'),
+#             headers={
+#                 'Content-Type': 'application/json'
+#             },
+#             data=json.dumps({
+#                 'fields': {
+#                     'project': {
+#                         'key': 'SAND'
+#                     },
+#                     'summary': 'Testing REST API programmatic',
+#                     'description': 'Generating JIRA issues via django unit-test.',
+#                     'issuetype': {
+#                         'name': 'IT Help'
+#                     },
+#                     'reporter': {
+#                         'name': 'testuser1'
+#                     },
+#                     'customfield_10010': 'sand/data-submission'
+#                 }
+#             })
+#         )
+#
+#     @skip('Test against helpdesk server')
+#     def test_comment_existing_ticket(self):
+#         ticket_key = 'SAND-38'
+#         ticket_action = 'comment'
+#         url = '{0}{1}/{2}/{3}'.format(self.base_url, self.api_sub_url,
+#                                       ticket_key, ticket_action)
+#         response = requests.post(
+#             url=url,
+#             auth=('brokeragent', 'puN;7_k[-"_,ZiJi'),
+#             headers={
+#                 'Content-Type': 'application/json'
+#             },
+#             data=json.dumps({
+#                 'body': 'programmatic update of ticket {}'.format(ticket_key)
+#             })
+#         )
+#         # working (compate test above)! -> output:
+#         # response.status  201
+#         # content
+#         # {u'author': {u'active': True,
+#         #              u'avatarUrls': {u'16x16': u'http://helpdesk.gfbio.org/secure/useravatar?size=xsmall&avatarId=10122',
+#         #                              u'24x24': u'http://helpdesk.gfbio.org/secure/useravatar?size=small&avatarId=10122',
+#         #                              u'32x32': u'http://helpdesk.gfbio.org/secure/useravatar?size=medium&avatarId=10122',
+#         #                              u'48x48': u'http://helpdesk.gfbio.org/secure/useravatar?avatarId=10122'},
+#         #              u'displayName': u'Broker Agent',
+#         #              u'emailAddress': u'brokeragent@gfbio.org',
+#         #              u'key': u'brokeragent@gfbio.org',
+#         #              u'name': u'brokeragent',
+#         #              u'self': u'http://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent',
+#         #              u'timeZone': u'Etc/UTC'},
+#         #  u'body': u'programmatic update of ticket SAND-38',
+#         #  u'created': u'2016-01-26T14:00:06.449+0000',
+#         #  u'id': u'10111',
+#         #  u'self': u'http://helpdesk.gfbio.org/rest/api/2/issue/10129/comment/10111',
+#         #  u'updateAuthor': {u'active': True,
+#         #                    u'avatarUrls': {u'16x16': u'http://helpdesk.gfbio.org/secure/useravatar?size=xsmall&avatarId=10122',
+#         #                                    u'24x24': u'http://helpdesk.gfbio.org/secure/useravatar?size=small&avatarId=10122',
+#         #                                    u'32x32': u'http://helpdesk.gfbio.org/secure/useravatar?size=medium&avatarId=10122',
+#         #                                    u'48x48': u'http://helpdesk.gfbio.org/secure/useravatar?avatarId=10122'},
+#         #                    u'displayName': u'Broker Agent',
+#         #                    u'emailAddress': u'brokeragent@gfbio.org',
+#         #                    u'key': u'brokeragent@gfbio.org',
+#         #                    u'name': u'brokeragent',
+#         #                    u'self': u'http://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent',
+#         #                    u'timeZone': u'Etc/UTC'},
+#         #  u'updated': u'2016-01-26T14:00:06.449+0000'}
+#
 
 class TestCeleryTasks(TestCase):
     # 'persistent_identifier',

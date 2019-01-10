@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
+import json
+from unittest import skip
 from uuid import uuid4
 
 import requests
 import responses
-from unittest import skip
 from django.test import TestCase
 from django.utils.encoding import smart_text
+from mock import patch
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    PANGAEA_ISSUE_BASE_URL
+    PANGAEA_ISSUE_BASE_URL, HELPDESK_API_SUB_URL
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
     ResourceCredential, SiteConfiguration, RequestLog, AdditionalReference
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
@@ -16,6 +18,8 @@ from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_pangaea_soap_body, _get_pangaea_soap_response
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
     send_submission_to_ena
+from gfbio_submissions.brokerage.utils.gfbio import \
+    gfbio_assemble_research_object_id_json, gfbio_get_user_by_id
 from gfbio_submissions.brokerage.utils.pangaea import \
     request_pangaea_login_token, parse_pangaea_login_token_response, \
     get_pangaea_login_token, create_pangaea_jira_ticket
@@ -484,7 +488,8 @@ class PangaeaTicketTest(TestCase):
         self.assertEqual(1, len(submissions_with_reference))
         self.assertEqual(
             1,
-            len(submissions_with_reference.first().additionalreference_set.all())
+            len(
+                submissions_with_reference.first().additionalreference_set.all())
         )
         self.assertEqual(
             1,
@@ -494,3 +499,109 @@ class PangaeaTicketTest(TestCase):
         ref = submissions_with_reference.first().additionalreference_set.filter(
             type=AdditionalReference.PANGAEA_JIRA_TICKET).first()
         self.assertEqual('PDI-0815', ref.reference_key)
+
+
+class TestServiceMethods(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        User.objects.create(
+            username="user1"
+        )
+        resource_credential = ResourceCredential.objects.create(
+            url='https://gfbio-pub2.inf-bb.uni-jena.de',
+            title='gfbio_portal',
+            authentication_string='-',
+            username='broker.agent@gfbio.org',
+            password='',
+            comment='comment',
+        )
+        SiteConfiguration.objects.create(
+            title='default',
+            site=None,
+            ena_server=resource_credential,
+            pangaea_server=resource_credential,
+            gfbio_server=resource_credential,
+            helpdesk_server=resource_credential,
+            comment='',
+        )
+        SubmissionTest._create_submission_via_serializer()
+
+    def test_assemble_research_object_json(self):
+        submission = Submission.objects.first()
+        prepared_json, broker_object_pks = \
+            gfbio_assemble_research_object_id_json(submission.brokerobject_set)
+        self.assertTrue(isinstance(prepared_json, str))
+        self.assertTrue(isinstance(broker_object_pks, list))
+        json_result = json.loads(prepared_json)
+        self.assertTrue(isinstance(json_result[0]['extendeddata'], str))
+
+    @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
+    def test_gfbio_get_user_by_id(self, mock_requests):
+        mock_requests.get.return_value.status_code = 200
+        mock_requests.get.return_value.ok = True
+        response_data = {"firstname": "Marc", "middlename": "",
+                         "emailaddress": "maweber@mpi-bremen.de",
+                         "fullname": "Marc Weber",
+                         "screenname": "maweber", "userid": 16250,
+                         "lastname": "Weber"}
+        mock_requests.get.return_value.content = json.dumps(response_data)
+        conf = SiteConfiguration.objects.first()
+        submission = Submission.objects.first()
+        response = gfbio_get_user_by_id(16250, conf, submission=submission)
+        self.assertEqual(200, response.status_code)
+        content = json.loads(response.content)
+        self.assertDictEqual(response_data, content)
+
+        response = gfbio_get_user_by_id('16250', conf, submission=submission)
+        self.assertEqual(200, response.status_code)
+        content = json.loads(response.content)
+        self.assertDictEqual(response_data, content)
+
+
+class TestGFBioJira(TestCase):
+    base_url = 'http://helpdesk.gfbio.org'
+
+    @skip('Test against helpdesk server')
+    def test_create_request(self):
+        url = 'http://helpdesk.gfbio.org{0}'.format(HELPDESK_API_SUB_URL)
+        response = requests.post(
+            url=url,
+            auth=('brokeragent', ''),
+            headers={
+                'Content-Type': 'application/json'
+            },
+            data=json.dumps({
+                'fields': {
+                    'project': {
+                        'key': 'SAND'
+                    },
+                    'summary': 'Testing REST API programmatic',
+                    'description': 'Generating JIRA issues via django unit-test.',
+                    'issuetype': {
+                        'name': 'IT Help'
+                    },
+                    'reporter': {
+                        'name': 'testuser1'
+                    },
+                    'customfield_10010': 'sand/data-submission'
+                }
+            })
+        )
+
+    @skip('Test against helpdesk server')
+    def test_comment_existing_ticket(self):
+        ticket_key = 'SAND-38'
+        ticket_action = 'comment'
+        url = '{0}{1}/{2}/{3}'.format(self.base_url, HELPDESK_API_SUB_URL,
+                                      ticket_key, ticket_action)
+        response = requests.post(
+            url=url,
+            auth=('brokeragent', ''),
+            headers={
+                'Content-Type': 'application/json'
+            },
+            data=json.dumps({
+                'body': 'programmatic update of ticket {}'.format(ticket_key)
+            })
+        )
