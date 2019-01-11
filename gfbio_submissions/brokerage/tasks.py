@@ -421,6 +421,7 @@ def request_pangaea_login_token_task(previous_task_result=None,
         apply_default_task_retry_policy(response,
                                         request_pangaea_login_token_task,
                                         submission)
+        print('RESP ', response.content)
         login_token = parse_pangaea_login_token_response(response)
         return login_token
     else:
@@ -434,6 +435,8 @@ def create_pangaea_jira_ticket_task(login_token=None, submission_id=None):
     submission, site_configuration = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
         submission_id=submission_id, task=create_pangaea_jira_ticket_task
     )
+    print('SUBMSISION ',submission)
+    print('CONF ', site_configuration)
     if submission is not None and site_configuration is not None:
         response = create_pangaea_jira_ticket(login_token=login_token,
                                               site_configuration=site_configuration,

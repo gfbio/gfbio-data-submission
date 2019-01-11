@@ -214,56 +214,6 @@ class TestTasks(TestCase):
 
 class TestSubmissionTransferTasks(TestTasks):
 
-    # @classmethod
-    # def setUpTestData(cls):
-    #     super().setUpTestData()
-    #     print('\nTEST Subclass SETUP')
-    #     permissions = Permission.objects.filter(
-    #         content_type__app_label='brokerage',
-    #         name__endswith='primary data file')
-    #     user = User.objects.create(
-    #         username='user1'
-    #     )
-    #     user.user_permissions.add(*permissions)
-    #     submission = SubmissionTest._create_submission_via_serializer()
-    #     submission.additionalreference_set.create(
-    #         type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-    #         reference_key='FAKE_KEY',
-    #         primary=True
-    #     )
-    #     submission.additionalreference_set.create(
-    #         type=AdditionalReference.PANGAEA_JIRA_TICKET,
-    #         reference_key='PANGAEA_FAKE_KEY',
-    #         primary=True
-    #     )
-    #     submission = SubmissionTest._create_submission_via_serializer()
-    #     submission.submitting_user = '16250'
-    #     submission.save()
-    #     resource_cred = ResourceCredential.objects.create(
-    #         title='Resource Title',
-    #         url='https://www.example.com',
-    #         authentication_string='letMeIn'
-    #     )
-    #     SiteConfiguration.objects.create(
-    #         title='default',
-    #         site=None,
-    #         ena_server=resource_cred,
-    #         pangaea_server=resource_cred,
-    #         gfbio_server=resource_cred,
-    #         helpdesk_server=resource_cred,
-    #         comment='Default configuration',
-    #         contact='kevin@horstmeier.de'
-    #     )
-    #     SiteConfiguration.objects.create(
-    #         title='default-2',
-    #         site=None,
-    #         ena_server=resource_cred,
-    #         pangaea_server=resource_cred,
-    #         gfbio_server=resource_cred,
-    #         helpdesk_server=resource_cred,
-    #         comment='Default configuration 2',
-    #     )
-
     def test_prepare_ena_submission_data_task(self):
         submission = Submission.objects.first()
         text_data = AuditableTextData.objects.all()
@@ -357,9 +307,10 @@ class TestSubmissionTransferTasks(TestTasks):
         submission = Submission.objects.first()
         # fix ids to match ena_response.xml test-data aliases when running
         # multiple tests
-        related_broker_objects = BrokerObject.objects.filter(submissions=submission)
+        related_broker_objects = BrokerObject.objects.filter(
+            submissions=submission)
         for i in range(0, len(related_broker_objects)):
-            related_broker_objects[i].pk = i+1
+            related_broker_objects[i].pk = i + 1
             related_broker_objects[i].save()
 
         conf = SiteConfiguration.objects.first()
@@ -386,9 +337,6 @@ class TestSubmissionTransferTasks(TestTasks):
         self.assertTrue(ret_val)
         self.assertLess(0, len(PersistentIdentifier.objects.all()))
         # submission.delete()
-
-
-
 
 
 class TestSubmissionPreparationTasks(TestTasks):

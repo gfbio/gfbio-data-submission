@@ -5263,111 +5263,111 @@ def fake_trigger_submission_transfer(submission_id=None):
 #                            len_auditable_text_datas)
 
 
-class TestSubmissionTransferHandler(TestCase):
-    fixtures = ('user', 'submission', 'broker_object',
-                'resource_credential', 'persistent_identifier',
-                'site_configuration')
-
-    def test_instance(self):
-        transfer_handler = SubmissionTransferHandler(
-            submission_id=1,
-            target_archive='ENA'
-        )
-        self.assertIsInstance(transfer_handler, SubmissionTransferHandler)
-        self.assertEqual(1, transfer_handler.submission_id)
-        self.assertEqual('ENA', transfer_handler.target_archive)
-
-    def test_get_submisssion_and_siteconfig_for_task(self):
-        sub, conf = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
-            submission_id=1)
-        reports = TaskProgressReport.objects.all()
-        self.assertEqual(0, len(reports))
-        self.assertIsInstance(sub, Submission)
-        self.assertIsInstance(conf, SiteConfiguration)
-
-    @skip(
-        'currently this method is not supposed to rise an exception, so task.chain can proceed in a controlled way')
-    def test_invalid_submission_id(self):
-        with self.assertRaises(
-                SubmissionTransferHandler.TransferInternalError) as exc:
-            sub, conf = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
-                submission_id=99)
-
-    def test_no_site_config(self):
-        confs = SiteConfiguration.objects.all()
-        sub = Submission.objects.get(pk=1)
-        sub.site = User.objects.get(pk=2)
-        sub.save()
-        sub, conf = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
-            submission_id=1)
-        reports = TaskProgressReport.objects.all()
-        self.assertEqual(0, len(reports))
-        self.assertIsInstance(conf, SiteConfiguration)
-        self.assertEqual('default', conf.title)
-
-    def test_no_site_config_without_default(self):
-        site_config = SiteConfiguration.objects.get(pk=2)
-        site_config.delete()
-        submission = Submission.objects.get(pk=1)
-        # submission.on_hold = True
-        submission.site = User.objects.get(pk=2)
-        submission.save()
-        with self.assertRaises(
-                SubmissionTransferHandler.TransferInternalError) as exc:
-            sub, conf = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
-                submission_id=1)
-
-    def test_raise_400_exception(self):
-        response = requests.models.Response()
-        response.status_code = 401
-        response._content = '{}'
-        with self.assertRaises(
-                SubmissionTransferHandler.TransferClientError) as exc:
-            SubmissionTransferHandler.raise_response_exceptions(response)
-
-    def test_raise_500_exception(self):
-        response = requests.models.Response()
-        response.status_code = 500
-        response._content = '{}'
-        with self.assertRaises(
-                SubmissionTransferHandler.TransferServerError) as exc:
-            SubmissionTransferHandler.raise_response_exceptions(response)
-
-    @patch('gfbio_submissions.brokerage.utils.ena.requests')
-    def test_execute_ena_only(self, mock_requests):
-        sth = SubmissionTransferHandler(submission_id=1, target_archive='ENA')
-        # with patch('config.celeryconfig.CELERY_ALWAYS_EAGER', True,
-        #            create=True):
-        mock_requests.post.return_value.status_code = 201
-        mock_requests.post.return_value.ok = True
-        mock_requests.post.return_value.content = '{}'
-        # FIXME: No Idea what is supposed to happen here, compare in genomicsdataservices test
-        # with self.assertRaises(AttributeError) as exc:
-        #     sth.execute_submission_to_ena()
-        sth.execute_submission_to_ena()
-
-    @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
-    @patch('gfbio_submissions.brokerage.utils.ena.requests')
-    @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
-    def test_execute_ena_pangaea(self, mock_requests, m2, m3):
-        sth = SubmissionTransferHandler(submission_id=1,
-                                        target_archive='ENA_PANGAEA')
-        # try:
-        # with patch('config.celeryconfig.CELERY_ALWAYS_EAGER', True,
-        #           create=True):
-        sub = Submission.objects.get(pk=1)
-        sub.additionalreference_set.create(
-            type=AdditionalReference.PANGAEA_JIRA_TICKET,
-            reference_key='FAKE_KEY',
-            primary=True
-        )
-        mock_requests.post.return_value.status_code = 201
-        mock_requests.post.return_value.ok = True
-        mock_requests.post.return_value.content = '{"a": 2}'
-        # FIXME: No Idea what is supposed to happen here, compare in genomicsdataservices test
-        # with self.assertRaises(AttributeError) as exc:
-        #     sth.execute_submission_to_ena_and_pangaea()
-        sth.execute_submission_to_ena_and_pangaea()
+# class TestSubmissionTransferHandler(TestCase):
+#     fixtures = ('user', 'submission', 'broker_object',
+#                 'resource_credential', 'persistent_identifier',
+#                 'site_configuration')
+#
+#     def test_instance(self):
+#         transfer_handler = SubmissionTransferHandler(
+#             submission_id=1,
+#             target_archive='ENA'
+#         )
+#         self.assertIsInstance(transfer_handler, SubmissionTransferHandler)
+#         self.assertEqual(1, transfer_handler.submission_id)
+#         self.assertEqual('ENA', transfer_handler.target_archive)
+#
+#     def test_get_submisssion_and_siteconfig_for_task(self):
+#         sub, conf = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+#             submission_id=1)
+#         reports = TaskProgressReport.objects.all()
+#         self.assertEqual(0, len(reports))
+#         self.assertIsInstance(sub, Submission)
+#         self.assertIsInstance(conf, SiteConfiguration)
+#
+#     @skip(
+#         'currently this method is not supposed to rise an exception, so task.chain can proceed in a controlled way')
+#     def test_invalid_submission_id(self):
+#         with self.assertRaises(
+#                 SubmissionTransferHandler.TransferInternalError) as exc:
+#             sub, conf = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+#                 submission_id=99)
+#
+#     def test_no_site_config(self):
+#         confs = SiteConfiguration.objects.all()
+#         sub = Submission.objects.get(pk=1)
+#         sub.site = User.objects.get(pk=2)
+#         sub.save()
+#         sub, conf = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+#             submission_id=1)
+#         reports = TaskProgressReport.objects.all()
+#         self.assertEqual(0, len(reports))
+#         self.assertIsInstance(conf, SiteConfiguration)
+#         self.assertEqual('default', conf.title)
+#
+#     def test_no_site_config_without_default(self):
+#         site_config = SiteConfiguration.objects.get(pk=2)
+#         site_config.delete()
+#         submission = Submission.objects.get(pk=1)
+#         # submission.on_hold = True
+#         submission.site = User.objects.get(pk=2)
+#         submission.save()
+#         with self.assertRaises(
+#                 SubmissionTransferHandler.TransferInternalError) as exc:
+#             sub, conf = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+#                 submission_id=1)
+#
+#     def test_raise_400_exception(self):
+#         response = requests.models.Response()
+#         response.status_code = 401
+#         response._content = '{}'
+#         with self.assertRaises(
+#                 SubmissionTransferHandler.TransferClientError) as exc:
+#             SubmissionTransferHandler.raise_response_exceptions(response)
+#
+#     def test_raise_500_exception(self):
+#         response = requests.models.Response()
+#         response.status_code = 500
+#         response._content = '{}'
+#         with self.assertRaises(
+#                 SubmissionTransferHandler.TransferServerError) as exc:
+#             SubmissionTransferHandler.raise_response_exceptions(response)
+#
+#     @patch('gfbio_submissions.brokerage.utils.ena.requests')
+#     def test_execute_ena_only(self, mock_requests):
+#         sth = SubmissionTransferHandler(submission_id=1, target_archive='ENA')
+#         # with patch('config.celeryconfig.CELERY_ALWAYS_EAGER', True,
+#         #            create=True):
+#         mock_requests.post.return_value.status_code = 201
+#         mock_requests.post.return_value.ok = True
+#         mock_requests.post.return_value.content = '{}'
+#         # FIXME: No Idea what is supposed to happen here, compare in genomicsdataservices test
+#         # with self.assertRaises(AttributeError) as exc:
+#         #     sth.execute_submission_to_ena()
+#         sth.execute_submission_to_ena()
+#
+#     @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
+#     @patch('gfbio_submissions.brokerage.utils.ena.requests')
+#     @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
+#     def test_execute_ena_pangaea(self, mock_requests, m2, m3):
+#         sth = SubmissionTransferHandler(submission_id=1,
+#                                         target_archive='ENA_PANGAEA')
+#         # try:
+#         # with patch('config.celeryconfig.CELERY_ALWAYS_EAGER', True,
+#         #           create=True):
+#         sub = Submission.objects.get(pk=1)
+#         sub.additionalreference_set.create(
+#             type=AdditionalReference.PANGAEA_JIRA_TICKET,
+#             reference_key='FAKE_KEY',
+#             primary=True
+#         )
+#         mock_requests.post.return_value.status_code = 201
+#         mock_requests.post.return_value.ok = True
+#         mock_requests.post.return_value.content = '{"a": 2}'
+#         # FIXME: No Idea what is supposed to happen here, compare in genomicsdataservices test
+#         # with self.assertRaises(AttributeError) as exc:
+#         #     sth.execute_submission_to_ena_and_pangaea()
+#         sth.execute_submission_to_ena_and_pangaea()
 
 
 class TestSubmissionFileUpload(APITestCase):

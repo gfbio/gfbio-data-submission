@@ -10,12 +10,14 @@ from django.utils.encoding import smart_text
 from mock import patch
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    PANGAEA_ISSUE_BASE_URL, HELPDESK_API_SUB_URL
+    PANGAEA_ISSUE_BASE_URL, HELPDESK_API_SUB_URL, HELPDESK_COMMENT_SUB_URL
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
-    ResourceCredential, SiteConfiguration, RequestLog, AdditionalReference
+    ResourceCredential, SiteConfiguration, RequestLog, AdditionalReference, \
+    TaskProgressReport
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
-    _get_pangaea_soap_body, _get_pangaea_soap_response
+    _get_pangaea_soap_body, _get_pangaea_soap_response, \
+    _get_pangaea_attach_response, _get_pangaea_comment_response
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
     send_submission_to_ena
 from gfbio_submissions.brokerage.utils.gfbio import \
@@ -23,6 +25,8 @@ from gfbio_submissions.brokerage.utils.gfbio import \
 from gfbio_submissions.brokerage.utils.pangaea import \
     request_pangaea_login_token, parse_pangaea_login_token_response, \
     get_pangaea_login_token, create_pangaea_jira_ticket
+from gfbio_submissions.brokerage.utils.submission_transfer import \
+    SubmissionTransferHandler
 from gfbio_submissions.users.models import User
 
 
@@ -605,3 +609,179 @@ class TestGFBioJira(TestCase):
                 'body': 'programmatic update of ticket {}'.format(ticket_key)
             })
         )
+
+
+class TestSubmissionTransferHandler(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        user = User.objects.create(
+            username="user1"
+        )
+        resource_cred = ResourceCredential.objects.create(
+            title='Pangaea Credential',
+            url='https://ws.pangaea.de/ws/services/PanLogin',
+            username='gfbio-broker',
+            password='secret'
+        )
+        resource_cred_2 = ResourceCredential.objects.create(
+            title='Resource Title',
+            url='https://www.example.com',
+            authentication_string='letMeIn'
+        )
+        SiteConfiguration.objects.create(
+            title='Title',
+            site=user,
+            ena_server=resource_cred_2,
+            pangaea_server=resource_cred,
+            gfbio_server=resource_cred,
+            helpdesk_server=resource_cred,
+            comment='Comment',
+        )
+        SiteConfiguration.objects.create(
+            title='default',
+            site=None,
+            ena_server=resource_cred_2,
+            pangaea_server=resource_cred,
+            gfbio_server=resource_cred,
+            helpdesk_server=resource_cred,
+            comment='Comment',
+        )
+        submission = SubmissionTest._create_submission_via_serializer()
+        submission.additionalreference_set.create(
+            type=AdditionalReference.PANGAEA_JIRA_TICKET,
+            reference_key='FAKE_KEY',
+            primary=True
+        )
+        submission = Submission.objects.create(site=None)
+
+    def test_instance(self):
+        submission = Submission.objects.first()
+        transfer_handler = SubmissionTransferHandler(
+            submission_id=submission.pk,
+            target_archive='ENA'
+        )
+        self.assertIsInstance(transfer_handler, SubmissionTransferHandler)
+        self.assertEqual(submission.pk, transfer_handler.submission_id)
+        self.assertEqual('ENA', transfer_handler.target_archive)
+
+    def test_get_submisssion_and_siteconfig_for_task(self):
+        submission = Submission.objects.first()
+        sub, conf = \
+            SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+                submission_id=submission.pk)
+        reports = TaskProgressReport.objects.all()
+        self.assertEqual(0, len(reports))
+        self.assertIsInstance(sub, Submission)
+        self.assertIsInstance(conf, SiteConfiguration)
+
+    @skip('currently this method is not supposed to rise an exception, '
+          'so task.chain can proceed in a controlled way')
+    def test_invalid_submission_id(self):
+        with self.assertRaises(
+                SubmissionTransferHandler.TransferInternalError) as exc:
+            sub, conf = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+                submission_id=99)
+
+    def test_no_site_config(self):
+        sub, conf = \
+            SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+                submission_id=Submission.objects.last().pk)
+        reports = TaskProgressReport.objects.all()
+        self.assertEqual(0, len(reports))
+        self.assertIsInstance(conf, SiteConfiguration)
+        self.assertEqual('default', conf.title)
+
+    def test_no_site_config_without_default(self):
+        site_config = SiteConfiguration.objects.last()
+        site_config.delete()
+        submission = Submission.objects.last()
+        with self.assertRaises(
+                SubmissionTransferHandler.TransferInternalError) as exc:
+            sub, conf = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+                submission_id=submission.pk)
+
+    def test_raise_400_exception(self):
+        response = requests.models.Response()
+        response.status_code = 401
+        response._content = '{}'
+        with self.assertRaises(
+                SubmissionTransferHandler.TransferClientError) as exc:
+            SubmissionTransferHandler.raise_response_exceptions(response)
+
+    def test_raise_500_exception(self):
+        response = requests.models.Response()
+        response.status_code = 500
+        response._content = '{}'
+        with self.assertRaises(
+                SubmissionTransferHandler.TransferServerError) as exc:
+            SubmissionTransferHandler.raise_response_exceptions(response)
+
+    @responses.activate
+    def test_execute_ena_only(self):
+        submission = Submission.objects.first()
+        conf = SiteConfiguration.objects.first()
+        responses.add(
+            responses.POST,
+            conf.ena_server.url,
+            status=200,
+            body=_get_ena_xml_response()
+        )
+        url = '{0}{1}/{2}/{3}'.format(
+            conf.helpdesk_server.url,
+            HELPDESK_API_SUB_URL,
+            'FAKE_KEY',
+            HELPDESK_COMMENT_SUB_URL,
+        )
+        responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
+        sth = SubmissionTransferHandler(submission_id=submission.pk,
+                                        target_archive='ENA')
+        self.assertEqual(0, len(TaskProgressReport.objects.all()))
+        sth.execute_submission_to_ena()
+        self.assertLess(0, len(TaskProgressReport.objects.all()))
+
+    @responses.activate
+    def test_execute_ena_pangaea(self):
+        submission = Submission.objects.first()
+        conf = SiteConfiguration.objects.first()
+        responses.add(
+            responses.POST,
+            conf.ena_server.url,
+            status=200,
+            body=_get_ena_xml_response()
+        )
+        url = '{0}{1}/{2}/{3}'.format(
+            conf.helpdesk_server.url,
+            HELPDESK_API_SUB_URL,
+            'FAKE_KEY',
+            HELPDESK_COMMENT_SUB_URL,
+        )
+        responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
+        responses.add(
+            responses.POST,
+            conf.pangaea_server.url,
+            body=_get_pangaea_soap_response(),
+            status=200)
+        responses.add(
+            responses.POST,
+            PANGAEA_ISSUE_BASE_URL,
+            json={'id': '31444', 'key': 'PANGAEA_FAKE_KEY',
+                  'self': 'http://issues.pangaea.de/rest/api/2/issue/31444'},
+            status=201)
+        responses.add(
+            responses.POST,
+            '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
+                                        'PANGAEA_FAKE_KEY'),
+            json=_get_pangaea_attach_response(),
+            status=200)
+        responses.add(
+            responses.POST,
+            '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
+                                    'PANGAEA_FAKE_KEY'),
+            json=_get_pangaea_comment_response(),
+            status=200)
+        sth = SubmissionTransferHandler(submission_id=submission.pk,
+                                        target_archive='ENA_PANGAEA')
+        self.assertEqual(0, len(TaskProgressReport.objects.all()))
+        sth.execute_submission_to_ena_and_pangaea()
+        self.assertLess(0, len(TaskProgressReport.objects.all()))
