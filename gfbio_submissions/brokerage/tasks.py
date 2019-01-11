@@ -858,7 +858,7 @@ def add_pangaealink_to_helpdesk_ticket_task(prev_task_result=None,
                 submission=submission,
             )
 
-            apply_default_task_^(response,
+            apply_default_task_retry_policy(response,
                                             add_pangaealink_to_helpdesk_ticket_task,
                                             submission)
     else:

@@ -127,7 +127,7 @@ class TestInitialChainTasks(TestCase):
     @responses.activate
     def test_put_initial_chain_no_release(self):
         self._add_create_ticket_response()
-        response = self.api_client.post(
+        self.api_client.post(
             '/api/submissions/',
             content_type='application/json',
             data=json.dumps({
@@ -136,7 +136,7 @@ class TestInitialChainTasks(TestCase):
                 'data': _get_submission_request_data()
             }))
         submission = Submission.objects.first()
-        response = self.api_client.put(
+        self.api_client.put(
             '/api/submissions/{0}/'.format(submission.broker_submission_id),
             data={'target': 'ENA', 'release': False, 'data': {
                 'requirements': {'title': 'A Title 0815',
@@ -212,36 +212,6 @@ class TestCeleryTasks(TestCase):
     def _delete_test_data():
         PrimaryDataFile.objects.all().delete()
 
-    # def setUp(self):
-    #     print(' ', len(Submission.objects.all()), ' ',
-    #           len(BrokerObject.objects.all()), ' ',
-    #           len(PersistentIdentifier.objects.all()), )
-    #     SubmissionTest._create_submission_via_serializer()
-    #
-    # def tearDown(self):
-    #     print('Tear DOWN')
-    #     BrokerObject.objects.all().delete()
-    #     # Submission.objects.all().delete()
-    #     PersistentIdentifier.objects.all().delete()
-    #     print(' ', len(Submission.objects.all()), ' ',
-    #           len(BrokerObject.objects.all()), ' ',
-    #           len(PersistentIdentifier.objects.all()), )
-
-    # def tearDown(self):
-    #     BrokerObject.objects.all().delete()
-    #     PersistentIdentifier.objects.all().delete()
-
-    # def _add_create_ticket_response(self):
-    #     responses.add(
-    #         responses.POST,
-    #         '{0}{1}'.format(
-    #             self.site_config.helpdesk_server.url,
-    #             HELPDESK_API_SUB_URL
-    #         ),
-    #         status=200,
-    #         body=json.dumps({'mocked_response': True})
-    #     )
-
     def test_prepare_ena_submission_data_task(self):
         submission = Submission.objects.first()
         text_data = AuditableTextData.objects.all()
@@ -302,7 +272,6 @@ class TestCeleryTasks(TestCase):
                 submission_id=submission.pk
             )
         )()
-        ret_val = result.get()
         self.assertTrue(result.successful())
         ret_val = result.get()
         self.assertTrue(isinstance(ret_val, tuple))
@@ -331,7 +300,6 @@ class TestCeleryTasks(TestCase):
         self.assertIsNone(ret_val)
 
     # TODO: add test where nonsense content is returned like '' or {}
-    # @patch('gfbio_submissions.brokerage.utils.ena.requests')
     @responses.activate
     def test_process_ena_response_task_successful(self):
         submission = Submission.objects.first()
@@ -354,7 +322,6 @@ class TestCeleryTasks(TestCase):
                 submission_id=submission.pk
             )
         )()
-
         ret_val = result.get()
         self.assertTrue(result.successful())
         self.assertTrue(ret_val)
@@ -403,7 +370,6 @@ class TestCeleryTasks(TestCase):
 
     # TODO: this one below
     # TODO: check all test, even if passing, for json exceptions that need repsonse mock
-
     @responses.activate
     def test_get_gfbio_user_email_task_success(self):
         submission = Submission.objects.last()
@@ -592,35 +558,6 @@ class TestCeleryTasks(TestCase):
         self.assertTrue(result.successful())
         self.assertFalse(result.get())
 
-    # duplicate of above
-    # @responses.activate
-    # def test_comment_helpdesk_ticket_task(self):
-    #     submission = Submission.objects.first()
-    #     submission.additionalreference_set.create(
-    #         type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-    #         reference_key='FAKE_KEY',
-    #         primary=True
-    #     )
-    #     site_config = SiteConfiguration.objects.first()
-    #     url = '{0}{1}/{2}/{3}'.format(
-    #         site_config.helpdesk_server.url,
-    #         HELPDESK_API_SUB_URL,
-    #         'FAKE_KEY',
-    #         HELPDESK_COMMENT_SUB_URL,
-    #     )
-    #     responses.add(responses.POST,
-    #                   url,
-    #                   json={'bla': 'blubb'},
-    #                   status=200)
-    #     submission = Submission.objects.get(pk=1)
-    #     result = comment_helpdesk_ticket_task.apply_async(
-    #         kwargs={
-    #             'submission_id': submission.pk,
-    #             'comment_body': 'test-comment'
-    #         }
-    #     )
-    #     self.assertTrue(result.successful())
-
     @responses.activate
     def test_attach_to_helpdesk_ticket_task_no_primarydatafile(self):
         submission = Submission.objects.first()
@@ -681,7 +618,7 @@ class TestCeleryTasks(TestCase):
         'gfbio_submissions.brokerage.tasks.apply_timebased_task_retry_policy')
     def test_attach_primarydatafile_without_ticket(self, mock):
         submission = Submission.objects.last()
-        result = attach_file_to_helpdesk_ticket_task.apply_async(
+        attach_file_to_helpdesk_ticket_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
             }
