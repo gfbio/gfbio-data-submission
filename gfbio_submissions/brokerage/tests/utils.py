@@ -90,6 +90,27 @@ def _get_jira_response():
 
 def _get_jira_attach_response():
     with open(os.path.join(
-            _get_test_data_dir_path(), 'jira_attach_response.json'), 'r') as data_file:
+            _get_test_data_dir_path(), 'jira_attach_response.json'),
+            'r') as data_file:
         return json.load(data_file)
 
+
+def _get_pangaea_attach_response():
+    with open(os.path.join(
+            _get_test_data_dir_path(), 'pangaea_attach_response.json'),
+            'r') as data_file:
+        return json.load(data_file)
+
+
+def _get_pangaea_comment_response():
+    with open(os.path.join(
+            _get_test_data_dir_path(), 'pangaea_comment_response.json'),
+            'r') as data_file:
+        return json.load(data_file)
+
+
+def _get_pangaea_ticket_response():
+    with open(os.path.join(
+            _get_test_data_dir_path(), 'pangaea_ticket_response.json'),
+            'r') as data_file:
+        return json.load(data_file)
