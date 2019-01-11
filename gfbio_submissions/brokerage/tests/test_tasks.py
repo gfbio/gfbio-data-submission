@@ -144,11 +144,11 @@ class TestInitialChainTasks(TestCase):
             format='json', )
 
 
-# TODO: split task tests accoding to subject/target
-class TestCeleryTasks(TestCase):
+class TestTasks(TestCase):
 
     @classmethod
     def setUpTestData(cls):
+        print('\nTEST TASKS SETUP')
         permissions = Permission.objects.filter(
             content_type__app_label='brokerage',
             name__endswith='primary data file')
@@ -175,7 +175,6 @@ class TestCeleryTasks(TestCase):
             url='https://www.example.com',
             authentication_string='letMeIn'
         )
-
         SiteConfiguration.objects.create(
             title='default',
             site=None,
@@ -212,6 +211,59 @@ class TestCeleryTasks(TestCase):
     def _delete_test_data():
         PrimaryDataFile.objects.all().delete()
 
+
+class TestSubmissionTransferTasks(TestTasks):
+
+    # @classmethod
+    # def setUpTestData(cls):
+    #     super().setUpTestData()
+    #     print('\nTEST Subclass SETUP')
+    #     permissions = Permission.objects.filter(
+    #         content_type__app_label='brokerage',
+    #         name__endswith='primary data file')
+    #     user = User.objects.create(
+    #         username='user1'
+    #     )
+    #     user.user_permissions.add(*permissions)
+    #     submission = SubmissionTest._create_submission_via_serializer()
+    #     submission.additionalreference_set.create(
+    #         type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+    #         reference_key='FAKE_KEY',
+    #         primary=True
+    #     )
+    #     submission.additionalreference_set.create(
+    #         type=AdditionalReference.PANGAEA_JIRA_TICKET,
+    #         reference_key='PANGAEA_FAKE_KEY',
+    #         primary=True
+    #     )
+    #     submission = SubmissionTest._create_submission_via_serializer()
+    #     submission.submitting_user = '16250'
+    #     submission.save()
+    #     resource_cred = ResourceCredential.objects.create(
+    #         title='Resource Title',
+    #         url='https://www.example.com',
+    #         authentication_string='letMeIn'
+    #     )
+    #     SiteConfiguration.objects.create(
+    #         title='default',
+    #         site=None,
+    #         ena_server=resource_cred,
+    #         pangaea_server=resource_cred,
+    #         gfbio_server=resource_cred,
+    #         helpdesk_server=resource_cred,
+    #         comment='Default configuration',
+    #         contact='kevin@horstmeier.de'
+    #     )
+    #     SiteConfiguration.objects.create(
+    #         title='default-2',
+    #         site=None,
+    #         ena_server=resource_cred,
+    #         pangaea_server=resource_cred,
+    #         gfbio_server=resource_cred,
+    #         helpdesk_server=resource_cred,
+    #         comment='Default configuration 2',
+    #     )
+
     def test_prepare_ena_submission_data_task(self):
         submission = Submission.objects.first()
         text_data = AuditableTextData.objects.all()
@@ -221,7 +273,6 @@ class TestCeleryTasks(TestCase):
                 'submission_id': submission.pk
             }
         )
-        ret_val = result.get()
         self.assertTrue(result.successful())
         ret_val = result.get()
         self.assertTrue(isinstance(ret_val, dict))
@@ -302,7 +353,15 @@ class TestCeleryTasks(TestCase):
     # TODO: add test where nonsense content is returned like '' or {}
     @responses.activate
     def test_process_ena_response_task_successful(self):
+        print('\n\n######################################\n\n')
         submission = Submission.objects.first()
+        # fix ids to match ena_response.xml test-data aliases when running
+        # multiple tests
+        related_broker_objects = BrokerObject.objects.filter(submissions=submission)
+        for i in range(0, len(related_broker_objects)):
+            related_broker_objects[i].pk = i+1
+            related_broker_objects[i].save()
+
         conf = SiteConfiguration.objects.first()
         responses.add(
             responses.POST,
@@ -326,9 +385,16 @@ class TestCeleryTasks(TestCase):
         self.assertTrue(result.successful())
         self.assertTrue(ret_val)
         self.assertLess(0, len(PersistentIdentifier.objects.all()))
+        # submission.delete()
+
+
+
+
+
+class TestSubmissionPreparationTasks(TestTasks):
 
     def test_create_broker_objects_from_submission_data_task(self):
-        submission = Submission.objects.last()
+        submission = Submission.objects.first()
         submission.release = True
         submission.status = Submission.SUBMITTED
         submission.save()
@@ -355,7 +421,7 @@ class TestCeleryTasks(TestCase):
     @patch('gfbio_submissions.brokerage.tasks.logger')
     def test_check_on_hold_proceed_without_email(self, mock_logger):
         submission = Submission.objects.first()
-        conf = SiteConfiguration.objects.last()
+        conf = SiteConfiguration.objects.first()
         conf.release_submissions = True
         conf.save()
         check_on_hold_status_task.apply_async(
@@ -368,7 +434,9 @@ class TestCeleryTasks(TestCase):
         task_names = [r.task_name for r in reports]
         self.assertTrue('tasks.check_on_hold_status_task' in task_names)
 
-    # TODO: this one below
+
+class TestPortalServiceTasks(TestTasks):
+
     # TODO: check all test, even if passing, for json exceptions that need repsonse mock
     @responses.activate
     def test_get_gfbio_user_email_task_success(self):
@@ -498,6 +566,9 @@ class TestCeleryTasks(TestCase):
         self.assertEqual({'first_name': '', 'last_name': '',
                           'user_email': 'kevin@horstmeier.de',
                           'user_full_name': ''}, result.get())
+
+
+class TestGFBioHelpDeskTasks(TestTasks):
 
     @responses.activate
     def test_create_helpdesk_ticket_task_success(self):
@@ -719,7 +790,8 @@ class TestCeleryTasks(TestCase):
         )
         self.assertFalse(result.successful())
 
-    # ---------------------- Pangaea tasks -------------------------------------
+
+class TestPangaeaTasks(TestTasks):
 
     @responses.activate
     def test_request_pangaea_login_token_task_success(self):
@@ -1128,8 +1200,8 @@ class TestCeleryTasks(TestCase):
         self.assertEqual('DOI', pid.pid_type)
         self.assertEqual('doi:10.1594/PANGAEA.786576', pid.pid)
 
-    # ---------------- CHAIN TESTS ---------------------------------------------
 
+class TestTaskChains(TestTasks):
     @responses.activate
     def test_pangaea_chain(self):
         submission = Submission.objects.first()
@@ -1161,7 +1233,7 @@ class TestCeleryTasks(TestCase):
     @responses.activate
     def test_initiate_submission_chain_success(self):
         submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.get(pk=1)
+        site_config = SiteConfiguration.objects.first()
 
         len_auditable_data = len(AuditableTextData.objects.all())
 
