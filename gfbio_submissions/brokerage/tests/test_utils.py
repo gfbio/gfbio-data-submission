@@ -5,23 +5,31 @@ from uuid import uuid4
 
 import requests
 import responses
+from django.contrib.auth.models import Permission
 from django.test import TestCase
+from django.urls import reverse
 from django.utils.encoding import smart_text
 from mock import patch
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    PANGAEA_ISSUE_BASE_URL, HELPDESK_API_SUB_URL, HELPDESK_COMMENT_SUB_URL
+    PANGAEA_ISSUE_BASE_URL, HELPDESK_API_SUB_URL, HELPDESK_COMMENT_SUB_URL, \
+    HELPDESK_ATTACHMENT_SUB_URL
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
     ResourceCredential, SiteConfiguration, RequestLog, AdditionalReference, \
-    TaskProgressReport
+    TaskProgressReport, PrimaryDataFile
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_pangaea_soap_body, _get_pangaea_soap_response, \
-    _get_pangaea_attach_response, _get_pangaea_comment_response
+    _get_pangaea_attach_response, _get_pangaea_comment_response, \
+    _get_jira_attach_response
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
     send_submission_to_ena
 from gfbio_submissions.brokerage.utils.gfbio import \
-    gfbio_assemble_research_object_id_json, gfbio_get_user_by_id
+    gfbio_assemble_research_object_id_json, gfbio_get_user_by_id, \
+    gfbio_helpdesk_create_ticket, gfbio_helpdesk_comment_on_ticket, \
+    gfbio_helpdesk_attach_file_to_ticket
 from gfbio_submissions.brokerage.utils.pangaea import \
     request_pangaea_login_token, parse_pangaea_login_token_response, \
     get_pangaea_login_token, create_pangaea_jira_ticket
@@ -785,3 +793,178 @@ class TestSubmissionTransferHandler(TestCase):
         self.assertEqual(0, len(TaskProgressReport.objects.all()))
         sth.execute_submission_to_ena_and_pangaea()
         self.assertLess(0, len(TaskProgressReport.objects.all()))
+
+
+class TestHelpDeskTicketMethods(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        user = User.objects.create_user(
+            username='horst', email='horst@horst.de', password='password')
+        permissions = Permission.objects.filter(
+            content_type__app_label='brokerage',
+            codename__endswith='primarydatafile')
+        user.user_permissions.add(*permissions)
+        token = Token.objects.create(user=user)
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        cls.api_client = client
+        resource_cred = ResourceCredential.objects.create(
+            title='Resource Title',
+            url='https://www.example.com',
+            authentication_string='letMeIn'
+        )
+        SiteConfiguration.objects.create(
+            title='default',
+            site=None,
+            ena_server=resource_cred,
+            pangaea_server=resource_cred,
+            gfbio_server=resource_cred,
+            helpdesk_server=resource_cred,
+            comment='Default configuration',
+            contact='kevin@horstmeier.de'
+        )
+        # SiteConfiguration.objects.create(
+        #     title='default',
+        #     site=None,
+        #     ena_server=resource_cred_2,
+        #     pangaea_server=resource_cred,
+        #     gfbio_server=resource_cred,
+        #     helpdesk_server=resource_cred,
+        #     comment='Comment',
+        # )
+        submission = SubmissionTest._create_submission_via_serializer()
+        submission.additionalreference_set.create(
+            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+            reference_key='FAKE_KEY',
+            primary=True
+        )
+        # submission = Submission.objects.create(site=None)
+
+    @classmethod
+    def _create_test_data(cls, path, delete=True):
+        if delete:
+            cls._delete_test_data()
+        f = open(path, 'w')
+        f.write('test123\n')
+        f.close()
+        f = open(path, 'rb')
+        return {
+            'data_file': f,
+        }
+
+    @staticmethod
+    def _delete_test_data():
+        PrimaryDataFile.objects.all().delete()
+
+    @responses.activate
+    def test_create_helpdesk_ticket(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        responses.add(
+            responses.POST,
+            '{0}{1}'.format(site_config.helpdesk_server.url,
+                            HELPDESK_API_SUB_URL),
+            json={'bla': 'blubb'},
+            status=200)
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = gfbio_helpdesk_create_ticket(
+            site_config=site_config,
+            submission=submission,
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+
+    @responses.activate
+    def test_create_helpdesk_ticket_unicode_text(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        responses.add(
+            responses.POST,
+            '{0}{1}'.format(site_config.helpdesk_server.url,
+                            HELPDESK_API_SUB_URL),
+            json={'bla': 'blubb'},
+            status=200)
+
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = gfbio_helpdesk_create_ticket(
+            site_config=site_config,
+            submission=submission,
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+
+    @responses.activate
+    def test_comment_on_helpdesk_ticket(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        url = '{0}{1}/{2}/{3}'.format(
+            site_config.helpdesk_server.url,
+            HELPDESK_API_SUB_URL,
+            'FAKE_KEY',
+            HELPDESK_COMMENT_SUB_URL,
+        )
+        responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = gfbio_helpdesk_comment_on_ticket(
+            site_config=site_config,
+            ticket_key='FAKE_KEY',
+            comment_body='body',
+            submission=submission
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+
+    @responses.activate
+    def test_attach_template_to_helpdesk_ticket(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        url = reverse('brokerage:submissions_primary_data', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        responses.add(responses.POST, url, json={}, status=200)
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          site_config.helpdesk_server.url,
+                          HELPDESK_API_SUB_URL,
+                          'FAKE_KEY',
+                          HELPDESK_ATTACHMENT_SUB_URL,
+                      ),
+                      json=_get_jira_attach_response(),
+                      status=200)
+        data = self._create_test_data('/tmp/test_primary_data_file')
+        self.api_client.post(url, data, format='multipart')
+        pd = submission.primarydatafile_set.first()
+        response = gfbio_helpdesk_attach_file_to_ticket(
+            site_config, 'FAKE_KEY', pd.data_file, submission)
+        self.assertEqual(200, response.status_code)
+        request_logs = RequestLog.objects.all()
+        self.assertEqual(2, len(request_logs))
+
+    @responses.activate
+    def test_attach_template_without_submitting_user(self):
+        submission = Submission.objects.first()
+        submission.submitting_user = None
+        submission.save()
+        site_config = SiteConfiguration.objects.first()
+        url = reverse('brokerage:submissions_primary_data', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        responses.add(responses.POST, url, json={}, status=200)
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          site_config.helpdesk_server.url,
+                          HELPDESK_API_SUB_URL,
+                          'FAKE_KEY',
+                          HELPDESK_ATTACHMENT_SUB_URL,
+                      ),
+                      json=_get_jira_attach_response(),
+                      status=200)
+        data = self._create_test_data('/tmp/test_primary_data_file')
+        self.api_client.post(url, data, format='multipart')
+        pd = submission.primarydatafile_set.first()
+        response = gfbio_helpdesk_attach_file_to_ticket(site_config, 'FAKE_KEY',
+                                                        pd.data_file,
+                                                        submission)
+        self.assertEqual(200, response.status_code)
+        request_logs = RequestLog.objects.all()
+        self.assertEqual(2, len(request_logs))
+        self.assertEqual('', request_logs.first().site_user)
