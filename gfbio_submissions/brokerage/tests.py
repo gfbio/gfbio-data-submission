@@ -1,61 +1,10 @@
 # -*- coding: utf-8 -*-
-import base64
-import copy
-import csv
-import io
-import json
-import os
-import pprint
-import textwrap
-import uuid
-from json import JSONDecodeError
-from unittest import skip
-from urllib.parse import urlparse
-from uuid import uuid4, UUID
 
-import jsonschema
-import requests
-import responses
-from celery import chain
-from django.conf import settings
-from django.core.urlresolvers import reverse
 from django.test import TestCase
-from mock import patch
-from rest_framework import status
-from rest_framework.authtoken.models import Token
-from rest_framework.test import APITestCase, APIClient
 
-from config.settings.base import MEDIA_URL
-from gfbio_submissions.brokerage.admin import download_auditable_text_data
-from gfbio_submissions.brokerage.configuration.settings import \
-    HELPDESK_API_SUB_URL, HELPDESK_COMMENT_SUB_URL
 from gfbio_submissions.users.models import User
-from .configuration.settings import PANGAEA_ISSUE_BASE_URL
-from .models import Submission, \
-    ResourceCredential, BrokerObject, RequestLog, PersistentIdentifier, \
-    SiteConfiguration, AdditionalReference, TaskProgressReport, \
-    SubmissionFileUpload, PrimaryDataFile, AuditableTextData
+from .models import BrokerObject
 from .serializers import SubmissionSerializer
-from .tasks import create_helpdesk_ticket_task, \
-    create_broker_objects_from_submission_data_task, \
-    transfer_data_to_ena_task, process_ena_response_task, \
-    comment_helpdesk_ticket_task, \
-    request_pangaea_login_token_task, create_pangaea_jira_ticket_task, \
-    attach_file_to_pangaea_ticket_task, comment_on_pangaea_ticket_task, \
-    check_for_pangaea_doi_task, \
-    add_pangaealink_to_helpdesk_ticket_task, trigger_submission_transfer, \
-    check_on_hold_status_task, get_gfbio_user_email_task, \
-    prepare_ena_submission_data_task, attach_file_to_helpdesk_ticket_task
-from .utils.ena import download_submitted_run_files_to_stringIO, \
-    prepare_ena_data, \
-    store_ena_data_as_auditable_text_data
-from .utils.gfbio import \
-    gfbio_assemble_research_object_id_json, gfbio_site_object_ids_service, \
-    gfbio_helpdesk_create_ticket, \
-    gfbio_helpdesk_comment_on_ticket, gfbio_get_user_by_id, \
-    gfbio_helpdesk_attach_file_to_ticket
-from .utils.submission_transfer import \
-    SubmissionTransferHandler
 
 
 # class ResourceCredentialTest(TestCase):
@@ -954,6 +903,7 @@ class SubmissionTest(TestCase):
         if create_broker_objects:
             BrokerObject.objects.add_submission_data(submission)
         return submission
+
 
 #     # done
 #     def test_create_empty_submission(self):
@@ -2435,7 +2385,6 @@ class SubmissionTest(TestCase):
 
 def fake_trigger_submission_transfer(submission_id=None):
     return True
-
 
 # class TestAddSubmissionView(TestCase):
 #     fixtures = (
@@ -5757,83 +5706,83 @@ def fake_trigger_submission_transfer(submission_id=None):
 #                 broker_submission_id=sub.broker_submission_id))
 #         self.assertEqual(200, response.status_code)
 
-        # def test_serialization(self):
-    #     sub = Submission.objects.first()
-    #
-    #     # single object get nicht
-    #     # data = serializers.serialize("xml", sub)
-    #
-    #     # fake als iterable list kappt
-    #     # querysets natürlich auch object.all()
-    #     # fields: data = serializers.serialize('xml', SomeModel.objects.all(), fields=('name','size'))
-    #     data = serializers.serialize("xml", [sub, ])
-    #     dxml = xml.dom.minidom.parseString(data)
-    #     d = dxml.toprettyxml()
-    #     print d
-    #     print '\n-----------------------------\n'
-    #     data = serializers.serialize("json", [sub, ])
-    #     d = json.loads(data)
-    #     pprint(d)
-    #
-    #     # This is useful if you want to serialize data directly to a file-like object (which includes an HttpResponse):
-    #     # with open("file.xml", "w") as out:
-    #     #     xml_serializer.serialize(SomeModel.objects.all(), stream=out)
-    #     XMLSerializer = serializers.get_serializer("xml")
-    #     xml_serializer = XMLSerializer()
-    #     xml_serializer.serialize(Submission.objects.filter(
-    #         broker_submission_id=sub.broker_submission_id))
-    #     data = xml_serializer.getvalue()
-    #     dxml = xml.dom.minidom.parseString(data)
-    #     d = dxml.toprettyxml()
-    #     print '\n-----------------------------\n'
-    #     print d
-    #
-    #     XMLSerializer = serializers.get_serializer("json")
-    #     xml_serializer = XMLSerializer()
-    #     xml_serializer.serialize(Submission.objects.filter(
-    #         broker_submission_id=sub.broker_submission_id))
-    #     data = xml_serializer.getvalue()
-    #     d = json.loads(data)
-    #     print '\n-----------------------------\n'
-    #     pprint(d)
-    #
-    # def test_on_save_serialization(self):
-    #     # self serialization: this works with json, works not with xml
-    #     # I guess one or more fields are not allowd to be blank
-    #     print '\n############\tCREATE\t###########\n'
-    #     sub = Submission()
-    #     data = sub.save()
-    #     print data
-    #     print '\n############\tUpdate\t###########\n'
-    #     sub.target = 'ENA'
-    #     data = sub.save()
-    #     print data
-    #
-    #     # yepp its the empty json-data that makes xml serialization crash on blank values,
-    #     # at least with default postgres json
-    #     # sub = Submission()
-    #     # sub.data = '{"bla": "blubb"}'
-    #     # data = sub.save()
-    #     # print '\n#######################\n'
-    #     # print data
-    #
-    #     # this works with self serialization
-    #     # sub = Submission.objects.first()
-    #     # sub.download_url = 'http://www.myhorseisamazing.com'
-    #     # data = sub.save()
-    #     # print data
-    #
-    # def test_deserialize_jsonfile(self):
-    #     with open(
-    #             '/git-python-test/6_10154447-d0a8-4c38-b92a-0ea84d10678a.json',
-    #             'rb') as dump:
-    #         content = dump.read()
-    #         print content
-    #
-    #     for obj in serializers.deserialize('json', content,
-    #                                        cls=DjangoJSONEncoder):
-    #         print obj
-    #         obj.save()
+# def test_serialization(self):
+#     sub = Submission.objects.first()
+#
+#     # single object get nicht
+#     # data = serializers.serialize("xml", sub)
+#
+#     # fake als iterable list kappt
+#     # querysets natürlich auch object.all()
+#     # fields: data = serializers.serialize('xml', SomeModel.objects.all(), fields=('name','size'))
+#     data = serializers.serialize("xml", [sub, ])
+#     dxml = xml.dom.minidom.parseString(data)
+#     d = dxml.toprettyxml()
+#     print d
+#     print '\n-----------------------------\n'
+#     data = serializers.serialize("json", [sub, ])
+#     d = json.loads(data)
+#     pprint(d)
+#
+#     # This is useful if you want to serialize data directly to a file-like object (which includes an HttpResponse):
+#     # with open("file.xml", "w") as out:
+#     #     xml_serializer.serialize(SomeModel.objects.all(), stream=out)
+#     XMLSerializer = serializers.get_serializer("xml")
+#     xml_serializer = XMLSerializer()
+#     xml_serializer.serialize(Submission.objects.filter(
+#         broker_submission_id=sub.broker_submission_id))
+#     data = xml_serializer.getvalue()
+#     dxml = xml.dom.minidom.parseString(data)
+#     d = dxml.toprettyxml()
+#     print '\n-----------------------------\n'
+#     print d
+#
+#     XMLSerializer = serializers.get_serializer("json")
+#     xml_serializer = XMLSerializer()
+#     xml_serializer.serialize(Submission.objects.filter(
+#         broker_submission_id=sub.broker_submission_id))
+#     data = xml_serializer.getvalue()
+#     d = json.loads(data)
+#     print '\n-----------------------------\n'
+#     pprint(d)
+#
+# def test_on_save_serialization(self):
+#     # self serialization: this works with json, works not with xml
+#     # I guess one or more fields are not allowd to be blank
+#     print '\n############\tCREATE\t###########\n'
+#     sub = Submission()
+#     data = sub.save()
+#     print data
+#     print '\n############\tUpdate\t###########\n'
+#     sub.target = 'ENA'
+#     data = sub.save()
+#     print data
+#
+#     # yepp its the empty json-data that makes xml serialization crash on blank values,
+#     # at least with default postgres json
+#     # sub = Submission()
+#     # sub.data = '{"bla": "blubb"}'
+#     # data = sub.save()
+#     # print '\n#######################\n'
+#     # print data
+#
+#     # this works with self serialization
+#     # sub = Submission.objects.first()
+#     # sub.download_url = 'http://www.myhorseisamazing.com'
+#     # data = sub.save()
+#     # print data
+#
+# def test_deserialize_jsonfile(self):
+#     with open(
+#             '/git-python-test/6_10154447-d0a8-4c38-b92a-0ea84d10678a.json',
+#             'rb') as dump:
+#         content = dump.read()
+#         print content
+#
+#     for obj in serializers.deserialize('json', content,
+#                                        cls=DjangoJSONEncoder):
+#         print obj
+#         obj.save()
 
 
 # class TestHelpDeskTicketMethods(TestCase):
@@ -6114,242 +6063,242 @@ def fake_trigger_submission_transfer(submission_id=None):
 #         self.assertEqual('CANCELLED', tpr.task_return_value)
 
 
-class TestDownloadEnaReport(TestCase):
-    fixtures = ('user', 'broker_object', 'submission', 'resource_credential',
-                'persistent_identifier', 'site_configuration',)
-
-    # TODO: remove later, since real credentials are needed
-    # TODO: mock ftp request -> https://stackoverflow.com/questions/35654355/mocking-ftp-in-unit-test
-    @skip('real request to ena ftp unit mock is in place')
-    def test_ftp_access(self):
-        rc = ResourceCredential.objects.create(
-            title='ena_ftp',
-            url='webin.ebi.ac.uk',
-            authentication_string='',
-            username='Webin-40945',
-            password='EgjPKns',
-            comment='',
-        )
-        site_conf = SiteConfiguration.objects.get(pk=1)
-        site_conf.ena_ftp = rc
-        site_conf.save()
-
-        decompressed_file = io.StringIO()
-        report = download_submitted_run_files_to_stringIO(
-            site_config=site_conf,
-            decompressed_io=decompressed_file,
-        )
-        self.assertTrue(len(report) > 0)
-        decompressed_file.seek(0)
-        reader = csv.DictReader(decompressed_file, delimiter=str('\t'))
-        row = reader.next()
-        self.assertTrue('STUDY_ID' in row.keys())
-        decompressed_file.close()
-
-
-class SchemaValidationTest(TestCase):
-    # https://github.com/Julian/jsonschema
-    @skip('files not available')
-    def test_draft04_flat_validation(self):
-        rel_path = os.path.join(
-            'gfbio_submissions/brokerage/test_data/',
-            'flat_draft04_schema.json')
-        with open(rel_path, 'r') as schema_file:
-            schema = json.load(schema_file)
-        validator = jsonschema.Draft4Validator(schema)
-
-        data = {}
-        data_valid = validator.is_valid(data)
-        self.assertFalse(data_valid)
-
-        data = {
-            'id': 18,
-            'name': 'Horst',
-            'the-address': {}
-        }
-        data_valid = validator.is_valid(data)
-
-    # TODO: docker-compose -f dev.yml run django python manage.py collectstatic
-    def test_mrr_validation(self):
-        rel_path = os.path.join(
-            settings.STATIC_ROOT, 'schemas',
-            'minimal_requirements.json')
-        abs_path = os.path.abspath(rel_path)
-
-        with open(rel_path, 'r') as schema_file:
-            schema = json.load(schema_file)
-        validator = jsonschema.Draft4Validator(schema)
-
-        data = {
-            'requirements': {}
-        }
-        data_valid = validator.is_valid(data)
-        self.assertFalse(data_valid)
-
-        data = {
-            'requirements': {
-                'title': '123456',
-                'description': '123456',
-                'author': '123456'
-            }
-        }
-        data_valid = validator.is_valid(data)
-        self.assertTrue(data_valid)
-
-    def test_ena_validation(self):
-        rel_path = os.path.join(settings.STATIC_ROOT, 'schemas',
-                                'ena_requirements.json')
-        with open(rel_path, 'r') as schema_file:
-            schema = json.load(schema_file)
-        validator = jsonschema.Draft4Validator(schema)
-        data = {
-            'requirements': {
-                'title': '123456',
-                'description': '123456',
-                'samples': 12
-            }
-        }
-        data_valid = validator.is_valid(data)
-        self.assertFalse(data_valid)
-
-        data = {
-            'requirements': {
-                'title': 'test-1',
-                'description': 'unit test test-data',
-                'study_type': 'Metagenomics',
-                'samples': [
-                    {
-                        'sample_alias': 'sample_x123',
-                        'sample_title': 'Sample 1',
-                        'taxon_id': 12
-                    },
-                    {
-                        'sample_alias': 'sample_y456',
-                        'sample_title': 'Sample 2',
-                        'description': 'Very verbose description.',
-                        'taxon_id': 34
-                    }
-                ],
-                "experiments": [
-                    {
-                        'experiment_alias': 'experiment_jp456',
-                        'platform': 'AB 3730xL Genetic Analyzer',
-                        'design': {
-                            'sample_descriptor': 'sample_y456',
-                            'library_descriptor': {
-                                'library_strategy': 'AMPLICON',
-                                'library_source': 'METAGENOMIC',
-                                'library_selection': 'PCR',
-                                'library_layout': {
-                                    'layout_type': 'paired',
-                                    'nominal_length': 450
-                                }
-                            }
-                        }
-                    },
-                    {
-                        'experiment_alias': 'experiment_oo789',
-                        'platform': 'AB 3730xL Genetic Analyzer',
-                        'files': {
-                            'forward_read_file_name': 'File4.forward.fastq.gz',
-                            'reverse_read_file_name': 'File4.reverse.fastq.gz',
-                            'forward_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
-                            'reverse_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75df'
-                        },
-                        'design': {
-                            'sample_descriptor': 'sample_x123',
-                            'library_descriptor': {
-                                'library_strategy': 'AMPLICON',
-                                'library_source': 'METAGENOMIC',
-                                'library_selection': 'PCR',
-                                'library_layout': {
-                                    'layout_type': 'paired',
-                                    'nominal_length': 450
-                                }
-                            }
-                        }
-                    }
-                ],
-                'runs': [
-                    {
-                        'experiment_ref': 'experiment_jp456',
-                        'data_block': {
-                            'files': [
-                                {
-                                    'filename': 'aFile',
-                                    'filetype': 'fastq',
-                                    'checksum_method': 'MD5',
-                                    'checksum': '12345'
-                                }
-                            ]
-                        }
-                    }
-                ]
-            }
-        }
-        data_valid = validator.is_valid(data)
-        self.assertTrue(data_valid)
+# class TestDownloadEnaReport(TestCase):
+#     fixtures = ('user', 'broker_object', 'submission', 'resource_credential',
+#                 'persistent_identifier', 'site_configuration',)
+#
+#     # TODO: remove later, since real credentials are needed
+#     # TODO: mock ftp request -> https://stackoverflow.com/questions/35654355/mocking-ftp-in-unit-test
+#     @skip('real request to ena ftp unit mock is in place')
+#     def test_ftp_access(self):
+#         rc = ResourceCredential.objects.create(
+#             title='ena_ftp',
+#             url='webin.ebi.ac.uk',
+#             authentication_string='',
+#             username='Webin-40945',
+#             password='EgjPKns',
+#             comment='',
+#         )
+#         site_conf = SiteConfiguration.objects.get(pk=1)
+#         site_conf.ena_ftp = rc
+#         site_conf.save()
+#
+#         decompressed_file = io.StringIO()
+#         report = download_submitted_run_files_to_stringIO(
+#             site_config=site_conf,
+#             decompressed_io=decompressed_file,
+#         )
+#         self.assertTrue(len(report) > 0)
+#         decompressed_file.seek(0)
+#         reader = csv.DictReader(decompressed_file, delimiter=str('\t'))
+#         row = reader.next()
+#         self.assertTrue('STUDY_ID' in row.keys())
+#         decompressed_file.close()
 
 
-class JsonDictFieldTest(TestCase):
-    fixtures = (
-        'user', 'submission',
-    )
-
-    def test_submission_data_escape_situation(self):
-        sub = SubmissionTest._prepare_entities_with_runs(
-            create_broker_objects=False)
-        self.assertTrue(isinstance(sub.data, dict))
-        serialized_data = json.dumps(sub.data)
-        self.assertTrue(type(serialized_data) == str)
-        self.assertEqual(0, serialized_data.count('\\'))
-        sub.save()
-        self.assertTrue(isinstance(sub.data, dict))
-        serialized_data = json.dumps(sub.data)
-        self.assertTrue(type(serialized_data) == str)
-        self.assertEqual(0, serialized_data.count('\\'))
-
-        sub.save()
-        self.assertTrue(isinstance(sub.data, dict))
-        serialized_data = json.dumps(sub.data)
-        self.assertTrue(type(serialized_data) == str)
-        self.assertEqual(0, serialized_data.count('\\'))
-
-    def test_search_submission_data(self):
-        sub = SubmissionTest._prepare_entities_with_runs(
-            create_broker_objects=False)
-        submissions = Submission.objects.all()
-        qs = Submission.objects.filter(data__requirements__title='123456')
-        self.assertEqual(1, len(qs))
-        self.assertEqual(sub.broker_submission_id,
-                         qs.first().broker_submission_id)
-
-        qs = Submission.objects.filter(data__requirements__has_key='custom_key')
-        self.assertEqual(0, len(qs))
-
-        sub.data['requirements']['custom_key'] = True
-        sub.save()
-        qs = Submission.objects.filter(data__requirements__has_key='custom_key')
-        self.assertEqual(1, len(qs))
-
-    def test_json_dict_field_on_broker_object(self):
-        sub = SubmissionTest._prepare_entities_with_runs()
-        request_id_fake = uuid.UUID('71d59109-695d-4172-a8be-df6fb3283857')
-        study, samples, experiments, runs = sub.get_json_with_aliases(
-            alias_postfix=request_id_fake)
-        bo = BrokerObject()
-        bo.type = 'study'
-        bo.site = User.objects.all().first()
-        bo.data = {}
-        bo.save()
-        json.dumps(bo.data)
-        bo.data = {'first': 1, 'second': True}
-        bo.save()
-
-        qs = sub.brokerobject_set.filter(data__sample_title='stitle')
-
-        bo.data = {'first': 1, 'second': str(uuid4())}
-        bo.save()
-
-        bo.data = '{"bla": 2}'
-        bo.save()
+# class SchemaValidationTest(TestCase):
+#     # https://github.com/Julian/jsonschema
+#     @skip('files not available')
+#     def test_draft04_flat_validation(self):
+#         rel_path = os.path.join(
+#             'gfbio_submissions/brokerage/test_data/',
+#             'flat_draft04_schema.json')
+#         with open(rel_path, 'r') as schema_file:
+#             schema = json.load(schema_file)
+#         validator = jsonschema.Draft4Validator(schema)
+#
+#         data = {}
+#         data_valid = validator.is_valid(data)
+#         self.assertFalse(data_valid)
+#
+#         data = {
+#             'id': 18,
+#             'name': 'Horst',
+#             'the-address': {}
+#         }
+#         data_valid = validator.is_valid(data)
+#
+#     # TODO: docker-compose -f dev.yml run django python manage.py collectstatic
+#     def test_mrr_validation(self):
+#         rel_path = os.path.join(
+#             settings.STATIC_ROOT, 'schemas',
+#             'minimal_requirements.json')
+#         abs_path = os.path.abspath(rel_path)
+#
+#         with open(rel_path, 'r') as schema_file:
+#             schema = json.load(schema_file)
+#         validator = jsonschema.Draft4Validator(schema)
+#
+#         data = {
+#             'requirements': {}
+#         }
+#         data_valid = validator.is_valid(data)
+#         self.assertFalse(data_valid)
+#
+#         data = {
+#             'requirements': {
+#                 'title': '123456',
+#                 'description': '123456',
+#                 'author': '123456'
+#             }
+#         }
+#         data_valid = validator.is_valid(data)
+#         self.assertTrue(data_valid)
+#
+#     def test_ena_validation(self):
+#         rel_path = os.path.join(settings.STATIC_ROOT, 'schemas',
+#                                 'ena_requirements.json')
+#         with open(rel_path, 'r') as schema_file:
+#             schema = json.load(schema_file)
+#         validator = jsonschema.Draft4Validator(schema)
+#         data = {
+#             'requirements': {
+#                 'title': '123456',
+#                 'description': '123456',
+#                 'samples': 12
+#             }
+#         }
+#         data_valid = validator.is_valid(data)
+#         self.assertFalse(data_valid)
+#
+#         data = {
+#             'requirements': {
+#                 'title': 'test-1',
+#                 'description': 'unit test test-data',
+#                 'study_type': 'Metagenomics',
+#                 'samples': [
+#                     {
+#                         'sample_alias': 'sample_x123',
+#                         'sample_title': 'Sample 1',
+#                         'taxon_id': 12
+#                     },
+#                     {
+#                         'sample_alias': 'sample_y456',
+#                         'sample_title': 'Sample 2',
+#                         'description': 'Very verbose description.',
+#                         'taxon_id': 34
+#                     }
+#                 ],
+#                 "experiments": [
+#                     {
+#                         'experiment_alias': 'experiment_jp456',
+#                         'platform': 'AB 3730xL Genetic Analyzer',
+#                         'design': {
+#                             'sample_descriptor': 'sample_y456',
+#                             'library_descriptor': {
+#                                 'library_strategy': 'AMPLICON',
+#                                 'library_source': 'METAGENOMIC',
+#                                 'library_selection': 'PCR',
+#                                 'library_layout': {
+#                                     'layout_type': 'paired',
+#                                     'nominal_length': 450
+#                                 }
+#                             }
+#                         }
+#                     },
+#                     {
+#                         'experiment_alias': 'experiment_oo789',
+#                         'platform': 'AB 3730xL Genetic Analyzer',
+#                         'files': {
+#                             'forward_read_file_name': 'File4.forward.fastq.gz',
+#                             'reverse_read_file_name': 'File4.reverse.fastq.gz',
+#                             'forward_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+#                             'reverse_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75df'
+#                         },
+#                         'design': {
+#                             'sample_descriptor': 'sample_x123',
+#                             'library_descriptor': {
+#                                 'library_strategy': 'AMPLICON',
+#                                 'library_source': 'METAGENOMIC',
+#                                 'library_selection': 'PCR',
+#                                 'library_layout': {
+#                                     'layout_type': 'paired',
+#                                     'nominal_length': 450
+#                                 }
+#                             }
+#                         }
+#                     }
+#                 ],
+#                 'runs': [
+#                     {
+#                         'experiment_ref': 'experiment_jp456',
+#                         'data_block': {
+#                             'files': [
+#                                 {
+#                                     'filename': 'aFile',
+#                                     'filetype': 'fastq',
+#                                     'checksum_method': 'MD5',
+#                                     'checksum': '12345'
+#                                 }
+#                             ]
+#                         }
+#                     }
+#                 ]
+#             }
+#         }
+#         data_valid = validator.is_valid(data)
+#         self.assertTrue(data_valid)
+#
+#
+# class JsonDictFieldTest(TestCase):
+#     fixtures = (
+#         'user', 'submission',
+#     )
+#
+#     def test_submission_data_escape_situation(self):
+#         sub = SubmissionTest._prepare_entities_with_runs(
+#             create_broker_objects=False)
+#         self.assertTrue(isinstance(sub.data, dict))
+#         serialized_data = json.dumps(sub.data)
+#         self.assertTrue(type(serialized_data) == str)
+#         self.assertEqual(0, serialized_data.count('\\'))
+#         sub.save()
+#         self.assertTrue(isinstance(sub.data, dict))
+#         serialized_data = json.dumps(sub.data)
+#         self.assertTrue(type(serialized_data) == str)
+#         self.assertEqual(0, serialized_data.count('\\'))
+#
+#         sub.save()
+#         self.assertTrue(isinstance(sub.data, dict))
+#         serialized_data = json.dumps(sub.data)
+#         self.assertTrue(type(serialized_data) == str)
+#         self.assertEqual(0, serialized_data.count('\\'))
+#
+#     def test_search_submission_data(self):
+#         sub = SubmissionTest._prepare_entities_with_runs(
+#             create_broker_objects=False)
+#         submissions = Submission.objects.all()
+#         qs = Submission.objects.filter(data__requirements__title='123456')
+#         self.assertEqual(1, len(qs))
+#         self.assertEqual(sub.broker_submission_id,
+#                          qs.first().broker_submission_id)
+#
+#         qs = Submission.objects.filter(data__requirements__has_key='custom_key')
+#         self.assertEqual(0, len(qs))
+#
+#         sub.data['requirements']['custom_key'] = True
+#         sub.save()
+#         qs = Submission.objects.filter(data__requirements__has_key='custom_key')
+#         self.assertEqual(1, len(qs))
+#
+#     def test_json_dict_field_on_broker_object(self):
+#         sub = SubmissionTest._prepare_entities_with_runs()
+#         request_id_fake = uuid.UUID('71d59109-695d-4172-a8be-df6fb3283857')
+#         study, samples, experiments, runs = sub.get_json_with_aliases(
+#             alias_postfix=request_id_fake)
+#         bo = BrokerObject()
+#         bo.type = 'study'
+#         bo.site = User.objects.all().first()
+#         bo.data = {}
+#         bo.save()
+#         json.dumps(bo.data)
+#         bo.data = {'first': 1, 'second': True}
+#         bo.save()
+#
+#         qs = sub.brokerobject_set.filter(data__sample_title='stitle')
+#
+#         bo.data = {'first': 1, 'second': str(uuid4())}
+#         bo.save()
+#
+#         bo.data = '{"bla": 2}'
+#         bo.save()

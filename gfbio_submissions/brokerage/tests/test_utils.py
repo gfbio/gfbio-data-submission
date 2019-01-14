@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import csv
+import io
 import json
 from unittest import skip
 from uuid import uuid4
@@ -25,7 +27,7 @@ from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_pangaea_attach_response, _get_pangaea_comment_response, \
     _get_jira_attach_response
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
-    send_submission_to_ena
+    send_submission_to_ena, download_submitted_run_files_to_stringIO
 from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_assemble_research_object_id_json, gfbio_get_user_by_id, \
     gfbio_helpdesk_create_ticket, gfbio_helpdesk_comment_on_ticket, \
@@ -824,22 +826,12 @@ class TestHelpDeskTicketMethods(TestCase):
             comment='Default configuration',
             contact='kevin@horstmeier.de'
         )
-        # SiteConfiguration.objects.create(
-        #     title='default',
-        #     site=None,
-        #     ena_server=resource_cred_2,
-        #     pangaea_server=resource_cred,
-        #     gfbio_server=resource_cred,
-        #     helpdesk_server=resource_cred,
-        #     comment='Comment',
-        # )
         submission = SubmissionTest._create_submission_via_serializer()
         submission.additionalreference_set.create(
             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
             reference_key='FAKE_KEY',
             primary=True
         )
-        # submission = Submission.objects.create(site=None)
 
     @classmethod
     def _create_test_data(cls, path, delete=True):
@@ -968,3 +960,52 @@ class TestHelpDeskTicketMethods(TestCase):
         request_logs = RequestLog.objects.all()
         self.assertEqual(2, len(request_logs))
         self.assertEqual('', request_logs.first().site_user)
+
+
+class TestDownloadEnaReport(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        resource_cred = ResourceCredential.objects.create(
+            title='Resource Title',
+            url='https://www.example.com',
+            authentication_string='letMeIn'
+        )
+        SiteConfiguration.objects.create(
+            title='default',
+            site=None,
+            ena_server=resource_cred,
+            pangaea_server=resource_cred,
+            gfbio_server=resource_cred,
+            helpdesk_server=resource_cred,
+            comment='Default configuration',
+            contact='kevin@horstmeier.de'
+        )
+
+    # TODO: remove later, since real credentials are needed
+    # TODO: mock ftp request -> https://stackoverflow.com/questions/35654355/mocking-ftp-in-unit-test
+    @skip('real request to ena ftp unit mock is in place')
+    def test_ftp_access(self):
+        rc = ResourceCredential.objects.create(
+            title='ena_ftp',
+            url='webin.ebi.ac.uk',
+            authentication_string='',
+            username='Webin-40945',
+            password='',
+            comment='',
+        )
+        site_conf = SiteConfiguration.objects.first()
+        site_conf.ena_ftp = rc
+        site_conf.save()
+
+        decompressed_file = io.StringIO()
+        report = download_submitted_run_files_to_stringIO(
+            site_config=site_conf,
+            decompressed_io=decompressed_file,
+        )
+        self.assertTrue(len(report) > 0)
+        decompressed_file.seek(0)
+        reader = csv.DictReader(decompressed_file, delimiter=str('\t'))
+        row = reader.next()
+        self.assertTrue('STUDY_ID' in row.keys())
+        decompressed_file.close()
