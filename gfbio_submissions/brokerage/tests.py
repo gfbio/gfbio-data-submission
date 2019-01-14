@@ -5434,234 +5434,234 @@ def fake_trigger_submission_transfer(submission_id=None):
 #         self.assertIn(b'No file was submitted.', response.content)
 
 
-class TestPrimaryDataFile(APITestCase):
-    fixtures = ['user', 'submission', 'site_configuration', 'user',
-                'resource_credential', ]
-
-    @classmethod
-    def _create_test_data(cls, path, delete=True):
-        if delete:
-            cls._delete_test_data()
-        f = open(path, 'w')
-        f.write('test123\n')
-        f.close()
-        f = open(path, 'rb')
-        return {
-            'data_file': f,
-        }
-
-    @staticmethod
-    def _delete_test_data():
-        PrimaryDataFile.objects.all().delete()
-
-    def test_empty_relation(self):
-        sub = Submission.objects.first()
-        pd = sub.primarydatafile_set.first()
-        self.assertIsNone(pd)
-
-    def test_valid_file_upload(self):
-        sub = Submission.objects.all().first()
-        sub.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='FAKE_KEY',
-            primary=True
-        )
-        url = reverse('brokerage:submissions_primary_data', kwargs={
-            'broker_submission_id': sub.broker_submission_id})
-        data = self._create_test_data('/tmp/test_primary_data_file')
-        token = Token.objects.create(user=User.objects.get(pk=2))
-
-        reports_len = len(TaskProgressReport.objects.all())
-
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        response = client.post(url, data, format='multipart')
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn(b'broker_submission_id', response.content)
-        self.assertIn(b'"id"', response.content)
-        self.assertIn(b'site', response.content)
-        self.assertEqual(User.objects.get(pk=2).username, response.data['site'])
-        self.assertIn(b'data_file', response.content)
-        self.assertTrue(
-            urlparse(response.data['data_file']).path.startswith(MEDIA_URL))
-
-        self.assertGreater(len(TaskProgressReport.objects.all()), reports_len)
-
-    def test_no_permission_file_upload(self):
-        sub = Submission.objects.all().first()
-        sub.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='FAKE_KEY',
-            primary=True
-        )
-        url = reverse('brokerage:submissions_primary_data', kwargs={
-            'broker_submission_id': sub.broker_submission_id})
-        data = self._create_test_data('/tmp/test_primary_data_file')
-        token = Token.objects.create(user=User.objects.get(pk=3))
-
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        response = client.post(url, data, format='multipart')
-
-        self.assertEqual(403, response.status_code)
-
-    def test_not_owner_file_upload(self):
-        sub = Submission.objects.all().first()
-        sub.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='FAKE_KEY',
-            primary=True
-        )
-        sub.site = User.objects.get(pk=3)
-        sub.save()
-        url = reverse('brokerage:submissions_primary_data', kwargs={
-            'broker_submission_id': sub.broker_submission_id})
-        data = self._create_test_data('/tmp/test_primary_data_file')
-        token = Token.objects.create(user=User.objects.get(pk=2))
-
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        response = client.post(url, data, format='multipart')
-        # FIXME: until changed, everyone with permissions can add file, even if not owner of respective submission
-        self.assertEqual(201, response.status_code)
-
-    def test_get_list(self):
-        sub = Submission.objects.all().first()
-        sub.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='FAKE_KEY',
-            primary=True
-        )
-        url = reverse('brokerage:submissions_primary_data', kwargs={
-            'broker_submission_id': sub.broker_submission_id})
-        token = Token.objects.create(user=User.objects.get(pk=2))
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-
-        response = client.get(url)
-        self.assertEqual(405, response.status_code)
-
-    def test_get_detail(self):
-        sub = Submission.objects.all().first()
-        sub.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='FAKE_KEY',
-            primary=True
-        )
-        token = Token.objects.create(user=User.objects.get(pk=2))
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        url = reverse('brokerage:submissions_primary_data_detail', kwargs={
-            'broker_submission_id': sub.broker_submission_id, 'pk': 1})
-
-        response = client.get(url)
-        self.assertEqual(405, response.status_code)
-
-    def test_wrong_submission_put(self):
-        sub = Submission.objects.all().first()
-        sub.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='FAKE_KEY',
-            primary=True
-        )
-        url = reverse('brokerage:submissions_primary_data', kwargs={
-            'broker_submission_id': sub.broker_submission_id})
-        token = Token.objects.create(user=User.objects.get(pk=2))
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-
-        data = self._create_test_data('/tmp/test_primary_data_file_1111')
-        response = client.post(url, data, format='multipart')
-        self.assertEqual(201, response.status_code)
-        self.assertEqual(1, len(PrimaryDataFile.objects.all()))
-        fname = PrimaryDataFile.objects.all().first().data_file.name
-        self.assertIn('test_primary_data_file_1111', fname)
-
-        content = json.loads(response.content.decode('utf-8'))
-        sub = Submission.objects.all().last()
-        sub.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='FAKE_KEY_2',
-            primary=True
-        )
-        url = reverse('brokerage:submissions_primary_data_detail', kwargs={
-            'broker_submission_id': sub.broker_submission_id,
-            'pk': content.get('id')})
-
-        data = self._create_test_data('/tmp/test_primary_data_file_2222', False)
-        response = client.put(url, data, format='multipart')
-        self.assertEqual(400, response.status_code)
-
-    def test_valid_file_put(self):
-        sub = Submission.objects.all().first()
-        sub.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='FAKE_KEY',
-            primary=True
-        )
-        sub.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='FAKE_KEY',
-            primary=True
-        )
-        url = reverse('brokerage:submissions_primary_data', kwargs={
-            'broker_submission_id': sub.broker_submission_id})
-        token = Token.objects.create(user=User.objects.get(pk=2))
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-
-        data = self._create_test_data('/tmp/test_primary_data_file_1111')
-        response = client.post(url, data, format='multipart')
-        self.assertEqual(201, response.status_code)
-        self.assertEqual(1, len(PrimaryDataFile.objects.all()))
-        fname = PrimaryDataFile.objects.all().first().data_file.name
-        self.assertIn('test_primary_data_file_1111', fname)
-
-        content = json.loads(response.content.decode('utf-8'))
-        url = reverse('brokerage:submissions_primary_data_detail', kwargs={
-            'broker_submission_id': sub.broker_submission_id,
-            'pk': content.get('id')})
-
-        data = self._create_test_data('/tmp/test_primary_data_file_2222', False)
-        response = client.put(url, data, format='multipart')
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(1, len(PrimaryDataFile.objects.all()))
-        fname = PrimaryDataFile.objects.all().first().data_file.name
-        self.assertIn('test_primary_data_file_2222', fname)
-
-    def test_no_submission_upload(self):
-        url = reverse('brokerage:submissions_primary_data', kwargs={
-            'broker_submission_id': uuid4()})
-        data = self._create_test_data('/tmp/test_primary_data_file')
-        token = Token.objects.create(user=User.objects.get(pk=2))
-
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        response = client.post(url, data, format='multipart')
-
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertIn(b'No submission', response.content)
-
-    def test_empty_upload(self):
-        sub = Submission.objects.all().first()
-        sub.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='FAKE_KEY',
-            primary=True
-        )
-        url = reverse('brokerage:submissions_primary_data', kwargs={
-            'broker_submission_id': sub.broker_submission_id})
-        data = self._create_test_data('/tmp/test_primary_data_file')
-        token = Token.objects.create(user=User.objects.get(pk=2))
-
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        response = client.post(url, {}, format='multipart')
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(b'No file was submitted.', response.content)
-
+# class TestPrimaryDataFile(APITestCase):
+#     fixtures = ['user', 'submission', 'site_configuration', 'user',
+#                 'resource_credential', ]
+#
+#     @classmethod
+#     def _create_test_data(cls, path, delete=True):
+#         if delete:
+#             cls._delete_test_data()
+#         f = open(path, 'w')
+#         f.write('test123\n')
+#         f.close()
+#         f = open(path, 'rb')
+#         return {
+#             'data_file': f,
+#         }
+#
+#     @staticmethod
+#     def _delete_test_data():
+#         PrimaryDataFile.objects.all().delete()
+#
+#     def test_empty_relation(self):
+#         sub = Submission.objects.first()
+#         pd = sub.primarydatafile_set.first()
+#         self.assertIsNone(pd)
+#
+#     def test_valid_file_upload(self):
+#         sub = Submission.objects.all().first()
+#         sub.additionalreference_set.create(
+#             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+#             reference_key='FAKE_KEY',
+#             primary=True
+#         )
+#         url = reverse('brokerage:submissions_primary_data', kwargs={
+#             'broker_submission_id': sub.broker_submission_id})
+#         data = self._create_test_data('/tmp/test_primary_data_file')
+#         token = Token.objects.create(user=User.objects.get(pk=2))
+#
+#         reports_len = len(TaskProgressReport.objects.all())
+#
+#         client = APIClient()
+#         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+#         response = client.post(url, data, format='multipart')
+#
+#         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+#         self.assertIn(b'broker_submission_id', response.content)
+#         self.assertIn(b'"id"', response.content)
+#         self.assertIn(b'site', response.content)
+#         self.assertEqual(User.objects.get(pk=2).username, response.data['site'])
+#         self.assertIn(b'data_file', response.content)
+#         self.assertTrue(
+#             urlparse(response.data['data_file']).path.startswith(MEDIA_URL))
+#
+#         self.assertGreater(len(TaskProgressReport.objects.all()), reports_len)
+#
+#     def test_no_permission_file_upload(self):
+#         sub = Submission.objects.all().first()
+#         sub.additionalreference_set.create(
+#             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+#             reference_key='FAKE_KEY',
+#             primary=True
+#         )
+#         url = reverse('brokerage:submissions_primary_data', kwargs={
+#             'broker_submission_id': sub.broker_submission_id})
+#         data = self._create_test_data('/tmp/test_primary_data_file')
+#         token = Token.objects.create(user=User.objects.get(pk=3))
+#
+#         client = APIClient()
+#         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+#         response = client.post(url, data, format='multipart')
+#
+#         self.assertEqual(403, response.status_code)
+#
+#     def test_not_owner_file_upload(self):
+#         sub = Submission.objects.all().first()
+#         sub.additionalreference_set.create(
+#             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+#             reference_key='FAKE_KEY',
+#             primary=True
+#         )
+#         sub.site = User.objects.get(pk=3)
+#         sub.save()
+#         url = reverse('brokerage:submissions_primary_data', kwargs={
+#             'broker_submission_id': sub.broker_submission_id})
+#         data = self._create_test_data('/tmp/test_primary_data_file')
+#         token = Token.objects.create(user=User.objects.get(pk=2))
+#
+#         client = APIClient()
+#         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+#         response = client.post(url, data, format='multipart')
+#         # FIXME: until changed, everyone with permissions can add file, even if not owner of respective submission
+#         self.assertEqual(201, response.status_code)
+#
+#     def test_get_list(self):
+#         sub = Submission.objects.all().first()
+#         sub.additionalreference_set.create(
+#             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+#             reference_key='FAKE_KEY',
+#             primary=True
+#         )
+#         url = reverse('brokerage:submissions_primary_data', kwargs={
+#             'broker_submission_id': sub.broker_submission_id})
+#         token = Token.objects.create(user=User.objects.get(pk=2))
+#         client = APIClient()
+#         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+#
+#         response = client.get(url)
+#         self.assertEqual(405, response.status_code)
+#
+#     def test_get_detail(self):
+#         sub = Submission.objects.all().first()
+#         sub.additionalreference_set.create(
+#             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+#             reference_key='FAKE_KEY',
+#             primary=True
+#         )
+#         token = Token.objects.create(user=User.objects.get(pk=2))
+#         client = APIClient()
+#         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+#         url = reverse('brokerage:submissions_primary_data_detail', kwargs={
+#             'broker_submission_id': sub.broker_submission_id, 'pk': 1})
+#
+#         response = client.get(url)
+#         self.assertEqual(405, response.status_code)
+#
+#     def test_wrong_submission_put(self):
+#         sub = Submission.objects.all().first()
+#         sub.additionalreference_set.create(
+#             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+#             reference_key='FAKE_KEY',
+#             primary=True
+#         )
+#         url = reverse('brokerage:submissions_primary_data', kwargs={
+#             'broker_submission_id': sub.broker_submission_id})
+#         token = Token.objects.create(user=User.objects.get(pk=2))
+#         client = APIClient()
+#         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+#
+#         data = self._create_test_data('/tmp/test_primary_data_file_1111')
+#         response = client.post(url, data, format='multipart')
+#         self.assertEqual(201, response.status_code)
+#         self.assertEqual(1, len(PrimaryDataFile.objects.all()))
+#         fname = PrimaryDataFile.objects.all().first().data_file.name
+#         self.assertIn('test_primary_data_file_1111', fname)
+#
+#         content = json.loads(response.content.decode('utf-8'))
+#         sub = Submission.objects.all().last()
+#         sub.additionalreference_set.create(
+#             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+#             reference_key='FAKE_KEY_2',
+#             primary=True
+#         )
+#         url = reverse('brokerage:submissions_primary_data_detail', kwargs={
+#             'broker_submission_id': sub.broker_submission_id,
+#             'pk': content.get('id')})
+#
+#         data = self._create_test_data('/tmp/test_primary_data_file_2222', False)
+#         response = client.put(url, data, format='multipart')
+#         self.assertEqual(400, response.status_code)
+#
+#     def test_valid_file_put(self):
+#         sub = Submission.objects.all().first()
+#         sub.additionalreference_set.create(
+#             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+#             reference_key='FAKE_KEY',
+#             primary=True
+#         )
+#         sub.additionalreference_set.create(
+#             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+#             reference_key='FAKE_KEY',
+#             primary=True
+#         )
+#         url = reverse('brokerage:submissions_primary_data', kwargs={
+#             'broker_submission_id': sub.broker_submission_id})
+#         token = Token.objects.create(user=User.objects.get(pk=2))
+#         client = APIClient()
+#         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+#
+#         data = self._create_test_data('/tmp/test_primary_data_file_1111')
+#         response = client.post(url, data, format='multipart')
+#         self.assertEqual(201, response.status_code)
+#         self.assertEqual(1, len(PrimaryDataFile.objects.all()))
+#         fname = PrimaryDataFile.objects.all().first().data_file.name
+#         self.assertIn('test_primary_data_file_1111', fname)
+#
+#         content = json.loads(response.content.decode('utf-8'))
+#         url = reverse('brokerage:submissions_primary_data_detail', kwargs={
+#             'broker_submission_id': sub.broker_submission_id,
+#             'pk': content.get('id')})
+#
+#         data = self._create_test_data('/tmp/test_primary_data_file_2222', False)
+#         response = client.put(url, data, format='multipart')
+#         self.assertEqual(200, response.status_code)
+#         self.assertEqual(1, len(PrimaryDataFile.objects.all()))
+#         fname = PrimaryDataFile.objects.all().first().data_file.name
+#         self.assertIn('test_primary_data_file_2222', fname)
+#
+#     def test_no_submission_upload(self):
+#         url = reverse('brokerage:submissions_primary_data', kwargs={
+#             'broker_submission_id': uuid4()})
+#         data = self._create_test_data('/tmp/test_primary_data_file')
+#         token = Token.objects.create(user=User.objects.get(pk=2))
+#
+#         client = APIClient()
+#         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+#         response = client.post(url, data, format='multipart')
+#
+#         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+#         self.assertIn(b'No submission', response.content)
+#
+#     def test_empty_upload(self):
+#         sub = Submission.objects.all().first()
+#         sub.additionalreference_set.create(
+#             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+#             reference_key='FAKE_KEY',
+#             primary=True
+#         )
+#         url = reverse('brokerage:submissions_primary_data', kwargs={
+#             'broker_submission_id': sub.broker_submission_id})
+#         data = self._create_test_data('/tmp/test_primary_data_file')
+#         token = Token.objects.create(user=User.objects.get(pk=2))
+#
+#         client = APIClient()
+#         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+#         response = client.post(url, {}, format='multipart')
+#
+#         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+#         self.assertIn(b'No file was submitted.', response.content)
+#
 
 class TestAuditableTextData(TestCase):
     fixtures = ('user', 'submission', 'broker_object',
