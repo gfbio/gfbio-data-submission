@@ -5370,68 +5370,68 @@ def fake_trigger_submission_transfer(submission_id=None):
 #         sth.execute_submission_to_ena_and_pangaea()
 
 
-class TestSubmissionFileUpload(APITestCase):
-    fixtures = ['user', 'submission', ]
-
-    def _create_test_data(self, path):
-        self._delete_test_data()
-        f = open(path, 'w')
-        f.write('test123\n')
-        f.close()
-        f = open(path, 'rb')
-        return {
-            'file': f,
-        }
-
-    @staticmethod
-    def _delete_test_data():
-        SubmissionFileUpload.objects.all().delete()
-
-    def test_valid_file_upload(self):
-        sub = Submission.objects.all().first()
-        url = reverse('brokerage:submissions_upload', kwargs={
-            'broker_submission_id': sub.broker_submission_id})
-        data = self._create_test_data('/tmp/test_upload')
-        token = Token.objects.create(user=User.objects.get(pk=2))
-
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        response = client.post(url, data, format='multipart')
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn(b'broker_submission_id', response.content)
-        self.assertIn(b'site', response.content)
-        self.assertEqual(User.objects.get(pk=2).username, response.data['site'])
-        self.assertIn(b'file', response.content)
-        self.assertTrue(
-            urlparse(response.data['file']).path.startswith(MEDIA_URL))
-
-    def test_no_submission_upload(self):
-        url = reverse('brokerage:submissions_upload', kwargs={
-            'broker_submission_id': uuid4()})
-        data = self._create_test_data('/tmp/test_upload')
-        token = Token.objects.create(user=User.objects.get(pk=2))
-
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        response = client.post(url, data, format='multipart')
-
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertIn(b'No submission', response.content)
-
-    def test_empty_upload(self):
-        sub = Submission.objects.all().first()
-        url = reverse('brokerage:submissions_upload', kwargs={
-            'broker_submission_id': sub.broker_submission_id})
-        data = self._create_test_data('/tmp/test_upload')
-        token = Token.objects.create(user=User.objects.get(pk=2))
-
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        response = client.post(url, {}, format='multipart')
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(b'No file was submitted.', response.content)
+# class TestSubmissionFileUpload(APITestCase):
+#     fixtures = ['user', 'submission', ]
+#
+#     def _create_test_data(self, path):
+#         self._delete_test_data()
+#         f = open(path, 'w')
+#         f.write('test123\n')
+#         f.close()
+#         f = open(path, 'rb')
+#         return {
+#             'file': f,
+#         }
+#
+#     @staticmethod
+#     def _delete_test_data():
+#         SubmissionFileUpload.objects.all().delete()
+#
+#     def test_valid_file_upload(self):
+#         sub = Submission.objects.all().first()
+#         url = reverse('brokerage:submissions_upload', kwargs={
+#             'broker_submission_id': sub.broker_submission_id})
+#         data = self._create_test_data('/tmp/test_upload')
+#         token = Token.objects.create(user=User.objects.get(pk=2))
+#
+#         client = APIClient()
+#         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+#         response = client.post(url, data, format='multipart')
+#
+#         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+#         self.assertIn(b'broker_submission_id', response.content)
+#         self.assertIn(b'site', response.content)
+#         self.assertEqual(User.objects.get(pk=2).username, response.data['site'])
+#         self.assertIn(b'file', response.content)
+#         self.assertTrue(
+#             urlparse(response.data['file']).path.startswith(MEDIA_URL))
+#
+#     def test_no_submission_upload(self):
+#         url = reverse('brokerage:submissions_upload', kwargs={
+#             'broker_submission_id': uuid4()})
+#         data = self._create_test_data('/tmp/test_upload')
+#         token = Token.objects.create(user=User.objects.get(pk=2))
+#
+#         client = APIClient()
+#         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+#         response = client.post(url, data, format='multipart')
+#
+#         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+#         self.assertIn(b'No submission', response.content)
+#
+#     def test_empty_upload(self):
+#         sub = Submission.objects.all().first()
+#         url = reverse('brokerage:submissions_upload', kwargs={
+#             'broker_submission_id': sub.broker_submission_id})
+#         data = self._create_test_data('/tmp/test_upload')
+#         token = Token.objects.create(user=User.objects.get(pk=2))
+#
+#         client = APIClient()
+#         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+#         response = client.post(url, {}, format='multipart')
+#
+#         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+#         self.assertIn(b'No file was submitted.', response.content)
 
 
 class TestPrimaryDataFile(APITestCase):
