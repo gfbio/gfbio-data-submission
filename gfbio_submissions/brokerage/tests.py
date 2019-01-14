@@ -6018,100 +6018,100 @@ def fake_trigger_submission_transfer(submission_id=None):
 #         self.assertIsInstance(tpr.__str__(), str)
 
 
-class TestSubmissionTask(TestCase):
-    fixtures = ('user', 'submission', 'broker_object',
-                'resource_credential', 'additional_reference',
-                'site_configuration')
-
-    @staticmethod
-    def _run_task(submission_id=1):
-        result = create_broker_objects_from_submission_data_task.apply_async(
-            kwargs={
-                'submission_id': submission_id
-            }
-        )
-
-    def test_create(self):
-        report = TaskProgressReport()
-        report.save()
-        reports = TaskProgressReport.objects.all()
-        self.assertEqual(1, len(reports))
-
-    @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
-    def test_create_with_retry_task(self, mock_requests):
-        sub = FullWorkflowTest._prepare()
-        sub.submitting_user = 'gfbio'
-        sub.save()
-        sub.brokerobject_set.filter(
-            type='study').first().persistentidentifier_set.create(
-            archive='ENA',
-            pid_type='PRJ',
-            pid='PRJEB20411',
-            outgoing_request_id=uuid.uuid4()
-        )
-
-        reports = TaskProgressReport.objects.all()
-        self.assertEqual(0, len(reports))
-
-        mock_requests.post.return_value.status_code = 500
-        mock_requests.post.return_value.ok = False
-        mock_requests.post.return_value.content = ''
-        result = comment_on_pangaea_ticket_task.apply_async(
-            kwargs={
-                'submission_id': sub.pk,
-                'kwargs': {
-                    'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
-                    'ticket_key': 'PDI-11735'
-                },
-                'comment_body': 'ACC 12345'
-            }
-        )
-
-        reports = TaskProgressReport.objects.all()
-        self.assertEqual(1, len(reports))
-        report = reports.first()
-        self.assertEqual('RETRY', report.status)
-        self.assertEqual('500', report.task_exception)
-
-    def test_task_report_creation(self):
-        task_reports = TaskProgressReport.objects.all()
-        self.assertEqual(0, len(task_reports))
-
-        self._run_task()
-
-        task_reports = TaskProgressReport.objects.all()
-        self.assertEqual(1, len(task_reports))
-        self.assertEqual(
-            'tasks.create_broker_objects_from_submission_data_task',
-            task_reports.first().task_name
-        )
-
-    def test_task_report_update_after_return(self):
-        self._run_task(submission_id=1)
-        task_reports = TaskProgressReport.objects.all()
-        self.assertEqual(1, len(task_reports))
-        tpr = task_reports.first()
-        self.assertEqual('SUCCESS', tpr.status)
-        self.assertNotEqual('', tpr.task_kwargs)
-
-    def test_task_report_update_invalid_task_id(self):
-        self._run_task(submission_id=1)
-
-        report, created = TaskProgressReport.objects.update_report_after_return(
-            status='TEST',
-            task_id=uuid4(),
-        )
-
-        self.assertTrue(created)
-        self.assertEqual('unnamed_task', report.__str__())
-
-    def test_task_report_update_on_wrong_submission(self):
-        self._run_task(submission_id=1111)
-        task_reports = TaskProgressReport.objects.all()
-        self.assertEqual(1, len(task_reports))
-        tpr = task_reports.first()
-        self.assertEqual('SUCCESS', tpr.status)
-        self.assertEqual('CANCELLED', tpr.task_return_value)
+# class TestSubmissionTask(TestCase):
+#     fixtures = ('user', 'submission', 'broker_object',
+#                 'resource_credential', 'additional_reference',
+#                 'site_configuration')
+#
+#     @staticmethod
+#     def _run_task(submission_id=1):
+#         result = create_broker_objects_from_submission_data_task.apply_async(
+#             kwargs={
+#                 'submission_id': submission_id
+#             }
+#         )
+#
+#     def test_create(self):
+#         report = TaskProgressReport()
+#         report.save()
+#         reports = TaskProgressReport.objects.all()
+#         self.assertEqual(1, len(reports))
+#
+#     @patch('gfbio_submissions.brokerage.utils.pangaea.requests')
+#     def test_create_with_retry_task(self, mock_requests):
+#         sub = FullWorkflowTest._prepare()
+#         sub.submitting_user = 'gfbio'
+#         sub.save()
+#         sub.brokerobject_set.filter(
+#             type='study').first().persistentidentifier_set.create(
+#             archive='ENA',
+#             pid_type='PRJ',
+#             pid='PRJEB20411',
+#             outgoing_request_id=uuid.uuid4()
+#         )
+#
+#         reports = TaskProgressReport.objects.all()
+#         self.assertEqual(0, len(reports))
+#
+#         mock_requests.post.return_value.status_code = 500
+#         mock_requests.post.return_value.ok = False
+#         mock_requests.post.return_value.content = ''
+#         result = comment_on_pangaea_ticket_task.apply_async(
+#             kwargs={
+#                 'submission_id': sub.pk,
+#                 'kwargs': {
+#                     'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
+#                     'ticket_key': 'PDI-11735'
+#                 },
+#                 'comment_body': 'ACC 12345'
+#             }
+#         )
+#
+#         reports = TaskProgressReport.objects.all()
+#         self.assertEqual(1, len(reports))
+#         report = reports.first()
+#         self.assertEqual('RETRY', report.status)
+#         self.assertEqual('500', report.task_exception)
+#
+#     def test_task_report_creation(self):
+#         task_reports = TaskProgressReport.objects.all()
+#         self.assertEqual(0, len(task_reports))
+#
+#         self._run_task()
+#
+#         task_reports = TaskProgressReport.objects.all()
+#         self.assertEqual(1, len(task_reports))
+#         self.assertEqual(
+#             'tasks.create_broker_objects_from_submission_data_task',
+#             task_reports.first().task_name
+#         )
+#
+#     def test_task_report_update_after_return(self):
+#         self._run_task(submission_id=1)
+#         task_reports = TaskProgressReport.objects.all()
+#         self.assertEqual(1, len(task_reports))
+#         tpr = task_reports.first()
+#         self.assertEqual('SUCCESS', tpr.status)
+#         self.assertNotEqual('', tpr.task_kwargs)
+#
+#     def test_task_report_update_invalid_task_id(self):
+#         self._run_task(submission_id=1)
+#
+#         report, created = TaskProgressReport.objects.update_report_after_return(
+#             status='TEST',
+#             task_id=uuid4(),
+#         )
+#
+#         self.assertTrue(created)
+#         self.assertEqual('unnamed_task', report.__str__())
+#
+#     def test_task_report_update_on_wrong_submission(self):
+#         self._run_task(submission_id=1111)
+#         task_reports = TaskProgressReport.objects.all()
+#         self.assertEqual(1, len(task_reports))
+#         tpr = task_reports.first()
+#         self.assertEqual('SUCCESS', tpr.status)
+#         self.assertEqual('CANCELLED', tpr.task_return_value)
 
 
 class TestDownloadEnaReport(TestCase):
