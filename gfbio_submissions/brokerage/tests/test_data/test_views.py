@@ -116,19 +116,10 @@ class TestPrimaryDataFile(TestCase):
     def setUpTestData(cls):
         user = User.objects.create_user(
             username='horst', email='horst@horst.de', password='password')
-
-        # for p in Permission.objects.filter(content_type__app_label='brokerage', codename__endswith='primarydatafile'):
-        #     print(p.codename)
         permissions = Permission.objects.filter(
             content_type__app_label='brokerage',
             codename__endswith='primarydatafile')
-        # permissions = Permission.objects.filter(
-        #     content_type__app_label='brokerage',
-        #     codename__endswith='submission')
         user.user_permissions.add(*permissions)
-        # permissions = Permission.objects.filter(
-        #     content_type__app_label='brokerage', codename__endswith='upload')
-        # user.user_permissions.add(*permissions)
         token = Token.objects.create(user=user)
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)

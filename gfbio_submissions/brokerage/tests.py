@@ -5663,99 +5663,99 @@ def fake_trigger_submission_transfer(submission_id=None):
 #         self.assertIn(b'No file was submitted.', response.content)
 #
 
-class TestAuditableTextData(TestCase):
-    fixtures = ('user', 'submission', 'broker_object',
-                'resource_credential', 'additional_reference',
-                'site_configuration')
-
-    def test_instance(self):
-        sub = Submission.objects.get(pk=1)
-        atd = AuditableTextData.objects.create(
-            name='test-file',
-            submission=sub
-        )
-        self.assertFalse(atd.pk is None)
-        self.assertIsInstance(atd, AuditableTextData)
-
-    def test_store_ena_data_as_auditable_text_data(self):
-        all_text_data = AuditableTextData.objects.all()
-        self.assertEqual(0, len(all_text_data))
-        sub = FullWorkflowTest._prepare()
-        data = prepare_ena_data(sub)
-        store_ena_data_as_auditable_text_data(sub, data)
-        all_text_data = AuditableTextData.objects.all()
-        self.assertEqual(4, len(all_text_data))
-        text_data_for_submission = AuditableTextData.objects.filter(
-            submission=sub)
-        self.assertEqual(4, len(text_data_for_submission))
-
-    def test_manager_assemble_ena_submission_data(self):
-        sub = FullWorkflowTest._prepare()
-        data = prepare_ena_data(sub)
-        store_ena_data_as_auditable_text_data(sub, data)
-        res = AuditableTextData.objects.assemble_ena_submission_data(
-            submission=sub)
-        request_file_keys = ['SAMPLE', 'STUDY', 'EXPERIMENT', 'RUN']
-        self.assertEqual(sorted(request_file_keys), sorted(list(res.keys())))
-
-    def test_manager_submission_data_no_experiments_no_runs(self):
-        sub = FullWorkflowTest._prepare()
-        data = prepare_ena_data(sub)
-        data.pop('EXPERIMENT')
-        data.pop('RUN')
-        self.assertEqual(0, len(AuditableTextData.objects.all()))
-        store_ena_data_as_auditable_text_data(sub, data)
-        self.assertEqual(2, len(AuditableTextData.objects.all()))
-        res = AuditableTextData.objects.assemble_ena_submission_data(
-            submission=sub)
-        request_file_keys = ['SAMPLE', 'STUDY', ]
-        self.assertEqual(sorted(request_file_keys), sorted(list(res.keys())))
-
-    def test_manager_submission_filter(self):
-        sub = FullWorkflowTest._prepare()
-        data = prepare_ena_data(sub)
-        self.assertEqual(0, len(AuditableTextData.objects.all()))
-        store_ena_data_as_auditable_text_data(sub, data)
-        self.assertEqual(4, len(AuditableTextData.objects.all()))
-        self.assertEqual(4,
-                         len(AuditableTextData.objects.filter(submission=sub)))
-
-        sub2 = FullWorkflowTest._prepare()
-        data = prepare_ena_data(sub2)
-        store_ena_data_as_auditable_text_data(sub2, data)
-        self.assertEqual(8, len(AuditableTextData.objects.all()))
-        self.assertEqual(4,
-                         len(AuditableTextData.objects.filter(submission=sub2)))
-
-    def test_manager_invalid_submission(self):
-        sub = FullWorkflowTest._prepare()
-        data = prepare_ena_data(sub)
-        self.assertEqual(0, len(AuditableTextData.objects.all()))
-        store_ena_data_as_auditable_text_data(sub, data)
-        self.assertEqual(4, len(AuditableTextData.objects.all()))
-        self.assertEqual(4,
-                         len(AuditableTextData.objects.filter(submission=sub)))
-
-        sub2 = FullWorkflowTest._prepare()
-        self.assertEqual(0,
-                         len(AuditableTextData.objects.filter(submission=sub2)))
-
-        res = AuditableTextData.objects.assemble_ena_submission_data(
-            submission=sub2)
-        self.assertDictEqual({}, res)
-
-    def test_admin_download(self):
-        sub = FullWorkflowTest._prepare()
-        data = prepare_ena_data(sub)
-        store_ena_data_as_auditable_text_data(sub, data)
-        data = AuditableTextData.objects.filter(submission=sub)
-        print(data)
-
-        response = download_auditable_text_data(
-            None, None,
-            Submission.objects.filter(
-                broker_submission_id=sub.broker_submission_id))
-        self.assertEqual(200, response.status_code)
+# class TestAuditableTextData(TestCase):
+#     fixtures = ('user', 'submission', 'broker_object',
+#                 'resource_credential', 'additional_reference',
+#                 'site_configuration')
+#
+#     def test_instance(self):
+#         sub = Submission.objects.get(pk=1)
+#         atd = AuditableTextData.objects.create(
+#             name='test-file',
+#             submission=sub
+#         )
+#         self.assertFalse(atd.pk is None)
+#         self.assertIsInstance(atd, AuditableTextData)
+#
+#     def test_store_ena_data_as_auditable_text_data(self):
+#         all_text_data = AuditableTextData.objects.all()
+#         self.assertEqual(0, len(all_text_data))
+#         sub = FullWorkflowTest._prepare()
+#         data = prepare_ena_data(sub)
+#         store_ena_data_as_auditable_text_data(sub, data)
+#         all_text_data = AuditableTextData.objects.all()
+#         self.assertEqual(4, len(all_text_data))
+#         text_data_for_submission = AuditableTextData.objects.filter(
+#             submission=sub)
+#         self.assertEqual(4, len(text_data_for_submission))
+#
+#     def test_manager_assemble_ena_submission_data(self):
+#         sub = FullWorkflowTest._prepare()
+#         data = prepare_ena_data(sub)
+#         store_ena_data_as_auditable_text_data(sub, data)
+#         res = AuditableTextData.objects.assemble_ena_submission_data(
+#             submission=sub)
+#         request_file_keys = ['SAMPLE', 'STUDY', 'EXPERIMENT', 'RUN']
+#         self.assertEqual(sorted(request_file_keys), sorted(list(res.keys())))
+#
+#     def test_manager_submission_data_no_experiments_no_runs(self):
+#         sub = FullWorkflowTest._prepare()
+#         data = prepare_ena_data(sub)
+#         data.pop('EXPERIMENT')
+#         data.pop('RUN')
+#         self.assertEqual(0, len(AuditableTextData.objects.all()))
+#         store_ena_data_as_auditable_text_data(sub, data)
+#         self.assertEqual(2, len(AuditableTextData.objects.all()))
+#         res = AuditableTextData.objects.assemble_ena_submission_data(
+#             submission=sub)
+#         request_file_keys = ['SAMPLE', 'STUDY', ]
+#         self.assertEqual(sorted(request_file_keys), sorted(list(res.keys())))
+#
+#     def test_manager_submission_filter(self):
+#         sub = FullWorkflowTest._prepare()
+#         data = prepare_ena_data(sub)
+#         self.assertEqual(0, len(AuditableTextData.objects.all()))
+#         store_ena_data_as_auditable_text_data(sub, data)
+#         self.assertEqual(4, len(AuditableTextData.objects.all()))
+#         self.assertEqual(4,
+#                          len(AuditableTextData.objects.filter(submission=sub)))
+#
+#         sub2 = FullWorkflowTest._prepare()
+#         data = prepare_ena_data(sub2)
+#         store_ena_data_as_auditable_text_data(sub2, data)
+#         self.assertEqual(8, len(AuditableTextData.objects.all()))
+#         self.assertEqual(4,
+#                          len(AuditableTextData.objects.filter(submission=sub2)))
+#
+#     def test_manager_invalid_submission(self):
+#         sub = FullWorkflowTest._prepare()
+#         data = prepare_ena_data(sub)
+#         self.assertEqual(0, len(AuditableTextData.objects.all()))
+#         store_ena_data_as_auditable_text_data(sub, data)
+#         self.assertEqual(4, len(AuditableTextData.objects.all()))
+#         self.assertEqual(4,
+#                          len(AuditableTextData.objects.filter(submission=sub)))
+#
+#         sub2 = FullWorkflowTest._prepare()
+#         self.assertEqual(0,
+#                          len(AuditableTextData.objects.filter(submission=sub2)))
+#
+#         res = AuditableTextData.objects.assemble_ena_submission_data(
+#             submission=sub2)
+#         self.assertDictEqual({}, res)
+#
+#     def test_admin_download(self):
+#         sub = FullWorkflowTest._prepare()
+#         data = prepare_ena_data(sub)
+#         store_ena_data_as_auditable_text_data(sub, data)
+#         data = AuditableTextData.objects.filter(submission=sub)
+#         print(data)
+#
+#         response = download_auditable_text_data(
+#             None, None,
+#             Submission.objects.filter(
+#                 broker_submission_id=sub.broker_submission_id))
+#         self.assertEqual(200, response.status_code)
 
         # def test_serialization(self):
     #     sub = Submission.objects.first()
