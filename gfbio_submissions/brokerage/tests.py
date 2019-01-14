@@ -5995,27 +5995,27 @@ def fake_trigger_submission_transfer(submission_id=None):
 #         self.assertEqual('', request_logs.first().site_user)
 
 
-class TestTaskProgressReport(TestCase):
-    fixtures = ('user', 'submission',)
-
-    def test_instance(self):
-        self.assertEqual(0, len(TaskProgressReport.objects.all()))
-        sub = Submission.objects.get(pk=1)
-        tpr = TaskProgressReport.objects.create(
-            submission=sub,
-            task_name='foo',
-        )
-        tpr.save()
-        self.assertEqual(1, len(TaskProgressReport.objects.all()))
-
-    def test_str(self):
-        tpr = TaskProgressReport.objects.create(
-            submission=Submission.objects.get(pk=1),
-            task_name='foo',
-        )
-        tpr.save()
-        self.assertEqual('foo', tpr.__str__())
-        self.assertIsInstance(tpr.__str__(), str)
+# class TestTaskProgressReport(TestCase):
+#     fixtures = ('user', 'submission',)
+#
+#     def test_instance(self):
+#         self.assertEqual(0, len(TaskProgressReport.objects.all()))
+#         sub = Submission.objects.get(pk=1)
+#         tpr = TaskProgressReport.objects.create(
+#             submission=sub,
+#             task_name='foo',
+#         )
+#         tpr.save()
+#         self.assertEqual(1, len(TaskProgressReport.objects.all()))
+#
+#     def test_str(self):
+#         tpr = TaskProgressReport.objects.create(
+#             submission=Submission.objects.get(pk=1),
+#             task_name='foo',
+#         )
+#         tpr.save()
+#         self.assertEqual('foo', tpr.__str__())
+#         self.assertIsInstance(tpr.__str__(), str)
 
 
 class TestSubmissionTask(TestCase):

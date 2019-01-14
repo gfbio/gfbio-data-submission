@@ -8,7 +8,8 @@ from mock import patch
 from gfbio_submissions.brokerage.admin import download_auditable_text_data
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, TicketLabel, BrokerObject, CenterName, Submission, \
-    PersistentIdentifier, RequestLog, AdditionalReference, AuditableTextData
+    PersistentIdentifier, RequestLog, AdditionalReference, AuditableTextData, \
+    TaskProgressReport
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data_without_runs, \
     _get_ena_data, _get_ena_xml_response
@@ -650,3 +651,32 @@ class TestAuditableTextData(TestCase):
                 broker_submission_id=submission.broker_submission_id)
         )
         self.assertEqual(200, response.status_code)
+
+
+class TestTaskProgressReport(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        user = User.objects.create(
+            username="user1"
+        )
+        Submission.objects.create(site=user)
+
+    def test_instance(self):
+        self.assertEqual(0, len(TaskProgressReport.objects.all()))
+        submission = Submission.objects.first()
+        tpr = TaskProgressReport.objects.create(
+            submission=submission,
+            task_name='foo',
+        )
+        tpr.save()
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+
+    def test_str(self):
+        tpr = TaskProgressReport.objects.create(
+            submission=Submission.objects.first(),
+            task_name='foo',
+        )
+        tpr.save()
+        self.assertEqual('foo', tpr.__str__())
+        self.assertIsInstance(tpr.__str__(), str)
