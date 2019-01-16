@@ -362,7 +362,6 @@ class EnalizerTest(TestCase):
             submission=submission)
         ena_submission_data.pop('EXPERIMENT')
         ena_submission_data.pop('RUN')
-        print(ena_submission_data)
         response, req_log_request_id = send_submission_to_ena(
             submission=submission,
             archive_access=conf.ena_server,

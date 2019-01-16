@@ -28,13 +28,6 @@ def _get_ena_data_without_runs():
         return json.load(data_file)
 
 
-# def _get_ena_data_with_runs():
-#     with open(os.path.join(
-#             _get_test_data_dir_path(),
-#             'ena_data_no_runs.json'), 'r') as data_file:
-#         return json.load(data_file)
-
-
 def _get_parsed_ena_response():
     with open(os.path.join(
             _get_test_data_dir_path(), 'ena_response.json'), 'r') as data_file:

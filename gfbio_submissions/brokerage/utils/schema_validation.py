@@ -168,11 +168,6 @@ def validate_ena_relations(data):
 # FIXME: since id determins root for looking up included files
 def validate_data_full(data, target):
     schema_location = TARGET_SCHEMA_MAPPINGS[target]
-    # print '\n\nFULL_VAL:  SCHEMA LOCATION ', schema_location
-    # print os.path.join(
-    #         settings.STATIC_ROOT,
-    #         schema_location)
-    # print '\n\n'
     valid, errors = validate_data(
         data=data, schema_file=os.path.join(
             settings.STATIC_ROOT,
@@ -187,11 +182,6 @@ def validate_data_full(data, target):
 
 
 def validate_data_min(data):
-    # print '\n\nMIN_VAL:  SCHEMA LOCATION '
-    # print os.path.join(
-    #     settings.STATIC_ROOT,
-    #     STATIC_MIN_REQUIREMENTS_LOCATION)
-    # print '\n\n'
     return validate_data(
         data=data, schema_file=os.path.join(
             settings.STATIC_ROOT,

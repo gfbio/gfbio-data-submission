@@ -303,7 +303,6 @@ class TestSubmissionTransferTasks(TestTasks):
     # TODO: add test where nonsense content is returned like '' or {}
     @responses.activate
     def test_process_ena_response_task_successful(self):
-        print('\n\n######################################\n\n')
         submission = Submission.objects.first()
         # fix ids to match ena_response.xml test-data aliases when running
         # multiple tests
