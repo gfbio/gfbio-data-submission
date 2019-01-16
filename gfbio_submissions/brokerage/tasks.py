@@ -67,7 +67,6 @@ class SubmissionTask(Task):
 
 @celery.task(name='tasks.trigger_submission_transfer', base=SubmissionTask)
 def trigger_submission_transfer(submission_id=None):
-    print("\trigger_submission_transfer")
     logger.info(
         msg='trigger_submission_transfer. get submission with pk={}.'.format(
             submission_id)
@@ -208,6 +207,10 @@ def apply_default_task_retry_policy(response, task, submission):
                     submission.broker_submission_id, e),
             )
         else:
+            logger.info(
+                msg='{} SubmissionTransfer.TransferServerError retry after delay'
+                    ''.format(task.name)
+            )
             raise task.retry(
                 exc=e,
                 countdown=(task.request.retries + 1) * SUBMISSION_RETRY_DELAY,
@@ -590,7 +593,9 @@ def get_gfbio_user_email_task(submission_id=None):
                                             site_configuration, submission)
             try:
                 # content = json.loads(response.content)
-                content = response.json()
+                response_json = response.json()
+                content = response_json if isinstance(response_json,
+                                                      dict) else {}
                 res['user_email'] = content.get('emailaddress',
                                                 site_configuration.contact)
                 res['user_full_name'] = content.get('fullname', '')
@@ -792,7 +797,7 @@ def generic_comment_helpdesk_ticket_task(prev_task_result=None,
                 submission=submission,
             )
             apply_default_task_retry_policy(response,
-                                            comment_helpdesk_ticket_task,
+                                            generic_comment_helpdesk_ticket_task,
                                             submission)
     else:
         return TaskProgressReport.CANCELLED
@@ -843,7 +848,7 @@ def add_pangaealink_to_helpdesk_ticket_task(prev_task_result=None,
             )
 
             apply_default_task_retry_policy(response,
-                                            comment_helpdesk_ticket_task,
+                                            add_pangaealink_to_helpdesk_ticket_task,
                                             submission)
     else:
         return TaskProgressReport.CANCELLED

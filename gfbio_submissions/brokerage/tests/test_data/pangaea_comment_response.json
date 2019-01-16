@@ -1,0 +1,37 @@
+{
+    "self": "http://issues.pangaea.de/rest/api/2/issue/31444/comment/72996",
+    "id": "72996",
+    "author": {
+        "self": "http://issues.pangaea.de/rest/api/2/user?username=gfbio-broker",
+        "name": "gfbio-broker",
+        "key": "gfbio-broker",
+        "emailAddress": "i.kostadinov@jacobs-university.de",
+        "avatarUrls": {
+            "48x48": "http://issues.pangaea.de/secure/useravatar?avatarId=10072",
+            "24x24": "http://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072",
+            "16x16": "http://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072",
+            "32x32": "http://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"
+        },
+        "displayName": "GFBio broker account",
+        "active": true,
+        "timeZone": "Etc/UTC"
+    },
+    "body": "This should be some descripitive text regarding attached files, containing ENA-Accession numbers",
+    "updateAuthor": {
+        "self": "http://issues.pangaea.de/rest/api/2/user?username=gfbio-broker",
+        "name": "gfbio-broker",
+        "key": "gfbio-broker",
+        "emailAddress": "i.kostadinov@jacobs-university.de",
+        "avatarUrls": {
+            "48x48": "http://issues.pangaea.de/secure/useravatar?avatarId=10072",
+            "24x24": "http://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072",
+            "16x16": "http://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072",
+            "32x32": "http://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"
+        },
+        "displayName": "GFBio broker account",
+        "active": true,
+        "timeZone": "Etc/UTC"
+    },
+    "created": "2016-02-26T14:47:46.982+0000",
+    "updated": "2016-02-26T14:47:46.982+0000"
+}

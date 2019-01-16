@@ -1,0 +1,25 @@
+[
+    {
+        "self": "http://issues.pangaea.de/rest/api/2/attachment/49860",
+        "id": "49860",
+        "filename": "report.csv",
+        "author": {
+            "self": "http://issues.pangaea.de/rest/api/2/user?username=gfbio-broker",
+            "name": "gfbio-broker",
+            "key": "gfbio-broker",
+            "emailAddress": "kevin.horstmeier@jacobs-university.de",
+            "avatarUrls": {
+                "48x48": "http://issues.pangaea.de/secure/useravatar?avatarId=10072",
+                "24x24": "http://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072",
+                "16x16": "http://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072",
+                "32x32": "http://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"
+            },
+            "displayName": "GFBio broker account",
+            "active": true,
+            "timeZone": "Etc/UTC"
+        },
+        "created": "2016-02-26T14:47:46.000+0000",
+        "size": 38,
+        "content": "http://issues.pangaea.de/secure/attachment/49860/report.csv"
+    }
+]

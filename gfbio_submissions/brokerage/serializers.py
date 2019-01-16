@@ -41,7 +41,6 @@ class SubmissionSerializer(serializers.ModelSerializer):
             if not valid:
                 raise serializers.ValidationError(
                     {'data': [e.message for e in errors]})
-        # print 'validate data ', data
         return data
 
     class Meta:

@@ -58,7 +58,6 @@ class SubmissionsView(mixins.ListModelMixin,
 
         from gfbio_submissions.brokerage.tasks import \
             trigger_submission_transfer
-        print("ADD VIEW before trigger ")
         trigger_submission_transfer.apply_async(
             kwargs={
                 'submission_id': submission.pk,
@@ -103,12 +102,7 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
             response = self.update(request, *args, **kwargs)
 
             # FIXME: updates to submission download url are not covered here
-
             # affected_submissions = instance.submission_set.filter(broker_submission_id=instance.broker_submission_id)
-            # print request.content
-            # # for sub in affected_submissions:
-            # #     sub.download_url =
-            # print instance.broker_submission_id
 
             from gfbio_submissions.brokerage.tasks import \
                 trigger_submission_transfer_for_updates

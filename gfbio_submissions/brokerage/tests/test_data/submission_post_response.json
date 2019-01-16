@@ -1,0 +1,64 @@
+{
+    "broker_submission_id": "replace_this_with_uuid4_when_testing",
+    "data": {
+        "requirements": {
+            "description": "123456",
+            "experiments": [
+                {
+                    "design": {
+                        "design_description": "",
+                        "library_descriptor": {
+                            "library_layout": {
+                                "layout_type": "paired",
+                                "nominal_length": 450
+                            },
+                            "library_selection": "PCR",
+                            "library_source": "METAGENOMIC",
+                            "library_strategy": "AMPLICON"
+                        },
+                        "sample_descriptor": "sample2"
+                    },
+                    "experiment_alias": "experiment1",
+                    "platform": "AB 3730xL Genetic Analyzer"
+                }
+            ],
+            "runs": [
+                {
+                    "data_block": {
+                        "files": [
+                            {
+                                "checksum": "12345",
+                                "checksum_method": "MD5",
+                                "filename": "aFile",
+                                "filetype": "fastq"
+                            }
+                        ]
+                    },
+                    "experiment_ref": "experiment1"
+                }
+            ],
+            "samples": [
+                {
+                    "sample_alias": "sample1",
+                    "sample_title": "stitle",
+                    "taxon_id": 1234
+                },
+                {
+                    "sample_alias": "sample2",
+                    "sample_title": "stitleagain",
+                    "taxon_id": 1234
+                }
+            ],
+            "study_type": "Metagenomics",
+            "title": "123456"
+        }
+    },
+    "download_url": "",
+    "embargo": null,
+    "release": true,
+    "site": "horst",
+    "site_project_id": "",
+    "status": "SUBMITTED",
+    "submitting_user": "",
+    "target": "ENA"
+}
