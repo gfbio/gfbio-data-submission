@@ -16,6 +16,11 @@ import NotFoundPage from 'containers/NotFoundPage/Loadable';
 
 import GlobalStyle from '../../global-styles';
 
+// perhaps this way with "test" as url.py entry
+// or do like in ena_redux
+// <Route exact path="test/" component={HomePage}/>
+// <Route exact path="test/t1" component={Test_1}/>
+
 export default function App() {
   return (
     <div>

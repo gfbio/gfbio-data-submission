@@ -6,6 +6,7 @@ const OfflinePlugin = require('offline-plugin');
 const { HashedModuleIdsPlugin } = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
+const ReplaceInFileWebpackPlugin = require('replace-in-file-webpack-plugin');
 
 module.exports = require('./webpack.base.babel')({
   mode: 'production',
@@ -17,6 +18,7 @@ module.exports = require('./webpack.base.babel')({
   ],
 
   // Utilize long-term caching by adding content hashes (not compilation hashes) to compiled assets
+  // public path need to match dir where js is hosted. If remote server full url is needed
   output: {
     filename: '[name].[chunkhash].js',
     chunkFilename: '[name].[chunkhash].chunk.js',
@@ -122,9 +124,10 @@ module.exports = require('./webpack.base.babel')({
     }),
 
     new WebpackPwaManifest({
-      name: 'React Boilerplate',
-      short_name: 'React BP',
-      description: 'My React Boilerplate-based project!',
+      name: 'GFBio Submission System',
+      short_name: 'gfbio-submission-system',
+      description:
+        'Frontend and main user-interface of the gfbio-submission-system',
       background_color: '#fafafa',
       theme_color: '#b1624d',
       inject: true,
@@ -147,6 +150,24 @@ module.exports = require('./webpack.base.babel')({
       hashDigest: 'hex',
       hashDigestLength: 20,
     }),
+
+    // TODO: check replaceinfileplugin UPDATE: regex not working ...
+    // new ReplaceInFileWebpackPlugin([
+    //   {
+    //     dir: 'build/',
+    //     files: ['sw.js'],
+    //     rules: [
+    //       {
+    //         search: '/main\\.[0-9A-Za-z]*\\.chunk\\.js/ig',
+    //         replace: 'submission.ui.js',
+    //       },
+    //       // {
+    //       //   search: /@title/,
+    //       //   replace: 'webpack',
+    //       // },
+    //     ],
+    //   },
+    // ]),
   ],
 
   performance: {

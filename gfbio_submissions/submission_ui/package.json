@@ -1,17 +1,17 @@
 {
-  "name": "react-boilerplate",
-  "version": "3.7.0",
-  "description": "A highly scalable, offline-first foundation with the best DX and a focus on performance and best practices",
+  "name": "submission-ui",
+  "version": "0.0.1",
+  "description": "Frontend and main user-interface of the gfbio-submission-system",
+  "author": "Marc Weber",
+  "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/react-boilerplate/react-boilerplate.git"
+    "url": "https://maweber@colab.mpi-bremen.de/stash/scm/gfbio/gfbio_submissions.git"
   },
   "engines": {
     "npm": ">=5",
     "node": ">=8.10.0"
   },
-  "author": "Max Stoiber",
-  "license": "MIT",
   "scripts": {
     "analyze:clean": "rimraf stats.json",
     "preanalyze": "npm run analyze:clean",
@@ -42,7 +42,20 @@
     "test": "cross-env NODE_ENV=test jest --coverage",
     "test:watch": "cross-env NODE_ENV=test jest --watchAll",
     "coveralls": "cat ./coverage/lcov.info | coveralls",
-    "prettify": "prettier --write"
+    "prettify": "prettier --write",
+    "build-rename-js": "renamer --find '/main\\..*\\.js/' --replace 'submission.ui.js' build/*.js",
+    "build-rename-vendor-js": "renamer --find '/vendor\\..*\\.js/' --replace 'vendor.submission.ui.js' build/*.js",
+    "build-rename-vendor-js-gz": "renamer --find '/vendor\\..*\\.js.gz/' --replace 'vendor.submission.ui.js.gz' build/*.js.gz",
+    "build-rename": "npm run build-rename-js && npm run build-rename-vendor-js && npm run build-rename-vendor-js-gz",
+    "sed-sw-js-main": "sed -i 's/main\\.[[:alnum:]]*\\.chunk\\.js/submission.ui.js/g' build/sw.js",
+    "sed-sw-runtime-js": "sed -i 's/runtime~main\\.[[:alnum:]]*\\.js/runtime~submission.ui.js/g' build/sw.js",
+    "sed-sw-vendor-js": "sed -i 's/vendor\\.[[:alnum:]]*\\.chunk\\.js/vendor.submission.ui.js/g' build/sw.js",
+    "sed-sw-js": "npm run sed-sw-js-main && npm run sed-sw-runtime-js && npm run sed-sw-vendor-js",
+    "copy-build-js": "copyfiles -f 'build/*.js' '../static/js/'",
+    "copy-build-js-gz": "copyfiles -f 'build/*.js.gz' '../static/js/'",
+    "copy-buildfiles": "npm run copy-build-js",
+    "collectstatic": "docker-compose -f ../../local.yml run --rm django python manage.py collectstatic",
+    "collect": "npm run build && npm run build-rename && npm run sed-sw-js && npm run copy-build-js && npm run collectstatic"
   },
   "lint-staged": {
     "*.js": [
@@ -60,9 +73,10 @@
   },
   "dependencies": {
     "@babel/polyfill": "7.0.0",
-    "chalk": "^2.4.1",
+    "chalk": "2.4.1",
     "compression": "1.7.3",
     "connected-react-router": "4.5.0",
+    "copyfiles": "2.1.0",
     "cross-env": "5.2.0",
     "express": "4.16.4",
     "fontfaceobserver": "2.0.13",
@@ -85,6 +99,7 @@
     "redux": "4.0.1",
     "redux-immutable": "4.0.0",
     "redux-saga": "0.16.2",
+    "renamer": "1.1.1",
     "reselect": "4.0.0",
     "sanitize.css": "4.1.0",
     "styled-components": "4.0.2",
@@ -146,8 +161,9 @@
     "prettier": "1.14.3",
     "react-app-polyfill": "0.1.3",
     "react-test-renderer": "16.6.0",
+    "replace-in-file-webpack-plugin": "1.0.6",
     "rimraf": "2.6.2",
-    "shelljs": "^0.8.2",
+    "shelljs": "0.8.2",
     "style-loader": "0.23.1",
     "stylelint": "9.6.0",
     "stylelint-config-recommended": "2.1.0",
