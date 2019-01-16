@@ -6,7 +6,6 @@ const OfflinePlugin = require('offline-plugin');
 const { HashedModuleIdsPlugin } = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
-const ReplaceInFileWebpackPlugin = require('replace-in-file-webpack-plugin');
 
 module.exports = require('./webpack.base.babel')({
   mode: 'production',
@@ -150,24 +149,6 @@ module.exports = require('./webpack.base.babel')({
       hashDigest: 'hex',
       hashDigestLength: 20,
     }),
-
-    // TODO: check replaceinfileplugin UPDATE: regex not working ...
-    // new ReplaceInFileWebpackPlugin([
-    //   {
-    //     dir: 'build/',
-    //     files: ['sw.js'],
-    //     rules: [
-    //       {
-    //         search: '/main\\.[0-9A-Za-z]*\\.chunk\\.js/ig',
-    //         replace: 'submission.ui.js',
-    //       },
-    //       // {
-    //       //   search: /@title/,
-    //       //   replace: 'webpack',
-    //       // },
-    //     ],
-    //   },
-    // ]),
   ],
 
   performance: {

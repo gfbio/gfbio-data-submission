@@ -8,24 +8,22 @@
  */
 
 import React from 'react';
-import { Route, Switch } from 'react-router-dom';
+import { BrowserRouter, Route, Switch } from 'react-router-dom';
 import HomePage from 'containers/HomePage/Loadable';
 import Test_1 from 'containers/Test_1/Loadable';
 import NotFoundPage from 'containers/NotFoundPage/Loadable';
-// import createBrowserHistory from 'history/createBrowserHistory';
-
-// perhaps this way with "test" as url.py entry
-// or do like in ena_redux
 
 const urlPrefix = '/ui/test';
 export default function App() {
   return (
     <div>
-      <Switch>
-        <Route exact path={`${urlPrefix}/`} component={HomePage} />
-        <Route exact path={`${urlPrefix}/t1`} component={Test_1}/>
-        <Route component={NotFoundPage} />
-      </Switch>
+      <BrowserRouter basename={urlPrefix}>
+        <Switch>
+          <Route exact path="/" component={HomePage} />
+          <Route exact path="/t1" component={Test_1} />
+          <Route component={NotFoundPage}/>
+        </Switch>
+      </BrowserRouter>
     </div>
   );
 }
