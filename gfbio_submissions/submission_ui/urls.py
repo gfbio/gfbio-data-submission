@@ -1,20 +1,14 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals
-
 from django.conf.urls import url
-
-from . import views
+from django.views.generic import TemplateView
 
 urlpatterns = [
-
-    # url(
-    #     regex=r'^brokerage/submissions/ena/form/schema/(?P<schema_name>[a-z\-_]+)$',
-    #     view=views.EnaWidgetDeliverSchemaView.as_view(),
-    #     name='ena_widget_schemas'
-    # ),
-    # url(
-    #     regex=r'^brokerage/submissions/ena/form/options/(?P<options_name>[a-z\-_]+)$',
-    #     view=views.EnaWidgetDeliverOptionsView.as_view(),
-    #     name='ena_widget_options'
-    # ),
+    url(
+        # by omitting the '$' in the url,
+        # the react app in this template will take care of every url below
+        # more specific: the react-router checks for matches.
+        r'submission/',
+        TemplateView.as_view(template_name='submission_ui/submission.html'),
+        name='test_react'
+    ),
 ]
