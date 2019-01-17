@@ -7,8 +7,8 @@ urlpatterns = [
         # by omitting the '$' in the url,
         # the react app in this template will take care of every url below
         # more specific: the react-router checks for matches.
-        r'test/',
-        TemplateView.as_view(template_name='submission_ui/test_react.html'),
+        r'submission/',
+        TemplateView.as_view(template_name='submission_ui/submission.html'),
         name='test_react'
     ),
 ]
