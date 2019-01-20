@@ -1,0 +1,118 @@
+section#blue {
+
+    padding: 4rem 0;
+    background-color: $gfbio-blue-0-8;
+
+    h1, h5, h4, h6, p, li {
+        color: $gray-100;
+    }
+
+    hr {
+        max-width: none;
+        border-top: 1px solid $gray-100;
+        width: 100%;
+    }
+
+    p {
+        font-size: 0.9rem;
+    }
+
+    //
+    //h1 {
+    //    @include raleway;
+    //    font-weight: 100;
+    //    color: $gray-darkest;
+    //    font-size: 3.5rem;
+    //}
+    //
+
+    span {
+        color: $white-opac;
+        font-size: 4rem;
+    }
+
+    i {
+        color: $white-opac;
+        font-size: 4rem;
+    }
+
+    i.check-list {
+        color: $white-opac;
+        display: block;
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+
+    i.check-list-smaller {
+        @extend .check-list;
+        font-size: 3.9rem;
+        margin-bottom: 0;
+    }
+
+    // TODO: candidate for generic class, copy from masthead.scss
+    .btn-submit {
+
+        font-weight: 400;
+
+        border-color: darken($gfbio-green, .2);
+        background-color: $white;
+        color: $gfbio-green !important;
+
+        &:focus {
+            border-color: $gfbio-green-0-7;
+            box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+        }
+        &:hover {
+            color: $white !important;
+            background-color: $gfbio-green;
+        }
+        &:active {
+            border-color: darken($gfbio-green, .2) !important;
+            background-color: $white !important;
+            color: $gfbio-green !important;
+        }
+        /*//border-color: darken($gfbio-blue, .1);
+        //background-color: $gfbio-blue;
+        //color: $white !important;
+
+        // padding: 1rem;
+        border-color: $gray-400;
+        background-color: $white;
+        color: $gray-700;
+
+        &:focus {
+            box-shadow: none;
+        }
+
+        &:hover {
+            //background-color: $white;
+            //color: $gfbio-blue !important;
+        }*/
+    }
+
+    .btn-submit-dmp {
+        border-color: darken($white, .2);
+        background-color: $gfbio-blue-0-8-fulltone;
+        color: $white !important;
+
+        &:focus {
+            box-shadow: none;
+        }
+        &:hover {
+            background-color: $white;
+            color: $gfbio-blue-0-8-fulltone !important;
+        }
+        /*border-color: darken($gfbio-green, .2);
+        background-color: $gfbio-green;
+        color: $white !important;
+
+        &:focus {
+            box-shadow: none;
+        }
+        &:hover {
+            background-color: $white;
+            color: $gfbio-green !important;
+        }*/
+    }
+
+}

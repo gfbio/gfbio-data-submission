@@ -1,0 +1,115 @@
+.col-form-label {
+    // @include raleway;
+    font-size: .9rem;
+}
+
+// works on btn-secondary
+.green-blue {
+    background-color: $gfbio-green;
+    color: $white !important;
+    &:focus {
+        box-shadow: none;
+    }
+    &:hover {
+        background-color: $gfbio-blue;
+        color: $white !important;
+    }
+}
+
+// works on btn-secondary
+.blue-green {
+    background-color: $gfbio-blue;
+    color: $white !important;
+    &:focus {
+        box-shadow: none;
+    }
+    &:hover {
+        background-color: $gfbio-green;
+        color: $white !important;
+    }
+}
+
+.boxed {
+    padding: 2rem;
+    background-color: $white;
+    border: 1px solid $gray-medium;
+    border-radius: .25rem;
+}
+
+// works on btn-secondary
+.green {
+    border-color: darken($gfbio-green, .2);
+    background-color: $gfbio-green;
+    color: $white !important;
+    &:focus {
+        box-shadow: none;
+    }
+
+    &:hover, &:not(:disabled):not(.disabled):active,
+    &:not(:disabled):not(.disabled).active {
+        &:focus {
+            box-shadow: none;
+        }
+        border-color: darken($gfbio-green, .2);
+        background-color: $white;
+        color: $gfbio-green !important;
+        box-shadow: none;
+    }
+}
+
+form.pagewide-form {
+    section.sub-navi {
+        margin-top: 57px;
+        padding: 1rem 0;
+    }
+
+    .form-header-top {
+        margin-bottom: 2rem;
+    }
+
+    .form-header {
+        margin: 2rem 0;
+    }
+
+    .section-title {
+        text-transform: none;
+        color: $gray-dark-2;
+    }
+
+    .header {
+        // letter-spacing: 2px;
+        letter-spacing: normal;
+        border-bottom: 1px solid $gray-medium;
+    }
+
+    input {
+        &:focus {
+            border-color: $gfbio-green-0-7;
+            box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+            outline-color: $gfbio-green-0-7;
+        }
+    }
+
+    .custom-file {
+        outline-color: $gfbio-green-0-7;
+    }
+
+    .custom-file-input:focus ~ .custom-file-label::after {
+        outline-color: $gfbio-green-0-7;
+        border-left-color: $gfbio-green-0-7;
+    }
+
+    .custom-file-input:focus ~ .custom-file-label {
+        border-color: $gfbio-green-0-7;
+        box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+        outline-color: $gfbio-green-0-7;
+    }
+
+    select {
+        &:focus {
+            border-color: $gfbio-green-0-7;
+            box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+        }
+    }
+
+}

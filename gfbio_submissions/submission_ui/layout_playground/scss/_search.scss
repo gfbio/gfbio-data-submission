@@ -1,0 +1,238 @@
+// @import "../vendor/bootstrap/css/bootstrap.css";
+
+.search-page-title {
+    // originally this padding
+    // padding: 0;
+
+    // using padding to adapt for nav height does not produce scrollbar
+    padding: 57px 0 0 0;
+
+    //originally this margin to adapt for nav height
+    //margin-top: 57px;
+
+    // using padding instead of margin, needs larger height
+    height: 18.5rem;
+    background-color: $gray-100;
+
+    .search-title-container {
+        position: relative;
+        // TODO: top position via rem ?
+        // top: 20%;
+        top: 2.5rem;
+        z-index: 2;
+
+        h4 {
+
+        }
+    }
+
+    .form-group {
+        margin-bottom: 0.5rem;
+    }
+
+    // TODO: refactor to generic class, light-blue button
+    .btn-search {
+        background-color: $gfbio-light-blue;
+        border-color: darken($gfbio-light-blue, .2);
+
+        &:hover, &:not(:disabled):not(.disabled):active,
+        &:not(:disabled):not(.disabled).active {
+            &:focus {
+                box-shadow: none;
+            }
+            border-color: darken($gfbio-light-blue, .2);
+            background-color: $white;
+            color: $gfbio-light-blue !important;
+            box-shadow: none;
+        }
+        &:focus {
+            box-shadow: none;
+        }
+        &:hover {
+            background-color: $white;
+            color: $gfbio-light-blue !important;
+        }
+    }
+
+    .landing-search {
+        &:focus {
+            border-color: $gfbio-green-0-7;
+            box-shadow: 0 0 0 0.2rem $gfbio-green-0-3
+        }
+    }
+
+    p {
+        a {
+            // TODO: search color harmonies
+            // http://paletton.com/#uid=33s0u0koNRMdAWOjEUfu5OrJxGX
+            color: $gfbio-light-blue;
+
+            &:hover {
+                text-decoration: none;
+                color: $contrast-1;
+            }
+        }
+    }
+
+}
+
+ul.errorlist {
+    // list-style-type: none;
+    padding: 0 0 0 1rem;
+    margin: 0;
+
+    li {
+        list-style-type: none;
+        color: $error-red;
+        font-size: 0.85rem;
+    }
+}
+
+// TODO: replace unicode 'lock' charcter with icon ?
+section.search-results {
+
+    padding-top: 3rem;
+    min-height: 64vh;
+
+    @media (max-width: 768px) {
+        margin-top: 6rem;
+    }
+
+    h4 {
+        color: $gray-darker;
+        font-weight: 400;
+    }
+
+    h6 {
+        @include raleway;
+        color: $gray-dark;
+    }
+
+    hr {
+        max-width: none;
+        border-top: 1px solid $gray-medium;
+        width: 100%;
+    }
+
+    .search-bottom {
+        margin-top: 3rem;
+    }
+
+    ul.pagination {
+        @include raleway;
+
+        li.page-item {
+            a.page-link {
+                color: $gfbio-light-blue;
+                border-color: $gray-medium;
+                &:hover {
+                    color: $white;
+                    background-color: $gfbio-light-blue;
+                }
+            }
+        }
+
+        li.page-item.active {
+            a.page-link {
+                color: $white;
+                background-color: $gfbio-light-blue;
+                &:hover {
+                    color: $white;
+                    background-color: $gfbio-light-blue-0-6;
+                }
+            }
+
+        }
+
+    }
+
+    .result-col {
+
+        margin-top: 1.5rem;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+        border-radius: 0.5rem;
+
+        //border: 1px dashed transparent;
+        //
+        //&:hover {
+        //    border: 1px dashed $gray-400;
+        //}
+
+        div.citation {
+
+            &:hover {
+            }
+
+            a {
+                text-decoration: none;
+                color: $gfbio-light-blue;
+
+                &:hover {
+                    color: $contrast-1 !important;
+                }
+
+                .creator {
+                    display: inline-block;
+                    color: $gray-600;
+                    font-size: 0.9rem;
+                    font-weight: bold;
+
+                }
+
+                .date {
+                    display: inline-block;
+                    color: $gray-600;
+                    font-size: 0.9rem;
+                    font-weight: bold;
+                }
+
+                .title {
+                    display: block;
+                    font-size: 1.15rem;
+                    padding: 0.1rem 0 0.5rem 0;
+                }
+
+            }
+
+        }
+
+        table.desc {
+            color: $gray-darker;
+            margin-bottom: 0.5rem;
+
+            a {
+                text-decoration: none;
+                color: $gfbio-light-blue;
+
+                &:hover {
+                    color: $contrast-1;
+                }
+            }
+
+            .desc-left {
+                // @extend align-top;
+                vertical-align: top;
+            }
+
+        }
+
+        div.info {
+
+            a {
+                text-decoration: none;
+                color: $gfbio-light-blue;
+                padding: 0 0.2rem 0 0.2rem;
+                border-radius: 0.25rem;
+
+                &:hover {
+                    color: $white;
+                    background-color: $gfbio-light-blue;
+                    // color: $contrast-2;
+                }
+            }
+        }
+
+    }
+
+}

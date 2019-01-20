@@ -1,0 +1,34 @@
+#account {
+
+  h4 {
+    font-weight: 300;
+  }
+
+  .login-or {
+    // background-color: $gray-100;
+    border-radius: .25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .socialaccount_providers {
+    // list-style: none;
+    padding: 0;
+  }
+
+  .socialaccount_provider {
+    text-decoration: none;
+    span {
+      display: block;
+      color: $gray-darker;
+    }
+  }
+
+}
+
+h4.social {
+  font-family: "Raleway", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  margin-bottom: 1.5rem;
+  font-weight: 300;
+}
