@@ -18,7 +18,7 @@ from gfbio_submissions.brokerage.tests.utils import \
 from gfbio_submissions.users.models import User
 
 
-class TestAddSubmissionView(TestCase):
+class TestSubmissionView(TestCase):
 
     @classmethod
     def setUpTestData(cls):
@@ -84,6 +84,9 @@ class TestAddSubmissionView(TestCase):
             format='json'
         )
 
+
+class TestSubmissionViewSimple(TestSubmissionView):
+
     def test_submissions_get_request(self):
         response = self.client.get('/api/submissions/')
         self.assertEqual(401, response.status_code)
@@ -98,6 +101,45 @@ class TestAddSubmissionView(TestCase):
         keys = json.loads(response.content.decode('utf-8')).keys()
         self.assertIn('target', keys)
         self.assertIn('data', keys)
+
+    @responses.activate
+    def test_post_on_submission_detail_view(self):
+        self._add_create_ticket_response()
+        self._post_submission()
+        submission = Submission.objects.first()
+        response = self.api_client.post(
+            '/api/submissions/{}/'.format(submission.pk),
+            {'target': 'ENA', 'data': {'requirements': {
+                'title': 'A Title 0815', 'description': 'A Description 2'}}},
+            format='json'
+        )
+        self.assertEqual(405, response.status_code)
+
+    @responses.activate
+    def test_delete_submission(self):
+        self._add_create_ticket_response()
+        self._post_submission()
+        submission = Submission.objects.first()
+        response = self.api_client.delete(
+            '/api/submissions/{0}/'.format(submission.broker_submission_id))
+        self.assertEqual(204, response.status_code)
+        self.assertEqual(1, len(Submission.objects.all()))
+        submission = Submission.objects.first()
+        self.assertEqual(Submission.CANCELLED, submission.status)
+
+    @responses.activate
+    def test_patch_submission(self):
+        self._add_create_ticket_response()
+        self._post_submission()
+        response = self.api_client.patch(
+            '/api/submissions/{0}/'.format(Submission.objects.first().id),
+            {'target': 'ENA_PANGAEA'},
+            format='json'
+        )
+        self.assertEqual(405, response.status_code)
+
+
+class TestSubmissionViewMinimumPosts(TestSubmissionView):
 
     def test_invalid_min_post(self):
         self.assertEqual(0, len(Submission.objects.all()))
@@ -220,6 +262,9 @@ class TestAddSubmissionView(TestCase):
         self.assertIn(b'target', response.content)
         self.assertEqual(0, len(Submission.objects.all()))
 
+
+class TestSubmissionViewFullPosts(TestSubmissionView):
+
     @responses.activate
     def test_empty_max_post(self):
         self._add_create_ticket_response()
@@ -313,6 +358,9 @@ class TestAddSubmissionView(TestCase):
         self.assertIn('description', response.content.decode('utf-8'))
         self.assertEqual(0, len(Submission.objects.all()))
 
+
+class TestSubmissionViewGetRequest(TestSubmissionView):
+
     @responses.activate
     def test_get_submissions(self):
         self._add_create_ticket_response()
@@ -358,6 +406,9 @@ class TestAddSubmissionView(TestCase):
         self._post_submission()
         response = self.api_client.get('/api/submissions/{0}/'.format(uuid4()))
         self.assertEqual(404, response.status_code)
+
+
+class TestSubmissionViewPutRequests(TestSubmissionView):
 
     @responses.activate
     def test_put_submission(self):
@@ -590,41 +641,8 @@ class TestAddSubmissionView(TestCase):
                 submission.broker_submission_id),
             content)
 
-    @responses.activate
-    def test_post_on_submission_detail_view(self):
-        self._add_create_ticket_response()
-        self._post_submission()
-        submission = Submission.objects.first()
-        response = self.api_client.post(
-            '/api/submissions/{}/'.format(submission.pk),
-            {'target': 'ENA', 'data': {'requirements': {
-                'title': 'A Title 0815', 'description': 'A Description 2'}}},
-            format='json'
-        )
-        self.assertEqual(405, response.status_code)
 
-    @responses.activate
-    def test_delete_submission(self):
-        self._add_create_ticket_response()
-        self._post_submission()
-        submission = Submission.objects.first()
-        response = self.api_client.delete(
-            '/api/submissions/{0}/'.format(submission.broker_submission_id))
-        self.assertEqual(204, response.status_code)
-        self.assertEqual(1, len(Submission.objects.all()))
-        submission = Submission.objects.first()
-        self.assertEqual(Submission.CANCELLED, submission.status)
-
-    @responses.activate
-    def test_patch_submission(self):
-        self._add_create_ticket_response()
-        self._post_submission()
-        response = self.api_client.patch(
-            '/api/submissions/{0}/'.format(Submission.objects.first().id),
-            {'target': 'ENA_PANGAEA'},
-            format='json'
-        )
-        self.assertEqual(405, response.status_code)
+class TestSubmissionViewPermissions(TestSubmissionView):
 
     def test_no_credentials(self):
         response = self.client.post('/api/submissions/')
