@@ -13,6 +13,7 @@ from git import Repo
 from model_utils.models import TimeStampedModel
 
 from config.settings.base import ADMINS, AUTH_USER_MODEL, LOCAL_REPOSITORY
+from gfbio_submissions.brokerage.configuration.settings import GENERIC
 from .configuration.settings import ENA, ENA_PANGAEA
 from .configuration.settings import PRIMARY_DATA_FILE_DELAY
 from .fields import JsonDictField
@@ -188,7 +189,8 @@ class Submission(models.Model):
 
     TARGETS = (
         (ENA, ENA),
-        (ENA_PANGAEA, ENA_PANGAEA)
+        (ENA_PANGAEA, ENA_PANGAEA),
+        (GENERIC, GENERIC)
     )
 
     broker_submission_id = models.UUIDField(primary_key=False,
@@ -234,6 +236,7 @@ class Submission(models.Model):
 
     objects = SubmissionManager()
 
+    # TODO: refactor/move: too specific (molecular submission)
     def get_json_with_aliases(self, alias_postfix):
         new_study_alias, study = self.set_study_alias(alias_postfix)
         sample_aliases, samples = self.set_sample_aliases(alias_postfix)
@@ -247,6 +250,7 @@ class Submission(models.Model):
         return study.data, [s.data for s in samples], \
                [s.data for s in experiments], [s.data for s in runs]
 
+    # TODO: refactor/move: too specific (molecular submission)
     def set_run_aliases(self, alias_postfix, experiment_aliases):
         runs = self.brokerobject_set.filter(type='run')
         for r in runs:
@@ -256,12 +260,14 @@ class Submission(models.Model):
                 r.data['run_alias'] = '{0}:{1}'.format(r.id, alias_postfix)
         return runs
 
+    # TODO: refactor/move: too specific (molecular submission)
     def set_study_alias(self, alias_postfix):
         study = self.brokerobject_set.filter(type='study').first()
         new_study_alias = '{0}:{1}'.format(study.id, alias_postfix)
         study.data['study_alias'] = new_study_alias
         return new_study_alias, study
 
+    # TODO: refactor/move: too specific (molecular submission)
     def set_experiment_aliases(self, alias_postfix, new_study_alias,
                                sample_aliases):
         experiments = self.brokerobject_set.filter(type='experiment')
@@ -281,6 +287,7 @@ class Submission(models.Model):
 
         return experiment_aliases, experiments
 
+    # TODO: refactor/move: too specific (molecular submission)
     def set_sample_aliases(self, alias_postfix):
         samples = self.brokerobject_set.filter(type='sample')
         sample_aliases = {
@@ -295,21 +302,25 @@ class Submission(models.Model):
 
         return sample_aliases, samples
 
+    # TODO: refactor/move: too specific (molecular submission)
     def get_study_json(self):
         return self.brokerobject_set.filter(type='study').first().data
 
+    # TODO: refactor/move: too specific (molecular submission)
     def get_sample_json(self):
         return {
             'samples': [s.data for s in
                         self.brokerobject_set.filter(type='sample')]
         }
 
+    # TODO: refactor/move: too specific (molecular submission)
     def get_experiment_json(self):
         return {
             'experiments': [s.data for s in
                             self.brokerobject_set.filter(type='experiment')]
         }
 
+    # TODO: refactor/move: too specific (molecular submission)
     def get_run_json(self):
         return {
             'runs': [s.data for s in

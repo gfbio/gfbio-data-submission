@@ -104,6 +104,13 @@ ENA_PANGAEA = getattr(
     'ENA_PANGAEA'
 )
 
+GENERIC = getattr(
+    settings,
+    'GENERIC',
+    'GENERIC'
+)
+
+
 HELPDESK_API_SUB_URL = getattr(
     settings,
     'HELPDESK_API_SUB_URL',
