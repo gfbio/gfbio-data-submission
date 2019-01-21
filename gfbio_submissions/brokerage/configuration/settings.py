@@ -227,3 +227,9 @@ STATIC_ENA_REQUIREMENTS_LOCATION = getattr(
     'STATIC_ENA_REQUIREMENTS_LOCATION',
     'schemas/ena_requirements.json'
 )
+
+STATIC_GENERIC_REQUIREMENTS_LOCATION = getattr(
+    settings,
+    'STATIC_GENERIC_REQUIREMENTS_LOCATION',
+    'schemas/gfbio_generic_requirements.json'
+)
