@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 import json
 import logging
 import os
@@ -228,7 +229,11 @@ class Submission(models.Model):
     center_name = models.ForeignKey(CenterName, null=True)
 
     data = JsonDictField(default=dict)
-    embargo = models.DateField(null=True, blank=True)
+    # default to today + 1 year
+    embargo = models.DateField(
+        default=datetime.date.today() + datetime.timedelta(days=365),
+        null=True,
+        blank=True)
 
     # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
     created = models.DateTimeField(auto_now_add=True)

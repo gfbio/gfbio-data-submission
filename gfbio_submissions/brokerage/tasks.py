@@ -643,8 +643,6 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
                                         submission)
         if not len(existing_tickets):
             try:
-                # TODO: parse json possible with json.loads(response.content.decode('utf-8'))
-                # TODO: request lib provides response.json()
                 content = response.json()
             except JSONDecodeError as e:
                 logger.warning(

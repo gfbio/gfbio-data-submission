@@ -890,20 +890,21 @@ class TestHelpDeskTicketMethods(TestCase):
         print(submission)
         print(submission.target)
         pprint(submission.data)
+        print('URL', submission.download_url)
+        print('EMBARGO ', submission.embargo)
 
-        # submission = Submission.objects.first()
-        # site_config = SiteConfiguration.objects.first()
-        # responses.add(
-        #     responses.POST,
-        #     '{0}{1}'.format(site_config.helpdesk_server.url,
-        #                     HELPDESK_API_SUB_URL),
-        #     json={'bla': 'blubb'},
-        #     status=200)
+        site_config = SiteConfiguration.objects.first()
+        responses.add(
+            responses.POST,
+            '{0}{1}'.format(site_config.helpdesk_server.url,
+                            HELPDESK_API_SUB_URL),
+            json={'bla': 'blubb'},
+            status=200)
         # self.assertEqual(0, len(RequestLog.objects.all()))
-        # response = gfbio_helpdesk_create_ticket(
-        #     site_config=site_config,
-        #     submission=submission,
-        # )
+        response = gfbio_helpdesk_create_ticket(
+            site_config=site_config,
+            submission=submission,
+        )
         # self.assertEqual(200, response.status_code)
         # self.assertEqual(1, len(RequestLog.objects.all()))
 

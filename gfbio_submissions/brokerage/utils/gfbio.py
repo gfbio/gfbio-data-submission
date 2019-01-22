@@ -2,6 +2,7 @@
 import datetime
 import json
 import logging
+from pprint import pprint
 
 import requests
 from django.db import transaction
@@ -208,31 +209,59 @@ def gfbio_helpdesk_create_ticket(site_config, submission, reporter=None):
         HELPDESK_API_SUB_URL
     )
 
-    # if not reporter:
-    #     reporter = {}
-
+    # ena+gen
     summary = submission.data.get('requirements', {}).get('title', '')
-    # 30 - len(' (...)')
     if len(summary) >= 45:
         summary = '{0}{1}'.format(summary[:45], '...')
 
-    # TODO: extract, refactor for multi purpose, ENA + Generic
-    data = json.dumps({
+    mutual_data = {
         'fields': {
             'project': {
                 'key': site_config.jira_project_key
             },
             'summary': '{0}'.format(summary),
-            # TODO: + 'user iD:'.USER-ID + 'study type: STUDY - TYPE
-            'description': '{0}'.format(
-                submission.data.get('requirements', {}).get('description', '')),
+            'description': '{0}'.format(submission.data.get('requirements', {}).get('description', '')),
             'issuetype': {
                 'name': 'Data Submission'
             },
             'reporter': {
-                'name': reporter.get('user_email', '')
+                'name': reporter.get('user_email', 'No valid user, name or email available')
             },
+            'customfield_10201': submission.data.get('requirements', {}).get('title', ''),
+            'customfield_10208': submission.data.get('requirements', {}).get('description', ''),
+        }
+    }
+
+    # TODO: extract, refactor for multi purpose, ENA + Generic
+    # ena/mol specific
+    data_dict = {
+        'fields': {
+            # md
+            'project': {
+                'key': site_config.jira_project_key
+            },
+            # md
+            'summary': '{0}'.format(summary),
+            # TODO: + 'user iD:'.USER-ID + 'study type: STUDY - TYPE
+            # md
+            'description': '{0}'.format(
+                submission.data.get('requirements', {}).get('description', '')),
+            # md
+            'issuetype': {
+                'name': 'Data Submission'
+            },
+            # generic: submitting gfbio user, prefilled
+            # ba: submitting gfbio user, sc.contact or error text (see below)
+            # md
+            'reporter': {
+                'name': reporter.get('user_email', 'No valid user, name or email available')
+            },
+            # ba: hardcoded val after slash
+            # generic: assuming it is analog to molecular
             'customfield_10010': 'dsub/molecular' if site_config.jira_project_key == SiteConfiguration.DSUB else 'sand/molecular-data',
+
+            # generic
+            # ba: this here
             # FIXME: use embargo from Submission, this as fallback
             'customfield_10200': '{0}'.format(
                 (datetime.date.today() + datetime.timedelta(
@@ -244,6 +273,7 @@ def gfbio_helpdesk_create_ticket(site_config, submission, reporter=None):
                 reporter.get('first_name', ''),
                 reporter.get('last_name', ''),
                 reporter.get('user_email', '')),
+            # md
             'customfield_10208': submission.data.get('requirements', {}).get(
                 'description', ''),
             'customfield_10303': '{0}'.format(submission.broker_submission_id),
@@ -253,7 +283,13 @@ def gfbio_helpdesk_create_ticket(site_config, submission, reporter=None):
             'customfield_10229': [{'value': 'MIxS'}],
             'customfield_10216': [{"value": "Uncertain"}],
         }
-    })
+    }
+    data = json.dumps(data_dict)
+
+    print('gfbio_helpdesk_create_ticket. DATA:')
+    pprint(data_dict)
+    print('\n************************************\n')
+
     # requestlog: ok
     response = requests.post(
         url=url,
