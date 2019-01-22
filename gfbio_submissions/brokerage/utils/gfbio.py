@@ -248,7 +248,6 @@ def gfbio_prepare_helpdesk_payload(reporter, site_config, submission):
         # omit researchobjectid field 'customfield_10309'. maybe use site_object_id or brokerobject_id
         # omit id version field 'customfield_10309'
     }
-    # TODO: extract, refactor for multi purpose, ENA + Generic
     # ena/mol specific
     molecular_data = {
         # md
@@ -330,8 +329,6 @@ def gfbio_prepare_helpdesk_payload(reporter, site_config, submission):
     return mutual_data
 
 
-# TODO: refactor -> now molecular specific. improve
-# TODO: review if smarter Implementation possible
 def gfbio_helpdesk_create_ticket(site_config, submission, reporter=None):
     if reporter is None:
         reporter = {}
@@ -339,6 +336,7 @@ def gfbio_helpdesk_create_ticket(site_config, submission, reporter=None):
         site_config.helpdesk_server.url,
         HELPDESK_API_SUB_URL
     )
+    # TODO: if data is handed in as a parameter, this method here would be generic
     data = json.dumps({
         'fields': gfbio_prepare_helpdesk_payload(
             reporter, site_config, submission)
