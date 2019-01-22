@@ -535,6 +535,10 @@ class TaskProgressReport(models.Model):
             return 'unnamed_task'
 
 
+# TODO: refactor/review: almost the same as PrimaryData
+#   only that intended usecase was sequence data
+#   that is not supposed to be attached to ticket
+#   and may be deleted/moved after a while
 class SubmissionFileUpload(models.Model):
     submission = models.ForeignKey(
         Submission, null=True,
@@ -548,6 +552,12 @@ class SubmissionFileUpload(models.Model):
     changed = models.DateTimeField(auto_now=True)
 
 
+# TODO: refactor/review: compare TODO for SubmissionFileUpload
+#   intended usecase is csv template file with trigger
+#   to attach to existing ticket
+# TODO: consider how to use for csv update view, where
+#   template is input for submissiondata and an update here
+#   updates submission.data. also consider TODOs regarding redundant file models
 class PrimaryDataFile(models.Model):
     submission = models.ForeignKey(
         Submission,

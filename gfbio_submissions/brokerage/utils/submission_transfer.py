@@ -112,6 +112,7 @@ class SubmissionTransferHandler(object):
                                                   error))
                 raise error
 
+    # TODO: rename, since this is specifically for ena and pangaea (molecular)
     def setup_pre_release_chain(self):
         from gfbio_submissions.brokerage.tasks import \
             create_broker_objects_from_submission_data_task, \
@@ -140,7 +141,6 @@ class SubmissionTransferHandler(object):
             ''.format(update, release)
         )
         if update and release:
-            # code is only valid for these two targets (we don't have more anyways)
             if self.target_archive == ENA or self.target_archive == ENA_PANGAEA:
                 logger.info(
                     'SubmissionTransferHandler. target_archive={0} trigger '

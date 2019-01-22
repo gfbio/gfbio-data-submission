@@ -45,7 +45,7 @@
                     "CC BY-SA: Creative Commons Attribution-ShareAlike 4.0"
                 ]
             },
-            "related_publication": {
+            "related_publications": {
                 "type": "string"
             },
             "metadata_schema": {

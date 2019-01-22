@@ -198,20 +198,25 @@ def gfbio_get_user_by_id(user_id, site_configuration, submission):
     return response
 
 
-def gfbio_helpdesk_create_ticket(site_config, submission, reporter={}):
+# TODO: refactor -> now molecular specific. improve
+# TODO: review if smarter Implementation possible
+def gfbio_helpdesk_create_ticket(site_config, submission, reporter=None):
+    if reporter is None:
+        reporter = {}
     url = '{0}{1}'.format(
         site_config.helpdesk_server.url,
         HELPDESK_API_SUB_URL
     )
 
-    if not reporter:
-        reporter = {}
+    # if not reporter:
+    #     reporter = {}
 
     summary = submission.data.get('requirements', {}).get('title', '')
     # 30 - len(' (...)')
     if len(summary) >= 45:
         summary = '{0}{1}'.format(summary[:45], '...')
 
+    # TODO: extract, refactor for multi purpose, ENA + Generic
     data = json.dumps({
         'fields': {
             'project': {
@@ -228,6 +233,7 @@ def gfbio_helpdesk_create_ticket(site_config, submission, reporter={}):
                 'name': reporter.get('user_email', '')
             },
             'customfield_10010': 'dsub/molecular' if site_config.jira_project_key == SiteConfiguration.DSUB else 'sand/molecular-data',
+            # FIXME: use embargo from Submission, this as fallback
             'customfield_10200': '{0}'.format(
                 (datetime.date.today() + datetime.timedelta(
                     days=365)).isoformat()
@@ -241,6 +247,7 @@ def gfbio_helpdesk_create_ticket(site_config, submission, reporter={}):
             'customfield_10208': submission.data.get('requirements', {}).get(
                 'description', ''),
             'customfield_10303': '{0}'.format(submission.broker_submission_id),
+            # FIXME: url in data and model, decide and review
             'customfield_10600': submission.data.get('requirements', {}).get(
                 'download_url', ''),
             'customfield_10229': [{'value': 'MIxS'}],

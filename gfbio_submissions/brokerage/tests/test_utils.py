@@ -2,6 +2,8 @@
 import csv
 import io
 import json
+import os
+from pprint import pprint
 from unittest import skip
 from uuid import uuid4
 
@@ -21,11 +23,12 @@ from gfbio_submissions.brokerage.configuration.settings import \
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
     ResourceCredential, SiteConfiguration, RequestLog, AdditionalReference, \
     TaskProgressReport, PrimaryDataFile
+from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_pangaea_soap_body, _get_pangaea_soap_response, \
     _get_pangaea_attach_response, _get_pangaea_comment_response, \
-    _get_jira_attach_response
+    _get_jira_attach_response, _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
     send_submission_to_ena, download_submitted_run_files_to_stringIO
 from gfbio_submissions.brokerage.utils.gfbio import \
@@ -865,6 +868,44 @@ class TestHelpDeskTicketMethods(TestCase):
         )
         self.assertEqual(200, response.status_code)
         self.assertEqual(1, len(RequestLog.objects.all()))
+
+    # TODO: rename/refactor once generic ticket is implemented
+    #   or refactoring of this method is finished
+    @responses.activate
+    def test_create_helpdesk_ticket_dev_generic(self):
+        data = {}
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'generic_data.json'), 'r') as data_file:
+            data = json.load(data_file)
+        serializer = SubmissionSerializer(data={
+            'target': 'GENERIC',
+            'release': True,
+            'data': data
+        })
+        valid = serializer.is_valid()
+        print(valid)
+        print(serializer.errors)
+        submission = serializer.save(site=User.objects.first())
+        print(submission)
+        print(submission.target)
+        pprint(submission.data)
+
+        # submission = Submission.objects.first()
+        # site_config = SiteConfiguration.objects.first()
+        # responses.add(
+        #     responses.POST,
+        #     '{0}{1}'.format(site_config.helpdesk_server.url,
+        #                     HELPDESK_API_SUB_URL),
+        #     json={'bla': 'blubb'},
+        #     status=200)
+        # self.assertEqual(0, len(RequestLog.objects.all()))
+        # response = gfbio_helpdesk_create_ticket(
+        #     site_config=site_config,
+        #     submission=submission,
+        # )
+        # self.assertEqual(200, response.status_code)
+        # self.assertEqual(1, len(RequestLog.objects.all()))
 
     @responses.activate
     def test_create_helpdesk_ticket_unicode_text(self):
