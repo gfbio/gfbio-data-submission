@@ -349,6 +349,9 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         # self.assertEqual('{0}/{1}'.format(url, 'download'),
         #                  sub.download_url)
 
+
+    # TODO: test valid max post with embargo value in data
+
     def test_valid_max_post_with_invalid_min_data(self):
         self.assertEqual(0, len(Submission.objects.all()))
         data = _get_submission_request_data()

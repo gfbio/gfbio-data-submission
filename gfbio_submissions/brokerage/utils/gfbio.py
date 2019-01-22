@@ -227,67 +227,94 @@ def gfbio_helpdesk_create_ticket(site_config, submission, reporter=None):
             'reporter': {
                 'name': reporter.get('user_email', 'No valid user, name or email available')
             },
+            'customfield_10200':
+                '{0}'.format(submission.embargo.isoformat())
+                if submission.embargo is not None
+                else '{0}'.format((datetime.date.today() + datetime.timedelta(days=365)).isoformat()),
             'customfield_10201': submission.data.get('requirements', {}).get('title', ''),
             'customfield_10208': submission.data.get('requirements', {}).get('description', ''),
+            'customfield_10303': '{0}'.format(submission.broker_submission_id),
         }
     }
 
     # TODO: extract, refactor for multi purpose, ENA + Generic
     # ena/mol specific
-    data_dict = {
+    molecular_data = {
         'fields': {
             # md
-            'project': {
-                'key': site_config.jira_project_key
-            },
+            # 'project': {
+            #     'key': site_config.jira_project_key
+            # },
             # md
-            'summary': '{0}'.format(summary),
+            # 'summary': '{0}'.format(summary),
             # TODO: + 'user iD:'.USER-ID + 'study type: STUDY - TYPE
             # md
-            'description': '{0}'.format(
-                submission.data.get('requirements', {}).get('description', '')),
+            # 'description': '{0}'.format(
+            #     submission.data.get('requirements', {}).get('description', '')),
             # md
-            'issuetype': {
-                'name': 'Data Submission'
-            },
+            # 'issuetype': {
+            #     'name': 'Data Submission'
+            # },
             # generic: submitting gfbio user, prefilled
             # ba: submitting gfbio user, sc.contact or error text (see below)
             # md
-            'reporter': {
-                'name': reporter.get('user_email', 'No valid user, name or email available')
-            },
+            # 'reporter': {
+            #     'name': reporter.get('user_email', 'No valid user, name or email available')
+            # },
+
             # ba: hardcoded val after slash
             # generic: assuming it is analog to molecular
             'customfield_10010': 'dsub/molecular' if site_config.jira_project_key == SiteConfiguration.DSUB else 'sand/molecular-data',
 
-            # generic
+            # generic: RO - from data, but plain text
             # ba: this here
             # FIXME: use embargo from Submission, this as fallback
-            'customfield_10200': '{0}'.format(
-                (datetime.date.today() + datetime.timedelta(
-                    days=365)).isoformat()
-            ),
-            'customfield_10201': submission.data.get('requirements', {}).get(
-                'title', ''),
+            # 'customfield_10200': '{0}'.format(
+            #     (datetime.date.today() + datetime.timedelta(
+            #         days=365)).isoformat()
+            # ),
+            # md
+            # 'customfield_10200': '{0}'.format(submission.embargo.isoformat())
+            # if submission.embargo is not None
+            # else '{0}'.format((datetime.date.today() + datetime.timedelta(days=365)).isoformat()),
+            # md
+            # 'customfield_10201': submission.data.get('requirements', {}).get(
+            #     'title', ''),
+
+            # generic: data_set_author, comma separated list of authors possible
+            # ba: this
             'customfield_10205': '{0},{1};{2}'.format(
                 reporter.get('first_name', ''),
                 reporter.get('last_name', ''),
                 reporter.get('user_email', '')),
             # md
-            'customfield_10208': submission.data.get('requirements', {}).get(
-                'description', ''),
-            'customfield_10303': '{0}'.format(submission.broker_submission_id),
+            # 'customfield_10208': submission.data.get('requirements', {}).get(
+            #     'description', ''),
+            # md
+            # 'customfield_10303': '{0}'.format(submission.broker_submission_id),
+
+            # TODO: generic not yet in schema, use submission property
+            # generic: primary_data field in form if link.. radio button is clicked
+            # ba: submission property, but not yet in schema, done via serializer
             # FIXME: url in data and model, decide and review
+            # TODO: rename to consistent name for all types ?
+            # TODO: if consistent name and from serializer. this is #md
             'customfield_10600': submission.data.get('requirements', {}).get(
                 'download_url', ''),
+
+            # ba: hardcoded this value
+            # generic: one of list or none
             'customfield_10229': [{'value': 'MIxS'}],
+
+            # ba hardcoded this value
+            # generic: legal_requirements field, array of certain values
             'customfield_10216': [{"value": "Uncertain"}],
         }
     }
-    data = json.dumps(data_dict)
+    data = json.dumps(molecular_data)
 
     print('gfbio_helpdesk_create_ticket. DATA:')
-    pprint(data_dict)
+    pprint(molecular_data)
     print('\n************************************\n')
 
     # requestlog: ok
