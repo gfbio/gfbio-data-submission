@@ -12,7 +12,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
     HELPDESK_API_SUB_URL, \
     HELPDESK_COMMENT_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL, GENERIC
 from gfbio_submissions.brokerage.models import BrokerObject, \
-    SiteConfiguration, RequestLog, Submission
+    SiteConfiguration, RequestLog
 from gfbio_submissions.brokerage.utils.generic import \
     SOID_KEY
 
@@ -199,23 +199,12 @@ def gfbio_get_user_by_id(user_id, site_configuration, submission):
     return response
 
 
-# TODO: refactor -> now molecular specific. improve
-# TODO: review if smarter Implementation possible
-def gfbio_helpdesk_create_ticket(site_config, submission, reporter=None):
-    if reporter is None:
-        reporter = {}
-    url = '{0}{1}'.format(
-        site_config.helpdesk_server.url,
-        HELPDESK_API_SUB_URL
-    )
-
+def gfbio_prepare_helpdesk_payload(reporter, site_config, submission):
     requirements = submission.data.get('requirements', {})
-
     # ena+gen
     summary = requirements.get('title', '')
     if len(summary) >= 45:
         summary = '{0}{1}'.format(summary[:45], '...')
-
     mutual_data = {
         'project': {
             'key': site_config.jira_project_key
@@ -238,7 +227,6 @@ def gfbio_helpdesk_create_ticket(site_config, submission, reporter=None):
         'customfield_10208': requirements.get('description', ''),
         'customfield_10303': '{0}'.format(submission.broker_submission_id),
     }
-
     generic_data = {
         'customfield_10010': 'dsub/generic'
         if site_config.jira_project_key == SiteConfiguration.DSUB
@@ -260,7 +248,6 @@ def gfbio_helpdesk_create_ticket(site_config, submission, reporter=None):
         # omit researchobjectid field 'customfield_10309'. maybe use site_object_id or brokerobject_id
         # omit id version field 'customfield_10309'
     }
-
     # TODO: extract, refactor for multi purpose, ENA + Generic
     # ena/mol specific
     molecular_data = {
@@ -320,7 +307,7 @@ def gfbio_helpdesk_create_ticket(site_config, submission, reporter=None):
         # generic: primary_data field in form if link.. radio button is clicked
         # ba: submission property, but not yet in schema, done via serializer
         # FIXME: url in data and model, decide and review
-        # TODO: rename to consistent name for all types ?
+        # TODO: rename to consistent name for all types ? portals 'link online resource' sounds good
         # TODO: if consistent name and from serializer. this is #md
         'customfield_10600': requirements.get(
             'download_url', ''),
@@ -333,31 +320,39 @@ def gfbio_helpdesk_create_ticket(site_config, submission, reporter=None):
         # generic: legal_requirements field, array of certain values
         'customfield_10216': [{"value": "Uncertain"}],
     }
-
     if submission.target == GENERIC:
         mutual_data.update(generic_data)
     else:
         mutual_data.update(molecular_data)
-    data = json.dumps({'fields': mutual_data})
-
     print('gfbio_helpdesk_create_ticket. DATA:')
     pprint({'fields': mutual_data})
     print('\n************************************\n')
+    return mutual_data
 
-    # requestlog: ok
+
+# TODO: refactor -> now molecular specific. improve
+# TODO: review if smarter Implementation possible
+def gfbio_helpdesk_create_ticket(site_config, submission, reporter=None):
+    if reporter is None:
+        reporter = {}
+    url = '{0}{1}'.format(
+        site_config.helpdesk_server.url,
+        HELPDESK_API_SUB_URL
+    )
+    data = json.dumps({
+        'fields': gfbio_prepare_helpdesk_payload(
+            reporter, site_config, submission)
+    })
     response = requests.post(
         url=url,
         auth=(site_config.helpdesk_server.username,
               site_config.helpdesk_server.password),
-        headers={
-            'Content-Type': 'application/json'
-        },
+        headers={'Content-Type': 'application/json'},
         data=data
     )
-
     with transaction.atomic():
         details = response.headers or ''
-        request_log = RequestLog.objects.create(
+        RequestLog.objects.create(
             type=RequestLog.OUTGOING,
             url=url,
             data=data,
@@ -368,7 +363,6 @@ def gfbio_helpdesk_create_ticket(site_config, submission, reporter=None):
                 'response_headers': str(details)
             }
         )
-
     return response
 
 
