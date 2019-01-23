@@ -317,6 +317,36 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual('', submission.download_url)
 
     @responses.activate
+    def test_valid_max_post_target_generic(self):
+        self._add_create_ticket_response()
+        self.assertEqual(0, len(Submission.objects.all()))
+        # since no generic field is mandatory
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'GENERIC', 'release': True,
+             'data': {
+                'requirements': {
+                    'title': 'A Title',
+                    'description': 'A Description'}}},
+            format='json'
+        )
+        self.assertEqual(201, response.status_code)
+        content = json.loads(response.content.decode('utf-8'))
+        # expected = _get_submission_post_response()
+        # expected['embargo'] = '{0}'.format(
+        #     datetime.date.today() + datetime.timedelta(days=365))
+        # expected['broker_submission_id'] = content['broker_submission_id']
+        # self.assertDictEqual(expected, content)
+        # self.assertNotIn('download_url', content['data']['requirements'].keys())
+        self.assertEqual(1, len(Submission.objects.all()))
+        submission = Submission.objects.first()
+        # self.assertEqual(UUID(expected['broker_submission_id']),
+        #                  submission.broker_submission_id)
+        self.assertEqual(Submission.SUBMITTED,
+                         content.get('status', 'NOPE'))
+        self.assertEqual('', submission.download_url)
+
+    @responses.activate
     def test_valid_max_post_with_data_url(self):
         self._add_create_ticket_response()
         self.assertEqual(0, len(Submission.objects.all()))

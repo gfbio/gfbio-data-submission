@@ -998,7 +998,7 @@ class TestHelpDeskTicketMethods(TestCase):
         response = gfbio_helpdesk_comment_on_ticket(
             site_config=site_config,
             ticket_key='FAKE_KEY',
-            body='body',
+            comment_body='body',
             submission=submission
         )
         self.assertEqual(200, response.status_code)
@@ -1028,6 +1028,54 @@ class TestHelpDeskTicketMethods(TestCase):
         self.assertEqual(200, response.status_code)
         request_logs = RequestLog.objects.all()
         self.assertEqual(2, len(request_logs))
+
+    @responses.activate
+    def test_attach_multiple_files_to_helpdesk_ticket(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        url = reverse('brokerage:submissions_primary_data', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        responses.add(responses.POST, url, json={}, status=200)
+        response_json = _get_jira_attach_response()
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          site_config.helpdesk_server.url,
+                          HELPDESK_API_SUB_URL,
+                          'FAKE_KEY',
+                          HELPDESK_ATTACHMENT_SUB_URL,
+                      ),
+                      json=response_json,
+                      status=200)
+        data = self._create_test_data('/tmp/test_primary_data_file_1')
+        self.api_client.post(url, data, format='multipart')
+        print(PrimaryDataFile.objects.all())
+        pd = submission.primarydatafile_set.first()
+        gfbio_helpdesk_attach_file_to_ticket(
+            site_config, 'FAKE_KEY', pd.data_file, submission)
+        self.assertEqual(
+            1,
+            len(PrimaryDataFile.objects.filter(submission=submission))
+        )
+
+        data = self._create_test_data('/tmp/test_primary_data_file_2',
+                                      delete=False)
+        self.api_client.post(url, data, format='multipart')
+        print(PrimaryDataFile.objects.all())
+        pd = submission.primarydatafile_set.last()
+        response = gfbio_helpdesk_attach_file_to_ticket(
+            site_config, 'FAKE_KEY', pd.data_file, submission)
+        self.assertEqual(
+            2,
+            len(PrimaryDataFile.objects.filter(submission=submission))
+        )
+        print(response.status_code)
+        print(response.content)
+        primary_data_files = PrimaryDataFile.objects.filter(
+            submission=submission)
+        for p in primary_data_files:
+            print(p)
+        for t in TaskProgressReport.objects.all():
+            print(t)
 
     @responses.activate
     def test_attach_template_without_submitting_user(self):

@@ -15,17 +15,17 @@ from . import views
 # router.register(r'submissions', views.SubmissionsViewSet)
 
 urlpatterns = [
-    url(
-        regex=r'submissions/ena/form/showcase$',
-        view=TemplateView.as_view(template_name='ena_widget.html'),
-        name='ena_showcase'
-    ),
-    url(
-        regex=r'submissions/ena/form/showcase/integrated$',
-        view=login_required(
-            TemplateView.as_view(template_name='ena_widget_integrated.html')),
-        name='ena_showcase'
-    ),
+    # url(
+    #     regex=r'submissions/ena/form/showcase$',
+    #     view=TemplateView.as_view(template_name='ena_widget.html'),
+    #     name='ena_showcase'
+    # ),
+    # url(
+    #     regex=r'submissions/ena/form/showcase/integrated$',
+    #     view=login_required(
+    #         TemplateView.as_view(template_name='ena_widget_integrated.html')),
+    #     name='ena_showcase'
+    # ),
 
     # TODO: use '/' since viewset will do the same
     url(

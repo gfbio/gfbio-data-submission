@@ -559,7 +559,7 @@ class SubmissionFileUpload(models.Model):
 
 # TODO: refactor/review: compare TODO for SubmissionFileUpload
 #   intended usecase is csv template file with trigger
-#   to attach to existing ticket
+#   to attach to existing ticket. but with .save(attach=False) almost the same
 # TODO: consider how to use for csv update view, where
 #   template is input for submissiondata and an update here
 #   updates submission.data. also consider TODOs regarding redundant file models
