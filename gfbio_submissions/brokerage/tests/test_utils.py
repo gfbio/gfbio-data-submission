@@ -32,9 +32,10 @@ from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
     send_submission_to_ena, download_submitted_run_files_to_stringIO
 from gfbio_submissions.brokerage.utils.gfbio import \
-    gfbio_assemble_research_object_id_json, gfbio_get_user_by_id, \
+    gfbio_get_user_by_id, \
     gfbio_helpdesk_create_ticket, gfbio_helpdesk_comment_on_ticket, \
-    gfbio_helpdesk_attach_file_to_ticket, gfbio_prepare_create_helpdesk_payload
+    gfbio_helpdesk_attach_file_to_ticket, gfbio_prepare_create_helpdesk_payload, \
+    gfbio_update_helpdesk_ticket
 from gfbio_submissions.brokerage.utils.pangaea import \
     request_pangaea_login_token, parse_pangaea_login_token_response, \
     get_pangaea_login_token, create_pangaea_jira_ticket
@@ -543,15 +544,6 @@ class TestServiceMethods(TestCase):
         )
         SubmissionTest._create_submission_via_serializer()
 
-    def test_assemble_research_object_json(self):
-        submission = Submission.objects.first()
-        prepared_json, broker_object_pks = \
-            gfbio_assemble_research_object_id_json(submission.brokerobject_set)
-        self.assertTrue(isinstance(prepared_json, str))
-        self.assertTrue(isinstance(broker_object_pks, list))
-        json_result = json.loads(prepared_json)
-        self.assertTrue(isinstance(json_result[0]['extendeddata'], str))
-
     @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
     def test_gfbio_get_user_by_id(self, mock_requests):
         mock_requests.get.return_value.status_code = 200
@@ -621,6 +613,39 @@ class TestGFBioJira(TestCase):
                 'body': 'programmatic update of ticket {}'.format(ticket_key)
             })
         )
+
+    @skip('Test against helpdesk server')
+    def test_get_and_update_existing_ticket(self):
+        # was generic submission, done via gfbio-portal
+        ticket_key = 'SAND-1460'
+        url = '{0}{1}/{2}'.format(self.base_url, HELPDESK_API_SUB_URL,
+                                  ticket_key, )
+        response = requests.get(
+            url=url,
+            auth=('brokeragent', ''),
+        )
+        pprint(response.json())
+        response = requests.put(
+            url=url,
+            auth=('brokeragent', ''),
+            headers={
+                'Content-Type': 'application/json'
+            },
+            data=json.dumps({
+                'fields': {
+                    # single value/string
+                    'customfield_10205': 'New Name Marc Weber, Alfred E. Neumann',
+                    # array of values/strings
+                    'customfield_10216': [
+                        {'value': 'Uncertain'},
+                        {'value': 'Nagoya Protocol'},
+                        {'value': 'Sensitive Personal Information'},
+                    ]
+                }
+            })
+        )
+        self.assertEqual(204, response.status_code)
+        self.assertEqual(0, len(response.content))
 
 
 class TestSubmissionTransferHandler(TestCase):
@@ -876,7 +901,7 @@ class TestHelpDeskTicketMethods(TestCase):
     # TODO: rename/refactor once generic ticket is implemented
     #   or refactoring of this method is finished
     @responses.activate
-    def test_create_helpdesk_ticket_dev_generic(self):
+    def test_create_helpdesk_ticket_generic_target(self):
         data = {}
         with open(os.path.join(
                 _get_test_data_dir_path(),
@@ -904,7 +929,6 @@ class TestHelpDeskTicketMethods(TestCase):
                             HELPDESK_API_SUB_URL),
             json={'bla': 'blubb'},
             status=200)
-        # self.assertEqual(0, len(RequestLog.objects.all()))
         data = gfbio_prepare_create_helpdesk_payload(
             site_config=site_config,
             submission=submission)
@@ -913,8 +937,9 @@ class TestHelpDeskTicketMethods(TestCase):
             submission=submission,
             data=data,
         )
-        # self.assertEqual(200, response.status_code)
-        # self.assertEqual(1, len(RequestLog.objects.all()))
+        print(response.content)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, len(RequestLog.objects.all()))
 
     @responses.activate
     def test_create_helpdesk_ticket_unicode_text(self):
@@ -940,6 +965,25 @@ class TestHelpDeskTicketMethods(TestCase):
         self.assertEqual(1, len(RequestLog.objects.all()))
 
     @responses.activate
+    def test_update_helpdesk_ticket(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        url = '{0}{1}/{2}'.format(
+            site_config.helpdesk_server.url,
+            HELPDESK_API_SUB_URL,
+            'FAKE_KEY'
+        )
+        responses.add(responses.PUT, url, body='', status=204)
+        response = gfbio_update_helpdesk_ticket(
+            site_configuration=site_config,
+            submission=submission,
+            ticket_key='FAKE_KEY',
+            data={}
+        )
+        self.assertEqual(204, response.status_code)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+
+    @responses.activate
     def test_comment_on_helpdesk_ticket(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
@@ -954,7 +998,7 @@ class TestHelpDeskTicketMethods(TestCase):
         response = gfbio_helpdesk_comment_on_ticket(
             site_config=site_config,
             ticket_key='FAKE_KEY',
-            comment_body='body',
+            body='body',
             submission=submission
         )
         self.assertEqual(200, response.status_code)
