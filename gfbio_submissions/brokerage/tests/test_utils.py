@@ -34,7 +34,7 @@ from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
 from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_assemble_research_object_id_json, gfbio_get_user_by_id, \
     gfbio_helpdesk_create_ticket, gfbio_helpdesk_comment_on_ticket, \
-    gfbio_helpdesk_attach_file_to_ticket
+    gfbio_helpdesk_attach_file_to_ticket, gfbio_prepare_create_helpdesk_payload
 from gfbio_submissions.brokerage.utils.pangaea import \
     request_pangaea_login_token, parse_pangaea_login_token_response, \
     get_pangaea_login_token, create_pangaea_jira_ticket
@@ -862,9 +862,13 @@ class TestHelpDeskTicketMethods(TestCase):
             json={'bla': 'blubb'},
             status=200)
         self.assertEqual(0, len(RequestLog.objects.all()))
+        data = gfbio_prepare_create_helpdesk_payload(
+            site_config=site_config,
+            submission=submission)
         response = gfbio_helpdesk_create_ticket(
             site_config=site_config,
             submission=submission,
+            data=data,
         )
         self.assertEqual(200, response.status_code)
         self.assertEqual(1, len(RequestLog.objects.all()))
@@ -901,9 +905,13 @@ class TestHelpDeskTicketMethods(TestCase):
             json={'bla': 'blubb'},
             status=200)
         # self.assertEqual(0, len(RequestLog.objects.all()))
+        data = gfbio_prepare_create_helpdesk_payload(
+            site_config=site_config,
+            submission=submission)
         response = gfbio_helpdesk_create_ticket(
             site_config=site_config,
             submission=submission,
+            data=data,
         )
         # self.assertEqual(200, response.status_code)
         # self.assertEqual(1, len(RequestLog.objects.all()))
@@ -920,9 +928,13 @@ class TestHelpDeskTicketMethods(TestCase):
             status=200)
 
         self.assertEqual(0, len(RequestLog.objects.all()))
+        data = gfbio_prepare_create_helpdesk_payload(
+            site_config=site_config,
+            submission=submission)
         response = gfbio_helpdesk_create_ticket(
             site_config=site_config,
             submission=submission,
+            data=data,
         )
         self.assertEqual(200, response.status_code)
         self.assertEqual(1, len(RequestLog.objects.all()))

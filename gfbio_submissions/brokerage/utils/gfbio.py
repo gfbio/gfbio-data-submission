@@ -199,7 +199,9 @@ def gfbio_get_user_by_id(user_id, site_configuration, submission):
     return response
 
 
-def gfbio_prepare_helpdesk_payload(reporter, site_config, submission):
+def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
+    if reporter is None:
+        reporter = {}
     requirements = submission.data.get('requirements', {})
     # ena+gen
     summary = requirements.get('title', '')
@@ -326,27 +328,29 @@ def gfbio_prepare_helpdesk_payload(reporter, site_config, submission):
     print('gfbio_helpdesk_create_ticket. DATA:')
     pprint({'fields': mutual_data})
     print('\n************************************\n')
-    return mutual_data
+    return {'fields': mutual_data}
 
 
-def gfbio_helpdesk_create_ticket(site_config, submission, reporter=None):
-    if reporter is None:
-        reporter = {}
+def gfbio_helpdesk_create_ticket(site_config, submission, data={}, reporter={}):
+    # if reporter is None:
+    #     reporter = {}
+    # if data is None:
+    #     data = {}
     url = '{0}{1}'.format(
         site_config.helpdesk_server.url,
         HELPDESK_API_SUB_URL
     )
     # TODO: if data is handed in as a parameter, this method here would be generic
-    data = json.dumps({
-        'fields': gfbio_prepare_helpdesk_payload(
-            reporter, site_config, submission)
-    })
+    # data = json.dumps({
+    #     'fields': gfbio_prepare_create_helpdesk_payload(
+    #         reporter, site_config, submission)
+    # })
     response = requests.post(
         url=url,
         auth=(site_config.helpdesk_server.username,
               site_config.helpdesk_server.password),
         headers={'Content-Type': 'application/json'},
-        data=data
+        data=json.dumps(data)
     )
     with transaction.atomic():
         details = response.headers or ''
