@@ -65,9 +65,9 @@ class SubmissionTransferHandler(object):
         return submission
 
     @classmethod
-    def get_submisssion_and_siteconfig_for_task(cls, submission_id=None,
-                                                task=None,
-                                                get_closed_submission=False):
+    def get_submission_and_siteconfig_for_task(cls, submission_id=None,
+                                               task=None,
+                                               get_closed_submission=False):
         # TODO: Catch DoesNotExist here, so tasks will have to deal with only on type of exception
         submission = cls._get_submission(submission_id, get_closed_submission)
         if submission:

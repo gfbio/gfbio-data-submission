@@ -705,7 +705,7 @@ class TestSubmissionTransferHandler(TestCase):
     def test_get_submisssion_and_siteconfig_for_task(self):
         submission = Submission.objects.first()
         sub, conf = \
-            SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+            SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
                 submission_id=submission.pk)
         reports = TaskProgressReport.objects.all()
         self.assertEqual(0, len(reports))
@@ -717,12 +717,12 @@ class TestSubmissionTransferHandler(TestCase):
     def test_invalid_submission_id(self):
         with self.assertRaises(
                 SubmissionTransferHandler.TransferInternalError) as exc:
-            sub, conf = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+            sub, conf = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
                 submission_id=99)
 
     def test_no_site_config(self):
         sub, conf = \
-            SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+            SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
                 submission_id=Submission.objects.last().pk)
         reports = TaskProgressReport.objects.all()
         self.assertEqual(0, len(reports))
@@ -735,7 +735,7 @@ class TestSubmissionTransferHandler(TestCase):
         submission = Submission.objects.last()
         with self.assertRaises(
                 SubmissionTransferHandler.TransferInternalError) as exc:
-            sub, conf = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+            sub, conf = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
                 submission_id=submission.pk)
 
     def test_raise_400_exception(self):
