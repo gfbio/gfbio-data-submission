@@ -18,13 +18,10 @@ from .serializers import \
     PrimaryDataFileSerializer
 
 
-# http://www.django-rest-framework.org/tutorial/3-class-based-views/
-# class SubmissionsViewSet(viewsets.ModelViewSet):
 class SubmissionsView(mixins.ListModelMixin,
                       mixins.CreateModelMixin,
                       generics.GenericAPIView):
     queryset = Submission.objects.all()
-    # serializer_class = SubmissionSerializer
     serializer_class = SubmissionDetailSerializer
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
@@ -32,19 +29,6 @@ class SubmissionsView(mixins.ListModelMixin,
                           IsOwnerOrReadOnly)
 
     def perform_create(self, serializer):
-        # submission = Submission()
-        # if 'submitting_user' in serializer.validated_data.keys():
-        #     submission.submitting_user = serializer.validated_data.get(
-        #         'submitting_user', '')
-        # submission.site = User.objects.get(username=self.request.user)
-        # submission.submission_target = serializer.validated_data.get('target',
-        #                                                              '')
-        # submission.download_url = serializer.validated_data.get(
-        #     'data', {}).get('requirements', {}).get('download_url', '')
-        # submission.submission_data = serializer.save(
-        #     site=self.request.user,
-        #     broker_submission_id=submission.broker_submission_id
-        # )
         submission = serializer.save(site=self.request.user, )
         with transaction.atomic():
             RequestLog.objects.create(
@@ -127,7 +111,6 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         instance = self.get_object()
         instance.status = Submission.CANCELLED
         instance.save()
-        # instance.submission_set.all().update(status=Submission.CANCELLED)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

@@ -848,7 +848,6 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
         content = json.loads(response.content.decode('utf-8'))
         # No 'optional_validation' since all generic special fields
         # are non-mandatory
-        print(content)
         expected = {
             'embargo': '{0}'.format(
                 datetime.date.today() + datetime.timedelta(days=365)),

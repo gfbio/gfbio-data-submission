@@ -3,7 +3,6 @@ import csv
 import io
 import json
 import os
-from pprint import pprint
 from unittest import skip
 from uuid import uuid4
 
@@ -624,7 +623,6 @@ class TestGFBioJira(TestCase):
             url=url,
             auth=('brokeragent', ''),
         )
-        pprint(response.json())
         response = requests.put(
             url=url,
             auth=('brokeragent', ''),
@@ -913,15 +911,7 @@ class TestHelpDeskTicketMethods(TestCase):
             'data': data
         })
         valid = serializer.is_valid()
-        print(valid)
-        print(serializer.errors)
         submission = serializer.save(site=User.objects.first())
-        print(submission)
-        print(submission.target)
-        pprint(submission.data)
-        print('URL', submission.download_url)
-        print('EMBARGO ', submission.embargo)
-
         site_config = SiteConfiguration.objects.first()
         responses.add(
             responses.POST,
@@ -937,7 +927,6 @@ class TestHelpDeskTicketMethods(TestCase):
             submission=submission,
             data=data,
         )
-        print(response.content)
         self.assertEqual(200, response.status_code)
         self.assertEqual(1, len(RequestLog.objects.all()))
 
@@ -1048,7 +1037,6 @@ class TestHelpDeskTicketMethods(TestCase):
                       status=200)
         data = self._create_test_data('/tmp/test_primary_data_file_1')
         self.api_client.post(url, data, format='multipart')
-        print(PrimaryDataFile.objects.all())
         pd = submission.primarydatafile_set.first()
         gfbio_helpdesk_attach_file_to_ticket(
             site_config, 'FAKE_KEY', pd.data_file, submission)
@@ -1060,7 +1048,6 @@ class TestHelpDeskTicketMethods(TestCase):
         data = self._create_test_data('/tmp/test_primary_data_file_2',
                                       delete=False)
         self.api_client.post(url, data, format='multipart')
-        print(PrimaryDataFile.objects.all())
         pd = submission.primarydatafile_set.last()
         response = gfbio_helpdesk_attach_file_to_ticket(
             site_config, 'FAKE_KEY', pd.data_file, submission)
@@ -1068,14 +1055,6 @@ class TestHelpDeskTicketMethods(TestCase):
             2,
             len(PrimaryDataFile.objects.filter(submission=submission))
         )
-        print(response.status_code)
-        print(response.content)
-        primary_data_files = PrimaryDataFile.objects.filter(
-            submission=submission)
-        for p in primary_data_files:
-            print(p)
-        for t in TaskProgressReport.objects.all():
-            print(t)
 
     @responses.activate
     def test_attach_template_without_submitting_user(self):

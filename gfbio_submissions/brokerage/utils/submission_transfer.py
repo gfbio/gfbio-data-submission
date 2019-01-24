@@ -128,6 +128,7 @@ class SubmissionTransferHandler(object):
             submission_id=self.submission_id).set(
             countdown=SUBMISSION_DELAY)
 
+    # TODO: better name !
     def initiate_submission_process(self, release=False, update=False):
         logger.info(
             'SubmissionTransferHandler. initiate_submission_process. '
@@ -157,6 +158,7 @@ class SubmissionTransferHandler(object):
                 submission_id=self.submission_id).set(
                 countdown=SUBMISSION_DELAY)
             if release:
+                # TODO: check for Submission Type !
                 chain = chain | self.setup_pre_release_chain()
         else:
             return None

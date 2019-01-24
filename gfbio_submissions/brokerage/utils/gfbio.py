@@ -234,9 +234,6 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
         mutual_data.update(generic_data)
     else:
         mutual_data.update(molecular_data)
-    print('gfbio_helpdesk_create_ticket. DATA:')
-    pprint({'fields': mutual_data})
-    print('\n************************************\n')
     return {'fields': mutual_data}
 
 

@@ -1,32 +1,9 @@
 # -*- coding: utf-8 -*-
 from django.conf.urls import url
-from django.contrib.auth.decorators import login_required
-from django.views.generic import TemplateView
 
 from . import views
 
-# from rest_framework_swagger.views import get_swagger_view
-
-# TODO: take care of proper documentation for available services
-# schema_view = get_swagger_view(title='GFBio Data Submission API')
-
-# TODO: check ViewSet
-# router = DefaultRouter()
-# router.register(r'submissions', views.SubmissionsViewSet)
-
 urlpatterns = [
-    # url(
-    #     regex=r'submissions/ena/form/showcase$',
-    #     view=TemplateView.as_view(template_name='ena_widget.html'),
-    #     name='ena_showcase'
-    # ),
-    # url(
-    #     regex=r'submissions/ena/form/showcase/integrated$',
-    #     view=login_required(
-    #         TemplateView.as_view(template_name='ena_widget_integrated.html')),
-    #     name='ena_showcase'
-    # ),
-
     # TODO: use '/' since viewset will do the same
     url(
         regex=r'submissions/$',
