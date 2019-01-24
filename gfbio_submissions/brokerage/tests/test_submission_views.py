@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import base64
+import datetime
 import json
 from uuid import UUID, uuid4
 
@@ -18,7 +19,7 @@ from gfbio_submissions.brokerage.tests.utils import \
 from gfbio_submissions.users.models import User
 
 
-class TestAddSubmissionView(TestCase):
+class TestSubmissionView(TestCase):
 
     @classmethod
     def setUpTestData(cls):
@@ -84,6 +85,9 @@ class TestAddSubmissionView(TestCase):
             format='json'
         )
 
+
+class TestSubmissionViewSimple(TestSubmissionView):
+
     def test_submissions_get_request(self):
         response = self.client.get('/api/submissions/')
         self.assertEqual(401, response.status_code)
@@ -98,6 +102,45 @@ class TestAddSubmissionView(TestCase):
         keys = json.loads(response.content.decode('utf-8')).keys()
         self.assertIn('target', keys)
         self.assertIn('data', keys)
+
+    @responses.activate
+    def test_post_on_submission_detail_view(self):
+        self._add_create_ticket_response()
+        self._post_submission()
+        submission = Submission.objects.first()
+        response = self.api_client.post(
+            '/api/submissions/{}/'.format(submission.pk),
+            {'target': 'ENA', 'data': {'requirements': {
+                'title': 'A Title 0815', 'description': 'A Description 2'}}},
+            format='json'
+        )
+        self.assertEqual(405, response.status_code)
+
+    @responses.activate
+    def test_delete_submission(self):
+        self._add_create_ticket_response()
+        self._post_submission()
+        submission = Submission.objects.first()
+        response = self.api_client.delete(
+            '/api/submissions/{0}/'.format(submission.broker_submission_id))
+        self.assertEqual(204, response.status_code)
+        self.assertEqual(1, len(Submission.objects.all()))
+        submission = Submission.objects.first()
+        self.assertEqual(Submission.CANCELLED, submission.status)
+
+    @responses.activate
+    def test_patch_submission(self):
+        self._add_create_ticket_response()
+        self._post_submission()
+        response = self.api_client.patch(
+            '/api/submissions/{0}/'.format(Submission.objects.first().id),
+            {'target': 'ENA_PANGAEA'},
+            format='json'
+        )
+        self.assertEqual(405, response.status_code)
+
+
+class TestSubmissionViewMinimumPosts(TestSubmissionView):
 
     def test_invalid_min_post(self):
         self.assertEqual(0, len(Submission.objects.all()))
@@ -149,7 +192,8 @@ class TestAddSubmissionView(TestCase):
                 "requirements : 'experiments' is a required property"],
                 'requirements': {'description': 'A Description',
                                  'title': 'A Title'}},
-            'embargo': None,
+            'embargo': '{0}'.format(
+                datetime.date.today() + datetime.timedelta(days=365)),
             'download_url': '',
             'release': False,
             'site': 'horst',
@@ -164,7 +208,7 @@ class TestAddSubmissionView(TestCase):
         submission = Submission.objects.last()
         self.assertEqual(UUID(content['broker_submission_id']),
                          submission.broker_submission_id)
-        self.assertIsNone(submission.embargo)
+        self.assertIsNotNone(submission.embargo)
         self.assertFalse(submission.release)
         self.assertEqual(0, len(submission.site_project_id))
         self.assertEqual(Submission.OPEN, submission.status)
@@ -189,7 +233,8 @@ class TestAddSubmissionView(TestCase):
                 u"requirements : 'experiments' is a required property"],
                 'requirements': {'description': 'A Description',
                                  'title': 'A Title'}},
-            'embargo': None,
+            'embargo': '{0}'.format(
+                datetime.date.today() + datetime.timedelta(days=365)),
             'download_url': '',
             'release': False,
             'site': 'horst',
@@ -219,6 +264,9 @@ class TestAddSubmissionView(TestCase):
         self.assertEqual(400, response.status_code)
         self.assertIn(b'target', response.content)
         self.assertEqual(0, len(Submission.objects.all()))
+
+
+class TestSubmissionViewFullPosts(TestSubmissionView):
 
     @responses.activate
     def test_empty_max_post(self):
@@ -256,6 +304,7 @@ class TestAddSubmissionView(TestCase):
         self.assertEqual(201, response.status_code)
         content = json.loads(response.content.decode('utf-8'))
         expected = _get_submission_post_response()
+        expected['embargo'] = '{0}'.format(datetime.date.today() + datetime.timedelta(days=365))
         expected['broker_submission_id'] = content['broker_submission_id']
         self.assertDictEqual(expected, content)
         self.assertNotIn('download_url', content['data']['requirements'].keys())
@@ -263,6 +312,36 @@ class TestAddSubmissionView(TestCase):
         submission = Submission.objects.first()
         self.assertEqual(UUID(expected['broker_submission_id']),
                          submission.broker_submission_id)
+        self.assertEqual(Submission.SUBMITTED,
+                         content.get('status', 'NOPE'))
+        self.assertEqual('', submission.download_url)
+
+    @responses.activate
+    def test_valid_max_post_target_generic(self):
+        self._add_create_ticket_response()
+        self.assertEqual(0, len(Submission.objects.all()))
+        # since no generic field is mandatory
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'GENERIC', 'release': True,
+             'data': {
+                'requirements': {
+                    'title': 'A Title',
+                    'description': 'A Description'}}},
+            format='json'
+        )
+        self.assertEqual(201, response.status_code)
+        content = json.loads(response.content.decode('utf-8'))
+        # expected = _get_submission_post_response()
+        # expected['embargo'] = '{0}'.format(
+        #     datetime.date.today() + datetime.timedelta(days=365))
+        # expected['broker_submission_id'] = content['broker_submission_id']
+        # self.assertDictEqual(expected, content)
+        # self.assertNotIn('download_url', content['data']['requirements'].keys())
+        self.assertEqual(1, len(Submission.objects.all()))
+        submission = Submission.objects.first()
+        # self.assertEqual(UUID(expected['broker_submission_id']),
+        #                  submission.broker_submission_id)
         self.assertEqual(Submission.SUBMITTED,
                          content.get('status', 'NOPE'))
         self.assertEqual('', submission.download_url)
@@ -300,6 +379,9 @@ class TestAddSubmissionView(TestCase):
         # self.assertEqual('{0}/{1}'.format(url, 'download'),
         #                  sub.download_url)
 
+
+    # TODO: test valid max post with embargo value in data
+
     def test_valid_max_post_with_invalid_min_data(self):
         self.assertEqual(0, len(Submission.objects.all()))
         data = _get_submission_request_data()
@@ -312,6 +394,9 @@ class TestAddSubmissionView(TestCase):
         self.assertEqual(400, response.status_code)
         self.assertIn('description', response.content.decode('utf-8'))
         self.assertEqual(0, len(Submission.objects.all()))
+
+
+class TestSubmissionViewGetRequest(TestSubmissionView):
 
     @responses.activate
     def test_get_submissions(self):
@@ -358,6 +443,9 @@ class TestAddSubmissionView(TestCase):
         self._post_submission()
         response = self.api_client.get('/api/submissions/{0}/'.format(uuid4()))
         self.assertEqual(404, response.status_code)
+
+
+class TestSubmissionViewPutRequests(TestSubmissionView):
 
     @responses.activate
     def test_put_submission(self):
@@ -590,41 +678,8 @@ class TestAddSubmissionView(TestCase):
                 submission.broker_submission_id),
             content)
 
-    @responses.activate
-    def test_post_on_submission_detail_view(self):
-        self._add_create_ticket_response()
-        self._post_submission()
-        submission = Submission.objects.first()
-        response = self.api_client.post(
-            '/api/submissions/{}/'.format(submission.pk),
-            {'target': 'ENA', 'data': {'requirements': {
-                'title': 'A Title 0815', 'description': 'A Description 2'}}},
-            format='json'
-        )
-        self.assertEqual(405, response.status_code)
 
-    @responses.activate
-    def test_delete_submission(self):
-        self._add_create_ticket_response()
-        self._post_submission()
-        submission = Submission.objects.first()
-        response = self.api_client.delete(
-            '/api/submissions/{0}/'.format(submission.broker_submission_id))
-        self.assertEqual(204, response.status_code)
-        self.assertEqual(1, len(Submission.objects.all()))
-        submission = Submission.objects.first()
-        self.assertEqual(Submission.CANCELLED, submission.status)
-
-    @responses.activate
-    def test_patch_submission(self):
-        self._add_create_ticket_response()
-        self._post_submission()
-        response = self.api_client.patch(
-            '/api/submissions/{0}/'.format(Submission.objects.first().id),
-            {'target': 'ENA_PANGAEA'},
-            format='json'
-        )
-        self.assertEqual(405, response.status_code)
+class TestSubmissionViewPermissions(TestSubmissionView):
 
     def test_no_credentials(self):
         response = self.client.post('/api/submissions/')
@@ -745,6 +800,88 @@ class TestAddSubmissionView(TestCase):
             'site_object_id': 'o1', 'study': '{}'})
         self.assertNotEqual(401, response.status_code)
         self.assertEqual(400, response.status_code)
+
+
+class TestSubmissionViewGenericTarget(TestSubmissionView):
+
+    def test_post_empty_generic(self):
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'GENERIC', 'release': False, 'data': {}},
+            format='json'
+        )
+        self.assertEqual(400, response.status_code)
+        keys = json.loads(response.content.decode('utf-8')).keys()
+        self.assertIn('optional_validation', keys)
+        self.assertIn('data', keys)
+        self.assertEqual(0, len(Submission.objects.all()))
+
+    def test_schema_error_min_post(self):
+        self.assertEqual(0, len(Submission.objects.all()))
+        response = self.api_client.post('/api/submissions/',
+                                        {'target': 'GENERIC',
+                                         'data': {'requirements': {}}},
+                                        format='json'
+                                        )
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(400, response.status_code)
+        self.assertIn('data', content.keys())
+        self.assertListEqual(
+            ["requirements : 'title' is a required property",
+             "requirements : 'description' is a required property"],
+            content['data'])
+        self.assertEqual(0, len(Submission.objects.all()))
+
+    @responses.activate
+    def test_valid_min_post(self):
+        self._add_create_ticket_response()
+        self.assertEqual(0, len(Submission.objects.all()))
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'GENERIC', 'data': {
+                'requirements': {
+                    'title': 'A Generic Title',
+                    'description': 'A Generic Description'}}},
+            format='json'
+        )
+        content = json.loads(response.content.decode('utf-8'))
+        # No 'optional_validation' since all generic special fields
+        # are non-mandatory
+        expected = {
+            'embargo': '{0}'.format(
+                datetime.date.today() + datetime.timedelta(days=365)),
+            'download_url': '',
+            'status': 'OPEN',
+            'release': False,
+            'broker_submission_id': content['broker_submission_id'],
+            'site_project_id': '',
+            'target': 'GENERIC',
+            'site': 'horst',
+            'submitting_user': '',
+            'data': {
+                'requirements': {
+                    'description': 'A Generic Description',
+                    'title': 'A Generic Title'
+                }
+            }
+        }
+        self.assertEqual(201, response.status_code)
+        self.assertDictEqual(expected, content)
+        self.assertEqual(1, len(Submission.objects.all()))
+        submission = Submission.objects.last()
+        self.assertEqual(UUID(content['broker_submission_id']),
+                         submission.broker_submission_id)
+        self.assertIsNotNone(submission.embargo)
+        self.assertFalse(submission.release)
+        self.assertEqual(0, len(submission.site_project_id))
+        self.assertEqual(Submission.OPEN, submission.status)
+        self.assertEqual(0, len(submission.submitting_user))
+        self.assertEqual(0,
+                         len(submission.submitting_user_common_information))
+        self.assertEqual('GENERIC', submission.target)
+        request_logs = RequestLog.objects.filter(type=RequestLog.INCOMING)
+        self.assertEqual(1, len(request_logs))
 
     # TODO: move to integration-test file
     # TODO: modify to use new endpoints

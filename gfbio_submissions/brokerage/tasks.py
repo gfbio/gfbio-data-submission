@@ -13,6 +13,8 @@ from django.utils.encoding import smart_text
 from requests import ConnectionError, Response
 
 from gfbio_submissions.brokerage.configuration.settings import ENA
+from gfbio_submissions.brokerage.utils.gfbio import \
+    gfbio_prepare_create_helpdesk_payload
 from .configuration.settings import BASE_HOST_NAME, \
     PRIMARY_DATA_FILE_MAX_RETRIES, PRIMARY_DATA_FILE_DELAY, \
     SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY, PANGAEA_ISSUE_VIEW_URL
@@ -109,7 +111,7 @@ def check_on_hold_status_task(previous_task_result=None, submission_id=None):
         msg='check_on_hold_status_task. get submission with pk={}.'.format(
             submission_id)
     )
-    submission, site_configuration = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+    submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id, task=check_on_hold_status_task)
     if submission is not None and site_configuration is not None:
         if site_configuration.release_submissions:
@@ -295,7 +297,7 @@ def prepare_ena_submission_data_task(prev_task_result=None, submission_id=None):
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
              name='tasks.transfer_data_to_ena_task', base=SubmissionTask)
 def transfer_data_to_ena_task(prepare_result=None, submission_id=None):
-    submission, site_configuration = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+    submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id, task=transfer_data_to_ena_task)
     logger.info(
         msg='transfer_data_to_ena_task. start assemble_ena_submission_data '
@@ -402,7 +404,7 @@ def process_ena_response_task(transfer_result=None, submission_id=None,
              name='tasks.request_pangaea_login_token_task', base=SubmissionTask)
 def request_pangaea_login_token_task(previous_task_result=None,
                                      submission_id=None):
-    submission, site_configuration = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+    submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id, task=request_pangaea_login_token_task
     )
     if submission is not None and site_configuration is not None:
@@ -421,7 +423,7 @@ def request_pangaea_login_token_task(previous_task_result=None,
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
              name='tasks.create_pangaea_jira_ticket_task', base=SubmissionTask)
 def create_pangaea_jira_ticket_task(login_token=None, submission_id=None):
-    submission, site_configuration = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+    submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id, task=create_pangaea_jira_ticket_task
     )
     if submission is not None and site_configuration is not None:
@@ -576,7 +578,7 @@ def check_for_pangaea_doi_task(resource_credential_id=None):
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
              name='tasks.get_gfbio_user_email_task', base=SubmissionTask)
 def get_gfbio_user_email_task(submission_id=None):
-    submission, site_configuration = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+    submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id, task=get_gfbio_user_email_task)
     logger.info(
         msg='get_gfbio_user_email_task submission_id={0}'.format(submission_id)
@@ -618,7 +620,7 @@ def get_gfbio_user_email_task(submission_id=None):
 def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
                                 summary=None,
                                 description=None):
-    submission, site_configuration = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+    submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id, task=create_helpdesk_ticket_task)
     if submission is not None and site_configuration is not None:
         existing_tickets = submission.additionalreference_set.filter(
@@ -634,33 +636,36 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
                 submission=submission,
             )
         else:
+            data = gfbio_prepare_create_helpdesk_payload(
+                reporter=prev_task_result,
+                site_config=site_configuration,
+                submission=submission)
             response = gfbio_helpdesk_create_ticket(
                 site_config=site_configuration,
                 submission=submission,
+                data=data,
                 reporter=prev_task_result
             )
-        apply_default_task_retry_policy(response, create_helpdesk_ticket_task,
-                                        submission)
-        if not len(existing_tickets):
-            try:
-                # TODO: parse json possible with json.loads(response.content.decode('utf-8'))
-                # TODO: request lib provides response.json()
-                content = response.json()
-            except JSONDecodeError as e:
-                logger.warning(
-                    'create_helpdesk_ticket_task submission_id={0} JSONDecodeError={1}'.format(
-                        submission_id, e))
-                content = {}
-            submission.additionalreference_set.create(
-                type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-                # reference_key=json.loads(response.content).get('key',
-                #                                                'no_key_available'),
-                reference_key=content.get('key', 'no_key_available'),
-                # reference_key=json.loads(response.content.decode('utf-8')).get(
-                #     'key', 'no_key_available'),
-                primary=True
-            )
-
+            apply_default_task_retry_policy(response,
+                                            create_helpdesk_ticket_task,
+                                            submission)
+            if not len(existing_tickets):
+                try:
+                    content = response.json()
+                except JSONDecodeError as e:
+                    logger.warning(
+                        'create_helpdesk_ticket_task submission_id={0} JSONDecodeError={1}'.format(
+                            submission_id, e))
+                    content = {}
+                submission.additionalreference_set.create(
+                    type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+                    # reference_key=json.loads(response.content).get('key',
+                    #                                                'no_key_available'),
+                    reference_key=content.get('key', 'no_key_available'),
+                    # reference_key=json.loads(response.content.decode('utf-8')).get(
+                    #     'key', 'no_key_available'),
+                    primary=True
+                )
 
     else:
         return TaskProgressReport.CANCELLED
@@ -679,7 +684,7 @@ def comment_helpdesk_ticket_task(prev_task_result=None, comment_body=None,
     )
 
     # No submission will be returned if submission.status is error
-    submission, site_configuration = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+    submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id, task=comment_helpdesk_ticket_task,
         get_closed_submission=True)
 
@@ -723,7 +728,7 @@ def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None):
     logger.info(
         msg='attach_file_to_helpdesk_ticket_task submission_id={} '.format(
             submission_id))
-    submission, site_configuration = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+    submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id, task=attach_file_to_helpdesk_ticket_task,
         get_closed_submission=True)
     if submission is not None and site_configuration is not None:
@@ -781,7 +786,7 @@ def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None):
              base=SubmissionTask)
 def generic_comment_helpdesk_ticket_task(prev_task_result=None,
                                          comment_body=None, submission_id=None):
-    submission, site_configuration = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+    submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id, task=comment_helpdesk_ticket_task,
         get_closed_submission=True)
     if submission is not None and site_configuration is not None:
@@ -820,7 +825,7 @@ def generic_comment_helpdesk_ticket_task(prev_task_result=None,
              )
 def add_pangaealink_to_helpdesk_ticket_task(prev_task_result=None,
                                             submission_id=None):
-    submission, site_configuration = SubmissionTransferHandler.get_submisssion_and_siteconfig_for_task(
+    submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id,
         task=add_pangaealink_to_helpdesk_ticket_task,
         get_closed_submission=True

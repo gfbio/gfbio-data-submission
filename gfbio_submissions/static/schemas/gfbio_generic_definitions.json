@@ -1,0 +1,83 @@
+{
+    "generic": {
+        "type": "object",
+        "properties": {
+            "data_collection_time": {
+                "type": "string",
+                "minLength": 8
+            },
+            "dataset_label": {
+                "type": "string"
+            },
+            "categories": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                    "type": "string",
+                    "enum": [
+                        "Algae & Protists",
+                        "Bacteriology, Virology",
+                        "Botany",
+                        "Ecology & Environment",
+                        "Geoscience",
+                        "Microbiology",
+                        "Mycology",
+                        "Palaeontology",
+                        "Zoology",
+                        "Other"
+                    ]
+                }
+            },
+            "dataset_author": {
+                "type": "string"
+            },
+            "license": {
+                "type": "string",
+                "enum": [
+                    "",
+                    "Other License",
+                    "CC0: Creative Commons Zero 1.0",
+                    "CC BY: Creative Commons Attribution 4.0",
+                    "CC BY-NC: Creative Commons Attribution-NonCommercial 4.0",
+                    "CC BY-NC-ND: Creative Commons Attribution-NonCommercial-NoDerivs 4.0",
+                    "CC BY-NC-SA: Creative Commons Attribution-NonCommercial-ShareAlike 4.0",
+                    "CC BY-ND: Creative Commons Attribution-NoDerivs 4.0",
+                    "CC BY-SA: Creative Commons Attribution-ShareAlike 4.0"
+                ]
+            },
+            "related_publications": {
+                "type": "string"
+            },
+            "metadata_schema": {
+                "type": "string",
+                "enum": [
+                    "",
+                    "Other metadata or documentation",
+                    "ABCD 2.06",
+                    "DwC 2013-10-25",
+                    "DC 1.1",
+                    "EDM 5.2.3",
+                    "EML 2.1.1",
+                    "ESE 3.4.1",
+                    "INSPIRE Directive 2007/2/EC",
+                    "ISO 19115-1 2014",
+                    "MIxS 4.0"
+                ]
+            },
+            "legal_requirements": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                    "type": "string",
+                    "enum": [
+                        "",
+                        "Nagoya Protocol",
+                        "IUCN Red List of Threatened Species",
+                        "Sensitive Personal Information",
+                        "Uncertain"
+                    ]
+                }
+            }
+        }
+    }
+}

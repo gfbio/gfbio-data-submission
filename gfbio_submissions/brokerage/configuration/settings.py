@@ -104,6 +104,13 @@ ENA_PANGAEA = getattr(
     'ENA_PANGAEA'
 )
 
+GENERIC = getattr(
+    settings,
+    'GENERIC',
+    'GENERIC'
+)
+
+
 HELPDESK_API_SUB_URL = getattr(
     settings,
     'HELPDESK_API_SUB_URL',
@@ -219,4 +226,10 @@ STATIC_ENA_REQUIREMENTS_LOCATION = getattr(
     settings,
     'STATIC_ENA_REQUIREMENTS_LOCATION',
     'schemas/ena_requirements.json'
+)
+
+STATIC_GENERIC_REQUIREMENTS_LOCATION = getattr(
+    settings,
+    'STATIC_GENERIC_REQUIREMENTS_LOCATION',
+    'schemas/gfbio_generic_requirements.json'
 )
