@@ -55,7 +55,8 @@
     "copy-build-js-gz": "copyfiles -f 'build/*.js.gz' '../static/js/'",
     "copy-buildfiles": "npm run copy-build-js",
     "collectstatic": "echo yes | docker-compose -f ../../local.yml run --rm django python manage.py collectstatic",
-    "collect": "npm run build && npm run build-rename && npm run sed-sw-js && npm run copy-build-js && npm run collectstatic"
+    "collect": "npm run build && npm run build-rename && npm run sed-sw-js && npm run copy-build-js && npm run collectstatic",
+    "copylayout": "./copy_layout_to_static.sh"
   },
   "lint-staged": {
     "*.js": [
