@@ -228,18 +228,18 @@
 
     {% block page-title %}
 
-        {% comment %}<section class="page-title bg-secondary">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <h3 class="uppercase">
-                        <i class="ti-pencil-alt"></i> Form Inputs</h3>
+        <section class="page-title bg-secondary">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h3 class="uppercase">
+                            <i class="ti-pencil-alt"></i> Form Inputs</h3>
+                    </div>
                 </div>
+                <!--end of row-->
             </div>
-            <!--end of row-->
-        </div>
-        <!--end of container-->
-    </section>{% endcomment %}
+            <!--end of container-->
+        </section>
 
     {% endblock page-title %}
 
@@ -261,7 +261,12 @@
                                 project.</p>
                         </div>
                     </div> <!-- /row -->
-
+                    <div class="row">
+                        <div class="col">
+                            <div style="height: 2000px;">Spacer. height 2000px
+                            </div>
+                        </div>
+                    </div>
                 {% endblock content %}
 
             </div> <!-- /container -->
@@ -386,7 +391,9 @@
 
     <!-- Your stuff: Third-party javascript libraries go here -->
     {% block thirdPartyJavaScript %}
-
+        <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>
+        <script src="{% static 'vendor/scrollreveal/scrollreveal.min.js' %}"></script>
+        <script src="{% static 'vendor/magnific-popup/jquery.magnific-popup.min.js' %}"></script>
     {% endblock thirdPartyJavaScript %}
 
     <!-- place project specific Javascript in this file -->
