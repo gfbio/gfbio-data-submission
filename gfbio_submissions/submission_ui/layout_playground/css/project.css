@@ -639,7 +639,8 @@ p.lead {
 header.masthead {
   padding-top: 5rem;
   padding-bottom: calc(5rem - 57px);
-  background: url("../images/photo-1481026469463-66327c86e544-opac25-grey.jpg") top center;
+  background: url("../material/images/stock_photos/unsplash_grass3.jpg") top center;
+  background: url("../material/images/stock_photos/chuttersnap-541390-unsplash-blue.jpg") bottom center;
   background-size: cover;
 }
 
@@ -666,7 +667,7 @@ header.masthead h1 small, header.masthead h3 small {
 
 header.masthead h3 {
   font-weight: 300;
-  font-size: 1.8rem;
+  font-size: 1.4rem;
 }
 
 header.masthead h1 {
@@ -697,6 +698,20 @@ header.masthead h2.landing-icon {
 header.masthead p {
   font-weight: 300;
   color: #666;
+}
+
+header.masthead p.landing-page-caption {
+  font-weight: 400;
+  font-size: .85rem;
+}
+
+header.masthead p.landing-page-caption a {
+  color: #3CACE4;
+}
+
+header.masthead p.landing-page-caption a:hover {
+  text-decoration: none;
+  color: #FF8362;
 }
 
 header.masthead .btn-landing-blue {
@@ -762,22 +777,22 @@ header.masthead .btn-submit {
   background-color: #fff;
   color: #81B248 !important;
   /*//border-color: darken($gfbio-blue, .1);
-        //background-color: $gfbio-blue;
-        //color: $white !important;
+    //background-color: $gfbio-blue;
+    //color: $white !important;
 
-        // padding: 1rem;
-        border-color: $gray-400;
-        background-color: $white;
-        color: $gray-700;
+    // padding: 1rem;
+    border-color: $gray-400;
+    background-color: $white;
+    color: $gray-700;
 
-        &:focus {
-            box-shadow: none;
-        }
+    &:focus {
+        box-shadow: none;
+    }
 
-        &:hover {
-            //background-color: $white;
-            //color: $gfbio-blue !important;
-        }*/
+    &:hover {
+        //background-color: $white;
+        //color: $gfbio-blue !important;
+    }*/
 }
 
 header.masthead .btn-submit:focus {
