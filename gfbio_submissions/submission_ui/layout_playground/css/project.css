@@ -1,3 +1,9 @@
+/*!
+ * Start Bootstrap - Creative v5.0.2 (https://startbootstrap.com/template-overviews/creative)
+ * Copyright 2013-2019 Start Bootstrap
+ * Licensed under MIT (https://github.com/BlackrockDigital/startbootstrap-creative/blob/master/LICENSE)
+ */
+
 section#about, section#about2 {
   background-color: rgba(52, 90, 162, 0.9);
   padding-top: 6rem;
@@ -100,17 +106,11 @@ h5 {
 
 .text-90deg {
   -webkit-transform: rotate(90deg);
-  -moz-transform: rotate(90deg);
-  -ms-transform: rotate(90deg);
-  -o-transform: rotate(90deg);
   transform: rotate(90deg);
 }
 
 .text-270deg {
   -webkit-transform: rotate(270deg);
-  -moz-transform: rotate(270deg);
-  -ms-transform: rotate(270deg);
-  -o-transform: rotate(270deg);
   transform: rotate(270deg);
 }
 
@@ -377,6 +377,7 @@ section#twitter i {
 }
 
 .green-blue:focus {
+  -webkit-box-shadow: none;
   box-shadow: none;
 }
 
@@ -391,6 +392,7 @@ section#twitter i {
 }
 
 .blue-green:focus {
+  -webkit-box-shadow: none;
   box-shadow: none;
 }
 
@@ -413,6 +415,7 @@ section#twitter i {
 }
 
 .green:focus {
+  -webkit-box-shadow: none;
   box-shadow: none;
 }
 
@@ -420,10 +423,12 @@ section#twitter i {
   border-color: #80b148;
   background-color: #fff;
   color: #81B248 !important;
+  -webkit-box-shadow: none;
   box-shadow: none;
 }
 
 .green:hover:focus, .green:not(:disabled):not(.disabled):active:focus, .green:not(:disabled):not(.disabled).active:focus {
+  -webkit-box-shadow: none;
   box-shadow: none;
 }
 
@@ -452,6 +457,7 @@ form.pagewide-form .header {
 
 form.pagewide-form input:focus {
   border-color: rgba(129, 178, 72, 0.7);
+  -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
   box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
   outline-color: rgba(129, 178, 72, 0.7);
 }
@@ -467,12 +473,14 @@ form.pagewide-form .custom-file-input:focus ~ .custom-file-label::after {
 
 form.pagewide-form .custom-file-input:focus ~ .custom-file-label {
   border-color: rgba(129, 178, 72, 0.7);
+  -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
   box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
   outline-color: rgba(129, 178, 72, 0.7);
 }
 
 form.pagewide-form select:focus {
   border-color: rgba(129, 178, 72, 0.7);
+  -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
   box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
 }
 
@@ -501,7 +509,6 @@ hr.light {
 a {
   color: #345AA2;
   -webkit-transition: all 0.2s;
-  -moz-transition: all 0.2s;
   transition: all 0.2s;
 }
 
@@ -597,6 +604,11 @@ section {
   text-shadow: none;
 }
 
+img::-moz-selection {
+  color: #fff;
+  background: transparent;
+}
+
 img::selection {
   color: #fff;
   background: transparent;
@@ -627,10 +639,7 @@ p.lead {
 header.masthead {
   padding-top: 5rem;
   padding-bottom: calc(5rem - 57px);
-  background: url("../images/photo-1481026469463-66327c86e544-opac25-grey.jpg") top center;
-  -webkit-background-size: cover;
-  -moz-background-size: cover;
-  -o-background-size: cover;
+  background: url("../images/chuttersnap-541390-unsplash.jpg") center center;
   background-size: cover;
 }
 
@@ -657,7 +666,7 @@ header.masthead h1 small, header.masthead h3 small {
 
 header.masthead h3 {
   font-weight: 300;
-  font-size: 1.8rem;
+  font-size: 1.4rem;
 }
 
 header.masthead h1 {
@@ -690,6 +699,22 @@ header.masthead p {
   color: #666;
 }
 
+header.masthead p.landing-page-caption {
+  font-weight: 400;
+  font-size: .85rem;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 2rem;
+}
+
+header.masthead p.landing-page-caption a {
+  color: #3CACE4;
+}
+
+header.masthead p.landing-page-caption a:hover {
+  text-decoration: none;
+  color: #FF8362;
+}
+
 header.masthead .btn-landing-blue {
   border-color: #345aa1;
   background-color: #345AA2;
@@ -698,6 +723,7 @@ header.masthead .btn-landing-blue {
 
 header.masthead .btn-landing-blue:focus {
   border-color: rgba(52, 90, 162, 0.9);
+  -webkit-box-shadow: 0 0 0 0.2rem rgba(52, 90, 162, 0.6);
   box-shadow: 0 0 0 0.2rem rgba(52, 90, 162, 0.6);
 }
 
@@ -720,6 +746,7 @@ header.masthead .btn-landing-search {
 
 header.masthead .btn-landing-search:focus {
   border-color: rgba(129, 178, 72, 0.7);
+  -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
   box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
 }
 
@@ -736,6 +763,7 @@ header.masthead .btn-landing-search:active {
 
 header.masthead .landing-search:focus {
   border-color: rgba(129, 178, 72, 0.7);
+  -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
   box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
 }
 
@@ -750,26 +778,27 @@ header.masthead .btn-submit {
   background-color: #fff;
   color: #81B248 !important;
   /*//border-color: darken($gfbio-blue, .1);
-        //background-color: $gfbio-blue;
-        //color: $white !important;
+    //background-color: $gfbio-blue;
+    //color: $white !important;
 
-        // padding: 1rem;
-        border-color: $gray-400;
-        background-color: $white;
-        color: $gray-700;
+    // padding: 1rem;
+    border-color: $gray-400;
+    background-color: $white;
+    color: $gray-700;
 
-        &:focus {
-            box-shadow: none;
-        }
+    &:focus {
+        box-shadow: none;
+    }
 
-        &:hover {
-            //background-color: $white;
-            //color: $gfbio-blue !important;
-        }*/
+    &:hover {
+        //background-color: $white;
+        //color: $gfbio-blue !important;
+    }*/
 }
 
 header.masthead .btn-submit:focus {
   border-color: rgba(129, 178, 72, 0.7);
+  -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
   box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
 }
 
@@ -793,14 +822,17 @@ header.masthead .btn-search:hover, header.masthead .btn-search:not(:disabled):no
   border-color: #3bace4;
   background-color: #fff;
   color: #3CACE4 !important;
+  -webkit-box-shadow: none;
   box-shadow: none;
 }
 
 header.masthead .btn-search:hover:focus, header.masthead .btn-search:not(:disabled):not(.disabled):active:focus, header.masthead .btn-search:not(:disabled):not(.disabled).active:focus {
+  -webkit-box-shadow: none;
   box-shadow: none;
 }
 
 header.masthead .btn-search:focus {
+  -webkit-box-shadow: none;
   box-shadow: none;
 }
 
@@ -857,6 +889,7 @@ header.masthead .sign-up {
 }
 
 header.masthead .sign-up:focus {
+  -webkit-box-shadow: none;
   box-shadow: none;
 }
 
@@ -872,6 +905,7 @@ header.masthead .sign-in {
 }
 
 header.masthead .sign-in:focus {
+  -webkit-box-shadow: none;
   box-shadow: none;
 }
 
@@ -952,7 +986,6 @@ header.masthead .scroll-link-sleep {
   /* from main navBase. remove or adaept to backgroundb */
   font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   -webkit-transition: all 0.2s;
-  -moz-transition: all 0.2s;
   transition: all 0.2s;
 }
 
@@ -1102,6 +1135,7 @@ header.masthead .scroll-link-sleep {
 }
 
 #mainNav .navbar-nav > li.nav-item .sign-in:focus, #mainNavBase .navbar-nav > li.nav-item .sign-in:focus {
+  -webkit-box-shadow: none;
   box-shadow: none;
 }
 
@@ -1117,6 +1151,7 @@ header.masthead .scroll-link-sleep {
 }
 
 #mainNav .navbar-nav > li.nav-item .sign-up:focus, #mainNavBase .navbar-nav > li.nav-item .sign-up:focus {
+  -webkit-box-shadow: none;
   box-shadow: none;
 }
 
@@ -1131,6 +1166,7 @@ header.masthead .scroll-link-sleep {
 }
 
 #mainNav .navbar-nav > li.nav-item .sign-out:focus, #mainNavBase .navbar-nav > li.nav-item .sign-out:focus {
+  -webkit-box-shadow: none;
   box-shadow: none;
 }
 
@@ -1561,10 +1597,8 @@ section#partners .card-columns .card {
 @media (min-width: 576px) {
   section#partners .card-columns {
     -webkit-column-count: 6;
-    -moz-column-count: 6;
     column-count: 6;
     -webkit-column-gap: 1.5rem;
-    -moz-column-gap: 1.5rem;
     column-gap: 1.5rem;
     orphans: 1;
     widows: 1;
@@ -1578,10 +1612,8 @@ section#partners .card-columns .card {
 @media (max-width: 575px) {
   section#partners .card-columns {
     -webkit-column-count: 3;
-    -moz-column-count: 3;
     column-count: 3;
     -webkit-column-gap: 1.5rem;
-    -moz-column-gap: 1.5rem;
     column-gap: 1.5rem;
     orphans: 1;
     widows: 1;
@@ -1610,7 +1642,6 @@ section#partners .card-columns .card {
   color: #fff;
   background: rgba(52, 90, 162, 0.9);
   -webkit-transition: all 0.2s;
-  -moz-transition: all 0.2s;
   transition: all 0.2s;
 }
 
@@ -1618,6 +1649,7 @@ section#partners .card-columns .card {
   position: absolute;
   top: 50%;
   width: 100%;
+  -webkit-transform: translateY(-50%);
   transform: translateY(-50%);
   text-align: center;
 }
@@ -1684,14 +1716,17 @@ section#partners .card-columns .card {
   border-color: #3bace4;
   background-color: #fff;
   color: #3CACE4 !important;
+  -webkit-box-shadow: none;
   box-shadow: none;
 }
 
 .search-page-title .btn-search:hover:focus, .search-page-title .btn-search:not(:disabled):not(.disabled):active:focus, .search-page-title .btn-search:not(:disabled):not(.disabled).active:focus {
+  -webkit-box-shadow: none;
   box-shadow: none;
 }
 
 .search-page-title .btn-search:focus {
+  -webkit-box-shadow: none;
   box-shadow: none;
 }
 
@@ -1702,6 +1737,7 @@ section#partners .card-columns .card {
 
 .search-page-title .landing-search:focus {
   border-color: rgba(129, 178, 72, 0.7);
+  -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
   box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
 }
 
@@ -1913,6 +1949,7 @@ section#blue .btn-submit {
 
 section#blue .btn-submit:focus {
   border-color: rgba(129, 178, 72, 0.7);
+  -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
   box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
 }
 
@@ -1945,6 +1982,7 @@ section#blue .btn-submit-dmp {
 }
 
 section#blue .btn-submit-dmp:focus {
+  -webkit-box-shadow: none;
   box-shadow: none;
 }
 
@@ -2009,17 +2047,20 @@ section.molecular-submission div#ui-molecular-data-submission legend {
 
 section.molecular-submission div#ui-molecular-data-submission input:focus {
   border-color: rgba(129, 178, 72, 0.7);
+  -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
   box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
   outline-color: rgba(129, 178, 72, 0.7);
 }
 
 section.molecular-submission div#ui-molecular-data-submission select:focus {
   border-color: rgba(129, 178, 72, 0.7);
+  -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
   box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
 }
 
 section.molecular-submission div#ui-molecular-data-submission textarea:focus {
   border-color: rgba(129, 178, 72, 0.7);
+  -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
   box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
 }
 

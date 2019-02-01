@@ -1,10 +1,21 @@
 {% extends "base.html" %}
-{% block title %}{% block head_title %}{% endblock head_title %}{% endblock title %}
+{% block title %}{% block head_title %}
+{% endblock head_title %}{% endblock title %}
+
+{% block page-title %}
+
+{% endblock page-title %}
+
+{% block navigation %}
+{% endblock navigation %}
 
 {% block content %}
-<div class="row">
-  <div class="col-md-6 offset-md-3">
-    {% block inner %}{% endblock %}
-  </div>
-</div>
+    <div class="row" id="account">
+        <div class="col-md-5 offset-md-3">
+            {% block inner %}{% endblock %}
+        </div>
+    </div>
 {% endblock %}
+
+{% block footer %}
+{% endblock footer %}
