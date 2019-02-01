@@ -434,7 +434,22 @@ section#twitter i {
 
 form.pagewide-form section.sub-navi {
   margin-top: 57px;
-  padding: 1rem 0;
+  padding: .5rem 0 1rem 0;
+}
+
+form.pagewide-form section.sub-navi .nav {
+  /*
+       font-size: .8rem;
+      color: $gray-800;*/
+}
+
+form.pagewide-form section.sub-navi .nav .nav-link {
+  font-size: .85rem;
+  color: #343a40;
+}
+
+form.pagewide-form section.sub-navi .nav .active {
+  font-weight: bold;
 }
 
 form.pagewide-form .form-header-top {
