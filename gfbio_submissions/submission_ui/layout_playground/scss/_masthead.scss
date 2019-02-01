@@ -3,11 +3,12 @@ header.masthead {
   padding-top: 5rem;
   padding-bottom: calc(5rem - 57px);
   // background-image: url('../images/unsplash_grass_blue.jpeg');
-  //background-image: url('../img/unsplash_grass_green.jpeg');
+  // background-image: url('../images/unsplash_grass_bw.jpeg');
 
   //background: url('../material/images/stock_photos/jason-blackeye-295313-unsplash.jpg') top center;
-  background: url('../material/images/stock_photos/unsplash_grass3.jpg') top center;
-  background: url('../material/images/stock_photos/chuttersnap-541390-unsplash-blue.jpg') bottom center;
+  // background: url('../material/images/stock_photos/unsplash_grass3.jpg') top center;
+
+  background: url('../images/chuttersnap-541390-unsplash.jpg') center center;
 
   //background-image: url('../material/images/stock_photos/photo-1481026469463-66327c86e544-opac25.jpg');
   //background: url('../images/photo-1481026469463-66327c86e544-opac25-grey.jpg') top center;
@@ -92,6 +93,9 @@ header.masthead {
   p.landing-page-caption {
     font-weight: 400;
     font-size: .85rem;
+
+    background-color: $white-opac;
+    border-radius: 2rem;
 
     a {
       // TODO: search color harmonies
