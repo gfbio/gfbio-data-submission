@@ -154,7 +154,7 @@
 </nav>
 
 
-<form name="wrapping-form" method="post" class="pagewide-form">
+<form name="wrapping-form" method="" class="pagewide-form">
 
   <section class="sub-navi">
     <div class="container">
@@ -170,6 +170,142 @@
       </div>
     </div>
   </section>
+
+  <div class="container">
+    <div class="row">
+
+      <div class="col-md-9"><!-- left col -->
+
+
+        <header class="header header-left form-header-top">
+          <h2 class="section-title">Title</h2>
+          <p class="section-subtitle"></p>
+        </header>
+
+        <div class="form-group">
+          <input class="form-control" type="text" id="title"
+                 placeholder="Enter a title for your submission">
+        </div>
+
+
+        <header class="header header-left form-header-top">
+          <h2 class="section-title">Description</h2>
+          <p class="section-subtitle"></p>
+        </header>
+        <div class="form-group">
+          <textarea
+            class="form-control"
+            id="description"
+            rows="7"
+            placeholder="Enter some text describing your submission"></textarea>
+        </div>
+
+
+        <header class="header header-left form-header-top mb-3">
+          <h2 class="section-title">Participants</h2>
+          <p class="section-subtitle"></p>
+        </header>
+        <div class="form-group">
+          <!--<p>-->
+          <!--<button class="btn btn-primary btn-participant" type="button"-->
+          <!--data-toggle="collapse"-->
+          <!--data-target="#collapseExample" aria-expanded="false"-->
+          <!--aria-controls="collapseExample">-->
+          <!--Marc Weber-->
+          <!--</button>-->
+          <!--</p>-->
+
+          <ul class="list-inline">
+            <li class="list-inline-item">
+              <p class="participant">Participants:</p>
+            </li>
+            <li class="list-inline-item">
+              <button class="btn btn-primary btn-participant" type="button"
+                      data-toggle="collapse"
+                      data-target="#collapseExample" aria-expanded="false"
+                      aria-controls="collapseExample">
+                <i class="fa fa-bars"></i> Marc Weber
+              </button>
+            </li>
+
+            <li class="list-inline-item">
+              <button class="btn btn-primary btn-participant" type="button"
+                      data-toggle="collapse"
+                      data-target="#collapseExample2" aria-expanded="false"
+                      aria-controls="collapseExample2">
+                <i class="fa fa-plus"></i> add participant
+              </button>
+            </li>
+
+          </ul>
+
+          <div class="collapse" id="collapseExample">
+            <div class="card card-body">
+              <h5>Add Participant</h5>
+
+              <div class="form-row">
+                <div class="form-group col-md-3">
+                  <label for="firstName">First Name</label>
+                  <input type="text" class="form-control" id="firstName">
+                </div>
+                <div class="form-group col-md-3">
+                  <label for="lastName">Last Name</label>
+                  <input type="text" class="form-control" id="lastName">
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="emailAddress">Email Address</label>
+                  <input type="email" class="form-control"
+                         id="emailAddress"
+                         placeholder="name@example.com">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label for="institution">Institution (optional)</label>
+                  <input type="text" class="form-control" id="institution">
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="contribution">Contribution (optional)</label>
+                  <input type="text" class="form-control" id="contribution">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-md-2">
+                  <button
+                    class="btn btn-secondary btn-sm btn-block btn-light-blue-inverted">
+                    Cancel
+                  </button>
+                </div>
+                <div class="form-group col-md-2">
+                  <button
+                    class="btn btn-secondary btn-sm btn-block btn-light-blue-inverted">
+                    Remove
+                  </button>
+                </div>
+                <div class="form-group col-md-4"></div>
+                <div class="form-group col-md-4">
+                  <button class="btn btn-secondary btn-sm btn-block btn-light-blue">
+                    Save
+                  </button>
+                </div>
+              </div>
+
+
+            </div>
+
+          </div>
+
+
+        </div><!-- end left col -->
+
+        <div class="col-md-3"><!-- right col -->
+
+        </div><!-- end right col -->
+
+      </div><!-- end row -->
+    </div><!-- end container -->
 
 </form>
 

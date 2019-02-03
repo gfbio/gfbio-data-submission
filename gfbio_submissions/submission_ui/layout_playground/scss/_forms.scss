@@ -63,15 +63,73 @@
   }
 }
 
+// works on btn-secondary
+// TODO: refactor to generic class, light-blue button
+.btn-light-blue {
+  background-color: $gfbio-light-blue;
+  border-color: darken($gfbio-light-blue, .2);
+
+  &:hover, &:not(:disabled):not(.disabled):active,
+  &:not(:disabled):not(.disabled).active {
+    &:focus {
+      box-shadow: none;
+    }
+    border-color: darken($gfbio-light-blue, .2);
+    background-color: $white;
+    color: $gfbio-light-blue !important;
+    box-shadow: none;
+  }
+  &:focus {
+    box-shadow: none;
+  }
+  &:hover {
+    background-color: $white;
+    color: $gfbio-light-blue !important;
+  }
+}
+
+// works on btn-secondary
+// TODO: refactor to generic class, light-blue button
+.btn-light-blue-inverted {
+  //background-color: $gfbio-light-blue;
+  background-color: $white;
+  color: $gfbio-light-blue !important;
+  border-color: darken($gfbio-light-blue, .2);
+
+  &:hover, &:not(:disabled):not(.disabled):active,
+  &:not(:disabled):not(.disabled).active {
+    &:focus {
+      box-shadow: none;
+    }
+    border-color: darken($gfbio-light-blue, .2);
+    //background-color: $white;
+    //color: $gfbio-light-blue !important;
+    background-color: $gfbio-light-blue;
+    color: $white !important;
+    box-shadow: none;
+  }
+  &:focus {
+    box-shadow: none;
+  }
+  &:hover {
+    background-color: $gfbio-light-blue;
+    color: $white !important;
+  }
+}
+
 // TODO: used in forms_1.html . assuming one form around all fields to submit all fields
 //  in one action, maybe also to allow easier layouting
 // TODO: also used in submission_form_mock.html
 form.pagewide-form {
 
+  .form-group {
+    margin-bottom: 2rem;
+  }
+
   section.sub-navi {
     // TODO: hardcoded top margin to adapt for 57px floating main navigation
     margin-top: 57px;
-    padding: .5rem 0 1rem 0;
+    padding: .5rem 0 2rem 0;
 
     .nav {
 
@@ -89,11 +147,9 @@ form.pagewide-form {
         font-weight: bold;
       }
 
-
     }
 
   }
-
 
   .form-header-top {
     margin-bottom: 2rem;
@@ -109,17 +165,87 @@ form.pagewide-form {
   }
 
   .header {
-    // letter-spacing: 2px;
     letter-spacing: normal;
     border-bottom: 1px solid $gray-medium;
   }
 
   input {
+
+    &::placeholder {
+      font-size: 0.85rem;
+    }
+
     &:focus {
       border-color: $gfbio-green-0-7;
       box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
       outline-color: $gfbio-green-0-7;
     }
+
+  }
+
+  textarea {
+
+    &::placeholder {
+      font-size: 0.85rem;
+    }
+
+    &:focus {
+      border-color: $gfbio-green-0-7;
+      box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+      outline-color: $gfbio-green-0-7;
+    }
+
+  }
+
+  .participant {
+    font-size: 1rem;
+    padding-right: .5rem;
+  }
+
+  // works on btn-primary
+  .btn-participant {
+    //border-color: darken($gfbio-green, .2);
+    //background-color: $gfbio-green;
+    //color: $white !important;
+    color: $gfbio-light-blue;
+    background-color: $white;
+    border: none;
+
+    &:focus {
+      box-shadow: none;
+    }
+
+    &:hover, &:not(:disabled):not(.disabled):active,
+    &:not(:disabled):not(.disabled).active {
+      &:focus {
+        box-shadow: none;
+      }
+
+      color: $contrast-1;
+      background-color: $white;
+      border: none;
+      box-shadow: none;
+    }
+
+    i {
+      padding-right: .5rem;
+    }
+
+  }
+
+  .card {
+    // border:none;
+  }
+
+  h5 {
+    text-transform: none;
+    color: $gray-dark-2;
+    letter-spacing: normal;
+  }
+
+  label {
+    font-size: .85rem;
+    color: $gray-dark;
   }
 
   .custom-file {

@@ -432,9 +432,70 @@ section#twitter i {
   box-shadow: none;
 }
 
+.btn-light-blue {
+  background-color: #3CACE4;
+  border-color: #3bace4;
+}
+
+.btn-light-blue:hover, .btn-light-blue:not(:disabled):not(.disabled):active, .btn-light-blue:not(:disabled):not(.disabled).active {
+  border-color: #3bace4;
+  background-color: #fff;
+  color: #3CACE4 !important;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.btn-light-blue:hover:focus, .btn-light-blue:not(:disabled):not(.disabled):active:focus, .btn-light-blue:not(:disabled):not(.disabled).active:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.btn-light-blue:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.btn-light-blue:hover {
+  background-color: #fff;
+  color: #3CACE4 !important;
+}
+
+.btn-light-blue-inverted {
+  background-color: #fff;
+  color: #3CACE4 !important;
+  border-color: #3bace4;
+}
+
+.btn-light-blue-inverted:hover, .btn-light-blue-inverted:not(:disabled):not(.disabled):active, .btn-light-blue-inverted:not(:disabled):not(.disabled).active {
+  border-color: #3bace4;
+  background-color: #3CACE4;
+  color: #fff !important;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.btn-light-blue-inverted:hover:focus, .btn-light-blue-inverted:not(:disabled):not(.disabled):active:focus, .btn-light-blue-inverted:not(:disabled):not(.disabled).active:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.btn-light-blue-inverted:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.btn-light-blue-inverted:hover {
+  background-color: #3CACE4;
+  color: #fff !important;
+}
+
+form.pagewide-form .form-group {
+  margin-bottom: 2rem;
+}
+
 form.pagewide-form section.sub-navi {
   margin-top: 57px;
-  padding: .5rem 0 1rem 0;
+  padding: .5rem 0 2rem 0;
 }
 
 form.pagewide-form section.sub-navi .nav {
@@ -470,11 +531,94 @@ form.pagewide-form .header {
   border-bottom: 1px solid #ccc;
 }
 
+form.pagewide-form input::-webkit-input-placeholder {
+  font-size: 0.85rem;
+}
+
+form.pagewide-form input:-ms-input-placeholder {
+  font-size: 0.85rem;
+}
+
+form.pagewide-form input::-ms-input-placeholder {
+  font-size: 0.85rem;
+}
+
+form.pagewide-form input::placeholder {
+  font-size: 0.85rem;
+}
+
 form.pagewide-form input:focus {
   border-color: rgba(129, 178, 72, 0.7);
   -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
   box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
   outline-color: rgba(129, 178, 72, 0.7);
+}
+
+form.pagewide-form textarea::-webkit-input-placeholder {
+  font-size: 0.85rem;
+}
+
+form.pagewide-form textarea:-ms-input-placeholder {
+  font-size: 0.85rem;
+}
+
+form.pagewide-form textarea::-ms-input-placeholder {
+  font-size: 0.85rem;
+}
+
+form.pagewide-form textarea::placeholder {
+  font-size: 0.85rem;
+}
+
+form.pagewide-form textarea:focus {
+  border-color: rgba(129, 178, 72, 0.7);
+  -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
+  box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
+  outline-color: rgba(129, 178, 72, 0.7);
+}
+
+form.pagewide-form .participant {
+  font-size: 1rem;
+  padding-right: .5rem;
+}
+
+form.pagewide-form .btn-participant {
+  color: #3CACE4;
+  background-color: #fff;
+  border: none;
+}
+
+form.pagewide-form .btn-participant:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+form.pagewide-form .btn-participant:hover, form.pagewide-form .btn-participant:not(:disabled):not(.disabled):active, form.pagewide-form .btn-participant:not(:disabled):not(.disabled).active {
+  color: #FF8362;
+  background-color: #fff;
+  border: none;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+form.pagewide-form .btn-participant:hover:focus, form.pagewide-form .btn-participant:not(:disabled):not(.disabled):active:focus, form.pagewide-form .btn-participant:not(:disabled):not(.disabled).active:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+form.pagewide-form .btn-participant i {
+  padding-right: .5rem;
+}
+
+form.pagewide-form h5 {
+  text-transform: none;
+  color: #495057;
+  letter-spacing: normal;
+}
+
+form.pagewide-form label {
+  font-size: .85rem;
+  color: #666;
 }
 
 form.pagewide-form .custom-file {
