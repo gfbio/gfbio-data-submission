@@ -610,6 +610,10 @@ form.pagewide-form .btn-participant i {
   padding-right: .5rem;
 }
 
+form.pagewide-form .card .form-group {
+  margin-bottom: 1rem;
+}
+
 form.pagewide-form h5 {
   text-transform: none;
   color: #495057;
