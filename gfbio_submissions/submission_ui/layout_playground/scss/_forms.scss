@@ -74,14 +74,17 @@
     &:focus {
       box-shadow: none;
     }
+
     border-color: darken($gfbio-light-blue, .2);
     background-color: $white;
     color: $gfbio-light-blue !important;
     box-shadow: none;
   }
+
   &:focus {
     box-shadow: none;
   }
+
   &:hover {
     background-color: $white;
     color: $gfbio-light-blue !important;
@@ -101,6 +104,7 @@
     &:focus {
       box-shadow: none;
     }
+
     border-color: darken($gfbio-light-blue, .2);
     //background-color: $white;
     //color: $gfbio-light-blue !important;
@@ -108,9 +112,11 @@
     color: $white !important;
     box-shadow: none;
   }
+
   &:focus {
     box-shadow: none;
   }
+
   &:hover {
     background-color: $gfbio-light-blue;
     color: $white !important;
@@ -196,6 +202,25 @@ form.pagewide-form {
     }
 
   }
+
+  .custom-control-label {
+    font-size: 1rem;
+    color: $gray-dark;
+  }
+
+  .custom-control-input {
+    &:checked ~ .custom-control-label::before {
+      background-color: $gfbio-green;
+    }
+
+    &:focus ~ .custom-control-label::before {
+      border-color: $gfbio-green-0-7;
+      box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+      outline-color: $gfbio-green-0-7;
+    }
+
+  }
+
 
   .participant {
     font-size: 1rem;
