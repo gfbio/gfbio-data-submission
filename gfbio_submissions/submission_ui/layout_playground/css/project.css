@@ -696,6 +696,29 @@ form.pagewide-form .custom-file-input:focus ~ .custom-file-label {
   outline-color: rgba(129, 178, 72, 0.7);
 }
 
+form.pagewide-form .accordion-form-content .card {
+  border: none;
+  padding: 0;
+}
+
+form.pagewide-form .accordion-form-content .card li {
+  border: none;
+  padding: 0;
+}
+
+form.pagewide-form .accordion-form-content .card li .btn-license {
+  border: none;
+  background-color: #fff;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+  border-bottom: 1px solid #ced4da;
+  margin-bottom: 1px;
+}
+
+form.pagewide-form .accordion-form-content .card li .btn-license:hover {
+  background-color: #f8f8f8;
+}
+
 form.pagewide-form select:focus {
   border-color: rgba(129, 178, 72, 0.7);
   -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
