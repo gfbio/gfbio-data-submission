@@ -584,6 +584,7 @@ form.pagewide-form .custom-control-label {
 
 form.pagewide-form .custom-control-input:checked ~ .custom-control-label::before {
   background-color: #81B248;
+  border-color: rgba(129, 178, 72, 0.7);
 }
 
 form.pagewide-form .custom-control-input:focus ~ .custom-control-label::before {
@@ -593,23 +594,23 @@ form.pagewide-form .custom-control-input:focus ~ .custom-control-label::before {
   outline-color: rgba(129, 178, 72, 0.7);
 }
 
-form.pagewide-form .participant {
+form.pagewide-form .contributor {
   font-size: 1rem;
   padding-right: .5rem;
 }
 
-form.pagewide-form .btn-participant {
+form.pagewide-form .btn-contributor {
   color: #3CACE4;
   background-color: #fff;
   border: none;
 }
 
-form.pagewide-form .btn-participant:focus {
+form.pagewide-form .btn-contributor:focus {
   -webkit-box-shadow: none;
   box-shadow: none;
 }
 
-form.pagewide-form .btn-participant:hover, form.pagewide-form .btn-participant:not(:disabled):not(.disabled):active, form.pagewide-form .btn-participant:not(:disabled):not(.disabled).active {
+form.pagewide-form .btn-contributor:hover, form.pagewide-form .btn-contributor:not(:disabled):not(.disabled):active, form.pagewide-form .btn-contributor:not(:disabled):not(.disabled).active {
   color: #FF8362;
   background-color: #fff;
   border: none;
@@ -617,13 +618,51 @@ form.pagewide-form .btn-participant:hover, form.pagewide-form .btn-participant:n
   box-shadow: none;
 }
 
-form.pagewide-form .btn-participant:hover:focus, form.pagewide-form .btn-participant:not(:disabled):not(.disabled):active:focus, form.pagewide-form .btn-participant:not(:disabled):not(.disabled).active:focus {
+form.pagewide-form .btn-contributor:hover:focus, form.pagewide-form .btn-contributor:not(:disabled):not(.disabled):active:focus, form.pagewide-form .btn-contributor:not(:disabled):not(.disabled).active:focus {
   -webkit-box-shadow: none;
   box-shadow: none;
 }
 
-form.pagewide-form .btn-participant i {
+form.pagewide-form .btn-contributor i {
   padding-right: .5rem;
+}
+
+form.pagewide-form .btn-license {
+  background-color: #f8f8f8;
+  color: #495057;
+  border-color: #ced4da;
+}
+
+form.pagewide-form .btn-license:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+form.pagewide-form .btn-license:hover, form.pagewide-form .btn-license:not(:disabled):not(.disabled):active, form.pagewide-form .btn-license:not(:disabled):not(.disabled).active {
+  background-color: #fff;
+  color: #495057;
+  border-color: #ced4da;
+}
+
+form.pagewide-form .btn-license:hover:focus, form.pagewide-form .btn-license:not(:disabled):not(.disabled):active:focus, form.pagewide-form .btn-license:not(:disabled):not(.disabled).active:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+form.pagewide-form .btn-license:hover a, form.pagewide-form .btn-license:not(:disabled):not(.disabled):active a, form.pagewide-form .btn-license:not(:disabled):not(.disabled).active a {
+  color: #3CACE4;
+}
+
+form.pagewide-form .btn-license i {
+  padding-right: 1rem;
+}
+
+form.pagewide-form .btn-license a {
+  color: #495057;
+  font-size: .75rem;
+  text-decoration: none;
+  float: right;
+  line-height: 1.5rem;
 }
 
 form.pagewide-form .card .form-group {

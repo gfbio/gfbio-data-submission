@@ -207,7 +207,7 @@
         </header>
         <div class="form-group">
           <!--<p>-->
-          <!--<button class="btn btn-primary btn-participant" type="button"-->
+          <!--<button class="btn btn-primary btn-contributor" type="button"-->
           <!--data-toggle="collapse"-->
           <!--data-target="#collapseExample" aria-expanded="false"-->
           <!--aria-controls="collapseExample">-->
@@ -217,10 +217,10 @@
 
           <ul class="list-inline">
             <li class="list-inline-item">
-              <p class="participant">Participants:</p>
+              <p class="contributor">Contributors:</p>
             </li>
             <li class="list-inline-item">
-              <button class="btn btn-primary btn-participant" type="button"
+              <button class="btn btn-primary btn-contributor" type="button"
                       data-toggle="collapse"
                       data-target="#collapseExample" aria-expanded="false"
                       aria-controls="collapseExample">
@@ -229,11 +229,11 @@
             </li>
 
             <li class="list-inline-item">
-              <button class="btn btn-primary btn-participant" type="button"
+              <button class="btn btn-primary btn-contributor" type="button"
                       data-toggle="collapse"
                       data-target="#collapseExample" aria-expanded="false"
                       aria-controls="collapseExample">
-                <i class="fa fa-plus"></i> add participant
+                <i class="fa fa-plus"></i> add contributor
               </button>
             </li>
 
@@ -241,7 +241,7 @@
 
           <div class="collapse" id="collapseExample">
             <div class="card card-body">
-              <h5>Add Participant</h5>
+              <h5>Add Contributor</h5>
 
               <div class="form-row">
                 <div class="form-group col-md-3">
@@ -419,7 +419,7 @@
         </div>
 
         <header class="header header-left form-header-top">
-          <h2 class="section-title">Hold a comment</h2>
+          <h2 class="section-title">Add a comment</h2>
           <p class="section-subtitle">(optional)</p>
         </header>
         <div class="form-group">
@@ -435,6 +435,100 @@
 
 
       <div class="col-md-3"><!-- right col -->
+
+        <header class="header header-left form-header-top">
+          <h2 class="section-title">License</h2>
+          <p class="section-subtitle"></p>
+        </header>
+
+        <div class="form-group">
+
+          <button class="btn btn-primary btn-block btn-license text-left"
+                  type="button"
+                  data-toggle="collapse"
+                  data-target="#collapseLicense" aria-expanded="false"
+                  aria-controls="collapseLicense">
+
+
+
+            <!--<div class="d-flex justify-content-between bd-highlight mb-3">-->
+              <!--<div class="p-2 bd-highlight"><i class="fa fa-balance-scale"></i>-->
+              <!--</div>-->
+              <!--<div class="p-2 bd-highlight">CC BY 4.0</div>-->
+              <!--<div class="p-2 bd-highlight"><a-->
+                <!--class="btn btn-license-link d-flex justify-content-end"-->
+                <!--href="EDIT_LICENSE">change</a></div>-->
+            <!--</div>-->
+
+
+            <i class="fa fa-balance-scale"></i>
+            CC BY 4.0
+            <a class="license-link align-bottom" href="EDIT_LICENSE">change</a>
+
+          </button>
+
+
+          <div class="collapse" id="collapseLicense">
+            <div class="card card-body">
+              <h5>Add Participant</h5>
+
+              <div class="form-row">
+                <div class="form-group col-md-3">
+                  <label for="firstName">First Name</label>
+                  <input type="text" class="form-control" id="firstName">
+                </div>
+                <div class="form-group col-md-3">
+                  <label for="lastName">Last Name</label>
+                  <input type="text" class="form-control" id="lastName">
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="emailAddress">Email Address</label>
+                  <input type="email" class="form-control"
+                         id="emailAddress"
+                         placeholder="name@example.com">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label for="institution">Institution (optional)</label>
+                  <input type="text" class="form-control" id="institution">
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="contribution">Contribution (optional)</label>
+                  <input type="text" class="form-control" id="contribution">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-md-2">
+                  <button
+                    class="btn btn-secondary btn-sm btn-block btn-light-blue-inverted">
+                    Cancel
+                  </button>
+                </div>
+                <div class="form-group col-md-2">
+                  <button
+                    class="btn btn-secondary btn-sm btn-block btn-light-blue-inverted">
+                    Remove
+                  </button>
+                </div>
+                <div class="form-group col-md-4"></div>
+                <div class="form-group col-md-4">
+                  <button
+                    class="btn btn-secondary btn-sm btn-block btn-light-blue">
+                    Save
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+
+        </div>
+
 
       </div><!-- end right col -->
 

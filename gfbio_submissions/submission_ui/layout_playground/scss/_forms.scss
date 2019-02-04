@@ -211,6 +211,7 @@ form.pagewide-form {
   .custom-control-input {
     &:checked ~ .custom-control-label::before {
       background-color: $gfbio-green;
+      border-color: $gfbio-green-0-7;
     }
 
     &:focus ~ .custom-control-label::before {
@@ -222,13 +223,13 @@ form.pagewide-form {
   }
 
 
-  .participant {
+  .contributor {
     font-size: 1rem;
     padding-right: .5rem;
   }
 
   // works on btn-primary
-  .btn-participant {
+  .btn-contributor {
     //border-color: darken($gfbio-green, .2);
     //background-color: $gfbio-green;
     //color: $white !important;
@@ -258,9 +259,49 @@ form.pagewide-form {
 
   }
 
-  .card-body {
-    //padding: 1rem;
+
+  .btn-license {
+    background-color: $gray-100;
+    color: $gray-dark-2;
+    border-color: $gray-400;
+
+    &:focus {
+      box-shadow: none;
+    }
+
+    &:hover, &:not(:disabled):not(.disabled):active,
+    &:not(:disabled):not(.disabled).active {
+      &:focus {
+        box-shadow: none;
+      }
+
+      background-color: $white;
+      color: $gray-dark-2;
+      border-color: $gray-400;
+
+      a {
+        color: $gfbio-light-blue;
+      }
+
+    }
+
+    i {
+      padding-right: 1rem;
+    }
+
+    a {
+      color: $gray-dark-2;
+      font-size: .75rem;
+      text-decoration: none;
+      float: right;
+      line-height: 1.5rem;
+    }
+
   }
+
+  //.card-body {
+  //  //padding: 1rem;
+  //}
 
   .card {
     // border:none;
