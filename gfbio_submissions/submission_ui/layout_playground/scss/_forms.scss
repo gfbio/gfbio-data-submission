@@ -127,35 +127,35 @@
   }
 }
 
-.btn-contrast {
-  background-color: $gfbio-blue;
-  border-color: darken($contrast-1, .2);
-
-  &:hover, &:not(:disabled):not(.disabled):active,
-  &:not(:disabled):not(.disabled).active {
-    &:focus {
-      box-shadow: none;
-    }
-
-    border-color: darken($gfbio-light-blue, .2);
-    background-color: $white;
-    color: $gfbio-light-blue !important;
-    box-shadow: none;
-  }
-
-  &:focus {
-    box-shadow: none;
-  }
-
-  &:hover {
-    background-color: $white;
-    color: $gfbio-light-blue !important;
-  }
-
-  i {
-    padding-right: .5rem;
-  }
-}
+//.btn-contrast {
+//  background-color: $gfbio-blue;
+//  border-color: darken($contrast-1, .2);
+//
+//  &:hover, &:not(:disabled):not(.disabled):active,
+//  &:not(:disabled):not(.disabled).active {
+//    &:focus {
+//      box-shadow: none;
+//    }
+//
+//    border-color: darken($gfbio-light-blue, .2);
+//    background-color: $white;
+//    color: $gfbio-light-blue !important;
+//    box-shadow: none;
+//  }
+//
+//  &:focus {
+//    box-shadow: none;
+//  }
+//
+//  &:hover {
+//    background-color: $white;
+//    color: $gfbio-light-blue !important;
+//  }
+//
+//  i {
+//    padding-right: .5rem;
+//  }
+//}
 
 // TODO: used in forms_1.html . assuming one form around all fields to submit all fields
 //  in one action, maybe also to allow easier layouting

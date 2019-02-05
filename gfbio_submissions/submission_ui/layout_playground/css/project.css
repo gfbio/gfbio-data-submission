@@ -493,38 +493,6 @@ section#twitter i {
   color: #fff !important;
 }
 
-.btn-contrast {
-  background-color: #345AA2;
-  border-color: #ff8261;
-}
-
-.btn-contrast:hover, .btn-contrast:not(:disabled):not(.disabled):active, .btn-contrast:not(:disabled):not(.disabled).active {
-  border-color: #3bace4;
-  background-color: #fff;
-  color: #3CACE4 !important;
-  -webkit-box-shadow: none;
-  box-shadow: none;
-}
-
-.btn-contrast:hover:focus, .btn-contrast:not(:disabled):not(.disabled):active:focus, .btn-contrast:not(:disabled):not(.disabled).active:focus {
-  -webkit-box-shadow: none;
-  box-shadow: none;
-}
-
-.btn-contrast:focus {
-  -webkit-box-shadow: none;
-  box-shadow: none;
-}
-
-.btn-contrast:hover {
-  background-color: #fff;
-  color: #3CACE4 !important;
-}
-
-.btn-contrast i {
-  padding-right: .5rem;
-}
-
 form.pagewide-form .form-group {
   margin-bottom: 2rem;
 }
