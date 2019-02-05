@@ -460,6 +460,10 @@ section#twitter i {
   color: #3CACE4 !important;
 }
 
+.btn-light-blue i {
+  padding-right: .5rem;
+}
+
 .btn-light-blue-inverted {
   background-color: #fff;
   color: #3CACE4 !important;
@@ -487,6 +491,38 @@ section#twitter i {
 .btn-light-blue-inverted:hover {
   background-color: #3CACE4;
   color: #fff !important;
+}
+
+.btn-contrast {
+  background-color: #345AA2;
+  border-color: #ff8261;
+}
+
+.btn-contrast:hover, .btn-contrast:not(:disabled):not(.disabled):active, .btn-contrast:not(:disabled):not(.disabled).active {
+  border-color: #3bace4;
+  background-color: #fff;
+  color: #3CACE4 !important;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.btn-contrast:hover:focus, .btn-contrast:not(:disabled):not(.disabled):active:focus, .btn-contrast:not(:disabled):not(.disabled).active:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.btn-contrast:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.btn-contrast:hover {
+  background-color: #fff;
+  color: #3CACE4 !important;
+}
+
+.btn-contrast i {
+  padding-right: .5rem;
 }
 
 form.pagewide-form .form-group {
