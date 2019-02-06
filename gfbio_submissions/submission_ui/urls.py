@@ -4,7 +4,7 @@ from django.views.generic import TemplateView
 
 urlpatterns = [
     url(
-        r'submission/mock/$',
+        r'submission/mock.$',
         TemplateView.as_view(
             template_name='submission_ui/submission_mock.html'),
         name='submission_mock'
