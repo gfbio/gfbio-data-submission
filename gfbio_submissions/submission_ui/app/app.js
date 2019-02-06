@@ -37,8 +37,8 @@ import { translationMessages } from './i18n';
 const initialState = {};
 const store = configureStore(initialState, history);
 
-const MOUNT_ID = 'submission-ui';
-const MOUNT_NODE = document.getElementById('app');
+// TODO: Here the root element ID is used, set according to html container id
+const MOUNT_NODE = document.getElementById('submission-ui');
 
 const render = messages => {
   ReactDOM.render(

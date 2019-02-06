@@ -13,7 +13,9 @@ import HomePage from 'containers/HomePage/Loadable';
 import Test_1 from 'containers/Test_1/Loadable';
 import NotFoundPage from 'containers/NotFoundPage/Loadable';
 
-const urlPrefix = '/ui/test';
+// TODO: set according to root django url, full path from config/urls.py
+//  to APP/urls.py
+const urlPrefix = '/ui/submission';
 export default function App() {
   return (
     <div>
@@ -21,7 +23,7 @@ export default function App() {
         <Switch>
           <Route exact path="/" component={HomePage} />
           <Route exact path="/t1" component={Test_1} />
-          <Route component={NotFoundPage}/>
+          <Route component={NotFoundPage} />
         </Switch>
       </BrowserRouter>
     </div>

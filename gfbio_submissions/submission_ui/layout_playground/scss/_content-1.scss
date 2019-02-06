@@ -10,12 +10,12 @@
 
 .page-title-bg-blue {
     @extend .page-title;
-    background: url('../images/unsplash_grass_blue.jpeg') center center;
+    //background: url('../images/unsplash_grass_blue.jpeg') center center;
 }
 
 .page-title-bg-green {
     @extend .page-title;
-    background-image: url('../images/unsplash_grass.jpeg');
+    //background-image: url('../images/unsplash_grass.jpeg');
     background-position: center center;
 }
 
