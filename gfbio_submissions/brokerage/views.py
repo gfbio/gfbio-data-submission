@@ -18,13 +18,10 @@ from .serializers import \
     PrimaryDataFileSerializer
 
 
-# http://www.django-rest-framework.org/tutorial/3-class-based-views/
-# class SubmissionsViewSet(viewsets.ModelViewSet):
 class SubmissionsView(mixins.ListModelMixin,
                       mixins.CreateModelMixin,
                       generics.GenericAPIView):
     queryset = Submission.objects.all()
-    # serializer_class = SubmissionSerializer
     serializer_class = SubmissionDetailSerializer
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
@@ -32,19 +29,6 @@ class SubmissionsView(mixins.ListModelMixin,
                           IsOwnerOrReadOnly)
 
     def perform_create(self, serializer):
-        # submission = Submission()
-        # if 'submitting_user' in serializer.validated_data.keys():
-        #     submission.submitting_user = serializer.validated_data.get(
-        #         'submitting_user', '')
-        # submission.site = User.objects.get(username=self.request.user)
-        # submission.submission_target = serializer.validated_data.get('target',
-        #                                                              '')
-        # submission.download_url = serializer.validated_data.get(
-        #     'data', {}).get('requirements', {}).get('download_url', '')
-        # submission.submission_data = serializer.save(
-        #     site=self.request.user,
-        #     broker_submission_id=submission.broker_submission_id
-        # )
         submission = serializer.save(site=self.request.user, )
         with transaction.atomic():
             RequestLog.objects.create(
@@ -58,7 +42,6 @@ class SubmissionsView(mixins.ListModelMixin,
 
         from gfbio_submissions.brokerage.tasks import \
             trigger_submission_transfer
-        print("ADD VIEW before trigger ")
         trigger_submission_transfer.apply_async(
             kwargs={
                 'submission_id': submission.pk,
@@ -103,12 +86,7 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
             response = self.update(request, *args, **kwargs)
 
             # FIXME: updates to submission download url are not covered here
-
             # affected_submissions = instance.submission_set.filter(broker_submission_id=instance.broker_submission_id)
-            # print request.content
-            # # for sub in affected_submissions:
-            # #     sub.download_url =
-            # print instance.broker_submission_id
 
             from gfbio_submissions.brokerage.tasks import \
                 trigger_submission_transfer_for_updates
@@ -133,7 +111,6 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         instance = self.get_object()
         instance.status = Submission.CANCELLED
         instance.save()
-        # instance.submission_set.all().update(status=Submission.CANCELLED)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

@@ -65,9 +65,9 @@ class SubmissionTransferHandler(object):
         return submission
 
     @classmethod
-    def get_submisssion_and_siteconfig_for_task(cls, submission_id=None,
-                                                task=None,
-                                                get_closed_submission=False):
+    def get_submission_and_siteconfig_for_task(cls, submission_id=None,
+                                               task=None,
+                                               get_closed_submission=False):
         # TODO: Catch DoesNotExist here, so tasks will have to deal with only on type of exception
         submission = cls._get_submission(submission_id, get_closed_submission)
         if submission:
@@ -112,6 +112,7 @@ class SubmissionTransferHandler(object):
                                                   error))
                 raise error
 
+    # TODO: rename, since this is specifically for ena and pangaea (molecular)
     def setup_pre_release_chain(self):
         from gfbio_submissions.brokerage.tasks import \
             create_broker_objects_from_submission_data_task, \
@@ -127,6 +128,7 @@ class SubmissionTransferHandler(object):
             submission_id=self.submission_id).set(
             countdown=SUBMISSION_DELAY)
 
+    # TODO: better name !
     def initiate_submission_process(self, release=False, update=False):
         logger.info(
             'SubmissionTransferHandler. initiate_submission_process. '
@@ -140,7 +142,6 @@ class SubmissionTransferHandler(object):
             ''.format(update, release)
         )
         if update and release:
-            # code is only valid for these two targets (we don't have more anyways)
             if self.target_archive == ENA or self.target_archive == ENA_PANGAEA:
                 logger.info(
                     'SubmissionTransferHandler. target_archive={0} trigger '
@@ -157,6 +158,7 @@ class SubmissionTransferHandler(object):
                 submission_id=self.submission_id).set(
                 countdown=SUBMISSION_DELAY)
             if release:
+                # TODO: check for Submission Type !
                 chain = chain | self.setup_pre_release_chain()
         else:
             return None

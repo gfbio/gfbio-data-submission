@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+
+
+    <meta name="author" content="">
+
+    <title>GFBio Services</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom fonts for this template -->
+    <!-- Icons -->
+    <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet"
+          type="text/css">
+
+    <!-- TODO: consider https://github.com/linea-io/linea-scss -->
+    <link href="vendor/linea_icons/_basic/_ICONFONT/styles.css"
+          rel="stylesheet" type="text/css">
+
+    <!-- TODO: consider https://github.com/aastrong/themify-icons.scss -->
+    <link href="vendor/themify-icons/themify-icons.css" rel="stylesheet"
+          type="text/css">
+
+    <link href="https://unpkg.com/ionicons@4.2.2/dist/css/ionicons.min.css"
+          rel="stylesheet">
+
+
+    <!-- EXAMPLES FOR USAGE:
+
+        <span class="ti-download"></span>
+        <span class="ti-arrow-up"></span>
+        <i class="fa fa-4x fa-paper-plane text-primary mb-3 sr-icons"></i>
+        <span class="icon icon-basic-accelerator"></span>
+        <div class="icon icon-basic-accelerator"></div>
+
+        <i class="icon ion-md-heart"></i>
+    -->
+
+    <!-- Google Fonts -->
+    <!--
+        as google font selection:
+        https://fonts.google.com/selection?category=Serif&query=slab&selection.family=Amiri:400,400i,700,700i|Cinzel:400,700,900|Cormorant+Garamond:300,300i,400,400i,500,500i,600,600i,700,700i|Crimson+Text:400,400i,600,600i,700,700i|EB+Garamond:400,400i,500,500i,600,600i,700,700i,800,800i|Lora:400,400i,700,700i|Lustria|Merriweather:300,300i,400,400i,700,700i,900,900i|Neuton:200,300,400,400i,700,800|Open+Sans:300,300i,400,400i,600,600i,700,700i,800,800i|Raleway:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i|Roboto+Slab:100,300,400,700|Scheherazade:400,700|Slabo+13px|Slabo+27px|Zilla+Slab:300,300i,400,400i,500,500i,600,600i,700,700i
+    -->
+
+    <link href="https://fonts.googleapis.com/css?family=Amiri:400,400i,700,700i|Cinzel:400,700,900|Cormorant+Garamond:300,300i,400,400i,500,500i,600,600i,700,700i|Crimson+Text:400,400i,600,600i,700,700i|EB+Garamond:400,400i,500,500i,600,600i,700,700i,800,800i|Lora:400,400i,700,700i|Lustria|Merriweather:300,300i,400,400i,700,700i,900,900i|Neuton:200,300,400,400i,700,800|Open+Sans:300,300i,400,400i,600,600i,700,700i,800,800i|Raleway:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i|Roboto+Slab:100,300,400,700|Scheherazade:400,700|Slabo+13px|Slabo+27px|Zilla+Slab:300,300i,400,400i,500,500i,600,600i,700,700i"
+          rel="stylesheet">
+    <!--
+
+        font-family: 'Open Sans', sans-serif;
+        font-family: 'Raleway', sans-serif;
+        font-family: 'Merriweather', serif;
+        font-family: 'Lora', serif;
+        font-family: 'Crimson Text', serif;
+        font-family: 'Cinzel', serif;
+        font-family: 'Cormorant Garamond', serif;
+        font-family: 'EB Garamond', serif;
+        font-family: 'Amiri', serif;
+        font-family: 'Zilla Slab', serif;
+        font-family: 'Neuton', serif;
+        font-family: 'Lustria', serif;
+        font-family: 'Scheherazade', serif;
+        font-family: 'Slabo 13px', serif;
+        font-family: 'Slabo 27px', serif;
+        font-family: 'Roboto Slab', serif;
+
+    -->
+    <!-- Old selection below, all sizes available -->
+    <!--<link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800'
+          rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic,900,900italic'
+          rel='stylesheet' type='text/css'>
+    <link href="https://fonts.googleapis.com/css?family=Raleway:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i"
+          rel="stylesheet">-->
+
+    <!-- Plugin CSS -->
+    <link href="vendor/magnific-popup/magnific-popup.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/project.min.css" rel="stylesheet">
+
+</head>
+
+<body id="page-top">
+
+<!-- Navigation  id="mainNavBase" -> navbar always white just "mainNav" -> transparent on start  -->
+<nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+    <div class="container-fluid">
+        <a class="navbar-brand js-scroll-trigger" href="#page-top">
+            <!--<span class="blue">G</span>
+            <span class="light-blue">F</span>
+            <span class="green">B</span>io-->
+            GFBio
+            <small>Services</small>
+        </a>
+        <button class="navbar-toggler navbar-toggler-right" type="button"
+                data-toggle="collapse" data-target="#navbarResponsive"
+                aria-controls="navbarResponsive" aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link js-scroll-trigger"
+                       href="#about">About</a>
+                </li>
+
+                <!--<li class="nav-item dropdown">-->
+                <!--<a class="nav-link has-dropdown" data-toggle="dropdown"-->
+                <!--href="#" role="button" aria-haspopup="true"-->
+                <!--aria-expanded="false">Dropdown</a>-->
+                <!--<div class="dropdown-menu">-->
+                <!--<a class="dropdown-item" href="#">Action</a>-->
+                <!--<a class="dropdown-item" href="#">Another action</a>-->
+                <!--<a class="dropdown-item" href="#">Something else-->
+                <!--here</a>-->
+                <!--<div class="dropdown-divider"></div>-->
+                <!--<a class="dropdown-item" href="#">Separated link</a>-->
+                <!--</div>-->
+                <!--</li>-->
+
+                <!--<li class="nav-item">-->
+                <!--<a class="nav-link js-scroll-trigger" href="#contact">Contact</a>-->
+                <!--</li>-->
+                <li class="nav-item">
+                    <a class="nav-link btn btn-secondary btn-sm sign-up"
+                       href="#services">
+                        Sign Up
+                    </a>
+                    <!--<a class="nav-link sign" href="#">Sign Up</a>-->
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link btn btn-secondary btn-sm sign-in"
+                       href="#portfolio">
+                        Sign In
+                    </a>
+                </li>
+
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<header class="masthead text-center text-white d-flex">
+    <div class="container my-auto">
+
+        <div class="row">
+
+            <div class="col-lg-10 mx-auto">
+                <div class="row">
+                    <div class="col-sm-4 align-self-center p-0">
+                        <!-- TODO: add PNG fallback for older browsers. https://toddmotto.com/mastering-svg-use-for-a-retina-web-fallbacks-with-png-script/ -->
+                        <img class=""
+                             src="images/gfbio_logo_inkscape.ai.svg">
+                    </div>
+                    <div class="col-sm-8 align-self-center">
+                        <h1 class="text-center main">
+                            FAIR . Research . Data
+                        </h1>
+                        <h3 class="text-center m-0">
+                            <!--Data submission & publishing services-->
+                            <!--&lt;!&ndash;<br>for the biological and environmental research community&ndash;&gt;-->
+                            <!--<br> for -->
+                            Ecology, Biodiversity & Environmental Studies
+                        </h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-10 mx-auto mt-5rem">
+                <form>
+                    <div class="form-row">
+                        <div class="form-group col-md-8">
+                            <input type="text"
+                                   class="form-control landing-search"
+                                   id="landing-search-text"
+                                   placeholder="Enter a search term ... ">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <button type="submit"
+                                    class="btn btn-block btn-secondary btn-landing-search"
+                                    id="submit-search"><i
+                                    class="ti-search icon pr-2"></i>Find
+                                Data
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="col-lg-8 mx-auto mt-5">
+                <form>
+                    <div class="form-row">
+                        <div class="form-group col">
+                            <button type="submit"
+                                    class="btn btn-block btn-secondary btn-landing-search"
+                                    id="submit-data"><i
+                                    class="ti-upload icon pr-2"></i>
+                                Submit Data
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+
+
+    </div>
+
+    <!-- TODO: BUGGY ...  -->
+    <!--<a id="scroll-link" class="nav-link js-scroll-trigger bottom-link"-->
+    <!--href="#dmp">-->
+    <!--<i class="ti-angle-double-down icon"></i>-->
+    <!--&lt;!&ndash;Data Management Plans&ndash;&gt;-->
+
+    <!--</a>-->
+
+</header>
+
+<!-- Style in content-2.scss -->
+<section id="dmp" class="light-section">
+    <div class="container">
+
+        <div class="row">
+            <div class="col-sm-12">
+                <h6 class="">GFBio Data Management</h6>
+                <hr class="mb-100">
+            </div>
+        </div>
+        <!--end of row-->
+
+        <div class="row">
+
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-12">
+                        <h1>Data Management Plans</h1>
+                    </div>
+                </div>
+                <!--end of row-->
+                <div class="row mb-100">
+                    <div class="col-md-10 col-sm-12">
+                        <p class="lead">
+                            Lorem ipsum dolor sit amet, consetetur sadipscing
+                            elitr,
+                            sed diam nonumy eirmod tempor invidunt ut labore.
+                            Lorem ipsum dolor sit amet, consetetur sadipscing
+                            elitr,
+                            sed diam nonumy eirmod tempor invidunt ut labore.
+                        </p>
+                        <a class="btn btn-secondary btn-submit-dmp"
+                           href="https://www.gfbio.org/data/plan/dmpt">
+                            Create a Data Management Plan
+                        </a>
+                    </div>
+                </div>
+                <!--end of row-->
+            </div>
+
+            <div class="col-md-4">
+                <i class="ti-layout-list-thumb icon check-list"
+                   style="font-size: 6rem"></i>
+                <i class="ti-layout-list-thumb icon check-list"
+                   style="font-size: 6rem"></i>
+            </div>
+
+        </div>
+
+
+        <!--<div class="row">
+            <div class="col-md-3 col-sm-6 mb-xs-24">
+                <i class="ti-view-list-alt icon check-list"></i>
+                &lt;!&ndash;<h6 class="">Data Submission</h6>
+                <ul>
+                    <li>Medibank Private</li>
+                    <li>Fit Bit</li>
+                    <li>GoPro LTD.</li>
+                    <li>Adventours</li>
+                    <li>Airbnb</li>
+                    <li>Chemist Warehouse</li>
+                </ul>&ndash;&gt;
+            </div>
+            <div class="col-md-3 col-sm-6 mb-xs-24">
+                <i class="ti-layout-list-thumb icon check-list"></i>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-xs-24">
+                <i class="ti-pencil-alt icon check-list"></i>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-xs-24">
+                <i class="ti-check-box icon check-list"></i>
+            </div>
+        </div>-->
+        <!--end of row-->
+    </div>
+    <!--end of container-->
+</section>
+
+
+<!--<section class="bg-green" id="about2">-->
+<!--<div class="container">-->
+<!--<div class="row">-->
+<!--<div class="col-lg-10 mx-auto text-center">-->
+<!--<h2 class="section-heading text-white">GFBio-->
+<!--Services</h2>-->
+<!--<hr class="light my-4">-->
+<!--<p class="mb-4">-->
+
+<!--Every Scientist has to manage data. Each dataset is-->
+<!--different.-->
+<!--We offer a variety of services and tools to aid in the-->
+<!--process of data management, data submission, retrieval and-->
+<!--visualization.-->
+<!--Including web applications, REST APIs and curation services-->
+<!--built upon state-of-the art technologies.-->
+
+<!--</p>-->
+<!--<a class="btn btn-about"-->
+<!--href="pageWithExpl.andSignUp.html">Get Started!</a>-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+<!--</section>-->
+
+<!--<section id="partners">-->
+
+<!--<div class="container">-->
+
+<!--<div class="row">-->
+<!--<div class="col-sm-12">-->
+<!--<h6 class="">GFBio Services Partners</h6>-->
+<!--<hr class="mb-160">-->
+<!--</div>-->
+<!--</div>-->
+
+<!--<div class="row">-->
+<!--<div class="col-md-10">-->
+<!--<h1>Who is involved </h1>-->
+<!--</div>-->
+<!--</div>-->
+<!--<div class="row mb-160">-->
+<!--<div class="col-md-6 col-sm-8">-->
+<!--<p class="lead">-->
+<!--Lorem ipsum dolor sit amet, consetetur sadipscing elitr,-->
+<!--sed diam nonumy eirmod tempor invidunt ut labore.-->
+<!--</p>-->
+<!--</div>-->
+<!--</div>-->
+
+<!--<div class="card-columns">-->
+<!--<div class="card">-->
+<!--<img class="card-img" src="img/logos/awi_logo-01.png"-->
+<!--alt="Card image">-->
+<!--</div>-->
+<!--<div class="card">-->
+<!--<img class="card-img" src="img/logos/BGBM_Logo_new.png"-->
+<!--alt="Card image">-->
+<!--</div>-->
+<!--<div class="card">-->
+<!--<img class="card-img" src="img/logos/dfg_logo_blau.jpg"-->
+<!--alt="Card image">-->
+<!--</div>-->
+<!--<div class="card">-->
+<!--<img class="card-img" src="img/logos/DSMZLogo.png"-->
+<!--alt="Card image">-->
+<!--</div>-->
+<!--<div class="card">-->
+<!--<img class="card-img" src="img/logos/Friedrich_Schiller_Uni.png"-->
+<!--alt="Card image">-->
+<!--</div>-->
+
+
+<!--<div class="card">-->
+<!--<img class="card-img" src="img/logos/GWDG.png"-->
+<!--alt="Card image">-->
+<!--</div>-->
+<!--<div class="card">-->
+<!--<img class="card-img" src="img/logos/jacobs_uni_transp.png"-->
+<!--alt="Card image">-->
+<!--</div>-->
+<!--<div class="card">-->
+<!--<img class="card-img" src="img/logos/MPI-BGC.png"-->
+<!--alt="Card image">-->
+<!--</div>-->
+<!--<div class="card">-->
+<!--<img class="card-img" src="img/logos/Museum_f_Naturkunde.png"-->
+<!--alt="Card image">-->
+<!--</div>-->
+<!--<div class="card">-->
+<!--<img class="card-img"-->
+<!--src="img/logos/Partnerlogo_FreieUniversitaetBerlin.png"-->
+<!--alt="Card image">-->
+<!--</div>-->
+<!--<div class="card">-->
+<!--<img class="card-img"-->
+<!--src="img/logos/Partnerlogo_MARUM_312x100.png"-->
+<!--alt="Card image">-->
+<!--</div>-->
+<!--<div class="card">-->
+<!--<img class="card-img"-->
+<!--src="img/logos/Partnerlogo_Philipps_Uni.gif"-->
+<!--alt="Card image">-->
+<!--</div>-->
+<!--<div class="card">-->
+<!--<img class="card-img" src="img/logos/Partnerlogo_SNSB.png"-->
+<!--alt="Card image">-->
+<!--</div>-->
+
+<!--<div class="card">-->
+<!--<img class="card-img" src="img/logos/Partnerlogo_UFZ.jpg"-->
+<!--alt="Card image">-->
+<!--</div>-->
+
+
+<!--<div class="card">-->
+<!--<img class="card-img"-->
+<!--src="img/logos/Partnerlogo_Uni-Goettingen.jpg"-->
+<!--alt="Card image">-->
+<!--</div>-->
+<!--<div class="card">-->
+<!--<img class="card-img" src="img/logos/senckenberg.png"-->
+<!--alt="Card image">-->
+<!--</div>-->
+<!--<div class="card">-->
+<!--<img class="card-img" src="img/logos/SMNS.jpg"-->
+<!--alt="Card image">-->
+<!--</div>-->
+<!--<div class="card">-->
+<!--<img class="card-img" src="img/logos/SUB_Goettingen.jpg"-->
+<!--alt="Card image">-->
+<!--</div>-->
+<!--<div class="card">-->
+<!--<img class="card-img"-->
+<!--src="img/logos/uni%20leipzig%20logo_internet.gif"-->
+<!--alt="Card image">-->
+<!--</div>-->
+<!--<div class="card">-->
+<!--<img class="card-img" src="img/logos/ZFMK.png"-->
+<!--alt="Card image">-->
+<!--</div>-->
+
+
+<!--</div>-->
+
+<!--</div>-->
+
+
+<!--</section>-->
+<!-- Style in content-2.scss -->
+<!--<section class="bg-dark dark-section" id="">
+    <div class="container">
+
+        <div class="row">
+            <div class="col-sm-12">
+                <h6 class="">GFBio Services</h6>
+                <hr class="mb-160">
+            </div>
+        </div>
+        &lt;!&ndash;end of row&ndash;&gt;
+
+        <div class="row">
+            <div class="col-md-10">
+                <h1>What we offer</h1>
+            </div>
+        </div>
+        &lt;!&ndash;end of row&ndash;&gt;
+
+        <div class="row mb-160">
+            <div class="col-md-6 col-sm-8">
+                <p class="lead">
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed
+                    diam nonumy eirmod tempor invidunt ut labore.
+                </p>
+            </div>
+        </div>
+
+        &lt;!&ndash;end of row&ndash;&gt;
+        <div class="row">
+            <div class="col-md-3 col-sm-6 mb-xs-24">
+                <i class="ti-pulse icon"></i>
+                <h6 class="">Health Monitoring</h6>
+                <ul>
+                    <li>Medibank Private</li>
+                    <li>Fit Bit</li>
+                    <li>GoPro LTD.</li>
+                    <li>Adventours</li>
+                    <li>Airbnb</li>
+                    <li>Chemist Warehouse</li>
+                </ul>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-xs-24">
+                <i class="ti-map-alt icon mb32"></i>
+                <h6 class="">Location Services</h6>
+                <ul>
+                    <li>Find My iPhone</li>
+                    <li>FourSquare</li>
+                    <li>Periscope</li>
+                    <li>Crackle</li>
+                    <li>Urban Spoon</li>
+                    <li>Yelp</li>
+                </ul>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-xs-24">
+                <i class="ti-mobile icon mb32"></i>
+                <h6 class="">Social Data</h6>
+                <ul>
+                    <li>Life Invader</li>
+                    <li>Twitter</li>
+                    <li>Google AdWords</li>
+                    <li>Track My Day</li>
+                    <li>SocialScape</li>
+                    <li>Tinder</li>
+                </ul>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-xs-24">
+                <i class="ti-harddrives icon mb32"></i>
+                <h6 class="">Cloud Enterprise</h6>
+                <ul>
+                    <li>Box</li>
+                    <li>Sunny Cloudy</li>
+                    <li>Cumulii</li>
+                    <li>Precipitatr</li>
+                    <li>Nimb.us</li>
+                </ul>
+            </div>
+        </div>
+        &lt;!&ndash;end of row&ndash;&gt;
+    </div>
+    &lt;!&ndash;end of container&ndash;&gt;
+</section>-->
+
+<!-- ------------------------------------------------------------ -->
+<!--<section class="container">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="feature">
+                <h3>
+                    &lt;!&ndash; etline &ndash;&gt;
+                    <i class="etl-upload"></i>
+                    Submit to just the right Archives
+                </h3>
+                <p>
+                    Lorem ipsum dolor sit amet, consetetur
+                    sadipscing
+                    elitr,
+                    sed diam nonumy eirmod tempor invidunt ut
+                    labore.
+                </p>
+                <a href="#">
+                    Learn more
+                </a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="feature">
+                <h3>
+                    &lt;!&ndash;<img src="images/icons/outline-color-support.png"/>&ndash;&gt;
+                    <i class="etl-key"></i>
+                    Fully compliant to FAIR principles
+
+                </h3>
+                <p>
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr,
+                    sed diam nonumy eirmod tempor invidunt ut labore.
+                </p>
+                <a href="#">
+                    Learn more
+                </a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="feature">
+                <h3>
+                    &lt;!&ndash;<img src="images/icons/outline-color-random.png"&ndash;&gt;
+                    &lt;!&ndash;style="top:6px;"/>&ndash;&gt;
+                    <i class="etl-pencil"></i>
+                    Curation & <br>Stewardship
+
+                </h3>
+                <p>
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr,
+                    sed diam nonumy eirmod tempor invidunt ut labore.
+                </p>
+                <a href="#">
+                    Learn more
+                </a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="feature">
+                <h3>
+                    &lt;!&ndash;<img src="images/icons/outline-color-pen.png"&ndash;&gt;
+                    &lt;!&ndash;style="top:6px;"/>&ndash;&gt;
+                    <i class="etl-beaker"></i>
+                    Suitable for Institutions and Researchers
+                </h3>
+                <p>
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr,
+                    sed diam nonumy eirmod tempor invidunt ut labore.
+                </p>
+                <a href="#">
+                    Learn more
+                </a>
+            </div>
+        </div>
+    </div>
+</section>-->
+
+<!-- ------------------------------------------------------------ -->
+
+<!--<section id="content-1">-->
+<!--<div class="container">-->
+<!--<div class="row">-->
+<!--<div class="col-sm-5">-->
+<!--<h4 class="">DIVERSITY & DIFFERENCE</h4>-->
+<!--<p>-->
+<!--Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed-->
+<!--do eiusmod tempor incididunt ut labore et dolore magna-->
+<!--aliqua. Ut enim ad minim veniam, quis nostrud exercitation-->
+<!--ullamco laboris nisi ut aliquip ex ea commodo consequat.-->
+<!--Duis aute irure dolor in reprehenderit in voluptate velit-->
+<!--esse cillum dolore eu fugiat nulla pariatur. Excepteur sint-->
+<!--occaecat cupidatat non proident.-->
+<!--</p>-->
+<!--</div>-->
+<!--<div class="col-sm-7">-->
+<!--<h4 class="">DIVERSITY & DIFFERENCE</h4>-->
+<!--<p>-->
+<!--Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed-->
+<!--do eiusmod tempor incididunt ut labore et dolore magna-->
+<!--aliqua. Ut enim ad minim veniam, quis nostrud exercitation-->
+<!--ullamco laboris nisi ut aliquip ex ea commodo consequat.-->
+<!--Duis aute irure dolor in reprehenderit in voluptate velit-->
+<!--esse cillum dolore eu fugiat nulla pariatur. Excepteur sint-->
+<!--occaecat cupidatat non proident.-->
+<!--</p>-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+<!--</section>-->
+
+<!--<section id="content-2">-->
+<!--<div class="container">-->
+<!--<div class="row">-->
+
+<!--<div class="col-md-9">-->
+<!--<h1>CONTENT HERE</h1>-->
+<!--</div>-->
+
+<!--<div class="col-md-3 hidden-sm">-->
+
+<!--<div class="side-col-item">-->
+<!--<h6 class="title">Search</h6>-->
+<!--<hr/>-->
+<!--&lt;!&ndash; TODO: style forms &ndash;&gt;-->
+<!--<form>-->
+<!--<input class="" type="text" placeholder="Type Here">-->
+<!--</form>-->
+<!--</div>-->
+
+<!--<div class="side-col-item">-->
+<!--<h6 class="title">About the author</h6>-->
+<!--<hr/>-->
+<!--<p>-->
+<!--Sed ut perspiciatis unde omnis iste natus error sit-->
+<!--voluptatem-->
+<!--antium doloremque laudantium, totam rem aperiam, eaque-->
+<!--ipsa-->
+<!--quae.-->
+<!--</p>-->
+<!--</div>-->
+
+<!--<div class="side-col-item">-->
+<!--<h6 class="title">About the author</h6>-->
+<!--<hr/>-->
+<!--<p>-->
+<!--Sed ut perspiciatis unde omnis iste natus error sit-->
+<!--voluptatem-->
+<!--antium doloremque laudantium, totam rem aperiam, eaque-->
+<!--ipsa-->
+<!--quae.-->
+<!--</p>-->
+<!--</div>-->
+
+<!--<div class="side-col-item">-->
+<!--<h6 class="title">About the author</h6>-->
+<!--<hr/>-->
+<!--<p>-->
+<!--Sed ut perspiciatis unde omnis iste natus error sit-->
+<!--voluptatem-->
+<!--antium doloremque laudantium, totam rem aperiam, eaque-->
+<!--ipsa-->
+<!--quae.-->
+<!--</p>-->
+<!--</div>-->
+
+<!--</div>-->
+
+<!--</div>-->
+<!--</div>-->
+<!--</section>-->
+
+
+<!-- Style in content-2.scss -->
+<!--<section class="bg-dark dark-section">-->
+<!--<div class="container">-->
+
+<!--<div class="row">-->
+<!--<div class="col-sm-12">-->
+<!--<h6 class="">Portfolio Sectors</h6>-->
+<!--<hr class="mb-160">-->
+<!--</div>-->
+<!--</div>-->
+<!--&lt;!&ndash;end of row&ndash;&gt;-->
+
+<!--<div class="row">-->
+<!--<div class="col-md-10">-->
+<!--<h1>Focussed, Diverse, Disruptive.</h1>-->
+<!--</div>-->
+<!--</div>-->
+<!--&lt;!&ndash;end of row&ndash;&gt;-->
+
+<!--<div class="row mb-160">-->
+<!--<div class="col-md-6 col-sm-8">-->
+<!--<p class="lead">-->
+<!--Foundry maintains a portfolio spanning multiple sectors.-->
+<!--Disruptive technology is our unifying theme.-->
+<!--</p>-->
+<!--</div>-->
+<!--</div>-->
+
+<!--&lt;!&ndash;end of row&ndash;&gt;-->
+<!--<div class="row">-->
+<!--<div class="col-md-3 col-sm-6 mb-xs-24">-->
+<!--<i class="ti-pulse icon"></i>-->
+<!--<h6 class="">Health Monitoring</h6>-->
+<!--<ul>-->
+<!--<li>Medibank Private</li>-->
+<!--<li>Fit Bit</li>-->
+<!--<li>GoPro LTD.</li>-->
+<!--<li>Adventours</li>-->
+<!--<li>Airbnb</li>-->
+<!--<li>Chemist Warehouse</li>-->
+<!--</ul>-->
+<!--</div>-->
+<!--<div class="col-md-3 col-sm-6 mb-xs-24">-->
+<!--<i class="ti-map-alt icon mb32"></i>-->
+<!--<h6 class="">Location Services</h6>-->
+<!--<ul>-->
+<!--<li>Find My iPhone</li>-->
+<!--<li>FourSquare</li>-->
+<!--<li>Periscope</li>-->
+<!--<li>Crackle</li>-->
+<!--<li>Urban Spoon</li>-->
+<!--<li>Yelp</li>-->
+<!--</ul>-->
+<!--</div>-->
+<!--<div class="col-md-3 col-sm-6 mb-xs-24">-->
+<!--<i class="ti-mobile icon mb32"></i>-->
+<!--<h6 class="">Social Data</h6>-->
+<!--<ul>-->
+<!--<li>Life Invader</li>-->
+<!--<li>Twitter</li>-->
+<!--<li>Google AdWords</li>-->
+<!--<li>Track My Day</li>-->
+<!--<li>SocialScape</li>-->
+<!--<li>Tinder</li>-->
+<!--</ul>-->
+<!--</div>-->
+<!--<div class="col-md-3 col-sm-6 mb-xs-24">-->
+<!--<i class="ti-harddrives icon mb32"></i>-->
+<!--<h6 class="">Cloud Enterprise</h6>-->
+<!--<ul>-->
+<!--<li>Box</li>-->
+<!--<li>Sunny Cloudy</li>-->
+<!--<li>Cumulii</li>-->
+<!--<li>Precipitatr</li>-->
+<!--<li>Nimb.us</li>-->
+<!--</ul>-->
+<!--</div>-->
+<!--</div>-->
+<!--&lt;!&ndash;end of row&ndash;&gt;-->
+<!--</div>-->
+<!--&lt;!&ndash;end of container&ndash;&gt;-->
+<!--</section>-->
+
+<!--<section id="services">-->
+<!--<div class="container">-->
+<!--<div class="row">-->
+<!--<div class="col-lg-12 text-center">-->
+<!--<h2 class="section-heading">At Your Service</h2>-->
+<!--<hr class="my-4">-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+<!--<div class="container">-->
+<!--<div class="row">-->
+<!--<div class="col-lg-3 col-md-6 text-center">-->
+<!--<div class="service-box mt-5 mx-auto">-->
+<!--<i class="fa fa-4x fa-diamond text-primary mb-3 sr-icons"></i>-->
+<!--<h3 class="mb-3">Sturdy Templates</h3>-->
+<!--<p class="text-muted mb-0">Our templates are updated-->
+<!--regularly so they don't break.</p>-->
+<!--</div>-->
+<!--</div>-->
+<!--<div class="col-lg-3 col-md-6 text-center">-->
+<!--<div class="service-box mt-5 mx-auto">-->
+<!--<i class="fa fa-4x fa-paper-plane text-primary mb-3 sr-icons"></i>-->
+<!--<h3 class="mb-3">Ready to Ship</h3>-->
+<!--<p class="text-muted mb-0">You can use this theme as is, or-->
+<!--you can make changes!</p>-->
+<!--</div>-->
+<!--</div>-->
+<!--<div class="col-lg-3 col-md-6 text-center">-->
+<!--<div class="service-box mt-5 mx-auto">-->
+<!--<i class="fa fa-4x fa-newspaper-o text-primary mb-3 sr-icons"></i>-->
+<!--<h3 class="mb-3">Up to Date</h3>-->
+<!--<p class="text-muted mb-0">We update dependencies to keep-->
+<!--things fresh.</p>-->
+<!--</div>-->
+<!--</div>-->
+<!--<div class="col-lg-3 col-md-6 text-center">-->
+<!--<div class="service-box mt-5 mx-auto">-->
+<!--<i class="fa fa-4x fa-heart text-primary mb-3 sr-icons"></i>-->
+<!--<h3 class="mb-3">Made with Love</h3>-->
+<!--<p class="text-muted mb-0">You have to make your websites-->
+<!--with love these days!</p>-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+<!--</section>-->
+
+<!--<section class="p-0" id="portfolio">-->
+<!--<div class="container-fluid p-0">-->
+<!--<div class="row no-gutters popup-gallery">-->
+<!--<div class="col-lg-4 col-sm-6">-->
+<!--<a class="portfolio-box" href="img/portfolio/fullsize/1.jpg">-->
+<!--<img class="img-fluid" src="img/portfolio/thumbnails/1.jpg"-->
+<!--alt="">-->
+<!--<div class="portfolio-box-caption">-->
+<!--<div class="portfolio-box-caption-content">-->
+<!--<div class="project-category text-faded">-->
+<!--Category-->
+<!--</div>-->
+<!--<div class="project-name">-->
+<!--Project Name-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+<!--</a>-->
+<!--</div>-->
+<!--<div class="col-lg-4 col-sm-6">-->
+<!--<a class="portfolio-box" href="img/portfolio/fullsize/2.jpg">-->
+<!--<img class="img-fluid" src="img/portfolio/thumbnails/2.jpg"-->
+<!--alt="">-->
+<!--<div class="portfolio-box-caption">-->
+<!--<div class="portfolio-box-caption-content">-->
+<!--<div class="project-category text-faded">-->
+<!--Category-->
+<!--</div>-->
+<!--<div class="project-name">-->
+<!--Project Name-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+<!--</a>-->
+<!--</div>-->
+<!--<div class="col-lg-4 col-sm-6">-->
+<!--<a class="portfolio-box" href="img/portfolio/fullsize/3.jpg">-->
+<!--<img class="img-fluid" src="img/portfolio/thumbnails/3.jpg"-->
+<!--alt="">-->
+<!--<div class="portfolio-box-caption">-->
+<!--<div class="portfolio-box-caption-content">-->
+<!--<div class="project-category text-faded">-->
+<!--Category-->
+<!--</div>-->
+<!--<div class="project-name">-->
+<!--Project Name-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+<!--</a>-->
+<!--</div>-->
+<!--<div class="col-lg-4 col-sm-6">-->
+<!--<a class="portfolio-box" href="img/portfolio/fullsize/4.jpg">-->
+<!--<img class="img-fluid" src="img/portfolio/thumbnails/4.jpg"-->
+<!--alt="">-->
+<!--<div class="portfolio-box-caption">-->
+<!--<div class="portfolio-box-caption-content">-->
+<!--<div class="project-category text-faded">-->
+<!--Category-->
+<!--</div>-->
+<!--<div class="project-name">-->
+<!--Project Name-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+<!--</a>-->
+<!--</div>-->
+<!--<div class="col-lg-4 col-sm-6">-->
+<!--<a class="portfolio-box" href="img/portfolio/fullsize/5.jpg">-->
+<!--<img class="img-fluid" src="img/portfolio/thumbnails/5.jpg"-->
+<!--alt="">-->
+<!--<div class="portfolio-box-caption">-->
+<!--<div class="portfolio-box-caption-content">-->
+<!--<div class="project-category text-faded">-->
+<!--Category-->
+<!--</div>-->
+<!--<div class="project-name">-->
+<!--Project Name-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+<!--</a>-->
+<!--</div>-->
+<!--<div class="col-lg-4 col-sm-6">-->
+<!--<a class="portfolio-box" href="img/portfolio/fullsize/6.jpg">-->
+<!--<img class="img-fluid" src="img/portfolio/thumbnails/6.jpg"-->
+<!--alt="">-->
+<!--<div class="portfolio-box-caption">-->
+<!--<div class="portfolio-box-caption-content">-->
+<!--<div class="project-category text-faded">-->
+<!--Category-->
+<!--</div>-->
+<!--<div class="project-name">-->
+<!--Project Name-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+<!--</a>-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+<!--</section>-->
+
+<!--<section class="bg-dark text-white">-->
+<!--<div class="container text-center">-->
+<!--<h2 class="mb-4">Free Download at Start Bootstrap!</h2>-->
+<!--<a class="btn btn-light btn-xl sr-button"-->
+<!--href="http://startbootstrap.com/template-overviews/creative/">Download-->
+<!--Now!</a>-->
+<!--</div>-->
+<!--</section>-->
+
+<!--<section id="contact">-->
+<!--<div class="container">-->
+<!--<div class="row">-->
+<!--<div class="col-lg-8 mx-auto text-center">-->
+<!--<h2 class="section-heading">Let's Get In Touch!</h2>-->
+<!--<hr class="my-4">-->
+<!--<p class="mb-5">Ready to start your next project with us? That's-->
+<!--great! Give us a call or send us an email and we will get-->
+<!--back to you as soon as possible!</p>-->
+<!--</div>-->
+<!--</div>-->
+<!--<div class="row">-->
+<!--<div class="col-lg-4 ml-auto text-center">-->
+<!--<i class="fa fa-phone fa-3x mb-3 sr-contact"></i>-->
+<!--<p>123-456-6789</p>-->
+<!--</div>-->
+<!--<div class="col-lg-4 mr-auto text-center">-->
+<!--<i class="fa fa-envelope-o fa-3x mb-3 sr-contact"></i>-->
+<!--<p>-->
+<!--<a href="mailto:your-email@your-domain.com">feedback@startbootstrap.com</a>-->
+<!--</p>-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+<!--</section>-->
+<section>
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <h1 class="text-center"> add footer, then it's done</h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-2">
+                <a href="https://www.gfbio.org/">GFBio main site</a>
+            </div>
+            <div class="col-sm-2">
+                <a href="https://www.gfbio.org/about/legal-notice">Legal Notice</a>
+            </div>
+            <div class="col-sm-2">
+                <a href="https://www.gfbio.org/about/privacy-policy">Privacy Policy</a>
+            </div>
+            <div class="col-sm-2">
+                <a href="https://twitter.com/GFBio_Project">Twitter</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Bootstrap core JavaScript -->
+<script src="vendor/jquery/jquery.min.js"></script>
+<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<!-- Plugin JavaScript -->
+<script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+<script src="vendor/scrollreveal/scrollreveal.min.js"></script>
+<script src="vendor/magnific-popup/jquery.magnific-popup.min.js"></script>
+
+<!-- Custom scripts for this template -->
+<script src="js/project.min.js"></script>
+</body>
+
+</html>

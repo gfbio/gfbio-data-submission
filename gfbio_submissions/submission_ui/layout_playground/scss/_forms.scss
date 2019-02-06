@@ -1,0 +1,412 @@
+.col-form-label {
+  // @include raleway;
+  font-size: .9rem;
+}
+
+// works on btn-secondary
+.green-blue {
+  background-color: $gfbio-green;
+  color: $white !important;
+
+  &:focus {
+    box-shadow: none;
+  }
+
+  &:hover {
+    background-color: $gfbio-blue;
+    color: $white !important;
+  }
+}
+
+// works on btn-secondary
+.blue-green {
+  background-color: $gfbio-blue;
+  color: $white !important;
+
+  &:focus {
+    box-shadow: none;
+  }
+
+  &:hover {
+    background-color: $gfbio-green;
+    color: $white !important;
+  }
+}
+
+.boxed {
+  padding: 2rem;
+  background-color: $white;
+  border: 1px solid $gray-medium;
+  border-radius: .25rem;
+}
+
+// works on btn-secondary
+.green {
+  border-color: darken($gfbio-green, .2);
+  background-color: $gfbio-green;
+  color: $white !important;
+
+  &:focus {
+    box-shadow: none;
+  }
+
+  &:hover, &:not(:disabled):not(.disabled):active,
+  &:not(:disabled):not(.disabled).active {
+    &:focus {
+      box-shadow: none;
+    }
+
+    border-color: darken($gfbio-green, .2);
+    background-color: $white;
+    color: $gfbio-green !important;
+    box-shadow: none;
+  }
+}
+
+// works on btn-secondary
+// TODO: refactor to generic class, light-blue button
+.btn-light-blue {
+  background-color: $gfbio-light-blue;
+  border-color: darken($gfbio-light-blue, .2);
+
+  &:hover, &:not(:disabled):not(.disabled):active,
+  &:not(:disabled):not(.disabled).active {
+    &:focus {
+      box-shadow: none;
+    }
+
+    border-color: darken($gfbio-light-blue, .2);
+    background-color: $white;
+    color: $gfbio-light-blue !important;
+    box-shadow: none;
+  }
+
+  &:focus {
+    box-shadow: none;
+  }
+
+  &:hover {
+    background-color: $white;
+    color: $gfbio-light-blue !important;
+  }
+
+  i {
+    padding-right: .5rem;
+  }
+}
+
+// works on btn-secondary
+// TODO: refactor to generic class, light-blue button
+.btn-light-blue-inverted {
+  //background-color: $gfbio-light-blue;
+  background-color: $white;
+  color: $gfbio-light-blue !important;
+  border-color: darken($gfbio-light-blue, .2);
+
+  &:hover, &:not(:disabled):not(.disabled):active,
+  &:not(:disabled):not(.disabled).active {
+    &:focus {
+      box-shadow: none;
+    }
+
+    border-color: darken($gfbio-light-blue, .2);
+    //background-color: $white;
+    //color: $gfbio-light-blue !important;
+    background-color: $gfbio-light-blue;
+    color: $white !important;
+    box-shadow: none;
+  }
+
+  &:focus {
+    box-shadow: none;
+  }
+
+  &:hover {
+    background-color: $gfbio-light-blue;
+    color: $white !important;
+  }
+}
+
+//.btn-contrast {
+//  background-color: $gfbio-blue;
+//  border-color: darken($contrast-1, .2);
+//
+//  &:hover, &:not(:disabled):not(.disabled):active,
+//  &:not(:disabled):not(.disabled).active {
+//    &:focus {
+//      box-shadow: none;
+//    }
+//
+//    border-color: darken($gfbio-light-blue, .2);
+//    background-color: $white;
+//    color: $gfbio-light-blue !important;
+//    box-shadow: none;
+//  }
+//
+//  &:focus {
+//    box-shadow: none;
+//  }
+//
+//  &:hover {
+//    background-color: $white;
+//    color: $gfbio-light-blue !important;
+//  }
+//
+//  i {
+//    padding-right: .5rem;
+//  }
+//}
+
+// TODO: used in forms_1.html . assuming one form around all fields to submit all fields
+//  in one action, maybe also to allow easier layouting
+// TODO: also used in submission_form_mock.html
+form.pagewide-form {
+
+  .form-group {
+    margin-bottom: 2rem;
+  }
+
+  section.sub-navi {
+    // TODO: hardcoded top margin to adapt for 57px floating main navigation
+    margin-top: 57px;
+    padding: .5rem 0 2rem 0;
+
+    .nav {
+
+      /*
+       font-size: .8rem;
+      color: $gray-800;*/
+
+      .nav-link {
+        font-size: .85rem;
+        color: $gray-800;
+
+      }
+
+      .active {
+        font-weight: bold;
+      }
+
+    }
+
+  }
+
+  .form-header-top {
+    margin-bottom: 2rem;
+  }
+
+  .form-header {
+    margin: 2rem 0;
+  }
+
+  .section-title {
+    text-transform: none;
+    color: $gray-dark-2;
+  }
+
+  .header {
+    letter-spacing: normal;
+    border-bottom: 1px solid $gray-medium;
+  }
+
+  input {
+
+    &::placeholder {
+      font-size: 0.85rem;
+    }
+
+    &:focus {
+      border-color: $gfbio-green-0-7;
+      box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+      outline-color: $gfbio-green-0-7;
+    }
+
+  }
+
+  textarea {
+
+    &::placeholder {
+      font-size: 0.85rem;
+    }
+
+    &:focus {
+      border-color: $gfbio-green-0-7;
+      box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+      outline-color: $gfbio-green-0-7;
+    }
+
+  }
+
+  .custom-control-label {
+    font-size: 1rem;
+    color: $gray-dark;
+  }
+
+  .custom-control-input {
+    &:checked ~ .custom-control-label::before {
+      background-color: $gfbio-green;
+      border-color: $gfbio-green-0-7;
+    }
+
+    &:focus ~ .custom-control-label::before {
+      border-color: $gfbio-green-0-7;
+      box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+      outline-color: $gfbio-green-0-7;
+    }
+
+  }
+
+
+  .contributor {
+    font-size: 1rem;
+    padding-right: .5rem;
+  }
+
+  // works on btn-primary
+  .btn-contributor {
+    //border-color: darken($gfbio-green, .2);
+    //background-color: $gfbio-green;
+    //color: $white !important;
+    color: $gfbio-light-blue;
+    background-color: $white;
+    border: none;
+
+    &:focus {
+      box-shadow: none;
+    }
+
+    &:hover, &:not(:disabled):not(.disabled):active,
+    &:not(:disabled):not(.disabled).active {
+      &:focus {
+        box-shadow: none;
+      }
+
+      color: $contrast-1;
+      background-color: $white;
+      border: none;
+      box-shadow: none;
+    }
+
+    i {
+      padding-right: .5rem;
+    }
+
+  }
+
+
+  .btn-license {
+    background-color: $gray-100;
+    color: $gray-dark-2;
+    border-color: $gray-400;
+
+    &:focus {
+      box-shadow: none;
+    }
+
+    &:hover, &:not(:disabled):not(.disabled):active,
+    &:not(:disabled):not(.disabled).active {
+      &:focus {
+        box-shadow: none;
+      }
+
+      background-color: $white;
+      color: $gray-dark-2;
+      border-color: $gray-400;
+
+      a {
+        color: $gfbio-light-blue;
+      }
+
+    }
+
+    i {
+      padding-right: 1rem;
+    }
+
+    a {
+      color: $gray-dark-2;
+      font-size: .75rem;
+      text-decoration: none;
+      float: right;
+      line-height: 1.5rem;
+    }
+
+  }
+
+  //.card-body {
+  //  //padding: 1rem;
+  //}
+
+  .card {
+    // border:none;
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+  }
+
+  h5 {
+    text-transform: none;
+    color: $gray-dark-2;
+    letter-spacing: normal;
+  }
+
+  label {
+    font-size: .85rem;
+    color: $gray-dark;
+  }
+
+  .custom-file {
+    outline-color: $gfbio-green-0-7;
+  }
+
+  .custom-file-input:focus ~ .custom-file-label::after {
+    outline-color: $gfbio-green-0-7;
+    border-left-color: $gfbio-green-0-7;
+  }
+
+  .custom-file-input:focus ~ .custom-file-label {
+    border-color: $gfbio-green-0-7;
+    box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+    outline-color: $gfbio-green-0-7;
+  }
+
+  .accordion-form-content {
+
+    .card {
+      border: none;
+      padding: 0;
+
+      li {
+        border: none;
+        padding: 0;
+
+        .btn-license {
+          border: none;
+          //border-radius: 0;
+          background-color: $white;
+          border-bottom-right-radius: 0;
+          border-bottom-left-radius: 0;
+          border-bottom: 1px solid $gray-400;
+          margin-bottom: 1px;
+
+          &:hover {
+            background-color: $gray-100;
+          }
+
+        }
+
+      }
+    }
+
+  }
+
+  select {
+    &:focus {
+      border-color: $gfbio-green-0-7;
+      box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+    }
+  }
+
+}

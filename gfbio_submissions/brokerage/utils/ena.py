@@ -637,7 +637,7 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data):
         except RequestLog.DoesNotExist:
             logger.error('No incoming request for submission_id {}'.format(
                 submission.broker_submission_id))
-        site_user = submission.submitting_user if submission.submitting_user is not None else '',
+        site_user = submission.submitting_user if submission.submitting_user is not None else ''
         req_log = RequestLog(
             request_id=outgoing_request_id,
             type=RequestLog.OUTGOING,
@@ -699,28 +699,6 @@ def parse_ena_submission_response(response_content=''):
     return res
 
 
-# TODO: decouple GCDJ ...
-# def gcdj_webservice_validation(sample_data):
-#     sample_msg = 'Gcdj error(s) in sample with title \'{0}\''.format(
-#         sample_data.get('sample_title', ''))
-#     gcdjson = sample_data.get('gcdjson', {})
-#     checklist = gcdjson.get('checklist', '')
-#     package = gcdjson.get('package', '')
-#
-#     # requestlog: no -> submission/bsi  ?
-#     # TODO: add requestlog once this method is used again
-#     response = requests.post(
-#         url=GCDJ_VALIDATION_URL.format(
-#             BASE_HOST_NAME, checklist, package),
-#         data={'gcdjson': json.dumps(gcdjson)}
-#     )
-#
-#     content = json.loads(response.content)
-#     gcdj_valid = content.get('gcdj_valid')
-#     gcdj_errors = content.get('errors', [])
-#     return sample_msg, gcdj_valid, gcdj_errors
-
-
 def validate_sample_data(json_data):
     try:
         with open(os.path.join(settings.STATIC_ROOT,
@@ -741,17 +719,6 @@ def validate_sample_data(json_data):
             for error in validator.iter_errors(json_data)
         ]
     else:
-        # TODO: decouple GCDJ ...
-        # gcdj_errors = []
-        # for s in json_data.get('samples', {}):
-        #     if 'gcdjson' in s.keys():
-        #         title, valid, errors = gcdj_webservice_validation(s)
-        #         if not valid:
-        #             gcdj_errors.append((title, errors))
-        #
-        # if len(gcdj_errors) > 0:
-        #     return False, gcdj_errors
-        # else:
         return True, []
 
 

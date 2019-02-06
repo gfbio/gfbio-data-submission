@@ -6,7 +6,7 @@ settings = {}
 BASE_HOST_NAME = getattr(
     settings,
     'BASE_HOST_NAME',
-    'c103-171.cloud.gwdg.de'
+    'submission.gfbio.org'
 )
 
 BASIC_TYPE = getattr(
@@ -103,6 +103,13 @@ ENA_PANGAEA = getattr(
     'ENA_PANGAEA',
     'ENA_PANGAEA'
 )
+
+GENERIC = getattr(
+    settings,
+    'GENERIC',
+    'GENERIC'
+)
+
 
 HELPDESK_API_SUB_URL = getattr(
     settings,
@@ -219,4 +226,10 @@ STATIC_ENA_REQUIREMENTS_LOCATION = getattr(
     settings,
     'STATIC_ENA_REQUIREMENTS_LOCATION',
     'schemas/ena_requirements.json'
+)
+
+STATIC_GENERIC_REQUIREMENTS_LOCATION = getattr(
+    settings,
+    'STATIC_GENERIC_REQUIREMENTS_LOCATION',
+    'schemas/gfbio_generic_requirements.json'
 )

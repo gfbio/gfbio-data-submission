@@ -1,0 +1,53 @@
+{
+    "requirements": {
+        "title": "123456",
+        "description": "123456",
+        "study_type": "Metagenomics",
+        "samples": [
+            {
+                "sample_alias": "sample1",
+                "sample_title": "stitle",
+                "taxon_id": 1234
+            },
+            {
+                "sample_alias": "sample2",
+                "sample_title": "stitleagain",
+                "taxon_id": 1234
+            }
+        ],
+        "experiments": [
+            {
+                "experiment_alias": "experiment1",
+                "platform": "AB 3730xL Genetic Analyzer",
+                "design": {
+                    "sample_descriptor": "sample2",
+                    "design_description": "",
+                    "library_descriptor": {
+                        "library_strategy": "AMPLICON",
+                        "library_source": "METAGENOMIC",
+                        "library_selection": "PCR",
+                        "library_layout": {
+                            "layout_type": "paired",
+                            "nominal_length": 450
+                        }
+                    }
+                }
+            }
+        ],
+        "runs": [
+            {
+                "experiment_ref": "experiment1",
+                "data_block": {
+                    "files": [
+                        {
+                            "filename": "aFile",
+                            "filetype": "fastq",
+                            "checksum_method": "MD5",
+                            "checksum": "12345"
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

@@ -1,0 +1,799 @@
+{% extends "base_content.html" %}
+{% load static %}
+
+{% block content-wrapper %}
+
+    <form name="wrapping-form" method="" class="pagewide-form">
+
+        <section class="sub-navi">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <nav class="nav">
+                            <a class="nav-link" href="#">My Submissions</a>
+                            <a class="nav-link active" href="#">Create
+                                Submission</a>
+                            <a class="nav-link" href="#">Help</a>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="container">
+            <div class="row">
+
+                <div class="col-md-9"><!-- left col -->
+
+                    <header class="header header-left form-header-top">
+                        <h2 class="section-title">Title</h2>
+                        <p class="section-subtitle"></p>
+                    </header>
+                    <div class="form-group">
+                        <input class="form-control" type="text" id="title"
+                               placeholder="Enter a title for your submission">
+                    </div>
+
+                    <header class="header header-left form-header-top">
+                        <h2 class="section-title">Description</h2>
+                        <p class="section-subtitle"></p>
+                    </header>
+                    <div class="form-group">
+          <textarea
+                  class="form-control"
+                  id="description"
+                  rows="7"
+                  placeholder="Enter some text describing your submission"></textarea>
+                    </div>
+
+                    <header class="header header-left form-header-top">
+                        <h2 class="section-title">Upload Data</h2>
+                        <p class="section-subtitle">(optional)</p>
+                    </header>
+                    <div class="form-group">
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input"
+                                   id="customFile">
+                            <label class="custom-file-label" for="customFile">Choose
+                                file</label>
+                        </div>
+                    </div>
+
+
+                    <header class="header header-left form-header-top mb-3">
+                        <h2 class="section-title">Contributors</h2>
+                        <p class="section-subtitle">(optional)</p>
+                    </header>
+                    <div class="form-group">
+                        <ul class="list-inline">
+                            <li class="list-inline-item">
+                                <p class="contributor">Contributors:</p>
+                            </li>
+                            <li class="list-inline-item">
+                                <button class="btn btn-primary btn-contributor"
+                                        type="button"
+                                        data-toggle="collapse"
+                                        data-target="#collapseExample"
+                                        aria-expanded="false"
+                                        aria-controls="collapseExample">
+                                    <i class="fa fa-bars"></i> Marc Weber
+                                </button>
+                            </li>
+                            <li class="list-inline-item">
+                                <button class="btn btn-primary btn-contributor"
+                                        type="button"
+                                        data-toggle="collapse"
+                                        data-target="#collapseExample"
+                                        aria-expanded="false"
+                                        aria-controls="collapseExample">
+                                    <i class="fa fa-plus"></i> add contributor
+                                </button>
+                            </li>
+                        </ul>
+                        <div class="collapse" id="collapseExample">
+                            <div class="card card-body">
+                                <h5>Add Contributor</h5>
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label for="firstName">First
+                                            Name</label>
+                                        <input type="text" class="form-control"
+                                               id="firstName">
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="lastName">Last Name</label>
+                                        <input type="text" class="form-control"
+                                               id="lastName">
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label for="emailAddress">Email
+                                            Address</label>
+                                        <input type="email" class="form-control"
+                                               id="emailAddress"
+                                               placeholder="name@example.com">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label for="institution">Institution
+                                            (optional)</label>
+                                        <input type="text" class="form-control"
+                                               id="institution">
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label for="contribution">Contribution
+                                            (optional)</label>
+                                        <input type="text" class="form-control"
+                                               id="contribution">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-2">
+                                        <button
+                                                class="btn btn-secondary btn-sm btn-block btn-light-blue-inverted">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                    <div class="form-group col-md-2">
+                                        <button
+                                                class="btn btn-secondary btn-sm btn-block btn-light-blue-inverted">
+                                            Remove
+                                        </button>
+                                    </div>
+                                    <div class="form-group col-md-4"></div>
+                                    <div class="form-group col-md-4">
+                                        <button
+                                                class="btn btn-secondary btn-sm btn-block btn-light-blue">
+                                            Save
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <header class="header header-left form-header-top">
+                        <h2 class="section-title">Target Datacenter</h2>
+                        <p class="section-subtitle">(optional)</p>
+                    </header>
+                    <div class="form-group">
+                        <select class="form-control" id="targetDataCenter">
+                            <option></option>
+                            <option>ENA – European Nucleotide Archive</option>
+                            <option>
+                                PANGAEA – Data Publisher for Earth &
+                                Environmental Science
+                            </option>
+                            <option>
+                                Data Centers at Natural Science Collections
+                            </option>
+                            <option>
+                                BGBM – Botanic Garden and Botanical Museum
+                                Berlin, Freie
+                                Universität Berlin
+                            </option>
+                            <option>
+                                DSMZ – Leibniz Institute DSMZ – German
+                                Collection of
+                                Microorganisms and Cell Cultures, Braunschweig
+                            </option>
+                            <option>
+                                MfN – Leibniz Institute for Research on
+                                Evolution and
+                                Biodiversity, Berlin
+                            </option>
+                            <option>
+                                SGN – Senckenberg Gesellschaft für
+                                Naturforschung – Leibniz
+                                Institute, Frankfurt
+                            </option>
+                            <option>
+                                SMNS – State Museum of Natural History Stuttgart
+                            </option>
+                            <option>
+                                SNSB – Staatliche Naturwissenschaftliche
+                                Sammlungen Bayerns
+                                – SNSB IT Center, München
+                            </option>
+                            <option>
+                                ZFMK – Zoological Research Museum Alexander
+                                Koenig – Leibniz
+                                Institute for Animal Biodiversity, Bonn
+                            </option>
+                        </select>
+                    </div>
+
+
+                    <header class="header header-left form-header-top">
+                        <h2 class="section-title">Categories for this
+                            submission</h2>
+                        <p class="section-subtitle">(optional)</p>
+                    </header>
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox"
+                                       class="custom-control-input"
+                                       id="customCheck1">
+                                <label class="custom-control-label"
+                                       for="customCheck1">
+                                    Algae & Protists
+                                </label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox"
+                                       class="custom-control-input"
+                                       id="customCheck2">
+                                <label class="custom-control-label"
+                                       for="customCheck2">
+                                    Bacteriology or Virology
+                                </label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox"
+                                       class="custom-control-input"
+                                       id="customCheck3">
+                                <label class="custom-control-label"
+                                       for="customCheck3">
+                                    Botany
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox"
+                                       class="custom-control-input"
+                                       id="customCheck4">
+                                <label class="custom-control-label"
+                                       for="customCheck4">
+                                    Ecology & Environment
+                                </label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox"
+                                       class="custom-control-input"
+                                       id="customCheck5">
+                                <label class="custom-control-label"
+                                       for="customCheck5">
+                                    Geoscience
+                                </label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox"
+                                       class="custom-control-input"
+                                       id="customCheck6">
+                                <label class="custom-control-label"
+                                       for="customCheck6">
+                                    Microbiology
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox"
+                                       class="custom-control-input"
+                                       id="customCheck7">
+                                <label class="custom-control-label"
+                                       for="customCheck7">
+                                    Mycology
+                                </label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox"
+                                       class="custom-control-input"
+                                       id="customCheck8">
+                                <label class="custom-control-label"
+                                       for="customCheck8">
+                                    Palaeontology
+                                </label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox"
+                                       class="custom-control-input"
+                                       id="customCheck9">
+                                <label class="custom-control-label"
+                                       for="customCheck9">
+                                    Zoology
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <header class="header header-left form-header-top">
+                        <h2 class="section-title">Add a comment</h2>
+                        <p class="section-subtitle">(optional)</p>
+                    </header>
+                    <div class="form-group">
+          <textarea
+                  class="form-control"
+                  id="comment"
+                  rows="7"
+                  placeholder="Enter a comment"></textarea>
+                    </div>
+
+                    <div class="form-row mt-5">
+                        <div class="form-group col-md-4">
+                            <button
+                                    class="btn btn-secondary btn-block btn-light-blue">
+                                <i class="fa fa-clipboard"></i>
+                                Save
+                            </button>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <button
+                                    class="btn btn-secondary btn-block btn-light-blue">
+                                <i class="fa fa-calendar"></i>
+                                Set Embargo
+                            </button>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <button
+                                    class="btn btn-secondary btn-block green">
+                                <i class="fa fa-play"></i>
+                                Submit
+                            </button>
+                        </div>
+                    </div>
+
+                </div><!-- end left col -->
+
+
+                <div class="col-md-3"><!-- right col -->
+
+                    <header class="header header-left form-header-top">
+                        <h2 class="section-title">License</h2>
+                        <p class="section-subtitle"></p>
+                    </header>
+                    <div class="form-group accordion-form-content">
+                        <button class="btn btn-primary btn-block btn-license text-left"
+                                type="button"
+                                data-toggle="collapse"
+                                data-target="#collapseLicense"
+                                aria-expanded="false"
+                                aria-controls="collapseLicense">
+                            <i class="fa fa-balance-scale"></i>
+                            CC BY 4.0
+                            <a class="license-link align-bottom"
+                               href="EDIT_LICENSE">change</a>
+                        </button>
+                        <div class="collapse" id="collapseLicense">
+                            <div class="card card-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            CC0 1.0
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            CC BY 4.0
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            CC BY NC 3.0
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            MIT
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            Apache-2.0
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            BSD 3-clause
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            BSD 2-clause
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            GPLv3
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            GPLv2
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            LGPL
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            MPL-2.0
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            CeCILL
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            CeCILL-B
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            CERN OHL
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            TAPR OHL
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+
+                    <header class="header header-left form-header-top">
+                        <h2 class="section-title">Legal Requirements</h2>
+                        <p class="section-subtitle"></p>
+                    </header>
+                    <div class="form-group">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input"
+                                   id="legalCheck1">
+                            <label class="custom-control-label"
+                                   for="legalCheck1">
+                                Nagoya Protocol
+                            </label>
+                        </div>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input"
+                                   id="legalCheck2">
+                            <label class="custom-control-label"
+                                   for="legalCheck2">
+                                IUCN Red List of Threatened Species
+                            </label>
+                        </div>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input"
+                                   id="legalCheck3">
+                            <label class="custom-control-label"
+                                   for="legalCheck3">
+                                Sensitive Personal Information
+                            </label>
+                        </div>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input"
+                                   id="legalCheck4" checked="checked">
+                            <label class="custom-control-label"
+                                   for="legalCheck4">
+                                Uncertain
+                            </label>
+                        </div>
+                    </div>
+
+
+                    <header class="header header-left form-header-top">
+                        <h2 class="section-title">Metadata Schema</h2>
+                        <p class="section-subtitle"></p>
+                    </header>
+                    <div class="form-group accordion-form-content">
+                        <button class="btn btn-primary btn-block btn-license text-left"
+                                type="button"
+                                data-toggle="collapse"
+                                data-target="#collapseMetaData"
+                                aria-expanded="false"
+                                aria-controls="collapseMetaData">
+                            <i class="fa fa-code"></i>
+                            None
+                            <a class="license-link align-bottom"
+                               href="EDIT_LICENSE">change</a>
+                        </button>
+                        <div class="collapse" id="collapseMetaData">
+                            <div class="card card-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            ABCD 2.06
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            DwC 2013-10-25
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            DC 1.1
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            EDM 5.2.3
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            EML 2.1.1
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            ESE 3.4.1
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            INSPIRE Directive 2007/2/EC
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            ISO 19115-1 2014
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            GPLv2
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button
+                                                class="btn btn-primary btn-block btn-license text-left"
+                                                type="button"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLicense"
+                                                aria-expanded="false"
+                                                aria-controls="collapseLicense">
+                                            MIxS 4.0
+                                            <a class="license-link align-bottom"
+                                               href="EDIT_LICENSE">details</a>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <header class="header header-left form-header-top">
+                        <h2 class="section-title">Metadata Templates</h2>
+                        <p class="section-subtitle"></p>
+                    </header>
+                    <div class="form-group">
+                        <ul class="list-inline">
+                            <li class="list-inline-item">
+                                <button class="btn btn-primary btn-contributor"
+                                        type="button">
+                                    <i class="fa fa-external-link"></i> Link to
+                                    Template
+                                </button>
+                            </li>
+                            <li>
+                                <button class="btn btn-primary btn-contributor"
+                                        type="button">
+                                    <i class="fa fa-external-link"></i> Template
+                                    Collection A
+                                </button>
+                            </li>
+                            <li>
+                                <button class="btn btn-primary btn-contributor"
+                                        type="button">
+                                    <i class="fa fa-external-link"></i> Template
+                                    Collection B
+                                </button>
+                            </li>
+
+                        </ul>
+                    </div>
+
+                </div><!-- end right col -->
+
+            </div><!-- end row -->
+        </div><!-- end container -->
+    </form>
+
+{% endblock content-wrapper %}
+
+{% block footer %}
+{% endblock footer %}

@@ -1,0 +1,213 @@
+{
+    "expand": "renderedFields,names,schema,transitions,operations,editmeta,changelog",
+    "id": "33002",
+    "self": "https://issues.pangaea.de/rest/api/2/issue/33002",
+    "key": "PDI-12428",
+    "fields": {
+        "issuetype": {
+            "self": "https://issues.pangaea.de/rest/api/2/issuetype/6",
+            "id": "6",
+            "description": "Submission of data to PANGAEA",
+            "iconUrl": "https://issues.pangaea.de/images/icons/issuetypes/newfeature.png",
+            "name": "Data Submission",
+            "subtask": false
+        },
+        "timespent": null,
+        "timeoriginalestimate": null,
+        "description": null,
+        "project": {
+            "self": "https://issues.pangaea.de/rest/api/2/project/10010",
+            "id": "10010",
+            "key": "PDI",
+            "name": "PANGAEA Data Archiving & Publication",
+            "avatarUrls": {
+                "48x48": "https://issues.pangaea.de/secure/projectavatar?avatarId=10011",
+                "24x24": "https://issues.pangaea.de/secure/projectavatar?size=small&avatarId=10011",
+                "16x16": "https://issues.pangaea.de/secure/projectavatar?size=xsmall&avatarId=10011",
+                "32x32": "https://issues.pangaea.de/secure/projectavatar?size=medium&avatarId=10011"
+            }
+        },
+        "aggregatetimespent": null,
+        "resolution": null,
+        "timetracking": {},
+        "attachment": [
+            {
+                "self": "https://issues.pangaea.de/rest/api/2/attachment/53276",
+                "id": "53276",
+                "filename": "contextual_data.csv",
+                "author": {
+                    "self": "https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker",
+                    "name": "gfbio-broker",
+                    "key": "gfbio-broker",
+                    "emailAddress": "i.kostadinov@jacobs-university.de",
+                    "avatarUrls": {
+                        "48x48": "https://issues.pangaea.de/secure/useravatar?avatarId=10072",
+                        "24x24": "https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072",
+                        "16x16": "https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072",
+                        "32x32": "https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"
+                    },
+                    "displayName": "GFBio broker account",
+                    "active": true,
+                    "timeZone": "Etc/UTC"
+                },
+                "created": "2016-06-02T10:38:06.000+0000",
+                "size": 1502,
+                "content": "https://issues.pangaea.de/secure/attachment/53276/contextual_data.csv"
+            }
+        ],
+        "aggregatetimeestimate": null,
+        "resolutiondate": null,
+        "workratio": -1,
+        "summary": "Automated request by GFBio BrokerAgent",
+        "lastViewed": "2016-06-02T12:06:25.250+0000",
+        "watches": {
+            "self": "https://issues.pangaea.de/rest/api/2/issue/PDI-12428/watchers",
+            "watchCount": 0,
+            "isWatching": false
+        },
+        "creator": {
+            "self": "https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker",
+            "name": "gfbio-broker",
+            "key": "gfbio-broker",
+            "emailAddress": "i.kostadinov@jacobs-university.de",
+            "avatarUrls": {
+                "48x48": "https://issues.pangaea.de/secure/useravatar?avatarId=10072",
+                "24x24": "https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072",
+                "16x16": "https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072",
+                "32x32": "https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"
+            },
+            "displayName": "GFBio broker account",
+            "active": true,
+            "timeZone": "Etc/UTC"
+        },
+        "subtasks": [],
+        "created": "2016-06-02T10:37:50.000+0000",
+        "reporter": {
+            "self": "https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker",
+            "name": "gfbio-broker",
+            "key": "gfbio-broker",
+            "emailAddress": "i.kostadinov@jacobs-university.de",
+            "avatarUrls": {
+                "48x48": "https://issues.pangaea.de/secure/useravatar?avatarId=10072",
+                "24x24": "https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072",
+                "16x16": "https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072",
+                "32x32": "https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"
+            },
+            "displayName": "GFBio broker account",
+            "active": true,
+            "timeZone": "Etc/UTC"
+        },
+        "customfield_10120": null,
+        "customfield_10220": null,
+        "aggregateprogress": {
+            "progress": 0,
+            "total": 0
+        },
+        "priority": {
+            "self": "https://issues.pangaea.de/rest/api/2/priority/3",
+            "iconUrl": "https://issues.pangaea.de/images/icons/priorities/major.png",
+            "name": "Major",
+            "id": "3"
+        },
+        "customfield_10122": null,
+        "customfield_10320": null,
+        "customfield_10002": "gfbio-broker",
+        "customfield_10420": null,
+        "customfield_10003": {
+            "self": "https://issues.pangaea.de/rest/api/2/customFieldOption/10000",
+            "value": "CC-BY: Creative Commons Attribution 3.0 Unported",
+            "id": "10000"
+        },
+        "customfield_10421": null,
+        "customfield_10520": "doi:10.1594/PANGAEA.786576",
+        "labels": [],
+        "customfield_10004": null,
+        "timeestimate": null,
+        "aggregatetimeoriginalestimate": null,
+        "progress": {
+            "progress": 0,
+            "total": 0
+        },
+        "comment": {
+            "startAt": 0,
+            "maxResults": 1,
+            "total": 1,
+            "comments": [
+                {
+                    "self": "https://issues.pangaea.de/rest/api/2/issue/33002/comment/77173",
+                    "id": "77173",
+                    "author": {
+                        "self": "https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker",
+                        "name": "gfbio-broker",
+                        "key": "gfbio-broker",
+                        "emailAddress": "i.kostadinov@jacobs-university.de",
+                        "avatarUrls": {
+                            "48x48": "https://issues.pangaea.de/secure/useravatar?avatarId=10072",
+                            "24x24": "https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072",
+                            "16x16": "https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072",
+                            "32x32": "https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"
+                        },
+                        "displayName": "GFBio broker account",
+                        "active": true,
+                        "timeZone": "Etc/UTC"
+                    },
+                    "body": "ENA Accession No. of study ERP015860. broker_submission_id: 9cb23074-689e-4058-a9e9-ccba1fe2ab1d. ",
+                    "updateAuthor": {
+                        "self": "https://issues.pangaea.de/rest/api/2/user?username=gfbio-broker",
+                        "name": "gfbio-broker",
+                        "key": "gfbio-broker",
+                        "emailAddress": "i.kostadinov@jacobs-university.de",
+                        "avatarUrls": {
+                            "48x48": "https://issues.pangaea.de/secure/useravatar?avatarId=10072",
+                            "24x24": "https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10072",
+                            "16x16": "https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10072",
+                            "32x32": "https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10072"
+                        },
+                        "displayName": "GFBio broker account",
+                        "active": true,
+                        "timeZone": "Etc/UTC"
+                    },
+                    "created": "2016-06-02T10:38:22.000+0000",
+                    "updated": "2016-06-02T10:38:22.000+0000"
+                }
+            ]
+        },
+        "issuelinks": [],
+        "worklog": {
+            "startAt": 0,
+            "maxResults": 20,
+            "total": 0,
+            "worklogs": []
+        },
+        "assignee": {
+            "self": "https://issues.pangaea.de/rest/api/2/user?username=jfelden",
+            "name": "jfelden",
+            "key": "jfelden",
+            "emailAddress": "jfelden@marum.de",
+            "avatarUrls": {
+                "48x48": "https://issues.pangaea.de/secure/useravatar?avatarId=10067",
+                "24x24": "https://issues.pangaea.de/secure/useravatar?size=small&avatarId=10067",
+                "16x16": "https://issues.pangaea.de/secure/useravatar?size=xsmall&avatarId=10067",
+                "32x32": "https://issues.pangaea.de/secure/useravatar?size=medium&avatarId=10067"
+            },
+            "displayName": "Janine Felden",
+            "active": true,
+            "timeZone": "Europe/Berlin"
+        },
+        "updated": "2016-06-02T12:03:16.000+0000",
+        "status": {
+            "self": "https://issues.pangaea.de/rest/api/2/status/1",
+            "description": "The issue is open and ready for the assignee to start work on it.",
+            "iconUrl": "https://issues.pangaea.de/images/icons/statuses/open.png",
+            "name": "Open",
+            "id": "1",
+            "statusCategory": {
+                "self": "https://issues.pangaea.de/rest/api/2/statuscategory/2",
+                "id": 2,
+                "key": "new",
+                "colorName": "blue-gray",
+                "name": "To Do"
+            }
+        }
+    }
+}

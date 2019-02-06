@@ -66,59 +66,6 @@ class SubmissionManager(models.Manager):
 
 
 class BrokerObjectManager(models.Manager):
-    broker_object_test_data = {
-        'requirements': {
-            'title': '123456',
-            'description': '123456',
-            'study_type': 'Metagenomics',
-            'samples': [
-                {
-                    'sample_alias': 'sample1',
-                    'sample_title': 'stitle',
-                    'taxon_id': 1234
-                },
-                {
-                    'sample_alias': 'sample2',
-                    'sample_title': 'stitleagain',
-                    'taxon_id': 1234
-                }
-            ],
-            "experiments": [
-                {
-                    'experiment_alias': 'experiment1',
-                    'platform': 'AB 3730xL Genetic Analyzer',
-                    'design': {
-                        'sample_descriptor': 'sample2',
-                        'design_description': '',
-                        'library_descriptor': {
-                            'library_strategy': 'AMPLICON',
-                            'library_source': 'METAGENOMIC',
-                            'library_selection': 'PCR',
-                            'library_layout': {
-                                'layout_type': 'paired',
-                                'nominal_length': 450
-                            }
-                        }
-                    }
-                }
-            ],
-            'runs': [
-                {
-                    'experiment_ref': 'experiment1',
-                    'data_block': {
-                        'files': [
-                            {
-                                'filename': 'aFile',
-                                'filetype': 'fastq',
-                                'checksum_method': 'MD5',
-                                'checksum': '12345'
-                            }
-                        ]
-                    }
-                }
-            ]
-        }
-    }
 
     def add_downloaded_pids_to_existing_broker_objects(
             self, study_pid, decompressed_file):
@@ -216,12 +163,6 @@ class BrokerObjectManager(models.Manager):
 
     def add_entity(self, submission, entity_type, site, site_project_id,
                    site_object_id, json_data):
-        # print('\n\n------------\tadd_entity\t--------------\n')
-        # print('submission ', submission)
-        # print('entity type ', entity_type)
-        # print('site ', site)
-        # print('spid ', site_project_id)
-        # print('siod ', site_object_id)
         obj, created = self.update_or_create(
             type=entity_type,
             site=site,
@@ -229,13 +170,10 @@ class BrokerObjectManager(models.Manager):
             site_object_id=site_object_id,
             defaults={'data': json_data}
         )
-        # print('after 1. create. created ', created, ' id ', obj.id, ' pk ', obj.pk, ' soid ', obj.site_object_id)
         if obj.site_object_id == '':
             obj.site_object_id = '{0}_{1}'.format(obj.site, obj.pk)
             obj.save()
         obj.submissions.add(submission)
-        # print('after add to submission.  id ', obj.id, ' pk ', obj.pk, ' soid ', obj.site_object_id)
-        # print('submssion bo set ', submission.brokerobject_set.all())
         return obj
 
     def add_submission_data(self, submission):
@@ -246,18 +184,11 @@ class BrokerObjectManager(models.Manager):
                 pass
 
     def add_ena_submission_data(self, submission):
-        # print('\n++++++++++++++++++++++\tadd_ena_submission_data\t+++++++++++++++++++\n')
         # TODO: check submission.data behaviour in this (new) python 3 environment
         if isinstance(submission.data, str):
             data = json.loads(submission.data)
-            # FIXME: WTF why is task loading str into unicode ?
-            # if isinstance(data, str) or isinstance(data, unicode):
-            #     data = json.loads(data)
         else:
             data = submission.data
-        # print('\ndata\n')
-        # p# print.# p# print(data)
-        # print('\ndata\n')
         obj = self.add_entity(
             submission=submission,
             entity_type='study',
@@ -270,7 +201,6 @@ class BrokerObjectManager(models.Manager):
                 'study_type': data['requirements']['study_type']
             }
         )
-        # print('study ? . obj id ', obj.id, ' pk ', obj.pk, ' soid ', obj.site_object_id, ' type ', obj.type)
         data['requirements']['site_object_id'] = obj.site_object_id
         for i in range(0, len(data['requirements']['samples'])):
             # for sample in data['requirements']['samples']:

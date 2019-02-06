@@ -11,7 +11,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
     STATIC_ENA_REQUIREMENTS_LOCATION, STATIC_MIN_REQUIREMENTS_LOCATION, ENA, \
     ENA_PANGAEA, STATIC_SAMPLE_SCHEMA_LOCATION, \
     STATIC_STUDY_SCHEMA_LOCATION, STATIC_EXPERIMENT_SCHEMA_LOCATION, \
-    STATIC_RUN_SCHEMA_LOCATION
+    STATIC_RUN_SCHEMA_LOCATION, GENERIC, STATIC_GENERIC_REQUIREMENTS_LOCATION
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +111,8 @@ def validate_sample(data):
 
 TARGET_SCHEMA_MAPPINGS = {
     ENA: STATIC_ENA_REQUIREMENTS_LOCATION,
-    ENA_PANGAEA: STATIC_ENA_REQUIREMENTS_LOCATION
+    ENA_PANGAEA: STATIC_ENA_REQUIREMENTS_LOCATION,
+    GENERIC: STATIC_GENERIC_REQUIREMENTS_LOCATION,
 }
 
 
@@ -168,11 +169,6 @@ def validate_ena_relations(data):
 # FIXME: since id determins root for looking up included files
 def validate_data_full(data, target):
     schema_location = TARGET_SCHEMA_MAPPINGS[target]
-    # print '\n\nFULL_VAL:  SCHEMA LOCATION ', schema_location
-    # print os.path.join(
-    #         settings.STATIC_ROOT,
-    #         schema_location)
-    # print '\n\n'
     valid, errors = validate_data(
         data=data, schema_file=os.path.join(
             settings.STATIC_ROOT,
@@ -187,11 +183,6 @@ def validate_data_full(data, target):
 
 
 def validate_data_min(data):
-    # print '\n\nMIN_VAL:  SCHEMA LOCATION '
-    # print os.path.join(
-    #     settings.STATIC_ROOT,
-    #     STATIC_MIN_REQUIREMENTS_LOCATION)
-    # print '\n\n'
     return validate_data(
         data=data, schema_file=os.path.join(
             settings.STATIC_ROOT,
