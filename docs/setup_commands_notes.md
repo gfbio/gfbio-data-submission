@@ -349,15 +349,16 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
         sudo supervisorctl status
             gfbio_submissions                   RUNNING   pid 25091, uptime 0:01:16
         
-        sudo docker-compose -f production.yml run --rm postgres backup
+        docker-compose -f production.yml run --rm postgres backup
             creating backup
             ---------------
             successfully created backup backup_2018_08_29T20_23_57.sql.gz
 
 
-- stop docker containers via supervisor process manager
-        
-        sudo supervisorctl stop gfbio_submissions
+- OPTIONAL (but remaining commands seem to run slowly)
+    - stop docker containers via supervisor process manager
+            
+            sudo supervisorctl stop gfbio_submissions
 
 - fetch latest changes from repository and checkout latest tag        
         
