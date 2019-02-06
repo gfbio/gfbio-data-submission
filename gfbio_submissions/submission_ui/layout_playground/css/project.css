@@ -36,11 +36,6 @@ section#about .btn-about:hover, section#about2 .btn-about:hover {
   background-color: #81B248;
 }
 
-section#about2 {
-  background-image: url("../images/unsplash_grass_bw.jpeg");
-  background-position: center center;
-}
-
 #account h4 {
   font-weight: 300;
 }
@@ -82,11 +77,6 @@ h4.social {
 
 .page-title-bg-green {
   background-image: url("../images/unsplash_grass.jpeg");
-  background-position: center center;
-}
-
-.page-title-bg-bw {
-  background-image: url("../images/unsplash_grass_bw.jpeg");
   background-position: center center;
 }
 
