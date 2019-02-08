@@ -56,11 +56,6 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-// const withReduxForm = reduxForm({
-//   // a unique name for the form
-//   form: 'contact',
-// });
-
 const withConnect = connect(
   mapStateToProps,
   mapDispatchToProps,
@@ -73,5 +68,4 @@ export default compose(
   withReducer,
   withSaga,
   withConnect,
-  // withReduxForm,
 )(SubmissionForm);

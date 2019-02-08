@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Field, reduxForm } from 'redux-form/immutable';
 
+// TODO: class or simple component once adapted to real submission form
 let ContactForm = props => {
   const { handleSubmit } = props;
   return (
@@ -14,10 +15,13 @@ let ContactForm = props => {
         <label htmlFor="lastName">Last Name</label>
         <Field name="lastName" component="input" type="text"/>
       </div>
-      {/*<div>*/}
-        {/*<label htmlFor="email">Email</label>*/}
-        {/*<Field name="email" component="input" type="email"/>*/}
-      {/*</div>*/}
+      {/*
+        TODO: submit can be trigered by remote component
+        so this submit can be omitted.
+        TODO: idea is to modularize (submission form components) and combine
+        them independently under on submit and/or save action
+        TODO: check wizard example
+       */}
       <button type="submit">Submit</button>
     </form>
   );
