@@ -14,8 +14,9 @@ function submissionFormReducer(state = initialState, action) {
     case DEFAULT_ACTION:
       return state;
     case SUBMIT_FORM:
-      console.log('SUBMIT_FORM');
+      console.log('reducer SUBMIT_FORM');
       console.log(action.form);
+      console.log('------------');
       return state;
     default:
       return state;

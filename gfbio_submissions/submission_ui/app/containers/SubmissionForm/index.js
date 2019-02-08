@@ -35,7 +35,8 @@ export class SubmissionForm extends React.Component {
       <div>
         <FormattedMessage {...messages.header} />
         <h1>FORM ?</h1>
-        <ContactForm onSubmit={this.submit} />
+        {/*<ContactForm onSubmit={this.submit} />*/}
+        <ContactForm onSubmit={this.props.handleSubmit} />
       </div>
     );
   }
