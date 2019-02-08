@@ -13,24 +13,36 @@ import { compose } from 'redux';
 
 import injectSaga from 'utils/injectSaga';
 import injectReducer from 'utils/injectReducer';
+import ContactForm from './ContactForm';
 import makeSelectSubmissionForm from './selectors';
 import reducer from './reducer';
 import saga from './saga';
 import messages from './messages';
+import { submitForm } from './actions';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
+  submit = values => {
+    // print the form values to the console
+    console.log(values);
+  };
+
   render() {
+    // {/* <FormattedMessage {...messages.header} /> */}
+    // {/*<ContactForm onSubmit={this.submit} />*/}
+    console.log('render SubmissionForm');
     return (
       <div>
         <FormattedMessage {...messages.header} />
+        <h1>FORM ?</h1>
+        <ContactForm onSubmit={this.submit} />
       </div>
     );
   }
 }
 
 SubmissionForm.propTypes = {
-  dispatch: PropTypes.func.isRequired,
+  handleSubmit: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -39,9 +51,14 @@ const mapStateToProps = createStructuredSelector({
 
 function mapDispatchToProps(dispatch) {
   return {
-    dispatch,
+    handleSubmit: form => dispatch(submitForm(form)),
   };
 }
+
+// const withReduxForm = reduxForm({
+//   // a unique name for the form
+//   form: 'contact',
+// });
 
 const withConnect = connect(
   mapStateToProps,
@@ -55,4 +72,5 @@ export default compose(
   withReducer,
   withSaga,
   withConnect,
+  // withReduxForm,
 )(SubmissionForm);
