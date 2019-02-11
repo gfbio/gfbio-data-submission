@@ -157,6 +157,32 @@
 //  }
 //}
 
+
+section.sub-navi {
+  // TODO: hardcoded top margin to adapt for 57px floating main navigation
+  margin-top: 57px;
+  padding: .5rem 0 2rem 0;
+
+  .nav {
+
+    /*
+     font-size: .8rem;
+    color: $gray-800;*/
+
+    .nav-link {
+      font-size: .85rem;
+      color: $gray-800;
+
+    }
+
+    .active {
+      font-weight: bold;
+    }
+
+  }
+
+}
+
 // TODO: used in forms_1.html . assuming one form around all fields to submit all fields
 //  in one action, maybe also to allow easier layouting
 // TODO: also used in submission_form_mock.html
@@ -166,30 +192,30 @@ form.pagewide-form {
     margin-bottom: 2rem;
   }
 
-  section.sub-navi {
-    // TODO: hardcoded top margin to adapt for 57px floating main navigation
-    margin-top: 57px;
-    padding: .5rem 0 2rem 0;
-
-    .nav {
-
-      /*
-       font-size: .8rem;
-      color: $gray-800;*/
-
-      .nav-link {
-        font-size: .85rem;
-        color: $gray-800;
-
-      }
-
-      .active {
-        font-weight: bold;
-      }
-
-    }
-
-  }
+  //section.sub-navi {
+  //  // TODO: hardcoded top margin to adapt for 57px floating main navigation
+  //  margin-top: 57px;
+  //  padding: .5rem 0 2rem 0;
+  //
+  //  .nav {
+  //
+  //    /*
+  //     font-size: .8rem;
+  //    color: $gray-800;*/
+  //
+  //    .nav-link {
+  //      font-size: .85rem;
+  //      color: $gray-800;
+  //
+  //    }
+  //
+  //    .active {
+  //      font-weight: bold;
+  //    }
+  //
+  //  }
+  //
+  //}
 
   .form-header-top {
     margin-bottom: 2rem;

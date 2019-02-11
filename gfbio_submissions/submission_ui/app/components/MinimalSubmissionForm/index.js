@@ -11,7 +11,9 @@ import React from 'react';
 /* eslint-disable react/prefer-stateless-function */
 class MinimalSubmissionForm extends React.PureComponent {
   render() {
-    return <div />;
+    return (
+
+    );
   }
 }
 
