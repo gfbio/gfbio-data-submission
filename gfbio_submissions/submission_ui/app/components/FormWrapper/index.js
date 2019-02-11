@@ -5,30 +5,16 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import { compose } from 'redux';
+// import PropTypes from 'prop-types';
+// import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
-export class FormWrapper extends React.PureComponent {
+class FormWrapper extends React.PureComponent {
   render() {
     return <div />;
   }
 }
 
-FormWrapper.propTypes = {
-  dispatch: PropTypes.func.isRequired,
-};
+FormWrapper.propTypes = {};
 
-function mapDispatchToProps(dispatch) {
-  return {
-    dispatch,
-  };
-}
-
-const withConnect = connect(
-  null,
-  mapDispatchToProps,
-);
-
-export default compose(withConnect)(FormWrapper);
+export default FormWrapper;

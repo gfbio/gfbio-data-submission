@@ -2,7 +2,7 @@
 // import { mount } from 'enzyme';
 // import { enzymeFind } from 'styled-components/test-utils';
 
-// import { FormWrapper } from '../index';
+// import FormWrapper from '../index';
 
 describe('<FormWrapper />', () => {
   it('Expect to have unit tests specified', () => {
