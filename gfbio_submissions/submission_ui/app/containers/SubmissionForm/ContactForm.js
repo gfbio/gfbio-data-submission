@@ -16,7 +16,7 @@ let ContactForm = props => {
         <Field name="lastName" component="input" type="text"/>
       </div>
       {/*
-        TODO: submit can be trigered by remote component
+        TODO: submit can be triggered by remote component
         so this submit can be omitted.
         TODO: idea is to modularize (submission form components) and combine
         them independently under on submit and/or save action
