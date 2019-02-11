@@ -1,29 +1,222 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <!-- The first thing in any HTML file should be the charset -->
   <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <title>GFBio Submissions</title>
 
-  <!-- Make the page mobile compatible -->
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet"
+        href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+        integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
+        crossorigin="anonymous">
+  <!-- Custom fonts for this template -->
+  <!-- Icons -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+        integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"
+        crossorigin="anonymous">
 
-  <!-- Allow installing the app to the homescreen -->
-  <meta name="mobile-web-app-capable" content="yes">
+  <!-- TODO: consider https://github.com/linea-io/linea-scss -->
+  <!--<link-->
+  <!--href="layout_playground/vendor/linea_icons/_basic/_ICONFONT/styles.css"-->
+  <!--type="text/css"-->
+  <!--rel="stylesheet">-->
+  <!-- TODO: current hack: serve form local server -->j
+  <link
+    href="http://0.0.0.0:8000/static/vendor/linea_icons/_basic/_ICONFONT/styles.css"
+    type="text/css"
+    rel="stylesheet">
+  <!-- TODO: consider https://github.com/aastrong/themify-icons.scss -->
+  <!--<link href="layout_playground/vendor/themify-icons/themify-icons.css"-->
+  <!--type="text/css"-->
+  <!--rel="stylesheet">-->
+  <!-- TODO: current hack: serve form local server -->
+  <link href="http://0.0.0.0:8000/static/vendor/themify-icons/themify-icons.css"
+        type="text/css"
+        rel="stylesheet">
 
-  <link rel="icon" href="/favicon.ico" />
-  <title>GFBio Submission System Boilerplate</title>
+
+  <link href="https://unpkg.com/ionicons@4.2.2/dist/css/ionicons.min.css"
+        rel="stylesheet">
+
+  <link
+    href="https://fonts.googleapis.com/css?family=Amiri:400,400i,700,700i|Cinzel:400,700,900|Cormorant+Garamond:300,300i,400,400i,500,500i,600,600i,700,700i|Crimson+Text:400,400i,600,600i,700,700i|EB+Garamond:400,400i,500,500i,600,600i,700,700i,800,800i|Lora:400,400i,700,700i|Lustria|Merriweather:300,300i,400,400i,700,700i,900,900i|Neuton:200,300,400,400i,700,800|Open+Sans:300,300i,400,400i,600,600i,700,700i,800,800i|Raleway:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i|Roboto+Slab:100,300,400,700|Scheherazade:400,700|Slabo+13px|Slabo+27px|Zilla+Slab:300,300i,400,400i,500,500i,600,600i,700,700i"
+    rel="stylesheet">
+
+  <!-- Custom styles for this template -->
+  <!-- TODO: find a way to integrate local css -->
+  <!--<link rel="stylesheet" href="project.css" type="text/css">-->
+  <!-- TODO: current hack: serve form local server -->
+  <link rel="stylesheet"
+        href="http://0.0.0.0:8000/static/css/project.css">
+
 </head>
 
-<body>
-  <!-- Display a message if JS has been disabled on the browser. -->
-  <noscript>If you're seeing this message, that means
-    <strong>JavaScript has been disabled on your browser</strong>, please
-    <strong>enable JS</strong> to make this app work.</noscript>
+<body id="page-top">
 
-  <!-- The app hooks into this div -->
-  <div id="submission-ui"></div>
-  <!-- A lot of magic happens in this file. HtmlWebpackPlugin automatically injects all assets (e.g. bundle.js, main.css) with the correct HTML tags, which is why they are missing in this file. Don't add any assets here! (Check out webpack.dev.babel.js and webpack.prod.babel.js if you want to know more) -->
+<nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNavBase">
+  <div class="container-fluid">
+    <a class="navbar-brand js-scroll-trigger" href="#page-top">
+      GFBio
+      <small>Submissions</small>
+    </a>
+    <button class="navbar-toggler navbar-toggler-right" type="button"
+            data-toggle="collapse" data-target="#navbarResponsive"
+            aria-controls="navbarResponsive" aria-expanded="false"
+            aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarResponsive">
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+          <a class="nav-link"
+             href="#about">About</a>
+        </li>
+
+        <li class="nav-item dropdown">
+          <a class="nav-link has-dropdown" data-toggle="dropdown"
+             href="#" role="button" aria-haspopup="true"
+             aria-expanded="false">Dropdown</a>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" href="#">Action</a>
+            <a class="dropdown-item" href="#">Another action</a>
+            <a class="dropdown-item" href="#">Something else
+              here</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="#">Separated link</a>
+          </div>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link js-scroll-trigger" href="#contact">Contact</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link btn btn-secondary btn-sm sign-up"
+             href="#services">
+            Sign Up
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link btn btn-secondary btn-sm sign-in"
+             href="#portfolio">
+            Sign In
+          </a>
+        </li>
+
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Display a message if JS has been disabled on the browser. -->
+<noscript>If you're seeing this message, that means
+  <strong>JavaScript has been disabled on your browser</strong>, please
+  <strong>enable JS</strong> to make this app work.
+</noscript>
+
+<h1>app index.html</h1>
+
+<!-- The app hooks into this div -->
+<div id="submission-ui"></div>
+<!-- A lot of magic happens in this file. HtmlWebpackPlugin automatically injects all assets (e.g. bundle.js, main.css) with the correct HTML tags, which is why they are missing in this file. Don't add any assets here! (Check out webpack.dev.babel.js and webpack.prod.babel.js if you want to know more) -->
+<!-- TODO: remove artificial spacer once more content is available -->
+
+
+<!--<footer class="mt-5">-->
+<!--<div class="container">-->
+<!--<div class="row">-->
+<!--<div class="col-md-3 col-sm-6">-->
+<!--<a href="https://www.gfbio.org/">-->
+<!--<img src="images/gf_bio_white.png">-->
+<!--</a>-->
+<!--</div>-->
+<!--<div class="col-md-3 col-sm-6">-->
+<!--<h6>GFBio</h6>-->
+<!--<hr>-->
+<!--<ul class="list-unstyled">-->
+<!--<li>-->
+<!--<a href="https://www.gfbio.org/">GFBio Project</a>-->
+<!--</li>-->
+<!--<li>-->
+<!--<a href="https://www.gfbio.org/gfbio_ev">GFBio e.V.</a>-->
+<!--</li>-->
+
+<!--<li>-->
+<!--<a href="https://www.gfbio.org/about/legal-notice">Legal-->
+<!--Notice</a>-->
+<!--</li>-->
+<!--<li>-->
+<!--<a href="https://www.gfbio.org/about/privacy-policy">Privacy-->
+<!--Policy</a>-->
+<!--</li>-->
+<!--</ul>-->
+<!--</div>-->
+<!--<div class="col-md-3 col-sm-6">-->
+<!--<h6>Services</h6>-->
+<!--<hr>-->
+<!--<ul class="list-unstyled">-->
+<!--<li>-->
+<!--<a href="https://services.gfbio.org/search/">-->
+<!--<i class="ti-search icon"></i>-->
+<!--Find-->
+<!--Data</a>-->
+<!--</li>-->
+<!--<li>-->
+<!--<a href="#">-->
+<!--<i class="ti-upload icon"></i>-->
+<!--Submit-->
+<!--Data</a>-->
+<!--</li>-->
+<!--<li>-->
+<!--<a href="https://www.gfbio.org/data/plan/dmpt">-->
+<!--<i class="ti-check-box icon"></i>-->
+<!--Data Management Plan-->
+<!--</a>-->
+<!--</li>-->
+<!--</ul>-->
+<!--</div>-->
+<!--<div class="col-md-3 col-sm-6">-->
+<!--<h6>Get in touch</h6>-->
+<!--<hr>-->
+<!--<ul class="list-unstyled">-->
+<!--<li>-->
+<!--<a href="https://twitter.com/GFBio_Project">-->
+<!--<i class="ti-twitter-alt icon"></i>-->
+<!--Twitter-->
+<!--</a>-->
+<!--</li>-->
+<!--<li>-->
+<!--<a href="mailto:info@gfbio.org">-->
+<!--<i class="ti-email icon"></i>-->
+<!--Email-->
+<!--us-->
+<!--</a>-->
+<!--</li>-->
+<!--</ul>-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+<!--</footer>-->
+
+<!-- Bootstrap core JavaScript -->
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+  integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+  crossorigin="anonymous"></script>
+<script
+  src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+  integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+  crossorigin="anonymous"></script>
+
+<!--&lt;!&ndash; Custom scripts for this template &ndash;&gt;-->
+<!--<script src="js/project.min.js"></script>-->
+
 </body>
-
 </html>
