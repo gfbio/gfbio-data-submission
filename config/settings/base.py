@@ -327,3 +327,4 @@ LOCAL_REPOSITORY = env('LOCAL_REPOSITORY',
 REMOTE_REPOSITORY = env('REMOTE_REPOSITORY',
                         default='https://maweber@colab.mpi-bremen.de/stash/scm/gfbio/gfbio-submission-auditing-tests.git')
 ########## END Access AuditableTextData
+

@@ -16,6 +16,7 @@ import makeSelectSubmissionForm from './selectors';
 import reducer from './reducer';
 import saga from './saga';
 import { submitForm } from './actions';
+import FormWrapper from 'components/FormWrapper';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
@@ -30,9 +31,11 @@ export class SubmissionForm extends React.Component {
     console.log('render SubmissionForm');
     return (
       <div id="submission-form-wrapper">
-        <h1>APP</h1>
-        {/* TODO: is id necessary ? */}
+        {/* TODO: is div id necessary ? */}
+        <h1>Submission Form App</h1>
 
+        {/* TODO: extract to component. */}
+        {/* TODO: candidate for redc */}
         <section className="sub-navi">
           <div className="container">
             <div className="row">
@@ -52,6 +55,8 @@ export class SubmissionForm extends React.Component {
             </div>
           </div>
         </section>
+
+        <FormWrapper />
 
         {/* <FormattedMessage {...messages.header} /> */}
         {/* <h1>FORM ?</h1> */}
