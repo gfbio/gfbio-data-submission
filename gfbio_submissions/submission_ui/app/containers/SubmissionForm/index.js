@@ -17,13 +17,14 @@ import reducer from './reducer';
 import saga from './saga';
 import { submitForm } from './actions';
 import FormWrapper from 'components/FormWrapper';
+import ContactForm from './ContactForm';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
-  submit = values => {
-    // print the form values to the console
-    console.log(values);
-  };
+  // submit = values => {
+  //   console.log('SubmissionForm class method. submitted values');
+  //   console.log(values);
+  // };
 
   render() {
     // {/* <FormattedMessage {...messages.header} /> */}
@@ -56,7 +57,7 @@ export class SubmissionForm extends React.Component {
           </div>
         </section>
 
-        <FormWrapper />
+        <FormWrapper onSubmit={this.props.handleSubmit} />
 
         {/* <FormattedMessage {...messages.header} /> */}
         {/* <h1>FORM ?</h1> */}

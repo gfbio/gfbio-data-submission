@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { reduxForm } from 'redux-form/immutable';
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
 import MinimalSubmissionForm from 'components/MinimalSubmissionForm';
 // import styled from 'styled-components';
 
@@ -14,13 +14,42 @@ import MinimalSubmissionForm from 'components/MinimalSubmissionForm';
 class FormWrapper extends React.PureComponent {
   render() {
     return (
-      <form name="wrapping-form" method="" className="pagewide-form">
+      <form
+        name="wrapping-form"
+        className="pagewide-form"
+        onSubmit={this.props.handleSubmit}
+      >
         <div className="container">
           <div className="row">
             <div className="col-md-9">
               {/* left col */}
               <h2>Left col</h2>
               <MinimalSubmissionForm />
+
+              {/* TODO: candidate for extra component (function) for modularity */}
+              <div className="form-row mt-5">
+                <div className="form-group col-md-4">
+                  <button className="btn btn-secondary btn-block btn-light-blue">
+                    <i className="fa fa-clipboard" />
+                    Save
+                  </button>
+                </div>
+                <div className="form-group col-md-4">
+                  <button className="btn btn-secondary btn-block btn-light-blue">
+                    <i className="fa fa-calendar" />
+                    Set Embargo
+                  </button>
+                </div>
+                <div className="form-group col-md-4">
+                  <button
+                    type="submit"
+                    className="btn btn-secondary btn-block green"
+                  >
+                    <i className="fa fa-play" />
+                    Submit
+                  </button>
+                </div>
+              </div>
             </div>
             {/* end left col */}
             <div className="col-md-3">
@@ -35,6 +64,8 @@ class FormWrapper extends React.PureComponent {
   }
 }
 
-FormWrapper.propTypes = {};
+FormWrapper.propTypes = {
+  handleSubmit: PropTypes.func,
+};
 
 export default reduxForm({ form: 'formWrapper' })(FormWrapper);
