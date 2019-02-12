@@ -17,7 +17,6 @@ import reducer from './reducer';
 import saga from './saga';
 import { submitForm } from './actions';
 import FormWrapper from 'components/FormWrapper';
-import ContactForm from './ContactForm';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
