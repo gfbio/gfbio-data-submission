@@ -118,13 +118,19 @@
   <strong>enable JS</strong> to make this app work.
 </noscript>
 
-<h1>app index.html</h1>
 
-<!-- The app hooks into this div -->
-<div id="submission-ui"></div>
-<!-- A lot of magic happens in this file. HtmlWebpackPlugin automatically injects all assets (e.g. bundle.js, main.css) with the correct HTML tags, which is why they are missing in this file. Don't add any assets here! (Check out webpack.dev.babel.js and webpack.prod.babel.js if you want to know more) -->
-<!-- TODO: remove artificial spacer once more content is available -->
-
+<section id="mainSection">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12">
+        <!-- The app hooks into this div -->
+        <div id="submission-ui"></div>
+        <!-- A lot of magic happens in this file. HtmlWebpackPlugin automatically injects all assets (e.g. bundle.js, main.css) with the correct HTML tags, which is why they are missing in this file. Don't add any assets here! (Check out webpack.dev.babel.js and webpack.prod.babel.js if you want to know more) -->
+        <!-- TODO: remove artificial spacer once more content is available -->
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- Bootstrap core JavaScript -->
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
