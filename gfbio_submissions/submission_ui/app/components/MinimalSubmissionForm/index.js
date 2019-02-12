@@ -6,6 +6,7 @@
 
 import React from 'react';
 import { Field } from 'redux-form/immutable';
+import UploadForm from '../UploadForm';
 // import PropTypes from 'prop-types';
 // import styled from 'styled-components';
 
@@ -41,6 +42,8 @@ class MinimalSubmissionForm extends React.PureComponent {
             placeholder="Enter some text describing your submission"
           />
         </div>
+
+        <UploadForm />
       </div>
     );
   }
