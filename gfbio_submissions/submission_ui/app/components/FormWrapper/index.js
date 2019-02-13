@@ -12,6 +12,7 @@ import ContributersForm from '../ContributersForm';
 import TargetDataCenterForm from '../TargetDataCenterForm';
 import DataCategoryForm from '../DataCategoryForm';
 import CommentForm from '../CommentForm';
+import LicenseSelectionForm from '../LicenseSelectionForm';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -70,6 +71,8 @@ class FormWrapper extends React.PureComponent {
             <div className="col-md-3">
               {/* right col */}
               <h2>Right Col</h2>
+
+              <LicenseSelectionForm />
             </div>
             {/* end right col */}
           </div>
