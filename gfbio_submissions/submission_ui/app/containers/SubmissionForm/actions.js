@@ -4,7 +4,12 @@
  *
  */
 
-import { CHANGE_LICENSE, DEFAULT_ACTION, SUBMIT_FORM } from './constants';
+import {
+  CHANGE_LICENSE,
+  CHANGE_META_DATA_SCHEMA,
+  DEFAULT_ACTION,
+  SUBMIT_FORM,
+} from './constants';
 
 export function defaultAction() {
   return {
@@ -16,6 +21,13 @@ export function changeLicense(license) {
   return {
     type: CHANGE_LICENSE,
     license,
+  };
+}
+
+export function changeMetaDataSchema(metaDataSchema) {
+  return {
+    type: CHANGE_META_DATA_SCHEMA,
+    metaDataSchema,
   };
 }
 

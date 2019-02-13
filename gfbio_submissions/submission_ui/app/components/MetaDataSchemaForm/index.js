@@ -5,7 +5,14 @@
  */
 
 import React from 'react';
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
+import { createStructuredSelector } from 'reselect';
+import { connect } from 'react-redux';
+import injectReducer from 'utils/injectReducer';
+import { compose } from 'redux';
+import reducer from '../../containers/SubmissionForm/reducer';
+import { makeSelectMetaDataSchema } from '../../containers/SubmissionForm/selectors';
+import { changeMetaDataSchema } from '../../containers/SubmissionForm/actions';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -33,6 +40,7 @@ class MetaDataSchemaForm extends React.PureComponent {
         data-target="#collapseMetaData"
         aria-expanded="false"
         aria-controls="collapseMetaData"
+        onClick={() => this.props.onClickMetaDataSchema(schema)}
       >
         {schema}
         <a
@@ -62,7 +70,7 @@ class MetaDataSchemaForm extends React.PureComponent {
             aria-controls="collapseMetaData"
           >
             <i className="fa fa-code" />
-            None
+            {this.props.metaDataSchema}
             <p className="align-bottom">change</p>
           </button>
 
@@ -77,6 +85,30 @@ class MetaDataSchemaForm extends React.PureComponent {
   }
 }
 
-MetaDataSchemaForm.propTypes = {};
+MetaDataSchemaForm.propTypes = {
+  onClickMetaDataSchema: PropTypes.func,
+  metaDataSchema: PropTypes.string,
+};
 
-export default MetaDataSchemaForm;
+const mapStateToProps = createStructuredSelector({
+  metaDataSchema: makeSelectMetaDataSchema(),
+});
+
+function mapDispatchToProps(dispatch) {
+  return {
+    onClickMetaDataSchema: metaDataSchema =>
+      dispatch(changeMetaDataSchema(metaDataSchema)),
+  };
+}
+
+const withConnect = connect(
+  mapStateToProps,
+  mapDispatchToProps,
+);
+const withReducer = injectReducer({ key: 'submissionForm', reducer });
+
+export default compose(
+  withReducer,
+  withConnect,
+)(MetaDataSchemaForm);
+// export default MetaDataSchemaForm;

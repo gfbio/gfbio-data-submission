@@ -24,6 +24,11 @@ const makeSelectLicense = () =>
     substate.get('license'),
   );
 
+const makeSelectMetaDataSchema = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('metaDataSchema'),
+  );
+
 export default makeSelectSubmissionForm;
 
-export { selectSubmissionFormDomain, makeSelectLicense };
+export { selectSubmissionFormDomain, makeSelectLicense, makeSelectMetaDataSchema };
