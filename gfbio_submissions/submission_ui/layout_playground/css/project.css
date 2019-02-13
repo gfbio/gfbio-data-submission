@@ -479,7 +479,6 @@ section#twitter i {
 }
 
 section.sub-navi {
-  margin-top: 57px;
   padding: .5rem 0 2rem 0;
 }
 
@@ -577,6 +576,20 @@ form.pagewide-form .custom-control-input:checked ~ .custom-control-label::before
 }
 
 form.pagewide-form .custom-control-input:focus ~ .custom-control-label::before {
+  border-color: rgba(129, 178, 72, 0.7);
+  -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
+  box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
+  outline-color: rgba(129, 178, 72, 0.7);
+}
+
+form.pagewide-form .dropzone {
+  border: 1px solid #ced4da;
+  border-radius: .25rem;
+  padding: .375rem .75rem .375rem .75rem;
+  height: 8rem;
+}
+
+form.pagewide-form .dropzone:focus {
   border-color: rgba(129, 178, 72, 0.7);
   -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
   box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);

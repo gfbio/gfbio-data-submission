@@ -160,7 +160,7 @@
 
 section.sub-navi {
   // TODO: hardcoded top margin to adapt for 57px floating main navigation
-  margin-top: 57px;
+  // margin-top: 57px;
   padding: .5rem 0 2rem 0;
 
   .nav {
@@ -282,6 +282,18 @@ form.pagewide-form {
 
   }
 
+  .dropzone {
+    border: 1px solid $form-gray-1;
+    border-radius: .25rem;
+    padding: .375rem .75rem .375rem .75rem;
+    height: 8rem;
+
+    &:focus {
+      border-color: $gfbio-green-0-7;
+      box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+      outline-color: $gfbio-green-0-7;
+    }
+  }
 
   .contributor {
     font-size: 1rem;
