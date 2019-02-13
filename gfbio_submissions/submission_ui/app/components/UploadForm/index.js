@@ -7,7 +7,6 @@
 import React from 'react';
 import classNames from 'classnames';
 import Dropzone from 'react-dropzone';
-import { Field } from 'redux-form/immutable';
 // import PropTypes from 'prop-types';
 // import styled from 'styled-components';
 

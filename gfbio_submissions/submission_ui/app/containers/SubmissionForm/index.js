@@ -12,22 +12,15 @@ import { compose } from 'redux';
 
 import injectSaga from 'utils/injectSaga';
 import injectReducer from 'utils/injectReducer';
+import FormWrapper from 'components/FormWrapper';
 import makeSelectSubmissionForm from './selectors';
 import reducer from './reducer';
 import saga from './saga';
 import { submitForm } from './actions';
-import FormWrapper from 'components/FormWrapper';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
-  // submit = values => {
-  //   console.log('SubmissionForm class method. submitted values');
-  //   console.log(values);
-  // };
-
   render() {
-    // {/* <FormattedMessage {...messages.header} /> */}
-    // {/*<ContactForm onSubmit={this.submit} />*/}
     console.log('render SubmissionForm');
     return (
       <div id="submission-form-wrapper">
@@ -57,11 +50,6 @@ export class SubmissionForm extends React.Component {
         </section>
 
         <FormWrapper onSubmit={this.props.handleSubmit} />
-
-        {/* <FormattedMessage {...messages.header} /> */}
-        {/* <h1>FORM ?</h1> */}
-        {/* /!*<ContactForm onSubmit={this.submit} />*!/ */}
-        {/* <ContactForm onSubmit={this.props.handleSubmit} /> */}
       </div>
     );
   }
