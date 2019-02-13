@@ -14,6 +14,7 @@ import DataCategoryForm from '../DataCategoryForm';
 import CommentForm from '../CommentForm';
 import LicenseSelectionForm from '../LicenseSelectionForm';
 import LegalRequirementsForm from '../LegalRequirementsForm';
+import MetaDataSchemaForm from '../MetaDataSchemaForm';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -76,6 +77,8 @@ class FormWrapper extends React.PureComponent {
               <LicenseSelectionForm />
 
               <LegalRequirementsForm />
+
+              <MetaDataSchemaForm />
 
             </div>
             {/* end right col */}
