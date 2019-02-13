@@ -19,5 +19,11 @@ const selectSubmissionFormDomain = state =>
 const makeSelectSubmissionForm = () =>
   createSelector(selectSubmissionFormDomain, substate => substate.toJS());
 
+const makeSelectLicense = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('license'),
+  );
+
 export default makeSelectSubmissionForm;
-export { selectSubmissionFormDomain };
+
+export { selectSubmissionFormDomain, makeSelectLicense };

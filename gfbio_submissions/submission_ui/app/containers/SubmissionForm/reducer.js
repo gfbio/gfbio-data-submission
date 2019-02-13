@@ -7,9 +7,13 @@
 import { fromJS } from 'immutable';
 import { DEFAULT_ACTION, SUBMIT_FORM } from './constants';
 
-export const initialState = fromJS({});
+export const initialState = fromJS({
+  license: 'CC BY 4.0',
+});
 
 function submissionFormReducer(state = initialState, action) {
+  // console.log('submissionFormReducer ');
+  // console.log(state);
   switch (action.type) {
     case DEFAULT_ACTION:
       return state;

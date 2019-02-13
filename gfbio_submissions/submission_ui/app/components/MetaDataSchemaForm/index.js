@@ -29,13 +29,16 @@ class MetaDataSchemaForm extends React.PureComponent {
       <button
         className="btn btn-primary btn-block btn-license text-left"
         type="button"
-        data-toggle="collapse"
+        data-toggle="collapse show"
         data-target="#collapseMetaData"
         aria-expanded="false"
         aria-controls="collapseMetaData"
       >
         {schema}
-        <a className="license-link align-bottom" href={`edit_${schema}`}>
+        <a
+          className="license-link align-bottom"
+          href={`link_to_details_of_${schema}`}
+        >
           details
         </a>
       </button>

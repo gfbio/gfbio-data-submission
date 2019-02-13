@@ -5,7 +5,14 @@
  */
 
 import React from 'react';
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import injectReducer from 'utils/injectReducer';
+import { createStructuredSelector } from 'reselect';
+import { compose } from 'redux';
+// import { makeSelectLicense } from '../../containers/SubmissionForm/selectors';
+import reducer from '../../containers/SubmissionForm/reducer';
+import { makeSelectLicense } from '../../containers/SubmissionForm/selectors';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -33,13 +40,13 @@ class LicenseSelectionForm extends React.PureComponent {
       <button
         className="btn btn-primary btn-block btn-license text-left"
         type="button"
-        data-toggle="collapse"
+        data-toggle="collapse show"
         data-target="#collapseLicense"
         aria-expanded="false"
         aria-controls="collapseLicense"
       >
         {license}
-        <a className="align-bottom" href={`edit_${license}`}>
+        <a className="align-bottom" href={`link_to_details_of_${license}`}>
           details
         </a>
       </button>
@@ -67,7 +74,7 @@ class LicenseSelectionForm extends React.PureComponent {
             aria-controls="collapseLicense"
           >
             <i className="fa fa-balance-scale" />
-            CC BY 4.0
+            {this.props.license}
             <p className="align-bottom">change</p>
           </button>
 
@@ -82,6 +89,29 @@ class LicenseSelectionForm extends React.PureComponent {
   }
 }
 
-LicenseSelectionForm.propTypes = {};
+LicenseSelectionForm.propTypes = {
+  onClickLicense: PropTypes.func,
+  license: PropTypes.string,
+};
 
-export default LicenseSelectionForm;
+const mapStateToProps = createStructuredSelector({
+  license: makeSelectLicense(),
+});
+
+function mapDispatchToProps(dispatch) {
+  return {
+    // onClickLicense: () => dispatch(finishSubmission()),
+  };
+}
+
+const withConnect = connect(
+  mapStateToProps,
+  mapDispatchToProps,
+);
+const withReducer = injectReducer({ key: 'submissionForm', reducer });
+
+export default compose(
+  withReducer,
+  withConnect,
+)(LicenseSelectionForm);
+// export default LicenseSelectionForm;
