@@ -11,6 +11,7 @@ import MinimalSubmissionForm from 'components/MinimalSubmissionForm';
 import ContributersForm from '../ContributersForm';
 import TargetDataCenterForm from '../TargetDataCenterForm';
 import DataCategoryForm from '../DataCategoryForm';
+import CommentForm from '../CommentForm';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -27,13 +28,16 @@ class FormWrapper extends React.PureComponent {
             <div className="col-md-9">
               {/* left col */}
               <h2>Left col</h2>
+
               <MinimalSubmissionForm />
 
               <ContributersForm />
 
               <TargetDataCenterForm />
 
-              <DataCategoryForm/>
+              <DataCategoryForm />
+
+              <CommentForm />
 
               {/* TODO: candidate for extra component (function) for modularity */}
               <div className="form-row mt-5">
