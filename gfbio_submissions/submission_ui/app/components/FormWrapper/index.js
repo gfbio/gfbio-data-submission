@@ -9,11 +9,11 @@ import { reduxForm } from 'redux-form/immutable';
 import PropTypes from 'prop-types';
 import MinimalSubmissionForm from 'components/MinimalSubmissionForm';
 import ContributersForm from '../ContributersForm';
+import TargetDataCenterForm from '../TargetDataCenterForm';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
 class FormWrapper extends React.PureComponent {
-  // TODO: needs actual Functionality. Maybe a connection to store/reducer
   render() {
     return (
       <form
@@ -29,6 +29,8 @@ class FormWrapper extends React.PureComponent {
               <MinimalSubmissionForm />
 
               <ContributersForm />
+
+              <TargetDataCenterForm />
 
               {/* TODO: candidate for extra component (function) for modularity */}
               <div className="form-row mt-5">
