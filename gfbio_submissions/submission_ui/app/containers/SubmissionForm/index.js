@@ -25,10 +25,8 @@ export class SubmissionForm extends React.Component {
     return (
       <div id="submission-form-wrapper">
         {/* TODO: is div id necessary ? */}
-        <h1>Submission Form App</h1>
-
         {/* TODO: extract to component. */}
-        {/* TODO: candidate for redc */}
+        {/* TODO: candidate for redux-router */}
         <section className="sub-navi">
           <div className="container">
             <div className="row">
