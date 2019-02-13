@@ -39,8 +39,8 @@ class UploadForm extends React.PureComponent {
                   <p>Drop files here...</p>
                 ) : (
                   <p>
-                    Try dropping some files here, or click to select files to
-                    upload.
+                    Try <b>dropping</b> some files here, or <b>click</b> to
+                    select files to upload.
                   </p>
                 )}
               </div>
