@@ -29,7 +29,7 @@ class LicenseSelectionForm extends React.PureComponent {
   ];
 
   licenseListElements = this.licenseList.map(license => (
-    <li className="list-group-item">
+    <li className="list-group-item" key={license.replace(/ /g, '')}>
       <button
         className="btn btn-primary btn-block btn-license text-left"
         type="button"
