@@ -16,7 +16,7 @@ class LegalRequirementsForm extends React.PureComponent {
       <div>
         <header className="header header-left form-header-top">
           <h2 className="section-title">Legal Requirements</h2>
-          <p className="section-subtitle"></p>
+          <p className="section-subtitle" />
         </header>
         <div className="form-group">
           <div className="custom-control custom-checkbox">
@@ -51,8 +51,10 @@ class LegalRequirementsForm extends React.PureComponent {
               component="input"
               type="checkbox"
             />
-            <label className="custom-control-label"
-                   htmlFor="personalInformation">
+            <label
+              className="custom-control-label"
+              htmlFor="personalInformation"
+            >
               Sensitive Personal Information
             </label>
           </div>
