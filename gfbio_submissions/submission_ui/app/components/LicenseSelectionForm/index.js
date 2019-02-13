@@ -68,9 +68,7 @@ class LicenseSelectionForm extends React.PureComponent {
           >
             <i className="fa fa-balance-scale" />
             CC BY 4.0
-            <p className="align-bottom" href="EDIT_LICENSE">
-              change
-            </p>
+            <p className="align-bottom">change</p>
           </button>
 
           <div className="collapse" id="collapseLicense">

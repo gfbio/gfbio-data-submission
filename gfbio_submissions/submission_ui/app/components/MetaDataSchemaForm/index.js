@@ -60,9 +60,7 @@ class MetaDataSchemaForm extends React.PureComponent {
           >
             <i className="fa fa-code" />
             None
-            <p className="align-bottom">
-              change
-            </p>
+            <p className="align-bottom">change</p>
           </button>
 
           <div className="collapse" id="collapseMetaData">
