@@ -10,9 +10,9 @@ import { connect } from 'react-redux';
 import injectReducer from 'utils/injectReducer';
 import { createStructuredSelector } from 'reselect';
 import { compose } from 'redux';
-// import { makeSelectLicense } from '../../containers/SubmissionForm/selectors';
 import reducer from '../../containers/SubmissionForm/reducer';
 import { makeSelectLicense } from '../../containers/SubmissionForm/selectors';
+import { changeLicense } from '../../containers/SubmissionForm/actions';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -44,6 +44,7 @@ class LicenseSelectionForm extends React.PureComponent {
         data-target="#collapseLicense"
         aria-expanded="false"
         aria-controls="collapseLicense"
+        onClick={() => this.props.onClickLicense(license)}
       >
         {license}
         <a className="align-bottom" href={`link_to_details_of_${license}`}>
@@ -100,7 +101,7 @@ const mapStateToProps = createStructuredSelector({
 
 function mapDispatchToProps(dispatch) {
   return {
-    // onClickLicense: () => dispatch(finishSubmission()),
+    onClickLicense: license => dispatch(changeLicense(license)),
   };
 }
 
@@ -114,4 +115,3 @@ export default compose(
   withReducer,
   withConnect,
 )(LicenseSelectionForm);
-// export default LicenseSelectionForm;
