@@ -639,6 +639,16 @@ form.pagewide-form .btn-license {
   border-color: #ced4da;
 }
 
+form.pagewide-form .btn-license p {
+  color: #495057;
+  font-size: .75rem;
+  text-decoration: none;
+  float: right;
+  line-height: 1.5rem;
+  margin: 0;
+  padding: 0;
+}
+
 form.pagewide-form .btn-license:focus {
   -webkit-box-shadow: none;
   box-shadow: none;
@@ -656,6 +666,10 @@ form.pagewide-form .btn-license:hover:focus, form.pagewide-form .btn-license:not
 }
 
 form.pagewide-form .btn-license:hover a, form.pagewide-form .btn-license:not(:disabled):not(.disabled):active a, form.pagewide-form .btn-license:not(:disabled):not(.disabled).active a {
+  color: #3CACE4;
+}
+
+form.pagewide-form .btn-license:hover p, form.pagewide-form .btn-license:not(:disabled):not(.disabled):active p, form.pagewide-form .btn-license:not(:disabled):not(.disabled).active p {
   color: #3CACE4;
 }
 

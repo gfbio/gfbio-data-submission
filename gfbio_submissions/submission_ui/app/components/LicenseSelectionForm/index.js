@@ -39,7 +39,7 @@ class LicenseSelectionForm extends React.PureComponent {
         aria-controls="collapseLicense"
       >
         {license}
-        <a className="license-link align-bottom" href={`edit_${license}`}>
+        <a className="align-bottom" href={`edit_${license}`}>
           details
         </a>
       </button>
@@ -68,9 +68,9 @@ class LicenseSelectionForm extends React.PureComponent {
           >
             <i className="fa fa-balance-scale" />
             CC BY 4.0
-            <a className="license-link align-bottom" href="EDIT_LICENSE">
+            <p className="align-bottom" href="EDIT_LICENSE">
               change
-            </a>
+            </p>
           </button>
 
           <div className="collapse" id="collapseLicense">
