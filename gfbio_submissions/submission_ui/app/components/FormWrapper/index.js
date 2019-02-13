@@ -8,10 +8,12 @@ import React from 'react';
 import { reduxForm } from 'redux-form/immutable';
 import PropTypes from 'prop-types';
 import MinimalSubmissionForm from 'components/MinimalSubmissionForm';
+import ContributersForm from '../ContributersForm';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
 class FormWrapper extends React.PureComponent {
+  // TODO: needs actual Functionality. Maybe a connection to store/reducer
   render() {
     return (
       <form
@@ -26,16 +28,20 @@ class FormWrapper extends React.PureComponent {
               <h2>Left col</h2>
               <MinimalSubmissionForm />
 
+              <ContributersForm />
+
               {/* TODO: candidate for extra component (function) for modularity */}
               <div className="form-row mt-5">
                 <div className="form-group col-md-4">
-                  <button className="btn btn-secondary btn-block btn-light-blue">
+                  <button
+                    className="btn btn-secondary btn-block btn-light-blue">
                     <i className="fa fa-clipboard" />
                     Save
                   </button>
                 </div>
                 <div className="form-group col-md-4">
-                  <button className="btn btn-secondary btn-block btn-light-blue">
+                  <button
+                    className="btn btn-secondary btn-block btn-light-blue">
                     <i className="fa fa-calendar" />
                     Set Embargo
                   </button>
