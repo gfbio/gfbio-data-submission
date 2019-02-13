@@ -33,7 +33,7 @@ class FormWrapper extends React.PureComponent {
 
               <TargetDataCenterForm />
 
-              <DataCategoryForm />
+              <DataCategoryForm/>
 
               {/* TODO: candidate for extra component (function) for modularity */}
               <div className="form-row mt-5">

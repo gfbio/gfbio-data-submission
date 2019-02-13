@@ -11,40 +11,28 @@ import { Field } from 'redux-form/immutable';
 
 /* eslint-disable react/prefer-stateless-function */
 class TargetDataCenterForm extends React.PureComponent {
+  dataCenterList = [
+    '',
+    'ENA – European Nucleotide Archive',
+    'PANGAEA – Data Publisher for Earth & Environmental Science',
+    'Data Centers at Natural Science Collections',
+    'BGBM – Botanic Garden and Botanical Museum Berlin, Freie Universität Berlin',
+    'DSMZ – Leibniz Institute DSMZ – German Collection of Microorganisms and Cell Cultures, Braunschweig',
+    'MfN – Leibniz Institute for Research on Evolution and Biodiversity, Berlin',
+    'SGN – Senckenberg Gesellschaft für Naturforschung – Leibniz Institute, Frankfurt',
+    'SMNS – State Museum of Natural History Stuttgart',
+    'SNSB – Staatliche Naturwissenschaftliche Sammlungen Bayerns – SNSB IT Center, München',
+    'ZFMK – Zoological Research Museum Alexander Koenig – Leibniz Institute for Animal Biodiversity, Bonn',
+  ];
+
+  dataCenterOptions = this.dataCenterList.map((center, index) => (
+    <option key={index}>{center}</option>
+  ));
+
   renderDataCenterSelector = ({ input, meta: { touched, error } }) => (
     <div className="form-group">
       <select className="form-control" {...input}>
-        <option />
-        <option>ENA – European Nucleotide Archive</option>
-        <option>
-          PANGAEA – Data Publisher for Earth & Environmental Science
-        </option>
-        <option>Data Centers at Natural Science Collections</option>
-        <option>
-          BGBM – Botanic Garden and Botanical Museum Berlin, Freie Universität
-          Berlin
-        </option>
-        <option>
-          DSMZ – Leibniz Institute DSMZ – German Collection of Microorganisms
-          and Cell Cultures, Braunschweig
-        </option>
-        <option>
-          MfN – Leibniz Institute for Research on Evolution and Biodiversity,
-          Berlin
-        </option>
-        <option>
-          SGN – Senckenberg Gesellschaft für Naturforschung – Leibniz Institute,
-          Frankfurt
-        </option>
-        <option>SMNS – State Museum of Natural History Stuttgart</option>
-        <option>
-          SNSB – Staatliche Naturwissenschaftliche Sammlungen Bayerns – SNSB IT
-          Center, München
-        </option>
-        <option>
-          ZFMK – Zoological Research Museum Alexander Koenig – Leibniz Institute
-          for Animal Biodiversity, Bonn
-        </option>
+        {this.dataCenterOptions}
       </select>
       {touched && error && <span>{error}</span>}
     </div>
