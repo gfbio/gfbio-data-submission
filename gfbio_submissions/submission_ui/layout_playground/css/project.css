@@ -417,6 +417,10 @@ section#twitter i {
   box-shadow: none;
 }
 
+.green i {
+  padding-right: .5rem;
+}
+
 .btn-light-blue {
   background-color: #3CACE4;
   border-color: #3bace4;

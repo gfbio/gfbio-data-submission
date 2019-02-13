@@ -65,7 +65,6 @@ class LegalRequirementsForm extends React.PureComponent {
               id="uncertain"
               component="input"
               type="checkbox"
-              checked="checked"
             />
             <label className="custom-control-label" htmlFor="uncertain">
               Uncertain
