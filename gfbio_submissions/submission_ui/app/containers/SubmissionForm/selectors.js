@@ -36,6 +36,11 @@ const makeSelectMetaDataSchema = () =>
     substate.get('metaDataSchema'),
   );
 
+const makeSelectReduxFormForm = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('reduxFormForm'),
+  );
+
 export default makeSelectSubmissionForm;
 
 export {
@@ -43,4 +48,5 @@ export {
   makeSelectLicense,
   makeSelectMetaDataSchema,
   makeSelectFormWrapper,
+  makeSelectReduxFormForm,
 };

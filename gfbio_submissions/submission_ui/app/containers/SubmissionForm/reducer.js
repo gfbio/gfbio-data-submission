@@ -16,6 +16,7 @@ import {
 export const initialState = fromJS({
   license: 'CC BY 4.0',
   metaDataSchema: 'None',
+  reduxFormForm: {},
 });
 
 function submissionFormReducer(state = initialState, action) {
@@ -40,7 +41,7 @@ function submissionFormReducer(state = initialState, action) {
       console.log('reducer SUBMIT_FORM');
       console.log(action.form);
       console.log('------------');
-      return state;
+      return state.set('reduxFormForm', action.form);
     default:
       return state;
   }

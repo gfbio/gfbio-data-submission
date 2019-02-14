@@ -69,6 +69,11 @@ const mapStateToProps = createStructuredSelector({
   reduxFormForm: makeSelectFormWrapper(),
 });
 
+// TODO: Decision has to be made to handle save by accessing 'formWrapper'
+//  from global state via selector
+//  or
+//  use form.onSubmit with parameter in method. this way validation will
+//  happen on save like on submit
 function mapDispatchToProps(dispatch) {
   return {
     handleSubmit: form => dispatch(submitForm(form)),
