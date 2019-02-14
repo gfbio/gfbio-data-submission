@@ -9,6 +9,7 @@ import {
   CHANGE_LICENSE,
   CHANGE_META_DATA_SCHEMA,
   DEFAULT_ACTION,
+  SAVE_FORM,
   SUBMIT_FORM,
 } from './constants';
 
@@ -29,6 +30,12 @@ function submissionFormReducer(state = initialState, action) {
       console.log('reducer CHANGE_META_DATA_SCHEMA');
       console.log(action.metaDataSchema);
       return state.set('metaDataSchema', action.metaDataSchema);
+    case SAVE_FORM:
+      console.log('reducer SAVE_FORM');
+      console.log('current state of form');
+      console.log(state);
+      console.log('------------');
+      return state;
     case SUBMIT_FORM:
       console.log('reducer SUBMIT_FORM');
       console.log(action.form);

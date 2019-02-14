@@ -13,15 +13,14 @@ import { compose } from 'redux';
 import injectSaga from 'utils/injectSaga';
 import injectReducer from 'utils/injectReducer';
 import FormWrapper from 'components/FormWrapper';
-import makeSelectSubmissionForm from './selectors';
 import reducer from './reducer';
 import saga from './saga';
-import { submitForm } from './actions';
+import { saveForm, submitForm } from './actions';
+import makeSelectSubmissionForm, { makeSelectFormWrapper } from './selectors';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
   render() {
-    console.log('render SubmissionForm');
     return (
       <div id="submission-form-wrapper">
         {/* TODO: is div id necessary ? */}
@@ -47,7 +46,10 @@ export class SubmissionForm extends React.Component {
           </div>
         </section>
 
-        <FormWrapper onSubmit={this.props.handleSubmit} />
+        <FormWrapper
+          onSubmit={this.props.handleSubmit}
+          handleSave={this.props.handleSave}
+        />
       </div>
     );
   }
@@ -55,15 +57,22 @@ export class SubmissionForm extends React.Component {
 
 SubmissionForm.propTypes = {
   handleSubmit: PropTypes.func.isRequired,
+  handleSave: PropTypes.func.isRequired,
+  // TODO: maybe remove once save workflow is established
+  // submissionForm: PropTypes.object,
+  // reduxFormForm: PropTypes.object,
 };
 
 const mapStateToProps = createStructuredSelector({
   submissionForm: makeSelectSubmissionForm(),
+  // TODO: maybe remove once save workflow is established
+  reduxFormForm: makeSelectFormWrapper(),
 });
 
 function mapDispatchToProps(dispatch) {
   return {
     handleSubmit: form => dispatch(submitForm(form)),
+    handleSave: () => dispatch(saveForm()),
   };
 }
 

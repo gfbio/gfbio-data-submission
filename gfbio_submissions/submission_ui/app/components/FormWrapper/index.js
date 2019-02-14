@@ -57,7 +57,7 @@ class FormWrapper extends React.PureComponent {
 
           <div className="row">
             <div className="col-md-9">
-              <SubmitFormSection />
+              <SubmitFormSection onSave={this.props.handleSave} />
               {/* left col */}
             </div>
             <div className="col-md-3">{/* right col */}</div>
@@ -70,6 +70,7 @@ class FormWrapper extends React.PureComponent {
 
 FormWrapper.propTypes = {
   handleSubmit: PropTypes.func,
+  handleSave: PropTypes.func,
 };
 
 export default reduxForm({ form: 'formWrapper' })(FormWrapper);

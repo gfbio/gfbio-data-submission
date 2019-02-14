@@ -11,6 +11,13 @@ const selectSubmissionFormDomain = state =>
 /**
  * Other specific selectors
  */
+const selectReduxFormDomain = state => state.get('form', initialState);
+
+/*
+* redux-form returns regular state. not ImmutableJS state ...
+* */
+const makeSelectFormWrapper = () =>
+  createSelector(selectReduxFormDomain, substate => substate.formWrapper);
 
 /**
  * Default selector used by SubmissionForm
@@ -31,4 +38,9 @@ const makeSelectMetaDataSchema = () =>
 
 export default makeSelectSubmissionForm;
 
-export { selectSubmissionFormDomain, makeSelectLicense, makeSelectMetaDataSchema };
+export {
+  selectSubmissionFormDomain,
+  makeSelectLicense,
+  makeSelectMetaDataSchema,
+  makeSelectFormWrapper,
+};
