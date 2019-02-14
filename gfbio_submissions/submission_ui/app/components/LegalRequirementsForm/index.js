@@ -12,6 +12,7 @@ import { Field } from 'redux-form/lib/immutable';
 /* eslint-disable react/prefer-stateless-function */
 class LegalRequirementsForm extends React.PureComponent {
   render() {
+    const legalRequirementsPrefix = 'legal-requirement ';
     return (
       <div>
         <header className="header header-left form-header-top">
@@ -22,7 +23,7 @@ class LegalRequirementsForm extends React.PureComponent {
           <div className="custom-control custom-checkbox">
             <Field
               className="custom-control-input"
-              name="nagoyaProtocol"
+              name={`${legalRequirementsPrefix}Nagoya Protocol`}
               id="nagoyaProtocol"
               component="input"
               type="checkbox"
@@ -34,7 +35,7 @@ class LegalRequirementsForm extends React.PureComponent {
           <div className="custom-control custom-checkbox">
             <Field
               className="custom-control-input"
-              name="iucnList"
+              name={`${legalRequirementsPrefix}IUCN Red List of Threatened Species`}
               id="iucnList"
               component="input"
               type="checkbox"
@@ -46,7 +47,7 @@ class LegalRequirementsForm extends React.PureComponent {
           <div className="custom-control custom-checkbox">
             <Field
               className="custom-control-input"
-              name="personalInformation"
+              name={`${legalRequirementsPrefix}Sensitive Personal Information`}
               id="personalInformation"
               component="input"
               type="checkbox"
@@ -61,7 +62,7 @@ class LegalRequirementsForm extends React.PureComponent {
           <div className="custom-control custom-checkbox">
             <Field
               className="custom-control-input"
-              name="uncertain"
+              name={`${legalRequirementsPrefix}Uncertain`}
               id="uncertain"
               component="input"
               type="checkbox"

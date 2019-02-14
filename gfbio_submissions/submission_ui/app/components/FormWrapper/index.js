@@ -8,13 +8,13 @@ import React from 'react';
 import { reduxForm } from 'redux-form/immutable';
 import PropTypes from 'prop-types';
 import MinimalSubmissionForm from 'components/MinimalSubmissionForm';
-import ContributersForm from '../ContributersForm';
-import TargetDataCenterForm from '../TargetDataCenterForm';
-import DataCategoryForm from '../DataCategoryForm';
-import CommentForm from '../CommentForm';
-import LicenseSelectionForm from '../LicenseSelectionForm';
-import LegalRequirementsForm from '../LegalRequirementsForm';
-import MetaDataSchemaForm from '../MetaDataSchemaForm';
+import ContributersForm from 'components/ContributersForm';
+import TargetDataCenterForm from 'components/TargetDataCenterForm';
+import DataCategoryForm from 'components/DataCategoryForm';
+import CommentForm from 'components/CommentForm';
+import LicenseSelectionForm from 'components/LicenseSelectionForm';
+import LegalRequirementsForm from 'components/LegalRequirementsForm';
+import MetaDataSchemaForm from 'components/MetaDataSchemaForm';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -56,10 +56,6 @@ class FormWrapper extends React.PureComponent {
 
           <div className="row">
             <div className="col-md-9">
-              {/* <SubmitFormSection */}
-              {/* onSave={this.props.handleSave} */}
-              {/* handleSubmit={this.props.handleSubmit} */}
-              {/* /> */}
               {/* left col */}
 
               <div className="form-row mt-5">
@@ -67,7 +63,6 @@ class FormWrapper extends React.PureComponent {
                   <button
                     type="submit"
                     className="btn btn-secondary btn-block btn-light-blue"
-                    // onClick={() => this.props.onSave('remoteSubmit')}
                     onClick={this.props.handleSubmit(values =>
                       this.props.onSubmit({
                         ...values,
@@ -115,7 +110,6 @@ class FormWrapper extends React.PureComponent {
 
 FormWrapper.propTypes = {
   handleSubmit: PropTypes.func,
-  // handleSave: PropTypes.func,
   onSubmit: PropTypes.func,
 };
 
