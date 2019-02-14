@@ -1,11 +1,11 @@
-import { take, call, put, select, takeLatest, all } from 'redux-saga/effects';
+import { all, call, select, takeLatest, put } from 'redux-saga/effects';
 import { SAVE_FORM, SUBMIT_FORM } from './constants';
 import {
-  makeSelectFormWrapper,
   makeSelectLicense,
   makeSelectMetaDataSchema,
   makeSelectReduxFormForm,
 } from './selectors';
+import { submitFormError, submitFormSuccess } from './actions';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -19,12 +19,15 @@ export function* performSubmitFormSaga() {
   const data = Object.assign({ license, metaDataSchema }, reduxFormForm);
   try {
     // const response = yield call(sendMethod, param1, param2);
-    const response = yield call(sleep, 3000);
+    yield call(sleep, 3000);
+    const response = '{}';
     console.log('sent data');
     console.log(data);
+    yield put(submitFormSuccess(response));
   } catch (error) {
     console.log('Error');
     console.log(error);
+    yield put(submitFormError(error));
   }
   console.log('------ END performSubmitFormSaga -----');
 }

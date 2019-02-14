@@ -10,7 +10,7 @@ import {
   CHANGE_META_DATA_SCHEMA,
   DEFAULT_ACTION,
   SAVE_FORM,
-  SUBMIT_FORM,
+  SUBMIT_FORM, SUBMIT_FORM_ERROR, SUBMIT_FORM_SUCCESS,
 } from './constants';
 
 export const initialState = fromJS({
@@ -40,6 +40,16 @@ function submissionFormReducer(state = initialState, action) {
       console.log(action.form);
       console.log('------------');
       return state.set('reduxFormForm', action.form);
+    case SUBMIT_FORM_SUCCESS:
+      console.log('reducer SUBMIT_FORM_SUCCESS');
+      console.log(action.response);
+      console.log('------------');
+      return state;
+    case SUBMIT_FORM_ERROR:
+      console.log('reducer SUBMIT_FORM_ERROR');
+      console.log(action.errorResponse);
+      console.log('------------');
+      return state;
     default:
       return state;
   }
