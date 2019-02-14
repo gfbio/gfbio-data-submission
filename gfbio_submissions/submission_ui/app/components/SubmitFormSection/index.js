@@ -15,9 +15,15 @@ class SubmitFormSection extends React.PureComponent {
       <div className="form-row mt-5">
         <div className="form-group col-md-4">
           <button
-            type="button"
+            type="submit"
             className="btn btn-secondary btn-block btn-light-blue"
-            onClick={() => this.props.onSave('remoteSubmit')}
+            // onClick={() => this.props.onSave('remoteSubmit')}
+            onClick={this.props.handleSubmit(values =>
+              this.props.onSubmit({
+                ...values,
+                pill: 'blue',
+              }),
+            )}
           >
             <i className="fa fa-clipboard" />
             Save
@@ -44,7 +50,9 @@ class SubmitFormSection extends React.PureComponent {
 }
 
 SubmitFormSection.propTypes = {
-  onSave: PropTypes.func.isRequired,
+  onSave: PropTypes.func,
+  handleSubmit: PropTypes.func,
+  onSubmit: PropTypes.func,
 };
 
 export default SubmitFormSection;

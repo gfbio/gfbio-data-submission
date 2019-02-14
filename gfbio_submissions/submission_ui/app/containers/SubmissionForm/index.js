@@ -74,6 +74,7 @@ const mapStateToProps = createStructuredSelector({
 //  or
 //  use form.onSubmit with parameter in method. this way validation will
 //  happen on save like on submit
+// but there is only on signal for sagas to take, maybe fork saga ?
 function mapDispatchToProps(dispatch) {
   return {
     handleSubmit: form => dispatch(submitForm(form)),
