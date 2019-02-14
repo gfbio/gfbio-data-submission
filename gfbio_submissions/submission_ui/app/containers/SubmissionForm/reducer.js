@@ -33,8 +33,6 @@ function submissionFormReducer(state = initialState, action) {
       return state.set('metaDataSchema', action.metaDataSchema);
     case SAVE_FORM:
       console.log('reducer SAVE_FORM');
-      console.log('current state of form');
-      console.log(state);
       console.log('------------');
       return state;
     case SUBMIT_FORM:

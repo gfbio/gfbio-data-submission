@@ -71,7 +71,7 @@ class FormWrapper extends React.PureComponent {
                     onClick={this.props.handleSubmit(values =>
                       this.props.onSubmit({
                         ...values,
-                        pill: 'blue',
+                        workflow: 'save',
                       }),
                     )}
                   >
@@ -95,7 +95,7 @@ class FormWrapper extends React.PureComponent {
                     onClick={this.props.handleSubmit(values =>
                       this.props.onSubmit({
                         ...values,
-                        pill: 'red',
+                        workflow: 'submit',
                       }),
                     )}
                   >
@@ -115,7 +115,7 @@ class FormWrapper extends React.PureComponent {
 
 FormWrapper.propTypes = {
   handleSubmit: PropTypes.func,
-  handleSave: PropTypes.func,
+  // handleSave: PropTypes.func,
   onSubmit: PropTypes.func,
 };
 

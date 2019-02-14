@@ -18,14 +18,28 @@ export function* performSaveFormSaga() {
   console.log('------ END performSaveFormSaga -----');
 }
 
-export function* submitFormSaga() {
-  yield takeLatest(SUBMIT_FORM, performSubmitFormSaga);
+export function* processSubmitFormTypeSaga() {
+  console.log('processSubmitFormType');
+  const reduxFormForm = yield select(makeSelectReduxFormForm());
+  console.log(reduxFormForm);
+  if (reduxFormForm.workflow === 'save') {
+    console.log('DO SAVE');
+    yield* performSaveFormSaga();
+  } else {
+    console.log('DO SUBMIT (else)');
+    yield* performSubmitFormSaga();
+  }
+  console.log('------ END processSubmitFormType -----');
 }
 
-export function* saveFormSaga() {
-  yield takeLatest(SAVE_FORM, performSaveFormSaga);
+export function* submitFormSaga() {
+  yield takeLatest(SUBMIT_FORM, processSubmitFormTypeSaga);
 }
+
+// export function* saveFormSaga() {
+//   yield takeLatest(SAVE_FORM, performSaveFormSaga);
+// }
 
 export default function* rootSaga() {
-  yield all([saveFormSaga(), submitFormSaga()]);
+  yield all([submitFormSaga(), processSubmitFormTypeSaga()]);
 }
