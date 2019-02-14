@@ -9,7 +9,7 @@ import {
   CHANGE_META_DATA_SCHEMA,
   DEFAULT_ACTION,
   SAVE_FORM,
-  SUBMIT_FORM,
+  SUBMIT_FORM, SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_SUCCESS,
 } from './constants';
@@ -44,6 +44,12 @@ export function submitForm(form) {
   return {
     type: SUBMIT_FORM,
     form,
+  };
+}
+
+export function submitFormActive() {
+  return {
+    type: SUBMIT_FORM_ACTIVE,
   };
 }
 

@@ -4,13 +4,24 @@ import {
   makeSelectLicense,
   makeSelectMetaDataSchema,
   makeSelectReduxFormForm,
+  makeSelectSubmitInProgress,
 } from './selectors';
-import { submitFormError, submitFormSuccess } from './actions';
+import {
+  submitFormActive,
+  submitFormError,
+  submitFormSuccess,
+} from './actions';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 export function* performSubmitFormSaga() {
   console.log('performSubmitFormSaga');
+  // TODO: re-think approach to block multi submissions
+  //    good news is TAKE_LATEST really only processes last click
+  //    process starts over and over for every click until last one completes
+  // const submitInProgress = yield select(makeSelectSubmitInProgress());
+  // if (!submitInProgress) {
+  //   yield put(submitFormActive());
   const reduxFormForm = yield select(makeSelectReduxFormForm());
   console.log(reduxFormForm);
   const license = yield select(makeSelectLicense());
@@ -29,6 +40,9 @@ export function* performSubmitFormSaga() {
     console.log(error);
     yield put(submitFormError(error));
   }
+  // } else {
+  //   console.log(`Submit in progress ${submitInProgress} do nothing`);
+  // }
   console.log('------ END performSubmitFormSaga -----');
 }
 

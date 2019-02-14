@@ -41,6 +41,11 @@ const makeSelectReduxFormForm = () =>
     substate.get('reduxFormForm'),
   );
 
+const makeSelectSubmitInProgress = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('submitInProgress'),
+  );
+
 export default makeSelectSubmissionForm;
 
 export {
@@ -49,4 +54,5 @@ export {
   makeSelectMetaDataSchema,
   makeSelectFormWrapper,
   makeSelectReduxFormForm,
+  makeSelectSubmitInProgress,
 };

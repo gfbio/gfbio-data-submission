@@ -20,6 +20,12 @@ import MetaDataSchemaForm from 'components/MetaDataSchemaForm';
 /* eslint-disable react/prefer-stateless-function */
 class FormWrapper extends React.PureComponent {
   render() {
+    let submitIconClass = 'fa-play';
+    let submitButtonText = 'Submit';
+    if (this.props.submitInProgress) {
+      submitIconClass = 'fa-cog fa-spin fa-fw';
+      submitButtonText = 'submitting ...';
+    }
     return (
       <form
         name="wrapping-form"
@@ -94,8 +100,8 @@ class FormWrapper extends React.PureComponent {
                       }),
                     )}
                   >
-                    <i className="fa fa-play" />
-                    Submit
+                    <i className={`fa ${submitIconClass}`} />
+                    {submitButtonText}
                   </button>
                 </div>
               </div>
@@ -111,6 +117,7 @@ class FormWrapper extends React.PureComponent {
 FormWrapper.propTypes = {
   handleSubmit: PropTypes.func,
   onSubmit: PropTypes.func,
+  submitInProgress: PropTypes.bool,
 };
 
 export default reduxForm({ form: 'formWrapper' })(FormWrapper);

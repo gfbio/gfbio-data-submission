@@ -16,7 +16,10 @@ import FormWrapper from 'components/FormWrapper';
 import reducer from './reducer';
 import saga from './saga';
 import { saveForm, submitForm } from './actions';
-import makeSelectSubmissionForm, { makeSelectFormWrapper } from './selectors';
+import makeSelectSubmissionForm, {
+  makeSelectFormWrapper,
+  makeSelectSubmitInProgress,
+} from './selectors';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
@@ -49,6 +52,7 @@ export class SubmissionForm extends React.Component {
         <FormWrapper
           onSubmit={this.props.handleSubmit}
           handleSave={this.props.handleSave}
+          submitInProgress={this.props.submitInProgress}
         />
       </div>
     );
@@ -58,6 +62,7 @@ export class SubmissionForm extends React.Component {
 SubmissionForm.propTypes = {
   handleSubmit: PropTypes.func.isRequired,
   handleSave: PropTypes.func.isRequired,
+  submitInProgress: PropTypes.bool,
   // TODO: maybe remove once save workflow is established
   // submissionForm: PropTypes.object,
   // reduxFormForm: PropTypes.object,
@@ -67,6 +72,7 @@ const mapStateToProps = createStructuredSelector({
   submissionForm: makeSelectSubmissionForm(),
   // TODO: maybe remove once save workflow is established
   reduxFormForm: makeSelectFormWrapper(),
+  submitInProgress: makeSelectSubmitInProgress(),
 });
 
 // TODO: Decision has to be made to handle save by accessing 'formWrapper'
