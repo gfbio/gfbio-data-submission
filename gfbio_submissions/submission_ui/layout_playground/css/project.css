@@ -501,6 +501,12 @@ section.sub-navi .nav .active {
   font-weight: bold;
 }
 
+form.pagewide-form {
+  /*
+    Overwrite react-datepicker styles
+   */
+}
+
 form.pagewide-form .form-group {
   margin-bottom: 2rem;
 }
@@ -757,6 +763,34 @@ form.pagewide-form .react-datepicker-wrapper {
 
 form.pagewide-form .react-datepicker__input-container {
   width: 100%;
+}
+
+form.pagewide-form .react-datepicker {
+  font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  border-color: #ced4da;
+}
+
+form.pagewide-form .react-datepicker__header {
+  border-color: #ced4da;
+  background-color: #f8f8f8;
+}
+
+form.pagewide-form .react-datepicker__current-month {
+  font-weight: 400;
+  font-size: 1rem;
+  color: #666;
+}
+
+form.pagewide-form .react-datepicker__day-name {
+  font-weight: 400;
+  font-size: .9rem;
+  color: #666;
+}
+
+form.pagewide-form .react-datepicker__day {
+  font-weight: 400;
+  font-size: .8rem;
+  color: #666;
 }
 
 body,

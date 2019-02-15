@@ -471,12 +471,44 @@ form.pagewide-form {
     }
   }
 
+  /*
+    Overwrite react-datepicker styles
+   */
   .react-datepicker-wrapper {
     width: 100%;
   }
 
   .react-datepicker__input-container {
     width: 100%;
+  }
+
+  .react-datepicker {
+    @include sans-serif-font;
+    border-color: $form-gray-1;
+  }
+
+  .react-datepicker__header {
+    border-color: $form-gray-1;
+    background-color: $gray-100;
+  }
+
+  .react-datepicker__current-month {
+    font-weight: 400;
+    font-size: 1rem;
+    color: $gray-dark;
+  }
+
+  .react-datepicker__day-name {
+    font-weight: 400;
+    font-size: .9rem;
+    color: $gray-dark;
+  }
+
+  .react-datepicker__day {
+    font-weight: 400;
+    font-size: .8rem;
+    color: $gray-dark;
+    // TODO: focus, hover
   }
 
 }
