@@ -9,8 +9,12 @@ import {
   CHANGE_META_DATA_SCHEMA,
   DEFAULT_ACTION,
   SAVE_FORM,
-  SUBMIT_FORM, SUBMIT_FORM_ACTIVE,
+  SAVE_FORM_ERROR,
+  SAVE_FORM_SUCCESS,
+  SUBMIT_FORM,
+  SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
+  SUBMIT_FORM_START,
   SUBMIT_FORM_SUCCESS,
 } from './constants';
 
@@ -40,10 +44,28 @@ export function saveForm() {
   };
 }
 
+export function saveFormSuccess() {
+  return {
+    type: SAVE_FORM_SUCCESS,
+  };
+}
+
+export function saveFormError() {
+  return {
+    type: SAVE_FORM_ERROR,
+  };
+}
+
 export function submitForm(form) {
   return {
     type: SUBMIT_FORM,
     form,
+  };
+}
+
+export function submitFormStart() {
+  return {
+    type: SUBMIT_FORM_START,
   };
 }
 

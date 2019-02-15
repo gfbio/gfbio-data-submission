@@ -13,9 +13,9 @@ const selectSubmissionFormDomain = state =>
  */
 const selectReduxFormDomain = state => state.get('form', initialState);
 
-/*
-* redux-form returns regular state. not ImmutableJS state ...
-* */
+/**
+ * redux-form returns regular state. not ImmutableJS state ...
+ */
 const makeSelectFormWrapper = () =>
   createSelector(selectReduxFormDomain, substate => substate.formWrapper);
 
@@ -46,6 +46,11 @@ const makeSelectSubmitInProgress = () =>
     substate.get('submitInProgress'),
   );
 
+const makeSelectSaveInProgress = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('saveInProgress'),
+  );
+
 export default makeSelectSubmissionForm;
 
 export {
@@ -55,4 +60,5 @@ export {
   makeSelectFormWrapper,
   makeSelectReduxFormForm,
   makeSelectSubmitInProgress,
+  makeSelectSaveInProgress,
 };

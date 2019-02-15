@@ -1,65 +1,53 @@
-import {
-  all,
-  call,
-  select,
-  takeLatest,
-  put,
-  takeLeading,
-} from 'redux-saga/effects';
-import { SAVE_FORM, SUBMIT_FORM } from './constants';
+import { all, call, put, select, takeLeading } from 'redux-saga/effects';
+import uuid from 'uuid';
+import { SAVE_FORM, SUBMIT_FORM, SUBMIT_FORM_START } from './constants';
 import {
   makeSelectLicense,
   makeSelectMetaDataSchema,
   makeSelectReduxFormForm,
-  makeSelectSubmitInProgress,
 } from './selectors';
 import {
-  submitFormActive,
-  submitFormError,
+  saveForm,
+  saveFormError,
+  saveFormSuccess,
+  submitFormError, submitFormStart,
   submitFormSuccess,
 } from './actions';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 export function* performSubmitFormSaga() {
-  console.log('performSubmitFormSaga');
-  // TODO: re-think approach to block multi submissions
-  //    good news is TAKE_LATEST really only processes last click
-  //    process starts over and over for every click until last one completes
-  // const submitInProgress = yield select(makeSelectSubmitInProgress());
-  // if (!submitInProgress) {
-  //   yield put(submitFormActive());
+  const u4 = uuid.v4();
+  console.log(`performSubmitFormSaga ${u4}`);
   const reduxFormForm = yield select(makeSelectReduxFormForm());
-  console.log(reduxFormForm);
   const license = yield select(makeSelectLicense());
   const metaDataSchema = yield select(makeSelectMetaDataSchema());
-  console.log(`${license} ${metaDataSchema}`);
   const data = Object.assign({ license, metaDataSchema }, reduxFormForm);
   try {
     // const response = yield call(sendMethod, param1, param2);
     yield call(sleep, 3000);
     const response = '{}';
-    console.log('sent data');
-    console.log(data);
     yield put(submitFormSuccess(response));
   } catch (error) {
-    console.log('Error');
-    console.log(error);
     yield put(submitFormError(error));
   }
-  // } else {
-  //   console.log(`Submit in progress ${submitInProgress} do nothing`);
-  // }
-  console.log('------ END performSubmitFormSaga -----');
+  console.log(`------ END performSubmitFormSaga ----- ${u4}`);
 }
 
 export function* performSaveFormSaga() {
   console.log('performSaveFormSaga');
   const reduxFormForm = yield select(makeSelectReduxFormForm());
-  console.log(reduxFormForm);
-  // const license = yield select(makeSelectLicense());
-  // const metaDataSchema = yield select(makeSelectMetaDataSchema());
-  // console.log(`${license} ${metaDataSchema}`);
+  const license = yield select(makeSelectLicense());
+  const metaDataSchema = yield select(makeSelectMetaDataSchema());
+  const data = Object.assign({ license, metaDataSchema }, reduxFormForm);
+  try {
+    // const response = yield call(saveMethod, param1, param2);
+    yield call(sleep, 3000);
+    const response = '{}';
+    yield put(saveFormSuccess(response));
+  } catch (error) {
+    yield put(saveFormError(error));
+  }
   // form state as it is, without submit needed
   // const formWrapper = yield select(makeSelectFormWrapper());
   // console.log(formWrapper);
@@ -67,27 +55,25 @@ export function* performSaveFormSaga() {
 }
 
 export function* processSubmitFormTypeSaga() {
-  console.log('processSubmitFormType');
+  const u4 = uuid.v4();
+  console.log(`processSubmitFormType ${u4}`);
   const reduxFormForm = yield select(makeSelectReduxFormForm());
-  // console.log(reduxFormForm);
   if (reduxFormForm.workflow === 'save') {
-    console.log('DO SAVE');
-    yield* performSaveFormSaga();
+    yield put(saveForm());
   } else if (reduxFormForm.workflow === 'submit') {
-    console.log('DO SUBMIT (else)');
-    // TODO: better fork saga ?
-    //  https://medium.freecodecamp.org/redux-saga-common-patterns-48437892e11c
-    //  https://decembersoft.com/posts/4-tips-for-managing-many-sagas-in-a-react-redux-saga-app/
-    //  https://mysticcoders.com/blog/simplifying-redux-saga-entry-file
-    yield* performSubmitFormSaga();
+    yield put(submitFormStart());
   }
-  console.log('------ END processSubmitFormType -----');
+  console.log(`------ END processSubmitFormType ----- ${u4}`);
 }
 
-export function* submitFormSaga() {
+export function* checkFormTypeSaga() {
   // new feature from rc1 that blocks until finished
   // https://redux-saga.js.org/docs/api/index.html#takeleadingpattern-saga-args
   yield takeLeading(SUBMIT_FORM, processSubmitFormTypeSaga);
+}
+
+export function* submitFormSaga() {
+  yield takeLeading(SUBMIT_FORM_START, performSubmitFormSaga);
 }
 
 export function* saveFormSaga() {
@@ -95,5 +81,5 @@ export function* saveFormSaga() {
 }
 
 export default function* rootSaga() {
-  yield all([submitFormSaga(), saveFormSaga()]);
+  yield all([checkFormTypeSaga(), saveFormSaga(), submitFormSaga()]);
 }

@@ -22,10 +22,17 @@ class FormWrapper extends React.PureComponent {
   render() {
     let submitIconClass = 'fa-play';
     let submitButtonText = 'Submit';
+    let saveIconClass = 'fa-clipboard';
+    let saveButtonText = 'Save';
     if (this.props.submitInProgress) {
       submitIconClass = 'fa-cog fa-spin fa-fw';
       submitButtonText = 'submitting ...';
     }
+    if (this.props.saveInProgress) {
+      saveIconClass = 'fa-cog fa-spin fa-fw';
+      saveButtonText = 'saving ...';
+    }
+
     return (
       <form
         name="wrapping-form"
@@ -76,8 +83,8 @@ class FormWrapper extends React.PureComponent {
                       }),
                     )}
                   >
-                    <i className="fa fa-clipboard" />
-                    Save
+                    <i className={`fa ${saveIconClass}`} />
+                    {saveButtonText}
                   </button>
                 </div>
                 <div className="form-group col-md-4">
@@ -118,6 +125,7 @@ FormWrapper.propTypes = {
   handleSubmit: PropTypes.func,
   onSubmit: PropTypes.func,
   submitInProgress: PropTypes.bool,
+  saveInProgress: PropTypes.bool,
 };
 
 export default reduxForm({ form: 'formWrapper' })(FormWrapper);
