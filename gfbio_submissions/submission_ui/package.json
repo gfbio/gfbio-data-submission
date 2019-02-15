@@ -102,7 +102,7 @@
     "redux": "4.0.1",
     "redux-form": "^8.1.0",
     "redux-immutable": "4.0.0",
-    "redux-saga": "0.16.2",
+    "redux-saga": "^1.0.0-rc.0",
     "renamer": "1.1.1",
     "reselect": "4.0.0",
     "sanitize.css": "4.1.0",

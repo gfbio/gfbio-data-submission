@@ -1,4 +1,11 @@
-import { all, call, select, takeLatest, put } from 'redux-saga/effects';
+import {
+  all,
+  call,
+  select,
+  takeLatest,
+  put,
+  takeLeading,
+} from 'redux-saga/effects';
 import { SAVE_FORM, SUBMIT_FORM } from './constants';
 import {
   makeSelectLicense,
@@ -78,11 +85,13 @@ export function* processSubmitFormTypeSaga() {
 }
 
 export function* submitFormSaga() {
-  yield takeLatest(SUBMIT_FORM, processSubmitFormTypeSaga);
+  // new feature from rc1 that blocks until finished
+  // https://redux-saga.js.org/docs/api/index.html#takeleadingpattern-saga-args
+  yield takeLeading(SUBMIT_FORM, processSubmitFormTypeSaga);
 }
 
 export function* saveFormSaga() {
-  yield takeLatest(SAVE_FORM, performSaveFormSaga);
+  yield takeLeading(SAVE_FORM, performSaveFormSaga);
 }
 
 export default function* rootSaga() {
