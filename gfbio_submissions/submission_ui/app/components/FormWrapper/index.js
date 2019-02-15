@@ -89,13 +89,17 @@ class FormWrapper extends React.PureComponent {
                   </button>
                 </div>
                 <div className="form-group col-md-4">
-                  <button
+                  {/* <button
                     type="button"
                     className="btn btn-secondary btn-block btn-light-blue"
                   >
                     <i className="fa fa-calendar" />
                     Set Embargo
-                  </button>
+                  </button> */}
+                  <EmbargoDatePicker
+                    onChange={this.props.handleDateChange}
+                    embargoDate={this.props.embargoDate}
+                  />
                 </div>
                 <div className="form-group col-md-4">
                   <button
@@ -114,10 +118,7 @@ class FormWrapper extends React.PureComponent {
                 </div>
               </div>
             </div>
-            <div className="col-md-3">
-              {/* right col */}
-              <EmbargoDatePicker />
-            </div>
+            <div className="col-md-3">{/* right col */}</div>
           </div>
         </div>
       </form>
@@ -127,6 +128,8 @@ class FormWrapper extends React.PureComponent {
 
 FormWrapper.propTypes = {
   handleSubmit: PropTypes.func,
+  handleDateChange: PropTypes.func,
+  embargoDate: PropTypes.instanceOf(Date),
   onSubmit: PropTypes.func,
   submitInProgress: PropTypes.bool,
   saveInProgress: PropTypes.bool,

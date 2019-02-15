@@ -15,8 +15,9 @@ import injectReducer from 'utils/injectReducer';
 import FormWrapper from 'components/FormWrapper';
 import reducer from './reducer';
 import saga from './saga';
-import { saveForm, submitForm } from './actions';
+import { saveForm, setEmbargoDate, submitForm } from './actions';
 import makeSelectSubmissionForm, {
+  makeSelectEmbargoDate,
   makeSelectFormWrapper, makeSelectSaveInProgress,
   makeSelectSubmitInProgress,
 } from './selectors';
@@ -48,12 +49,14 @@ export class SubmissionForm extends React.Component {
             </div>
           </div>
         </section>
-
+        {/* TODO: FormWrapper is a good candidate for its own store connectio */}
         <FormWrapper
           onSubmit={this.props.handleSubmit}
           handleSave={this.props.handleSave}
           submitInProgress={this.props.submitInProgress}
           saveInProgress={this.props.saveInProgress}
+          handleDateChange={this.props.handleDateChange}
+          embargoDate={this.props.embargoDate}
         />
       </div>
     );
@@ -64,7 +67,10 @@ SubmissionForm.propTypes = {
   handleSubmit: PropTypes.func.isRequired,
   handleSave: PropTypes.func.isRequired,
   submitInProgress: PropTypes.bool,
-  saveInProgress: PropTypes.bool,
+  // saveInProgress: PropTypes.bool,
+  embargoDate: PropTypes.instanceOf(Date),
+  // embargoDate: PropTypes.string,
+  handleDateChange: PropTypes.func,
   // TODO: maybe remove once save workflow is established
   // submissionForm: PropTypes.object,
   // reduxFormForm: PropTypes.object,
@@ -76,6 +82,7 @@ const mapStateToProps = createStructuredSelector({
   reduxFormForm: makeSelectFormWrapper(),
   submitInProgress: makeSelectSubmitInProgress(),
   saveInProgress: makeSelectSaveInProgress(),
+  embargoDate: makeSelectEmbargoDate(),
 });
 
 // TODO: Decision has to be made to handle save by accessing 'formWrapper'
@@ -88,6 +95,7 @@ function mapDispatchToProps(dispatch) {
   return {
     handleSubmit: form => dispatch(submitForm(form)),
     handleSave: () => dispatch(saveForm()),
+    handleDateChange: date => dispatch(setEmbargoDate(date)),
   };
 }
 

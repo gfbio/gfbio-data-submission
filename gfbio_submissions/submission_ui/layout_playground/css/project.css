@@ -751,6 +751,14 @@ form.pagewide-form select:focus {
   box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
 }
 
+form.pagewide-form .react-datepicker-wrapper {
+  width: 100%;
+}
+
+form.pagewide-form .react-datepicker__input-container {
+  width: 100%;
+}
+
 body,
 html {
   width: 100%;

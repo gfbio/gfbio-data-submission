@@ -10,7 +10,7 @@ import {
   DEFAULT_ACTION,
   SAVE_FORM,
   SAVE_FORM_ERROR,
-  SAVE_FORM_SUCCESS,
+  SAVE_FORM_SUCCESS, SET_EMBARGO_DATE,
   SUBMIT_FORM,
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
@@ -86,5 +86,12 @@ export function submitFormError(errorResponse) {
   return {
     type: SUBMIT_FORM_ERROR,
     errorResponse,
+  };
+}
+
+export function setEmbargoDate(date) {
+  return {
+    type: SET_EMBARGO_DATE,
+    date,
   };
 }

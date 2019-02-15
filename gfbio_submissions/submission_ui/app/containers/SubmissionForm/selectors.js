@@ -51,6 +51,11 @@ const makeSelectSaveInProgress = () =>
     substate.get('saveInProgress'),
   );
 
+const makeSelectEmbargoDate = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('embargoDate'),
+  );
+
 export default makeSelectSubmissionForm;
 
 export {
@@ -61,4 +66,5 @@ export {
   makeSelectReduxFormForm,
   makeSelectSubmitInProgress,
   makeSelectSaveInProgress,
+  makeSelectEmbargoDate,
 };

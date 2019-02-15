@@ -12,6 +12,7 @@ import {
   SAVE_FORM,
   SAVE_FORM_ERROR,
   SAVE_FORM_SUCCESS,
+  SET_EMBARGO_DATE,
   SUBMIT_FORM,
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
@@ -25,6 +26,7 @@ export const initialState = fromJS({
   reduxFormForm: {},
   submitInProgress: false,
   saveInProgress: false,
+  embargoDate: new Date(),
 });
 
 function submissionFormReducer(state = initialState, action) {
@@ -52,6 +54,9 @@ function submissionFormReducer(state = initialState, action) {
       return state.set('submitInProgress', false);
     case SUBMIT_FORM_ERROR:
       return state.set('submitInProgress', false);
+    case SET_EMBARGO_DATE:
+      console.log('SET_EMBARGO_DATE');
+      return state.set('embargoDate', action.date);
     default:
       return state;
   }
