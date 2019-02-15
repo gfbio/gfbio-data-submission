@@ -15,6 +15,7 @@ import CommentForm from 'components/CommentForm';
 import LicenseSelectionForm from 'components/LicenseSelectionForm';
 import LegalRequirementsForm from 'components/LegalRequirementsForm';
 import MetaDataSchemaForm from 'components/MetaDataSchemaForm';
+import EmbargoDatePicker from 'components/EmbargoDatePicker';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -113,7 +114,10 @@ class FormWrapper extends React.PureComponent {
                 </div>
               </div>
             </div>
-            <div className="col-md-3">{/* right col */}</div>
+            <div className="col-md-3">
+              {/* right col */}
+              <EmbargoDatePicker />
+            </div>
           </div>
         </div>
       </form>
