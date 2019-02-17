@@ -219,7 +219,7 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
 - docker --version
 - systemctl status docker
 - sudo usermod -aG docker root
-- sudo usermod -aG docker ${USER}
+    - sudo usermod -aG docker ${USER}
 
 - sudo curl -L https://github.com/docker/compose/releases/download/1.23.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
 - sudo chmod +x /usr/local/bin/docker-compose 
