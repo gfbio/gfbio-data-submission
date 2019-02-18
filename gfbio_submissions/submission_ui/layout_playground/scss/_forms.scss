@@ -509,6 +509,20 @@ form.pagewide-form {
     font-size: .8rem;
     color: $gray-dark;
     // TODO: focus, hover
+    &:focus {
+      border-radius: .3rem;
+      border-color: $gfbio-green;
+    }
+
+    &:hover {
+      background-color: $gfbio-light-blue;
+      color: $white;
+    }
+  }
+
+  .react-datepicker__day--selected {
+    background-color: $gfbio-blue;
+    color: $white;
   }
 
 }
