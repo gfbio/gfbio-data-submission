@@ -55,7 +55,6 @@ function submissionFormReducer(state = initialState, action) {
     case SUBMIT_FORM_ERROR:
       return state.set('submitInProgress', false);
     case SET_EMBARGO_DATE:
-      console.log('SET_EMBARGO_DATE');
       return state.set('embargoDate', action.date);
     default:
       return state;
