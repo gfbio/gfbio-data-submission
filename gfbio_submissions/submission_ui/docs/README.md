@@ -69,6 +69,9 @@ development and build commands.
   at any time.
 - if built app code is under VC and is updated, old js chunks should be
   deleted
+- in general everythin except project.js is automatically gererated by 'npm run collect'
+  thus it should be deleted, then generated, then add to repo to be included to the next 
+  release.
   
   
   
