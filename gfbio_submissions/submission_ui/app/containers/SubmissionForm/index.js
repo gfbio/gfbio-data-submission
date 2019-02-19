@@ -22,12 +22,16 @@ import makeSelectSubmissionForm, {
   makeSelectSaveInProgress,
   makeSelectSubmitInProgress,
 } from './selectors';
+import Form2 from '../../components/Form2';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
   render() {
     return (
       <div id="submission-form-wrapper">
+
+        <Form2 />
+
         {/* TODO: is div id necessary ? */}
         {/* TODO: extract to component. */}
         {/* TODO: candidate for redux-router */}
