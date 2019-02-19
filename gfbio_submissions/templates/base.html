@@ -21,16 +21,17 @@
 
         <!-- Latest compiled and minified Bootstrap 4 beta CSS -->
         <link rel="stylesheet"
-              href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
-              integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+              href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+              integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
               crossorigin="anonymous">
 
 
         <!-- Your stuff: Third-party CSS libraries go here -->
         <!-- Icons -->
-        <link href="{% static 'vendor/font-awesome/css/font-awesome.min.css' %}"
-              rel="stylesheet"
-              type="text/css">
+        <link rel="stylesheet"
+              href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+              integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"
+              crossorigin="anonymous">
 
         <!-- TODO: consider https://github.com/linea-io/linea-scss -->
         <link href="{% static 'vendor/linea_icons/_basic/_ICONFONT/styles.css' %}"
@@ -227,18 +228,18 @@
 
     {% block page-title %}
 
-{#        <section class="page-title bg-secondary">#}
-{#            <div class="container">#}
-{#                <div class="row">#}
-{#                    <div class="col-md-6">#}
-{#                        <h3 class="uppercase">#}
-{#                            <i class="ti-pencil-alt"></i> Form Inputs</h3>#}
-{#                    </div>#}
-{#                </div>#}
-{#                <!--end of row-->#}
-{#            </div>#}
-{#            <!--end of container-->#}
-{#        </section>#}
+        {#        <section class="page-title bg-secondary">#}
+        {#            <div class="container">#}
+        {#                <div class="row">#}
+        {#                    <div class="col-md-6">#}
+        {#                        <h3 class="uppercase">#}
+        {#                            <i class="ti-pencil-alt"></i> Form Inputs</h3>#}
+        {#                    </div>#}
+        {#                </div>#}
+        {#                <!--end of row-->#}
+        {#            </div>#}
+        {#            <!--end of container-->#}
+        {#        </section>#}
 
     {% endblock page-title %}
 
@@ -378,21 +379,23 @@
 {% block javascript %}
 
     <!-- Required by Bootstrap v4 beta -->
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
-            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
             crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
-            integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+    <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+            integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
             crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
-            integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+    <script
+            src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+            integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
             crossorigin="anonymous"></script>
 
     <!-- Your stuff: Third-party javascript libraries go here -->
     {% block thirdPartyJavaScript %}
-{#        <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>#}
-{#        <script src="{% static 'vendor/scrollreveal/scrollreveal.min.js' %}"></script>#}
-{#        <script src="{% static 'vendor/magnific-popup/jquery.magnific-popup.min.js' %}"></script>#}
+        {#        <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>#}
+        {#        <script src="{% static 'vendor/scrollreveal/scrollreveal.min.js' %}"></script>#}
+        {#        <script src="{% static 'vendor/magnific-popup/jquery.magnific-popup.min.js' %}"></script>#}
     {% endblock thirdPartyJavaScript %}
 
     <!-- place project specific Javascript in this file -->
