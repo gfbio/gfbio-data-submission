@@ -19,6 +19,9 @@ const selectReduxFormDomain = state => state.get('form', initialState);
 const makeSelectFormWrapper = () =>
   createSelector(selectReduxFormDomain, substate => substate.formWrapper);
 
+const makeSelectFormWrapperErrors = () =>
+  createSelector(selectReduxFormDomain, substate => substate.formWrapper.syncErrors);
+
 /**
  * Default selector used by SubmissionForm
  */
@@ -67,4 +70,5 @@ export {
   makeSelectSubmitInProgress,
   makeSelectSaveInProgress,
   makeSelectEmbargoDate,
+  makeSelectFormWrapperErrors,
 };

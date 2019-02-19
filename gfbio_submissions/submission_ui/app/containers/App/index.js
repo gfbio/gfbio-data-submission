@@ -12,6 +12,7 @@ import { BrowserRouter, Route, Switch } from 'react-router-dom';
 import HomePage from 'containers/HomePage/Loadable';
 import NotFoundPage from 'containers/NotFoundPage/Loadable';
 import SubmissionForm from 'containers/SubmissionForm/Loadable';
+import { TestForm } from '../TestForm';
 
 // TODO: set according to root django url, full path from config/urls.py
 //  to APP/urls.py. local development works, but entering URL with prefix
@@ -25,6 +26,7 @@ export default function App() {
           <Route exact path="/" component={HomePage} />
           {/* TODO: maybe remove /form url and use / instead ? */}
           <Route exact path="/form" component={SubmissionForm} />
+          <Route exact path="/test" component={TestForm} />
           <Route component={NotFoundPage} />
         </Switch>
       </BrowserRouter>

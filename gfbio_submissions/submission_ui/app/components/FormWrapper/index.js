@@ -89,13 +89,6 @@ class FormWrapper extends React.PureComponent {
                   </button>
                 </div>
                 <div className="form-group col-md-4">
-                  {/* <button
-                    type="button"
-                    className="btn btn-secondary btn-block btn-light-blue"
-                  >
-                    <i className="fa fa-calendar" />
-                    Set Embargo
-                  </button> */}
                   <EmbargoDatePicker
                     onChange={this.props.handleDateChange}
                     embargoDate={this.props.embargoDate}

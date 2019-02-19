@@ -18,7 +18,8 @@ import saga from './saga';
 import { saveForm, setEmbargoDate, submitForm } from './actions';
 import makeSelectSubmissionForm, {
   makeSelectEmbargoDate,
-  makeSelectFormWrapper, makeSelectSaveInProgress,
+  makeSelectFormWrapper,
+  makeSelectSaveInProgress,
   makeSelectSubmitInProgress,
 } from './selectors';
 
