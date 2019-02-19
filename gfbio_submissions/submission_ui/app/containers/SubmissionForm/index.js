@@ -18,19 +18,39 @@ import saga from './saga';
 import { saveForm, setEmbargoDate, submitForm } from './actions';
 import makeSelectSubmissionForm, {
   makeSelectEmbargoDate,
-  makeSelectFormWrapper,
+  makeSelectFormWrapper, makeSelectInitialValue,
   makeSelectSaveInProgress,
   makeSelectSubmitInProgress,
 } from './selectors';
-import Form2 from '../../components/Form2';
+import ContactForm from './ContactForm';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
+
+  submit = values => {
+    // print the form values to the console
+    console.log('submit func from SubForm');
+    console.log(values);
+  };
+
+  getInitialValues = () => {
+    return {
+      firstName: 'rajat',
+      lastName: 'WEBER',
+    };
+  };
+
   render() {
+    console.log('SubmissionForm');
+    console.log(this.props);
     return (
       <div id="submission-form-wrapper">
 
-        <Form2 />
+        <ContactForm onSubmit={this.submit} initialValues={this.props.initialValues}/>
+
+        <div className="m-5 p-5"></div>
+
+        {/*<Form2 />*/}
 
         {/* TODO: is div id necessary ? */}
         {/* TODO: extract to component. */}
@@ -79,6 +99,8 @@ SubmissionForm.propTypes = {
   // TODO: maybe remove once save workflow is established
   // submissionForm: PropTypes.object,
   // reduxFormForm: PropTypes.object,
+  initialValues: PropTypes.object,
+
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -88,6 +110,7 @@ const mapStateToProps = createStructuredSelector({
   submitInProgress: makeSelectSubmitInProgress(),
   saveInProgress: makeSelectSaveInProgress(),
   embargoDate: makeSelectEmbargoDate(),
+  initialValues: makeSelectInitialValue()
 });
 
 // TODO: Decision has to be made to handle save by accessing 'formWrapper'

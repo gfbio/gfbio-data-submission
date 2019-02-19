@@ -24,6 +24,7 @@ export const initialState = fromJS({
   license: 'CC BY 4.0',
   metaDataSchema: 'None',
   reduxFormForm: {},
+  initialValues: {},
   submitInProgress: false,
   saveInProgress: false,
   embargoDate: new Date(),
@@ -41,7 +42,9 @@ function submissionFormReducer(state = initialState, action) {
       return state.set('saveInProgress', true);
     case SAVE_FORM_SUCCESS:
       // TODO: set bsi etc after success, from then its updates
-      return state.set('saveInProgress', false);
+      return state
+        .set('initialValues', { firstName: 'BLUB', lastName: 'BLA' })
+        .set('saveInProgress', false);
     case SAVE_FORM_ERROR:
       return state.set('saveInProgress', false);
     case SUBMIT_FORM:

@@ -67,16 +67,19 @@ export function* processSubmitFormTypeSaga() {
 }
 
 export function* checkFormTypeSaga() {
+  console.log('checkFormTypeSaga');
   // new feature from rc1 that blocks until finished
   // https://redux-saga.js.org/docs/api/index.html#takeleadingpattern-saga-args
   yield takeLeading(SUBMIT_FORM, processSubmitFormTypeSaga);
 }
 
 export function* submitFormSaga() {
+  console.log('checkForm2Saga');
   yield takeLeading(SUBMIT_FORM_START, performSubmitFormSaga);
 }
 
 export function* saveFormSaga() {
+  console.log('saveFormSaga');
   yield takeLeading(SAVE_FORM, performSaveFormSaga);
 }
 

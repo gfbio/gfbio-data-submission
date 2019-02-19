@@ -128,4 +128,5 @@ FormWrapper.propTypes = {
   saveInProgress: PropTypes.bool,
 };
 
-export default reduxForm({ form: 'formWrapper' })(FormWrapper);
+// initialValues: {title: 'Preset'} -> is set to form values once form is touched but not shown in browser
+export default reduxForm({ form: 'formWrapper',  })(FormWrapper);

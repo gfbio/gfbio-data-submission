@@ -11,13 +11,26 @@ const selectSubmissionFormDomain = state =>
 /**
  * Other specific selectors
  */
-const selectReduxFormDomain = state => state.get('form', initialState);
+const selectReduxFormDomain = state => state.get('form');
 
+// const selectRouter = state => state.get('router');
+
+// const makeSelectLocation = () =>
+//   createSelector(selectReduxFormDomain, substate =>
+//     routerState.get('location').toJS(),
+//   );
+
+// console.log('selectors js');
+// console.log(state);
+// console.log('----------------');
 /**
  * redux-form returns regular state. not ImmutableJS state ...
  */
 const makeSelectFormWrapper = () =>
-  createSelector(selectReduxFormDomain, substate => substate.formWrapper);
+  createSelector(selectReduxFormDomain, substate =>  substate.toJS());
+
+const makeSelectContactForm = () =>
+  createSelector(selectReduxFormDomain, substate => substate.get('contact'));
 
 const makeSelectFormWrapperErrors = () =>
   createSelector(selectReduxFormDomain, substate => substate.formWrapper.syncErrors);
@@ -59,6 +72,12 @@ const makeSelectEmbargoDate = () =>
     substate.get('embargoDate'),
   );
 
+
+const makeSelectInitialValue = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('initialValues'),
+  );
+
 export default makeSelectSubmissionForm;
 
 export {
@@ -71,4 +90,6 @@ export {
   makeSelectSaveInProgress,
   makeSelectEmbargoDate,
   makeSelectFormWrapperErrors,
+  makeSelectInitialValue,
+  makeSelectContactForm,
 };
