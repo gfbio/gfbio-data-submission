@@ -3,47 +3,7 @@ import PropTypes from 'prop-types';
 import { Field, reduxForm } from 'redux-form/immutable';
 import { connect } from 'react-redux';
 import { createStructuredSelector } from 'reselect';
-import { compose } from 'redux';
-import {
-  getFormValues,
-  getFormInitialValues,
-  getFormSyncErrors,
-  getFormMeta,
-  getFormAsyncErrors,
-  getFormSyncWarnings,
-  getFormSubmitErrors,
-  getFormError,
-  getFormNames,
-  isDirty,
-  isPristine,
-  isValid,
-  isInvalid,
-  isSubmitting,
-  hasSubmitSucceeded,
-  hasSubmitFailed,
-} from 'redux-form/immutable';
-
-import injectSaga from 'utils/injectSaga';
-import injectReducer from 'utils/injectReducer';
-import {
-  makeSelectContactForm,
-  makeSelectFormWrapper,
-  makeSelectInitialValue,
-} from './selectors';
-import reducer from './reducer';
-import saga from './saga';
-
-const data = {
-  // used to populate "account" reducer when "Load" is clicked
-  firstName: 'Jane',
-  lastName: 'Doe',
-  age: '42',
-  anniversaryDate: '2018-08-22',
-  sex: 'female',
-  employed: true,
-  favoriteColor: 'Blue',
-  bio: 'Born to write amazing Redux code.',
-};
+import { makeSelectContactForm } from './selectors';
 
 // TODO: or PureComponent ? difference matters here ?
 class ContactForm extends React.Component {
@@ -76,7 +36,7 @@ class ContactForm extends React.Component {
 ContactForm.propTypes = {
   handleSubmit: PropTypes.func,
   initialValues: PropTypes.object,
-  theState: PropTypes.any
+  theState: PropTypes.any,
 };
 
 // ContactForm = reduxForm({
@@ -137,7 +97,10 @@ ContactForm = connect(mapStateToProps, mapDispatchToProps)(ContactForm);
 // setting initial values dynamically only works via properties
 // stackoverflow says connect has to be called after reduxForm
 // but when I do so, nothing gets rendered
-ContactForm = reduxForm({ form: 'contact', enableReinitialize : true })(ContactForm);
+ContactForm = reduxForm({
+  form: 'contact',
+  enableReinitialize: true,
+})(ContactForm);
 
 // ContactForm = connect()(ContactForm);
 
@@ -146,15 +109,3 @@ export default ContactForm;
 // let CF = reduxForm({ form: 'contact', enableReinitialize : true })(ContactForm);
 // CF = connect(mapStateToProps, mapDispatchToProps)(CF);
 // export default CF;
-
-// export default ContactForm;
-// export default connect(mapStateToProps)(ContactForm);
-// ContactForm = connect(
-//   state => ({
-//     initialValues: state.account.data // pull initial values from account reducer
-//   }),
-//   { load: loadAccount }               // bind account loading action creator
-// )(ContactForm);
-
-// export default ContactForm;
-// export default connect(mapStateToProps)(ContactForm);
