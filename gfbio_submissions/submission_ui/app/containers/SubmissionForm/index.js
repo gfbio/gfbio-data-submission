@@ -33,11 +33,25 @@ export class SubmissionForm extends React.Component {
     console.log(values);
   };
 
-  getInitialValues = () => {
+  getProfile = () => {
     return {
-      firstName: 'rajat',
-      lastName: 'WEBER',
-    };
+      ui_settings: {
+        minimal: {
+          visible: true,
+          default: {
+            title: 'profile-title',
+            description: 'profile-description',
+          }
+        }
+      }
+    }
+  };
+
+  getInitialVals = () => {
+    return {
+      title: 'initial-title',
+      description: 'initial-description',
+    }
   };
 
   render() {
@@ -82,6 +96,12 @@ export class SubmissionForm extends React.Component {
           saveInProgress={this.props.saveInProgress}
           handleDateChange={this.props.handleDateChange}
           embargoDate={this.props.embargoDate}
+          // profile does not work for pre-fill
+          profile={this.getProfile()}
+          // this works to pre-fill
+          // initialValues={this.getInitialVals()}
+          // this works, and react to state change
+          initialValues={this.props.initialValues}
         />
       </div>
     );

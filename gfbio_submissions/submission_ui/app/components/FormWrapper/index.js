@@ -7,7 +7,7 @@
 import React from 'react';
 import { reduxForm } from 'redux-form/immutable';
 import PropTypes from 'prop-types';
-import MinimalSubmissionForm from 'components/MinimalSubmissionForm';
+// import MinimalSubmissionForm from '../components/MinimalSubmissionForm';
 import ContributersForm from 'components/ContributersForm';
 import TargetDataCenterForm from 'components/TargetDataCenterForm';
 import DataCategoryForm from 'components/DataCategoryForm';
@@ -16,6 +16,7 @@ import LicenseSelectionForm from 'components/LicenseSelectionForm';
 import LegalRequirementsForm from 'components/LegalRequirementsForm';
 import MetaDataSchemaForm from 'components/MetaDataSchemaForm';
 import EmbargoDatePicker from 'components/EmbargoDatePicker';
+import MinimalSubmissionForm from '../MinimalSubmissionForm';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -33,6 +34,9 @@ class FormWrapper extends React.PureComponent {
       saveIconClass = 'fa-cog fa-spin fa-fw';
       saveButtonText = 'saving ...';
     }
+
+    console.log('FormWrapper render props');
+    console.log(this.props);
 
     return (
       <form
@@ -126,7 +130,11 @@ FormWrapper.propTypes = {
   onSubmit: PropTypes.func,
   submitInProgress: PropTypes.bool,
   saveInProgress: PropTypes.bool,
+  profile: PropTypes.object,
 };
 
+// this is already connected to redux-form reducer ?
+
 // initialValues: {title: 'Preset'} -> is set to form values once form is touched but not shown in browser
-export default reduxForm({ form: 'formWrapper',  })(FormWrapper);
+FormWrapper = reduxForm({ form: 'formWrapper',  enableReinitialize: true,})(FormWrapper);
+export default FormWrapper;
