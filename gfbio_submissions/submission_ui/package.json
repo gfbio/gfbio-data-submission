@@ -74,6 +74,7 @@
   },
   "dependencies": {
     "@babel/polyfill": "7.0.0",
+    "axios": "^0.18.0",
     "chalk": "2.4.1",
     "classnames": "^2.2.6",
     "compression": "1.7.3",
@@ -183,7 +184,6 @@
     "webpack-cli": "3.1.2",
     "webpack-dev-middleware": "3.4.0",
     "webpack-hot-middleware": "2.24.3 ",
-    "webpack-pwa-manifest": "3.7.1",
-    "whatwg-fetch": "3.0.0"
+    "webpack-pwa-manifest": "3.7.1"
   }
 }
