@@ -3,7 +3,7 @@
  * SubmissionForm reducer
  *
  */
-
+import uuid from 'uuid';
 import { fromJS } from 'immutable';
 import {
   CHANGE_LICENSE,
@@ -24,6 +24,7 @@ export const initialState = fromJS({
   license: 'CC BY 4.0',
   metaDataSchema: 'None',
   reduxFormForm: {},
+  initialValues: {},
   submitInProgress: false,
   saveInProgress: false,
   embargoDate: new Date(),
@@ -41,7 +42,10 @@ function submissionFormReducer(state = initialState, action) {
       return state.set('saveInProgress', true);
     case SAVE_FORM_SUCCESS:
       // TODO: set bsi etc after success, from then its updates
-      return state.set('saveInProgress', false);
+      const u  = uuid.v4()
+      return state
+        .set('initialValues', { title: 'BLUB '+u, description: 'BLA '+u })
+        .set('saveInProgress', false);
     case SAVE_FORM_ERROR:
       return state.set('saveInProgress', false);
     case SUBMIT_FORM:

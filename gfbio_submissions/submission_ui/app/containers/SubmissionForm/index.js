@@ -19,15 +19,42 @@ import { saveForm, setEmbargoDate, submitForm } from './actions';
 import makeSelectSubmissionForm, {
   makeSelectEmbargoDate,
   makeSelectFormWrapper,
+  makeSelectInitialValue,
   makeSelectSaveInProgress,
   makeSelectSubmitInProgress,
 } from './selectors';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
+
+  // submit = values => {
+  //   // print the form values to the console
+  //   console.log('submit func from SubForm');
+  //   console.log(values);
+  // };
+  //
+  getProfile = () => {
+    return {
+      ui_settings: {
+        minimal: {
+          visible: true,
+          default: {
+            title: 'profile-title',
+            description: 'profile-description',
+          },
+        },
+      },
+    };
+  };
+
   render() {
+    console.log('SubmissionForm');
+    console.log(this.props);
     return (
       <div id="submission-form-wrapper">
+
+        {/*<ContactForm onSubmit={this.submit} initialValues={this.props.initialValues}/>*/}
+
         {/* TODO: is div id necessary ? */}
         {/* TODO: extract to component. */}
         {/* TODO: candidate for redux-router */}
@@ -58,6 +85,12 @@ export class SubmissionForm extends React.Component {
           saveInProgress={this.props.saveInProgress}
           handleDateChange={this.props.handleDateChange}
           embargoDate={this.props.embargoDate}
+          // profile does not work for pre-fill
+          profile={this.getProfile()}
+          // this works to pre-fill
+          // initialValues={this.getInitialVals()}
+          // this works, and react to state change
+          initialValues={this.props.initialValues}
         />
       </div>
     );
@@ -75,6 +108,8 @@ SubmissionForm.propTypes = {
   // TODO: maybe remove once save workflow is established
   // submissionForm: PropTypes.object,
   // reduxFormForm: PropTypes.object,
+  initialValues: PropTypes.object,
+
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -84,6 +119,7 @@ const mapStateToProps = createStructuredSelector({
   submitInProgress: makeSelectSubmitInProgress(),
   saveInProgress: makeSelectSaveInProgress(),
   embargoDate: makeSelectEmbargoDate(),
+  initialValues: makeSelectInitialValue(),
 });
 
 // TODO: Decision has to be made to handle save by accessing 'formWrapper'

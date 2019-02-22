@@ -20,56 +20,56 @@ import saga from './saga';
 import { submitForm } from '../SubmissionForm/actions';
 
 /* eslint-disable react/prefer-stateless-function */
-export class TestForm extends React.PureComponent {
+export class TestForm extends React.Component {
   render() {
     return (
-      <div>
-        <h1>TestForm</h1>
-        <form onSubmit={this.props.handleSubmit}>
+      <form
+        // onSubmit={this.props.handleSubmit}
+      >
+        <div>
+          <label>First Name</label>
           <div>
-            <label>First Name</label>
-            <div>
-              <Field
-                name="firstName"
-                component="input"
-                type="text"
-                placeholder="First Name"
-              />
-            </div>
-          </div>
-          <div>
-            <label>Last Name</label>
-            <div>
-              <Field
-                name="lastName"
-                component="input"
-                type="text"
-                placeholder="Last Name"
-              />
-            </div>
+            <Field
+              name="firstName"
+              component="input"
+              type="text"
+              placeholder="First Name"
+            />
           </div>
 
-          <div>
-            <button type="submit">
-              Submit
-            </button>
-            {/*<button type="submit" disabled={pristine || submitting}>*/}
-            {/*Submit*/}
-            {/*</button>*/}
-            {/*<button type="button" disabled={pristine || submitting}*/}
-            {/*onClick={reset}>*/}
-            {/*Clear Values*/}
-            {/*</button>*/}
-          </div>
-        </form>
-      </div>
+          {/*</div>*/}
+          {/*<div>*/}
+          {/*<label>Last Name</label>*/}
+          {/*<div>*/}
+          {/*<Field*/}
+          {/*name="lastName"*/}
+          {/*component="input"*/}
+          {/*type="text"*/}
+          {/*placeholder="Last Name"*/}
+          {/*/>*/}
+          {/*</div>*/}
+        </div>
+
+        {/*<div>*/}
+        {/*<button type="submit">*/}
+        {/*Submit*/}
+        {/*</button>*/}
+        {/*/!*<button type="submit" disabled={pristine || submitting}>*!/*/}
+        {/*/!*Submit*!/*/}
+        {/*/!*</button>*!/*/}
+        {/*/!*<button type="button" disabled={pristine || submitting}*!/*/}
+        {/*/!*onClick={reset}>*!/*/}
+        {/*/!*Clear Values*!/*/}
+        {/*/!*</button>*!/*/}
+        {/*</div>*/}
+      </form>
     );
   }
 }
 
-TestForm.propTypes = {
-  handleSubmit: PropTypes.func,
-};
+// TestForm.propTypes = {
+//   handleSubmit: PropTypes.func,
+// };
 
 // const mapStateToProps = createStructuredSelector({
 //   testForm: makeSelectTestForm(),
@@ -81,6 +81,12 @@ TestForm.propTypes = {
 //   };
 // }
 //
+// TestForm = connect(
+//   mapStateToProps,
+//   mapDispatchToProps,
+// )(TestForm);
+
+export default reduxForm({ form: 'testForm' })(TestForm);
 // const withConnect = connect(
 //   mapStateToProps,
 //   mapDispatchToProps,
@@ -100,7 +106,7 @@ TestForm.propTypes = {
 //   withConnect,
 // )(TestForm);
 //
-export default reduxForm({ form: 'formWrapper' })(TestForm);
+// export default reduxForm({ form: 'formWrapper' })(TestForm);
 
 
 
