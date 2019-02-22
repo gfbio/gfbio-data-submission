@@ -17,14 +17,12 @@ export const postSubmission = () => {
     },
   });
 
-  instance.post('', {
-    name: 'Fred',
-  })
-    .then(function(response) {
-      console.log(response);
-    })
-    .catch(function(error) {
-      console.log(error);
-    });
+  return instance.post('', { name: 'Fred' });
+  // .then(function(response) {
+  //   console.log(response);
+  // })
+  // .catch(function(error) {
+  //   console.log(error);
+  // });
 
 };

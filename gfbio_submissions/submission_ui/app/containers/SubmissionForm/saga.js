@@ -26,13 +26,16 @@ export function* performSubmitFormSaga() {
   try {
     console.log('SUBMIT ...');
     // console.log('sending: ');
-    console.log(data);
+    // console.log(data);
     // const response = yield call(sendMethod, param1, param2);
     // yield call(sleep, 3000);
     const response = yield call(postSubmission);
+    console.log('SUBMIT ... response ');
+    console.log(response);
     // console.log('... DONE');
     yield put(submitFormSuccess(response));
   } catch (error) {
+    console.log('SUBMIT ...ERROR');
     console.log(error);
     yield put(submitFormError(error));
   }

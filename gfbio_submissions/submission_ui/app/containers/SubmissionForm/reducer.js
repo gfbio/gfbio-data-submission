@@ -42,21 +42,25 @@ function submissionFormReducer(state = initialState, action) {
       return state.set('saveInProgress', true);
     case SAVE_FORM_SUCCESS:
       // TODO: set bsi etc after success, from then its updates
-      const u  = uuid.v4()
+      const u = uuid.v4();
       return state
-        .set('initialValues', { title: 'BLUB '+u, description: 'BLA '+u })
+        .set('initialValues', { title: 'BLUB ' + u, description: 'BLA ' + u })
         .set('saveInProgress', false);
     case SAVE_FORM_ERROR:
       return state.set('saveInProgress', false);
     case SUBMIT_FORM:
       return state.set('reduxFormForm', action.form);
     case SUBMIT_FORM_START:
+      console.log('reducer SUBMIT_FORM_START');
       return state.set('submitInProgress', true);
     case SUBMIT_FORM_ACTIVE:
+      console.log('reducer SUBMIT_FORM_ACTIVE');
       return state.set('submitInProgress', true);
     case SUBMIT_FORM_SUCCESS:
+      console.log('reducer SUBMIT_FORM_SUCCESS');
       return state.set('submitInProgress', false);
     case SUBMIT_FORM_ERROR:
+      console.log('reducer SUBMIT_FORM_ERROR');
       return state.set('submitInProgress', false);
     case SET_EMBARGO_DATE:
       return state.set('embargoDate', action.date);
