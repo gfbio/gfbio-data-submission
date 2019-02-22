@@ -82,6 +82,11 @@ const makeSelectToken = () =>
     substate.get('token'),
   );
 
+const makeSelectUserId = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('userId'),
+  );
+
 export default makeSelectSubmissionForm;
 
 export {
@@ -97,4 +102,5 @@ export {
   makeSelectInitialValue,
   makeSelectContactForm,
   makeSelectToken,
+  makeSelectUserId,
 };

@@ -3,7 +3,7 @@ import axios from 'axios';
 // const API_ROOT = 'https://submission.gfbio.org';
 const SUBMISSIONS = '/api/submissions/';
 
-export const postSubmission = () => {
+export const postSubmission = (token) => {
 
   console.log('postSubmission');
 

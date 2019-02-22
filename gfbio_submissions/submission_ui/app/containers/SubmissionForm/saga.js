@@ -3,7 +3,7 @@ import { SAVE_FORM, SUBMIT_FORM, SUBMIT_FORM_START } from './constants';
 import {
   makeSelectLicense,
   makeSelectMetaDataSchema,
-  makeSelectReduxFormForm, makeSelectToken,
+  makeSelectReduxFormForm, makeSelectToken, makeSelectUserId,
 } from './selectors';
 import {
   saveForm,
@@ -23,6 +23,9 @@ export function* performSubmitFormSaga() {
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
 
+  console.log(token);
+  console.log(window.props.token);
+
   const reduxFormForm = yield select(makeSelectReduxFormForm());
   const license = yield select(makeSelectLicense());
   const metaDataSchema = yield select(makeSelectMetaDataSchema());
@@ -33,7 +36,7 @@ export function* performSubmitFormSaga() {
     // console.log(data);
     // const response = yield call(sendMethod, param1, param2);
     // yield call(sleep, 3000);
-    const response = yield call(postSubmission);
+    const response = yield call(postSubmission, token);
     console.log('SUBMIT ... response ');
     console.log(response);
     // console.log('... DONE');

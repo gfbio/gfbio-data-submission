@@ -20,16 +20,29 @@ import {
   SUBMIT_FORM_SUCCESS,
 } from './constants';
 
+console.log('REDUCER');
+let backendParameters = {};
+console.log(window.props);
+if (window.props !== undefined) {
+  backendParameters = window.props;
+  console.log('BACKEND PARAMS');
+  console.log(backendParameters);
+}
+
 export const initialState = fromJS({
   license: 'CC BY 4.0',
   metaDataSchema: 'None',
   reduxFormForm: {},
   initialValues: {},
   // TODO: set token according to site. maybe IDM user in the future
-  token: '5639b56bd077fb3e12d7e4a0ada244aaa970c2fd',
+  // token: '5639b56bd077fb3e12d7e4a0ada244aaa970c2fd',
   submitInProgress: false,
   saveInProgress: false,
   embargoDate: new Date(),
+  userId: backendParameters.userId || -1,
+  token: backendParameters['token'] || 'NO_TOKEN',
+  userName: backendParameters.userName || '',
+
 });
 
 function submissionFormReducer(state = initialState, action) {
