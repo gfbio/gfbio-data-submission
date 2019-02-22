@@ -10,7 +10,6 @@ https://docs.djangoproject.com/en/dev/ref/settings/
 import environ
 from celery.schedules import crontab
 
-
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
 VERSION = '1.65.4'
@@ -77,9 +76,9 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 # MIDDLEWARE CONFIGURATION
 # ------------------------------------------------------------------------------
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -271,7 +270,8 @@ ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
 # TODO: 06.02.2019 set back to true when in production
 # TODO: set proper value in env !!!
-ACCOUNT_ALLOW_REGISTRATION = env.bool('DJANGO_ACCOUNT_ALLOW_REGISTRATION', False)
+ACCOUNT_ALLOW_REGISTRATION = env.bool('DJANGO_ACCOUNT_ALLOW_REGISTRATION',
+                                      False)
 ACCOUNT_ADAPTER = 'gfbio_submissions.users.adapters.AccountAdapter'
 SOCIALACCOUNT_ADAPTER = 'gfbio_submissions.users.adapters.SocialAccountAdapter'
 
@@ -327,4 +327,3 @@ LOCAL_REPOSITORY = env('LOCAL_REPOSITORY',
 REMOTE_REPOSITORY = env('REMOTE_REPOSITORY',
                         default='https://maweber@colab.mpi-bremen.de/stash/scm/gfbio/gfbio-submission-auditing-tests.git')
 ########## END Access AuditableTextData
-

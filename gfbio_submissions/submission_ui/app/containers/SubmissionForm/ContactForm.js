@@ -9,8 +9,8 @@ import { makeSelectContactForm } from './selectors';
 class ContactForm extends React.Component {
 
   render() {
-    console.log('ContactForm RENDER');
-    console.log(this.props);
+    // console.log('ContactForm RENDER');
+    // console.log(this.props);
     return (
       <form onSubmit={this.props.handleSubmit}>
         <div>

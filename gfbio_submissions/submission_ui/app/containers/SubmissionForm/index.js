@@ -48,8 +48,8 @@ export class SubmissionForm extends React.Component {
   };
 
   render() {
-    console.log('SubmissionForm');
-    console.log(this.props);
+    // console.log('SubmissionForm');
+    // console.log(this.props);
     return (
       <div id="submission-form-wrapper">
 

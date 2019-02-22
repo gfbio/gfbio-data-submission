@@ -13,24 +13,27 @@ import {
   submitFormStart,
   submitFormSuccess,
 } from './actions';
+import { postSubmission } from './submissionApi';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 export function* performSubmitFormSaga() {
+  console.log('performSubmitFormSaga');
   const reduxFormForm = yield select(makeSelectReduxFormForm());
   const license = yield select(makeSelectLicense());
   const metaDataSchema = yield select(makeSelectMetaDataSchema());
   const data = Object.assign({ license, metaDataSchema }, reduxFormForm);
   try {
     console.log('SUBMIT ...');
-    console.log('sending: ');
+    // console.log('sending: ');
     console.log(data);
     // const response = yield call(sendMethod, param1, param2);
-    yield call(sleep, 3000);
-    const response = '{}';
-    console.log('... DONE');
+    // yield call(sleep, 3000);
+    const response = yield call(postSubmission);
+    // console.log('... DONE');
     yield put(submitFormSuccess(response));
   } catch (error) {
+    console.log(error);
     yield put(submitFormError(error));
   }
 }

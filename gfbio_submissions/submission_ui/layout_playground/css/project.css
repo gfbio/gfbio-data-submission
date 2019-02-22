@@ -960,6 +960,10 @@ p.lead {
   line-height: 1.8rem;
 }
 
+#mainSection {
+  min-height: 99vh;
+}
+
 header.masthead {
   padding-top: 5rem;
   padding-bottom: calc(5rem - 57px);

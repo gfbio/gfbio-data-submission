@@ -58,8 +58,8 @@ class MinimalSubmissionForm extends React.PureComponent {
   );
 
   render() {
-    console.log('MinForm render');
-    console.log(this.props);
+    // console.log('MinForm render');
+    // console.log(this.props);
     return (
       <div>
         <header className="header header-left form-header-top">
