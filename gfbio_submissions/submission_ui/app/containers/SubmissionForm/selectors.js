@@ -27,7 +27,7 @@ const selectReduxFormDomain = state => state.get('form');
  * redux-form returns regular state. not ImmutableJS state ...
  */
 const makeSelectFormWrapper = () =>
-  createSelector(selectReduxFormDomain, substate =>  substate.toJS());
+  createSelector(selectReduxFormDomain, substate => substate.toJS());
 
 const makeSelectContactForm = () =>
   createSelector(selectReduxFormDomain, substate => substate.get('contact'));
@@ -72,10 +72,14 @@ const makeSelectEmbargoDate = () =>
     substate.get('embargoDate'),
   );
 
-
 const makeSelectInitialValue = () =>
   createSelector(selectSubmissionFormDomain, substate =>
     substate.get('initialValues'),
+  );
+
+const makeSelectToken = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('token'),
   );
 
 export default makeSelectSubmissionForm;
@@ -92,4 +96,5 @@ export {
   makeSelectFormWrapperErrors,
   makeSelectInitialValue,
   makeSelectContactForm,
+  makeSelectToken,
 };

@@ -25,6 +25,8 @@ export const initialState = fromJS({
   metaDataSchema: 'None',
   reduxFormForm: {},
   initialValues: {},
+  // TODO: set token according to site. maybe IDM user in the future
+  token: '5639b56bd077fb3e12d7e4a0ada244aaa970c2fd',
   submitInProgress: false,
   saveInProgress: false,
   embargoDate: new Date(),

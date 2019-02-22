@@ -3,7 +3,7 @@ import { SAVE_FORM, SUBMIT_FORM, SUBMIT_FORM_START } from './constants';
 import {
   makeSelectLicense,
   makeSelectMetaDataSchema,
-  makeSelectReduxFormForm,
+  makeSelectReduxFormForm, makeSelectToken,
 } from './selectors';
 import {
   saveForm,
@@ -19,6 +19,10 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 export function* performSubmitFormSaga() {
   console.log('performSubmitFormSaga');
+
+  const token = yield select(makeSelectToken());
+  const userId = yield select(makeSelectUserId());
+
   const reduxFormForm = yield select(makeSelectReduxFormForm());
   const license = yield select(makeSelectLicense());
   const metaDataSchema = yield select(makeSelectMetaDataSchema());

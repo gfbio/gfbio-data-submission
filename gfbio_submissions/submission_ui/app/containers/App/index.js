@@ -13,6 +13,9 @@ import HomePage from 'containers/HomePage/Loadable';
 import NotFoundPage from 'containers/NotFoundPage/Loadable';
 import SubmissionForm from 'containers/SubmissionForm/Loadable';
 
+console.log('---- APP INDEX.JS ');
+console.log(window.props);
+
 // TODO: set according to root django url, full path from config/urls.py
 //  to APP/urls.py. local development works, but entering URL with prefix
 //  prevents error messages
@@ -31,3 +34,5 @@ export default function App() {
     </div>
   );
 }
+
+console.log('END ---- APP INDEX.JS ');

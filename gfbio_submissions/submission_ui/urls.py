@@ -2,6 +2,7 @@
 from django.conf.urls import url
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
+
 from . import views
 
 urlpatterns = [
@@ -16,8 +17,9 @@ urlpatterns = [
         # the react app in this template will take care of every url below
         # more specific: the react-router checks for matches.
         regex=r'submission/',
-        view=login_required(TemplateView.as_view(
-            template_name='submission_ui/submission.html')),
+        # view=login_required(TemplateView.as_view(
+        #     template_name='submission_ui/submission.html')),
+        view=login_required(views.SubmissionFrontendView.as_view()),
         name='test_react'
     ),
     # FIXME: remove once submission.org is in production
