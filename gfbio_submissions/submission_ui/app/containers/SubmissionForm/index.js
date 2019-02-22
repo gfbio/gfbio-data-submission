@@ -18,21 +18,21 @@ import saga from './saga';
 import { saveForm, setEmbargoDate, submitForm } from './actions';
 import makeSelectSubmissionForm, {
   makeSelectEmbargoDate,
-  makeSelectFormWrapper, makeSelectInitialValue,
+  makeSelectFormWrapper,
+  makeSelectInitialValue,
   makeSelectSaveInProgress,
   makeSelectSubmitInProgress,
 } from './selectors';
-import ContactForm from './ContactForm';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
 
-  submit = values => {
-    // print the form values to the console
-    console.log('submit func from SubForm');
-    console.log(values);
-  };
-
+  // submit = values => {
+  //   // print the form values to the console
+  //   console.log('submit func from SubForm');
+  //   console.log(values);
+  // };
+  //
   getProfile = () => {
     return {
       ui_settings: {
@@ -41,17 +41,10 @@ export class SubmissionForm extends React.Component {
           default: {
             title: 'profile-title',
             description: 'profile-description',
-          }
-        }
-      }
-    }
-  };
-
-  getInitialVals = () => {
-    return {
-      title: 'initial-title',
-      description: 'initial-description',
-    }
+          },
+        },
+      },
+    };
   };
 
   render() {
@@ -60,11 +53,7 @@ export class SubmissionForm extends React.Component {
     return (
       <div id="submission-form-wrapper">
 
-        <ContactForm onSubmit={this.submit} initialValues={this.props.initialValues}/>
-
-        <div className="m-5 p-5"></div>
-
-        {/*<Form2 />*/}
+        {/*<ContactForm onSubmit={this.submit} initialValues={this.props.initialValues}/>*/}
 
         {/* TODO: is div id necessary ? */}
         {/* TODO: extract to component. */}
@@ -130,7 +119,7 @@ const mapStateToProps = createStructuredSelector({
   submitInProgress: makeSelectSubmitInProgress(),
   saveInProgress: makeSelectSaveInProgress(),
   embargoDate: makeSelectEmbargoDate(),
-  initialValues: makeSelectInitialValue()
+  initialValues: makeSelectInitialValue(),
 });
 
 // TODO: Decision has to be made to handle save by accessing 'formWrapper'
