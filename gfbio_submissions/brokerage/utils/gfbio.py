@@ -9,7 +9,8 @@ from requests.structures import CaseInsensitiveDict
 
 from gfbio_submissions.brokerage.configuration.settings import \
     HELPDESK_API_SUB_URL, \
-    HELPDESK_COMMENT_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL, GENERIC
+    HELPDESK_COMMENT_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL, GENERIC, \
+    HELPDESK_LICENSE_MAPPINGS
 from gfbio_submissions.brokerage.models import SiteConfiguration, RequestLog
 
 logger = logging.getLogger(__name__)
@@ -149,6 +150,8 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
         #                       requirements.get('categories', [])],
         'customfield_10313': ', '.join(requirements.get('categories', [])),
         'customfield_10205': requirements.get('dataset_author', ''),
+
+        # TODO: maybe a list of licenses
         # 'customfield_10202': requirements.get('license', ''),
         # FROM TICKET: https://helpdesk.gfbio.org/rest/api/2/issue/SAND-1460
         # "customfield_10202": {
@@ -156,11 +159,8 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
         #     "value": "other",
         #     "id": "10500"
         # },
-        'customfield_10202': {
-            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10500',
-            'value': requirements.get('license', 'other'),
-            'id': '10500'
-        },
+        'customfield_10202': HELPDESK_LICENSE_MAPPINGS.get(
+            requirements.get('license', 'Other')),
         'customfield_10307': requirements.get('related_publications', ''),
         # 'customfield_10229': requirements.get('metadata_schema', ''),
         # FROM TICKET: https://helpdesk.gfbio.org/rest/api/2/issue/SAND-1460

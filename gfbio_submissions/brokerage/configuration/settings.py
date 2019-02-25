@@ -110,7 +110,6 @@ GENERIC = getattr(
     'GENERIC'
 )
 
-
 HELPDESK_API_SUB_URL = getattr(
     settings,
     'HELPDESK_API_SUB_URL',
@@ -127,6 +126,53 @@ HELPDESK_ATTACHMENT_SUB_URL = getattr(
     settings,
     'HELPDESK_ATTACHMENT_SUB_URL',
     'attachments'
+)
+
+HELPDESK_LICENSE_MAPPINGS = getattr(
+    settings,
+    'HELPDESK_LICENSE_MAPPINGS',
+    {
+        'CC0 1.0': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10197',
+            'value': 'CC0',
+            'id': '10197'
+        },
+        'CC BY 4.0': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10800',
+            'value': 'CC BY 4.0',
+            'id': '10800'
+        },
+        'CC BY NC 4.0': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10801',
+            'value': 'CC BY-NC 4.0',
+            'id': '10801'
+        },
+        'CC BY-NC-ND 4.0': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10805',
+            'value': 'CC BY-NC-ND 4.0',
+            'id': '10805'
+        },
+        'CC BY-NC-SA 4.0': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10804',
+            'value': 'CC BY-NC-SA 4.0',
+            'id': '10804'
+        },
+        'CC BY-ND 4.0': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10803',
+            'value': 'CC BY-ND 4.0',
+            'id': '10803'
+        },
+        'CC BY-SA 4.0': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10802',
+            'value': 'CC BY-SA 4.0',
+            'id': '10802'
+        },
+        'Other License': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10500',
+            'value': 'other',
+            'id': '10500'
+        }
+    }
 )
 
 PANGAEA = getattr(
