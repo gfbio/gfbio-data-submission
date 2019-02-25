@@ -32,8 +32,8 @@ const makeSelectFormWrapper = () =>
 const makeSelectContactForm = () =>
   createSelector(selectReduxFormDomain, substate => substate.get('contact'));
 
-const makeSelectFormWrapperErrors = () =>
-  createSelector(selectReduxFormDomain, substate => substate.formWrapper.syncErrors);
+// const makeSelectFormWrapperErrors = () =>
+//   createSelector(selectReduxFormDomain, substate => substate.formWrapper.syncErrors);
 
 /**
  * Default selector used by SubmissionForm
@@ -98,7 +98,7 @@ export {
   makeSelectSubmitInProgress,
   makeSelectSaveInProgress,
   makeSelectEmbargoDate,
-  makeSelectFormWrapperErrors,
+  // makeSelectFormWrapperErrors,
   makeSelectInitialValue,
   makeSelectContactForm,
   makeSelectToken,

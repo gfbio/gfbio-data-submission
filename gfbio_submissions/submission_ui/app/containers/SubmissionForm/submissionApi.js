@@ -6,7 +6,7 @@ import axios from 'axios';
 const API_ROOT = 'http://0.0.0.0:8000';
 const SUBMISSIONS = '/api/submissions/';
 
-export const postSubmission = (token) => {
+export const postSubmission = (token, data_body) => {
 
   console.log('postSubmission');
 
@@ -20,7 +20,7 @@ export const postSubmission = (token) => {
     },
   });
 
-  return instance.post('', { name: 'Fred' });
+  return instance.post('', data_body);
   // .then(function(response) {
   //   console.log(response);
   // })

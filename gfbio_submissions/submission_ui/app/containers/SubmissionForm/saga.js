@@ -1,9 +1,12 @@
 import { all, call, put, select, takeLeading } from 'redux-saga/effects';
 import { SAVE_FORM, SUBMIT_FORM, SUBMIT_FORM_START } from './constants';
 import {
+  makeSelectFormWrapper,
   makeSelectLicense,
   makeSelectMetaDataSchema,
-  makeSelectReduxFormForm, makeSelectToken, makeSelectUserId,
+  makeSelectReduxFormForm,
+  makeSelectToken,
+  makeSelectUserId,
 } from './selectors';
 import {
   saveForm,
@@ -18,25 +21,53 @@ import { postSubmission } from './submissionApi';
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 export function* performSubmitFormSaga() {
-  console.log('performSubmitFormSaga');
+  console.log(' ----------------- performSubmitFormSaga -------------- ');
 
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
 
-  console.log(token);
+  // console.log(token);
   // console.log(window.props.token);
 
-  const reduxFormForm = yield select(makeSelectReduxFormForm());
+  const form = yield select(makeSelectFormWrapper());
+  const formWrapper = form.formWrapper || {};
+  const formValues = formWrapper.values || {};
+  console.log('formValues');
+  console.log(formValues);
+
   const license = yield select(makeSelectLicense());
   const metaDataSchema = yield select(makeSelectMetaDataSchema());
-  const data = Object.assign({ license, metaDataSchema }, reduxFormForm);
+
+  /*
+  * {
+        target: DEFAULT_TARGET,
+        release: false,
+        submitting_user: userId,
+        download_url: submissionData.download_url,
+        data: {
+          requirements: submissionData.requirements,
+        },
+      }
+  * */
+
+  let payload = {
+    target: 'GENERIC',
+    release: false,
+    submitting_user: userId,
+    // download_url: 'url?',
+    data: {
+      requirements: formValues,
+    },
+  };
+
+  // const data = Object.assign({ license, metaDataSchema }, {});
   try {
     console.log('SUBMIT ...');
     // console.log('sending: ');
     // console.log(data);
     // const response = yield call(sendMethod, param1, param2);
     // yield call(sleep, 3000);
-    const response = yield call(postSubmission, token);
+    const response = yield call(postSubmission, token, payload);
     console.log('SUBMIT ... response ');
     console.log(response);
     // console.log('... DONE');
