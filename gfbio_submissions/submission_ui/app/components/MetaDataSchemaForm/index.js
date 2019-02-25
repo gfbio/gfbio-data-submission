@@ -27,8 +27,8 @@ class MetaDataSchemaForm extends React.PureComponent {
     'ESE 3.4.1',
     'INSPIRE Directive 2007/2/EC',
     'ISO 19115-1 2014',
-    'GPLv2',
     'MIxS 4.0',
+    'Other metadata or documentation',
   ];
 
   schemaListElements = this.schemaList.map(schema => (

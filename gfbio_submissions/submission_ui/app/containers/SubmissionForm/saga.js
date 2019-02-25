@@ -49,14 +49,14 @@ export function* performSubmitFormSaga() {
         },
       }
   * */
-
+  const requirements = Object.assign({license, metaDataSchema}, formValues);
   let payload = {
     target: 'GENERIC',
-    release: false,
+    release: true, // false for save
     submitting_user: userId,
     // download_url: 'url?',
     data: {
-      requirements: formValues,
+      requirements: requirements,
     },
   };
 

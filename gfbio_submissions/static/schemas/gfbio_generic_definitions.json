@@ -36,13 +36,13 @@
                 "enum": [
                     "",
                     "Other License",
-                    "CC0: Creative Commons Zero 1.0",
-                    "CC BY: Creative Commons Attribution 4.0",
-                    "CC BY-NC: Creative Commons Attribution-NonCommercial 4.0",
-                    "CC BY-NC-ND: Creative Commons Attribution-NonCommercial-NoDerivs 4.0",
-                    "CC BY-NC-SA: Creative Commons Attribution-NonCommercial-ShareAlike 4.0",
-                    "CC BY-ND: Creative Commons Attribution-NoDerivs 4.0",
-                    "CC BY-SA: Creative Commons Attribution-ShareAlike 4.0"
+                    "CC0 1.0",
+                    "CC BY 4.0",
+                    "CC BY-NC 4.0",
+                    "CC BY-NC-ND 4.0",
+                    "CC BY-NC-SA 4.0",
+                    "CC BY-ND 4.0",
+                    "CC BY-SA 4.0"
                 ]
             },
             "related_publications": {
@@ -51,7 +51,7 @@
             "metadata_schema": {
                 "type": "string",
                 "enum": [
-                    "",
+                    "None",
                     "Other metadata or documentation",
                     "ABCD 2.06",
                     "DwC 2013-10-25",
