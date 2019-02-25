@@ -2,7 +2,6 @@
 import datetime
 import json
 import logging
-from pprint import pprint
 
 import requests
 from django.db import transaction
@@ -143,13 +142,42 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
         if site_config.jira_project_key == SiteConfiguration.DSUB
         else 'sand/generic-data',
         'customfield_10311': requirements.get('data_collection_time', ''),
-        'customfield_10308': requirements.get('dataset_label', ''),
-        'customfield_10313': [{'value': c} for c in
-                              requirements.get('categories', [])],
+        'customfield_10308': [{'value': c} for c in
+                              requirements.get('dataset_label', [])],
+        # TODO: change JIRA type to array. makes no sense to use string with separators
+        # 'customfield_10313': [{'value': c} for c in
+        #                       requirements.get('categories', [])],
+        'customfield_10313': ', '.join(requirements.get('categories', [])),
         'customfield_10205': requirements.get('dataset_author', ''),
-        'customfield_10202': requirements.get('license', ''),
+        # 'customfield_10202': requirements.get('license', ''),
+        # FROM TICKET: https://helpdesk.gfbio.org/rest/api/2/issue/SAND-1460
+        # "customfield_10202": {
+        #     "self": "https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10500",
+        #     "value": "other",
+        #     "id": "10500"
+        # },
+        'customfield_10202': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10500',
+            'value': requirements.get('license', 'other'),
+            'id': '10500'
+        },
         'customfield_10307': requirements.get('related_publications', ''),
-        'customfield_10229': requirements.get('metadata_schema', ''),
+        # 'customfield_10229': requirements.get('metadata_schema', ''),
+        # FROM TICKET: https://helpdesk.gfbio.org/rest/api/2/issue/SAND-1460
+        # "customfield_10229": [
+        #     {
+        #         "self": "https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10300",
+        #         "value": "other",
+        #         "id": "10300"
+        #     }
+        # ],
+        'customfield_10229': [
+            {
+                'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10300',
+                'value': requirements.get('metadata_schema', 'other'),
+                'id': '10300'
+            }
+        ],
         'customfield_10216': [{'value': l} for l in
                               requirements.get('legal_requirements', [])],
         # project_id is potentially derived from portal db table, null in test-submission

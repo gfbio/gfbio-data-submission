@@ -9,6 +9,22 @@
             "dataset_label": {
                 "type": "string"
             },
+            "data_center": {
+                "type": "string",
+                "enum": [
+                    "",
+                    "ENA – European Nucleotide Archive",
+                    "PANGAEA – Data Publisher for Earth & Environmental Science",
+                    "Data Centers at Natural Science Collections",
+                    "BGBM – Botanic Garden and Botanical Museum Berlin, Freie Universität Berlin",
+                    "DSMZ – Leibniz Institute DSMZ – German Collection of Microorganisms and Cell Cultures, Braunschweig",
+                    "MfN – Leibniz Institute for Research on Evolution and Biodiversity, Berlin",
+                    "SGN – Senckenberg Gesellschaft für Naturforschung – Leibniz Institute, Frankfurt",
+                    "SMNS – State Museum of Natural History Stuttgart",
+                    "SNSB – Staatliche Naturwissenschaftliche Sammlungen Bayerns – SNSB IT Center, München",
+                    "ZFMK – Zoological Research Museum Alexander Koenig – Leibniz Institute for Animal Biodiversity, Bonn"
+                ]
+            },
             "categories": {
                 "type": "array",
                 "uniqueItems": true,
@@ -16,7 +32,7 @@
                     "type": "string",
                     "enum": [
                         "Algae & Protists",
-                        "Bacteriology, Virology",
+                        "Bacteriology or Virology",
                         "Botany",
                         "Ecology & Environment",
                         "Geoscience",
@@ -77,6 +93,9 @@
                         "Uncertain"
                     ]
                 }
+            },
+            "comment": {
+                "type": "string"
             }
         }
     }
