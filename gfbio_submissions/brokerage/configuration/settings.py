@@ -175,6 +175,63 @@ HELPDESK_LICENSE_MAPPINGS = getattr(
     }
 )
 
+HELPDESK_METASCHEMA_MAPPINGS = getattr(
+    settings,
+    'HELPDESK_METASCHEMA_MAPPINGS',
+    {
+        'ABCD 2.06': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10204',
+            'value': 'ABCD',
+            'id': '10204'
+        },
+        'DwC 2013-10-25': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10149',
+            'value': 'Darwin Core',
+            'id': '10149'
+        },
+        'DC 1.1': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10183',
+            'value': 'Dublin Core',
+            'id': '10183'
+        },
+        'EDM 5.2.3': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10184',
+            'value': 'EDM',
+            'id': '10184'
+        },
+        'EML 2.1.1': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10150',
+            'value': 'EML',
+            'id': '10150'
+        },
+        'ESE 3.4.1': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10185',
+            'value': 'ESE',
+            'id': '10185'
+        },
+        'INSPIRE Directive 2007/2/EC': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10186',
+            'value': 'INSPIRE',
+            'id': '10186'
+        },
+        'ISO 19115-1 2014': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10151',
+            'value': 'ISO 19115',
+            'id': '10151'
+        },
+        'MIxS 4.0': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10152',
+            'value': 'MIxS',
+            'id': '10152'
+        },
+        'Other metadata or documentation': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10300',
+            'value': 'other',
+            'id': '10300'
+        }
+    }
+)
+
 PANGAEA = getattr(
     settings,
     'PANGAEA',
