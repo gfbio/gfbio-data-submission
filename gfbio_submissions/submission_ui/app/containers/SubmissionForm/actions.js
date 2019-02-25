@@ -44,9 +44,10 @@ export function saveForm() {
   };
 }
 
-export function saveFormSuccess() {
+export function saveFormSuccess(response) {
   return {
     type: SAVE_FORM_SUCCESS,
+    response,
   };
 }
 

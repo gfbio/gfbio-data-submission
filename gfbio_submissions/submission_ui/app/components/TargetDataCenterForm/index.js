@@ -47,7 +47,7 @@ class TargetDataCenterForm extends React.PureComponent {
           <h2 className="section-title">Target Datacenter</h2>
           <p className="section-subtitle">(optional)</p>
         </header>
-        <Field name="dataCenter" component={this.renderDataCenterSelector} />
+        <Field name="data_center" component={this.renderDataCenterSelector} />
       </div>
     );
   }

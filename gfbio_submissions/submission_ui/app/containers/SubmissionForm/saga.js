@@ -20,85 +20,67 @@ import { postSubmission } from './submissionApi';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-export function* performSubmitFormSaga() {
-  console.log(' ----------------- performSubmitFormSaga -------------- ');
-
-  const token = yield select(makeSelectToken());
-  const userId = yield select(makeSelectUserId());
-
-  // console.log(token);
-  // console.log(window.props.token);
-
+// TODO: move logic to utils.js. here only workflow
+function* prepareRequestData(userId, submit = true) {
   const form = yield select(makeSelectFormWrapper());
   const formWrapper = form.formWrapper || {};
-  const formValues = formWrapper.values || {};
-  console.log('formValues');
-  console.log(formValues);
-
+  let formValues = formWrapper.values || {};
+  let legal_requirements = [];
+  let categories = [];
+  for (let f in formValues) {
+    if (f.includes('legal-requirement')) {
+      legal_requirements.push(f.replace('legal-requirement ', ''));
+      delete formValues[f];
+    }
+    if (f.includes('data-category')) {
+      categories.push(f.replace('data-category ', ''));
+      delete formValues[f];
+    }
+  }
   const license = yield select(makeSelectLicense());
   const metaDataSchema = yield select(makeSelectMetaDataSchema());
-
-  /*
-  * {
-        target: DEFAULT_TARGET,
-        release: false,
-        submitting_user: userId,
-        download_url: submissionData.download_url,
-        data: {
-          requirements: submissionData.requirements,
-        },
-      }
-  * */
-  const requirements = Object.assign({license, metaDataSchema}, formValues);
-  let payload = {
+  const requirements = Object.assign({
+    license,
+    metaDataSchema,
+    legal_requirements,
+    categories,
+  }, formValues);
+  return {
     target: 'GENERIC',
-    release: true, // false for save
+    release: submit, // false for save
     submitting_user: userId,
     // download_url: 'url?',
     data: {
       requirements: requirements,
     },
   };
+}
 
-  // const data = Object.assign({ license, metaDataSchema }, {});
+export function* performSubmitFormSaga() {
+  console.log(' ----------------- performSubmitFormSaga -------------- ');
+  const token = yield select(makeSelectToken());
+  const userId = yield select(makeSelectUserId());
+  const payload = yield prepareRequestData(userId);
   try {
-    console.log('SUBMIT ...');
-    // console.log('sending: ');
-    // console.log(data);
-    // const response = yield call(sendMethod, param1, param2);
-    // yield call(sleep, 3000);
     const response = yield call(postSubmission, token, payload);
-    console.log('SUBMIT ... response ');
-    console.log(response);
-    // console.log('... DONE');
     yield put(submitFormSuccess(response));
   } catch (error) {
-    console.log('SUBMIT ...ERROR');
     console.log(error);
     yield put(submitFormError(error));
   }
 }
 
 export function* performSaveFormSaga() {
-  const reduxFormForm = yield select(makeSelectReduxFormForm());
-  const license = yield select(makeSelectLicense());
-  const metaDataSchema = yield select(makeSelectMetaDataSchema());
-  const data = Object.assign({ license, metaDataSchema }, reduxFormForm);
+  console.log(' ----------------- performSaveFormSaga -------------- ');
+  const token = yield select(makeSelectToken());
+  const userId = yield select(makeSelectUserId());
+  const payload = yield prepareRequestData(userId, false);
   try {
-    console.log('SAVE ...');
-    console.log('sending: ');
-    console.log(data);
-    // const response = yield call(saveMethod, param1, param2);
-    yield call(sleep, 3000);
-    const response = '{}';
-    console.log('... DONE');
+    const response = yield call(postSubmission, token, payload);
     yield put(saveFormSuccess(response));
   } catch (error) {
     yield put(saveFormError(error));
   }
-  // form state as it is, without submit needed
-  // const formWrapper = yield select(makeSelectFormWrapper());
-  // console.log(formWrapper);
 }
 
 export function* processSubmitFormTypeSaga() {

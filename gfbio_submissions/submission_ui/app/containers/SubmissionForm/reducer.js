@@ -46,7 +46,10 @@ export const initialState = fromJS({
   // TODO: replace. during development token defaults to test-server user
   token: backendParameters['token'] || '5639b56bd077fb3e12d7e4a0ada244aaa970c2fd',
   userName: backendParameters.userName || '',
-
+  // TODO: decide what from actual response is needed, then put in reducer
+  submitResponse: {},
+  // TODO: same for save
+  saveResponse: {},
 });
 
 function submissionFormReducer(state = initialState, action) {
@@ -61,9 +64,10 @@ function submissionFormReducer(state = initialState, action) {
       return state.set('saveInProgress', true);
     case SAVE_FORM_SUCCESS:
       // TODO: set bsi etc after success, from then its updates
-      const u = uuid.v4();
+      // const u = uuid.v4();
       return state
-        .set('initialValues', { title: 'BLUB ' + u, description: 'BLA ' + u })
+        // .set('initialValues', { title: 'BLUB ' + u, description: 'BLA ' + u })
+        .set('saveResponse', action.response)
         .set('saveInProgress', false);
     case SAVE_FORM_ERROR:
       return state.set('saveInProgress', false);
@@ -77,7 +81,9 @@ function submissionFormReducer(state = initialState, action) {
       return state.set('submitInProgress', true);
     case SUBMIT_FORM_SUCCESS:
       console.log('reducer SUBMIT_FORM_SUCCESS');
-      return state.set('submitInProgress', false);
+      return state
+        .set('submitResponse', action.response)
+        .set('submitInProgress', false);
     case SUBMIT_FORM_ERROR:
       console.log('reducer SUBMIT_FORM_ERROR');
       return state.set('submitInProgress', false);
