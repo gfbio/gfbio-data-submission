@@ -24,7 +24,7 @@ export function* performSubmitFormSaga() {
   const userId = yield select(makeSelectUserId());
 
   console.log(token);
-  console.log(window.props.token);
+  // console.log(window.props.token);
 
   const reduxFormForm = yield select(makeSelectReduxFormForm());
   const license = yield select(makeSelectLicense());
