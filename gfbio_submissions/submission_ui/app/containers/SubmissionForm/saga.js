@@ -38,10 +38,10 @@ function* prepareRequestData(userId, submit = true) {
     }
   }
   const license = yield select(makeSelectLicense());
-  const metaDataSchema = yield select(makeSelectMetaDataSchema());
+  const metadata_schema = yield select(makeSelectMetaDataSchema());
   const requirements = Object.assign({
     license,
-    metaDataSchema,
+    metadata_schema,
     legal_requirements,
     categories,
   }, formValues);
