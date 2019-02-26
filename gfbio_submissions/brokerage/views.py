@@ -274,6 +274,9 @@ class SubmissionUploadView(mixins.CreateModelMixin,
         return Response(data_content, status=status.HTTP_201_CREATED,
                         headers=headers)
 
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
 
 class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
                                  mixins.UpdateModelMixin,

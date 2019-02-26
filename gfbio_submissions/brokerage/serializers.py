@@ -106,6 +106,7 @@ class PrimaryDataFileSerializer(serializers.ModelSerializer):
 
 
 class SubmissionUploadSerializer(serializers.ModelSerializer):
+    # TODO: user field ?
     site = serializers.ReadOnlyField(source='site.username')
     submission = serializers.PrimaryKeyRelatedField(read_only=True)
 
