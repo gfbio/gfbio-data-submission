@@ -35,9 +35,6 @@ class FormWrapper extends React.PureComponent {
       saveButtonText = 'saving ...';
     }
 
-    // console.log('FormWrapper render props');
-    // console.log(this.props);
-
     return (
       <form
         name="wrapping-form"

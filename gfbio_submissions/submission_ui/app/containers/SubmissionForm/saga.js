@@ -57,7 +57,6 @@ function* prepareRequestData(userId, submit = true) {
 }
 
 export function* performSubmitFormSaga() {
-  console.log(' ----------------- performSubmitFormSaga -------------- ');
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
   const payload = yield prepareRequestData(userId);
@@ -71,7 +70,6 @@ export function* performSubmitFormSaga() {
 }
 
 export function* performSaveFormSaga() {
-  console.log(' ----------------- performSaveFormSaga -------------- ');
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
   const payload = yield prepareRequestData(userId, false);
@@ -93,19 +91,16 @@ export function* processSubmitFormTypeSaga() {
 }
 
 export function* checkFormTypeSaga() {
-  console.log('checkFormTypeSaga');
   // new feature from rc1 that blocks until finished
   // https://redux-saga.js.org/docs/api/index.html#takeleadingpattern-saga-args
   yield takeLeading(SUBMIT_FORM, processSubmitFormTypeSaga);
 }
 
 export function* submitFormSaga() {
-  console.log('checkForm2Saga');
   yield takeLeading(SUBMIT_FORM_START, performSubmitFormSaga);
 }
 
 export function* saveFormSaga() {
-  console.log('saveFormSaga');
   yield takeLeading(SAVE_FORM, performSaveFormSaga);
 }
 

@@ -32,7 +32,7 @@ export class SubmissionForm extends React.Component {
   //   console.log('submit func from SubForm');
   //   console.log(values);
   // };
-  //
+
   getProfile = () => {
     return {
       ui_settings: {
@@ -48,8 +48,6 @@ export class SubmissionForm extends React.Component {
   };
 
   render() {
-    // console.log('SubmissionForm');
-    // console.log(this.props);
     return (
       <div id="submission-form-wrapper">
 
