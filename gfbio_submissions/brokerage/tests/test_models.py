@@ -2,6 +2,7 @@
 import uuid
 
 import responses
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from mock import patch
 
@@ -9,7 +10,7 @@ from gfbio_submissions.brokerage.admin import download_auditable_text_data
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, TicketLabel, BrokerObject, CenterName, Submission, \
     PersistentIdentifier, RequestLog, AdditionalReference, AuditableTextData, \
-    TaskProgressReport
+    TaskProgressReport, SubmissionUpload
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data_without_runs, \
     _get_ena_data, _get_ena_xml_response
@@ -680,3 +681,35 @@ class TestTaskProgressReport(TestCase):
         tpr.save()
         self.assertEqual('foo', tpr.__str__())
         self.assertIsInstance(tpr.__str__(), str)
+
+
+class TestSubmissionUpload(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        user = User.objects.create(
+            username="user1"
+        )
+        Submission.objects.create(site=user)
+
+    def test_instance(self):
+        self.assertEqual(0, len(SubmissionUpload.objects.all()))
+        submission_upload = SubmissionUpload.objects.create(
+            submission=Submission.objects.first(),
+            site=User.objects.first(),
+            user=User.objects.first(),
+            file=SimpleUploadedFile('test_submission_upload.txt',
+                                    b'these are the file contents!'),
+        )
+        self.assertEqual(1, len(SubmissionUpload.objects.all()))
+
+    def test_str(self):
+        submission_upload = SubmissionUpload.objects.create(
+            submission=Submission.objects.first(),
+            site=User.objects.first(),
+            user=User.objects.first(),
+            file=SimpleUploadedFile('test_submission_upload.txt',
+                                    b'these are the file contents!'),
+        )
+        self.assertEqual('test_submission_upload.txt | {0}'.format(
+            Submission.objects.first().broker_submission_id),
+                         submission_upload.__str__())

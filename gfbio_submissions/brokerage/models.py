@@ -661,6 +661,9 @@ class SubmissionUpload(TimeStampedModel):
                 countdown=PRIMARY_DATA_FILE_DELAY
             )
 
+    def __str__(self):
+        return ' | '.join(reversed(self.file.name.split(os.sep)))
+
 class AuditableTextData(models.Model):
     data_id = models.UUIDField(primary_key=False, default=uuid.uuid4)
     name = models.CharField(max_length=128)
