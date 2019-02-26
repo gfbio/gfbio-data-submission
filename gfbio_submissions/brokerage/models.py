@@ -629,7 +629,7 @@ class SubmissionUpload(TimeStampedModel):
         null=True,
         blank=True,
         related_name='user_upload',
-        help_text='Related "User". A real person that uses '
+        help_text='Related "User". E.g. a real person that uses '
                   'the submission frontend',
     )
     file = models.FileField(
@@ -663,6 +663,7 @@ class SubmissionUpload(TimeStampedModel):
 
     def __str__(self):
         return ' | '.join(reversed(self.file.name.split(os.sep)))
+
 
 class AuditableTextData(models.Model):
     data_id = models.UUIDField(primary_key=False, default=uuid.uuid4)
