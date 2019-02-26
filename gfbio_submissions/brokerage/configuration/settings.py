@@ -257,6 +257,7 @@ PANGAEA_ISSUE_DOI_FIELD_NAME = getattr(
     'customfield_10520'
 )
 
+# TODO: rename
 PRIMARY_DATA_FILE_DELAY = getattr(
     settings,
     'PRIMARY_DATA_FILE_DELAY',
@@ -264,6 +265,7 @@ PRIMARY_DATA_FILE_DELAY = getattr(
     120
 )
 
+# TODO: rename
 PRIMARY_DATA_FILE_MAX_RETRIES = getattr(
     settings,
     'PRIMARY_DATA_FILE_MAX_RETRIES',

@@ -22,7 +22,7 @@ from .managers import AuditableTextDataManager
 from .managers import SiteConfigurationManager, \
     SubmissionManager, BrokerObjectManager, TaskProgressReportManager
 from .utils.submission_tools import \
-    submission_file_upload_path, submission_primary_data_file_upload_path
+    submission_upload_path, submission_primary_data_file_upload_path
 
 logger = logging.getLogger(__name__)
 
@@ -550,7 +550,7 @@ class SubmissionFileUpload(models.Model):
         blank=True,
         help_text='Submission this File belongs to.')
     site = models.ForeignKey(AUTH_USER_MODEL, related_name='submissionupload')
-    file = models.FileField(upload_to=submission_file_upload_path)
+    file = models.FileField(upload_to=submission_upload_path)
 
     # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
     created = models.DateTimeField(auto_now_add=True)
@@ -608,6 +608,58 @@ class PrimaryDataFile(models.Model):
                 countdown=PRIMARY_DATA_FILE_DELAY
             )
 
+
+class SubmissionUpload(TimeStampedModel):
+    submission = models.ForeignKey(
+        Submission,
+        null=True,
+        blank=True,
+        help_text='Submission associated with this Upload.'
+    )
+    site = models.ForeignKey(
+        AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name='site_upload',
+        help_text='Related "Site". E.g. gfbio-portal or silva.',
+    )
+    # TODO: once IDM in place, it will be possible to directly assign real users
+    user = models.ForeignKey(
+        AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name='user_upload',
+        help_text='Related "User". A real person that uses '
+                  'the submission frontend',
+    )
+    file = models.FileField(
+        upload_to=submission_upload_path,
+        help_text='The actual file uploaded.',
+    )
+
+    # TODO: from PrimaryDataFile ...
+    class NoTicketAvailableError(Exception):
+        pass
+
+    # TODO: from PrimaryDataFile ...
+    @classmethod
+    def raise_ticket_exception(self, no_of_helpdesk_tickets):
+        if no_of_helpdesk_tickets == 0:
+            raise self.NoTicketAvailableError
+
+    # TODO: from PrimaryDataFile. new default for attach is -> false
+    def save(self, attach=False, *args, **kwargs):
+        super(SubmissionUpload, self).save(*args, **kwargs)
+        if attach:
+            from .tasks import \
+                attach_file_to_helpdesk_ticket_task
+            attach_file_to_helpdesk_ticket_task.apply_async(
+                kwargs={
+                    'submission_id': '{0}'.format(self.submission.pk),
+                },
+                # TODO: rename
+                countdown=PRIMARY_DATA_FILE_DELAY
+            )
 
 class AuditableTextData(models.Model):
     data_id = models.UUIDField(primary_key=False, default=uuid.uuid4)
