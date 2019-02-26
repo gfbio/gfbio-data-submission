@@ -20,9 +20,6 @@ const selectReduxFormDomain = state => state.get('form');
 //     routerState.get('location').toJS(),
 //   );
 
-// console.log('selectors js');
-// console.log(state);
-// console.log('----------------');
 /**
  * redux-form returns regular state. not ImmutableJS state ...
  */

@@ -9,8 +9,6 @@ import { makeSelectContactForm } from './selectors';
 class ContactForm extends React.Component {
 
   render() {
-    // console.log('ContactForm RENDER');
-    // console.log(this.props);
     return (
       <form onSubmit={this.props.handleSubmit}>
         <div>
@@ -68,9 +66,6 @@ function mapDispatchToProps(dispatch) {
 // // same reducer as SubmisisonForm injected under different key
 // const withReducer = injectReducer({ key: 'CForm', reducer });
 // const withSaga = injectSaga({ key: 'CForm', saga });
-//
-// console.info(withConnect);
-// console.log(ContactForm);
 //
 // export default compose(
 //   withReducer,

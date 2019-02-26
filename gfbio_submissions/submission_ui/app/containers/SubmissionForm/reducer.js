@@ -20,13 +20,9 @@ import {
   SUBMIT_FORM_SUCCESS,
 } from './constants';
 
-console.log('REDUCER');
 let backendParameters = {};
-console.log(window.props);
 if (window.props !== undefined) {
   backendParameters = window.props;
-  console.log('BACKEND PARAMS');
-  console.log(backendParameters);
 }
 
 export const initialState = fromJS({
@@ -74,18 +70,14 @@ function submissionFormReducer(state = initialState, action) {
     case SUBMIT_FORM:
       return state.set('reduxFormForm', action.form);
     case SUBMIT_FORM_START:
-      console.log('reducer SUBMIT_FORM_START');
       return state.set('submitInProgress', true);
     case SUBMIT_FORM_ACTIVE:
-      console.log('reducer SUBMIT_FORM_ACTIVE');
       return state.set('submitInProgress', true);
     case SUBMIT_FORM_SUCCESS:
-      console.log('reducer SUBMIT_FORM_SUCCESS');
       return state
         .set('submitResponse', action.response)
         .set('submitInProgress', false);
     case SUBMIT_FORM_ERROR:
-      console.log('reducer SUBMIT_FORM_ERROR');
       return state.set('submitInProgress', false);
     case SET_EMBARGO_DATE:
       return state.set('embargoDate', action.date);
