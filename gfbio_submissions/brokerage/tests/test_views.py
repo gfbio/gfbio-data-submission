@@ -528,117 +528,164 @@ class TestSubmissionUploadView(TestCase):
         response = self.api_client.get(url)
         self.assertEqual(405, response.status_code)
 
-    # def test_get_detail(self):
-    #     submission = Submission.objects.all().first()
-    #     url = reverse(
-    #         'brokerage:submissions_primary_data_detail',
-    #         kwargs={
-    #             'broker_submission_id': submission.broker_submission_id,
-    #             'pk': 1
-    #         })
-    #
-    #     response = self.api_client.get(url)
-    #     self.assertEqual(405, response.status_code)
+    def test_get_detail(self):
+        submission = Submission.objects.all().first()
+        url = reverse(
+            'brokerage:submissions_new_upload_detail',
+            kwargs={
+                'broker_submission_id': submission.broker_submission_id,
+                'pk': 1
+            })
 
-    # @responses.activate
-    # def test_wrong_submission_put(self):
-    #     submission = Submission.objects.first()
-    #     site_config = SiteConfiguration.objects.first()
-    #     url = reverse(
-    #         'brokerage:submissions_primary_data',
-    #         kwargs={
-    #             'broker_submission_id': submission.broker_submission_id
-    #         })
-    #     responses.add(responses.POST, url, json={}, status=200)
-    #     responses.add(responses.POST,
-    #                   '{0}{1}/{2}/{3}'.format(
-    #                       site_config.helpdesk_server.url,
-    #                       HELPDESK_API_SUB_URL,
-    #                       'FAKE_KEY',
-    #                       HELPDESK_ATTACHMENT_SUB_URL,
-    #                   ),
-    #                   json=_get_jira_attach_response(),
-    #                   status=200)
-    #     data = self._create_test_data('/tmp/test_primary_data_file_1111')
-    #     response = self.api_client.post(url, data, format='multipart')
-    #     self.assertEqual(201, response.status_code)
-    #     self.assertEqual(1, len(PrimaryDataFile.objects.all()))
-    #     fname = PrimaryDataFile.objects.all().first().data_file.name
-    #     self.assertIn('test_primary_data_file_1111', fname)
-    #     content = json.loads(response.content.decode('utf-8'))
-    #     submission = Submission.objects.last()
-    #     submission.additionalreference_set.create(
-    #         type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-    #         reference_key='FAKE_KEY_2',
-    #         primary=True
-    #     )
-    #     url = reverse(
-    #         'brokerage:submissions_primary_data_detail',
-    #         kwargs={
-    #             'broker_submission_id': submission.broker_submission_id,
-    #             'pk': content.get('id')
-    #         })
-    #     data = self._create_test_data('/tmp/test_primary_data_file_2222', False)
-    #     response = self.api_client.put(url, data, format='multipart')
-    #     self.assertEqual(400, response.status_code)
-    #
-    # @responses.activate
-    # def test_valid_file_put(self):
-    #     submission = Submission.objects.first()
-    #     site_config = SiteConfiguration.objects.first()
-    #     url = reverse(
-    #         'brokerage:submissions_primary_data',
-    #         kwargs={
-    #             'broker_submission_id': submission.broker_submission_id
-    #         })
-    #     responses.add(responses.POST, url, json={}, status=200)
-    #     responses.add(responses.POST,
-    #                   '{0}{1}/{2}/{3}'.format(
-    #                       site_config.helpdesk_server.url,
-    #                       HELPDESK_API_SUB_URL,
-    #                       'FAKE_KEY',
-    #                       HELPDESK_ATTACHMENT_SUB_URL,
-    #                   ),
-    #                   json=_get_jira_attach_response(),
-    #                   status=200)
-    #     data = self._create_test_data('/tmp/test_primary_data_file_1111')
-    #     response = self.api_client.post(url, data, format='multipart')
-    #     self.assertEqual(201, response.status_code)
-    #     self.assertEqual(1, len(PrimaryDataFile.objects.all()))
-    #     fname = PrimaryDataFile.objects.all().first().data_file.name
-    #     self.assertIn('test_primary_data_file_1111', fname)
-    #     content = json.loads(response.content.decode('utf-8'))
-    #     url = reverse(
-    #         'brokerage:submissions_primary_data_detail',
-    #         kwargs={
-    #             'broker_submission_id': submission.broker_submission_id,
-    #             'pk': content.get('id')
-    #         })
-    #     data = self._create_test_data('/tmp/test_primary_data_file_2222', False)
-    #     response = self.api_client.put(url, data, format='multipart')
-    #     self.assertEqual(200, response.status_code)
-    #     self.assertEqual(1, len(PrimaryDataFile.objects.all()))
-    #     fname = PrimaryDataFile.objects.all().first().data_file.name
-    #     self.assertIn('test_primary_data_file_2222', fname)
-    #
-    # def test_no_submission_upload(self):
-    #     url = reverse(
-    #         'brokerage:submissions_primary_data',
-    #         kwargs={
-    #             'broker_submission_id': uuid4()
-    #         })
-    #     data = self._create_test_data('/tmp/test_primary_data_file')
-    #     response = self.api_client.post(url, data, format='multipart')
-    #     self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-    #     self.assertIn(b'No submission', response.content)
-    #
-    # def test_empty_upload(self):
-    #     submission = Submission.objects.first()
-    #     url = reverse(
-    #         'brokerage:submissions_primary_data',
-    #         kwargs={
-    #             'broker_submission_id': submission.broker_submission_id
-    #         })
-    #     response = self.api_client.post(url, {}, format='multipart')
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    #     self.assertIn(b'No file was submitted.', response.content)
+        response = self.api_client.get(url)
+        self.assertEqual(405, response.status_code)
+
+    @responses.activate
+    def test_wrong_submission_put(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        url = reverse(
+            'brokerage:submissions_new_upload',
+            kwargs={
+                'broker_submission_id': submission.broker_submission_id
+            })
+        responses.add(responses.POST, url, json={}, status=200)
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          site_config.helpdesk_server.url,
+                          HELPDESK_API_SUB_URL,
+                          'FAKE_KEY',
+                          HELPDESK_ATTACHMENT_SUB_URL,
+                      ),
+                      json=_get_jira_attach_response(),
+                      status=200)
+        data = self._create_test_data('/tmp/test_primary_data_file_11112222')
+        response = self.api_client.post(url, data, format='multipart')
+        self.assertEqual(201, response.status_code)
+        self.assertEqual(1, len(SubmissionUpload.objects.all()))
+        fname = SubmissionUpload.objects.all().first().file.name
+        self.assertIn('test_primary_data_file_11112222', fname)
+        content = json.loads(response.content.decode('utf-8'))
+        submission = Submission.objects.last()
+        submission.additionalreference_set.create(
+            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+            reference_key='FAKE_KEY_2',
+            primary=True
+        )
+        url = reverse(
+            'brokerage:submissions_new_upload_detail',
+            kwargs={
+                'broker_submission_id': submission.broker_submission_id,
+                'pk': content.get('id')
+            })
+        data = self._create_test_data('/tmp/test_primary_data_file_2222', False)
+        response = self.api_client.put(url, data, format='multipart')
+        self.assertEqual(400, response.status_code)
+
+    @responses.activate
+    def test_valid_file_put_no_task(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        url = reverse(
+            'brokerage:submissions_new_upload',
+            kwargs={
+                'broker_submission_id': submission.broker_submission_id
+            })
+        responses.add(responses.POST, url, json={}, status=200)
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          site_config.helpdesk_server.url,
+                          HELPDESK_API_SUB_URL,
+                          'FAKE_KEY',
+                          HELPDESK_ATTACHMENT_SUB_URL,
+                      ),
+                      json=_get_jira_attach_response(),
+                      status=200)
+        data = self._create_test_data('/tmp/test_primary_data_file_1111')
+        reports_len = len(TaskProgressReport.objects.all())
+        response = self.api_client.post(url, data, format='multipart')
+        self.assertEqual(201, response.status_code)
+        self.assertEqual(1, len(SubmissionUpload.objects.all()))
+
+        fname = SubmissionUpload.objects.all().first().file.name
+        self.assertIn('test_primary_data_file_1111', fname)
+        content = json.loads(response.content.decode('utf-8'))
+        url = reverse(
+            'brokerage:submissions_new_upload_detail',
+            kwargs={
+                'broker_submission_id': submission.broker_submission_id,
+                'pk': content.get('id')
+            })
+        data = self._create_test_data('/tmp/test_primary_data_file_2222', False)
+        response = self.api_client.put(url, data, format='multipart')
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, len(SubmissionUpload.objects.all()))
+        fname = SubmissionUpload.objects.all().first().file.name
+        self.assertIn('test_primary_data_file_2222', fname)
+        self.assertEqual(len(TaskProgressReport.objects.all()), reports_len)
+
+    @responses.activate
+    def test_valid_file_put_with_task(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        url = reverse(
+            'brokerage:submissions_new_upload',
+            kwargs={
+                'broker_submission_id': submission.broker_submission_id
+            })
+        responses.add(responses.POST, url, json={}, status=200)
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          site_config.helpdesk_server.url,
+                          HELPDESK_API_SUB_URL,
+                          'FAKE_KEY',
+                          HELPDESK_ATTACHMENT_SUB_URL,
+                      ),
+                      json=_get_jira_attach_response(),
+                      status=200)
+        data = self._create_test_data('/tmp/test_primary_data_file_1111')
+        reports_len = len(TaskProgressReport.objects.all())
+        response = self.api_client.post(url, data, format='multipart')
+        self.assertEqual(201, response.status_code)
+        self.assertEqual(1, len(SubmissionUpload.objects.all()))
+        fname = SubmissionUpload.objects.all().first().file.name
+        self.assertIn('test_primary_data_file_1111', fname)
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(len(TaskProgressReport.objects.all()), reports_len)
+
+        url = reverse(
+            'brokerage:submissions_new_upload_detail',
+            kwargs={
+                'broker_submission_id': submission.broker_submission_id,
+                'pk': content.get('id')
+            })
+        data = self._create_test_data('/tmp/test_primary_data_file_2222', False)
+        data['attach_to_ticket'] = True
+        response = self.api_client.put(url, data, format='multipart')
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, len(SubmissionUpload.objects.all()))
+        fname = SubmissionUpload.objects.all().first().file.name
+        self.assertIn('test_primary_data_file_2222', fname)
+        self.assertGreater(len(TaskProgressReport.objects.all()), reports_len)
+
+    def test_no_submission_upload(self):
+        url = reverse(
+            'brokerage:submissions_new_upload',
+            kwargs={
+                'broker_submission_id': uuid4()
+            })
+        data = self._create_test_data('/tmp/test_primary_data_file')
+        response = self.api_client.post(url, data, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn(b'No submission', response.content)
+
+    def test_empty_upload(self):
+        submission = Submission.objects.first()
+        url = reverse(
+            'brokerage:submissions_new_upload',
+            kwargs={
+                'broker_submission_id': submission.broker_submission_id
+            })
+        response = self.api_client.post(url, {}, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(b'No file was submitted.', response.content)
