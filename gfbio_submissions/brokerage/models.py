@@ -551,6 +551,7 @@ class SubmissionFileUpload(models.Model):
         help_text='Submission this File belongs to.')
     site = models.ForeignKey(AUTH_USER_MODEL, related_name='submissionupload')
     file = models.FileField(upload_to=submission_upload_path)
+    migrated = models.BooleanField(default=False)
 
     # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
     created = models.DateTimeField(auto_now_add=True)
@@ -583,6 +584,7 @@ class PrimaryDataFile(models.Model):
         default='',
         blank=True,
         help_text='Any comments or useful information regarding this file')
+    migrated = models.BooleanField(default=False)
 
     # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
     created = models.DateTimeField(auto_now_add=True)
