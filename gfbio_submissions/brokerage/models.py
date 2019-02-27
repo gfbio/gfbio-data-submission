@@ -632,6 +632,12 @@ class SubmissionUpload(TimeStampedModel):
         help_text='Related "User". E.g. a real person that uses '
                   'the submission frontend',
     )
+    attach_to_ticket = models.BooleanField(
+        default=False,
+        help_text='When checked, thus having True as value, every uploaded '
+                  'file will be attached to the main helpdesk ticket'
+                  'associated with "submission".',
+    )
     file = models.FileField(
         upload_to=submission_upload_path,
         help_text='The actual file uploaded.',
@@ -648,9 +654,9 @@ class SubmissionUpload(TimeStampedModel):
             raise self.NoTicketAvailableError
 
     # TODO: from PrimaryDataFile. new default for attach is -> false
-    def save(self, attach=False, *args, **kwargs):
+    def save(self, *args, **kwargs):
         super(SubmissionUpload, self).save(*args, **kwargs)
-        if attach:
+        if self.attach_to_ticket:
             from .tasks import \
                 attach_file_to_helpdesk_ticket_task
             attach_file_to_helpdesk_ticket_task.apply_async(

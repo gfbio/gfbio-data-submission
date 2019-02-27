@@ -109,7 +109,8 @@ class SubmissionUploadSerializer(serializers.ModelSerializer):
     # TODO: user field ?
     site = serializers.ReadOnlyField(source='site.username')
     submission = serializers.PrimaryKeyRelatedField(read_only=True)
+    attach_to_ticket = serializers.BooleanField(required=False)
 
     class Meta:
         model = SubmissionUpload
-        fields = ('site', 'file', 'submission')
+        fields = ('site', 'file', 'submission', 'attach_to_ticket',)

@@ -5,10 +5,10 @@ from uuid import uuid4
 
 import responses
 from django.contrib.auth.models import Permission
+from django.core.urlresolvers import reverse
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from django.core.urlresolvers import reverse
 from rest_framework.test import APIClient
 
 from config.settings.base import MEDIA_URL
@@ -16,7 +16,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
     HELPDESK_API_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL
 from gfbio_submissions.brokerage.models import SubmissionFileUpload, Submission, \
     SiteConfiguration, ResourceCredential, PrimaryDataFile, AdditionalReference, \
-    TaskProgressReport
+    TaskProgressReport, SubmissionUpload
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_jira_attach_response
 from gfbio_submissions.users.models import User
@@ -421,25 +421,16 @@ class TestSubmissionUploadView(TestCase):
         self.assertIsNone(pd)
 
     @responses.activate
-    def test_valid_upload(self):
+    def test_valid_upload_no_task(self):
         submission = Submission.objects.all().first()
         site_config = SiteConfiguration.objects.first()
         url = reverse('brokerage:submissions_new_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
-        print(url)
         responses.add(responses.POST, url, json={}, status=200)
-        responses.add(responses.POST,
-                      '{0}{1}/{2}/{3}'.format(
-                          site_config.helpdesk_server.url,
-                          HELPDESK_API_SUB_URL,
-                          'FAKE_KEY',
-                          HELPDESK_ATTACHMENT_SUB_URL,
-                      ),
-                      json=_get_jira_attach_response(),
-                      status=200)
         data = self._create_test_data('/tmp/test_primary_data_file')
 
         reports_len = len(TaskProgressReport.objects.all())
+        uploads_len = len(SubmissionUpload.objects.all())
         response = self.api_client.post(url, data, format='multipart')
         print(response.status_code)
         print(response.content)
@@ -452,54 +443,91 @@ class TestSubmissionUploadView(TestCase):
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))
         # TODO: no task is triggered yet
-        # self.assertGreater(len(TaskProgressReport.objects.all()), reports_len)
+        self.assertEqual(len(TaskProgressReport.objects.all()), reports_len)
+        self.assertGreater(len(SubmissionUpload.objects.all()), uploads_len)
 
+    @responses.activate
+    def test_valid_upload_with_task(self):
+        submission = Submission.objects.all().first()
+        site_config = SiteConfiguration.objects.first()
+        url = reverse('brokerage:submissions_new_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        responses.add(responses.POST, url, json={}, status=200)
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          site_config.helpdesk_server.url,
+                          HELPDESK_API_SUB_URL,
+                          'FAKE_KEY',
+                          HELPDESK_ATTACHMENT_SUB_URL,
+                      ),
+                      json=_get_jira_attach_response(),
+                      status=200)
+        data = self._create_test_data('/tmp/test_primary_data_file')
+        print('\ndata\n')
+        print(data)
+        data['attach_to_ticket'] = True
 
-    # def test_no_permission_file_upload(self):
-    #     submission = Submission.objects.all().first()
-    #     url = reverse(
-    #         'brokerage:submissions_primary_data',
-    #         kwargs={
-    #             'broker_submission_id': submission.broker_submission_id
-    #         })
-    #     data = self._create_test_data('/tmp/test_primary_data_file')
-    #     response = self.other_api_client.post(url, data, format='multipart')
-    #
-    #     self.assertEqual(403, response.status_code)
-    #
-    # @responses.activate
-    # def test_not_owner_file_upload(self):
-    #     submission = Submission.objects.first()
-    #     submission.site = User.objects.last()
-    #     submission.save()
-    #     site_config = SiteConfiguration.objects.first()
-    #     url = reverse('brokerage:submissions_primary_data', kwargs={
-    #         'broker_submission_id': submission.broker_submission_id})
-    #     responses.add(responses.POST, url, json={}, status=200)
-    #     responses.add(responses.POST,
-    #                   '{0}{1}/{2}/{3}'.format(
-    #                       site_config.helpdesk_server.url,
-    #                       HELPDESK_API_SUB_URL,
-    #                       'FAKE_KEY',
-    #                       HELPDESK_ATTACHMENT_SUB_URL,
-    #                   ),
-    #                   json=_get_jira_attach_response(),
-    #                   status=200)
-    #     data = self._create_test_data('/tmp/test_primary_data_file')
-    #     response = self.api_client.post(url, data, format='multipart')
-    #     # FIXME: until changed, everyone with permissions can add file, even if not owner of respective submission
-    #     self.assertEqual(201, response.status_code)
-    #
-    # def test_get_list(self):
-    #     submission = Submission.objects.first()
-    #     url = reverse(
-    #         'brokerage:submissions_primary_data',
-    #         kwargs={
-    #             'broker_submission_id': submission.broker_submission_id
-    #         })
-    #     response = self.api_client.get(url)
-    #     self.assertEqual(405, response.status_code)
-    #
+        reports_len = len(TaskProgressReport.objects.all())
+        uploads_len = len(SubmissionUpload.objects.all())
+        response = self.api_client.post(url, data, format='multipart')
+        print(response.status_code)
+        print(response.content)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn(b'broker_submission_id', response.content)
+        self.assertIn(b'"id"', response.content)
+        self.assertIn(b'site', response.content)
+        self.assertEqual(User.objects.first().username, response.data['site'])
+        self.assertIn(b'file', response.content)
+        self.assertTrue(
+            urlparse(response.data['file']).path.startswith(MEDIA_URL))
+        self.assertGreater(len(TaskProgressReport.objects.all()), reports_len)
+        self.assertGreater(len(SubmissionUpload.objects.all()), uploads_len)
+
+    def test_no_permission_file_upload(self):
+        submission = Submission.objects.all().first()
+        url = reverse(
+            'brokerage:submissions_new_upload',
+            kwargs={
+                'broker_submission_id': submission.broker_submission_id
+            })
+        data = self._create_test_data('/tmp/test_primary_data_file')
+        response = self.other_api_client.post(url, data, format='multipart')
+
+        self.assertEqual(403, response.status_code)
+
+    @responses.activate
+    def test_not_owner_file_upload(self):
+        submission = Submission.objects.first()
+        submission.site = User.objects.last()
+        submission.save()
+        site_config = SiteConfiguration.objects.first()
+        url = reverse('brokerage:submissions_new_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        responses.add(responses.POST, url, json={}, status=200)
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          site_config.helpdesk_server.url,
+                          HELPDESK_API_SUB_URL,
+                          'FAKE_KEY',
+                          HELPDESK_ATTACHMENT_SUB_URL,
+                      ),
+                      json=_get_jira_attach_response(),
+                      status=200)
+        data = self._create_test_data('/tmp/test_primary_data_file')
+        response = self.api_client.post(url, data, format='multipart')
+        # FIXME: until changed, everyone with permissions can add file, even if not owner of respective submission
+        self.assertEqual(201, response.status_code)
+
+    def test_get_list(self):
+        submission = Submission.objects.first()
+        url = reverse(
+            'brokerage:submissions_new_upload',
+            kwargs={
+                'broker_submission_id': submission.broker_submission_id
+            })
+        response = self.api_client.get(url)
+        self.assertEqual(405, response.status_code)
+
     # def test_get_detail(self):
     #     submission = Submission.objects.all().first()
     #     url = reverse(
@@ -511,7 +539,7 @@ class TestSubmissionUploadView(TestCase):
     #
     #     response = self.api_client.get(url)
     #     self.assertEqual(405, response.status_code)
-    #
+
     # @responses.activate
     # def test_wrong_submission_put(self):
     #     submission = Submission.objects.first()
