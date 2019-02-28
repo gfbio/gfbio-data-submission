@@ -2,9 +2,11 @@
 import os
 import shutil
 
+from django.core.files import File
 from django.core.management import BaseCommand
+from django.db.models.fields.files import FieldFile
 
-from gfbio_submissions.brokerage.models import Submission
+from gfbio_submissions.brokerage.models import Submission, SubmissionUpload
 
 
 # FIXME / TODO: test on local development server
@@ -38,7 +40,6 @@ class Command(BaseCommand):
                             print('\tmove\n\t{0}\n\tto\n\t{1}'.format(file_path,
                                                                       new_path))
                             shutil.move(file_path, new_path)
-                            # TODO: create SubmisisonUpload and mark migrated, compate SubmissionFileUpload code below
                             print(
                                 '\tnew path exiting: {0} | old path existing: '
                                 '{1}'.format(
@@ -46,6 +47,16 @@ class Command(BaseCommand):
                                     os.path.exists(file_path)
                                 )
                             )
+                            new_file = open(new_path, 'r')
+                            file = File(name=tail, file=new_file)
+                            submission_upload = SubmissionUpload.objects.create(
+                                    submission=submission,
+                                    site=submission.site,
+                                    attach_to_ticket=False,
+                                    file=file
+                                )
+                            new_file.close()
+                            print('\tNew SubmissionUpload created: {0}'.format(submission_upload))
                         else:
                             print('something is wrong with path for '
                                   'primarydatafile: {0}'.format(file_path))
@@ -55,25 +66,6 @@ class Command(BaseCommand):
         else:
             print('something is wrong with path: {0}'.format(media_path))
 
-            # print(head)
-            # print(tail)
-            #     # print(p.data_file.read())
-            #     fixed_path = 'gfbio_submission/media/{0}'.format(p.data_file.name)
-            #     path = os.path.abspath(fixed_path)
-            #     # print(path)
-            #     # print(os.path.exists(path))
-            #     head, tail = os.path.split(path)
-            #     # print((head, tail))
-            #     head = head.replace('primary_data_files', '')
-            #     # print(head)
-            #     # print(os.path.exists(head))
-            #     print(path)
-            #     print(os.path.exists(path))
-            #     new_path = '{0}{1}'.format(head, tail)
-            #     print(new_path)
-            #     print(os.path.exists(new_path))
-            #     # print(os.listdir(head))
-            #     # shutil.move(path, new_path)
 
             # TODO: requires a copy/move command from /primarydate folder to /{bsi} folder (one level up)
             # submission_upload = SubmissionUpload.objects.create(
