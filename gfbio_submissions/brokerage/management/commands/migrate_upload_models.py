@@ -45,7 +45,7 @@ class Command(BaseCommand):
                                     os.path.exists(file_path)
                                 )
                             )
-                            new_file = open(new_path, 'r')
+                            new_file = open(new_path, 'rb')
                             file = File(name=tail, file=new_file)
                             submission_upload = SubmissionUpload.objects.create(
                                 submission=submission,
