@@ -80,6 +80,5 @@ class Command(BaseCommand):
         else:
             print('something is wrong with path: {0}'.format(media_path))
 
-
-def handle(self, *args, **options):
-    self.migrate_upload_models()
+    def handle(self, *args, **options):
+        self.migrate_upload_models()
