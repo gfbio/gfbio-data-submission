@@ -21,7 +21,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
     HELPDESK_ATTACHMENT_SUB_URL
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
     ResourceCredential, SiteConfiguration, RequestLog, AdditionalReference, \
-    TaskProgressReport, PrimaryDataFile
+    TaskProgressReport, SubmissionUpload
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
@@ -830,7 +830,7 @@ class TestHelpDeskTicketMethods(TestCase):
             username='horst', email='horst@horst.de', password='password')
         permissions = Permission.objects.filter(
             content_type__app_label='brokerage',
-            codename__endswith='primarydatafile')
+            codename__endswith='upload')
         user.user_permissions.add(*permissions)
         token = Token.objects.create(user=user)
         client = APIClient()
@@ -867,12 +867,12 @@ class TestHelpDeskTicketMethods(TestCase):
         f.close()
         f = open(path, 'rb')
         return {
-            'data_file': f,
+            'file': f,
         }
 
     @staticmethod
     def _delete_test_data():
-        PrimaryDataFile.objects.all().delete()
+        SubmissionUpload.objects.all().delete()
 
     @responses.activate
     def test_create_helpdesk_ticket(self):
@@ -997,7 +997,7 @@ class TestHelpDeskTicketMethods(TestCase):
     def test_attach_template_to_helpdesk_ticket(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
-        url = reverse('brokerage:submissions_primary_data', kwargs={
+        url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
         responses.add(responses.POST, url, json={}, status=200)
         responses.add(responses.POST,
@@ -1010,10 +1010,11 @@ class TestHelpDeskTicketMethods(TestCase):
                       json=_get_jira_attach_response(),
                       status=200)
         data = self._create_test_data('/tmp/test_primary_data_file')
+        data['attach_to_ticket'] = True
         self.api_client.post(url, data, format='multipart')
-        pd = submission.primarydatafile_set.first()
+        pd = submission.submissionupload_set.first()
         response = gfbio_helpdesk_attach_file_to_ticket(
-            site_config, 'FAKE_KEY', pd.data_file, submission)
+            site_config, 'FAKE_KEY', pd.file, submission)
         self.assertEqual(200, response.status_code)
         request_logs = RequestLog.objects.all()
         self.assertEqual(2, len(request_logs))
@@ -1022,7 +1023,7 @@ class TestHelpDeskTicketMethods(TestCase):
     def test_attach_multiple_files_to_helpdesk_ticket(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
-        url = reverse('brokerage:submissions_primary_data', kwargs={
+        url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
         responses.add(responses.POST, url, json={}, status=200)
         response_json = _get_jira_attach_response()
@@ -1036,24 +1037,26 @@ class TestHelpDeskTicketMethods(TestCase):
                       json=response_json,
                       status=200)
         data = self._create_test_data('/tmp/test_primary_data_file_1')
+        data['attach_to_ticket'] = True
         self.api_client.post(url, data, format='multipart')
-        pd = submission.primarydatafile_set.first()
+        pd = submission.submissionupload_set.first()
         gfbio_helpdesk_attach_file_to_ticket(
-            site_config, 'FAKE_KEY', pd.data_file, submission)
+            site_config, 'FAKE_KEY', pd.file, submission)
         self.assertEqual(
             1,
-            len(PrimaryDataFile.objects.filter(submission=submission))
+            len(SubmissionUpload.objects.filter(submission=submission))
         )
 
         data = self._create_test_data('/tmp/test_primary_data_file_2',
                                       delete=False)
+        data['attach_to_ticket'] = True
         self.api_client.post(url, data, format='multipart')
-        pd = submission.primarydatafile_set.last()
+        pd = submission.submissionupload_set.last()
         response = gfbio_helpdesk_attach_file_to_ticket(
-            site_config, 'FAKE_KEY', pd.data_file, submission)
+            site_config, 'FAKE_KEY', pd.file, submission)
         self.assertEqual(
             2,
-            len(PrimaryDataFile.objects.filter(submission=submission))
+            len(SubmissionUpload.objects.filter(submission=submission))
         )
 
     @responses.activate
@@ -1062,7 +1065,7 @@ class TestHelpDeskTicketMethods(TestCase):
         submission.submitting_user = None
         submission.save()
         site_config = SiteConfiguration.objects.first()
-        url = reverse('brokerage:submissions_primary_data', kwargs={
+        url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
         responses.add(responses.POST, url, json={}, status=200)
         responses.add(responses.POST,
@@ -1075,10 +1078,11 @@ class TestHelpDeskTicketMethods(TestCase):
                       json=_get_jira_attach_response(),
                       status=200)
         data = self._create_test_data('/tmp/test_primary_data_file')
+        data['attach_to_ticket'] = True
         self.api_client.post(url, data, format='multipart')
-        pd = submission.primarydatafile_set.first()
+        pd = submission.submissionupload_set.first()
         response = gfbio_helpdesk_attach_file_to_ticket(site_config, 'FAKE_KEY',
-                                                        pd.data_file,
+                                                        pd.file,
                                                         submission)
         self.assertEqual(200, response.status_code)
         request_logs = RequestLog.objects.all()

@@ -35,14 +35,14 @@ urlpatterns = [
     # ),
     # TODO: keep only as long as views above exist, then add proper url and rename
     url(
-        regex=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/newupload/$',
+        regex=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/$',
         view=views.SubmissionUploadView.as_view(),
         # name='submissions_new_upload'
         name='submissions_upload'
     ),
     # TODO: keep only as long as views above exist, then add proper url and rename
     url(
-        regex=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/newupload/(?P<pk>[0-9]+)/$',
+        regex=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/(?P<pk>[0-9]+)/$',
         view=views.SubmissionUploadDetailView.as_view(),
         name='submissions_upload_detail'
     ),
