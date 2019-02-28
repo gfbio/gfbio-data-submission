@@ -156,6 +156,8 @@ class TestUploadModelMigration(TestCase):
         self.assertEqual(0, len(sub_d.primarydatafile_set.all()))
         self.assertEqual(0, len(sub_a.submissionupload_set.all()))
 
+        self._delete_test_data()
+
     def test_management_command_method(self):
         migrate_upload_models.Command.migrate_upload_models()
         sub_a = Submission.objects.get(pk=1)
@@ -182,3 +184,5 @@ class TestUploadModelMigration(TestCase):
 
         for s in SubmissionUpload.objects.all():
             self.assertGreater(len(s.file.read()), 0)
+
+        self._delete_test_data()
