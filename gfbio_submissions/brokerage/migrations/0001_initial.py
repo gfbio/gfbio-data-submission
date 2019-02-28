@@ -152,7 +152,7 @@ class Migration(migrations.Migration):
             name='SubmissionFileUpload',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('file', models.FileField(upload_to=gfbio_submissions.brokerage.utils.submission_tools.submission_file_upload_path)),
+                ('file', models.FileField(upload_to=gfbio_submissions.brokerage.utils.submission_tools.submission_upload_path)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('changed', models.DateTimeField(auto_now=True)),
                 ('site', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='submissionupload', to=settings.AUTH_USER_MODEL)),

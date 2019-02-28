@@ -11,11 +11,11 @@ from rest_framework.response import Response
 
 from .configuration.settings import SUBMISSION_DELAY
 from .models import SubmissionFileUpload, \
-    Submission, PrimaryDataFile, RequestLog
+    Submission, PrimaryDataFile, RequestLog, SubmissionUpload
 from .permissions import IsOwnerOrReadOnly
 from .serializers import \
     SubmissionDetailSerializer, SubmissionFileUploadSerializer, \
-    PrimaryDataFileSerializer
+    PrimaryDataFileSerializer, SubmissionUploadSerializer
 
 
 class SubmissionsView(mixins.ListModelMixin,
@@ -114,6 +114,7 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+# TODO: remove
 class SubmissionFileUploadView(mixins.CreateModelMixin,
                                generics.GenericAPIView):
     queryset = SubmissionFileUpload.objects.all()
@@ -155,6 +156,7 @@ class SubmissionFileUploadView(mixins.CreateModelMixin,
         return self.create(request, *args, **kwargs)
 
 
+# TODO: remove
 class PrimaryDataFileView(mixins.CreateModelMixin,
                           mixins.ListModelMixin,
                           generics.GenericAPIView):
@@ -198,6 +200,7 @@ class PrimaryDataFileView(mixins.CreateModelMixin,
         return self.create(request, *args, **kwargs)
 
 
+# TODO: remove
 class PrimaryDataFileDetailView(mixins.RetrieveModelMixin,
                                 mixins.UpdateModelMixin,
                                 mixins.DestroyModelMixin,
@@ -220,7 +223,84 @@ class PrimaryDataFileDetailView(mixins.RetrieveModelMixin,
                                            '{0}'.format(broker_submission_id)},
                             status=status.HTTP_400_BAD_REQUEST)
         try:
+            Submission.objects.get(
+                broker_submission_id=broker_submission_id
+            )
+        except Submission.DoesNotExist as e:
+            return Response({'submission': 'No submission for this '
+                                           'broker_submission_id '
+                                           '{0}'.format(broker_submission_id)},
+                            status=status.HTTP_404_NOT_FOUND)
+        response = self.update(request, *args, **kwargs)
+        return response
+
+
+class SubmissionUploadView(mixins.CreateModelMixin,
+                           mixins.ListModelMixin,
+                           generics.GenericAPIView):
+    queryset = SubmissionUpload.objects.all()
+    serializer_class = SubmissionUploadSerializer
+    parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
+    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated,
+                          permissions.DjangoModelPermissions,
+                          IsOwnerOrReadOnly)
+
+    def perform_create(self, serializer, submission):
+        return serializer.save(site=self.request.user, submission=submission)
+
+    def create(self, request, *args, **kwargs):
+        broker_submission_id = kwargs.get('broker_submission_id', uuid4())
+        try:
             sub = Submission.objects.get(
+                broker_submission_id=broker_submission_id
+            )
+        except Submission.DoesNotExist as e:
+            return Response({'submission': 'No submission for this '
+                                           'broker_submission_id:'
+                                           ' {0}'.format(broker_submission_id)},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        obj = self.perform_create(serializer, sub)
+
+        headers = self.get_success_headers(serializer.data)
+        data_content = dict(serializer.data)
+        data_content.pop('submission', 0)
+        data_content['id'] = obj.pk
+        data_content['broker_submission_id'] = sub.broker_submission_id
+
+        return Response(data_content, status=status.HTTP_201_CREATED,
+                        headers=headers)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+
+class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
+                                 mixins.UpdateModelMixin,
+                                 mixins.DestroyModelMixin,
+                                 generics.GenericAPIView):
+    queryset = SubmissionUpload.objects.all()
+    serializer_class = SubmissionUploadSerializer
+    parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
+    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated,
+                          permissions.DjangoModelPermissions,
+                          IsOwnerOrReadOnly)
+
+    def put(self, request, *args, **kwargs):
+        broker_submission_id = kwargs.get('broker_submission_id', uuid4())
+        instance = self.get_object()
+        if instance.submission.broker_submission_id != UUID(
+                broker_submission_id):
+            return Response({'submission': 'No link to this '
+                                           'broker_submission_id '
+                                           '{0}'.format(broker_submission_id)},
+                            status=status.HTTP_400_BAD_REQUEST)
+        try:
+            Submission.objects.get(
                 broker_submission_id=broker_submission_id
             )
         except Submission.DoesNotExist as e:

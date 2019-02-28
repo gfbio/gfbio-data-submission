@@ -11,7 +11,8 @@ from .configuration.settings import SUBMISSION_DELAY
 from .models import PersistentIdentifier, \
     Submission, ResourceCredential, BrokerObject, RequestLog, \
     AdditionalReference, SiteConfiguration, PrimaryDataFile, \
-    TaskProgressReport, TicketLabel, SubmissionFileUpload, AuditableTextData, \
+    TaskProgressReport, TicketLabel, SubmissionFileUpload, SubmissionUpload, \
+    AuditableTextData, \
     CenterName
 from .utils.submission_transfer import \
     SubmissionTransferHandler
@@ -180,5 +181,7 @@ admin.site.register(TaskProgressReport, TaskProgressReportAdmin)
 
 admin.site.register(SubmissionFileUpload, SubmissionFileUploadAdmin)
 admin.site.register(PrimaryDataFile)
+admin.site.register(SubmissionUpload)
+
 admin.site.register(AuditableTextData)
 admin.site.register(CenterName)
