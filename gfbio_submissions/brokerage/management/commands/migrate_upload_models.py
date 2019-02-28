@@ -4,7 +4,6 @@ import shutil
 
 from django.core.files import File
 from django.core.management import BaseCommand
-from django.db.models.fields.files import FieldFile
 
 from gfbio_submissions.brokerage.models import Submission, SubmissionUpload
 
@@ -26,7 +25,6 @@ class Command(BaseCommand):
                     submission.broker_submission_id))
                 submission_path = '{0}{1}{2}'.format(media_path, os.sep,
                                                      submission.broker_submission_id)
-
                 # if not, it means there are no uploads for this submission
                 if os.path.exists(submission_path):
                     pdfs = submission.primarydatafile_set.all()
@@ -50,63 +48,37 @@ class Command(BaseCommand):
                             new_file = open(new_path, 'r')
                             file = File(name=tail, file=new_file)
                             submission_upload = SubmissionUpload.objects.create(
-                                    submission=submission,
-                                    site=submission.site,
-                                    attach_to_ticket=False,
-                                    file=file
-                                )
+                                submission=submission,
+                                site=submission.site,
+                                attach_to_ticket=False,
+                                file=file
+                            )
                             new_file.close()
-                            print('\tNew SubmissionUpload created: {0}'.format(submission_upload))
+                            p.migrated = True
+                            p.save(attach=False)
+                            print('\tNew SubmissionUpload created: {0}'.format(
+                                submission_upload))
                         else:
                             print('something is wrong with path for '
                                   'primarydatafile: {0}'.format(file_path))
+                    sfus = submission.submissionfileupload_set.all()
+                    for s in sfus:
+                        print('\n\t{0} | {1}'.format(s.file.name, s.migrated))
+                        submission_upload = SubmissionUpload.objects.create(
+                            submission=submission,
+                            site=submission.site,
+                            attach_to_ticket=False,
+                            file=s.file
+                        )
+                        s.migrated = True
+                        s.save()
+                        print('\tNew SubmissionUpload created: {0}'.format(
+                            submission_upload))
                 else:
                     print(' ... path not existing. most likely no uploaded '
                           'files for this submission')
         else:
             print('something is wrong with path: {0}'.format(media_path))
-
-
-            # TODO: requires a copy/move command from /primarydate folder to /{bsi} folder (one level up)
-            # submission_upload = SubmissionUpload.objects.create(
-            #     submission=submission,
-            #     site=submission.site,
-            #     # file already attached for all PDFs on production system
-            #     attach_to_ticket=False,
-            #     file=p.data_file
-            # )
-            # sfus = submission.submissionfileupload_set.all()
-            # print('SFUs')
-            # print(sfus)
-            # for s in sfus:
-            #     print('\t{0} | {1}'.format(s.file.name, s.migrated))
-            #     submission_upload = SubmissionUpload.objects.create(
-            #         submission=submission,
-            #         site=submission.site,
-            #         attach_to_ticket=False,
-            #         file=s.file
-            #     )
-            #     s.migrated = True
-            #     s.save()
-            print('\n================================\n')
-            # all_sfus = SubmissionFileUpload.objects.all()
-            # for a in all_sfus:
-            #     print('{0} | {1}'.format(a.file.name, a.migrated))
-            # print('\n================================\n')
-            # all_uploads = SubmissionUpload.objects.all()
-            # for a in all_uploads:
-            #     print('{0} | {1}'.format(a.file.name, a.site))
-            # print('\n================================\n')
-            # sfu_1 = SubmissionFileUpload.objects.first()
-            # su_1 = SubmissionUpload.objects.first()
-            # print(sfu_1.file.read())
-            # print(su_1.file.name)
-            # print(su_1.file.read())
-            # print('\n================================\n')
-            # sfu_1.delete()
-            # su_1 = SubmissionUpload.objects.first()
-            # print(su_1.file.name)
-            # print(su_1.file.read())
 
 
 def handle(self, *args, **options):
