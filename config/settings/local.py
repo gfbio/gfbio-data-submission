@@ -136,3 +136,8 @@ LOGGING = {
         },
     },
 }
+
+########## CORS SETTINGS
+CORS_ORIGIN_ALLOW_ALL = True
+# TODO: this is needed ??
+CORS_ALLOW_CREDENTIALS = True

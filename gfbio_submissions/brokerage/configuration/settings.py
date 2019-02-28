@@ -110,7 +110,6 @@ GENERIC = getattr(
     'GENERIC'
 )
 
-
 HELPDESK_API_SUB_URL = getattr(
     settings,
     'HELPDESK_API_SUB_URL',
@@ -127,6 +126,110 @@ HELPDESK_ATTACHMENT_SUB_URL = getattr(
     settings,
     'HELPDESK_ATTACHMENT_SUB_URL',
     'attachments'
+)
+
+HELPDESK_LICENSE_MAPPINGS = getattr(
+    settings,
+    'HELPDESK_LICENSE_MAPPINGS',
+    {
+        'CC0 1.0': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10197',
+            'value': 'CC0',
+            'id': '10197'
+        },
+        'CC BY 4.0': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10800',
+            'value': 'CC BY 4.0',
+            'id': '10800'
+        },
+        'CC BY NC 4.0': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10801',
+            'value': 'CC BY-NC 4.0',
+            'id': '10801'
+        },
+        'CC BY-NC-ND 4.0': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10805',
+            'value': 'CC BY-NC-ND 4.0',
+            'id': '10805'
+        },
+        'CC BY-NC-SA 4.0': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10804',
+            'value': 'CC BY-NC-SA 4.0',
+            'id': '10804'
+        },
+        'CC BY-ND 4.0': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10803',
+            'value': 'CC BY-ND 4.0',
+            'id': '10803'
+        },
+        'CC BY-SA 4.0': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10802',
+            'value': 'CC BY-SA 4.0',
+            'id': '10802'
+        },
+        'Other License': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10500',
+            'value': 'other',
+            'id': '10500'
+        }
+    }
+)
+
+HELPDESK_METASCHEMA_MAPPINGS = getattr(
+    settings,
+    'HELPDESK_METASCHEMA_MAPPINGS',
+    {
+        'ABCD 2.06': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10204',
+            'value': 'ABCD',
+            'id': '10204'
+        },
+        'DwC 2013-10-25': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10149',
+            'value': 'Darwin Core',
+            'id': '10149'
+        },
+        'DC 1.1': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10183',
+            'value': 'Dublin Core',
+            'id': '10183'
+        },
+        'EDM 5.2.3': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10184',
+            'value': 'EDM',
+            'id': '10184'
+        },
+        'EML 2.1.1': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10150',
+            'value': 'EML',
+            'id': '10150'
+        },
+        'ESE 3.4.1': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10185',
+            'value': 'ESE',
+            'id': '10185'
+        },
+        'INSPIRE Directive 2007/2/EC': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10186',
+            'value': 'INSPIRE',
+            'id': '10186'
+        },
+        'ISO 19115-1 2014': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10151',
+            'value': 'ISO 19115',
+            'id': '10151'
+        },
+        'MIxS 4.0': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10152',
+            'value': 'MIxS',
+            'id': '10152'
+        },
+        'Other metadata or documentation': {
+            'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10300',
+            'value': 'other',
+            'id': '10300'
+        }
+    }
 )
 
 PANGAEA = getattr(
@@ -154,6 +257,7 @@ PANGAEA_ISSUE_DOI_FIELD_NAME = getattr(
     'customfield_10520'
 )
 
+# TODO: rename
 PRIMARY_DATA_FILE_DELAY = getattr(
     settings,
     'PRIMARY_DATA_FILE_DELAY',
@@ -161,6 +265,7 @@ PRIMARY_DATA_FILE_DELAY = getattr(
     120
 )
 
+# TODO: rename
 PRIMARY_DATA_FILE_MAX_RETRIES = getattr(
     settings,
     'PRIMARY_DATA_FILE_MAX_RETRIES',

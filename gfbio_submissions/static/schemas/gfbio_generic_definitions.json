@@ -9,6 +9,22 @@
             "dataset_label": {
                 "type": "string"
             },
+            "data_center": {
+                "type": "string",
+                "enum": [
+                    "",
+                    "ENA – European Nucleotide Archive",
+                    "PANGAEA – Data Publisher for Earth & Environmental Science",
+                    "Data Centers at Natural Science Collections",
+                    "BGBM – Botanic Garden and Botanical Museum Berlin, Freie Universität Berlin",
+                    "DSMZ – Leibniz Institute DSMZ – German Collection of Microorganisms and Cell Cultures, Braunschweig",
+                    "MfN – Leibniz Institute for Research on Evolution and Biodiversity, Berlin",
+                    "SGN – Senckenberg Gesellschaft für Naturforschung – Leibniz Institute, Frankfurt",
+                    "SMNS – State Museum of Natural History Stuttgart",
+                    "SNSB – Staatliche Naturwissenschaftliche Sammlungen Bayerns – SNSB IT Center, München",
+                    "ZFMK – Zoological Research Museum Alexander Koenig – Leibniz Institute for Animal Biodiversity, Bonn"
+                ]
+            },
             "categories": {
                 "type": "array",
                 "uniqueItems": true,
@@ -16,7 +32,7 @@
                     "type": "string",
                     "enum": [
                         "Algae & Protists",
-                        "Bacteriology, Virology",
+                        "Bacteriology or Virology",
                         "Botany",
                         "Ecology & Environment",
                         "Geoscience",
@@ -36,13 +52,13 @@
                 "enum": [
                     "",
                     "Other License",
-                    "CC0: Creative Commons Zero 1.0",
-                    "CC BY: Creative Commons Attribution 4.0",
-                    "CC BY-NC: Creative Commons Attribution-NonCommercial 4.0",
-                    "CC BY-NC-ND: Creative Commons Attribution-NonCommercial-NoDerivs 4.0",
-                    "CC BY-NC-SA: Creative Commons Attribution-NonCommercial-ShareAlike 4.0",
-                    "CC BY-ND: Creative Commons Attribution-NoDerivs 4.0",
-                    "CC BY-SA: Creative Commons Attribution-ShareAlike 4.0"
+                    "CC0 1.0",
+                    "CC BY 4.0",
+                    "CC BY-NC 4.0",
+                    "CC BY-NC-ND 4.0",
+                    "CC BY-NC-SA 4.0",
+                    "CC BY-ND 4.0",
+                    "CC BY-SA 4.0"
                 ]
             },
             "related_publications": {
@@ -51,7 +67,7 @@
             "metadata_schema": {
                 "type": "string",
                 "enum": [
-                    "",
+                    "None",
                     "Other metadata or documentation",
                     "ABCD 2.06",
                     "DwC 2013-10-25",
@@ -77,6 +93,9 @@
                         "Uncertain"
                     ]
                 }
+            },
+            "comment": {
+                "type": "string"
             }
         }
     }

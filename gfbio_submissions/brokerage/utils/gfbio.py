@@ -2,7 +2,6 @@
 import datetime
 import json
 import logging
-from pprint import pprint
 
 import requests
 from django.db import transaction
@@ -10,7 +9,8 @@ from requests.structures import CaseInsensitiveDict
 
 from gfbio_submissions.brokerage.configuration.settings import \
     HELPDESK_API_SUB_URL, \
-    HELPDESK_COMMENT_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL, GENERIC
+    HELPDESK_COMMENT_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL, GENERIC, \
+    HELPDESK_LICENSE_MAPPINGS, HELPDESK_METASCHEMA_MAPPINGS
 from gfbio_submissions.brokerage.models import SiteConfiguration, RequestLog
 
 logger = logging.getLogger(__name__)
@@ -138,27 +138,35 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
         'customfield_10208': requirements.get('description', ''),
         'customfield_10303': '{0}'.format(submission.broker_submission_id),
     }
+
     generic_data = {
         'customfield_10010': 'dsub/generic'
         if site_config.jira_project_key == SiteConfiguration.DSUB
-        else 'sand/generic-data',
-        'customfield_10311': requirements.get('data_collection_time', ''),
-        'customfield_10308': requirements.get('dataset_label', ''),
-        'customfield_10313': [{'value': c} for c in
-                              requirements.get('categories', [])],
+        else 'sand/generic-data', 'customfield_10311': requirements.get(
+            'data_collection_time', ''),
+        'customfield_10308': [{'value': c} for c in
+                              requirements.get(
+                                  'dataset_label',
+                                  [])],
+        'customfield_10313': ', '.join(
+            requirements.get('categories', [])),
         'customfield_10205': requirements.get('dataset_author', ''),
-        'customfield_10202': requirements.get('license', ''),
-        'customfield_10307': requirements.get('related_publications', ''),
-        'customfield_10229': requirements.get('metadata_schema', ''),
+        'customfield_10307': requirements.get(
+            'related_publications', ''),
         'customfield_10216': [{'value': l} for l in
-                              requirements.get('legal_requirements', [])],
-        # project_id is potentially derived from portal db table, null in test-submission
+                              requirements.get('legal_requirements',
+                                               [])],
         'customfield_10314': requirements.get('project_id', ''),
-        'customfield_10311': requirements.get('data_collection_time', ''),
-        # omit DCRT related fields completely. 'customfield_10217', 'customfield_10500'
-        # omit researchobjectid field 'customfield_10309'. maybe use site_object_id or brokerobject_id
-        # omit id version field 'customfield_10309'
-    }
+        'customfield_10202': [
+            HELPDESK_LICENSE_MAPPINGS.get(
+                requirements.get('license', 'Other'))]}
+
+    metadata_schema = requirements.get('metadata_schema',
+                                       'Other metadata or documentation')
+    if metadata_schema is not None:
+        generic_data['customfield_10229'] = [
+            HELPDESK_METASCHEMA_MAPPINGS.get(metadata_schema)]
+
     # ena/mol specific
     molecular_data = {
         # md

@@ -101,7 +101,7 @@ compare http://cookiecutter-django.readthedocs.io/en/latest/developing-locally-d
 
 #### delete local database within postgres container
 
-- docker exec -it gfbio_submissions_postgres_1 psql -U postgres
+- docker exec -it gfbio_submissions_postgres_1_66ade2b6f75e psql -U gfbio_submissions
 
         psql (10.4 (Debian 10.4-2.pgdg90+1))
         Type "help" for help.
@@ -219,7 +219,7 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
 - docker --version
 - systemctl status docker
 - sudo usermod -aG docker root
-- sudo usermod -aG docker ${USER}
+    - sudo usermod -aG docker ${USER}
 
 - sudo curl -L https://github.com/docker/compose/releases/download/1.23.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
 - sudo chmod +x /usr/local/bin/docker-compose 
@@ -293,7 +293,7 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
 
 ## Release
 
-### Manual release
+### Manual 66.0e
 
 #### Local commands
 

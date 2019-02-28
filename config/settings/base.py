@@ -10,10 +10,9 @@ https://docs.djangoproject.com/en/dev/ref/settings/
 import environ
 from celery.schedules import crontab
 
-
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
-VERSION = '1.65.4'
+VERSION = '1.66.0'
 
 ROOT_DIR = environ.Path(
     __file__) - 3  # (gfbio_submissions/config/settings/base.py - 3 = gfbio_submissions/)
@@ -77,9 +76,9 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 # MIDDLEWARE CONFIGURATION
 # ------------------------------------------------------------------------------
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -271,7 +270,8 @@ ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
 # TODO: 06.02.2019 set back to true when in production
 # TODO: set proper value in env !!!
-ACCOUNT_ALLOW_REGISTRATION = env.bool('DJANGO_ACCOUNT_ALLOW_REGISTRATION', False)
+ACCOUNT_ALLOW_REGISTRATION = env.bool('DJANGO_ACCOUNT_ALLOW_REGISTRATION',
+                                      False)
 ACCOUNT_ADAPTER = 'gfbio_submissions.users.adapters.AccountAdapter'
 SOCIALACCOUNT_ADAPTER = 'gfbio_submissions.users.adapters.SocialAccountAdapter'
 

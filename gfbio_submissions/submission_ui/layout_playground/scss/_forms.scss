@@ -61,6 +61,10 @@
     color: $gfbio-green !important;
     box-shadow: none;
   }
+
+  i {
+    margin-right: .75rem;
+  }
 }
 
 // works on btn-secondary
@@ -91,7 +95,7 @@
   }
 
   i {
-    padding-right: .5rem;
+    margin-right: .75rem;
   }
 }
 
@@ -157,6 +161,32 @@
 //  }
 //}
 
+
+section.sub-navi {
+  // TODO: hardcoded top margin to adapt for 57px floating main navigation
+  // margin-top: 57px;
+  padding: .5rem 0 2rem 0;
+
+  .nav {
+
+    /*
+     font-size: .8rem;
+    color: $gray-800;*/
+
+    .nav-link {
+      font-size: .85rem;
+      color: $gray-800;
+
+    }
+
+    .active {
+      font-weight: bold;
+    }
+
+  }
+
+}
+
 // TODO: used in forms_1.html . assuming one form around all fields to submit all fields
 //  in one action, maybe also to allow easier layouting
 // TODO: also used in submission_form_mock.html
@@ -166,30 +196,30 @@ form.pagewide-form {
     margin-bottom: 2rem;
   }
 
-  section.sub-navi {
-    // TODO: hardcoded top margin to adapt for 57px floating main navigation
-    margin-top: 57px;
-    padding: .5rem 0 2rem 0;
-
-    .nav {
-
-      /*
-       font-size: .8rem;
-      color: $gray-800;*/
-
-      .nav-link {
-        font-size: .85rem;
-        color: $gray-800;
-
-      }
-
-      .active {
-        font-weight: bold;
-      }
-
-    }
-
-  }
+  //section.sub-navi {
+  //  // TODO: hardcoded top margin to adapt for 57px floating main navigation
+  //  margin-top: 57px;
+  //  padding: .5rem 0 2rem 0;
+  //
+  //  .nav {
+  //
+  //    /*
+  //     font-size: .8rem;
+  //    color: $gray-800;*/
+  //
+  //    .nav-link {
+  //      font-size: .85rem;
+  //      color: $gray-800;
+  //
+  //    }
+  //
+  //    .active {
+  //      font-weight: bold;
+  //    }
+  //
+  //  }
+  //
+  //}
 
   .form-header-top {
     margin-bottom: 2rem;
@@ -207,6 +237,12 @@ form.pagewide-form {
   .header {
     letter-spacing: normal;
     border-bottom: 1px solid $gray-medium;
+  }
+
+  .input-error {
+    font-size: 0.85rem;
+    color: $error-red;
+    padding: .75rem .75rem 0 .75rem;
   }
 
   input {
@@ -256,6 +292,18 @@ form.pagewide-form {
 
   }
 
+  .dropzone {
+    border: 1px solid $form-gray-1;
+    border-radius: .25rem;
+    padding: .375rem .75rem .375rem .75rem;
+    height: 8rem;
+
+    &:focus {
+      border-color: $gfbio-green-0-7;
+      box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+      outline-color: $gfbio-green-0-7;
+    }
+  }
 
   .contributor {
     font-size: 1rem;
@@ -299,6 +347,16 @@ form.pagewide-form {
     color: $gray-dark-2;
     border-color: $gray-400;
 
+    p {
+      color: $gray-dark-2;
+      font-size: .75rem;
+      text-decoration: none;
+      float: right;
+      line-height: 1.5rem;
+      margin: 0;
+      padding: 0;
+    }
+
     &:focus {
       box-shadow: none;
     }
@@ -314,6 +372,10 @@ form.pagewide-form {
       border-color: $gray-400;
 
       a {
+        color: $gfbio-light-blue;
+      }
+
+      p {
         color: $gfbio-light-blue;
       }
 
@@ -407,6 +469,60 @@ form.pagewide-form {
       border-color: $gfbio-green-0-7;
       box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
     }
+  }
+
+  /*
+    Overwrite react-datepicker styles
+   */
+  .react-datepicker-wrapper {
+    width: 100%;
+  }
+
+  .react-datepicker__input-container {
+    width: 100%;
+  }
+
+  .react-datepicker {
+    @include sans-serif-font;
+    border-color: $form-gray-1;
+  }
+
+  .react-datepicker__header {
+    border-color: $form-gray-1;
+    background-color: $gray-100;
+  }
+
+  .react-datepicker__current-month {
+    font-weight: 400;
+    font-size: 1rem;
+    color: $gray-dark;
+  }
+
+  .react-datepicker__day-name {
+    font-weight: 400;
+    font-size: .9rem;
+    color: $gray-dark;
+  }
+
+  .react-datepicker__day {
+    font-weight: 400;
+    font-size: .8rem;
+    color: $gray-dark;
+    // TODO: focus, hover
+    &:focus {
+      border-radius: .3rem;
+      border-color: $gfbio-green;
+    }
+
+    &:hover {
+      background-color: $gfbio-light-blue;
+      color: $white;
+    }
+  }
+
+  .react-datepicker__day--selected {
+    background-color: $gfbio-blue;
+    color: $white;
   }
 
 }
