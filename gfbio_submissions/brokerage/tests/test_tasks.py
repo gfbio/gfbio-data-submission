@@ -2,6 +2,7 @@
 import base64
 import json
 import uuid
+from pprint import pprint
 from uuid import uuid4
 
 import responses
@@ -151,7 +152,8 @@ class TestTasks(TestCase):
     def setUpTestData(cls):
         permissions = Permission.objects.filter(
             content_type__app_label='brokerage',
-            name__endswith='primary data file')
+            name__endswith='upload')
+        pprint(permissions)
         user = User.objects.create(
             username='user1'
         )
@@ -204,7 +206,7 @@ class TestTasks(TestCase):
         f.close()
         f = open(path, 'rb')
         return {
-            'data_file': f,
+            'file': f,
         }
 
     @staticmethod
@@ -590,7 +592,6 @@ class TestGFBioHelpDeskTasks(TestTasks):
                       url,
                       json=_get_jira_response(),
                       status=200)
-        # submission = Submission.objects.get(pk=1)
         result = attach_file_to_helpdesk_ticket_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
@@ -603,7 +604,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
     def test_attach_to_helpdesk_ticket_task_with_primarydatafile(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
-        url = reverse('brokerage:submissions_primary_data', kwargs={
+        url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
         responses.add(responses.POST, url, json={}, status=200)
         responses.add(responses.POST,
@@ -616,6 +617,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
                       json=_get_jira_attach_response(),
                       status=200)
         data = self._create_test_data('/tmp/test_primary_data_file')
+        data['attach_to_ticket'] = True
         token = Token.objects.create(user=submission.site)
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
