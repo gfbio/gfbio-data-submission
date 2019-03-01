@@ -5,12 +5,14 @@
  */
 
 import {
+  ADD_RELATED_PUBLICATION, CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
   CHANGE_META_DATA_SCHEMA,
   DEFAULT_ACTION,
   SAVE_FORM,
   SAVE_FORM_ERROR,
-  SAVE_FORM_SUCCESS, SET_EMBARGO_DATE,
+  SAVE_FORM_SUCCESS,
+  SET_EMBARGO_DATE,
   SUBMIT_FORM,
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
@@ -94,5 +96,19 @@ export function setEmbargoDate(date) {
   return {
     type: SET_EMBARGO_DATE,
     date,
+  };
+}
+
+export function addRelatedPublication(value) {
+  return {
+    type: ADD_RELATED_PUBLICATION,
+    value,
+  };
+}
+
+export function changeCurrentRelatedPublication(value) {
+  return {
+    type: CHANGE_CURRENT_RELATED_PUBLICATION,
+    value,
   };
 }

@@ -84,6 +84,16 @@ const makeSelectUserId = () =>
     substate.get('userId'),
   );
 
+const makeSelectRelatedPublications = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('relatedPublications'),
+  );
+
+const makeSelectCurrentRelatedPublication = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('currentRelatedPublication'),
+  );
+
 export default makeSelectSubmissionForm;
 
 export {
@@ -100,4 +110,6 @@ export {
   makeSelectContactForm,
   makeSelectToken,
   makeSelectUserId,
+  makeSelectRelatedPublications,
+  makeSelectCurrentRelatedPublication,
 };

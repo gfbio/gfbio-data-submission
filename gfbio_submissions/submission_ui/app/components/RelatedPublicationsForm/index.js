@@ -5,55 +5,94 @@
  */
 
 import React from 'react';
-import { Field } from 'redux-form/lib/immutable';
-import { required } from '../MinimalSubmissionForm/validation';
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
+import { createStructuredSelector } from 'reselect';
+import {
+  makeSelectCurrentRelatedPublication,
+  makeSelectRelatedPublications,
+} from '../../containers/SubmissionForm/selectors';
+import {
+  addRelatedPublication,
+  changeCurrentRelatedPublication,
+} from '../../containers/SubmissionForm/actions';
+import { connect } from 'react-redux';
+import { compose } from 'redux';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
 class RelatedPublicationsForm extends React.PureComponent {
-  // renderInputField = ({
-  //                       input,
-  //                       placeholder,
-  //                       type,
-  //                       meta: { touched, error, warning },
-  //                     }) => (
-  //   <div>
-  //     <div>
-  //       <input
-  //         {...input}
-  //         placeholder={placeholder}
-  //         type={type}
-  //         className="form-control"
-  //       />
-  //       {touched &&
-  //       ((error && <span className="input-error">{error}</span>) ||
-  //         (warning && <span className="input-warning">{warning}</span>))}
-  //     </div>
-  //   </div>
-  // );
+
+  // localstate to keep track of just the value in input field
+  // constructor() {
+  //   super();
+  //   this.state = {
+  //     publicationValue: '',
+  //   };
+  // }
+
+  handleChange = (e) => {
+    // this.setState({ publicationValue: e.target.value });
+    this.props.handleChange(e.target.value);
+  };
 
   render() {
+    console.log(this.props);
+    /*
+
+    schemaListElements = this.schemaList.map(schema => (
+    <li className="list-group-item" key={schema.replace(/ /g, '')}>
+      <button
+        className="btn btn-primary btn-block btn-license text-left"
+        type="button"
+        data-toggle="collapse show"
+        data-target="#collapseMetaData"
+        aria-expanded="false"
+        aria-controls="collapseMetaData"
+        onClick={() => this.props.onClickMetaDataSchema(schema)}
+      >
+        {schema}
+        <a
+          className="license-link align-bottom"
+          href={`link_to_details_of_${schema}`}
+        >
+          details
+        </a>
+      </button>
+    </li>
+  ));
+
+    */
+
+    const publicationList = this.props.relatedPublications.map(pub => (
+      <li>{pub}</li>
+    ));
     return (
       <div>
         <header className="header header-left form-header-top">
           <h2 className="section-title">Related Publications</h2>
           <p className="section-subtitle">(optional)</p>
         </header>
+        <ul>
+          {publicationList}
+        </ul>
         <div className="form-row">
           <div className="form-group col-md-10">
-            <Field
-              name="relatedPublication"
-              className="form-control"
-              component="input"
-              type="text"
-              placeholder="Enter a publication or reference"
+            <input className="form-control" type="text"
+                   id="relatedPublication"
+                   placeholder="Enter a publication or reference"
+                   onChange={this.handleChange}
             />
           </div>
           <div className="form-group col-md-2">
             <button
               className="btn btn-secondary btn-block
-              btn-light-blue-inverted">
+              btn-light-blue-inverted"
+              onClick={e => {
+                e.preventDefault();
+                this.props.handleAdd(this.props.currentRelatedPublication);
+              }}
+
+            >
               Add
             </button>
           </div>
@@ -63,6 +102,31 @@ class RelatedPublicationsForm extends React.PureComponent {
   }
 }
 
-RelatedPublicationsForm.propTypes = {};
+RelatedPublicationsForm.propTypes = {
+  currentRelatedPublication: PropTypes.string,
+  relatedPublications: PropTypes.array,
+  handleAdd: PropTypes.func,
+  handleChange: PropTypes.func,
+};
 
-export default RelatedPublicationsForm;
+const mapStateToProps = createStructuredSelector({
+  relatedPublications: makeSelectRelatedPublications(),
+  currentRelatedPublication: makeSelectCurrentRelatedPublication(),
+});
+
+function mapDispatchToProps(dispatch) {
+  return {
+    handleAdd: value => dispatch(addRelatedPublication(value)),
+    handleChange: value => dispatch(changeCurrentRelatedPublication(value)),
+  };
+}
+
+const withConnect = connect(
+  mapStateToProps,
+  mapDispatchToProps,
+);
+
+export default compose(withConnect)(RelatedPublicationsForm);
+// redux-form captures its own onchange etc, button triggers my own action
+// RelatedPublicationsForm = compose(withConnect)(RelatedPublicationsForm);
+// export default reduxForm({ form: 'publicationForm' })(RelatedPublicationsForm);
