@@ -131,6 +131,38 @@
   }
 }
 
+// works on btn-secondary
+// TODO: refactor to generic class, light-blue button
+//.btn-form {
+//  //background-color: $gfbio-light-blue;
+//  background-color: $white;
+//  color: $gfbio-light-blue !important;
+//  border-color: darken($gfbio-light-blue, .2);
+//
+//  &:hover, &:not(:disabled):not(.disabled):active,
+//  &:not(:disabled):not(.disabled).active {
+//    &:focus {
+//      box-shadow: none;
+//    }
+//
+//    border-color: darken($contrast-1, .2);
+//    //background-color: $white;
+//    //color: $gfbio-light-blue !important;
+//    background-color: $white;
+//    color: $contrast-1 !important;
+//    box-shadow: none;
+//  }
+//
+//  &:focus {
+//    box-shadow: none;
+//  }
+//
+//  &:hover {
+//    //background-color: $contrast-1;
+//    color: $contrast-1 !important;
+//  }
+//}
+
 //.btn-contrast {
 //  background-color: $gfbio-blue;
 //  border-color: darken($contrast-1, .2);
