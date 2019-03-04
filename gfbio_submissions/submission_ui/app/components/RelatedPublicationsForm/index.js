@@ -93,6 +93,7 @@ class RelatedPublicationsForm extends React.PureComponent {
           <div className="form-group col-md-10">
             <input className="form-control" type="text"
                    id="relatedPublication"
+                   value={this.props.currentRelatedPublication}
                    placeholder="Enter a publication or reference"
                    onChange={this.handleChange}
             />
