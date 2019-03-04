@@ -540,7 +540,15 @@ form.pagewide-form {
   /*
     Overwrite react-datepicker styles
    */
+  .react-datepicker {
+    width: 100%;
+  }
+
   .react-datepicker-wrapper {
+    width: 100%;
+  }
+
+  .react-datepicker__month-container {
     width: 100%;
   }
 
