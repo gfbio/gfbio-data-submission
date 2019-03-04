@@ -4,7 +4,7 @@ import {
   makeSelectFormWrapper,
   makeSelectLicense,
   makeSelectMetaDataSchema,
-  makeSelectReduxFormForm,
+  makeSelectReduxFormForm, makeSelectRelatedPublications,
   makeSelectToken,
   makeSelectUserId,
 } from './selectors';
@@ -39,10 +39,12 @@ function* prepareRequestData(userId, submit = true) {
   }
   const license = yield select(makeSelectLicense());
   const metadata_schema = yield select(makeSelectMetaDataSchema());
+  const related_publications = yield select(makeSelectRelatedPublications());
   const requirements = Object.assign({
     license,
     metadata_schema,
     legal_requirements,
+    related_publications,
     categories,
   }, formValues);
   return {
