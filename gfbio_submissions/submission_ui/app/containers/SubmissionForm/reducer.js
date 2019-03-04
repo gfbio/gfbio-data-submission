@@ -5,10 +5,12 @@
  */
 import { fromJS } from 'immutable';
 import {
-  ADD_RELATED_PUBLICATION, CHANGE_CURRENT_RELATED_PUBLICATION,
+  ADD_RELATED_PUBLICATION,
+  CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
   CHANGE_META_DATA_SCHEMA,
   DEFAULT_ACTION,
+  REMOVE_RELATED_PUBLICATION,
   SAVE_FORM,
   SAVE_FORM_ERROR,
   SAVE_FORM_SUCCESS,
@@ -94,6 +96,11 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .update('relatedPublications', (relatedPublications) => relatedPublications.push(action.value))
         .set('currentRelatedPublication', '');
+    case REMOVE_RELATED_PUBLICATION:
+      console.log('REMOVE_RELATED_PUBLICATION');
+      console.log(action.index);
+      return state
+        .update('relatedPublications', (relatedPublications) => relatedPublications.splice(action.index, 1));
     default:
       return state;
   }

@@ -5,10 +5,12 @@
  */
 
 import {
-  ADD_RELATED_PUBLICATION, CHANGE_CURRENT_RELATED_PUBLICATION,
+  ADD_RELATED_PUBLICATION,
+  CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
   CHANGE_META_DATA_SCHEMA,
   DEFAULT_ACTION,
+  REMOVE_RELATED_PUBLICATION,
   SAVE_FORM,
   SAVE_FORM_ERROR,
   SAVE_FORM_SUCCESS,
@@ -103,6 +105,13 @@ export function addRelatedPublication(value) {
   return {
     type: ADD_RELATED_PUBLICATION,
     value,
+  };
+}
+
+export function removeRelatedPublication(index) {
+  return {
+    type: REMOVE_RELATED_PUBLICATION,
+    index,
   };
 }
 

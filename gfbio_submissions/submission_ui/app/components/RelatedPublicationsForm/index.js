@@ -14,6 +14,7 @@ import {
 import {
   addRelatedPublication,
   changeCurrentRelatedPublication,
+  removeRelatedPublication,
 } from '../../containers/SubmissionForm/actions';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
@@ -68,7 +69,10 @@ class RelatedPublicationsForm extends React.PureComponent {
         return <li key={index}
                    className="list-group-item d-flex justify-content-between align-items-center publication">
           {pub}
-          <button className="btn btn-remove">
+          <button className="btn btn-remove" onClick={(e) => {
+            e.preventDefault();
+            this.props.handleRemove(index);
+          }}>
             <i className="fa fa-times" />
             Remove
           </button>
@@ -94,7 +98,7 @@ class RelatedPublicationsForm extends React.PureComponent {
             />
           </div>
           <div className="form-group col-md-2">
-            <button
+            <a
               className="btn btn-secondary btn-block
               btn-light-blue-inverted"
               onClick={e => {
@@ -104,7 +108,7 @@ class RelatedPublicationsForm extends React.PureComponent {
 
             >
               Add
-            </button>
+            </a>
           </div>
         </div>
       </div>
@@ -116,6 +120,7 @@ RelatedPublicationsForm.propTypes = {
   currentRelatedPublication: PropTypes.string,
   relatedPublications: PropTypes.array,
   handleAdd: PropTypes.func,
+  handleRemove: PropTypes.func,
   handleChange: PropTypes.func,
 };
 
@@ -128,6 +133,7 @@ function mapDispatchToProps(dispatch) {
   return {
     handleAdd: value => dispatch(addRelatedPublication(value)),
     handleChange: value => dispatch(changeCurrentRelatedPublication(value)),
+    handleRemove: index => dispatch(removeRelatedPublication(index)),
   };
 }
 
