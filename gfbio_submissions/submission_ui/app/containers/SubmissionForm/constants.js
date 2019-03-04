@@ -21,3 +21,7 @@ export const SUBMIT_FORM_SUCCESS = 'app/SubmissionForm/SUBMIT_FORM_SUCCESS';
 export const SUBMIT_FORM_ERROR = 'app/SubmissionForm/SUBMIT_FORM_ERROR';
 
 export const SET_EMBARGO_DATE = 'app/SubmssionForm/SET_EMBARGO_DATE';
+
+export const ADD_RELATED_PUBLICATION = 'app/SubmssionForm/ADD_RELATED_PUBLICATION';
+export const REMOVE_RELATED_PUBLICATION = 'app/SubmssionForm/REMOVE_RELATED_PUBLICATION';
+export const CHANGE_CURRENT_RELATED_PUBLICATION = 'app/SubmssionForm/CHANGE_CURRENT_RELATED_PUBLICATION';

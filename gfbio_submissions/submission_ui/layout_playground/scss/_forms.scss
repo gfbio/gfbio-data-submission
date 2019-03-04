@@ -131,6 +131,38 @@
   }
 }
 
+// works on btn-secondary
+// TODO: refactor to generic class, light-blue button
+//.btn-form {
+//  //background-color: $gfbio-light-blue;
+//  background-color: $white;
+//  color: $gfbio-light-blue !important;
+//  border-color: darken($gfbio-light-blue, .2);
+//
+//  &:hover, &:not(:disabled):not(.disabled):active,
+//  &:not(:disabled):not(.disabled).active {
+//    &:focus {
+//      box-shadow: none;
+//    }
+//
+//    border-color: darken($contrast-1, .2);
+//    //background-color: $white;
+//    //color: $gfbio-light-blue !important;
+//    background-color: $white;
+//    color: $contrast-1 !important;
+//    box-shadow: none;
+//  }
+//
+//  &:focus {
+//    box-shadow: none;
+//  }
+//
+//  &:hover {
+//    //background-color: $contrast-1;
+//    color: $contrast-1 !important;
+//  }
+//}
+
 //.btn-contrast {
 //  background-color: $gfbio-blue;
 //  border-color: darken($contrast-1, .2);
@@ -288,6 +320,40 @@ form.pagewide-form {
       border-color: $gfbio-green-0-7;
       box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
       outline-color: $gfbio-green-0-7;
+    }
+
+  }
+
+  li.publication {
+    border: none;
+    background-color: $gray-100;
+    border: 1px solid $gray-400;
+    border-radius: .25rem;
+    padding: .375rem .75rem .375rem .75rem;
+    margin-bottom: .25rem;
+    color: $gray-dark;
+    font-size: 1rem;
+
+    &:hover {
+      z-index: inherit;
+    }
+
+    &:last-child {
+      margin-bottom: 1rem;
+    }
+
+    .btn-remove {
+      color: $contrast-2;
+      font-size: .75rem;
+      padding: .25rem;
+
+      &:hover {
+        font-weight: bold;
+      }
+
+      i {
+        padding-right: .5rem;
+      }
     }
 
   }

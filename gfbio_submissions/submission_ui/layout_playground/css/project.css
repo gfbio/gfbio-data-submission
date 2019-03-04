@@ -598,6 +598,39 @@ form.pagewide-form .custom-control-input:focus ~ .custom-control-label::before {
   outline-color: rgba(129, 178, 72, 0.7);
 }
 
+form.pagewide-form li.publication {
+  border: none;
+  background-color: #f8f8f8;
+  border: 1px solid #ced4da;
+  border-radius: .25rem;
+  padding: .375rem .75rem .375rem .75rem;
+  margin-bottom: .25rem;
+  color: #666;
+  font-size: 1rem;
+}
+
+form.pagewide-form li.publication:hover {
+  z-index: inherit;
+}
+
+form.pagewide-form li.publication:last-child {
+  margin-bottom: 1rem;
+}
+
+form.pagewide-form li.publication .btn-remove {
+  color: #FF6339;
+  font-size: .75rem;
+  padding: .25rem;
+}
+
+form.pagewide-form li.publication .btn-remove:hover {
+  font-weight: bold;
+}
+
+form.pagewide-form li.publication .btn-remove i {
+  padding-right: .5rem;
+}
+
 form.pagewide-form .dropzone {
   border: 1px solid #ced4da;
   border-radius: .25rem;

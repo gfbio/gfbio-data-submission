@@ -26,18 +26,6 @@ class LicenseSelectionForm extends React.PureComponent {
     'CC BY-ND 4.0',
     'CC BY-SA 4.0',
     'Other License',
-    // 'MIT',
-    // 'Apache-2.0',
-    // 'BSD 3-clause',
-    // 'BSD 2-clause',
-    // 'GPLv3',
-    // 'GPLv2',
-    // 'LGPL',
-    // 'MPL-2.0',
-    // 'CeCILL',
-    // 'CeCILL-B',
-    // 'CERN OHL',
-    // 'TAPR OHL',
   ];
 
   licenseListElements = this.licenseList.map(license => (

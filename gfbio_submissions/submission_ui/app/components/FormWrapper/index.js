@@ -17,6 +17,7 @@ import LegalRequirementsForm from 'components/LegalRequirementsForm';
 import MetaDataSchemaForm from 'components/MetaDataSchemaForm';
 import EmbargoDatePicker from 'components/EmbargoDatePicker';
 import MinimalSubmissionForm from '../MinimalSubmissionForm';
+import RelatedPublicationsForm from '../RelatedPublicationsForm';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -54,7 +55,11 @@ class FormWrapper extends React.PureComponent {
 
               <DataCategoryForm />
 
+              <RelatedPublicationsForm />
+
               <CommentForm />
+
+
             </div>
             {/* end left col */}
             <div className="col-md-3">
