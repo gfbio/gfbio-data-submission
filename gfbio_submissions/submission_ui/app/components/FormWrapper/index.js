@@ -15,9 +15,9 @@ import CommentForm from 'components/CommentForm';
 import LicenseSelectionForm from 'components/LicenseSelectionForm';
 import LegalRequirementsForm from 'components/LegalRequirementsForm';
 import MetaDataSchemaForm from 'components/MetaDataSchemaForm';
-import EmbargoDatePicker from 'components/EmbargoDatePicker';
 import MinimalSubmissionForm from '../MinimalSubmissionForm';
 import RelatedPublicationsForm from '../RelatedPublicationsForm';
+import EmbargoDatePicker from '../EmbargoDatePicker';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -70,6 +70,11 @@ class FormWrapper extends React.PureComponent {
               <LegalRequirementsForm />
 
               <MetaDataSchemaForm />
+
+              <EmbargoDatePicker
+                onChange={this.props.handleDateChange}
+                embargoDate={this.props.embargoDate}
+              />
             </div>
             {/* end right col */}
           </div>
@@ -95,10 +100,7 @@ class FormWrapper extends React.PureComponent {
                   </button>
                 </div>
                 <div className="form-group col-md-4">
-                  <EmbargoDatePicker
-                    onChange={this.props.handleDateChange}
-                    embargoDate={this.props.embargoDate}
-                  />
+
                 </div>
                 <div className="form-group col-md-4">
                   <button
@@ -138,5 +140,8 @@ FormWrapper.propTypes = {
 // this is already connected to redux-form reducer ?
 
 // initialValues: {title: 'Preset'} -> is set to form values once form is touched but not shown in browser
-FormWrapper = reduxForm({ form: 'formWrapper',  enableReinitialize: true,})(FormWrapper);
+FormWrapper = reduxForm({
+  form: 'formWrapper',
+  enableReinitialize: true,
+})(FormWrapper);
 export default FormWrapper;

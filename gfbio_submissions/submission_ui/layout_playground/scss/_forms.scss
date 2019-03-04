@@ -540,7 +540,15 @@ form.pagewide-form {
   /*
     Overwrite react-datepicker styles
    */
+  .react-datepicker {
+    width: 100%;
+  }
+
   .react-datepicker-wrapper {
+    width: 100%;
+  }
+
+  .react-datepicker__month-container {
     width: 100%;
   }
 
@@ -581,13 +589,13 @@ form.pagewide-form {
     }
 
     &:hover {
-      background-color: $gfbio-light-blue;
+      background-color: $gfbio-green;
       color: $white;
     }
   }
 
   .react-datepicker__day--selected {
-    background-color: $gfbio-blue;
+    background-color: $gfbio-light-blue;
     color: $white;
   }
 

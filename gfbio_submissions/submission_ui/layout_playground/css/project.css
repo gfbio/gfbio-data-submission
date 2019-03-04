@@ -790,7 +790,15 @@ form.pagewide-form select:focus {
   box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
 }
 
+form.pagewide-form .react-datepicker {
+  width: 100%;
+}
+
 form.pagewide-form .react-datepicker-wrapper {
+  width: 100%;
+}
+
+form.pagewide-form .react-datepicker__month-container {
   width: 100%;
 }
 
@@ -832,12 +840,12 @@ form.pagewide-form .react-datepicker__day:focus {
 }
 
 form.pagewide-form .react-datepicker__day:hover {
-  background-color: #3CACE4;
+  background-color: #81B248;
   color: #fff;
 }
 
 form.pagewide-form .react-datepicker__day--selected {
-  background-color: #345AA2;
+  background-color: #3CACE4;
   color: #fff;
 }
 
