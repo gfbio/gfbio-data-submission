@@ -581,13 +581,13 @@ form.pagewide-form {
     }
 
     &:hover {
-      background-color: $gfbio-light-blue;
+      background-color: $gfbio-green;
       color: $white;
     }
   }
 
   .react-datepicker__day--selected {
-    background-color: $gfbio-blue;
+    background-color: $gfbio-light-blue;
     color: $white;
   }
 

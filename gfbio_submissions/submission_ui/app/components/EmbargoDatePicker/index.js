@@ -17,6 +17,10 @@ class EmbargoDatePicker extends React.Component {
   render() {
     return (
       <div>
+        <header className="header header-left form-header-top">
+          <h2 className="section-title">Set Embargo</h2>
+          <p className="section-subtitle" />
+        </header>
         <DatePicker
           customInput={
             <ButtonInput
@@ -25,6 +29,7 @@ class EmbargoDatePicker extends React.Component {
               text="Set Embargo"
             />
           }
+          inline
           selected={this.props.embargoDate}
           onChange={this.props.onChange}
           dateFormat="MMMM d, yyyy"

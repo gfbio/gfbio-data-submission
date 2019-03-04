@@ -832,12 +832,12 @@ form.pagewide-form .react-datepicker__day:focus {
 }
 
 form.pagewide-form .react-datepicker__day:hover {
-  background-color: #3CACE4;
+  background-color: #81B248;
   color: #fff;
 }
 
 form.pagewide-form .react-datepicker__day--selected {
-  background-color: #345AA2;
+  background-color: #3CACE4;
   color: #fff;
 }
 
