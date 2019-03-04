@@ -784,6 +784,10 @@ form.pagewide-form .accordion-form-content .card li .btn-license:hover {
   background-color: #f8f8f8;
 }
 
+form.pagewide-form select {
+  color: #666;
+}
+
 form.pagewide-form select:focus {
   border-color: rgba(129, 178, 72, 0.7);
   -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
