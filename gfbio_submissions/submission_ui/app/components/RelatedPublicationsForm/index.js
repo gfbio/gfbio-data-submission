@@ -63,16 +63,26 @@ class RelatedPublicationsForm extends React.PureComponent {
 
     */
 
-    const publicationList = this.props.relatedPublications.map(pub => (
-      <li>{pub}</li>
-    ));
+    const publicationList = this.props.relatedPublications.map((pub, index) => {
+      if (pub !== '') {
+        return <li key={index}
+                   className="list-group-item d-flex justify-content-between align-items-center publication">
+          {pub}
+          <button className="btn btn-remove">
+            <i className="fa fa-times" />
+            Remove
+          </button>
+        </li>;
+      }
+    });
+
     return (
       <div>
         <header className="header header-left form-header-top">
-          <h2 className="section-title">Related Publications</h2>
+          <h2 className="section-title">Related Publications </h2>
           <p className="section-subtitle">(optional)</p>
         </header>
-        <ul>
+        <ul className="list-group list-group-flush">
           {publicationList}
         </ul>
         <div className="form-row">
