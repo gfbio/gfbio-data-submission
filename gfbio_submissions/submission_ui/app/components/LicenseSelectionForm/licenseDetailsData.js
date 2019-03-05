@@ -49,8 +49,8 @@ export const licenseDetailData = {
       'voluptua.',
     link: 'http://www.google.de',
   },
-  'CC BY-NC-SA 4.0': {
-    name: 'CC0 1.0',
+  CCBYNCSA40: {
+    name: 'CC BY-NC-SA 4.0',
     shortDescription: 'Lorem ipsum dolor sit amet, consetetur sadipscing ' +
       'elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore ' +
       'magna aliquyam erat, sed diam voluptua. At vero eos et accusam et ' +
@@ -101,7 +101,7 @@ export const licenseDetailData = {
 
 
 export const licenseModals = Object.keys(licenseDetailData).map(licenseKey => (
-  <div className="modal fade" id={licenseKey} tabIndex="-1"
+  <div className="modal fade" key={licenseKey} id={licenseKey} tabIndex="-1"
        role="dialog" aria-labelledby="exampleModalCenterTitle"
        aria-hidden="true">
     <div className="modal-dialog modal-dialog-centered modal-lg"
@@ -125,8 +125,9 @@ export const licenseModals = Object.keys(licenseDetailData).map(licenseKey => (
         <div className="modal-footer">
           <a
             className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
-            data-dismiss="modal"
+            // data-dismiss="modal"
             href={licenseDetailData[licenseKey].link}
+            target="_blank"
           >Read More
           </a>
 
