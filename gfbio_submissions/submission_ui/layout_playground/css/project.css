@@ -535,6 +535,10 @@ form.pagewide-form .input-error {
   padding: .75rem .75rem 0 .75rem;
 }
 
+form.pagewide-form input {
+  font-size: .9rem;
+}
+
 form.pagewide-form input::-webkit-input-placeholder {
   font-size: 0.85rem;
 }
