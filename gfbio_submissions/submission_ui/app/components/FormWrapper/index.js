@@ -18,6 +18,7 @@ import MetaDataSchemaForm from 'components/MetaDataSchemaForm';
 import MinimalSubmissionForm from '../MinimalSubmissionForm';
 import RelatedPublicationsForm from '../RelatedPublicationsForm';
 import EmbargoDatePicker from '../EmbargoDatePicker';
+import DataUrlForm from '../DataUrlForm';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -48,6 +49,8 @@ class FormWrapper extends React.PureComponent {
               {/* left col */}
 
               <MinimalSubmissionForm />
+
+              <DataUrlForm />
 
               <ContributersForm />
 
