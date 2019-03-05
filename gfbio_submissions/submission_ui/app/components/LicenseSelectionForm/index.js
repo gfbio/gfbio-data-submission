@@ -40,9 +40,15 @@ class LicenseSelectionForm extends React.PureComponent {
         onClick={() => this.props.onClickLicense(license)}
       >
         {license}
-        <a className="align-bottom" href={`link_to_details_of_${license}`}>
+        <a className="align-bottom" data-toggle="modal"
+           data-target="#exampleModalCenter">
           details
         </a>
+        {/*<a type="button" className="align-bottom btn btn-license-detail"*/}
+        {/*data-toggle="modal"*/}
+        {/*data-target="#exampleModalCenter">*/}
+        {/*details*/}
+        {/*</a>*/}
       </button>
     </li>
   ));
@@ -57,6 +63,58 @@ class LicenseSelectionForm extends React.PureComponent {
           <h2 className="section-title">License</h2>
           <p className="section-subtitle" />
         </header>
+        {/* MODAL*/}
+        <div className="modal fade" id="exampleModalCenter" tabIndex="-1"
+             role="dialog" aria-labelledby="exampleModalCenterTitle"
+             aria-hidden="true">
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h4 className="modal-title" id="exampleModalCenterTitle">
+                  'Licensen Name' Decription
+                </h4>
+                <button type="button" className="close" data-dismiss="modal"
+                        aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div className="modal-body">
+                <h6>What does this mean?</h6>
+                <p>
+                  This dataset is licensed under a Creative Commons Attribution
+                  4.0 International licence. What does this mean? You can share,
+                  copy and modify this dataset so long as you give appropriate
+                  credit, provide a link to the CC BY license, and indicate if
+                  changes were made, but you may not do so in a way that
+                  suggests the rights holder has endorsed you or your use of the
+                  dataset. Note that further permission may be required for any
+                  content within the dataset that is identified as belonging to
+                  a third party.
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
+                  data-dismiss="modal"
+                >Read More
+                </button>
+
+                <button
+                  className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
+                  data-dismiss="modal"
+                >Choose this License
+                </button>
+
+                {/*<button type="button" className="btn btn-secondary"*/}
+                {/*data-dismiss="modal">Close*/}
+                {/*</button>*/}
+                {/*<button type="button" className="btn btn-primary">Save changes*/}
+                {/*</button>*/}
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* END MODAL*/}
 
         <div className="form-group accordion-form-content">
           <button

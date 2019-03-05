@@ -460,16 +460,48 @@ form.pagewide-form {
       float: right;
       line-height: 1.5rem;
     }
+  }
+
+  .btn-license-detail {
+    padding: 0;
+    margin: 0;
+    border: 0;
+    float: right;
+    color: $gray-dark-2;
+    font-size: .75rem;
+    line-height: 1.5rem;
+
+    &:focus {
+      box-shadow: none;
+    }
+
+    &:hover {
+      color: $gfbio-light-blue;
+    }
 
   }
 
-  //.card-body {
-  //  //padding: 1rem;
-  //}
+  /* modal stuff */
+  .modal-content {
+    border-color: $white;
+
+    h4 {
+      @include sans-serif-font;
+      font-weight: 300;
+    }
+  }
+
+  .modal-header {
+    border: none;
+  }
+
+  .modal-body {
+    border: none;
+  }
+
+  /* end modal stuff */
 
   .card {
-    // border:none;
-
     .form-group {
       margin-bottom: 1rem;
     }
@@ -534,6 +566,7 @@ form.pagewide-form {
 
   select {
     color: $gray-dark;
+
     &:focus {
       border-color: $gfbio-green-0-7;
       box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
