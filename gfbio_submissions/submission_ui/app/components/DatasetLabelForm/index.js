@@ -1,6 +1,6 @@
 /**
  *
- * RelatedPublicationsForm
+ * DatasetLabelForm
  *
  */
 
@@ -8,31 +8,32 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
 import {
-  makeSelectCurrentRelatedPublication,
-  makeSelectRelatedPublications,
+  makeSelectCurrentLabel,
+  makeSelectDatasetLabels,
 } from '../../containers/SubmissionForm/selectors';
 import {
-  addRelatedPublication,
-  changeCurrentRelatedPublication,
-  removeRelatedPublication,
+  addDatasetLabel,
+  changeCurrentLabel,
+  removeDatsetLabel,
 } from '../../containers/SubmissionForm/actions';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
-class RelatedPublicationsForm extends React.PureComponent {
+class DatasetLabelForm extends React.PureComponent {
 
   handleChange = (e) => {
     this.props.handleChange(e.target.value);
   };
 
   render() {
-    const publicationList = this.props.relatedPublications.map((pub, index) => {
-      if (pub !== '') {
+
+    const labelList = this.props.datasetLabels.map((label, index) => {
+      if (label !== '') {
         return <li key={index}
                    className="list-group-item d-flex justify-content-between align-items-center publication">
-          <span><i className="icon ion-md-paper pub"></i> {pub}</span>
+          <span><i className="fa fa-tags pub" /> {label} </span>
           <button className="btn btn-remove" onClick={(e) => {
             e.preventDefault();
             this.props.handleRemove(index);
@@ -47,18 +48,18 @@ class RelatedPublicationsForm extends React.PureComponent {
     return (
       <div>
         <header className="header header-left form-header-top">
-          <h2 className="section-title">Related Publications </h2>
+          <h2 className="section-title">Labels</h2>
           <p className="section-subtitle">(optional)</p>
         </header>
         <ul className="list-group list-group-flush">
-          {publicationList}
+          {labelList}
         </ul>
         <div className="form-row">
           <div className="form-group col-md-10">
             <input className="form-control" type="text"
                    id="relatedPublication"
-                   value={this.props.currentRelatedPublication}
-                   placeholder="Enter a publication or reference"
+                   value={this.props.currentLabel}
+                   placeholder="Add Lables to your Dataset"
                    onChange={this.handleChange}
             />
           </div>
@@ -68,7 +69,7 @@ class RelatedPublicationsForm extends React.PureComponent {
               btn-light-blue-inverted"
               onClick={e => {
                 e.preventDefault();
-                this.props.handleAdd(this.props.currentRelatedPublication);
+                this.props.handleAdd(this.props.currentLabel);
               }}
 
             >
@@ -81,24 +82,24 @@ class RelatedPublicationsForm extends React.PureComponent {
   }
 }
 
-RelatedPublicationsForm.propTypes = {
-  currentRelatedPublication: PropTypes.string,
-  relatedPublications: PropTypes.array,
+DatasetLabelForm.propTypes = {
+  currentLabel: PropTypes.string,
+  datasetLabels: PropTypes.array,
   handleAdd: PropTypes.func,
   handleRemove: PropTypes.func,
   handleChange: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
-  relatedPublications: makeSelectRelatedPublications(),
-  currentRelatedPublication: makeSelectCurrentRelatedPublication(),
+  datasetLabels: makeSelectDatasetLabels(),
+  currentLabel: makeSelectCurrentLabel(),
 });
 
 function mapDispatchToProps(dispatch) {
   return {
-    handleAdd: value => dispatch(addRelatedPublication(value)),
-    handleChange: value => dispatch(changeCurrentRelatedPublication(value)),
-    handleRemove: index => dispatch(removeRelatedPublication(index)),
+    handleAdd: value => dispatch(addDatasetLabel(value)),
+    handleChange: value => dispatch(changeCurrentLabel(value)),
+    handleRemove: index => dispatch(removeDatsetLabel(index)),
   };
 }
 
@@ -107,4 +108,4 @@ const withConnect = connect(
   mapDispatchToProps,
 );
 
-export default compose(withConnect)(RelatedPublicationsForm);
+export default compose(withConnect)(DatasetLabelForm);

@@ -5,11 +5,14 @@
  */
 import { fromJS } from 'immutable';
 import {
+  ADD_DATASET_LABEL,
   ADD_RELATED_PUBLICATION,
+  CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
   CHANGE_META_DATA_SCHEMA,
   DEFAULT_ACTION,
+  REMOVE_DATASET_LABEL,
   REMOVE_RELATED_PUBLICATION,
   SAVE_FORM,
   SAVE_FORM_ERROR,
@@ -49,7 +52,9 @@ export const initialState = fromJS({
   // TODO: same for save
   saveResponse: {},
   currentRelatedPublication: '',
-  relatedPublications: [],
+  relatedPublications: Array(),
+  currentLabel: '',
+  datasetLabels: Array(),
 });
 
 function submissionFormReducer(state = initialState, action) {
@@ -101,6 +106,22 @@ function submissionFormReducer(state = initialState, action) {
       console.log(action.index);
       return state
         .update('relatedPublications', (relatedPublications) => relatedPublications.splice(action.index, 1));
+    case CHANGE_CURRENT_DATASET_LABEL:
+      console.log('CHANGE_CURRENT_DATASET_LABEL');
+      console.log(action.value);
+      return state
+        .set('currentLabel', action.value);
+    case ADD_DATASET_LABEL:
+      console.log('ADD_DATASET_LABEL');
+      console.log(action.value);
+      return state
+        .update('datasetLabels', (datasetLabels) => datasetLabels.push(action.value))
+        .set('currentLabel', '');
+    case REMOVE_DATASET_LABEL:
+      console.log('REMOVE_DATASET_LABEL');
+      console.log(action.index);
+      return state
+        .update('datasetLabels', (datasetLabels) => datasetLabels.splice(action.index, 1));
     default:
       return state;
   }

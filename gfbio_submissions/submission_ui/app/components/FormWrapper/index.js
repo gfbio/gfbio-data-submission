@@ -19,6 +19,7 @@ import MinimalSubmissionForm from '../MinimalSubmissionForm';
 import RelatedPublicationsForm from '../RelatedPublicationsForm';
 import EmbargoDatePicker from '../EmbargoDatePicker';
 import DataUrlForm from '../DataUrlForm';
+import DatasetLabelForm from '../DatasetLabelForm';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -57,6 +58,8 @@ class FormWrapper extends React.PureComponent {
               <TargetDataCenterForm />
 
               <DataCategoryForm />
+
+              <DatasetLabelForm />
 
               <RelatedPublicationsForm />
 
