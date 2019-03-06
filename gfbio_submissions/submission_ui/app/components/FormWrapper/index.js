@@ -25,9 +25,9 @@ import DataUrlForm from '../DataUrlForm';
 class FormWrapper extends React.PureComponent {
   render() {
     let submitIconClass = 'fa-play';
-    let submitButtonText = 'Submit';
+    let submitButtonText = 'Start Submission';
     let saveIconClass = 'fa-clipboard';
-    let saveButtonText = 'Save';
+    let saveButtonText = 'Save Draft';
     if (this.props.submitInProgress) {
       submitIconClass = 'fa-cog fa-spin fa-fw';
       submitButtonText = 'submitting ...';

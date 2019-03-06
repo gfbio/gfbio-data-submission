@@ -502,6 +502,8 @@ section.sub-navi .nav .active {
 }
 
 form.pagewide-form {
+  /* modal stuff */
+  /* end modal stuff */
   /*
     Overwrite react-datepicker styles
    */
@@ -732,6 +734,46 @@ form.pagewide-form .btn-license a {
   text-decoration: none;
   float: right;
   line-height: 1.5rem;
+}
+
+form.pagewide-form .btn-license-detail {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  float: right;
+  color: #495057;
+  font-size: .75rem;
+  line-height: 1.5rem;
+}
+
+form.pagewide-form .btn-license-detail:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+form.pagewide-form .btn-license-detail:hover {
+  color: #3CACE4;
+}
+
+form.pagewide-form .modal-content {
+  border-color: #fff;
+}
+
+form.pagewide-form .modal-content h4 {
+  font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 300;
+}
+
+form.pagewide-form .modal-header {
+  border: none;
+}
+
+form.pagewide-form .modal-body {
+  border: none;
+}
+
+form.pagewide-form .modal-footer {
+  border: none;
 }
 
 form.pagewide-form .card .form-group {
