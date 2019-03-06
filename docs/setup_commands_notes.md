@@ -293,6 +293,21 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
 
 ## Release
 
+### Release on development machine
+
+ ssh -l root 141.5.103.171
+ 
+ supervisorctl stop devgfbiosubmissions
+ 
+ 
+cd /var/www/gfbio_submissions/
+
+
+ git fetch
+ 2006  git pull origin develop 
+docker-compose -f production.yml build
+
+
 ### Manual release
 
 #### Local commands
