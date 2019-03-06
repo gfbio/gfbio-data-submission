@@ -13,7 +13,9 @@ import { compose } from 'redux';
 import reducer from '../../containers/SubmissionForm/reducer';
 import { makeSelectLicense } from '../../containers/SubmissionForm/selectors';
 import { changeLicense } from '../../containers/SubmissionForm/actions';
-import { licenseDetailData, licenseModals } from './licenseDetailsData';
+import LicenseModals, {
+  licenseDetailData,
+} from './licenseDetailsData';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -29,7 +31,7 @@ class LicenseSelectionForm extends React.PureComponent {
         aria-expanded="false"
         aria-controls="collapseLicense"
         onClick={() => this.props.onClickLicense(
-          licenseDetailData[licenseKey].name, licenseKey)}
+          licenseDetailData[licenseKey].name)}
       >
         {licenseDetailData[licenseKey].name}
         <a className="align-bottom" data-toggle="modal"
@@ -51,7 +53,9 @@ class LicenseSelectionForm extends React.PureComponent {
           <p className="section-subtitle" />
         </header>
         {/* MODAL*/}
-        {licenseModals}
+        <LicenseModals
+          onClickLicense={this.props.onClickLicense}
+        />
         {/* END MODAL*/}
         <div className="form-group accordion-form-content">
           <button

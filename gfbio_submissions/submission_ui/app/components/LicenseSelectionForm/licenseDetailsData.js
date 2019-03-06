@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 export const licenseDetailData = {
   CC010: {
@@ -99,46 +100,59 @@ export const licenseDetailData = {
   },
 };
 
+class LicenseModals extends React.PureComponent {
 
-export const licenseModals = Object.keys(licenseDetailData).map(licenseKey => (
-  <div className="modal fade" key={licenseKey} id={licenseKey} tabIndex="-1"
-       role="dialog" aria-labelledby="exampleModalCenterTitle"
-       aria-hidden="true">
-    <div className="modal-dialog modal-dialog-centered modal-lg"
-         role="document">
-      <div className="modal-content">
-        <div className="modal-header">
-          <h4 className="modal-title" id="exampleModalCenterTitle">
-            {licenseDetailData[licenseKey].name + ' Description'}
-          </h4>
-          <button type="button" className="close" data-dismiss="modal"
-                  aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div className="modal-body">
-          <h5>What does this mean ?</h5>
-          <p>
-            {licenseDetailData[licenseKey].shortDescription}
-          </p>
-        </div>
-        <div className="modal-footer">
-          <a
-            className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
-            // data-dismiss="modal"
-            href={licenseDetailData[licenseKey].link}
-            target="_blank"
-          >Read More
-          </a>
+  render() {
+    const licenseModals = Object.keys(licenseDetailData).map(licenseKey => (
+      <div className="modal fade" key={licenseKey} id={licenseKey} tabIndex="-1"
+           role="dialog" aria-labelledby="exampleModalCenterTitle"
+           aria-hidden="true">
+        <div className="modal-dialog modal-dialog-centered modal-lg"
+             role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h4 className="modal-title" id="exampleModalCenterTitle">
+                {licenseDetailData[licenseKey].name + ' Description'}
+              </h4>
+              <button type="button" className="close" data-dismiss="modal"
+                      aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div className="modal-body">
+              <h5>What does this mean ?</h5>
+              <p>
+                {licenseDetailData[licenseKey].shortDescription}
+              </p>
+            </div>
+            <div className="modal-footer">
+              <a
+                className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
+                href={licenseDetailData[licenseKey].link}
+                target="_blank"
+              >Read More
+              </a>
 
-          <a
-            className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted mt-0"
-            data-dismiss="modal"
-          >Choose this License
-          </a>
+              <a
+                className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted mt-0"
+                data-dismiss="modal"
+                onClick={() => this.props.onClickLicense(
+                  licenseDetailData[licenseKey].name)}
+              >Choose this License
+              </a>
 
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-));
+    ));
+    return licenseModals;
+  }
+
+}
+
+LicenseModals.propTypes = {
+  onClickLicense: PropTypes.func,
+};
+
+export default LicenseModals;
