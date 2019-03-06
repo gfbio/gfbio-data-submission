@@ -11,7 +11,7 @@ export const licenseDetailData = {
       ' sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod ' +
       'tempor invidunt ut labore et dolore magna aliquyam erat, sed diam ' +
       'voluptua.',
-    link: 'http://www.google.de',
+    link: 'https://creativecommons.org/publicdomain/zero/1.0/deed.en',
   },
   CCBY40: {
     name: 'CC BY 4.0',
@@ -23,7 +23,7 @@ export const licenseDetailData = {
       ' sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod ' +
       'tempor invidunt ut labore et dolore magna aliquyam erat, sed diam ' +
       'voluptua.',
-    link: 'http://www.google.de',
+    link: 'https://creativecommons.org/licenses/by/4.0/deed.en',
   },
   CCBYNC40: {
     name: 'CC BY NC 4.0',
@@ -35,7 +35,7 @@ export const licenseDetailData = {
       ' sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod ' +
       'tempor invidunt ut labore et dolore magna aliquyam erat, sed diam ' +
       'voluptua.',
-    link: 'http://www.google.de',
+    link: 'https://creativecommons.org/licenses/by-nc/4.0/deed.en',
   },
   CCBYNCND40: {
     name: 'CC BY-NC-ND 4.0',
@@ -47,7 +47,7 @@ export const licenseDetailData = {
       ' sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod ' +
       'tempor invidunt ut labore et dolore magna aliquyam erat, sed diam ' +
       'voluptua.',
-    link: 'http://www.google.de',
+    link: 'https://creativecommons.org/licenses/by-nc-nd/4.0/deed.en',
   },
   CCBYNCSA40: {
     name: 'CC BY-NC-SA 4.0',
@@ -59,7 +59,7 @@ export const licenseDetailData = {
       ' sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod ' +
       'tempor invidunt ut labore et dolore magna aliquyam erat, sed diam ' +
       'voluptua.',
-    link: 'http://www.google.de',
+    link: 'https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en',
   },
   CCBYND40: {
     name: 'CC BY-ND 4.0',
@@ -71,7 +71,7 @@ export const licenseDetailData = {
       ' sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod ' +
       'tempor invidunt ut labore et dolore magna aliquyam erat, sed diam ' +
       'voluptua.',
-    link: 'http://www.google.de',
+    link: 'https://creativecommons.org/licenses/by-nd/4.0/deed.en',
   },
   CCBYSA40: {
     name: 'CC BY-SA 4.0',
@@ -83,7 +83,7 @@ export const licenseDetailData = {
       ' sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod ' +
       'tempor invidunt ut labore et dolore magna aliquyam erat, sed diam ' +
       'voluptua.',
-    link: 'http://www.google.de',
+    link: 'https://creativecommons.org/licenses/by-sa/4.0/deed.en',
   },
   OtherLicense: {
     name: 'Other License',
@@ -131,11 +131,11 @@ export const licenseModals = Object.keys(licenseDetailData).map(licenseKey => (
           >Read More
           </a>
 
-          <button
-            className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
+          <a
+            className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted mt-0"
             data-dismiss="modal"
           >Choose this License
-          </button>
+          </a>
 
         </div>
       </div>

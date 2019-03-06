@@ -772,6 +772,10 @@ form.pagewide-form .modal-body {
   border: none;
 }
 
+form.pagewide-form .modal-footer {
+  border: none;
+}
+
 form.pagewide-form .card .form-group {
   margin-bottom: 1rem;
 }
