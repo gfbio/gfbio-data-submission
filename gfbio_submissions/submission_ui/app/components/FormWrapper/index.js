@@ -20,6 +20,7 @@ import RelatedPublicationsForm from '../RelatedPublicationsForm';
 import EmbargoDatePicker from '../EmbargoDatePicker';
 import DataUrlForm from '../DataUrlForm';
 import DatasetLabelForm from '../DatasetLabelForm';
+import TemplateLinkList from '../TemplateLinkList';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -74,6 +75,8 @@ class FormWrapper extends React.PureComponent {
               <LicenseSelectionForm />
 
               <LegalRequirementsForm />
+
+              <TemplateLinkList />
 
               <MetaDataSchemaForm />
 
