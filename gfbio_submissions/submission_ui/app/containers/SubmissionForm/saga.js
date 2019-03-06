@@ -1,6 +1,7 @@
 import { all, call, put, select, takeLeading } from 'redux-saga/effects';
 import { SAVE_FORM, SUBMIT_FORM, SUBMIT_FORM_START } from './constants';
 import {
+  makeSelectDatasetLabels,
   makeSelectFormWrapper,
   makeSelectLicense,
   makeSelectMetaDataSchema,
@@ -40,11 +41,13 @@ function* prepareRequestData(userId, submit = true) {
   const license = yield select(makeSelectLicense());
   const metadata_schema = yield select(makeSelectMetaDataSchema());
   const related_publications = yield select(makeSelectRelatedPublications());
+  const datasetLabels = yield select(makeSelectDatasetLabels());
   const requirements = Object.assign({
     license,
     metadata_schema,
     legal_requirements,
     related_publications,
+    datasetLabels,
     categories,
   }, formValues);
   return {
