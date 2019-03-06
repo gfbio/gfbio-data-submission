@@ -370,6 +370,27 @@ form.pagewide-form {
 
   }
 
+  .template-links {
+
+    a {
+      border: none;
+      //border-right: 1px solid $gfbio-light-blue;
+      border-bottom: 1px solid $gray-200;
+      border-radius: 0 0 0 0;
+      color: $gfbio-light-blue;
+      margin-bottom: .25rem;
+
+      i {
+        padding-right: .75rem;
+      }
+
+      &:hover {
+        color: $contrast-2;
+        background-color: $white;
+      }
+    }
+  }
+
   .dropzone {
     border: 1px solid $form-gray-1;
     border-radius: .25rem;

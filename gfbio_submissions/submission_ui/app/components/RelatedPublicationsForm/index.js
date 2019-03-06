@@ -32,7 +32,7 @@ class RelatedPublicationsForm extends React.PureComponent {
       if (pub !== '') {
         return <li key={index}
                    className="list-group-item d-flex justify-content-between align-items-center publication">
-          <span><i className="icon ion-md-paper pub"></i> {pub}</span>
+          <span><i className="icon ion-md-paper pub"/> {pub}</span>
           <button className="btn btn-remove" onClick={(e) => {
             e.preventDefault();
             this.props.handleRemove(index);
