@@ -4,6 +4,9 @@
  * Licensed under MIT (https://github.com/BlackrockDigital/startbootstrap-creative/blob/master/LICENSE)
  */
 
+/*
+ https://coolors.co/3cade4-78c0e0-192bc2-150578-0e0e52
+*/
 section#about, section#about2 {
   background-color: rgba(52, 90, 162, 0.9);
   padding-top: 6rem;
@@ -564,6 +567,10 @@ form.pagewide-form input:focus {
   outline-color: rgba(129, 178, 72, 0.7);
 }
 
+form.pagewide-form option {
+  font-size: .9rem;
+}
+
 form.pagewide-form textarea::-webkit-input-placeholder {
   font-size: 0.85rem;
 }
@@ -605,13 +612,14 @@ form.pagewide-form .custom-control-input:focus ~ .custom-control-label::before {
 }
 
 form.pagewide-form li.publication {
+  font-size: .9rem;
   border: none;
-  background-color: #f8f8f8;
-  border: 1px solid #ced4da;
+  background-color: #f8fcfd;
+  border: 1px solid #3CACE4;
   border-radius: .25rem;
   padding: .375rem .75rem .375rem .75rem;
   margin-bottom: .25rem;
-  color: #666;
+  color: #3CACE4;
   font-size: 1rem;
 }
 
@@ -621,6 +629,10 @@ form.pagewide-form li.publication:hover {
 
 form.pagewide-form li.publication:last-child {
   margin-bottom: 1rem;
+}
+
+form.pagewide-form li.publication i.pub {
+  padding-right: 1rem;
 }
 
 form.pagewide-form li.publication .btn-remove {

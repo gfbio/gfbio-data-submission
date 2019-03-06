@@ -5,11 +5,12 @@
  */
 
 import {
-  ADD_RELATED_PUBLICATION,
+  ADD_DATASET_LABEL,
+  ADD_RELATED_PUBLICATION, CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
   CHANGE_META_DATA_SCHEMA,
-  DEFAULT_ACTION,
+  DEFAULT_ACTION, REMOVE_DATASET_LABEL,
   REMOVE_RELATED_PUBLICATION,
   SAVE_FORM,
   SAVE_FORM_ERROR,
@@ -118,6 +119,27 @@ export function removeRelatedPublication(index) {
 export function changeCurrentRelatedPublication(value) {
   return {
     type: CHANGE_CURRENT_RELATED_PUBLICATION,
+    value,
+  };
+}
+
+export function addDatasetLabel(value) {
+  return {
+    type: ADD_DATASET_LABEL,
+    value,
+  };
+}
+
+export function removeDatsetLabel(index) {
+  return {
+    type: REMOVE_DATASET_LABEL,
+    index,
+  };
+}
+
+export function changeCurrentLabel(value) {
+  return {
+    type: CHANGE_CURRENT_DATASET_LABEL,
     value,
   };
 }
