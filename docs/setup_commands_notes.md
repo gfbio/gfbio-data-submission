@@ -293,7 +293,7 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
 
 ## Release
 
-### Manual 66.0e
+### Manual release
 
 #### Local commands
 
