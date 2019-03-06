@@ -649,6 +649,23 @@ form.pagewide-form li.publication .btn-remove i {
   padding-right: .5rem;
 }
 
+form.pagewide-form .template-links a {
+  border: none;
+  border-bottom: 1px solid #e9ecef;
+  border-radius: 0 0 0 0;
+  color: #3CACE4;
+  margin-bottom: .25rem;
+}
+
+form.pagewide-form .template-links a i {
+  padding-right: .75rem;
+}
+
+form.pagewide-form .template-links a:hover {
+  color: #FF6339;
+  background-color: #fff;
+}
+
 form.pagewide-form .dropzone {
   border: 1px solid #ced4da;
   border-radius: .25rem;
