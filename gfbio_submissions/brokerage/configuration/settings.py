@@ -95,7 +95,7 @@ DEFAULT_ENA_BROKER_NAME = getattr(
 DEFAULT_ENA_CENTER_NAME = getattr(
     settings,
     'DEFAULT_ENA_CENTER_NAME',
-    'GFBIO'
+    '_NO_CENTER_NAME_SET_'
 )
 
 ENA_PANGAEA = getattr(

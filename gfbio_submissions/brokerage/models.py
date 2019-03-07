@@ -14,7 +14,8 @@ from git import Repo
 from model_utils.models import TimeStampedModel
 
 from config.settings.base import ADMINS, AUTH_USER_MODEL, LOCAL_REPOSITORY
-from gfbio_submissions.brokerage.configuration.settings import GENERIC
+from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
+    DEFAULT_ENA_CENTER_NAME
 from .configuration.settings import ENA, ENA_PANGAEA
 from .configuration.settings import PRIMARY_DATA_FILE_DELAY
 from .fields import JsonDictField
@@ -173,7 +174,7 @@ class CenterName(models.Model):
         if self.center_name != '':
             return '{0}'.format(self.center_name)
         else:
-            return '_NO_NAME_SET_'
+            return DEFAULT_ENA_CENTER_NAME
 
 
 class Submission(models.Model):

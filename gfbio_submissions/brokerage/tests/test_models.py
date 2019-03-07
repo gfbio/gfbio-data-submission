@@ -233,7 +233,7 @@ class CenterNameTest(TestCase):
 
     def test_default_name(self):
         cn = CenterName()
-        self.assertEqual('GFBIO', cn.center_name)
+        self.assertEqual('', cn.center_name)
 
     def test_str(self):
         cn, created = CenterName.objects.get_or_create(center_name='ABC')

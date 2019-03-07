@@ -44,7 +44,7 @@ class Enalizer(object):
         self.experiments_contain_files = False
         self.run = runs
         self.runs_key = 'runs'
-        if submission.center_name is not None:
+        if submission.center_name is not None and submission.center_name != '':
             self.center_name = submission.center_name.center_name
         else:
             self.center_name = DEFAULT_ENA_CENTER_NAME
