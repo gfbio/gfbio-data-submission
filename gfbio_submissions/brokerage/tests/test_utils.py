@@ -135,6 +135,9 @@ class EnalizerTest(TestCase):
         k, sample_xml = data.get('SAMPLE')
         self.assertEqual('sample.xml', k)
         submission_samples = submission.brokerobject_set.filter(type='sample')
+        # FIXME: order of samples seem to be random
+        print('\n\n-------------------------------------\n\n')
+        print(sample_xml)
         self.assertIn(
             '<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="{1}">'
             '<TITLE>sample title</TITLE>'

@@ -153,7 +153,6 @@ class TestTasks(TestCase):
         permissions = Permission.objects.filter(
             content_type__app_label='brokerage',
             name__endswith='upload')
-        pprint(permissions)
         user = User.objects.create(
             username='user1'
         )
