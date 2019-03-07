@@ -246,6 +246,39 @@ class Submission(models.Model):
 
     objects = SubmissionManager()
 
+    def save(self, *args, **kwargs):
+        print('SUBMISSION save ', self.broker_submission_id)
+        previous_state = None
+        # update, no creation
+        if self.pk:
+            previous_state = Submission.objects.filter(pk=self.pk).first()
+            print('\tOLD')
+            print('\t', previous_state.center_name)
+
+        super(Submission, self).save(*args, **kwargs)
+        print('super save done')
+        if previous_state and previous_state.center_name != self.center_name:
+            # instance difference
+            print('DO CREATE NEW XML DUE TO CNAME CHANGE')
+            self.auditabletextdata_set.all().delete()
+            from .tasks import prepare_ena_submission_data_task
+            prepare_ena_submission_data_task.apply_async(
+                kwargs={
+                    'submission_id': '{0}'.format(self.pk),
+                }
+            )
+
+        # if self.attach_to_ticket:
+        #     from .tasks import \
+        #         attach_file_to_helpdesk_ticket_task
+        #     attach_file_to_helpdesk_ticket_task.apply_async(
+        #         kwargs={
+        #             'submission_id': '{0}'.format(self.submission.pk),
+        #         },
+        #         # TODO: rename
+        #         countdown=PRIMARY_DATA_FILE_DELAY
+        #     )
+
     # TODO: refactor/move: too specific (molecular submission)
     def get_json_with_aliases(self, alias_postfix):
         new_study_alias, study = self.set_study_alias(alias_postfix)

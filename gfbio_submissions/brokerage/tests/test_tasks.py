@@ -20,7 +20,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, Submission, AuditableTextData, PersistentIdentifier, \
     BrokerObject, TaskProgressReport, AdditionalReference, PrimaryDataFile, \
-    RequestLog
+    RequestLog, CenterName
 from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, \
     transfer_data_to_ena_task, process_ena_response_task, \
     create_broker_objects_from_submission_data_task, check_on_hold_status_task, \
@@ -212,6 +212,33 @@ class TestTasks(TestCase):
     @staticmethod
     def _delete_test_data():
         PrimaryDataFile.objects.all().delete()
+
+
+class TestTasksTriggeredBySubmissionSave(TestTasks):
+
+    def test_center_name_change(self):
+        center_name, created = CenterName.objects.get_or_create(
+            center_name='ABCD')
+        center_name_2, created = CenterName.objects.get_or_create(
+            center_name='EFGH')
+        sub = Submission.objects.first()
+        text_datas = sub.auditabletextdata_set.all()
+        self.assertEqual(0, len(text_datas))
+
+        sub.center_name = center_name
+        sub.save()
+        text_datas = sub.auditabletextdata_set.all()
+        len_text_datas = len(text_datas)
+        self.assertLess(0, len_text_datas)
+        for a in text_datas:
+            self.assertIn('center_name="ABCD"', a.text_data)
+
+        sub.center_name = center_name_2
+        sub.save()
+        text_datas = sub.auditabletextdata_set.all()
+        self.assertEqual(len_text_datas, len(text_datas))
+        for a in text_datas:
+            self.assertIn('center_name="EFGH"', a.text_data)
 
 
 class TestSubmissionTransferTasks(TestTasks):
