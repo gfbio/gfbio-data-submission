@@ -167,10 +167,13 @@ class TicketLabel(models.Model):
 
 
 class CenterName(models.Model):
-    center_name = models.CharField(max_length=128, default='GFBIO')
+    center_name = models.CharField(max_length=128, default='')
 
     def __str__(self):
-        return '{0}'.format(self.center_name)
+        if self.center_name != '':
+            return '{0}'.format(self.center_name)
+        else:
+            return '_NO_NAME_SET_'
 
 
 class Submission(models.Model):
@@ -230,6 +233,7 @@ class Submission(models.Model):
 
     data = JsonDictField(default=dict)
     # default to today + 1 year
+    # FIXME: setting default dynamically causes new migrations. without migrations default is last date plus 1 year
     embargo = models.DateField(
         default=datetime.date.today() + datetime.timedelta(days=365),
         null=True,
