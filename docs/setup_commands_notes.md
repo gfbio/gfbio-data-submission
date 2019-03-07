@@ -295,18 +295,15 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
 
 ### Release on development machine
 
- ssh -l root 141.5.103.171
- 
- supervisorctl stop devgfbiosubmissions
- 
- 
-cd /var/www/gfbio_submissions/
-
-
- git fetch
- 2006  git pull origin develop 
-docker-compose -f production.yml build
-
+- ssh -l root 141.5.103.171
+- supervisorctl stop devgfbiosubmissions
+- cd /var/www/gfbio_submissions/
+- git fetch
+- git pull origin develop 
+- docker-compose -f production.yml build
+- docker-compose -f production.yml run --rm django python manage.py migrate
+- docker-compose -f production.yml run --rm django python manage.py collectstatic
+- supervisorctl start devgfbiosubmissions
 
 ### Manual release
 
