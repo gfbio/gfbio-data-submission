@@ -57,6 +57,7 @@ THIRD_PARTY_APPS = [
     'allauth.socialaccount',  # registration
     'allauth.socialaccount.providers.github',  # github
     'allauth.socialaccount.providers.orcid',  # orcid
+    'allauth.socialaccount.providers.openid', # openid
     'rest_framework',  # Django REST framework
     'rest_framework.authtoken',  # token authentication
     'corsheaders',  # django cors headers
@@ -327,3 +328,21 @@ LOCAL_REPOSITORY = env('LOCAL_REPOSITORY',
 REMOTE_REPOSITORY = env('REMOTE_REPOSITORY',
                         default='https://maweber@colab.mpi-bremen.de/stash/scm/gfbio/gfbio-submission-auditing-tests.git')
 ########## END Access AuditableTextData
+
+########## ALL_AUTH OPENID SETTINGS
+SOCIALACCOUNT_PROVIDERS = {
+    'openid': {
+        'SERVERS': [
+            # dict(id='yahoo',
+            #      name='Yahoo',
+            #      openid_url='http://me.yahoo.com'),
+            # dict(id='hyves',
+            #      name='Hyves',
+            #      openid_url='http://hyves.nl'),
+            dict(id='google',
+                 name='Google',
+                 openid_url='https://www.google.com/accounts/o8/id'),
+        ]
+    }
+}
+########## END ALL_AUTH OPENID SETTINGS
