@@ -239,6 +239,20 @@ class TestTasksTriggeredBySubmissionSave(TestTasks):
         for a in text_datas:
             self.assertIn('center_name="EFGH"', a.text_data)
 
+    def test_center_name_change_without_brokerobjects(self):
+        submission = SubmissionTest._create_submission_via_serializer()
+        center_name, created = CenterName.objects.get_or_create(
+            center_name='ABCD')
+        self.assertEqual(0, len(TaskProgressReport.objects.all()))
+        submission.brokerobject_set.all().delete()
+        print(submission.brokerobject_set.all())
+        submission.center_name = center_name
+        submission.save()
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        task_report = TaskProgressReport.objects.first()
+        self.assertEqual(TaskProgressReport.CANCELLED,
+                         task_report.task_return_value)
+
 
 class TestSubmissionTransferTasks(TestTasks):
 
