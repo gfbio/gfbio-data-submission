@@ -14,7 +14,8 @@ from git import Repo
 from model_utils.models import TimeStampedModel
 
 from config.settings.base import ADMINS, AUTH_USER_MODEL, LOCAL_REPOSITORY
-from gfbio_submissions.brokerage.configuration.settings import GENERIC
+from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
+    DEFAULT_ENA_CENTER_NAME
 from .configuration.settings import ENA, ENA_PANGAEA
 from .configuration.settings import PRIMARY_DATA_FILE_DELAY
 from .fields import JsonDictField
@@ -167,10 +168,13 @@ class TicketLabel(models.Model):
 
 
 class CenterName(models.Model):
-    center_name = models.CharField(max_length=128, default='GFBIO')
+    center_name = models.CharField(max_length=128, default='')
 
     def __str__(self):
-        return '{0}'.format(self.center_name)
+        if self.center_name != '':
+            return '{0}'.format(self.center_name)
+        else:
+            return DEFAULT_ENA_CENTER_NAME
 
 
 class Submission(models.Model):
@@ -230,6 +234,7 @@ class Submission(models.Model):
 
     data = JsonDictField(default=dict)
     # default to today + 1 year
+    # FIXME: setting default dynamically causes new migrations. without migrations default is last date plus 1 year
     embargo = models.DateField(
         default=datetime.date.today() + datetime.timedelta(days=365),
         null=True,
@@ -240,6 +245,22 @@ class Submission(models.Model):
     changed = models.DateTimeField(auto_now=True)
 
     objects = SubmissionManager()
+
+    def save(self, *args, **kwargs):
+        previous_state = None
+        # update, no creation
+        if self.pk:
+            previous_state = Submission.objects.filter(pk=self.pk).first()
+        super(Submission, self).save(*args, **kwargs)
+        if previous_state and previous_state.center_name != self.center_name:
+            # instance difference, delete and create new
+            self.auditabletextdata_set.all().delete()
+            from .tasks import prepare_ena_submission_data_task
+            prepare_ena_submission_data_task.apply_async(
+                kwargs={
+                    'submission_id': '{0}'.format(self.pk),
+                }
+            )
 
     # TODO: refactor/move: too specific (molecular submission)
     def get_json_with_aliases(self, alias_postfix):

@@ -18,10 +18,10 @@ from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
     PANGAEA_ISSUE_BASE_URL, HELPDESK_API_SUB_URL, HELPDESK_COMMENT_SUB_URL, \
-    HELPDESK_ATTACHMENT_SUB_URL
+    HELPDESK_ATTACHMENT_SUB_URL, DEFAULT_ENA_CENTER_NAME
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
     ResourceCredential, SiteConfiguration, RequestLog, AdditionalReference, \
-    TaskProgressReport, PrimaryDataFile
+    TaskProgressReport, SubmissionUpload
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
@@ -90,7 +90,7 @@ class EnalizerTest(TestCase):
     def test_center_name(self):
         submission = Submission.objects.first()
         enalizer = Enalizer(submission=submission, alias_postfix='test')
-        self.assertEqual('GFBIO', enalizer.center_name)
+        self.assertEqual(DEFAULT_ENA_CENTER_NAME, enalizer.center_name)
         center_name, created = CenterName.objects.get_or_create(
             center_name='CustomCenter')
         submission.center_name = center_name
@@ -135,20 +135,25 @@ class EnalizerTest(TestCase):
         k, sample_xml = data.get('SAMPLE')
         self.assertEqual('sample.xml', k)
         submission_samples = submission.brokerobject_set.filter(type='sample')
+        # FIXME: order of samples seem to be random
+        print('\n\n-------------------------------------\n\n')
+        print(sample_xml)
         self.assertIn(
-            '<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="GFBIO">'
+            '<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="{1}">'
             '<TITLE>sample title</TITLE>'
             '<SAMPLE_NAME>'
             '<TAXON_ID>530564</TAXON_ID>'
             '</SAMPLE_NAME>'
-            '<DESCRIPTION />'.format(submission_samples[0].pk), sample_xml)
+            '<DESCRIPTION />'.format(submission_samples[0].pk,
+                                     DEFAULT_ENA_CENTER_NAME), sample_xml)
         self.assertIn(
-            '<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="GFBIO">'
+            '<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="{1}">'
             '<TITLE>sample title 2</TITLE>'
             '<SAMPLE_NAME>'
             '<TAXON_ID>530564</TAXON_ID>'
             '</SAMPLE_NAME>'
-            '<DESCRIPTION />'.format(submission_samples[1].pk), sample_xml)
+            '<DESCRIPTION />'.format(submission_samples[1].pk,
+                                     DEFAULT_ENA_CENTER_NAME), sample_xml)
 
     def test_sample_xml_center_name(self):
         submission = Submission.objects.first()
@@ -238,10 +243,11 @@ class EnalizerTest(TestCase):
             type='study').first()
         for i in range(5):
             self.assertIn(
-                '<EXPERIMENT alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="GFBIO">'
-                '<STUDY_REF refname="{1}:test-enalizer-sample" />'
+                '<EXPERIMENT alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="{1}">'
+                '<STUDY_REF refname="{2}:test-enalizer-sample" />'
                 ''.format(
                     submission_experiments[i].pk,
+                    DEFAULT_ENA_CENTER_NAME,
                     submission_study.pk,
                 ), experiment_xml)
 
@@ -830,7 +836,7 @@ class TestHelpDeskTicketMethods(TestCase):
             username='horst', email='horst@horst.de', password='password')
         permissions = Permission.objects.filter(
             content_type__app_label='brokerage',
-            codename__endswith='primarydatafile')
+            codename__endswith='upload')
         user.user_permissions.add(*permissions)
         token = Token.objects.create(user=user)
         client = APIClient()
@@ -867,12 +873,12 @@ class TestHelpDeskTicketMethods(TestCase):
         f.close()
         f = open(path, 'rb')
         return {
-            'data_file': f,
+            'file': f,
         }
 
     @staticmethod
     def _delete_test_data():
-        PrimaryDataFile.objects.all().delete()
+        SubmissionUpload.objects.all().delete()
 
     @responses.activate
     def test_create_helpdesk_ticket(self):
@@ -997,7 +1003,7 @@ class TestHelpDeskTicketMethods(TestCase):
     def test_attach_template_to_helpdesk_ticket(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
-        url = reverse('brokerage:submissions_primary_data', kwargs={
+        url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
         responses.add(responses.POST, url, json={}, status=200)
         responses.add(responses.POST,
@@ -1010,10 +1016,11 @@ class TestHelpDeskTicketMethods(TestCase):
                       json=_get_jira_attach_response(),
                       status=200)
         data = self._create_test_data('/tmp/test_primary_data_file')
+        data['attach_to_ticket'] = True
         self.api_client.post(url, data, format='multipart')
-        pd = submission.primarydatafile_set.first()
+        pd = submission.submissionupload_set.first()
         response = gfbio_helpdesk_attach_file_to_ticket(
-            site_config, 'FAKE_KEY', pd.data_file, submission)
+            site_config, 'FAKE_KEY', pd.file, submission)
         self.assertEqual(200, response.status_code)
         request_logs = RequestLog.objects.all()
         self.assertEqual(2, len(request_logs))
@@ -1022,7 +1029,7 @@ class TestHelpDeskTicketMethods(TestCase):
     def test_attach_multiple_files_to_helpdesk_ticket(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
-        url = reverse('brokerage:submissions_primary_data', kwargs={
+        url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
         responses.add(responses.POST, url, json={}, status=200)
         response_json = _get_jira_attach_response()
@@ -1036,24 +1043,26 @@ class TestHelpDeskTicketMethods(TestCase):
                       json=response_json,
                       status=200)
         data = self._create_test_data('/tmp/test_primary_data_file_1')
+        data['attach_to_ticket'] = True
         self.api_client.post(url, data, format='multipart')
-        pd = submission.primarydatafile_set.first()
+        pd = submission.submissionupload_set.first()
         gfbio_helpdesk_attach_file_to_ticket(
-            site_config, 'FAKE_KEY', pd.data_file, submission)
+            site_config, 'FAKE_KEY', pd.file, submission)
         self.assertEqual(
             1,
-            len(PrimaryDataFile.objects.filter(submission=submission))
+            len(SubmissionUpload.objects.filter(submission=submission))
         )
 
         data = self._create_test_data('/tmp/test_primary_data_file_2',
                                       delete=False)
+        data['attach_to_ticket'] = True
         self.api_client.post(url, data, format='multipart')
-        pd = submission.primarydatafile_set.last()
+        pd = submission.submissionupload_set.last()
         response = gfbio_helpdesk_attach_file_to_ticket(
-            site_config, 'FAKE_KEY', pd.data_file, submission)
+            site_config, 'FAKE_KEY', pd.file, submission)
         self.assertEqual(
             2,
-            len(PrimaryDataFile.objects.filter(submission=submission))
+            len(SubmissionUpload.objects.filter(submission=submission))
         )
 
     @responses.activate
@@ -1062,7 +1071,7 @@ class TestHelpDeskTicketMethods(TestCase):
         submission.submitting_user = None
         submission.save()
         site_config = SiteConfiguration.objects.first()
-        url = reverse('brokerage:submissions_primary_data', kwargs={
+        url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
         responses.add(responses.POST, url, json={}, status=200)
         responses.add(responses.POST,
@@ -1075,10 +1084,11 @@ class TestHelpDeskTicketMethods(TestCase):
                       json=_get_jira_attach_response(),
                       status=200)
         data = self._create_test_data('/tmp/test_primary_data_file')
+        data['attach_to_ticket'] = True
         self.api_client.post(url, data, format='multipart')
-        pd = submission.primarydatafile_set.first()
+        pd = submission.submissionupload_set.first()
         response = gfbio_helpdesk_attach_file_to_ticket(site_config, 'FAKE_KEY',
-                                                        pd.data_file,
+                                                        pd.file,
                                                         submission)
         self.assertEqual(200, response.status_code)
         request_logs = RequestLog.objects.all()

@@ -84,6 +84,26 @@ const makeSelectUserId = () =>
     substate.get('userId'),
   );
 
+const makeSelectRelatedPublications = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('relatedPublications'),
+  );
+
+const makeSelectCurrentRelatedPublication = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('currentRelatedPublication'),
+  );
+
+const makeSelectDatasetLabels = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('datasetLabels'),
+  );
+
+const makeSelectCurrentLabel = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('currentLabel'),
+  );
+
 export default makeSelectSubmissionForm;
 
 export {
@@ -100,4 +120,8 @@ export {
   makeSelectContactForm,
   makeSelectToken,
   makeSelectUserId,
+  makeSelectRelatedPublications,
+  makeSelectCurrentRelatedPublication,
+  makeSelectCurrentLabel,
+  makeSelectDatasetLabels,
 };

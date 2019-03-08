@@ -2,6 +2,7 @@
 import base64
 import json
 import uuid
+from pprint import pprint
 from uuid import uuid4
 
 import responses
@@ -19,7 +20,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, Submission, AuditableTextData, PersistentIdentifier, \
     BrokerObject, TaskProgressReport, AdditionalReference, PrimaryDataFile, \
-    RequestLog
+    RequestLog, CenterName
 from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, \
     transfer_data_to_ena_task, process_ena_response_task, \
     create_broker_objects_from_submission_data_task, check_on_hold_status_task, \
@@ -151,7 +152,7 @@ class TestTasks(TestCase):
     def setUpTestData(cls):
         permissions = Permission.objects.filter(
             content_type__app_label='brokerage',
-            name__endswith='primary data file')
+            name__endswith='upload')
         user = User.objects.create(
             username='user1'
         )
@@ -204,12 +205,53 @@ class TestTasks(TestCase):
         f.close()
         f = open(path, 'rb')
         return {
-            'data_file': f,
+            'file': f,
         }
 
     @staticmethod
     def _delete_test_data():
         PrimaryDataFile.objects.all().delete()
+
+
+class TestTasksTriggeredBySubmissionSave(TestTasks):
+
+    def test_center_name_change(self):
+        center_name, created = CenterName.objects.get_or_create(
+            center_name='ABCD')
+        center_name_2, created = CenterName.objects.get_or_create(
+            center_name='EFGH')
+        sub = Submission.objects.first()
+        text_datas = sub.auditabletextdata_set.all()
+        self.assertEqual(0, len(text_datas))
+
+        sub.center_name = center_name
+        sub.save()
+        text_datas = sub.auditabletextdata_set.all()
+        len_text_datas = len(text_datas)
+        self.assertLess(0, len_text_datas)
+        for a in text_datas:
+            self.assertIn('center_name="ABCD"', a.text_data)
+
+        sub.center_name = center_name_2
+        sub.save()
+        text_datas = sub.auditabletextdata_set.all()
+        self.assertEqual(len_text_datas, len(text_datas))
+        for a in text_datas:
+            self.assertIn('center_name="EFGH"', a.text_data)
+
+    def test_center_name_change_without_brokerobjects(self):
+        submission = SubmissionTest._create_submission_via_serializer()
+        center_name, created = CenterName.objects.get_or_create(
+            center_name='ABCD')
+        self.assertEqual(0, len(TaskProgressReport.objects.all()))
+        submission.brokerobject_set.all().delete()
+        print(submission.brokerobject_set.all())
+        submission.center_name = center_name
+        submission.save()
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        task_report = TaskProgressReport.objects.first()
+        self.assertEqual(TaskProgressReport.CANCELLED,
+                         task_report.task_return_value)
 
 
 class TestSubmissionTransferTasks(TestTasks):
@@ -590,7 +632,6 @@ class TestGFBioHelpDeskTasks(TestTasks):
                       url,
                       json=_get_jira_response(),
                       status=200)
-        # submission = Submission.objects.get(pk=1)
         result = attach_file_to_helpdesk_ticket_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
@@ -603,7 +644,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
     def test_attach_to_helpdesk_ticket_task_with_primarydatafile(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
-        url = reverse('brokerage:submissions_primary_data', kwargs={
+        url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
         responses.add(responses.POST, url, json={}, status=200)
         responses.add(responses.POST,
@@ -616,6 +657,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
                       json=_get_jira_attach_response(),
                       status=200)
         data = self._create_test_data('/tmp/test_primary_data_file')
+        data['attach_to_ticket'] = True
         token = Token.objects.create(user=submission.site)
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)

@@ -131,6 +131,38 @@
   }
 }
 
+// works on btn-secondary
+// TODO: refactor to generic class, light-blue button
+//.btn-form {
+//  //background-color: $gfbio-light-blue;
+//  background-color: $white;
+//  color: $gfbio-light-blue !important;
+//  border-color: darken($gfbio-light-blue, .2);
+//
+//  &:hover, &:not(:disabled):not(.disabled):active,
+//  &:not(:disabled):not(.disabled).active {
+//    &:focus {
+//      box-shadow: none;
+//    }
+//
+//    border-color: darken($contrast-1, .2);
+//    //background-color: $white;
+//    //color: $gfbio-light-blue !important;
+//    background-color: $white;
+//    color: $contrast-1 !important;
+//    box-shadow: none;
+//  }
+//
+//  &:focus {
+//    box-shadow: none;
+//  }
+//
+//  &:hover {
+//    //background-color: $contrast-1;
+//    color: $contrast-1 !important;
+//  }
+//}
+
 //.btn-contrast {
 //  background-color: $gfbio-blue;
 //  border-color: darken($contrast-1, .2);
@@ -247,6 +279,8 @@ form.pagewide-form {
 
   input {
 
+    font-size: .9rem;
+
     &::placeholder {
       font-size: 0.85rem;
     }
@@ -257,6 +291,10 @@ form.pagewide-form {
       outline-color: $gfbio-green-0-7;
     }
 
+  }
+
+  option {
+    font-size: .9rem;
   }
 
   textarea {
@@ -290,6 +328,67 @@ form.pagewide-form {
       outline-color: $gfbio-green-0-7;
     }
 
+  }
+
+  li.publication {
+    font-size: .9rem;
+    border: none;
+    background-color: $light-blue-0;
+    border: 1px solid $gfbio-light-blue;
+    border-radius: .25rem;
+    padding: .375rem .75rem .375rem .75rem;
+    margin-bottom: .25rem;
+    color: $gfbio-light-blue;
+    font-size: 1rem;
+
+    &:hover {
+      z-index: inherit;
+    }
+
+    &:last-child {
+      margin-bottom: 1rem;
+    }
+
+    i.pub {
+      padding-right: 1rem;
+    }
+
+    .btn-remove {
+      //color: $lb0-contrast;
+      color: $contrast-2;
+      font-size: .75rem;
+      padding: .25rem;
+
+      &:hover {
+        font-weight: bold;
+      }
+
+      i {
+        padding-right: .5rem;
+      }
+    }
+
+  }
+
+  .template-links {
+
+    a {
+      border: none;
+      //border-right: 1px solid $gfbio-light-blue;
+      border-bottom: 1px solid $gray-200;
+      border-radius: 0 0 0 0;
+      color: $gfbio-light-blue;
+      margin-bottom: .25rem;
+
+      i {
+        padding-right: .75rem;
+      }
+
+      &:hover {
+        color: $contrast-1;
+        background-color: $white;
+      }
+    }
   }
 
   .dropzone {
@@ -392,16 +491,52 @@ form.pagewide-form {
       float: right;
       line-height: 1.5rem;
     }
+  }
+
+  .btn-license-detail {
+    padding: 0;
+    margin: 0;
+    border: 0;
+    float: right;
+    color: $gray-dark-2;
+    font-size: .75rem;
+    line-height: 1.5rem;
+
+    &:focus {
+      box-shadow: none;
+    }
+
+    &:hover {
+      color: $gfbio-light-blue;
+    }
 
   }
 
-  //.card-body {
-  //  //padding: 1rem;
-  //}
+  /* modal stuff */
+  .modal-content {
+    border-color: $white;
+
+    h4 {
+      @include sans-serif-font;
+      font-weight: 300;
+    }
+  }
+
+  .modal-header {
+    border: none;
+  }
+
+  .modal-body {
+    border: none;
+  }
+
+  .modal-footer {
+    border: none;
+  }
+
+  /* end modal stuff */
 
   .card {
-    // border:none;
-
     .form-group {
       margin-bottom: 1rem;
     }
@@ -465,6 +600,8 @@ form.pagewide-form {
   }
 
   select {
+    color: $gray-dark;
+
     &:focus {
       border-color: $gfbio-green-0-7;
       box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
@@ -474,7 +611,15 @@ form.pagewide-form {
   /*
     Overwrite react-datepicker styles
    */
+  .react-datepicker {
+    width: 100%;
+  }
+
   .react-datepicker-wrapper {
+    width: 100%;
+  }
+
+  .react-datepicker__month-container {
     width: 100%;
   }
 
@@ -515,13 +660,13 @@ form.pagewide-form {
     }
 
     &:hover {
-      background-color: $gfbio-light-blue;
+      background-color: $gfbio-green;
       color: $white;
     }
   }
 
   .react-datepicker__day--selected {
-    background-color: $gfbio-blue;
+    background-color: $gfbio-light-blue;
     color: $white;
   }
 

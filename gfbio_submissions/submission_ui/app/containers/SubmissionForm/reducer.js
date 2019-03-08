@@ -3,12 +3,17 @@
  * SubmissionForm reducer
  *
  */
-import uuid from 'uuid';
 import { fromJS } from 'immutable';
 import {
+  ADD_DATASET_LABEL,
+  ADD_RELATED_PUBLICATION,
+  CHANGE_CURRENT_DATASET_LABEL,
+  CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
   CHANGE_META_DATA_SCHEMA,
   DEFAULT_ACTION,
+  REMOVE_DATASET_LABEL,
+  REMOVE_RELATED_PUBLICATION,
   SAVE_FORM,
   SAVE_FORM_ERROR,
   SAVE_FORM_SUCCESS,
@@ -46,6 +51,10 @@ export const initialState = fromJS({
   submitResponse: {},
   // TODO: same for save
   saveResponse: {},
+  currentRelatedPublication: '',
+  relatedPublications: Array(),
+  currentLabel: '',
+  datasetLabels: Array(),
 });
 
 function submissionFormReducer(state = initialState, action) {
@@ -62,7 +71,7 @@ function submissionFormReducer(state = initialState, action) {
       // TODO: set bsi etc after success, from then its updates
       // const u = uuid.v4();
       return state
-        // .set('initialValues', { title: 'BLUB ' + u, description: 'BLA ' + u })
+      // .set('initialValues', { title: 'BLUB ' + u, description: 'BLA ' + u })
         .set('saveResponse', action.response)
         .set('saveInProgress', false);
     case SAVE_FORM_ERROR:
@@ -81,6 +90,38 @@ function submissionFormReducer(state = initialState, action) {
       return state.set('submitInProgress', false);
     case SET_EMBARGO_DATE:
       return state.set('embargoDate', action.date);
+    case CHANGE_CURRENT_RELATED_PUBLICATION:
+      console.log('CHANGE_CURRENT_RELATED_PUBLICATION');
+      console.log(action.value);
+      return state
+        .set('currentRelatedPublication', action.value);
+    case ADD_RELATED_PUBLICATION:
+      console.log('ADD_RELATED_PUBLICATION');
+      console.log(action.value);
+      return state
+        .update('relatedPublications', (relatedPublications) => relatedPublications.push(action.value))
+        .set('currentRelatedPublication', '');
+    case REMOVE_RELATED_PUBLICATION:
+      console.log('REMOVE_RELATED_PUBLICATION');
+      console.log(action.index);
+      return state
+        .update('relatedPublications', (relatedPublications) => relatedPublications.splice(action.index, 1));
+    case CHANGE_CURRENT_DATASET_LABEL:
+      console.log('CHANGE_CURRENT_DATASET_LABEL');
+      console.log(action.value);
+      return state
+        .set('currentLabel', action.value);
+    case ADD_DATASET_LABEL:
+      console.log('ADD_DATASET_LABEL');
+      console.log(action.value);
+      return state
+        .update('datasetLabels', (datasetLabels) => datasetLabels.push(action.value))
+        .set('currentLabel', '');
+    case REMOVE_DATASET_LABEL:
+      console.log('REMOVE_DATASET_LABEL');
+      console.log(action.index);
+      return state
+        .update('datasetLabels', (datasetLabels) => datasetLabels.splice(action.index, 1));
     default:
       return state;
   }

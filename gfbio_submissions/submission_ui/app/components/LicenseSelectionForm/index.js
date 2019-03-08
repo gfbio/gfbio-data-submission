@@ -13,35 +13,16 @@ import { compose } from 'redux';
 import reducer from '../../containers/SubmissionForm/reducer';
 import { makeSelectLicense } from '../../containers/SubmissionForm/selectors';
 import { changeLicense } from '../../containers/SubmissionForm/actions';
+import LicenseModals, {
+  licenseDetailData,
+} from './licenseDetailsData';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
 class LicenseSelectionForm extends React.PureComponent {
-  licenseList = [
-    'CC0 1.0',
-    'CC BY 4.0',
-    'CC BY NC 4.0',
-    'CC BY-NC-ND 4.0',
-    'CC BY-NC-SA 4.0',
-    'CC BY-ND 4.0',
-    'CC BY-SA 4.0',
-    'Other License',
-    // 'MIT',
-    // 'Apache-2.0',
-    // 'BSD 3-clause',
-    // 'BSD 2-clause',
-    // 'GPLv3',
-    // 'GPLv2',
-    // 'LGPL',
-    // 'MPL-2.0',
-    // 'CeCILL',
-    // 'CeCILL-B',
-    // 'CERN OHL',
-    // 'TAPR OHL',
-  ];
 
-  licenseListElements = this.licenseList.map(license => (
-    <li className="list-group-item" key={license.replace(/ /g, '')}>
+  licenseListElements = Object.keys(licenseDetailData).map(licenseKey => (
+    <li className="list-group-item" key={licenseKey}>
       <button
         className="btn btn-primary btn-block btn-license text-left"
         type="button"
@@ -49,10 +30,12 @@ class LicenseSelectionForm extends React.PureComponent {
         data-target="#collapseLicense"
         aria-expanded="false"
         aria-controls="collapseLicense"
-        onClick={() => this.props.onClickLicense(license)}
+        onClick={() => this.props.onClickLicense(
+          licenseDetailData[licenseKey].name)}
       >
-        {license}
-        <a className="align-bottom" href={`link_to_details_of_${license}`}>
+        {licenseDetailData[licenseKey].name}
+        <a className="align-bottom" data-toggle="modal"
+           data-target={'#' + licenseKey}>
           details
         </a>
       </button>
@@ -69,7 +52,11 @@ class LicenseSelectionForm extends React.PureComponent {
           <h2 className="section-title">License</h2>
           <p className="section-subtitle" />
         </header>
-
+        {/* MODAL*/}
+        <LicenseModals
+          onClickLicense={this.props.onClickLicense}
+        />
+        {/* END MODAL*/}
         <div className="form-group accordion-form-content">
           <button
             className="btn btn-primary btn-block btn-license text-left"

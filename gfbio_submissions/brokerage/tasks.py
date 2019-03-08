@@ -275,7 +275,7 @@ def prepare_ena_submission_data_task(prev_task_result=None, submission_id=None):
             prev_task_result,
             submission_id)
     )
-    if submission is not None:
+    if submission is not None and len(submission.brokerobject_set.all()) > 0:
         ena_submission_data = prepare_ena_data(submission=submission)
         logger.info(
             msg='prepare_ena_submission_data_task. finished prepare_ena_data '
@@ -743,7 +743,11 @@ def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None):
         # implemented
         if len(existing_tickets):
             # TODO: be more specific on PrimaryDataFile to retrieve, same for ticket above
-            pd = submission.primarydatafile_set.first()
+            # pd = submission.primarydatafile_set.first()
+            # pd = submission.submissionupload_set.get(pk=submission_upload_id)
+            # TODO: extend to loop over all uploads with attach=True
+            pd = submission.submissionupload_set.filter(
+                attach_to_ticket=True).first()
             if pd:
                 logger.info(
                     msg='attach_file_to_helpdesk_ticket_task PrimaryDataFile found {0} '.format(
@@ -752,7 +756,7 @@ def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None):
                 response = gfbio_helpdesk_attach_file_to_ticket(
                     site_config=site_configuration,
                     ticket_key=existing_tickets.first().reference_key,
-                    file=pd.data_file,
+                    file=pd.file,
                     submission=submission
                 )
                 logger.info(
