@@ -18,7 +18,7 @@ from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
     PANGAEA_ISSUE_BASE_URL, HELPDESK_API_SUB_URL, HELPDESK_COMMENT_SUB_URL, \
-    HELPDESK_ATTACHMENT_SUB_URL
+    HELPDESK_ATTACHMENT_SUB_URL, DEFAULT_ENA_CENTER_NAME
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
     ResourceCredential, SiteConfiguration, RequestLog, AdditionalReference, \
     TaskProgressReport, SubmissionUpload
@@ -90,7 +90,7 @@ class EnalizerTest(TestCase):
     def test_center_name(self):
         submission = Submission.objects.first()
         enalizer = Enalizer(submission=submission, alias_postfix='test')
-        self.assertEqual('GFBIO', enalizer.center_name)
+        self.assertEqual(DEFAULT_ENA_CENTER_NAME, enalizer.center_name)
         center_name, created = CenterName.objects.get_or_create(
             center_name='CustomCenter')
         submission.center_name = center_name
@@ -135,20 +135,25 @@ class EnalizerTest(TestCase):
         k, sample_xml = data.get('SAMPLE')
         self.assertEqual('sample.xml', k)
         submission_samples = submission.brokerobject_set.filter(type='sample')
+        # FIXME: order of samples seem to be random
+        print('\n\n-------------------------------------\n\n')
+        print(sample_xml)
         self.assertIn(
-            '<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="GFBIO">'
+            '<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="{1}">'
             '<TITLE>sample title</TITLE>'
             '<SAMPLE_NAME>'
             '<TAXON_ID>530564</TAXON_ID>'
             '</SAMPLE_NAME>'
-            '<DESCRIPTION />'.format(submission_samples[0].pk), sample_xml)
+            '<DESCRIPTION />'.format(submission_samples[0].pk,
+                                     DEFAULT_ENA_CENTER_NAME), sample_xml)
         self.assertIn(
-            '<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="GFBIO">'
+            '<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="{1}">'
             '<TITLE>sample title 2</TITLE>'
             '<SAMPLE_NAME>'
             '<TAXON_ID>530564</TAXON_ID>'
             '</SAMPLE_NAME>'
-            '<DESCRIPTION />'.format(submission_samples[1].pk), sample_xml)
+            '<DESCRIPTION />'.format(submission_samples[1].pk,
+                                     DEFAULT_ENA_CENTER_NAME), sample_xml)
 
     def test_sample_xml_center_name(self):
         submission = Submission.objects.first()
@@ -238,10 +243,11 @@ class EnalizerTest(TestCase):
             type='study').first()
         for i in range(5):
             self.assertIn(
-                '<EXPERIMENT alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="GFBIO">'
-                '<STUDY_REF refname="{1}:test-enalizer-sample" />'
+                '<EXPERIMENT alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="{1}">'
+                '<STUDY_REF refname="{2}:test-enalizer-sample" />'
                 ''.format(
                     submission_experiments[i].pk,
+                    DEFAULT_ENA_CENTER_NAME,
                     submission_study.pk,
                 ), experiment_xml)
 

@@ -432,8 +432,6 @@ class TestSubmissionUploadView(TestCase):
         reports_len = len(TaskProgressReport.objects.all())
         uploads_len = len(SubmissionUpload.objects.all())
         response = self.api_client.post(url, data, format='multipart')
-        print(response.status_code)
-        print(response.content)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn(b'broker_submission_id', response.content)
         self.assertIn(b'"id"', response.content)
@@ -463,15 +461,11 @@ class TestSubmissionUploadView(TestCase):
                       json=_get_jira_attach_response(),
                       status=200)
         data = self._create_test_data('/tmp/test_primary_data_file')
-        print('\ndata\n')
-        print(data)
         data['attach_to_ticket'] = True
 
         reports_len = len(TaskProgressReport.objects.all())
         uploads_len = len(SubmissionUpload.objects.all())
         response = self.api_client.post(url, data, format='multipart')
-        print(response.status_code)
-        print(response.content)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn(b'broker_submission_id', response.content)
         self.assertIn(b'"id"', response.content)
