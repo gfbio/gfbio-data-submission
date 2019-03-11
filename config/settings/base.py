@@ -334,7 +334,7 @@ SOCIALACCOUNT_PROVIDERS = {
     'openid': {
         'SERVERS': [
             dict(id='gwdg',
-                 name='GFBIO SSO',
+                 name='GFBIO SSO (settings)',
                  openid_url='https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php'),
         ]
     }
