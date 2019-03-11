@@ -332,6 +332,7 @@ REMOTE_REPOSITORY = env('REMOTE_REPOSITORY',
 ########## END Access AuditableTextData
 
 ########## ALL_AUTH OPENID SETTINGS
+# TODO: django-allauth openid does not work for openidconnect !
 # SOCIALACCOUNT_PROVIDERS = {
 #     'openid': {
 #         'SERVERS': [
