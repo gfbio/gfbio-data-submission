@@ -180,7 +180,7 @@ LOGGING = {
             'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
         },
         'console': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose'
         }
@@ -213,7 +213,7 @@ LOGGING = {
         },
         'celery': {
             'handlers': ['console'],
-            'level': 'DEBUG',  # TODO: I suggest Info here
+            'level': 'INFO',  # TODO: I suggest Info here
             'propagate': True
         },
     },
