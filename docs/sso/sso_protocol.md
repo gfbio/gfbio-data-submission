@@ -34,4 +34,23 @@ decoded:
     implicit
     User Account
     login	aggressive-kangaroo@example.com
-    password	Testy-Gerenuk-Testy-Cassowary-2
+    password	Testy-Gerenuk-Testy-Cassow  ary-2
+
+
+
+https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php?redirect_uri=https%3A%2F%2Fc103-171.cloud.gwdg.de%2Foidc%2Fcallback%2F&nonce=pooEGcidgYeckTQrYzhOf1hqtaNWo4sC&scope=openid+email&state=HMjC5jzofdKpjdFMvziYTiBNrgVafwaY&response_type=code&client_id=_5a9bafe89b8d6b6fd34982130aae08a5c080bf6f75
+
+
+
+https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php?
+    redirect_uri=https://c103-171.cloud.gwdg.de/oidc/callback/
+                    &nonce=pooEGcidgYeckTQrYzhOf1hqtaNWo4sC
+                    &scope=openid+email
+                    &state=HMjC5jzofdKpjdFMvziYTiBNrgVafwaY
+                    &response_type=code
+                    &client_id=_5a9bafe89b8d6b6fd34982130aae08a5c080bf6f75
+
+
+
+
+
