@@ -362,5 +362,5 @@ OIDC_OP_TOKEN_ENDPOINT = 'https://sso.gfbio.org/simplesaml/module.php/oidc/acces
 OIDC_OP_USER_ENDPOINT = ' https://sso.gfbio.org/simplesaml/module.php/oidc/userinfo.php'
 
 # TODO: not sure if needed
-LOGIN_REDIRECT_URL = '/users/'
-LOGOUT_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
+LOGOUT_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
