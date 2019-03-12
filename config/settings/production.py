@@ -180,7 +180,7 @@ LOGGING = {
             'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
         },
         'console': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose'
         }
@@ -219,7 +219,7 @@ LOGGING = {
         'mozilla_django_oidc': {
             'handlers': ['console'],
             'level': 'DEBUG',
-            'propagate': True
+            'propagate': False
         },
     },
 }
