@@ -360,3 +360,7 @@ OIDC_OP_JWKS_ENDPOINT = env('OIDC_OP_JWKS_ENDPOINT', default='no_jwks_url')
 OIDC_OP_AUTHORIZATION_ENDPOINT = 'https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php'
 OIDC_OP_TOKEN_ENDPOINT = 'https://sso.gfbio.org/simplesaml/module.php/oidc/access_token.php'
 OIDC_OP_USER_ENDPOINT = ' https://sso.gfbio.org/simplesaml/module.php/oidc/userinfo.php'
+
+# TODO: not sure if needed
+LOGIN_REDIRECT_URL = '/users/'
+LOGOUT_REDIRECT_URL = '/'
