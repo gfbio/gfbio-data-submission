@@ -354,6 +354,8 @@ OIDC_RP_CLIENT_ID = env('OIDC_RP_CLIENT_ID', default='no_oidc_cl_id')
 OIDC_RP_CLIENT_SECRET = env('OIDC_RP_CLIENT_SECRET',
                             default='no_oidc_cl_secret')
 
+OIDC_RP_SIGN_ALGO = env('OIDC_RP_SIGN_ALGO', default='HS256')
+
 OIDC_OP_AUTHORIZATION_ENDPOINT = 'https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php'
 OIDC_OP_TOKEN_ENDPOINT = 'https://sso.gfbio.org/simplesaml/module.php/oidc/access_token.php'
 OIDC_OP_USER_ENDPOINT = ' https://sso.gfbio.org/simplesaml/module.php/oidc/userinfo.php'
