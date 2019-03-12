@@ -216,6 +216,11 @@ LOGGING = {
             'level': 'INFO',  # TODO: I suggest Info here
             'propagate': True
         },
+        'mozilla_django_oidc': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True
+        },
     },
 }
 SENTRY_CELERY_LOGLEVEL = env.int('DJANGO_SENTRY_LOG_LEVEL', logging.INFO)
