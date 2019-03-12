@@ -12,44 +12,62 @@ decoded:
         
         http://0.0.0.0:8000/accounts/openid/login/?process=login&openid=http://me.yahoo.com     
    
-        
-# Oauth2.0 playground
 
-    Great!
-    Great! A new OAuth 2.0 client was created for you along with a user account. 
-    You can see the registration info below. This information is stored in a 
-    cookie in your browser. Save the user login and password, 
-    since you'll need those in order to authenticate as that user during 
-    the OAuth flow!
+
+# with nonce, as enabled by default
+
+    https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php?redirect_uri=https%3A%2F%2Fc103-171.cloud.gwdg.de%2Foidc%2Fcallback%2F&nonce=pooEGcidgYeckTQrYzhOf1hqtaNWo4sC&scope=openid+email&state=HMjC5jzofdKpjdFMvziYTiBNrgVafwaY&response_type=code&client_id=_5a9bafe89b8d6b6fd34982130aae08a5c080bf6f75
+
+
+    https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php
+        ?redirect_uri=https://c103-171.cloud.gwdg.de/oidc/callback/
+        &nonce=pooEGcidgYeckTQrYzhOf1hqtaNWo4sC
+        &scope=openid+email
+        &state=HMjC5jzofdKpjdFMvziYTiBNrgVafwaY
+        &response_type=code
+        &client_id=_5a9bafe89b8d6b6fd34982130aae08a5c080bf6f75
+
+# without nonce, disabled by setting
+
+## 1.
+
+### start URL
     
-    Client Registration
-    client_id	0oajou0ky3vXgse4I0h7
-    client_secret	Wh45TRqIfnEtcmlGMf0IhoGiHwFtgQg5NwQcPf3f
-    Registered Redirect URIs	
-    https://www.oauth.com/playground/authorization-code.html
-    https://www.oauth.com/playground/authorization-code-with-pkce.html
-    Supported Grant Types	
-    authorization_code
-    refresh_token
-    implicit
-    User Account
-    login	aggressive-kangaroo@example.com
-    password	Testy-Gerenuk-Testy-Cassow  ary-2
+    - 302
+    - https://c103-171.cloud.gwdg.de/oidc/authenticate/ 
 
+### redirect to
+    
+    - 302
+    - https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php?response_type=code&client_id=_5a9bafe89b8d6b6fd34982130aae08a5c080bf6f75&scope=openid+email&redirect_uri=https%3A%2F%2Fc103-171.cloud.gwdg.de%2Foidc%2Fcallback%2F&state=lgpuYgGEiHmcYOwLb9zZ204VMEQHNlU2
+    - https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php
+        ?response_type=code
+        &client_id=_5a9bafe89b8d6b6fd34982130aae08a5c080bf6f75
+        &scope=openid+email
+        &redirect_uri=https://c103-171.cloud.gwdg.de/oidc/callback/
+        &state=lgpuYgGEiHmcYOwLb9zZ204VMEQHNlU2
 
+## nicht existierender user
 
-https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php?redirect_uri=https%3A%2F%2Fc103-171.cloud.gwdg.de%2Foidc%2Fcallback%2F&nonce=pooEGcidgYeckTQrYzhOf1hqtaNWo4sC&scope=openid+email&state=HMjC5jzofdKpjdFMvziYTiBNrgVafwaY&response_type=code&client_id=_5a9bafe89b8d6b6fd34982130aae08a5c080bf6f75
+Es wird nach login korrekt zurückgeleitet (auf root url, wie in settings angegeben).
+Es ist ein annonymer nutzer "LVDRAXWCHGCF8BCFT2OJY2TAC6K" angemeldet und auch
+angelegt, mit unverified email, die der gwdg account email entspricht.
 
+TODO: user creation anpassen    
+    
+## Existierender user
 
+Das hier klappte mit gwdg account maweber@mpi-bremen.de, als zur gleichen Zeit auch
+ein user mit dieser email auf dem dev server existierte. username maweberSU, superuser.
 
-https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php?
-    redirect_uri=https://c103-171.cloud.gwdg.de/oidc/callback/
-                    &nonce=pooEGcidgYeckTQrYzhOf1hqtaNWo4sC
-                    &scope=openid+email
-                    &state=HMjC5jzofdKpjdFMvziYTiBNrgVafwaY
-                    &response_type=code
-                    &client_id=_5a9bafe89b8d6b6fd34982130aae08a5c080bf6f75
+    https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php?response_type=code&client_id=_5a9bafe89b8d6b6fd34982130aae08a5c080bf6f75&scope=openid+email&redirect_uri=https%3A%2F%2Fc103-171.cloud.gwdg.de%2Foidc%2Fcallback%2F&state=L8xuC8QTGo73XQ9cIJeld56Oa6lqpogR
 
+    https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php
+        ?response_type=code
+        &client_id=_5a9bafe89b8d6b6fd34982130aae08a5c080bf6f75
+        &scope=openid+email
+        &redirect_uri=https://c103-171.cloud.gwdg.de/oidc/callback/
+        &state=L8xuC8QTGo73XQ9cIJeld56Oa6lqpogR
 
 
 
