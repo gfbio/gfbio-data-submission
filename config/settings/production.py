@@ -227,9 +227,9 @@ LOGGING = {
             'propagate': True
         },
         'mozilla_django_oidc': {
-            'handlers': ['console-debug'],
+            'handlers': ['console', 'console-debug'],
             'level': 'DEBUG',
-            'propagate': True
+            'propagate': False
         },
     },
 }
