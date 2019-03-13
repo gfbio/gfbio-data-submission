@@ -31,3 +31,4 @@ export const REMOVE_DATASET_LABEL = 'app/SubmssionForm/REMOVE_DATASET_LABEL';
 export const CHANGE_CURRENT_DATASET_LABEL = 'app/SubmssionForm/CHANGE_CURRENT_DATASET_LABEL';
 
 export const ADD_FILE_UPLOAD = 'app/SubmssionForm/ADD_FILE_UPLOAD';
+export const REMOVE_FILE_UPLOAD = 'app/SubmssionForm/REMOVE_FILE_UPLOAD';

@@ -13,7 +13,7 @@ import {
   CHANGE_LICENSE,
   CHANGE_META_DATA_SCHEMA,
   DEFAULT_ACTION,
-  REMOVE_DATASET_LABEL,
+  REMOVE_DATASET_LABEL, REMOVE_FILE_UPLOAD,
   REMOVE_RELATED_PUBLICATION,
   SAVE_FORM,
   SAVE_FORM_ERROR,
@@ -117,6 +117,9 @@ function submissionFormReducer(state = initialState, action) {
       console.log(action.value);
       return state
         .update('fileUploads', (fileUploads) => fileUploads.push(...action.value));
+    case REMOVE_FILE_UPLOAD:
+      return state
+        .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1));
     default:
       return state;
   }

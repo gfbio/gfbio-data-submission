@@ -10,7 +10,10 @@ import Dropzone from 'react-dropzone';
 import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
 import { makeSelectFileUploads } from '../../containers/SubmissionForm/selectors';
-import { addFileUpload } from '../../containers/SubmissionForm/actions';
+import {
+  addFileUpload,
+  removeFileUpload,
+} from '../../containers/SubmissionForm/actions';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 // import styled from 'styled-components';
@@ -33,12 +36,35 @@ class UploadForm extends React.PureComponent {
     console.log('UPLOAD FORM RENDER: fileUploads');
     console.log(this.props.fileUploads);
     console.log('--------------------------');
+
+    // TODO: needs different styling
+    // TODO: needs different position
+    // TODO: accordion style for no. of file over X ?
+    const fileUploadSchedule = this.props.fileUploads.map((file, index) => {
+      return <li key={index}
+                 className="list-group-item d-flex justify-content-between align-items-center publication">
+        <span><i className="fa fa-file-o pub" /> {file.name} </span>
+        <span>{file.size}</span>
+        <span>{file.type}</span>
+        <button className="btn btn-remove" onClick={(e) => {
+          e.preventDefault();
+          this.props.handleRemove(index);
+        }}>
+          <i className="fa fa-times" />
+          Remove
+        </button>
+      </li>;
+    });
+
     return (
       <div>
         <header className="header header-left form-header-top">
           <h2 className="section-title">Upload Data</h2>
           <p className="section-subtitle">(optional)</p>
         </header>
+        <ul className="list-group list-group-flush">
+          {fileUploadSchedule}
+        </ul>
         <div className="form-group">
           <Dropzone onDrop={this.onDrop}>
             {({ getRootProps, getInputProps, isDragActive }) => (
@@ -69,6 +95,7 @@ class UploadForm extends React.PureComponent {
 UploadForm.propTypes = {
   fileUploads: PropTypes.array,
   handleDrop: PropTypes.func,
+  handleRemove: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -78,8 +105,7 @@ const mapStateToProps = createStructuredSelector({
 function mapDispatchToProps(dispatch) {
   return {
     handleDrop: value => dispatch(addFileUpload(value)),
-    // handleChange: value => dispatch(changeCurrentRelatedPublication(value)),
-    // handleRemove: index => dispatch(removeRelatedPublication(index)),
+    handleRemove: index => dispatch(removeFileUpload(index)),
   };
 }
 

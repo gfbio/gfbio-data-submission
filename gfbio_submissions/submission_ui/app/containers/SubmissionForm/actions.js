@@ -10,7 +10,7 @@ import {
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
   CHANGE_META_DATA_SCHEMA,
-  DEFAULT_ACTION, REMOVE_DATASET_LABEL,
+  DEFAULT_ACTION, REMOVE_DATASET_LABEL, REMOVE_FILE_UPLOAD,
   REMOVE_RELATED_PUBLICATION,
   SAVE_FORM,
   SAVE_FORM_ERROR,
@@ -148,6 +148,13 @@ export function addFileUpload(value) {
   return {
     type: ADD_FILE_UPLOAD,
     value,
+  };
+}
+
+export function removeFileUpload(index) {
+  return {
+    type: REMOVE_FILE_UPLOAD,
+    index,
   };
 }
 
