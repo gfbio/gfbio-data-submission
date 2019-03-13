@@ -290,6 +290,13 @@ SUBMISSION_MAX_RETRIES = getattr(
     2
 )
 
+SUBMISSION_SAVE_TRIGGER_DELAY = getattr(
+    settings,
+    'SUBMISSION_SAVE_TRIGGER_DELAY',
+    # seconds
+    30
+)
+
 SUBMISSION_RETRY_DELAY = getattr(
     settings,
     'SUBMISSION_RETRY_DELAY',

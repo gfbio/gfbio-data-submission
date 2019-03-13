@@ -15,7 +15,7 @@ from model_utils.models import TimeStampedModel
 
 from config.settings.base import ADMINS, AUTH_USER_MODEL, LOCAL_REPOSITORY
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
-    DEFAULT_ENA_CENTER_NAME
+    DEFAULT_ENA_CENTER_NAME, SUBMISSION_SAVE_TRIGGER_DELAY
 from .configuration.settings import ENA, ENA_PANGAEA
 from .configuration.settings import PRIMARY_DATA_FILE_DELAY
 from .fields import JsonDictField
@@ -247,20 +247,36 @@ class Submission(models.Model):
     objects = SubmissionManager()
 
     def save(self, *args, **kwargs):
+        logger.info('\n\n\tSubmission save()')
         previous_state = None
+        logger.info('\tself.pk: {0}'.format(self.pk))
         # update, no creation
         if self.pk:
             previous_state = Submission.objects.filter(pk=self.pk).first()
+            logger.info('\tprevious_state  {0}'.format(previous_state))
         super(Submission, self).save(*args, **kwargs)
+        logger.info('\tafter super.save')
         if previous_state and previous_state.center_name != self.center_name:
+            logger.info(
+                '\tpreviuos_state not none and previous center name differs')
+            logger.info(
+                '\t\tprevious center_name: {0} | self.center_name: {1}'.format(
+                    previous_state.center_name, self.center_name
+                ))
+
+            logger.info('\tdelete textdata')
             # instance difference, delete and create new
             self.auditabletextdata_set.all().delete()
+            logger.info('\ttrigger task')
             from .tasks import prepare_ena_submission_data_task
             prepare_ena_submission_data_task.apply_async(
                 kwargs={
                     'submission_id': '{0}'.format(self.pk),
-                }
+                },
+                countdown=SUBMISSION_SAVE_TRIGGER_DELAY,
             )
+            logger.info('\tEND OF IF')
+        logger.info('\tEND OF SAVE')
 
     # TODO: refactor/move: too specific (molecular submission)
     def get_json_with_aliases(self, alias_postfix):
