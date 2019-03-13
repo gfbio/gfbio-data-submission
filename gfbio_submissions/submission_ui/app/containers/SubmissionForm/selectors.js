@@ -104,6 +104,11 @@ const makeSelectCurrentLabel = () =>
     substate.get('currentLabel'),
   );
 
+const makeSelectFileUploads = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('fileUploads'),
+  );
+
 export default makeSelectSubmissionForm;
 
 export {
@@ -124,4 +129,5 @@ export {
   makeSelectCurrentRelatedPublication,
   makeSelectCurrentLabel,
   makeSelectDatasetLabels,
+  makeSelectFileUploads,
 };

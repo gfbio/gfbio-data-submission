@@ -29,3 +29,5 @@ export const CHANGE_CURRENT_RELATED_PUBLICATION = 'app/SubmssionForm/CHANGE_CURR
 export const ADD_DATASET_LABEL = 'app/SubmssionForm/ADD_DATASET_LABEL';
 export const REMOVE_DATASET_LABEL = 'app/SubmssionForm/REMOVE_DATASET_LABEL';
 export const CHANGE_CURRENT_DATASET_LABEL = 'app/SubmssionForm/CHANGE_CURRENT_DATASET_LABEL';
+
+export const ADD_FILE_UPLOAD = 'app/SubmssionForm/ADD_FILE_UPLOAD';

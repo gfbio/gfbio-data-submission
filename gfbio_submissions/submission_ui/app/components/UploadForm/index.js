@@ -7,7 +7,12 @@
 import React from 'react';
 import classNames from 'classnames';
 import Dropzone from 'react-dropzone';
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
+import { createStructuredSelector } from 'reselect';
+import { makeSelectFileUploads } from '../../containers/SubmissionForm/selectors';
+import { addFileUpload } from '../../containers/SubmissionForm/actions';
+import { connect } from 'react-redux';
+import { compose } from 'redux';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -20,9 +25,14 @@ class UploadForm extends React.PureComponent {
     console.log(acceptedFiles);
     console.log('rejectedFiles');
     console.log(rejectedFiles);
+    this.props.handleDrop(acceptedFiles);
   };
 
   render() {
+
+    console.log('UPLOAD FORM RENDER: fileUploads');
+    console.log(this.props.fileUploads);
+    console.log('--------------------------');
     return (
       <div>
         <header className="header header-left form-header-top">
@@ -56,6 +66,27 @@ class UploadForm extends React.PureComponent {
   }
 }
 
-UploadForm.propTypes = {};
+UploadForm.propTypes = {
+  fileUploads: PropTypes.array,
+  handleDrop: PropTypes.func,
+};
 
-export default UploadForm;
+const mapStateToProps = createStructuredSelector({
+  fileUploads: makeSelectFileUploads(),
+});
+
+function mapDispatchToProps(dispatch) {
+  return {
+    handleDrop: value => dispatch(addFileUpload(value)),
+    // handleChange: value => dispatch(changeCurrentRelatedPublication(value)),
+    // handleRemove: index => dispatch(removeRelatedPublication(index)),
+  };
+}
+
+const withConnect = connect(
+  mapStateToProps,
+  mapDispatchToProps,
+);
+
+export default compose(withConnect)(UploadForm);
+

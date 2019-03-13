@@ -5,7 +5,7 @@
  */
 
 import {
-  ADD_DATASET_LABEL,
+  ADD_DATASET_LABEL, ADD_FILE_UPLOAD,
   ADD_RELATED_PUBLICATION, CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
@@ -143,3 +143,11 @@ export function changeCurrentLabel(value) {
     value,
   };
 }
+
+export function addFileUpload(value) {
+  return {
+    type: ADD_FILE_UPLOAD,
+    value,
+  };
+}
+

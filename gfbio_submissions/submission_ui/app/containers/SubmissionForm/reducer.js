@@ -6,6 +6,7 @@
 import { fromJS } from 'immutable';
 import {
   ADD_DATASET_LABEL,
+  ADD_FILE_UPLOAD,
   ADD_RELATED_PUBLICATION,
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
@@ -55,6 +56,7 @@ export const initialState = fromJS({
   relatedPublications: Array(),
   currentLabel: '',
   datasetLabels: Array(),
+  fileUploads: Array(),
 });
 
 function submissionFormReducer(state = initialState, action) {
@@ -91,37 +93,30 @@ function submissionFormReducer(state = initialState, action) {
     case SET_EMBARGO_DATE:
       return state.set('embargoDate', action.date);
     case CHANGE_CURRENT_RELATED_PUBLICATION:
-      console.log('CHANGE_CURRENT_RELATED_PUBLICATION');
-      console.log(action.value);
       return state
         .set('currentRelatedPublication', action.value);
     case ADD_RELATED_PUBLICATION:
-      console.log('ADD_RELATED_PUBLICATION');
-      console.log(action.value);
       return state
         .update('relatedPublications', (relatedPublications) => relatedPublications.push(action.value))
         .set('currentRelatedPublication', '');
     case REMOVE_RELATED_PUBLICATION:
-      console.log('REMOVE_RELATED_PUBLICATION');
-      console.log(action.index);
       return state
         .update('relatedPublications', (relatedPublications) => relatedPublications.splice(action.index, 1));
     case CHANGE_CURRENT_DATASET_LABEL:
-      console.log('CHANGE_CURRENT_DATASET_LABEL');
-      console.log(action.value);
       return state
         .set('currentLabel', action.value);
     case ADD_DATASET_LABEL:
-      console.log('ADD_DATASET_LABEL');
-      console.log(action.value);
       return state
         .update('datasetLabels', (datasetLabels) => datasetLabels.push(action.value))
         .set('currentLabel', '');
     case REMOVE_DATASET_LABEL:
-      console.log('REMOVE_DATASET_LABEL');
-      console.log(action.index);
       return state
         .update('datasetLabels', (datasetLabels) => datasetLabels.splice(action.index, 1));
+    case ADD_FILE_UPLOAD:
+      console.log('ADD_FILE_UPLOAD');
+      console.log(action.value);
+      return state
+        .update('fileUploads', (fileUploads) => fileUploads.push(...action.value));
     default:
       return state;
   }
