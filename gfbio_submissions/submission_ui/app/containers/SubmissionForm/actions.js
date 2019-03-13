@@ -20,7 +20,7 @@ import {
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
-  SUBMIT_FORM_SUCCESS,
+  SUBMIT_FORM_SUCCESS, UPLOAD_FILES_ERROR, UPLOAD_FILES_SUCCESS,
 } from './constants';
 
 export function defaultAction() {
@@ -155,6 +155,22 @@ export function removeFileUpload(index) {
   return {
     type: REMOVE_FILE_UPLOAD,
     index,
+  };
+}
+
+// TODO: upload file action
+
+export function uploadFilesSuccess(response) {
+  return {
+    type: UPLOAD_FILES_SUCCESS,
+    response,
+  };
+}
+
+export function uploadFilesError(errorResponse) {
+  return {
+    type: UPLOAD_FILES_ERROR,
+    errorResponse,
   };
 }
 

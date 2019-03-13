@@ -1,7 +1,7 @@
 import { all, call, put, select, takeLeading } from 'redux-saga/effects';
 import { SAVE_FORM, SUBMIT_FORM, SUBMIT_FORM_START } from './constants';
 import {
-  makeSelectDatasetLabels,
+  makeSelectDatasetLabels, makeSelectFileUploads,
   makeSelectFormWrapper,
   makeSelectLicense,
   makeSelectMetaDataSchema,
@@ -15,9 +15,9 @@ import {
   saveFormSuccess,
   submitFormError,
   submitFormStart,
-  submitFormSuccess,
+  submitFormSuccess, uploadFilesError, uploadFilesSuccess,
 } from './actions';
-import { postSubmission } from './submissionApi';
+import { postFiles, postSubmission } from './submissionApi';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -74,15 +74,28 @@ export function* performSubmitFormSaga() {
   }
 }
 
+// TODO: to test upload, most regular stuff is commented and a hardcoded testsubmission is used
 export function* performSaveFormSaga() {
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
-  const payload = yield prepareRequestData(userId, false);
+  // TODO: regular save stuff
+  // const payload = yield prepareRequestData(userId, false);
+  // try {
+  //   const response = yield call(postSubmission, token, payload);
+  //   yield put(saveFormSuccess(response));
+  // } catch (error) {
+  //   yield put(saveFormError(error));
+  // }
+  // TODO: end regular save stuff
+
+  // TODO: upload test from here on
+  const fileUploads = yield select(makeSelectFileUploads());
+  const brokerSubmissionId = 'adb2caf6-2b48-459f-b3af-d64e2c04630a';
   try {
-    const response = yield call(postSubmission, token, payload);
-    yield put(saveFormSuccess(response));
+    const response = yield call(postFiles, token, brokerSubmissionId, fileUploads);
+    yield put(uploadFilesSuccess(response));
   } catch (error) {
-    yield put(saveFormError(error));
+    yield put(uploadFilesError(error));
   }
 }
 

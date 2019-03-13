@@ -28,3 +28,24 @@ export const postSubmission = (token, data_body) => {
   // });
 
 };
+
+
+// TODO: https://decembersoft.com/posts/file-upload-progress-with-redux-saga/
+
+// r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/$',
+export const postFiles = (token, brokerSubmissionId, files) => {
+  let formData = new FormData();
+  // for (let i = 0; i < files.length; i++) {
+  //   let file = files[i];
+  //   formData.append('files[' + i + ']', file);
+  // }
+  // const instance = axios.create({
+  //   // TODO: remove API_ROOT compate above TODOs
+  //   baseURL: API_ROOT + SUBMISSIONS + brokerSubmissionId +  '/upload/',
+  //   // baseURL: SUBMISSIONS,
+  //   headers: {
+  //     'Authorization': 'Token ' + token,
+  //     'Content-Type': 'application/json',
+  //   },
+  // });
+};

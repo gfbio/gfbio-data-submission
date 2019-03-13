@@ -32,3 +32,8 @@ export const CHANGE_CURRENT_DATASET_LABEL = 'app/SubmssionForm/CHANGE_CURRENT_DA
 
 export const ADD_FILE_UPLOAD = 'app/SubmssionForm/ADD_FILE_UPLOAD';
 export const REMOVE_FILE_UPLOAD = 'app/SubmssionForm/REMOVE_FILE_UPLOAD';
+
+export const UPLOAD_FILES = 'app/SubmssionForm/UPLOAD_FILES';
+export const UPLOAD_FILES_PROGRESS = 'app/SubmssionForm/UPLOAD_FILES_PROGRESS';
+export const UPLOAD_FILES_SUCCESS = 'app/SubmssionForm/UPLOAD_FILES_SUCCESS';
+export const UPLOAD_FILES_ERROR = 'app/SubmssionForm/UPLOAD_FILES_ERROR';
