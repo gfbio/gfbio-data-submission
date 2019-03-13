@@ -268,7 +268,9 @@ def create_broker_objects_from_submission_data_task(
 def prepare_ena_submission_data_task(prev_task_result=None, submission_id=None):
     submission = SubmissionTransferHandler.get_submission_for_task(
         submission_id=submission_id,
-        task=prepare_ena_submission_data_task)
+        task=prepare_ena_submission_data_task,
+        get_closed_submission=True,
+    )
     logger.info(
         msg='prepare_ena_submission_data_task. start prepare_ena_data '
             'previous_task_result={} | submission_id={}'.format(
