@@ -263,6 +263,41 @@ def create_broker_objects_from_submission_data_task(
 
 # ENA submission transfer tasks ------------------------------------------------
 
+@celery.task(name='tasks.delete_related_auditable_textdata_task',
+             base=SubmissionTask)
+def delete_related_auditable_textdata_task(prev_task_result=None,
+                                           submission_id=None):
+    submission = SubmissionTransferHandler.get_submission_for_task(
+        submission_id=submission_id,
+        task=delete_related_auditable_textdata_task,
+        get_closed_submission=True,
+    )
+    logger.info(
+        msg='delete_related_auditable_textdata_task. '
+            'previous_task_result={} | submission_id={}'.format(
+            prev_task_result,
+            submission_id)
+    )
+    if submission is not None and len(submission.brokerobject_set.all()) > 0:
+        logger.info(
+            msg='delete_related_auditable_textdata_task. start deleting. '
+                'submission_id={}'.format(submission_id)
+        )
+        with transaction.atomic():
+            submission.auditabletextdata_set.all().delete()
+        logger.info(
+            msg='delete_related_auditable_textdata_task. done deleting. '
+                'submission_id={}'.format(submission_id)
+        )
+    else:
+        logger.info(
+            msg='delete_related_auditable_textdata_task. no submission. '
+                'return CANCELLED '
+                'submission_id={}'.format(submission_id)
+        )
+        return TaskProgressReport.CANCELLED
+
+
 @celery.task(name='tasks.prepare_ena_submission_data_task',
              base=SubmissionTask)
 def prepare_ena_submission_data_task(prev_task_result=None, submission_id=None):
@@ -277,20 +312,32 @@ def prepare_ena_submission_data_task(prev_task_result=None, submission_id=None):
             prev_task_result,
             submission_id)
     )
-    if submission is not None and len(submission.brokerobject_set.all()) > 0:
+    # prev_task_result != TaskProgressReport.CANCELLED and
+    if submission is not None and len(
+            submission.brokerobject_set.all()) > 0:
         ena_submission_data = prepare_ena_data(submission=submission)
         logger.info(
             msg='prepare_ena_submission_data_task. finished prepare_ena_data '
                 'submission_id={}'.format(submission_id)
         )
-        logger.info('\n\nENA SUBMISSION DATA')
-        logger.info('\n{}'.format(ena_submission_data))
-        logger.info('\n\nENA SUBMISSION DATA\n\n')
+        # logger.info('\n\nENA SUBMISSION DATA')
+        # logger.info('\n{}'.format(ena_submission_data))
+        # logger.info('\n\nENA SUBMISSION DATA\n\n')
         store_ena_data_as_auditable_text_data(submission=submission,
                                               data=ena_submission_data)
         # TODO: this will become obsolete once, data is taken from AuditableTextData ....
+        logger.info(
+            msg='prepare_ena_submission_data_task. finished '
+                'store_ena_data_as_auditable_text_data '
+                'submission_id={}'.format(submission_id)
+        )
         return ena_submission_data
     else:
+        logger.info(
+            msg='prepare_ena_submission_data_task. no submission or '
+                'no brokerobjects. return CANCELLED '
+                'submission_id={}'.format(submission_id)
+        )
         return TaskProgressReport.CANCELLED
 
 

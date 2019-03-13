@@ -245,11 +245,13 @@ class TestTasksTriggeredBySubmissionSave(TestTasks):
             center_name='ABCD')
         self.assertEqual(0, len(TaskProgressReport.objects.all()))
         submission.brokerobject_set.all().delete()
-        print(submission.brokerobject_set.all())
         submission.center_name = center_name
         submission.save()
-        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        self.assertEqual(2, len(TaskProgressReport.objects.all()))
         task_report = TaskProgressReport.objects.first()
+        self.assertEqual(TaskProgressReport.CANCELLED,
+                         task_report.task_return_value)
+        task_report = TaskProgressReport.objects.last()
         self.assertEqual(TaskProgressReport.CANCELLED,
                          task_report.task_return_value)
 

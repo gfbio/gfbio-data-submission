@@ -264,17 +264,17 @@ class Submission(models.Model):
                     previous_state.center_name, self.center_name
                 ))
 
-            logger.info('\tdelete textdata')
             # instance difference, delete and create new
-            self.auditabletextdata_set.all().delete()
             logger.info('\ttrigger task')
-            from .tasks import prepare_ena_submission_data_task
-            prepare_ena_submission_data_task.apply_async(
-                kwargs={
-                    'submission_id': '{0}'.format(self.pk),
-                },
-                countdown=SUBMISSION_SAVE_TRIGGER_DELAY,
-            )
+            from .tasks import delete_related_auditable_textdata_task, \
+                prepare_ena_submission_data_task
+            chain = delete_related_auditable_textdata_task.s(
+                submission_id=self.pk).set(
+                countdown=SUBMISSION_SAVE_TRIGGER_DELAY) \
+                    | prepare_ena_submission_data_task.s(
+                submission_id=self.pk).set(
+                countdown=SUBMISSION_SAVE_TRIGGER_DELAY)
+            chain()
             logger.info('\tEND OF IF')
         logger.info('\tEND OF SAVE')
 

@@ -187,7 +187,7 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'level': 'DEBUG',  # TODO: I suggest Info here
+            'level': 'INFO  ',  # TODO: I suggest Info here
             'handlers': ['console', ],
             'propagate': False,
         },
@@ -213,7 +213,7 @@ LOGGING = {
         },
         'celery': {
             'handlers': ['console'],
-            'level': 'DEBUG',  # TODO: I suggest Info here
+            'level': 'INFO',  # TODO: I suggest Info here
             'propagate': True
         },
     },
