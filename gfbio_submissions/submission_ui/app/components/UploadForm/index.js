@@ -12,9 +12,13 @@ import Dropzone from 'react-dropzone';
 
 /* eslint-disable react/prefer-stateless-function */
 class UploadForm extends React.PureComponent {
+
   onDrop = (acceptedFiles, rejectedFiles) => {
     console.log('DrOP');
+    console.log('acceptedFiles');
+    // TODO: accepted files will become list of files scheduled for upload, remove etc
     console.log(acceptedFiles);
+    console.log('rejectedFiles');
     console.log(rejectedFiles);
   };
 
