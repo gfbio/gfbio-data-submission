@@ -9,17 +9,14 @@ import classNames from 'classnames';
 import Dropzone from 'react-dropzone';
 import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
-import {
-  makeSelectFileUploads,
-  // makeSelectProgress,
-} from '../../containers/SubmissionForm/selectors';
+import { makeSelectFileUploads } from '../../containers/SubmissionForm/selectors';
 import {
   addFileUpload,
   removeFileUpload,
-  // uploadRequest,
 } from '../../containers/SubmissionForm/actions';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
+import FileIndicator from './FileIndicator';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -47,19 +44,14 @@ class UploadForm extends React.PureComponent {
     // TODO: needs different position
     // TODO: accordion style for no. of file over X ?
     const fileUploadSchedule = this.props.fileUploads.map((file, index) => {
-      return <li key={index}
-                 className="list-group-item d-flex justify-content-between align-items-center publication">
-        <span><i className="fa fa-file-o pub" /> {file.name} </span>
-        <span>{file.size}</span>
-        <span>{file.type}</span>
-        <button className="btn btn-remove" onClick={(e) => {
-          e.preventDefault();
-          this.props.handleRemove(index);
-        }}>
-          <i className="fa fa-times" />
-          Remove
-        </button>
-      </li>;
+      return <FileIndicator
+        key={index}
+        index={index}
+        fileName={file.name}
+        fileSize={file.size}
+        fileType={file.type}
+        handleRemove={this.props.handleRemove}
+      />;
     });
 
     return (
