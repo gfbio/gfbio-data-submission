@@ -87,22 +87,26 @@ function* prepareRequestData(userId, submit = true) {
 
 function* performUploadSaga() {
   // const uid = uuid.v4();
-  // console.log('\nperformUploadSaga ' + uid);
+  console.log('\nperformUploadSaga ');
   // console.log(file);
   // TODO: try blocking sequence
   const fileUploads = yield select(makeSelectFileUploads());
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
   const token = yield select(makeSelectToken());
+
+  // iterate over all files scheduled for upload. call single upload each iteration
   for (let f of fileUploads) {
-    let min = 1;
-    let max = 6;
-    let random = Math.random() * (+max - +min) + +min;
-    console.log('\nperformUploadSaga ms: ' + random + ' ' + f.name);
+    console.log('\nupload single file');
+
+    // TODO: error reporting for single upload errors
+    // TODO: progress for single file upload
     const response = yield call(postFile, token, brokerSubmissionId, f);
     console.log('Upload response ');
     console.log(response);
-    yield sleep(3000 * random);
+
+    // yield sleep(3000 * random);
   }
+  // success for upload of all files
   yield put(uploadFilesSuccess({}));
 }
 

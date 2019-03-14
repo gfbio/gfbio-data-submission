@@ -41,13 +41,31 @@ export const postFile = (token, brokerSubmissionId, file) => {
   //   let file = files[i];
   //   formData.append('files[' + i + ']', file);
   // }
+
   const instance = axios.create({
     // TODO: remove API_ROOT compare above TODOs
-    baseURL: API_ROOT + SUBMISSIONS + brokerSubmissionId +  '/upload/',
+    baseURL: API_ROOT + SUBMISSIONS + brokerSubmissionId + '/upload/',
     headers: {
       'Authorization': 'Token ' + token,
-      // 'Content-Type': 'application/json',
+    },
+    onUploadProgress: progressEvent => {
+      let percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total );
+      console.log('progress: ', progressEvent.loaded, ' percent completed ', percentCompleted);
     },
   });
   return instance.post('', formData);
+
+  // TODO: this works too
+  // const config = {
+  //   headers: {
+  //     'Authorization': 'Token ' + token,
+  //     // 'Content-Type': 'application/json',
+  //   },
+  //   onUploadProgress: progressEvent => {
+  //     // TODO: throttle in chrome for local testing
+  //     let percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+  //     console.log('progress: ', progressEvent.loaded, ' percent completed ', percentCompleted);
+  //   },
+  // };
+  // return axios.post(API_ROOT + SUBMISSIONS + brokerSubmissionId + '/upload/', formData, config);
 };
