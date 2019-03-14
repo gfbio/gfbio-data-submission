@@ -35,6 +35,7 @@ FileIndicator.propTypes = {
   fileSize: PropTypes.number,
   fileType: PropTypes.string,
   handleRemove: PropTypes.func,
+  file: PropTypes.object,
 };
 
 

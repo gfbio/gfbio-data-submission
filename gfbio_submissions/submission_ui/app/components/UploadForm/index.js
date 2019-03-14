@@ -29,7 +29,17 @@ class UploadForm extends React.PureComponent {
     console.log(acceptedFiles);
     console.log('rejectedFiles');
     console.log(rejectedFiles);
-    this.props.handleDrop(acceptedFiles);
+    const fileIndicators = acceptedFiles.map((file, index) => {
+      return <FileIndicator
+        key={index}
+        index={index}
+        fileName={file.name}
+        fileSize={file.size}
+        fileType={file.type}
+        handleRemove={this.props.handleRemove}
+      />;
+    });
+    this.props.handleDrop(fileIndicators);
     //  upload example
     // this.props.onUpload(acceptedFiles[0]);
   };
@@ -43,16 +53,16 @@ class UploadForm extends React.PureComponent {
     // TODO: needs different styling
     // TODO: needs different position
     // TODO: accordion style for no. of file over X ?
-    const fileUploadSchedule = this.props.fileUploads.map((file, index) => {
-      return <FileIndicator
-        key={index}
-        index={index}
-        fileName={file.name}
-        fileSize={file.size}
-        fileType={file.type}
-        handleRemove={this.props.handleRemove}
-      />;
-    });
+    // const fileUploadSchedule = this.props.fileUploads.map((file, index) => {
+    //   return <FileIndicator
+    //     key={index}
+    //     index={index}
+    //     fileName={file.name}
+    //     fileSize={file.size}
+    //     fileType={file.type}
+    //     handleRemove={this.props.handleRemove}
+    //   />;
+    // });
 
     return (
       <div>
@@ -61,7 +71,8 @@ class UploadForm extends React.PureComponent {
           <p className="section-subtitle">(optional)</p>
         </header>
         <ul className="list-group list-group-flush">
-          {fileUploadSchedule}
+          {/*{fileUploadSchedule}*/}
+          {this.props.fileUploads}
         </ul>
         <div className="form-group">
           <Dropzone onDrop={this.onDrop}>
