@@ -46,7 +46,7 @@ export const postFile = (token, brokerSubmissionId, file) => {
     baseURL: API_ROOT + SUBMISSIONS + brokerSubmissionId +  '/upload/',
     headers: {
       'Authorization': 'Token ' + token,
-      'Content-Type': 'application/json',
+      // 'Content-Type': 'application/json',
     },
   });
   return instance.post('', formData);

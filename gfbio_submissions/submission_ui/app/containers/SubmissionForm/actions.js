@@ -25,9 +25,13 @@ import {
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
   SUBMIT_FORM_SUCCESS,
+  // UPLOAD_FAILURE,
   UPLOAD_FILES,
   UPLOAD_FILES_ERROR,
   UPLOAD_FILES_SUCCESS,
+  // UPLOAD_PROGRESS,
+  // UPLOAD_REQUEST,
+  // UPLOAD_SUCCESS,
 } from './constants';
 
 export function defaultAction() {
@@ -185,4 +189,39 @@ export function uploadFilesError(errorResponse) {
     errorResponse,
   };
 }
+
+// upload example
+// export function uploadRequest(file) {
+//   return {
+//     type: UPLOAD_REQUEST,
+//     file,
+//   };
+// }
+//
+// // file: File,
+// export function uploadProgress(file, progress) {
+//   return {
+//     type: UPLOAD_PROGRESS,
+//     progress,
+//     meta: { file },
+//   };
+// }
+//
+// // file
+// export function uploadSuccess(file) {
+//   return {
+//     type: UPLOAD_SUCCESS,
+//     meta: { file },
+//   };
+// }
+//
+// // file: File,
+// export function uploadFailure(file, err) {
+//   return {
+//     type: UPLOAD_FAILURE,
+//     err,
+//     // error: true,
+//     meta: { file },
+//   };
+// }
 

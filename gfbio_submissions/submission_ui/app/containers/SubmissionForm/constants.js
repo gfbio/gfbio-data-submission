@@ -37,3 +37,9 @@ export const UPLOAD_FILES = 'app/SubmssionForm/UPLOAD_FILES';
 export const UPLOAD_FILES_PROGRESS = 'app/SubmssionForm/UPLOAD_FILES_PROGRESS';
 export const UPLOAD_FILES_SUCCESS = 'app/SubmssionForm/UPLOAD_FILES_SUCCESS';
 export const UPLOAD_FILES_ERROR = 'app/SubmssionForm/UPLOAD_FILES_ERROR';
+
+// progress example
+// export const UPLOAD_REQUEST = 'app/SubmssionForm/UPLOAD_REQUEST';
+// export const UPLOAD_PROGRESS = 'app/SubmssionForm/UPLOAD_PROGRESS';
+// export const UPLOAD_SUCCESS = 'app/SubmssionForm/UPLOAD_SUCCESS';
+// export const UPLOAD_FAILURE = 'app/SubmssionForm/UPLOAD_FAILURE';

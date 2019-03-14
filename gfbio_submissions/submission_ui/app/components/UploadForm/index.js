@@ -9,10 +9,14 @@ import classNames from 'classnames';
 import Dropzone from 'react-dropzone';
 import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
-import { makeSelectFileUploads } from '../../containers/SubmissionForm/selectors';
+import {
+  makeSelectFileUploads,
+  // makeSelectProgress,
+} from '../../containers/SubmissionForm/selectors';
 import {
   addFileUpload,
   removeFileUpload,
+  // uploadRequest,
 } from '../../containers/SubmissionForm/actions';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
@@ -29,6 +33,8 @@ class UploadForm extends React.PureComponent {
     console.log('rejectedFiles');
     console.log(rejectedFiles);
     this.props.handleDrop(acceptedFiles);
+    //  upload example
+    // this.props.onUpload(acceptedFiles[0]);
   };
 
   render() {
@@ -86,6 +92,7 @@ class UploadForm extends React.PureComponent {
               </div>
             )}
           </Dropzone>
+          {/*<progress value={this.props.progress} />*/}
         </div>
       </div>
     );
@@ -96,16 +103,21 @@ UploadForm.propTypes = {
   fileUploads: PropTypes.array,
   handleDrop: PropTypes.func,
   handleRemove: PropTypes.func,
+  // upload example
+  // progress: PropTypes.number,
+  // onUpload: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
   fileUploads: makeSelectFileUploads(),
+  // progress: makeSelectProgress(),
 });
 
 function mapDispatchToProps(dispatch) {
   return {
     handleDrop: value => dispatch(addFileUpload(value)),
     handleRemove: index => dispatch(removeFileUpload(index)),
+    // onUpload: file => dispatch(uploadRequest(file)),
   };
 }
 

@@ -3,7 +3,9 @@ import {
   call,
   put,
   select,
-  takeEvery, takeLatest,
+  // take,
+  takeEvery,
+  takeLatest,
   takeLeading,
 } from 'redux-saga/effects';
 import {
@@ -11,6 +13,7 @@ import {
   SUBMIT_FORM,
   SUBMIT_FORM_START,
   UPLOAD_FILES,
+  // UPLOAD_REQUEST,
 } from './constants';
 import {
   makeSelectBrokerSubmissionId,
@@ -31,10 +34,14 @@ import {
   submitFormError,
   submitFormStart,
   submitFormSuccess,
+  // uploadFailure,
   uploadFiles,
   uploadFilesSuccess,
+  // uploadProgress,
+  // uploadSuccess,
 } from './actions';
 import { postFile, postSubmission } from './submissionApi';
+// import { createUploadFileChannel } from './createFileUploadChannel';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -154,6 +161,41 @@ export function* saveFormSaga() {
 export function* uploadFilesSaga() {
   yield takeLatest(UPLOAD_FILES, performUploadSaga);
 }
+
+
+// upload example
+
+
+// // Upload the specified file
+// export function* uploadFileSaga(file) {
+//   const token = yield select(makeSelectToken());
+//   const channel = yield call(
+//     createUploadFileChannel,
+//     'http://0.0.0.0:8000/api/submissions/5e6ef890-3973-40b4-a10b-2c3a783111f1/upload/',
+//     file,
+//     token);
+//   while (true) {
+//     const { progress = 0, err, success } = yield take(channel);
+//     if (err) {
+//       yield put(uploadFailure(file, err));
+//       return;
+//     }
+//     if (success) {
+//       yield put(uploadSuccess(file));
+//       return;
+//     }
+//     yield put(uploadProgress(file, progress));
+//   }
+// }
+//
+// // Watch for an upload request and then
+// // defer to another saga to perform the actual upload
+// export function* uploadRequestWatcherSaga() {
+//   yield takeEvery(UPLOAD_REQUEST, function* (action) {
+//     const file = action.payload;
+//     yield call(uploadFileSaga, file);
+//   });
+// }
 
 
 export default function* rootSaga() {
