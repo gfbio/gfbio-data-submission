@@ -33,19 +33,21 @@ export const postSubmission = (token, data_body) => {
 // TODO: https://decembersoft.com/posts/file-upload-progress-with-redux-saga/
 
 // r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/$',
-export const postFiles = (token, brokerSubmissionId, files) => {
+export const postFile = (token, brokerSubmissionId, file) => {
   let formData = new FormData();
+  formData.append('file', file);
+
   // for (let i = 0; i < files.length; i++) {
   //   let file = files[i];
   //   formData.append('files[' + i + ']', file);
   // }
-  // const instance = axios.create({
-  //   // TODO: remove API_ROOT compate above TODOs
-  //   baseURL: API_ROOT + SUBMISSIONS + brokerSubmissionId +  '/upload/',
-  //   // baseURL: SUBMISSIONS,
-  //   headers: {
-  //     'Authorization': 'Token ' + token,
-  //     'Content-Type': 'application/json',
-  //   },
-  // });
+  const instance = axios.create({
+    // TODO: remove API_ROOT compare above TODOs
+    baseURL: API_ROOT + SUBMISSIONS + brokerSubmissionId +  '/upload/',
+    headers: {
+      'Authorization': 'Token ' + token,
+      'Content-Type': 'application/json',
+    },
+  });
+  return instance.post('', formData);
 };

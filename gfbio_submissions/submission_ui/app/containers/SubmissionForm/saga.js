@@ -13,6 +13,7 @@ import {
   UPLOAD_FILES,
 } from './constants';
 import {
+  makeSelectBrokerSubmissionId,
   makeSelectDatasetLabels,
   makeSelectFileUploads,
   makeSelectFormWrapper,
@@ -33,7 +34,7 @@ import {
   uploadFiles,
   uploadFilesSuccess,
 } from './actions';
-import { postSubmission } from './submissionApi';
+import { postFile, postSubmission } from './submissionApi';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -83,11 +84,16 @@ function* performUploadSaga() {
   // console.log(file);
   // TODO: try blocking sequence
   const fileUploads = yield select(makeSelectFileUploads());
+  const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
+  const token = yield select(makeSelectToken());
   for (let f of fileUploads) {
     let min = 1;
     let max = 6;
     let random = Math.random() * (+max - +min) + +min;
     console.log('\nperformUploadSaga ms: ' + random + ' ' + f.name);
+    const response = yield call(postFile, token, brokerSubmissionId, f);
+    console.log('Upload response ');
+    console.log(response);
     yield sleep(3000 * random);
   }
   yield put(uploadFilesSuccess({}));

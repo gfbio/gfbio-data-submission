@@ -59,6 +59,7 @@ export const initialState = fromJS({
   currentLabel: '',
   datasetLabels: Array(),
   fileUploads: Array(),
+  brokerSubmissionId: '',
 });
 
 function submissionFormReducer(state = initialState, action) {
@@ -73,9 +74,10 @@ function submissionFormReducer(state = initialState, action) {
       return state.set('saveInProgress', true);
     case SAVE_FORM_SUCCESS:
       // TODO: set bsi etc after success, from then its updates
-      // const u = uuid.v4();
+      console.log('SAVE_FORM_SUCCESS');
+      console.log(action.response);
       return state
-      // .set('initialValues', { title: 'BLUB ' + u, description: 'BLA ' + u })
+        .set('brokerSubmissionId', action.response.data.broker_submission_id)
         .set('saveResponse', action.response)
         .set('saveInProgress', false);
     case SAVE_FORM_ERROR:

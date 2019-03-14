@@ -109,6 +109,11 @@ const makeSelectFileUploads = () =>
     substate.get('fileUploads'),
   );
 
+const makeSelectBrokerSubmissionId = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('brokerSubmissionId'),
+  );
+
 export default makeSelectSubmissionForm;
 
 export {
@@ -130,4 +135,5 @@ export {
   makeSelectCurrentLabel,
   makeSelectDatasetLabels,
   makeSelectFileUploads,
+  makeSelectBrokerSubmissionId,
 };
