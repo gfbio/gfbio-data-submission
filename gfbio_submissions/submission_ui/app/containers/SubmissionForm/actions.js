@@ -5,12 +5,16 @@
  */
 
 import {
-  ADD_DATASET_LABEL, ADD_FILE_UPLOAD,
-  ADD_RELATED_PUBLICATION, CHANGE_CURRENT_DATASET_LABEL,
+  ADD_DATASET_LABEL,
+  ADD_FILE_UPLOAD,
+  ADD_RELATED_PUBLICATION,
+  CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
   CHANGE_META_DATA_SCHEMA,
-  DEFAULT_ACTION, REMOVE_DATASET_LABEL, REMOVE_FILE_UPLOAD,
+  DEFAULT_ACTION,
+  REMOVE_DATASET_LABEL,
+  REMOVE_FILE_UPLOAD,
   REMOVE_RELATED_PUBLICATION,
   SAVE_FORM,
   SAVE_FORM_ERROR,
@@ -20,7 +24,10 @@ import {
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
-  SUBMIT_FORM_SUCCESS, UPLOAD_FILES_ERROR, UPLOAD_FILES_SUCCESS,
+  SUBMIT_FORM_SUCCESS,
+  UPLOAD_FILES,
+  UPLOAD_FILES_ERROR,
+  UPLOAD_FILES_SUCCESS,
 } from './constants';
 
 export function defaultAction() {
@@ -56,9 +63,10 @@ export function saveFormSuccess(response) {
   };
 }
 
-export function saveFormError() {
+export function saveFormError(error) {
   return {
     type: SAVE_FORM_ERROR,
+    error,
   };
 }
 
@@ -158,7 +166,11 @@ export function removeFileUpload(index) {
   };
 }
 
-// TODO: upload file action
+export function uploadFiles() {
+  return {
+    type: UPLOAD_FILES,
+  };
+}
 
 export function uploadFilesSuccess(response) {
   return {

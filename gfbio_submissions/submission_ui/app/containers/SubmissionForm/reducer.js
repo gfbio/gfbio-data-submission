@@ -13,7 +13,8 @@ import {
   CHANGE_LICENSE,
   CHANGE_META_DATA_SCHEMA,
   DEFAULT_ACTION,
-  REMOVE_DATASET_LABEL, REMOVE_FILE_UPLOAD,
+  REMOVE_DATASET_LABEL,
+  REMOVE_FILE_UPLOAD,
   REMOVE_RELATED_PUBLICATION,
   SAVE_FORM,
   SAVE_FORM_ERROR,
@@ -24,6 +25,7 @@ import {
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
   SUBMIT_FORM_SUCCESS,
+  UPLOAD_FILES, UPLOAD_FILES_SUCCESS,
 } from './constants';
 
 let backendParameters = {};
@@ -77,6 +79,8 @@ function submissionFormReducer(state = initialState, action) {
         .set('saveResponse', action.response)
         .set('saveInProgress', false);
     case SAVE_FORM_ERROR:
+      console.log('SAVE_FORM_ERROR');
+      console.log(action);
       return state.set('saveInProgress', false);
     case SUBMIT_FORM:
       return state.set('reduxFormForm', action.form);
@@ -120,6 +124,12 @@ function submissionFormReducer(state = initialState, action) {
     case REMOVE_FILE_UPLOAD:
       return state
         .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1));
+    case UPLOAD_FILES:
+      console.log('UPLOAD_FILES reducer');
+      return state;
+    case UPLOAD_FILES_SUCCESS:
+      console.log('UPLOAD_FILES_SUCCESS reducer');
+      return state;
     default:
       return state;
   }

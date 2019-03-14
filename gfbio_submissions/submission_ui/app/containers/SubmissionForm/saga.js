@@ -1,11 +1,25 @@
-import { all, call, put, select, takeLeading } from 'redux-saga/effects';
-import { SAVE_FORM, SUBMIT_FORM, SUBMIT_FORM_START } from './constants';
 import {
-  makeSelectDatasetLabels, makeSelectFileUploads,
+  all,
+  call,
+  put,
+  select,
+  takeEvery, takeLatest,
+  takeLeading,
+} from 'redux-saga/effects';
+import {
+  SAVE_FORM,
+  SUBMIT_FORM,
+  SUBMIT_FORM_START,
+  UPLOAD_FILES,
+} from './constants';
+import {
+  makeSelectDatasetLabels,
+  makeSelectFileUploads,
   makeSelectFormWrapper,
   makeSelectLicense,
   makeSelectMetaDataSchema,
-  makeSelectReduxFormForm, makeSelectRelatedPublications,
+  makeSelectReduxFormForm,
+  makeSelectRelatedPublications,
   makeSelectToken,
   makeSelectUserId,
 } from './selectors';
@@ -15,9 +29,11 @@ import {
   saveFormSuccess,
   submitFormError,
   submitFormStart,
-  submitFormSuccess, uploadFilesError, uploadFilesSuccess,
+  submitFormSuccess,
+  uploadFiles,
+  uploadFilesSuccess,
 } from './actions';
-import { postFiles, postSubmission } from './submissionApi';
+import { postSubmission } from './submissionApi';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -61,6 +77,22 @@ function* prepareRequestData(userId, submit = true) {
   };
 }
 
+function* performUploadSaga() {
+  // const uid = uuid.v4();
+  // console.log('\nperformUploadSaga ' + uid);
+  // console.log(file);
+  // TODO: try blocking sequence
+  const fileUploads = yield select(makeSelectFileUploads());
+  for (let f of fileUploads) {
+    let min = 1;
+    let max = 6;
+    let random = Math.random() * (+max - +min) + +min;
+    console.log('\nperformUploadSaga ms: ' + random + ' ' + f.name);
+    yield sleep(3000 * random);
+  }
+  yield put(uploadFilesSuccess({}));
+}
+
 export function* performSubmitFormSaga() {
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
@@ -74,28 +106,18 @@ export function* performSubmitFormSaga() {
   }
 }
 
-// TODO: to test upload, most regular stuff is commented and a hardcoded testsubmission is used
 export function* performSaveFormSaga() {
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
-  // TODO: regular save stuff
-  // const payload = yield prepareRequestData(userId, false);
-  // try {
-  //   const response = yield call(postSubmission, token, payload);
-  //   yield put(saveFormSuccess(response));
-  // } catch (error) {
-  //   yield put(saveFormError(error));
-  // }
-  // TODO: end regular save stuff
-
-  // TODO: upload test from here on
-  const fileUploads = yield select(makeSelectFileUploads());
-  const brokerSubmissionId = 'adb2caf6-2b48-459f-b3af-d64e2c04630a';
+  const payload = yield prepareRequestData(userId, false);
   try {
-    const response = yield call(postFiles, token, brokerSubmissionId, fileUploads);
-    yield put(uploadFilesSuccess(response));
+    const response = yield call(postSubmission, token, payload);
+    yield put(saveFormSuccess(response));
+    console.log('SAGA save succesful  | put form success');
+    console.log('continue with file uploads ?');
+    yield put(uploadFiles());
   } catch (error) {
-    yield put(uploadFilesError(error));
+    yield put(saveFormError(error));
   }
 }
 
@@ -107,6 +129,7 @@ export function* processSubmitFormTypeSaga() {
     yield put(submitFormStart());
   }
 }
+
 
 export function* checkFormTypeSaga() {
   // new feature from rc1 that blocks until finished
@@ -122,6 +145,11 @@ export function* saveFormSaga() {
   yield takeLeading(SAVE_FORM, performSaveFormSaga);
 }
 
+export function* uploadFilesSaga() {
+  yield takeLatest(UPLOAD_FILES, performUploadSaga);
+}
+
+
 export default function* rootSaga() {
-  yield all([checkFormTypeSaga(), saveFormSaga(), submitFormSaga()]);
+  yield all([checkFormTypeSaga(), saveFormSaga(), submitFormSaga(), uploadFilesSaga()]);
 }
