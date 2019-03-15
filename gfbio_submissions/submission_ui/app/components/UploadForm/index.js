@@ -9,24 +9,17 @@ import classNames from 'classnames';
 import Dropzone from 'react-dropzone';
 import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
-import { makeSelectFileUploads } from '../../containers/SubmissionForm/selectors';
 import { addFileUpload } from '../../containers/SubmissionForm/actions';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import FileIndicator from './FileIndicator';
 // import shortid from 'shortid';
-// import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
 class UploadForm extends React.PureComponent {
 
   onDrop = (acceptedFiles, rejectedFiles) => {
-    // console.log('DrOP');
-    // console.log('acceptedFiles');
     // // TODO: accepted files will become list of files scheduled for upload, remove etc
-    // console.log(acceptedFiles);
-    // console.log('rejectedFiles');
-    // console.log(rejectedFiles);
     this.props.handleDrop(acceptedFiles);
   };
 
@@ -39,15 +32,6 @@ class UploadForm extends React.PureComponent {
     // TODO: needs different styling
     // TODO: needs different position
     // TODO: accordion style for no. of file over X ?
-    // const fileUploadSchedule = this.props.fileUploads.map((file, index) => {
-    //   return <FileIndicator
-    //     key={index}
-    //     index={index}
-    //     fileName={file.name}
-    //     fileSize={file.size}
-    //     fileType={file.type}
-    //   />;
-    // });
 
     return (
       <div>
@@ -86,14 +70,10 @@ class UploadForm extends React.PureComponent {
 }
 
 UploadForm.propTypes = {
-  // fileUploads: PropTypes.array,
-  // fileUploadIndicators: PropTypes.object,
   handleDrop: PropTypes.func,
 };
 
-const mapStateToProps = createStructuredSelector({
-  // fileUploads: makeSelectFileUploads(),
-});
+const mapStateToProps = createStructuredSelector({});
 
 function mapDispatchToProps(dispatch) {
   return {
