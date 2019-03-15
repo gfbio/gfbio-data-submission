@@ -127,37 +127,12 @@ function submissionFormReducer(state = initialState, action) {
       console.log('OLD STATE fileupload');
       console.log(state.get('fileUploads'));
 
-      // let uploads = (fileUploads) => fileUploads.push(...action.value);
-      // console.log(uploads);
-      let newState = state.update('fileUploads', (fileUploads) => fileUploads.push(...action.value));
-      console.log('NEW STATE fileupload');
-      console.log(newState.get('fileUploads'));
-      // const uploadIndicators = newState.get('fileUploads').map((file, index) => {
-      //   return <FileIndicator
-      //     key={index}
-      //     index={index}
-      //     fileName={file.name}
-      //     fileSize={file.size}
-      //     fileType={file.type}
-      //     // handleRemove={this.props.handleRemove}
-      //   />;
-      // });
+      // let newState = state.update('fileUploads', (fileUploads) => fileUploads.push(...action.value));
+      // console.log('NEW STATE fileupload');
+      // console.log(newState.get('fileUploads'));
 
-      // console.log(typeof action.value);
-      // let tmp = {};
-      // for (let v in action.value) {
-      //   tmp[v.id] = v;
-      // }
-      // console.log(tmp);
-      // console.log(typeof tmp);
-      // console.log(state);
-
-      // return state
-      //.update('fileUploads', (fileUploads) => fileUploads.assign(tmp));
-      //   .update('fileUploads', (fileUploads) => fileUploads.push(...action.value));
-      //   .update('fileUploads', uploads);
-      return newState;
-    // .set('fileUploadIndicators', uploadIndicators);
+      return state
+        .update('fileUploads', (fileUploads) => fileUploads.push(...action.value));
     case REMOVE_FILE_UPLOAD:
       return state
         .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1));

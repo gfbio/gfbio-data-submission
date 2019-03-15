@@ -54,12 +54,10 @@ FileIndicator.propTypes = {
 
 const mapStateToProps = createStructuredSelector({
   fileUploads: makeSelectFileUploads(),
-  // fileUploadIndicators: makeSelectFileUploadIndicators(),
 });
 
 function mapDispatchToProps(dispatch) {
   return {
-    // handleDrop: value => dispatch(addFileUpload(value)),
     handleRemove: index => dispatch(removeFileUpload(index)),
   };
 }
