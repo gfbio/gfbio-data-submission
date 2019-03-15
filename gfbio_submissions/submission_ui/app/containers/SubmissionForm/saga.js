@@ -134,12 +134,17 @@ function countdown(secs) {
 }
 
 // function* uploadProgressWatcher(fileName, channel) {
-function* uploadProgressWatcher(channel) {
+function* uploadProgressWatcher(channel, index) {
+  const fileUploads = yield select(makeSelectFileUploads());
   while (true) {
     try {
       const progress = yield take(channel);
-      console.info('progress');
-      console.info(progress);
+      console.info('\nprogress');
+      // TODO: now the idea is to dispatch an action with index, access fileuploads
+      //  in reducer with index and change progress there and see if it updated rendered list
+      let x = fileUploads.get(index);
+      console.info('file index '+index+'  progress '+progress+' file ? '+x);
+      console.info(x);
       // yield put(actions.uploadFiles.progress(progress))
     } catch (err) {
       console.info('ERROR ');
@@ -154,9 +159,10 @@ function* uploadProgressWatcher(channel) {
 
 //tmp.push({id: shortid.generate(), progress: 0, file: a})
 // function* uploadFile(fileName, index, files) {
-function* uploadFile(file) {
+function* uploadFile(file, index) {
   console.warn('upload file');
   console.warn(file);
+  console.warn('index: ' + index);
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
   const token = yield select(makeSelectToken());
   try {
@@ -165,7 +171,7 @@ function* uploadFile(file) {
 
     const uploadChannel = yield call(createUploadFileChannel, brokerSubmissionId, file.file, token);
     // yield fork(uploadProgressWatcher, fileName, uploadChannel);
-    yield fork(uploadProgressWatcher, uploadChannel);
+    yield fork(uploadProgressWatcher, uploadChannel, index);
   } catch (err) {
     console.log('yield error action');
     console.log(err);
@@ -198,8 +204,10 @@ function* performUploadSaga() {
   // yield all(
   //   Object.keys(tmp).map(uploadFile)
   // )
+  let index = 0;
   for (let f of fileUploads) {
-    yield call(uploadFile, f);
+    yield call(uploadFile, f, index);
+    index++;
   }
   //   console.log('\tupload single file');
   //   console.log(f);
