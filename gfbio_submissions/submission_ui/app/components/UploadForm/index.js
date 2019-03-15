@@ -9,7 +9,10 @@ import classNames from 'classnames';
 import Dropzone from 'react-dropzone';
 import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
-import { makeSelectFileUploads } from '../../containers/SubmissionForm/selectors';
+import {
+  makeSelectFileUploadIndicators,
+  makeSelectFileUploads,
+} from '../../containers/SubmissionForm/selectors';
 import {
   addFileUpload,
   removeFileUpload,
@@ -17,6 +20,7 @@ import {
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import FileIndicator from './FileIndicator';
+import shortid from 'shortid';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -29,7 +33,35 @@ class UploadForm extends React.PureComponent {
     console.log(acceptedFiles);
     console.log('rejectedFiles');
     console.log(rejectedFiles);
-    const fileIndicators = acceptedFiles.map((file, index) => {
+    // FIXME: because index is now relative to no. of files for this drop
+    //    remove is behaving unexpected
+    // const fileIndicators = acceptedFiles.map((file, index) => {
+    //   return <FileIndicator
+    //     key={index}
+    //     id={shortid.generate()}
+    //     index={index}
+    //     fileName={file.name}
+    //     fileSize={file.size}
+    //     fileType={file.type}
+    //     handleRemove={this.props.handleRemove}
+    //   />;
+    // });
+    // this.props.handleDrop(fileIndicators);
+    this.props.handleDrop(acceptedFiles);
+    //  upload example
+    // this.props.onUpload(acceptedFiles[0]);
+  };
+
+  render() {
+
+    console.log('UPLOAD FORM RENDER: fileUploads');
+    console.log(this.props);
+    console.log('--------------------------');
+
+    // TODO: needs different styling
+    // TODO: needs different position
+    // TODO: accordion style for no. of file over X ?
+    const fileUploadSchedule = this.props.fileUploads.map((file, index) => {
       return <FileIndicator
         key={index}
         index={index}
@@ -39,30 +71,15 @@ class UploadForm extends React.PureComponent {
         handleRemove={this.props.handleRemove}
       />;
     });
-    this.props.handleDrop(fileIndicators);
-    //  upload example
-    // this.props.onUpload(acceptedFiles[0]);
-  };
-
-  render() {
-
-    console.log('UPLOAD FORM RENDER: fileUploads');
-    console.log(this.props.fileUploads);
-    console.log('--------------------------');
-
-    // TODO: needs different styling
-    // TODO: needs different position
-    // TODO: accordion style for no. of file over X ?
-    // const fileUploadSchedule = this.props.fileUploads.map((file, index) => {
-    //   return <FileIndicator
-    //     key={index}
-    //     index={index}
-    //     fileName={file.name}
-    //     fileSize={file.size}
-    //     fileType={file.type}
-    //     handleRemove={this.props.handleRemove}
-    //   />;
-    // });
+    // console.log('------------ fileUploadSchedule --------------');
+    // console.log(fileUploadSchedule);
+    // let tmpSchedule = fileUploadSchedule.toJS();
+    // for (let f in tmpSchedule) {
+    //   console.log('\n', f);
+    //   console.log(tmpSchedule[f]);
+    //   tmpSchedule[f].props.id = f;
+    // }
+    // console.log(tmpSchedule);
 
     return (
       <div>
@@ -71,8 +88,8 @@ class UploadForm extends React.PureComponent {
           <p className="section-subtitle">(optional)</p>
         </header>
         <ul className="list-group list-group-flush">
-          {/*{fileUploadSchedule}*/}
-          {this.props.fileUploads}
+          {fileUploadSchedule}
+          {/*{this.props.fileUploads}*/}
         </ul>
         <div className="form-group">
           <Dropzone onDrop={this.onDrop}>
@@ -104,6 +121,7 @@ class UploadForm extends React.PureComponent {
 
 UploadForm.propTypes = {
   fileUploads: PropTypes.array,
+  fileUploadIndicators: PropTypes.object,
   handleDrop: PropTypes.func,
   handleRemove: PropTypes.func,
   // upload example
@@ -113,6 +131,7 @@ UploadForm.propTypes = {
 
 const mapStateToProps = createStructuredSelector({
   fileUploads: makeSelectFileUploads(),
+  fileUploadIndicators: makeSelectFileUploadIndicators(),
   // progress: makeSelectProgress(),
 });
 

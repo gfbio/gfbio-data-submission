@@ -30,12 +30,15 @@ class FileIndicator extends React.Component {
 }
 
 FileIndicator.propTypes = {
+  id: PropTypes.string,
+  // TODO: remove index once associative array implemented -> id
   index: PropTypes.number,
   fileName: PropTypes.string,
   fileSize: PropTypes.number,
   fileType: PropTypes.string,
   handleRemove: PropTypes.func,
-  file: PropTypes.object,
+  // TODO: whole file needed anyway for upload, could save other file related props
+  // file: PropTypes.object,
 };
 
 

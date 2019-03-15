@@ -41,6 +41,7 @@ import {
   // uploadSuccess,
 } from './actions';
 import { postFile, postSubmission } from './submissionApi';
+import uuid from "uuid";
 // import { createUploadFileChannel } from './createFileUploadChannel';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -86,8 +87,8 @@ function* prepareRequestData(userId, submit = true) {
 }
 
 function* performUploadSaga() {
-  // const uid = uuid.v4();
-  console.log('\nperformUploadSaga ');
+  const uid = uuid.v4();
+  console.log('\nperformUploadSaga '+uid);
   // console.log(file);
   // TODO: try blocking sequence
   const fileUploads = yield select(makeSelectFileUploads());

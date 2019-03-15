@@ -3,6 +3,7 @@
  * SubmissionForm reducer
  *
  */
+import React from 'react';
 import { fromJS } from 'immutable';
 import {
   ADD_DATASET_LABEL,
@@ -25,8 +26,10 @@ import {
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
   SUBMIT_FORM_SUCCESS,
-  UPLOAD_FILES, UPLOAD_FILES_SUCCESS,
+  UPLOAD_FILES,
+  UPLOAD_FILES_SUCCESS,
 } from './constants';
+import FileIndicator from '../../components/UploadForm';
 
 let backendParameters = {};
 if (window.props !== undefined) {
@@ -59,6 +62,7 @@ export const initialState = fromJS({
   currentLabel: '',
   datasetLabels: Array(),
   fileUploads: Array(),
+  fileUploadIndicators: Array(),
   brokerSubmissionId: '',
   // progress: 0,
 });
@@ -122,8 +126,40 @@ function submissionFormReducer(state = initialState, action) {
     case ADD_FILE_UPLOAD:
       console.log('ADD_FILE_UPLOAD');
       console.log(action.value);
-      return state
-        .update('fileUploads', (fileUploads) => fileUploads.push(...action.value));
+      console.log('OLD STATE fileupload');
+      console.log(state.get('fileUploads'));
+
+      // let uploads = (fileUploads) => fileUploads.push(...action.value);
+      // console.log(uploads);
+      let newState = state.update('fileUploads', (fileUploads) => fileUploads.push(...action.value));
+      console.log('NEW STATE fileupload');
+      console.log(newState.get('fileUploads'));
+      const uploadIndicators = newState.get('fileUploads').map((file, index) => {
+        return <FileIndicator
+          key={index}
+          index={index}
+          fileName={file.name}
+          fileSize={file.size}
+          fileType={file.type}
+          // handleRemove={this.props.handleRemove}
+        />;
+      });
+
+      // console.log(typeof action.value);
+      // let tmp = {};
+      // for (let v in action.value) {
+      //   tmp[v.id] = v;
+      // }
+      // console.log(tmp);
+      // console.log(typeof tmp);
+      // console.log(state);
+
+      // return state
+      //.update('fileUploads', (fileUploads) => fileUploads.assign(tmp));
+      //   .update('fileUploads', (fileUploads) => fileUploads.push(...action.value));
+      //   .update('fileUploads', uploads);
+      return newState
+        .set('fileUploadIndicators', uploadIndicators);
     case REMOVE_FILE_UPLOAD:
       return state
         .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1));

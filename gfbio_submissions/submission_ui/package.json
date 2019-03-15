@@ -108,6 +108,7 @@
     "renamer": "1.1.1",
     "reselect": "4.0.0",
     "sanitize.css": "4.1.0",
+    "shortid": "^2.2.14",
     "styled-components": "4.0.2",
     "uuid": "^3.3.2",
     "warning": "4.0.2"
