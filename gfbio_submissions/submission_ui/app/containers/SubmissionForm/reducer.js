@@ -60,9 +60,7 @@ export const initialState = fromJS({
   currentLabel: '',
   datasetLabels: Array(),
   fileUploads: Array(),
-  // fileUploadIndicators: Array(),
   brokerSubmissionId: '',
-  // progress: 0,
 });
 
 function submissionFormReducer(state = initialState, action) {

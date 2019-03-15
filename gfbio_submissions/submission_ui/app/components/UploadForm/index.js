@@ -9,38 +9,32 @@ import classNames from 'classnames';
 import Dropzone from 'react-dropzone';
 import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
-import {
-  // makeSelectFileUploadIndicators,
-  makeSelectFileUploads,
-} from '../../containers/SubmissionForm/selectors';
-import {
-  addFileUpload,
-  removeFileUpload,
-} from '../../containers/SubmissionForm/actions';
+import { makeSelectFileUploads } from '../../containers/SubmissionForm/selectors';
+import { addFileUpload } from '../../containers/SubmissionForm/actions';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import FileIndicator from './FileIndicator';
-import shortid from 'shortid';
+// import shortid from 'shortid';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
 class UploadForm extends React.PureComponent {
 
   onDrop = (acceptedFiles, rejectedFiles) => {
-    console.log('DrOP');
-    console.log('acceptedFiles');
-    // TODO: accepted files will become list of files scheduled for upload, remove etc
-    console.log(acceptedFiles);
-    console.log('rejectedFiles');
-    console.log(rejectedFiles);
+    // console.log('DrOP');
+    // console.log('acceptedFiles');
+    // // TODO: accepted files will become list of files scheduled for upload, remove etc
+    // console.log(acceptedFiles);
+    // console.log('rejectedFiles');
+    // console.log(rejectedFiles);
     this.props.handleDrop(acceptedFiles);
   };
 
   render() {
 
-    console.log('UPLOAD FORM RENDER: fileUploads');
-    console.log(this.props);
-    console.log('--------------------------');
+    // console.log('UPLOAD FORM RENDER: fileUploads');
+    // console.log(this.props);
+    // console.log('--------------------------');
 
     // TODO: needs different styling
     // TODO: needs different position
@@ -63,7 +57,6 @@ class UploadForm extends React.PureComponent {
         </header>
         <ul className="list-group list-group-flush">
           {fileUploadSchedule}
-          {/*{this.props.fileUploadIndicators}*/}
         </ul>
         <div className="form-group">
           <Dropzone onDrop={this.onDrop}>
@@ -86,7 +79,6 @@ class UploadForm extends React.PureComponent {
               </div>
             )}
           </Dropzone>
-          {/*<progress value={this.props.progress} />*/}
         </div>
       </div>
     );
