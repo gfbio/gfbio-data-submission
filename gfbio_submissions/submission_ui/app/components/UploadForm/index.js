@@ -39,15 +39,15 @@ class UploadForm extends React.PureComponent {
     // TODO: needs different styling
     // TODO: needs different position
     // TODO: accordion style for no. of file over X ?
-    const fileUploadSchedule = this.props.fileUploads.map((file, index) => {
-      return <FileIndicator
-        key={index}
-        index={index}
-        fileName={file.name}
-        fileSize={file.size}
-        fileType={file.type}
-      />;
-    });
+    // const fileUploadSchedule = this.props.fileUploads.map((file, index) => {
+    //   return <FileIndicator
+    //     key={index}
+    //     index={index}
+    //     fileName={file.name}
+    //     fileSize={file.size}
+    //     fileType={file.type}
+    //   />;
+    // });
 
     return (
       <div>
@@ -55,9 +55,9 @@ class UploadForm extends React.PureComponent {
           <h2 className="section-title">Upload Data</h2>
           <p className="section-subtitle">(optional)</p>
         </header>
-        <ul className="list-group list-group-flush">
-          {fileUploadSchedule}
-        </ul>
+
+        <FileIndicator />
+
         <div className="form-group">
           <Dropzone onDrop={this.onDrop}>
             {({ getRootProps, getInputProps, isDragActive }) => (
@@ -86,13 +86,13 @@ class UploadForm extends React.PureComponent {
 }
 
 UploadForm.propTypes = {
-  fileUploads: PropTypes.array,
-  fileUploadIndicators: PropTypes.object,
+  // fileUploads: PropTypes.array,
+  // fileUploadIndicators: PropTypes.object,
   handleDrop: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
-  fileUploads: makeSelectFileUploads(),
+  // fileUploads: makeSelectFileUploads(),
 });
 
 function mapDispatchToProps(dispatch) {

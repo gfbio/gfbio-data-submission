@@ -11,29 +11,38 @@ import { compose } from 'redux';
 import { removeFileUpload } from '../../containers/SubmissionForm/actions';
 
 class FileIndicator extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {};
-  }
+  // constructor(props) {
+  //   super(props);
+  //   this.state = {};
+  // }
 
   render() {
+
     console.log('FileIndicator render props');
     console.log(this.props);
     console.log('--------------------------------');
-    return (
-      <li
+
+    const fileListElements = this.props.fileUploads.map((file, index) => {
+      return <li
+        key={index}
         className="list-group-item d-flex justify-content-between align-items-center publication">
-        <span><i className="fa fa-file-o pub" /> {this.props.fileName} </span>
-        <span>{this.props.fileSize}</span>
-        <span>{this.props.fileType}</span>
+        <span><i className="fa fa-file-o pub" /> {file.name} </span>
+        <span>file.size}</span>
+        <span>{file.type}</span>
         <button className="btn btn-remove" onClick={(e) => {
           e.preventDefault();
-          this.props.handleRemove(this.props.index);
+          this.props.handleRemove(index);
         }}>
           <i className="fa fa-times" />
           Remove
         </button>
-      </li>
+      </li>;
+    });
+
+    return (
+      <ul className="list-group list-group-flush">
+        {fileListElements}
+      </ul>
     );
   }
 
@@ -41,12 +50,13 @@ class FileIndicator extends React.Component {
 }
 
 FileIndicator.propTypes = {
-  id: PropTypes.string,
-  // TODO: remove index once associative array implemented -> id
-  index: PropTypes.number,
-  fileName: PropTypes.string,
-  fileSize: PropTypes.number,
-  fileType: PropTypes.string,
+  fileUploads: PropTypes.array,
+  // id: PropTypes.string,
+  // // TODO: remove index once associative array implemented -> id
+  // index: PropTypes.number,
+  // fileName: PropTypes.string,
+  // fileSize: PropTypes.number,
+  // fileType: PropTypes.string,
   handleRemove: PropTypes.func,
   // TODO: whole file needed anyway for upload, could save other file related props
   // file: PropTypes.object,
