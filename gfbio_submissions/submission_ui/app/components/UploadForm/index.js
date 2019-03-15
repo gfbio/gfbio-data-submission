@@ -10,7 +10,7 @@ import Dropzone from 'react-dropzone';
 import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
 import {
-  makeSelectFileUploadIndicators,
+  // makeSelectFileUploadIndicators,
   makeSelectFileUploads,
 } from '../../containers/SubmissionForm/selectors';
 import {
@@ -68,7 +68,7 @@ class UploadForm extends React.PureComponent {
         fileName={file.name}
         fileSize={file.size}
         fileType={file.type}
-        handleRemove={this.props.handleRemove}
+        // handleRemove={this.props.handleRemove}
       />;
     });
     // console.log('------------ fileUploadSchedule --------------');
@@ -89,7 +89,7 @@ class UploadForm extends React.PureComponent {
         </header>
         <ul className="list-group list-group-flush">
           {fileUploadSchedule}
-          {/*{this.props.fileUploads}*/}
+          {/*{this.props.fileUploadIndicators}*/}
         </ul>
         <div className="form-group">
           <Dropzone onDrop={this.onDrop}>
@@ -123,7 +123,8 @@ UploadForm.propTypes = {
   fileUploads: PropTypes.array,
   fileUploadIndicators: PropTypes.object,
   handleDrop: PropTypes.func,
-  handleRemove: PropTypes.func,
+  //handleRemove: PropTypes.func,
+
   // upload example
   // progress: PropTypes.number,
   // onUpload: PropTypes.func,
@@ -131,14 +132,14 @@ UploadForm.propTypes = {
 
 const mapStateToProps = createStructuredSelector({
   fileUploads: makeSelectFileUploads(),
-  fileUploadIndicators: makeSelectFileUploadIndicators(),
+  // fileUploadIndicators: makeSelectFileUploadIndicators(),
   // progress: makeSelectProgress(),
 });
 
 function mapDispatchToProps(dispatch) {
   return {
     handleDrop: value => dispatch(addFileUpload(value)),
-    handleRemove: index => dispatch(removeFileUpload(index)),
+    //handleRemove: index => dispatch(removeFileUpload(index)),
     // onUpload: file => dispatch(uploadRequest(file)),
   };
 }

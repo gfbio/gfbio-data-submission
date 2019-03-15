@@ -1,6 +1,14 @@
 import React from 'react';
 
 import PropTypes from 'prop-types';
+import { createStructuredSelector } from 'reselect';
+import {
+  makeSelectFileUploadIndicators,
+  makeSelectFileUploads,
+} from '../../containers/SubmissionForm/selectors';
+import { connect } from 'react-redux';
+import { compose } from 'redux';
+import { removeFileUpload } from '../../containers/SubmissionForm/actions';
 
 class FileIndicator extends React.Component {
   constructor(props) {
@@ -9,6 +17,9 @@ class FileIndicator extends React.Component {
   }
 
   render() {
+    console.log('FileIndicator render props');
+    console.log(this.props);
+    console.log('--------------------------------');
     return (
       <li
         className="list-group-item d-flex justify-content-between align-items-center publication">
@@ -41,6 +52,22 @@ FileIndicator.propTypes = {
   // file: PropTypes.object,
 };
 
+const mapStateToProps = createStructuredSelector({
+  fileUploads: makeSelectFileUploads(),
+  // fileUploadIndicators: makeSelectFileUploadIndicators(),
+});
 
-export default FileIndicator;
+function mapDispatchToProps(dispatch) {
+  return {
+    // handleDrop: value => dispatch(addFileUpload(value)),
+    handleRemove: index => dispatch(removeFileUpload(index)),
+  };
+}
+
+const withConnect = connect(
+  mapStateToProps,
+  mapDispatchToProps,
+);
+
+export default compose(withConnect)(FileIndicator);
 
