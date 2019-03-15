@@ -13,14 +13,18 @@ import { addFileUpload } from '../../containers/SubmissionForm/actions';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import FileIndicator from './FileIndicator';
-// import shortid from 'shortid';
+import shortid from 'shortid';
 
 /* eslint-disable react/prefer-stateless-function */
 class UploadForm extends React.PureComponent {
 
   onDrop = (acceptedFiles, rejectedFiles) => {
     // // TODO: accepted files will become list of files scheduled for upload, remove etc
-    this.props.handleDrop(acceptedFiles);
+    let tmp = [];
+    for(let a of acceptedFiles) {
+      tmp.push({id: shortid.generate(), progress: 0, file: a})
+    }
+    this.props.handleDrop(tmp);
   };
 
   render() {

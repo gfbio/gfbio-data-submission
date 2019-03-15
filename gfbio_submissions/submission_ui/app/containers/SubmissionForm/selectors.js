@@ -114,16 +114,11 @@ const makeSelectBrokerSubmissionId = () =>
     substate.get('brokerSubmissionId'),
   );
 
-// const makeSelectFileUploadIndicators = () =>
-//   createSelector(selectSubmissionFormDomain, substate =>
-//     substate.get('fileUploadIndicators'),
-//   );
+const makeSelectNewUploads = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('newUploads'),
+  );
 
-// upload example
-// const makeSelectProgress = () =>
-//   createSelector(selectSubmissionFormDomain, substate  =>
-//     substate.get('progress'),
-//   );
 
 export default makeSelectSubmissionForm;
 
@@ -147,6 +142,5 @@ export {
   makeSelectDatasetLabels,
   makeSelectFileUploads,
   makeSelectBrokerSubmissionId,
-  // makeSelectProgress,
-  // makeSelectFileUploadIndicators,
+  makeSelectNewUploads,
 };

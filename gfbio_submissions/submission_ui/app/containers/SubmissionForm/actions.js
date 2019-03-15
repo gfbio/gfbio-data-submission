@@ -24,7 +24,7 @@ import {
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
-  SUBMIT_FORM_SUCCESS,
+  SUBMIT_FORM_SUCCESS, UPLOAD_FILE_PROGRESS,
   // UPLOAD_FAILURE,
   UPLOAD_FILES,
   UPLOAD_FILES_ERROR,
@@ -187,5 +187,13 @@ export function uploadFilesError(errorResponse) {
   return {
     type: UPLOAD_FILES_ERROR,
     errorResponse,
+  };
+}
+
+export function uploadFileProgress(index, val) {
+  return {
+    type: UPLOAD_FILE_PROGRESS,
+    index,
+    val,
   };
 }

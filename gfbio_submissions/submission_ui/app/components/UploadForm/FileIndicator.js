@@ -5,6 +5,7 @@ import { createStructuredSelector } from 'reselect';
 import {
   makeSelectFileUploadIndicators,
   makeSelectFileUploads,
+  makeSelectNewUploads,
 } from '../../containers/SubmissionForm/selectors';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
@@ -19,16 +20,18 @@ class FileIndicator extends React.Component {
   render() {
 
     console.log('FileIndicator render props');
-    console.log(this.props);
+    console.log(this.props.fileUploads);
     console.log('--------------------------------');
 
-    const fileListElements = this.props.fileUploads.map((file, index) => {
+    const fileListElements = this.props.fileUploads.map((upload, index) => {
+      console.log(upload);
       return <li
         key={index}
         className="list-group-item d-flex justify-content-between align-items-center publication">
-        <span><i className="fa fa-file-o pub" /> {file.name} </span>
-        <span>file.size}</span>
-        <span>{file.type}</span>
+        <small><i className="fa fa-file-o pub" /> {upload.file.name} </small>
+        <small>{upload.file.size}</small>
+        <small>{upload.file.type}</small>
+        <b>{upload.progress}</b>
         <button className="btn btn-remove" onClick={(e) => {
           e.preventDefault();
           this.props.handleRemove(index);
@@ -51,6 +54,7 @@ class FileIndicator extends React.Component {
 
 FileIndicator.propTypes = {
   fileUploads: PropTypes.array,
+  newUploads: PropTypes.object,
   // id: PropTypes.string,
   // // TODO: remove index once associative array implemented -> id
   // index: PropTypes.number,
@@ -64,6 +68,7 @@ FileIndicator.propTypes = {
 
 const mapStateToProps = createStructuredSelector({
   fileUploads: makeSelectFileUploads(),
+  newUploads: makeSelectNewUploads(),
 });
 
 function mapDispatchToProps(dispatch) {

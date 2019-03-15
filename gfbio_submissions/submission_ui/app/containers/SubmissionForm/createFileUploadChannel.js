@@ -1,5 +1,5 @@
-// import { buffers, END, eventChannel } from 'redux-saga';
-//
+import { buffers, END, eventChannel } from 'redux-saga';
+
 // export function createUploadFileChannel(endpoint, file, token) {
 //   return eventChannel(emitter => {
 //     const xhr = new XMLHttpRequest();
@@ -29,7 +29,9 @@
 //     };
 //     xhr.open('POST', endpoint, true);
 //     xhr.setRequestHeader('Authorization', 'Token ' + token);
-//     xhr.send(file);
+//     let formData = new FormData();
+//     formData.append('file', file);
+//     xhr.send(formData);
 //     return () => {
 //       xhr.upload.removeEventListener('progress', onProgress);
 //       xhr.upload.removeEventListener('error', onFailure);
