@@ -83,7 +83,6 @@ function* prepareRequestData(userId, submit = true) {
 }
 
 function* uploadProgressWatcher(channel, index) {
-  const fileUploads = yield select(makeSelectFileUploads());
   while (true) {
     try {
       const progress = yield take(channel);
@@ -116,7 +115,6 @@ function* uploadFile(file, index) {
 
 function* performUploadSaga() {
   const fileUploads = yield select(makeSelectFileUploads());
-
   let index = 0;
   for (let f of fileUploads) {
     yield call(uploadFile, f, index);
@@ -176,6 +174,35 @@ export function* submitFormSaga() {
 export function* saveFormSaga() {
   yield takeLeading(SAVE_FORM, performSaveFormSaga);
 }
+// TODO: adapt upload workflow for submit
+/*
+current save workflow with upload:
+==================================
+- SAVE_FORM is taken, triggers performSaveFormSaga
+- this posts a submission with submit=False
+- if errors dispatch saveFormError via put
+- if success (brokersubmissionid) dispatch saveFormSuccess
+  and dispatch uploadFiles
+- UPLOAD_FILES is taken, triggers performUploadSaga
+- this gets fileUploads from current state and iterates over it, while counting an index
+- every iteration a call() to uploadFile is send with file and index as parameters (yield all not working currently ?)
+- uploadFile calls and gets an uploadChannel from createUploadFileChannel and
+- forks a uploadProgressWatcher with the channel and the index
+- uploadProgressWatcher watches the upload progress (of axios onUploadProgress event triggered in createUploadFileChannel)
+- dispatches uploadFileProgress action which updates state for file at index, and watches for errors.
+
+TODO: dispatch error for single file, everywhere error is expected/ try-catched
+TODO: set property in single file capture status success/error/finished
+TODO: dispatch action all_files_uploaded success/error
+TODO: block remove button, when save/submit working (modify upload list not possible after start of submission)
+TODO: no re-upload of already uploaded files -> set property, compare above
+TODO: style file list, position etc
+TODO: real upload bar instead of numeric progress
+
+TODO: when in edit mode: remove file means delete already uploaded file.
+
+*/
+
 
 export function* uploadFilesSaga() {
   yield takeLatest(UPLOAD_FILES, performUploadSaga);
