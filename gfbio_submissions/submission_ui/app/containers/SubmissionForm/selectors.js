@@ -114,11 +114,6 @@ const makeSelectBrokerSubmissionId = () =>
     substate.get('brokerSubmissionId'),
   );
 
-const makeSelectNewUploads = () =>
-  createSelector(selectSubmissionFormDomain, substate =>
-    substate.get('newUploads'),
-  );
-
 
 export default makeSelectSubmissionForm;
 
@@ -142,5 +137,4 @@ export {
   makeSelectDatasetLabels,
   makeSelectFileUploads,
   makeSelectBrokerSubmissionId,
-  makeSelectNewUploads,
 };

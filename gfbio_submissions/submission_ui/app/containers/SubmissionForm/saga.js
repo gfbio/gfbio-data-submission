@@ -143,8 +143,9 @@ function* uploadProgressWatcher(channel, index) {
       // TODO: now the idea is to dispatch an action with index, access fileuploads
       //  in reducer with index and change progress there and see if it updated rendered list
       let x = fileUploads.get(index);
-      console.info('file index '+index+'  progress '+progress+' file ? '+x);
+      console.info('file index ' + index + '  progress ' + progress + ' file ? ' + x);
       console.info(x);
+      yield put(uploadFileProgress(index, progress));
       // yield put(actions.uploadFiles.progress(progress))
     } catch (err) {
       console.info('ERROR ');
@@ -152,7 +153,9 @@ function* uploadProgressWatcher(channel, index) {
       // yield put(actions.uploadFiles.progress(err))
     } finally {
       console.log('finally');
-      if (yield cancelled()) channel.close();
+      if (yield cancelled()) {
+        channel.close();
+      }
     }
   }
 }

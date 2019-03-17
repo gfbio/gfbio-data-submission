@@ -59,8 +59,7 @@ export const initialState = fromJS({
   relatedPublications: Array(),
   currentLabel: '',
   datasetLabels: Array(),
-  fileUploads: Array(),
-  newUploads: {},
+  fileUploads: [],
   brokerSubmissionId: '',
 });
 
@@ -140,12 +139,26 @@ function submissionFormReducer(state = initialState, action) {
       console.log('UPLOAD_FILES reducer');
       return state;
     case UPLOAD_FILE_PROGRESS:
-      console.log('UPLOAD_FILE_PROGRESS');
-      // console.log('index '+action.index);
-      // console.log('val '+action.val);
+      console.log('\n\nUPLOAD_FILE_PROGRESS');
+      console.log('action');
+      console.log(action);
+      // let uploads = state.get('fileUploads');
+      let upload = state.getIn(['fileUploads', action.index]);
+      upload.progress = action.val;
+      console.log(upload);
+      // console.log(state.getIn(['fileUploads', action.index, 'progress']));
+      // console.log(typeof state.getIn(['fileUploads', action.index]));
+      // state.setIn(['fileUploads', action.index]);
+      // console.log(state.getIn(['fileUploads', action.index]));
       // return state
       //   .update('fileUploads', (fileUploads) => fileUploads[action.index].progress = action.val);
-      return state;
+      // let newState = state.setIn(['fileUploads', action.index], upload);
+      // console.log(newState.get('fileUploads'));
+      console.log('-----------------------------');
+      // TODO: setIn does not work as described in here: https://thomastuts.com/blog/immutable-js-101-maps-lists.html
+      return state
+        .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1, upload));
+    // .setIn(['fileUploads', action.index], upload);
     case UPLOAD_FILES_SUCCESS:
       console.log('UPLOAD_FILES_SUCCESS reducer');
       return state;

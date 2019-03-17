@@ -3,9 +3,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
 import {
-  makeSelectFileUploadIndicators,
   makeSelectFileUploads,
-  makeSelectNewUploads,
 } from '../../containers/SubmissionForm/selectors';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
@@ -54,7 +52,6 @@ class FileIndicator extends React.Component {
 
 FileIndicator.propTypes = {
   fileUploads: PropTypes.array,
-  newUploads: PropTypes.object,
   // id: PropTypes.string,
   // // TODO: remove index once associative array implemented -> id
   // index: PropTypes.number,
@@ -68,7 +65,6 @@ FileIndicator.propTypes = {
 
 const mapStateToProps = createStructuredSelector({
   fileUploads: makeSelectFileUploads(),
-  newUploads: makeSelectNewUploads(),
 });
 
 function mapDispatchToProps(dispatch) {
