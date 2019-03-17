@@ -126,7 +126,6 @@ export {
   makeSelectSubmitInProgress,
   makeSelectSaveInProgress,
   makeSelectEmbargoDate,
-  // makeSelectFormWrapperErrors,
   makeSelectInitialValue,
   makeSelectContactForm,
   makeSelectToken,

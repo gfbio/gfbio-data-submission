@@ -1,20 +1,19 @@
 import {
   all,
-  call, cancelled,
+  call,
+  cancelled,
+  fork,
   put,
   select,
   take,
-  takeEvery,
   takeLatest,
   takeLeading,
-  fork,
 } from 'redux-saga/effects';
 import {
   SAVE_FORM,
   SUBMIT_FORM,
   SUBMIT_FORM_START,
   UPLOAD_FILES,
-  // UPLOAD_REQUEST,
 } from './constants';
 import {
   makeSelectBrokerSubmissionId,
@@ -34,23 +33,12 @@ import {
   saveFormSuccess,
   submitFormError,
   submitFormStart,
-  submitFormSuccess, uploadFileProgress,
-  // uploadFailure,
-  uploadFiles, uploadFilesError,
-  uploadFilesSuccess,
-  // uploadProgress,
-  // uploadSuccess,
+  submitFormSuccess,
+  uploadFileProgress,
+  uploadFiles,
 } from './actions';
-import {
-  fileChannel,
-  postFile,
-  postSubmission,
-  createUploadFileChannel,
-} from './submissionApi';
-import uuid from 'uuid';
-import axios from 'axios';
-import { eventChannel, END } from 'redux-saga';
-import shortid from 'shortid';
+import { createUploadFileChannel, postSubmission } from './submissionApi';
+import { END, eventChannel } from 'redux-saga';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -94,59 +82,12 @@ function* prepareRequestData(userId, submit = true) {
   };
 }
 
-// function* uploadSaga(file) {
-//   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
-//   const token = yield select(makeSelectToken());
-//
-//   const channel = yield call(fileChannel, token, brokerSubmissionId, file);
-//   while (true) {
-//     const { progress = 0, err, success } = yield take(channel);
-//     if (err) {
-//       yield put(uploadFilesError(err));
-//       return;
-//     }
-//     if (success) {
-//       yield put(uploadFilesSuccess(file));
-//       return;
-//     }
-//     yield put(uploadFileProgress(file, progress));
-//   }
-// }
-
-
-function countdown(secs) {
-  return eventChannel(emitter => {
-      const iv = setInterval(() => {
-        secs -= 1;
-        if (secs > 0) {
-          emitter(secs);
-        } else {
-          // this causes the channel to close
-          emitter(END);
-        }
-      }, 1000);
-      // The subscriber must return an unsubscribe function
-      return () => {
-        clearInterval(iv);
-      };
-    },
-  );
-}
-
-// function* uploadProgressWatcher(fileName, channel) {
 function* uploadProgressWatcher(channel, index) {
   const fileUploads = yield select(makeSelectFileUploads());
   while (true) {
     try {
       const progress = yield take(channel);
-      console.info('\nprogress');
-      // TODO: now the idea is to dispatch an action with index, access fileuploads
-      //  in reducer with index and change progress there and see if it updated rendered list
-      let x = fileUploads.get(index);
-      console.info('file index ' + index + '  progress ' + progress + ' file ? ' + x);
-      console.info(x);
       yield put(uploadFileProgress(index, progress));
-      // yield put(actions.uploadFiles.progress(progress))
     } catch (err) {
       console.info('ERROR ');
       console.info(err);
@@ -160,20 +101,11 @@ function* uploadProgressWatcher(channel, index) {
   }
 }
 
-//tmp.push({id: shortid.generate(), progress: 0, file: a})
-// function* uploadFile(fileName, index, files) {
 function* uploadFile(file, index) {
-  console.warn('upload file');
-  console.warn(file);
-  console.warn('index: ' + index);
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
   const token = yield select(makeSelectToken());
   try {
-    // const formData = new FormData();
-    // formData.append('files', files[fileName]);
-
     const uploadChannel = yield call(createUploadFileChannel, brokerSubmissionId, file.file, token);
-    // yield fork(uploadProgressWatcher, fileName, uploadChannel);
     yield fork(uploadProgressWatcher, uploadChannel, index);
   } catch (err) {
     console.log('yield error action');
@@ -183,61 +115,13 @@ function* uploadFile(file, index) {
 }
 
 function* performUploadSaga() {
-  const uid = uuid.v4();
-  console.log('\nperformUploadSaga ' + uid);
-  // console.log(file);
-  // TODO: try blocking sequence
   const fileUploads = yield select(makeSelectFileUploads());
-  console.log(fileUploads.toArray());
-  const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
-  const token = yield select(makeSelectToken());
-  const API_ROOT = 'http://0.0.0.0:8000';
-  const SUBMISSIONS = '/api/submissions/';
-  // iterate over all files scheduled for upload. call single upload each iteration
-  // let tmp = fileUploads.map((index, value) => {return value});
-  // let tmp = {};
-  // for(let f of fileUploads) {
-  //   tmp[f.id] = f;
-  // }
-  // console.log('TMP');
-  //
-  // console.log(tmp);
 
-  // TODO: try to get this working. parallel ?
-  // yield all(
-  //   Object.keys(tmp).map(uploadFile)
-  // )
   let index = 0;
   for (let f of fileUploads) {
     yield call(uploadFile, f, index);
     index++;
   }
-  //   console.log('\tupload single file');
-  //   console.log(f);
-  //   // let value = 12;
-  //   // const chan = yield call(countdown, value);
-  //
-  //   // https://stackoverflow.com/questions/40402744/redux-saga-axios-and-progress-event
-  //
-  //   // let url = API_ROOT + SUBMISSIONS + brokerSubmissionId + '/upload/';
-  //   const channel = yield call(createUploadFileChannel, brokerSubmissionId, f.file, token);
-  //   while (true) {
-  //     try {
-  //       const progress = yield take(channel);
-  //       console.info('progress');
-  //       console.info(progress);
-  //       // yield put(actions.uploadFiles.progress(progress))
-  //     } catch (err) {
-  //       console.info('ERROR ');
-  //       console.info(err);
-  //       // yield put(actions.uploadFiles.progress(err))
-  //     } finally {
-  //       console.log('finally');
-  //       if (yield cancelled()) channel.close();
-  //     }
-  //   }
-  //
-  // }
 
   // success for upload of all files
   // yield put(uploadFilesSuccess({}));
@@ -263,8 +147,6 @@ export function* performSaveFormSaga() {
   try {
     const response = yield call(postSubmission, token, payload);
     yield put(saveFormSuccess(response));
-    console.log('SAGA save succesful  | put form success');
-    console.log('continue with file uploads ?');
     yield put(uploadFiles());
   } catch (error) {
     yield put(saveFormError(error));
@@ -298,42 +180,6 @@ export function* saveFormSaga() {
 export function* uploadFilesSaga() {
   yield takeLatest(UPLOAD_FILES, performUploadSaga);
 }
-
-
-// upload example
-
-
-// // Upload the specified file
-// export function* uploadFileSaga(file) {
-//   const token = yield select(makeSelectToken());
-//   const channel = yield call(
-//     createUploadFileChannel,
-//     'http://0.0.0.0:8000/api/submissions/5e6ef890-3973-40b4-a10b-2c3a783111f1/upload/',
-//     file,
-//     token);
-//   while (true) {
-//     const { progress = 0, err, success } = yield take(channel);
-//     if (err) {
-//       yield put(uploadFailure(file, err));
-//       return;
-//     }
-//     if (success) {
-//       yield put(uploadSuccess(file));
-//       return;
-//     }
-//     yield put(uploadProgress(file, progress));
-//   }
-// }
-//
-// // Watch for an upload request and then
-// // defer to another saga to perform the actual upload
-// export function* uploadRequestWatcherSaga() {
-//   yield takeEvery(UPLOAD_REQUEST, function* (action) {
-//     const file = action.payload;
-//     yield call(uploadFileSaga, file);
-//   });
-// }
-
 
 export default function* rootSaga() {
   yield all([checkFormTypeSaga(), saveFormSaga(), submitFormSaga(), uploadFilesSaga()]);

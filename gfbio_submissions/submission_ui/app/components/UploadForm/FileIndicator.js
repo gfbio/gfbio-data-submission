@@ -2,9 +2,7 @@ import React from 'react';
 
 import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
-import {
-  makeSelectFileUploads,
-} from '../../containers/SubmissionForm/selectors';
+import { makeSelectFileUploads } from '../../containers/SubmissionForm/selectors';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { removeFileUpload } from '../../containers/SubmissionForm/actions';
@@ -52,15 +50,7 @@ class FileIndicator extends React.Component {
 
 FileIndicator.propTypes = {
   fileUploads: PropTypes.array,
-  // id: PropTypes.string,
-  // // TODO: remove index once associative array implemented -> id
-  // index: PropTypes.number,
-  // fileName: PropTypes.string,
-  // fileSize: PropTypes.number,
-  // fileType: PropTypes.string,
   handleRemove: PropTypes.func,
-  // TODO: whole file needed anyway for upload, could save other file related props
-  // file: PropTypes.object,
 };
 
 const mapStateToProps = createStructuredSelector({
