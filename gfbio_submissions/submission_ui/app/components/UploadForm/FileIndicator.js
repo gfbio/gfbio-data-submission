@@ -6,6 +6,7 @@ import { makeSelectFileUploads } from '../../containers/SubmissionForm/selectors
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { removeFileUpload } from '../../containers/SubmissionForm/actions';
+import filesize from 'filesize';
 
 class FileIndicator extends React.Component {
   // constructor(props) {
@@ -23,18 +24,28 @@ class FileIndicator extends React.Component {
       console.log(upload);
       return <li
         key={index}
-        className="list-group-item d-flex justify-content-between align-items-center publication">
-        <small><i className="fa fa-file-o pub" /> {upload.file.name} </small>
-        <small>{upload.file.size}</small>
-        <small>{upload.file.type}</small>
-        <b>{upload.progress}</b>
-        <button className="btn btn-remove" onClick={(e) => {
-          e.preventDefault();
-          this.props.handleRemove(index);
-        }}>
-          <i className="fa fa-times" />
-          Remove
-        </button>
+        className="list-group-item d-flex justify-content-between align-items-center file-upload">
+        <div>
+          <small><i className="fa fa-file-text-o pub" /> {upload.file.name}
+          </small>
+        </div>
+        {/*<small>{upload.file.type}</small>*/}
+        {/*<b>{upload.progress}</b>*/}
+        <div>
+          <small className="mr-5 file-size">{filesize(upload.file.size)}</small>
+          <button className="btn btn-download mr-3">
+            <i className="icon ion-md-download"></i>
+          </button>
+          <button className="btn btn-remove" onClick={(e) => {
+            e.preventDefault();
+            this.props.handleRemove(index);
+          }}>
+            {/*<i className="fa fa-times" />*/}
+            {/*Remove*/}
+            {/*<i className="icon ion-md-trash"></i>*/}
+            <i className="fa fa-trash" aria-hidden="true"></i>
+          </button>
+        </div>
       </li>;
     });
 

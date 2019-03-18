@@ -370,6 +370,70 @@ form.pagewide-form {
 
   }
 
+  li.file-upload {
+    font-size: .9rem;
+    //border-radius: .25rem;
+    border: none;
+    padding: .375rem .75rem .375rem .75rem;
+    margin-bottom: .25rem;
+
+    &:last-child {
+      margin-bottom: 1rem;
+    }
+
+    &:hover {
+      background-color: $gray-100;
+    }
+
+    small.file-size {
+      font-weight: 400;
+    }
+
+    i.pub {
+      padding-right: 1rem;
+      font-size: 1.25rem;
+      color: $gfbio-green;
+    }
+
+    .btn {
+      font-size: .75rem;
+      padding: .25rem;
+
+      i {
+        font-size: 1.25rem;
+      }
+    }
+
+    .btn-remove {
+      color: $contrast-2;
+
+      &:hover {
+        color: $error-red;
+
+        i {
+          //font-size: 1.5rem;
+        }
+      }
+
+
+    }
+
+    .btn-download {
+      color: $gfbio-light-blue;
+      //margin-right: 1rem;
+
+      &:hover {
+        color: $gfbio-blue;
+
+        i {
+          //font-size: 1.5rem;
+        }
+      }
+
+    }
+
+  }
+
   .template-links {
 
     a {
