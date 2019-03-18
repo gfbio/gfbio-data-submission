@@ -21,8 +21,14 @@ class UploadForm extends React.PureComponent {
   onDrop = (acceptedFiles, rejectedFiles) => {
     // // TODO: accepted files will become list of files scheduled for upload, remove etc
     let tmp = [];
-    for(let a of acceptedFiles) {
-      tmp.push({id: shortid.generate(), progress: 0, file: a})
+    for (let a of acceptedFiles) {
+      tmp.push({
+        id: shortid.generate(),
+        progress: 0,
+        file: a,
+        status: 'pending',
+        messages: {},
+      });
     }
     this.props.handleDrop(tmp);
   };
