@@ -656,6 +656,17 @@ form.pagewide-form li.file-upload {
   margin-bottom: .25rem;
 }
 
+form.pagewide-form li.file-upload .progress {
+  background-color: inherit;
+  height: 2px;
+  z-index: 99;
+  border-radius: 0;
+}
+
+form.pagewide-form li.file-upload .progress .progress-bar {
+  background-color: rgba(129, 178, 72, 0.9);
+}
+
 form.pagewide-form li.file-upload:last-child {
   margin-bottom: 1rem;
 }
@@ -693,7 +704,6 @@ form.pagewide-form li.file-upload .btn-remove:hover {
 
 form.pagewide-form li.file-upload .btn-download {
   color: #3CACE4;
-  margin-right: 1rem;
 }
 
 form.pagewide-form li.file-upload .btn-download:hover {

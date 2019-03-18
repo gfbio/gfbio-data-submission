@@ -22,30 +22,45 @@ class FileIndicator extends React.Component {
 
     const fileListElements = this.props.fileUploads.map((upload, index) => {
       console.log(upload);
+      let progressStyle = {
+        width: `${upload.progress}%`,
+      };
       return <li
         key={index}
-        className="list-group-item d-flex justify-content-between align-items-center file-upload">
-        <div>
-          <small><i className="fa fa-file-text-o pub" /> {upload.file.name}
-          </small>
+        className="list-group-item  file-upload">
+        <div className="d-flex justify-content-between align-items-center">
+          <div>
+            <small><i className="fa fa-file-text-o pub" /> {upload.file.name}
+            </small>
+          </div>
+          {/*<small>{upload.file.type}</small>*/}
+          {/*<b>{upload.progress}</b>*/}
+          <div>
+            <small
+              className="mr-5 file-size">{filesize(upload.file.size)}</small>
+            <button className="btn btn-download mr-3">
+              <i className="icon ion-md-download"></i>
+            </button>
+            <button className="btn btn-remove" onClick={(e) => {
+              e.preventDefault();
+              this.props.handleRemove(index);
+            }}>
+              {/*<i className="fa fa-times" />*/}
+              {/*Remove*/}
+              {/*<i className="icon ion-md-trash"></i>*/}
+              <i className="fa fa-trash" aria-hidden="true"></i>
+            </button>
+          </div>
         </div>
-        {/*<small>{upload.file.type}</small>*/}
-        {/*<b>{upload.progress}</b>*/}
-        <div>
-          <small className="mr-5 file-size">{filesize(upload.file.size)}</small>
-          <button className="btn btn-download mr-3">
-            <i className="icon ion-md-download"></i>
-          </button>
-          <button className="btn btn-remove" onClick={(e) => {
-            e.preventDefault();
-            this.props.handleRemove(index);
-          }}>
-            {/*<i className="fa fa-times" />*/}
-            {/*Remove*/}
-            {/*<i className="icon ion-md-trash"></i>*/}
-            <i className="fa fa-trash" aria-hidden="true"></i>
-          </button>
+
+        {/*<div className="pbar-test">*/}
+
+        <div className="progress">
+          <div className="progress-bar" role="progressbar" style={progressStyle}
+               aria-valuenow={`${upload.progress}`} aria-valuemin="0" aria-valuemax="100"></div>
         </div>
+
+        {/*</div>*/}
       </li>;
     });
 
