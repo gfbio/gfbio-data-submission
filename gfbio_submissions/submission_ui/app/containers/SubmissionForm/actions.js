@@ -24,7 +24,7 @@ import {
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
-  SUBMIT_FORM_SUCCESS, UPLOAD_FILE_PROGRESS,
+  SUBMIT_FORM_SUCCESS, UPLOAD_FILE_ERROR, UPLOAD_FILE_PROGRESS,
   // UPLOAD_FAILURE,
   UPLOAD_FILES,
   UPLOAD_FILES_ERROR,
@@ -176,6 +176,7 @@ export function uploadFiles() {
   };
 }
 
+/* Files with s for multiple */
 export function uploadFilesSuccess(response) {
   return {
     type: UPLOAD_FILES_SUCCESS,
@@ -190,6 +191,9 @@ export function uploadFilesError(errorResponse) {
   };
 }
 
+/* END Files with s for multiple */
+
+/* File no s for single File */
 export function uploadFileProgress(index, val) {
   return {
     type: UPLOAD_FILE_PROGRESS,
@@ -197,3 +201,11 @@ export function uploadFileProgress(index, val) {
     val,
   };
 }
+
+export function uploadFileError(error) {
+  return {
+    type: UPLOAD_FILE_ERROR,
+    error,
+  };
+}
+/* END File no s for single File */

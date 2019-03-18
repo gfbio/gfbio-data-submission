@@ -33,7 +33,7 @@ import {
   saveFormSuccess,
   submitFormError,
   submitFormStart,
-  submitFormSuccess,
+  submitFormSuccess, uploadFileError,
   uploadFileProgress,
   uploadFiles,
 } from './actions';
@@ -90,7 +90,7 @@ function* uploadProgressWatcher(channel, index) {
     } catch (err) {
       console.info('ERROR ');
       console.info(err);
-      // yield put(actions.uploadFiles.progress(err))
+      yield put(uploadFileError(err));
     } finally {
       console.log('finally');
       if (yield cancelled()) {
@@ -109,7 +109,7 @@ function* uploadFile(file, index) {
   } catch (err) {
     console.log('yield error action');
     console.log(err);
-    // yield* actions.uploadFiles.failure(err);
+    yield put(uploadFileError(err));
   }
 }
 

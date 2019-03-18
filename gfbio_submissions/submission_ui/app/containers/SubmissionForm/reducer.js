@@ -24,7 +24,7 @@ import {
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
-  SUBMIT_FORM_SUCCESS, UPLOAD_FILE_PROGRESS,
+  SUBMIT_FORM_SUCCESS, UPLOAD_FILE_ERROR, UPLOAD_FILE_PROGRESS,
   UPLOAD_FILES, UPLOAD_FILES_ERROR,
   UPLOAD_FILES_SUCCESS,
 } from './constants';
@@ -129,6 +129,12 @@ function submissionFormReducer(state = initialState, action) {
     case UPLOAD_FILES:
       console.log('UPLOAD_FILES reducer');
       return state;
+    case UPLOAD_FILES_SUCCESS:
+      console.log('UPLOAD_FILES_SUCCESS reducer');
+      return state;
+    case UPLOAD_FILES_ERROR:
+      console.log('UPLOAD_FILES_ERROR reducer');
+      return state;
     case UPLOAD_FILE_PROGRESS:
       console.log('\n\nUPLOAD_FILE_PROGRESS');
       let upload = state.getIn(['fileUploads', action.index]);
@@ -138,11 +144,9 @@ function submissionFormReducer(state = initialState, action) {
       // TODO: setIn does not work as described in here: https://thomastuts.com/blog/immutable-js-101-maps-lists.html
       return state
         .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1, upload));
-    case UPLOAD_FILES_SUCCESS:
-      console.log('UPLOAD_FILES_SUCCESS reducer');
-      return state;
-    case UPLOAD_FILES_ERROR:
-      console.log('UPLOAD_FILES_ERROR reducer');
+    case UPLOAD_FILE_ERROR:
+      console.log('UPLOAD_FILE_ERROR');
+      console.log(action.error);
       return state;
     default:
       return state;
