@@ -39,8 +39,6 @@ export const initialState = fromJS({
   metaDataSchema: 'None',
   reduxFormForm: {},
   initialValues: {},
-  // TODO: set token according to site. maybe IDM user in the future
-  // token: '5639b56bd077fb3e12d7e4a0ada244aaa970c2fd',
   submitInProgress: false,
   saveInProgress: false,
   embargoDate: new Date(),
@@ -56,10 +54,11 @@ export const initialState = fromJS({
   // TODO: same for save
   saveResponse: {},
   currentRelatedPublication: '',
-  relatedPublications: Array(),
+  relatedPublications: [],
   currentLabel: '',
-  datasetLabels: Array(),
+  datasetLabels: [],
   fileUploads: [],
+  fileUploadInProgress: false,
   brokerSubmissionId: '',
 });
 
@@ -124,17 +123,24 @@ function submissionFormReducer(state = initialState, action) {
         .update('fileUploads', (fileUploads) => fileUploads.push(...action.value));
     case REMOVE_FILE_UPLOAD:
       console.log('REMOVE_FILE_UPLOAD');
-      return state
-        .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1));
+      if (state.get('fileUploadInProgress') == false) {
+        return state
+          .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1));
+      } else {
+        return state;
+      }
     case UPLOAD_FILES:
       console.log('UPLOAD_FILES reducer');
-      return state;
+      return state
+        .set('fileUploadInProgress', true);
     case UPLOAD_FILES_SUCCESS:
       console.log('UPLOAD_FILES_SUCCESS reducer');
-      return state;
+      return state
+        .set('fileUploadInProgress', false);
     case UPLOAD_FILES_ERROR:
       console.log('UPLOAD_FILES_ERROR reducer');
-      return state;
+      return state
+        .set('fileUploadInProgress', false);
     case UPLOAD_FILE_PROGRESS:
       console.log('\n\nUPLOAD_FILE_PROGRESS');
       let upload = state.getIn(['fileUploads', action.index]);

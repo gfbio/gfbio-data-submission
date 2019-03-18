@@ -35,7 +35,7 @@ import {
   submitFormStart,
   submitFormSuccess, uploadFileError,
   uploadFileProgress,
-  uploadFiles,
+  uploadFiles, uploadFilesSuccess,
 } from './actions';
 import { createUploadFileChannel, postSubmission } from './submissionApi';
 import { END, eventChannel } from 'redux-saga';
@@ -120,9 +120,7 @@ function* performUploadSaga() {
     yield call(uploadFile, f, index);
     index++;
   }
-
-  // success for upload of all files
-  // yield put(uploadFilesSuccess({}));
+  yield put(uploadFilesSuccess({}));
 }
 
 export function* performSubmitFormSaga() {
