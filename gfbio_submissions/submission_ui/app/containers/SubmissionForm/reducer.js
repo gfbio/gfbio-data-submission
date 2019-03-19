@@ -24,8 +24,12 @@ import {
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
-  SUBMIT_FORM_SUCCESS, UPLOAD_FILE_ERROR, UPLOAD_FILE_PROGRESS,
-  UPLOAD_FILES, UPLOAD_FILES_ERROR,
+  SUBMIT_FORM_SUCCESS,
+  UPLOAD_FILE_ERROR,
+  UPLOAD_FILE_PROGRESS,
+  UPLOAD_FILE_SUCCESS,
+  UPLOAD_FILES,
+  UPLOAD_FILES_ERROR,
   UPLOAD_FILES_SUCCESS,
 } from './constants';
 
@@ -152,8 +156,20 @@ function submissionFormReducer(state = initialState, action) {
         .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1, upload));
     case UPLOAD_FILE_ERROR:
       console.log('UPLOAD_FILE_ERROR');
+      console.log(action.index);
       console.log(action.error);
-      return state;
+      let error_upload = state.getIn(['fileUploads', action.index]);
+      error_upload.messages = action.error;
+      error_upload.status = 'error';
+      return state
+        .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1, error_upload));
+    case UPLOAD_FILE_SUCCESS:
+      console.log('UPLOAD_FILE_SUCCESS');
+      console.log(action.index);
+      let success_upload = state.getIn(['fileUploads', action.index]);
+      success_upload.status = 'success';
+      return state
+        .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1, success_upload));
     default:
       return state;
   }

@@ -26,7 +26,7 @@ class UploadForm extends React.PureComponent {
         id: shortid.generate(),
         progress: 0,
         file: a,
-        status: 'pending',
+        status: 'pending', // 'success' 'error' 'uploading'
         messages: {},
       });
     }

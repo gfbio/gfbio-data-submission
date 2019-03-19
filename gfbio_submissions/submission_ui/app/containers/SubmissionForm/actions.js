@@ -24,7 +24,10 @@ import {
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
-  SUBMIT_FORM_SUCCESS, UPLOAD_FILE_ERROR, UPLOAD_FILE_PROGRESS,
+  SUBMIT_FORM_SUCCESS,
+  UPLOAD_FILE_ERROR,
+  UPLOAD_FILE_PROGRESS,
+  UPLOAD_FILE_SUCCESS,
   // UPLOAD_FAILURE,
   UPLOAD_FILES,
   UPLOAD_FILES_ERROR,
@@ -202,10 +205,19 @@ export function uploadFileProgress(index, val) {
   };
 }
 
-export function uploadFileError(error) {
+export function uploadFileError(index, error) {
   return {
     type: UPLOAD_FILE_ERROR,
+    index,
     error,
   };
 }
+
+export function uploadFileSuccess(index) {
+  return {
+    type: UPLOAD_FILE_SUCCESS,
+    index,
+  };
+}
+
 /* END File no s for single File */

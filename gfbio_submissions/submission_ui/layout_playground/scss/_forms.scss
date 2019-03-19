@@ -370,6 +370,30 @@ form.pagewide-form {
 
   }
 
+  .pending {
+    background-color: $white;
+
+    &:hover {
+      background-color: $gray-100;
+    }
+  }
+
+  .error {
+    background-color: $error-background;
+
+    &:hover {
+      background-color: $error-background-hover;
+    }
+  }
+
+  .success {
+    background-color: $gfbio-green-0-1;
+
+    &:hover {
+      background-color: $gfbio-green-0-3;
+    }
+  }
+
   li.file-upload {
     font-size: .9rem;
     //border-radius: .25rem;
@@ -382,6 +406,7 @@ form.pagewide-form {
     //  height: 25px;
     //  background-color: limegreen;
     //}
+
 
     .progress {
       background-color: inherit;
@@ -401,9 +426,9 @@ form.pagewide-form {
       margin-bottom: 1rem;
     }
 
-    &:hover {
-      background-color: $gray-100;
-    }
+    //&:hover {
+    //  background-color: $gray-100;
+    //}
 
     small.file-size {
       font-weight: 400;

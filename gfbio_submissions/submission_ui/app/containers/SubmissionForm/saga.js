@@ -33,12 +33,14 @@ import {
   saveFormSuccess,
   submitFormError,
   submitFormStart,
-  submitFormSuccess, uploadFileError,
+  submitFormSuccess,
+  uploadFileError,
   uploadFileProgress,
-  uploadFiles, uploadFilesSuccess,
+  uploadFiles,
+  uploadFilesSuccess,
+  uploadFileSuccess,
 } from './actions';
 import { createUploadFileChannel, postSubmission } from './submissionApi';
-import { END, eventChannel } from 'redux-saga';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -88,11 +90,12 @@ function* uploadProgressWatcher(channel, index) {
       const progress = yield take(channel);
       yield put(uploadFileProgress(index, progress));
     } catch (err) {
-      console.info('ERROR ');
+      console.info('ERROR uploadProgressWatcher');
       console.info(err);
-      yield put(uploadFileError(err));
+      yield put(uploadFileError(index, err));
     } finally {
       console.log('finally');
+      yield put(uploadFileSuccess(index));
       if (yield cancelled()) {
         channel.close();
       }
@@ -107,9 +110,9 @@ function* uploadFile(file, index) {
     const uploadChannel = yield call(createUploadFileChannel, brokerSubmissionId, file.file, token);
     yield fork(uploadProgressWatcher, uploadChannel, index);
   } catch (err) {
-    console.log('yield error action');
+    console.log('yield error action uploadFile');
     console.log(err);
-    yield put(uploadFileError(err));
+    yield put(uploadFileError(index, err));
   }
 }
 
@@ -172,6 +175,7 @@ export function* submitFormSaga() {
 export function* saveFormSaga() {
   yield takeLeading(SAVE_FORM, performSaveFormSaga);
 }
+
 // TODO: adapt upload workflow for submit
 /*
 current save workflow with upload:

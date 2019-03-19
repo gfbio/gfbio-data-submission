@@ -25,9 +25,10 @@ class FileIndicator extends React.Component {
       let progressStyle = {
         width: `${upload.progress}%`,
       };
+
       return <li
         key={index}
-        className="list-group-item  file-upload">
+        className={"list-group-item file-upload "+upload.status}>
         <div className="d-flex justify-content-between align-items-center">
           <div>
             <small><i className="fa fa-file-text-o pub" /> {upload.file.name}
@@ -57,7 +58,8 @@ class FileIndicator extends React.Component {
 
         <div className="progress">
           <div className="progress-bar" role="progressbar" style={progressStyle}
-               aria-valuenow={`${upload.progress}`} aria-valuemin="0" aria-valuemax="100"></div>
+               aria-valuenow={`${upload.progress}`} aria-valuemin="0"
+               aria-valuemax="100"></div>
         </div>
 
         {/*</div>*/}

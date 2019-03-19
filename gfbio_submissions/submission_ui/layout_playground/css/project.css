@@ -649,6 +649,30 @@ form.pagewide-form li.publication .btn-remove i {
   padding-right: .5rem;
 }
 
+form.pagewide-form .pending {
+  background-color: #fff;
+}
+
+form.pagewide-form .pending:hover {
+  background-color: #f8f8f8;
+}
+
+form.pagewide-form .error {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+form.pagewide-form .error:hover {
+  background-color: rgba(220, 53, 69, 0.3);
+}
+
+form.pagewide-form .success {
+  background-color: rgba(129, 178, 72, 0.1);
+}
+
+form.pagewide-form .success:hover {
+  background-color: rgba(129, 178, 72, 0.3);
+}
+
 form.pagewide-form li.file-upload {
   font-size: .9rem;
   border: none;
@@ -669,10 +693,6 @@ form.pagewide-form li.file-upload .progress .progress-bar {
 
 form.pagewide-form li.file-upload:last-child {
   margin-bottom: 1rem;
-}
-
-form.pagewide-form li.file-upload:hover {
-  background-color: #f8f8f8;
 }
 
 form.pagewide-form li.file-upload small.file-size {
