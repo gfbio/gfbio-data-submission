@@ -43,7 +43,9 @@ class FormWrapper extends React.PureComponent {
       <form
         name="wrapping-form"
         className="pagewide-form"
-        // onSubmit={this.props.handleSubmit}
+        onSubmit={e => {
+          e.preventDefault();
+        }}
       >
         <div className="container">
           <div className="row">
