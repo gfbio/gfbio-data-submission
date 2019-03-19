@@ -64,6 +64,7 @@ export const initialState = fromJS({
   fileUploads: [],
   fileUploadInProgress: false,
   brokerSubmissionId: '',
+  contributor: {},
 });
 
 function submissionFormReducer(state = initialState, action) {
