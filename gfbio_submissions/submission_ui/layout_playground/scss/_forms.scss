@@ -370,6 +370,115 @@ form.pagewide-form {
 
   }
 
+  .pending {
+    background-color: $white;
+
+    &:hover {
+      background-color: $gray-100;
+    }
+  }
+
+  .error {
+    background-color: $error-background;
+
+    &:hover {
+      background-color: $error-background-hover;
+    }
+  }
+
+  .success {
+    background-color: $gfbio-green-0-1;
+
+    &:hover {
+      background-color: $gfbio-green-0-3;
+    }
+  }
+
+  li.file-upload {
+    font-size: .9rem;
+    //border-radius: .25rem;
+    border: none;
+    padding: .375rem .75rem .375rem .75rem;
+    margin-bottom: .25rem;
+
+    //.pbar-test {
+    //  width: 100%;
+    //  height: 25px;
+    //  background-color: limegreen;
+    //}
+
+
+    .progress {
+      background-color: inherit;
+      height: 2px;
+      //margin-bottom: 1px;
+      z-index: 99;
+      border-radius: 0;
+
+      .progress-bar {
+        background-color: $gfbio-green-0-9;
+        //border-radius: 0;
+      }
+
+    }
+
+    &:last-child {
+      margin-bottom: 1rem;
+    }
+
+    //&:hover {
+    //  background-color: $gray-100;
+    //}
+
+    small.file-size {
+      font-weight: 400;
+    }
+
+    i.pub {
+      padding-right: 1rem;
+      font-size: 1.25rem;
+      color: $gfbio-green;
+    }
+
+    .btn {
+      font-size: .75rem;
+      padding: .25rem;
+
+      i {
+        font-size: 1.25rem;
+      }
+    }
+
+    .btn-remove {
+      color: $contrast-2;
+
+      &:hover {
+        color: $error-red;
+
+        i {
+          //font-size: 1.5rem;
+        }
+      }
+
+
+    }
+
+    .btn-download {
+      color: $gfbio-light-blue;
+      //margin-right: 1rem;
+
+      &:hover {
+        color: $gfbio-blue;
+
+        i {
+          //font-size: 1.5rem;
+        }
+      }
+
+    }
+
+  }
+
   .template-links {
 
     a {

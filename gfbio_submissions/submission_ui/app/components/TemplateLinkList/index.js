@@ -16,7 +16,7 @@ class TemplateLinkList extends React.PureComponent {
         <header className="header header-left form-header-top">
           <h2 className="section-title">Metadata Templates</h2>
         </header>
-        <div class="form-group list-group template-links">
+        <div className="form-group list-group template-links">
           <a
             href="https://submissions.gfbio.org/ui/molecular/full_template.csv"
             className="list-group-item list-group-item-action"

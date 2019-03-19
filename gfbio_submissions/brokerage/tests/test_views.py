@@ -444,6 +444,13 @@ class TestSubmissionUploadView(TestCase):
         self.assertEqual(len(TaskProgressReport.objects.all()), reports_len)
         self.assertGreater(len(SubmissionUpload.objects.all()), uploads_len)
 
+    def test_upload_of_multiple_files(self):
+        submission = Submission.objects.all().first()
+        site_config = SiteConfiguration.objects.first()
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        responses.add(responses.POST, url, json={}, status=200)
+
     @responses.activate
     def test_valid_upload_with_task(self):
         submission = Submission.objects.all().first()

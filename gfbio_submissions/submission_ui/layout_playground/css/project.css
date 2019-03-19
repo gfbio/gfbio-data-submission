@@ -649,6 +649,87 @@ form.pagewide-form li.publication .btn-remove i {
   padding-right: .5rem;
 }
 
+form.pagewide-form .pending {
+  background-color: #fff;
+}
+
+form.pagewide-form .pending:hover {
+  background-color: #f8f8f8;
+}
+
+form.pagewide-form .error {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+form.pagewide-form .error:hover {
+  background-color: rgba(220, 53, 69, 0.3);
+}
+
+form.pagewide-form .success {
+  background-color: rgba(129, 178, 72, 0.1);
+}
+
+form.pagewide-form .success:hover {
+  background-color: rgba(129, 178, 72, 0.3);
+}
+
+form.pagewide-form li.file-upload {
+  font-size: .9rem;
+  border: none;
+  padding: .375rem .75rem .375rem .75rem;
+  margin-bottom: .25rem;
+}
+
+form.pagewide-form li.file-upload .progress {
+  background-color: inherit;
+  height: 2px;
+  z-index: 99;
+  border-radius: 0;
+}
+
+form.pagewide-form li.file-upload .progress .progress-bar {
+  background-color: rgba(129, 178, 72, 0.9);
+}
+
+form.pagewide-form li.file-upload:last-child {
+  margin-bottom: 1rem;
+}
+
+form.pagewide-form li.file-upload small.file-size {
+  font-weight: 400;
+}
+
+form.pagewide-form li.file-upload i.pub {
+  padding-right: 1rem;
+  font-size: 1.25rem;
+  color: #81B248;
+}
+
+form.pagewide-form li.file-upload .btn {
+  font-size: .75rem;
+  padding: .25rem;
+}
+
+form.pagewide-form li.file-upload .btn i {
+  font-size: 1.25rem;
+}
+
+form.pagewide-form li.file-upload .btn-remove {
+  color: #FF6339;
+}
+
+form.pagewide-form li.file-upload .btn-remove:hover {
+  color: #dc3545;
+}
+
+form.pagewide-form li.file-upload .btn-download {
+  color: #3CACE4;
+}
+
+form.pagewide-form li.file-upload .btn-download:hover {
+  color: #345AA2;
+}
+
 form.pagewide-form .template-links a {
   border: none;
   border-bottom: 1px solid #e9ecef;

@@ -1,11 +1,29 @@
-import { all, call, put, select, takeLeading } from 'redux-saga/effects';
-import { SAVE_FORM, SUBMIT_FORM, SUBMIT_FORM_START } from './constants';
 import {
+  all,
+  call,
+  cancelled,
+  fork,
+  put,
+  select,
+  take,
+  takeLatest,
+  takeLeading,
+} from 'redux-saga/effects';
+import {
+  SAVE_FORM,
+  SUBMIT_FORM,
+  SUBMIT_FORM_START,
+  UPLOAD_FILES,
+} from './constants';
+import {
+  makeSelectBrokerSubmissionId,
   makeSelectDatasetLabels,
+  makeSelectFileUploads,
   makeSelectFormWrapper,
   makeSelectLicense,
   makeSelectMetaDataSchema,
-  makeSelectReduxFormForm, makeSelectRelatedPublications,
+  makeSelectReduxFormForm,
+  makeSelectRelatedPublications,
   makeSelectToken,
   makeSelectUserId,
 } from './selectors';
@@ -16,8 +34,13 @@ import {
   submitFormError,
   submitFormStart,
   submitFormSuccess,
+  uploadFileError,
+  uploadFileProgress,
+  uploadFiles,
+  uploadFilesSuccess,
+  uploadFileSuccess,
 } from './actions';
-import { postSubmission } from './submissionApi';
+import { createUploadFileChannel, postSubmission } from './submissionApi';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -61,6 +84,48 @@ function* prepareRequestData(userId, submit = true) {
   };
 }
 
+function* uploadProgressWatcher(channel, index) {
+  while (true) {
+    try {
+      const progress = yield take(channel);
+      yield put(uploadFileProgress(index, progress));
+    } catch (err) {
+      console.info('ERROR uploadProgressWatcher');
+      console.info(err);
+      yield put(uploadFileError(index, err));
+    } finally {
+      console.log('finally');
+      yield put(uploadFileSuccess(index));
+      if (yield cancelled()) {
+        channel.close();
+      }
+    }
+  }
+}
+
+function* uploadFile(file, index) {
+  const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
+  const token = yield select(makeSelectToken());
+  try {
+    const uploadChannel = yield call(createUploadFileChannel, brokerSubmissionId, file.file, token);
+    yield fork(uploadProgressWatcher, uploadChannel, index);
+  } catch (err) {
+    console.log('yield error action uploadFile');
+    console.log(err);
+    yield put(uploadFileError(index, err));
+  }
+}
+
+function* performUploadSaga() {
+  const fileUploads = yield select(makeSelectFileUploads());
+  let index = 0;
+  for (let f of fileUploads) {
+    yield call(uploadFile, f, index);
+    index++;
+  }
+  yield put(uploadFilesSuccess({}));
+}
+
 export function* performSubmitFormSaga() {
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
@@ -81,6 +146,7 @@ export function* performSaveFormSaga() {
   try {
     const response = yield call(postSubmission, token, payload);
     yield put(saveFormSuccess(response));
+    yield put(uploadFiles());
   } catch (error) {
     yield put(saveFormError(error));
   }
@@ -94,6 +160,7 @@ export function* processSubmitFormTypeSaga() {
     yield put(submitFormStart());
   }
 }
+
 
 export function* checkFormTypeSaga() {
   // new feature from rc1 that blocks until finished
@@ -109,6 +176,40 @@ export function* saveFormSaga() {
   yield takeLeading(SAVE_FORM, performSaveFormSaga);
 }
 
+// TODO: adapt upload workflow for submit
+/*
+current save workflow with upload:
+==================================
+- SAVE_FORM is taken, triggers performSaveFormSaga
+- this posts a submission with submit=False
+- if errors dispatch saveFormError via put
+- if success (brokersubmissionid) dispatch saveFormSuccess
+  and dispatch uploadFiles
+- UPLOAD_FILES is taken, triggers performUploadSaga
+- this gets fileUploads from current state and iterates over it, while counting an index
+- every iteration a call() to uploadFile is send with file and index as parameters (yield all not working currently ?)
+- uploadFile calls and gets an uploadChannel from createUploadFileChannel and
+- forks a uploadProgressWatcher with the channel and the index
+- uploadProgressWatcher watches the upload progress (of axios onUploadProgress event triggered in createUploadFileChannel)
+- dispatches uploadFileProgress action which updates state for file at index, and watches for errors.
+
+TODO: dispatch error for single file, everywhere error is expected/ try-catched
+TODO: set property in single file capture status success/error/finished
+TODO: dispatch action all_files_uploaded success/error
+TODO: block remove button, when save/submit working (modify upload list not possible after start of submission)
+TODO: no re-upload of already uploaded files -> set property, compare above
+TODO: style file list, position etc
+TODO: real upload bar instead of numeric progress
+
+TODO: when in edit mode: remove file means delete already uploaded file.
+
+*/
+
+
+export function* uploadFilesSaga() {
+  yield takeLatest(UPLOAD_FILES, performUploadSaga);
+}
+
 export default function* rootSaga() {
-  yield all([checkFormTypeSaga(), saveFormSaga(), submitFormSaga()]);
+  yield all([checkFormTypeSaga(), saveFormSaga(), submitFormSaga(), uploadFilesSaga()]);
 }

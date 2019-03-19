@@ -104,6 +104,17 @@ const makeSelectCurrentLabel = () =>
     substate.get('currentLabel'),
   );
 
+const makeSelectFileUploads = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('fileUploads'),
+  );
+
+const makeSelectBrokerSubmissionId = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('brokerSubmissionId'),
+  );
+
+
 export default makeSelectSubmissionForm;
 
 export {
@@ -115,7 +126,6 @@ export {
   makeSelectSubmitInProgress,
   makeSelectSaveInProgress,
   makeSelectEmbargoDate,
-  // makeSelectFormWrapperErrors,
   makeSelectInitialValue,
   makeSelectContactForm,
   makeSelectToken,
@@ -124,4 +134,6 @@ export {
   makeSelectCurrentRelatedPublication,
   makeSelectCurrentLabel,
   makeSelectDatasetLabels,
+  makeSelectFileUploads,
+  makeSelectBrokerSubmissionId,
 };

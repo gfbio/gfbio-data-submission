@@ -7,7 +7,10 @@
                 "minLength": 8
             },
             "dataset_label": {
-                "type": "string"
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
             },
             "data_center": {
                 "type": "string",
@@ -62,7 +65,10 @@
                 ]
             },
             "related_publications": {
-                "type": "string"
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
             },
             "metadata_schema": {
                 "type": "string",

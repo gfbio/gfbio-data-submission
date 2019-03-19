@@ -20,12 +20,23 @@ export const SUBMIT_FORM_ACTIVE = 'app/SubmissionForm/SUBMIT_FORM_ACTIVE';
 export const SUBMIT_FORM_SUCCESS = 'app/SubmissionForm/SUBMIT_FORM_SUCCESS';
 export const SUBMIT_FORM_ERROR = 'app/SubmissionForm/SUBMIT_FORM_ERROR';
 
-export const SET_EMBARGO_DATE = 'app/SubmssionForm/SET_EMBARGO_DATE';
+export const SET_EMBARGO_DATE = 'app/SubmissionForm/SET_EMBARGO_DATE';
 
-export const ADD_RELATED_PUBLICATION = 'app/SubmssionForm/ADD_RELATED_PUBLICATION';
-export const REMOVE_RELATED_PUBLICATION = 'app/SubmssionForm/REMOVE_RELATED_PUBLICATION';
-export const CHANGE_CURRENT_RELATED_PUBLICATION = 'app/SubmssionForm/CHANGE_CURRENT_RELATED_PUBLICATION';
+export const ADD_RELATED_PUBLICATION = 'app/SubmissionForm/ADD_RELATED_PUBLICATION';
+export const REMOVE_RELATED_PUBLICATION = 'app/SubmissionForm/REMOVE_RELATED_PUBLICATION';
+export const CHANGE_CURRENT_RELATED_PUBLICATION = 'app/SubmissionForm/CHANGE_CURRENT_RELATED_PUBLICATION';
 
-export const ADD_DATASET_LABEL = 'app/SubmssionForm/ADD_DATASET_LABEL';
-export const REMOVE_DATASET_LABEL = 'app/SubmssionForm/REMOVE_DATASET_LABEL';
-export const CHANGE_CURRENT_DATASET_LABEL = 'app/SubmssionForm/CHANGE_CURRENT_DATASET_LABEL';
+export const ADD_DATASET_LABEL = 'app/SubmissionForm/ADD_DATASET_LABEL';
+export const REMOVE_DATASET_LABEL = 'app/SubmissionForm/REMOVE_DATASET_LABEL';
+export const CHANGE_CURRENT_DATASET_LABEL = 'app/SubmissionForm/CHANGE_CURRENT_DATASET_LABEL';
+
+export const ADD_FILE_UPLOAD = 'app/SubmissionForm/ADD_FILE_UPLOAD';
+export const REMOVE_FILE_UPLOAD = 'app/SubmissionForm/REMOVE_FILE_UPLOAD';
+
+export const UPLOAD_FILES = 'app/SubmissionForm/UPLOAD_FILES';
+export const UPLOAD_FILES_SUCCESS = 'app/SubmissionForm/UPLOAD_FILES_SUCCESS';
+export const UPLOAD_FILES_ERROR = 'app/SubmissionForm/UPLOAD_FILES_ERROR';
+
+export const UPLOAD_FILE_PROGRESS = 'app/SubmissionForm/UPLOAD_FILE_PROGRESS';
+export const UPLOAD_FILE_ERROR = 'app/SubmissionForm/UPLOAD_FILE_ERROR';
+export const UPLOAD_FILE_SUCCESS = 'app/SubmissionForm/UPLOAD_FILE_SUCCESS';
