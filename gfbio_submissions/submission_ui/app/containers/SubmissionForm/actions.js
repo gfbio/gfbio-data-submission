@@ -9,6 +9,7 @@ import {
   ADD_DATASET_LABEL,
   ADD_FILE_UPLOAD,
   ADD_RELATED_PUBLICATION,
+  CHANGE_CONTRIBUTOR,
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
@@ -29,13 +30,9 @@ import {
   UPLOAD_FILE_ERROR,
   UPLOAD_FILE_PROGRESS,
   UPLOAD_FILE_SUCCESS,
-  // UPLOAD_FAILURE,
   UPLOAD_FILES,
   UPLOAD_FILES_ERROR,
   UPLOAD_FILES_SUCCESS,
-  // UPLOAD_PROGRESS,
-  // UPLOAD_REQUEST,
-  // UPLOAD_SUCCESS,
 } from './constants';
 
 export function defaultAction() {
@@ -227,5 +224,12 @@ export function addContributor(contributor) {
   return {
     type: ADD_CONTRIBUTOR,
     contributor,
+  };
+}
+
+export function changeContributor(index) {
+  return {
+    type: CHANGE_CONTRIBUTOR,
+    index,
   };
 }

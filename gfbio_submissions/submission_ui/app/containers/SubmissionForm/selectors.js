@@ -119,6 +119,10 @@ const makeSelectContributors = () =>
     substate.get('contributors'),
   );
 
+const makeSelectCurrentContributor = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('currentContributor'),
+  );
 
 export default makeSelectSubmissionForm;
 
@@ -142,4 +146,5 @@ export {
   makeSelectFileUploads,
   makeSelectBrokerSubmissionId,
   makeSelectContributors,
+  makeSelectCurrentContributor,
 };

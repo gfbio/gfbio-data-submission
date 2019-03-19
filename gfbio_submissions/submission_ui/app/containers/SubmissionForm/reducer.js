@@ -8,7 +8,7 @@ import {
   ADD_CONTRIBUTOR,
   ADD_DATASET_LABEL,
   ADD_FILE_UPLOAD,
-  ADD_RELATED_PUBLICATION,
+  ADD_RELATED_PUBLICATION, CHANGE_CONTRIBUTOR,
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
@@ -177,6 +177,12 @@ function submissionFormReducer(state = initialState, action) {
       console.log(action.contributor);
       return state
         .update('contributors', (contributors) => contributors.push(action.contributor));
+    case CHANGE_CONTRIBUTOR:
+      console.log('CHANGE_CONTRIBUTOR');
+      console.log(action.index);
+      return state;
+    // return state
+    //   .update('contributors', (contributors) => contributors.push(action.contributor));
     default:
       return state;
   }

@@ -7,10 +7,16 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
-import { makeSelectContributors } from '../../containers/SubmissionForm/selectors';
+import {
+  makeSelectContributors,
+  makeSelectCurrentContributor,
+} from '../../containers/SubmissionForm/selectors';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { addContributor } from '../../containers/SubmissionForm/actions';
+import {
+  addContributor,
+  changeContributor,
+} from '../../containers/SubmissionForm/actions';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -21,18 +27,16 @@ class ContributersForm extends React.PureComponent {
     super(props);
     this.state = {
       formValues: {},
-      // errors: ['error message'],
     };
     this.handleChange = this.handleChange.bind(this);
-    // this.onSave = this.onSave.bind(this);
   }
 
   validateFormValues() {
-    console.log('validateFormValues');
+    // console.log('validateFormValues');
     let isValid = true;
     let formValues = this.state.formValues;
     if (!formValues['firstName']) {
-      console.log('validateFormValues no fn');
+      // console.log('validateFormValues no fn');
       isValid = false;
     }
     // if (typeof formValues['firstName'] !== 'undefined') {
@@ -42,7 +46,7 @@ class ContributersForm extends React.PureComponent {
     //   }
     // }
     if (!formValues['lastName']) {
-      console.log('validateFormValues no ln');
+      // console.log('validateFormValues no ln');
       isValid = false;
     }
     // if (typeof formValues['lastName'] !== 'undefined') {
@@ -52,7 +56,7 @@ class ContributersForm extends React.PureComponent {
     //   }
     // }
     if (!formValues['emailAddress']) {
-      console.log('validateFormValues no email');
+      // console.log('validateFormValues no email');
       isValid = false;
     }
 
@@ -64,7 +68,7 @@ class ContributersForm extends React.PureComponent {
     //     isValid = false;
     //   }
     // }
-    console.log('validateFormValues will return: ' + isValid);
+    // console.log('validateFormValues will return: ' + isValid);
     return isValid;
   }
 
@@ -75,10 +79,10 @@ class ContributersForm extends React.PureComponent {
   }
 
   onSave = () => {
-    console.log('ContributersForm onSave');
-    console.log(this.state);
+    // console.log('ContributersForm onSave');
+    // console.log(this.state);
     let isValid = this.validateFormValues();
-    console.log('valiud ? ' + isValid);
+    // console.log('valiud ? ' + isValid);
     if (this.validateFormValues()) {
       this.props.addContributor(this.state.formValues);
       document.getElementById('firstName').value = '';
@@ -98,10 +102,7 @@ class ContributersForm extends React.PureComponent {
 
   render() {
     console.log('ContributersForm render');
-    console.log(this.props);
-    // let errors = this.state.errors.map(error => {
-    //   return <li><span className="input-error">{error}</span></li>;
-    // });
+    // console.log(this.props);
     let contributers = this.props.contributors.map((c, index) => {
       return <li key={index} className="list-inline-item">
         <button
@@ -111,117 +112,12 @@ class ContributersForm extends React.PureComponent {
           data-target='#contributerDetailWrapper'
           aria-expanded="false"
           aria-controls='#contributerDetailWrapper'
+          onClick={() => this.props.changeContributor(index)}
         >
           <i className="fa fa-bars" /> {`${c.firstName} ${c.lastName}`}
         </button>
       </li>;
     });
-
-    // let detailWrappers = this.props.contributors.map((c, index) => {
-    //   return <div key={index} className="collapse"
-    //               id={'#contributerDetailWrapper' + index}>
-    //     <div className="card card-body">
-    //       <h5>Edit Contributor {c.firstName}</h5>
-    //       <div className="form-row">
-    //         <div className="form-group col-md-3">
-    //
-    //           <label htmlFor="firstName">First Name</label>
-    //           <input type="text" className="form-control"
-    //                  id="firstName" onChange={this.handleChange}
-    //             // value={this.prop.contributors[0]['firstName']}
-    //             // required
-    //           />
-    //
-    //         </div>
-    //         <div className="form-group col-md-3">
-    //
-    //           <label htmlFor="lastName">Last Name</label>
-    //           <input type="text" className="form-control" id="lastName"
-    //                  onChange={this.handleChange}
-    //             // value={this.prop.contributors[0]['lastName']}
-    //             // requireds
-    //           />
-    //
-    //         </div>
-    //         <div className="form-group col-md-6">
-    //
-    //           <label htmlFor="emailAddress">Email Address</label>
-    //           <input
-    //             type="email"
-    //             className="form-control"
-    //             id="emailAddress"
-    //             placeholder="name@example.com"
-    //             onChange={this.handleChange}
-    //             // value={this.prop.contributors[0]['emailAdress']}
-    //             // required
-    //           />
-    //
-    //         </div>
-    //       </div>
-    //       <div className="form-row">
-    //         <div className="form-group col-md-6">
-    //
-    //           <label htmlFor="institution">Institution (optional)</label>
-    //           <input
-    //             type="text"
-    //             className="form-control"
-    //             id="institution"
-    //             onChange={this.handleChange}
-    //             // value={this.prop.contributors[0]['institution']}
-    //           />
-    //
-    //         </div>
-    //         <div className="form-group col-md-6">
-    //
-    //           <label htmlFor="contribution">Contribution
-    //             (optional)</label>
-    //           <input
-    //             type="text"
-    //             className="form-control"
-    //             id="contribution"
-    //             onChange={this.handleChange}
-    //             // value={this.prop.contributors[0]['contribution']}
-    //           />
-    //
-    //         </div>
-    //       </div>
-    //       <div className="form-row">
-    //         <div className="form-group col-md-2">
-    //
-    //           <button
-    //             className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
-    //             data-toggle="collapse"
-    //             data-target="#contributerFormWrapper"
-    //             aria-expanded="false"
-    //             aria-controls="contributerFormWrapper"
-    //           >
-    //             Cancel
-    //           </button>
-    //
-    //         </div>
-    //         <div className="form-group col-md-2">
-    //
-    //           {/*<button*/}
-    //           {/*className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted">*/}
-    //           {/*Remove*/}
-    //           {/*</button>*/}
-    //
-    //         </div>
-    //         <div className="form-group col-md-4" />
-    //         <div className="form-group col-md-4">
-    //
-    //           <button
-    //             className="btn btn-secondary btn-sm btn-block btn-light-blue"
-    //             onClick={this.onSave}
-    //           >
-    //             Save
-    //           </button>
-    //         </div>
-    //       </div>
-    //     </div>
-    //   </div>;
-    // });
-
 
     return (
       <div>
@@ -252,8 +148,9 @@ class ContributersForm extends React.PureComponent {
 
           </ul>
 
-          <div className="accordion" id="accordionExample">
-            <div id="contributerFormWrapper" className="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+          <div className="accordion" id="accordion">
+            <div id="contributerFormWrapper" className="collapse"
+                 aria-labelledby="headingOne" data-parent="#accordion">
               <div className="card card-body">
                 <h5>Add Contributor</h5>
                 <div className="form-row">
@@ -350,7 +247,8 @@ class ContributersForm extends React.PureComponent {
               </div>
             </div>
 
-            <div className="collapse" id="contributerDetailWrapper" aria-labelledby="headingTwo" data-parent="#accordionExample">
+            <div className="collapse" id="contributerDetailWrapper"
+                 aria-labelledby="headingTwo" data-parent="#accordion">
               <div className="card card-body">
                 <h5>Edit Contributor</h5>
                 <div className="form-row">
@@ -456,16 +354,20 @@ class ContributersForm extends React.PureComponent {
 ContributersForm.propTypes = {
   contributors: PropTypes.object,
   addContributor: PropTypes.func,
+  changeContributor: PropTypes.func,
+  currentContributor: PropTypes.object,
 };
 
 const mapStateToProps = createStructuredSelector({
   contributors: makeSelectContributors(),
+  currentContributor: makeSelectCurrentContributor(),
 });
 
 
 function mapDispatchToProps(dispatch) {
   return {
     addContributor: contributor => dispatch(addContributor(contributor)),
+    changeContributor: index => dispatch(changeContributor(index)),
   };
 }
 
