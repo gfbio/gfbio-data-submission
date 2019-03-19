@@ -5,6 +5,7 @@
  */
 
 import {
+  ADD_CONTRIBUTOR,
   ADD_DATASET_LABEL,
   ADD_FILE_UPLOAD,
   ADD_RELATED_PUBLICATION,
@@ -221,3 +222,10 @@ export function uploadFileSuccess(index) {
 }
 
 /* END File no s for single File */
+
+export function addContributor(contributor) {
+  return {
+    type: ADD_CONTRIBUTOR,
+    contributor,
+  };
+}

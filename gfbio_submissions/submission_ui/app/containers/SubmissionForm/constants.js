@@ -40,3 +40,5 @@ export const UPLOAD_FILES_ERROR = 'app/SubmissionForm/UPLOAD_FILES_ERROR';
 export const UPLOAD_FILE_PROGRESS = 'app/SubmissionForm/UPLOAD_FILE_PROGRESS';
 export const UPLOAD_FILE_ERROR = 'app/SubmissionForm/UPLOAD_FILE_ERROR';
 export const UPLOAD_FILE_SUCCESS = 'app/SubmissionForm/UPLOAD_FILE_SUCCESS';
+
+export const ADD_CONTRIBUTOR = 'app/SubmissionForm/ADD_CONTRIBUTOR';

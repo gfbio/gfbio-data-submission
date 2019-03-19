@@ -5,6 +5,7 @@
  */
 import { fromJS } from 'immutable';
 import {
+  ADD_CONTRIBUTOR,
   ADD_DATASET_LABEL,
   ADD_FILE_UPLOAD,
   ADD_RELATED_PUBLICATION,
@@ -64,7 +65,7 @@ export const initialState = fromJS({
   fileUploads: [],
   fileUploadInProgress: false,
   brokerSubmissionId: '',
-  contributor: {},
+  contributors: [],
 });
 
 function submissionFormReducer(state = initialState, action) {
@@ -171,6 +172,11 @@ function submissionFormReducer(state = initialState, action) {
       success_upload.status = 'success';
       return state
         .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1, success_upload));
+    case ADD_CONTRIBUTOR:
+      console.log('ADD_CONTRIBUTOR');
+      console.log(action);
+      return state
+        .update('contributors', (contributors) => contributors.push(action.contributor));
     default:
       return state;
   }

@@ -10,6 +10,7 @@ import { createStructuredSelector } from 'reselect';
 import { makeSelectContributors } from '../../containers/SubmissionForm/selectors';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
+import { addContributor } from '../../containers/SubmissionForm/actions';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -20,51 +21,66 @@ class ContributersForm extends React.PureComponent {
     super(props);
     this.state = {
       formValues: {},
+      // errors: {},
     };
     this.handleChange = this.handleChange.bind(this);
+    this.onSave = this.onSave.bind(this);
   }
 
-  /*
-  * <Input id="number"
-       type="time"
-       onChange={(evt) => { console.log(evt.target.value); }} />
+  validateFormValues() {
+    // console.log('validateFormValues');
+    let isValid = true;
+    let formValues = this.state.formValues;
+    if (!formValues['firstName']) {
+      isValid = false;
+    }
+    if (typeof formValues['firstName'] !== 'undefined') {
+      if (!formValues['firstName'].match(/^[a-zA-Z]+$/)) {
+        isValid = false;
+      }
+    }
+    if (!formValues['lastName']) {
+      isValid = false;
+    }
+    if (typeof formValues['lastName'] !== 'undefined') {
+      if (!formValues['lastName'].match(/^[a-zA-Z]+$/)) {
+        isValid = false;
+      }
+    }
+    if (!formValues['emailAddress']) {
+      isValid = false;
+    }
 
-
-       //Email
-        if(!fields["email"]){
-           formIsValid = false;
-           errors["email"] = "Cannot be empty";
-        }
-
-        if(typeof fields["email"] !== "undefined"){
-           let lastAtPos = fields["email"].lastIndexOf('@');
-           let lastDotPos = fields["email"].lastIndexOf('.');
-
-           if (!(lastAtPos < lastDotPos && lastAtPos > 0 && fields["email"].indexOf('@@') == -1 && lastDotPos > 2 && (fields["email"].length - lastDotPos) > 2)) {
-              formIsValid = false;
-              errors["email"] = "Email is not valid";
-            }
-       }
-
-
-  * */
+    if (typeof formValues['emailAddress'] !== 'undefined') {
+      const pattern = /[a-zA-Z0-9]+[\.]?([a-zA-Z0-9]+)?[\@][a-z]{3,9}[\.][a-z]{2,5}/g;
+      const result = pattern.test(formValues['emailAddress']);
+      if (result === false) {
+        isValid = false;
+      }
+    }
+    return isValid;
+  }
 
   handleChange(event) {
-    // console.log('handleChange ');
-    let xid = event.target.id;
     let values = this.state.formValues;
     values[event.target.id] = event.target.value;
     this.setState({ formValues: values });
-    // console.log('state ');
-    // console.log(this.state);
   }
 
   onSave = () => {
     console.log('ContributersForm onSave');
     console.log(this.state);
+    let isValid = this.validateFormValues();
+    console.log('valiud ? ' + isValid);
+    if (this.validateFormValues()) {
+      this.props.addContributor(this.state.formValues);
+      this.setState({ formValues: {} });
+    }
   };
 
   render() {
+    console.log('ContributersForm render');
+    console.log(this.props);
     return (
       <div>
         <header className="header header-left form-header-top mb-3">
@@ -113,14 +129,14 @@ class ContributersForm extends React.PureComponent {
 
                   <label htmlFor="firstName">First Name</label>
                   <input type="text" className="form-control"
-                         id="firstName" onChange={this.handleChange} />
+                         id="firstName" onChange={this.handleChange} required />
 
                 </div>
                 <div className="form-group col-md-3">
 
                   <label htmlFor="lastName">Last Name</label>
                   <input type="text" className="form-control" id="lastName"
-                         onChange={this.handleChange} />
+                         onChange={this.handleChange} required />
 
                 </div>
                 <div className="form-group col-md-6">
@@ -132,6 +148,7 @@ class ContributersForm extends React.PureComponent {
                     id="emailAddress"
                     placeholder="name@example.com"
                     onChange={this.handleChange}
+                    required
                   />
 
                 </div>
@@ -200,6 +217,7 @@ class ContributersForm extends React.PureComponent {
 
 ContributersForm.propTypes = {
   contributors: PropTypes.object,
+  addContributor: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -209,7 +227,7 @@ const mapStateToProps = createStructuredSelector({
 
 function mapDispatchToProps(dispatch) {
   return {
-    // handleDrop: value => dispatch(addFileUpload(value)),
+    addContributor: contributor => dispatch(addContributor(contributor)),
   };
 }
 
