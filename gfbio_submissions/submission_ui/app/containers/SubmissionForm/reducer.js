@@ -174,7 +174,7 @@ function submissionFormReducer(state = initialState, action) {
         .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1, success_upload));
     case ADD_CONTRIBUTOR:
       console.log('ADD_CONTRIBUTOR');
-      console.log(action);
+      console.log(action.contributor);
       return state
         .update('contributors', (contributors) => contributors.push(action.contributor));
     default:

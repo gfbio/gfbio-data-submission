@@ -21,43 +21,50 @@ class ContributersForm extends React.PureComponent {
     super(props);
     this.state = {
       formValues: {},
-      // errors: {},
+      // errors: ['error message'],
     };
     this.handleChange = this.handleChange.bind(this);
-    this.onSave = this.onSave.bind(this);
+    // this.onSave = this.onSave.bind(this);
   }
 
   validateFormValues() {
-    // console.log('validateFormValues');
+    console.log('validateFormValues');
     let isValid = true;
     let formValues = this.state.formValues;
     if (!formValues['firstName']) {
+      console.log('validateFormValues no fn');
       isValid = false;
     }
-    if (typeof formValues['firstName'] !== 'undefined') {
-      if (!formValues['firstName'].match(/^[a-zA-Z]+$/)) {
-        isValid = false;
-      }
-    }
+    // if (typeof formValues['firstName'] !== 'undefined') {
+    //   console.log('validateFormValues fn unde or regex');
+    //   if (!formValues['firstName'].match(/^[a-zA-Z]+$/)) {
+    //     isValid = false;
+    //   }
+    // }
     if (!formValues['lastName']) {
+      console.log('validateFormValues no ln');
       isValid = false;
     }
-    if (typeof formValues['lastName'] !== 'undefined') {
-      if (!formValues['lastName'].match(/^[a-zA-Z]+$/)) {
-        isValid = false;
-      }
-    }
+    // if (typeof formValues['lastName'] !== 'undefined') {
+    //   console.log('validateFormValues ln undef or regex');
+    //   if (!formValues['lastName'].match(/^[a-zA-Z]+$/)) {
+    //     isValid = false;
+    //   }
+    // }
     if (!formValues['emailAddress']) {
+      console.log('validateFormValues no email');
       isValid = false;
     }
 
-    if (typeof formValues['emailAddress'] !== 'undefined') {
-      const pattern = /[a-zA-Z0-9]+[\.]?([a-zA-Z0-9]+)?[\@][a-z]{3,9}[\.][a-z]{2,5}/g;
-      const result = pattern.test(formValues['emailAddress']);
-      if (result === false) {
-        isValid = false;
-      }
-    }
+    // if (typeof formValues['emailAddress'] !== 'undefined') {
+    //   const pattern = /[a-zA-Z0-9]+[\.]?([a-zA-Z0-9]+)?[\@][a-z]{3,9}[\.][a-z]{2,5}/g;
+    //   const result = pattern.test(formValues['emailAddress']);
+    //   if (result === false) {
+    //     console.log('validateFormValues email regex');
+    //     isValid = false;
+    //   }
+    // }
+    console.log('validateFormValues will return: ' + isValid);
     return isValid;
   }
 
@@ -74,6 +81,17 @@ class ContributersForm extends React.PureComponent {
     console.log('valiud ? ' + isValid);
     if (this.validateFormValues()) {
       this.props.addContributor(this.state.formValues);
+      document.getElementById('firstName').value = '';
+      document.getElementById('lastName').value = '';
+      document.getElementById('emailAddress').value = '';
+      document.getElementById('institution').value = '';
+      document.getElementById('contribution').value = '';
+      // WRONG: whole doc is parse
+      // let elements = document.getElementsByTagName('input');
+      // console.log(elements);
+      // for (let i in elements) {
+      //   elements[i].value = '';
+      // }
       this.setState({ formValues: {} });
     }
   };
@@ -81,6 +99,23 @@ class ContributersForm extends React.PureComponent {
   render() {
     console.log('ContributersForm render');
     console.log(this.props);
+    // let errors = this.state.errors.map(error => {
+    //   return <li><span className="input-error">{error}</span></li>;
+    // });
+    let contributers = this.props.contributors.map((c, index) => {
+      return <li className="list-inline-item">
+        <button
+          className="btn btn-primary btn-contributor"
+          type="button"
+          data-toggle="collapse"
+          data-target="#contributerFormWrapper"
+          aria-expanded="false"
+          aria-controls="contributerFormWrapper"
+        >
+          <i className="fa fa-bars" /> {`${c.firstName} ${c.lastName}`}
+        </button>
+      </li>;
+    });
     return (
       <div>
         <header className="header header-left form-header-top mb-3">
@@ -93,27 +128,16 @@ class ContributersForm extends React.PureComponent {
               <p className="contributor">Contributors:</p>
             </li>
 
-            {/*<li className="list-inline-item">*/}
-            {/*<button*/}
-            {/*className="btn btn-primary btn-contributor"*/}
-            {/*type="button"*/}
-            {/*data-toggle="collapse"*/}
-            {/*data-target="#collapseExample"*/}
-            {/*aria-expanded="false"*/}
-            {/*aria-controls="collapseExample"*/}
-            {/*>*/}
-            {/*<i className="fa fa-bars" /> Marc Weber*/}
-            {/*</button>*/}
-            {/*</li>*/}
+            {contributers}
 
             <li className="list-inline-item">
               <button
                 className="btn btn-primary btn-contributor"
                 type="button"
                 data-toggle="collapse"
-                data-target="#collapseExample"
+                data-target="#contributerFormWrapper"
                 aria-expanded="false"
-                aria-controls="collapseExample"
+                aria-controls="contributerFormWrapper"
               >
                 <i className="fa fa-plus" /> add contributor
               </button>
@@ -121,7 +145,7 @@ class ContributersForm extends React.PureComponent {
 
           </ul>
 
-          <div className="collapse" id="collapseExample">
+          <div className="collapse" id="contributerFormWrapper">
             <div className="card card-body">
               <h5>Add Contributor</h5>
               <div className="form-row">
@@ -129,14 +153,18 @@ class ContributersForm extends React.PureComponent {
 
                   <label htmlFor="firstName">First Name</label>
                   <input type="text" className="form-control"
-                         id="firstName" onChange={this.handleChange} required />
+                         id="firstName" onChange={this.handleChange}
+                    // required
+                  />
 
                 </div>
                 <div className="form-group col-md-3">
 
                   <label htmlFor="lastName">Last Name</label>
                   <input type="text" className="form-control" id="lastName"
-                         onChange={this.handleChange} required />
+                         onChange={this.handleChange}
+                    // required
+                  />
 
                 </div>
                 <div className="form-group col-md-6">
@@ -148,7 +176,7 @@ class ContributersForm extends React.PureComponent {
                     id="emailAddress"
                     placeholder="name@example.com"
                     onChange={this.handleChange}
-                    required
+                    // required
                   />
 
                 </div>
@@ -182,17 +210,22 @@ class ContributersForm extends React.PureComponent {
                 <div className="form-group col-md-2">
 
                   <button
-                    className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted">
+                    className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
+                    data-toggle="collapse"
+                    data-target="#contributerFormWrapper"
+                    aria-expanded="false"
+                    aria-controls="contributerFormWrapper"
+                  >
                     Cancel
                   </button>
 
                 </div>
                 <div className="form-group col-md-2">
 
-                  <button
-                    className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted">
-                    Remove
-                  </button>
+                  {/*<button*/}
+                  {/*className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted">*/}
+                  {/*Remove*/}
+                  {/*</button>*/}
 
                 </div>
                 <div className="form-group col-md-4" />
@@ -204,7 +237,6 @@ class ContributersForm extends React.PureComponent {
                   >
                     Save
                   </button>
-
                 </div>
               </div>
             </div>
