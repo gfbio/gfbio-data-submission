@@ -108,23 +108,28 @@ class ContributersForm extends React.PureComponent {
     this.setState({ formOpen: openStatus });
   };
 
+  // explicit close add form
+  closeFormBody = () => {
+    this.setState({ formOpen: false });
+  };
+
   render() {
     console.log('ContributersForm render');
     console.log(this.props.currentContributor);
     const { formOpen } = this.state;
     let contributors = this.props.contributors.map((c, index) => {
       return <li key={index} className="list-inline-item">
-        <button
-          className="btn btn-primary btn-contributor"
-          type="button"
-          data-toggle="collapse"
-          data-target='#contributorDetailWrapper'
-          aria-expanded="false"
-          aria-controls='#contributorDetailWrapper'
-          onClick={() => this.props.changeContributor(index)}
-        >
-          <i className="fa fa-bars" /> {`${c.firstName} ${c.lastName}`}
-        </button>
+        {/*<button*/}
+        {/*className="btn btn-primary btn-contributor"*/}
+        {/*type="button"*/}
+        {/*data-toggle="collapse"*/}
+        {/*data-target='#contributorDetailWrapper'*/}
+        {/*aria-expanded="false"*/}
+        {/*aria-controls='#contributorDetailWrapper'*/}
+        {/*onClick={() => this.props.changeContributor(index)}*/}
+        {/*>*/}
+        {/*<i className="fa fa-bars" /> {`${c.firstName} ${c.lastName}`}*/}
+        {/*</button>*/}
       </li>;
     });
 
@@ -158,11 +163,11 @@ class ContributersForm extends React.PureComponent {
             </li>
 
             {/* actual form button */}
-            <li className="list-inline-item" id="headingOne">
+            <li className="list-inline-item">
               <Button
                 className="btn btn-primary btn-contributor"
                 onClick={() => this.onClickAddButton(!formOpen)}
-                aria-controls="example-collapse-text"
+                aria-controls="contributorForm"
                 aria-expanded={formOpen}
               >
                 <i className="fa fa-plus" /> add contributor
@@ -172,7 +177,7 @@ class ContributersForm extends React.PureComponent {
           </ul>
 
           <Collapse in={this.state.formOpen}>
-            <div id="example-collapse-text">
+            <div id="contributorForm">
               <div className="card card-body">
                 <h5>Add Contributor</h5>
                 <div className="form-row">
@@ -236,15 +241,14 @@ class ContributersForm extends React.PureComponent {
                 <div className="form-row">
                   <div className="form-group col-md-2">
 
-                    <button
+                    <Button
                       className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
-                      data-toggle="collapse"
-                      data-target="#contributorFormWrapper"
-                      aria-expanded="false"
-                      aria-controls="contributorFormWrapper"
+                      onClick={() => this.closeFormBody()}
+                      aria-controls="contributorForm"
+                      aria-expanded={formOpen}
                     >
                       Cancel
-                    </button>
+                    </Button>
 
                   </div>
                   <div className="form-group col-md-2">
