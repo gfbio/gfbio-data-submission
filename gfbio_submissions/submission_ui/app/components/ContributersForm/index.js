@@ -82,10 +82,6 @@ class ContributersForm extends React.PureComponent {
   }
 
   onSave = () => {
-    // console.log('ContributersForm onSave');
-    // console.log(this.state);
-    let isValid = this.validateFormValues();
-    // console.log('valiud ? ' + isValid);
     if (this.validateFormValues()) {
       this.props.addContributor(this.state.formValues);
       document.getElementById('firstName').value = '';
@@ -93,13 +89,7 @@ class ContributersForm extends React.PureComponent {
       document.getElementById('emailAddress').value = '';
       document.getElementById('institution').value = '';
       document.getElementById('contribution').value = '';
-      // WRONG: whole doc is parse
-      // let elements = document.getElementsByTagName('input');
-      // console.log(elements);
-      // for (let i in elements) {
-      //   elements[i].value = '';
-      // }
-      this.setState({ formValues: {} });
+      this.setState({ formValues: {}, formOpen: false });
     }
   };
 
@@ -119,17 +109,17 @@ class ContributersForm extends React.PureComponent {
     const { formOpen } = this.state;
     let contributors = this.props.contributors.map((c, index) => {
       return <li key={index} className="list-inline-item">
-        {/*<button*/}
-        {/*className="btn btn-primary btn-contributor"*/}
-        {/*type="button"*/}
-        {/*data-toggle="collapse"*/}
-        {/*data-target='#contributorDetailWrapper'*/}
-        {/*aria-expanded="false"*/}
-        {/*aria-controls='#contributorDetailWrapper'*/}
-        {/*onClick={() => this.props.changeContributor(index)}*/}
-        {/*>*/}
-        {/*<i className="fa fa-bars" /> {`${c.firstName} ${c.lastName}`}*/}
-        {/*</button>*/}
+        <button
+          className="btn btn-primary btn-contributor"
+          type="button"
+          data-toggle="collapse"
+          data-target='#contributorDetailWrapper'
+          aria-expanded="false"
+          aria-controls='#contributorDetailWrapper'
+          onClick={() => this.props.changeContributor(index)}
+        >
+          <i className="fa fa-bars" /> {`${c.firstName} ${c.lastName}`}
+        </button>
       </li>;
     });
 
@@ -257,12 +247,15 @@ class ContributersForm extends React.PureComponent {
                   <div className="form-group col-md-4" />
                   <div className="form-group col-md-4">
 
-                    <button
+                    <Button
                       className="btn btn-secondary btn-sm btn-block btn-light-blue"
                       onClick={this.onSave}
+                      aria-controls="contributorForm"
+                      aria-expanded={formOpen}
                     >
                       Save
-                    </button>
+                    </Button>
+
                   </div>
                 </div>
               </div>
