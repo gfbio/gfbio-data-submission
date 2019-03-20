@@ -30,6 +30,7 @@ class ContributersForm extends React.PureComponent {
     this.state = {
       formValues: {},
       formOpen: false,
+      detailOpen: false,
     };
     this.handleChange = this.handleChange.bind(this);
   }
@@ -93,9 +94,9 @@ class ContributersForm extends React.PureComponent {
     }
   };
 
-  // toggles add form
-  onClickAddButton = (openStatus) => {
-    this.setState({ formOpen: openStatus });
+  // toggles add form, closes detail
+  onClickAddButton = (newStatus) => {
+    this.setState({ formOpen: newStatus, detailOpen: false });
   };
 
   // explicit close add form
@@ -103,10 +104,15 @@ class ContributersForm extends React.PureComponent {
     this.setState({ formOpen: false });
   };
 
+  // toogles Detail, closes form
+  onClickDetailButton = (newStatus) => {
+    this.setState({ detailOpen: newStatus, formOpen: false });
+  };
+
   render() {
     console.log('ContributersForm render');
     console.log(this.props.currentContributor);
-    const { formOpen } = this.state;
+    const { formOpen, detailOpen } = this.state;
     let contributors = this.props.contributors.map((c, index) => {
       return <li key={index} className="list-inline-item">
         <button
@@ -123,6 +129,7 @@ class ContributersForm extends React.PureComponent {
       </li>;
     });
 
+    // TODO: https://react-bootstrap.netlify.com/
     return (
       <div>
         <header className="header header-left form-header-top mb-3">
@@ -139,17 +146,25 @@ class ContributersForm extends React.PureComponent {
 
             {/* detail button mock */}
             <li className="list-inline-item">
-              <button
+              {/*<button*/}
+              {/*className="btn btn-primary btn-contributor"*/}
+              {/*type="button"*/}
+              {/*data-toggle="collapse"*/}
+              {/*data-target='#contributorDetailWrapper'*/}
+              {/*aria-expanded="false"*/}
+              {/*aria-controls='#contributorDetailWrapper'*/}
+              {/*// onClick={() => this.props.changeContributor(index)}*/}
+              {/*>*/}
+              {/*<i className="fa fa-bars" /> horst meier*/}
+              {/*</button>*/}
+              <Button
                 className="btn btn-primary btn-contributor"
-                type="button"
-                data-toggle="collapse"
-                data-target='#contributorDetailWrapper'
-                aria-expanded="false"
-                aria-controls='#contributorDetailWrapper'
-                // onClick={() => this.props.changeContributor(index)}
+                onClick={() => this.onClickDetailButton(!detailOpen)}
+                aria-controls="contributorForm"
+                aria-expanded={detailOpen}
               >
                 <i className="fa fa-bars" /> horst meier
-              </button>
+              </Button>
             </li>
 
             {/* actual form button */}
@@ -260,6 +275,10 @@ class ContributersForm extends React.PureComponent {
                 </div>
               </div>
             </div>
+          </Collapse>
+
+          <Collapse in={this.state.detailOpen}>
+            <h3>Detail</h3>
           </Collapse>
 
           <div className="accordion" id="accordion">
