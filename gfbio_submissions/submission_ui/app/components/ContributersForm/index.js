@@ -102,7 +102,25 @@ class ContributersForm extends React.PureComponent {
 
   render() {
     console.log('ContributersForm render');
-    // console.log(this.props);
+    console.log(this.props.currentContributor);
+    let tmpContributor = {
+      firstName: '',
+      lastName: '',
+      emailAddress: '',
+      institution: '',
+      contribution: '',
+    };
+    if (typeof this.props.currentContributor !== 'undefined') {
+      tmpContributor = {
+        firstName: this.props.currentContributor.firstName,
+        lastName: this.props.currentContributor.lastName,
+        emailAddress: this.props.currentContributor.emailAddress,
+        institution: this.props.currentContributor.institution,
+        contribution: this.props.currentContributor.contribution,
+      };
+    }
+    // let f, l, e, c, i = this.props.currentContributor;
+    // console.log(f);
     let contributers = this.props.contributors.map((c, index) => {
       return <li key={index} className="list-inline-item">
         <button
@@ -257,6 +275,7 @@ class ContributersForm extends React.PureComponent {
                     <label htmlFor="firstName">First Name</label>
                     <input type="text" className="form-control"
                            id="firstName" onChange={this.handleChange}
+                           value={tmpContributor.firstName}
                       // required
                     />
 
@@ -266,6 +285,7 @@ class ContributersForm extends React.PureComponent {
                     <label htmlFor="lastName">Last Name</label>
                     <input type="text" className="form-control" id="lastName"
                            onChange={this.handleChange}
+                           value={tmpContributor.lastName}
                       // required
                     />
 
@@ -279,6 +299,7 @@ class ContributersForm extends React.PureComponent {
                       id="emailAddress"
                       placeholder="name@example.com"
                       onChange={this.handleChange}
+                      value={tmpContributor.emailAddress}
                       // required
                     />
 
@@ -293,6 +314,7 @@ class ContributersForm extends React.PureComponent {
                       className="form-control"
                       id="institution"
                       onChange={this.handleChange}
+                      value={tmpContributor.institution}
                     />
 
                   </div>
@@ -305,6 +327,7 @@ class ContributersForm extends React.PureComponent {
                       className="form-control"
                       id="contribution"
                       onChange={this.handleChange}
+                      value={tmpContributor.contribution}
                     />
 
                   </div>
@@ -325,10 +348,10 @@ class ContributersForm extends React.PureComponent {
                   </div>
                   <div className="form-group col-md-2">
 
-                    {/*<button*/}
-                    {/*className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted">*/}
-                    {/*Remove*/}
-                    {/*</button>*/}
+                    <button
+                      className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted">
+                      Remove
+                    </button>
 
                   </div>
                   <div className="form-group col-md-4" />

@@ -66,6 +66,7 @@ export const initialState = fromJS({
   fileUploadInProgress: false,
   brokerSubmissionId: '',
   contributors: [],
+  currentContributor: {},
 });
 
 function submissionFormReducer(state = initialState, action) {
@@ -180,7 +181,10 @@ function submissionFormReducer(state = initialState, action) {
     case CHANGE_CONTRIBUTOR:
       console.log('CHANGE_CONTRIBUTOR');
       console.log(action.index);
-      return state;
+      let contributor = state.getIn(['contributors', action.index]);
+      console.log(contributor);
+      return state
+        .set('currentContributor', contributor);
     // return state
     //   .update('contributors', (contributors) => contributors.push(action.contributor));
     default:
