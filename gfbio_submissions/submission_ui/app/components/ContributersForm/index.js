@@ -121,15 +121,15 @@ class ContributersForm extends React.PureComponent {
     }
     // let f, l, e, c, i = this.props.currentContributor;
     // console.log(f);
-    let contributers = this.props.contributors.map((c, index) => {
+    let contributors = this.props.contributors.map((c, index) => {
       return <li key={index} className="list-inline-item">
         <button
           className="btn btn-primary btn-contributor"
           type="button"
           data-toggle="collapse"
-          data-target='#contributerDetailWrapper'
+          data-target='#contributorDetailWrapper'
           aria-expanded="false"
-          aria-controls='#contributerDetailWrapper'
+          aria-controls='#contributorDetailWrapper'
           onClick={() => this.props.changeContributor(index)}
         >
           <i className="fa fa-bars" /> {`${c.firstName} ${c.lastName}`}
@@ -149,16 +149,32 @@ class ContributersForm extends React.PureComponent {
               <p className="contributor">Contributors:</p>
             </li>
 
-            {contributers}
+            {contributors}
 
+            {/* detail button mock */}
+            <li className="list-inline-item">
+              <button
+                className="btn btn-primary btn-contributor"
+                type="button"
+                data-toggle="collapse"
+                data-target='#contributorDetailWrapper'
+                aria-expanded="false"
+                aria-controls='#contributorDetailWrapper'
+                // onClick={() => this.props.changeContributor(index)}
+              >
+                <i className="fa fa-bars" /> horst meier
+              </button>
+            </li>
+
+            {/* actual form button */}
             <li className="list-inline-item" id="headingOne">
               <button
                 className="btn btn-primary btn-contributor"
                 type="button"
                 data-toggle="collapse"
-                data-target="#contributerFormWrapper"
+                data-target="#contributorFormWrapper"
                 aria-expanded="false"
-                aria-controls="contributerFormWrapper"
+                aria-controls="contributorFormWrapper"
               >
                 <i className="fa fa-plus" /> add contributor
               </button>
@@ -167,204 +183,214 @@ class ContributersForm extends React.PureComponent {
           </ul>
 
           <div className="accordion" id="accordion">
-            <div id="contributerFormWrapper" className="collapse"
+            <div id="contributorFormWrapper" className="collapse"
                  aria-labelledby="headingOne" data-parent="#accordion">
+
+              <h3><i>tmp header form</i></h3>
+
               <div className="card card-body">
-                <h5>Add Contributor</h5>
-                <div className="form-row">
-                  <div className="form-group col-md-3">
+                {/*<h5>Add Contributor</h5>*/}
+                {/*<div className="form-row">*/}
+                {/*<div className="form-group col-md-3">*/}
 
-                    <label htmlFor="firstName">First Name</label>
-                    <input type="text" className="form-control"
-                           id="firstName" onChange={this.handleChange}
-                      // required
-                    />
+                {/*<label htmlFor="firstName">First Name</label>*/}
+                {/*<input type="text" className="form-control"*/}
+                {/*id="firstName" onChange={this.handleChange}*/}
+                {/*// required*/}
+                {/*/>*/}
 
-                  </div>
-                  <div className="form-group col-md-3">
+                {/*</div>*/}
+                {/*<div className="form-group col-md-3">*/}
 
-                    <label htmlFor="lastName">Last Name</label>
-                    <input type="text" className="form-control" id="lastName"
-                           onChange={this.handleChange}
-                      // required
-                    />
+                {/*<label htmlFor="lastName">Last Name</label>*/}
+                {/*<input type="text" className="form-control" id="lastName"*/}
+                {/*onChange={this.handleChange}*/}
+                {/*// required*/}
+                {/*/>*/}
 
-                  </div>
-                  <div className="form-group col-md-6">
+                {/*</div>*/}
+                {/*<div className="form-group col-md-6">*/}
 
-                    <label htmlFor="emailAddress">Email Address</label>
-                    <input
-                      type="email"
-                      className="form-control"
-                      id="emailAddress"
-                      placeholder="name@example.com"
-                      onChange={this.handleChange}
-                      // required
-                    />
+                {/*<label htmlFor="emailAddress">Email Address</label>*/}
+                {/*<input*/}
+                {/*type="email"*/}
+                {/*className="form-control"*/}
+                {/*id="emailAddress"*/}
+                {/*placeholder="name@example.com"*/}
+                {/*onChange={this.handleChange}*/}
+                {/*// required*/}
+                {/*/>*/}
 
-                  </div>
-                </div>
-                <div className="form-row">
-                  <div className="form-group col-md-6">
+                {/*</div>*/}
+                {/*</div>*/}
+                {/*<div className="form-row">*/}
+                {/*<div className="form-group col-md-6">*/}
 
-                    <label htmlFor="institution">Institution (optional)</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="institution"
-                      onChange={this.handleChange}
-                    />
+                {/*<label htmlFor="institution">Institution (optional)</label>*/}
+                {/*<input*/}
+                {/*type="text"*/}
+                {/*className="form-control"*/}
+                {/*id="institution"*/}
+                {/*onChange={this.handleChange}*/}
+                {/*/>*/}
 
-                  </div>
-                  <div className="form-group col-md-6">
+                {/*</div>*/}
+                {/*<div className="form-group col-md-6">*/}
 
-                    <label htmlFor="contribution">Contribution
-                      (optional)</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="contribution"
-                      onChange={this.handleChange}
-                    />
+                {/*<label htmlFor="contribution">Contribution*/}
+                {/*(optional)</label>*/}
+                {/*<input*/}
+                {/*type="text"*/}
+                {/*className="form-control"*/}
+                {/*id="contribution"*/}
+                {/*onChange={this.handleChange}*/}
+                {/*/>*/}
 
-                  </div>
-                </div>
-                <div className="form-row">
-                  <div className="form-group col-md-2">
+                {/*</div>*/}
+                {/*</div>*/}
+                {/*<div className="form-row">*/}
+                {/*<div className="form-group col-md-2">*/}
 
-                    <button
-                      className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
-                      data-toggle="collapse"
-                      data-target="#contributerFormWrapper"
-                      aria-expanded="false"
-                      aria-controls="contributerFormWrapper"
-                    >
-                      Cancel
-                    </button>
+                <button
+                  className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
+                  data-toggle="collapse"
+                  data-target="#contributorFormWrapper"
+                  aria-expanded="false"
+                  aria-controls="contributorFormWrapper"
+                >
+                  Cancel
+                </button>
 
-                  </div>
-                  <div className="form-group col-md-2">
+                {/*</div>*/}
+                {/*<div className="form-group col-md-2">*/}
 
-                    {/*<button*/}
-                    {/*className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted">*/}
-                    {/*Remove*/}
-                    {/*</button>*/}
+                {/*/!*<button*!/*/}
+                {/*/!*className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted">*!/*/}
+                {/*/!*Remove*!/*/}
+                {/*/!*</button>*!/*/}
 
-                  </div>
-                  <div className="form-group col-md-4" />
-                  <div className="form-group col-md-4">
+                {/*</div>*/}
+                {/*<div className="form-group col-md-4" />*/}
+                {/*<div className="form-group col-md-4">*/}
 
-                    <button
-                      className="btn btn-secondary btn-sm btn-block btn-light-blue"
-                      onClick={this.onSave}
-                    >
-                      Save
-                    </button>
-                  </div>
-                </div>
+                <button
+                  className="btn btn-secondary btn-sm btn-block btn-light-blue"
+                  // onClick={this.onSave}
+                >
+                  Save
+                </button>
+                {/*</div>*/}
+                {/*</div>*/}
               </div>
             </div>
 
-            <div className="collapse" id="contributerDetailWrapper"
+            <div className="collapse" id="contributorDetailWrapper"
                  aria-labelledby="headingTwo" data-parent="#accordion">
+              <h3><i>tmp header detail</i></h3>
+
               <div className="card card-body">
-                <h5>Edit Contributor</h5>
-                <div className="form-row">
-                  <div className="form-group col-md-3">
+                {/*<h5>Edit Contributor</h5>*/}
+                {/*<div className="form-row">*/}
+                {/*<div className="form-group col-md-3">*/}
 
-                    <label htmlFor="firstName">First Name</label>
-                    <input type="text" className="form-control"
-                           id="firstName" onChange={this.handleChange}
-                           value={tmpContributor.firstName}
-                      // required
-                    />
+                {/*<label htmlFor="firstName">First Name</label>*/}
+                {/*<input type="text" className="form-control"*/}
+                {/*id="firstName" onChange={this.handleChange}*/}
+                {/*value={tmpContributor.firstName}*/}
+                {/*// required*/}
+                {/*/>*/}
 
-                  </div>
-                  <div className="form-group col-md-3">
+                {/*</div>*/}
+                {/*<div className="form-group col-md-3">*/}
 
-                    <label htmlFor="lastName">Last Name</label>
-                    <input type="text" className="form-control" id="lastName"
-                           onChange={this.handleChange}
-                           value={tmpContributor.lastName}
-                      // required
-                    />
+                {/*<label htmlFor="lastName">Last Name</label>*/}
+                {/*<input type="text" className="form-control" id="lastName"*/}
+                {/*onChange={this.handleChange}*/}
+                {/*value={tmpContributor.lastName}*/}
+                {/*// required*/}
+                {/*/>*/}
 
-                  </div>
-                  <div className="form-group col-md-6">
+                {/*</div>*/}
+                {/*<div className="form-group col-md-6">*/}
 
-                    <label htmlFor="emailAddress">Email Address</label>
-                    <input
-                      type="email"
-                      className="form-control"
-                      id="emailAddress"
-                      placeholder="name@example.com"
-                      onChange={this.handleChange}
-                      value={tmpContributor.emailAddress}
-                      // required
-                    />
+                {/*<label htmlFor="emailAddress">Email Address</label>*/}
+                {/*<input*/}
+                {/*type="email"*/}
+                {/*className="form-control"*/}
+                {/*id="emailAddress"*/}
+                {/*placeholder="name@example.com"*/}
+                {/*onChange={this.handleChange}*/}
+                {/*value={tmpContributor.emailAddress}*/}
+                {/*// required*/}
+                {/*/>*/}
 
-                  </div>
-                </div>
-                <div className="form-row">
-                  <div className="form-group col-md-6">
+                {/*</div>*/}
+                {/*</div>*/}
+                {/*<div className="form-row">*/}
+                {/*<div className="form-group col-md-6">*/}
 
-                    <label htmlFor="institution">Institution (optional)</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="institution"
-                      onChange={this.handleChange}
-                      value={tmpContributor.institution}
-                    />
+                {/*<label htmlFor="institution">Institution (optional)</label>*/}
+                {/*<input*/}
+                {/*type="text"*/}
+                {/*className="form-control"*/}
+                {/*id="institution"*/}
+                {/*onChange={this.handleChange}*/}
+                {/*value={tmpContributor.institution}*/}
+                {/*/>*/}
 
-                  </div>
-                  <div className="form-group col-md-6">
+                {/*</div>*/}
+                {/*<div className="form-group col-md-6">*/}
 
-                    <label htmlFor="contribution">Contribution
-                      (optional)</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="contribution"
-                      onChange={this.handleChange}
-                      value={tmpContributor.contribution}
-                    />
+                {/*<label htmlFor="contribution">Contribution*/}
+                {/*(optional)</label>*/}
+                {/*<input*/}
+                {/*type="text"*/}
+                {/*className="form-control"*/}
+                {/*id="contribution"*/}
+                {/*onChange={this.handleChange}*/}
+                {/*value={tmpContributor.contribution}*/}
+                {/*/>*/}
 
-                  </div>
-                </div>
-                <div className="form-row">
-                  <div className="form-group col-md-2">
+                {/*</div>*/}
+                {/*</div>*/}
+                {/*<div className="form-row">*/}
+                {/*<div className="form-group col-md-2">*/}
 
-                    <button
-                      className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
-                      data-toggle="collapse"
-                      data-target="#contributerFormWrapper"
-                      aria-expanded="false"
-                      aria-controls="contributerFormWrapper"
-                    >
-                      Cancel
-                    </button>
+                <button
+                  className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
+                  data-toggle="collapse"
+                  data-target="#contributorDetailWrapper"
+                  aria-expanded="false"
+                  aria-controls="contributorDetailWrapper"
+                >
+                  Cancel
+                </button>
 
-                  </div>
-                  <div className="form-group col-md-2">
+                {/*</div>*/}
+                {/*<div className="form-group col-md-2">*/}
 
-                    <button
-                      className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted">
-                      Remove
-                    </button>
+                <button
+                  className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
+                  data-toggle="collapse"
+                  data-target="#contributorDetailWrapper"
+                  aria-expanded="false"
+                  aria-controls="contributorDetailWrapper"
+                >
+                  Remove
+                </button>
 
-                  </div>
-                  <div className="form-group col-md-4" />
-                  <div className="form-group col-md-4">
+                {/*</div>*/}
+                {/*<div className="form-group col-md-4" />*/}
+                {/*<div className="form-group col-md-4">*/}
 
-                    <button
-                      className="btn btn-secondary btn-sm btn-block btn-light-blue"
-                      onClick={this.onSave}
-                    >
-                      Save
-                    </button>
-                  </div>
-                </div>
+                <button
+                  className="btn btn-secondary btn-sm btn-block btn-light-blue"
+                  // onClick={this.onSave}
+                >
+                  Save
+                </button>
+                {/*</div>*/}
+                {/*</div>*/}
               </div>
             </div>
           </div>
