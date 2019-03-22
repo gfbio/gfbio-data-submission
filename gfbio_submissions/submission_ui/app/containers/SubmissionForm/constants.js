@@ -43,3 +43,4 @@ export const UPLOAD_FILE_SUCCESS = 'app/SubmissionForm/UPLOAD_FILE_SUCCESS';
 
 export const ADD_CONTRIBUTOR = 'app/SubmissionForm/ADD_CONTRIBUTOR';
 export const CHANGE_CONTRIBUTOR = 'app/SubmissionForm/CHANGE_CONTRIBUTOR';
+export const UPDATE_CONTRIBUTOR = 'app/SubmissionForm/UPDATE_CONTRIBUTOR';

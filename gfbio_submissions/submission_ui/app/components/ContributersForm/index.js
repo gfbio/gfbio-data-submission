@@ -16,6 +16,7 @@ import { compose } from 'redux';
 import {
   addContributor,
   changeContributor,
+  updateContributor,
 } from '../../containers/SubmissionForm/actions';
 import Button from 'react-bootstrap/Button';
 import Collapse from 'react-bootstrap/Collapse';
@@ -29,10 +30,13 @@ class ContributersForm extends React.PureComponent {
     super(props);
     this.state = {
       formValues: {},
+      editFormValues: {},
       formOpen: false,
       detailOpen: false,
+      contributorIndex: -1,
     };
     this.handleChange = this.handleChange.bind(this);
+    this.handleChangeEdit = this.handleChangeEdit.bind(this);
   }
 
   validateFormValues() {
@@ -76,10 +80,35 @@ class ContributersForm extends React.PureComponent {
     return isValid;
   }
 
+  validateEditFormValues() {
+    let isValid = true;
+    let formValues = this.state.editFormValues;
+    console.log('validteEditFormVAlues');
+    console.log(formValues);
+    if (!formValues['firstNameEdit']) {
+      isValid = false;
+    }
+    if (!formValues['lastNameEdit']) {
+      isValid = false;
+    }
+    if (!formValues['emailAddressEdit']) {
+      isValid = false;
+    }
+    return isValid;
+  }
+
   handleChange(event) {
+    console.log('handleChange ' + event.target.id);
     let values = this.state.formValues;
     values[event.target.id] = event.target.value;
     this.setState({ formValues: values });
+  }
+
+  handleChangeEdit(event) {
+    console.log('handleChangeEdit ' + event.target.id);
+    let values = this.state.editFormValues;
+    values[event.target.id] = event.target.value;
+    this.setState({ editFormValues: values });
   }
 
   onSave = () => {
@@ -92,6 +121,21 @@ class ContributersForm extends React.PureComponent {
       document.getElementById('contribution').value = '';
       this.setState({ formValues: {}, formOpen: false });
     }
+  };
+
+  onSaveEdit = (index) => {
+    console.log('onsave edit -> ' + this.state.contributorIndex);
+    if (this.validateEditFormValues()) {
+      console.log('edit valid');
+      this.props.updateContributor(index, this.state.editFormValues);
+      document.getElementById('firstNameEdit').value = '';
+      document.getElementById('lastNameEdit').value = '';
+      document.getElementById('emailAddressEdit').value = '';
+      document.getElementById('institutionEdit').value = '';
+      document.getElementById('contributionEdit').value = '';
+      this.setState({ editFormValues: {}, detailOpen: false });
+    }
+
   };
 
   // toggles add form, closes detail
@@ -108,14 +152,25 @@ class ContributersForm extends React.PureComponent {
   onClickDetailButton = (newStatus, index = -1) => {
     if (index >= 0) {
       this.props.changeContributor(index);
-      this.setState({ detailOpen: newStatus, formOpen: false });
+      this.setState({
+        detailOpen: newStatus,
+        formOpen: false,
+        contributorIndex: index,
+        editFormValues: {
+          firstNameEdit: this.props.currentContributor.firstName,
+          lastNameEdit: this.props.currentContributor.lastName,
+          emailAddressEdit: this.props.currentContributor.emailAddress,
+          institutionEdit: this.props.currentContributor.institution,
+          contributionEdit: this.props.currentContributor.contribution,
+        },
+      });
     }
   };
 
   render() {
     console.log('ContributersForm render');
-    console.log(this.props.currentContributor);
-    // console.log(this.state);
+    // console.log(this.props.currentContributor);
+    console.log(this.state);
     const { formOpen, detailOpen } = this.state;
     const { firstName, lastName, emailAddress, institution, contribution } = this.props.currentContributor;
     console.log(firstName, ' ', lastName);
@@ -147,18 +202,6 @@ class ContributersForm extends React.PureComponent {
             </li>
 
             {contributors}
-
-            {/* detail button mock */}
-            {/*<li className="list-inline-item">*/}
-            {/*<Button*/}
-            {/*className="btn btn-primary btn-contributor"*/}
-            {/*onClick={() => this.onClickDetailButton(!detailOpen)}*/}
-            {/*aria-controls="contributorForm"*/}
-            {/*aria-expanded={detailOpen}*/}
-            {/*>*/}
-            {/*<i className="fa fa-bars" /> horst meier*/}
-            {/*</Button>*/}
-            {/*</li>*/}
 
             {/* actual form button */}
             <li className="list-inline-item">
@@ -274,8 +317,8 @@ class ContributersForm extends React.PureComponent {
                   <label htmlFor="firstNameEdit">First Name</label>
                   <input type="text" className="form-control"
                          id="firstNameEdit"
-                         onChange={this.handleChange}
-                         value={firstName}
+                         onChange={this.handleChangeEdit}
+                         defaultValue={firstName}
                   />
 
                 </div>
@@ -283,8 +326,8 @@ class ContributersForm extends React.PureComponent {
 
                   <label htmlFor="lastNameEdit">Last Name</label>
                   <input type="text" className="form-control" id="lastNameEdit"
-                         onChange={this.handleChange}
-                         value={lastName}
+                         onChange={this.handleChangeEdit}
+                         defaultValue={lastName}
                   />
 
                 </div>
@@ -296,8 +339,8 @@ class ContributersForm extends React.PureComponent {
                     className="form-control"
                     id="emailAddressEdit"
                     placeholder="name@example.com"
-                    onChange={this.handleChange}
-                    value={emailAddress}
+                    onChange={this.handleChangeEdit}
+                    defaultValue={emailAddress}
                   />
 
                 </div>
@@ -305,13 +348,14 @@ class ContributersForm extends React.PureComponent {
               <div className="form-row">
                 <div className="form-group col-md-6">
 
-                  <label htmlFor="institutionEdit">Institution (optional)</label>
+                  <label htmlFor="institutionEdit">Institution
+                    (optional)</label>
                   <input
                     type="text"
                     className="form-control"
                     id="institutionEdit"
-                    onChange={this.handleChange}
-                    value={institution}
+                    onChange={this.handleChangeEdit}
+                    defaultValue={institution}
                   />
 
                 </div>
@@ -323,8 +367,8 @@ class ContributersForm extends React.PureComponent {
                     type="text"
                     className="form-control"
                     id="contributionEdit"
-                    onChange={this.handleChange}
-                    value={contribution}
+                    onChange={this.handleChangeEdit}
+                    defaultValue={contribution}
                   />
 
                 </div>
@@ -361,7 +405,7 @@ class ContributersForm extends React.PureComponent {
 
                   <button
                     className="btn btn-secondary btn-sm btn-block btn-light-blue"
-                    // onClick={this.onSave}
+                    onClick={this.onSaveEdit}
                   >
                     Save
                   </button>
@@ -381,6 +425,7 @@ ContributersForm.propTypes = {
   contributors: PropTypes.object,
   addContributor: PropTypes.func,
   changeContributor: PropTypes.func,
+  updateContributor: PropTypes.func,
   currentContributor: PropTypes.object,
 };
 
@@ -394,6 +439,7 @@ function mapDispatchToProps(dispatch) {
   return {
     addContributor: contributor => dispatch(addContributor(contributor)),
     changeContributor: index => dispatch(changeContributor(index)),
+    updateContributor: (index, contributor) => dispatch(updateContributor(index, contributor)),
   };
 }
 
