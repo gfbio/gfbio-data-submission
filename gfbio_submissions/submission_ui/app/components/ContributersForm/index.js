@@ -172,8 +172,8 @@ class ContributersForm extends React.PureComponent {
     // console.log(this.props.currentContributor);
     console.log(this.state);
     const { formOpen, detailOpen } = this.state;
-    const { firstName, lastName, emailAddress, institution, contribution } = this.props.currentContributor;
-    console.log(firstName, ' ', lastName);
+    // const { firstName, lastName, emailAddress, institution, contribution } = this.props.currentContributor;
+    // console.log(firstName, ' ', lastName);
 
     let contributors = this.props.contributors.map((c, index) => {
       return <li key={index} className="list-inline-item">
