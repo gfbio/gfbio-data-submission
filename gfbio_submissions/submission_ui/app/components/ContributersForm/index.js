@@ -36,7 +36,7 @@ class ContributersForm extends React.PureComponent {
       contributorIndex: -1,
     };
     this.handleChange = this.handleChange.bind(this);
-    this.handleChangeEdit = this.handleChangeEdit.bind(this);
+    // this.handleChangeEdit = this.handleChangeEdit.bind(this);
   }
 
   validateFormValues() {
@@ -80,22 +80,22 @@ class ContributersForm extends React.PureComponent {
     return isValid;
   }
 
-  validateEditFormValues() {
-    let isValid = true;
-    let formValues = this.state.editFormValues;
-    console.log('validteEditFormVAlues');
-    console.log(formValues);
-    if (!formValues['firstNameEdit']) {
-      isValid = false;
-    }
-    if (!formValues['lastNameEdit']) {
-      isValid = false;
-    }
-    if (!formValues['emailAddressEdit']) {
-      isValid = false;
-    }
-    return isValid;
-  }
+  // validateEditFormValues() {
+  //   let isValid = true;
+  //   let formValues = this.state.editFormValues;
+  //   console.log('validteEditFormVAlues');
+  //   console.log(formValues);
+  //   if (!formValues['firstNameEdit']) {
+  //     isValid = false;
+  //   }
+  //   if (!formValues['lastNameEdit']) {
+  //     isValid = false;
+  //   }
+  //   if (!formValues['emailAddressEdit']) {
+  //     isValid = false;
+  //   }
+  //   return isValid;
+  // }
 
   handleChange(event) {
     console.log('handleChange ' + event.target.id);
@@ -104,12 +104,12 @@ class ContributersForm extends React.PureComponent {
     this.setState({ formValues: values });
   }
 
-  handleChangeEdit(event) {
-    console.log('handleChangeEdit ' + event.target.id);
-    let values = this.state.editFormValues;
-    values[event.target.id] = event.target.value;
-    this.setState({ editFormValues: values });
-  }
+  // handleChangeEdit(event) {
+  //   console.log('handleChangeEdit ' + event.target.id);
+  //   let values = this.state.editFormValues;
+  //   values[event.target.id] = event.target.value;
+  //   this.setState({ editFormValues: values });
+  // }
 
   onSave = () => {
     if (this.validateFormValues()) {
@@ -123,20 +123,20 @@ class ContributersForm extends React.PureComponent {
     }
   };
 
-  onSaveEdit = (index) => {
-    console.log('onsave edit -> ' + this.state.contributorIndex);
-    if (this.validateEditFormValues()) {
-      console.log('edit valid');
-      this.props.updateContributor(index, this.state.editFormValues);
-      document.getElementById('firstNameEdit').value = '';
-      document.getElementById('lastNameEdit').value = '';
-      document.getElementById('emailAddressEdit').value = '';
-      document.getElementById('institutionEdit').value = '';
-      document.getElementById('contributionEdit').value = '';
-      this.setState({ editFormValues: {}, detailOpen: false });
-    }
-
-  };
+  // onSaveEdit = (index) => {
+  //   console.log('onsave edit -> ' + this.state.contributorIndex);
+  //   if (this.validateEditFormValues()) {
+  //     console.log('edit valid');
+  //     this.props.updateContributor(index, this.state.editFormValues);
+  //     document.getElementById('firstNameEdit').value = '';
+  //     document.getElementById('lastNameEdit').value = '';
+  //     document.getElementById('emailAddressEdit').value = '';
+  //     document.getElementById('institutionEdit').value = '';
+  //     document.getElementById('contributionEdit').value = '';
+  //     this.setState({ editFormValues: {}, detailOpen: false });
+  //   }
+  //
+  // };
 
   // toggles add form, closes detail
   onClickAddButton = (newStatus) => {
@@ -149,23 +149,23 @@ class ContributersForm extends React.PureComponent {
   };
 
   // toogles Detail, closes form
-  onClickDetailButton = (newStatus, index = -1) => {
-    if (index >= 0) {
-      this.props.changeContributor(index);
-      this.setState({
-        detailOpen: newStatus,
-        formOpen: false,
-        contributorIndex: index,
-        editFormValues: {
-          firstNameEdit: this.props.currentContributor.firstName,
-          lastNameEdit: this.props.currentContributor.lastName,
-          emailAddressEdit: this.props.currentContributor.emailAddress,
-          institutionEdit: this.props.currentContributor.institution,
-          contributionEdit: this.props.currentContributor.contribution,
-        },
-      });
-    }
-  };
+  // onClickDetailButton = (newStatus, index = -1) => {
+  //   if (index >= 0) {
+  //     this.props.changeContributor(index);
+  //     this.setState({
+  //       detailOpen: newStatus,
+  //       formOpen: false,
+  //       contributorIndex: index,
+  //       editFormValues: {
+  //         firstNameEdit: this.props.currentContributor.firstName,
+  //         lastNameEdit: this.props.currentContributor.lastName,
+  //         emailAddressEdit: this.props.currentContributor.emailAddress,
+  //         institutionEdit: this.props.currentContributor.institution,
+  //         contributionEdit: this.props.currentContributor.contribution,
+  //       },
+  //     });
+  //   }
+  // };
 
   render() {
     console.log('ContributersForm render');
@@ -177,14 +177,14 @@ class ContributersForm extends React.PureComponent {
 
     let contributors = this.props.contributors.map((c, index) => {
       return <li key={index} className="list-inline-item">
-        <Button
-          className="btn btn-primary btn-contributor"
-          onClick={() => this.onClickDetailButton(!detailOpen, index)}
-          aria-controls="contributorForm"
-          aria-expanded={detailOpen}
-        >
-          <i className="fa fa-bars" /> {`${c.firstName} ${c.lastName}`}
-        </Button>
+        {/*<Button*/}
+        {/*className="btn btn-primary btn-contributor"*/}
+        {/*onClick={() => this.onClickDetailButton(!detailOpen, index)}*/}
+        {/*aria-controls="contributorForm"*/}
+        {/*aria-expanded={detailOpen}*/}
+        {/*>*/}
+        {/*<i className="fa fa-bars" /> {`${c.firstName} ${c.lastName}`}*/}
+        {/*</Button>*/}
       </li>;
     });
 
@@ -308,111 +308,111 @@ class ContributersForm extends React.PureComponent {
             </div>
           </Collapse>
 
-          <Collapse in={this.state.detailOpen}>
-            <div className="card card-body">
-              <h5>Edit Contributor</h5>
-              <div className="form-row">
-                <div className="form-group col-md-3">
+          {/*<Collapse in={this.state.detailOpen}>*/}
+          {/*<div className="card card-body">*/}
+          {/*<h5>Edit Contributor</h5>*/}
+          {/*<div className="form-row">*/}
+          {/*<div className="form-group col-md-3">*/}
 
-                  <label htmlFor="firstNameEdit">First Name</label>
-                  <input type="text" className="form-control"
-                         id="firstNameEdit"
-                         onChange={this.handleChangeEdit}
-                         defaultValue={firstName}
-                  />
+          {/*<label htmlFor="firstNameEdit">First Name</label>*/}
+          {/*<input type="text" className="form-control"*/}
+          {/*id="firstNameEdit"*/}
+          {/*onChange={this.handleChangeEdit}*/}
+          {/*defaultValue={firstName}*/}
+          {/*/>*/}
 
-                </div>
-                <div className="form-group col-md-3">
+          {/*</div>*/}
+          {/*<div className="form-group col-md-3">*/}
 
-                  <label htmlFor="lastNameEdit">Last Name</label>
-                  <input type="text" className="form-control" id="lastNameEdit"
-                         onChange={this.handleChangeEdit}
-                         defaultValue={lastName}
-                  />
+          {/*<label htmlFor="lastNameEdit">Last Name</label>*/}
+          {/*<input type="text" className="form-control" id="lastNameEdit"*/}
+          {/*onChange={this.handleChangeEdit}*/}
+          {/*defaultValue={lastName}*/}
+          {/*/>*/}
 
-                </div>
-                <div className="form-group col-md-6">
+          {/*</div>*/}
+          {/*<div className="form-group col-md-6">*/}
 
-                  <label htmlFor="emailAddressEdit">Email Address</label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    id="emailAddressEdit"
-                    placeholder="name@example.com"
-                    onChange={this.handleChangeEdit}
-                    defaultValue={emailAddress}
-                  />
+          {/*<label htmlFor="emailAddressEdit">Email Address</label>*/}
+          {/*<input*/}
+          {/*type="email"*/}
+          {/*className="form-control"*/}
+          {/*id="emailAddressEdit"*/}
+          {/*placeholder="name@example.com"*/}
+          {/*onChange={this.handleChangeEdit}*/}
+          {/*defaultValue={emailAddress}*/}
+          {/*/>*/}
 
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group col-md-6">
+          {/*</div>*/}
+          {/*</div>*/}
+          {/*<div className="form-row">*/}
+          {/*<div className="form-group col-md-6">*/}
 
-                  <label htmlFor="institutionEdit">Institution
-                    (optional)</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="institutionEdit"
-                    onChange={this.handleChangeEdit}
-                    defaultValue={institution}
-                  />
+          {/*<label htmlFor="institutionEdit">Institution*/}
+          {/*(optional)</label>*/}
+          {/*<input*/}
+          {/*type="text"*/}
+          {/*className="form-control"*/}
+          {/*id="institutionEdit"*/}
+          {/*onChange={this.handleChangeEdit}*/}
+          {/*defaultValue={institution}*/}
+          {/*/>*/}
 
-                </div>
-                <div className="form-group col-md-6">
+          {/*</div>*/}
+          {/*<div className="form-group col-md-6">*/}
 
-                  <label htmlFor="contributionEdit">Contribution
-                    (optional)</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="contributionEdit"
-                    onChange={this.handleChangeEdit}
-                    defaultValue={contribution}
-                  />
+          {/*<label htmlFor="contributionEdit">Contribution*/}
+          {/*(optional)</label>*/}
+          {/*<input*/}
+          {/*type="text"*/}
+          {/*className="form-control"*/}
+          {/*id="contributionEdit"*/}
+          {/*onChange={this.handleChangeEdit}*/}
+          {/*defaultValue={contribution}*/}
+          {/*/>*/}
 
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group col-md-2">
+          {/*</div>*/}
+          {/*</div>*/}
+          {/*<div className="form-row">*/}
+          {/*<div className="form-group col-md-2">*/}
 
-                  <button
-                    className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
-                    data-toggle="collapse"
-                    data-target="#contributorDetailWrapper"
-                    aria-expanded="false"
-                    aria-controls="contributorDetailWrapper"
-                  >
-                    Cancel
-                  </button>
+          {/*<button*/}
+          {/*className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"*/}
+          {/*data-toggle="collapse"*/}
+          {/*data-target="#contributorDetailWrapper"*/}
+          {/*aria-expanded="false"*/}
+          {/*aria-controls="contributorDetailWrapper"*/}
+          {/*>*/}
+          {/*Cancel*/}
+          {/*</button>*/}
 
-                </div>
-                <div className="form-group col-md-2">
+          {/*</div>*/}
+          {/*<div className="form-group col-md-2">*/}
 
-                  <button
-                    className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
-                    data-toggle="collapse"
-                    data-target="#contributorDetailWrapper"
-                    aria-expanded="false"
-                    aria-controls="contributorDetailWrapper"
-                  >
-                    Remove
-                  </button>
+          {/*<button*/}
+          {/*className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"*/}
+          {/*data-toggle="collapse"*/}
+          {/*data-target="#contributorDetailWrapper"*/}
+          {/*aria-expanded="false"*/}
+          {/*aria-controls="contributorDetailWrapper"*/}
+          {/*>*/}
+          {/*Remove*/}
+          {/*</button>*/}
 
-                </div>
-                <div className="form-group col-md-4" />
-                <div className="form-group col-md-4">
+          {/*</div>*/}
+          {/*<div className="form-group col-md-4" />*/}
+          {/*<div className="form-group col-md-4">*/}
 
-                  <button
-                    className="btn btn-secondary btn-sm btn-block btn-light-blue"
-                    onClick={this.onSaveEdit}
-                  >
-                    Save
-                  </button>
-                </div>
-              </div>
-            </div>
-          </Collapse>
+          {/*<button*/}
+          {/*className="btn btn-secondary btn-sm btn-block btn-light-blue"*/}
+          {/*onClick={this.onSaveEdit}*/}
+          {/*>*/}
+          {/*Save*/}
+          {/*</button>*/}
+          {/*</div>*/}
+          {/*</div>*/}
+          {/*</div>*/}
+          {/*</Collapse>*/}
 
 
         </div>
