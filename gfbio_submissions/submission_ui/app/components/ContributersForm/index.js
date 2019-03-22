@@ -105,20 +105,26 @@ class ContributersForm extends React.PureComponent {
   };
 
   // toogles Detail, closes form
-  onClickDetailButton = (newStatus) => {
-    this.setState({ detailOpen: newStatus, formOpen: false });
+  onClickDetailButton = (newStatus, index = -1) => {
+    if (index >= 0) {
+      this.props.changeContributor(index);
+      this.setState({ detailOpen: newStatus, formOpen: false });
+    }
   };
 
   render() {
     console.log('ContributersForm render');
-    // console.log(this.props.currentContributor);
+    console.log(this.props.currentContributor);
     // console.log(this.state);
     const { formOpen, detailOpen } = this.state;
+    const { firstName, lastName, emailAddress, institution, contribution } = this.props.currentContributor;
+    console.log(firstName, ' ', lastName);
+
     let contributors = this.props.contributors.map((c, index) => {
       return <li key={index} className="list-inline-item">
         <Button
           className="btn btn-primary btn-contributor"
-          onClick={() => this.onClickDetailButton(!detailOpen)}
+          onClick={() => this.onClickDetailButton(!detailOpen, index)}
           aria-controls="contributorForm"
           aria-expanded={detailOpen}
         >
@@ -143,16 +149,16 @@ class ContributersForm extends React.PureComponent {
             {contributors}
 
             {/* detail button mock */}
-            <li className="list-inline-item">
-              <Button
-                className="btn btn-primary btn-contributor"
-                onClick={() => this.onClickDetailButton(!detailOpen)}
-                aria-controls="contributorForm"
-                aria-expanded={detailOpen}
-              >
-                <i className="fa fa-bars" /> horst meier
-              </Button>
-            </li>
+            {/*<li className="list-inline-item">*/}
+            {/*<Button*/}
+            {/*className="btn btn-primary btn-contributor"*/}
+            {/*onClick={() => this.onClickDetailButton(!detailOpen)}*/}
+            {/*aria-controls="contributorForm"*/}
+            {/*aria-expanded={detailOpen}*/}
+            {/*>*/}
+            {/*<i className="fa fa-bars" /> horst meier*/}
+            {/*</Button>*/}
+            {/*</li>*/}
 
             {/* actual form button */}
             <li className="list-inline-item">
@@ -265,35 +271,33 @@ class ContributersForm extends React.PureComponent {
               <div className="form-row">
                 <div className="form-group col-md-3">
 
-                  <label htmlFor="firstName">First Name</label>
+                  <label htmlFor="firstNameEdit">First Name</label>
                   <input type="text" className="form-control"
-                         id="firstName" onChange={this.handleChange}
-                    // value={tmpContributor.firstName}
-                    // required
+                         id="firstNameEdit"
+                         onChange={this.handleChange}
+                         value={firstName}
                   />
 
                 </div>
                 <div className="form-group col-md-3">
 
-                  <label htmlFor="lastName">Last Name</label>
-                  <input type="text" className="form-control" id="lastName"
+                  <label htmlFor="lastNameEdit">Last Name</label>
+                  <input type="text" className="form-control" id="lastNameEdit"
                          onChange={this.handleChange}
-                    // value={tmpContributor.lastName}
-                    // required
+                         value={lastName}
                   />
 
                 </div>
                 <div className="form-group col-md-6">
 
-                  <label htmlFor="emailAddress">Email Address</label>
+                  <label htmlFor="emailAddressEdit">Email Address</label>
                   <input
                     type="email"
                     className="form-control"
-                    id="emailAddress"
+                    id="emailAddressEdit"
                     placeholder="name@example.com"
                     onChange={this.handleChange}
-                    // value={tmpContributor.emailAddress}
-                    // required
+                    value={emailAddress}
                   />
 
                 </div>
@@ -301,26 +305,26 @@ class ContributersForm extends React.PureComponent {
               <div className="form-row">
                 <div className="form-group col-md-6">
 
-                  <label htmlFor="institution">Institution (optional)</label>
+                  <label htmlFor="institutionEdit">Institution (optional)</label>
                   <input
                     type="text"
                     className="form-control"
-                    id="institution"
+                    id="institutionEdit"
                     onChange={this.handleChange}
-                    // value={tmpContributor.institution}
+                    value={institution}
                   />
 
                 </div>
                 <div className="form-group col-md-6">
 
-                  <label htmlFor="contribution">Contribution
+                  <label htmlFor="contributionEdit">Contribution
                     (optional)</label>
                   <input
                     type="text"
                     className="form-control"
-                    id="contribution"
+                    id="contributionEdit"
                     onChange={this.handleChange}
-                    // value={tmpContributor.contribution}
+                    value={contribution}
                   />
 
                 </div>
