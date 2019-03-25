@@ -124,11 +124,6 @@ const makeSelectCurrentContributor = () =>
     substate.get('currentContributor'),
   );
 
-// const makeSelectCurrentContributorIndex = () =>
-//   createSelector(selectSubmissionFormDomain, substate =>
-//     substate.get('currentContributorIndex'),
-//   );
-
 export default makeSelectSubmissionForm;
 
 export {
@@ -152,5 +147,4 @@ export {
   makeSelectBrokerSubmissionId,
   makeSelectContributors,
   makeSelectCurrentContributor,
-  // makeSelectCurrentContributorIndex,
 };

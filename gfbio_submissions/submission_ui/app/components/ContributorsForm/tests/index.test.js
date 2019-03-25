@@ -2,9 +2,9 @@
 // import { mount } from 'enzyme';
 // import { enzymeFind } from 'styled-components/test-utils';
 
-// import ContributersForm from '../index';
+// import ContributorsForm from '../index';
 
-describe('<ContributersForm />', () => {
+describe('<ContributorsForm />', () => {
   it('Expect to have unit tests specified', () => {
     expect(true).toEqual(false);
   });

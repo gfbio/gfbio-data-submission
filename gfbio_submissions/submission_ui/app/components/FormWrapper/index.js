@@ -8,7 +8,7 @@ import React from 'react';
 import { reduxForm } from 'redux-form/immutable';
 import PropTypes from 'prop-types';
 // import MinimalSubmissionForm from '../components/MinimalSubmissionForm';
-import ContributersForm from 'components/ContributersForm';
+import ContributersForm from 'components/ContributorsForm';
 import TargetDataCenterForm from 'components/TargetDataCenterForm';
 import DataCategoryForm from 'components/DataCategoryForm';
 import CommentForm from 'components/CommentForm';
