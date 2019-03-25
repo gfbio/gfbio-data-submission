@@ -10,6 +10,7 @@ import {
   ADD_FILE_UPLOAD,
   ADD_RELATED_PUBLICATION,
   CHANGE_CONTRIBUTOR,
+  // CHANGE_CONTRIBUTOR_INDEX,
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
@@ -26,7 +27,7 @@ import {
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
-  SUBMIT_FORM_SUCCESS, UPDATE_CONTRIBUTOR,
+  SUBMIT_FORM_SUCCESS, UPDATE_CONTRIBUTOR, UPDATE_CURRENT_CONTRIBUTOR,
   UPLOAD_FILE_ERROR,
   UPLOAD_FILE_PROGRESS,
   UPLOAD_FILE_SUCCESS,
@@ -227,12 +228,27 @@ export function addContributor(contributor) {
   };
 }
 
+// export function changeContributorIndex(index) {
+//   return {
+//     type: CHANGE_CONTRIBUTOR_INDEX,
+//     index,
+//   };
+// }
+
 export function changeContributor(index) {
   return {
     type: CHANGE_CONTRIBUTOR,
     index,
   };
 }
+
+export function updateCurrentContributor(contributor) {
+  return {
+    type: UPDATE_CURRENT_CONTRIBUTOR,
+    contributor,
+  };
+}
+
 
 export function updateContributor(index, contributor) {
   return {
