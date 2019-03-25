@@ -5,20 +5,10 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
-import {
-  makeSelectContributors,
-  makeSelectCurrentContributor,
-} from '../../containers/SubmissionForm/selectors';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import {
-  addContributor,
-  changeContributor,
-  updateContributor,
-  updateCurrentContributor,
-} from '../../containers/SubmissionForm/actions';
 import Button from 'react-bootstrap/Button';
 import Collapse from 'react-bootstrap/Collapse';
 
@@ -425,26 +415,26 @@ class ContributorsForm extends React.PureComponent {
 }
 
 ContributorsForm.propTypes = {
-  contributors: PropTypes.object,
-  addContributor: PropTypes.func,
-  changeContributor: PropTypes.func,
-  updateCurrentContributor: PropTypes.func,
-  updateContributor: PropTypes.func,
-  currentContributor: PropTypes.object,
+  // contributors: PropTypes.object,
+  // // addContributor: PropTypes.func,
+  // changeContributor: PropTypes.func,
+  // updateCurrentContributor: PropTypes.func,
+  // updateContributor: PropTypes.func,
+  // currentContributor: PropTypes.object,
 };
 
 const mapStateToProps = createStructuredSelector({
-  contributors: makeSelectContributors(),
-  currentContributor: makeSelectCurrentContributor(),
+  // contributors: makeSelectContributors(),
+  // currentContributor: makeSelectCurrentContributor(),
 });
 
 
 function mapDispatchToProps(dispatch) {
   return {
-    addContributor: contributor => dispatch(addContributor(contributor)),
-    changeContributor: index => dispatch(changeContributor(index)),
-    updateCurrentContributor: (contributor) => dispatch(updateCurrentContributor(contributor)),
-    updateContributor: (index, contributor) => dispatch(updateContributor(index, contributor)),
+    // addContributor: contributor => dispatch(addContributor(contributor)),
+    // changeContributor: index => dispatch(changeContributor(index)),
+    // updateCurrentContributor: (contributor) => dispatch(updateCurrentContributor(contributor)),
+    // updateContributor: (index, contributor) => dispatch(updateContributor(index, contributor)),
   };
 }
 
