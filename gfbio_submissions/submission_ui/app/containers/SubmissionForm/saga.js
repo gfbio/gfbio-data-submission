@@ -42,7 +42,7 @@ import {
 } from './actions';
 import { createUploadFileChannel, postSubmission } from './submissionApi';
 
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+// const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 // TODO: move logic to utils.js. here only workflow
 function* prepareRequestData(userId, submit = true) {

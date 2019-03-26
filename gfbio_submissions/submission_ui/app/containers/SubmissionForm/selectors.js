@@ -114,15 +114,10 @@ const makeSelectBrokerSubmissionId = () =>
     substate.get('brokerSubmissionId'),
   );
 
-// const makeSelectContributors = () =>
-//   createSelector(selectSubmissionFormDomain, substate =>
-//     substate.get('contributors'),
-//   );
-//
-// const makeSelectCurrentContributor = () =>
-//   createSelector(selectSubmissionFormDomain, substate =>
-//     substate.get('currentContributor'),
-//   );
+const makeSelectContributors = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('contributors'),
+  );
 
 export default makeSelectSubmissionForm;
 
@@ -145,6 +140,6 @@ export {
   makeSelectDatasetLabels,
   makeSelectFileUploads,
   makeSelectBrokerSubmissionId,
-  // makeSelectContributors,
+  makeSelectContributors,
   // makeSelectCurrentContributor,
 };

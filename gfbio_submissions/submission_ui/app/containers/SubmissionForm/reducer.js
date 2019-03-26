@@ -66,7 +66,6 @@ export const initialState = fromJS({
   brokerSubmissionId: '',
   contributors: [],
   currentContributor: {},
-  // currentContributorIndex: -1,
 });
 
 function submissionFormReducer(state = initialState, action) {
@@ -173,57 +172,11 @@ function submissionFormReducer(state = initialState, action) {
       success_upload.status = 'success';
       return state
         .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1, success_upload));
-
     case SET_CONTRIBUTORS:
       console.log('SET_CONTRIBUTORS');
       console.log(action.contributors);
       return state
         .set('contributors', action.contributors);
-
-      // case ADD_CONTRIBUTOR:
-    //   console.log('ADD_CONTRIBUTOR');
-    //   console.log(action.contributor);
-    //   return state
-    //     .update('contributors', (contributors) => contributors.push(action.contributor));
-    //
-    //
-    // case UPDATE_CURRENT_CONTRIBUTOR:
-    //   console.log('UPDATE_CURRENT_CONTRIBUTOR');
-    //   console.log(action.contributor);
-    //   let current = state.get('currentContributor');
-    //   console.log(Object.assign(current, action.contributor));
-    //   return state
-    //   // .set('currentContributor', current);
-    //     .update('currentContributor', (currentContributor) => Object.assign(currentContributor, action.contributor));
-    // // works but returns immutable map
-    // // .setIn(['currentContributor', action.contributor['id']], action.contributor['value']);
-    //
-    //
-    // case CHANGE_CONTRIBUTOR:
-    //   console.log('CHANGE_CONTRIBUTOR');
-    //   console.log(action.index);
-    //   let contributor = state.getIn(['contributors', action.index]);
-    //   console.log('contributor:');
-    //   console.log(contributor);
-    //   return state
-    //     .set('currentContributor', contributor);
-    // // return state
-    // //   .update('contributors', (contributors) => contributors.push(action.contributor));
-    // case UPDATE_CONTRIBUTOR:
-    //   console.log('UPDATE_CONTRIBUTOR');
-    //   console.log(action);
-    //   // let updatedContributor = state.getIn(['contributors', action.index]);
-    //   // let updatedContributor = {
-    //   //   firstName: action.contributor.firstNameEdit,
-    //   //   lastName: action.contributor.lastNameEdit,
-    //   //   emailAddress: action.contributor.emailAddressEdit,
-    //   //   institution: action.contributor.institutionEdit,
-    //   //   contribution: action.contributor.contributionEdit,
-    //   // };
-    //   console.log('updatedContributor:');
-    //   // console.log(updatedContributor);
-    //   return state;
-    // // .update('contributors', (contributors) => contributors.splice(action.index, 1, updatedContributor));
     default:
       return state;
   }

@@ -12,6 +12,7 @@ import { compose } from 'redux';
 import Button from 'react-bootstrap/Button';
 import Collapse from 'react-bootstrap/Collapse';
 import { setContributors } from '../../containers/SubmissionForm/actions';
+import { makeSelectContributors } from '../../containers/SubmissionForm/selectors';
 
 /* eslint-disable react/prefer-stateless-function */
 class ContributorsForm extends React.PureComponent {
@@ -289,7 +290,8 @@ class ContributorsForm extends React.PureComponent {
     const { formOpen, detailOpen } = this.state;
     let editForm = this.renderEditForm(detailOpen);
 
-    let contributors = this.state.contribs.map((c, index) => {
+    // let contributors = this.state.contribs.map((c, index) => {
+    let contributors = this.props.contributors.map((c, index) => {
       return <li key={index} className="list-inline-item">
         <Button
           className="btn btn-primary btn-contributor"
@@ -409,6 +411,7 @@ class ContributorsForm extends React.PureComponent {
             {editForm}
           </Collapse>
 
+
         </div>
       </div>
     );
@@ -417,9 +420,12 @@ class ContributorsForm extends React.PureComponent {
 
 ContributorsForm.propTypes = {
   setContributors: PropTypes.func,
+  contributors: PropTypes.array
 };
 
-const mapStateToProps = createStructuredSelector({});
+const mapStateToProps = createStructuredSelector({
+  contributors: makeSelectContributors(),
+});
 
 
 function mapDispatchToProps(dispatch) {
