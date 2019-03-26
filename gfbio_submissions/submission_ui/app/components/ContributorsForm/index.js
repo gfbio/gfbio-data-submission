@@ -39,31 +39,25 @@ class ContributorsForm extends React.PureComponent {
     this.handleChangeContribution = this.handleChangeContribution.bind(this);
   }
 
-  validateFormValues(formValues) {
+  static validateFormValues(formValues) {
     let isValid = true;
-    // let formValues = this.state.formValues;
     if (!formValues['firstName']) {
-      // console.log('validateFormValues no fn');
       isValid = false;
     }
     // if (typeof formValues['firstName'] !== 'undefined') {
-    //   console.log('validateFormValues fn unde or regex');
     //   if (!formValues['firstName'].match(/^[a-zA-Z]+$/)) {
     //     isValid = false;
     //   }
     // }
     if (!formValues['lastName']) {
-      // console.log('validateFormValues no ln');
       isValid = false;
     }
     // if (typeof formValues['lastName'] !== 'undefined') {
-    //   console.log('validateFormValues ln undef or regex');
     //   if (!formValues['lastName'].match(/^[a-zA-Z]+$/)) {
     //     isValid = false;
     //   }
     // }
     if (!formValues['emailAddress']) {
-      // console.log('validateFormValues no email');
       isValid = false;
     }
 
@@ -71,11 +65,9 @@ class ContributorsForm extends React.PureComponent {
     //   const pattern = /[a-zA-Z0-9]+[\.]?([a-zA-Z0-9]+)?[\@][a-z]{3,9}[\.][a-z]{2,5}/g;
     //   const result = pattern.test(formValues['emailAddress']);
     //   if (result === false) {
-    //     console.log('validateFormValues email regex');
     //     isValid = false;
     //   }
     // }
-    // console.log('validateFormValues will return: ' + isValid);
     return isValid;
   }
 
@@ -94,7 +86,7 @@ class ContributorsForm extends React.PureComponent {
   };
 
   onSave = () => {
-    if (this.validateFormValues(this.state.formValues)) {
+    if (ContributorsForm.validateFormValues(this.state.formValues)) {
       document.getElementById('firstName').value = '';
       document.getElementById('lastName').value = '';
       document.getElementById('emailAddress').value = '';
@@ -114,7 +106,7 @@ class ContributorsForm extends React.PureComponent {
       institution: this.state.institution,
       contribution: this.state.contribution,
     };
-    if (this.validateFormValues(tmp)) {
+    if (ContributorsForm.validateFormValues(tmp)) {
       const list = this.state.contribs;
       list[this.state.contributorIndex] = tmp;
       this.props.setContributors(list);
@@ -290,7 +282,7 @@ class ContributorsForm extends React.PureComponent {
 
   render() {
     console.log('ContributorsForm render');
-    console.log(this.props.currentContributor);
+    console.log(this.props);
     console.log('----------------------');
     console.log(this.state);
     console.log('---------------------------------');
@@ -334,8 +326,6 @@ class ContributorsForm extends React.PureComponent {
               </Button>
             </li>
           </ul>
-
-          {/* TODO: pre-fill detail form (easy), then update detail */}
 
           <Collapse in={this.state.formOpen}>
             <div className="card card-body">
@@ -426,27 +416,15 @@ class ContributorsForm extends React.PureComponent {
 }
 
 ContributorsForm.propTypes = {
-  // contributors: PropTypes.object,
   setContributors: PropTypes.func,
-  // changeContributor: PropTypes.func,
-  // updateCurrentContributor: PropTypes.func,
-  // updateContributor: PropTypes.func,
-  // currentContributor: PropTypes.object,
 };
 
-const mapStateToProps = createStructuredSelector({
-  // contributors: makeSelectContributors(),
-  // currentContributor: makeSelectCurrentContributor(),
-});
+const mapStateToProps = createStructuredSelector({});
 
 
 function mapDispatchToProps(dispatch) {
   return {
     setContributors: contributors => dispatch(setContributors(contributors)),
-    // addContributor: contributor => dispatch(addContributor(contributor)),
-    // changeContributor: index => dispatch(changeContributor(index)),
-    // updateCurrentContributor: (contributor) => dispatch(updateCurrentContributor(contributor)),
-    // updateContributor: (index, contributor) => dispatch(updateContributor(index, contributor)),
   };
 }
 
