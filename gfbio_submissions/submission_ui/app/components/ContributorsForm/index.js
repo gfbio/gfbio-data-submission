@@ -147,6 +147,14 @@ class ContributorsForm extends React.PureComponent {
     this.setState({ detailOpen: false });
   };
 
+  onClickRemove = () => {
+    let list = this.state.contribs;
+    list.splice(this.state.contributorIndex, 1);
+    this.cleanEditForm();
+    this.props.setContributors(list);
+    this.setState({ detailOpen: false, contribs: list });
+  };
+
   // toogles Detail, closes form
   onClickDetailButton = (newStatus, index = -1) => {
     if (index >= 0) {
@@ -257,7 +265,7 @@ class ContributorsForm extends React.PureComponent {
             {/* TODO: add remove function / worklfow */}
             <Button
               className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
-              onClick={() => this.closeDetailBody()}
+              onClick={() => this.onClickRemove()}
               aria-controls="contributorEditForm"
               aria-expanded={detailOpen}
             >
