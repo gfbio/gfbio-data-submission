@@ -19,6 +19,7 @@ import {
   SAVE_FORM,
   SAVE_FORM_ERROR,
   SAVE_FORM_SUCCESS,
+  SET_CONTRIBUTORS,
   SET_EMBARGO_DATE,
   SUBMIT_FORM,
   SUBMIT_FORM_ACTIVE,
@@ -217,6 +218,14 @@ export function uploadFileSuccess(index) {
 }
 
 /* END File no s for single File */
+
+
+export function setContributors(contributors) {
+  return {
+    type: SET_CONTRIBUTORS,
+    contributors,
+  };
+}
 
 // export function addContributor(contributor) {
 //   return {

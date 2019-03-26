@@ -5,12 +5,13 @@
  */
 
 import React from 'react';
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import Button from 'react-bootstrap/Button';
 import Collapse from 'react-bootstrap/Collapse';
+import { setContributors } from '../../containers/SubmissionForm/actions';
 
 /* eslint-disable react/prefer-stateless-function */
 class ContributorsForm extends React.PureComponent {
@@ -100,6 +101,7 @@ class ContributorsForm extends React.PureComponent {
       document.getElementById('institution').value = '';
       document.getElementById('contribution').value = '';
       const list = this.state.contribs.concat(this.state.formValues);
+      this.props.setContributors(list);
       this.setState({ formOpen: false, contribs: list, formValues: {} });
     }
   };
@@ -115,6 +117,7 @@ class ContributorsForm extends React.PureComponent {
     if (this.validateFormValues(tmp)) {
       const list = this.state.contribs;
       list[this.state.contributorIndex] = tmp;
+      this.props.setContributors(list);
       this.cleanEditForm();
       this.setState({
         contribs: list,
@@ -416,7 +419,7 @@ class ContributorsForm extends React.PureComponent {
 
 ContributorsForm.propTypes = {
   // contributors: PropTypes.object,
-  // // addContributor: PropTypes.func,
+  setContributors: PropTypes.func,
   // changeContributor: PropTypes.func,
   // updateCurrentContributor: PropTypes.func,
   // updateContributor: PropTypes.func,
@@ -431,6 +434,7 @@ const mapStateToProps = createStructuredSelector({
 
 function mapDispatchToProps(dispatch) {
   return {
+    setContributors: contributors => dispatch(setContributors(contributors)),
     // addContributor: contributor => dispatch(addContributor(contributor)),
     // changeContributor: index => dispatch(changeContributor(index)),
     // updateCurrentContributor: (contributor) => dispatch(updateCurrentContributor(contributor)),
