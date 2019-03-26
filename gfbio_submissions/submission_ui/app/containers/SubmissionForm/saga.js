@@ -16,7 +16,7 @@ import {
   UPLOAD_FILES,
 } from './constants';
 import {
-  makeSelectBrokerSubmissionId,
+  makeSelectBrokerSubmissionId, makeSelectContributors,
   makeSelectDatasetLabels,
   makeSelectFileUploads,
   makeSelectFormWrapper,
@@ -42,7 +42,7 @@ import {
 } from './actions';
 import { createUploadFileChannel, postSubmission } from './submissionApi';
 
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+// const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 // TODO: move logic to utils.js. here only workflow
 function* prepareRequestData(userId, submit = true) {
@@ -65,6 +65,7 @@ function* prepareRequestData(userId, submit = true) {
   const metadata_schema = yield select(makeSelectMetaDataSchema());
   const related_publications = yield select(makeSelectRelatedPublications());
   const datasetLabels = yield select(makeSelectDatasetLabels());
+  const contributors = yield select(makeSelectContributors());
   const requirements = Object.assign({
     license,
     metadata_schema,
@@ -72,6 +73,7 @@ function* prepareRequestData(userId, submit = true) {
     related_publications,
     datasetLabels,
     categories,
+    contributors,
   }, formValues);
   return {
     target: 'GENERIC',

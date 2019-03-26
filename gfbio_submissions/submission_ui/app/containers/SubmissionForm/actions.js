@@ -19,6 +19,7 @@ import {
   SAVE_FORM,
   SAVE_FORM_ERROR,
   SAVE_FORM_SUCCESS,
+  SET_CONTRIBUTORS,
   SET_EMBARGO_DATE,
   SUBMIT_FORM,
   SUBMIT_FORM_ACTIVE,
@@ -28,13 +29,9 @@ import {
   UPLOAD_FILE_ERROR,
   UPLOAD_FILE_PROGRESS,
   UPLOAD_FILE_SUCCESS,
-  // UPLOAD_FAILURE,
   UPLOAD_FILES,
   UPLOAD_FILES_ERROR,
   UPLOAD_FILES_SUCCESS,
-  // UPLOAD_PROGRESS,
-  // UPLOAD_REQUEST,
-  // UPLOAD_SUCCESS,
 } from './constants';
 
 export function defaultAction() {
@@ -221,3 +218,11 @@ export function uploadFileSuccess(index) {
 }
 
 /* END File no s for single File */
+
+
+export function setContributors(contributors) {
+  return {
+    type: SET_CONTRIBUTORS,
+    contributors,
+  };
+}

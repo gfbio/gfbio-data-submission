@@ -18,7 +18,7 @@ import {
   REMOVE_RELATED_PUBLICATION,
   SAVE_FORM,
   SAVE_FORM_ERROR,
-  SAVE_FORM_SUCCESS,
+  SAVE_FORM_SUCCESS, SET_CONTRIBUTORS,
   SET_EMBARGO_DATE,
   SUBMIT_FORM,
   SUBMIT_FORM_ACTIVE,
@@ -64,6 +64,8 @@ export const initialState = fromJS({
   fileUploads: [],
   fileUploadInProgress: false,
   brokerSubmissionId: '',
+  contributors: [],
+  currentContributor: {},
 });
 
 function submissionFormReducer(state = initialState, action) {
@@ -170,6 +172,11 @@ function submissionFormReducer(state = initialState, action) {
       success_upload.status = 'success';
       return state
         .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1, success_upload));
+    case SET_CONTRIBUTORS:
+      console.log('SET_CONTRIBUTORS');
+      console.log(action.contributors);
+      return state
+        .set('contributors', action.contributors);
     default:
       return state;
   }
