@@ -7,8 +7,7 @@
 import React from 'react';
 import { reduxForm } from 'redux-form/immutable';
 import PropTypes from 'prop-types';
-// import MinimalSubmissionForm from '../components/MinimalSubmissionForm';
-import ContributersForm from 'components/ContributorsForm';
+import ContributorsForm from 'components/ContributorsForm';
 import TargetDataCenterForm from 'components/TargetDataCenterForm';
 import DataCategoryForm from 'components/DataCategoryForm';
 import CommentForm from 'components/CommentForm';
@@ -21,10 +20,63 @@ import EmbargoDatePicker from '../EmbargoDatePicker';
 import DataUrlForm from '../DataUrlForm';
 import DatasetLabelForm from '../DatasetLabelForm';
 import TemplateLinkList from '../TemplateLinkList';
-// import styled from 'styled-components';
+import Alert from 'react-bootstrap/Alert';
 
 /* eslint-disable react/prefer-stateless-function */
 class FormWrapper extends React.PureComponent {
+
+  getSyncErrors = () => {
+    if (this.props.reduxFormWrapper !== undefined) {
+      return this.props.reduxFormWrapper.syncErrors;
+    }
+    return undefined;
+  };
+
+  getFields = () => {
+    if (this.props.reduxFormWrapper !== undefined) {
+      return this.props.reduxFormWrapper.fields;
+    }
+    return undefined;
+  };
+
+  prepareErrorNotification = () => {
+    let errors = this.getSyncErrors();
+    let fields = this.getFields();
+    if (errors !== undefined && fields !== undefined) {
+      let errorsKeys = new Set(Object.keys(errors));
+      let fieldsKeys = new Set(Object.keys(fields));
+      let mutual = new Set([...errorsKeys].filter(x => fieldsKeys.has(x)));
+      let errorList = [...mutual].map((errorKey, index) => {
+        return (
+          <li key={index} className="list-group-item">
+            <span className="validation-error-item">
+              <i className="ti-layout-line-solid icon " />
+              {errorKey}
+              <i className="ti-arrow-right icon pl-1" />
+              {errors[errorKey]}
+            </span>
+          </li>
+        );
+      });
+      return (
+        <Alert variant="light">
+          <Alert.Heading><i className="fa  fa-bolt" /> There are some validation
+            errors you need to take care of</Alert.Heading>
+          <ul className="list-group list-group-flush">
+            {errorList}
+            <li className="list-group-item">
+              <span className="validation-error-item">
+                Once all errors are resolved, try to 'save' or 'start' again.
+              </span>
+            </li>
+          </ul>
+        </Alert>
+      );
+    } else {
+      return null;
+    }
+  };
+
   render() {
     let submitIconClass = 'fa-play';
     let submitButtonText = 'Start Submission';
@@ -38,7 +90,7 @@ class FormWrapper extends React.PureComponent {
       saveIconClass = 'fa-cog fa-spin fa-fw';
       saveButtonText = 'saving ...';
     }
-
+    let errors = this.prepareErrorNotification();
     return (
       <form
         name="wrapping-form"
@@ -49,14 +101,29 @@ class FormWrapper extends React.PureComponent {
       >
         <div className="container">
           <div className="row">
+            {/*<div className="col-md-2">*/}
+            {/* left col */}
+            {/* TODO: https://getbootstrap.com/docs/4.0/examples/dashboard/ */}
+
+            {/* TODO: sticky left side bar. Or on the right ? */}
+            {/*<div className="sticky-top sidebar">*/}
+            {/*  <header className="header header-left form-header-top">*/}
+            {/*    <h2 className="section-title"></h2>*/}
+            {/*    <p className="section-subtitle" />*/}
+            {/*  </header>*/}
+            {/*  <p>lorem ipsum ...</p>*/}
+            {/*</div>*/}
+
+            {/*</div>*/}
+            {/* left col */}
             <div className="col-md-9">
-              {/* left col */}
+              {/* middle col */}
 
               <MinimalSubmissionForm />
 
               <DataUrlForm />
 
-              <ContributersForm />
+              <ContributorsForm />
 
               <TargetDataCenterForm />
 
@@ -68,9 +135,8 @@ class FormWrapper extends React.PureComponent {
 
               <CommentForm />
 
-
             </div>
-            {/* end left col */}
+            {/* end middle col */}
             <div className="col-md-3">
               {/* right col */}
 
@@ -87,15 +153,20 @@ class FormWrapper extends React.PureComponent {
                 embargoDate={this.props.embargoDate}
               />
             </div>
-            {/* end right col */}
           </div>
 
           <div className="row">
+
             <div className="col-md-9">
-              {/* left col */}
+              {/* middle col */}
+              <div className="form-row">
+                <div className="form-group col-md-12">
+                  {errors}
+                </div>
+              </div>
 
               <div className="form-row mt-5">
-                <div className="form-group col-md-4">
+                <div className="form-group col-md-6">
                   <button
                     type="submit"
                     className="btn btn-secondary btn-block btn-light-blue"
@@ -110,10 +181,10 @@ class FormWrapper extends React.PureComponent {
                     {saveButtonText}
                   </button>
                 </div>
-                <div className="form-group col-md-4">
+                {/*<div className="form-group col-md-4">*/}
 
-                </div>
-                <div className="form-group col-md-4">
+                {/*</div>*/}
+                <div className="form-group col-md-6">
                   <button
                     type="submit"
                     className="btn btn-secondary btn-block green"
@@ -139,13 +210,13 @@ class FormWrapper extends React.PureComponent {
 }
 
 FormWrapper.propTypes = {
-  handleSubmit: PropTypes.func,
   handleDateChange: PropTypes.func,
   embargoDate: PropTypes.instanceOf(Date),
   onSubmit: PropTypes.func,
   submitInProgress: PropTypes.bool,
   saveInProgress: PropTypes.bool,
   profile: PropTypes.object,
+  reduxFormWrapper: PropTypes.object,
 };
 
 // this is already connected to redux-form reducer ?

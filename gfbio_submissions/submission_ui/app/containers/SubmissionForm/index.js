@@ -16,7 +16,7 @@ import FormWrapper from 'components/FormWrapper';
 import reducer from './reducer';
 import saga from './saga';
 import { saveForm, setEmbargoDate, submitForm } from './actions';
-import makeSelectSubmissionForm, {
+import {
   makeSelectEmbargoDate,
   makeSelectFormWrapper,
   makeSelectInitialValue,
@@ -26,12 +26,6 @@ import makeSelectSubmissionForm, {
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
-
-  // submit = values => {
-  //   // print the form values to the console
-  //   console.log('submit func from SubForm');
-  //   console.log(values);
-  // };
 
   getProfile = () => {
     return {
@@ -50,7 +44,7 @@ export class SubmissionForm extends React.Component {
   render() {
     return (
       <div id="submission-form-wrapper">
-
+        {/* TODO: working example for initial form values, refer to VCS */}
         {/*<ContactForm onSubmit={this.submit} initialValues={this.props.initialValues}/>*/}
 
         {/* TODO: is div id necessary ? */}
@@ -75,10 +69,21 @@ export class SubmissionForm extends React.Component {
             </div>
           </div>
         </section>
+
+        {/* TODO: top or bottom sticky ?*/}
+        {/*<section className="sub-navi sticky-top sidebar bg-light">*/}
+        {/*  <div className="container">*/}
+        {/*    <div className="row">*/}
+        {/*      <div className="col-sm-12">*/}
+        {/*        <h1>sticky top</h1>*/}
+        {/*      </div>*/}
+        {/*    </div>*/}
+        {/*  </div>*/}
+        {/*</section>*/}
+
         {/* TODO: FormWrapper is a good candidate for its own store connectio */}
         <FormWrapper
           onSubmit={this.props.handleSubmit}
-          handleSave={this.props.handleSave}
           submitInProgress={this.props.submitInProgress}
           saveInProgress={this.props.saveInProgress}
           handleDateChange={this.props.handleDateChange}
@@ -89,6 +94,7 @@ export class SubmissionForm extends React.Component {
           // initialValues={this.getInitialVals()}
           // this works, and react to state change
           initialValues={this.props.initialValues}
+          reduxFormWrapper={this.props.reduxFormForm.formWrapper}
         />
       </div>
     );
@@ -97,7 +103,7 @@ export class SubmissionForm extends React.Component {
 
 SubmissionForm.propTypes = {
   handleSubmit: PropTypes.func.isRequired,
-  handleSave: PropTypes.func.isRequired,
+  // handleSave: PropTypes.func.isRequired,
   submitInProgress: PropTypes.bool,
   // saveInProgress: PropTypes.bool,
   embargoDate: PropTypes.instanceOf(Date),
@@ -105,13 +111,12 @@ SubmissionForm.propTypes = {
   handleDateChange: PropTypes.func,
   // TODO: maybe remove once save workflow is established
   // submissionForm: PropTypes.object,
-  // reduxFormForm: PropTypes.object,
+  reduxFormForm: PropTypes.object,
   initialValues: PropTypes.object,
-
 };
 
 const mapStateToProps = createStructuredSelector({
-  submissionForm: makeSelectSubmissionForm(),
+  // submissionForm: makeSelectSubmissionForm(),
   // TODO: maybe remove once save workflow is established
   reduxFormForm: makeSelectFormWrapper(),
   submitInProgress: makeSelectSubmitInProgress(),
@@ -129,7 +134,7 @@ const mapStateToProps = createStructuredSelector({
 function mapDispatchToProps(dispatch) {
   return {
     handleSubmit: form => dispatch(submitForm(form)),
-    handleSave: () => dispatch(saveForm()),
+    // handleSave: () => dispatch(saveForm()),
     handleDateChange: date => dispatch(setEmbargoDate(date)),
   };
 }

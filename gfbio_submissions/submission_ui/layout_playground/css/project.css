@@ -504,6 +504,12 @@ section.sub-navi .nav .active {
   font-weight: bold;
 }
 
+/* sticky sidebar */
+.sidebar {
+  top: 57px;
+}
+
+/* end sticky sidebar */
 form.pagewide-form {
   /* modal stuff */
   /* end modal stuff */
@@ -514,6 +520,23 @@ form.pagewide-form {
 
 form.pagewide-form .form-group {
   margin-bottom: 2rem;
+}
+
+form.pagewide-form .alert-heading {
+  color: #dc3545;
+  font-size: 1.2rem;
+}
+
+form.pagewide-form .alert-heading i {
+  padding: 0 .5rem 0 .5rem;
+}
+
+form.pagewide-form .validation-error-item {
+  font-size: .9rem;
+}
+
+form.pagewide-form .validation-error-item i {
+  padding-right: .5rem;
 }
 
 form.pagewide-form .form-header-top {

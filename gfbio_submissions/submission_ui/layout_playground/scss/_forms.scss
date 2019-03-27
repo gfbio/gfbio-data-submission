@@ -219,6 +219,15 @@ section.sub-navi {
 
 }
 
+/* sticky sidebar */
+.sidebar {
+  // TODO: hardcoded top margin to adapt for 57px floating main navigation
+  //margin-top: 57px;
+  top: 57px;
+}
+
+/* end sticky sidebar */
+
 // TODO: used in forms_1.html . assuming one form around all fields to submit all fields
 //  in one action, maybe also to allow easier layouting
 // TODO: also used in submission_form_mock.html
@@ -252,6 +261,21 @@ form.pagewide-form {
   //  }
   //
   //}
+
+  .alert-heading {
+    color: $error-red;
+    font-size: 1.2rem;
+     i {
+       padding: 0 .5rem 0 .5rem;
+     }
+  }
+
+  .validation-error-item {
+    font-size: .9rem;
+    i {
+      padding-right: .5rem;
+    }
+  }
 
   .form-header-top {
     margin-bottom: 2rem;
