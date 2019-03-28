@@ -85,6 +85,23 @@ class TestSubmissionView(TestCase):
             format='json'
         )
 
+    def _post_submission_with_submitting_user(self, submitting_user='69'):
+        return self.api_client.post(
+            '/api/submissions/',
+            {
+                'target': 'ENA',
+                'release': False,
+                'submitting_user': '{}'.format(submitting_user),
+                'data': {
+                    'requirements': {
+                        'title': 'A Title',
+                        'description': 'A Description'
+                    }
+                }
+            },
+            format='json'
+        )
+
 
 class TestSubmissionViewSimple(TestSubmissionView):
 
@@ -304,7 +321,8 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(201, response.status_code)
         content = json.loads(response.content.decode('utf-8'))
         expected = _get_submission_post_response()
-        expected['embargo'] = '{0}'.format(datetime.date.today() + datetime.timedelta(days=365))
+        expected['embargo'] = '{0}'.format(
+            datetime.date.today() + datetime.timedelta(days=365))
         expected['broker_submission_id'] = content['broker_submission_id']
         self.assertDictEqual(expected, content)
         self.assertNotIn('download_url', content['data']['requirements'].keys())
@@ -325,9 +343,9 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             '/api/submissions/',
             {'target': 'GENERIC', 'release': True,
              'data': {
-                'requirements': {
-                    'title': 'A Title',
-                    'description': 'A Description'}}},
+                 'requirements': {
+                     'title': 'A Title',
+                     'description': 'A Description'}}},
             format='json'
         )
         self.assertEqual(201, response.status_code)
@@ -379,7 +397,6 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         # self.assertEqual('{0}/{1}'.format(url, 'download'),
         #                  sub.download_url)
 
-
     # TODO: test valid max post with embargo value in data
 
     def test_valid_max_post_with_invalid_min_data(self):
@@ -424,6 +441,10 @@ class TestSubmissionViewGetRequest(TestSubmissionView):
         response = self.api_client.get('/api/submissions/')
         content = json.loads(response.content.decode('utf-8'))
         self.assertEqual(1, len(content))
+
+        for a in Submission.objects.all():
+            print(a.broker_submission_id, ' : ', a.submitting_user, ' : ',
+                  a.site)
 
     @responses.activate
     def test_get_submission(self):
