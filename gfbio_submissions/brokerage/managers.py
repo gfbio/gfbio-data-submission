@@ -64,6 +64,12 @@ class SubmissionManager(models.Manager):
             ~Q(status=self.model.CANCELLED)
         )
 
+    def get_submissions_of_submitting_user(self, submitting_user_identifier=None):
+        return self.filter(
+            Q(submitting_user=submitting_user_identifier),
+            ~Q(submitting_user='')
+        )
+
 
 class BrokerObjectManager(models.Manager):
 

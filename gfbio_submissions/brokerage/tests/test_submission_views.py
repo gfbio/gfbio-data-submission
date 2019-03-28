@@ -27,12 +27,24 @@ class TestSubmissionView(TestCase):
             content_type__app_label='brokerage',
             codename__endswith='submission')
         user = User.objects.create_user(
-            username='horst', email='horst@horst.de', password='password')
+            username='horst', email='horst@horst.de', password='password',
+            is_site=True)
         user.user_permissions.add(*cls.permissions)
         user = User.objects.create_user(
             username='kevin', email='kevin@kevin.de', password='secret',
-            is_staff=True)
+            is_staff=True, is_site=True)
         user.user_permissions.add(*cls.permissions)
+
+        regular_user = User.objects.create_user(
+            username='regular_user', email='re@gu.la', password='secret',
+            is_staff=False, is_site=False, is_user=True)
+        regular_user.user_permissions.add(*cls.permissions)
+
+        regular_user = User.objects.create_user(
+            username='regular_user_2', email='re2@gu.la', password='secret',
+            is_staff=False, is_site=False, is_user=True)
+        regular_user.user_permissions.add(*cls.permissions)
+
         User.objects.create_superuser(
             username='admin', email='admin@admin.de', password='psst')
         cls.factory = APIRequestFactory()
@@ -416,6 +428,20 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
 class TestSubmissionViewGetRequest(TestSubmissionView):
 
     @responses.activate
+    def _prepare_submissions_for_various_users(self):
+        self._add_create_ticket_response()
+        regular_user = User.objects.get(username='regular_user')
+        self._post_submission_with_submitting_user(regular_user.id)
+        self._post_submission_with_submitting_user(regular_user.id)
+        regular_user_2 = User.objects.get(username='regular_user_2')
+        self._post_submission_with_submitting_user(regular_user_2.id)
+        self._post_submission()
+        # 1 - horst - no submitting_user
+        # 2 - reg. - reg
+        # 1 - reg2 -reg2
+        # total 4
+
+    @responses.activate
     def test_get_submissions(self):
         self._add_create_ticket_response()
         self._post_submission()
@@ -426,7 +452,7 @@ class TestSubmissionViewGetRequest(TestSubmissionView):
         self.assertEqual(1, len(content))
 
     @responses.activate
-    def test_get_submissions_for_user(self):
+    def test_get_submissions_for_site_user(self):
         self._add_create_ticket_response()
         self._post_submission()
         self.other_api_client.post(
@@ -457,6 +483,33 @@ class TestSubmissionViewGetRequest(TestSubmissionView):
         self.assertEqual(200, response.status_code)
         self.assertTrue(isinstance(content, dict))
         self.assertEqual('horst', content['site'])
+
+    # @responses.activate
+    def test_get_submission_for_submitting_user(self):
+        self._prepare_submissions_for_various_users()
+
+        regular_user = User.objects.get(username='regular_user')
+        regular_user_2 = User.objects.get(username='regular_user_2')
+
+        # TODO: remove this assertions. only testing db. if useful move to test_models.py/manaager
+        # self.assertEqual(4, len(Submission.objects.all()))
+        # self.assertEqual(2, len(Submission.objects.filter(
+        #     submitting_user='{}'.format(regular_user.id))))
+        # self.assertEqual(1, len(Submission.objects.filter(
+        #     submitting_user='{}'.format(regular_user_2.id))))
+        # self.assertEqual(1, len(Submission.objects.filter(submitting_user='')))
+
+        # self._add_create_ticket_response()
+        # regular_user = User.objects.get(username='regular_user')
+        # self._post_submission_with_submitting_user(regular_user.id)
+        # self._post_submission_with_submitting_user(regular_user.id)
+        # regular_user_2 = User.objects.get(username='regular_user_2')
+        # self._post_submission_with_submitting_user(regular_user_2.id)
+        # self._post_submission()
+        # # 1 - horst - no submitting_user
+        # # 2 - reg. - reg
+        # # 1 - reg2 -reg2
+        # # total 5
 
     @responses.activate
     def test_no_submission_for_id(self):
@@ -836,8 +889,7 @@ class TestSubmissionViewPermissions(TestSubmissionView):
 
     def test_invalid_authentication_with_token_from_db(self):
         user = User.objects.get(username='horst')
-        # no token
-        # Token.objects.create(user=user)
+        # no token created
         token = Token.objects.filter(user=user).first()
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token {0}'.format(token.key))
