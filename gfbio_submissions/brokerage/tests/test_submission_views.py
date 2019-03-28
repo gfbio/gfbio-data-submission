@@ -451,6 +451,8 @@ class TestSubmissionViewGetRequest(TestSubmissionView):
         self.assertEqual(1, len(Submission.objects.all()))
         self.assertEqual(1, len(content))
 
+    # TODO: note that 'site' has access to ALL submission created with
+    #  its credentials
     @responses.activate
     def test_get_submissions_for_site_user(self):
         self._add_create_ticket_response()
@@ -472,24 +474,17 @@ class TestSubmissionViewGetRequest(TestSubmissionView):
             print(a.broker_submission_id, ' : ', a.submitting_user, ' : ',
                   a.site)
 
-    @responses.activate
-    def test_get_submission(self):
-        self._add_create_ticket_response()
-        self._post_submission()
-        submission = Submission.objects.first()
-        response = self.api_client.get(
-            '/api/submissions/{0}/'.format(submission.broker_submission_id))
-        content = json.loads(response.content.decode('utf-8'))
-        self.assertEqual(200, response.status_code)
-        self.assertTrue(isinstance(content, dict))
-        self.assertEqual('horst', content['site'])
-
-    # @responses.activate
     def test_get_submission_for_submitting_user(self):
         self._prepare_submissions_for_various_users()
 
         regular_user = User.objects.get(username='regular_user')
         regular_user_2 = User.objects.get(username='regular_user_2')
+
+        # TODO: note that 'site' has access to ALL submission created with
+        #  its credentials. compare to-do / test above
+        response = self.api_client.get('/api/submissions/')
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(4, len(content))
 
         # TODO: remove this assertions. only testing db. if useful move to test_models.py/manaager
         # self.assertEqual(4, len(Submission.objects.all()))
@@ -510,6 +505,18 @@ class TestSubmissionViewGetRequest(TestSubmissionView):
         # # 2 - reg. - reg
         # # 1 - reg2 -reg2
         # # total 5
+
+    @responses.activate
+    def test_get_submission(self):
+        self._add_create_ticket_response()
+        self._post_submission()
+        submission = Submission.objects.first()
+        response = self.api_client.get(
+            '/api/submissions/{0}/'.format(submission.broker_submission_id))
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(isinstance(content, dict))
+        self.assertEqual('horst', content['site'])
 
     @responses.activate
     def test_no_submission_for_id(self):

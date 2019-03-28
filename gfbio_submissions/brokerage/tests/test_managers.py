@@ -77,6 +77,7 @@ class TestSubmissionManagerSubmittingUser(TestCase):
             username='user3',
             is_site=False,
             is_user=True,
+            email='user3@user3.com'
         )
         Submission.objects.create(site=user)
         Submission.objects.create(
@@ -84,7 +85,7 @@ class TestSubmissionManagerSubmittingUser(TestCase):
         Submission.objects.create(
             site=user_2, submitting_user='{}'.format(user_2.id))
         Submission.objects.create(
-            site=user_3, submitting_user='{}'.format(user_3.id))
+            site=user_3, submitting_user='{}'.format(user_3.email))
 
     def test_db_content(self):
         self.assertEqual(4, len(Submission.objects.all()))
@@ -96,7 +97,7 @@ class TestSubmissionManagerSubmittingUser(TestCase):
         self.assertEqual(2, len(submissions))
         user = User.objects.get(username='user3')
         submissions = Submission.objects.get_submissions_of_submitting_user(
-            submitting_user_identifier='{}'.format(user.id))
+            submitting_user_identifier='{}'.format(user.email))
         self.assertEqual(1, len(submissions))
 
     def test_get_submissions_for_invalid_submitting_user(self):

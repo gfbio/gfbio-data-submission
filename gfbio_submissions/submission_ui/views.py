@@ -42,6 +42,8 @@ class SubmissionFrontendView(LoginRequiredMixin, TemplateView):
             SubmissionFrontendView, self).get_context_data(*args, **kwargs)
         user = self.request.user
         user_name = user.get_username()
+        # TODO: refactor/extract to other position
+        # TODO: render warning if no token available
         token = ''
         try:
             token = Token.objects.get(
