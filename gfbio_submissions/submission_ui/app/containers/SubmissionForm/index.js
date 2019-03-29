@@ -44,7 +44,7 @@ export class SubmissionForm extends React.Component {
 
   render() {
     return (
-      <div id="submission-form-wrapper">
+      <div>
         {/* TODO: working example for initial form values, refer to VCS */}
         {/*<ContactForm onSubmit={this.submit} initialValues={this.props.initialValues}/>*/}
 
