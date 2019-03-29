@@ -486,7 +486,8 @@ section#twitter i {
 }
 
 section.sub-navi {
-  padding: .5rem 0 2rem 0;
+  padding: 0;
+  margin-bottom: 2rem;
 }
 
 section.sub-navi .nav {
@@ -496,8 +497,19 @@ section.sub-navi .nav {
 }
 
 section.sub-navi .nav .nav-link {
-  font-size: .85rem;
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 1rem;
   color: #343a40;
+  border-radius: .25rem;
+}
+
+section.sub-navi .nav .nav-link i {
+  padding-right: .5rem;
+}
+
+section.sub-navi .nav .nav-link:hover {
+  background-color: #3CACE4;
+  color: #fff;
 }
 
 section.sub-navi .nav .active {
@@ -1133,7 +1145,7 @@ p.lead {
 }
 
 section {
-  padding: 6rem 0;
+  padding: 4rem 0;
 }
 
 .section-heading {

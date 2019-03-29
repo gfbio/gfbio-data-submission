@@ -17,9 +17,18 @@ class SubmissionSubNavigation extends React.PureComponent {
           <div className="row">
             <div className="col-sm-12">
               <nav className="nav">
-                <Link className="nav-link" to="/list">My Submissions</Link>
-                <Link className="nav-link" to="/form">Create Submission</Link>
-                <Link className="nav-link" to="/list">Help</Link>
+                <Link className="nav-link" to="/list">
+                  <i className="icon ion-ios-list" />
+                  My Submissions
+                </Link>
+                <Link className="nav-link" to="/form">
+                  <i className="icon ion-ios-add-circle-outline" />
+                  Create Submission
+                </Link>
+                <Link className="nav-link" to="/list">
+                  <i className="icon ion-ios-help-circle-outline" />
+                  Help
+                </Link>
               </nav>
             </div>
           </div>
