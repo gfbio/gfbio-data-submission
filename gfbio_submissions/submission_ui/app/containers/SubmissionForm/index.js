@@ -5,7 +5,6 @@
  */
 
 import React from 'react';
-import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { createStructuredSelector } from 'reselect';
@@ -24,6 +23,7 @@ import {
   makeSelectSaveInProgress,
   makeSelectSubmitInProgress,
 } from './selectors';
+import SubmissionSubNavigation from '../../components/SubmissionSubNavigation';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
@@ -48,21 +48,7 @@ export class SubmissionForm extends React.Component {
         {/* TODO: working example for initial form values, refer to VCS */}
         {/*<ContactForm onSubmit={this.submit} initialValues={this.props.initialValues}/>*/}
 
-        {/* TODO: is div id necessary ? */}
-        {/* TODO: extract to component. */}
-        <section className="sub-navi">
-          <div className="container">
-            <div className="row">
-              <div className="col-sm-12">
-                <nav className="nav">
-                  <Link className="nav-link" to="/list">My Submissions</Link>
-                  <Link className="nav-link" to="/form">Create Submission</Link>
-                  <Link className="nav-link" to="/list">Help</Link>
-                </nav>
-              </div>
-            </div>
-          </div>
-        </section>
+        <SubmissionSubNavigation />
 
         {/* TODO: top or bottom sticky ?*/}
         {/*<section className="sub-navi sticky-top sidebar bg-light">*/}
