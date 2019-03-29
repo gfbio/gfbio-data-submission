@@ -30,6 +30,10 @@ export class SubmissionList extends React.Component {
     console.log('render SubmissionList');
     console.log(this.props);
 
+    // TODO: now that everything is set up, continue with get subs in saga
+    //  set loading indicator, fetch subs, on error show message, on success
+    //  show list
+
     return (
       <div>
       </div>
