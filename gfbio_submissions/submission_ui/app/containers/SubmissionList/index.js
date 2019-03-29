@@ -12,13 +12,24 @@ import { compose } from 'redux';
 
 import injectSaga from 'utils/injectSaga';
 import injectReducer from 'utils/injectReducer';
-import makeSelectSubmissionList from './selectors';
+import { makeSelectSubmissions } from './selectors';
 import reducer from './reducer';
 import saga from './saga';
+import { fetchSubmissions } from './actions';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionList extends React.Component {
+
+  componentDidMount() {
+    this.props.fetchSubmissions();
+  }
+
+
   render() {
+
+    console.log('render SubmissionList');
+    console.log(this.props);
+
     return (
       <div>
       </div>
@@ -27,16 +38,17 @@ export class SubmissionList extends React.Component {
 }
 
 SubmissionList.propTypes = {
-  dispatch: PropTypes.func.isRequired,
+  fetchSubmissions: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
-  submissionList: makeSelectSubmissionList(),
+  // submissionList: makeSelectSubmissionList(),
+  submissions: makeSelectSubmissions(),
 });
 
 function mapDispatchToProps(dispatch) {
   return {
-    dispatch,
+    fetchSubmissions: () => dispatch(fetchSubmissions()),
   };
 }
 

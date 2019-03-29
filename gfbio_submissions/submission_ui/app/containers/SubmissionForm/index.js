@@ -23,7 +23,6 @@ import {
   makeSelectSaveInProgress,
   makeSelectSubmitInProgress,
 } from './selectors';
-import SubmissionSubNavigation from '../../components/SubmissionSubNavigation';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
@@ -43,6 +42,10 @@ export class SubmissionForm extends React.Component {
   };
 
   render() {
+
+    console.log('render SubmissionForm');
+    console.log(this.props);
+
     return (
       <div>
         {/* TODO: working example for initial form values, refer to VCS */}

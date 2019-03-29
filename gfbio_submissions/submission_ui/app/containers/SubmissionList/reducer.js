@@ -5,13 +5,15 @@
  */
 
 import { fromJS } from 'immutable';
-import { DEFAULT_ACTION } from './constants';
+import { FETCH_SUBMISSIONS } from './constants';
 
-export const initialState = fromJS({});
+export const initialState = fromJS({
+  submissions: [],
+});
 
 function submissionListReducer(state = initialState, action) {
   switch (action.type) {
-    case DEFAULT_ACTION:
+    case FETCH_SUBMISSIONS:
       return state;
     default:
       return state;

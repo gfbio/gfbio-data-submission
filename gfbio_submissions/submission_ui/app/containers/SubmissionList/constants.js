@@ -4,4 +4,4 @@
  *
  */
 
-export const DEFAULT_ACTION = 'app/SubmissionList/DEFAULT_ACTION';
+export const FETCH_SUBMISSIONS = 'app/SubmissionList/FETCH_SUBMISSIONS';

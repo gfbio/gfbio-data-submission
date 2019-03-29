@@ -19,5 +19,14 @@ const selectSubmissionListDomain = state =>
 const makeSelectSubmissionList = () =>
   createSelector(selectSubmissionListDomain, substate => substate.toJS());
 
+const makeSelectSubmissions = () =>
+  createSelector(selectSubmissionListDomain, substate =>
+    substate.get('submissions'),
+  );
+
+
 export default makeSelectSubmissionList;
-export { selectSubmissionListDomain };
+export {
+  selectSubmissionListDomain,
+  makeSelectSubmissions,
+};

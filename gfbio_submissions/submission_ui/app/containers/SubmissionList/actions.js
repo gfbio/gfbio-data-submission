@@ -4,10 +4,10 @@
  *
  */
 
-import { DEFAULT_ACTION } from './constants';
+import { FETCH_SUBMISSIONS } from './constants';
 
-export function defaultAction() {
+export function fetchSubmissions() {
   return {
-    type: DEFAULT_ACTION,
+    type: FETCH_SUBMISSIONS,
   };
 }
