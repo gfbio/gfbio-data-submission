@@ -48,8 +48,6 @@ export class SubmissionForm extends React.Component {
         {/* TODO: working example for initial form values, refer to VCS */}
         {/*<ContactForm onSubmit={this.submit} initialValues={this.props.initialValues}/>*/}
 
-        <SubmissionSubNavigation />
-
         {/* TODO: top or bottom sticky ?*/}
         {/*<section className="sub-navi sticky-top sidebar bg-light">*/}
         {/*  <div className="container">*/}

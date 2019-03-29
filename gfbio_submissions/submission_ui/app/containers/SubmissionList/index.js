@@ -17,11 +17,10 @@ import reducer from './reducer';
 import saga from './saga';
 
 /* eslint-disable react/prefer-stateless-function */
-export class SubmissionList extends React.PureComponent {
+export class SubmissionList extends React.Component {
   render() {
     return (
       <div>
-        <h1>Submission List</h1>
       </div>
     );
   }
