@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { createStructuredSelector } from 'reselect';
@@ -15,7 +16,7 @@ import injectReducer from 'utils/injectReducer';
 import FormWrapper from 'components/FormWrapper';
 import reducer from './reducer';
 import saga from './saga';
-import { saveForm, setEmbargoDate, submitForm } from './actions';
+import { setEmbargoDate, submitForm } from './actions';
 import {
   makeSelectEmbargoDate,
   makeSelectFormWrapper,
@@ -49,21 +50,14 @@ export class SubmissionForm extends React.Component {
 
         {/* TODO: is div id necessary ? */}
         {/* TODO: extract to component. */}
-        {/* TODO: candidate for redux-router */}
         <section className="sub-navi">
           <div className="container">
             <div className="row">
               <div className="col-sm-12">
                 <nav className="nav">
-                  <a className="nav-link" href="#">
-                    My Submissions
-                  </a>
-                  <a className="nav-link active" href="#">
-                    Create Submission
-                  </a>
-                  <a className="nav-link" href="#">
-                    Help
-                  </a>
+                  <Link className="nav-link" to="/list">My Submissions</Link>
+                  <Link className="nav-link" to="/form">Create Submission</Link>
+                  <Link className="nav-link" to="/list">Help</Link>
                 </nav>
               </div>
             </div>
@@ -103,11 +97,8 @@ export class SubmissionForm extends React.Component {
 
 SubmissionForm.propTypes = {
   handleSubmit: PropTypes.func.isRequired,
-  // handleSave: PropTypes.func.isRequired,
   submitInProgress: PropTypes.bool,
-  // saveInProgress: PropTypes.bool,
   embargoDate: PropTypes.instanceOf(Date),
-  // embargoDate: PropTypes.string,
   handleDateChange: PropTypes.func,
   // TODO: maybe remove once save workflow is established
   // submissionForm: PropTypes.object,
@@ -134,7 +125,6 @@ const mapStateToProps = createStructuredSelector({
 function mapDispatchToProps(dispatch) {
   return {
     handleSubmit: form => dispatch(submitForm(form)),
-    // handleSave: () => dispatch(saveForm()),
     handleDateChange: date => dispatch(setEmbargoDate(date)),
   };
 }
