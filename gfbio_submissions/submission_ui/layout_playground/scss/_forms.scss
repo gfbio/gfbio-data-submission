@@ -200,6 +200,7 @@ section.sub-navi {
   // padding: 0 0 2rem 0;
   padding: 0;
   margin-bottom: 2rem;
+  border-bottom: 1px solid $gray-medium;
 
   .nav {
 
@@ -212,7 +213,8 @@ section.sub-navi {
       //font-size: .85rem;
       font-size: 1rem;
       color: $gray-800;
-      border-radius: .25rem;
+      //border-top-left-radius: .25rem;
+      //border-top-right-radius: .25rem;
 
       i {
         padding-right: .5rem;

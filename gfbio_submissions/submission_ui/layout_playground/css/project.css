@@ -488,6 +488,7 @@ section#twitter i {
 section.sub-navi {
   padding: 0;
   margin-bottom: 2rem;
+  border-bottom: 1px solid #ccc;
 }
 
 section.sub-navi .nav {
@@ -500,7 +501,6 @@ section.sub-navi .nav .nav-link {
   font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 1rem;
   color: #343a40;
-  border-radius: .25rem;
 }
 
 section.sub-navi .nav .nav-link i {

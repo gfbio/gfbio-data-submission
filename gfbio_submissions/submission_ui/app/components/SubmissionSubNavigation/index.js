@@ -13,7 +13,7 @@ class SubmissionSubNavigation extends React.PureComponent {
   render() {
     return (
       <section className="sub-navi">
-        <div className="container">
+        <div className="container-fluid">
           <div className="row">
             <div className="col-sm-12">
               <nav className="nav">
