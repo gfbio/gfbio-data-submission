@@ -27,6 +27,12 @@ export class SubmissionList extends React.Component {
 
   render() {
 
+    let submissionItems = this.props.submissions.map((submission, index) => {
+      return <li key={index}>
+        {submission.broker_submission_id}
+      </li>;
+    });
+
     console.log('render SubmissionList');
     console.log(this.props);
 
@@ -36,6 +42,9 @@ export class SubmissionList extends React.Component {
 
     return (
       <div>
+        <ul>
+          {submissionItems}
+        </ul>
       </div>
     );
   }
@@ -43,6 +52,7 @@ export class SubmissionList extends React.Component {
 
 SubmissionList.propTypes = {
   fetchSubmissions: PropTypes.func,
+  submissions: PropTypes.array,
 };
 
 const mapStateToProps = createStructuredSelector({

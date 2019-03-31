@@ -16,7 +16,7 @@ function* performFetchSubmissionsSaga() {
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
   try {
-    const response = yield call(getSubmissions, token, 33);
+    const response = yield call(getSubmissions, token, userId);
     console.log('success');
     console.log(response);
     yield put(fetchSubmissionsSuccess(response));
