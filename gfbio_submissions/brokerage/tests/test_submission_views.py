@@ -525,6 +525,43 @@ class TestUserSubmissionViewGetRequests(TestSubmissionView):
                          submissions[0].get('submitting_user', 'xxx'))
 
     @responses.activate
+    def test_get_submissions_unknown_userid(self):
+        self._add_create_ticket_response()
+        regular_user = User.objects.get(username='regular_user')
+        self._post_submission_with_submitting_user(regular_user.id)
+        self._post_submission_with_submitting_user(regular_user.id)
+        response = self.api_client.get('/api/submissions/user/69/')
+        print(response.content)
+        print(response.status_code)
+        self.assertEqual(200, response.status_code)
+        submissions = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(0, len(submissions))
+
+    def test_get_submissions_various_user_ids(self):
+        self._prepare_submissions_for_various_users()
+        self.assertEqual(4, len(Submission.objects.all()))
+
+        regular_user = User.objects.get(username='regular_user')
+        regular_user_2 = User.objects.get(username='regular_user_2')
+        horst = User.objects.get(username='horst')
+
+        response = self.api_client.get(
+            '/api/submissions/user/{0}/'.format(regular_user.id))
+        submissions = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(2, len(submissions))
+
+        response = self.api_client.get(
+            '/api/submissions/user/{0}/'.format(regular_user_2.id))
+        submissions = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(1, len(submissions))
+
+        response = self.api_client.get(
+            '/api/submissions/user/{0}/'.format(horst.id))
+        submissions = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(0, len(submissions))
+
+    @responses.activate
     def test_get_submissions_with_special_characters_id(self):
         self._add_create_ticket_response()
         user_identifier = '?=§$%@@!"\'!&//()ß´`^°#~,مليسيا'

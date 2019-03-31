@@ -1,5 +1,8 @@
-import { all, takeLatest } from 'redux-saga/effects';
+import { all, call, put, select, takeLatest } from 'redux-saga/effects';
 import { FETCH_SUBMISSIONS } from './constants';
+import { makeSelectToken, makeSelectUserId } from '../SubmissionList/selectors';
+import { fetchSubmissionsError, fetchSubmissionsSuccess } from './actions';
+import { getSubmissions } from './submissionListApi';
 
 
 // function* performChange() {
@@ -8,8 +11,20 @@ import { FETCH_SUBMISSIONS } from './constants';
 //   console.log(location);
 // }
 
-function* performFetchSaga() {
-  console.log('performFetchSaga');
+function* performFetchSubmissionsSaga() {
+  console.log('performFetchsubmissionsSaga');
+  const token = yield select(makeSelectToken());
+  const userId = yield select(makeSelectUserId());
+  try {
+    const response = yield call(getSubmissions, token, 33);
+    console.log('success');
+    console.log(response);
+    yield put(fetchSubmissionsSuccess(response));
+  } catch (error) {
+    console.log('error');
+    console.log(error);
+    yield put(fetchSubmissionsError(error));
+  }
 }
 
 // export function* routeChange() {
@@ -17,7 +32,7 @@ function* performFetchSaga() {
 // }
 
 export function* fetchSubmissionsSaga() {
-  yield takeLatest(FETCH_SUBMISSIONS, performFetchSaga);
+  yield takeLatest(FETCH_SUBMISSIONS, performFetchSubmissionsSaga);
 }
 
 

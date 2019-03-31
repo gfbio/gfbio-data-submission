@@ -24,9 +24,21 @@ const makeSelectSubmissions = () =>
     substate.get('submissions'),
   );
 
+const makeSelectToken = () =>
+  createSelector(selectSubmissionListDomain, substate =>
+    substate.get('token'),
+  );
+
+const makeSelectUserId = () =>
+  createSelector(selectSubmissionListDomain, substate =>
+    substate.get('userId'),
+  );
+
 
 export default makeSelectSubmissionList;
 export {
   selectSubmissionListDomain,
   makeSelectSubmissions,
+  makeSelectToken,
+  makeSelectUserId,
 };

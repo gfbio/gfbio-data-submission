@@ -115,13 +115,15 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
 
 
 class UserSubmissionDetailView(generics.ListAPIView):
-    queryset = Submission.objects.all()
     serializer_class = SubmissionDetailSerializer
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
                           permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
-    lookup_field = 'submitting_user'
+
+    def get_queryset(self):
+        submitting_user = self.kwargs['submitting_user']
+        return Submission.objects.filter(submitting_user=submitting_user)
 
 
 # TODO: remove

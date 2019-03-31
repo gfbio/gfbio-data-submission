@@ -36,6 +36,7 @@ export const postFile = (token, brokerSubmissionId, file) => {
   let formData = new FormData();
   formData.append('file', file);
 
+  // TODO: go for config object variant, compare below
   const instance = axios.create({
     // TODO: remove API_ROOT compare above TODOs
     baseURL: API_ROOT + SUBMISSIONS + brokerSubmissionId + '/upload/',
