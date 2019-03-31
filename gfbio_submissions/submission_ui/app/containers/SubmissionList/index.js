@@ -28,8 +28,17 @@ export class SubmissionList extends React.Component {
   render() {
 
     let submissionItems = this.props.submissions.map((submission, index) => {
-      return <li key={index}>
-        {submission.broker_submission_id}
+      return <li key={index} className="list-group-item">
+        <a className="row" href="#">
+          <div>
+            {submission.data.requirements.title}</div>
+          <div>
+            {submission.broker_submission_id}
+          </div>
+          <div></div>
+          <div></div>
+          {/*{submission.broker_submission_id}*/}
+        </a>
       </li>;
     });
 
@@ -41,8 +50,8 @@ export class SubmissionList extends React.Component {
     //  show list
 
     return (
-      <div>
-        <ul>
+      <div className="submission-list-wrapper">
+        <ul className="list-group">
           {submissionItems}
         </ul>
       </div>

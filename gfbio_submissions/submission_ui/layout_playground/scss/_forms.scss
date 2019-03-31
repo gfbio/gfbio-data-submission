@@ -235,6 +235,28 @@ section.sub-navi {
 
 }
 
+/* Submission List */
+
+.submission-list-wrapper {
+
+  ul {
+
+    li {
+
+      border-color: #00cc00;
+      border-radius: 0;
+      margin: .5rem 0 .5rem 0;
+
+      a {
+        color: red;
+      }
+    }
+
+  }
+}
+
+/* End Submission List */
+
 /* sticky sidebar */
 .sidebar {
   // TODO: hardcoded top margin to adapt for 57px floating main navigation
@@ -281,13 +303,15 @@ form.pagewide-form {
   .alert-heading {
     color: $error-red;
     font-size: 1.2rem;
-     i {
-       padding: 0 .5rem 0 .5rem;
-     }
+
+    i {
+      padding: 0 .5rem 0 .5rem;
+    }
   }
 
   .validation-error-item {
     font-size: .9rem;
+
     i {
       padding-right: .5rem;
     }

@@ -516,6 +516,18 @@ section.sub-navi .nav .active {
   font-weight: bold;
 }
 
+/* Submission List */
+.submission-list-wrapper ul li {
+  border-color: #00cc00;
+  border-radius: 0;
+  margin: .5rem 0 .5rem 0;
+}
+
+.submission-list-wrapper ul li a {
+  color: red;
+}
+
+/* End Submission List */
 /* sticky sidebar */
 .sidebar {
   top: 57px;
