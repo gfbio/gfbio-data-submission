@@ -29,14 +29,27 @@ export class SubmissionList extends React.Component {
 
     let submissionItems = this.props.submissions.map((submission, index) => {
       return <li key={index} className="list-group-item">
-        <a className="row" href="#">
-          <div>
-            {submission.data.requirements.title}</div>
-          <div>
-            {submission.broker_submission_id}
+        <a className="row align-items-center" href="#">
+          <div className="col-md-8 col-sm-12 title">
+            {/*icon ion-ios-redo*/}
+            <span><i className="icon ion-md-apps" /></span>
+            <span>{submission.data.requirements.title}</span>
           </div>
-          <div></div>
-          <div></div>
+          <div className="col-md-2 col-sm-12 status">
+            <span className="">
+              {submission.status}
+            </span>
+          </div>
+          {/*<div className="col-md-1 edit">*/}
+          {/* if saved, else submitted and no edit possible */}
+          {/*<span>Edit</span>*/}
+          {/*</div>*/}
+          <div className="col-md-2 col-sm-12 actions">
+            <span><i className="icon ion-md-create" />Edit</span>
+            <span className="p-0"><i className="icon ion-md-trash" />Delete</span>
+            {/*<span className="ti-pencil"></span>Edit*/}
+            {/*<span></span>*/}
+          </div>
           {/*{submission.broker_submission_id}*/}
         </a>
       </li>;

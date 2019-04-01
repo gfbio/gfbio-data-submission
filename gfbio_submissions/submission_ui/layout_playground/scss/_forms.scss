@@ -243,12 +243,56 @@ section.sub-navi {
 
     li {
 
-      border-color: #00cc00;
-      border-radius: 0;
+      border-color: $form-gray-1;
       margin: .5rem 0 .5rem 0;
+      padding-top: 0;
+      padding-bottom: 0;
+
+      &:first-child {
+        border-radius: 0;
+      }
 
       a {
-        color: red;
+        @include raleway;
+        color: $gray-800;
+        text-decoration: none;
+        padding: .5rem;
+        font-size: .9rem;
+
+        .title {
+          //width: 65%;
+          //padding-right: 1rem;
+        }
+
+        .status {
+          //width: 10%;
+          font-size: .75rem;
+          font-weight: bold;
+          text-align: left;
+          //padding: .25rem 1rem .25rem 0;
+          //padding-right: 1rem;
+        }
+
+        .edit {
+          //width: 10%;
+        }
+
+        .actions {
+          text-align: right;
+          //width: 15%;
+        }
+
+
+        i {
+          color: $gray-700;
+          padding-right: .75rem;
+          font-size: 1rem;
+        }
+
+        span {
+          padding-right: .75rem;
+        }
+
       }
     }
 
