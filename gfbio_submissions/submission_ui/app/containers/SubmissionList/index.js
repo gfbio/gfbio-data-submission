@@ -16,6 +16,7 @@ import { makeSelectSubmissions } from './selectors';
 import reducer from './reducer';
 import saga from './saga';
 import { fetchSubmissions } from './actions';
+import { API_ROOT, SUBMISSIONS } from '../../globalConstants';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionList extends React.Component {
@@ -29,7 +30,7 @@ export class SubmissionList extends React.Component {
 
     let submissionItems = this.props.submissions.map((submission, index) => {
       return <li key={index} className="list-group-item">
-        <a className="row no-gutters" href="#">
+        <a className="row no-gutters" href="detail-triggered-by-react-to-filled-form">
           <div className="col-md-8 col-sm-12 align-self-center title">
             {/*icon ion-ios-redo*/}
             <i className="icon ion-md-apps" />
