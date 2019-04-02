@@ -26,10 +26,11 @@ export default function App() {
     <div>
       <SubmissionSubNavigation />
       <Switch>
-        <Route exact path="/" component={HomePage} />
+        <Route exact path='/' component={HomePage} />
         {/* TODO: maybe remove /form url and use / instead ? */}
-        <Route exact path="/form" component={SubmissionForm} />
-        <Route exact path="/list" component={SubmissionList} />
+        <Route exact path='/form' component={SubmissionForm} />
+        <Route path='/form/:brokerSubmissionId' component={SubmissionForm} />
+        <Route exact path='/list' component={SubmissionList} />
         <Route component={NotFoundPage} />
       </Switch>
     </div>
