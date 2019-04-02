@@ -1,13 +1,17 @@
-import json
+import logging
 import os
 
 from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
-from django.shortcuts import render
 from django.views import View
 from django.views.generic import TemplateView
+from rest_framework.authtoken.models import Token
 
-from .configuration.settings import CSV_TEMPLATE_STATIC_PATH
+from gfbio_submissions.users.models import User
+from .configuration.settings import CSV_TEMPLATE_STATIC_PATH, HOSTING_SITE
+
+logger = logging.getLogger(__name__)
 
 
 # FIXME: artefact of old server. As long as react widget is active on
@@ -30,19 +34,31 @@ class CsvTemplateDownloadView(View):
         return response
 
 
-class SubmissionFrontendView(TemplateView):
+class SubmissionFrontendView(LoginRequiredMixin, TemplateView):
     template_name = 'submission_ui/submission.html'
 
     def get_context_data(self, *args, **kwargs):
         context = super(
             SubmissionFrontendView, self).get_context_data(*args, **kwargs)
         user = self.request.user
+        user_name = user.get_username()
+        # TODO: refactor/extract to other position
+        # TODO: render warning if no token available
+        token = ''
+        try:
+            token = Token.objects.get(
+                user=User.objects.get(username=HOSTING_SITE, is_site=True))
+        except User.DoesNotExist as e:
+            logger.warning('Error getting token for SubmissionFrontendView. '
+                           'User {0} does not exist:  '
+                           '{1}'.format(HOSTING_SITE, e))
+        except Token.DoesNotExist as e:
+            logger.warning('Error getting token for SubmissionFrontendView. '
+                           'Token for User {0} does not exist:  '
+                           '{1}'.format(HOSTING_SITE, e))
         context['parameters'] = {
-            'userName': user.get_username(),
+            'userName': user_name,
             'userId': user.id,
-            # TODO: token of site. rethink once IDM is in place
-            # TODO: get token dynamically ? or from .env ? -> settings?
-            'token': '5639b56bd077fb3e12d7e4a0ada244aaa970c2fd',
+            'token': token,
         }
         return context
-

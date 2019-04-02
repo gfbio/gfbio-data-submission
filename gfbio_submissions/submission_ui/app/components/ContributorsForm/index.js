@@ -282,11 +282,11 @@ class ContributorsForm extends React.PureComponent {
   };
 
   render() {
-    console.log('ContributorsForm render');
-    console.log(this.props);
-    console.log('----------------------');
-    console.log(this.state);
-    console.log('---------------------------------');
+    // console.log('ContributorsForm render');
+    // console.log(this.props);
+    // console.log('----------------------');
+    // console.log(this.state);
+    // console.log('---------------------------------');
     const { formOpen, detailOpen } = this.state;
     let editForm = this.renderEditForm(detailOpen);
 

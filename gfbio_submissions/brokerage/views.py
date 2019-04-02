@@ -114,6 +114,18 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class UserSubmissionDetailView(generics.ListAPIView):
+    serializer_class = SubmissionDetailSerializer
+    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated,
+                          permissions.DjangoModelPermissions,
+                          IsOwnerOrReadOnly)
+
+    def get_queryset(self):
+        submitting_user = self.kwargs['submitting_user']
+        return Submission.objects.filter(submitting_user=submitting_user)
+
+
 # TODO: remove
 class SubmissionFileUploadView(mixins.CreateModelMixin,
                                generics.GenericAPIView):

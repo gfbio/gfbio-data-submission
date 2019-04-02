@@ -50,7 +50,7 @@ export const initialState = fromJS({
   // TODO: replace. development default of 2
   userId: backendParameters.userId || 2,
   // token: backendParameters['token'] || 'NO_TOKEN',
-  // TODO: replace. during development token defaults to test-server user
+  // FIXME: replace. during development token defaults to test-server user
   token: backendParameters['token'] || '5639b56bd077fb3e12d7e4a0ada244aaa970c2fd',
   userName: backendParameters.userName || '',
   // TODO: decide what from actual response is needed, then put in reducer

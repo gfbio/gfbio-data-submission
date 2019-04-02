@@ -2,6 +2,8 @@
 import base64
 import datetime
 import json
+import urllib
+from urllib.parse import urlencode
 from uuid import UUID, uuid4
 
 import responses
@@ -27,12 +29,24 @@ class TestSubmissionView(TestCase):
             content_type__app_label='brokerage',
             codename__endswith='submission')
         user = User.objects.create_user(
-            username='horst', email='horst@horst.de', password='password')
+            username='horst', email='horst@horst.de', password='password',
+            is_site=True)
         user.user_permissions.add(*cls.permissions)
         user = User.objects.create_user(
             username='kevin', email='kevin@kevin.de', password='secret',
-            is_staff=True)
+            is_staff=True, is_site=True)
         user.user_permissions.add(*cls.permissions)
+
+        regular_user = User.objects.create_user(
+            username='regular_user', email='re@gu.la', password='secret',
+            is_staff=False, is_site=False, is_user=True)
+        regular_user.user_permissions.add(*cls.permissions)
+
+        regular_user = User.objects.create_user(
+            username='regular_user_2', email='re2@gu.la', password='secret',
+            is_staff=False, is_site=False, is_user=True)
+        regular_user.user_permissions.add(*cls.permissions)
+
         User.objects.create_superuser(
             username='admin', email='admin@admin.de', password='psst')
         cls.factory = APIRequestFactory()
@@ -82,6 +96,23 @@ class TestSubmissionView(TestCase):
                 'requirements': {
                     'title': 'A Title',
                     'description': 'A Description'}}},
+            format='json'
+        )
+
+    def _post_submission_with_submitting_user(self, submitting_user='69'):
+        return self.api_client.post(
+            '/api/submissions/',
+            {
+                'target': 'ENA',
+                'release': False,
+                'submitting_user': '{}'.format(submitting_user),
+                'data': {
+                    'requirements': {
+                        'title': 'A Title',
+                        'description': 'A Description'
+                    }
+                }
+            },
             format='json'
         )
 
@@ -304,7 +335,8 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(201, response.status_code)
         content = json.loads(response.content.decode('utf-8'))
         expected = _get_submission_post_response()
-        expected['embargo'] = '{0}'.format(datetime.date.today() + datetime.timedelta(days=365))
+        expected['embargo'] = '{0}'.format(
+            datetime.date.today() + datetime.timedelta(days=365))
         expected['broker_submission_id'] = content['broker_submission_id']
         self.assertDictEqual(expected, content)
         self.assertNotIn('download_url', content['data']['requirements'].keys())
@@ -325,9 +357,9 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             '/api/submissions/',
             {'target': 'GENERIC', 'release': True,
              'data': {
-                'requirements': {
-                    'title': 'A Title',
-                    'description': 'A Description'}}},
+                 'requirements': {
+                     'title': 'A Title',
+                     'description': 'A Description'}}},
             format='json'
         )
         self.assertEqual(201, response.status_code)
@@ -379,7 +411,6 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         # self.assertEqual('{0}/{1}'.format(url, 'download'),
         #                  sub.download_url)
 
-
     # TODO: test valid max post with embargo value in data
 
     def test_valid_max_post_with_invalid_min_data(self):
@@ -408,8 +439,10 @@ class TestSubmissionViewGetRequest(TestSubmissionView):
         self.assertEqual(1, len(Submission.objects.all()))
         self.assertEqual(1, len(content))
 
+    # TODO: note that 'site' has access to ALL submission created with
+    #  its credentials
     @responses.activate
-    def test_get_submissions_for_user(self):
+    def test_get_submissions_for_site_user(self):
         self._add_create_ticket_response()
         self._post_submission()
         self.other_api_client.post(
@@ -424,6 +457,10 @@ class TestSubmissionViewGetRequest(TestSubmissionView):
         response = self.api_client.get('/api/submissions/')
         content = json.loads(response.content.decode('utf-8'))
         self.assertEqual(1, len(content))
+
+        for a in Submission.objects.all():
+            print(a.broker_submission_id, ' : ', a.submitting_user, ' : ',
+                  a.site)
 
     @responses.activate
     def test_get_submission(self):
@@ -443,6 +480,140 @@ class TestSubmissionViewGetRequest(TestSubmissionView):
         self._post_submission()
         response = self.api_client.get('/api/submissions/{0}/'.format(uuid4()))
         self.assertEqual(404, response.status_code)
+
+
+class TestUserSubmissionViewGetRequests(TestSubmissionView):
+
+    @responses.activate
+    def _prepare_submissions_for_various_users(self):
+        self._add_create_ticket_response()
+        regular_user = User.objects.get(username='regular_user')
+        self._post_submission_with_submitting_user(regular_user.id)
+        self._post_submission_with_submitting_user(regular_user.id)
+        regular_user_2 = User.objects.get(username='regular_user_2')
+        self._post_submission_with_submitting_user(regular_user_2.id)
+        self._post_submission()
+        # 1 - horst - no submitting_user
+        # 2 - reg. - reg
+        # 1 - reg2 -reg2
+        # total 4
+
+    @responses.activate
+    def test_get_submissions(self):
+        self._add_create_ticket_response()
+        regular_user = User.objects.get(username='regular_user')
+        self._post_submission_with_submitting_user(regular_user.id)
+        response = self.api_client.get(
+            '/api/submissions/user/{0}/'.format(regular_user.id))
+        self.assertEqual(200, response.status_code)
+        submissions = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(1, len(submissions))
+        self.assertEqual('{0}'.format(regular_user.id),
+                         submissions[0].get('submitting_user', 'xxx'))
+
+    @responses.activate
+    def test_get_submissions_with_email_id(self):
+        self._add_create_ticket_response()
+        regular_user = User.objects.get(username='regular_user')
+        self._post_submission_with_submitting_user(regular_user.email)
+        response = self.api_client.get(
+            '/api/submissions/user/{0}/'.format(regular_user.email))
+        self.assertEqual(200, response.status_code)
+        submissions = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(1, len(submissions))
+        self.assertEqual('{0}'.format(regular_user.email),
+                         submissions[0].get('submitting_user', 'xxx'))
+
+    @responses.activate
+    def test_get_submissions_unknown_userid(self):
+        self._add_create_ticket_response()
+        regular_user = User.objects.get(username='regular_user')
+        self._post_submission_with_submitting_user(regular_user.id)
+        self._post_submission_with_submitting_user(regular_user.id)
+        response = self.api_client.get('/api/submissions/user/69/')
+        print(response.content)
+        print(response.status_code)
+        self.assertEqual(200, response.status_code)
+        submissions = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(0, len(submissions))
+
+    def test_get_submissions_various_user_ids(self):
+        self._prepare_submissions_for_various_users()
+        self.assertEqual(4, len(Submission.objects.all()))
+
+        regular_user = User.objects.get(username='regular_user')
+        regular_user_2 = User.objects.get(username='regular_user_2')
+        horst = User.objects.get(username='horst')
+
+        response = self.api_client.get(
+            '/api/submissions/user/{0}/'.format(regular_user.id))
+        submissions = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(2, len(submissions))
+
+        response = self.api_client.get(
+            '/api/submissions/user/{0}/'.format(regular_user_2.id))
+        submissions = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(1, len(submissions))
+
+        response = self.api_client.get(
+            '/api/submissions/user/{0}/'.format(horst.id))
+        submissions = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(0, len(submissions))
+
+    @responses.activate
+    def test_get_submissions_with_special_characters_id(self):
+        self._add_create_ticket_response()
+        user_identifier = '?=§$%@@!"\'!&//()ß´`^°#~,مليسيا'
+        self._post_submission_with_submitting_user(user_identifier)
+        submission = Submission.objects.first()
+        self.assertEqual(user_identifier, submission.submitting_user)
+        # quote before using such a string in an url
+        quoted = urllib.parse.quote(user_identifier)
+        response = self.api_client.get(
+            '/api/submissions/user/{0}/'.format(quoted))
+        self.assertEqual(200, response.status_code)
+        submissions = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(1, len(submissions))
+        self.assertEqual('{0}'.format(user_identifier),
+                         submissions[0].get('submitting_user', 'xxx'))
+
+    def test_get_no_submissions_for_user(self):
+        response = self.api_client.get(
+            '/api/submissions/user/69/')
+        self.assertEqual(200, response.status_code)
+        submissions = json.loads(response.content.decode('utf-8'))
+        self.assertListEqual(submissions, [])
+
+    def test_get_no_parameter(self):
+        response = self.api_client.get(
+            '/api/submissions/user/')
+        print(response.status_code)
+        print(response.content)
+        self.assertEqual(404, response.status_code)
+
+    @responses.activate
+    def test_get_submissions_no_credentials(self):
+        self._add_create_ticket_response()
+        regular_user = User.objects.get(username='regular_user')
+        self._post_submission_with_submitting_user(regular_user.id)
+        response = self.client.get(
+            '/api/submissions/user/{0}/'.format(regular_user.id))
+        self.assertEqual(401, response.status_code)
+
+    @responses.activate
+    def test_get_submissions_content(self):
+        self._add_create_ticket_response()
+        regular_user = User.objects.get(username='regular_user')
+        self._post_submission_with_submitting_user(regular_user.id)
+        self._post_submission_with_submitting_user(regular_user.id)
+        response = self.api_client.get(
+            '/api/submissions/user/{0}/'.format(regular_user.id))
+        self.assertEqual(200, response.status_code)
+        submissions = json.loads(response.content.decode('utf-8'))
+        self.assertIsInstance(submissions, list)
+        self.assertEqual(2, len(submissions))
+        self.assertIsInstance(submissions[0], dict)
 
 
 class TestSubmissionViewPutRequests(TestSubmissionView):
@@ -795,6 +966,18 @@ class TestSubmissionViewPermissions(TestSubmissionView):
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token {0}'.format(token.key))
 
+        response = client.post('/api/submissions/', {
+            'site_project_id': 'p1', 'submitting_user': 'johnDoe',
+            'site_object_id': 'o1', 'study': '{}'})
+        self.assertNotEqual(401, response.status_code)
+        self.assertEqual(400, response.status_code)
+
+    def test_valid_authentication_with_token_from_db(self):
+        user = User.objects.get(username='horst')
+        Token.objects.create(user=user)
+        token = Token.objects.filter(user=user).first()
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token {0}'.format(token.key))
         response = client.post('/api/submissions/', {
             'site_project_id': 'p1', 'submitting_user': 'johnDoe',
             'site_object_id': 'o1', 'study': '{}'})

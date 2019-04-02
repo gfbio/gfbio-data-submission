@@ -15,7 +15,7 @@ import injectReducer from 'utils/injectReducer';
 import FormWrapper from 'components/FormWrapper';
 import reducer from './reducer';
 import saga from './saga';
-import { saveForm, setEmbargoDate, submitForm } from './actions';
+import { setEmbargoDate, submitForm } from './actions';
 import {
   makeSelectEmbargoDate,
   makeSelectFormWrapper,
@@ -42,33 +42,16 @@ export class SubmissionForm extends React.Component {
   };
 
   render() {
+
+    console.log('render SubmissionForm');
+    console.log(this.props);
+
     return (
-      <div id="submission-form-wrapper">
+      <div className="submission-form-wrapper">
+        <h1 className="current-location"><i
+          className="icon ion-ios-add-circle-outline pr-3" />Create Submission</h1>
         {/* TODO: working example for initial form values, refer to VCS */}
         {/*<ContactForm onSubmit={this.submit} initialValues={this.props.initialValues}/>*/}
-
-        {/* TODO: is div id necessary ? */}
-        {/* TODO: extract to component. */}
-        {/* TODO: candidate for redux-router */}
-        <section className="sub-navi">
-          <div className="container">
-            <div className="row">
-              <div className="col-sm-12">
-                <nav className="nav">
-                  <a className="nav-link" href="#">
-                    My Submissions
-                  </a>
-                  <a className="nav-link active" href="#">
-                    Create Submission
-                  </a>
-                  <a className="nav-link" href="#">
-                    Help
-                  </a>
-                </nav>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* TODO: top or bottom sticky ?*/}
         {/*<section className="sub-navi sticky-top sidebar bg-light">*/}
@@ -103,11 +86,8 @@ export class SubmissionForm extends React.Component {
 
 SubmissionForm.propTypes = {
   handleSubmit: PropTypes.func.isRequired,
-  // handleSave: PropTypes.func.isRequired,
   submitInProgress: PropTypes.bool,
-  // saveInProgress: PropTypes.bool,
   embargoDate: PropTypes.instanceOf(Date),
-  // embargoDate: PropTypes.string,
   handleDateChange: PropTypes.func,
   // TODO: maybe remove once save workflow is established
   // submissionForm: PropTypes.object,
@@ -134,7 +114,6 @@ const mapStateToProps = createStructuredSelector({
 function mapDispatchToProps(dispatch) {
   return {
     handleSubmit: form => dispatch(submitForm(form)),
-    // handleSave: () => dispatch(saveForm()),
     handleDateChange: date => dispatch(setEmbargoDate(date)),
   };
 }

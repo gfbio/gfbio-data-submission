@@ -15,6 +15,12 @@ urlpatterns = [
         view=views.SubmissionDetailView.as_view(),
         name='submissions_detail'
     ),
+    url(
+        regex=r'submissions/user/(?P<submitting_user>.+)/$',
+        view=views.UserSubmissionDetailView.as_view(),
+        name='submissions_user_detail'
+    ),
+
     # TODO: rename/remove
     # url(
     #     regex=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/$',

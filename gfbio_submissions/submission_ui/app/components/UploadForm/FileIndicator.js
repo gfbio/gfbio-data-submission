@@ -16,9 +16,9 @@ class FileIndicator extends React.Component {
 
   render() {
 
-    console.log('FileIndicator render props');
-    console.log(this.props.fileUploads);
-    console.log('--------------------------------');
+    // console.log('FileIndicator render props');
+    // console.log(this.props.fileUploads);
+    // console.log('--------------------------------');
 
     const fileListElements = this.props.fileUploads.map((upload, index) => {
       console.log(upload);

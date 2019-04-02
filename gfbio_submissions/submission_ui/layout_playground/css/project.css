@@ -355,6 +355,16 @@ section#twitter i {
   color: rgba(255, 255, 255, 0.3);
 }
 
+h1.current-location {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 200;
+  margin-bottom: 2rem;
+}
+
+h1.current-location i {
+  color: #495057;
+}
+
 .col-form-label {
   font-size: .9rem;
 }
@@ -486,7 +496,9 @@ section#twitter i {
 }
 
 section.sub-navi {
-  padding: .5rem 0 2rem 0;
+  padding: 0;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #ccc;
 }
 
 section.sub-navi .nav {
@@ -496,14 +508,123 @@ section.sub-navi .nav {
 }
 
 section.sub-navi .nav .nav-link {
-  font-size: .85rem;
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 1rem;
   color: #343a40;
+}
+
+section.sub-navi .nav .nav-link i {
+  padding-right: .5rem;
+}
+
+section.sub-navi .nav .nav-link:hover {
+  background-color: #3CACE4;
+  color: #fff;
 }
 
 section.sub-navi .nav .active {
   font-weight: bold;
 }
 
+/* Submission form wrapper */
+.submission-form-wrapper {
+  padding-left: 2.25rem;
+}
+
+/* end  Submission form wrapper */
+/* Submission List */
+.submission-list-wrapper {
+  padding-left: 2.25rem;
+}
+
+.submission-list-wrapper h6 {
+  text-transform: uppercase;
+  color: #495057;
+  font-size: .8rem;
+  font-weight: bold;
+}
+
+.submission-list-wrapper ul li {
+  border-color: #ced4da;
+  margin: .5rem 0 .5rem 0;
+  padding: 0;
+  color: #343a40;
+}
+
+.submission-list-wrapper ul li:first-child {
+  border-radius: 0;
+}
+
+.submission-list-wrapper ul li:last-child {
+  border-radius: 0;
+}
+
+.submission-list-wrapper ul li:hover {
+  border-color: #62BEEB;
+}
+
+.submission-list-wrapper ul li a {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #343a40;
+  background-color: #f8f8f8;
+  text-decoration: none;
+  padding: 0 0 0 .5rem;
+  font-size: .9rem;
+}
+
+.submission-list-wrapper ul li a .status {
+  font-size: .75rem;
+  font-weight: bold;
+  text-align: left;
+  color: #868e96;
+}
+
+.submission-list-wrapper ul li a .actions {
+  text-align: right;
+}
+
+.submission-list-wrapper ul li a i {
+  color: #81B248;
+  padding: 0 .75rem 0 .75rem;
+  font-size: 1rem;
+}
+
+.submission-list-wrapper ul li a span {
+  padding-right: .75rem;
+}
+
+.submission-list-wrapper ul li a a {
+  padding: .5rem;
+}
+
+.submission-list-wrapper ul li a a i {
+  color: #495057;
+  padding: 0 .5rem 0 0;
+}
+
+.submission-list-wrapper ul li a:hover {
+  color: #fff;
+  background-color: #3CACE4;
+}
+
+.submission-list-wrapper ul li a:hover .status {
+  color: #fff;
+}
+
+.submission-list-wrapper ul li a:hover i {
+  color: #fff;
+}
+
+.submission-list-wrapper ul li a:hover a {
+  color: #fff;
+  background-color: #3CACE4;
+}
+
+.submission-list-wrapper ul li a:hover a:hover {
+  background-color: #62BEEB;
+}
+
+/* End Submission List */
 /* sticky sidebar */
 .sidebar {
   top: 57px;
@@ -1133,7 +1254,7 @@ p.lead {
 }
 
 section {
-  padding: 6rem 0;
+  padding: 4rem 0;
 }
 
 .section-heading {

@@ -7,6 +7,8 @@ from django.utils.translation import ugettext_lazy as _
 
 @python_2_unicode_compatible
 class User(AbstractUser):
+    is_site = models.BooleanField(default=False)
+    is_user = models.BooleanField(default=True)
 
     # First Name and Last Name do not cover name patterns
     # around the globe.
