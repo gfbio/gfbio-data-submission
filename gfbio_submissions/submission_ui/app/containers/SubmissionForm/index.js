@@ -47,7 +47,9 @@ export class SubmissionForm extends React.Component {
     console.log(this.props);
 
     return (
-      <div>
+      <div className="submission-form-wrapper">
+        <h1 className="current-location"><i
+          className="icon ion-ios-add-circle-outline pr-3" />Create Submission</h1>
         {/* TODO: working example for initial form values, refer to VCS */}
         {/*<ContactForm onSubmit={this.submit} initialValues={this.props.initialValues}/>*/}
 

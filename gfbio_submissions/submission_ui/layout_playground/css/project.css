@@ -355,6 +355,16 @@ section#twitter i {
   color: rgba(255, 255, 255, 0.3);
 }
 
+h1.current-location {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 200;
+  margin-bottom: 2rem;
+}
+
+h1.current-location i {
+  color: #666;
+}
+
 .col-form-label {
   font-size: .9rem;
 }
@@ -516,7 +526,24 @@ section.sub-navi .nav .active {
   font-weight: bold;
 }
 
+/* Submission form wrapper */
+.submission-form-wrapper {
+  padding-left: 2.25rem;
+}
+
+/* end  Submission form wrapper */
 /* Submission List */
+.submission-list-wrapper {
+  padding-left: 2.25rem;
+}
+
+.submission-list-wrapper h6 {
+  text-transform: uppercase;
+  color: #495057;
+  font-size: .8rem;
+  font-weight: bold;
+}
+
 .submission-list-wrapper ul li {
   border-color: #ced4da;
   margin: .5rem 0 .5rem 0;
@@ -525,6 +552,10 @@ section.sub-navi .nav .active {
 }
 
 .submission-list-wrapper ul li:first-child {
+  border-radius: 0;
+}
+
+.submission-list-wrapper ul li:last-child {
   border-radius: 0;
 }
 

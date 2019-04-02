@@ -1,3 +1,13 @@
+h1.current-location {
+  @include raleway;
+  font-weight: 200;
+  margin-bottom: 2rem;
+
+  i {
+    color: $gray-dark;
+  }
+}
+
 .col-form-label {
   // @include raleway;
   font-size: .9rem;
@@ -235,9 +245,30 @@ section.sub-navi {
 
 }
 
+/* Submission form wrapper */
+
+.submission-form-wrapper {
+  padding-left: 2.25rem;
+}
+
+/* end  Submission form wrapper */
+
 /* Submission List */
 
 .submission-list-wrapper {
+
+  padding-left: 2.25rem;
+
+  h6 {
+    text-transform: uppercase;
+    color: $gray-700;
+    font-size: .8rem;
+    font-weight: bold;
+  }
+
+  .header {
+
+  }
 
   ul {
 
@@ -253,6 +284,10 @@ section.sub-navi {
       //background-color: $white;
 
       &:first-child {
+        border-radius: 0;
+      }
+
+      &:last-child {
         border-radius: 0;
       }
 

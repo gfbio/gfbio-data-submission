@@ -59,6 +59,21 @@ export class SubmissionList extends React.Component {
 
     console.log('render SubmissionList');
     console.log(this.props);
+    console.log(submissionItems.length);
+    let header = null;
+    if (submissionItems.length > 0) {
+      header = <div className="row no-gutters">
+        <div className="col-sm-8">
+          <h6>Title</h6>
+        </div>
+        <div className="col-sm-2">
+          <h6>Status</h6>
+        </div>
+        <div className="col-sm-2">
+          {/*<h6>Actions</h6>*/}
+        </div>
+      </div>;
+    }
 
     // TODO: now that everything is set up, continue with get subs in saga
     //  set loading indicator, fetch subs, on error show message, on success
@@ -66,9 +81,17 @@ export class SubmissionList extends React.Component {
 
     return (
       <div className="submission-list-wrapper">
-        <ul className="list-group">
-          {submissionItems}
-        </ul>
+
+        <h1 className="current-location"><i
+          className="icon ion-ios-list pr-3" />My Submissions</h1>
+        <div className="container">
+          {header}
+        </div>
+        <div className="container">
+          <ul className="list-group">
+            {submissionItems}
+          </ul>
+        </div>
       </div>
     );
   }
