@@ -10,24 +10,28 @@ import {
   takeLeading,
 } from 'redux-saga/effects';
 import {
+  FETCH_SUBMISSION,
   SAVE_FORM,
   SUBMIT_FORM,
   SUBMIT_FORM_START,
   UPLOAD_FILES,
 } from './constants';
 import {
-  makeSelectBrokerSubmissionId, makeSelectContributors,
+  makeSelectBrokerSubmissionId,
+  makeSelectContributors,
   makeSelectDatasetLabels,
   makeSelectFileUploads,
   makeSelectFormWrapper,
   makeSelectLicense,
   makeSelectMetaDataSchema,
   makeSelectReduxFormForm,
-  makeSelectRelatedPublications,
+  makeSelectRelatedPublications, makeSelectRequestBrokerSubmissionId,
   makeSelectToken,
   makeSelectUserId,
 } from './selectors';
 import {
+  fetchSubmissionError,
+  fetchSubmissionSuccess,
   saveForm,
   saveFormError,
   saveFormSuccess,
@@ -40,7 +44,11 @@ import {
   uploadFilesSuccess,
   uploadFileSuccess,
 } from './actions';
-import { createUploadFileChannel, postSubmission } from './submissionApi';
+import {
+  createUploadFileChannel,
+  getSubmission,
+  postSubmission,
+} from './submissionApi';
 
 // const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -163,6 +171,22 @@ export function* processSubmitFormTypeSaga() {
   }
 }
 
+export function* performFetchSubmissionSaga() {
+  console.log('performFetchSubmissionSaga');
+  const token = yield select(makeSelectToken());
+  const bsi = yield select(makeSelectRequestBrokerSubmissionId());
+  try {
+    const response = yield call(getSubmission, token, bsi);
+    console.log('success');
+    console.log(response);
+    yield put(fetchSubmissionSuccess(response));
+  } catch (error) {
+    console.log('error');
+    console.log(error);
+    yield put(fetchSubmissionError(error));
+  }
+}
+
 
 export function* checkFormTypeSaga() {
   // new feature from rc1 that blocks until finished
@@ -207,11 +231,14 @@ TODO: when in edit mode: remove file means delete already uploaded file.
 
 */
 
-
 export function* uploadFilesSaga() {
   yield takeLatest(UPLOAD_FILES, performUploadSaga);
 }
 
+export function* fetchSubmissionSaga() {
+  yield takeLatest(FETCH_SUBMISSION, performFetchSubmissionSaga);
+}
+
 export default function* rootSaga() {
-  yield all([checkFormTypeSaga(), saveFormSaga(), submitFormSaga(), uploadFilesSaga()]);
+  yield all([checkFormTypeSaga(), saveFormSaga(), submitFormSaga(), uploadFilesSaga(), fetchSubmissionSaga()]);
 }

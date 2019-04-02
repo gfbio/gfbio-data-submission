@@ -15,17 +15,31 @@ import injectReducer from 'utils/injectReducer';
 import FormWrapper from 'components/FormWrapper';
 import reducer from './reducer';
 import saga from './saga';
-import { setEmbargoDate, submitForm } from './actions';
+import { fetchSubmission, setEmbargoDate, submitForm } from './actions';
 import {
   makeSelectEmbargoDate,
   makeSelectFormWrapper,
-  makeSelectInitialValue,
   makeSelectSaveInProgress,
+  makeSelectSubmission,
   makeSelectSubmitInProgress,
 } from './selectors';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
+
+  componentDidMount() {
+    console.log('--------------- componentDidMount SubmissionForm');
+    // console.log(this.props);
+    const { brokerSubmissionId } = this.props.match.params;
+    console.log('\tbsi:');
+    console.log(brokerSubmissionId);
+    console.log('###############################');
+    if (typeof brokerSubmissionId != undefined) {
+      console.log('\t---> load submission for ' + brokerSubmissionId);
+      this.props.fetchSubmission(brokerSubmissionId);
+
+    }
+  }
 
   getProfile = () => {
     return {
@@ -41,14 +55,28 @@ export class SubmissionForm extends React.Component {
     };
   };
 
+  // TODO: remove, testing only
+  getInitialVals = () => {
+    return {
+      title: 'initial-title',
+      description: 'initial-description',
+    }
+  };
+
   render() {
 
-    console.log('render SubmissionForm');
-    console.log(this.props);
-    const { brokerSubmissionId } = this.props.match.params;
-    console.log('bsi:');
-    console.log(brokerSubmissionId);
+    console.log('--------------render SubmissionForm');
+    console.log(this.props.submission);
     console.log('###############################');
+
+    /*
+    *  TODO: - set preliminary version of data send as submission
+    *        - assemble inital values for FormWrapper from loaded submission
+    *        - some vals will be read by redux-form directly
+    *        - some vals have to be pre-processed to set non-form fields accordingly. e.g. license
+    *        - adapt submit/save processes to update instead of submit new (set/use brokerSubnmissionId ?)
+    *
+    *  */
 
     return (
       <div className="submission-form-wrapper">
@@ -81,7 +109,11 @@ export class SubmissionForm extends React.Component {
           // this works to pre-fill
           // initialValues={this.getInitialVals()}
           // this works, and react to state change
+
+          // TODO: set proper vals from submission
           initialValues={this.props.initialValues}
+
+
           reduxFormWrapper={this.props.reduxFormForm.formWrapper}
         />
       </div>
@@ -98,6 +130,8 @@ SubmissionForm.propTypes = {
   // submissionForm: PropTypes.object,
   reduxFormForm: PropTypes.object,
   initialValues: PropTypes.object,
+  submission: PropTypes.object,
+  fetchSubmission: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -108,6 +142,7 @@ const mapStateToProps = createStructuredSelector({
   saveInProgress: makeSelectSaveInProgress(),
   embargoDate: makeSelectEmbargoDate(),
   initialValues: makeSelectInitialValue(),
+  submission: makeSelectSubmission(),
 });
 
 // TODO: Decision has to be made to handle save by accessing 'formWrapper'
@@ -120,6 +155,7 @@ function mapDispatchToProps(dispatch) {
   return {
     handleSubmit: form => dispatch(submitForm(form)),
     handleDateChange: date => dispatch(setEmbargoDate(date)),
+    fetchSubmission: brokerSubmissionId => dispatch(fetchSubmission(brokerSubmissionId)),
   };
 }
 

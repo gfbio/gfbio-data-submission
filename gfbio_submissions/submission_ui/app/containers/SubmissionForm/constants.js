@@ -4,8 +4,6 @@
  *
  */
 
-export const DEFAULT_ACTION = 'app/SubmissionForm/DEFAULT_ACTION';
-
 export const CHANGE_LICENSE = 'app/SubmissionForm/CHANGE_LICENSE';
 export const CHANGE_META_DATA_SCHEMA =
   'app/SubmissionForm/CHANGE_META_DATA_SCHEMA';
@@ -42,3 +40,7 @@ export const UPLOAD_FILE_ERROR = 'app/SubmissionForm/UPLOAD_FILE_ERROR';
 export const UPLOAD_FILE_SUCCESS = 'app/SubmissionForm/UPLOAD_FILE_SUCCESS';
 
 export const SET_CONTRIBUTORS = 'app/SubmissionForm/SET_CONTRIBUTORS';
+
+export const FETCH_SUBMISSION = 'app/SubmissionForm/FETCH_SUBMISSION';
+export const FETCH_SUBMISSION_SUCCESS = 'app/SubmissionForm/FETCH_SUBMISSION_SUCCESS';
+export const FETCH_SUBMISSION_ERROR = 'app/SubmissionForm/FETCH_SUBMISSION_ERROR';

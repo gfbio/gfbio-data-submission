@@ -1,13 +1,13 @@
-import { defaultAction } from '../actions';
-import { DEFAULT_ACTION } from '../constants';
+import { changeLicense } from '../actions';
+import { CHANGE_LICENSE } from '../constants';
 
 describe('SubmissionForm actions', () => {
   describe('Default Action', () => {
     it('has a type of DEFAULT_ACTION', () => {
       const expected = {
-        type: DEFAULT_ACTION,
+        type: CHANGE_LICENSE,
       };
-      expect(defaultAction()).toEqual(expected);
+      expect(changeLicense()).toEqual(expected);
     });
   });
 });

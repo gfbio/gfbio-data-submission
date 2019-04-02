@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { END, eventChannel } from 'redux-saga';
-import { API_ROOT, SUBMISSIONS, UPLOAD } from '../../globalConstants';
+import { API_ROOT, SUBMISSIONS, UPLOAD, USER_URL } from '../../globalConstants';
 
 export const postSubmission = (token, data_body) => {
 
@@ -22,6 +22,18 @@ export const postSubmission = (token, data_body) => {
   //   console.log(error);
   // });
 
+};
+
+export const getSubmission = (token, brokerSubmissionId) => {
+  const config = {
+    headers: {
+      'Authorization': 'Token ' + token,
+    },
+  };
+  return axios.get(
+    `${API_ROOT + SUBMISSIONS + brokerSubmissionId}/`,
+    config,
+  );
 };
 
 

@@ -12,13 +12,16 @@ import {
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
   CHANGE_META_DATA_SCHEMA,
-  DEFAULT_ACTION,
+  FETCH_SUBMISSION,
+  FETCH_SUBMISSION_ERROR,
+  FETCH_SUBMISSION_SUCCESS,
   REMOVE_DATASET_LABEL,
   REMOVE_FILE_UPLOAD,
   REMOVE_RELATED_PUBLICATION,
   SAVE_FORM,
   SAVE_FORM_ERROR,
-  SAVE_FORM_SUCCESS, SET_CONTRIBUTORS,
+  SAVE_FORM_SUCCESS,
+  SET_CONTRIBUTORS,
   SET_EMBARGO_DATE,
   SUBMIT_FORM,
   SUBMIT_FORM_ACTIVE,
@@ -42,7 +45,8 @@ export const initialState = fromJS({
   license: 'CC BY 4.0',
   metaDataSchema: 'None',
   reduxFormForm: {},
-  initialValues: {},
+  // initialValues: {},
+  submission: {},
   submitInProgress: false,
   saveInProgress: false,
   embargoDate: new Date(),
@@ -64,14 +68,13 @@ export const initialState = fromJS({
   fileUploads: [],
   fileUploadInProgress: false,
   brokerSubmissionId: '',
+  requestBrokerSubmissionId: '',
   contributors: [],
   currentContributor: {},
 });
 
 function submissionFormReducer(state = initialState, action) {
   switch (action.type) {
-    case DEFAULT_ACTION:
-      return state;
     case CHANGE_LICENSE:
       return state.set('license', action.license);
     case CHANGE_META_DATA_SCHEMA:
@@ -80,15 +83,11 @@ function submissionFormReducer(state = initialState, action) {
       return state.set('saveInProgress', true);
     case SAVE_FORM_SUCCESS:
       // TODO: set bsi etc after success, from then its updates
-      console.log('SAVE_FORM_SUCCESS');
-      console.log(action.response);
       return state
         .set('brokerSubmissionId', action.response.data.broker_submission_id)
         .set('saveResponse', action.response)
         .set('saveInProgress', false);
     case SAVE_FORM_ERROR:
-      console.log('SAVE_FORM_ERROR');
-      console.log(action);
       return state.set('saveInProgress', false);
     case SUBMIT_FORM:
       return state.set('reduxFormForm', action.form);
@@ -128,7 +127,6 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .update('fileUploads', (fileUploads) => fileUploads.push(...action.value));
     case REMOVE_FILE_UPLOAD:
-      console.log('REMOVE_FILE_UPLOAD');
       if (state.get('fileUploadInProgress') == false) {
         return state
           .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1));
@@ -136,47 +134,46 @@ function submissionFormReducer(state = initialState, action) {
         return state;
       }
     case UPLOAD_FILES:
-      console.log('UPLOAD_FILES reducer');
       return state
         .set('fileUploadInProgress', true);
     case UPLOAD_FILES_SUCCESS:
-      console.log('UPLOAD_FILES_SUCCESS reducer');
       return state
         .set('fileUploadInProgress', false);
     case UPLOAD_FILES_ERROR:
-      console.log('UPLOAD_FILES_ERROR reducer');
       return state
         .set('fileUploadInProgress', false);
     case UPLOAD_FILE_PROGRESS:
-      console.log('\n\nUPLOAD_FILE_PROGRESS');
       let upload = state.getIn(['fileUploads', action.index]);
       upload.progress = action.val;
-      console.log(upload);
-      console.log('-----------------------------');
       // TODO: setIn does not work as described in here: https://thomastuts.com/blog/immutable-js-101-maps-lists.html
       return state
         .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1, upload));
     case UPLOAD_FILE_ERROR:
-      console.log('UPLOAD_FILE_ERROR');
-      console.log(action.index);
-      console.log(action.error);
       let error_upload = state.getIn(['fileUploads', action.index]);
       error_upload.messages = action.error;
       error_upload.status = 'error';
       return state
         .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1, error_upload));
     case UPLOAD_FILE_SUCCESS:
-      console.log('UPLOAD_FILE_SUCCESS');
-      console.log(action.index);
       let success_upload = state.getIn(['fileUploads', action.index]);
       success_upload.status = 'success';
       return state
         .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1, success_upload));
     case SET_CONTRIBUTORS:
-      console.log('SET_CONTRIBUTORS');
-      console.log(action.contributors);
       return state
         .set('contributors', action.contributors);
+    case FETCH_SUBMISSION:
+      console.log('FETCH_SUBMISSION');
+      // TODO: set prop to inidcate loading -> loading gif
+      return state.
+        set('requestBrokerSubmissionId', action.brokerSubmissionId);
+    case FETCH_SUBMISSION_SUCCESS:
+      console.log('FETCH_SUBMISSION_SUCCESS');
+      return state.
+        set('submission', action.response.data);
+    case FETCH_SUBMISSION_ERROR:
+      console.log('FETCH_SUBMISSION_ERROR');
+      return state;
     default:
       return state;
   }

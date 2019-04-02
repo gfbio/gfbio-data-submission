@@ -12,7 +12,9 @@ import {
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
   CHANGE_META_DATA_SCHEMA,
-  DEFAULT_ACTION,
+  FETCH_SUBMISSION,
+  FETCH_SUBMISSION_ERROR,
+  FETCH_SUBMISSION_SUCCESS,
   REMOVE_DATASET_LABEL,
   REMOVE_FILE_UPLOAD,
   REMOVE_RELATED_PUBLICATION,
@@ -33,12 +35,6 @@ import {
   UPLOAD_FILES_ERROR,
   UPLOAD_FILES_SUCCESS,
 } from './constants';
-
-export function defaultAction() {
-  return {
-    type: DEFAULT_ACTION,
-  };
-}
 
 export function changeLicense(license) {
   return {
@@ -219,10 +215,31 @@ export function uploadFileSuccess(index) {
 
 /* END File no s for single File */
 
-
 export function setContributors(contributors) {
   return {
     type: SET_CONTRIBUTORS,
     contributors,
+  };
+}
+
+export function fetchSubmission(brokerSubmissionId) {
+  return {
+    type: FETCH_SUBMISSION,
+    brokerSubmissionId,
+  };
+}
+
+
+export function fetchSubmissionSuccess(response) {
+  return {
+    type: FETCH_SUBMISSION_SUCCESS,
+    response,
+  };
+}
+
+export function fetchSubmissionError(errorResponse) {
+  return {
+    type: FETCH_SUBMISSION_ERROR,
+    errorResponse,
   };
 }
