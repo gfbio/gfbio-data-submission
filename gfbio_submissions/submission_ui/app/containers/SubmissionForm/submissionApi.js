@@ -1,11 +1,6 @@
 import axios from 'axios';
 import { END, eventChannel } from 'redux-saga';
-// TODO: no api root needed if app is on same host with django
-// const API_ROOT = 'https://submission.gfbio.org';
-// TODO: for rapid js standalone development, full servername is needed though.
-const API_ROOT = 'http://0.0.0.0:8000';
-
-const SUBMISSIONS = '/api/submissions/';
+import { API_ROOT, SUBMISSIONS, UPLOAD } from '../../globalConstants';
 
 export const postSubmission = (token, data_body) => {
 
@@ -39,7 +34,7 @@ export const postFile = (token, brokerSubmissionId, file) => {
   // TODO: go for config object variant, compare below
   const instance = axios.create({
     // TODO: remove API_ROOT compare above TODOs
-    baseURL: API_ROOT + SUBMISSIONS + brokerSubmissionId + '/upload/',
+    baseURL: API_ROOT + SUBMISSIONS + brokerSubmissionId + UPLOAD,
     headers: {
       'Authorization': 'Token ' + token,
     },
@@ -85,7 +80,7 @@ export function createUploadFileChannel(brokerSubmissionId, file, token) {
       },
     };
     axios.post(
-      API_ROOT + SUBMISSIONS + brokerSubmissionId + '/upload/',
+      API_ROOT + SUBMISSIONS + brokerSubmissionId + UPLOAD,
       formData,
       config,
     ).then(() => {
