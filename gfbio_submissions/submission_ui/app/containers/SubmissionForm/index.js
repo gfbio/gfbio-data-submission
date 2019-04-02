@@ -72,8 +72,9 @@ export class SubmissionForm extends React.Component {
     /*
     *  TODO: - set preliminary version of data send as submission
     *        - assemble inital values for FormWrapper from loaded submission
-    *        - some vals will be read by redux-form directly
-    *        - some vals have to be pre-processed to set non-form fields accordingly. e.g. license
+    *        - some vals to serve as initialValues (consumed by redux form with this property name)
+    *        - some vals have to be pre-processed, in extra prop (e.g. nonFormInitialValues),
+    *             to set non-form fields accordingly. e.g. license
     *        - adapt submit/save processes to update instead of submit new (set/use brokerSubnmissionId ?)
     *
     *  */
@@ -107,11 +108,11 @@ export class SubmissionForm extends React.Component {
           // profile does not work for pre-fill
           profile={this.getProfile()}
           // this works to pre-fill
-          // initialValues={this.getInitialVals()}
+          initialValues={this.getInitialVals()}
           // this works, and react to state change
 
           // TODO: set proper vals from submission
-          initialValues={this.props.initialValues}
+          // initialValues={this.props.initialValues}
 
 
           reduxFormWrapper={this.props.reduxFormForm.formWrapper}
@@ -129,7 +130,7 @@ SubmissionForm.propTypes = {
   // TODO: maybe remove once save workflow is established
   // submissionForm: PropTypes.object,
   reduxFormForm: PropTypes.object,
-  initialValues: PropTypes.object,
+  // initialValues: PropTypes.object,
   submission: PropTypes.object,
   fetchSubmission: PropTypes.func,
 };
@@ -141,7 +142,7 @@ const mapStateToProps = createStructuredSelector({
   submitInProgress: makeSelectSubmitInProgress(),
   saveInProgress: makeSelectSaveInProgress(),
   embargoDate: makeSelectEmbargoDate(),
-  initialValues: makeSelectInitialValue(),
+  // initialValues: makeSelectInitialValue(),
   submission: makeSelectSubmission(),
 });
 
