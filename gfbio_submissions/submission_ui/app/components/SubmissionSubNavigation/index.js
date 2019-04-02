@@ -13,6 +13,9 @@ class SubmissionSubNavigation extends React.PureComponent {
   render() {
     return (
       <section className="sub-navi">
+        {/*<section className="sub-navigation-header">*/}
+
+        {/*</section>*/}
         <div className="container">
           <div className="row">
             <div className="col-sm-12">

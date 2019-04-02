@@ -75,7 +75,9 @@ export class SubmissionForm extends React.Component {
     *        - some vals to serve as initialValues (consumed by redux form with this property name)
     *        - some vals have to be pre-processed, in extra prop (e.g. nonFormInitialValues),
     *             to set non-form fields accordingly. e.g. license
+    *        - maybe some vals have to be set in reducer to show up in store
     *        - adapt submit/save processes to update instead of submit new (set/use brokerSubnmissionId ?)
+    *        - list of uploaded files and edit this list is new story -> next ?
     *
     *  */
 

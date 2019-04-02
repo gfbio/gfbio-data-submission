@@ -357,12 +357,13 @@ section#twitter i {
 
 h1.current-location {
   font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #345AA2;
   font-weight: 200;
   margin-bottom: 2rem;
 }
 
 h1.current-location i {
-  color: #495057;
+  color: #345AA2;
 }
 
 .col-form-label {
@@ -495,6 +496,15 @@ h1.current-location i {
   color: #fff !important;
 }
 
+/* copy of parts of _search.scss .search-page-title */
+/* sub navigation section header area */
+.sub-navigation-header {
+  padding: 57px 0 0 0;
+  height: 18.5rem;
+  background-color: #f8f8f8;
+}
+
+/* end sub navigation section header area */
 section.sub-navi {
   padding: 0;
   margin-bottom: 2rem;

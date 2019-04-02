@@ -22,6 +22,10 @@ import SubmissionSubNavigation from '../../components/SubmissionSubNavigation';
 //  prefix/basename ('/ui/submission') is set in app/utils/history.js which is used
 //  in app/app.js where ConnectedRouter is instantiated.
 export default function App() {
+  // TODO: if services-search style header is desired: extend this
+  //  wrapping container here to display full section (override template
+  //    section block). take care of django messages.
+  //  annonymous div like here should be ok to wrap mulitple sections (like search has)
   return (
     <div>
       <SubmissionSubNavigation />

@@ -1,10 +1,11 @@
 h1.current-location {
   @include raleway;
+  color: $gfbio-blue;
   font-weight: 200;
   margin-bottom: 2rem;
 
   i {
-    color: $gray-700;
+    color: $gfbio-blue;
   }
 }
 
@@ -203,6 +204,21 @@ h1.current-location {
 //  }
 //}
 
+/* copy of parts of _search.scss .search-page-title */
+/* sub navigation section header area */
+.sub-navigation-header {
+  // using padding to adapt for nav height does not produce scrollbar
+  padding: 57px 0 0 0;
+
+  //originally this margin to adapt for nav height
+  //margin-top: 57px;
+
+  // using padding instead of margin, needs larger height
+  height: 18.5rem;
+  background-color: $gray-100;
+}
+
+/* end sub navigation section header area */
 
 section.sub-navi {
   // TODO: hardcoded top margin to adapt for 57px floating main navigation

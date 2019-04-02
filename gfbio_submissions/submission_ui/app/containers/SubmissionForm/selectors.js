@@ -69,10 +69,10 @@ const makeSelectEmbargoDate = () =>
     substate.get('embargoDate'),
   );
 
-const makeSelectInitialValue = () =>
-  createSelector(selectSubmissionFormDomain, substate =>
-    substate.get('initialValues'),
-  );
+// const makeSelectInitialValue = () =>
+//   createSelector(selectSubmissionFormDomain, substate =>
+//     substate.get('initialValues'),
+//   );
 
 const makeSelectToken = () =>
   createSelector(selectSubmissionFormDomain, substate =>
@@ -140,7 +140,7 @@ export {
   makeSelectSubmitInProgress,
   makeSelectSaveInProgress,
   makeSelectEmbargoDate,
-  makeSelectInitialValue,
+  // makeSelectInitialValue,
   makeSelectContactForm,
   makeSelectToken,
   makeSelectUserId,

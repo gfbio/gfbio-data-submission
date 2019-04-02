@@ -30,7 +30,7 @@ export class SubmissionList extends React.Component {
     let submissionItems = this.props.submissions.map((submission, index) => {
       return <li key={index} className="list-group-item">
         <Link className="row no-gutters"
-              to={'/form/'+submission.broker_submission_id}>
+              to={'/form/' + submission.broker_submission_id}>
           <div className="col-md-8 col-sm-12 align-self-center title">
             {/*icon ion-ios-redo*/}
             <i className="icon ion-md-apps" />
@@ -82,9 +82,12 @@ export class SubmissionList extends React.Component {
 
     return (
       <div className="submission-list-wrapper">
-
-        <h1 className="current-location"><i
-          className="icon ion-ios-list pr-3" />My Submissions</h1>
+        {/*<section>*/}
+          <h1 className="current-location">
+            <i className="icon ion-ios-list pr-3" />
+            My Submissions
+          </h1>
+        {/*</section>*/}
         <div className="container">
           {header}
         </div>
