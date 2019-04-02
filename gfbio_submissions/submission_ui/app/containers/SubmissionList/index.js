@@ -29,13 +29,13 @@ export class SubmissionList extends React.Component {
 
     let submissionItems = this.props.submissions.map((submission, index) => {
       return <li key={index} className="list-group-item">
-        <a className="row align-items-center" href="#">
-          <div className="col-md-8 col-sm-12 title">
+        <a className="row no-gutters" href="#">
+          <div className="col-md-8 col-sm-12 align-self-center title">
             {/*icon ion-ios-redo*/}
-            <span><i className="icon ion-md-apps" /></span>
+            <i className="icon ion-md-apps" />
             <span>{submission.data.requirements.title}</span>
           </div>
-          <div className="col-md-2 col-sm-12 status">
+          <div className="col-md-2 col-sm-12 align-self-center status">
             <span className="">
               {submission.status}
             </span>
@@ -44,9 +44,11 @@ export class SubmissionList extends React.Component {
           {/* if saved, else submitted and no edit possible */}
           {/*<span>Edit</span>*/}
           {/*</div>*/}
-          <div className="col-md-2 col-sm-12 actions">
-            <span><i className="icon ion-md-create" />Edit</span>
-            <span className="p-0"><i className="icon ion-md-trash" />Delete</span>
+          <div className="col-md-2 col-sm-12 align-self-center actions">
+            <a href="#" className="h-100 d-inline-block pr-4 pl-4"><i
+              className="icon ion-md-create" />Edit</a>
+            <a href="#" className="h-100 d-inline-block"><i
+              className="icon ion-md-trash" />Delete</a>
             {/*<span className="ti-pencil"></span>Edit*/}
             {/*<span></span>*/}
           </div>
