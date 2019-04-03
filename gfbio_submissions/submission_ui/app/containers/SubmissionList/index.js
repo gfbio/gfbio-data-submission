@@ -46,9 +46,9 @@ export class SubmissionList extends React.Component {
           {/*<span>Edit</span>*/}
           {/*</div>*/}
           <div className="col-md-2 col-sm-12 align-self-center actions">
-            <a className="h-100 d-inline-block pr-4 pl-4"><i
+            <a className="action h-100 d-inline-block pr-4 pl-4"><i
               className="icon ion-md-create" />Edit</a>
-            <a className="h-100 d-inline-block"><i
+            <a className="action h-100 d-inline-block"><i
               className="icon ion-md-trash" />Delete</a>
             {/*<span className="ti-pencil"></span>Edit*/}
             {/*<span></span>*/}

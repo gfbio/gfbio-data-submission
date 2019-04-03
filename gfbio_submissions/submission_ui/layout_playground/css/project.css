@@ -538,13 +538,13 @@ section.sub-navi .nav .active {
 
 /* Submission form wrapper */
 .submission-form-wrapper {
-  padding-left: 2.25rem;
+  padding-left: 1.25rem;
 }
 
 /* end  Submission form wrapper */
 /* Submission List */
 .submission-list-wrapper {
-  padding-left: 2.25rem;
+  padding-left: 1.25rem;
 }
 
 .submission-list-wrapper h6 {
@@ -603,11 +603,13 @@ section.sub-navi .nav .active {
   padding-right: .75rem;
 }
 
-.submission-list-wrapper ul li a a {
+.submission-list-wrapper ul li a a.action {
   padding: .5rem;
+  color: #343a40;
+  background-color: #f8f8f8;
 }
 
-.submission-list-wrapper ul li a a i {
+.submission-list-wrapper ul li a a.action i {
   color: #495057;
   padding: 0 .5rem 0 0;
 }
@@ -625,13 +627,17 @@ section.sub-navi .nav .active {
   color: #fff;
 }
 
-.submission-list-wrapper ul li a:hover a {
+.submission-list-wrapper ul li a:hover a.action {
   color: #fff;
   background-color: #3CACE4;
 }
 
-.submission-list-wrapper ul li a:hover a:hover {
+.submission-list-wrapper ul li a:hover a.action:hover {
   background-color: #62BEEB;
+}
+
+.submission-list-wrapper ul li a:hover a.action i {
+  color: #fff;
 }
 
 /* End Submission List */
