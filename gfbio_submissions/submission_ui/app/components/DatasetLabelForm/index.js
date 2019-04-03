@@ -28,7 +28,11 @@ class DatasetLabelForm extends React.PureComponent {
   };
 
   render() {
-
+    console.log('DatasetLabelForm render');
+    console.log(this.props);
+    console.log('----------------------');
+    console.log(this.state);
+    console.log('---------------------------------');
     const labelList = this.props.datasetLabels.map((label, index) => {
       if (label !== '') {
         return <li key={index}

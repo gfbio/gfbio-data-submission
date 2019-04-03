@@ -117,10 +117,15 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .set('currentLabel', action.value);
     case ADD_DATASET_LABEL:
+      console.log('ADD_DATASET_LABEL ');
+      console.log(action);
+      console.log(state.get('datasetLabels'));
       return state
         .update('datasetLabels', (datasetLabels) => datasetLabels.push(action.value))
         .set('currentLabel', '');
     case REMOVE_DATASET_LABEL:
+      console.log('REMOVE_DATASET_LABEL ');
+      console.log(action);
       return state
         .update('datasetLabels', (datasetLabels) => datasetLabels.splice(action.index, 1));
     case ADD_FILE_UPLOAD:
@@ -172,8 +177,8 @@ function submissionFormReducer(state = initialState, action) {
       // TODO: refactor to some sort of getter with checks
       console.log(action.response.data);
       return state
-        .set('relatedPublications', action.response.data.data.requirements.related_publications)
-        .set('datasetLabels', action.response.data.data.requirements.datasetLabels)
+        .set('relatedPublications', fromJS(action.response.data.data.requirements.related_publications))
+        .set('datasetLabels', fromJS(action.response.data.data.requirements.datasetLabels))
         .set('contributors', action.response.data.data.requirements.contributors)
         .set('embargoDate', new Date(action.response.data.embargo))
         .set('license', action.response.data.data.requirements.license)
