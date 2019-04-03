@@ -57,61 +57,68 @@ export class SubmissionForm extends React.Component {
 
   // TODO: remove, testing only
   getInitialVals = () => {
-    // categories prototyping
+    // categories prototyping WORKS
     let categories = [
       'Algae & Protists',
       'Zoology',
       'Geoscience',
     ];
+    // from DataCategoryForm
     const dataCategoryPrefix = 'data-category ';
     let prepared_categories = {};
     for (let c of categories) {
       prepared_categories[dataCategoryPrefix + c] = true;
     }
     // end categories prototyping---------------------
+
+    // legal reqs prototyping
+    let legal_requirements = [
+      'Sensitive Personal Information',
+      'Uncertain',
+    ];
+    // from LegalRequirementsForm
+    const legalRequirementsPrefix = 'legal-requirement ';
+    let prepared_requirements = {};
+    for (let l of legal_requirements) {
+      prepared_requirements[legalRequirementsPrefix + l] = true;
+    }
+    // end legal reqs prototyping
+
     let res = {
       title: 'initial-title', // works
       description: 'initial-description', // works
       dataUrl: 'http://www.data-url.com/edited/?horst=2', // works
       comment: 'initial-comment', // works
       data_center: 'BGBM \u2013 Botanic Garden and Botanical Museum Berlin, Freie Universit\u00e4t Berlin', // works
-      metadata_schema: 'MIxS 4.0', // set 'metaDataSchema' in reducer
-      license: 'CC BY-ND 4.0', // set 'license' in reducer
-      related_publications: [ // set 'relatedPublications' in reducer
-        '11',
-        '22',
-        '33',
-      ],
-      datasetLabels: [ // set 'datasetLabels' in reducer
-        '1',
-        '2',
-        '3',
-      ],
-      legal_requirements: [ // in form.initialValue available
-        'Sensitive Personal Information',
-        'Uncertain',
-      ],
-      // categories: [ // in form.initialValue available
-      //   'Algae & Protists',
-      //   'Zoology',
-      //   'Geoscience',
+      // metadata_schema: 'MIxS 4.0', // set 'metaDataSchema' in reducer
+      // license: 'CC BY-ND 4.0', // set 'license' in reducer
+      // related_publications: [ // set 'relatedPublications' in reducer
+      //   '11',
+      //   '22',
+      //   '33',
       // ],
-      contributors: [
-        {
-          'lastName': 'lname',
-          'contribution': 'coffee',
-          'emailAddress': 'maweber@maoinv.de',
-          'firstName': 'fname',
-          'institution': 'MPU',
-        },
-        {
-          'lastName': '2222',
-          'firstName': '2222',
-          'emailAddress': '2222',
-        },
-      ],
+      // datasetLabels: [ // set 'datasetLabels' in reducer
+      //   '1',
+      //   '2',
+      //   '3',
+      // ],
+      // contributors: [
+      //   {
+      //     'lastName': 'lname',
+      //     'contribution': 'coffee',
+      //     'emailAddress': 'maweber@maoinv.de',
+      //     'firstName': 'fname',
+      //     'institution': 'MPU',
+      //   },
+      //   {
+      //     'lastName': '2222',
+      //     'firstName': '2222',
+      //     'emailAddress': '2222',
+      //   },
+      // ],
     };
     Object.assign(res, prepared_categories);
+    Object.assign(res, prepared_requirements);
     return res;
   };
 
@@ -126,9 +133,9 @@ export class SubmissionForm extends React.Component {
 
   render() {
 
-    // console.log('--------------render SubmissionForm');
-    // console.log(this.getRequirements());
-    // console.log('###############################');
+    console.log('--------------render SubmissionForm');
+    console.log(this.props.submission);
+    console.log('###############################');
 
     /*
     *  TODO: - set preliminary version of data send as submission

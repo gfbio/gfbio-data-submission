@@ -165,12 +165,20 @@ function submissionFormReducer(state = initialState, action) {
     case FETCH_SUBMISSION:
       console.log('FETCH_SUBMISSION');
       // TODO: set prop to inidcate loading -> loading gif
-      return state.
-        set('requestBrokerSubmissionId', action.brokerSubmissionId);
+      return state.set('requestBrokerSubmissionId', action.brokerSubmissionId);
     case FETCH_SUBMISSION_SUCCESS:
       console.log('FETCH_SUBMISSION_SUCCESS');
-      return state.
-        set('submission', action.response.data);
+      // TODO: 2x data: 1 from axios 1 from json-body
+      // TODO: refactor to some sort of getter with checks
+      console.log(action.response.data);
+      return state
+        .set('relatedPublications', action.response.data.data.requirements.related_publications)
+        .set('datasetLabels', action.response.data.data.requirements.datasetLabels)
+        .set('contributors', action.response.data.data.requirements.contributors)
+        .set('embargoDate', new Date(action.response.data.embargo))
+        .set('license', action.response.data.data.requirements.license)
+        .set('metaDataSchema', action.response.data.data.requirements.metadata_schema)
+        .set('submission', action.response.data);
     case FETCH_SUBMISSION_ERROR:
       console.log('FETCH_SUBMISSION_ERROR');
       return state;
