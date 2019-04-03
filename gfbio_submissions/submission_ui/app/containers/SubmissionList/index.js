@@ -83,10 +83,10 @@ export class SubmissionList extends React.Component {
     return (
       <div className="submission-list-wrapper">
         {/*<section>*/}
-          <h1 className="current-location">
-            <i className="icon ion-ios-list pr-3" />
-            My Submissions
-          </h1>
+        {/*  <h1 className="current-location">*/}
+        {/*    <i className="icon ion-ios-list pr-3" />*/}
+        {/*    My Submissions*/}
+        {/*  </h1>*/}
         {/*</section>*/}
         <div className="container">
           {header}
