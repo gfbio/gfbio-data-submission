@@ -13,6 +13,9 @@ import { Field } from 'redux-form/immutable';
 class DataCategoryForm extends React.PureComponent {
   // TODO: adapt for generic based solution instead of hardcoding all boxes
   render() {
+    console.log('--------------render DataCategoryForm');
+    console.log(this.props);
+    console.log('###############################');
     const dataCategoryPrefix = 'data-category ';
     return (
       <div>

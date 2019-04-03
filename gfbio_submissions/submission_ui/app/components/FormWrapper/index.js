@@ -91,6 +91,11 @@ class FormWrapper extends React.PureComponent {
       saveButtonText = 'saving ...';
     }
     let errors = this.prepareErrorNotification();
+
+    console.log('--------------render FormWrapper');
+    console.log(this.props.initialValues.toJS());
+    console.log('###############################');
+
     return (
       <form
         name="wrapping-form"
