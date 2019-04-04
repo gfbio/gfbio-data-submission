@@ -13,9 +13,10 @@ import {
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
   CHANGE_META_DATA_SCHEMA,
+  DATA_CATEGORY_PREFIX,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
-  FETCH_SUBMISSION_SUCCESS, REMOVE_CONTRIBUTOR,
+  FETCH_SUBMISSION_SUCCESS, LEGAL_REQUIREMENTS_PREFIX, REMOVE_CONTRIBUTOR,
   REMOVE_DATASET_LABEL,
   REMOVE_FILE_UPLOAD,
   REMOVE_RELATED_PUBLICATION,
@@ -36,6 +37,7 @@ import {
   UPLOAD_FILES_ERROR,
   UPLOAD_FILES_SUCCESS,
 } from './constants';
+import { prepareInitialValues } from './utils';
 
 let backendParameters = {};
 if (window.props !== undefined) {
@@ -197,6 +199,7 @@ function submissionFormReducer(state = initialState, action) {
       console.log(action.response.data.data.requirements.contributors);
       console.log(typeof action.response.data.data.requirements.contributors);
       return state
+        .set('initialValues', prepareInitialValues(action.response.data))
         .set('relatedPublications', fromJS(action.response.data.data.requirements.related_publications))
         .set('datasetLabels', fromJS(action.response.data.data.requirements.datasetLabels))
         .set('contributors', action.response.data.data.requirements.contributors)

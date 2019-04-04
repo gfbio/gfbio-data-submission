@@ -6,13 +6,14 @@
 
 import React from 'react';
 import { Field } from 'redux-form/lib/immutable';
+import { LEGAL_REQUIREMENTS_PREFIX } from '../../containers/SubmissionForm/constants';
 // import PropTypes from 'prop-types';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
 class LegalRequirementsForm extends React.PureComponent {
   render() {
-    const legalRequirementsPrefix = 'legal-requirement ';
+    // const legalRequirementsPrefix = 'legal-requirement ';
     return (
       <div>
         <header className="header header-left form-header-top">
@@ -23,7 +24,7 @@ class LegalRequirementsForm extends React.PureComponent {
           <div className="custom-control custom-checkbox">
             <Field
               className="custom-control-input"
-              name={`${legalRequirementsPrefix}Nagoya Protocol`}
+              name={`${LEGAL_REQUIREMENTS_PREFIX}Nagoya Protocol`}
               id="nagoyaProtocol"
               component="input"
               type="checkbox"
@@ -35,7 +36,7 @@ class LegalRequirementsForm extends React.PureComponent {
           <div className="custom-control custom-checkbox">
             <Field
               className="custom-control-input"
-              name={`${legalRequirementsPrefix}IUCN Red List of Threatened Species`}
+              name={`${LEGAL_REQUIREMENTS_PREFIX}IUCN Red List of Threatened Species`}
               id="iucnList"
               component="input"
               type="checkbox"
@@ -47,7 +48,7 @@ class LegalRequirementsForm extends React.PureComponent {
           <div className="custom-control custom-checkbox">
             <Field
               className="custom-control-input"
-              name={`${legalRequirementsPrefix}Sensitive Personal Information`}
+              name={`${LEGAL_REQUIREMENTS_PREFIX}Sensitive Personal Information`}
               id="personalInformation"
               component="input"
               type="checkbox"
@@ -62,7 +63,7 @@ class LegalRequirementsForm extends React.PureComponent {
           <div className="custom-control custom-checkbox">
             <Field
               className="custom-control-input"
-              name={`${legalRequirementsPrefix}Uncertain`}
+              name={`${LEGAL_REQUIREMENTS_PREFIX}Uncertain`}
               id="uncertain"
               component="input"
               type="checkbox"

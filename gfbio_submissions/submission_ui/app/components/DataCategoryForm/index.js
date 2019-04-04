@@ -6,6 +6,7 @@
 
 import React from 'react';
 import { Field } from 'redux-form/immutable';
+import { DATA_CATEGORY_PREFIX } from '../../containers/SubmissionForm/constants';
 // import PropTypes from 'prop-types';
 // import styled from 'styled-components';
 
@@ -16,7 +17,7 @@ class DataCategoryForm extends React.PureComponent {
     // console.log('--------------render DataCategoryForm');
     // console.log(this.props);
     // console.log('###############################');
-    const dataCategoryPrefix = 'data-category ';
+    // const dataCategoryPrefix = 'data-category ';
     return (
       <div>
         <header className="header header-left form-header-top">
@@ -29,7 +30,7 @@ class DataCategoryForm extends React.PureComponent {
             <div className="custom-control custom-checkbox">
               <Field
                 className="custom-control-input"
-                name={`${dataCategoryPrefix}Algae & Protists`}
+                name={`${DATA_CATEGORY_PREFIX}Algae & Protists`}
                 id="algaeProtists"
                 component="input"
                 type="checkbox"
@@ -41,7 +42,7 @@ class DataCategoryForm extends React.PureComponent {
             <div className="custom-control custom-checkbox">
               <Field
                 className="custom-control-input"
-                name={`${dataCategoryPrefix}Bacteriology or Virology`}
+                name={`${DATA_CATEGORY_PREFIX}Bacteriology or Virology`}
                 id="bacteriologyOrVirology"
                 component="input"
                 type="checkbox"
@@ -56,7 +57,7 @@ class DataCategoryForm extends React.PureComponent {
             <div className="custom-control custom-checkbox">
               <Field
                 className="custom-control-input"
-                name={`${dataCategoryPrefix}Botany`}
+                name={`${DATA_CATEGORY_PREFIX}Botany`}
                 id="botany"
                 component="input"
                 type="checkbox"
@@ -70,7 +71,7 @@ class DataCategoryForm extends React.PureComponent {
             <div className="custom-control custom-checkbox">
               <Field
                 className="custom-control-input"
-                name={`${dataCategoryPrefix}Ecology & Environment`}
+                name={`${DATA_CATEGORY_PREFIX}Ecology & Environment`}
                 id="ecologyEnvironment"
                 component="input"
                 type="checkbox"
@@ -85,7 +86,7 @@ class DataCategoryForm extends React.PureComponent {
             <div className="custom-control custom-checkbox">
               <Field
                 className="custom-control-input"
-                name={`${dataCategoryPrefix}Geoscience`}
+                name={`${DATA_CATEGORY_PREFIX}Geoscience`}
                 id="geoscience"
                 component="input"
                 type="checkbox"
@@ -97,7 +98,7 @@ class DataCategoryForm extends React.PureComponent {
             <div className="custom-control custom-checkbox">
               <Field
                 className="custom-control-input"
-                name={`${dataCategoryPrefix}Microbiology`}
+                name={`${DATA_CATEGORY_PREFIX}Microbiology`}
                 id="microbiology"
                 component="input"
                 type="checkbox"
@@ -111,7 +112,7 @@ class DataCategoryForm extends React.PureComponent {
             <div className="custom-control custom-checkbox">
               <Field
                 className="custom-control-input"
-                name={`${dataCategoryPrefix}Mycology`}
+                name={`${DATA_CATEGORY_PREFIX}Mycology`}
                 id="mycology"
                 component="input"
                 type="checkbox"
@@ -123,7 +124,7 @@ class DataCategoryForm extends React.PureComponent {
             <div className="custom-control custom-checkbox">
               <Field
                 className="custom-control-input"
-                name={`${dataCategoryPrefix}Palaeontology`}
+                name={`${DATA_CATEGORY_PREFIX}Palaeontology`}
                 id="palaeontology"
                 component="input"
                 type="checkbox"
@@ -135,7 +136,7 @@ class DataCategoryForm extends React.PureComponent {
             <div className="custom-control custom-checkbox">
               <Field
                 className="custom-control-input"
-                name={`${dataCategoryPrefix}Zoology`}
+                name={`${DATA_CATEGORY_PREFIX}Zoology`}
                 id="zoology"
                 component="input"
                 type="checkbox"

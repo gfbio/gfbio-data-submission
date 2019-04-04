@@ -18,7 +18,7 @@ import saga from './saga';
 import { fetchSubmission, setEmbargoDate, submitForm } from './actions';
 import {
   makeSelectEmbargoDate,
-  makeSelectFormWrapper,
+  makeSelectFormWrapper, makeSelectInitialValues,
   makeSelectSaveInProgress,
   makeSelectSubmission,
   makeSelectSubmitInProgress,
@@ -28,16 +28,9 @@ import {
 export class SubmissionForm extends React.Component {
 
   componentDidMount() {
-    // console.log('--------------- componentDidMount SubmissionForm');
-    // console.log(this.props);
     const { brokerSubmissionId } = this.props.match.params;
-    // console.log('\tbsi:');
-    // console.log(brokerSubmissionId);
-    // console.log('###############################');
     if (brokerSubmissionId !== undefined) {
-      // console.log('\t---> load submission for ' + brokerSubmissionId);
       this.props.fetchSubmission(brokerSubmissionId);
-
     }
   }
 
@@ -57,32 +50,6 @@ export class SubmissionForm extends React.Component {
 
   // TODO: remove, testing only
   getInitialVals = () => {
-    // categories prototyping WORKS
-    let categories = [
-      'Algae & Protists',
-      'Zoology',
-      'Geoscience',
-    ];
-    // from DataCategoryForm
-    const dataCategoryPrefix = 'data-category ';
-    let prepared_categories = {};
-    for (let c of categories) {
-      prepared_categories[dataCategoryPrefix + c] = true;
-    }
-    // end categories prototyping---------------------
-
-    // legal reqs prototyping
-    let legal_requirements = [
-      'Sensitive Personal Information',
-      'Uncertain',
-    ];
-    // from LegalRequirementsForm
-    const legalRequirementsPrefix = 'legal-requirement ';
-    let prepared_requirements = {};
-    for (let l of legal_requirements) {
-      prepared_requirements[legalRequirementsPrefix + l] = true;
-    }
-    // end legal reqs prototyping
 
     let res = {
       title: 'initial-title', // works
@@ -117,8 +84,6 @@ export class SubmissionForm extends React.Component {
       //   },
       // ],
     };
-    Object.assign(res, prepared_categories);
-    Object.assign(res, prepared_requirements);
     return res;
   };
 
@@ -133,9 +98,9 @@ export class SubmissionForm extends React.Component {
 
   render() {
 
-    // console.log('--------------render SubmissionForm');
-    // console.log(this.props.submission);
-    // console.log('###############################');
+    console.log('--------------render SubmissionForm');
+    console.log(this.props);
+    console.log('###############################');
 
     /*
     *  TODO: - set preliminary version of data send as submission
@@ -200,7 +165,7 @@ SubmissionForm.propTypes = {
   // TODO: maybe remove once save workflow is established
   // submissionForm: PropTypes.object,
   reduxFormForm: PropTypes.object,
-  // initialValues: PropTypes.object,
+  initialValues: PropTypes.object,
   submission: PropTypes.object,
   fetchSubmission: PropTypes.func,
 };
@@ -212,7 +177,7 @@ const mapStateToProps = createStructuredSelector({
   submitInProgress: makeSelectSubmitInProgress(),
   saveInProgress: makeSelectSaveInProgress(),
   embargoDate: makeSelectEmbargoDate(),
-  // initialValues: makeSelectInitialValue(),
+  initialValues: makeSelectInitialValues(),
   submission: makeSelectSubmission(),
 });
 

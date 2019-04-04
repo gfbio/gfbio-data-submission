@@ -168,15 +168,11 @@ class ContributorsForm extends React.PureComponent {
   // toogles Detail, closes form
   onClickDetailButton = (newStatus, index = -1) => {
     if (index >= 0) {
-      console.log('type of contributors');
-      console.log(Array.isArray(this.props.contributors));
-
       // TODO: read about how this can be handled in immutable js
       let contributors = this.props.contributors;
       if (!Array.isArray(this.props.contributors)) {
         contributors = this.props.contributors.toJS();
       }
-
       this.setState({
         detailOpen: newStatus,
         formOpen: false,
@@ -288,18 +284,10 @@ class ContributorsForm extends React.PureComponent {
   };
 
   render() {
-    console.log('ContributorsForm render');
-    console.log(this.props.contributors);
-    // console.log('----------------------');
-    // console.log(this.state);
-    console.log('---------------------------------');
     const { formOpen, detailOpen } = this.state;
     let editForm = this.renderEditForm(detailOpen);
 
     let contributors = this.props.contributors.map((c, index) => {
-      console.log('generate contr.: ');
-      console.log(c);
-      console.log(index);
       return <li key={index} className="list-inline-item">
         <Button
           className="btn btn-primary btn-contributor"
