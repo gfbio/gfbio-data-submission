@@ -102,6 +102,7 @@ function submissionFormReducer(state = initialState, action) {
       return state.set('submitInProgress', true);
     case SUBMIT_FORM_SUCCESS:
       return state
+        .set('brokerSubmissionId', action.response.data.broker_submission_id)
         .set('submitResponse', action.response)
         .set('submitInProgress', false);
     case SUBMIT_FORM_ERROR:
@@ -195,10 +196,10 @@ function submissionFormReducer(state = initialState, action) {
       // TODO: set prop to inidcate loading -> loading gif
       return state.set('requestBrokerSubmissionId', action.brokerSubmissionId);
     case FETCH_SUBMISSION_SUCCESS:
-      // console.log('FETCH_SUBMISSION_SUCCESS');
+      console.log('FETCH_SUBMISSION_SUCCESS');
       // TODO: 2x data: 1 from axios 1 from json-body
       // TODO: refactor to some sort of getter with checks
-      // console.log(action.response.data.data.requirements.contributors);
+      console.log(action.response.data.broker_submission_id);
       // console.log(typeof action.response.data.data.requirements.contributors);
       return setStateFormValues(state, action);
     case FETCH_SUBMISSION_ERROR:

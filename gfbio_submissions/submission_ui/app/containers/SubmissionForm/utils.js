@@ -51,6 +51,7 @@ export const prepareInitialValues = (submissionData) => {
 
 export const setStateFormValues = (state, action) => {
   return state
+    .set('brokerSubmissionId', action.response.data.broker_submission_id)
     .set('initialValues', prepareInitialValues(action.response.data))
     .set('relatedPublications', fromJS(action.response.data.data.requirements.related_publications))
     .set('datasetLabels', fromJS(action.response.data.data.requirements.datasetLabels))
@@ -58,5 +59,6 @@ export const setStateFormValues = (state, action) => {
     .set('embargoDate', new Date(action.response.data.embargo))
     .set('license', action.response.data.data.requirements.license)
     .set('metaDataSchema', action.response.data.data.requirements.metadata_schema)
+    // TODO: need whole submission ?
     .set('submission', action.response.data);
 };

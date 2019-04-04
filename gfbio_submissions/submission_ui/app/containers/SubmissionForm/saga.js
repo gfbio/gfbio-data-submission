@@ -150,6 +150,11 @@ export function* performSubmitFormSaga() {
 }
 
 export function* performSaveFormSaga() {
+  console.log('performSaveSaga. bsi:');
+  const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
+  console.log(brokerSubmissionId);
+  // TODO: if bsi put update action ....
+
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
   const payload = yield prepareRequestData(userId, false);
