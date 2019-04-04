@@ -14,7 +14,7 @@ import Collapse from 'react-bootstrap/Collapse';
 import {
   addContributor,
   removeContributor,
-  setContributors,
+  setContributors, updateContributor,
 } from '../../containers/SubmissionForm/actions';
 import { makeSelectContributors } from '../../containers/SubmissionForm/selectors';
 
@@ -132,7 +132,8 @@ class ContributorsForm extends React.PureComponent {
     if (ContributorsForm.validateFormValues(tmp)) {
       const list = this.state.contribs;
       list[this.state.contributorIndex] = tmp;
-      this.props.setContributors(list);
+      this.props.updateContributor(tmp, this.state.contributorIndex);
+      // this.props.setContributors(list);
       this.cleanEditForm();
       this.setState({
         contribs: list,
@@ -459,6 +460,7 @@ class ContributorsForm extends React.PureComponent {
 ContributorsForm.propTypes = {
   setContributors: PropTypes.func,
   addContributor: PropTypes.func,
+  updateContributor: PropTypes.func,
   removeContributor: PropTypes.func,
   contributors: PropTypes.array,
 };
@@ -473,6 +475,7 @@ function mapDispatchToProps(dispatch) {
     setContributors: contributors => dispatch(setContributors(contributors)),
     addContributor: contributor => dispatch(addContributor(contributor)),
     removeContributor: index => dispatch(removeContributor(index)),
+    updateContributor: (contributor, index) => dispatch(updateContributor(contributor, index)),
   };
 }
 

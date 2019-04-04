@@ -28,7 +28,7 @@ import {
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
-  SUBMIT_FORM_SUCCESS,
+  SUBMIT_FORM_SUCCESS, UPDATE_CONTRIBUTOR,
   UPLOAD_FILE_ERROR,
   UPLOAD_FILE_PROGRESS,
   UPLOAD_FILE_SUCCESS,
@@ -175,6 +175,12 @@ function submissionFormReducer(state = initialState, action) {
       console.log(action.contributor);
       return state
         .update('contributors', (contributors) => contributors.push(action.contributor));
+    case UPDATE_CONTRIBUTOR:
+      console.log('UPDATE_CONTRIBUTOR');
+      console.log(action.contributor);
+      console.log(action.index);
+      return state
+        .update('contributors', (contributors) => contributors.splice(action.index, 1, action.contributor));
     case REMOVE_CONTRIBUTOR:
       console.log('REMOVE_CONTRIBUTOR');
       console.log(action.index);

@@ -28,7 +28,7 @@ import {
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
-  SUBMIT_FORM_SUCCESS,
+  SUBMIT_FORM_SUCCESS, UPDATE_CONTRIBUTOR,
   UPLOAD_FILE_ERROR,
   UPLOAD_FILE_PROGRESS,
   UPLOAD_FILE_SUCCESS,
@@ -227,6 +227,14 @@ export function addContributor(contributor) {
   return {
     type: ADD_CONTRIBUTOR,
     contributor,
+  };
+}
+
+export function updateContributor(contributor, index) {
+  return {
+    type: UPDATE_CONTRIBUTOR,
+    contributor,
+    index,
   };
 }
 
