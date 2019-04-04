@@ -11,7 +11,10 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import Button from 'react-bootstrap/Button';
 import Collapse from 'react-bootstrap/Collapse';
-import { setContributors } from '../../containers/SubmissionForm/actions';
+import {
+  addContributor,
+  setContributors,
+} from '../../containers/SubmissionForm/actions';
 import { makeSelectContributors } from '../../containers/SubmissionForm/selectors';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -105,9 +108,11 @@ class ContributorsForm extends React.PureComponent {
       document.getElementById('emailAddress').value = '';
       document.getElementById('institution').value = '';
       document.getElementById('contribution').value = '';
-      const list = this.state.contribs.concat(this.state.formValues);
 
-      this.props.setContributors(list);
+      this.props.addContributor(this.state.formValues);
+
+      const list = this.state.contribs.concat(this.state.formValues);
+      // this.props.setContributors(list);
       this.setState({ formOpen: false, contribs: list, formValues: {} });
       // const list = this.props.contributors.concat(this.state.formValues);
       // this.props.setContributors(list);
@@ -169,7 +174,7 @@ class ContributorsForm extends React.PureComponent {
     if (index >= 0) {
       console.log('onClickDetailButton index ' + index);
       console.log('state before ');
-      console.log(this.state);
+      console.log(this.state.formValues);
       console.log(this.props.contributors);
       this.setState({
         detailOpen: newStatus,
@@ -312,7 +317,7 @@ class ContributorsForm extends React.PureComponent {
     console.log('ContributorsForm render');
     console.log(this.props);
     console.log('----------------------');
-    console.log(this.state);
+    console.log(this.state.formValues);
     console.log('---------------------------------');
     const { formOpen, detailOpen } = this.state;
     let editForm = this.renderEditForm(detailOpen);
@@ -449,6 +454,7 @@ class ContributorsForm extends React.PureComponent {
 
 ContributorsForm.propTypes = {
   setContributors: PropTypes.func,
+  addContributor: PropTypes.func,
   contributors: PropTypes.array,
 };
 
@@ -460,6 +466,7 @@ const mapStateToProps = createStructuredSelector({
 function mapDispatchToProps(dispatch) {
   return {
     setContributors: contributors => dispatch(setContributors(contributors)),
+    addContributor: contributor => dispatch(addContributor(contributor)),
   };
 }
 

@@ -5,6 +5,7 @@
  */
 
 import {
+  ADD_CONTRIBUTOR,
   ADD_DATASET_LABEL,
   ADD_FILE_UPLOAD,
   ADD_RELATED_PUBLICATION,
@@ -219,6 +220,13 @@ export function setContributors(contributors) {
   return {
     type: SET_CONTRIBUTORS,
     contributors,
+  };
+}
+
+export function addContributor(contributor) {
+  return {
+    type: ADD_CONTRIBUTOR,
+    contributor,
   };
 }
 

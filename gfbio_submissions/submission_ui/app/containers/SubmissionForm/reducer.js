@@ -5,6 +5,7 @@
  */
 import { fromJS } from 'immutable';
 import {
+  ADD_CONTRIBUTOR,
   ADD_DATASET_LABEL,
   ADD_FILE_UPLOAD,
   ADD_RELATED_PUBLICATION,
@@ -169,6 +170,12 @@ function submissionFormReducer(state = initialState, action) {
       console.log(action.contributors);
       return state
         .set('contributors', action.contributors);
+    case ADD_CONTRIBUTOR:
+      console.log('ADD_CONTRIBUTOR');
+      console.log(action.contributor);
+      return state
+        .update('contributors', (contributors) => contributors.push(action.contributor));
+    // .set('contributors', action.contributors);
     case FETCH_SUBMISSION:
       console.log('FETCH_SUBMISSION');
       // TODO: set prop to inidcate loading -> loading gif
