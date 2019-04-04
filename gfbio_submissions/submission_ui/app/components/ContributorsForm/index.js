@@ -111,9 +111,9 @@ class ContributorsForm extends React.PureComponent {
 
       this.props.addContributor(this.state.formValues);
 
-      const list = this.state.contribs.concat(this.state.formValues);
+      // const list = this.state.contribs.concat(this.state.formValues);
       // this.props.setContributors(list);
-      this.setState({ formOpen: false, contribs: list, formValues: {} });
+      this.setState({ formOpen: false, formValues: {} });
       // const list = this.props.contributors.concat(this.state.formValues);
       // this.props.setContributors(list);
       // this.setState({ formOpen: false, formValues: {} });
@@ -175,7 +175,9 @@ class ContributorsForm extends React.PureComponent {
       console.log('onClickDetailButton index ' + index);
       console.log('state before ');
       console.log(this.state.formValues);
-      console.log(this.props.contributors);
+      console.log(this.props.contributors.toJS());
+      // console.log(this.props.getIn('contributors', index));
+      const contributors = this.props.contributors.toJS();
       this.setState({
         detailOpen: newStatus,
         formOpen: false,
@@ -187,13 +189,13 @@ class ContributorsForm extends React.PureComponent {
         // emailAddress: this.state.contribs[index].emailAddress,
         // institution: this.state.contribs[index].institution,
         // contribution: this.state.contribs[index].contribution,
-        current: this.props.contributors[index],
-        value: this.props.contributors[index].firstName,
-        firstName: this.props.contributors[index].firstName,
-        lastName: this.props.contributors[index].lastName,
-        emailAddress: this.props.contributors[index].emailAddress,
-        institution: this.props.contributors[index].institution,
-        contribution: this.props.contributors[index].contribution,
+        current: contributors[index],
+        value: contributors[index].firstName,
+        firstName: contributors[index].firstName,
+        lastName: contributors[index].lastName,
+        emailAddress: contributors[index].emailAddress,
+        institution: contributors[index].institution,
+        contribution: contributors[index].contribution,
       });
     }
   };
@@ -317,7 +319,7 @@ class ContributorsForm extends React.PureComponent {
     console.log('ContributorsForm render');
     console.log(this.props);
     console.log('----------------------');
-    console.log(this.state.formValues);
+    console.log(this.state);
     console.log('---------------------------------');
     const { formOpen, detailOpen } = this.state;
     let editForm = this.renderEditForm(detailOpen);
