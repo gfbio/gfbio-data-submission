@@ -30,7 +30,6 @@ class ContributorsForm extends React.PureComponent {
       institution: '',
       contribution: '',
       formValues: {},
-      contribs: [],
       current: {},
       formOpen: false,
       detailOpen: false,
@@ -43,18 +42,6 @@ class ContributorsForm extends React.PureComponent {
     this.handleChangeInstitution = this.handleChangeInstitution.bind(this);
     this.handleChangeContribution = this.handleChangeContribution.bind(this);
   }
-
-  // componentDidMount() {
-  //   console.log('ContributorsForm componentDidMount');
-  //   console.log(typeof this.state.contribs);
-  //   console.log(typeof this.props.contributors);
-  //   // this.setState({ contribs: this.props.contributors.toJS() });
-  // }
-  //
-  // componentDidUpdate(prevProps, prevState, snapshot) {
-  //   console.log('componentDidUpdate');
-  //   // this.setState({ contribs: this.props.contributors.toJS() });
-  // }
 
   static validateFormValues(formValues) {
     let isValid = true;
@@ -109,15 +96,8 @@ class ContributorsForm extends React.PureComponent {
       document.getElementById('emailAddress').value = '';
       document.getElementById('institution').value = '';
       document.getElementById('contribution').value = '';
-
       this.props.addContributor(this.state.formValues);
-
-      // const list = this.state.contribs.concat(this.state.formValues);
-      // this.props.setContributors(list);
       this.setState({ formOpen: false, formValues: {} });
-      // const list = this.props.contributors.concat(this.state.formValues);
-      // this.props.setContributors(list);
-      // this.setState({ formOpen: false, formValues: {} });
     }
   };
 
@@ -130,13 +110,9 @@ class ContributorsForm extends React.PureComponent {
       contribution: this.state.contribution,
     };
     if (ContributorsForm.validateFormValues(tmp)) {
-      const list = this.state.contribs;
-      list[this.state.contributorIndex] = tmp;
       this.props.updateContributor(tmp, this.state.contributorIndex);
-      // this.props.setContributors(list);
       this.cleanEditForm();
       this.setState({
-        contribs: list,
         detailOpen: false,
         firstName: '',
         lastName: '',
@@ -164,10 +140,7 @@ class ContributorsForm extends React.PureComponent {
   };
 
   onClickRemove = () => {
-    let list = this.state.contribs;
-    list.splice(this.state.contributorIndex, 1);
     this.cleanEditForm();
-    // this.props.setContributors(list);
     this.props.removeContributor(this.state.contributorIndex);
     this.setState({ detailOpen: false });
   };
@@ -175,23 +148,11 @@ class ContributorsForm extends React.PureComponent {
   // toogles Detail, closes form
   onClickDetailButton = (newStatus, index = -1) => {
     if (index >= 0) {
-      console.log('onClickDetailButton index ' + index);
-      console.log('state before ');
-      console.log(this.state.formValues);
-      console.log(this.props.contributors.toJS());
-      // console.log(this.props.getIn('contributors', index));
       const contributors = this.props.contributors.toJS();
       this.setState({
         detailOpen: newStatus,
         formOpen: false,
         contributorIndex: index,
-        // current: this.state.contribs[index],
-        // value: this.state.contribs[index].firstName,
-        // firstName: this.state.contribs[index].firstName,
-        // lastName: this.state.contribs[index].lastName,
-        // emailAddress: this.state.contribs[index].emailAddress,
-        // institution: this.state.contribs[index].institution,
-        // contribution: this.state.contribs[index].contribution,
         current: contributors[index],
         value: contributors[index].firstName,
         firstName: contributors[index].firstName,
@@ -327,9 +288,6 @@ class ContributorsForm extends React.PureComponent {
     const { formOpen, detailOpen } = this.state;
     let editForm = this.renderEditForm(detailOpen);
 
-    // TODO: contributers is generated from props in any case
-    //    so all operation should work on redux props instead of state
-    // let contributors = this.state.contribs.map((c, index) => {
     let contributors = this.props.contributors.map((c, index) => {
       return <li key={index} className="list-inline-item">
         <Button
