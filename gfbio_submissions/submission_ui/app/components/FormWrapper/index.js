@@ -92,9 +92,9 @@ class FormWrapper extends React.PureComponent {
     }
     let errors = this.prepareErrorNotification();
 
-    console.log('--------------render FormWrapper');
-    console.log(this.props.initialValues.toJS());
-    console.log('###############################');
+    // console.log('--------------render FormWrapper');
+    // console.log(this.props.initialValues.toJS());
+    // console.log('###############################');
 
     return (
       <form

@@ -28,14 +28,14 @@ import {
 export class SubmissionForm extends React.Component {
 
   componentDidMount() {
-    console.log('--------------- componentDidMount SubmissionForm');
+    // console.log('--------------- componentDidMount SubmissionForm');
     // console.log(this.props);
     const { brokerSubmissionId } = this.props.match.params;
-    console.log('\tbsi:');
-    console.log(brokerSubmissionId);
-    console.log('###############################');
+    // console.log('\tbsi:');
+    // console.log(brokerSubmissionId);
+    // console.log('###############################');
     if (brokerSubmissionId !== undefined) {
-      console.log('\t---> load submission for ' + brokerSubmissionId);
+      // console.log('\t---> load submission for ' + brokerSubmissionId);
       this.props.fetchSubmission(brokerSubmissionId);
 
     }
@@ -133,9 +133,9 @@ export class SubmissionForm extends React.Component {
 
   render() {
 
-    console.log('--------------render SubmissionForm');
-    console.log(this.props.submission);
-    console.log('###############################');
+    // console.log('--------------render SubmissionForm');
+    // console.log(this.props.submission);
+    // console.log('###############################');
 
     /*
     *  TODO: - set preliminary version of data send as submission

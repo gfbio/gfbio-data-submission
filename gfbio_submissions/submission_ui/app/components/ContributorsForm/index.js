@@ -40,6 +40,18 @@ class ContributorsForm extends React.PureComponent {
     this.handleChangeContribution = this.handleChangeContribution.bind(this);
   }
 
+  // componentDidMount() {
+  //   console.log('ContributorsForm componentDidMount');
+  //   console.log(typeof this.state.contribs);
+  //   console.log(typeof this.props.contributors);
+  //   // this.setState({ contribs: this.props.contributors.toJS() });
+  // }
+  //
+  // componentDidUpdate(prevProps, prevState, snapshot) {
+  //   console.log('componentDidUpdate');
+  //   // this.setState({ contribs: this.props.contributors.toJS() });
+  // }
+
   static validateFormValues(formValues) {
     let isValid = true;
     if (!formValues['firstName']) {
@@ -94,8 +106,12 @@ class ContributorsForm extends React.PureComponent {
       document.getElementById('institution').value = '';
       document.getElementById('contribution').value = '';
       const list = this.state.contribs.concat(this.state.formValues);
+
       this.props.setContributors(list);
       this.setState({ formOpen: false, contribs: list, formValues: {} });
+      // const list = this.props.contributors.concat(this.state.formValues);
+      // this.props.setContributors(list);
+      // this.setState({ formOpen: false, formValues: {} });
     }
   };
 
@@ -151,17 +167,28 @@ class ContributorsForm extends React.PureComponent {
   // toogles Detail, closes form
   onClickDetailButton = (newStatus, index = -1) => {
     if (index >= 0) {
+      console.log('onClickDetailButton index ' + index);
+      console.log('state before ');
+      console.log(this.state);
+      console.log(this.props.contributors);
       this.setState({
         detailOpen: newStatus,
         formOpen: false,
         contributorIndex: index,
-        current: this.state.contribs[index],
-        value: this.state.contribs[index].firstName,
-        firstName: this.state.contribs[index].firstName,
-        lastName: this.state.contribs[index].lastName,
-        emailAddress: this.state.contribs[index].emailAddress,
-        institution: this.state.contribs[index].institution,
-        contribution: this.state.contribs[index].contribution,
+        // current: this.state.contribs[index],
+        // value: this.state.contribs[index].firstName,
+        // firstName: this.state.contribs[index].firstName,
+        // lastName: this.state.contribs[index].lastName,
+        // emailAddress: this.state.contribs[index].emailAddress,
+        // institution: this.state.contribs[index].institution,
+        // contribution: this.state.contribs[index].contribution,
+        current: this.props.contributors[index],
+        value: this.props.contributors[index].firstName,
+        firstName: this.props.contributors[index].firstName,
+        lastName: this.props.contributors[index].lastName,
+        emailAddress: this.props.contributors[index].emailAddress,
+        institution: this.props.contributors[index].institution,
+        contribution: this.props.contributors[index].contribution,
       });
     }
   };
@@ -282,14 +309,16 @@ class ContributorsForm extends React.PureComponent {
   };
 
   render() {
-    // console.log('ContributorsForm render');
-    // console.log(this.props);
-    // console.log('----------------------');
-    // console.log(this.state);
-    // console.log('---------------------------------');
+    console.log('ContributorsForm render');
+    console.log(this.props);
+    console.log('----------------------');
+    console.log(this.state);
+    console.log('---------------------------------');
     const { formOpen, detailOpen } = this.state;
     let editForm = this.renderEditForm(detailOpen);
 
+    // TODO: contributers is generated from props in any case
+    //    so all operation should work on redux props instead of state
     // let contributors = this.state.contribs.map((c, index) => {
     let contributors = this.props.contributors.map((c, index) => {
       return <li key={index} className="list-inline-item">
@@ -420,7 +449,7 @@ class ContributorsForm extends React.PureComponent {
 
 ContributorsForm.propTypes = {
   setContributors: PropTypes.func,
-  contributors: PropTypes.array
+  contributors: PropTypes.array,
 };
 
 const mapStateToProps = createStructuredSelector({

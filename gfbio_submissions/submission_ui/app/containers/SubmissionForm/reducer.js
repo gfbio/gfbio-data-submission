@@ -165,6 +165,8 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1, success_upload));
     case SET_CONTRIBUTORS:
+      console.log('SET_CONTRIBUTORS');
+      console.log(action.contributors);
       return state
         .set('contributors', action.contributors);
     case FETCH_SUBMISSION:
@@ -175,7 +177,8 @@ function submissionFormReducer(state = initialState, action) {
       console.log('FETCH_SUBMISSION_SUCCESS');
       // TODO: 2x data: 1 from axios 1 from json-body
       // TODO: refactor to some sort of getter with checks
-      console.log(action.response.data);
+      console.log(action.response.data.data.requirements.contributors);
+      console.log(typeof action.response.data.data.requirements.contributors);
       return state
         .set('relatedPublications', fromJS(action.response.data.data.requirements.related_publications))
         .set('datasetLabels', fromJS(action.response.data.data.requirements.datasetLabels))
