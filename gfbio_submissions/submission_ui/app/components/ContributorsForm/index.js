@@ -81,6 +81,26 @@ class ContributorsForm extends React.PureComponent {
     this.setState({ formValues: values });
   }
 
+  handleChangeFirstName(event) {
+    this.setState({ firstName: event.target.value });
+  }
+
+  handleChangeLastName(event) {
+    this.setState({ lastName: event.target.value });
+  }
+
+  handleChangeEmailAddress(event) {
+    this.setState({ emailAddress: event.target.value });
+  }
+
+  handleChangeInstitution(event) {
+    this.setState({ institution: event.target.value });
+  }
+
+  handleChangeContribution(event) {
+    this.setState({ contribution: event.target.value });
+  }
+
   cleanEditForm = () => {
     document.getElementById('firstNameEdit').value = '';
     document.getElementById('lastNameEdit').value = '';
@@ -148,7 +168,15 @@ class ContributorsForm extends React.PureComponent {
   // toogles Detail, closes form
   onClickDetailButton = (newStatus, index = -1) => {
     if (index >= 0) {
-      const contributors = this.props.contributors.toJS();
+      console.log('type of contributors');
+      console.log(Array.isArray(this.props.contributors));
+
+      // TODO: read about how this can be handled in immutable js
+      let contributors = this.props.contributors;
+      if (!Array.isArray(this.props.contributors)) {
+        contributors = this.props.contributors.toJS();
+      }
+
       this.setState({
         detailOpen: newStatus,
         formOpen: false,
@@ -163,26 +191,6 @@ class ContributorsForm extends React.PureComponent {
       });
     }
   };
-
-  handleChangeFirstName(event) {
-    this.setState({ firstName: event.target.value });
-  }
-
-  handleChangeLastName(event) {
-    this.setState({ lastName: event.target.value });
-  }
-
-  handleChangeEmailAddress(event) {
-    this.setState({ emailAddress: event.target.value });
-  }
-
-  handleChangeInstitution(event) {
-    this.setState({ institution: event.target.value });
-  }
-
-  handleChangeContribution(event) {
-    this.setState({ contribution: event.target.value });
-  }
 
   renderEditForm = (detailOpen) => {
     return (
@@ -281,14 +289,17 @@ class ContributorsForm extends React.PureComponent {
 
   render() {
     console.log('ContributorsForm render');
-    console.log(this.props);
-    console.log('----------------------');
-    console.log(this.state);
+    console.log(this.props.contributors);
+    // console.log('----------------------');
+    // console.log(this.state);
     console.log('---------------------------------');
     const { formOpen, detailOpen } = this.state;
     let editForm = this.renderEditForm(detailOpen);
 
     let contributors = this.props.contributors.map((c, index) => {
+      console.log('generate contr.: ');
+      console.log(c);
+      console.log(index);
       return <li key={index} className="list-inline-item">
         <Button
           className="btn btn-primary btn-contributor"
