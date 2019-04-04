@@ -1,4 +1,5 @@
 import { DATA_CATEGORY_PREFIX, LEGAL_REQUIREMENTS_PREFIX } from './constants';
+import { fromJS } from 'immutable';
 
 export const prepareCategories = (requirements) => {
   let prepared_categories = {};
@@ -46,4 +47,16 @@ export const prepareInitialValues = (submissionData) => {
 
   }
   return initialValues;
+};
+
+export const setStateFormValues = (state, action) => {
+  return state
+    .set('initialValues', prepareInitialValues(action.response.data))
+    .set('relatedPublications', fromJS(action.response.data.data.requirements.related_publications))
+    .set('datasetLabels', fromJS(action.response.data.data.requirements.datasetLabels))
+    .set('contributors', action.response.data.data.requirements.contributors)
+    .set('embargoDate', new Date(action.response.data.embargo))
+    .set('license', action.response.data.data.requirements.license)
+    .set('metaDataSchema', action.response.data.data.requirements.metadata_schema)
+    .set('submission', action.response.data);
 };

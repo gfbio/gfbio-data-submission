@@ -13,10 +13,10 @@ import {
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
   CHANGE_META_DATA_SCHEMA,
-  DATA_CATEGORY_PREFIX,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
-  FETCH_SUBMISSION_SUCCESS, LEGAL_REQUIREMENTS_PREFIX, REMOVE_CONTRIBUTOR,
+  FETCH_SUBMISSION_SUCCESS,
+  REMOVE_CONTRIBUTOR,
   REMOVE_DATASET_LABEL,
   REMOVE_FILE_UPLOAD,
   REMOVE_RELATED_PUBLICATION,
@@ -29,7 +29,8 @@ import {
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
-  SUBMIT_FORM_SUCCESS, UPDATE_CONTRIBUTOR,
+  SUBMIT_FORM_SUCCESS,
+  UPDATE_CONTRIBUTOR,
   UPLOAD_FILE_ERROR,
   UPLOAD_FILE_PROGRESS,
   UPLOAD_FILE_SUCCESS,
@@ -37,7 +38,7 @@ import {
   UPLOAD_FILES_ERROR,
   UPLOAD_FILES_SUCCESS,
 } from './constants';
-import { prepareInitialValues } from './utils';
+import { setStateFormValues } from './utils';
 
 let backendParameters = {};
 if (window.props !== undefined) {
@@ -75,6 +76,7 @@ export const initialState = fromJS({
   contributors: [],
   currentContributor: {},
 });
+
 
 function submissionFormReducer(state = initialState, action) {
   switch (action.type) {
@@ -198,15 +200,7 @@ function submissionFormReducer(state = initialState, action) {
       // TODO: refactor to some sort of getter with checks
       console.log(action.response.data.data.requirements.contributors);
       console.log(typeof action.response.data.data.requirements.contributors);
-      return state
-        .set('initialValues', prepareInitialValues(action.response.data))
-        .set('relatedPublications', fromJS(action.response.data.data.requirements.related_publications))
-        .set('datasetLabels', fromJS(action.response.data.data.requirements.datasetLabels))
-        .set('contributors', action.response.data.data.requirements.contributors)
-        .set('embargoDate', new Date(action.response.data.embargo))
-        .set('license', action.response.data.data.requirements.license)
-        .set('metaDataSchema', action.response.data.data.requirements.metadata_schema)
-        .set('submission', action.response.data);
+      return setStateFormValues(state, action);
     case FETCH_SUBMISSION_ERROR:
       console.log('FETCH_SUBMISSION_ERROR');
       return state;

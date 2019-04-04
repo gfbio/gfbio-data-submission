@@ -49,43 +49,43 @@ export class SubmissionForm extends React.Component {
   };
 
   // TODO: remove, testing only
-  getInitialVals = () => {
-
-    let res = {
-      title: 'initial-title', // works
-      description: 'initial-description', // works
-      dataUrl: 'http://www.data-url.com/edited/?horst=2', // works
-      comment: 'initial-comment', // works
-      data_center: 'BGBM \u2013 Botanic Garden and Botanical Museum Berlin, Freie Universit\u00e4t Berlin', // works
-      // metadata_schema: 'MIxS 4.0', // set 'metaDataSchema' in reducer
-      // license: 'CC BY-ND 4.0', // set 'license' in reducer
-      // related_publications: [ // set 'relatedPublications' in reducer
-      //   '11',
-      //   '22',
-      //   '33',
-      // ],
-      // datasetLabels: [ // set 'datasetLabels' in reducer
-      //   '1',
-      //   '2',
-      //   '3',
-      // ],
-      // contributors: [
-      //   {
-      //     'lastName': 'lname',
-      //     'contribution': 'coffee',
-      //     'emailAddress': 'maweber@maoinv.de',
-      //     'firstName': 'fname',
-      //     'institution': 'MPU',
-      //   },
-      //   {
-      //     'lastName': '2222',
-      //     'firstName': '2222',
-      //     'emailAddress': '2222',
-      //   },
-      // ],
-    };
-    return res;
-  };
+  // getInitialVals = () => {
+  //
+  //   let res = {
+  //     title: 'initial-title', // works
+  //     description: 'initial-description', // works
+  //     dataUrl: 'http://www.data-url.com/edited/?horst=2', // works
+  //     comment: 'initial-comment', // works
+  //     data_center: 'BGBM \u2013 Botanic Garden and Botanical Museum Berlin, Freie Universit\u00e4t Berlin', // works
+  //     // metadata_schema: 'MIxS 4.0', // set 'metaDataSchema' in reducer
+  //     // license: 'CC BY-ND 4.0', // set 'license' in reducer
+  //     // related_publications: [ // set 'relatedPublications' in reducer
+  //     //   '11',
+  //     //   '22',
+  //     //   '33',
+  //     // ],
+  //     // datasetLabels: [ // set 'datasetLabels' in reducer
+  //     //   '1',
+  //     //   '2',
+  //     //   '3',
+  //     // ],
+  //     // contributors: [
+  //     //   {
+  //     //     'lastName': 'lname',
+  //     //     'contribution': 'coffee',
+  //     //     'emailAddress': 'maweber@maoinv.de',
+  //     //     'firstName': 'fname',
+  //     //     'institution': 'MPU',
+  //     //   },
+  //     //   {
+  //     //     'lastName': '2222',
+  //     //     'firstName': '2222',
+  //     //     'emailAddress': '2222',
+  //     //   },
+  //     // ],
+  //   };
+  //   return res;
+  // };
 
   getRequirements = () => {
     if (this.props.submission.hasOwnProperty('data')) {
@@ -143,11 +143,11 @@ export class SubmissionForm extends React.Component {
           // profile does not work for pre-fill
           profile={this.getProfile()}
           // this works to pre-fill
-          initialValues={this.getInitialVals()}
+          // initialValues={this.getInitialVals()}
           // this works, and react to state change
 
           // TODO: set proper vals from submission
-          // initialValues={this.props.initialValues}
+          initialValues={this.props.initialValues}
 
 
           reduxFormWrapper={this.props.reduxFormForm.formWrapper}
