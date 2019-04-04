@@ -41,6 +41,7 @@ export const UPLOAD_FILE_SUCCESS = 'app/SubmissionForm/UPLOAD_FILE_SUCCESS';
 
 export const SET_CONTRIBUTORS = 'app/SubmissionForm/SET_CONTRIBUTORS';
 export const ADD_CONTRIBUTOR = 'app/SubmissionForm/ADD_CONTRIBUTOR';
+export const REMOVE_CONTRIBUTOR = 'app/SubmissionForm/REMOVE_CONTRIBUTOR';
 
 export const FETCH_SUBMISSION = 'app/SubmissionForm/FETCH_SUBMISSION';
 export const FETCH_SUBMISSION_SUCCESS = 'app/SubmissionForm/FETCH_SUBMISSION_SUCCESS';

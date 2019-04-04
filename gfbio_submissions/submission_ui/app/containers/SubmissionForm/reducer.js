@@ -15,7 +15,7 @@ import {
   CHANGE_META_DATA_SCHEMA,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
-  FETCH_SUBMISSION_SUCCESS,
+  FETCH_SUBMISSION_SUCCESS, REMOVE_CONTRIBUTOR,
   REMOVE_DATASET_LABEL,
   REMOVE_FILE_UPLOAD,
   REMOVE_RELATED_PUBLICATION,
@@ -175,7 +175,11 @@ function submissionFormReducer(state = initialState, action) {
       console.log(action.contributor);
       return state
         .update('contributors', (contributors) => contributors.push(action.contributor));
-    // .set('contributors', action.contributors);
+    case REMOVE_CONTRIBUTOR:
+      console.log('REMOVE_CONTRIBUTOR');
+      console.log(action.index);
+      return state
+        .update('contributors', (contributors) => contributors.splice(action.index, 1));
     case FETCH_SUBMISSION:
       console.log('FETCH_SUBMISSION');
       // TODO: set prop to inidcate loading -> loading gif

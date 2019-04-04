@@ -15,7 +15,7 @@ import {
   CHANGE_META_DATA_SCHEMA,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
-  FETCH_SUBMISSION_SUCCESS,
+  FETCH_SUBMISSION_SUCCESS, REMOVE_CONTRIBUTOR,
   REMOVE_DATASET_LABEL,
   REMOVE_FILE_UPLOAD,
   REMOVE_RELATED_PUBLICATION,
@@ -227,6 +227,13 @@ export function addContributor(contributor) {
   return {
     type: ADD_CONTRIBUTOR,
     contributor,
+  };
+}
+
+export function removeContributor(index) {
+  return {
+    type: REMOVE_CONTRIBUTOR,
+    index,
   };
 }
 
