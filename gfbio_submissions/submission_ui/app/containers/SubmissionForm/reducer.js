@@ -49,7 +49,7 @@ export const initialState = fromJS({
   license: 'CC BY 4.0',
   metaDataSchema: 'None',
   reduxFormForm: {},
-  // initialValues: {},
+  initialValues: {},
   submission: {},
   submitInProgress: false,
   saveInProgress: false,
@@ -122,15 +122,15 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .set('currentLabel', action.value);
     case ADD_DATASET_LABEL:
-      console.log('ADD_DATASET_LABEL ');
-      console.log(action);
-      console.log(state.get('datasetLabels'));
+      // console.log('ADD_DATASET_LABEL ');
+      // console.log(action);
+      // console.log(state.get('datasetLabels'));
       return state
         .update('datasetLabels', (datasetLabels) => datasetLabels.push(action.value))
         .set('currentLabel', '');
     case REMOVE_DATASET_LABEL:
-      console.log('REMOVE_DATASET_LABEL ');
-      console.log(action);
+      // console.log('REMOVE_DATASET_LABEL ');
+      // console.log(action);
       return state
         .update('datasetLabels', (datasetLabels) => datasetLabels.splice(action.index, 1));
     case ADD_FILE_UPLOAD:
@@ -170,39 +170,39 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1, success_upload));
     case SET_CONTRIBUTORS:
-      console.log('SET_CONTRIBUTORS');
-      console.log(action.contributors);
+      // console.log('SET_CONTRIBUTORS');
+      // console.log(action.contributors);
       return state
         .set('contributors', action.contributors);
     case ADD_CONTRIBUTOR:
-      console.log('ADD_CONTRIBUTOR');
-      console.log(action.contributor);
+      // console.log('ADD_CONTRIBUTOR');
+      // console.log(action.contributor);
       return state
         .update('contributors', (contributors) => contributors.push(action.contributor));
     case UPDATE_CONTRIBUTOR:
-      console.log('UPDATE_CONTRIBUTOR');
-      console.log(action.contributor);
-      console.log(action.index);
+      // console.log('UPDATE_CONTRIBUTOR');
+      // console.log(action.contributor);
+      // console.log(action.index);
       return state
         .update('contributors', (contributors) => contributors.splice(action.index, 1, action.contributor));
     case REMOVE_CONTRIBUTOR:
-      console.log('REMOVE_CONTRIBUTOR');
-      console.log(action.index);
+      // console.log('REMOVE_CONTRIBUTOR');
+      // console.log(action.index);
       return state
         .update('contributors', (contributors) => contributors.splice(action.index, 1));
     case FETCH_SUBMISSION:
-      console.log('FETCH_SUBMISSION');
+      // console.log('FETCH_SUBMISSION');
       // TODO: set prop to inidcate loading -> loading gif
       return state.set('requestBrokerSubmissionId', action.brokerSubmissionId);
     case FETCH_SUBMISSION_SUCCESS:
-      console.log('FETCH_SUBMISSION_SUCCESS');
+      // console.log('FETCH_SUBMISSION_SUCCESS');
       // TODO: 2x data: 1 from axios 1 from json-body
       // TODO: refactor to some sort of getter with checks
-      console.log(action.response.data.data.requirements.contributors);
-      console.log(typeof action.response.data.data.requirements.contributors);
+      // console.log(action.response.data.data.requirements.contributors);
+      // console.log(typeof action.response.data.data.requirements.contributors);
       return setStateFormValues(state, action);
     case FETCH_SUBMISSION_ERROR:
-      console.log('FETCH_SUBMISSION_ERROR');
+      // console.log('FETCH_SUBMISSION_ERROR');
       return state;
     default:
       return state;

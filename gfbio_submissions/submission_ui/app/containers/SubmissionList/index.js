@@ -58,9 +58,9 @@ export class SubmissionList extends React.Component {
       </li>;
     });
 
-    console.log('render SubmissionList');
-    console.log(this.props);
-    console.log(submissionItems.length);
+    // console.log('render SubmissionList');
+    // console.log(this.props);
+    // console.log(submissionItems.length);
     let header = null;
     if (submissionItems.length > 0) {
       header = <div className="row no-gutters">

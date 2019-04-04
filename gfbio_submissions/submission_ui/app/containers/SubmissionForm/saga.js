@@ -100,11 +100,11 @@ function* uploadProgressWatcher(channel, index) {
       const progress = yield take(channel);
       yield put(uploadFileProgress(index, progress));
     } catch (err) {
-      console.info('ERROR uploadProgressWatcher');
-      console.info(err);
+      // console.info('ERROR uploadProgressWatcher');
+      // console.info(err);
       yield put(uploadFileError(index, err));
     } finally {
-      console.log('finally');
+      // console.log('finally');
       yield put(uploadFileSuccess(index));
       if (yield cancelled()) {
         channel.close();
@@ -120,8 +120,8 @@ function* uploadFile(file, index) {
     const uploadChannel = yield call(createUploadFileChannel, brokerSubmissionId, file.file, token);
     yield fork(uploadProgressWatcher, uploadChannel, index);
   } catch (err) {
-    console.log('yield error action uploadFile');
-    console.log(err);
+    // console.log('yield error action uploadFile');
+    // console.log(err);
     yield put(uploadFileError(index, err));
   }
 }
@@ -144,7 +144,7 @@ export function* performSubmitFormSaga() {
     const response = yield call(postSubmission, token, payload);
     yield put(submitFormSuccess(response));
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     yield put(submitFormError(error));
   }
 }
@@ -172,17 +172,17 @@ export function* processSubmitFormTypeSaga() {
 }
 
 export function* performFetchSubmissionSaga() {
-  console.log('performFetchSubmissionSaga');
+  // console.log('performFetchSubmissionSaga');
   const token = yield select(makeSelectToken());
   const bsi = yield select(makeSelectRequestBrokerSubmissionId());
   try {
     const response = yield call(getSubmission, token, bsi);
-    console.log('success');
-    console.log(response);
+    // console.log('success');
+    // console.log(response);
     yield put(fetchSubmissionSuccess(response));
   } catch (error) {
-    console.log('error');
-    console.log(error);
+    // console.log('error');
+    // console.log(error);
     yield put(fetchSubmissionError(error));
   }
 }

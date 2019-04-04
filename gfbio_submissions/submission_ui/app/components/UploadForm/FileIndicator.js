@@ -21,7 +21,7 @@ class FileIndicator extends React.Component {
     // console.log('--------------------------------');
 
     const fileListElements = this.props.fileUploads.map((upload, index) => {
-      console.log(upload);
+      // console.log(upload);
       let progressStyle = {
         width: `${upload.progress}%`,
       };

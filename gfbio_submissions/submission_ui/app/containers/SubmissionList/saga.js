@@ -12,17 +12,17 @@ import { getSubmissions } from './submissionListApi';
 // }
 
 function* performFetchSubmissionsSaga() {
-  console.log('performFetchsubmissionsSaga');
+  // console.log('performFetchsubmissionsSaga');
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
   try {
     const response = yield call(getSubmissions, token, userId);
-    console.log('success');
-    console.log(response);
+    // console.log('success');
+    // console.log(response);
     yield put(fetchSubmissionsSuccess(response));
   } catch (error) {
-    console.log('error');
-    console.log(error);
+    // console.log('error');
+    // console.log(error);
     yield put(fetchSubmissionsError(error));
   }
 }

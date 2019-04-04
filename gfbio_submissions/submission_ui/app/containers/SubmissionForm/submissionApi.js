@@ -96,15 +96,15 @@ export function createUploadFileChannel(brokerSubmissionId, file, token) {
       formData,
       config,
     ).then(() => {
-      console.log('channel. fulfilled emit END');
+      // console.log('channel. fulfilled emit END');
       emit(END);
     }).catch(err => {
       emit(new Error(err.message));
-      console.log('channel. Error emit END');
+      // console.log('channel. Error emit END');
       emit(END);
     });
     const unsubscribe = () => {
-      console.log('channel. UNSUBSCRIBE');
+      // console.log('channel. UNSUBSCRIBE');
     };
     return unsubscribe;
   });

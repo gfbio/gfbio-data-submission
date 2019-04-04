@@ -98,9 +98,9 @@ export class SubmissionForm extends React.Component {
 
   render() {
 
-    console.log('--------------render SubmissionForm');
-    console.log(this.props);
-    console.log('###############################');
+    // console.log('--------------render SubmissionForm');
+    // console.log(this.props);
+    // console.log('###############################');
 
     /*
     *  TODO: - set preliminary version of data send as submission
