@@ -25,7 +25,8 @@ import {
   makeSelectLicense,
   makeSelectMetaDataSchema,
   makeSelectReduxFormForm,
-  makeSelectRelatedPublications, makeSelectRequestBrokerSubmissionId,
+  makeSelectRelatedPublications,
+  makeSelectRequestBrokerSubmissionId,
   makeSelectToken,
   makeSelectUserId,
 } from './selectors';
@@ -50,6 +51,7 @@ import {
   postSubmission,
 } from './submissionApi';
 
+import { push } from 'connected-react-router/immutable';
 // const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 // TODO: move logic to utils.js. here only workflow
@@ -142,7 +144,9 @@ export function* performSubmitFormSaga() {
   const payload = yield prepareRequestData(userId);
   try {
     const response = yield call(postSubmission, token, payload);
+    yield put(uploadFiles());
     yield put(submitFormSuccess(response));
+    yield put(push('/list'));
   } catch (error) {
     // console.log(error);
     yield put(submitFormError(error));
@@ -160,8 +164,9 @@ export function* performSaveFormSaga() {
   const payload = yield prepareRequestData(userId, false);
   try {
     const response = yield call(postSubmission, token, payload);
-    yield put(saveFormSuccess(response));
     yield put(uploadFiles());
+    yield put(saveFormSuccess(response));
+    yield put(push('/list'));
   } catch (error) {
     yield put(saveFormError(error));
   }
