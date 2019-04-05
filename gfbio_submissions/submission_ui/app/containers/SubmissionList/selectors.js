@@ -9,6 +9,14 @@ const selectSubmissionListDomain = state =>
   state.get('submissionList', initialState);
 
 /**
+ * Direct selector to the submissionForm state domain
+ */
+
+const selectSubmissionFormDomain = state =>
+  state.get('submissionForm', initialState);
+
+
+/**
  * Other specific selectors
  */
 

@@ -129,6 +129,11 @@ const makeSelectRequestBrokerSubmissionId = () =>
     substate.get('requestBrokerSubmissionId'),
   );
 
+const makeSelectShowSaveSuccess = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('showSaveSuccess'),
+  );
+
 export default makeSelectSubmissionForm;
 
 export {
@@ -153,4 +158,5 @@ export {
   makeSelectInitialValues,
   makeSelectSubmission,
   makeSelectRequestBrokerSubmissionId,
+  makeSelectShowSaveSuccess,
 };

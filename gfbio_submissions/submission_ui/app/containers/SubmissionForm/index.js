@@ -53,9 +53,9 @@ export class SubmissionForm extends React.Component {
 
   render() {
 
-    console.log('--------------render SubmissionForm');
-    console.log(this.props);
-    console.log('###############################');
+    // console.log('--------------render SubmissionForm');
+    // console.log(this.props);
+    // console.log('###############################');
 
     /*
     *  TODO: - adapt submit/save processes to update instead of submit new (set/use brokerSubnmissionId ?)

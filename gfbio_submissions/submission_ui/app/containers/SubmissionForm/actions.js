@@ -12,7 +12,7 @@ import {
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
-  CHANGE_META_DATA_SCHEMA,
+  CHANGE_META_DATA_SCHEMA, CLOSE_SAVE_SUCCESS,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
   FETCH_SUBMISSION_SUCCESS, REMOVE_CONTRIBUTOR,
@@ -264,5 +264,11 @@ export function fetchSubmissionError(errorResponse) {
   return {
     type: FETCH_SUBMISSION_ERROR,
     errorResponse,
+  };
+}
+
+export function closeSaveSuccess() {
+  return {
+    type: CLOSE_SAVE_SUCCESS,
   };
 }

@@ -12,7 +12,7 @@ import {
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
-  CHANGE_META_DATA_SCHEMA,
+  CHANGE_META_DATA_SCHEMA, CLOSE_SAVE_SUCCESS,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
   FETCH_SUBMISSION_SUCCESS,
@@ -53,6 +53,7 @@ export const initialState = fromJS({
   submission: {},
   submitInProgress: false,
   saveInProgress: false,
+  showSaveSuccess: false,
   embargoDate: new Date(),
   // userId: backendParameters.userId || -1,
   // TODO: replace. development default of 2
@@ -85,13 +86,19 @@ function submissionFormReducer(state = initialState, action) {
     case CHANGE_META_DATA_SCHEMA:
       return state.set('metaDataSchema', action.metaDataSchema);
     case SAVE_FORM:
-      return state.set('saveInProgress', true);
+      return state
+        .set('showSaveSuccess', false)
+        .set('saveInProgress', true);
     case SAVE_FORM_SUCCESS:
       // TODO: set bsi etc after success, from then its updates
       return state
         .set('brokerSubmissionId', action.response.data.broker_submission_id)
         .set('saveResponse', action.response)
-        .set('saveInProgress', false);
+        .set('saveInProgress', false)
+        .set('showSaveSuccess', true);
+    case CLOSE_SAVE_SUCCESS:
+      return state
+        .set('showSaveSuccess', false);
     case SAVE_FORM_ERROR:
       return state.set('saveInProgress', false);
     case SUBMIT_FORM:

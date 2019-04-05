@@ -16,9 +16,33 @@ import { makeSelectSubmissions } from './selectors';
 import reducer from './reducer';
 import saga from './saga';
 import { fetchSubmissions } from './actions';
+import Button from 'react-bootstrap/Button';
+import Modal from 'react-bootstrap/Modal';
+import { makeSelectShowSaveSuccess } from '../SubmissionForm/selectors';
+import { closeSaveSuccess } from '../SubmissionForm/actions';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionList extends React.Component {
+
+  // constructor(props, context) {
+  //   super(props, context);
+  //
+  //   this.handleShow = this.handleShow.bind(this);
+  //   this.handleClose = this.handleClose.bind(this);
+  //
+  //   this.state = {
+  //     show: false,
+  //   };
+  // }
+  //
+  // handleClose() {
+  //   this.setState({ show: false });
+  // }
+  //
+  // handleShow() {
+  //   this.setState({ show: true });
+  // }
+
 
   componentDidMount() {
     this.props.fetchSubmissions();
@@ -26,6 +50,9 @@ export class SubmissionList extends React.Component {
 
 
   render() {
+    console.log('--------------render SubmissionList');
+    console.log(this.props);
+    console.log('###############################');
 
     let submissionItems = this.props.submissions.map((submission, index) => {
       return <li key={index} className="list-group-item">
@@ -58,9 +85,6 @@ export class SubmissionList extends React.Component {
       </li>;
     });
 
-    // console.log('render SubmissionList');
-    // console.log(this.props);
-    // console.log(submissionItems.length);
     let header = null;
     if (submissionItems.length > 0) {
       header = <div className="row no-gutters">
@@ -89,6 +113,31 @@ export class SubmissionList extends React.Component {
         {/*  </h1>*/}
         {/*</section>*/}
         <div className="container">
+          <div className="row">
+            {/*<Button variant="primary" onClick={this.handleShow}>*/}
+            {/*  Launch demo modal*/}
+            {/*</Button>*/}
+
+            <Modal show={this.props.showSaveSuccess}
+                   onHide={this.props.closeSaveSuccess}>
+              <Modal.Header closeButton>
+                <Modal.Title>Modal heading</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>Woohoo, you're reading this text in a
+                modal!</Modal.Body>
+              <Modal.Footer>
+                <Button variant="secondary"
+                        onClick={this.props.closeSaveSuccess}>
+                  Close
+                </Button>
+                <Button variant="primary" onClick={this.props.closeSaveSuccess}>
+                  Save Changes
+                </Button>
+              </Modal.Footer>
+            </Modal>
+          </div>
+        </div>
+        <div className="container">
           {header}
         </div>
         <div className="container">
@@ -104,16 +153,20 @@ export class SubmissionList extends React.Component {
 SubmissionList.propTypes = {
   fetchSubmissions: PropTypes.func,
   submissions: PropTypes.array,
+  showSaveSuccess: PropTypes.bool,
+  closeSaveSuccess: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
   // submissionList: makeSelectSubmissionList(),
   submissions: makeSelectSubmissions(),
+  showSaveSuccess: makeSelectShowSaveSuccess(),
 });
 
 function mapDispatchToProps(dispatch) {
   return {
     fetchSubmissions: () => dispatch(fetchSubmissions()),
+    closeSaveSuccess: () => dispatch(closeSaveSuccess()),
   };
 }
 
