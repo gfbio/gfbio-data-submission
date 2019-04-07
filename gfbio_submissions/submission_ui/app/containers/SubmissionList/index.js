@@ -16,10 +16,10 @@ import { makeSelectSubmissions } from './selectors';
 import reducer from './reducer';
 import saga from './saga';
 import { fetchSubmissions } from './actions';
-import Button from 'react-bootstrap/Button';
-import Modal from 'react-bootstrap/Modal';
 import { makeSelectShowSaveSuccess } from '../SubmissionForm/selectors';
 import { closeSaveSuccess } from '../SubmissionForm/actions';
+import Collapse from 'react-bootstrap/Collapse';
+import Button from 'react-bootstrap/Button';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionList extends React.Component {
@@ -112,31 +112,71 @@ export class SubmissionList extends React.Component {
         {/*    My Submissions*/}
         {/*  </h1>*/}
         {/*</section>*/}
-        <div className="container">
-          <div className="row">
-            {/*<Button variant="primary" onClick={this.handleShow}>*/}
-            {/*  Launch demo modal*/}
-            {/*</Button>*/}
-
-            <Modal show={this.props.showSaveSuccess}
-                   onHide={this.props.closeSaveSuccess}>
-              <Modal.Header closeButton>
-                <Modal.Title>Modal heading</Modal.Title>
-              </Modal.Header>
-              <Modal.Body>Woohoo, you're reading this text in a
-                modal!</Modal.Body>
-              <Modal.Footer>
+        {/*<Button variant="primary" onClick={this.handleShow}>*/}
+        {/*  Launch demo modal*/}
+        {/*</Button>*/}
+        <Collapse
+          in={this.props.showSaveSuccess}
+          // in={true}
+        >
+          {/*<div className="container">*/}
+          <div className="col-8 mx-auto success-message">
+            <div className="row">
+              <div className="col-1 mx-auto">
+                <i
+                  className="icon ion-md-checkmark-circle-outline align-bottom" />
+              </div>
+              <div className="col-8">
+                <h4>Your submission was saved</h4>
+                <p>
+                  Anim pariatur cliche reprehenderit, enim eiusmod high life
+                  accusamus
+                  terry richardson ad squid. Nihil anim keffiyeh helvetica,
+                  craft
+                  beer
+                  labore wes anderson cred nesciunt sapiente ea proident.
+                </p>
+              </div>
+              <div className="col-2">
                 <Button variant="secondary"
                         onClick={this.props.closeSaveSuccess}>
                   Close
                 </Button>
-                <Button variant="primary" onClick={this.props.closeSaveSuccess}>
-                  Save Changes
-                </Button>
-              </Modal.Footer>
-            </Modal>
+              </div>
+            </div>
           </div>
-        </div>
+          {/*</div>*/}
+        </Collapse>
+
+        {/*<Modal*/}
+        {/*  show={this.props.showSaveSuccess}*/}
+        {/*  // show={true}*/}
+        {/*  onHide={this.props.closeSaveSuccess}*/}
+        {/*  backdrop={true}*/}
+        {/*  centered*/}
+        {/*>*/}
+
+        {/*  <Modal.Header closeButton>*/}
+        {/*    <Modal.Title>Successfully saved !</Modal.Title>*/}
+        {/*  </Modal.Header>*/}
+
+        {/*  /!*<Modal.Body>*!/*/}
+
+        {/*  /!*</Modal.Body>*!/*/}
+
+        {/*  <Modal.Footer>*/}
+        {/*    <Button variant="secondary"*/}
+        {/*            onClick={this.props.closeSaveSuccess}>*/}
+        {/*      Close*/}
+        {/*    </Button>*/}
+        {/*    /!*<Button variant="primary" onClick={this.props.closeSaveSuccess}>*!/*/}
+        {/*    /!*  *!/*/}
+        {/*    /!*  Save Changes*!/*/}
+        {/*    /!*</Button>*!/*/}
+        {/*  </Modal.Footer>*/}
+        {/*</Modal>*/}
+
+
         <div className="container">
           {header}
         </div>

@@ -261,6 +261,56 @@ section.sub-navi {
 
 }
 
+/* collapse as success message */
+
+.success-message {
+
+  border: 1px solid $gray-300;
+  border-radius: .25rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+
+  i {
+    font-size: 3.5rem;
+    color: $gfbio-green-0-9;
+    display: block;
+  }
+
+  h4 {
+    font-weight: 300;
+    font-size: 1.25rem;
+    margin-bottom: .25rem;
+  }
+}
+
+/* end collapse as success message */
+
+/* modal as success message */
+//.modal-backdrop {
+//  background-color: $gfbio-blue-0-8;
+//}
+//
+//.modal-content {
+//
+//  .modal-header {
+//    border-bottom: 1px solid $form-gray-1;
+//
+//    .modal-title {
+//      @include raleway;
+//      font-weight: 300;
+//    }
+//  }
+//
+//  .modal-body {
+//  }
+//
+//  .modal-footer {
+//    border: none;
+//  }
+//}
+
+/* end modal as success message */
+
 /* Submission form wrapper */
 
 .submission-form-wrapper {
@@ -284,9 +334,6 @@ section.sub-navi {
     font-weight: bold;
   }
 
-  .header {
-
-  }
 
   ul {
 

@@ -536,6 +536,29 @@ section.sub-navi .nav .active {
   font-weight: bold;
 }
 
+/* collapse as success message */
+.success-message {
+  border: 1px solid #dee2e6;
+  border-radius: .25rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+}
+
+.success-message i {
+  font-size: 3.5rem;
+  color: rgba(129, 178, 72, 0.9);
+  display: block;
+}
+
+.success-message h4 {
+  font-weight: 300;
+  font-size: 1.25rem;
+  margin-bottom: .25rem;
+}
+
+/* end collapse as success message */
+/* modal as success message */
+/* end modal as success message */
 /* Submission form wrapper */
 .submission-form-wrapper {
   padding-left: 1.25rem;
