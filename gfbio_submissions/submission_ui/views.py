@@ -59,6 +59,6 @@ class SubmissionFrontendView(LoginRequiredMixin, TemplateView):
         context['parameters'] = {
             'userName': user_name,
             'userId': user.id,
-            'token': token,
+            'token': str(token),
         }
         return context

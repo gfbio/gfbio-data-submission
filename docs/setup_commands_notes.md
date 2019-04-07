@@ -305,6 +305,7 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
 - docker-compose -f production.yml run --rm django python manage.py collectstatic
 - supervisorctl start devgfbiosubmissions
 
+admin users: marc / marcw -> django
 ### Manual release
 
 #### Local commands
