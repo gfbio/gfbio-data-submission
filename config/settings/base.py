@@ -57,9 +57,11 @@ THIRD_PARTY_APPS = [
     'allauth.socialaccount',  # registration
     'allauth.socialaccount.providers.github',  # github
     'allauth.socialaccount.providers.orcid',  # orcid
+    'allauth.socialaccount.providers.openid',  # openid
     'rest_framework',  # Django REST framework
     'rest_framework.authtoken',  # token authentication
     'corsheaders',  # django cors headers
+    'mozilla_django_oidc',  # mozilla oidc
 ]
 
 # Apps specific for this project go here.
@@ -261,6 +263,7 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
+    'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
 ]
 
 # Some really nice defaults
@@ -327,3 +330,39 @@ LOCAL_REPOSITORY = env('LOCAL_REPOSITORY',
 REMOTE_REPOSITORY = env('REMOTE_REPOSITORY',
                         default='https://maweber@colab.mpi-bremen.de/stash/scm/gfbio/gfbio-submission-auditing-tests.git')
 ########## END Access AuditableTextData
+
+########## ALL_AUTH OPENID SETTINGS
+# TODO: django-allauth openid does not work for openidconnect !
+# SOCIALACCOUNT_PROVIDERS = {
+#     'openid': {
+#         'SERVERS': [
+#             dict(id='gwdg',
+#                  name='GFBIO SSO (settings)',
+#                  openid_url='https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php'),
+#             dict(
+#                 id='playgroud',
+#                 name='playground',
+#                 openid_url='https://www.oauth.com/playground/authorization-code.html'
+#             ),
+#         ]
+#     }
+#
+# }
+########## END ALL_AUTH OPENID SETTINGS
+
+OIDC_RP_CLIENT_ID = env('OIDC_RP_CLIENT_ID', default='no_oidc_cl_id')
+OIDC_RP_CLIENT_SECRET = env('OIDC_RP_CLIENT_SECRET',
+                            default='no_oidc_cl_secret')
+
+OIDC_RP_SIGN_ALGO = env('OIDC_RP_SIGN_ALGO', default='HS256')
+OIDC_OP_JWKS_ENDPOINT = env('OIDC_OP_JWKS_ENDPOINT', default='no_jwks_url')
+
+OIDC_OP_AUTHORIZATION_ENDPOINT = 'https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php'
+OIDC_OP_TOKEN_ENDPOINT = 'https://sso.gfbio.org/simplesaml/module.php/oidc/access_token.php'
+OIDC_OP_USER_ENDPOINT = ' https://sso.gfbio.org/simplesaml/module.php/oidc/userinfo.php'
+
+OIDC_USE_NONCE = False  # Default:	True
+
+# TODO: not sure if needed
+LOGIN_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
+LOGOUT_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
