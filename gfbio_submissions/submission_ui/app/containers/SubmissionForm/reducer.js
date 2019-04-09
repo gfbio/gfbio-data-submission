@@ -19,7 +19,7 @@ import {
   REMOVE_CONTRIBUTOR,
   REMOVE_DATASET_LABEL,
   REMOVE_FILE_UPLOAD,
-  REMOVE_RELATED_PUBLICATION,
+  REMOVE_RELATED_PUBLICATION, RESET_FORM,
   SAVE_FORM,
   SAVE_FORM_ERROR,
   SAVE_FORM_SUCCESS,
@@ -38,7 +38,7 @@ import {
   UPLOAD_FILES_ERROR,
   UPLOAD_FILES_SUCCESS,
 } from './constants';
-import { setStateFormValues } from './utils';
+import { resetStateFormValues, setStateFormValues } from './utils';
 
 let backendParameters = {};
 if (window.props !== undefined) {
@@ -60,7 +60,7 @@ export const initialState = fromJS({
   userId: backendParameters.userId || 2,
   // token: backendParameters['token'] || 'NO_TOKEN',
   // FIXME: replace. during development token defaults to test-server user
-  token: backendParameters['token']  || '5639b56bd077fb3e12d7e4a0ada244aaa970c2fd',
+  token: backendParameters['token'] || '5639b56bd077fb3e12d7e4a0ada244aaa970c2fd',
   userName: backendParameters.userName || '',
   // TODO: decide what from actual response is needed, then put in reducer
   submitResponse: {},
@@ -199,7 +199,7 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .update('contributors', (contributors) => contributors.splice(action.index, 1));
     case FETCH_SUBMISSION:
-      // console.log('FETCH_SUBMISSION');
+      console.log('FETCH_SUBMISSION');
       // TODO: set prop to inidcate loading -> loading gif
       return state.set('requestBrokerSubmissionId', action.brokerSubmissionId);
     case FETCH_SUBMISSION_SUCCESS:
@@ -210,8 +210,11 @@ function submissionFormReducer(state = initialState, action) {
       // console.log(typeof action.response.data.data.requirements.contributors);
       return setStateFormValues(state, action);
     case FETCH_SUBMISSION_ERROR:
-      // console.log('FETCH_SUBMISSION_ERROR');
+      console.log('FETCH_SUBMISSION_ERROR');
       return state;
+    case RESET_FORM:
+      console.log('RESET_FORM');
+      return resetStateFormValues(state);
     default:
       return state;
   }

@@ -50,9 +50,9 @@ export class SubmissionList extends React.Component {
 
 
   render() {
-    console.log('--------------render SubmissionList');
-    console.log(this.props);
-    console.log('###############################');
+    // console.log('--------------render SubmissionList');
+    // console.log(this.props);
+    // console.log('###############################');
 
     let submissionItems = this.props.submissions.map((submission, index) => {
       return <li key={index} className="list-group-item">

@@ -86,6 +86,8 @@ function* prepareRequestData(userId, submit = true) {
     contributors,
   }, formValues);
   return {
+    // TODO: determine target according to "Target Data center" value. e.g. "ena" = ENA_PANGAEA
+    // TODO: change name of non-molecular to sth. else
     target: 'GENERIC',
     release: submit, // false for save
     submitting_user: userId,

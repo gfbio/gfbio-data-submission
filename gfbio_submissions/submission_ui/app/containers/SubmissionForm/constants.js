@@ -48,6 +48,8 @@ export const FETCH_SUBMISSION = 'app/SubmissionForm/FETCH_SUBMISSION';
 export const FETCH_SUBMISSION_SUCCESS = 'app/SubmissionForm/FETCH_SUBMISSION_SUCCESS';
 export const FETCH_SUBMISSION_ERROR = 'app/SubmissionForm/FETCH_SUBMISSION_ERROR';
 
+export const RESET_FORM = 'app/SubmissionForm/RESET_FORM';
+
 export const CLOSE_SAVE_SUCCESS = 'app/SubmissionForm/CLOSE_SAVE_SUCCESS';
 
 

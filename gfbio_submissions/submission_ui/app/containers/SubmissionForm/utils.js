@@ -62,3 +62,17 @@ export const setStateFormValues = (state, action) => {
     // TODO: need whole submission ?
     .set('submission', action.response.data);
 };
+
+export const resetStateFormValues = (state) => {
+  return state
+    .set('brokerSubmissionId', '')
+    .set('initialValues', {})
+    .set('relatedPublications', fromJS([]))
+    .set('datasetLabels', fromJS([]))
+    .set('contributors', [])
+    .set('embargoDate', new Date())
+    .set('license', 'CC BY 4.0')
+    .set('metaDataSchema', 'None')
+    // TODO: need whole submission ?
+    .set('submission', {});
+};

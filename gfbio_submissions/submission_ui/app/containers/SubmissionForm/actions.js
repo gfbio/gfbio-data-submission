@@ -18,7 +18,7 @@ import {
   FETCH_SUBMISSION_SUCCESS, REMOVE_CONTRIBUTOR,
   REMOVE_DATASET_LABEL,
   REMOVE_FILE_UPLOAD,
-  REMOVE_RELATED_PUBLICATION,
+  REMOVE_RELATED_PUBLICATION, RESET_FORM,
   SAVE_FORM,
   SAVE_FORM_ERROR,
   SAVE_FORM_SUCCESS,
@@ -270,5 +270,11 @@ export function fetchSubmissionError(errorResponse) {
 export function closeSaveSuccess() {
   return {
     type: CLOSE_SAVE_SUCCESS,
+  };
+}
+
+export function resetForm() {
+  return {
+    type: RESET_FORM,
   };
 }
