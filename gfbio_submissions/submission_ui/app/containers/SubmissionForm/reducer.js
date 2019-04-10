@@ -12,14 +12,16 @@ import {
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
-  CHANGE_META_DATA_SCHEMA, CLOSE_SAVE_SUCCESS,
+  CHANGE_META_DATA_SCHEMA,
+  CLOSE_SAVE_SUCCESS,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
   FETCH_SUBMISSION_SUCCESS,
   REMOVE_CONTRIBUTOR,
   REMOVE_DATASET_LABEL,
   REMOVE_FILE_UPLOAD,
-  REMOVE_RELATED_PUBLICATION, RESET_FORM,
+  REMOVE_RELATED_PUBLICATION,
+  RESET_FORM,
   SAVE_FORM,
   SAVE_FORM_ERROR,
   SAVE_FORM_SUCCESS,
@@ -31,6 +33,9 @@ import {
   SUBMIT_FORM_START,
   SUBMIT_FORM_SUCCESS,
   UPDATE_CONTRIBUTOR,
+  UPDATE_SUBMISSION,
+  UPDATE_SUBMISSION_ERROR,
+  UPDATE_SUBMISSION_SUCCESS,
   UPLOAD_FILE_ERROR,
   UPLOAD_FILE_PROGRESS,
   UPLOAD_FILE_SUCCESS,
@@ -215,6 +220,21 @@ function submissionFormReducer(state = initialState, action) {
     case RESET_FORM:
       console.log('RESET_FORM');
       return resetStateFormValues(state);
+    case UPDATE_SUBMISSION:
+      console.log('UPDATE_SUBMISSION');
+      // TODO: set prop to inidcate loading -> loading gif
+      // return state.set('requestBrokerSubmissionId', action.brokerSubmissionId);
+      return state;
+    case UPDATE_SUBMISSION_SUCCESS:
+      console.log('UPDATE_SUBMISSION_SUCCESS');
+      // TODO: 2x data: 1 from axios 1 from json-body
+      // TODO: refactor to some sort of getter with checks
+      console.log(action.response.data.broker_submission_id);
+      // console.log(typeof action.response.data.data.requirements.contributors);
+      return setStateFormValues(state, action);
+    case UPDATE_SUBMISSION_ERROR:
+      console.log('UPDATE_SUBMISSION_ERROR');
+      return state;
     default:
       return state;
   }

@@ -12,13 +12,16 @@ import {
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
-  CHANGE_META_DATA_SCHEMA, CLOSE_SAVE_SUCCESS,
+  CHANGE_META_DATA_SCHEMA,
+  CLOSE_SAVE_SUCCESS,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
-  FETCH_SUBMISSION_SUCCESS, REMOVE_CONTRIBUTOR,
+  FETCH_SUBMISSION_SUCCESS,
+  REMOVE_CONTRIBUTOR,
   REMOVE_DATASET_LABEL,
   REMOVE_FILE_UPLOAD,
-  REMOVE_RELATED_PUBLICATION, RESET_FORM,
+  REMOVE_RELATED_PUBLICATION,
+  RESET_FORM,
   SAVE_FORM,
   SAVE_FORM_ERROR,
   SAVE_FORM_SUCCESS,
@@ -28,12 +31,14 @@ import {
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
-  SUBMIT_FORM_SUCCESS, UPDATE_CONTRIBUTOR,
+  SUBMIT_FORM_SUCCESS,
+  UPDATE_CONTRIBUTOR,
+  UPDATE_SUBMISSION,
+  UPDATE_SUBMISSION_ERROR,
+  UPDATE_SUBMISSION_SUCCESS,
   UPLOAD_FILE_ERROR,
   UPLOAD_FILE_PROGRESS,
   UPLOAD_FILE_SUCCESS,
-  UPLOAD_FILES,
-  UPLOAD_FILES_ERROR,
   UPLOAD_FILES_SUCCESS,
 } from './constants';
 
@@ -167,11 +172,11 @@ export function removeFileUpload(index) {
   };
 }
 
-export function uploadFiles() {
-  return {
-    type: UPLOAD_FILES,
-  };
-}
+// export function uploadFiles() {
+//   return {
+//     type: UPLOAD_FILES,
+//   };
+// }
 
 /* Files with s for multiple */
 export function uploadFilesSuccess(response) {
@@ -181,12 +186,12 @@ export function uploadFilesSuccess(response) {
   };
 }
 
-export function uploadFilesError(errorResponse) {
-  return {
-    type: UPLOAD_FILES_ERROR,
-    errorResponse,
-  };
-}
+// export function uploadFilesError(errorResponse) {
+//   return {
+//     type: UPLOAD_FILES_ERROR,
+//     errorResponse,
+//   };
+// }
 
 /* END Files with s for multiple */
 
@@ -276,5 +281,27 @@ export function closeSaveSuccess() {
 export function resetForm() {
   return {
     type: RESET_FORM,
+  };
+}
+
+export function updateSubmission(brokerSubmissionId) {
+  return {
+    type: UPDATE_SUBMISSION,
+    brokerSubmissionId,
+  };
+}
+
+
+export function updateSubmissionSuccess(response) {
+  return {
+    type: UPDATE_SUBMISSION_SUCCESS,
+    response,
+  };
+}
+
+export function updateSubmissionError(errorResponse) {
+  return {
+    type: UPDATE_SUBMISSION_ERROR,
+    errorResponse,
   };
 }

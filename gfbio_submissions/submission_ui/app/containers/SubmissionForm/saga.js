@@ -14,6 +14,7 @@ import {
   SAVE_FORM,
   SUBMIT_FORM,
   SUBMIT_FORM_START,
+  UPDATE_SUBMISSION,
   UPLOAD_FILES,
 } from './constants';
 import {
@@ -39,9 +40,11 @@ import {
   submitFormError,
   submitFormStart,
   submitFormSuccess,
+  updateSubmission,
+  updateSubmissionError,
+  updateSubmissionSuccess,
   uploadFileError,
   uploadFileProgress,
-  uploadFiles,
   uploadFilesSuccess,
   uploadFileSuccess,
 } from './actions';
@@ -118,19 +121,23 @@ function* uploadProgressWatcher(channel, index) {
 }
 
 function* uploadFile(file, index) {
+  // TODO: move to performUploadSaga. before loop.
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
   const token = yield select(makeSelectToken());
+  console.log('uploadFile');
+  console.log(brokerSubmissionId);
   try {
     const uploadChannel = yield call(createUploadFileChannel, brokerSubmissionId, file.file, token);
     yield fork(uploadProgressWatcher, uploadChannel, index);
   } catch (err) {
-    // console.log('yield error action uploadFile');
-    // console.log(err);
+    console.log('yield error action uploadFile');
+    console.log(err);
     yield put(uploadFileError(index, err));
   }
 }
 
 function* performUploadSaga() {
+  console.log('performUploadSaga');
   const fileUploads = yield select(makeSelectFileUploads());
   let index = 0;
   for (let f of fileUploads) {
@@ -138,6 +145,8 @@ function* performUploadSaga() {
     index++;
   }
   yield put(uploadFilesSuccess({}));
+  console.log('put upload success is done');
+  console.log('put push is done');
 }
 
 export function* performSubmitFormSaga() {
@@ -146,12 +155,31 @@ export function* performSubmitFormSaga() {
   const payload = yield prepareRequestData(userId);
   try {
     const response = yield call(postSubmission, token, payload);
-    yield put(uploadFiles());
     yield put(submitFormSuccess(response));
+    yield call(performUploadSaga);
     yield put(push('/list'));
   } catch (error) {
     // console.log(error);
     yield put(submitFormError(error));
+  }
+}
+
+export function* performUpdateSubmissionSaga() {
+  console.log('performUpdateSubmissionSaga. bsi:');
+  const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
+  console.log(brokerSubmissionId);
+  const token = yield select(makeSelectToken());
+  const userId = yield select(makeSelectUserId());
+  const payload = yield prepareRequestData(userId, false);
+  try {
+    const response = yield call(postSubmission, token, payload);
+    // TODO: updates of file are handled in extra story
+    // NOOPE: yield put(uploadFiles());
+    // yield call(performUploadSaga);
+    yield put(updateSubmissionSuccess(response));
+    yield put(push('/list'));
+  } catch (error) {
+    yield put(updateSubmissionError(error));
   }
 }
 
@@ -160,17 +188,26 @@ export function* performSaveFormSaga() {
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
   console.log(brokerSubmissionId);
   // TODO: if bsi put update action ....
-
-  const token = yield select(makeSelectToken());
-  const userId = yield select(makeSelectUserId());
-  const payload = yield prepareRequestData(userId, false);
-  try {
-    const response = yield call(postSubmission, token, payload);
-    yield put(uploadFiles());
-    yield put(saveFormSuccess(response));
-    yield put(push('/list'));
-  } catch (error) {
-    yield put(saveFormError(error));
+  if (brokerSubmissionId !== '') {
+    yield put(updateSubmission());
+  } else {
+    const token = yield select(makeSelectToken());
+    const userId = yield select(makeSelectUserId());
+    const payload = yield prepareRequestData(userId, false);
+    try {
+      const response = yield call(postSubmission, token, payload);
+      yield put(saveFormSuccess(response));
+      console.log('put save is done');
+      // call blocks, put dispatches async.
+      // yield put(uploadFiles());
+      yield call(performUploadSaga);
+      console.log('put upload is done');
+      // FIXME: moved this to end of upload method, to
+      yield put(push('/list'));
+      // console.log('put push is done');
+    } catch (error) {
+      yield put(saveFormError(error));
+    }
   }
 }
 
@@ -251,6 +288,11 @@ export function* fetchSubmissionSaga() {
   yield takeLatest(FETCH_SUBMISSION, performFetchSubmissionSaga);
 }
 
+export function* updateSubmissionSaga() {
+  yield takeLeading(UPDATE_SUBMISSION, performUpdateSubmissionSaga);
+}
+
 export default function* rootSaga() {
-  yield all([checkFormTypeSaga(), saveFormSaga(), submitFormSaga(), uploadFilesSaga(), fetchSubmissionSaga()]);
+  yield all([checkFormTypeSaga(), saveFormSaga(), submitFormSaga(),
+    uploadFilesSaga(), fetchSubmissionSaga(), updateSubmissionSaga()]);
 }
