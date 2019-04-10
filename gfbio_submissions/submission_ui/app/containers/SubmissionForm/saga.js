@@ -120,10 +120,10 @@ function* uploadProgressWatcher(channel, index) {
   }
 }
 
-function* uploadFile(file, index) {
+function* uploadFile(token, brokerSubmissionId, file, index) {
   // TODO: move to performUploadSaga. before loop.
-  const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
-  const token = yield select(makeSelectToken());
+  // const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
+  // const token = yield select(makeSelectToken());
   console.log('uploadFile');
   console.log(brokerSubmissionId);
   try {
@@ -136,12 +136,14 @@ function* uploadFile(file, index) {
   }
 }
 
-function* performUploadSaga() {
+function* performUploadSaga(brokerSubmissionId) {
   console.log('performUploadSaga');
   const fileUploads = yield select(makeSelectFileUploads());
+  // const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
+  const token = yield select(makeSelectToken());
   let index = 0;
   for (let f of fileUploads) {
-    yield call(uploadFile, f, index);
+    yield call(uploadFile, token, brokerSubmissionId, f, index);
     index++;
   }
   yield put(uploadFilesSuccess({}));
@@ -155,8 +157,8 @@ export function* performSubmitFormSaga() {
   const payload = yield prepareRequestData(userId);
   try {
     const response = yield call(postSubmission, token, payload);
+    yield call(performUploadSaga, response.data.broker_submission_id);
     yield put(submitFormSuccess(response));
-    yield call(performUploadSaga);
     yield put(push('/list'));
   } catch (error) {
     // console.log(error);
@@ -196,13 +198,13 @@ export function* performSaveFormSaga() {
     const payload = yield prepareRequestData(userId, false);
     try {
       const response = yield call(postSubmission, token, payload);
-      yield put(saveFormSuccess(response));
-      console.log('put save is done');
+      // yield put(saveFormSuccess(response));
       // call blocks, put dispatches async.
       // yield put(uploadFiles());
-      yield call(performUploadSaga);
+      yield call(performUploadSaga, response.data.broker_submission_id);
       console.log('put upload is done');
-      // FIXME: moved this to end of upload method, to
+      yield put(saveFormSuccess(response));
+      console.log('put save is done');
       yield put(push('/list'));
       // console.log('put push is done');
     } catch (error) {

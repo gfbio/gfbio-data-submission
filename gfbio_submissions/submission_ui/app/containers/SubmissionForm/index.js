@@ -65,7 +65,7 @@ export class SubmissionForm extends React.Component {
     console.log('###############################');
 
     if (this.props.brokerSubmissionId !== '' && this.props.match.path === '/form') {
-      // this.props.resetForm();
+      this.props.resetForm();
     }
 
     /*

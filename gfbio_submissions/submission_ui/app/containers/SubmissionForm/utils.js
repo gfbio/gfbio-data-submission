@@ -73,6 +73,7 @@ export const resetStateFormValues = (state) => {
     .set('embargoDate', new Date())
     .set('license', 'CC BY 4.0')
     .set('metaDataSchema', 'None')
+    .set('fileUploads', fromJS([]))
     // TODO: need whole submission ?
     .set('submission', {});
 };
