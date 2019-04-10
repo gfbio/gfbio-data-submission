@@ -193,14 +193,14 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .update('contributors', (contributors) => contributors.push(action.contributor));
     case UPDATE_CONTRIBUTOR:
-      // console.log('UPDATE_CONTRIBUTOR');
-      // console.log(action.contributor);
-      // console.log(action.index);
+      console.log('UPDATE_CONTRIBUTOR');
+      console.log(action.contributor);
+      console.log(action.index);
       return state
         .update('contributors', (contributors) => contributors.splice(action.index, 1, action.contributor));
     case REMOVE_CONTRIBUTOR:
-      // console.log('REMOVE_CONTRIBUTOR');
-      // console.log(action.index);
+      console.log('REMOVE_CONTRIBUTOR');
+      console.log(action.index);
       return state
         .update('contributors', (contributors) => contributors.splice(action.index, 1));
     case FETCH_SUBMISSION:
@@ -231,7 +231,10 @@ function submissionFormReducer(state = initialState, action) {
       // TODO: refactor to some sort of getter with checks
       console.log(action.response.data.broker_submission_id);
       // console.log(typeof action.response.data.data.requirements.contributors);
-      return setStateFormValues(state, action);
+      return state
+        .set('saveInProgress', false)
+        .set('showSaveSuccess', true);
+      // return setStateFormValues(state, action);
     case UPDATE_SUBMISSION_ERROR:
       console.log('UPDATE_SUBMISSION_ERROR');
       return state;

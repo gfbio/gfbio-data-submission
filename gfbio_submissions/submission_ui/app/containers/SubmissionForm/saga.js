@@ -20,7 +20,7 @@ import {
 import {
   makeSelectBrokerSubmissionId,
   makeSelectContributors,
-  makeSelectDatasetLabels,
+  makeSelectDatasetLabels, makeSelectEmbargoDate,
   makeSelectFileUploads,
   makeSelectFormWrapper,
   makeSelectLicense,
@@ -51,7 +51,7 @@ import {
 import {
   createUploadFileChannel,
   getSubmission,
-  postSubmission,
+  postSubmission, putSubmission,
 } from './submissionApi';
 
 import { push } from 'connected-react-router/immutable';
@@ -79,6 +79,7 @@ function* prepareRequestData(userId, submit = true) {
   const related_publications = yield select(makeSelectRelatedPublications());
   const datasetLabels = yield select(makeSelectDatasetLabels());
   const contributors = yield select(makeSelectContributors());
+  const embargo = yield select(makeSelectEmbargoDate());
   const requirements = Object.assign({
     license,
     metadata_schema,
@@ -94,7 +95,11 @@ function* prepareRequestData(userId, submit = true) {
     target: 'GENERIC',
     release: submit, // false for save
     submitting_user: userId,
-    // download_url: 'url?',
+    // FIXME: url regex in backend schema does not match this
+    // TODO: good chance to show errors responded from server validation
+    download_url: formValues.dataUrl,
+    // FIXME: this sends ISO with timezone, but server does not like it
+    // embargo: embargo,
     data: {
       requirements: requirements,
     },
@@ -174,7 +179,7 @@ export function* performUpdateSubmissionSaga() {
   const userId = yield select(makeSelectUserId());
   const payload = yield prepareRequestData(userId, false);
   try {
-    const response = yield call(postSubmission, token, payload);
+    const response = yield call(putSubmission, token, brokerSubmissionId, payload);
     // TODO: updates of file are handled in extra story
     // NOOPE: yield put(uploadFiles());
     // yield call(performUploadSaga);
