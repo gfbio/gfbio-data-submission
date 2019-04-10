@@ -55,7 +55,6 @@ import {
 } from './submissionApi';
 
 import { push } from 'connected-react-router/immutable';
-// const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 // TODO: move logic to utils.js. here only workflow
 function* prepareRequestData(userId, submit = true) {
@@ -156,18 +155,48 @@ function* performUploadSaga(brokerSubmissionId) {
   console.log('put push is done');
 }
 
+
 export function* performSubmitFormSaga() {
-  const token = yield select(makeSelectToken());
-  const userId = yield select(makeSelectUserId());
-  const payload = yield prepareRequestData(userId);
-  try {
-    const response = yield call(postSubmission, token, payload);
-    yield call(performUploadSaga, response.data.broker_submission_id);
-    yield put(submitFormSuccess(response));
-    yield put(push('/list'));
-  } catch (error) {
-    // console.log(error);
-    yield put(submitFormError(error));
+  console.log('performSubmitFormSaga. bsi:');
+  const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
+  console.log(brokerSubmissionId);
+  if (brokerSubmissionId !== '') {
+    yield put(updateSubmission(true));
+  } else {
+    const token = yield select(makeSelectToken());
+    const userId = yield select(makeSelectUserId());
+    const payload = yield prepareRequestData(userId);
+    try {
+      const response = yield call(postSubmission, token, payload);
+      yield call(performUploadSaga, response.data.broker_submission_id);
+      yield put(submitFormSuccess(response));
+      yield put(push('/list'));
+    } catch (error) {
+      // console.log(error);
+      yield put(submitFormError(error));
+    }
+  }
+}
+
+export function* performSaveFormSaga() {
+  console.log('performSaveSaga. bsi:');
+  const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
+  console.log(brokerSubmissionId);
+  // TODO: if bsi put update action ....
+  if (brokerSubmissionId !== '') {
+    yield put(updateSubmission(false));
+  } else {
+    const token = yield select(makeSelectToken());
+    const userId = yield select(makeSelectUserId());
+    const payload = yield prepareRequestData(userId, false);
+    try {
+      const response = yield call(postSubmission, token, payload);
+      yield call(performUploadSaga, response.data.broker_submission_id);
+      yield put(saveFormSuccess(response));
+      yield put(push('/list'));
+    } catch (error) {
+      yield put(saveFormError(error));
+    }
   }
 }
 
@@ -187,34 +216,6 @@ export function* performUpdateSubmissionSaga() {
     yield put(push('/list'));
   } catch (error) {
     yield put(updateSubmissionError(error));
-  }
-}
-
-export function* performSaveFormSaga() {
-  console.log('performSaveSaga. bsi:');
-  const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
-  console.log(brokerSubmissionId);
-  // TODO: if bsi put update action ....
-  if (brokerSubmissionId !== '') {
-    yield put(updateSubmission());
-  } else {
-    const token = yield select(makeSelectToken());
-    const userId = yield select(makeSelectUserId());
-    const payload = yield prepareRequestData(userId, false);
-    try {
-      const response = yield call(postSubmission, token, payload);
-      // yield put(saveFormSuccess(response));
-      // call blocks, put dispatches async.
-      // yield put(uploadFiles());
-      yield call(performUploadSaga, response.data.broker_submission_id);
-      console.log('put upload is done');
-      yield put(saveFormSuccess(response));
-      console.log('put save is done');
-      yield put(push('/list'));
-      // console.log('put push is done');
-    } catch (error) {
-      yield put(saveFormError(error));
-    }
   }
 }
 

@@ -284,10 +284,10 @@ export function resetForm() {
   };
 }
 
-export function updateSubmission(brokerSubmissionId) {
+export function updateSubmission(release) {
   return {
     type: UPDATE_SUBMISSION,
-    brokerSubmissionId,
+    release,
   };
 }
 
