@@ -86,6 +86,8 @@ class TestInitialChainTasks(TestCase):
     @responses.activate
     def test_min_post_initial_chain(self):
         self._add_create_ticket_response()
+        task_reports = TaskProgressReport.objects.all()
+        self.assertEqual(0, len(task_reports))
         min_response = self.api_client.post(
             '/api/submissions/',
             content_type='application/json',
@@ -99,10 +101,19 @@ class TestInitialChainTasks(TestCase):
                 }
             }))
         self.assertEqual(201, min_response.status_code)
+        task_reports = TaskProgressReport.objects.all()
+        expected_tasknames = ['tasks.get_gfbio_user_email_task',
+                              'tasks.create_helpdesk_ticket_task',
+                              'tasks.trigger_submission_transfer', ]
+        self.assertEqual(3, len(task_reports))
+        for t in task_reports:
+            self.assertIn(t.task_name, expected_tasknames)
 
     @responses.activate
     def test_max_post_with_release_initial_chain(self):
         self._add_create_ticket_response()
+        task_reports = TaskProgressReport.objects.all()
+        self.assertEqual(0, len(task_reports))
         max_response = self.api_client.post(
             '/api/submissions/',
             content_type='application/json',
@@ -112,10 +123,22 @@ class TestInitialChainTasks(TestCase):
                 'data': _get_submission_request_data()
             }))
         self.assertEqual(201, max_response.status_code)
+        task_reports = TaskProgressReport.objects.all()
+        expected_tasknames = ['tasks.get_gfbio_user_email_task',
+                              'tasks.create_helpdesk_ticket_task',
+                              'tasks.trigger_submission_transfer',
+                              'tasks.create_broker_objects_from_submission_data_task',
+                              'tasks.prepare_ena_submission_data_task',
+                              'tasks.check_on_hold_status_task', ]
+        self.assertEqual(6, len(task_reports))
+        for t in task_reports:
+            self.assertIn(t.task_name, expected_tasknames)
 
     @responses.activate
     def test_max_post_without_release_initial_chain(self):
         self._add_create_ticket_response()
+        task_reports = TaskProgressReport.objects.all()
+        self.assertEqual(0, len(task_reports))
         max_response = self.api_client.post(
             '/api/submissions/',
             content_type='application/json',
@@ -125,10 +148,19 @@ class TestInitialChainTasks(TestCase):
                 'data': _get_submission_request_data()
             }))
         self.assertEqual(201, max_response.status_code)
+        task_reports = TaskProgressReport.objects.all()
+        expected_tasknames = ['tasks.get_gfbio_user_email_task',
+                              'tasks.create_helpdesk_ticket_task',
+                              'tasks.trigger_submission_transfer', ]
+        self.assertEqual(3, len(task_reports))
+        for t in task_reports:
+            self.assertIn(t.task_name, expected_tasknames)
 
     @responses.activate
     def test_put_initial_chain_no_release(self):
         self._add_create_ticket_response()
+        task_reports = TaskProgressReport.objects.all()
+        self.assertEqual(0, len(task_reports))
         self.api_client.post(
             '/api/submissions/',
             content_type='application/json',
@@ -144,6 +176,16 @@ class TestInitialChainTasks(TestCase):
                 'requirements': {'title': 'A Title 0815',
                                  'description': 'A Description 2'}}},
             format='json', )
+        task_reports = TaskProgressReport.objects.all()
+        # trigger_submission_transfer from initial post
+        # trigger_submission_transfer_for_updates
+        expected_tasknames = ['tasks.get_gfbio_user_email_task',
+                              'tasks.create_helpdesk_ticket_task',
+                              'tasks.trigger_submission_transfer',
+                              'tasks.trigger_submission_transfer_for_updates', ]
+        self.assertEqual(4, len(task_reports))
+        for t in task_reports:
+            self.assertIn(t.task_name, expected_tasknames)
 
 
 class TestTasks(TestCase):

@@ -159,7 +159,8 @@ class SubmissionTransferHandler(object):
                 countdown=SUBMISSION_DELAY)
             if release:
                 # TODO: check for Submission Type !
-                chain = chain | self.setup_pre_release_chain()
+                if self.target_archive == ENA or self.target_archive == ENA_PANGAEA:
+                    chain = chain | self.setup_pre_release_chain()
         else:
             return None
         chain()
