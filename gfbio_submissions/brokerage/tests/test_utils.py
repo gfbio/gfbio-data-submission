@@ -912,6 +912,22 @@ class TestHelpDeskTicketMethods(TestCase):
             submission=submission)
         self.assertNotIn('assignee', payload['fields'].keys())
 
+        data['requirements'][
+            'data_center'] = 'GFBio Data Centers - our curators will suggest the appropriate one(s)'
+        serializer = SubmissionSerializer(data={
+            'target': 'GENERIC',
+            'release': True,
+            'data': data
+        })
+        serializer.is_valid()
+        print(serializer.errors)
+        submission = serializer.save(site=User.objects.first())
+        site_config = SiteConfiguration.objects.first()
+        payload = gfbio_prepare_create_helpdesk_payload(
+            site_config=site_config,
+            submission=submission)
+        self.assertNotIn('assignee', payload['fields'].keys())
+
     @responses.activate
     def test_create_helpdesk_ticket(self):
         submission = Submission.objects.first()
