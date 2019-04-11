@@ -9,9 +9,9 @@ from requests.structures import CaseInsensitiveDict
 
 from gfbio_submissions.brokerage.configuration.settings import \
     HELPDESK_API_SUB_URL, \
-    HELPDESK_COMMENT_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL, GENERIC, \
+    HELPDESK_COMMENT_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL, \
     HELPDESK_LICENSE_MAPPINGS, HELPDESK_METASCHEMA_MAPPINGS, \
-    HELPDESK_DATACENTER_USER_MAPPINGS
+    HELPDESK_DATACENTER_USER_MAPPINGS, HELPDESK_REQUEST_TYPE_MAPPINGS
 from gfbio_submissions.brokerage.models import SiteConfiguration, RequestLog
 
 logger = logging.getLogger(__name__)
@@ -112,11 +112,22 @@ def gfbio_get_user_by_id(user_id, site_configuration, submission):
 def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
     if reporter is None:
         reporter = {}
+
     requirements = submission.data.get('requirements', {})
-    # ena+gen
+
     summary = requirements.get('title', '')
     if len(summary) >= 45:
         summary = '{0}{1}'.format(summary[:45], '...')
+
+    # molecular or generic
+    jira_request_target = HELPDESK_REQUEST_TYPE_MAPPINGS.get(
+        requirements.get('data_center', ''),
+        HELPDESK_REQUEST_TYPE_MAPPINGS.get('default', '')
+    )
+    jira_request_type = 'dsub/{0}'.format(jira_request_target) \
+        if site_config.jira_project_key == SiteConfiguration.DSUB \
+        else 'sand/{0}-data'.format(jira_request_target)
+
     mutual_data = {
         'project': {
             'key': site_config.jira_project_key
@@ -130,6 +141,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
             'name': reporter.get('user_email',
                                  'No valid user, name or email available')
         },
+        'customfield_10010': jira_request_type,
         'customfield_10200': '{0}'.format(submission.embargo.isoformat())
         if submission.embargo is not None
         else '{0}'.format(
@@ -138,19 +150,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
         'customfield_10201': requirements.get('title', ''),
         'customfield_10208': requirements.get('description', ''),
         'customfield_10303': '{0}'.format(submission.broker_submission_id),
-    }
-    assignee = HELPDESK_DATACENTER_USER_MAPPINGS.get(
-        requirements.get('data_center', ''), '')
-    if len(assignee) > 0:
-        mutual_data['assignee'] = {'name': assignee}
-
-    print('gfbio_prepare_create_helpdesk_payload')
-    print(assignee)
-
-    generic_data = {
-        'customfield_10010': 'dsub/generic'
-        if site_config.jira_project_key == SiteConfiguration.DSUB
-        else 'sand/generic-data', 'customfield_10311': requirements.get(
+        'customfield_10311': requirements.get(
             'data_collection_time', ''),
         'customfield_10308': [{'value': c} for c in
                               requirements.get(
@@ -158,7 +158,13 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
                                   [])],
         'customfield_10313': ', '.join(
             requirements.get('categories', [])),
-        'customfield_10205': requirements.get('dataset_author', ''),
+        # used this way by generic submission
+        # 'customfield_10205': requirements.get('dataset_author', ''),
+        # used this way by molecular submission
+        'customfield_10205': '{0},{1};{2}'.format(
+            reporter.get('first_name', ''),
+            reporter.get('last_name', ''),
+            reporter.get('user_email', '')),
         'customfield_10307': '; '.join(
             requirements.get('related_publications', [])),
         'customfield_10216': [{'value': l} for l in
@@ -166,90 +172,73 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
                                                [])],
         'customfield_10314': requirements.get('project_id', ''),
         'customfield_10202': HELPDESK_LICENSE_MAPPINGS.get(
-            requirements.get('license', 'Other'))
+            requirements.get('license', 'Other')),
+        'customfield_10600': requirements.get('download_url', ''),
     }
+    assignee = HELPDESK_DATACENTER_USER_MAPPINGS.get(
+        requirements.get('data_center', ''), '')
+    if len(assignee) > 0:
+        mutual_data['assignee'] = {'name': assignee}
 
     metadata_schema = requirements.get('metadata_schema',
                                        'Other metadata or documentation')
-    if metadata_schema is not None:
-        generic_data['customfield_10229'] = [
-            HELPDESK_METASCHEMA_MAPPINGS.get(metadata_schema)]
+    if metadata_schema == 'Other metadata or documentation' and jira_request_target == 'molecular':
+        metadata_schema = 'MIxS 4.0'
+    mutual_data['customfield_10229'] = [HELPDESK_METASCHEMA_MAPPINGS.get(
+        metadata_schema)]
 
-    # ena/mol specific
-    molecular_data = {
-        # md
-        # 'project': {
-        #     'key': site_config.jira_project_key
-        # },
-        # md
-        # 'summary': '{0}'.format(summary),
-        # TODO: + 'user iD:'.USER-ID + 'study type: STUDY - TYPE
-        # md
-        # 'description': '{0}'.format(
-        #     requirements.get('description', '')),
-        # md
-        # 'issuetype': {
-        #     'name': 'Data Submission'
-        # },
-        # generic: submitting gfbio user, prefilled
-        # ba: submitting gfbio user, sc.contact or error text (see below)
-        # md
-        # 'reporter': {
-        #     'name': reporter.get('user_email', 'No valid user, name or email available')
-        # },
-
-        # ba: hardcoded val after slash
-        # generic: assuming it is analog to molecular
-        'customfield_10010': 'dsub/molecular' if site_config.jira_project_key == SiteConfiguration.DSUB else 'sand/molecular-data',
-
-        # generic: RO - from data, but plain text
-        # ba: this here
-        # FIXME: use embargo from Submission, this as fallback
-        # 'customfield_10200': '{0}'.format(
-        #     (datetime.date.today() + datetime.timedelta(
-        #         days=365)).isoformat()
-        # ),
-        # md
-        # 'customfield_10200': '{0}'.format(submission.embargo.isoformat())
-        # if submission.embargo is not None
-        # else '{0}'.format((datetime.date.today() + datetime.timedelta(days=365)).isoformat()),
-        # md
-        # 'customfield_10201': requirements.get(
-        #     'title', ''),
-
-        # generic: data_set_author, comma separated list of authors possible
-        # ba: this
-        'customfield_10205': '{0},{1};{2}'.format(
-            reporter.get('first_name', 'invalid first name'),
-            reporter.get('last_name', 'invalid last name'),
-            reporter.get('user_email', 'invalid email')),
-        # md
-        # 'customfield_10208': requirements.get(
-        #     'description', ''),
-        # md
-        # 'customfield_10303': '{0}'.format(submission.broker_submission_id),
-
-        # TODO: generic not yet in schema, use submission property
-        # generic: primary_data field in form if link.. radio button is clicked
-        # ba: submission property, but not yet in schema, done via serializer
-        # FIXME: url in data and model, decide and review
-        # TODO: rename to consistent name for all types ? portals 'link online resource' sounds good
-        # TODO: if consistent name and from serializer. this is #md
-        'customfield_10600': requirements.get(
-            'download_url', ''),
-
-        # ba: hardcoded this value
-        # generic: one of list or none
-        'customfield_10229': [{'value': 'MIxS'}],
-
-        # ba hardcoded this value
-        # generic: legal_requirements field, array of certain values
-        'customfield_10216': [{"value": "Uncertain"}],
-    }
-    if submission.target == GENERIC:
-        mutual_data.update(generic_data)
-    else:
-        mutual_data.update(molecular_data)
+    # generic_data = {
+    #     'customfield_10311': requirements.get(
+    #         'data_collection_time', ''),
+    #     'customfield_10308': [{'value': c} for c in
+    #                           requirements.get(
+    #                               'dataset_label',
+    #                               [])],
+    #     'customfield_10313': ', '.join(
+    #         requirements.get('categories', [])),
+    #     'customfield_10205': requirements.get('dataset_author', ''),
+    #     'customfield_10307': '; '.join(
+    #         requirements.get('related_publications', [])),
+    #     'customfield_10216': [{'value': l} for l in
+    #                           requirements.get('legal_requirements',
+    #                                            [])],
+    #     'customfield_10314': requirements.get('project_id', ''),
+    #     'customfield_10202': HELPDESK_LICENSE_MAPPINGS.get(
+    #         requirements.get('license', 'Other'))
+    # }
+    # molecular_data = {
+    #     # 'customfield_10205': '{0},{1};{2}'.format(
+    #     #     reporter.get('first_name', ''),
+    #     #     reporter.get('last_name', ''),
+    #     #     reporter.get('user_email', '')),
+    #
+    #     # TODO: generic not yet in schema, use submission property
+    #     #   generic: primary_data field in form if link.. radio button is clicked
+    #     #   ba: submission property, but not yet in schema, done via serializer
+    #     # FIXME: url in data and model, decide and review
+    #     # TODO: rename to consistent name for all types ? portals 'link online resource' sounds good
+    #     # TODO: if consistent name and from serializer.
+    #
+    #     # TODO: 11.04.2019: currently it is download_url in submission model
+    #     #   and download_url in data from widget -> data.requirements.download_url.
+    #     #   both are set when submitting via (new) widget.
+    #
+    #     # 'customfield_10600': requirements.get(
+    #     #     'download_url', ''),
+    #
+    #     # ba: hardcoded this value
+    #     # generic: one of list or none
+    #     # 'customfield_10229': [{'value': 'MIxS'}],
+    #
+    #     # ba hardcoded this value
+    #     # generic: legal_requirements field, array of certain values
+    #     # 'customfield_10216': [{"value": "Uncertain"}],
+    # }
+    # if submission.target == GENERIC:
+    #     pass
+    #     # mutual_data.update(generic_data)
+    # else:
+    #     mutual_data.update(molecular_data)
     return {'fields': mutual_data}
 
 

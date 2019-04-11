@@ -78,6 +78,7 @@ function* prepareRequestData(userId, submit = true) {
   const related_publications = yield select(makeSelectRelatedPublications());
   const datasetLabels = yield select(makeSelectDatasetLabels());
   const contributors = yield select(makeSelectContributors());
+  // FIXME: emabrgo date format mismathc frontend/bacend
   const embargo = yield select(makeSelectEmbargoDate());
   const requirements = Object.assign({
     license,
@@ -96,7 +97,7 @@ function* prepareRequestData(userId, submit = true) {
     submitting_user: userId,
     // FIXME: url regex in backend schema does not match this
     // TODO: good chance to show errors responded from server validation
-    download_url: formValues.dataUrl,
+    download_url: formValues.download_url,
     // FIXME: this sends ISO with timezone, but server does not like it
     // embargo: embargo,
     data: {

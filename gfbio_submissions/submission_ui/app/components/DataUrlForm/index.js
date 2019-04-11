@@ -42,7 +42,7 @@ class DataUrlForm extends React.PureComponent {
         </header>
         <div className="form-group">
           <Field
-            name="dataUrl"
+            name="download_url"
             className="form-control"
             component={this.renderInputField}
             type="text"

@@ -36,7 +36,7 @@ export const prepareInitialValues = (submissionData) => {
   // console.log('prepareInitialValues submissionData');
   // console.log(submissionData);
   let initialValues = {};
-  const directMatchingKeys = ['title', 'description', 'dataUrl', 'comment', 'data_center'];
+  const directMatchingKeys = ['title', 'description', 'download_url', 'comment', 'data_center'];
   if (submissionData.data !== undefined && submissionData.data.requirements != undefined) {
     const requirements = submissionData.data.requirements;
 

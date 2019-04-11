@@ -897,6 +897,10 @@ class TestHelpDeskTicketMethods(TestCase):
             site_config=site_config,
             submission=submission)
         self.assertEqual({'name': 'ikostadi'}, payload['fields']['assignee'])
+        self.assertEqual('sand/molecular-data',
+                         payload['fields']['customfield_10010'])
+        self.assertEqual('MIxS',
+                         payload['fields']['customfield_10229'][0]['value'])
 
         data['requirements'].pop('data_center')
         serializer = SubmissionSerializer(data={
@@ -911,6 +915,10 @@ class TestHelpDeskTicketMethods(TestCase):
             site_config=site_config,
             submission=submission)
         self.assertNotIn('assignee', payload['fields'].keys())
+        self.assertEqual('sand/generic-data',
+                         payload['fields']['customfield_10010'])
+        self.assertEqual('other',
+                         payload['fields']['customfield_10229'][0]['value'])
 
         data['requirements'][
             'data_center'] = 'GFBio Data Centers - our curators will suggest the appropriate one(s)'
@@ -920,7 +928,6 @@ class TestHelpDeskTicketMethods(TestCase):
             'data': data
         })
         serializer.is_valid()
-        print(serializer.errors)
         submission = serializer.save(site=User.objects.first())
         site_config = SiteConfiguration.objects.first()
         payload = gfbio_prepare_create_helpdesk_payload(

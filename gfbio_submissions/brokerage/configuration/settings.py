@@ -252,6 +252,15 @@ HELPDESK_DATACENTER_USER_MAPPINGS = getattr(
     }
 )
 
+HELPDESK_REQUEST_TYPE_MAPPINGS = getattr(
+    settings,
+    'HELPDESK_REQUEST_TYPE_MAPPINGS',
+    {
+        'ENA – European Nucleotide Archive': 'molecular',
+        'default': 'generic'
+    }
+)
+
 PANGAEA = getattr(
     settings,
     'PANGAEA',
