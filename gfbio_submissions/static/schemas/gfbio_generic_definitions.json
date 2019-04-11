@@ -6,7 +6,7 @@
                 "type": "string",
                 "minLength": 8
             },
-            "dataset_label": {
+            "dataset_labels": {
                 "type": "array",
                 "items": {
                     "type": "string"

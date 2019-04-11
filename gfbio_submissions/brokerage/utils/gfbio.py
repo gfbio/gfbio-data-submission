@@ -127,7 +127,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
     jira_request_type = 'dsub/{0}'.format(jira_request_target) \
         if site_config.jira_project_key == SiteConfiguration.DSUB \
         else 'sand/{0}-data'.format(jira_request_target)
-
+    print('\n------------------------\n', requirements.get('dataset_labels', []))
     mutual_data = {
         'project': {
             'key': site_config.jira_project_key
@@ -153,10 +153,13 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
         'customfield_10311': requirements.get(
             'data_collection_time', ''),
         # FIXME: labels not shown in ticket
-        'customfield_10308': [{'value': c} for c in
-                              requirements.get(
-                                  'dataset_label',
-                                  [])],
+        # 'customfield_10308': [{'value': c} for c in
+        #                       requirements.get(
+        #                           'dataset_labels',
+        #                           [])],
+        # 'customfield_10308': ', '.join(requirements.get('dataset_labels', [])),
+        # FIXME: looks strange in ticket -> ['label 1', 'label 2'] => 1 2 label
+        'customfield_10308': requirements.get('dataset_labels', []),
         'customfield_10313': ', '.join(
             requirements.get('categories', [])),
         # used this way by generic submission
@@ -185,8 +188,8 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
                                        'Other metadata or documentation')
     if metadata_schema == 'Other metadata or documentation' and jira_request_target == 'molecular':
         metadata_schema = 'MIxS 4.0'
-    mutual_data['customfield_10229'] = [HELPDESK_METASCHEMA_MAPPINGS.get(
-        metadata_schema)]
+    mutual_data['customfield_10229'] = HELPDESK_METASCHEMA_MAPPINGS.get(
+        metadata_schema)
 
     # generic_data = {
     #     'customfield_10311': requirements.get(

@@ -76,7 +76,7 @@ function* prepareRequestData(userId, submit = true) {
   const license = yield select(makeSelectLicense());
   const metadata_schema = yield select(makeSelectMetaDataSchema());
   const related_publications = yield select(makeSelectRelatedPublications());
-  const datasetLabels = yield select(makeSelectDatasetLabels());
+  const dataset_labels = yield select(makeSelectDatasetLabels());
   const contributors = yield select(makeSelectContributors());
   // FIXME: emabrgo date format mismathc frontend/bacend
   const embargo = yield select(makeSelectEmbargoDate());
@@ -85,7 +85,7 @@ function* prepareRequestData(userId, submit = true) {
     metadata_schema,
     legal_requirements,
     related_publications,
-    datasetLabels,
+    dataset_labels,
     categories,
     contributors,
   }, formValues);

@@ -96,7 +96,7 @@ const makeSelectCurrentRelatedPublication = () =>
 
 const makeSelectDatasetLabels = () =>
   createSelector(selectSubmissionFormDomain, substate =>
-    substate.get('datasetLabels'),
+    substate.get('dataset_labels'),
   );
 
 const makeSelectCurrentLabel = () =>

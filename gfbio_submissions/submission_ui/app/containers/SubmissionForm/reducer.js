@@ -74,7 +74,7 @@ export const initialState = fromJS({
   currentRelatedPublication: '',
   relatedPublications: [],
   currentLabel: '',
-  datasetLabels: [],
+  dataset_labels: [],
   fileUploads: [],
   fileUploadInProgress: false,
   brokerSubmissionId: '',
@@ -137,15 +137,14 @@ function submissionFormReducer(state = initialState, action) {
     case ADD_DATASET_LABEL:
       // console.log('ADD_DATASET_LABEL ');
       // console.log(action);
-      // console.log(state.get('datasetLabels'));
       return state
-        .update('datasetLabels', (datasetLabels) => datasetLabels.push(action.value))
+        .update('dataset_labels', (dataset_labels) => dataset_labels.push(action.value))
         .set('currentLabel', '');
     case REMOVE_DATASET_LABEL:
       // console.log('REMOVE_DATASET_LABEL ');
       // console.log(action);
       return state
-        .update('datasetLabels', (datasetLabels) => datasetLabels.splice(action.index, 1));
+        .update('dataset_labels', (dataset_labels) => dataset_labels.splice(action.index, 1));
     case ADD_FILE_UPLOAD:
       return state
         .update('fileUploads', (fileUploads) => fileUploads.push(...action.value));
