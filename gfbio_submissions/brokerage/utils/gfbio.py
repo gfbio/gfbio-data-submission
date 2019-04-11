@@ -152,6 +152,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
         'customfield_10303': '{0}'.format(submission.broker_submission_id),
         'customfield_10311': requirements.get(
             'data_collection_time', ''),
+        # FIXME: labels not shown in ticket
         'customfield_10308': [{'value': c} for c in
                               requirements.get(
                                   'dataset_label',
