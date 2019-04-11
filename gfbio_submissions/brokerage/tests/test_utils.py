@@ -880,6 +880,38 @@ class TestHelpDeskTicketMethods(TestCase):
     def _delete_test_data():
         SubmissionUpload.objects.all().delete()
 
+    def test_prepare_helpdesk_payload(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'generic_data.json'), 'r') as data_file:
+            data = json.load(data_file)
+        serializer = SubmissionSerializer(data={
+            'target': 'GENERIC',
+            'release': True,
+            'data': data
+        })
+        serializer.is_valid()
+        submission = serializer.save(site=User.objects.first())
+        site_config = SiteConfiguration.objects.first()
+        payload = gfbio_prepare_create_helpdesk_payload(
+            site_config=site_config,
+            submission=submission)
+        self.assertEqual({'name': 'ikostadi'}, payload['fields']['assignee'])
+
+        data['requirements'].pop('data_center')
+        serializer = SubmissionSerializer(data={
+            'target': 'GENERIC',
+            'release': True,
+            'data': data
+        })
+        serializer.is_valid()
+        submission = serializer.save(site=User.objects.first())
+        site_config = SiteConfiguration.objects.first()
+        payload = gfbio_prepare_create_helpdesk_payload(
+            site_config=site_config,
+            submission=submission)
+        self.assertNotIn('assignee', payload['fields'].keys())
+
     @responses.activate
     def test_create_helpdesk_ticket(self):
         submission = Submission.objects.first()
@@ -925,6 +957,8 @@ class TestHelpDeskTicketMethods(TestCase):
                             HELPDESK_API_SUB_URL),
             json={'bla': 'blubb'},
             status=200)
+        # datacenter jira user mappings
+        # https://gfbio.biowikifarm.net/internal/Data_Centers_Contact_Persons
         data = gfbio_prepare_create_helpdesk_payload(
             site_config=site_config,
             submission=submission)

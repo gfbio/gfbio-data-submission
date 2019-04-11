@@ -232,6 +232,26 @@ HELPDESK_METASCHEMA_MAPPINGS = getattr(
     }
 )
 
+# datacenter jira user mappings
+# https://gfbio.biowikifarm.net/internal/Data_Centers_Contact_Persons
+# TODO: always sync with list of valid datacenter values in json-schema file
+HELPDESK_DATACENTER_USER_MAPPINGS = getattr(
+    settings,
+    'HELPDESK_DATACENTER_USER_MAPPINGS',
+    {
+        # default/no user: 'GFBio Data Centers - our curators will suggest the appropriate one(s)': '',
+        'ENA – European Nucleotide Archive': 'ikostadi',
+        'PANGAEA – Data Publisher for Earth & Environmental Science': 'pangaea',
+        'BGBM – Botanic Garden and Botanical Museum Berlin, Freie Universität Berlin': 'bgbm',
+        'DSMZ – Leibniz Institute DSMZ – German Collection of Microorganisms and Cell Cultures, Braunschweig': 'dsmz',
+        'MfN – Leibniz Institute for Research on Evolution and Biodiversity, Berlin': 'mfn',
+        'SGN – Senckenberg Gesellschaft für Naturforschung – Leibniz Institute, Frankfurt': 'sgn',
+        'SMNS – State Museum of Natural History Stuttgart': 'smns',
+        'SNSB – Staatliche Naturwissenschaftliche Sammlungen Bayerns – SNSB IT Center, München': 'snsb',
+        'ZFMK – Zoological Research Museum Alexander Koenig – Leibniz Institute for Animal Biodiversity, Bonn': 'zfmk',
+    }
+)
+
 PANGAEA = getattr(
     settings,
     'PANGAEA',
