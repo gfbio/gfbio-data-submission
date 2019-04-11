@@ -151,15 +151,13 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
         'customfield_10313': ', '.join(
             requirements.get('categories', [])),
         'customfield_10205': requirements.get('dataset_author', ''),
-        'customfield_10307': requirements.get(
-            'related_publications', ''),
+        'customfield_10307': '; '.join(requirements.get('related_publications', [])),
         'customfield_10216': [{'value': l} for l in
                               requirements.get('legal_requirements',
                                                [])],
         'customfield_10314': requirements.get('project_id', ''),
-        'customfield_10202': [
-            HELPDESK_LICENSE_MAPPINGS.get(
-                requirements.get('license', 'Other'))]}
+        'customfield_10202': HELPDESK_LICENSE_MAPPINGS.get(requirements.get('license', 'Other'))
+    }
 
     metadata_schema = requirements.get('metadata_schema',
                                        'Other metadata or documentation')
