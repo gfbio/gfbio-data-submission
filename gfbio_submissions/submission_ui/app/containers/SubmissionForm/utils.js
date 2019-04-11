@@ -55,10 +55,25 @@ export const setStateFormValues = (state, action) => {
     .set('initialValues', prepareInitialValues(action.response.data))
     .set('relatedPublications', fromJS(action.response.data.data.requirements.related_publications))
     .set('datasetLabels', fromJS(action.response.data.data.requirements.datasetLabels))
-    .set('contributors', action.response.data.data.requirements.contributors)
+    .set('contributors', fromJS(action.response.data.data.requirements.contributors))
     .set('embargoDate', new Date(action.response.data.embargo))
     .set('license', action.response.data.data.requirements.license)
     .set('metaDataSchema', action.response.data.data.requirements.metadata_schema)
     // TODO: need whole submission ?
     .set('submission', action.response.data);
+};
+
+export const resetStateFormValues = (state) => {
+  return state
+    .set('brokerSubmissionId', '')
+    .set('initialValues', {})
+    .set('relatedPublications', fromJS([]))
+    .set('datasetLabels', fromJS([]))
+    .set('contributors', [])
+    .set('embargoDate', new Date())
+    .set('license', 'CC BY 4.0')
+    .set('metaDataSchema', 'None')
+    .set('fileUploads', fromJS([]))
+    // TODO: need whole submission ?
+    .set('submission', {});
 };

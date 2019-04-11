@@ -12,7 +12,8 @@ import {
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
-  CHANGE_META_DATA_SCHEMA, CLOSE_SAVE_SUCCESS,
+  CHANGE_META_DATA_SCHEMA,
+  CLOSE_SAVE_SUCCESS,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
   FETCH_SUBMISSION_SUCCESS,
@@ -20,6 +21,7 @@ import {
   REMOVE_DATASET_LABEL,
   REMOVE_FILE_UPLOAD,
   REMOVE_RELATED_PUBLICATION,
+  RESET_FORM,
   SAVE_FORM,
   SAVE_FORM_ERROR,
   SAVE_FORM_SUCCESS,
@@ -31,6 +33,9 @@ import {
   SUBMIT_FORM_START,
   SUBMIT_FORM_SUCCESS,
   UPDATE_CONTRIBUTOR,
+  UPDATE_SUBMISSION,
+  UPDATE_SUBMISSION_ERROR,
+  UPDATE_SUBMISSION_SUCCESS,
   UPLOAD_FILE_ERROR,
   UPLOAD_FILE_PROGRESS,
   UPLOAD_FILE_SUCCESS,
@@ -38,7 +43,7 @@ import {
   UPLOAD_FILES_ERROR,
   UPLOAD_FILES_SUCCESS,
 } from './constants';
-import { setStateFormValues } from './utils';
+import { resetStateFormValues, setStateFormValues } from './utils';
 
 let backendParameters = {};
 if (window.props !== undefined) {
@@ -56,11 +61,11 @@ export const initialState = fromJS({
   showSaveSuccess: false,
   embargoDate: new Date(),
   // userId: backendParameters.userId || -1,
-  // TODO: replace. development default of 2
+  // FIXME: replace. development default of 2
   userId: backendParameters.userId || 2,
   // token: backendParameters['token'] || 'NO_TOKEN',
   // FIXME: replace. during development token defaults to test-server user
-  token: backendParameters['token'],
+  token: backendParameters['token'] || '5639b56bd077fb3e12d7e4a0ada244aaa970c2fd',
   userName: backendParameters.userName || '',
   // TODO: decide what from actual response is needed, then put in reducer
   submitResponse: {},
@@ -188,18 +193,18 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .update('contributors', (contributors) => contributors.push(action.contributor));
     case UPDATE_CONTRIBUTOR:
-      // console.log('UPDATE_CONTRIBUTOR');
-      // console.log(action.contributor);
-      // console.log(action.index);
+      console.log('UPDATE_CONTRIBUTOR');
+      console.log(action.contributor);
+      console.log(action.index);
       return state
         .update('contributors', (contributors) => contributors.splice(action.index, 1, action.contributor));
     case REMOVE_CONTRIBUTOR:
-      // console.log('REMOVE_CONTRIBUTOR');
-      // console.log(action.index);
+      console.log('REMOVE_CONTRIBUTOR');
+      console.log(action.index);
       return state
         .update('contributors', (contributors) => contributors.splice(action.index, 1));
     case FETCH_SUBMISSION:
-      // console.log('FETCH_SUBMISSION');
+      console.log('FETCH_SUBMISSION');
       // TODO: set prop to inidcate loading -> loading gif
       return state.set('requestBrokerSubmissionId', action.brokerSubmissionId);
     case FETCH_SUBMISSION_SUCCESS:
@@ -210,7 +215,28 @@ function submissionFormReducer(state = initialState, action) {
       // console.log(typeof action.response.data.data.requirements.contributors);
       return setStateFormValues(state, action);
     case FETCH_SUBMISSION_ERROR:
-      // console.log('FETCH_SUBMISSION_ERROR');
+      console.log('FETCH_SUBMISSION_ERROR');
+      return state;
+    case RESET_FORM:
+      console.log('RESET_FORM');
+      return resetStateFormValues(state);
+    case UPDATE_SUBMISSION:
+      console.log('UPDATE_SUBMISSION');
+      // TODO: set prop to inidcate loading -> loading gif
+      // return state.set('requestBrokerSubmissionId', action.brokerSubmissionId);
+      return state;
+    case UPDATE_SUBMISSION_SUCCESS:
+      console.log('UPDATE_SUBMISSION_SUCCESS');
+      // TODO: 2x data: 1 from axios 1 from json-body
+      // TODO: refactor to some sort of getter with checks
+      console.log(action.response.data.broker_submission_id);
+      // console.log(typeof action.response.data.data.requirements.contributors);
+      return state
+        .set('saveInProgress', false)
+        .set('showSaveSuccess', true);
+      // return setStateFormValues(state, action);
+    case UPDATE_SUBMISSION_ERROR:
+      console.log('UPDATE_SUBMISSION_ERROR');
       return state;
     default:
       return state;

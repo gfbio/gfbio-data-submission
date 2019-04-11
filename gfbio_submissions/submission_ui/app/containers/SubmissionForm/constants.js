@@ -48,8 +48,13 @@ export const FETCH_SUBMISSION = 'app/SubmissionForm/FETCH_SUBMISSION';
 export const FETCH_SUBMISSION_SUCCESS = 'app/SubmissionForm/FETCH_SUBMISSION_SUCCESS';
 export const FETCH_SUBMISSION_ERROR = 'app/SubmissionForm/FETCH_SUBMISSION_ERROR';
 
+export const RESET_FORM = 'app/SubmissionForm/RESET_FORM';
+
 export const CLOSE_SAVE_SUCCESS = 'app/SubmissionForm/CLOSE_SAVE_SUCCESS';
 
+export const UPDATE_SUBMISSION = 'app/SubmissionForm/UPDATE_SUBMISSION';
+export const UPDATE_SUBMISSION_SUCCESS = 'app/SubmissionForm/UPDATE_SUBMISSION_SUCCESS';
+export const UPDATE_SUBMISSION_ERROR = 'app/SubmissionForm/UPDATE_SUBMISSION_ERROR';
 
 /* non redux constants */
 export const DATA_CATEGORY_PREFIX = 'data-category ';

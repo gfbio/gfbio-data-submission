@@ -15,7 +15,12 @@ import injectReducer from 'utils/injectReducer';
 import FormWrapper from 'components/FormWrapper';
 import reducer from './reducer';
 import saga from './saga';
-import { fetchSubmission, setEmbargoDate, submitForm } from './actions';
+import {
+  fetchSubmission,
+  resetForm,
+  setEmbargoDate,
+  submitForm,
+} from './actions';
 import {
   makeSelectBrokerSubmissionId,
   makeSelectEmbargoDate,
@@ -30,6 +35,8 @@ import {
 export class SubmissionForm extends React.Component {
 
   componentDidMount() {
+    console.log('SFORM did mounr params');
+    console.log(this.props.match.params);
     const { brokerSubmissionId } = this.props.match.params;
     if (brokerSubmissionId !== undefined) {
       this.props.fetchSubmission(brokerSubmissionId);
@@ -53,9 +60,13 @@ export class SubmissionForm extends React.Component {
 
   render() {
 
-    // console.log('--------------render SubmissionForm');
-    // console.log(this.props);
-    // console.log('###############################');
+    console.log('--------------render SubmissionForm');
+    console.log(this.props);
+    console.log('###############################');
+
+    if (this.props.brokerSubmissionId !== '' && this.props.match.path === '/form') {
+      this.props.resetForm();
+    }
 
     /*
     *  TODO: - adapt submit/save processes to update instead of submit new (set/use brokerSubnmissionId ?)
@@ -90,6 +101,7 @@ SubmissionForm.propTypes = {
   submission: PropTypes.object,
   brokerSubmissionId: PropTypes.string,
   fetchSubmission: PropTypes.func,
+  resetForm: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -107,6 +119,7 @@ function mapDispatchToProps(dispatch) {
     handleSubmit: form => dispatch(submitForm(form)),
     handleDateChange: date => dispatch(setEmbargoDate(date)),
     fetchSubmission: brokerSubmissionId => dispatch(fetchSubmission(brokerSubmissionId)),
+    resetForm: () => (dispatch(resetForm())),
   };
 }
 

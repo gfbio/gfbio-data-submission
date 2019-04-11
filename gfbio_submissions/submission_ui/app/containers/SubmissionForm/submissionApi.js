@@ -2,7 +2,7 @@ import axios from 'axios';
 import { END, eventChannel } from 'redux-saga';
 import { API_ROOT, SUBMISSIONS, UPLOAD, USER_URL } from '../../globalConstants';
 
-export const postSubmission = (token, data_body) => {
+export const postSubmission = (token, dataBody) => {
 
   const instance = axios.create({
     // TODO: remove API_ROOT compate above TODOs
@@ -14,7 +14,7 @@ export const postSubmission = (token, data_body) => {
     },
   });
 
-  return instance.post('', data_body);
+  return instance.post('', dataBody);
   // .then(function(response) {
   //   console.log(response);
   // })
@@ -22,6 +22,20 @@ export const postSubmission = (token, data_body) => {
   //   console.log(error);
   // });
 
+};
+
+export const putSubmission = (token, brokerSubmissionId, dataBody) => {
+  const config = {
+    headers: {
+      'Authorization': 'Token ' + token,
+      'Content-Type': 'application/json',
+    },
+  };
+  return axios.put(
+    `${API_ROOT + SUBMISSIONS + brokerSubmissionId}/`,
+    dataBody,
+    config,
+  );
 };
 
 export const getSubmission = (token, brokerSubmissionId) => {

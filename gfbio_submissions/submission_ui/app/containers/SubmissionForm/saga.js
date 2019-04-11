@@ -14,12 +14,13 @@ import {
   SAVE_FORM,
   SUBMIT_FORM,
   SUBMIT_FORM_START,
+  UPDATE_SUBMISSION,
   UPLOAD_FILES,
 } from './constants';
 import {
   makeSelectBrokerSubmissionId,
   makeSelectContributors,
-  makeSelectDatasetLabels,
+  makeSelectDatasetLabels, makeSelectEmbargoDate,
   makeSelectFileUploads,
   makeSelectFormWrapper,
   makeSelectLicense,
@@ -39,20 +40,21 @@ import {
   submitFormError,
   submitFormStart,
   submitFormSuccess,
+  updateSubmission,
+  updateSubmissionError,
+  updateSubmissionSuccess,
   uploadFileError,
   uploadFileProgress,
-  uploadFiles,
   uploadFilesSuccess,
   uploadFileSuccess,
 } from './actions';
 import {
   createUploadFileChannel,
   getSubmission,
-  postSubmission,
+  postSubmission, putSubmission,
 } from './submissionApi';
 
 import { push } from 'connected-react-router/immutable';
-// const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 // TODO: move logic to utils.js. here only workflow
 function* prepareRequestData(userId, submit = true) {
@@ -76,6 +78,7 @@ function* prepareRequestData(userId, submit = true) {
   const related_publications = yield select(makeSelectRelatedPublications());
   const datasetLabels = yield select(makeSelectDatasetLabels());
   const contributors = yield select(makeSelectContributors());
+  const embargo = yield select(makeSelectEmbargoDate());
   const requirements = Object.assign({
     license,
     metadata_schema,
@@ -86,10 +89,16 @@ function* prepareRequestData(userId, submit = true) {
     contributors,
   }, formValues);
   return {
+    // TODO: determine target according to "Target Data center" value. e.g. "ena" = ENA_PANGAEA
+    // TODO: change name of non-molecular to sth. else
     target: 'GENERIC',
     release: submit, // false for save
     submitting_user: userId,
-    // download_url: 'url?',
+    // FIXME: url regex in backend schema does not match this
+    // TODO: good chance to show errors responded from server validation
+    download_url: formValues.dataUrl,
+    // FIXME: this sends ISO with timezone, but server does not like it
+    // embargo: embargo,
     data: {
       requirements: requirements,
     },
@@ -115,41 +124,57 @@ function* uploadProgressWatcher(channel, index) {
   }
 }
 
-function* uploadFile(file, index) {
-  const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
-  const token = yield select(makeSelectToken());
+function* uploadFile(token, brokerSubmissionId, file, index) {
+  // TODO: move to performUploadSaga. before loop.
+  // const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
+  // const token = yield select(makeSelectToken());
+  console.log('uploadFile');
+  console.log(brokerSubmissionId);
   try {
     const uploadChannel = yield call(createUploadFileChannel, brokerSubmissionId, file.file, token);
     yield fork(uploadProgressWatcher, uploadChannel, index);
   } catch (err) {
-    // console.log('yield error action uploadFile');
-    // console.log(err);
+    console.log('yield error action uploadFile');
+    console.log(err);
     yield put(uploadFileError(index, err));
   }
 }
 
-function* performUploadSaga() {
+function* performUploadSaga(brokerSubmissionId) {
+  console.log('performUploadSaga');
   const fileUploads = yield select(makeSelectFileUploads());
+  // const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
+  const token = yield select(makeSelectToken());
   let index = 0;
   for (let f of fileUploads) {
-    yield call(uploadFile, f, index);
+    yield call(uploadFile, token, brokerSubmissionId, f, index);
     index++;
   }
   yield put(uploadFilesSuccess({}));
+  console.log('put upload success is done');
+  console.log('put push is done');
 }
 
+
 export function* performSubmitFormSaga() {
-  const token = yield select(makeSelectToken());
-  const userId = yield select(makeSelectUserId());
-  const payload = yield prepareRequestData(userId);
-  try {
-    const response = yield call(postSubmission, token, payload);
-    yield put(uploadFiles());
-    yield put(submitFormSuccess(response));
-    yield put(push('/list'));
-  } catch (error) {
-    // console.log(error);
-    yield put(submitFormError(error));
+  console.log('performSubmitFormSaga. bsi:');
+  const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
+  console.log(brokerSubmissionId);
+  if (brokerSubmissionId !== '') {
+    yield put(updateSubmission(true));
+  } else {
+    const token = yield select(makeSelectToken());
+    const userId = yield select(makeSelectUserId());
+    const payload = yield prepareRequestData(userId);
+    try {
+      const response = yield call(postSubmission, token, payload);
+      yield call(performUploadSaga, response.data.broker_submission_id);
+      yield put(submitFormSuccess(response));
+      yield put(push('/list'));
+    } catch (error) {
+      // console.log(error);
+      yield put(submitFormError(error));
+    }
   }
 }
 
@@ -158,17 +183,39 @@ export function* performSaveFormSaga() {
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
   console.log(brokerSubmissionId);
   // TODO: if bsi put update action ....
+  if (brokerSubmissionId !== '') {
+    yield put(updateSubmission(false));
+  } else {
+    const token = yield select(makeSelectToken());
+    const userId = yield select(makeSelectUserId());
+    const payload = yield prepareRequestData(userId, false);
+    try {
+      const response = yield call(postSubmission, token, payload);
+      yield call(performUploadSaga, response.data.broker_submission_id);
+      yield put(saveFormSuccess(response));
+      yield put(push('/list'));
+    } catch (error) {
+      yield put(saveFormError(error));
+    }
+  }
+}
 
+export function* performUpdateSubmissionSaga() {
+  console.log('performUpdateSubmissionSaga. bsi:');
+  const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
+  console.log(brokerSubmissionId);
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
   const payload = yield prepareRequestData(userId, false);
   try {
-    const response = yield call(postSubmission, token, payload);
-    yield put(uploadFiles());
-    yield put(saveFormSuccess(response));
+    const response = yield call(putSubmission, token, brokerSubmissionId, payload);
+    // TODO: updates of file are handled in extra story
+    // NOOPE: yield put(uploadFiles());
+    // yield call(performUploadSaga);
+    yield put(updateSubmissionSuccess(response));
     yield put(push('/list'));
   } catch (error) {
-    yield put(saveFormError(error));
+    yield put(updateSubmissionError(error));
   }
 }
 
@@ -249,6 +296,11 @@ export function* fetchSubmissionSaga() {
   yield takeLatest(FETCH_SUBMISSION, performFetchSubmissionSaga);
 }
 
+export function* updateSubmissionSaga() {
+  yield takeLeading(UPDATE_SUBMISSION, performUpdateSubmissionSaga);
+}
+
 export default function* rootSaga() {
-  yield all([checkFormTypeSaga(), saveFormSaga(), submitFormSaga(), uploadFilesSaga(), fetchSubmissionSaga()]);
+  yield all([checkFormTypeSaga(), saveFormSaga(), submitFormSaga(),
+    uploadFilesSaga(), fetchSubmissionSaga(), updateSubmissionSaga()]);
 }

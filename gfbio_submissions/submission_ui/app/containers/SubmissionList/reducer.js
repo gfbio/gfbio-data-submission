@@ -23,7 +23,9 @@ export const initialState = fromJS({
   userId: backendParameters.userId || 2,
   // token: backendParameters['token'] || 'NO_TOKEN',
   // FIXME: replace. during development token defaults to test-server user
-  token: backendParameters['token'],
+  // token: backendParameters['token'],
+  // FIXME: replace. during development token defaults to test-server user
+  token: backendParameters['token'] || '5639b56bd077fb3e12d7e4a0ada244aaa970c2fd',
   userName: backendParameters.userName || '',
 
 });
@@ -35,8 +37,7 @@ function submissionListReducer(state = initialState, action) {
     case FETCH_SUBMISSIONS_SUCCESS:
       // console.log('FETCH_SUBMISSIONS_SUCCESS');
       // console.log(action.response);
-      return state.
-        set('submissions',action.response.data);
+      return state.set('submissions', action.response.data);
     case FETCH_SUBMISSIONS_ERROR:
       return state;
     default:
