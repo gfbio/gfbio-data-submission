@@ -110,6 +110,33 @@ class TestInitialChainTasks(TestCase):
             self.assertIn(t.task_name, expected_tasknames)
 
     @responses.activate
+    def test_no_release_initial_chain(self):
+        self._add_create_ticket_response()
+        task_reports = TaskProgressReport.objects.all()
+        self.assertEqual(0, len(task_reports))
+        min_response = self.api_client.post(
+            '/api/submissions/',
+            content_type='application/json',
+            data=json.dumps({
+                'target': 'GENERIC',
+                'release': False,
+                'data': {
+                    'requirements': {
+                        'title': 'A Title',
+                        'description': 'A Description'
+                    }
+                }
+            }))
+        self.assertEqual(201, min_response.status_code)
+        task_reports = TaskProgressReport.objects.all()
+        expected_tasknames = ['tasks.get_gfbio_user_email_task',
+                              'tasks.create_helpdesk_ticket_task',
+                              'tasks.trigger_submission_transfer', ]
+        self.assertEqual(3, len(task_reports))
+        for t in task_reports:
+            self.assertIn(t.task_name, expected_tasknames)
+
+    @responses.activate
     def test_max_post_with_release_initial_chain(self):
         self._add_create_ticket_response()
         task_reports = TaskProgressReport.objects.all()

@@ -100,7 +100,6 @@ def trigger_submission_transfer_for_updates(broker_submission_id=None):
         submission_id=submission.pk,
         target_archive=submission.target
     )
-    # TODO: update means no new ticket and gfbio-email !!!
     transfer_handler.initiate_submission_process(release=submission.release,
                                                  update=True)
 
