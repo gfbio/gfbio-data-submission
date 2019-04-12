@@ -28,7 +28,7 @@ import {
   makeSelectReduxFormForm,
   makeSelectRelatedPublications,
   makeSelectRequestBrokerSubmissionId,
-  makeSelectToken,
+  makeSelectToken, makeSelectUpdateWithRelease,
   makeSelectUserId,
 } from './selectors';
 import {
@@ -166,14 +166,13 @@ export function* performSubmitFormSaga() {
   } else {
     const token = yield select(makeSelectToken());
     const userId = yield select(makeSelectUserId());
-    const payload = yield prepareRequestData(userId);
+    const payload = yield prepareRequestData(userId, true);
     try {
       const response = yield call(postSubmission, token, payload);
       yield call(performUploadSaga, response.data.broker_submission_id);
       yield put(submitFormSuccess(response));
       yield put(push('/list'));
     } catch (error) {
-      // console.log(error);
       yield put(submitFormError(error));
     }
   }
@@ -207,7 +206,8 @@ export function* performUpdateSubmissionSaga() {
   console.log(brokerSubmissionId);
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
-  const payload = yield prepareRequestData(userId, false);
+  const updateWithRelease = yield select(makeSelectUpdateWithRelease());
+  const payload = yield prepareRequestData(userId, updateWithRelease);
   try {
     const response = yield call(putSubmission, token, brokerSubmissionId, payload);
     // TODO: updates of file are handled in extra story
@@ -221,7 +221,9 @@ export function* performUpdateSubmissionSaga() {
 }
 
 export function* processSubmitFormTypeSaga() {
+  console.log('processSubmitFormTypeSaga');
   const reduxFormForm = yield select(makeSelectReduxFormForm());
+  console.log(reduxFormForm.workflow);
   if (reduxFormForm.workflow === 'save') {
     yield put(saveForm());
   } else if (reduxFormForm.workflow === 'submit') {

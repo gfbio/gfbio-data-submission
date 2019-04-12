@@ -81,6 +81,7 @@ export const initialState = fromJS({
   requestBrokerSubmissionId: '',
   contributors: [],
   currentContributor: {},
+  updateWithRelease: false,
 });
 
 
@@ -223,7 +224,8 @@ function submissionFormReducer(state = initialState, action) {
       console.log('UPDATE_SUBMISSION');
       // TODO: set prop to inidcate loading -> loading gif
       // return state.set('requestBrokerSubmissionId', action.brokerSubmissionId);
-      return state;
+      return state
+        .set('updateWithRelease', action.release);
     case UPDATE_SUBMISSION_SUCCESS:
       console.log('UPDATE_SUBMISSION_SUCCESS');
       // TODO: 2x data: 1 from axios 1 from json-body
@@ -232,11 +234,13 @@ function submissionFormReducer(state = initialState, action) {
       // console.log(typeof action.response.data.data.requirements.contributors);
       return state
         .set('saveInProgress', false)
-        .set('showSaveSuccess', true);
+        .set('showSaveSuccess', true)
+        .set('updateWithRelease', false);
       // return setStateFormValues(state, action);
     case UPDATE_SUBMISSION_ERROR:
       console.log('UPDATE_SUBMISSION_ERROR');
-      return state;
+      return state
+        .set('updateWithRelease', action.release);
     default:
       return state;
   }

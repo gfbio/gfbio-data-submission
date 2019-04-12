@@ -134,6 +134,12 @@ const makeSelectShowSaveSuccess = () =>
     substate.get('showSaveSuccess'),
   );
 
+const makeSelectUpdateWithRelease = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('updateWithRelease'),
+  );
+
+
 export default makeSelectSubmissionForm;
 
 export {
@@ -159,4 +165,5 @@ export {
   makeSelectSubmission,
   makeSelectRequestBrokerSubmissionId,
   makeSelectShowSaveSuccess,
+  makeSelectUpdateWithRelease,
 };
