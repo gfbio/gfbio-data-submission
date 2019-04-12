@@ -140,6 +140,7 @@ class SubmissionTransferHandler(object):
             'SubmissionTransferHandler. update={0} release={1}'
             ''.format(update, release)
         )
+        # TODO: update only, without release does nothing ?
         if update and release:
             if self.target_archive == ENA or self.target_archive == ENA_PANGAEA:
                 logger.info(

@@ -127,7 +127,6 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
     jira_request_type = 'dsub/{0}'.format(jira_request_target) \
         if site_config.jira_project_key == SiteConfiguration.DSUB \
         else 'sand/{0}-data'.format(jira_request_target)
-    print('\n------------------------\n', requirements.get('dataset_labels', []))
     mutual_data = {
         'project': {
             'key': site_config.jira_project_key
