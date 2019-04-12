@@ -36,7 +36,7 @@ export const prepareInitialValues = (submissionData) => {
   // console.log('prepareInitialValues submissionData');
   // console.log(submissionData);
   let initialValues = {};
-  const directMatchingKeys = ['title', 'description', 'dataUrl', 'comment', 'data_center'];
+  const directMatchingKeys = ['title', 'description', 'download_url', 'comment', 'data_center'];
   if (submissionData.data !== undefined && submissionData.data.requirements != undefined) {
     const requirements = submissionData.data.requirements;
 
@@ -54,7 +54,7 @@ export const setStateFormValues = (state, action) => {
     .set('brokerSubmissionId', action.response.data.broker_submission_id)
     .set('initialValues', prepareInitialValues(action.response.data))
     .set('relatedPublications', fromJS(action.response.data.data.requirements.related_publications))
-    .set('datasetLabels', fromJS(action.response.data.data.requirements.datasetLabels))
+    .set('dataset_labels', fromJS(action.response.data.data.requirements.dataset_labels))
     .set('contributors', fromJS(action.response.data.data.requirements.contributors))
     .set('embargoDate', new Date(action.response.data.embargo))
     .set('license', action.response.data.data.requirements.license)
@@ -68,7 +68,7 @@ export const resetStateFormValues = (state) => {
     .set('brokerSubmissionId', '')
     .set('initialValues', {})
     .set('relatedPublications', fromJS([]))
-    .set('datasetLabels', fromJS([]))
+    .set('dataset_labels', fromJS([]))
     .set('contributors', [])
     .set('embargoDate', new Date())
     .set('license', 'CC BY 4.0')
