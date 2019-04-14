@@ -56,35 +56,43 @@ export class SubmissionList extends React.Component {
 
     let submissionItems = this.props.submissions.map((submission, index) => {
       return <li key={index} className="list-group-item">
-        <Link className="row no-gutters"
-              to={'/form/' + submission.broker_submission_id}>
-          <div className="col-md-8 col-sm-12 align-self-center title">
-            {/*icon ion-ios-redo*/}
-            <i className="icon ion-md-apps" />
-            <span>{submission.data.requirements.title}</span>
+
+        <div className="row wrapping-row no-gutters">
+
+          <div className="col-md-10">
+            {/*left*/}
+            <Link className="row no-gutters"
+                  to={'/form/' + submission.broker_submission_id}>
+              <div className="col-md-9 col-sm-12 align-self-center">
+                {/*icon ion-ios-redo*/}
+                <i className="icon ion-md-apps" />
+                <span>{submission.data.requirements.title}</span>
+              </div>
+              <div className="col-md-3 col-sm-12 align-self-center status">
+                <span className="">
+                  {submission.status}
+                </span>
+              </div>
+            </Link>
           </div>
-          <div className="col-md-2 col-sm-12 align-self-center status">
-            <span className="">
-              {submission.status}
-            </span>
-          </div>
-          {/*<div className="col-md-1 edit">*/}
-          {/* if saved, else submitted and no edit possible */}
-          {/*<span>Edit</span>*/}
-          {/*</div>*/}
+
           <div className="col-md-2 col-sm-12 align-self-center actions">
-            <a
-              className="action h-100 d-inline-block pr-4 pl-4"
-            >
-              <i className="icon ion-md-create" />Edit</a>
-            <a
-              className="action h-100 d-inline-block"
-              onClick={() => this.props.deleteSubmission(submission.brokerSubmissionId)}
+            {/*right pr-4 pl-4*/}
+            <a className="action h-100 d-inline-block pr-4" href="">
+              <i className="icon ion-md-create" /> Edit
+            </a>
+            <a className="action h-100 d-inline-block"
+               href=""
+               onClick={(e) => {
+                 e.preventDefault();
+                 console.log('ON CLICK LIST DELETE');
+                 this.props.deleteSubmission(submission.brokerSubmissionId);
+               }}
             >
               <i className="icon ion-md-trash" />Delete</a>
           </div>
-          {/*{submission.broker_submission_id}*/}
-        </Link>
+        </div>
+
       </li>;
     });
 

@@ -579,6 +579,7 @@ section.sub-navi .nav .active {
 
 .submission-list-wrapper ul li {
   border-color: #ced4da;
+  background-color: #f8f8f8;
   margin: .5rem 0 .5rem 0;
   padding: 0;
   color: #343a40;
@@ -592,17 +593,16 @@ section.sub-navi .nav .active {
   border-radius: 0;
 }
 
-.submission-list-wrapper ul li:hover {
-  border-color: #62BEEB;
-}
-
 .submission-list-wrapper ul li a {
   font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   color: #343a40;
-  background-color: #f8f8f8;
   text-decoration: none;
-  padding: 0 0 0 .5rem;
+  padding: .5rem;
   font-size: .9rem;
+}
+
+.submission-list-wrapper ul li a span {
+  padding-right: .75rem;
 }
 
 .submission-list-wrapper ul li a .status {
@@ -612,55 +612,46 @@ section.sub-navi .nav .active {
   color: #868e96;
 }
 
-.submission-list-wrapper ul li a .actions {
-  text-align: right;
-}
-
 .submission-list-wrapper ul li a i {
   color: #81B248;
   padding: 0 .75rem 0 .75rem;
   font-size: 1rem;
 }
 
-.submission-list-wrapper ul li a span {
-  padding-right: .75rem;
+.submission-list-wrapper ul li .actions {
+  text-align: right;
 }
 
-.submission-list-wrapper ul li a a.action {
+.submission-list-wrapper ul li a.action {
   padding: .5rem;
   color: #343a40;
-  background-color: #f8f8f8;
 }
 
-.submission-list-wrapper ul li a a.action i {
+.submission-list-wrapper ul li a.action i {
   color: #495057;
   padding: 0 .5rem 0 0;
 }
 
-.submission-list-wrapper ul li a:hover {
+.submission-list-wrapper ul li:hover {
+  border-color: #62BEEB;
   color: #fff;
   background-color: #3CACE4;
 }
 
-.submission-list-wrapper ul li a:hover .status {
+.submission-list-wrapper ul li:hover a {
   color: #fff;
 }
 
-.submission-list-wrapper ul li a:hover i {
+.submission-list-wrapper ul li:hover a .status {
   color: #fff;
 }
 
-.submission-list-wrapper ul li a:hover a.action {
+.submission-list-wrapper ul li:hover a i {
   color: #fff;
-  background-color: #3CACE4;
 }
 
-.submission-list-wrapper ul li a:hover a.action:hover {
+.submission-list-wrapper ul li:hover a.action:hover {
   background-color: #62BEEB;
-}
-
-.submission-list-wrapper ul li a:hover a.action i {
-  color: #fff;
 }
 
 /* End Submission List */

@@ -340,6 +340,7 @@ section.sub-navi {
     li {
 
       border-color: $form-gray-1;
+      background-color: $gray-100;
       margin: .5rem 0 .5rem 0;
       //padding-top: 0;
       //padding-bottom 0;
@@ -356,25 +357,30 @@ section.sub-navi {
         border-radius: 0;
       }
 
-      &:hover {
-        border-color: $color-primary-2;
+      .wrapping-row {
+        //background-color: $gray-100;
       }
 
       a {
         @include raleway;
         color: $gray-800;
-        background-color: $gray-100;
+        //background-color: $gray-100;
         text-decoration: none;
-        padding: 0 0 0 .5rem;
+        //padding: 0 0 0 .5rem;
+        padding: .5rem;
         font-size: .9rem;
 
         //.list-col {
         //  padding: .5rem;
         //}
 
-        .title {
-          //width: 65%;
-          //padding-right: 1rem;
+        //.title {
+        //  //width: 65%;
+        //  //padding-right: 1rem;
+        //}
+
+        span {
+          padding-right: .75rem;
         }
 
         .status {
@@ -391,35 +397,65 @@ section.sub-navi {
         //  //width: 10%;
         //}
 
-        .actions {
-          text-align: right;
-          //width: 15%;
-        }
-
         i {
           color: $gfbio-green;
           padding: 0 .75rem 0 .75rem;
           font-size: 1rem;
         }
 
-        span {
-          padding-right: .75rem;
+
+        //&:hover {
+        //  color: $white;
+        //  background-color: $gfbio-light-blue;
+        //
+        //  .status {
+        //    color: $white;
+        //  }
+        //
+        //  i {
+        //    color: $white;
+        //  }
+        //
+        //  a.action {
+        //    color: $white;
+        //    background-color: $gfbio-light-blue;
+        //
+        //    &:hover {
+        //      background-color: $color-primary-2;
+        //    }
+        //
+        //    i {
+        //      color: $white;
+        //    }
+        //  }
+        //}
+
+      }
+
+      .actions {
+        text-align: right;
+        //width: 15%;
+
+      }
+
+      a.action {
+        padding: .5rem;
+        color: $gray-800;
+        //background-color: $gray-100;
+
+        i {
+          color: $gray-700;
+          padding: 0 .5rem 0 0;
         }
+      }
 
-        a.action {
-          padding: .5rem;
-          color: $gray-800;
-          background-color: $gray-100;
+      &:hover {
+        border-color: $color-primary-2;
+        color: $white;
+        background-color: $gfbio-light-blue;
 
-          i {
-            color: $gray-700;
-            padding: 0 .5rem 0 0;
-          }
-        }
-
-        &:hover {
+        a {
           color: $white;
-          background-color: $gfbio-light-blue;
 
           .status {
             color: $white;
@@ -428,25 +464,29 @@ section.sub-navi {
           i {
             color: $white;
           }
+        }
 
-          a.action {
-            color: $white;
-            background-color: $gfbio-light-blue;
+        a.action {
+          //padding: .5rem;
+          //color: $gray-800;
+          //background-color: $gray-100;
+          &:hover {
+            background-color: $color-primary-2;
+          }
 
-            &:hover {
-              background-color: $color-primary-2;
-            }
-
-            i {
-              color: $white;
-            }
+          i {
+            //color: $gray-700;
+            //padding: 0 .5rem 0 0;
           }
         }
 
       }
+
+
     }
 
   }
+
 }
 
 /* End Submission List */
