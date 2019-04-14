@@ -139,10 +139,10 @@ const makeSelectUpdateWithRelease = () =>
     substate.get('updateWithRelease'),
   );
 
-const makeSelectDeleteBrokerSubmissionId = () =>
-  createSelector(selectSubmissionFormDomain, substate =>
-    substate.get('deleteBrokerSubmissionId'),
-  );
+// const makeSelectDeleteBrokerSubmissionId = () =>
+//   createSelector(selectSubmissionFormDomain, substate =>
+//     substate.get('deleteBrokerSubmissionId'),
+//   );
 
 export default makeSelectSubmissionForm;
 
@@ -170,5 +170,5 @@ export {
   makeSelectRequestBrokerSubmissionId,
   makeSelectShowSaveSuccess,
   makeSelectUpdateWithRelease,
-  makeSelectDeleteBrokerSubmissionId,
+  // makeSelectDeleteBrokerSubmissionId,
 };

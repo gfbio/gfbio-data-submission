@@ -50,17 +50,17 @@ export const getSubmission = (token, brokerSubmissionId) => {
   );
 };
 
-export const requestDeleteSubmission = (token, brokerSubmissionId) => {
-  const config = {
-    headers: {
-      'Authorization': 'Token ' + token,
-    },
-  };
-  return axios.delete(
-    `${API_ROOT + SUBMISSIONS + brokerSubmissionId}/`,
-    config,
-  );
-};
+// export const requestDeleteSubmission = (token, brokerSubmissionId) => {
+//   const config = {
+//     headers: {
+//       'Authorization': 'Token ' + token,
+//     },
+//   };
+//   return axios.delete(
+//     `${API_ROOT + SUBMISSIONS + brokerSubmissionId}/`,
+//     config,
+//   );
+// };
 
 // TODO: https://decembersoft.com/posts/file-upload-progress-with-redux-saga/
 

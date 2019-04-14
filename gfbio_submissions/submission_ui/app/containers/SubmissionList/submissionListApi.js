@@ -17,3 +17,16 @@ export function getSubmissions(token, userId) {
   );
 
 }
+
+export const requestDeleteSubmission = (token, brokerSubmissionId) => {
+  const config = {
+    headers: {
+      'Authorization': 'Token ' + token,
+    },
+  };
+  return axios.delete(
+    `${API_ROOT + SUBMISSIONS + brokerSubmissionId}/`,
+    config,
+  );
+};
+

@@ -14,9 +14,6 @@ import {
   CHANGE_LICENSE,
   CHANGE_META_DATA_SCHEMA,
   CLOSE_SAVE_SUCCESS,
-  DELETE_SUBMISSION,
-  DELETE_SUBMISSION_ERROR,
-  DELETE_SUBMISSION_SUCCESS,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
   FETCH_SUBMISSION_SUCCESS,
@@ -309,24 +306,24 @@ export function updateSubmissionError(errorResponse) {
   };
 }
 
-export function deleteSubmission(brokerSubmissionId) {
-  return {
-    type: DELETE_SUBMISSION,
-    brokerSubmissionId,
-  };
-}
-
-
-export function deleteSubmissionSuccess(response) {
-  return {
-    type: DELETE_SUBMISSION_SUCCESS,
-    response,
-  };
-}
-
-export function deleteSubmissionError(errorResponse) {
-  return {
-    type: DELETE_SUBMISSION_ERROR,
-    errorResponse,
-  };
-}
+// export function deleteSubmission(brokerSubmissionId) {
+//   return {
+//     type: DELETE_SUBMISSION,
+//     brokerSubmissionId,
+//   };
+// }
+//
+//
+// export function deleteSubmissionSuccess(response) {
+//   return {
+//     type: DELETE_SUBMISSION_SUCCESS,
+//     response,
+//   };
+// }
+//
+// export function deleteSubmissionError(errorResponse) {
+//   return {
+//     type: DELETE_SUBMISSION_ERROR,
+//     errorResponse,
+//   };
+// }

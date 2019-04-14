@@ -15,9 +15,9 @@ import injectReducer from 'utils/injectReducer';
 import { makeSelectSubmissions } from './selectors';
 import reducer from './reducer';
 import saga from './saga';
-import { fetchSubmissions } from './actions';
+import { deleteSubmission, fetchSubmissions } from './actions';
 import { makeSelectShowSaveSuccess } from '../SubmissionForm/selectors';
-import { closeSaveSuccess, deleteSubmission } from '../SubmissionForm/actions';
+import { closeSaveSuccess } from '../SubmissionForm/actions';
 import Collapse from 'react-bootstrap/Collapse';
 import Button from 'react-bootstrap/Button';
 
@@ -86,7 +86,8 @@ export class SubmissionList extends React.Component {
                onClick={(e) => {
                  e.preventDefault();
                  console.log('ON CLICK LIST DELETE');
-                 this.props.deleteSubmission(submission.brokerSubmissionId);
+                 console.log(submission.broker_submission_id);
+                 this.props.deleteSubmission(submission.broker_submission_id);
                }}
             >
               <i className="icon ion-md-trash" />Delete</a>

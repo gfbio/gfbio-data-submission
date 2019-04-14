@@ -6,6 +6,7 @@
 
 import { fromJS } from 'immutable';
 import {
+  DELETE_SUBMISSION, DELETE_SUBMISSION_ERROR, DELETE_SUBMISSION_SUCCESS,
   FETCH_SUBMISSIONS,
   FETCH_SUBMISSIONS_ERROR,
   FETCH_SUBMISSIONS_SUCCESS,
@@ -27,6 +28,7 @@ export const initialState = fromJS({
   // FIXME: replace. during development token defaults to test-server user
   token: backendParameters['token'] || '5639b56bd077fb3e12d7e4a0ada244aaa970c2fd',
   userName: backendParameters.userName || '',
+  deleteBrokerSubmissionId: '',
 
 });
 
@@ -40,6 +42,15 @@ function submissionListReducer(state = initialState, action) {
       return state.set('submissions', action.response.data);
     case FETCH_SUBMISSIONS_ERROR:
       return state;
+    case DELETE_SUBMISSION:
+      return state
+        .set('deleteBrokerSubmissionId', action.brokerSubmissionId);
+    case DELETE_SUBMISSION_SUCCESS:
+      return state
+        .set('deleteBrokerSubmissionId', '');
+    case DELETE_SUBMISSION_ERROR:
+      return state
+        .set('deleteBrokerSubmissionId', '');
     default:
       return state;
   }

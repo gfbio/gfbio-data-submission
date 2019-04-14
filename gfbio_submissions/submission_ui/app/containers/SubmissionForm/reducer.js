@@ -14,9 +14,6 @@ import {
   CHANGE_LICENSE,
   CHANGE_META_DATA_SCHEMA,
   CLOSE_SAVE_SUCCESS,
-  DELETE_SUBMISSION,
-  DELETE_SUBMISSION_ERROR,
-  DELETE_SUBMISSION_SUCCESS,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
   FETCH_SUBMISSION_SUCCESS,
@@ -82,7 +79,7 @@ export const initialState = fromJS({
   fileUploadInProgress: false,
   brokerSubmissionId: '',
   requestBrokerSubmissionId: '',
-  deleteBrokerSubmissionId: '',
+  // deleteBrokerSubmissionId: '',
   contributors: [],
   currentContributor: {},
   updateWithRelease: false,
@@ -247,15 +244,15 @@ function submissionFormReducer(state = initialState, action) {
       console.log('UPDATE_SUBMISSION_ERROR');
       return state
         .set('updateWithRelease', action.release);
-    case DELETE_SUBMISSION:
-      return state
-        .set('deleteBrokerSubmissionId', action.brokerSubmissionId);
-    case DELETE_SUBMISSION_SUCCESS:
-      return state
-        .set('deleteBrokerSubmissionId', '');
-    case DELETE_SUBMISSION_ERROR:
-      return state
-        .set('deleteBrokerSubmissionId', '');
+    // case DELETE_SUBMISSION:
+    //   return state
+    //     .set('deleteBrokerSubmissionId', action.brokerSubmissionId);
+    // case DELETE_SUBMISSION_SUCCESS:
+    //   return state
+    //     .set('deleteBrokerSubmissionId', '');
+    // case DELETE_SUBMISSION_ERROR:
+    //   return state
+    //     .set('deleteBrokerSubmissionId', '');
     default:
       return state;
   }
