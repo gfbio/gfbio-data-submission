@@ -99,17 +99,60 @@ export class SubmissionList extends React.Component {
 
     let header = null;
     if (submissionItems.length > 0) {
-      header = <div className="row no-gutters">
-        <div className="col-sm-8">
-          <h6>Title</h6>
+      header = (
+        <div className="row no-gutters">
+          <div className="col-md-10 pl-3">
+            <div className="row no-gutters">
+              <div className="col-md-9 align-self-center">
+                <h6>Title</h6>
+              </div>
+              <div className="col-md-3 align-self-center">
+                <h6>Status</h6>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-2">
+
+          </div>
         </div>
-        <div className="col-sm-2">
-          <h6>Status</h6>
-        </div>
-        <div className="col-sm-2">
-          {/*<h6>Actions</h6>*/}
-        </div>
-      </div>;
+      );
+      {/*  <div className="row no-gutters">*/
+      }
+      {/*  /!*<div className="col-sm-10">*!/*/
+      }
+      {/*  /!*  <div className="row no-gutters">*!/*/
+      }
+      {/*  <div className="col-sm-9">*/
+      }
+      {/*    <h6>Title</h6>*/
+      }
+      {/*  </div>*/
+      }
+      {/*  <div className="col-sm-3">*/
+      }
+      {/*    <h6>Status</h6>*/
+      }
+      {/*    /!*  </div>*!/*/
+      }
+      {/*    /!*</div>*!/*/
+      }
+
+      {/*  </div>*/
+      }
+      {/*  /!*<div className="col-sm-2">*!/*/
+      }
+      {/*  /!*  <h6>Status</h6>*!/*/
+      }
+      {/*  /!*</div>*!/*/
+      }
+      {/*  /!*<div className="col-sm-2">*!/*/
+      }
+      {/*  /!*  /!*<h6>Actions</h6>*!/*!/*/
+      }
+      {/*  /!*</div>*!/*/
+      }
+      {/*</div>;*/
+      }
     }
 
     // TODO: now that everything is set up, continue with get subs in saga
