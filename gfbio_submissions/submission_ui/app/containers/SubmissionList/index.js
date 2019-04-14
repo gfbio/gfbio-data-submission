@@ -17,7 +17,7 @@ import reducer from './reducer';
 import saga from './saga';
 import { fetchSubmissions } from './actions';
 import { makeSelectShowSaveSuccess } from '../SubmissionForm/selectors';
-import { closeSaveSuccess } from '../SubmissionForm/actions';
+import { closeSaveSuccess, deleteSubmission } from '../SubmissionForm/actions';
 import Collapse from 'react-bootstrap/Collapse';
 import Button from 'react-bootstrap/Button';
 
@@ -73,12 +73,15 @@ export class SubmissionList extends React.Component {
           {/*<span>Edit</span>*/}
           {/*</div>*/}
           <div className="col-md-2 col-sm-12 align-self-center actions">
-            <a className="action h-100 d-inline-block pr-4 pl-4"><i
-              className="icon ion-md-create" />Edit</a>
-            <a className="action h-100 d-inline-block"><i
-              className="icon ion-md-trash" />Delete</a>
-            {/*<span className="ti-pencil"></span>Edit*/}
-            {/*<span></span>*/}
+            <a
+              className="action h-100 d-inline-block pr-4 pl-4"
+            >
+              <i className="icon ion-md-create" />Edit</a>
+            <a
+              className="action h-100 d-inline-block"
+              onClick={() => this.props.deleteSubmission(submission.brokerSubmissionId)}
+            >
+              <i className="icon ion-md-trash" />Delete</a>
           </div>
           {/*{submission.broker_submission_id}*/}
         </Link>
@@ -195,6 +198,7 @@ SubmissionList.propTypes = {
   submissions: PropTypes.array,
   showSaveSuccess: PropTypes.bool,
   closeSaveSuccess: PropTypes.func,
+  deleteSubmission: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -207,6 +211,8 @@ function mapDispatchToProps(dispatch) {
   return {
     fetchSubmissions: () => dispatch(fetchSubmissions()),
     closeSaveSuccess: () => dispatch(closeSaveSuccess()),
+    // TODO: warning modal
+    deleteSubmission: (brokerSubmissionId) => dispatch(deleteSubmission(brokerSubmissionId)),
   };
 }
 
