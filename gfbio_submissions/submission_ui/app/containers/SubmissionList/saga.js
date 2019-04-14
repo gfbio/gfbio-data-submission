@@ -10,7 +10,7 @@ import { FETCH_SUBMISSIONS } from './constants';
 import { makeSelectToken, makeSelectUserId } from './selectors';
 import {
   deleteSubmissionError,
-  deleteSubmissionSuccess,
+  deleteSubmissionSuccess, fetchSubmissions,
   fetchSubmissionsError,
   fetchSubmissionsSuccess,
 } from './actions';
@@ -49,6 +49,7 @@ export function* performDeleteSubmissionSaga() {
   try {
     const response = yield call(requestDeleteSubmission, token, deleteBrokerSubmissionId);
     yield put(deleteSubmissionSuccess(response));
+    yield put(fetchSubmissions());
   } catch (error) {
     yield put(deleteSubmissionError(error));
   }
