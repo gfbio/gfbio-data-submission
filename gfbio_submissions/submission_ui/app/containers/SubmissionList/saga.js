@@ -51,6 +51,8 @@ export function* performDeleteSubmissionSaga() {
     yield put(deleteSubmissionSuccess(response));
     yield put(fetchSubmissions());
   } catch (error) {
+    console.log('error');
+    console.log(error);
     yield put(deleteSubmissionError(error));
   }
 }

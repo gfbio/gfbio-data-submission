@@ -5,10 +5,13 @@
  */
 
 import {
-  DELETE_SUBMISSION, DELETE_SUBMISSION_ERROR, DELETE_SUBMISSION_SUCCESS,
+  CLOSE_DELETE_DIALOG,
+  DELETE_SUBMISSION,
+  DELETE_SUBMISSION_ERROR,
+  DELETE_SUBMISSION_SUCCESS,
   FETCH_SUBMISSIONS,
   FETCH_SUBMISSIONS_ERROR,
-  FETCH_SUBMISSIONS_SUCCESS,
+  FETCH_SUBMISSIONS_SUCCESS, SHOW_DELETE_DIALOG,
 } from './constants';
 
 export function fetchSubmissions() {
@@ -31,10 +34,24 @@ export function fetchSubmissionsError(errorResponse) {
   };
 }
 
-export function deleteSubmission(brokerSubmissionId) {
+
+export function showDeleteSubmissionDialog(brokerSubmissionId) {
+  return {
+    type: SHOW_DELETE_DIALOG,
+    brokerSubmissionId,
+  };
+}
+
+
+export function closeDeleteSubmissionDialog() {
+  return {
+    type: CLOSE_DELETE_DIALOG,
+  };
+}
+
+export function deleteSubmission() {
   return {
     type: DELETE_SUBMISSION,
-    brokerSubmissionId,
   };
 }
 

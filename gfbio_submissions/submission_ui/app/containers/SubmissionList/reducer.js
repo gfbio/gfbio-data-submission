@@ -6,10 +6,11 @@
 
 import { fromJS } from 'immutable';
 import {
+  CLOSE_DELETE_DIALOG,
   DELETE_SUBMISSION, DELETE_SUBMISSION_ERROR, DELETE_SUBMISSION_SUCCESS,
   FETCH_SUBMISSIONS,
   FETCH_SUBMISSIONS_ERROR,
-  FETCH_SUBMISSIONS_SUCCESS,
+  FETCH_SUBMISSIONS_SUCCESS, SHOW_DELETE_DIALOG,
 } from './constants';
 
 let backendParameters = {};
@@ -29,7 +30,7 @@ export const initialState = fromJS({
   token: backendParameters['token'] || '5639b56bd077fb3e12d7e4a0ada244aaa970c2fd',
   userName: backendParameters.userName || '',
   deleteBrokerSubmissionId: '',
-
+  deleteSubmissionDialog: false,
 });
 
 function submissionListReducer(state = initialState, action) {
@@ -42,14 +43,24 @@ function submissionListReducer(state = initialState, action) {
       return state.set('submissions', action.response.data);
     case FETCH_SUBMISSIONS_ERROR:
       return state;
-    case DELETE_SUBMISSION:
+    case SHOW_DELETE_DIALOG:
       return state
+        .set('deleteSubmissionDialog', true)
         .set('deleteBrokerSubmissionId', action.brokerSubmissionId);
+    case CLOSE_DELETE_DIALOG:
+      return state
+        .set('deleteSubmissionDialog', false)
+        .set('deleteBrokerSubmissionId', '');
+    case DELETE_SUBMISSION:
+      return state;
+        // .set('deleteBrokerSubmissionId', action.brokerSubmissionId);
     case DELETE_SUBMISSION_SUCCESS:
       return state
+        .set('deleteSubmissionDialog', false)
         .set('deleteBrokerSubmissionId', '');
     case DELETE_SUBMISSION_ERROR:
       return state
+        .set('deleteSubmissionDialog', false)
         .set('deleteBrokerSubmissionId', '');
     default:
       return state;
