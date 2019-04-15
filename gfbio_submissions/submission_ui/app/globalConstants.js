@@ -9,3 +9,5 @@ export const API_ROOT = 'http://0.0.0.0:8000';
 export const SUBMISSIONS = '/api/submissions/';
 export const USER_URL = 'user/';
 export const UPLOAD = '/upload/';
+
+export const STATUS_CANCELLED = 'CANCELLED';

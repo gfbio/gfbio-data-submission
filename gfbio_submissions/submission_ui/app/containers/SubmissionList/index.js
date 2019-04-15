@@ -32,6 +32,7 @@ import Modal from 'react-bootstrap/Modal';
 import Container from 'react-bootstrap/Container';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
+import { STATUS_CANCELLED } from '../../globalConstants';
 
 
 /* eslint-disable react/prefer-stateless-function */
@@ -42,53 +43,60 @@ export class SubmissionList extends React.Component {
   }
 
   render() {
-    // console.log('--------------render SubmissionList');
+    console.log('--------------render SubmissionList');
     // console.log(this.props);
     // console.log('###############################');
 
     let submissionItems = this.props.submissions.map((submission, index) => {
-      return <li key={index} className="list-group-item">
+      if (submission.status != STATUS_CANCELLED) {
+        return <li key={index} className="list-group-item">
 
-        <div className="row wrapping-row no-gutters">
+          <div className="row wrapping-row no-gutters">
 
-          <div className="col-md-10">
-            {/*left*/}
-            <Link className="row no-gutters"
-                  to={'/form/' + submission.broker_submission_id}>
-              <div className="col-md-9 col-sm-12 align-self-center">
-                {/*icon ion-ios-redo*/}
-                <i className="icon ion-md-apps" />
-                <span>{submission.data.requirements.title}</span>
-              </div>
-              <div className="col-md-3 col-sm-12 align-self-center status">
+            <div className="col-md-10">
+              {/*left*/}
+              <Link className="row no-gutters"
+                    to={'/form/' + submission.broker_submission_id}>
+                <div className="col-md-9 col-sm-12 align-self-center">
+                  {/*icon ion-ios-redo*/}
+                  <i className="icon ion-md-apps" />
+                  <span>{submission.data.requirements.title}</span>
+                </div>
+                <div className="col-md-3 col-sm-12 align-self-center status">
                 <span className="">
                   {submission.status}
                 </span>
-              </div>
-            </Link>
+                </div>
+              </Link>
+            </div>
+
+            <div className="col-md-2 col-sm-12 align-self-center actions">
+              {/*right pr-4 pl-4*/}
+              <a className="action h-100 d-inline-block pr-4" href="">
+                <i className="icon ion-md-create" /> Edit
+              </a>
+              <a className="action h-100 d-inline-block"
+                 href=""
+                 onClick={(e) => {
+                   e.preventDefault();
+                   console.log('ON CLICK LIST DELETE');
+                   console.log(submission.broker_submission_id);
+                   this.props.showDeleteSubmissionDialog(submission.broker_submission_id);
+                 }}
+              >
+                <i className="icon ion-md-trash" />Delete</a>
+            </div>
           </div>
 
-          <div className="col-md-2 col-sm-12 align-self-center actions">
-            {/*right pr-4 pl-4*/}
-            <a className="action h-100 d-inline-block pr-4" href="">
-              <i className="icon ion-md-create" /> Edit
-            </a>
-            <a className="action h-100 d-inline-block"
-               href=""
-               onClick={(e) => {
-                 e.preventDefault();
-                 console.log('ON CLICK LIST DELETE');
-                 console.log(submission.broker_submission_id);
-                 this.props.showDeleteSubmissionDialog(submission.broker_submission_id);
-               }}
-            >
-              <i className="icon ion-md-trash" />Delete</a>
-          </div>
-        </div>
+        </li>;
+      }
+      else {
+        return null;
+      }
 
-      </li>;
     });
-
+    console.log(submissionItems);
+    submissionItems = submissionItems.filter(item => item !== null);
     let header = null;
     if (submissionItems.length > 0) {
       header = (
