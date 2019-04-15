@@ -79,6 +79,7 @@ export const initialState = fromJS({
   fileUploadInProgress: false,
   brokerSubmissionId: '',
   requestBrokerSubmissionId: '',
+  // deleteBrokerSubmissionId: '',
   contributors: [],
   currentContributor: {},
   updateWithRelease: false,
@@ -238,11 +239,20 @@ function submissionFormReducer(state = initialState, action) {
         .set('submitInProgress', false)
         .set('showSaveSuccess', true)
         .set('updateWithRelease', false);
-      // return setStateFormValues(state, action);
+    // return setStateFormValues(state, action);
     case UPDATE_SUBMISSION_ERROR:
       console.log('UPDATE_SUBMISSION_ERROR');
       return state
         .set('updateWithRelease', action.release);
+    // case DELETE_SUBMISSION:
+    //   return state
+    //     .set('deleteBrokerSubmissionId', action.brokerSubmissionId);
+    // case DELETE_SUBMISSION_SUCCESS:
+    //   return state
+    //     .set('deleteBrokerSubmissionId', '');
+    // case DELETE_SUBMISSION_ERROR:
+    //   return state
+    //     .set('deleteBrokerSubmissionId', '');
     default:
       return state;
   }

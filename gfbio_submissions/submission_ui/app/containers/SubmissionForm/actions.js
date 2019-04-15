@@ -305,3 +305,25 @@ export function updateSubmissionError(errorResponse) {
     errorResponse,
   };
 }
+
+// export function deleteSubmission(brokerSubmissionId) {
+//   return {
+//     type: DELETE_SUBMISSION,
+//     brokerSubmissionId,
+//   };
+// }
+//
+//
+// export function deleteSubmissionSuccess(response) {
+//   return {
+//     type: DELETE_SUBMISSION_SUCCESS,
+//     response,
+//   };
+// }
+//
+// export function deleteSubmissionError(errorResponse) {
+//   return {
+//     type: DELETE_SUBMISSION_ERROR,
+//     errorResponse,
+//   };
+// }

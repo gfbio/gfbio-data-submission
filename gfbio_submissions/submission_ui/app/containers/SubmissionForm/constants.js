@@ -56,6 +56,10 @@ export const UPDATE_SUBMISSION = 'app/SubmissionForm/UPDATE_SUBMISSION';
 export const UPDATE_SUBMISSION_SUCCESS = 'app/SubmissionForm/UPDATE_SUBMISSION_SUCCESS';
 export const UPDATE_SUBMISSION_ERROR = 'app/SubmissionForm/UPDATE_SUBMISSION_ERROR';
 
+// export const DELETE_SUBMISSION = 'app/SubmissionForm/DELETE_SUBMISSION';
+// export const DELETE_SUBMISSION_SUCCESS = 'app/SubmissionForm/DELETE_SUBMISSION_SUCCESS';
+// export const DELETE_SUBMISSION_ERROR = 'app/SubmissionForm/DELETE_SUBMISSION_ERROR';
+
 /* non redux constants */
 export const DATA_CATEGORY_PREFIX = 'data-category ';
 export const LEGAL_REQUIREMENTS_PREFIX = 'legal-requirement ';

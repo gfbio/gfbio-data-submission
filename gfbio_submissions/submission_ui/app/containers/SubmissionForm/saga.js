@@ -10,6 +10,7 @@ import {
   takeLeading,
 } from 'redux-saga/effects';
 import {
+  DELETE_SUBMISSION,
   FETCH_SUBMISSION,
   SAVE_FORM,
   SUBMIT_FORM,
@@ -20,7 +21,8 @@ import {
 import {
   makeSelectBrokerSubmissionId,
   makeSelectContributors,
-  makeSelectDatasetLabels, makeSelectEmbargoDate,
+  makeSelectDatasetLabels, makeSelectDeleteBrokerSubmissionId,
+  makeSelectEmbargoDate,
   makeSelectFileUploads,
   makeSelectFormWrapper,
   makeSelectLicense,
@@ -28,10 +30,12 @@ import {
   makeSelectReduxFormForm,
   makeSelectRelatedPublications,
   makeSelectRequestBrokerSubmissionId,
-  makeSelectToken, makeSelectUpdateWithRelease,
+  makeSelectToken,
+  makeSelectUpdateWithRelease,
   makeSelectUserId,
 } from './selectors';
 import {
+  deleteSubmissionError, deleteSubmissionSuccess,
   fetchSubmissionError,
   fetchSubmissionSuccess,
   saveForm,
@@ -51,7 +55,8 @@ import {
 import {
   createUploadFileChannel,
   getSubmission,
-  postSubmission, putSubmission,
+  postSubmission,
+  putSubmission, requestDeleteSubmission,
 } from './submissionApi';
 
 import { push } from 'connected-react-router/immutable';
@@ -247,6 +252,17 @@ export function* performFetchSubmissionSaga() {
   }
 }
 
+// export function* performDeleteSubmissionSaga() {
+//   console.log('performDeleteSubmissionSaga');
+//   const token = yield select(makeSelectToken());
+//   const deleteBrokerSubmissionId = yield select(makeSelectDeleteBrokerSubmissionId());
+//   try {
+//     const response = yield call(requestDeleteSubmission, token, deleteBrokerSubmissionId);
+//     yield put(deleteSubmissionSuccess(response));
+//   } catch (error) {
+//     yield put(deleteSubmissionError(error));
+//   }
+// }
 
 export function* checkFormTypeSaga() {
   // new feature from rc1 that blocks until finished
@@ -303,7 +319,12 @@ export function* updateSubmissionSaga() {
   yield takeLeading(UPDATE_SUBMISSION, performUpdateSubmissionSaga);
 }
 
+// export function* deleteSubmissionSaga() {
+//   yield takeLeading(DELETE_SUBMISSION, performDeleteSubmissionSaga);
+// }
+
 export default function* rootSaga() {
   yield all([checkFormTypeSaga(), saveFormSaga(), submitFormSaga(),
-    uploadFilesSaga(), fetchSubmissionSaga(), updateSubmissionSaga()]);
+    uploadFilesSaga(), fetchSubmissionSaga(), updateSubmissionSaga(),
+   ]);
 }

@@ -42,6 +42,15 @@ const makeSelectUserId = () =>
     substate.get('userId'),
   );
 
+const makeSelectDeleteBrokerSubmissionId = () =>
+  createSelector(selectSubmissionListDomain, substate =>
+    substate.get('deleteBrokerSubmissionId'),
+  );
+
+const makeSelectDeleteSubmissionDialog = () =>
+  createSelector(selectSubmissionListDomain, substate =>
+    substate.get('deleteSubmissionDialog'),
+  );
 
 export default makeSelectSubmissionList;
 export {
@@ -49,4 +58,6 @@ export {
   makeSelectSubmissions,
   makeSelectToken,
   makeSelectUserId,
+  makeSelectDeleteBrokerSubmissionId,
+  makeSelectDeleteSubmissionDialog,
 };

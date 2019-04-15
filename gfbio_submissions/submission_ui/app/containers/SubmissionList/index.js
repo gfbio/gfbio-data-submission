@@ -12,92 +12,110 @@ import { compose } from 'redux';
 import { Link } from 'react-router-dom';
 import injectSaga from 'utils/injectSaga';
 import injectReducer from 'utils/injectReducer';
-import { makeSelectSubmissions } from './selectors';
+import {
+  makeSelectDeleteSubmissionDialog,
+  makeSelectSubmissions,
+} from './selectors';
 import reducer from './reducer';
 import saga from './saga';
-import { fetchSubmissions } from './actions';
+import {
+  closeDeleteSubmissionDialog,
+  deleteSubmission,
+  fetchSubmissions,
+  showDeleteSubmissionDialog,
+} from './actions';
 import { makeSelectShowSaveSuccess } from '../SubmissionForm/selectors';
 import { closeSaveSuccess } from '../SubmissionForm/actions';
 import Collapse from 'react-bootstrap/Collapse';
 import Button from 'react-bootstrap/Button';
+import Modal from 'react-bootstrap/Modal';
+import Container from 'react-bootstrap/Container';
+import Col from 'react-bootstrap/Col';
+import Row from 'react-bootstrap/Row';
+import { STATUS_CANCELLED } from '../../globalConstants';
+
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionList extends React.Component {
-
-  // constructor(props, context) {
-  //   super(props, context);
-  //
-  //   this.handleShow = this.handleShow.bind(this);
-  //   this.handleClose = this.handleClose.bind(this);
-  //
-  //   this.state = {
-  //     show: false,
-  //   };
-  // }
-  //
-  // handleClose() {
-  //   this.setState({ show: false });
-  // }
-  //
-  // handleShow() {
-  //   this.setState({ show: true });
-  // }
-
 
   componentDidMount() {
     this.props.fetchSubmissions();
   }
 
-
   render() {
-    // console.log('--------------render SubmissionList');
+    console.log('--------------render SubmissionList');
     // console.log(this.props);
     // console.log('###############################');
 
     let submissionItems = this.props.submissions.map((submission, index) => {
-      return <li key={index} className="list-group-item">
-        <Link className="row no-gutters"
-              to={'/form/' + submission.broker_submission_id}>
-          <div className="col-md-8 col-sm-12 align-self-center title">
-            {/*icon ion-ios-redo*/}
-            <i className="icon ion-md-apps" />
-            <span>{submission.data.requirements.title}</span>
-          </div>
-          <div className="col-md-2 col-sm-12 align-self-center status">
-            <span className="">
-              {submission.status}
-            </span>
-          </div>
-          {/*<div className="col-md-1 edit">*/}
-          {/* if saved, else submitted and no edit possible */}
-          {/*<span>Edit</span>*/}
-          {/*</div>*/}
-          <div className="col-md-2 col-sm-12 align-self-center actions">
-            <a className="action h-100 d-inline-block pr-4 pl-4"><i
-              className="icon ion-md-create" />Edit</a>
-            <a className="action h-100 d-inline-block"><i
-              className="icon ion-md-trash" />Delete</a>
-            {/*<span className="ti-pencil"></span>Edit*/}
-            {/*<span></span>*/}
-          </div>
-          {/*{submission.broker_submission_id}*/}
-        </Link>
-      </li>;
-    });
+      if (submission.status != STATUS_CANCELLED) {
+        return <li key={index} className="list-group-item">
 
+          <div className="row wrapping-row no-gutters">
+
+            <div className="col-md-10">
+              {/*left*/}
+              <Link className="row no-gutters"
+                    to={'/form/' + submission.broker_submission_id}>
+                <div className="col-md-9 col-sm-12 align-self-center">
+                  {/*icon ion-ios-redo*/}
+                  <i className="icon ion-md-apps" />
+                  <span>{submission.data.requirements.title}</span>
+                </div>
+                <div className="col-md-3 col-sm-12 align-self-center status">
+                <span className="">
+                  {submission.status}
+                </span>
+                </div>
+              </Link>
+            </div>
+
+            <div className="col-md-2 col-sm-12 align-self-center actions">
+              {/*right pr-4 pl-4*/}
+              <a className="action h-100 d-inline-block pr-4" href="">
+                <i className="icon ion-md-create" /> Edit
+              </a>
+              <a className="action h-100 d-inline-block"
+                 href=""
+                 onClick={(e) => {
+                   e.preventDefault();
+                   console.log('ON CLICK LIST DELETE');
+                   console.log(submission.broker_submission_id);
+                   this.props.showDeleteSubmissionDialog(submission.broker_submission_id);
+                 }}
+              >
+                <i className="icon ion-md-trash" />Delete</a>
+            </div>
+          </div>
+
+        </li>;
+      }
+      else {
+        return null;
+      }
+
+    });
+    console.log(submissionItems);
+    submissionItems = submissionItems.filter(item => item !== null);
     let header = null;
     if (submissionItems.length > 0) {
-      header = <div className="row no-gutters">
-        <div className="col-sm-8">
-          <h6>Title</h6>
+      header = (
+        <div className="row no-gutters">
+          <div className="col-md-10 pl-3">
+            <div className="row no-gutters">
+              <div className="col-md-9 align-self-center">
+                <h6>Title</h6>
+              </div>
+              <div className="col-md-3 align-self-center">
+                <h6>Status</h6>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-2">
+
+          </div>
         </div>
-        <div className="col-sm-2">
-          <h6>Status</h6>
-        </div>
-        <div className="col-sm-2">
-          {/*<h6>Actions</h6>*/}
-        </div>
-      </div>;
+      );
     }
 
     // TODO: now that everything is set up, continue with get subs in saga
@@ -106,20 +124,9 @@ export class SubmissionList extends React.Component {
 
     return (
       <div className="submission-list-wrapper">
-        {/*<section>*/}
-        {/*  <h1 className="current-location">*/}
-        {/*    <i className="icon ion-ios-list pr-3" />*/}
-        {/*    My Submissions*/}
-        {/*  </h1>*/}
-        {/*</section>*/}
-        {/*<Button variant="primary" onClick={this.handleShow}>*/}
-        {/*  Launch demo modal*/}
-        {/*</Button>*/}
         <Collapse
           in={this.props.showSaveSuccess}
-          // in={true}
         >
-          {/*<div className="container">*/}
           <div className="col-8 mx-auto success-message">
             <div className="row">
               <div className="col-1 mx-auto">
@@ -145,36 +152,67 @@ export class SubmissionList extends React.Component {
               </div>
             </div>
           </div>
-          {/*</div>*/}
         </Collapse>
 
-        {/*<Modal*/}
-        {/*  show={this.props.showSaveSuccess}*/}
-        {/*  // show={true}*/}
-        {/*  onHide={this.props.closeSaveSuccess}*/}
-        {/*  backdrop={true}*/}
-        {/*  centered*/}
-        {/*>*/}
+        <Modal
+          show={this.props.deleteSubmissionDialog}
+          onHide={this.props.closeDeleteSubmissionDialog}
+          backdrop={true}
+          centered
+        >
 
-        {/*  <Modal.Header closeButton>*/}
-        {/*    <Modal.Title>Successfully saved !</Modal.Title>*/}
-        {/*  </Modal.Header>*/}
+          <Modal.Header closeButton>
+            <Modal.Title className="pl-4">Delete Submission ?</Modal.Title>
+          </Modal.Header>
 
-        {/*  /!*<Modal.Body>*!/*/}
+          <Modal.Body>
+            <Container>
+              <Row className="show-grid text-center">
+                <Col xs={12} md={12}>
+                  Do you really want to delete this submission ?
+                  {/*    <code>.col-xs-12 .col-md-8</code>*/}
+                  {/*  </Col>*/}
+                  {/*  <Col xs={6} md={4}>*/}
+                  {/*    <code>.col-xs-6 .col-md-4</code>*/}
+                  {/*  </Col>*/}
+                  {/*</Row>*/}
 
-        {/*  /!*</Modal.Body>*!/*/}
+                  {/*<Row className="show-grid">*/}
+                  {/*  <Col xs={6} md={4}>*/}
+                  {/*    <code>.col-xs-6 .col-md-4</code>*/}
+                  {/*  </Col>*/}
+                  {/*  <Col xs={6} md={4}>*/}
+                  {/*    <code>.col-xs-6 .col-md-4</code>*/}
+                  {/*  </Col>*/}
+                  {/*  <Col xs={6} md={4}>*/}
+                  {/*    <code>.col-xs-6 .col-md-4</code>*/}
+                </Col>
+              </Row>
+            </Container>
 
-        {/*  <Modal.Footer>*/}
-        {/*    <Button variant="secondary"*/}
-        {/*            onClick={this.props.closeSaveSuccess}>*/}
-        {/*      Close*/}
-        {/*    </Button>*/}
-        {/*    /!*<Button variant="primary" onClick={this.props.closeSaveSuccess}>*!/*/}
-        {/*    /!*  *!/*/}
-        {/*    /!*  Save Changes*!/*/}
-        {/*    /!*</Button>*!/*/}
-        {/*  </Modal.Footer>*/}
-        {/*</Modal>*/}
+          </Modal.Body>
+
+          <Modal.Footer>
+            <Container>
+              <Row className="show-grid">
+                <Col xs={12} md={6}>
+                  <Button variant="secondary" className="btn-block green"
+                          onClick={this.props.closeDeleteSubmissionDialog}>
+                    <i className="icon ion-md-close" />
+                    Cancel
+                  </Button>
+                </Col>
+                <Col xs={12} md={6} className="text-right">
+                  <Button variant="secondary" className="btn-block red"
+                          onClick={this.props.deleteSubmission}>
+                    <i className="icon ion-md-trash" />
+                    Delete
+                  </Button>
+                </Col>
+              </Row>
+            </Container>
+          </Modal.Footer>
+        </Modal>
 
 
         <div className="container">
@@ -195,18 +233,27 @@ SubmissionList.propTypes = {
   submissions: PropTypes.array,
   showSaveSuccess: PropTypes.bool,
   closeSaveSuccess: PropTypes.func,
+  deleteSubmission: PropTypes.func,
+  showDeleteSubmissionDialog: PropTypes.func,
+  closeDeleteSubmissionDialog: PropTypes.func,
+  deleteSubmissionDialog: PropTypes.bool,
 };
 
 const mapStateToProps = createStructuredSelector({
   // submissionList: makeSelectSubmissionList(),
   submissions: makeSelectSubmissions(),
   showSaveSuccess: makeSelectShowSaveSuccess(),
+  deleteSubmissionDialog: makeSelectDeleteSubmissionDialog(),
 });
 
 function mapDispatchToProps(dispatch) {
   return {
     fetchSubmissions: () => dispatch(fetchSubmissions()),
     closeSaveSuccess: () => dispatch(closeSaveSuccess()),
+    // TODO: warning modal
+    showDeleteSubmissionDialog: (brokerSubmissionId) => dispatch(showDeleteSubmissionDialog(brokerSubmissionId)),
+    closeDeleteSubmissionDialog: () => dispatch(closeDeleteSubmissionDialog()),
+    deleteSubmission: (brokerSubmissionId) => dispatch(deleteSubmission(brokerSubmissionId)),
   };
 }
 
