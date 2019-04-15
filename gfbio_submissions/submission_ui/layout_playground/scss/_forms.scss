@@ -370,6 +370,11 @@ section.sub-navi {
         padding: .5rem;
         font-size: .9rem;
 
+        -webkit-transition: all 0ms;
+        -moz-transition: all 0ms;
+        -o-transition: all 0ms;
+        transition: all 0ms;
+
         //.list-col {
         //  padding: .5rem;
         //}

@@ -599,6 +599,8 @@ section.sub-navi .nav .active {
   text-decoration: none;
   padding: .5rem;
   font-size: .9rem;
+  -webkit-transition: all 0ms;
+  transition: all 0ms;
 }
 
 .submission-list-wrapper ul li a span {
