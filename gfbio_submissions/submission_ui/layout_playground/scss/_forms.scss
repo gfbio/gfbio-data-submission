@@ -919,6 +919,9 @@ form.pagewide-form {
       label.metadata {
         font-size: 1.1rem;
         color: $gray-dark-2;
+        border-right: 1px dashed $gray-medium;
+        padding: 0 1rem 0 1.5rem;
+        margin-right: 1rem;
       }
 
       input[type=checkbox] {
