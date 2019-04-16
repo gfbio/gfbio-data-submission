@@ -244,15 +244,6 @@ function submissionFormReducer(state = initialState, action) {
       console.log('UPDATE_SUBMISSION_ERROR');
       return state
         .set('updateWithRelease', action.release);
-    // case DELETE_SUBMISSION:
-    //   return state
-    //     .set('deleteBrokerSubmissionId', action.brokerSubmissionId);
-    // case DELETE_SUBMISSION_SUCCESS:
-    //   return state
-    //     .set('deleteBrokerSubmissionId', '');
-    // case DELETE_SUBMISSION_ERROR:
-    //   return state
-    //     .set('deleteBrokerSubmissionId', '');
     default:
       return state;
   }
