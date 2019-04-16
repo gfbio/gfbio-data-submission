@@ -7,12 +7,10 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { removeFileUpload } from '../../containers/SubmissionForm/actions';
 import filesize from 'filesize';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Tooltip from 'react-bootstrap/Tooltip';
 
 class FileIndicator extends React.Component {
-  // constructor(props) {
-  //   super(props);
-  //   this.state = {};
-  // }
 
   render() {
 
@@ -21,24 +19,31 @@ class FileIndicator extends React.Component {
     // console.log('--------------------------------');
 
     const fileListElements = this.props.fileUploads.map((upload, index) => {
-      // console.log(upload);
       let progressStyle = {
         width: `${upload.progress}%`,
       };
 
       return <li
         key={index}
-        className={"list-group-item file-upload "+upload.status}>
+        className={'list-group-item file-upload ' + upload.status}>
         <div className="d-flex justify-content-between align-items-center">
           <div>
-            <small><i className="fa fa-file-text-o pub" /> {upload.file.name}
+            <small className="file-name">
+              <input
+                type="checkbox"
+                id={`primary${index}`}
+                value={`primary${index}`}
+              />
+              <label htmlFor={`primary${index}`}
+                     className="metadata pl-4 pr-4"></label>
+              <i className="icon ion-md-document pub"></i>
+              {upload.file.name}
             </small>
           </div>
-          {/*<small>{upload.file.type}</small>*/}
-          {/*<b>{upload.progress}</b>*/}
           <div>
-            <small
-              className="mr-5 file-size">{filesize(upload.file.size)}</small>
+            <small className="mr-5 file-size">
+              {filesize(upload.file.size)}
+            </small>
             <button className="btn btn-download mr-3">
               <i className="icon ion-md-download"></i>
             </button>
@@ -46,15 +51,10 @@ class FileIndicator extends React.Component {
               e.preventDefault();
               this.props.handleRemove(index);
             }}>
-              {/*<i className="fa fa-times" />*/}
-              {/*Remove*/}
-              {/*<i className="icon ion-md-trash"></i>*/}
               <i className="fa fa-trash" aria-hidden="true"></i>
             </button>
           </div>
         </div>
-
-        {/*<div className="pbar-test">*/}
 
         <div className="progress">
           <div className="progress-bar" role="progressbar" style={progressStyle}
@@ -62,12 +62,40 @@ class FileIndicator extends React.Component {
                aria-valuemax="100"></div>
         </div>
 
-        {/*</div>*/}
       </li>;
     });
 
+    let listHeader = null;
+    if (fileListElements.size > 0) {
+      listHeader = <li className="list-group-item  file-upload">
+        <div className="d-flex justify-content-between align-items-center">
+          <div className="">
+            <OverlayTrigger
+              placement="right"
+              overlay={
+                <Tooltip id="tooltip-right">
+                  Tooltip on <strong>RIGHT</strong>.
+                </Tooltip>
+              }
+            >
+              <span className="upload-header">
+                Metadata
+                <i className="icon ion-ios-help-circle help align-bottom"
+                   aria-hidden="true"></i>
+              </span>
+            </OverlayTrigger>
+          </div>
+          <div>
+            <small className="mr-5 file-size">
+            </small>
+          </div>
+        </div>
+      </li>;
+    }
+
     return (
       <ul className="list-group list-group-flush">
+        {listHeader}
         {fileListElements}
       </ul>
     );

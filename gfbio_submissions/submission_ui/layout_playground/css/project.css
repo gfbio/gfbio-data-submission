@@ -928,6 +928,7 @@ form.pagewide-form li.file-upload {
   border: none;
   padding: .375rem .75rem .375rem .75rem;
   margin-bottom: .25rem;
+  color: #495057;
 }
 
 form.pagewide-form li.file-upload .progress {
@@ -978,6 +979,49 @@ form.pagewide-form li.file-upload .btn-download {
 
 form.pagewide-form li.file-upload .btn-download:hover {
   color: #345AA2;
+}
+
+form.pagewide-form li.file-upload .btn-metadata i {
+  font-size: 0.75rem;
+}
+
+form.pagewide-form li.file-upload .btn-metadata span {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+form.pagewide-form li.file-upload .upload-header i.help {
+  font-size: 1.25rem;
+  padding-left: .5rem;
+}
+
+form.pagewide-form li.file-upload small.file-name {
+  /* to hide the checkbox itself */
+  /* unchecked icon */
+  /* space between checkbox and label */
+  /* checked icon */
+  /* allow space for check mark */
+}
+
+form.pagewide-form li.file-upload small.file-name label.metadata {
+  font-size: 1.1rem;
+  color: #495057;
+}
+
+form.pagewide-form li.file-upload small.file-name input[type=checkbox] {
+  display: none;
+}
+
+form.pagewide-form li.file-upload small.file-name input[type=checkbox] + label:before {
+  font-family: "Ionicons";
+  display: inline-block;
+}
+
+form.pagewide-form li.file-upload small.file-name input[type=checkbox] + label:before {
+  content: "\f360";
+}
+
+form.pagewide-form li.file-upload small.file-name input[type=checkbox]:checked + label:before {
+  content: "\f2ba";
 }
 
 form.pagewide-form .template-links a {
