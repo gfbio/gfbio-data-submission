@@ -27,6 +27,7 @@ import {
   SAVE_FORM_SUCCESS,
   SET_CONTRIBUTORS,
   SET_EMBARGO_DATE,
+  SET_METADATA_INDEX,
   SUBMIT_FORM,
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
@@ -303,6 +304,13 @@ export function updateSubmissionError(errorResponse) {
   return {
     type: UPDATE_SUBMISSION_ERROR,
     errorResponse,
+  };
+}
+
+export function setMetaDataIndex(metaDataIndex) {
+  return {
+    type: SET_METADATA_INDEX,
+    metaDataIndex,
   };
 }
 

@@ -26,7 +26,7 @@ import {
   SAVE_FORM_ERROR,
   SAVE_FORM_SUCCESS,
   SET_CONTRIBUTORS,
-  SET_EMBARGO_DATE,
+  SET_EMBARGO_DATE, SET_METADATA_INDEX,
   SUBMIT_FORM,
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
@@ -77,6 +77,7 @@ export const initialState = fromJS({
   dataset_labels: [],
   fileUploads: [],
   fileUploadInProgress: false,
+  metaDataIndex: '',
   brokerSubmissionId: '',
   requestBrokerSubmissionId: '',
   // deleteBrokerSubmissionId: '',
@@ -244,6 +245,10 @@ function submissionFormReducer(state = initialState, action) {
       console.log('UPDATE_SUBMISSION_ERROR');
       return state
         .set('updateWithRelease', action.release);
+    case SET_METADATA_INDEX:
+      console.log('SET_METADATA_INDEX');
+      return state
+        .set('metaDataIndex', action.metaDataIndex);
     default:
       return state;
   }
