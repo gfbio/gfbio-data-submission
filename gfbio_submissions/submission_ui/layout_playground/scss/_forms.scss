@@ -567,6 +567,45 @@ section.sub-navi {
 
 /* end sticky sidebar */
 
+.tooltip [class$="inner"] {
+  font-size: .8rem;
+  font-weight: 300;
+  background-color: $white;
+  border: 1px solid $gray-dark-2;
+  color: $gray-dark-2;
+  //border: 1px solid background-color;
+}
+
+.tooltip [class$="arrow"] {
+  //border-color: lime;
+  //border-top: 5px solid background-color !important;
+  &:before {
+    border-right-color: $gray-dark-2 !important;
+  }
+}
+/*
+
+.tooltip.bs-tooltip-right .arrow:before {
+    border-right-color: #00cc00 !important;
+}
+.tooltip.bs-t
+*/
+//.tooltip-inner {
+//  max-width: 200px;
+//  padding: 3px 8px;
+//  color: #0f0;
+//  text-align: center;
+//  background-color: #000;
+//  border-radius: .25rem;
+//}
+//
+//.tooltip.bs-tooltip-auto[x-placement^=right] .arrow::before, .tooltip.bs-tooltip-right .arrow::before {
+//  margin-top: -3px;
+//  content: "";
+//  border-width: 5px 5px 5px 0;
+//  border-right-color: #00f;
+//}
+
 // TODO: used in forms_1.html . assuming one form around all fields to submit all fields
 //  in one action, maybe also to allow easier layouting
 // TODO: also used in submission_form_mock.html
@@ -893,6 +932,7 @@ form.pagewide-form {
         padding-left: .5rem;
       }
     }
+
 
     small.file-name {
       //input[type="checkbox"] {

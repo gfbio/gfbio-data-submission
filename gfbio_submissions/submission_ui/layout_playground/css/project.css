@@ -739,6 +739,25 @@ section.sub-navi .nav .active {
 }
 
 /* end sticky sidebar */
+.tooltip [class$="inner"] {
+  font-size: .8rem;
+  font-weight: 300;
+  background-color: #fff;
+  border: 1px solid #495057;
+  color: #495057;
+}
+
+.tooltip [class$="arrow"]:before {
+  border-right-color: #495057 !important;
+}
+
+/*
+
+.tooltip.bs-tooltip-right .arrow:before {
+    border-right-color: #00cc00 !important;
+}
+.tooltip.bs-t
+*/
 form.pagewide-form {
   /*
     Overwrite react-datepicker styles

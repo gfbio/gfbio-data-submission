@@ -125,7 +125,8 @@ class FileIndicator extends React.Component {
           placement="right"
           overlay={
             <Tooltip id="tooltip-right">
-              Tooltip on <strong>RIGHT</strong>.
+              {/*Tooltip on <strong>RIGHT</strong>.*/}
+              select <strong>meta-data</strong> (optional)
             </Tooltip>
           }
         >
