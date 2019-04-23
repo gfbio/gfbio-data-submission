@@ -26,7 +26,7 @@ import {
   SAVE_FORM_ERROR,
   SAVE_FORM_SUCCESS,
   SET_CONTRIBUTORS,
-  SET_EMBARGO_DATE,
+  SET_EMBARGO_DATE, SET_METADATA_INDEX,
   SUBMIT_FORM,
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
@@ -77,6 +77,7 @@ export const initialState = fromJS({
   dataset_labels: [],
   fileUploads: [],
   fileUploadInProgress: false,
+  metaDataIndex: '',
   brokerSubmissionId: '',
   requestBrokerSubmissionId: '',
   // deleteBrokerSubmissionId: '',
@@ -99,6 +100,7 @@ function submissionFormReducer(state = initialState, action) {
     case SAVE_FORM_SUCCESS:
       // TODO: set bsi etc after success, from then its updates
       return state
+        .set('metaDataIndex', '')
         .set('brokerSubmissionId', action.response.data.broker_submission_id)
         .set('saveResponse', action.response)
         .set('saveInProgress', false)
@@ -107,7 +109,9 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .set('showSaveSuccess', false);
     case SAVE_FORM_ERROR:
-      return state.set('saveInProgress', false);
+      return state
+        .set('metaDataIndex', '')
+        .set('saveInProgress', false);
     case SUBMIT_FORM:
       return state.set('reduxFormForm', action.form);
     case SUBMIT_FORM_START:
@@ -116,12 +120,15 @@ function submissionFormReducer(state = initialState, action) {
       return state.set('submitInProgress', true);
     case SUBMIT_FORM_SUCCESS:
       return state
+        .set('metaDataIndex', '')
         .set('brokerSubmissionId', action.response.data.broker_submission_id)
         .set('submitResponse', action.response)
         .set('submitInProgress', false)
         .set('showSaveSuccess', true);
     case SUBMIT_FORM_ERROR:
-      return state.set('submitInProgress', false);
+      return state
+        .set('metaDataIndex', '')
+        .set('submitInProgress', false);
     case SET_EMBARGO_DATE:
       return state.set('embargoDate', action.date);
     case CHANGE_CURRENT_RELATED_PUBLICATION:
@@ -154,6 +161,7 @@ function submissionFormReducer(state = initialState, action) {
     case REMOVE_FILE_UPLOAD:
       if (state.get('fileUploadInProgress') == false) {
         return state
+          .set('metaDataIndex', '')
           .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1));
       } else {
         return state;
@@ -163,6 +171,7 @@ function submissionFormReducer(state = initialState, action) {
         .set('fileUploadInProgress', true);
     case UPLOAD_FILES_SUCCESS:
       return state
+        .set('metaDataIndex', '')
         .set('fileUploadInProgress', false);
     case UPLOAD_FILES_ERROR:
       return state
@@ -238,21 +247,17 @@ function submissionFormReducer(state = initialState, action) {
         .set('saveInProgress', false)
         .set('submitInProgress', false)
         .set('showSaveSuccess', true)
+        .set('metaDataIndex', '')
         .set('updateWithRelease', false);
     // return setStateFormValues(state, action);
     case UPDATE_SUBMISSION_ERROR:
       console.log('UPDATE_SUBMISSION_ERROR');
       return state
         .set('updateWithRelease', action.release);
-    // case DELETE_SUBMISSION:
-    //   return state
-    //     .set('deleteBrokerSubmissionId', action.brokerSubmissionId);
-    // case DELETE_SUBMISSION_SUCCESS:
-    //   return state
-    //     .set('deleteBrokerSubmissionId', '');
-    // case DELETE_SUBMISSION_ERROR:
-    //   return state
-    //     .set('deleteBrokerSubmissionId', '');
+    case SET_METADATA_INDEX:
+      console.log('SET_METADATA_INDEX');
+      return state
+        .set('metaDataIndex', action.metaDataIndex);
     default:
       return state;
   }

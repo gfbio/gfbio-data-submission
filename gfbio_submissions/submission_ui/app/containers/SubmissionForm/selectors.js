@@ -139,6 +139,11 @@ const makeSelectUpdateWithRelease = () =>
     substate.get('updateWithRelease'),
   );
 
+const makeSelectMetaDataIndex = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('metaDataIndex'),
+  );
+
 // const makeSelectDeleteBrokerSubmissionId = () =>
 //   createSelector(selectSubmissionFormDomain, substate =>
 //     substate.get('deleteBrokerSubmissionId'),
@@ -170,5 +175,6 @@ export {
   makeSelectRequestBrokerSubmissionId,
   makeSelectShowSaveSuccess,
   makeSelectUpdateWithRelease,
+  makeSelectMetaDataIndex,
   // makeSelectDeleteBrokerSubmissionId,
 };

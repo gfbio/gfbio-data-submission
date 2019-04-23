@@ -10,7 +10,6 @@ import {
   takeLeading,
 } from 'redux-saga/effects';
 import {
-  DELETE_SUBMISSION,
   FETCH_SUBMISSION,
   SAVE_FORM,
   SUBMIT_FORM,
@@ -21,11 +20,11 @@ import {
 import {
   makeSelectBrokerSubmissionId,
   makeSelectContributors,
-  makeSelectDatasetLabels, makeSelectDeleteBrokerSubmissionId,
+  makeSelectDatasetLabels,
   makeSelectEmbargoDate,
   makeSelectFileUploads,
   makeSelectFormWrapper,
-  makeSelectLicense,
+  makeSelectLicense, makeSelectMetaDataIndex,
   makeSelectMetaDataSchema,
   makeSelectReduxFormForm,
   makeSelectRelatedPublications,
@@ -35,7 +34,6 @@ import {
   makeSelectUserId,
 } from './selectors';
 import {
-  deleteSubmissionError, deleteSubmissionSuccess,
   fetchSubmissionError,
   fetchSubmissionSuccess,
   saveForm,
@@ -56,10 +54,21 @@ import {
   createUploadFileChannel,
   getSubmission,
   postSubmission,
-  putSubmission, requestDeleteSubmission,
+  putSubmission,
 } from './submissionApi';
 
 import { push } from 'connected-react-router/immutable';
+
+function* getMetaDataFileName(metaDataIndex, fileUploads) {
+  const metaIndex = parseInt(metaDataIndex);
+  const metaDataFile = fileUploads.get(metaIndex);
+  let metaDataFileName = '';
+  if (metaDataFile !== undefined) {
+    console.log(metaDataFile.file.name);
+    metaDataFileName = metaDataFile.file.name;
+  }
+  return metaDataFileName;
+}
 
 // TODO: move logic to utils.js. here only workflow
 function* prepareRequestData(userId, submit = true) {
@@ -85,6 +94,15 @@ function* prepareRequestData(userId, submit = true) {
   const contributors = yield select(makeSelectContributors());
   // FIXME: emabrgo date format mismathc frontend/bacend
   const embargo = yield select(makeSelectEmbargoDate());
+
+
+  const metaDataIndex = yield select(makeSelectMetaDataIndex());
+  const fileUploads = yield select(makeSelectFileUploads());
+
+  const metaDataFileName = yield getMetaDataFileName(metaDataIndex, fileUploads);
+  // console.log('metaDataFile.file.name');
+  // console.log(metaDataFileName);
+
   const requirements = Object.assign({
     license,
     metadata_schema,
@@ -93,6 +111,8 @@ function* prepareRequestData(userId, submit = true) {
     dataset_labels,
     categories,
     contributors,
+    metaDataIndex,
+    metaDataFileName,
   }, formValues);
   return {
     // TODO: determine target according to "Target Data center" value. e.g. "ena" = ENA_PANGAEA
@@ -252,17 +272,6 @@ export function* performFetchSubmissionSaga() {
   }
 }
 
-// export function* performDeleteSubmissionSaga() {
-//   console.log('performDeleteSubmissionSaga');
-//   const token = yield select(makeSelectToken());
-//   const deleteBrokerSubmissionId = yield select(makeSelectDeleteBrokerSubmissionId());
-//   try {
-//     const response = yield call(requestDeleteSubmission, token, deleteBrokerSubmissionId);
-//     yield put(deleteSubmissionSuccess(response));
-//   } catch (error) {
-//     yield put(deleteSubmissionError(error));
-//   }
-// }
 
 export function* checkFormTypeSaga() {
   // new feature from rc1 that blocks until finished
@@ -319,12 +328,8 @@ export function* updateSubmissionSaga() {
   yield takeLeading(UPDATE_SUBMISSION, performUpdateSubmissionSaga);
 }
 
-// export function* deleteSubmissionSaga() {
-//   yield takeLeading(DELETE_SUBMISSION, performDeleteSubmissionSaga);
-// }
-
 export default function* rootSaga() {
   yield all([checkFormTypeSaga(), saveFormSaga(), submitFormSaga(),
     uploadFilesSaga(), fetchSubmissionSaga(), updateSubmissionSaga(),
-   ]);
+  ]);
 }
