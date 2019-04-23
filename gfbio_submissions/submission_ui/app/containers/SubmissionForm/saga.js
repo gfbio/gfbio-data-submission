@@ -157,7 +157,11 @@ function* uploadFile(token, brokerSubmissionId, file, index) {
   console.log('uploadFile');
   console.log(brokerSubmissionId);
   try {
-    const uploadChannel = yield call(createUploadFileChannel, brokerSubmissionId, file.file, token);
+    // true refers to 'attach_to_ticket' parameter of backend endpoint
+    //  stating that every uploaded file will be attached to the
+    //  respective ticket
+    const uploadChannel = yield call(createUploadFileChannel,
+      brokerSubmissionId, file.file, true, token);
     yield fork(uploadProgressWatcher, uploadChannel, index);
   } catch (err) {
     console.log('yield error action uploadFile');
