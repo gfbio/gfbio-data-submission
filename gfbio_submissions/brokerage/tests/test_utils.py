@@ -3,6 +3,7 @@ import csv
 import io
 import json
 import os
+from pprint import pprint
 from unittest import skip
 from uuid import uuid4
 
@@ -899,8 +900,9 @@ class TestHelpDeskTicketMethods(TestCase):
         self.assertEqual({'name': 'ikostadi'}, payload['fields']['assignee'])
         self.assertEqual('sand/molecular-data',
                          payload['fields']['customfield_10010'])
+        pprint(payload['fields'])
         self.assertEqual('MIxS',
-                         payload['fields']['customfield_10229'][0]['value'])
+                         payload['fields']['customfield_10229']['value'])
 
         data['requirements'].pop('data_center')
         serializer = SubmissionSerializer(data={
@@ -918,7 +920,7 @@ class TestHelpDeskTicketMethods(TestCase):
         self.assertEqual('sand/generic-data',
                          payload['fields']['customfield_10010'])
         self.assertEqual('other',
-                         payload['fields']['customfield_10229'][0]['value'])
+                         payload['fields']['customfield_10229']['value'])
 
         data['requirements'][
             'data_center'] = 'GFBio Data Centers - our curators will suggest the appropriate one(s)'
