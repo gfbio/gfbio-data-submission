@@ -100,6 +100,7 @@ function submissionFormReducer(state = initialState, action) {
     case SAVE_FORM_SUCCESS:
       // TODO: set bsi etc after success, from then its updates
       return state
+        .set('metaDataIndex', '')
         .set('brokerSubmissionId', action.response.data.broker_submission_id)
         .set('saveResponse', action.response)
         .set('saveInProgress', false)
@@ -108,7 +109,9 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .set('showSaveSuccess', false);
     case SAVE_FORM_ERROR:
-      return state.set('saveInProgress', false);
+      return state
+        .set('metaDataIndex', '')
+        .set('saveInProgress', false);
     case SUBMIT_FORM:
       return state.set('reduxFormForm', action.form);
     case SUBMIT_FORM_START:
@@ -117,12 +120,15 @@ function submissionFormReducer(state = initialState, action) {
       return state.set('submitInProgress', true);
     case SUBMIT_FORM_SUCCESS:
       return state
+        .set('metaDataIndex', '')
         .set('brokerSubmissionId', action.response.data.broker_submission_id)
         .set('submitResponse', action.response)
         .set('submitInProgress', false)
         .set('showSaveSuccess', true);
     case SUBMIT_FORM_ERROR:
-      return state.set('submitInProgress', false);
+      return state
+        .set('metaDataIndex', '')
+        .set('submitInProgress', false);
     case SET_EMBARGO_DATE:
       return state.set('embargoDate', action.date);
     case CHANGE_CURRENT_RELATED_PUBLICATION:
@@ -165,6 +171,7 @@ function submissionFormReducer(state = initialState, action) {
         .set('fileUploadInProgress', true);
     case UPLOAD_FILES_SUCCESS:
       return state
+        .set('metaDataIndex', '')
         .set('fileUploadInProgress', false);
     case UPLOAD_FILES_ERROR:
       return state
@@ -240,6 +247,7 @@ function submissionFormReducer(state = initialState, action) {
         .set('saveInProgress', false)
         .set('submitInProgress', false)
         .set('showSaveSuccess', true)
+        .set('metaDataIndex', '')
         .set('updateWithRelease', false);
     // return setStateFormValues(state, action);
     case UPDATE_SUBMISSION_ERROR:

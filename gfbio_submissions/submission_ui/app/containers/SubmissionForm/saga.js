@@ -24,7 +24,7 @@ import {
   makeSelectEmbargoDate,
   makeSelectFileUploads,
   makeSelectFormWrapper,
-  makeSelectLicense,
+  makeSelectLicense, makeSelectMetaDataIndex,
   makeSelectMetaDataSchema,
   makeSelectReduxFormForm,
   makeSelectRelatedPublications,
@@ -59,6 +59,17 @@ import {
 
 import { push } from 'connected-react-router/immutable';
 
+function* getMetaDataFileName(metaDataIndex, fileUploads) {
+  const metaIndex = parseInt(metaDataIndex);
+  const metaDataFile = fileUploads.get(metaIndex);
+  let metaDataFileName = '';
+  if (metaDataFile !== undefined) {
+    console.log(metaDataFile.file.name);
+    metaDataFileName = metaDataFile.file.name;
+  }
+  return metaDataFileName;
+}
+
 // TODO: move logic to utils.js. here only workflow
 function* prepareRequestData(userId, submit = true) {
   const form = yield select(makeSelectFormWrapper());
@@ -83,6 +94,15 @@ function* prepareRequestData(userId, submit = true) {
   const contributors = yield select(makeSelectContributors());
   // FIXME: emabrgo date format mismathc frontend/bacend
   const embargo = yield select(makeSelectEmbargoDate());
+
+
+  const metaDataIndex = yield select(makeSelectMetaDataIndex());
+  const fileUploads = yield select(makeSelectFileUploads());
+
+  const metaDataFileName = yield getMetaDataFileName(metaDataIndex, fileUploads);
+  // console.log('metaDataFile.file.name');
+  // console.log(metaDataFileName);
+
   const requirements = Object.assign({
     license,
     metadata_schema,
@@ -91,6 +111,8 @@ function* prepareRequestData(userId, submit = true) {
     dataset_labels,
     categories,
     contributors,
+    metaDataIndex,
+    metaDataFileName,
   }, formValues);
   return {
     // TODO: determine target according to "Target Data center" value. e.g. "ena" = ENA_PANGAEA

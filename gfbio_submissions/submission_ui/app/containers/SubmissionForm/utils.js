@@ -49,6 +49,7 @@ export const prepareInitialValues = (submissionData) => {
   return initialValues;
 };
 
+// TODO: .set('metaDataIndex', '')
 export const setStateFormValues = (state, action) => {
   return state
     .set('brokerSubmissionId', action.response.data.broker_submission_id)
@@ -65,6 +66,7 @@ export const setStateFormValues = (state, action) => {
 
 export const resetStateFormValues = (state) => {
   return state
+    .set('metaDataIndex', '')
     .set('brokerSubmissionId', '')
     .set('initialValues', {})
     .set('relatedPublications', fromJS([]))
