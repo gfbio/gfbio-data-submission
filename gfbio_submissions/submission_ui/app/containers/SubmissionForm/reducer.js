@@ -155,6 +155,7 @@ function submissionFormReducer(state = initialState, action) {
     case REMOVE_FILE_UPLOAD:
       if (state.get('fileUploadInProgress') == false) {
         return state
+          .set('metaDataIndex', '')
           .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1));
       } else {
         return state;

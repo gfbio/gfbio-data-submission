@@ -30,6 +30,8 @@ class FileIndicator extends React.Component {
     // if click and checked -> new metadata index
     // if click and not checked and equal metadataindex -> set index to -1
     // set all other field to display not checked
+
+    // 1. if item is removed, set metadataindex to -1
     if (event.target.checked) {
       this.props.changeMetaDataIndex(event.target.value);
     } else if (!event.target.checked && event.target.value === this.props.metaDataIndex) {
