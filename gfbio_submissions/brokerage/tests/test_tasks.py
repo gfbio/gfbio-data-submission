@@ -2,7 +2,6 @@
 import base64
 import json
 import uuid
-from pprint import pprint
 from uuid import uuid4
 
 import responses
@@ -20,7 +19,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, Submission, AuditableTextData, PersistentIdentifier, \
     BrokerObject, TaskProgressReport, AdditionalReference, PrimaryDataFile, \
-    RequestLog, CenterName
+    RequestLog, CenterName, SubmissionUpload
 from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, \
     transfer_data_to_ena_task, process_ena_response_task, \
     create_broker_objects_from_submission_data_task, check_on_hold_status_task, \
@@ -740,6 +739,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         result = attach_file_to_helpdesk_ticket_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
+                'submission_upload_id': SubmissionUpload.objects.first().pk,
             }
         )
         self.assertTrue(result.successful())

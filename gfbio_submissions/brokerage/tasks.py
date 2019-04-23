@@ -772,10 +772,12 @@ def comment_helpdesk_ticket_task(prev_task_result=None, comment_body=None,
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
              name='tasks.attach_file_to_helpdesk_ticket_task',
              base=SubmissionTask)
-def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None):
+def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None,
+                                        submission_upload_id=None):
     logger.info(
-        msg='attach_file_to_helpdesk_ticket_task submission_id={} '.format(
-            submission_id))
+        msg='attach_file_to_helpdesk_ticket_task submission_id={0} | '
+            'submission_upload_id={1}'.format(submission_id,
+                                              submission_upload_id))
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id, task=attach_file_to_helpdesk_ticket_task,
         get_closed_submission=True)
@@ -790,21 +792,17 @@ def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None):
         # submission transfer chain that creates the ticket, so a proper retry has to be
         # implemented
         if len(existing_tickets):
-            # TODO: be more specific on PrimaryDataFile to retrieve, same for ticket above
-            # pd = submission.primarydatafile_set.first()
-            # pd = submission.submissionupload_set.get(pk=submission_upload_id)
-            # TODO: extend to loop over all uploads with attach=True
-            pd = submission.submissionupload_set.filter(
-                attach_to_ticket=True).first()
-            if pd:
+            submission_upload = submission.submissionupload_set.filter(
+                attach_to_ticket=True).filter(pk=submission_upload_id).first()
+            if submission_upload:
                 logger.info(
-                    msg='attach_file_to_helpdesk_ticket_task PrimaryDataFile found {0} '.format(
-                        pd))
+                    msg='attach_file_to_helpdesk_ticket_task SubmissionUpload found {0} '.format(
+                        submission_upload))
                 # TODO: access media nginx https://stackoverflow.com/questions/8370658/how-to-serve-django-media-files-via-nginx
                 response = gfbio_helpdesk_attach_file_to_ticket(
                     site_config=site_configuration,
                     ticket_key=existing_tickets.first().reference_key,
-                    file=pd.file,
+                    file=submission_upload.file,
                     submission=submission
                 )
                 logger.info(
@@ -816,13 +814,15 @@ def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None):
                 return True
             else:
                 logger.info(
-                    msg='attach_file_to_helpdesk_ticket_task no PrimaryDataFile found. submission_id={} '.format(
-                        submission_id))
+                    msg='attach_file_to_helpdesk_ticket_task no SubmissionUpload'
+                        ' found. submission_id={0} | submission_upload_id={1}'
+                        ''.format(submission_id, submission_upload_id))
                 return False
         else:
             logger.info(
-                msg='attach_file_to_helpdesk_ticket_task no tickets found. submission_id={} '.format(
-                    submission_id))
+                msg='attach_file_to_helpdesk_ticket_task no tickets found. '
+                    'submission_id={0} | submission_upload_id={1}'
+                    ''.format(submission_id, submission_upload_id))
             apply_timebased_task_retry_policy(
                 task=attach_file_to_helpdesk_ticket_task,
                 submission=submission,

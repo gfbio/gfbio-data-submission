@@ -701,6 +701,7 @@ class SubmissionUpload(TimeStampedModel):
             attach_file_to_helpdesk_ticket_task.apply_async(
                 kwargs={
                     'submission_id': '{0}'.format(self.submission.pk),
+                    'submission_upload_id': '{0}'.format(self.pk)
                 },
                 # TODO: rename
                 countdown=PRIMARY_DATA_FILE_DELAY
