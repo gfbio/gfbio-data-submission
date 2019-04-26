@@ -57,7 +57,7 @@ THIRD_PARTY_APPS = [
     'allauth.socialaccount',  # registration
     'allauth.socialaccount.providers.github',  # github
     'allauth.socialaccount.providers.orcid',  # orcid
-    'allauth.socialaccount.providers.openid',  # openid
+    # 'allauth.socialaccount.providers.openid',  # openid
     'rest_framework',  # Django REST framework
     'rest_framework.authtoken',  # token authentication
     'corsheaders',  # django cors headers
@@ -350,6 +350,8 @@ REMOTE_REPOSITORY = env('REMOTE_REPOSITORY',
 # }
 ########## END ALL_AUTH OPENID SETTINGS
 
+########## OPENIDCONNECT SETTINGS
+
 OIDC_RP_CLIENT_ID = env('OIDC_RP_CLIENT_ID', default='no_oidc_cl_id')
 OIDC_RP_CLIENT_SECRET = env('OIDC_RP_CLIENT_SECRET',
                             default='no_oidc_cl_secret')
@@ -364,5 +366,7 @@ OIDC_OP_USER_ENDPOINT = ' https://sso.gfbio.org/simplesaml/module.php/oidc/useri
 OIDC_USE_NONCE = False  # Default:	True
 
 # TODO: not sure if needed
-LOGIN_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
-LOGOUT_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
+# LOGIN_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
+# LOGOUT_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
+
+########## END OPENIDCONNECT SETTINGS
