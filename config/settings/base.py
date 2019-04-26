@@ -57,7 +57,7 @@ THIRD_PARTY_APPS = [
     'allauth.socialaccount',  # registration
     'allauth.socialaccount.providers.github',  # github
     'allauth.socialaccount.providers.orcid',  # orcid
-    # 'allauth.socialaccount.providers.openid',  # openid
+    'allauth.socialaccount.providers.google',  # google
     'rest_framework',  # Django REST framework
     'rest_framework.authtoken',  # token authentication
     'corsheaders',  # django cors headers
@@ -330,25 +330,6 @@ LOCAL_REPOSITORY = env('LOCAL_REPOSITORY',
 REMOTE_REPOSITORY = env('REMOTE_REPOSITORY',
                         default='https://maweber@colab.mpi-bremen.de/stash/scm/gfbio/gfbio-submission-auditing-tests.git')
 ########## END Access AuditableTextData
-
-########## ALL_AUTH OPENID SETTINGS
-# TODO: django-allauth openid does not work for openidconnect !
-# SOCIALACCOUNT_PROVIDERS = {
-#     'openid': {
-#         'SERVERS': [
-#             dict(id='gwdg',
-#                  name='GFBIO SSO (settings)',
-#                  openid_url='https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php'),
-#             dict(
-#                 id='playgroud',
-#                 name='playground',
-#                 openid_url='https://www.oauth.com/playground/authorization-code.html'
-#             ),
-#         ]
-#     }
-#
-# }
-########## END ALL_AUTH OPENID SETTINGS
 
 ########## OPENIDCONNECT SETTINGS
 

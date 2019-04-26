@@ -17,16 +17,51 @@
 
   .socialaccount_provider {
     text-decoration: none;
+
     span {
       display: block;
       color: $gray-darker;
     }
   }
 
+
+  .socialaccount_text {
+    @include raleway;
+
+    font-size: .9rem;
+
+    i {
+      font-size: 1rem;
+    }
+  }
+
+  localLoginLink {
+  }
+
+  label {
+    //font-size: .9rem;
+  }
+
+  input {
+
+    font-size: .9rem;
+
+    &::placeholder {
+      font-size: 0.85rem;
+    }
+
+    &:focus {
+      border-color: $gfbio-green-0-7;
+      box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+      outline-color: $gfbio-green-0-7;
+    }
+
+  }
+
 }
 
 h4.social {
-  font-family: "Raleway", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  @include raleway;
   font-size: 1.5rem;
   line-height: 2rem;
   margin-bottom: 1.5rem;

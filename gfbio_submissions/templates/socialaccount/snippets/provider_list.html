@@ -21,19 +21,36 @@
             <a title="{{ provider.name }}"
                class="socialaccount_provider {{ provider.id }}"
                href="{% provider_login_url provider.id process=process scope=scope auth_params=auth_params %}">
-                <img src="{% static 'images/GitHub-Mark-32px.png' %}">
-                <span>
-                    {{ provider.name }}
-                </span>
+                {#                <img src="{% static 'images/GitHub-Mark-32px.png' %}">#}
+                <span class="socialaccount_text">
+{#                sign in with #}
+                                    {{ provider.name }}
+                    <i class="icon ion-logo-github"></i>
+                                </span>
             </a>
         {% elif provider.name == "Orcid.org" %}
             <a title="{{ provider.name }}"
                class="socialaccount_provider {{ provider.id }}"
                href="{% provider_login_url provider.id process=process scope=scope auth_params=auth_params %}">
-                <img src="{% static 'images/orcid_32x32.png' %}">
-                <span>
+                {#                <img src="{% static 'images/orcid_32x32.png' %}">#}
+                <span class="socialaccount_text">
+{#                    sign in with#}
                     {{ provider.name }}
+
+                    <img src="{% static 'images/orcid_icon-bw.svg' %}">
                 </span>
+
+            </a>
+        {% elif provider.name == "Google" %}
+            <a title="{{ provider.name }}"
+               class="socialaccount_provider {{ provider.id }}"
+               href="{% provider_login_url provider.id process=process scope=scope auth_params=auth_params %}">
+                <span class="socialaccount_text">
+{#                    sign in with #}
+                    {{ provider.name }}
+                    <i class="icon ion-logo-google"></i>
+                </span>
+
             </a>
         {% else %}
             <a title="{{ provider.name }}"
@@ -46,6 +63,7 @@
 
 
 {% endfor %}
-<li>
-    mozilla oidc: <a href="{% url 'oidc_authentication_init' %}">Login</a>
-</li>
+{# TODO: style openid connect link to gwdg #}
+{#<li>#}
+{#    mozilla oidc: <a href="{% url 'oidc_authentication_init' %}">Login</a>#}
+{#</li>#}

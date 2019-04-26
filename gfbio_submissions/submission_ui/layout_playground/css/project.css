@@ -61,8 +61,44 @@ section#about .btn-about:hover, section#about2 .btn-about:hover {
   color: #343434;
 }
 
+#account .socialaccount_text {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: .9rem;
+}
+
+#account .socialaccount_text i {
+  font-size: 1rem;
+}
+
+#account input {
+  font-size: .9rem;
+}
+
+#account input::-webkit-input-placeholder {
+  font-size: 0.85rem;
+}
+
+#account input:-ms-input-placeholder {
+  font-size: 0.85rem;
+}
+
+#account input::-ms-input-placeholder {
+  font-size: 0.85rem;
+}
+
+#account input::placeholder {
+  font-size: 0.85rem;
+}
+
+#account input:focus {
+  border-color: rgba(129, 178, 72, 0.7);
+  -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
+  box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
+  outline-color: rgba(129, 178, 72, 0.7);
+}
+
 h4.social {
-  font-family: "Raleway", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 1.5rem;
   line-height: 2rem;
   margin-bottom: 1.5rem;
