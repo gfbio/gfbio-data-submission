@@ -236,7 +236,7 @@ class Submission(models.Model):
     # default to today + 1 year
     # FIXME: setting default dynamically causes new migrations. without migrations default is last date plus 1 year
     embargo = models.DateField(
-        default=datetime.date.today() + datetime.timedelta(days=365),
+        # default=datetime.date.today() + datetime.timedelta(days=365),
         null=True,
         blank=True)
 
