@@ -300,6 +300,7 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
 - cd /var/www/gfbio_submissions/
 - git fetch
 - git pull origin develop 
+- check compose/production/caddy caddyfile content (dev or prod)
 - docker-compose -f production.yml build
 - docker-compose -f production.yml run --rm django python manage.py migrate
 - docker-compose -f production.yml run --rm django python manage.py collectstatic
