@@ -70,24 +70,61 @@ section#about .btn-about:hover, section#about2 .btn-about:hover {
   font-size: 1rem;
 }
 
+#account .localLoginLink {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background-color: #f8f8f8;
+  border-color: #e9ecef;
+  color: #343434;
+}
+
+#account .localLoginLink:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+#account .localLoginLink:hover, #account .localLoginLink:not(:disabled):not(.disabled):active, #account .localLoginLink:not(:disabled):not(.disabled).active {
+  border-color: #3CACE4;
+  background-color: #fff;
+  color: #3CACE4 !important;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+#account .localLoginLink:hover:focus, #account .localLoginLink:not(:disabled):not(.disabled):active:focus, #account .localLoginLink:not(:disabled):not(.disabled).active:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+#account #localLoginForm {
+  margin-top: 1.5rem;
+}
+
+#account label {
+  font-size: .775rem;
+}
+
 #account input {
-  font-size: .9rem;
+  height: calc(1.5em + .5rem + 2px);
+  padding: .25rem .5rem;
+  font-size: .775rem;
+  line-height: 1.5;
+  border-radius: .2rem;
 }
 
 #account input::-webkit-input-placeholder {
-  font-size: 0.85rem;
+  font-size: 0.775rem;
 }
 
 #account input:-ms-input-placeholder {
-  font-size: 0.85rem;
+  font-size: 0.775rem;
 }
 
 #account input::-ms-input-placeholder {
-  font-size: 0.85rem;
+  font-size: 0.775rem;
 }
 
 #account input::placeholder {
-  font-size: 0.85rem;
+  font-size: 0.775rem;
 }
 
 #account input:focus {

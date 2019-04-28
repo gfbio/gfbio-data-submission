@@ -35,19 +35,52 @@
     }
   }
 
-  localLoginLink {
+  .localLoginLink {
+    @include raleway;
+
+    background-color: $gray-100;
+    border-color: $gray-200;
+    color: $gray-darker;
+
+    &:focus {
+      box-shadow: none;
+    }
+
+    &:hover, &:not(:disabled):not(.disabled):active,
+    &:not(:disabled):not(.disabled).active {
+      &:focus {
+        box-shadow: none;
+      }
+
+      border-color: $gfbio-light-blue;
+      background-color: $white;
+      color: $gfbio-light-blue !important;
+      box-shadow: none;
+    }
+  }
+
+  #localLoginForm {
+    margin-top: 1.5rem;
   }
 
   label {
-    //font-size: .9rem;
+    font-size: .775rem;
   }
 
   input {
 
-    font-size: .9rem;
+    //font-size: .8rem;
+
+    //height: calc(1.25rem + 2px);
+
+    height: calc(1.5em + .5rem + 2px);
+    padding: .25rem .5rem;
+    font-size: .775rem;
+    line-height: 1.5;
+    border-radius: .2rem;
 
     &::placeholder {
-      font-size: 0.85rem;
+      font-size: 0.775rem;
     }
 
     &:focus {

@@ -274,7 +274,7 @@ ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 # TODO: 06.02.2019 set back to true when in production
 # TODO: set proper value in env !!!
 ACCOUNT_ALLOW_REGISTRATION = env.bool('DJANGO_ACCOUNT_ALLOW_REGISTRATION',
-                                      False)
+                                      True)
 ACCOUNT_ADAPTER = 'gfbio_submissions.users.adapters.AccountAdapter'
 SOCIALACCOUNT_ADAPTER = 'gfbio_submissions.users.adapters.SocialAccountAdapter'
 

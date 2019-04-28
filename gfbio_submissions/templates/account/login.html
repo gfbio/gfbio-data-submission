@@ -36,7 +36,7 @@
                     {% include "socialaccount/snippets/provider_list.html" with process="login" %}
                 </ul>
 
-{#                <div class="text-center login-or">{% trans 'or' %}</div>#}
+                {#                <div class="text-center login-or">{% trans 'or' %}</div>#}
 
             </div>
 
@@ -51,7 +51,7 @@
         {% endif %}
 
 
-        <a class="btn btn-light btn-block localLoginLink"
+        <a class="btn btn-sm btn-block btn-light localLoginLink"
            data-toggle="collapse"
            href="#localLoginForm"
            role="button"
@@ -60,12 +60,6 @@
             Use local login
         </a>
         <div class="collapse" id="localLoginForm">
-            {#            <div class="card card-body">#}
-            {#                Anim pariatur cliche reprehenderit, enim eiusmod high life#}
-            {#                accusamus terry richardson ad squid. Nihil anim keffiyeh#}
-            {#                helvetica, craft beer labore wes anderson cred nesciunt sapiente#}
-            {#                ea proident.#}
-            {#            </div>#}
             <div class="card card-body">
                 <form class="login" method="POST"
                       action="{% url 'account_login' %}">
@@ -75,9 +69,9 @@
                         <input type="hidden" name="{{ redirect_field_name }}"
                                value="{{ redirect_field_value }}"/>
                     {% endif %}
-                    <a class="button secondaryAction"
+                    <a class="btn btn-sm btn-block btn-light localLoginLink"
                        href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a>
-                    <button class="primaryAction btn btn-block btn-secondary green mt-4"
+                    <button class="primaryAction btn btn-block btn-sm btn-secondary green mt-4"
                             type="submit">{% trans "Sign In" %}</button>
                 </form>
             </div>
