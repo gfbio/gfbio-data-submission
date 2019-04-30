@@ -4,11 +4,64 @@
     font-weight: 300;
   }
 
-  .login-or {
-    // background-color: $gray-100;
-    border-radius: .25rem;
-    margin-bottom: 1.5rem;
+  //.login-or {
+  //  // background-color: $gray-100;
+  //  border-radius: .25rem;
+  //  margin-bottom: 1.5rem;
+  //}
+
+  .gfbio_login {
+    margin-bottom: 5rem;
+
+    a {
+      display: block;
+      text-decoration: none;
+      color: $gray-dark;
+
+      p {
+        margin-bottom: .75rem;
+      }
+
+      .login_background {
+        display: inline-block;
+        background: url('../images/gfbio_logo.dark.svg') no-repeat center center;
+        padding: 53px 107px 0 0 !important;
+      }
+
+      span {
+        @include raleway;
+        font-size: 1.15rem;
+        font-weight: 400;
+      }
+
+      &:hover {
+        color: $gfbio-light-blue;
+
+        p {
+          color: $gfbio-light-blue;
+        }
+
+        .login_background {
+          display: inline-block;
+          background: url('../images/gfbio_logo.smaller.svg') no-repeat center center;
+          padding: 53px 107px 0 0 !important;
+        }
+
+        .localLoginLink {
+          border-color: $gfbio-light-blue;
+          background-color: $white;
+          color: $gfbio-light-blue !important;
+          box-shadow: none;
+        }
+
+      }
+
+      //background: url('../images/gfbio_logo.dark.svg') no-repeat center center;
+      //padding: 53px 107px 0 0 !important;
+    }
+
   }
+
 
   .socialaccount_providers {
     // list-style: none;

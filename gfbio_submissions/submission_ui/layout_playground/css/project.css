@@ -43,9 +43,52 @@ section#about .btn-about:hover, section#about2 .btn-about:hover {
   font-weight: 300;
 }
 
-#account .login-or {
-  border-radius: .25rem;
-  margin-bottom: 1.5rem;
+#account .gfbio_login {
+  margin-bottom: 5rem;
+}
+
+#account .gfbio_login a {
+  display: block;
+  text-decoration: none;
+  color: #666;
+}
+
+#account .gfbio_login a p {
+  margin-bottom: .75rem;
+}
+
+#account .gfbio_login a .login_background {
+  display: inline-block;
+  background: url("../images/gfbio_logo.dark.svg") no-repeat center center;
+  padding: 53px 107px 0 0 !important;
+}
+
+#account .gfbio_login a span {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 400;
+}
+
+#account .gfbio_login a:hover {
+  color: #3CACE4;
+}
+
+#account .gfbio_login a:hover p {
+  color: #3CACE4;
+}
+
+#account .gfbio_login a:hover .login_background {
+  display: inline-block;
+  background: url("../images/gfbio_logo.smaller.svg") no-repeat center center;
+  padding: 53px 107px 0 0 !important;
+}
+
+#account .gfbio_login a:hover .localLoginLink {
+  border-color: #3CACE4;
+  background-color: #fff;
+  color: #3CACE4 !important;
+  -webkit-box-shadow: none;
+  box-shadow: none;
 }
 
 #account .socialaccount_providers {
