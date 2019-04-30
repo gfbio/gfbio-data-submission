@@ -61,6 +61,10 @@ section#about .btn-about:hover, section#about2 .btn-about:hover {
   color: #343434;
 }
 
+#account .socialaccount_provider span:hover {
+  color: #3CACE4;
+}
+
 #account .socialaccount_text {
   font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: .9rem;

@@ -21,6 +21,10 @@
     span {
       display: block;
       color: $gray-darker;
+
+      &:hover {
+        color: $gfbio-light-blue;
+      }
     }
   }
 

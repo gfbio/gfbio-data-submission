@@ -21,9 +21,7 @@
             <a title="{{ provider.name }}"
                class="socialaccount_provider {{ provider.id }}"
                href="{% provider_login_url provider.id process=process scope=scope auth_params=auth_params %}">
-                {#                <img src="{% static 'images/GitHub-Mark-32px.png' %}">#}
                 <span class="socialaccount_text">
-{#                sign in with #}
                                     {{ provider.name }}
                     <i class="icon ion-logo-github"></i>
                                 </span>
@@ -32,9 +30,7 @@
             <a title="{{ provider.name }}"
                class="socialaccount_provider {{ provider.id }}"
                href="{% provider_login_url provider.id process=process scope=scope auth_params=auth_params %}">
-                {#                <img src="{% static 'images/orcid_32x32.png' %}">#}
                 <span class="socialaccount_text">
-{#                    sign in with#}
                     {{ provider.name }}
 
                     <img src="{% static 'images/orcid_icon-bw.svg' %}">
@@ -46,7 +42,6 @@
                class="socialaccount_provider {{ provider.id }}"
                href="{% provider_login_url provider.id process=process scope=scope auth_params=auth_params %}">
                 <span class="socialaccount_text">
-{#                    sign in with #}
                     {{ provider.name }}
                     <i class="icon ion-logo-google"></i>
                 </span>
