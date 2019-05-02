@@ -48,15 +48,6 @@
                     </button>
                 </a>
 
-{#                <div class="row">#}
-{#                    <div class="col-md-6 text-left">#}
-{#                        <a href="#">Sign Up</a>#}
-{#                    </div>#}
-{#                    <div class="col-md-6 text-right">#}
-{#                        <a href="#">Forgot Password</a>#}
-{#                    </div>#}
-{#                </div>#}
-
             </div>
 
 
@@ -70,6 +61,10 @@
             {#            </p>#}
 
             <div class="text-center socialaccount_ballot">
+
+                <p class="text-center mb-3">
+                    Or sign in with one of your existing third pary accounts.
+                </p>
 
                 <ul class="list-inline socialaccount_providers">
                     {% include "socialaccount/snippets/provider_list.html" with process="login" %}
@@ -100,6 +95,15 @@
         </a>
         <div class="collapse" id="localLoginForm">
             <div class="card card-body">
+                <p class="text-center">
+                    In case the GFBio single sign on service is unavailable,
+                    you are able to login to your account locally.
+                    Prerequisite is that you have been logged in to our service
+                    before.
+                    You will only have access to
+                    {% blocktrans with site.name as site_name %}
+                        {{ site_name }}{% endblocktrans %}.
+                </p>
                 <form class="login" method="POST"
                       action="{% url 'account_login' %}">
                     {% csrf_token %}
@@ -110,6 +114,8 @@
                     {% endif %}
                     <a class="btn btn-sm btn-block btn-light localLoginLink"
                        href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a>
+                    <a class="btn btn-sm btn-block btn-light localLoginLink"
+                       href="{{ signup_url }}">{% trans "Sign Up" %}</a>
                     <button class="primaryAction btn btn-block btn-sm btn-secondary green mt-4"
                             type="submit">{% trans "Sign In" %}</button>
                 </form>
