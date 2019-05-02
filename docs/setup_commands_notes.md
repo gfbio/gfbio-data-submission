@@ -298,6 +298,9 @@ Access via https://www.gwdg.de/server-services/gwdg-cloud-server/self-service
 - ssh -l root 141.5.103.171
 - supervisorctl stop devgfbiosubmissions
 - cd /var/www/gfbio_submissions/
+
+- RENAMED CADDY FILE ?
+
 - git fetch
 - git pull origin develop 
 - check compose/production/caddy caddyfile content (dev or prod)
