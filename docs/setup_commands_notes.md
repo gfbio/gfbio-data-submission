@@ -448,6 +448,86 @@ TODO: needs improvements :
 ### Scripted release
 
 
+## Social Account(s) setup
+
+### GitHub
+
+- login as user  m.weber@jacobs-university.de
+- browse to https://github.com/settings/applications/new (there seems to be no link ...)
+- register new app by filling to form.
+
+        Register a new OAuth application
+        Application name
+        GFBio Submissions (Development)
+        Something users will recognize and trust.
+        
+        Homepage URL
+        https://c103-171.cloud.gwdg.de/
+        The full URL to your application homepage.
+        
+        Application description
+        Access Development Server of GFBio Submission System to test or try 
+        submission services.
+        This is displayed to all users of your application.
+        
+        Authorization callback URL
+        https://c103-171.cloud.gwdg.de/accounts/github/login/callback/
+
+- Client Secret and updating it here: https://github.com/settings/applications/1057950
+- owner: maweber
+- check site domain-name in admin: https://c103-171.cloud.gwdg.de/admin/sites/site/
+
+- add social application in django:
+
+        Next go back to the admin homepage and click on the add button for 
+        Social Applications on the bottom. This is where you configure each 
+        third-party OAuth. We’re using Github so that’s the Provider. 
+        We add a name and then the Client ID and Secret ID from Github. 
+        Final step is to add our site to the Chosen sites on the bottom. 
+        Then click save.
+
+- first time clicking login via orcid link on signin page:
+    - redirect to github page
+    - authorize access once
+    - login -> redirect to django. message that email has been sent
+    - link in mail leads to django page with confirm button. username is generated automatically (e.g. marc34)
+    - redirect to sign in page with message that email is confirmed
+    - click on github login link and login successful
+
+### ORCID
+
+- login to https://orcid.org user maweber@mpi-bremen.de
+- https://orcid.org/developer-tools
+
+- edit existing public API application used for services.gfbio.org
+    - add second callback url in developer tools (https://c103-171.cloud.gwdg.de/accounts/orcid/login/callback/)
+    
+- add social application in django admin
+- enter production server https url. save...
+
+- first time clicking login via orcid link on signin page:
+    - redirect to orcid login page
+    - prompt to authorize
+    - redirect back to django orcid sign up: enter email and username
+    - no existing usernames or emails
+    - once entered: message that verification email has been sent with finalize link
+    - link in mail leads to djangourl with button to verify for email x@y.de
+    - click confirm leads to signin page, click on orcid login button and login is successful
+    
+#### Google
+
+- https://console.developers.google.com/ -> marc.weber01@gmail.com
+
+- first time clicking login via google link on signin page:
+    - redirect to accounts.google -> email or phone number. -> marc.weber01@gmail.com
+    - password prompt then redirect to django landingpage with success ful login
+    - automatic username 'Marc82'
+    - resend verification failed (uwe mailserver ?) 
+
+#### GWDG
+
+- email matching of existing users
+- else cryptic automatic username
 
 ## Move production database
 
