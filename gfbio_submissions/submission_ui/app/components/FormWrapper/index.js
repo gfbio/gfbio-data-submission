@@ -84,74 +84,88 @@ class FormWrapper extends React.PureComponent {
   };
 
   renderNavigationPrompt = () => {
-    return (
-      <NavigationPrompt when={true}>
-        {({ onConfirm, onCancel }) => (
-          <Modal
-            show={true}
-            onHide={onCancel}
-            backdrop={true}
-            centered
-          >
-            <Modal.Header closeButton>
-              <Modal.Title className="pl-4">Leave this section ?</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <Container>
-                <Row className="show-grid text-center">
-                  <Col xs={12} md={12}>
-                    Are you sure leaving this form ? Press 'Cancel' to stay
-                    or press 'Save' to save changes before leaving.
-                    Press 'Discard' to leave with out saving.
-                  </Col>
-                </Row>
-              </Container>
-            </Modal.Body>
-            <Modal.Footer>
-              <Container>
-                <Row className="show-grid">
-                  <Col xs={12} md={4}>
-                    <Button variant="secondary"
-                            className="btn-block btn-sm green"
-                            onClick={onCancel}>
-                      <i className="icon ion-md-close" />
-                      Cancel
-                    </Button>
-                  </Col>
-                  <Col xs={12} md={4} className="text-right">
-                    {/* TODO: not necessary on read-only submissions */}
-                    {/* TODO: dont show if no changes or empty form*/}
-                    {/*
+    // const showPrompt = this.props.pristine === false || this.props.anyTouched;
+    console.log(this.props.pristine);
+    console.log(this.props.anyTouched);
+    // console.log(showPrompt);
+    if (this.props.pristine === false) {
+      return (
+
+        <NavigationPrompt when={true}>
+          {({ onConfirm, onCancel }) => (
+            <Modal
+              show={true}
+              onHide={onCancel}
+              backdrop={true}
+              centered
+            >
+              <Modal.Header closeButton>
+                <Modal.Title className="pl-4">Leave this section ?</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <Container>
+                  <Row className="show-grid text-center">
+                    <Col xs={12} md={12}>
+                      Are you sure leaving this form ? Press 'Cancel' to stay
+                      or press 'Save' to save changes before leaving.
+                      Press 'Discard' to leave with out saving.
+                    </Col>
+                  </Row>
+                </Container>
+              </Modal.Body>
+              <Modal.Footer>
+                <Container>
+                  <Row className="show-grid">
+                    <Col xs={12} md={4}>
+                      <Button variant="secondary"
+                              className="btn-block btn-sm green"
+                              onClick={onCancel}>
+                        <i className="icon ion-md-close" />
+                        Cancel
+                      </Button>
+                    </Col>
+                    <Col xs={12} md={4} className="text-right">
+                      {/* TODO: not necessary on read-only submissions */}
+                      {/*
+                      TODO: dont show if no changes or empty form DONE
+                         - this.props.anyTouched = false
+                         - this.props.pristine = true (unberührt) <-- !
+                    */}
+                      {/*
                     TODO: more advanced please: close after save, inspect redux store if events are fired -> YES
                             add boolean etc to close dialog on save and give feedback on save process
                     */}
-                    <Button variant="secondary"
-                            className="btn-block btn-sm btn-light-blue"
-                            onClick={this.props.handleSubmit(values =>
-                              this.props.onSubmit({
-                                ...values,
-                                workflow: 'save',
-                              }),
-                            )}>
-                      <i className="icon ion-ios-save" />
-                      Save
-                    </Button>
-                  </Col>
-                  <Col xs={12} md={4} className="text-right">
-                    <Button variant="secondary"
-                            className="btn-block btn-sm red"
-                            onClick={onConfirm}>
-                      <i className="icon ion-md-alert" />
-                      Discard
-                    </Button>
-                  </Col>
-                </Row>
-              </Container>
-            </Modal.Footer>
-          </Modal>
-        )}
-      </NavigationPrompt>
-    );
+                      <Button variant="secondary"
+                              className="btn-block btn-sm btn-light-blue"
+                              onClick={this.props.handleSubmit(values =>
+                                this.props.onSubmit({
+                                  ...values,
+                                  workflow: 'save',
+                                }),
+                              )}>
+                        <i className="icon ion-ios-save" />
+                        Save
+                      </Button>
+                    </Col>
+                    <Col xs={12} md={4} className="text-right">
+                      <Button variant="secondary"
+                              className="btn-block btn-sm red"
+                              onClick={onConfirm}>
+                        <i className="icon ion-md-alert" />
+                        Discard
+                      </Button>
+                    </Col>
+                  </Row>
+                </Container>
+              </Modal.Footer>
+            </Modal>
+          )}
+        </NavigationPrompt>
+
+      );
+    } else {
+      return null;
+    }
   };
 
   render() {
@@ -169,9 +183,9 @@ class FormWrapper extends React.PureComponent {
     }
     let errors = this.prepareErrorNotification();
 
-    // console.log('--------------render FormWrapper');
-    // console.log(this.props.initialValues.toJS());
-    // console.log('###############################');
+    console.log('--------------render FormWrapper');
+    console.log(this.props);
+    console.log('###############################');
 
     return (
       <form
