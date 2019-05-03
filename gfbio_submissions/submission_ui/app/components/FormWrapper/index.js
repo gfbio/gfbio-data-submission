@@ -21,6 +21,12 @@ import DataUrlForm from '../DataUrlForm';
 import DatasetLabelForm from '../DatasetLabelForm';
 import TemplateLinkList from '../TemplateLinkList';
 import Alert from 'react-bootstrap/Alert';
+import NavigationPrompt from 'react-router-navigation-prompt';
+import Modal from 'react-bootstrap/Modal';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Button from 'react-bootstrap/Button';
 
 /* eslint-disable react/prefer-stateless-function */
 class FormWrapper extends React.PureComponent {
@@ -77,6 +83,74 @@ class FormWrapper extends React.PureComponent {
     }
   };
 
+  renderNavigationPrompt = () => {
+    return (
+      <NavigationPrompt when={true}>
+        {({ onConfirm, onCancel }) => (
+          <Modal
+            show={true}
+            onHide={onCancel}
+            backdrop={true}
+            centered
+          >
+            <Modal.Header closeButton>
+              <Modal.Title className="pl-4">Leave this section ?</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <Container>
+                <Row className="show-grid text-center">
+                  <Col xs={12} md={12}>
+                    Are you sure leaving this form ? Press 'Cancel' to stay
+                    or press 'Save' to save changes before leaving.
+                    Press 'Discard' to leave with out saving.
+                  </Col>
+                </Row>
+              </Container>
+            </Modal.Body>
+            <Modal.Footer>
+              <Container>
+                <Row className="show-grid">
+                  <Col xs={12} md={4}>
+                    <Button variant="secondary"
+                            className="btn-block btn-sm green"
+                            onClick={onCancel}>
+                      <i className="icon ion-md-close" />
+                      Cancel
+                    </Button>
+                  </Col>
+                  <Col xs={12} md={4} className="text-right">
+                    {/*
+                    TODO: more advanced please: close after save, inspect redux store if events are fired
+                    */}
+                    <Button variant="secondary"
+                            className="btn-block btn-sm btn-light-blue"
+                            onClick={this.props.handleSubmit(values =>
+                              this.props.onSubmit({
+                                ...values,
+                                workflow: 'save',
+                              }),
+                            )}>
+                      <i className="icon ion-ios-save" />
+                      Save
+                    </Button>
+                  </Col>
+                  <Col xs={12} md={4} className="text-right">
+                    <Button variant="secondary"
+                            className="btn-block btn-sm red"
+                            onClick={onConfirm}>
+                      <i className="icon ion-md-alert" />
+                      Discard
+                    </Button>
+                  </Col>
+                </Row>
+              </Container>
+            </Modal.Footer>
+          </Modal>
+        )}
+      </NavigationPrompt>
+    );
+  };
+
   render() {
     let submitIconClass = 'fa-play';
     let submitButtonText = 'Start Submission';
@@ -123,6 +197,8 @@ class FormWrapper extends React.PureComponent {
             {/* left col */}
             <div className="col-md-9">
               {/* middle col */}
+              {/* TODO: not necessary on read-only submissions */}
+              {this.renderNavigationPrompt()}
 
               <MinimalSubmissionForm />
 

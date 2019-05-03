@@ -64,6 +64,66 @@ export class SubmissionForm extends React.Component {
   };
 
 
+  // renderNavigationPrompt = () => {
+  //   return (
+  //     <NavigationPrompt when={true}>
+  //       {({ onConfirm, onCancel }) => (
+  //         <Modal
+  //           show={true}
+  //           onHide={onCancel}
+  //           backdrop={true}
+  //           centered
+  //         >
+  //           <Modal.Header closeButton>
+  //             <Modal.Title className="pl-4">Leave this section ?</Modal.Title>
+  //           </Modal.Header>
+  //           <Modal.Body>
+  //             <Container>
+  //               <Row className="show-grid text-center">
+  //                 <Col xs={12} md={12}>
+  //                   Are you sure leaving this form ? Press 'Cancel' to stay
+  //                   or press 'Save' to save changes before leaving.
+  //                   Press 'Discard' to leave with out saving.
+  //                 </Col>
+  //               </Row>
+  //             </Container>
+  //           </Modal.Body>
+  //           <Modal.Footer>
+  //             <Container>
+  //               <Row className="show-grid">
+  //                 <Col xs={12} md={4}>
+  //                   <Button variant="secondary"
+  //                           className="btn-block btn-sm green"
+  //                           onClick={onCancel}>
+  //                     <i className="icon ion-md-close" />
+  //                     Cancel
+  //                   </Button>
+  //                 </Col>
+  //                 <Col xs={12} md={4} className="text-right">
+  //                   <Button variant="secondary"
+  //                           className="btn-block btn-sm btn-light-blue"
+  //                           onClick={this.props.handleSubmit}>
+  //                     <i className="icon ion-ios-save" />
+  //                     Save
+  //                   </Button>
+  //                 </Col>
+  //                 <Col xs={12} md={4} className="text-right">
+  //                   <Button variant="secondary"
+  //                           className="btn-block btn-sm red"
+  //                           onClick={onConfirm}>
+  //                     <i className="icon ion-md-alert" />
+  //                     Discard
+  //                   </Button>
+  //                 </Col>
+  //               </Row>
+  //             </Container>
+  //           </Modal.Footer>
+  //         </Modal>
+  //       )}
+  //     </NavigationPrompt>
+  //   );
+  // };
+
   render() {
 
     // console.log('--------------render SubmissionForm');
@@ -81,18 +141,61 @@ export class SubmissionForm extends React.Component {
 
     return (
       <div className="submission-form-wrapper">
-        <NavigationPrompt when={true}>
-          {({ onConfirm, onCancel }) => (
-
-            <Modal show={true}>
-              <div>
-                <p>Do you really want to leave?</p>
-                <button onClick={onCancel}>Cancel</button>
-                <button onClick={onConfirm}>Ok</button>
-              </div>
-            </Modal>
-          )}
-        </NavigationPrompt>
+        {/*<NavigationPrompt when={true}>*/}
+        {/*  {({ onConfirm, onCancel }) => (*/}
+        {/*    <Modal*/}
+        {/*      show={true}*/}
+        {/*      onHide={onCancel}*/}
+        {/*      backdrop={true}*/}
+        {/*      centered*/}
+        {/*    >*/}
+        {/*      <Modal.Header closeButton>*/}
+        {/*        <Modal.Title className="pl-4">Leave this section ?</Modal.Title>*/}
+        {/*      </Modal.Header>*/}
+        {/*      <Modal.Body>*/}
+        {/*        <Container>*/}
+        {/*          <Row className="show-grid text-center">*/}
+        {/*            <Col xs={12} md={12}>*/}
+        {/*              Are you sure leaving this form ? Press 'Cancel' to stay*/}
+        {/*              or press 'Save' to save changes before leaving.*/}
+        {/*              Press 'Discard' to leave with out saving.*/}
+        {/*            </Col>*/}
+        {/*          </Row>*/}
+        {/*        </Container>*/}
+        {/*      </Modal.Body>*/}
+        {/*      <Modal.Footer>*/}
+        {/*        <Container>*/}
+        {/*          <Row className="show-grid">*/}
+        {/*            <Col xs={12} md={4}>*/}
+        {/*              <Button variant="secondary"*/}
+        {/*                      className="btn-block btn-sm green"*/}
+        {/*                      onClick={onCancel}>*/}
+        {/*                <i className="icon ion-md-close" />*/}
+        {/*                Cancel*/}
+        {/*              </Button>*/}
+        {/*            </Col>*/}
+        {/*            <Col xs={12} md={4} className="text-right">*/}
+        {/*              <Button variant="secondary"*/}
+        {/*                      className="btn-block btn-sm btn-light-blue"*/}
+        {/*                      onClick={this.props.deleteSubmission}>*/}
+        {/*                <i className="icon ion-ios-save" />*/}
+        {/*                Save*/}
+        {/*              </Button>*/}
+        {/*            </Col>*/}
+        {/*            <Col xs={12} md={4} className="text-right">*/}
+        {/*              <Button variant="secondary"*/}
+        {/*                      className="btn-block btn-sm red"*/}
+        {/*                      onClick={onConfirm}>*/}
+        {/*                <i className="icon ion-md-alert" />*/}
+        {/*                Discard*/}
+        {/*              </Button>*/}
+        {/*            </Col>*/}
+        {/*          </Row>*/}
+        {/*        </Container>*/}
+        {/*      </Modal.Footer>*/}
+        {/*    </Modal>*/}
+        {/*  )}*/}
+        {/*</NavigationPrompt>*/}
         {/*<Prompt*/}
         {/*  when={true}*/}
         {/*  message="Are you sure you want to leave?"*/}
