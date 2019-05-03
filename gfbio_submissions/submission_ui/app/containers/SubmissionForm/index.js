@@ -9,6 +9,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { createStructuredSelector } from 'reselect';
 import { compose } from 'redux';
+import { Prompt } from 'react-router-dom';
 
 import injectSaga from 'utils/injectSaga';
 import injectReducer from 'utils/injectReducer';
@@ -60,9 +61,9 @@ export class SubmissionForm extends React.Component {
 
   render() {
 
-    console.log('--------------render SubmissionForm');
-    console.log(this.props);
-    console.log('###############################');
+    // console.log('--------------render SubmissionForm');
+    // console.log(this.props);
+    // console.log('###############################');
 
     if (this.props.brokerSubmissionId !== '' && this.props.match.path === '/form') {
       this.props.resetForm();
@@ -75,6 +76,10 @@ export class SubmissionForm extends React.Component {
 
     return (
       <div className="submission-form-wrapper">
+        {/*<Prompt*/}
+        {/*  when={true}*/}
+        {/*  message="Are you sure you want to leave?"*/}
+        {/*/>*/}
         <FormWrapper
           onSubmit={this.props.handleSubmit}
           submitInProgress={this.props.submitInProgress}

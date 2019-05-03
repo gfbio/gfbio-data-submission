@@ -64,7 +64,7 @@ function* getMetaDataFileName(metaDataIndex, fileUploads) {
   const metaDataFile = fileUploads.get(metaIndex);
   let metaDataFileName = '';
   if (metaDataFile !== undefined) {
-    console.log(metaDataFile.file.name);
+    // console.log(metaDataFile.file.name);
     metaDataFileName = metaDataFile.file.name;
   }
   return metaDataFileName;
@@ -154,8 +154,8 @@ function* uploadFile(token, brokerSubmissionId, file, index) {
   // TODO: move to performUploadSaga. before loop.
   // const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
   // const token = yield select(makeSelectToken());
-  console.log('uploadFile');
-  console.log(brokerSubmissionId);
+  // console.log('uploadFile');
+  // console.log(brokerSubmissionId);
   try {
     // true refers to 'attach_to_ticket' parameter of backend endpoint
     //  stating that every uploaded file will be attached to the
@@ -164,14 +164,14 @@ function* uploadFile(token, brokerSubmissionId, file, index) {
       brokerSubmissionId, file.file, true, token);
     yield fork(uploadProgressWatcher, uploadChannel, index);
   } catch (err) {
-    console.log('yield error action uploadFile');
-    console.log(err);
+    // console.log('yield error action uploadFile');
+    // console.log(err);
     yield put(uploadFileError(index, err));
   }
 }
 
 function* performUploadSaga(brokerSubmissionId) {
-  console.log('performUploadSaga');
+  // console.log('performUploadSaga');
   const fileUploads = yield select(makeSelectFileUploads());
   // const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
   const token = yield select(makeSelectToken());
@@ -181,15 +181,15 @@ function* performUploadSaga(brokerSubmissionId) {
     index++;
   }
   yield put(uploadFilesSuccess({}));
-  console.log('put upload success is done');
-  console.log('put push is done');
+  // console.log('put upload success is done');
+  // console.log('put push is done');
 }
 
 
 export function* performSubmitFormSaga() {
-  console.log('performSubmitFormSaga. bsi:');
+  // console.log('performSubmitFormSaga. bsi:');
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
-  console.log(brokerSubmissionId);
+  // console.log(brokerSubmissionId);
   if (brokerSubmissionId !== '') {
     yield put(updateSubmission(true));
   } else {
@@ -208,9 +208,9 @@ export function* performSubmitFormSaga() {
 }
 
 export function* performSaveFormSaga() {
-  console.log('performSaveSaga. bsi:');
+  // console.log('performSaveSaga. bsi:');
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
-  console.log(brokerSubmissionId);
+  // console.log(brokerSubmissionId);
   // TODO: if bsi put update action ....
   if (brokerSubmissionId !== '') {
     yield put(updateSubmission(false));
@@ -230,9 +230,9 @@ export function* performSaveFormSaga() {
 }
 
 export function* performUpdateSubmissionSaga() {
-  console.log('performUpdateSubmissionSaga. bsi:');
+  // console.log('performUpdateSubmissionSaga. bsi:');
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
-  console.log(brokerSubmissionId);
+  // console.log(brokerSubmissionId);
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
   const updateWithRelease = yield select(makeSelectUpdateWithRelease());
@@ -250,9 +250,9 @@ export function* performUpdateSubmissionSaga() {
 }
 
 export function* processSubmitFormTypeSaga() {
-  console.log('processSubmitFormTypeSaga');
+  // console.log('processSubmitFormTypeSaga');
   const reduxFormForm = yield select(makeSelectReduxFormForm());
-  console.log(reduxFormForm.workflow);
+  // console.log(reduxFormForm.workflow);
   if (reduxFormForm.workflow === 'save') {
     yield put(saveForm());
   } else if (reduxFormForm.workflow === 'submit') {

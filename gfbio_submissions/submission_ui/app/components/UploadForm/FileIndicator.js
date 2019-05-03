@@ -24,8 +24,8 @@ class FileIndicator extends React.Component {
   }
 
   handleMetadataSelect(event) {
-    console.log(event.target.value + '  -  ' + event.target.checked);
-    console.log(this.props.fileUploads.get(event.target.value));
+    // console.log(event.target.value + '  -  ' + event.target.checked);
+    // console.log(this.props.fileUploads.get(event.target.value));
     // click shows index and checkedvalue (after click[release])
     // if click and checked -> new metadata index
     // if click and not checked and equal metadataindex -> set index to -1

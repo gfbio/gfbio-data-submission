@@ -43,7 +43,7 @@ export class SubmissionList extends React.Component {
   }
 
   render() {
-    console.log('--------------render SubmissionList');
+    // console.log('--------------render SubmissionList');
     // console.log(this.props);
     // console.log('###############################');
 
@@ -79,8 +79,8 @@ export class SubmissionList extends React.Component {
                  href=""
                  onClick={(e) => {
                    e.preventDefault();
-                   console.log('ON CLICK LIST DELETE');
-                   console.log(submission.broker_submission_id);
+                   // console.log('ON CLICK LIST DELETE');
+                   // console.log(submission.broker_submission_id);
                    this.props.showDeleteSubmissionDialog(submission.broker_submission_id);
                  }}
               >
@@ -95,7 +95,7 @@ export class SubmissionList extends React.Component {
       }
 
     });
-    console.log(submissionItems);
+    // console.log(submissionItems);
     submissionItems = submissionItems.filter(item => item !== null);
     let header = null;
     if (submissionItems.length > 0) {

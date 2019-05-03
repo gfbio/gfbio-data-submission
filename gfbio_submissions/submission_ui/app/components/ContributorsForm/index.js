@@ -167,11 +167,11 @@ class ContributorsForm extends React.PureComponent {
 
   getContributorsAsArray() {
     let contributors = this.props.contributors;
-    console.log('contributors click Detail');
-    console.log(this.props.contributors);
-    console.log(typeof this.props.contributors);
+    // console.log('contributors click Detail');
+    // console.log(this.props.contributors);
+    // console.log(typeof this.props.contributors);
     if (!Array.isArray(this.props.contributors)) {
-      console.log('no array. set local contribs');
+      // console.log('no array. set local contribs');
       contributors = this.props.contributors.toJS();
     }
     return contributors;
@@ -296,10 +296,10 @@ class ContributorsForm extends React.PureComponent {
     const { formOpen, detailOpen } = this.state;
     let editForm = this.renderEditForm(detailOpen);
 
-    console.log('contributors click RENDER');
-    console.log(this.state);
-    console.log(this.props.contributors);
-    console.log(typeof this.props.contributors);
+    // console.log('contributors click RENDER');
+    // console.log(this.state);
+    // console.log(this.props.contributors);
+    // console.log(typeof this.props.contributors);
     let contributorsArray = this.getContributorsAsArray();
 
     let contributors = contributorsArray.map((c, index) => {
