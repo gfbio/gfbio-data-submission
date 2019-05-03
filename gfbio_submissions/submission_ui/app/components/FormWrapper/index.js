@@ -119,8 +119,11 @@ class FormWrapper extends React.PureComponent {
                     </Button>
                   </Col>
                   <Col xs={12} md={4} className="text-right">
+                    {/* TODO: not necessary on read-only submissions */}
+                    {/* TODO: dont show if no changes or empty form*/}
                     {/*
-                    TODO: more advanced please: close after save, inspect redux store if events are fired
+                    TODO: more advanced please: close after save, inspect redux store if events are fired -> YES
+                            add boolean etc to close dialog on save and give feedback on save process
                     */}
                     <Button variant="secondary"
                             className="btn-block btn-sm btn-light-blue"
@@ -197,7 +200,7 @@ class FormWrapper extends React.PureComponent {
             {/* left col */}
             <div className="col-md-9">
               {/* middle col */}
-              {/* TODO: not necessary on read-only submissions */}
+
               {this.renderNavigationPrompt()}
 
               <MinimalSubmissionForm />
