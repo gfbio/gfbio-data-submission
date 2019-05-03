@@ -26,7 +26,8 @@ import {
   SAVE_FORM_ERROR,
   SAVE_FORM_SUCCESS,
   SET_CONTRIBUTORS,
-  SET_EMBARGO_DATE, SET_METADATA_INDEX,
+  SET_EMBARGO_DATE,
+  SET_METADATA_INDEX,
   SUBMIT_FORM,
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
@@ -84,6 +85,7 @@ export const initialState = fromJS({
   contributors: [],
   currentContributor: {},
   updateWithRelease: false,
+  promptOnLeave: true,
 });
 
 
@@ -96,6 +98,7 @@ function submissionFormReducer(state = initialState, action) {
     case SAVE_FORM:
       return state
         .set('showSaveSuccess', false)
+        .set('promptOnLeave', false)
         .set('saveInProgress', true);
     case SAVE_FORM_SUCCESS:
       // TODO: set bsi etc after success, from then its updates
@@ -204,44 +207,44 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .update('contributors', (contributors) => contributors.push(action.contributor));
     case UPDATE_CONTRIBUTOR:
-      console.log('UPDATE_CONTRIBUTOR');
-      console.log(action.contributor);
-      console.log(action.index);
+      // console.log('UPDATE_CONTRIBUTOR');
+      // console.log(action.contributor);
+      // console.log(action.index);
       return state
         .update('contributors', (contributors) => contributors.splice(action.index, 1, action.contributor));
     case REMOVE_CONTRIBUTOR:
-      console.log('REMOVE_CONTRIBUTOR');
-      console.log(action.index);
+      // console.log('REMOVE_CONTRIBUTOR');
+      // console.log(action.index);
       return state
         .update('contributors', (contributors) => contributors.splice(action.index, 1));
     case FETCH_SUBMISSION:
-      console.log('FETCH_SUBMISSION');
+      // console.log('FETCH_SUBMISSION');
       // TODO: set prop to inidcate loading -> loading gif
       return state.set('requestBrokerSubmissionId', action.brokerSubmissionId);
     case FETCH_SUBMISSION_SUCCESS:
-      console.log('FETCH_SUBMISSION_SUCCESS');
+      // console.log('FETCH_SUBMISSION_SUCCESS');
       // TODO: 2x data: 1 from axios 1 from json-body
       // TODO: refactor to some sort of getter with checks
-      console.log(action.response.data.broker_submission_id);
+      // console.log(action.response.data.broker_submission_id);
       // console.log(typeof action.response.data.data.requirements.contributors);
-      return setStateFormValues(state, action);
+      return setStateFormValues(state, action).set('promptOnLeave', true);
     case FETCH_SUBMISSION_ERROR:
-      console.log('FETCH_SUBMISSION_ERROR');
+      // console.log('FETCH_SUBMISSION_ERROR');
       return state;
     case RESET_FORM:
-      console.log('RESET_FORM');
+      // console.log('RESET_FORM');
       return resetStateFormValues(state);
     case UPDATE_SUBMISSION:
-      console.log('UPDATE_SUBMISSION');
+      // console.log('UPDATE_SUBMISSION');
       // TODO: set prop to inidcate loading -> loading gif
       // return state.set('requestBrokerSubmissionId', action.brokerSubmissionId);
       return state
         .set('updateWithRelease', action.release);
     case UPDATE_SUBMISSION_SUCCESS:
-      console.log('UPDATE_SUBMISSION_SUCCESS');
+      // console.log('UPDATE_SUBMISSION_SUCCESS');
       // TODO: 2x data: 1 from axios 1 from json-body
       // TODO: refactor to some sort of getter with checks
-      console.log(action.response.data.broker_submission_id);
+      // console.log(action.response.data.broker_submission_id);
       // console.log(typeof action.response.data.data.requirements.contributors);
       return state
         .set('saveInProgress', false)
@@ -251,11 +254,11 @@ function submissionFormReducer(state = initialState, action) {
         .set('updateWithRelease', false);
     // return setStateFormValues(state, action);
     case UPDATE_SUBMISSION_ERROR:
-      console.log('UPDATE_SUBMISSION_ERROR');
+      // console.log('UPDATE_SUBMISSION_ERROR');
       return state
         .set('updateWithRelease', action.release);
     case SET_METADATA_INDEX:
-      console.log('SET_METADATA_INDEX');
+      // console.log('SET_METADATA_INDEX');
       return state
         .set('metaDataIndex', action.metaDataIndex);
     default:

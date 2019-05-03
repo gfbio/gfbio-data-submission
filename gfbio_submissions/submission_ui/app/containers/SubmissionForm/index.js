@@ -25,7 +25,7 @@ import {
   makeSelectBrokerSubmissionId,
   makeSelectEmbargoDate,
   makeSelectFormWrapper,
-  makeSelectInitialValues,
+  makeSelectInitialValues, makeSelectPromptOnLeave,
   makeSelectSaveInProgress,
   makeSelectSubmission,
   makeSelectSubmitInProgress,
@@ -35,8 +35,8 @@ import {
 export class SubmissionForm extends React.Component {
 
   componentDidMount() {
-    console.log('SFORM did mounr params');
-    console.log(this.props.match.params);
+    console.log('SFORM did mount props');
+    console.log(this.props);
     const { brokerSubmissionId } = this.props.match.params;
     if (brokerSubmissionId !== undefined) {
       this.props.fetchSubmission(brokerSubmissionId);
@@ -58,11 +58,71 @@ export class SubmissionForm extends React.Component {
   };
 
 
+  // renderNavigationPrompt = () => {
+  //   return (
+  //     <NavigationPrompt when={true}>
+  //       {({ onConfirm, onCancel }) => (
+  //         <Modal
+  //           show={true}
+  //           onHide={onCancel}
+  //           backdrop={true}
+  //           centered
+  //         >
+  //           <Modal.Header closeButton>
+  //             <Modal.Title className="pl-4">Leave this section ?</Modal.Title>
+  //           </Modal.Header>
+  //           <Modal.Body>
+  //             <Container>
+  //               <Row className="show-grid text-center">
+  //                 <Col xs={12} md={12}>
+  //                   Are you sure leaving this form ? Press 'Cancel' to stay
+  //                   or press 'Save' to save changes before leaving.
+  //                   Press 'Discard' to leave with out saving.
+  //                 </Col>
+  //               </Row>
+  //             </Container>
+  //           </Modal.Body>
+  //           <Modal.Footer>
+  //             <Container>
+  //               <Row className="show-grid">
+  //                 <Col xs={12} md={4}>
+  //                   <Button variant="secondary"
+  //                           className="btn-block btn-sm green"
+  //                           onClick={onCancel}>
+  //                     <i className="icon ion-md-close" />
+  //                     Cancel
+  //                   </Button>
+  //                 </Col>
+  //                 <Col xs={12} md={4} className="text-right">
+  //                   <Button variant="secondary"
+  //                           className="btn-block btn-sm btn-light-blue"
+  //                           onClick={this.props.handleSubmit}>
+  //                     <i className="icon ion-ios-save" />
+  //                     Save
+  //                   </Button>
+  //                 </Col>
+  //                 <Col xs={12} md={4} className="text-right">
+  //                   <Button variant="secondary"
+  //                           className="btn-block btn-sm red"
+  //                           onClick={onConfirm}>
+  //                     <i className="icon ion-md-alert" />
+  //                     Discard
+  //                   </Button>
+  //                 </Col>
+  //               </Row>
+  //             </Container>
+  //           </Modal.Footer>
+  //         </Modal>
+  //       )}
+  //     </NavigationPrompt>
+  //   );
+  // };
+
   render() {
 
-    console.log('--------------render SubmissionForm');
-    console.log(this.props);
-    console.log('###############################');
+    // console.log('--------------render SubmissionForm');
+    // console.log(this.props);
+    // console.log('###############################');
 
     if (this.props.brokerSubmissionId !== '' && this.props.match.path === '/form') {
       this.props.resetForm();
@@ -85,6 +145,7 @@ export class SubmissionForm extends React.Component {
           profile={this.getProfile()}
           initialValues={this.props.initialValues}
           reduxFormWrapper={this.props.reduxFormForm.formWrapper}
+          promptOnLeave={this.props.promptOnLeave}
         />
       </div>
     );
@@ -102,6 +163,7 @@ SubmissionForm.propTypes = {
   brokerSubmissionId: PropTypes.string,
   fetchSubmission: PropTypes.func,
   resetForm: PropTypes.func,
+  promptOnLeave: PropTypes.bool,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -112,6 +174,7 @@ const mapStateToProps = createStructuredSelector({
   initialValues: makeSelectInitialValues(),
   submission: makeSelectSubmission(),
   brokerSubmissionId: makeSelectBrokerSubmissionId(),
+  promptOnLeave: makeSelectPromptOnLeave(),
 });
 
 function mapDispatchToProps(dispatch) {

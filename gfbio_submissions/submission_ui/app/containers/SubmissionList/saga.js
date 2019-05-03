@@ -43,7 +43,7 @@ function* performFetchSubmissionsSaga() {
 }
 
 export function* performDeleteSubmissionSaga() {
-  console.log('performDeleteSubmissionSaga');
+  // console.log('performDeleteSubmissionSaga');
   const token = yield select(makeSelectToken());
   const deleteBrokerSubmissionId = yield select(makeSelectDeleteBrokerSubmissionId());
   try {
@@ -51,8 +51,8 @@ export function* performDeleteSubmissionSaga() {
     yield put(deleteSubmissionSuccess(response));
     yield put(fetchSubmissions());
   } catch (error) {
-    console.log('error');
-    console.log(error);
+    // console.log('error');
+    // console.log(error);
     yield put(deleteSubmissionError(error));
   }
 }

@@ -21,6 +21,12 @@ import DataUrlForm from '../DataUrlForm';
 import DatasetLabelForm from '../DatasetLabelForm';
 import TemplateLinkList from '../TemplateLinkList';
 import Alert from 'react-bootstrap/Alert';
+import NavigationPrompt from 'react-router-navigation-prompt';
+import Modal from 'react-bootstrap/Modal';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Button from 'react-bootstrap/Button';
 
 /* eslint-disable react/prefer-stateless-function */
 class FormWrapper extends React.PureComponent {
@@ -77,6 +83,94 @@ class FormWrapper extends React.PureComponent {
     }
   };
 
+  renderNavigationPrompt = () => {
+    if (this.props.saveInProgress) {
+      return (<Modal
+        show={true}
+        centered
+      >
+        <Modal.Header>
+          <Modal.Title className="pl-4">Saving ...</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Container>
+            <Row className="show-grid text-center">
+              <Col xs={12} md={12}>
+                <i className="fa fa-cog fa-spin fa-fw fa-lg" />
+              </Col>
+            </Row>
+          </Container>
+        </Modal.Body>
+      </Modal>);
+    } else if (this.props.pristine === false && this.props.promptOnLeave) {
+      return (
+        <NavigationPrompt when={true}>
+          {({ onConfirm, onCancel }) => (
+            <Modal
+              show={true}
+              onHide={onCancel}
+              backdrop={true}
+              centered
+            >
+              <Modal.Header closeButton>
+                <Modal.Title className="pl-4">Leave this section ?</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <Container>
+                  <Row className="show-grid text-center">
+                    <Col xs={12} md={12}>
+                      Are you sure leaving this form ? Press 'Cancel' to stay
+                      or press 'Save' to save changes before leaving.
+                      Press 'Discard' to leave with out saving.
+                    </Col>
+                  </Row>
+                </Container>
+              </Modal.Body>
+              <Modal.Footer>
+                <Container>
+                  <Row className="show-grid">
+                    <Col xs={12} md={4}>
+                      <Button variant="secondary"
+                              className="btn-block btn-sm green"
+                              onClick={onCancel}>
+                        <i className="icon ion-md-close" />
+                        Cancel
+                      </Button>
+                    </Col>
+                    <Col xs={12} md={4} className="text-right">
+                      <Button variant="secondary"
+                              className="btn-block btn-sm btn-light-blue"
+                              onClick={this.props.handleSubmit(values =>
+                                this.props.onSubmit({
+                                  ...values,
+                                  workflow: 'save',
+                                }),
+                              )}>
+                        <i className="icon ion-ios-save" />
+                        Save
+                      </Button>
+                    </Col>
+                    <Col xs={12} md={4} className="text-right">
+                      <Button variant="secondary"
+                              className="btn-block btn-sm red"
+                              onClick={onConfirm}>
+                        <i className="icon ion-md-alert" />
+                        Discard
+                      </Button>
+                    </Col>
+                  </Row>
+                </Container>
+              </Modal.Footer>
+            </Modal>
+          )}
+        </NavigationPrompt>
+
+      );
+    } else {
+      return null;
+    }
+  };
+
   render() {
     let submitIconClass = 'fa-play';
     let submitButtonText = 'Start Submission';
@@ -93,7 +187,7 @@ class FormWrapper extends React.PureComponent {
     let errors = this.prepareErrorNotification();
 
     // console.log('--------------render FormWrapper');
-    // console.log(this.props.initialValues.toJS());
+    // console.log(this.props);
     // console.log('###############################');
 
     return (
@@ -123,6 +217,8 @@ class FormWrapper extends React.PureComponent {
             {/* left col */}
             <div className="col-md-9">
               {/* middle col */}
+
+              {this.renderNavigationPrompt()}
 
               <MinimalSubmissionForm />
 
@@ -222,6 +318,7 @@ FormWrapper.propTypes = {
   saveInProgress: PropTypes.bool,
   profile: PropTypes.object,
   reduxFormWrapper: PropTypes.object,
+  promptOnLeave: PropTypes.bool,
 };
 
 // this is already connected to redux-form reducer ?
