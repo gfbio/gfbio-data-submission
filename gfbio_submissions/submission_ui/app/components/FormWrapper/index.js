@@ -84,13 +84,8 @@ class FormWrapper extends React.PureComponent {
   };
 
   renderNavigationPrompt = () => {
-    // const showPrompt = this.props.pristine === false || this.props.anyTouched;
-    console.log(this.props.pristine);
-    console.log(this.props.anyTouched);
-    // console.log(showPrompt);
-    if (this.props.pristine === false) {
+    if (this.props.pristine === false && this.props.promptOnLeave) {
       return (
-
         <NavigationPrompt when={true}>
           {({ onConfirm, onCancel }) => (
             <Modal
@@ -125,16 +120,6 @@ class FormWrapper extends React.PureComponent {
                       </Button>
                     </Col>
                     <Col xs={12} md={4} className="text-right">
-                      {/* TODO: not necessary on read-only submissions */}
-                      {/*
-                      TODO: dont show if no changes or empty form DONE
-                         - this.props.anyTouched = false
-                         - this.props.pristine = true (unberührt) <-- !
-                    */}
-                      {/*
-                    TODO: more advanced please: close after save, inspect redux store if events are fired -> YES
-                            add boolean etc to close dialog on save and give feedback on save process
-                    */}
                       <Button variant="secondary"
                               className="btn-block btn-sm btn-light-blue"
                               onClick={this.props.handleSubmit(values =>
@@ -315,6 +300,7 @@ FormWrapper.propTypes = {
   saveInProgress: PropTypes.bool,
   profile: PropTypes.object,
   reduxFormWrapper: PropTypes.object,
+  promptOnLeave: PropTypes.bool,
 };
 
 // this is already connected to redux-form reducer ?

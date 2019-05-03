@@ -85,6 +85,7 @@ export const initialState = fromJS({
   contributors: [],
   currentContributor: {},
   updateWithRelease: false,
+  promptOnLeave: true,
 });
 
 
@@ -97,6 +98,7 @@ function submissionFormReducer(state = initialState, action) {
     case SAVE_FORM:
       return state
         .set('showSaveSuccess', false)
+        .set('promptOnLeave', false)
         .set('saveInProgress', true);
     case SAVE_FORM_SUCCESS:
       // TODO: set bsi etc after success, from then its updates
@@ -225,7 +227,7 @@ function submissionFormReducer(state = initialState, action) {
       // TODO: refactor to some sort of getter with checks
       // console.log(action.response.data.broker_submission_id);
       // console.log(typeof action.response.data.data.requirements.contributors);
-      return setStateFormValues(state, action);
+      return setStateFormValues(state, action).set('promptOnLeave', true);
     case FETCH_SUBMISSION_ERROR:
       // console.log('FETCH_SUBMISSION_ERROR');
       return state;

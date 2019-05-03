@@ -9,8 +9,6 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { createStructuredSelector } from 'reselect';
 import { compose } from 'redux';
-import NavigationPrompt from 'react-router-navigation-prompt';
-import Modal from 'react-bootstrap/Modal';
 
 import injectSaga from 'utils/injectSaga';
 import injectReducer from 'utils/injectReducer';
@@ -27,15 +25,11 @@ import {
   makeSelectBrokerSubmissionId,
   makeSelectEmbargoDate,
   makeSelectFormWrapper,
-  makeSelectInitialValues,
+  makeSelectInitialValues, makeSelectPromptOnLeave,
   makeSelectSaveInProgress,
   makeSelectSubmission,
   makeSelectSubmitInProgress,
 } from './selectors';
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-import Button from 'react-bootstrap/Button';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
@@ -141,65 +135,6 @@ export class SubmissionForm extends React.Component {
 
     return (
       <div className="submission-form-wrapper">
-        {/*<NavigationPrompt when={true}>*/}
-        {/*  {({ onConfirm, onCancel }) => (*/}
-        {/*    <Modal*/}
-        {/*      show={true}*/}
-        {/*      onHide={onCancel}*/}
-        {/*      backdrop={true}*/}
-        {/*      centered*/}
-        {/*    >*/}
-        {/*      <Modal.Header closeButton>*/}
-        {/*        <Modal.Title className="pl-4">Leave this section ?</Modal.Title>*/}
-        {/*      </Modal.Header>*/}
-        {/*      <Modal.Body>*/}
-        {/*        <Container>*/}
-        {/*          <Row className="show-grid text-center">*/}
-        {/*            <Col xs={12} md={12}>*/}
-        {/*              Are you sure leaving this form ? Press 'Cancel' to stay*/}
-        {/*              or press 'Save' to save changes before leaving.*/}
-        {/*              Press 'Discard' to leave with out saving.*/}
-        {/*            </Col>*/}
-        {/*          </Row>*/}
-        {/*        </Container>*/}
-        {/*      </Modal.Body>*/}
-        {/*      <Modal.Footer>*/}
-        {/*        <Container>*/}
-        {/*          <Row className="show-grid">*/}
-        {/*            <Col xs={12} md={4}>*/}
-        {/*              <Button variant="secondary"*/}
-        {/*                      className="btn-block btn-sm green"*/}
-        {/*                      onClick={onCancel}>*/}
-        {/*                <i className="icon ion-md-close" />*/}
-        {/*                Cancel*/}
-        {/*              </Button>*/}
-        {/*            </Col>*/}
-        {/*            <Col xs={12} md={4} className="text-right">*/}
-        {/*              <Button variant="secondary"*/}
-        {/*                      className="btn-block btn-sm btn-light-blue"*/}
-        {/*                      onClick={this.props.deleteSubmission}>*/}
-        {/*                <i className="icon ion-ios-save" />*/}
-        {/*                Save*/}
-        {/*              </Button>*/}
-        {/*            </Col>*/}
-        {/*            <Col xs={12} md={4} className="text-right">*/}
-        {/*              <Button variant="secondary"*/}
-        {/*                      className="btn-block btn-sm red"*/}
-        {/*                      onClick={onConfirm}>*/}
-        {/*                <i className="icon ion-md-alert" />*/}
-        {/*                Discard*/}
-        {/*              </Button>*/}
-        {/*            </Col>*/}
-        {/*          </Row>*/}
-        {/*        </Container>*/}
-        {/*      </Modal.Footer>*/}
-        {/*    </Modal>*/}
-        {/*  )}*/}
-        {/*</NavigationPrompt>*/}
-        {/*<Prompt*/}
-        {/*  when={true}*/}
-        {/*  message="Are you sure you want to leave?"*/}
-        {/*/>*/}
         <FormWrapper
           onSubmit={this.props.handleSubmit}
           submitInProgress={this.props.submitInProgress}
@@ -210,6 +145,7 @@ export class SubmissionForm extends React.Component {
           profile={this.getProfile()}
           initialValues={this.props.initialValues}
           reduxFormWrapper={this.props.reduxFormForm.formWrapper}
+          promptOnLeave={this.props.promptOnLeave}
         />
       </div>
     );
@@ -227,6 +163,7 @@ SubmissionForm.propTypes = {
   brokerSubmissionId: PropTypes.string,
   fetchSubmission: PropTypes.func,
   resetForm: PropTypes.func,
+  promptOnLeave: PropTypes.bool,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -237,6 +174,7 @@ const mapStateToProps = createStructuredSelector({
   initialValues: makeSelectInitialValues(),
   submission: makeSelectSubmission(),
   brokerSubmissionId: makeSelectBrokerSubmissionId(),
+  promptOnLeave: makeSelectPromptOnLeave(),
 });
 
 function mapDispatchToProps(dispatch) {
