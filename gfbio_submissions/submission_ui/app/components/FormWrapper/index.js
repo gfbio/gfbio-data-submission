@@ -84,7 +84,25 @@ class FormWrapper extends React.PureComponent {
   };
 
   renderNavigationPrompt = () => {
-    if (this.props.pristine === false && this.props.promptOnLeave) {
+    if (this.props.saveInProgress) {
+      return (<Modal
+        show={true}
+        centered
+      >
+        <Modal.Header>
+          <Modal.Title className="pl-4">Saving ...</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Container>
+            <Row className="show-grid text-center">
+              <Col xs={12} md={12}>
+                <i className="fa fa-cog fa-spin fa-fw fa-lg" />
+              </Col>
+            </Row>
+          </Container>
+        </Modal.Body>
+      </Modal>);
+    } else if (this.props.pristine === false && this.props.promptOnLeave) {
       return (
         <NavigationPrompt when={true}>
           {({ onConfirm, onCancel }) => (
@@ -168,17 +186,15 @@ class FormWrapper extends React.PureComponent {
     }
     let errors = this.prepareErrorNotification();
 
-    console.log('--------------render FormWrapper');
-    console.log(this.props);
-    console.log('###############################');
+    // console.log('--------------render FormWrapper');
+    // console.log(this.props);
+    // console.log('###############################');
 
     return (
       <form
         name="wrapping-form"
         className="pagewide-form"
-        onSubmit={e => {
-          e.preventDefault();
-        }}
+        onSubmit={}
       >
         <div className="container">
           <div className="row">
