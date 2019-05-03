@@ -9,7 +9,8 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { createStructuredSelector } from 'reselect';
 import { compose } from 'redux';
-import { Prompt } from 'react-router-dom';
+import NavigationPrompt from 'react-router-navigation-prompt';
+import Modal from 'react-bootstrap/Modal';
 
 import injectSaga from 'utils/injectSaga';
 import injectReducer from 'utils/injectReducer';
@@ -31,13 +32,17 @@ import {
   makeSelectSubmission,
   makeSelectSubmitInProgress,
 } from './selectors';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Button from 'react-bootstrap/Button';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
 
   componentDidMount() {
-    console.log('SFORM did mounr params');
-    console.log(this.props.match.params);
+    console.log('SFORM did mount props');
+    console.log(this.props);
     const { brokerSubmissionId } = this.props.match.params;
     if (brokerSubmissionId !== undefined) {
       this.props.fetchSubmission(brokerSubmissionId);
@@ -76,6 +81,18 @@ export class SubmissionForm extends React.Component {
 
     return (
       <div className="submission-form-wrapper">
+        <NavigationPrompt when={true}>
+          {({ onConfirm, onCancel }) => (
+
+            <Modal show={true}>
+              <div>
+                <p>Do you really want to leave?</p>
+                <button onClick={onCancel}>Cancel</button>
+                <button onClick={onConfirm}>Ok</button>
+              </div>
+            </Modal>
+          )}
+        </NavigationPrompt>
         {/*<Prompt*/}
         {/*  when={true}*/}
         {/*  message="Are you sure you want to leave?"*/}
