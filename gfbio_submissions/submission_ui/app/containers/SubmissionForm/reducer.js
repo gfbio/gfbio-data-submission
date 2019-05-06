@@ -269,7 +269,8 @@ function submissionFormReducer(state = initialState, action) {
       return state;
     case RESET_FORM:
       // console.log('RESET_FORM');
-      return resetStateFormValues(state, getInitialContributors(backendParameters));
+      state = resetStateFormValues(state, getInitialContributors(backendParameters));
+      return state.set('promptOnLeave', true);
     case UPDATE_SUBMISSION:
       // console.log('UPDATE_SUBMISSION');
       // TODO: set prop to inidcate loading -> loading gif
