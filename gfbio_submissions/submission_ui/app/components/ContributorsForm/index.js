@@ -53,9 +53,12 @@ class ContributorsForm extends React.PureComponent {
     //     isValid = false;
     //   }
     // }
+
+    // No last name required currently
     if (!formValues['lastName']) {
       isValid = false;
     }
+
     // if (typeof formValues['lastName'] !== 'undefined') {
     //   if (!formValues['lastName'].match(/^[a-zA-Z]+$/)) {
     //     isValid = false;
