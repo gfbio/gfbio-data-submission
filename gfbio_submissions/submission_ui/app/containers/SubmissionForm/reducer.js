@@ -51,6 +51,42 @@ if (window.props !== undefined) {
   backendParameters = window.props;
 }
 
+function getInitialContributors(backendParameters) {
+  let realName = backendParameters.userRealName || '';
+  console.log('realName ', realName);
+  let nameSplit = realName.split(' ');
+  console.log(nameSplit);
+  let firstName, lastName = '';
+  if (nameSplit.length > 1) {
+    firstName = nameSplit.shift();
+    lastName = nameSplit.join(' ');
+  } else {
+    firstName = nameSplit.shift();
+  }
+  console.log(firstName);
+  console.log(lastName);
+  const initialContributor = {
+    firstName: firstName,
+    lastName: lastName,
+    emailAddress: backendParameters.userEmail || '',
+  };
+  if (initialContributor.firstName.length > 0 &&
+    initialContributor.emailAddress.length) {
+    return [initialContributor];
+  }
+  return [];
+}
+
+// function getInitialContributor(backendParameters) {
+// getInitialContributor();
+// return initialContributor;
+//   return {};
+// };
+//
+const initialContributors = getInitialContributors(backendParameters);
+console.log('initialContibutor');
+console.log(initialContributors);
+
 export const initialState = fromJS({
   license: 'CC BY 4.0',
   metaDataSchema: 'None',
@@ -82,7 +118,7 @@ export const initialState = fromJS({
   brokerSubmissionId: '',
   requestBrokerSubmissionId: '',
   // deleteBrokerSubmissionId: '',
-  contributors: [],
+  contributors: initialContributors,
   currentContributor: {},
   updateWithRelease: false,
   promptOnLeave: true,
@@ -233,7 +269,7 @@ function submissionFormReducer(state = initialState, action) {
       return state;
     case RESET_FORM:
       // console.log('RESET_FORM');
-      return resetStateFormValues(state);
+      return resetStateFormValues(state, getInitialContributors(backendParameters));
     case UPDATE_SUBMISSION:
       // console.log('UPDATE_SUBMISSION');
       // TODO: set prop to inidcate loading -> loading gif

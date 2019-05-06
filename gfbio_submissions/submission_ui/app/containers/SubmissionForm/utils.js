@@ -64,14 +64,14 @@ export const setStateFormValues = (state, action) => {
     .set('submission', action.response.data);
 };
 
-export const resetStateFormValues = (state) => {
+export const resetStateFormValues = (state, initialContributors=[]) => {
   return state
     .set('metaDataIndex', '')
     .set('brokerSubmissionId', '')
     .set('initialValues', {})
     .set('relatedPublications', fromJS([]))
     .set('dataset_labels', fromJS([]))
-    .set('contributors', [])
+    .set('contributors', initialContributors)
     .set('embargoDate', new Date())
     .set('license', 'CC BY 4.0')
     .set('metaDataSchema', 'None')

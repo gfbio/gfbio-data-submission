@@ -42,6 +42,7 @@ class SubmissionFrontendView(LoginRequiredMixin, TemplateView):
             SubmissionFrontendView, self).get_context_data(*args, **kwargs)
         user = self.request.user
         user_name = user.get_username()
+        user_email = user.email
         # TODO: refactor/extract to other position
         # TODO: render warning if no token available
         token = ''
@@ -58,6 +59,8 @@ class SubmissionFrontendView(LoginRequiredMixin, TemplateView):
                            '{1}'.format(HOSTING_SITE, e))
         context['parameters'] = {
             'userName': user_name,
+            'userRealName': user.name,
+            'userEmail': user_email,
             'userId': user.id,
             'token': str(token),
         }
