@@ -72,9 +72,13 @@ export class SubmissionList extends React.Component {
 
             <div className="col-md-2 col-sm-12 align-self-center actions">
               {/*right pr-4 pl-4*/}
-              <a className="action h-100 d-inline-block pr-4" href="">
+              {/*<a className="action h-100 d-inline-block pr-4" href="">*/}
+              {/*  <i className="icon ion-md-create" /> Edit*/}
+              {/*</a>*/}
+              <Link className="action h-100 d-inline-block pr-4"
+                    to={'/form/' + submission.broker_submission_id}>
                 <i className="icon ion-md-create" /> Edit
-              </a>
+              </Link>
               <a className="action h-100 d-inline-block"
                  href=""
                  onClick={(e) => {
@@ -89,8 +93,7 @@ export class SubmissionList extends React.Component {
           </div>
 
         </li>;
-      }
-      else {
+      } else {
         return null;
       }
 
