@@ -43,8 +43,6 @@ class SubmissionFrontendView(LoginRequiredMixin, TemplateView):
         user = self.request.user
         user_name = user.get_username()
         user_email = user.email
-        print(user_email)
-        print(user.name)
         # TODO: refactor/extract to other position
         # TODO: render warning if no token available
         token = ''
