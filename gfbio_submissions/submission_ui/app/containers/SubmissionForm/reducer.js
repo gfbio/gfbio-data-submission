@@ -51,7 +51,7 @@ if (window.props !== undefined) {
   backendParameters = window.props;
 }
 
-function getInitialContributors() {
+function getInitialContributors(backendParameters) {
   let realName = backendParameters.userRealName || '';
   console.log('realName ', realName);
   let nameSplit = realName.split(' ');
@@ -83,7 +83,7 @@ function getInitialContributors() {
 //   return {};
 // };
 //
-const initialContributors = getInitialContributors();
+const initialContributors = getInitialContributors(backendParameters);
 console.log('initialContibutor');
 console.log(initialContributors);
 
