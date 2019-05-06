@@ -153,7 +153,16 @@ class FormWrapper extends React.PureComponent {
                     <Col xs={12} md={4} className="text-right">
                       <Button variant="secondary"
                               className="btn-block btn-sm red"
-                              onClick={onConfirm}>
+                        // onClick={this.props.onDiscard}
+                              onClick={
+                                e => {
+                                  e.preventDefault();
+                                  // this.props.onDiscard();
+                                  this.props.reset();
+                                  onConfirm();
+                                }
+                              }
+                      >
                         <i className="icon ion-md-alert" />
                         Discard
                       </Button>
@@ -186,9 +195,9 @@ class FormWrapper extends React.PureComponent {
     }
     let errors = this.prepareErrorNotification();
 
-    // console.log('--------------render FormWrapper');
-    // console.log(this.props);
-    // console.log('###############################');
+    console.log('--------------render FormWrapper');
+    console.log(this.props);
+    console.log('###############################');
 
     return (
       <form

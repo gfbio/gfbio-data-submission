@@ -32,7 +32,7 @@ export default function App() {
       <Switch>
         <Route exact path='/' component={HomePage} />
         {/* TODO: maybe remove /form url and use / instead ? */}
-        <Route exact path='/form' component={SubmissionForm}  />
+        <Route exact path='/form' component={SubmissionForm} />
         <Route path='/form/:brokerSubmissionId' component={SubmissionForm} />
         <Route exact path='/list' component={SubmissionList} />
         <Route component={NotFoundPage} />
