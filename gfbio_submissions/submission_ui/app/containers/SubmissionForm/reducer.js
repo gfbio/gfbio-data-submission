@@ -4,6 +4,7 @@
  *
  */
 import { fromJS } from 'immutable';
+import dateFormat from 'dateformat';
 import {
   ADD_CONTRIBUTOR,
   ADD_DATASET_LABEL,
@@ -169,7 +170,7 @@ function submissionFormReducer(state = initialState, action) {
         .set('metaDataIndex', '')
         .set('submitInProgress', false);
     case SET_EMBARGO_DATE:
-      return state.set('embargoDate', action.date);
+      return state.set('embargoDate', dateFormat(action.date, 'yyyy-mm-dd'));
     case CHANGE_CURRENT_RELATED_PUBLICATION:
       return state
         .set('currentRelatedPublication', action.value);

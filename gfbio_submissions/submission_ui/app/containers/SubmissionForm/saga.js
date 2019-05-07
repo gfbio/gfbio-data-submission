@@ -114,6 +114,7 @@ function* prepareRequestData(userId, submit = true) {
     metaDataIndex,
     metaDataFileName,
   }, formValues);
+  // const embargoDate = `${embargo.getFullYear()}-${embargo.getMonth()}-${embargo.getDay()}`;
   return {
     // TODO: determine target according to "Target Data center" value. e.g. "ena" = ENA_PANGAEA
     // TODO: change name of non-molecular to sth. else
@@ -124,7 +125,8 @@ function* prepareRequestData(userId, submit = true) {
     // TODO: good chance to show errors responded from server validation
     download_url: formValues.download_url,
     // FIXME: this sends ISO with timezone, but server does not like it
-    // embargo: embargo,
+    // embargo: embargoDate https://www.npmjs.com/package/dateformat,
+    embargo,
     data: {
       requirements: requirements,
     },
