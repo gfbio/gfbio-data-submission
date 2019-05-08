@@ -223,8 +223,10 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
                 "requirements : 'experiments' is a required property"],
                 'requirements': {'description': 'A Description',
                                  'title': 'A Title'}},
-            'embargo': '{0}'.format(
-                datetime.date.today() + datetime.timedelta(days=365)),
+            # 'embargo': '{0}'.format(
+            #     datetime.date.today() + datetime.timedelta(days=365)),
+            # TODO: better defaults in model
+            'embargo': None,
             'download_url': '',
             'release': False,
             'site': 'horst',
@@ -239,7 +241,8 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
         submission = Submission.objects.last()
         self.assertEqual(UUID(content['broker_submission_id']),
                          submission.broker_submission_id)
-        self.assertIsNotNone(submission.embargo)
+        # self.assertIsNotNone(submission.embargo)
+        self.assertIsNone(submission.embargo)
         self.assertFalse(submission.release)
         self.assertEqual(0, len(submission.site_project_id))
         self.assertEqual(Submission.OPEN, submission.status)
@@ -264,8 +267,10 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
                 u"requirements : 'experiments' is a required property"],
                 'requirements': {'description': 'A Description',
                                  'title': 'A Title'}},
-            'embargo': '{0}'.format(
-                datetime.date.today() + datetime.timedelta(days=365)),
+            # 'embargo': '{0}'.format(
+            #     datetime.date.today() + datetime.timedelta(days=365)),
+            # TODO: better defaults in model
+            'embargo': None,
             'download_url': '',
             'release': False,
             'site': 'horst',
@@ -335,8 +340,8 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(201, response.status_code)
         content = json.loads(response.content.decode('utf-8'))
         expected = _get_submission_post_response()
-        expected['embargo'] = '{0}'.format(
-            datetime.date.today() + datetime.timedelta(days=365))
+        # expected['embargo'] = '{0}'.format(
+        #     datetime.date.today() + datetime.timedelta(days=365))
         expected['broker_submission_id'] = content['broker_submission_id']
         self.assertDictEqual(expected, content)
         self.assertNotIn('download_url', content['data']['requirements'].keys())
@@ -1066,8 +1071,10 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
         # No 'optional_validation' since all generic special fields
         # are non-mandatory
         expected = {
-            'embargo': '{0}'.format(
-                datetime.date.today() + datetime.timedelta(days=365)),
+            # 'embargo': '{0}'.format(
+            #     datetime.date.today() + datetime.timedelta(days=365)),
+            # TODO: better defaults in model
+            'embargo': None,
             'download_url': '',
             'status': 'OPEN',
             'release': False,
@@ -1089,7 +1096,8 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
         submission = Submission.objects.last()
         self.assertEqual(UUID(content['broker_submission_id']),
                          submission.broker_submission_id)
-        self.assertIsNotNone(submission.embargo)
+        # self.assertIsNotNone(submission.embargo)
+        self.assertIsNone(submission.embargo)
         self.assertFalse(submission.release)
         self.assertEqual(0, len(submission.site_project_id))
         self.assertEqual(Submission.OPEN, submission.status)
