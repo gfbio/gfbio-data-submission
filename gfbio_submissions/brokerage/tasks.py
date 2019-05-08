@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import json
 import logging
 from json import JSONDecodeError
 
@@ -196,8 +196,8 @@ def apply_default_task_retry_policy(response, task, submission):
                 ''.format(task.name, task.request.retries)
         )
         if task.request.retries == SUBMISSION_MAX_RETRIES:
-            logger.info(
-                msg='{} SubmissionTransfer.TransferServerError mail_admins max_retries={}'
+            logger.warning(
+                msg='{} SubmissionTransfer.TransferServerError (mail_admins) max_retries={}'
                     ''.format(task.name, SUBMISSION_MAX_RETRIES)
             )
             mail_admins(
@@ -663,11 +663,47 @@ def get_gfbio_user_email_task(submission_id=None):
         return TaskProgressReport.CANCELLED
 
 
+def force_ticket_creation(response, submission_id, contact):
+    print('\n\n\n catch_response_special_cases')
+    print(response.status_code)
+    if response.status_code >= 400:
+        try:
+            error_messages = response.json()
+        except JSONDecodeError as e:
+            return response
+        # deal with jira unknown reporter
+        if 'reporter' in error_messages.get('errors', {}).keys():
+            reporter_errors = error_messages.get('errors', {})
+            if 'The reporter specified is not a user' in reporter_errors.get(
+                    'reporter', ''):
+                default = {
+                    'user_email': contact,
+                    'user_full_name': '',
+                    'first_name': '',
+                    'last_name': '',
+                }
+                create_helpdesk_ticket_task.s(prev_task_result=default,
+                                              submission_id=submission_id).set(
+                    countdown=SUBMISSION_RETRY_DELAY)()
+    else:
+        pass
+    return response
+
+
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
              name='tasks.create_helpdesk_ticket_task', base=SubmissionTask)
 def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
                                 summary=None,
                                 description=None):
+    print('\n\n\ncreate_helpdesk_ticket_task')
+    print(prev_task_result)
+    # print(kwargs)
+
+    # print(options.get('force_ticket_creation', False))
+    # force_ticket_creation = options.get('force_ticket_creation', False)
+    # force_ticket_creation = False
+
+    print(submission_id)
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id, task=create_helpdesk_ticket_task)
     if submission is not None and site_configuration is not None:
@@ -692,8 +728,11 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
                 site_config=site_configuration,
                 submission=submission,
                 data=data,
-                reporter=prev_task_result
+                reporter=prev_task_result  # {} if force_ticket_creation else
             )
+            # print('\n----\n', response)
+            force_ticket_creation(response, submission_id,
+                                  'brokeragent@gfbio.org')
             apply_default_task_retry_policy(response,
                                             create_helpdesk_ticket_task,
                                             submission)

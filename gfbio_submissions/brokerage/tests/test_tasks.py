@@ -649,6 +649,31 @@ class TestGFBioHelpDeskTasks(TestTasks):
         self.assertEqual(1, len(submission.additionalreference_set.all()))
 
     @responses.activate
+    def test_create_helpdesk_ticket_task_for_unknown_reporter(self):
+        submission = Submission.objects.last()
+        site_config = SiteConfiguration.objects.first()
+        responses.add(
+            responses.POST,
+            '{0}{1}'.format(site_config.helpdesk_server.url,
+                            HELPDESK_API_SUB_URL),
+            body='{"errorMessages":[],"errors":{"reporter":"The reporter specified is not a user."}}',
+            status=400)
+        responses.add(
+            responses.POST,
+            '{0}{1}'.format(site_config.helpdesk_server.url,
+                            HELPDESK_API_SUB_URL),
+            body='',
+            status=200)
+        result = create_helpdesk_ticket_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        self.assertTrue(result.successful())
+        task_reports = TaskProgressReport.objects.all()
+        self.assertEqual(2, len(task_reports))
+
+    @responses.activate
     def test_create_helpdesk_ticket_task_unicode_text(self):
         submission = Submission.objects.last()
         site_config = SiteConfiguration.objects.first()
