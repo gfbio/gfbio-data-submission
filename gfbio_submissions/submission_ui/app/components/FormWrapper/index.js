@@ -84,13 +84,13 @@ class FormWrapper extends React.PureComponent {
   };
 
   renderNavigationPrompt = () => {
-    if (this.props.saveInProgress) {
+    if (this.props.saveInProgress || this.props.submitInProgress) {
       return (<Modal
         show={true}
         centered
       >
         <Modal.Header>
-          <Modal.Title className="pl-4">Saving ...</Modal.Title>
+          <Modal.Title className="pl-4">Processing ...</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Container>

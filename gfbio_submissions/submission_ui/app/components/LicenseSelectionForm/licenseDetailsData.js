@@ -27,7 +27,7 @@ export const licenseDetailData = {
     link: 'https://creativecommons.org/licenses/by/4.0/deed.en',
   },
   CCBYNC40: {
-    name: 'CC BY NC 4.0',
+    name: 'CC BY-NC 4.0',
     shortDescription: 'Lorem ipsum dolor sit amet, consetetur sadipscing ' +
       'elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore ' +
       'magna aliquyam erat, sed diam voluptua. At vero eos et accusam et ' +

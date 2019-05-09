@@ -134,7 +134,7 @@ function submissionFormReducer(state = initialState, action) {
     case SAVE_FORM:
       return state
         .set('showSaveSuccess', false)
-        .set('promptOnLeave', false)
+        // .set('promptOnLeave', false)
         .set('saveInProgress', true);
     case SAVE_FORM_SUCCESS:
       // TODO: set bsi etc after success, from then its updates
@@ -152,7 +152,9 @@ function submissionFormReducer(state = initialState, action) {
         .set('metaDataIndex', '')
         .set('saveInProgress', false);
     case SUBMIT_FORM:
-      return state.set('reduxFormForm', action.form);
+      return state
+        .set('promptOnLeave', false)
+        .set('reduxFormForm', action.form);
     case SUBMIT_FORM_START:
       return state.set('submitInProgress', true);
     case SUBMIT_FORM_ACTIVE:
@@ -271,7 +273,8 @@ function submissionFormReducer(state = initialState, action) {
     case RESET_FORM:
       // console.log('RESET_FORM');
       state = resetStateFormValues(state, getInitialContributors(backendParameters));
-      return state.set('promptOnLeave', true);
+      // return state.set('promptOnLeave', true);
+      return state;
     case UPDATE_SUBMISSION:
       // console.log('UPDATE_SUBMISSION');
       // TODO: set prop to inidcate loading -> loading gif
