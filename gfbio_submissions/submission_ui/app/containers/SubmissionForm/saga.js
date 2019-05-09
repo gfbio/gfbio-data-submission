@@ -56,6 +56,7 @@ import {
   postSubmission,
   putSubmission,
 } from './submissionApi';
+import dateFormat from 'dateformat';
 
 import { push } from 'connected-react-router/immutable';
 
@@ -93,7 +94,11 @@ function* prepareRequestData(userId, submit = true) {
   const dataset_labels = yield select(makeSelectDatasetLabels());
   const contributors = yield select(makeSelectContributors());
   // FIXME: emabrgo date format mismathc frontend/bacend
-  const embargo = yield select(makeSelectEmbargoDate());
+  const embargoDate = yield select(makeSelectEmbargoDate());
+  const embargo = dateFormat(embargoDate, 'yyyy-mm-dd');
+  console.log('embargo');
+  console.log(embargo);
+  // console.log(dateFormat(embargo, 'yyyy-mm-dd'));
 
 
   const metaDataIndex = yield select(makeSelectMetaDataIndex());
