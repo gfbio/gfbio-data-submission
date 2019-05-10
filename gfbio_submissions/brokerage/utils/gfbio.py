@@ -187,8 +187,14 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
                                        'Other metadata or documentation')
     if metadata_schema == 'Other metadata or documentation' and jira_request_target == 'molecular':
         metadata_schema = 'MIxS 4.0'
-    mutual_data['customfield_10229'] = HELPDESK_METASCHEMA_MAPPINGS.get(
-        metadata_schema)
+    metadata_schema_value = [
+        {
+            'value': HELPDESK_METASCHEMA_MAPPINGS.get(metadata_schema).get(
+                'value')
+        }
+    ]
+    # mutual_data['customfield_10229'] = HELPDESK_METASCHEMA_MAPPINGS.get(metadata_schema)
+    mutual_data['customfield_10229'] = metadata_schema_value
 
     # generic_data = {
     #     'customfield_10311': requirements.get(

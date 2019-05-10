@@ -4,7 +4,6 @@
  *
  */
 import { fromJS } from 'immutable';
-import dateFormat from 'dateformat';
 import {
   ADD_CONTRIBUTOR,
   ADD_DATASET_LABEL,
@@ -135,7 +134,7 @@ function submissionFormReducer(state = initialState, action) {
     case SAVE_FORM:
       return state
         .set('showSaveSuccess', false)
-        .set('promptOnLeave', false)
+        // .set('promptOnLeave', false)
         .set('saveInProgress', true);
     case SAVE_FORM_SUCCESS:
       // TODO: set bsi etc after success, from then its updates
@@ -153,7 +152,9 @@ function submissionFormReducer(state = initialState, action) {
         .set('metaDataIndex', '')
         .set('saveInProgress', false);
     case SUBMIT_FORM:
-      return state.set('reduxFormForm', action.form);
+      return state
+        .set('promptOnLeave', false)
+        .set('reduxFormForm', action.form);
     case SUBMIT_FORM_START:
       return state.set('submitInProgress', true);
     case SUBMIT_FORM_ACTIVE:
@@ -170,7 +171,8 @@ function submissionFormReducer(state = initialState, action) {
         .set('metaDataIndex', '')
         .set('submitInProgress', false);
     case SET_EMBARGO_DATE:
-      return state.set('embargoDate', dateFormat(action.date, 'yyyy-mm-dd'));
+      // return state.set('embargoDate', dateFormat(action.date, 'yyyy-mm-dd'));
+      return state.set('embargoDate', action.date);
     case CHANGE_CURRENT_RELATED_PUBLICATION:
       return state
         .set('currentRelatedPublication', action.value);
@@ -271,7 +273,8 @@ function submissionFormReducer(state = initialState, action) {
     case RESET_FORM:
       // console.log('RESET_FORM');
       state = resetStateFormValues(state, getInitialContributors(backendParameters));
-      return state.set('promptOnLeave', true);
+      // return state.set('promptOnLeave', true);
+      return state;
     case UPDATE_SUBMISSION:
       // console.log('UPDATE_SUBMISSION');
       // TODO: set prop to inidcate loading -> loading gif
