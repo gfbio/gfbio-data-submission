@@ -249,6 +249,7 @@ export function* performUpdateSubmissionSaga() {
     // TODO: updates of file are handled in extra story
     // NOOPE: yield put(uploadFiles());
     // yield call(performUploadSaga);
+    yield call(performUploadSaga, brokerSubmissionId);
     yield put(updateSubmissionSuccess(response));
     yield put(push('/list'));
   } catch (error) {
