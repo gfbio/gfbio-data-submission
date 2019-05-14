@@ -175,7 +175,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
                                                [])],
         'customfield_10314': requirements.get('project_id', ''),
         'customfield_10202': HELPDESK_LICENSE_MAPPINGS.get(
-            requirements.get('license', 'Other')),
+            requirements.get('license', 'Other License')),
         'customfield_10600': requirements.get('download_url', ''),
     }
     assignee = HELPDESK_DATACENTER_USER_MAPPINGS.get(

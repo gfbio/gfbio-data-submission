@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import csv
+import datetime
 import io
 import json
 import os
@@ -13,6 +14,7 @@ from django.contrib.auth.models import Permission
 from django.test import TestCase
 from django.urls import reverse
 from django.utils.encoding import smart_text
+from jira import JIRA, JIRAError
 from mock import patch
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
@@ -651,6 +653,90 @@ class TestGFBioJira(TestCase):
         )
         self.assertEqual(204, response.status_code)
         self.assertEqual(0, len(response.content))
+
+    @skip('Test against helpdesk server')
+    def test_python_jira(self):
+        jira = JIRA(server='http://helpdesk.gfbio.org/',
+                    basic_auth=('brokeragent', ''))
+        issues = jira.search_issues('assignee="Marc Weber"')
+        print(issues)
+        issue = jira.issue('SAND-1539')
+        print(issue)  # SAND-1539
+        print(issue.fields.description)  # remote debug 4
+        print(
+            issue.fields.customfield_10229)  # [<JIRA CustomFieldOption: value='Dublin Core', id='10183'>]
+        print(issue.fields.customfield_10229[0].value)  # Dublin Core
+
+    @skip('Test against helpdesk server')
+    def test_python_jira_create(self):
+        jira = JIRA(server='http://helpdesk.gfbio.org/',
+                    basic_auth=('brokeragent', ''))
+
+        # almost analog to gfbio_prepare_create_helpdesk_payload(...)
+        issue_dict = {
+            'project': {'key': 'SAND'},
+            'summary': 'New issue from jira-python',
+            'description': 'Look into this one',
+            'issuetype': {
+                'name': 'Data Submission'
+            },
+            'reporter': {
+                'name': 'maweber@mpi-bremen.de'
+            },
+            'assignee': {
+                'name': 'maweber@mpi-bremen.de'  # or data center
+            },
+            'customfield_10010': 'sand/molecular-data',
+            'customfield_10200': '{0}'.format(
+                (datetime.date.today() + datetime.timedelta(
+                    days=365)).isoformat()),
+            'customfield_10201': 'requirements title',
+            'customfield_10208': 'requirements description',
+            'customfield_10303': '7fafa310-6031-4e41-987b-271d89916eb2',
+            # 'customfield_10311': requirements.get('data_collection_time', ''),
+            'customfield_10308': ['LABEL1', 'label2', ],
+            'customfield_10313': ', '.join(
+                ['Algae & Protists', 'Microbiology']),
+            'customfield_10205': 'first_name,last_name;email',
+            'customfield_10307': '; '.join(['publication 1234']),
+            'customfield_10216': [{'value': l} for l in
+                                  ['Sensitive Personal Information',
+                                   'Uncertain']],
+            'customfield_10314': 'potential project id',
+            'customfield_10202': {
+                'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10500',
+                'value': 'other',
+                'id': '10500'
+            },
+            'customfield_10600': 'http://www.downloadurl.com',
+            'customfield_10229': [{'value': 'other'}],
+
+        }
+        try:
+            new_issue = jira.create_issue(fields=issue_dict)
+            print(new_issue)
+            # SAND-1540
+            # works : https://helpdesk.gfbio.org/projects/SAND/queues/custom/21/SAND-1540
+            print(type(new_issue))
+            # <class 'jira.resources.Issue'>
+        except JIRAError as e:
+            print('JIRA Error:')
+            print(e)
+            print('-----------------')
+            print(e.status_code)
+            # 400
+            print(e.response.text)
+            # {"errorMessages":[],"errors":{"Metadata Description":"data was
+            # not an array","customfield_10202":"Could not find valid 'id' or
+            # 'value' in the Parent Option object."}}
+
+        # new_issue = jira.create_issue(
+        #     project='PROJ_key_or_id',
+        #     summary='New issue from jira-python',
+        #     description='Look into this one',
+        #     issuetype={'name': 'Bug'}
+        # )
+        # print(new_issue)
 
 
 class TestSubmissionTransferHandler(TestCase):
