@@ -902,7 +902,7 @@ class TestHelpDeskTicketMethods(TestCase):
                          payload['fields']['customfield_10010'])
         pprint(payload['fields'])
         self.assertEqual('MIxS',
-                         payload['fields']['customfield_10229']['value'])
+                         payload['fields']['customfield_10229'][0]['value'])
 
         data['requirements'].pop('data_center')
         serializer = SubmissionSerializer(data={
@@ -919,8 +919,9 @@ class TestHelpDeskTicketMethods(TestCase):
         self.assertNotIn('assignee', payload['fields'].keys())
         self.assertEqual('sand/generic-data',
                          payload['fields']['customfield_10010'])
+
         self.assertEqual('other',
-                         payload['fields']['customfield_10229']['value'])
+                         payload['fields']['customfield_10229'][0]['value'])
 
         data['requirements'][
             'data_center'] = 'GFBio Data Centers - our curators will suggest the appropriate one(s)'
@@ -936,6 +937,30 @@ class TestHelpDeskTicketMethods(TestCase):
             site_config=site_config,
             submission=submission)
         self.assertNotIn('assignee', payload['fields'].keys())
+
+    def test_prepare_helpdesk_payload_metadataschema_is_none(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'generic_data.json'), 'r') as data_file:
+            data = json.load(data_file)
+        data['requirements'].pop('data_center')
+        data['requirements']['metadata_schema'] = 'None'
+        print(data)
+
+        serializer = SubmissionSerializer(data={
+            'target': 'GENERIC',
+            'release': True,
+            'data': data
+        })
+        serializer.is_valid()
+        submission = serializer.save(site=User.objects.first())
+        site_config = SiteConfiguration.objects.first()
+        payload = gfbio_prepare_create_helpdesk_payload(
+            site_config=site_config,
+            submission=submission)
+        pprint(payload['fields'])
+        self.assertEqual('other',
+                         payload['fields']['customfield_10229'][0]['value'])
 
     @responses.activate
     def test_create_helpdesk_ticket(self):

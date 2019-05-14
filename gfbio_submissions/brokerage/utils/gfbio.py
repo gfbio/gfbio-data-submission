@@ -189,8 +189,8 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
         metadata_schema = 'MIxS 4.0'
     metadata_schema_value = [
         {
-            'value': HELPDESK_METASCHEMA_MAPPINGS.get(metadata_schema).get(
-                'value')
+            'value': HELPDESK_METASCHEMA_MAPPINGS.get(metadata_schema, {}).get(
+                'value', 'other')
         }
     ]
     # mutual_data['customfield_10229'] = HELPDESK_METASCHEMA_MAPPINGS.get(metadata_schema)
