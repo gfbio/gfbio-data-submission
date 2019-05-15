@@ -738,6 +738,22 @@ class TestGFBioJira(TestCase):
         # )
         # print(new_issue)
 
+    # @skip('Test against helpdesk server')
+    def test_python_jira_update(self):
+        jira = JIRA(server='http://helpdesk.gfbio.org/',
+                    basic_auth=('brokeragent', ''))
+        issue = jira.issue('SAND-1540')
+        # issue.update(summary='new summary', description='A new summary was added')
+
+        # res = issue.update(notify=False, fields={'summary': 'new summary',
+        #                                    'description': 'A new summary was added'})
+        # jira.exceptions.JIRAError: JiraError HTTP 403 url: https://helpdesk.gfbio.org/rest/api/2/issue/16035?notifyUsers=false
+        # 	text: To discard the user notification either admin or project admin permissions are required.
+
+        res = issue.update(notify=True, fields={'summary': 'new summary',
+                                                 'description': 'A new summary was added'})
+        print(res)
+
 
 class TestSubmissionTransferHandler(TestCase):
 
