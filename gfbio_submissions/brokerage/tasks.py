@@ -759,6 +759,66 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
 
 
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
+             name='tasks.update_helpdesk_ticket_task', base=SubmissionTask)
+def update_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
+                                data=None):
+    logger.info(
+        msg='update_helpdesk_ticket_task submission_id={0} | '
+            'prev_task_result={1} | '
+            'data={2}'.format(
+            submission_id, prev_task_result, data)
+    )
+
+    submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
+        submission_id=submission_id, task=comment_helpdesk_ticket_task,
+        get_closed_submission=True)
+
+    if submission is not None and site_configuration is not None:
+        print('SUB and CONF')
+        tickets = submission.additionalreference_set.filter(
+            Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
+        if len(tickets) != 1:
+            print('TICKE != 1 return cancel')
+            return TaskProgressReport.CANCELLED
+        print('len ticket ', len(tickets), ' go  ..')
+
+        CONTINUE HERE ....
+
+        # existing_tickets = submission.additionalreference_set.filter(
+        #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
+        # if prev_task_result is True:
+        #     if target_archive == ENA:
+        #         study_pid = submission.brokerobject_set.filter(type='study'). \
+        #             first().persistentidentifier_set.filter(
+        #             pid_type='PRJ').first()
+        #         comment_body = 'Submission to ENA has been successful. Study is accessible via ENA ' \
+        #                        'Accession No. {}. broker_submission_id: {}.'.format(
+        #             study_pid.pid, submission.broker_submission_id)
+        #     elif target_archive == Submission.PANGAEA:
+        #         pass
+        #     else:
+        #         pass
+        # else:
+        #     comment_body = 'Submission to {} returned error(s). ' \
+        #                    'broker_submission_id: {}.'.format(target_archive,
+        #                                                       submission.broker_submission_id)
+        # if len(existing_tickets):
+        #     response = gfbio_helpdesk_comment_on_ticket(
+        #         site_config=site_configuration,
+        #         ticket_key=existing_tickets.first().reference_key,
+        #         comment_body=comment_body,
+        #         submission=submission,
+        #     )
+        #     apply_default_task_retry_policy(response,
+        #                                     comment_helpdesk_ticket_task,
+        #                                     submission)
+    else:
+        return TaskProgressReport.CANCELLED
+
+
+# TODO: examine all tasks for redundant code and possible generalization e.g.:
+# TODO: more generic like update above
+@celery.task(max_retries=SUBMISSION_MAX_RETRIES,
              name='tasks.comment_helpdesk_ticket_task', base=SubmissionTask)
 def comment_helpdesk_ticket_task(prev_task_result=None, comment_body=None,
                                  submission_id=None, target_archive=None):

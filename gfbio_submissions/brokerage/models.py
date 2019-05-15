@@ -249,9 +249,11 @@ class Submission(models.Model):
     def save(self, *args, **kwargs):
         logger.info('\n\n\tSubmission save()')
         previous_state = None
+        update = False
         logger.info('\tself.pk: {0}'.format(self.pk))
         # update, no creation
         if self.pk:
+            update = True
             previous_state = Submission.objects.filter(pk=self.pk).first()
             logger.info('\tprevious_state  {0}'.format(previous_state))
         super(Submission, self).save(*args, **kwargs)
@@ -276,6 +278,7 @@ class Submission(models.Model):
                 countdown=SUBMISSION_SAVE_TRIGGER_DELAY)
             chain()
             logger.info('\tEND OF IF')
+
         logger.info('\tEND OF SAVE')
 
     # TODO: refactor/move: too specific (molecular submission)

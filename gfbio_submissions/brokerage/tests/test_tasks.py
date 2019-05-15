@@ -28,7 +28,7 @@ from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, 
     add_pangaealink_to_helpdesk_ticket_task, request_pangaea_login_token_task, \
     create_pangaea_jira_ticket_task, attach_file_to_pangaea_ticket_task, \
     comment_on_pangaea_ticket_task, check_for_pangaea_doi_task, \
-    trigger_submission_transfer
+    trigger_submission_transfer, update_helpdesk_ticket_task
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_ena_xml_response, \
@@ -692,6 +692,39 @@ class TestGFBioHelpDeskTasks(TestTasks):
         )
         self.assertTrue(result.successful())
         self.assertEqual(1, len(submission.additionalreference_set.all()))
+
+    @responses.activate
+    def test_update_helpdesk_ticket_task_success(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        url = '{0}{1}/{2}'.format(
+            site_config.helpdesk_server.url,
+            HELPDESK_API_SUB_URL,
+            'FAKE_KEY'
+        )
+        responses.add(responses.PUT, url, body='', status=204)
+        # response = gfbio_update_helpdesk_ticket(
+        #     site_configuration=site_config,
+        #     submission=submission,
+        #     ticket_key='FAKE_KEY',
+        #     data={}
+        # )
+        # self.assertEqual(204, response.status_code)
+        # self.assertEqual(1, len(RequestLog.objects.all()))
+        data = {
+            'fields': {
+                'customfield_10205': 'New Name Marc Weber, Alfred E. Neumann',
+            }
+        }
+        result = update_helpdesk_ticket_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+                'data': data
+            }
+        )
+        self.assertTrue(result.successful())
+        # TODO: task reports, request logs
+        # self.assertFalse(result.get())
 
     @responses.activate
     def test_comment_helpdesk_ticket_task_success(self):

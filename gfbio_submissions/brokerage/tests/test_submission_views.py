@@ -648,29 +648,37 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
     def test_put_submission_with_ticket_update(self):
         self._add_create_ticket_response()
         self._post_submission()
-        print('\n\n-----------------------\n\n')
-        print(Submission.objects.all())
-        print(TaskProgressReport.objects.all())
-        # <QuerySet [<Submission: 1_dddbbd5f-f5ce-4d6b-8aba-fe4a749b5ab5>]>
-        # <QuerySet [<TaskProgressReport: tasks.get_gfbio_user_email_task>
-        # , <TaskProgressReport: tasks.create_helpdesk_ticket_task>,
-        # <TaskProgressReport: tasks.trigger_submission_transfer>]>
+        ticket_key = 'FAKE-101'
         submission = Submission.objects.first()
-        print(submission.additionalreference_set.first().__dict__)
-        #  {'_submission_cache': <Submission: 1_b30d9e7d-d872-4423-820a-e9bc7765a8bd>,
-        #  'id': 1, 'type': '0', 'primary': True,
-        #  '_state': (...),
-        #  'submission_id': 1, 'reference_key': 'no_key_available'}
-        for r in RequestLog.objects.all():
-            print(r.type, ' | ', r.url, ' | ', r.type)
+        primary_ref = submission.additionalreference_set.first()
+        self.assertTrue(primary_ref.primary)
+        primary_ref.reference_key = ticket_key
+        primary_ref.save()
+        print('\n\n\n', primary_ref.reference_key)
 
-        # https://helpdesk.gfbio.org/rest/api/2/issue/16035?notifyUsers=false
-
+        # print('\n\n-----------------------\n\n')
+        # print(Submission.objects.all())
+        # print(TaskProgressReport.objects.all())
+        # # <QuerySet [<Submission: 1_dddbbd5f-f5ce-4d6b-8aba-fe4a749b5ab5>]>
+        # # <QuerySet [<TaskProgressReport: tasks.get_gfbio_user_email_task>
+        # # , <TaskProgressReport: tasks.create_helpdesk_ticket_task>,
+        # # <TaskProgressReport: tasks.trigger_submission_transfer>]>
+        # submission = Submission.objects.first()
+        # print(submission.additionalreference_set.first().__dict__)
+        # #  {'_submission_cache': <Submission: 1_b30d9e7d-d872-4423-820a-e9bc7765a8bd>,
+        # #  'id': 1, 'type': '0', 'primary': True,
+        # #  '_state': (...),
+        # #  'submission_id': 1, 'reference_key': 'no_key_available'}
+        # for r in RequestLog.objects.all():
+        #     print(r.type, ' | ', r.url, ' | ', r.type)
+        #
+        # # https://helpdesk.gfbio.org/rest/api/2/issue/16035?notifyUsers=false
+        #
         responses.add(
             responses.POST,
-            '{0}{1}'.format(
+            '{0}{1}/{2}'.format(
                 self.site_config.helpdesk_server.url,
-                'rest/api/2/issue/16035'
+                HELPDESK_API_SUB_URL, ticket_key
             ),
             status=200,
             body=''

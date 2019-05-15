@@ -628,10 +628,10 @@ class TestGFBioJira(TestCase):
         ticket_key = 'SAND-1460'
         url = '{0}{1}/{2}'.format(self.base_url, HELPDESK_API_SUB_URL,
                                   ticket_key, )
-        response = requests.get(
-            url=url,
-            auth=('brokeragent', ''),
-        )
+        # response = requests.get(
+        #     url=url,
+        #     auth=('brokeragent', ''),
+        # )
         response = requests.put(
             url=url,
             auth=('brokeragent', ''),
