@@ -4,7 +4,6 @@ import datetime
 import io
 import json
 import os
-from pprint import pprint
 from unittest import skip
 from uuid import uuid4
 
@@ -139,8 +138,6 @@ class EnalizerTest(TestCase):
         self.assertEqual('sample.xml', k)
         submission_samples = submission.brokerobject_set.filter(type='sample')
         # FIXME: order of samples seem to be random
-        print('\n\n-------------------------------------\n\n')
-        print(sample_xml)
         self.assertIn(
             '<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="{1}">'
             '<TITLE>sample title</TITLE>'
@@ -659,13 +656,7 @@ class TestGFBioJira(TestCase):
         jira = JIRA(server='http://helpdesk.gfbio.org/',
                     basic_auth=('brokeragent', ''))
         issues = jira.search_issues('assignee="Marc Weber"')
-        print(issues)
         issue = jira.issue('SAND-1539')
-        print(issue)  # SAND-1539
-        print(issue.fields.description)  # remote debug 4
-        print(
-            issue.fields.customfield_10229)  # [<JIRA CustomFieldOption: value='Dublin Core', id='10183'>]
-        print(issue.fields.customfield_10229[0].value)  # Dublin Core
 
     @skip('Test against helpdesk server')
     def test_python_jira_create(self):
@@ -714,18 +705,16 @@ class TestGFBioJira(TestCase):
         }
         try:
             new_issue = jira.create_issue(fields=issue_dict)
-            print(new_issue)
             # SAND-1540
             # works : https://helpdesk.gfbio.org/projects/SAND/queues/custom/21/SAND-1540
-            print(type(new_issue))
             # <class 'jira.resources.Issue'>
         except JIRAError as e:
             print('JIRA Error:')
-            print(e)
-            print('-----------------')
-            print(e.status_code)
-            # 400
-            print(e.response.text)
+            # print(e)
+            # print('-----------------')
+            # print(e.status_code)
+            # # 400
+            # print(e.response.text)
             # {"errorMessages":[],"errors":{"Metadata Description":"data was
             # not an array","customfield_10202":"Could not find valid 'id' or
             # 'value' in the Parent Option object."}}
@@ -751,7 +740,7 @@ class TestGFBioJira(TestCase):
         # 	text: To discard the user notification either admin or project admin permissions are required.
 
         res = issue.update(notify=True, fields={'summary': 'new summary',
-                                                 'description': 'A new summary was added'})
+                                                'description': 'A new summary was added'})
         print(res)
 
 
@@ -814,7 +803,6 @@ class TestSubmissionTransferHandler(TestCase):
         sub, conf = \
             SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
                 submission_id=submission.pk)
-        # reports = TaskProgressReport.objects.all()
         tprs = TaskProgressReport.objects.exclude(
             task_name='tasks.update_helpdesk_ticket_task')
         self.assertEqual(0, len(tprs))
@@ -833,7 +821,6 @@ class TestSubmissionTransferHandler(TestCase):
         sub, conf = \
             SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
                 submission_id=Submission.objects.last().pk)
-        # reports = TaskProgressReport.objects.all()
         tprs = TaskProgressReport.objects.exclude(
             task_name='tasks.update_helpdesk_ticket_task')
         self.assertEqual(0, len(tprs))
@@ -1012,7 +999,6 @@ class TestHelpDeskTicketMethods(TestCase):
         self.assertEqual({'name': 'ikostadi'}, payload['fields']['assignee'])
         self.assertEqual('sand/molecular-data',
                          payload['fields']['customfield_10010'])
-        pprint(payload['fields'])
         self.assertEqual('MIxS',
                          payload['fields']['customfield_10229'][0]['value'])
 
@@ -1057,7 +1043,6 @@ class TestHelpDeskTicketMethods(TestCase):
             data = json.load(data_file)
         data['requirements'].pop('data_center')
         data['requirements']['metadata_schema'] = 'None'
-        print(data)
 
         serializer = SubmissionSerializer(data={
             'target': 'GENERIC',
@@ -1070,7 +1055,6 @@ class TestHelpDeskTicketMethods(TestCase):
         payload = gfbio_prepare_create_helpdesk_payload(
             site_config=site_config,
             submission=submission)
-        pprint(payload['fields'])
         self.assertEqual('other',
                          payload['fields']['customfield_10229'][0]['value'])
 

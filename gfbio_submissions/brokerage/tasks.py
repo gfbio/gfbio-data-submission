@@ -664,8 +664,6 @@ def get_gfbio_user_email_task(submission_id=None):
 
 
 def force_ticket_creation(response, submission_id, contact):
-    print('\n\n\n catch_response_special_cases')
-    print(response.status_code)
     if response.status_code >= 400:
         try:
             error_messages = response.json()
@@ -695,15 +693,6 @@ def force_ticket_creation(response, submission_id, contact):
 def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
                                 summary=None,
                                 description=None):
-    print('\n\n\ncreate_helpdesk_ticket_task')
-    print(prev_task_result)
-    # print(kwargs)
-
-    # print(options.get('force_ticket_creation', False))
-    # force_ticket_creation = options.get('force_ticket_creation', False)
-    # force_ticket_creation = False
-
-    print(submission_id)
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id, task=create_helpdesk_ticket_task)
     if submission is not None and site_configuration is not None:
@@ -774,20 +763,11 @@ def update_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
         get_closed_submission=True
     )
 
-    # submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-    #     submission_id=submission_id, task=update_helpdesk_ticket_task,
-    #     get_closed_submission=True)
-
-    # if submission is not None and site_configuration is not None:
     if submission is not None:
-        print('SUB')
         tickets = submission.additionalreference_set.filter(
             Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
         if len(tickets) != 1:
-            print('TICKE != 1 return cancel')
             return TaskProgressReport.CANCELLED
-        print('len ticket ', len(tickets), ' go  ..')
-
         submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
             submission_id=submission_id,
             task=update_helpdesk_ticket_task,
@@ -804,7 +784,6 @@ def update_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
                 site_config=site_configuration,
                 submission=submission)
 
-        pprint(data)
         response = gfbio_update_helpdesk_ticket(
             site_configuration=site_configuration,
             submission=submission,
@@ -814,35 +793,6 @@ def update_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
         apply_default_task_retry_policy(response,
                                         update_helpdesk_ticket_task,
                                         submission)
-
-        # existing_tickets = submission.additionalreference_set.filter(
-        #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
-        # if prev_task_result is True:
-        #     if target_archive == ENA:
-        #         study_pid = submission.brokerobject_set.filter(type='study'). \
-        #             first().persistentidentifier_set.filter(
-        #             pid_type='PRJ').first()
-        #         comment_body = 'Submission to ENA has been successful. Study is accessible via ENA ' \
-        #                        'Accession No. {}. broker_submission_id: {}.'.format(
-        #             study_pid.pid, submission.broker_submission_id)
-        #     elif target_archive == Submission.PANGAEA:
-        #         pass
-        #     else:
-        #         pass
-        # else:
-        #     comment_body = 'Submission to {} returned error(s). ' \
-        #                    'broker_submission_id: {}.'.format(target_archive,
-        #                                                       submission.broker_submission_id)
-        # if len(existing_tickets):
-        #     response = gfbio_helpdesk_comment_on_ticket(
-        #         site_config=site_configuration,
-        #         ticket_key=existing_tickets.first().reference_key,
-        #         comment_body=comment_body,
-        #         submission=submission,
-        #     )
-        #     apply_default_task_retry_policy(response,
-        #                                     comment_helpdesk_ticket_task,
-        #                                     submission)
     else:
         return TaskProgressReport.CANCELLED
 

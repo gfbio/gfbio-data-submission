@@ -464,10 +464,6 @@ class TestSubmissionViewGetRequest(TestSubmissionView):
         content = json.loads(response.content.decode('utf-8'))
         self.assertEqual(1, len(content))
 
-        for a in Submission.objects.all():
-            print(a.broker_submission_id, ' : ', a.submitting_user, ' : ',
-                  a.site)
-
     @responses.activate
     def test_get_submission(self):
         self._add_create_ticket_response()
@@ -538,8 +534,6 @@ class TestUserSubmissionViewGetRequests(TestSubmissionView):
         self._post_submission_with_submitting_user(regular_user.id)
         self._post_submission_with_submitting_user(regular_user.id)
         response = self.api_client.get('/api/submissions/user/69/')
-        print(response.content)
-        print(response.status_code)
         self.assertEqual(200, response.status_code)
         submissions = json.loads(response.content.decode('utf-8'))
         self.assertEqual(0, len(submissions))
@@ -595,8 +589,6 @@ class TestUserSubmissionViewGetRequests(TestSubmissionView):
     def test_get_no_parameter(self):
         response = self.api_client.get(
             '/api/submissions/user/')
-        print(response.status_code)
-        print(response.content)
         self.assertEqual(404, response.status_code)
 
     @responses.activate
@@ -650,17 +642,11 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
         self._post_submission()
         ticket_key = 'FAKE-101'
         site_config = SiteConfiguration.objects.first()
-        print('sitrecon url ', site_config.helpdesk_server.url)
-        print('{0}{1}/{2}'.format(
-            self.site_config.helpdesk_server.url,
-            HELPDESK_API_SUB_URL, ticket_key
-        ))
         url = '{0}{1}/{2}'.format(
             site_config.helpdesk_server.url,
             HELPDESK_API_SUB_URL,
             ticket_key
         )
-        print('URL ', url)
         responses.add(responses.PUT, url, body='', status=204)
         submission = Submission.objects.first()
 
@@ -669,34 +655,12 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
         self.assertTrue(primary_ref.primary)
         primary_ref.reference_key = ticket_key
         primary_ref.save()
-        print('\n\n\n', primary_ref.reference_key)
-        print(submission.embargo)
         submission.embargo = datetime.date.today() + datetime.timedelta(
             days=365)
         submission.save()
-        print('\n\n-----------------------\n\n')
-        task_reports = TaskProgressReport.objects.all()
-        # for t in task_reports:
-        #     print(t.task_name, '    ', t.task_args, ' ', t.task_kwargs)
-        update_tasks = TaskProgressReport.objects.filter(task_name='tasks.update_helpdesk_ticket_task')
-        print(update_tasks)
+        update_tasks = TaskProgressReport.objects.filter(
+            task_name='tasks.update_helpdesk_ticket_task')
         self.assertEqual(1, len(update_tasks))
-        # self.assertTrue('update_helpdesk_ticket_task' in task_name)
-        # # <QuerySet [<Submission: 1_dddbbd5f-f5ce-4d6b-8aba-fe4a749b5ab5>]>
-        # # <QuerySet [<TaskProgressReport: tasks.get_gfbio_user_email_task>
-        # # , <TaskProgressReport: tasks.create_helpdesk_ticket_task>,
-        # # <TaskProgressReport: tasks.trigger_submission_transfer>]>
-        # submission = Submission.objects.first()
-        # print(submission.additionalreference_set.first().__dict__)
-        # #  {'_submission_cache': <Submission: 1_b30d9e7d-d872-4423-820a-e9bc7765a8bd>,
-        # #  'id': 1, 'type': '0', 'primary': True,
-        # #  '_state': (...),
-        # #  'submission_id': 1, 'reference_key': 'no_key_available'}
-        # for r in RequestLog.objects.all():
-        #     print(r.type, ' | ', r.url, ' | ', r.type)
-        #
-        # # https://helpdesk.gfbio.org/rest/api/2/issue/16035?notifyUsers=false
-        #
 
     @responses.activate
     def test_putpost_submission(self):

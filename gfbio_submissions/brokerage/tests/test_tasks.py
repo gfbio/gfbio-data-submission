@@ -253,7 +253,6 @@ class TestTasks(TestCase):
         SiteConfiguration.objects.create(
             title='default',
             site=None,
-            # site=User.objects.first(),
             ena_server=resource_cred,
             pangaea_server=resource_cred,
             gfbio_server=resource_cred,
@@ -264,7 +263,6 @@ class TestTasks(TestCase):
         SiteConfiguration.objects.create(
             title='default-2',
             site=None,
-            # site=User.objects.first(),
             ena_server=resource_cred,
             pangaea_server=resource_cred,
             gfbio_server=resource_cred,
@@ -459,7 +457,6 @@ class TestSubmissionTransferTasks(TestTasks):
         self.assertTrue(result.successful())
         self.assertTrue(ret_val)
         self.assertLess(0, len(PersistentIdentifier.objects.all()))
-        # submission.delete()
 
 
 class TestSubmissionPreparationTasks(TestTasks):
@@ -682,9 +679,9 @@ class TestGFBioHelpDeskTasks(TestTasks):
             }
         )
         self.assertTrue(result.successful())
-        task_reports = TaskProgressReport.objects.all()
-        # contains 3 started update ticket tasks
-        self.assertEqual(5, len(task_reports))
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertEqual(2, len(tprs))
 
     @responses.activate
     def test_create_helpdesk_ticket_task_unicode_text(self):
@@ -710,25 +707,12 @@ class TestGFBioHelpDeskTasks(TestTasks):
     def test_update_helpdesk_ticket_task_success(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
-        print('*****************')
-        print(submission.pk)
-        print(site_config.pk)
-        # print(submission.siteconfiguration_set.all())
-        print('*****************')
         url = '{0}{1}/{2}'.format(
             site_config.helpdesk_server.url,
             HELPDESK_API_SUB_URL,
             'FAKE_KEY'
         )
         responses.add(responses.PUT, url, body='', status=204)
-        # response = gfbio_update_helpdesk_ticket(
-        #     site_configuration=site_config,
-        #     submission=submission,
-        #     ticket_key='FAKE_KEY',
-        #     data={}
-        # )
-        # self.assertEqual(204, response.status_code)
-        # self.assertEqual(1, len(RequestLog.objects.all()))
         data = {
             'fields': {
                 'customfield_10205': 'New Name Marc Weber, Alfred E. Neumann',
@@ -741,17 +725,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
             }
         )
         self.assertTrue(result.successful())
-        # TODO: task reports, request logs
-        # self.assertFalse(result.get())
-        task_reports = TaskProgressReport.objects.all()
-
-        for t in task_reports:
-            print(t.task_args, ' ', t.task_kwargs)
         request_logs = RequestLog.objects.all()
-        for r in request_logs:
-            print(r.type, ' ', r.url)
-        # self.assertEqual(2, len(task_reports))
-        # self.assertTrue('data' in task_reports[1].task_kwargs)
         self.assertEqual(1, len(request_logs))
         self.assertTrue(request_logs[0].url.endswith('FAKE_KEY'))
 
@@ -1263,7 +1237,7 @@ class TestPangaeaTasks(TestTasks):
                 'comment_body': 'ACC 12345'
             }
         )
-        # expects resuls from previous chain element
+        # expects results from previous chain element
         self.assertTrue(result.successful())
         request_logs = RequestLog.objects.all()
         self.assertEqual(1, len(request_logs))
@@ -1448,9 +1422,9 @@ class TestTaskProgressReportInTasks(TestTasks):
             '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
                                     'PANGAEA_FAKE_KEY'),
             status=500)
-        reports = TaskProgressReport.objects.all()
-        # 3 started and aborted update ticket tasks
-        self.assertEqual(3, len(reports))
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertEqual(0, len(tprs))
         comment_on_pangaea_ticket_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
@@ -1461,9 +1435,9 @@ class TestTaskProgressReportInTasks(TestTasks):
                 'comment_body': 'ACC 12345'
             }
         )
-        reports = TaskProgressReport.objects.all()
-        # 3 started and aborted update ticket tasks
-        self.assertEqual(4, len(reports))
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertEqual(1, len(tprs))
         reports = TaskProgressReport.objects.exclude(
             task_name='tasks.update_helpdesk_ticket_task')
         report = reports.last()
@@ -1472,9 +1446,9 @@ class TestTaskProgressReportInTasks(TestTasks):
 
     def test_task_report_creation(self):
         submission = Submission.objects.first()
-        task_reports = TaskProgressReport.objects.all()
-        # 3 started and aborted update ticket tasks
-        self.assertEqual(3, len(task_reports))
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertEqual(0, len(tprs))
         self._run_task(submission_id=submission.pk)
         task_reports = TaskProgressReport.objects.all()
         self.assertEqual(5, len(task_reports))
@@ -1487,9 +1461,9 @@ class TestTaskProgressReportInTasks(TestTasks):
 
     def test_task_report_update_after_return(self):
         self._run_task(submission_id=Submission.objects.first().pk)
-        task_reports = TaskProgressReport.objects.all()
-        # includes started and aborted update ticket tasks
-        self.assertEqual(5, len(task_reports))
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertEqual(1, len(tprs))
         tpr = TaskProgressReport.objects.exclude(
             task_name='tasks.update_helpdesk_ticket_task').first()
         self.assertEqual('SUCCESS', tpr.status)
@@ -1506,9 +1480,9 @@ class TestTaskProgressReportInTasks(TestTasks):
 
     def test_task_report_update_on_wrong_submission(self):
         self._run_task(submission_id=1111)
-        task_reports = TaskProgressReport.objects.all()
-        # includes started and aborted update ticket tasks
-        self.assertEqual(4, len(task_reports))
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertEqual(1, len(tprs))
         tpr = TaskProgressReport.objects.exclude(
             task_name='tasks.update_helpdesk_ticket_task').first()
         self.assertEqual('SUCCESS', tpr.status)

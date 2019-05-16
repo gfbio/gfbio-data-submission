@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import datetime
 import json
 import logging
 import os
@@ -247,20 +246,14 @@ class Submission(models.Model):
     objects = SubmissionManager()
 
     def save(self, *args, **kwargs):
-        logger.info('\n\n\tSubmission save()')
         previous_state = None
         update = False
-        logger.info('\tself.pk: {0}'.format(self.pk))
         # update, no creation
         if self.pk:
             update = True
             previous_state = Submission.objects.filter(pk=self.pk).first()
-            logger.info('\tprevious_state  {0}'.format(previous_state))
         super(Submission, self).save(*args, **kwargs)
-        logger.info('\tafter super.save')
         if update:
-            print('\n\n\n##########################')
-            print('trigger update of ticket')
             from .tasks import update_helpdesk_ticket_task
             update_helpdesk_ticket_task.apply_async(
                 kwargs={
@@ -270,15 +263,7 @@ class Submission(models.Model):
             )
         # TODO: refactor -> extract
         if previous_state and previous_state.center_name != self.center_name:
-            logger.info(
-                '\tpreviuos_state not none and previous center name differs')
-            logger.info(
-                '\t\tprevious center_name: {0} | self.center_name: {1}'.format(
-                    previous_state.center_name, self.center_name
-                ))
-
             # instance difference, delete and create new
-            logger.info('\ttrigger task')
             from .tasks import delete_related_auditable_textdata_task, \
                 prepare_ena_submission_data_task
             chain = delete_related_auditable_textdata_task.s(
@@ -288,9 +273,6 @@ class Submission(models.Model):
                 submission_id=self.pk).set(
                 countdown=SUBMISSION_SAVE_TRIGGER_DELAY)
             chain()
-            logger.info('\tEND OF IF')
-
-        logger.info('\tEND OF SAVE')
 
     # TODO: refactor/move: too specific (molecular submission)
     def get_json_with_aliases(self, alias_postfix):
@@ -766,41 +748,11 @@ class AuditableTextData(models.Model):
 
         serialized_file_path = os.path.join(repo.working_tree_dir,
                                             serialized_file_name)
-        # logger.info(
-        #     '\n\n\n###########\tsave auditable -> write file\t##########\n')
-        # logger.info('\nserialized {}'.format(serialized))
-        # logger.info('\ntype serialized {}'.format(type(serialized)))
-        # logger.info('\nfile name {}'.format(serialized_file_name))
-        # logger.info('\nrepo {}'.format(repo))
-        # logger.info('\npath {}'.format(serialized_file_path))
-        # # logger.info('\ntry to load ')
-        # # logger.info(json.loads(serialized.decode('utf-8')))
-        # logger.info('try to load old way')
-        # loaded = json.loads(serialized)
-        # logger.info('type loads {}'.format(type(loaded)))
-        # logger.info('\n')
-        # logger.info('textdata\n')
-        # logger.info(
-        #     '\n{}'.format(loaded[0]['fields'].get('text_data', 'NO_TEXT_DATA')))
-        # logger.info('\ntype textdata {}'.format(
-        #     type(loaded[0]['fields'].get('text_data', 'NO_TEXT_DATA'))))
-        # # logger.info('\ndo smart_text')
-        # # loaded[0]['fields']['text_data'] = smart_text(
-        # #     loaded[0]['fields']['text_data'])
-        # # logger.info('\ntype textdata {}'.format(
-        # #     type(loaded[0]['fields'].get('text_data', 'NO_TEXT_DATA'))))
-        #
-        # # logger.info('{}'.format(json.loads(serialized)))
-        # logger.info('\ndump ..')
         dumped = json.dumps(smart_text(serialized), indent=4,
                             sort_keys=True)
-        # logger.info('\nnew style dumped {}'.format(dumped))
-        # logger.info('\ntype  {}'.format(type(dumped)))
         with open(serialized_file_path, 'w') as serialization_file:
             serialization_file.write(
                 dumped
-                # json.dumps(json.loads(serialized), indent=4, sort_keys=True)
-                # json.dumps(bytes(serialized.decode('utf-8')), indent=4, sort_keys=True)
             )
         index.add([serialized_file_path])
         if not is_update:
@@ -810,7 +762,6 @@ class AuditableTextData(models.Model):
             msg = 'update AuditableTextData serialization {0}'.format(
                 serialized_file_name)
         index.commit(msg)
-        # logger.info('AFTER COMMIT \n\n\n')
 
     def __str__(self):
         return 'AuditableTextData_{0}'.format(self.data_id)
