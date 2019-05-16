@@ -768,24 +768,41 @@ def update_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
             'data={2}'.format(
             submission_id, prev_task_result, data)
     )
+    submission = SubmissionTransferHandler.get_submission_for_task(
+        submission_id=submission_id,
+        task=update_helpdesk_ticket_task,
+        get_closed_submission=True
+    )
 
-    submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-        submission_id=submission_id, task=comment_helpdesk_ticket_task,
-        get_closed_submission=True)
+    # submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
+    #     submission_id=submission_id, task=update_helpdesk_ticket_task,
+    #     get_closed_submission=True)
 
-    if submission is not None and site_configuration is not None:
-        print('SUB and CONF')
+    # if submission is not None and site_configuration is not None:
+    if submission is not None:
+        print('SUB')
         tickets = submission.additionalreference_set.filter(
             Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
         if len(tickets) != 1:
             print('TICKE != 1 return cancel')
             return TaskProgressReport.CANCELLED
         print('len ticket ', len(tickets), ' go  ..')
+
+        submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
+            submission_id=submission_id,
+            task=update_helpdesk_ticket_task,
+            get_closed_submission=True
+        )
+        if site_configuration is None:
+            return TaskProgressReport.CANCELLED
+
         ticket = tickets[0]
 
-        # data = gfbio_prepare_create_helpdesk_payload(
-        #     site_config=site_configuration,
-        #     submission=submission)
+        # TODO: explicit task for this use case
+        if data is None:
+            data = gfbio_prepare_create_helpdesk_payload(
+                site_config=site_configuration,
+                submission=submission)
 
         pprint(data)
         response = gfbio_update_helpdesk_ticket(

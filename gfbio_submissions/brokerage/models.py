@@ -258,6 +258,17 @@ class Submission(models.Model):
             logger.info('\tprevious_state  {0}'.format(previous_state))
         super(Submission, self).save(*args, **kwargs)
         logger.info('\tafter super.save')
+        if update:
+            print('\n\n\n##########################')
+            print('trigger update of ticket')
+            from .tasks import update_helpdesk_ticket_task
+            update_helpdesk_ticket_task.apply_async(
+                kwargs={
+                    'submission_id': '{0}'.format(self.pk),
+                },
+                countdown=PRIMARY_DATA_FILE_DELAY
+            )
+        # TODO: refactor -> extract
         if previous_state and previous_state.center_name != self.center_name:
             logger.info(
                 '\tpreviuos_state not none and previous center name differs')
