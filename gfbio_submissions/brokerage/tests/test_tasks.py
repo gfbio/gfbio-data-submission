@@ -155,8 +155,11 @@ class TestInitialChainTasks(TestCase):
                               'tasks.trigger_submission_transfer',
                               'tasks.create_broker_objects_from_submission_data_task',
                               'tasks.prepare_ena_submission_data_task',
-                              'tasks.check_on_hold_status_task', ]
-        self.assertEqual(6, len(task_reports))
+                              'tasks.check_on_hold_status_task',
+                              'tasks.update_helpdesk_ticket_task', ]
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertEqual(6, len(tprs))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -208,8 +211,11 @@ class TestInitialChainTasks(TestCase):
         expected_tasknames = ['tasks.get_gfbio_user_email_task',
                               'tasks.create_helpdesk_ticket_task',
                               'tasks.trigger_submission_transfer',
-                              'tasks.trigger_submission_transfer_for_updates', ]
-        self.assertEqual(4, len(task_reports))
+                              'tasks.trigger_submission_transfer_for_updates',
+                              'tasks.update_helpdesk_ticket_task', ]
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertEqual(4, len(tprs))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -313,15 +319,19 @@ class TestTasksTriggeredBySubmissionSave(TestTasks):
         submission = SubmissionTest._create_submission_via_serializer()
         center_name, created = CenterName.objects.get_or_create(
             center_name='ABCD')
-        self.assertEqual(0, len(TaskProgressReport.objects.all()))
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertEqual(0, len(tprs))
         submission.brokerobject_set.all().delete()
         submission.center_name = center_name
         submission.save()
-        self.assertEqual(2, len(TaskProgressReport.objects.all()))
-        task_report = TaskProgressReport.objects.first()
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertEqual(2, len(tprs))
+        task_report = tprs.first()
         self.assertEqual(TaskProgressReport.CANCELLED,
                          task_report.task_return_value)
-        task_report = TaskProgressReport.objects.last()
+        task_report = tprs.last()
         self.assertEqual(TaskProgressReport.CANCELLED,
                          task_report.task_return_value)
 
@@ -673,7 +683,8 @@ class TestGFBioHelpDeskTasks(TestTasks):
         )
         self.assertTrue(result.successful())
         task_reports = TaskProgressReport.objects.all()
-        self.assertEqual(2, len(task_reports))
+        # contains 3 started update ticket tasks
+        self.assertEqual(5, len(task_reports))
 
     @responses.activate
     def test_create_helpdesk_ticket_task_unicode_text(self):
@@ -1438,7 +1449,8 @@ class TestTaskProgressReportInTasks(TestTasks):
                                     'PANGAEA_FAKE_KEY'),
             status=500)
         reports = TaskProgressReport.objects.all()
-        self.assertEqual(0, len(reports))
+        # 3 started and aborted update ticket tasks
+        self.assertEqual(3, len(reports))
         comment_on_pangaea_ticket_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
@@ -1450,28 +1462,36 @@ class TestTaskProgressReportInTasks(TestTasks):
             }
         )
         reports = TaskProgressReport.objects.all()
-        self.assertEqual(1, len(reports))
-        report = reports.first()
+        # 3 started and aborted update ticket tasks
+        self.assertEqual(4, len(reports))
+        reports = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        report = reports.last()
         self.assertEqual('RETRY', report.status)
         self.assertEqual('500', report.task_exception)
 
     def test_task_report_creation(self):
         submission = Submission.objects.first()
         task_reports = TaskProgressReport.objects.all()
-        self.assertEqual(0, len(task_reports))
+        # 3 started and aborted update ticket tasks
+        self.assertEqual(3, len(task_reports))
         self._run_task(submission_id=submission.pk)
         task_reports = TaskProgressReport.objects.all()
-        self.assertEqual(1, len(task_reports))
+        self.assertEqual(5, len(task_reports))
+        report = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task').first()
         self.assertEqual(
             'tasks.create_broker_objects_from_submission_data_task',
-            task_reports.first().task_name
+            report.task_name
         )
 
     def test_task_report_update_after_return(self):
         self._run_task(submission_id=Submission.objects.first().pk)
         task_reports = TaskProgressReport.objects.all()
-        self.assertEqual(1, len(task_reports))
-        tpr = task_reports.first()
+        # includes started and aborted update ticket tasks
+        self.assertEqual(5, len(task_reports))
+        tpr = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task').first()
         self.assertEqual('SUCCESS', tpr.status)
         self.assertNotEqual('', tpr.task_kwargs)
 
@@ -1487,7 +1507,9 @@ class TestTaskProgressReportInTasks(TestTasks):
     def test_task_report_update_on_wrong_submission(self):
         self._run_task(submission_id=1111)
         task_reports = TaskProgressReport.objects.all()
-        self.assertEqual(1, len(task_reports))
-        tpr = task_reports.first()
+        # includes started and aborted update ticket tasks
+        self.assertEqual(4, len(task_reports))
+        tpr = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task').first()
         self.assertEqual('SUCCESS', tpr.status)
         self.assertEqual('CANCELLED', tpr.task_return_value)

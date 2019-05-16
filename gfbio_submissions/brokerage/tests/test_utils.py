@@ -738,7 +738,7 @@ class TestGFBioJira(TestCase):
         # )
         # print(new_issue)
 
-    # @skip('Test against helpdesk server')
+    @skip('Test against helpdesk server')
     def test_python_jira_update(self):
         jira = JIRA(server='http://helpdesk.gfbio.org/',
                     basic_auth=('brokeragent', ''))
@@ -814,8 +814,10 @@ class TestSubmissionTransferHandler(TestCase):
         sub, conf = \
             SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
                 submission_id=submission.pk)
-        reports = TaskProgressReport.objects.all()
-        self.assertEqual(0, len(reports))
+        # reports = TaskProgressReport.objects.all()
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertEqual(0, len(tprs))
         self.assertIsInstance(sub, Submission)
         self.assertIsInstance(conf, SiteConfiguration)
 
@@ -831,8 +833,10 @@ class TestSubmissionTransferHandler(TestCase):
         sub, conf = \
             SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
                 submission_id=Submission.objects.last().pk)
-        reports = TaskProgressReport.objects.all()
-        self.assertEqual(0, len(reports))
+        # reports = TaskProgressReport.objects.all()
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertEqual(0, len(tprs))
         self.assertIsInstance(conf, SiteConfiguration)
         self.assertEqual('default', conf.title)
 
@@ -880,9 +884,13 @@ class TestSubmissionTransferHandler(TestCase):
         responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
         sth = SubmissionTransferHandler(submission_id=submission.pk,
                                         target_archive='ENA')
-        self.assertEqual(0, len(TaskProgressReport.objects.all()))
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertEqual(0, len(tprs))
         sth.execute_submission_to_ena()
-        self.assertLess(0, len(TaskProgressReport.objects.all()))
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertLess(0, len(tprs))
 
     @responses.activate
     def test_execute_ena_pangaea(self):
@@ -926,7 +934,9 @@ class TestSubmissionTransferHandler(TestCase):
             status=200)
         sth = SubmissionTransferHandler(submission_id=submission.pk,
                                         target_archive='ENA_PANGAEA')
-        self.assertEqual(0, len(TaskProgressReport.objects.all()))
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertEqual(0, len(tprs))
         sth.execute_submission_to_ena_and_pangaea()
         self.assertLess(0, len(TaskProgressReport.objects.all()))
 
