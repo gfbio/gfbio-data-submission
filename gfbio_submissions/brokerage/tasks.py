@@ -782,7 +782,7 @@ def update_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
             return TaskProgressReport.CANCELLED
         print('len ticket ', len(tickets), ' go  ..')
 
-        CONTINUE HERE ....
+        # CONTINUE HERE ....
 
         # existing_tickets = submission.additionalreference_set.filter(
         #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
