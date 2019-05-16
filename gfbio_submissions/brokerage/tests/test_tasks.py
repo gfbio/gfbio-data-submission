@@ -725,6 +725,17 @@ class TestGFBioHelpDeskTasks(TestTasks):
         self.assertTrue(result.successful())
         # TODO: task reports, request logs
         # self.assertFalse(result.get())
+        task_reports = TaskProgressReport.objects.all()
+
+        for t in task_reports:
+            print(t.task_args, ' ', t.task_kwargs)
+        request_logs = RequestLog.objects.all()
+        for r in request_logs:
+            print(r.type, ' ', r.url)
+        self.assertEqual(2, len(task_reports))
+        self.assertTrue('data' in task_reports[1].task_kwargs)
+        self.assertEqual(1, len(request_logs))
+        self.assertTrue(request_logs[0].url.endswith('FAKE_KEY'))
 
     @responses.activate
     def test_comment_helpdesk_ticket_task_success(self):

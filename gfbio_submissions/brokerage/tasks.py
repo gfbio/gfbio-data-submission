@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-import json
 import logging
 from json import JSONDecodeError
+from pprint import pprint
 
 import celery
 from celery import Task
@@ -14,7 +14,7 @@ from requests import ConnectionError, Response
 
 from gfbio_submissions.brokerage.configuration.settings import ENA
 from gfbio_submissions.brokerage.utils.gfbio import \
-    gfbio_prepare_create_helpdesk_payload
+    gfbio_prepare_create_helpdesk_payload, gfbio_update_helpdesk_ticket
 from .configuration.settings import BASE_HOST_NAME, \
     PRIMARY_DATA_FILE_MAX_RETRIES, PRIMARY_DATA_FILE_DELAY, \
     SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY, PANGAEA_ISSUE_VIEW_URL
@@ -781,8 +781,22 @@ def update_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
             print('TICKE != 1 return cancel')
             return TaskProgressReport.CANCELLED
         print('len ticket ', len(tickets), ' go  ..')
+        ticket = tickets[0]
 
-        # CONTINUE HERE ....
+        # data = gfbio_prepare_create_helpdesk_payload(
+        #     site_config=site_configuration,
+        #     submission=submission)
+
+        pprint(data)
+        response = gfbio_update_helpdesk_ticket(
+            site_configuration=site_configuration,
+            submission=submission,
+            ticket_key=ticket.reference_key,
+            data=data
+        )
+        apply_default_task_retry_policy(response,
+                                        update_helpdesk_ticket_task,
+                                        submission)
 
         # existing_tickets = submission.additionalreference_set.filter(
         #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))

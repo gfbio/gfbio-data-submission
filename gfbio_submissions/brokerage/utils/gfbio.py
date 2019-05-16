@@ -196,6 +196,10 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}):
     # mutual_data['customfield_10229'] = HELPDESK_METASCHEMA_MAPPINGS.get(metadata_schema)
     mutual_data['customfield_10229'] = metadata_schema_value
 
+    # if len(reporter.keys()):
+    #     mutual_data['reporter'] = {'name': reporter.get(
+    #         'user_email', 'No valid user, name or email available')},
+
     # generic_data = {
     #     'customfield_10311': requirements.get(
     #         'data_collection_time', ''),
