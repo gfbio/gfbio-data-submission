@@ -15,7 +15,7 @@ from rest_framework.test import APIRequestFactory, APIClient
 from gfbio_submissions.brokerage.configuration.settings import \
     HELPDESK_API_SUB_URL
 from gfbio_submissions.brokerage.models import Submission, RequestLog, \
-    SiteConfiguration, ResourceCredential
+    SiteConfiguration, ResourceCredential, TaskProgressReport
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_submission_post_response
 from gfbio_submissions.users.models import User
@@ -432,6 +432,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(0, len(Submission.objects.all()))
 
 
+# FIXME: duplicate of below ?
 class TestSubmissionViewGetRequest(TestSubmissionView):
 
     @responses.activate
@@ -463,10 +464,6 @@ class TestSubmissionViewGetRequest(TestSubmissionView):
         content = json.loads(response.content.decode('utf-8'))
         self.assertEqual(1, len(content))
 
-        for a in Submission.objects.all():
-            print(a.broker_submission_id, ' : ', a.submitting_user, ' : ',
-                  a.site)
-
     @responses.activate
     def test_get_submission(self):
         self._add_create_ticket_response()
@@ -487,6 +484,7 @@ class TestSubmissionViewGetRequest(TestSubmissionView):
         self.assertEqual(404, response.status_code)
 
 
+# FIXME: duplicate of above ?
 class TestUserSubmissionViewGetRequests(TestSubmissionView):
 
     @responses.activate
@@ -536,8 +534,6 @@ class TestUserSubmissionViewGetRequests(TestSubmissionView):
         self._post_submission_with_submitting_user(regular_user.id)
         self._post_submission_with_submitting_user(regular_user.id)
         response = self.api_client.get('/api/submissions/user/69/')
-        print(response.content)
-        print(response.status_code)
         self.assertEqual(200, response.status_code)
         submissions = json.loads(response.content.decode('utf-8'))
         self.assertEqual(0, len(submissions))
@@ -593,8 +589,6 @@ class TestUserSubmissionViewGetRequests(TestSubmissionView):
     def test_get_no_parameter(self):
         response = self.api_client.get(
             '/api/submissions/user/')
-        print(response.status_code)
-        print(response.content)
         self.assertEqual(404, response.status_code)
 
     @responses.activate
@@ -641,6 +635,32 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
         self.assertTrue(isinstance(content, dict))
         self.assertIn('0815', content['data']['requirements']['title'])
         self.assertEqual(1, len(Submission.objects.all()))
+
+    @responses.activate
+    def test_put_submission_with_ticket_update(self):
+        self._add_create_ticket_response()
+        self._post_submission()
+        ticket_key = 'FAKE-101'
+        site_config = SiteConfiguration.objects.first()
+        url = '{0}{1}/{2}'.format(
+            site_config.helpdesk_server.url,
+            HELPDESK_API_SUB_URL,
+            ticket_key
+        )
+        responses.add(responses.PUT, url, body='', status=204)
+        submission = Submission.objects.first()
+
+        primary_ref = submission.additionalreference_set.first()
+
+        self.assertTrue(primary_ref.primary)
+        primary_ref.reference_key = ticket_key
+        primary_ref.save()
+        submission.embargo = datetime.date.today() + datetime.timedelta(
+            days=365)
+        submission.save()
+        update_tasks = TaskProgressReport.objects.filter(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertEqual(1, len(update_tasks))
 
     @responses.activate
     def test_putpost_submission(self):

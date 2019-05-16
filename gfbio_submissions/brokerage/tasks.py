@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-import json
 import logging
 from json import JSONDecodeError
+from pprint import pprint
 
 import celery
 from celery import Task
@@ -14,7 +14,7 @@ from requests import ConnectionError, Response
 
 from gfbio_submissions.brokerage.configuration.settings import ENA
 from gfbio_submissions.brokerage.utils.gfbio import \
-    gfbio_prepare_create_helpdesk_payload
+    gfbio_prepare_create_helpdesk_payload, gfbio_update_helpdesk_ticket
 from .configuration.settings import BASE_HOST_NAME, \
     PRIMARY_DATA_FILE_MAX_RETRIES, PRIMARY_DATA_FILE_DELAY, \
     SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY, PANGAEA_ISSUE_VIEW_URL
@@ -664,8 +664,6 @@ def get_gfbio_user_email_task(submission_id=None):
 
 
 def force_ticket_creation(response, submission_id, contact):
-    print('\n\n\n catch_response_special_cases')
-    print(response.status_code)
     if response.status_code >= 400:
         try:
             error_messages = response.json()
@@ -695,15 +693,6 @@ def force_ticket_creation(response, submission_id, contact):
 def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
                                 summary=None,
                                 description=None):
-    print('\n\n\ncreate_helpdesk_ticket_task')
-    print(prev_task_result)
-    # print(kwargs)
-
-    # print(options.get('force_ticket_creation', False))
-    # force_ticket_creation = options.get('force_ticket_creation', False)
-    # force_ticket_creation = False
-
-    print(submission_id)
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id, task=create_helpdesk_ticket_task)
     if submission is not None and site_configuration is not None:
@@ -758,6 +747,58 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
         return TaskProgressReport.CANCELLED
 
 
+@celery.task(max_retries=SUBMISSION_MAX_RETRIES,
+             name='tasks.update_helpdesk_ticket_task', base=SubmissionTask)
+def update_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
+                                data=None):
+    logger.info(
+        msg='update_helpdesk_ticket_task submission_id={0} | '
+            'prev_task_result={1} | '
+            'data={2}'.format(
+            submission_id, prev_task_result, data)
+    )
+    submission = SubmissionTransferHandler.get_submission_for_task(
+        submission_id=submission_id,
+        task=update_helpdesk_ticket_task,
+        get_closed_submission=True
+    )
+
+    if submission is not None:
+        tickets = submission.additionalreference_set.filter(
+            Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
+        if len(tickets) != 1:
+            return TaskProgressReport.CANCELLED
+        submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
+            submission_id=submission_id,
+            task=update_helpdesk_ticket_task,
+            get_closed_submission=True
+        )
+        if site_configuration is None:
+            return TaskProgressReport.CANCELLED
+
+        ticket = tickets[0]
+
+        # TODO: explicit task for this use case
+        if data is None:
+            data = gfbio_prepare_create_helpdesk_payload(
+                site_config=site_configuration,
+                submission=submission)
+
+        response = gfbio_update_helpdesk_ticket(
+            site_configuration=site_configuration,
+            submission=submission,
+            ticket_key=ticket.reference_key,
+            data=data
+        )
+        apply_default_task_retry_policy(response,
+                                        update_helpdesk_ticket_task,
+                                        submission)
+    else:
+        return TaskProgressReport.CANCELLED
+
+
+# TODO: examine all tasks for redundant code and possible generalization e.g.:
+# TODO: more generic like update above
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
              name='tasks.comment_helpdesk_ticket_task', base=SubmissionTask)
 def comment_helpdesk_ticket_task(prev_task_result=None, comment_body=None,
