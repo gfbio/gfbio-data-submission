@@ -4,6 +4,7 @@ import datetime
 import io
 import json
 import os
+from pprint import pprint
 from unittest import skip
 from uuid import uuid4
 
@@ -652,16 +653,92 @@ class TestGFBioJira(TestCase):
         self.assertEqual(0, len(response.content))
 
     @skip('Test against helpdesk server')
+    def test_update_ticket_with_siteconfig(self):
+
+        # WORKS:
+        ticket_key = 'SAND-1539'
+        url = '{0}{1}/{2}'.format(self.base_url, HELPDESK_API_SUB_URL,
+                                  ticket_key, )
+        response = requests.put(
+            url=url,
+            auth=('brokeragent', 'puN;7_k[-"_,ZiJi'),
+            headers={
+                'Content-Type': 'application/json'
+            },
+            data=json.dumps({
+                # 'fields': {
+                #     'customfield_10205': 'Kevin Horsmeier',
+                #     'customfield_10216': [
+                #         {'value': 'Uncertain'},
+                #     ]
+                # }
+                'fields': {
+                    # 'customfield_10010': 'sand/generic-data',
+                    'customfield_10202': {
+                        'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10805',
+                        'value': 'CC BY-NC-ND 4.0', 'id': '10805'},
+                    'issuetype': {'name': 'Data Submission'},
+                    'customfield_10307': 'pub1',
+                    'description': 'remote debug 4',
+                    'customfield_10208': 'remote debug 4',
+                    'customfield_10311': '',
+                    'customfield_10303': '7e6fa310-6031-4e41-987b-271d89916eb2',
+                    'customfield_10205': ',;', 'customfield_10216': [
+                        {'value': 'Sensitive Personal Information'},
+                        {'value': 'Uncertain'}],
+                    'summary': 'remote debug 4 EDIT TITLE AGAIN Part 2 "Retur...',
+                    # 'reporter': {
+                    #     'name': 'No valid user, name or email available'},
+                    'customfield_10313': 'Algae & Protists, Zoology, Geoscience, Microbiology',
+                    'project': {'key': 'SAND'},
+                    'customfield_10200': '2020-01-24',
+                    'customfield_10314': '',
+                    'customfield_10308': ['LABEL1', 'label2'],
+                    'customfield_10600': '',
+                    'customfield_10229': [{'value': 'Dublin Core'}],
+                    'customfield_10201': 'remote debug 4 EDIT TITLE AGAIN Part 2 "Return of the edit"'
+                }
+            })
+        )
+        print('URL: ', url)
+        print('response status: ', response.status_code)
+        print('response json: ')
+        pprint(response.content)
+        # ######################################
+
+        # jira = JIRA(server='http://helpdesk.gfbio.org/',
+        #             basic_auth=('brokeragent', 'puN;7_k[-"_,ZiJi'))
+        #
+        # issue = jira.issue('SAND-1539')
+        # res = issue.update(notify=True, fields={
+        #     'customfield_10205': 'New Name Marc Weber, Alfred E. Neumann',
+        #     'customfield_10216': [
+        #         {'value': 'Uncertain'},
+        #         {'value': 'Nagoya Protocol'},
+        #         {'value': 'Sensitive Personal Information'},
+        #     ]
+        # })
+        # print(res)
+
+        # issue = jira.issue('SAND-1540')
+        # res = issue.update(notify=True, fields={'summary': 'new summary Part 2',
+        #                                         'description': 'A new summary was added. AGAIN'})
+        # print(res)
+        pass
+
+    @skip('Test against helpdesk server')
     def test_python_jira(self):
         jira = JIRA(server='http://helpdesk.gfbio.org/',
-                    basic_auth=('brokeragent', ''))
+                    basic_auth=('brokeragent', 'puN;7_k[-"_,ZiJi'))
         issues = jira.search_issues('assignee="Marc Weber"')
+        pprint(issues)
         issue = jira.issue('SAND-1539')
+        print(issue)
 
     @skip('Test against helpdesk server')
     def test_python_jira_create(self):
         jira = JIRA(server='http://helpdesk.gfbio.org/',
-                    basic_auth=('brokeragent', ''))
+                    basic_auth=('brokeragent', 'puN;7_k[-"_,ZiJi'))
 
         # almost analog to gfbio_prepare_create_helpdesk_payload(...)
         issue_dict = {
@@ -705,13 +782,14 @@ class TestGFBioJira(TestCase):
         }
         try:
             new_issue = jira.create_issue(fields=issue_dict)
+            print(new_issue)
             # SAND-1540
             # works : https://helpdesk.gfbio.org/projects/SAND/queues/custom/21/SAND-1540
             # <class 'jira.resources.Issue'>
         except JIRAError as e:
             print('JIRA Error:')
-            # print(e)
-            # print('-----------------')
+            print(e)
+            print('-----------------')
             # print(e.status_code)
             # # 400
             # print(e.response.text)
@@ -730,8 +808,8 @@ class TestGFBioJira(TestCase):
     @skip('Test against helpdesk server')
     def test_python_jira_update(self):
         jira = JIRA(server='http://helpdesk.gfbio.org/',
-                    basic_auth=('brokeragent', ''))
-        issue = jira.issue('SAND-1540')
+                    basic_auth=('brokeragent', 'puN;7_k[-"_,ZiJi'))
+        issue = jira.issue('SAND-1543')
         # issue.update(summary='new summary', description='A new summary was added')
 
         # res = issue.update(notify=False, fields={'summary': 'new summary',

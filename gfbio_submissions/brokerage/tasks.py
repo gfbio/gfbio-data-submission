@@ -782,7 +782,9 @@ def update_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
         if data is None:
             data = gfbio_prepare_create_helpdesk_payload(
                 site_config=site_configuration,
-                submission=submission)
+                submission=submission,
+                prepare_for_update=True,
+            )
 
         response = gfbio_update_helpdesk_ticket(
             site_configuration=site_configuration,
