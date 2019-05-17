@@ -11,3 +11,6 @@ export const USER_URL = 'user/';
 export const UPLOAD = '/upload/';
 
 export const STATUS_CANCELLED = 'CANCELLED';
+
+export const MAX_UPLOAD_ITEMS = 20;
+export const MAX_TOTAL_UPLOAD_SIZE = 200000000;  // 200 MB = 200000000 bytes

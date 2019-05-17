@@ -14,6 +14,8 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import FileIndicator from './FileIndicator';
 import shortid from 'shortid';
+import { makeSelectFileUploads } from '../../containers/SubmissionForm/selectors';
+import { MAX_TOTAL_UPLOAD_SIZE, MAX_UPLOAD_ITEMS } from '../../globalConstants';
 
 /* eslint-disable react/prefer-stateless-function */
 class UploadForm extends React.PureComponent {
@@ -21,7 +23,14 @@ class UploadForm extends React.PureComponent {
   onDrop = (acceptedFiles, rejectedFiles) => {
     // // TODO: accepted files will become list of files scheduled for upload, remove etc
     let tmp = [];
+    console.log('droped files size: ');
+    // 200 MB in bytes, 20 files max
+    // 200000000
+    let tmpTotalSize = 0;
+    // let tmpFileCount = 0;
     for (let a of acceptedFiles) {
+      // console.log(' -- ' + a.size);
+      tmpTotalSize += a.size;
       tmp.push({
         id: shortid.generate(),
         progress: 0,
@@ -30,6 +39,19 @@ class UploadForm extends React.PureComponent {
         messages: {},
       });
     }
+    console.log(tmp);
+    console.log(this.props.fileUploads);
+    let uploadedTotalSize = 0;
+    for (let l of this.props.fileUploads) {
+      // console.log(l.file.size);
+      uploadedTotalSize += l.file.size;
+    }
+    console.log('tmpTotalSize '+tmpTotalSize);
+    console.log('uploadedTotalSize '+uploadedTotalSize);
+    console.log('both '+(tmpTotalSize+uploadedTotalSize));
+    console.log('no of all '+(tmp.length+this.props.fileUploads.size));
+    console.log((tmpTotalSize+uploadedTotalSize)<=MAX_TOTAL_UPLOAD_SIZE);
+    console.log((tmp.length+this.props.fileUploads.size)<=MAX_UPLOAD_ITEMS);
     this.props.handleDrop(tmp);
   };
 
@@ -53,7 +75,10 @@ class UploadForm extends React.PureComponent {
         <FileIndicator />
 
         <div className="form-group">
-          <Dropzone onDrop={this.onDrop}>
+          <Dropzone
+            onDrop={this.onDrop}
+            multiple={true}
+          >
             {({ getRootProps, getInputProps, isDragActive }) => (
               <div
                 {...getRootProps()}
@@ -81,9 +106,12 @@ class UploadForm extends React.PureComponent {
 
 UploadForm.propTypes = {
   handleDrop: PropTypes.func,
+  fileUploads: PropTypes.array,
 };
 
-const mapStateToProps = createStructuredSelector({});
+const mapStateToProps = createStructuredSelector({
+  fileUploads: makeSelectFileUploads(),
+});
 
 function mapDispatchToProps(dispatch) {
   return {
