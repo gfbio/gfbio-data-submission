@@ -46,13 +46,24 @@ class UploadForm extends React.PureComponent {
       // console.log(l.file.size);
       uploadedTotalSize += l.file.size;
     }
-    console.log('tmpTotalSize '+tmpTotalSize);
-    console.log('uploadedTotalSize '+uploadedTotalSize);
-    console.log('both '+(tmpTotalSize+uploadedTotalSize));
-    console.log('no of all '+(tmp.length+this.props.fileUploads.size));
-    console.log((tmpTotalSize+uploadedTotalSize)<=MAX_TOTAL_UPLOAD_SIZE);
-    console.log((tmp.length+this.props.fileUploads.size)<=MAX_UPLOAD_ITEMS);
-    this.props.handleDrop(tmp);
+    console.log('tmpTotalSize ' + tmpTotalSize);
+    console.log('uploadedTotalSize ' + uploadedTotalSize);
+    console.log('both ' + (tmpTotalSize + uploadedTotalSize));
+    console.log('no of all ' + (tmp.length + this.props.fileUploads.size));
+    console.log((tmpTotalSize + uploadedTotalSize) <= MAX_TOTAL_UPLOAD_SIZE);
+    console.log((tmp.length + this.props.fileUploads.size) <= MAX_UPLOAD_ITEMS);
+    // TODO: consider that if 19 files are registered, adding 2 more will not take place
+    //        although
+    if ((tmpTotalSize + uploadedTotalSize) <= MAX_TOTAL_UPLOAD_SIZE
+      && (tmp.length + this.props.fileUploads.size) <= MAX_UPLOAD_ITEMS) {
+      this.props.handleDrop(tmp);
+    }
+    else {
+      //TODO: add message to inform about limits
+      //        --> reducer var true/false if message is displayed
+      //        --> is there  something already available for react dropzone ?
+      //
+    }
   };
 
   render() {
