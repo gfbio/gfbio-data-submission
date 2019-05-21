@@ -27,17 +27,29 @@ import UploadMessage from './uploadMessage';
 /* eslint-disable react/prefer-stateless-function */
 class UploadForm extends React.PureComponent {
 
+  matchingUploadLimit = (acceptedFiles=[]) => {
+    let tmpTotalSize = 0;
+    for (let a of acceptedFiles) {
+      tmpTotalSize += a.size;
+    }
+    let uploadedTotalSize = 0;
+    for (let l of this.props.fileUploads) {
+      uploadedTotalSize += l.file.size;
+    }
+    if ((tmpTotalSize + uploadedTotalSize) <= MAX_TOTAL_UPLOAD_SIZE
+      && (acceptedFiles.length + this.props.fileUploads.size) <= MAX_UPLOAD_ITEMS) {
+      this.props.dismissShowUploadLimit();
+      return true;
+    } else {
+      this.props.showUploadLimit();
+      return false;
+    }
+  };
+
   onDrop = (acceptedFiles, rejectedFiles) => {
     // // TODO: accepted files will become list of files scheduled for upload, remove etc
     let tmp = [];
-    console.log('droped files size: ');
-    // 200 MB in bytes, 20 files max
-    // 200000000
-    let tmpTotalSize = 0;
-    // let tmpFileCount = 0;
     for (let a of acceptedFiles) {
-      // console.log(' -- ' + a.size);
-      tmpTotalSize += a.size;
       tmp.push({
         id: shortid.generate(),
         progress: 0,
@@ -46,32 +58,10 @@ class UploadForm extends React.PureComponent {
         messages: {},
       });
     }
-    console.log(tmp);
-    console.log(this.props.fileUploads);
-    let uploadedTotalSize = 0;
-    for (let l of this.props.fileUploads) {
-      // console.log(l.file.size);
-      uploadedTotalSize += l.file.size;
-    }
-    console.log('tmpTotalSize ' + tmpTotalSize);
-    console.log('uploadedTotalSize ' + uploadedTotalSize);
-    console.log('both ' + (tmpTotalSize + uploadedTotalSize));
-    console.log('no of all ' + (tmp.length + this.props.fileUploads.size));
-    console.log((tmpTotalSize + uploadedTotalSize) <= MAX_TOTAL_UPLOAD_SIZE);
-    console.log((tmp.length + this.props.fileUploads.size) <= MAX_UPLOAD_ITEMS);
-    // TODO: consider that if 19 files are registered, adding 2 more will not take place
-    //        although
-    if ((tmpTotalSize + uploadedTotalSize) <= MAX_TOTAL_UPLOAD_SIZE
-      && (tmp.length + this.props.fileUploads.size) <= MAX_UPLOAD_ITEMS) {
-      // TODO: remove upload limit warning
-      this.props.handleDrop(tmp);
-    } else {
-      //TODO: add message to inform about limits
-      //        --> reducer var true/false if message is displayed
-      //        --> is there  something already available for react dropzone ?
-      //
-      this.props.showUploadLimit();
-    }
+    // if (this.matchingUploadLimit(acceptedFiles)) {
+    this.props.handleDrop(tmp);
+    // }
+
   };
 
   render() {
@@ -83,6 +73,7 @@ class UploadForm extends React.PureComponent {
     // TODO: needs different styling
     // TODO: needs different position
     // TODO: accordion style for no. of file over X ?
+    this.matchingUploadLimit();
 
     const message = UploadMessage(this.props.showUploadLimitMessage, this.props.dismissShowUploadLimit);
     return (
