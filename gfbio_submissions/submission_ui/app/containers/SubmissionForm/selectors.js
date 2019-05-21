@@ -149,6 +149,11 @@ const makeSelectPromptOnLeave = () =>
     substate.get('promptOnLeave'),
   );
 
+const makeSelectShowUploadLimitMessage = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('showUploadLimitMessage'),
+  );
+
 
 // const makeSelectDeleteBrokerSubmissionId = () =>
 //   createSelector(selectSubmissionFormDomain, substate =>
@@ -184,4 +189,5 @@ export {
   makeSelectMetaDataIndex,
   // makeSelectDeleteBrokerSubmissionId,
   makeSelectPromptOnLeave,
+  makeSelectShowUploadLimitMessage,
 };

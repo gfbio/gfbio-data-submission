@@ -9,7 +9,10 @@ import classNames from 'classnames';
 import Dropzone from 'react-dropzone';
 import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
-import { addFileUpload } from '../../containers/SubmissionForm/actions';
+import {
+  addFileUpload,
+  showUplaodLimit,
+} from '../../containers/SubmissionForm/actions';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import FileIndicator from './FileIndicator';
@@ -56,6 +59,7 @@ class UploadForm extends React.PureComponent {
     //        although
     if ((tmpTotalSize + uploadedTotalSize) <= MAX_TOTAL_UPLOAD_SIZE
       && (tmp.length + this.props.fileUploads.size) <= MAX_UPLOAD_ITEMS) {
+      // TODO: remove upload limit warning
       this.props.handleDrop(tmp);
     }
     else {
@@ -63,6 +67,7 @@ class UploadForm extends React.PureComponent {
       //        --> reducer var true/false if message is displayed
       //        --> is there  something already available for react dropzone ?
       //
+      this.props.showUploadLimit();
     }
   };
 
@@ -118,6 +123,7 @@ class UploadForm extends React.PureComponent {
 UploadForm.propTypes = {
   handleDrop: PropTypes.func,
   fileUploads: PropTypes.array,
+  showUploadLimit: PropTypes.func
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -127,6 +133,7 @@ const mapStateToProps = createStructuredSelector({
 function mapDispatchToProps(dispatch) {
   return {
     handleDrop: value => dispatch(addFileUpload(value)),
+    showUploadLimit: () => dispatch(showUplaodLimit()),
   };
 }
 
