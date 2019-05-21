@@ -653,6 +653,35 @@ h1.current-location i {
   color: #fff !important;
 }
 
+.btn-green-inverted {
+  background-color: #fff;
+  color: #81B248 !important;
+  border-color: #80b148;
+}
+
+.btn-green-inverted:hover, .btn-green-inverted:not(:disabled):not(.disabled):active, .btn-green-inverted:not(:disabled):not(.disabled).active {
+  border-color: #80b148;
+  background-color: #81B248;
+  color: #fff !important;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.btn-green-inverted:hover:focus, .btn-green-inverted:not(:disabled):not(.disabled):active:focus, .btn-green-inverted:not(:disabled):not(.disabled).active:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.btn-green-inverted:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.btn-green-inverted:hover {
+  background-color: #81B248;
+  color: #fff !important;
+}
+
 /* copy of parts of _search.scss .search-page-title */
 /* sub navigation section header area */
 .sub-navigation-header {
@@ -705,6 +734,11 @@ section.sub-navi .nav .active {
   font-size: 3.5rem;
   color: rgba(129, 178, 72, 0.9);
   display: block;
+}
+
+.success-message i.close {
+  font-size: 2rem;
+  color: rgba(129, 178, 72, 0.9);
 }
 
 .success-message h4 {

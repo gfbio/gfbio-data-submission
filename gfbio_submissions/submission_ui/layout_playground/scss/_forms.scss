@@ -172,6 +172,39 @@ h1.current-location {
 
 // works on btn-secondary
 // TODO: refactor to generic class, light-blue button
+.btn-green-inverted {
+  //background-color: $gfbio-light-blue;
+  background-color: $white;
+  color: $gfbio-green !important;
+  border-color: darken($gfbio-green, .2);
+
+  &:hover, &:not(:disabled):not(.disabled):active,
+  &:not(:disabled):not(.disabled).active {
+    &:focus {
+      box-shadow: none;
+    }
+
+    border-color: darken($gfbio-green, .2);
+    //background-color: $white;
+    //color: $gfbio-light-blue !important;
+    background-color: $gfbio-green;
+    color: $white !important;
+    box-shadow: none;
+  }
+
+  &:focus {
+    box-shadow: none;
+  }
+
+  &:hover {
+    background-color: $gfbio-green;
+    color: $white !important;
+  }
+
+}
+
+// works on btn-secondary
+// TODO: refactor to generic class, light-blue button
 //.btn-form {
 //  //background-color: $gfbio-light-blue;
 //  background-color: $white;
@@ -302,6 +335,11 @@ section.sub-navi {
     font-size: 3.5rem;
     color: $gfbio-green-0-9;
     display: block;
+  }
+
+  i.close {
+    font-size: 2rem;
+    color: $gfbio-green-0-9;
   }
 
   h4 {

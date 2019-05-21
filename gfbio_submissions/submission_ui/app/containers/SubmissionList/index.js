@@ -137,23 +137,30 @@ export class SubmissionList extends React.Component {
                   className="icon ion-md-checkmark-circle-outline align-bottom" />
               </div>
               <div className="col-8">
-                <h4>Your submission was saved</h4>
+                <h4>Your data was submitted !</h4>
                 <p>
-                  Anim pariatur cliche reprehenderit, enim eiusmod high life
-                  accusamus
-                  terry richardson ad squid. Nihil anim keffiyeh helvetica,
-                  craft
-                  beer
-                  labore wes anderson cred nesciunt sapiente ea proident.
+                  Congratulations, you have started a data submission.
+                  You will receive a confirmation email from the GFBio
+                  Helpdesk Team. Please reply to this email if you have
+                  questions.
                 </p>
               </div>
               <div className="col-2">
                 <Button variant="secondary"
+                        className="btn-sm btn-block btn-green-inverted"
                         onClick={this.props.closeSaveSuccess}>
                   Close
                 </Button>
               </div>
             </div>
+            {/*<div className="row">*/}
+            {/*  <div className="col-8 mx-auto text-center">*/}
+            {/*    <Button variant="secondary" className="btn-sm btn-block btn-green-inverted"*/}
+            {/*            onClick={this.props.closeSaveSuccess}>*/}
+            {/*      Close*/}
+            {/*    </Button>*/}
+            {/*  </div>*/}
+            {/*</div>*/}
           </div>
         </Collapse>
 
