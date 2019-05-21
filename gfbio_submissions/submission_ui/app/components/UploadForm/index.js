@@ -10,15 +10,19 @@ import Dropzone from 'react-dropzone';
 import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
 import {
-  addFileUpload,
+  addFileUpload, dismissShowUplaodLimit,
   showUplaodLimit,
 } from '../../containers/SubmissionForm/actions';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import FileIndicator from './FileIndicator';
 import shortid from 'shortid';
-import { makeSelectFileUploads } from '../../containers/SubmissionForm/selectors';
+import {
+  makeSelectFileUploads,
+  makeSelectShowUploadLimitMessage,
+} from '../../containers/SubmissionForm/selectors';
 import { MAX_TOTAL_UPLOAD_SIZE, MAX_UPLOAD_ITEMS } from '../../globalConstants';
+import UploadMessage from './uploadMessage';
 
 /* eslint-disable react/prefer-stateless-function */
 class UploadForm extends React.PureComponent {
@@ -61,8 +65,7 @@ class UploadForm extends React.PureComponent {
       && (tmp.length + this.props.fileUploads.size) <= MAX_UPLOAD_ITEMS) {
       // TODO: remove upload limit warning
       this.props.handleDrop(tmp);
-    }
-    else {
+    } else {
       //TODO: add message to inform about limits
       //        --> reducer var true/false if message is displayed
       //        --> is there  something already available for react dropzone ?
@@ -81,6 +84,7 @@ class UploadForm extends React.PureComponent {
     // TODO: needs different position
     // TODO: accordion style for no. of file over X ?
 
+    const message = UploadMessage(this.props.showUploadLimitMessage, this.props.dismissShowUploadLimit);
     return (
       <div>
         <header className="header header-left form-header-top">
@@ -89,6 +93,8 @@ class UploadForm extends React.PureComponent {
         </header>
 
         <FileIndicator />
+
+        {message}
 
         <div className="form-group">
           <Dropzone
@@ -123,17 +129,21 @@ class UploadForm extends React.PureComponent {
 UploadForm.propTypes = {
   handleDrop: PropTypes.func,
   fileUploads: PropTypes.array,
-  showUploadLimit: PropTypes.func
+  showUploadLimit: PropTypes.func,
+  dismissShowUploadLimit: PropTypes.func,
+  showUploadLimitMessage: PropTypes.bool,
 };
 
 const mapStateToProps = createStructuredSelector({
   fileUploads: makeSelectFileUploads(),
+  showUploadLimitMessage: makeSelectShowUploadLimitMessage(),
 });
 
 function mapDispatchToProps(dispatch) {
   return {
     handleDrop: value => dispatch(addFileUpload(value)),
     showUploadLimit: () => dispatch(showUplaodLimit()),
+    dismissShowUploadLimit: () => dispatch(dismissShowUplaodLimit()),
   };
 }
 
