@@ -966,6 +966,21 @@ form.pagewide-form .header {
   border-bottom: 1px solid #ccc;
 }
 
+form.pagewide-form .save-header .section-title {
+  font-size: 1.2rem !important;
+}
+
+form.pagewide-form .save-header i {
+  padding: 0 .5rem 0 .5rem;
+  color: #81B248;
+}
+
+form.pagewide-form .save-text {
+  padding: .75rem 1.25rem;
+  font-size: .9rem;
+  color: #495057;
+}
+
 form.pagewide-form .input-error {
   font-size: 0.85rem;
   color: #dc3545;

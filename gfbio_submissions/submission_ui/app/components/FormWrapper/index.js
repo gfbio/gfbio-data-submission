@@ -276,6 +276,13 @@ class FormWrapper extends React.PureComponent {
                 </div>
               </div>
 
+              <div className="form-row">
+                <div className="form-group col-md-12">
+                  {/*{errors}*/}
+                  {this.props.saveSuccessMessage}
+                </div>
+              </div>
+
               <div className="form-row mt-5">
                 <div className="form-group col-md-6">
                   <button
@@ -329,6 +336,7 @@ FormWrapper.propTypes = {
   profile: PropTypes.object,
   reduxFormWrapper: PropTypes.object,
   promptOnLeave: PropTypes.bool,
+  saveSuccessMessage: PropTypes.object,
 };
 
 // this is already connected to redux-form reducer ?

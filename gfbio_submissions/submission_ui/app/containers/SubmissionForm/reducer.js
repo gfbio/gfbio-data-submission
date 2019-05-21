@@ -13,7 +13,7 @@ import {
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
   CHANGE_META_DATA_SCHEMA,
-  CLOSE_SAVE_SUCCESS, DISMISS_SHOW_UPLOAD_LIMIT,
+  CLOSE_SUBMIT_SUCCESS, DISMISS_SHOW_UPLOAD_LIMIT,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
   FETCH_SUBMISSION_SUCCESS,
@@ -95,6 +95,7 @@ export const initialState = fromJS({
   submission: {},
   submitInProgress: false,
   saveInProgress: false,
+  showSubmitSuccess: false,
   showSaveSuccess: false,
   embargoDate: new Date(),
   // userId: backendParameters.userId || -1,
@@ -148,9 +149,9 @@ function submissionFormReducer(state = initialState, action) {
         .set('saveResponse', action.response)
         .set('saveInProgress', false)
         .set('showSaveSuccess', true);
-    case CLOSE_SAVE_SUCCESS:
+    case CLOSE_SUBMIT_SUCCESS:
       return state
-        .set('showSaveSuccess', false);
+        .set('showSubmitSuccess', false);
     case SAVE_FORM_ERROR:
       return state
         .set('metaDataIndex', '')
@@ -169,7 +170,7 @@ function submissionFormReducer(state = initialState, action) {
         .set('brokerSubmissionId', action.response.data.broker_submission_id)
         .set('submitResponse', action.response)
         .set('submitInProgress', false)
-        .set('showSaveSuccess', true);
+        .set('showSubmitSuccess', true);
     case SUBMIT_FORM_ERROR:
       return state
         .set('metaDataIndex', '')
@@ -301,7 +302,7 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .set('saveInProgress', false)
         .set('submitInProgress', false)
-        .set('showSaveSuccess', true)
+        .set('showSubmitSuccess', true)
         .set('metaDataIndex', '')
         .set('updateWithRelease', false);
     // return setStateFormValues(state, action);

@@ -24,7 +24,7 @@ import {
   fetchSubmissions,
   showDeleteSubmissionDialog,
 } from './actions';
-import { makeSelectShowSaveSuccess } from '../SubmissionForm/selectors';
+import { makeSelectShowSubmitSuccess } from '../SubmissionForm/selectors';
 import { closeSaveSuccess } from '../SubmissionForm/actions';
 import Collapse from 'react-bootstrap/Collapse';
 import Button from 'react-bootstrap/Button';
@@ -128,7 +128,7 @@ export class SubmissionList extends React.Component {
     return (
       <div className="submission-list-wrapper">
         <Collapse
-          in={this.props.showSaveSuccess}
+          in={this.props.showSubmitSuccess}
         >
           <div className="col-8 mx-auto success-message">
             <div className="row">
@@ -241,7 +241,7 @@ export class SubmissionList extends React.Component {
 SubmissionList.propTypes = {
   fetchSubmissions: PropTypes.func,
   submissions: PropTypes.array,
-  showSaveSuccess: PropTypes.bool,
+  showSubmitSuccess: PropTypes.bool,
   closeSaveSuccess: PropTypes.func,
   deleteSubmission: PropTypes.func,
   showDeleteSubmissionDialog: PropTypes.func,
@@ -252,7 +252,7 @@ SubmissionList.propTypes = {
 const mapStateToProps = createStructuredSelector({
   // submissionList: makeSelectSubmissionList(),
   submissions: makeSelectSubmissions(),
-  showSaveSuccess: makeSelectShowSaveSuccess(),
+  showSubmitSuccess: makeSelectShowSubmitSuccess(),
   deleteSubmissionDialog: makeSelectDeleteSubmissionDialog(),
 });
 

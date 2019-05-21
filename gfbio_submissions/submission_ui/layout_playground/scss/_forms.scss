@@ -621,6 +621,7 @@ section.sub-navi {
     border-right-color: $gray-dark-2 !important;
   }
 }
+
 /*
 
 .tooltip.bs-tooltip-right .arrow:before {
@@ -711,6 +712,24 @@ form.pagewide-form {
   .header {
     letter-spacing: normal;
     border-bottom: 1px solid $gray-medium;
+  }
+
+  .save-header {
+    .section-title {
+      font-size: 1.2rem !important;
+    }
+
+    //padding-left: 1.25rem;
+    i {
+      padding: 0 .5rem 0 .5rem;
+      color: $gfbio-green;
+    }
+  }
+
+  .save-text {
+    padding:  .75rem 1.25rem;
+    font-size: .9rem;
+    color: $gray-700;
   }
 
   .input-error {
