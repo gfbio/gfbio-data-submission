@@ -58,6 +58,9 @@ export const UPDATE_SUBMISSION_ERROR = 'app/SubmissionForm/UPDATE_SUBMISSION_ERR
 
 export const SET_METADATA_INDEX = 'app/SubmissionForm/SET_METADATA_INDEX';
 
+export const SHOW_UPLOAD_LIMIT = 'app/SubmissionForm/SHOW_UPLOAD_LIMIT';
+export const DISMISS_SHOW_UPLOAD_LIMIT = 'app/SubmissionForm/DISMISS_SHOW_UPLOAD_LIMIT';
+
 
 /* non redux constants */
 export const DATA_CATEGORY_PREFIX = 'data-category ';

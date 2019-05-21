@@ -126,11 +126,13 @@ class LicenseModals extends React.PureComponent {
               </p>
             </div>
             <div className="modal-footer">
+
               <a
                 className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
                 href={licenseDetailData[licenseKey].link}
                 target="_blank"
               >Read More
+
               </a>
 
               <a

@@ -13,7 +13,7 @@ import {
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
   CHANGE_META_DATA_SCHEMA,
-  CLOSE_SAVE_SUCCESS,
+  CLOSE_SAVE_SUCCESS, DISMISS_SHOW_UPLOAD_LIMIT,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
   FETCH_SUBMISSION_SUCCESS,
@@ -27,7 +27,7 @@ import {
   SAVE_FORM_SUCCESS,
   SET_CONTRIBUTORS,
   SET_EMBARGO_DATE,
-  SET_METADATA_INDEX,
+  SET_METADATA_INDEX, SHOW_UPLOAD_LIMIT,
   SUBMIT_FORM,
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
@@ -314,3 +314,15 @@ export function setMetaDataIndex(metaDataIndex) {
   };
 }
 
+export function showUplaodLimit() {
+  return {
+    type: SHOW_UPLOAD_LIMIT,
+  };
+}
+
+
+export function dismissShowUplaodLimit() {
+  return {
+    type: DISMISS_SHOW_UPLOAD_LIMIT,
+  };
+}

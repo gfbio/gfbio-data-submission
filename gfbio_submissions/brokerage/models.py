@@ -259,7 +259,7 @@ class Submission(models.Model):
                 kwargs={
                     'submission_id': '{0}'.format(self.pk),
                 },
-                countdown=PRIMARY_DATA_FILE_DELAY
+                countdown=SUBMISSION_SAVE_TRIGGER_DELAY
             )
         # TODO: refactor -> extract
         if previous_state and previous_state.center_name != self.center_name:
