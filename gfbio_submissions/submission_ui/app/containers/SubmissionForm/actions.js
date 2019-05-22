@@ -12,7 +12,7 @@ import {
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
-  CHANGE_META_DATA_SCHEMA,
+  CHANGE_META_DATA_SCHEMA, CLOSE_SAVE_SUCCESS,
   CLOSE_SUBMIT_SUCCESS,
   DISMISS_SHOW_UPLOAD_LIMIT,
   FETCH_SUBMISSION,
@@ -275,9 +275,15 @@ export function fetchSubmissionError(errorResponse) {
   };
 }
 
-export function closeSaveSuccess() {
+export function closeSubmitSuccess() {
   return {
     type: CLOSE_SUBMIT_SUCCESS,
+  };
+}
+
+export function closeSaveSuccess() {
+  return {
+    type: CLOSE_SAVE_SUCCESS,
   };
 }
 

@@ -12,7 +12,7 @@ import {
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
-  CHANGE_META_DATA_SCHEMA,
+  CHANGE_META_DATA_SCHEMA, CLOSE_SAVE_SUCCESS,
   CLOSE_SUBMIT_SUCCESS, DISMISS_SHOW_UPLOAD_LIMIT,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
@@ -96,7 +96,9 @@ export const initialState = fromJS({
   submitInProgress: false,
   saveInProgress: false,
   showSubmitSuccess: false,
+
   showSaveSuccess: false,
+
   embargoDate: new Date(),
   // userId: backendParameters.userId || -1,
   // FIXME: replace. development default of 2
@@ -142,6 +144,7 @@ function submissionFormReducer(state = initialState, action) {
         // .set('promptOnLeave', false)
         .set('saveInProgress', true);
     case SAVE_FORM_SUCCESS:
+      console.info('SAVE_FORM_SUCCESS');
       // TODO: set bsi etc after success, from then its updates
       return state
         .set('metaDataIndex', '')
@@ -149,6 +152,9 @@ function submissionFormReducer(state = initialState, action) {
         .set('saveResponse', action.response)
         .set('saveInProgress', false)
         .set('showSaveSuccess', true);
+    case CLOSE_SAVE_SUCCESS:
+      return state
+        .set('showSaveSuccess', false);
     case CLOSE_SUBMIT_SUCCESS:
       return state
         .set('showSubmitSuccess', false);
@@ -294,7 +300,7 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .set('updateWithRelease', action.release);
     case UPDATE_SUBMISSION_SUCCESS:
-      // console.log('UPDATE_SUBMISSION_SUCCESS');
+      console.log('UPDATE_SUBMISSION_SUCCESS');
       // TODO: 2x data: 1 from axios 1 from json-body
       // TODO: refactor to some sort of getter with checks
       // console.log(action.response.data.broker_submission_id);
@@ -302,7 +308,8 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .set('saveInProgress', false)
         .set('submitInProgress', false)
-        .set('showSubmitSuccess', true)
+        // .set('showSubmitSuccess', true)
+        .set('showSaveSuccess', true)
         .set('metaDataIndex', '')
         .set('updateWithRelease', false);
     // return setStateFormValues(state, action);

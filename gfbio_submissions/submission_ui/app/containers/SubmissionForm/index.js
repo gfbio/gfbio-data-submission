@@ -136,10 +136,11 @@ export class SubmissionForm extends React.Component {
 
     // TODO: add action for saga to fetch that removes this after a few seconds
     const saveMessage = (
-      <div className="gray-background">
-        <Collapse
-          in={true}
-        >
+      <Collapse
+        in={this.props.showSaveSuccess}
+      >
+        <div className="gray-background">
+
           <div className="col-12">
             <header className="header save-header">
               <h2 className="section-title">
@@ -156,8 +157,9 @@ export class SubmissionForm extends React.Component {
             {/*  Close*/}
             {/*</Button>*/}
           </div>
-        </Collapse>
-      </div>
+
+        </div>
+      </Collapse>
     );
     /*
     *  TODO: - adapt submit/save processes to update instead of submit new (set/use brokerSubnmissionId ?)

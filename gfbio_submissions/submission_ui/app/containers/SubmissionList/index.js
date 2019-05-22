@@ -25,7 +25,7 @@ import {
   showDeleteSubmissionDialog,
 } from './actions';
 import { makeSelectShowSubmitSuccess } from '../SubmissionForm/selectors';
-import { closeSaveSuccess } from '../SubmissionForm/actions';
+import { closeSubmitSuccess } from '../SubmissionForm/actions';
 import Collapse from 'react-bootstrap/Collapse';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
@@ -259,7 +259,7 @@ const mapStateToProps = createStructuredSelector({
 function mapDispatchToProps(dispatch) {
   return {
     fetchSubmissions: () => dispatch(fetchSubmissions()),
-    closeSaveSuccess: () => dispatch(closeSaveSuccess()),
+    closeSaveSuccess: () => dispatch(closeSubmitSuccess()),
     // TODO: warning modal
     showDeleteSubmissionDialog: (brokerSubmissionId) => dispatch(showDeleteSubmissionDialog(brokerSubmissionId)),
     closeDeleteSubmissionDialog: () => dispatch(closeDeleteSubmissionDialog()),
