@@ -24,8 +24,8 @@ import {
   fetchSubmissions,
   showDeleteSubmissionDialog,
 } from './actions';
-import { makeSelectShowSaveSuccess } from '../SubmissionForm/selectors';
-import { closeSaveSuccess } from '../SubmissionForm/actions';
+import { makeSelectShowSubmitSuccess } from '../SubmissionForm/selectors';
+import { closeSubmitSuccess } from '../SubmissionForm/actions';
 import Collapse from 'react-bootstrap/Collapse';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
@@ -128,7 +128,7 @@ export class SubmissionList extends React.Component {
     return (
       <div className="submission-list-wrapper">
         <Collapse
-          in={this.props.showSaveSuccess}
+          in={this.props.showSubmitSuccess}
         >
           <div className="col-8 mx-auto success-message">
             <div className="row">
@@ -137,23 +137,30 @@ export class SubmissionList extends React.Component {
                   className="icon ion-md-checkmark-circle-outline align-bottom" />
               </div>
               <div className="col-8">
-                <h4>Your submission was saved</h4>
+                <h4>Your data was submitted !</h4>
                 <p>
-                  Anim pariatur cliche reprehenderit, enim eiusmod high life
-                  accusamus
-                  terry richardson ad squid. Nihil anim keffiyeh helvetica,
-                  craft
-                  beer
-                  labore wes anderson cred nesciunt sapiente ea proident.
+                  Congratulations, you have started a data submission.
+                  You will receive a confirmation email from the GFBio
+                  Helpdesk Team. Please reply to this email if you have
+                  questions.
                 </p>
               </div>
               <div className="col-2">
                 <Button variant="secondary"
+                        className="btn-sm btn-block btn-green-inverted"
                         onClick={this.props.closeSaveSuccess}>
                   Close
                 </Button>
               </div>
             </div>
+            {/*<div className="row">*/}
+            {/*  <div className="col-8 mx-auto text-center">*/}
+            {/*    <Button variant="secondary" className="btn-sm btn-block btn-green-inverted"*/}
+            {/*            onClick={this.props.closeSaveSuccess}>*/}
+            {/*      Close*/}
+            {/*    </Button>*/}
+            {/*  </div>*/}
+            {/*</div>*/}
           </div>
         </Collapse>
 
@@ -234,7 +241,7 @@ export class SubmissionList extends React.Component {
 SubmissionList.propTypes = {
   fetchSubmissions: PropTypes.func,
   submissions: PropTypes.array,
-  showSaveSuccess: PropTypes.bool,
+  showSubmitSuccess: PropTypes.bool,
   closeSaveSuccess: PropTypes.func,
   deleteSubmission: PropTypes.func,
   showDeleteSubmissionDialog: PropTypes.func,
@@ -245,14 +252,14 @@ SubmissionList.propTypes = {
 const mapStateToProps = createStructuredSelector({
   // submissionList: makeSelectSubmissionList(),
   submissions: makeSelectSubmissions(),
-  showSaveSuccess: makeSelectShowSaveSuccess(),
+  showSubmitSuccess: makeSelectShowSubmitSuccess(),
   deleteSubmissionDialog: makeSelectDeleteSubmissionDialog(),
 });
 
 function mapDispatchToProps(dispatch) {
   return {
     fetchSubmissions: () => dispatch(fetchSubmissions()),
-    closeSaveSuccess: () => dispatch(closeSaveSuccess()),
+    closeSaveSuccess: () => dispatch(closeSubmitSuccess()),
     // TODO: warning modal
     showDeleteSubmissionDialog: (brokerSubmissionId) => dispatch(showDeleteSubmissionDialog(brokerSubmissionId)),
     closeDeleteSubmissionDialog: () => dispatch(closeDeleteSubmissionDialog()),

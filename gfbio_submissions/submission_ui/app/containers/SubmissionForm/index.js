@@ -26,10 +26,13 @@ import {
   makeSelectEmbargoDate,
   makeSelectFormWrapper,
   makeSelectInitialValues, makeSelectPromptOnLeave,
-  makeSelectSaveInProgress,
+  makeSelectSaveInProgress, makeSelectShowSaveSuccess,
   makeSelectSubmission,
   makeSelectSubmitInProgress,
 } from './selectors';
+import Button from 'react-bootstrap/Button';
+import Collapse from 'react-bootstrap/Collapse';
+import Alert from 'react-bootstrap/Alert';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
@@ -127,11 +130,37 @@ export class SubmissionForm extends React.Component {
     if (this.props.brokerSubmissionId !== '' && this.props.match.path === '/form') {
       console.log('should RESET');
       this.props.resetForm();
-    }
-    else {
+    } else {
       console.log('no RESET');
     }
 
+    // TODO: add action for saga to fetch that removes this after a few seconds
+    const saveMessage = (
+      <Collapse
+        in={this.props.showSaveSuccess}
+      >
+        <div className="gray-background">
+
+          <div className="col-12">
+            <header className="header save-header">
+              <h2 className="section-title">
+                <i className="fa fa-check" aria-hidden="true"></i>
+                Save successful
+              </h2>
+            </header>
+            <p className="save-text">
+              All changes have been saved.
+            </p>
+            {/*<Button variant="secondary"*/}
+            {/*        className="btn-sm btn-green-inverted"*/}
+            {/*        onClick={this.props.closeSaveSuccess}>*/}
+            {/*  Close*/}
+            {/*</Button>*/}
+          </div>
+
+        </div>
+      </Collapse>
+    );
     /*
     *  TODO: - adapt submit/save processes to update instead of submit new (set/use brokerSubnmissionId ?)
     *        - list of uploaded files and edit this list is new story -> next ?
@@ -150,6 +179,7 @@ export class SubmissionForm extends React.Component {
           initialValues={this.props.initialValues}
           reduxFormWrapper={this.props.reduxFormForm.formWrapper}
           promptOnLeave={this.props.promptOnLeave}
+          saveSuccessMessage={saveMessage}
         />
       </div>
     );
@@ -168,6 +198,7 @@ SubmissionForm.propTypes = {
   fetchSubmission: PropTypes.func,
   resetForm: PropTypes.func,
   promptOnLeave: PropTypes.bool,
+  showSaveSuccess: PropTypes.bool,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -179,6 +210,7 @@ const mapStateToProps = createStructuredSelector({
   submission: makeSelectSubmission(),
   brokerSubmissionId: makeSelectBrokerSubmissionId(),
   promptOnLeave: makeSelectPromptOnLeave(),
+  showSaveSuccess: makeSelectShowSaveSuccess(),
 });
 
 function mapDispatchToProps(dispatch) {

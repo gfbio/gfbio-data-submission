@@ -8,13 +8,14 @@ import {
   take,
   takeLatest,
   takeLeading,
+  delay,
 } from 'redux-saga/effects';
 import {
   FETCH_SUBMISSION,
-  SAVE_FORM,
+  SAVE_FORM, SAVE_FORM_SUCCESS,
   SUBMIT_FORM,
   SUBMIT_FORM_START,
-  UPDATE_SUBMISSION,
+  UPDATE_SUBMISSION, UPDATE_SUBMISSION_SUCCESS,
   UPLOAD_FILES,
 } from './constants';
 import {
@@ -34,6 +35,7 @@ import {
   makeSelectUserId,
 } from './selectors';
 import {
+  closeSaveSuccess,
   fetchSubmissionError,
   fetchSubmissionSuccess,
   saveForm,
@@ -44,7 +46,7 @@ import {
   submitFormSuccess,
   updateSubmission,
   updateSubmissionError,
-  updateSubmissionSuccess,
+  updateSubmissionSuccess, updateSubmissionSuccessSubmit,
   uploadFileError,
   uploadFileProgress,
   uploadFilesSuccess,
@@ -229,7 +231,7 @@ export function* performSaveFormSaga() {
       const response = yield call(postSubmission, token, payload);
       yield call(performUploadSaga, response.data.broker_submission_id);
       yield put(saveFormSuccess(response));
-      yield put(push('/list'));
+      // yield put(push('/list'));
     } catch (error) {
       yield put(saveFormError(error));
     }
@@ -243,6 +245,7 @@ export function* performUpdateSubmissionSaga() {
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
   const updateWithRelease = yield select(makeSelectUpdateWithRelease());
+  console.info('performUpdateSubmissionSaga '+updateWithRelease);
   const payload = yield prepareRequestData(userId, updateWithRelease);
   try {
     const response = yield call(putSubmission, token, brokerSubmissionId, payload);
@@ -250,8 +253,13 @@ export function* performUpdateSubmissionSaga() {
     // NOOPE: yield put(uploadFiles());
     // yield call(performUploadSaga);
     yield call(performUploadSaga, brokerSubmissionId);
-    yield put(updateSubmissionSuccess(response));
-    yield put(push('/list'));
+    if (updateWithRelease) {
+      yield put(updateSubmissionSuccessSubmit(response));
+      yield put(push('/list'));
+    }
+    else {
+      yield put(updateSubmissionSuccess(response));
+    }
   } catch (error) {
     yield put(updateSubmissionError(error));
   }
@@ -282,6 +290,11 @@ export function* performFetchSubmissionSaga() {
     // console.log(error);
     yield put(fetchSubmissionError(error));
   }
+}
+
+export function* performCloseSaveMessageSaga() {
+  yield delay(2000);
+  yield put(closeSaveSuccess());
 }
 
 
@@ -328,6 +341,11 @@ TODO: when in edit mode: remove file means delete already uploaded file.
 
 */
 
+export function* closeSaveMessageSaga() {
+  yield takeLatest(SAVE_FORM_SUCCESS, performCloseSaveMessageSaga);
+  yield takeLatest(UPDATE_SUBMISSION_SUCCESS, performCloseSaveMessageSaga)
+}
+
 export function* uploadFilesSaga() {
   yield takeLatest(UPLOAD_FILES, performUploadSaga);
 }
@@ -343,5 +361,6 @@ export function* updateSubmissionSaga() {
 export default function* rootSaga() {
   yield all([checkFormTypeSaga(), saveFormSaga(), submitFormSaga(),
     uploadFilesSaga(), fetchSubmissionSaga(), updateSubmissionSaga(),
+    closeSaveMessageSaga(),
   ]);
 }

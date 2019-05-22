@@ -12,8 +12,9 @@ import {
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
-  CHANGE_META_DATA_SCHEMA,
-  CLOSE_SAVE_SUCCESS, DISMISS_SHOW_UPLOAD_LIMIT,
+  CHANGE_META_DATA_SCHEMA, CLOSE_SAVE_SUCCESS,
+  CLOSE_SUBMIT_SUCCESS,
+  DISMISS_SHOW_UPLOAD_LIMIT,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
   FETCH_SUBMISSION_SUCCESS,
@@ -27,7 +28,8 @@ import {
   SAVE_FORM_SUCCESS,
   SET_CONTRIBUTORS,
   SET_EMBARGO_DATE,
-  SET_METADATA_INDEX, SHOW_UPLOAD_LIMIT,
+  SET_METADATA_INDEX,
+  SHOW_UPLOAD_LIMIT,
   SUBMIT_FORM,
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
@@ -36,7 +38,7 @@ import {
   UPDATE_CONTRIBUTOR,
   UPDATE_SUBMISSION,
   UPDATE_SUBMISSION_ERROR,
-  UPDATE_SUBMISSION_SUCCESS,
+  UPDATE_SUBMISSION_SUCCESS, UPDATE_SUBMISSION_SUCCESS_SUBMIT,
   UPLOAD_FILE_ERROR,
   UPLOAD_FILE_PROGRESS,
   UPLOAD_FILE_SUCCESS,
@@ -273,6 +275,12 @@ export function fetchSubmissionError(errorResponse) {
   };
 }
 
+export function closeSubmitSuccess() {
+  return {
+    type: CLOSE_SUBMIT_SUCCESS,
+  };
+}
+
 export function closeSaveSuccess() {
   return {
     type: CLOSE_SAVE_SUCCESS,
@@ -296,6 +304,13 @@ export function updateSubmission(release) {
 export function updateSubmissionSuccess(response) {
   return {
     type: UPDATE_SUBMISSION_SUCCESS,
+    response,
+  };
+}
+
+export function updateSubmissionSuccessSubmit(response) {
+  return {
+    type: UPDATE_SUBMISSION_SUCCESS_SUBMIT,
     response,
   };
 }

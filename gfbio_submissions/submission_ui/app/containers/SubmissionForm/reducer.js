@@ -12,8 +12,8 @@ import {
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
-  CHANGE_META_DATA_SCHEMA,
-  CLOSE_SAVE_SUCCESS, DISMISS_SHOW_UPLOAD_LIMIT,
+  CHANGE_META_DATA_SCHEMA, CLOSE_SAVE_SUCCESS,
+  CLOSE_SUBMIT_SUCCESS, DISMISS_SHOW_UPLOAD_LIMIT,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
   FETCH_SUBMISSION_SUCCESS,
@@ -36,7 +36,7 @@ import {
   UPDATE_CONTRIBUTOR,
   UPDATE_SUBMISSION,
   UPDATE_SUBMISSION_ERROR,
-  UPDATE_SUBMISSION_SUCCESS,
+  UPDATE_SUBMISSION_SUCCESS, UPDATE_SUBMISSION_SUCCESS_SUBMIT,
   UPLOAD_FILE_ERROR,
   UPLOAD_FILE_PROGRESS,
   UPLOAD_FILE_SUCCESS,
@@ -95,7 +95,10 @@ export const initialState = fromJS({
   submission: {},
   submitInProgress: false,
   saveInProgress: false,
+  showSubmitSuccess: false,
+
   showSaveSuccess: false,
+
   embargoDate: new Date(),
   // userId: backendParameters.userId || -1,
   // FIXME: replace. development default of 2
@@ -141,6 +144,7 @@ function submissionFormReducer(state = initialState, action) {
         // .set('promptOnLeave', false)
         .set('saveInProgress', true);
     case SAVE_FORM_SUCCESS:
+      console.info('SAVE_FORM_SUCCESS');
       // TODO: set bsi etc after success, from then its updates
       return state
         .set('metaDataIndex', '')
@@ -151,6 +155,9 @@ function submissionFormReducer(state = initialState, action) {
     case CLOSE_SAVE_SUCCESS:
       return state
         .set('showSaveSuccess', false);
+    case CLOSE_SUBMIT_SUCCESS:
+      return state
+        .set('showSubmitSuccess', false);
     case SAVE_FORM_ERROR:
       return state
         .set('metaDataIndex', '')
@@ -169,7 +176,7 @@ function submissionFormReducer(state = initialState, action) {
         .set('brokerSubmissionId', action.response.data.broker_submission_id)
         .set('submitResponse', action.response)
         .set('submitInProgress', false)
-        .set('showSaveSuccess', true);
+        .set('showSubmitSuccess', true);
     case SUBMIT_FORM_ERROR:
       return state
         .set('metaDataIndex', '')
@@ -293,7 +300,7 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .set('updateWithRelease', action.release);
     case UPDATE_SUBMISSION_SUCCESS:
-      // console.log('UPDATE_SUBMISSION_SUCCESS');
+      console.log('UPDATE_SUBMISSION_SUCCESS');
       // TODO: 2x data: 1 from axios 1 from json-body
       // TODO: refactor to some sort of getter with checks
       // console.log(action.response.data.broker_submission_id);
@@ -301,7 +308,21 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .set('saveInProgress', false)
         .set('submitInProgress', false)
+        // .set('showSubmitSuccess', true)
         .set('showSaveSuccess', true)
+        .set('metaDataIndex', '')
+        .set('updateWithRelease', false);
+    case UPDATE_SUBMISSION_SUCCESS_SUBMIT:
+      console.log('UPDATE_SUBMISSION_SUCCESS_SUBMIT');
+      // TODO: 2x data: 1 from axios 1 from json-body
+      // TODO: refactor to some sort of getter with checks
+      // console.log(action.response.data.broker_submission_id);
+      // console.log(typeof action.response.data.data.requirements.contributors);
+      return state
+        .set('saveInProgress', false)
+        .set('submitInProgress', false)
+        .set('showSubmitSuccess', true)
+        // .set('showSaveSuccess', true)
         .set('metaDataIndex', '')
         .set('updateWithRelease', false);
     // return setStateFormValues(state, action);

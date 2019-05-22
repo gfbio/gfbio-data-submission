@@ -129,10 +129,16 @@ const makeSelectRequestBrokerSubmissionId = () =>
     substate.get('requestBrokerSubmissionId'),
   );
 
+const makeSelectShowSubmitSuccess = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('showSubmitSuccess'),
+  );
+
 const makeSelectShowSaveSuccess = () =>
   createSelector(selectSubmissionFormDomain, substate =>
     substate.get('showSaveSuccess'),
   );
+
 
 const makeSelectUpdateWithRelease = () =>
   createSelector(selectSubmissionFormDomain, substate =>
@@ -169,6 +175,7 @@ export {
   makeSelectFormWrapper,
   makeSelectReduxFormForm,
   makeSelectSubmitInProgress,
+  makeSelectShowSaveSuccess,
   makeSelectSaveInProgress,
   makeSelectEmbargoDate,
   makeSelectContactForm,
@@ -184,7 +191,7 @@ export {
   makeSelectInitialValues,
   makeSelectSubmission,
   makeSelectRequestBrokerSubmissionId,
-  makeSelectShowSaveSuccess,
+  makeSelectShowSubmitSuccess,
   makeSelectUpdateWithRelease,
   makeSelectMetaDataIndex,
   // makeSelectDeleteBrokerSubmissionId,

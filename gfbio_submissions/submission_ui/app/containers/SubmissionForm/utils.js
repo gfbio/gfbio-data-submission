@@ -66,6 +66,7 @@ export const setStateFormValues = (state, action) => {
 
 export const resetStateFormValues = (state, initialContributors=[]) => {
   return state
+    .set('showSubmitSuccess', false)
     .set('metaDataIndex', '')
     .set('brokerSubmissionId', '')
     .set('initialValues', {})

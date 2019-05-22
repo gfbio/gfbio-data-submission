@@ -172,6 +172,39 @@ h1.current-location {
 
 // works on btn-secondary
 // TODO: refactor to generic class, light-blue button
+.btn-green-inverted {
+  //background-color: $gfbio-light-blue;
+  background-color: $white;
+  color: $gfbio-green !important;
+  border-color: darken($gfbio-green, .2);
+
+  &:hover, &:not(:disabled):not(.disabled):active,
+  &:not(:disabled):not(.disabled).active {
+    &:focus {
+      box-shadow: none;
+    }
+
+    border-color: darken($gfbio-green, .2);
+    //background-color: $white;
+    //color: $gfbio-light-blue !important;
+    background-color: $gfbio-green;
+    color: $white !important;
+    box-shadow: none;
+  }
+
+  &:focus {
+    box-shadow: none;
+  }
+
+  &:hover {
+    background-color: $gfbio-green;
+    color: $white !important;
+  }
+
+}
+
+// works on btn-secondary
+// TODO: refactor to generic class, light-blue button
 //.btn-form {
 //  //background-color: $gfbio-light-blue;
 //  background-color: $white;
@@ -302,6 +335,11 @@ section.sub-navi {
     font-size: 3.5rem;
     color: $gfbio-green-0-9;
     display: block;
+  }
+
+  i.close {
+    font-size: 2rem;
+    color: $gfbio-green-0-9;
   }
 
   h4 {
@@ -583,6 +621,7 @@ section.sub-navi {
     border-right-color: $gray-dark-2 !important;
   }
 }
+
 /*
 
 .tooltip.bs-tooltip-right .arrow:before {
@@ -673,6 +712,31 @@ form.pagewide-form {
   .header {
     letter-spacing: normal;
     border-bottom: 1px solid $gray-medium;
+  }
+
+  .gray-background {
+    background-color: $gray-100;
+    border: 1px solid $gray-200;
+    border-radius: .25rem;
+    padding: .75rem 0 .25rem 0;
+  }
+
+  .save-header {
+    .section-title {
+      font-size: 1.2rem !important;
+    }
+
+    //padding-left: 1.25rem;
+    i {
+      padding: 0 .5rem 0 .5rem;
+      color: $gfbio-green;
+    }
+  }
+
+  .save-text {
+    padding:  .75rem 1.25rem;
+    font-size: .9rem;
+    color: $gray-700;
   }
 
   .input-error {
