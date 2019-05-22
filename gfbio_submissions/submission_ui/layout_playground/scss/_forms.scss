@@ -714,6 +714,13 @@ form.pagewide-form {
     border-bottom: 1px solid $gray-medium;
   }
 
+  .gray-background {
+    background-color: $gray-100;
+    border: 1px solid $gray-200;
+    border-radius: .25rem;
+    padding: .75rem 0 .25rem 0;
+  }
+
   .save-header {
     .section-title {
       font-size: 1.2rem !important;

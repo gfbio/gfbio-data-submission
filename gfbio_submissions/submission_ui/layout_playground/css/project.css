@@ -966,6 +966,13 @@ form.pagewide-form .header {
   border-bottom: 1px solid #ccc;
 }
 
+form.pagewide-form .gray-background {
+  background-color: #f8f8f8;
+  border: 1px solid #e9ecef;
+  border-radius: .25rem;
+  padding: .75rem 0 .25rem 0;
+}
+
 form.pagewide-form .save-header .section-title {
   font-size: 1.2rem !important;
 }

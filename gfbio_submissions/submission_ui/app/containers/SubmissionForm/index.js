@@ -136,7 +136,7 @@ export class SubmissionForm extends React.Component {
 
     // TODO: add action for saga to fetch that removes this after a few seconds
     const saveMessage = (
-      <div>
+      <div className="gray-background">
         <Collapse
           in={true}
         >
