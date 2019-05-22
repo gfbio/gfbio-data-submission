@@ -38,7 +38,7 @@ import {
   UPDATE_CONTRIBUTOR,
   UPDATE_SUBMISSION,
   UPDATE_SUBMISSION_ERROR,
-  UPDATE_SUBMISSION_SUCCESS,
+  UPDATE_SUBMISSION_SUCCESS, UPDATE_SUBMISSION_SUCCESS_SUBMIT,
   UPLOAD_FILE_ERROR,
   UPLOAD_FILE_PROGRESS,
   UPLOAD_FILE_SUCCESS,
@@ -304,6 +304,13 @@ export function updateSubmission(release) {
 export function updateSubmissionSuccess(response) {
   return {
     type: UPDATE_SUBMISSION_SUCCESS,
+    response,
+  };
+}
+
+export function updateSubmissionSuccessSubmit(response) {
+  return {
+    type: UPDATE_SUBMISSION_SUCCESS_SUBMIT,
     response,
   };
 }

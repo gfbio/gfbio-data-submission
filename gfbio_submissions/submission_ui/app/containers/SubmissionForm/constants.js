@@ -55,6 +55,7 @@ export const CLOSE_SAVE_SUCCESS = 'app/SubmissionForm/CLOSE_SAVE_SUCCESS';
 
 export const UPDATE_SUBMISSION = 'app/SubmissionForm/UPDATE_SUBMISSION';
 export const UPDATE_SUBMISSION_SUCCESS = 'app/SubmissionForm/UPDATE_SUBMISSION_SUCCESS';
+export const UPDATE_SUBMISSION_SUCCESS_SUBMIT = 'app/SubmissionForm/UPDATE_SUBMISSION_SUCCESS_SUBMIT';
 export const UPDATE_SUBMISSION_ERROR = 'app/SubmissionForm/UPDATE_SUBMISSION_ERROR';
 
 export const SET_METADATA_INDEX = 'app/SubmissionForm/SET_METADATA_INDEX';

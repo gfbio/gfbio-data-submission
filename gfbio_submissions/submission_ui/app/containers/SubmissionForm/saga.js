@@ -46,7 +46,7 @@ import {
   submitFormSuccess,
   updateSubmission,
   updateSubmissionError,
-  updateSubmissionSuccess,
+  updateSubmissionSuccess, updateSubmissionSuccessSubmit,
   uploadFileError,
   uploadFileProgress,
   uploadFilesSuccess,
@@ -245,6 +245,7 @@ export function* performUpdateSubmissionSaga() {
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
   const updateWithRelease = yield select(makeSelectUpdateWithRelease());
+  console.info('performUpdateSubmissionSaga '+updateWithRelease);
   const payload = yield prepareRequestData(userId, updateWithRelease);
   try {
     const response = yield call(putSubmission, token, brokerSubmissionId, payload);
@@ -252,8 +253,13 @@ export function* performUpdateSubmissionSaga() {
     // NOOPE: yield put(uploadFiles());
     // yield call(performUploadSaga);
     yield call(performUploadSaga, brokerSubmissionId);
-    yield put(updateSubmissionSuccess(response));
-    // yield put(push('/list'));
+    if (updateWithRelease) {
+      yield put(updateSubmissionSuccessSubmit(response));
+      yield put(push('/list'));
+    }
+    else {
+      yield put(updateSubmissionSuccess(response));
+    }
   } catch (error) {
     yield put(updateSubmissionError(error));
   }

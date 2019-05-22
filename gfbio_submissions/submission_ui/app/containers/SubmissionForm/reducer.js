@@ -36,7 +36,7 @@ import {
   UPDATE_CONTRIBUTOR,
   UPDATE_SUBMISSION,
   UPDATE_SUBMISSION_ERROR,
-  UPDATE_SUBMISSION_SUCCESS,
+  UPDATE_SUBMISSION_SUCCESS, UPDATE_SUBMISSION_SUCCESS_SUBMIT,
   UPLOAD_FILE_ERROR,
   UPLOAD_FILE_PROGRESS,
   UPLOAD_FILE_SUCCESS,
@@ -310,6 +310,19 @@ function submissionFormReducer(state = initialState, action) {
         .set('submitInProgress', false)
         // .set('showSubmitSuccess', true)
         .set('showSaveSuccess', true)
+        .set('metaDataIndex', '')
+        .set('updateWithRelease', false);
+    case UPDATE_SUBMISSION_SUCCESS_SUBMIT:
+      console.log('UPDATE_SUBMISSION_SUCCESS_SUBMIT');
+      // TODO: 2x data: 1 from axios 1 from json-body
+      // TODO: refactor to some sort of getter with checks
+      // console.log(action.response.data.broker_submission_id);
+      // console.log(typeof action.response.data.data.requirements.contributors);
+      return state
+        .set('saveInProgress', false)
+        .set('submitInProgress', false)
+        .set('showSubmitSuccess', true)
+        // .set('showSaveSuccess', true)
         .set('metaDataIndex', '')
         .set('updateWithRelease', false);
     // return setStateFormValues(state, action);
