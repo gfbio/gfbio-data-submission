@@ -260,8 +260,8 @@ class FormWrapper extends React.PureComponent {
               <MetaDataSchemaForm />
 
               <EmbargoDatePicker
-                onChange={this.props.handleDateChange}
-                embargoDate={this.props.embargoDate}
+                // onChange={this.props.handleDateChange}
+                // embargoDate={this.props.embargoDate}
               />
             </div>
           </div>
@@ -328,8 +328,6 @@ class FormWrapper extends React.PureComponent {
 }
 
 FormWrapper.propTypes = {
-  handleDateChange: PropTypes.func,
-  embargoDate: PropTypes.instanceOf(Date),
   onSubmit: PropTypes.func,
   submitInProgress: PropTypes.bool,
   saveInProgress: PropTypes.bool,

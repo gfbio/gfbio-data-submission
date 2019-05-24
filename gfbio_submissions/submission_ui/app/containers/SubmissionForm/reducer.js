@@ -130,6 +130,7 @@ export const initialState = fromJS({
   showUploadLimitMessage: false,
   // uploadNoOfFilesExceeded: false,
   // uploadVolumeExceeded: false,
+  showEmbargoDialog: false,
 });
 
 

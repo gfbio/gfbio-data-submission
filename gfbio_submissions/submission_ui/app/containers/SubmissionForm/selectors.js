@@ -160,6 +160,11 @@ const makeSelectShowUploadLimitMessage = () =>
     substate.get('showUploadLimitMessage'),
   );
 
+const makeSelectShowEmbargoDialog = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('showEmbargoDialog'),
+  );
+
 
 // const makeSelectDeleteBrokerSubmissionId = () =>
 //   createSelector(selectSubmissionFormDomain, substate =>
@@ -197,4 +202,5 @@ export {
   // makeSelectDeleteBrokerSubmissionId,
   makeSelectPromptOnLeave,
   makeSelectShowUploadLimitMessage,
+  makeSelectShowEmbargoDialog,
 };
