@@ -99,7 +99,8 @@ export const initialState = fromJS({
 
   showSaveSuccess: false,
 
-  embargoDate: new Date(),
+  // embargoDate: new Date(),
+  embargoDate: new Date().setFullYear(new Date().getFullYear() + 1),
   // userId: backendParameters.userId || -1,
   // FIXME: replace. development default of 2
   userId: backendParameters.userId || 2,
