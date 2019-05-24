@@ -927,6 +927,41 @@ section.sub-navi .nav .active {
 */
 form.pagewide-form {
   /*
+    embargo date styles
+
+
+    .btn-contributor {
+    //border-color: darken($gfbio-green, .2);
+    //background-color: $gfbio-green;
+    //color: $white !important;
+    color: $gfbio-light-blue;
+    background-color: $white;
+    border: none;
+
+    &:focus {
+      box-shadow: none;
+    }
+
+    &:hover, &:not(:disabled):not(.disabled):active,
+    &:not(:disabled):not(.disabled).active {
+      &:focus {
+        box-shadow: none;
+      }
+
+      color: $contrast-1;
+      background-color: $white;
+      border: none;
+      box-shadow: none;
+    }
+
+    i {
+      padding-right: .5rem;
+    }
+
+  }
+
+  */
+  /*
     Overwrite react-datepicker styles
    */
 }
@@ -1432,6 +1467,20 @@ form.pagewide-form select:focus {
   border-color: rgba(129, 178, 72, 0.7);
   -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
   box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
+}
+
+form.pagewide-form .btn-link-light-blue {
+  color: #3CACE4;
+  text-decoration: none;
+}
+
+form.pagewide-form .btn-link-light-blue:hover {
+  color: #FF8362;
+}
+
+form.pagewide-form .btn-link-light-blue i {
+  padding-right: .5rem;
+  font-size: 1.5rem;
 }
 
 form.pagewide-form .react-datepicker {

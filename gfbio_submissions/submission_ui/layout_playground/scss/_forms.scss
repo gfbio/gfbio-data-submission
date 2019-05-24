@@ -1280,6 +1280,62 @@ form.pagewide-form {
   }
 
   /*
+    embargo date styles
+
+
+    .btn-contributor {
+    //border-color: darken($gfbio-green, .2);
+    //background-color: $gfbio-green;
+    //color: $white !important;
+    color: $gfbio-light-blue;
+    background-color: $white;
+    border: none;
+
+    &:focus {
+      box-shadow: none;
+    }
+
+    &:hover, &:not(:disabled):not(.disabled):active,
+    &:not(:disabled):not(.disabled).active {
+      &:focus {
+        box-shadow: none;
+      }
+
+      color: $contrast-1;
+      background-color: $white;
+      border: none;
+      box-shadow: none;
+    }
+
+    i {
+      padding-right: .5rem;
+    }
+
+  }
+
+  */
+  // btn-link overwrite
+  // TODO: make generic as other button classes
+  .btn-link-light-blue {
+    color: $gfbio-light-blue;
+    text-decoration: none;
+
+    &:hover {
+      color: $contrast-1;
+    }
+
+    i {
+      padding-right: .5rem;
+      font-size: 1.5rem;
+    }
+
+    span {
+      //display: inline-block;
+    }
+  }
+
+
+  /*
     Overwrite react-datepicker styles
    */
   .react-datepicker {

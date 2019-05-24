@@ -23,6 +23,7 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
+import dateFormat from 'dateformat';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -36,10 +37,15 @@ class EmbargoDatePicker extends React.Component {
           <p className="section-subtitle" />
         </header>
 
-        <Button variant="secondary" className="btn-block green"
+        <p className="text-center">
+          <span>{dateFormat(this.props.embargoDate, 'dd mmmm yyyy')}</span>
+        </p>
+
+        <Button variant="link" className="btn-block btn-link-light-blue"
                 onClick={this.props.openEmbargoDialog}>
-          <i className="icon ion-md-close" />
-          SHOW
+          <i className="icon ion-md-calendar align-top" />
+          <span className="">set embargo date</span>
+          {/*<span>{dateFormat(this.props.embargoDate, 'dd mmmm yyyy')}</span>*/}
         </Button>
 
         <Modal
@@ -64,7 +70,7 @@ class EmbargoDatePicker extends React.Component {
             />
             <Button variant="secondary" className="btn-block green"
                     onClick={this.props.closeEmbargoDialog}>
-              <i className="icon ion-md-close" />
+              {/*<i className="icon ion-md-close" />*/}
               CLOSE
             </Button>
           </Modal.Body>
