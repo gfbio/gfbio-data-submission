@@ -64,7 +64,7 @@ export const setStateFormValues = (state, action) => {
     .set('submission', action.response.data);
 };
 
-export const resetStateFormValues = (state, initialContributors=[]) => {
+export const resetStateFormValues = (state, initialContributors = []) => {
   return state
     .set('showSubmitSuccess', false)
     .set('metaDataIndex', '')
@@ -73,7 +73,7 @@ export const resetStateFormValues = (state, initialContributors=[]) => {
     .set('relatedPublications', fromJS([]))
     .set('dataset_labels', fromJS([]))
     .set('contributors', initialContributors)
-    .set('embargoDate', new Date())
+    .set('embargoDate', new Date().setFullYear(new Date().getFullYear() + 1))
     .set('license', 'CC BY 4.0')
     .set('metaDataSchema', 'None')
     .set('fileUploads', fromJS([]))

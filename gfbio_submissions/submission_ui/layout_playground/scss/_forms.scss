@@ -353,7 +353,7 @@ section.sub-navi {
 
 /* modal */
 .modal-backdrop {
-  //background-color: $gfbio-light-blue-0-6;
+  background-color: $gray-700;
 }
 
 .modal-content {
@@ -734,7 +734,7 @@ form.pagewide-form {
   }
 
   .save-text {
-    padding:  .75rem 1.25rem;
+    padding: .75rem 1.25rem;
     font-size: .9rem;
     color: $gray-700;
   }

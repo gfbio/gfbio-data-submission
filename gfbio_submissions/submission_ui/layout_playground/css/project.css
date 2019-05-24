@@ -749,6 +749,10 @@ section.sub-navi .nav .active {
 
 /* end collapse as success message */
 /* modal */
+.modal-backdrop {
+  background-color: #495057;
+}
+
 .modal-content .modal-header {
   border: none;
 }

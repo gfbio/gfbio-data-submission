@@ -12,7 +12,7 @@ import {
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
-  CHANGE_META_DATA_SCHEMA, CLOSE_SAVE_SUCCESS,
+  CHANGE_META_DATA_SCHEMA, CLOSE_EMBARGO_DIALOG, CLOSE_SAVE_SUCCESS,
   CLOSE_SUBMIT_SUCCESS, DISMISS_SHOW_UPLOAD_LIMIT,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
@@ -27,7 +27,7 @@ import {
   SAVE_FORM_SUCCESS,
   SET_CONTRIBUTORS,
   SET_EMBARGO_DATE,
-  SET_METADATA_INDEX, SHOW_UPLOAD_LIMIT,
+  SET_METADATA_INDEX, SHOW_EMBARGO_DIALOG, SHOW_UPLOAD_LIMIT,
   SUBMIT_FORM,
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
@@ -183,6 +183,12 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .set('metaDataIndex', '')
         .set('submitInProgress', false);
+    case SHOW_EMBARGO_DIALOG:
+      return state
+        .set('showEmbargoDialog', true);
+    case CLOSE_EMBARGO_DIALOG:
+      return state
+        .set('showEmbargoDialog', false);
     case SET_EMBARGO_DATE:
       // return state.set('embargoDate', dateFormat(action.date, 'yyyy-mm-dd'));
       return state.set('embargoDate', action.date);
