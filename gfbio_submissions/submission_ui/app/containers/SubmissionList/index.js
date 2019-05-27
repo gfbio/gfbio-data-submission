@@ -50,9 +50,7 @@ export class SubmissionList extends React.Component {
     let submissionItems = this.props.submissions.map((submission, index) => {
       if (submission.status != STATUS_CANCELLED) {
         return <li key={index} className="list-group-item">
-
           <div className="row wrapping-row no-gutters">
-
             <div className="col-md-10">
               {/*left*/}
               <Link className="row no-gutters"
@@ -69,12 +67,7 @@ export class SubmissionList extends React.Component {
                 </div>
               </Link>
             </div>
-
             <div className="col-md-2 col-sm-12 align-self-center actions">
-              {/*right pr-4 pl-4*/}
-              {/*<a className="action h-100 d-inline-block pr-4" href="">*/}
-              {/*  <i className="icon ion-md-create" /> Edit*/}
-              {/*</a>*/}
               <Link className="action h-100 d-inline-block pr-4"
                     to={'/form/' + submission.broker_submission_id}>
                 <i className="icon ion-md-create" /> Edit
@@ -83,8 +76,6 @@ export class SubmissionList extends React.Component {
                  href=""
                  onClick={(e) => {
                    e.preventDefault();
-                   // console.log('ON CLICK LIST DELETE');
-                   // console.log(submission.broker_submission_id);
                    this.props.showDeleteSubmissionDialog(submission.broker_submission_id);
                  }}
               >
@@ -98,10 +89,33 @@ export class SubmissionList extends React.Component {
       }
 
     });
-    // console.log(submissionItems);
     submissionItems = submissionItems.filter(item => item !== null);
     let header = null;
+
+    let startNew = (
+      <div className="list-start-wrapper d-flex">
+        <div className="container my-auto">
+          <div className="row no-gutters text-center">
+            <div className="col-md-10 pl-3 align-middle">
+              <Link className="nav-link list-start" to="/form">
+                <p>
+                  You have no submissions yet.
+                </p>
+                <i className="icon ion-ios-add-circle-outline" />
+                <p>
+                  Start a new submission
+                </p>
+              </Link>
+              {/*  </div>*/}
+              {/*</div>*/}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
     if (submissionItems.length > 0) {
+      startNew = null;
       header = (
         <div className="row no-gutters">
           <div className="col-md-10 pl-3">
@@ -122,8 +136,8 @@ export class SubmissionList extends React.Component {
     }
 
     // TODO: now that everything is set up, continue with get subs in saga
-    //  set loading indicator, fetch subs, on error show message, on success
-    //  show list
+    // set loading indicator, fetch subs, on error show message, on success
+    // show list
 
     return (
       <div className="submission-list-wrapper">
@@ -153,14 +167,6 @@ export class SubmissionList extends React.Component {
                 </Button>
               </div>
             </div>
-            {/*<div className="row">*/}
-            {/*  <div className="col-8 mx-auto text-center">*/}
-            {/*    <Button variant="secondary" className="btn-sm btn-block btn-green-inverted"*/}
-            {/*            onClick={this.props.closeSaveSuccess}>*/}
-            {/*      Close*/}
-            {/*    </Button>*/}
-            {/*  </div>*/}
-            {/*</div>*/}
           </div>
         </Collapse>
 
@@ -180,22 +186,6 @@ export class SubmissionList extends React.Component {
               <Row className="show-grid text-center">
                 <Col xs={12} md={12}>
                   Do you really want to delete this submission ?
-                  {/*    <code>.col-xs-12 .col-md-8</code>*/}
-                  {/*  </Col>*/}
-                  {/*  <Col xs={6} md={4}>*/}
-                  {/*    <code>.col-xs-6 .col-md-4</code>*/}
-                  {/*  </Col>*/}
-                  {/*</Row>*/}
-
-                  {/*<Row className="show-grid">*/}
-                  {/*  <Col xs={6} md={4}>*/}
-                  {/*    <code>.col-xs-6 .col-md-4</code>*/}
-                  {/*  </Col>*/}
-                  {/*  <Col xs={6} md={4}>*/}
-                  {/*    <code>.col-xs-6 .col-md-4</code>*/}
-                  {/*  </Col>*/}
-                  {/*  <Col xs={6} md={4}>*/}
-                  {/*    <code>.col-xs-6 .col-md-4</code>*/}
                 </Col>
               </Row>
             </Container>
@@ -229,6 +219,7 @@ export class SubmissionList extends React.Component {
           {header}
         </div>
         <div className="container">
+          {startNew}
           <ul className="list-group">
             {submissionItems}
           </ul>
