@@ -17,7 +17,8 @@ import {
 } from '../../containers/SubmissionForm/selectors';
 import {
   closeEmbargoDialog,
-  setEmbargoDate, showEmbargoDialog,
+  setEmbargoDate,
+  showEmbargoDialog,
 } from '../../containers/SubmissionForm/actions';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
@@ -27,7 +28,6 @@ import dateFormat from 'dateformat';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-// import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
 class EmbargoDatePicker extends React.Component {
@@ -48,7 +48,6 @@ class EmbargoDatePicker extends React.Component {
                 onClick={this.props.openEmbargoDialog}>
           <i className="icon ion-md-calendar align-top" />
           <span className="">set embargo date</span>
-          {/*<span>{dateFormat(this.props.embargoDate, 'dd mmmm yyyy')}</span>*/}
         </Button>
 
         <Modal
@@ -77,24 +76,23 @@ class EmbargoDatePicker extends React.Component {
                 <Col xs={12} md={4}>
                   <Button variant="secondary"
                           className="btn-sm btn-block btn-light-blue-inverted"
-                          onClick={this.props.closeEmbargoDialog}>
-                    {/*<i className="icon ion-md-close" />*/}
+                          onClick={() => this.props.setEmbargoPeriod(6)}>
                     6 months
                   </Button>
                 </Col>
                 <Col xs={12} md={4}>
                   <Button variant="secondary"
                           className="btn-sm btn-block btn-light-blue-inverted"
-                          onClick={this.props.closeEmbargoDialog}>
-                    {/*<i className="icon ion-md-close" />*/}
+                          onClick={() => this.props.setEmbargoPeriod(12)}
+                  >
                     12 months
                   </Button>
                 </Col>
                 <Col xs={12} md={4}>
                   <Button variant="secondary"
                           className="btn-sm btn-block btn-light-blue-inverted"
-                          onClick={this.props.closeEmbargoDialog}>
-                    {/*<i className="icon ion-md-close" />*/}
+                          onClick={() => this.props.setEmbargoPeriod(18)}
+                  >
                     18 months
                   </Button>
                 </Col>
@@ -115,11 +113,6 @@ class EmbargoDatePicker extends React.Component {
                     onChange={this.props.onChange}
                     dateFormat="MMMM d, yyyy"
                   />
-                  {/*<Button variant="secondary" className="btn-block green"*/}
-                  {/*        onClick={this.props.closeEmbargoDialog}>*/}
-                  {/*  /!*<i className="icon ion-md-close" />*!/*/}
-                  {/*  CLOSE*/}
-                  {/*</Button>*/}
                 </Col>
               </Row>
             </Container>
@@ -128,34 +121,12 @@ class EmbargoDatePicker extends React.Component {
           <Modal.Footer>
             <Container>
               <Row className="show-grid">
-                <Col xs={12} md={6}>
-                  {/*<p>footer</p>*/}
+                <Col xs={12} md={12}>
                   <Button variant="secondary"
                           className="btn-sm btn-block btn-green-inverted"
                           onClick={this.props.closeEmbargoDialog}>
-                    {/*<i className="icon ion-md-close" />*/}
-                    Cancel
+                    Close
                   </Button>
-                </Col>
-                <Col xs={12} md={6}>
-                  <Button variant="secondary"
-                          className="btn-sm btn-block btn-green-inverted"
-                          onClick={this.props.closeEmbargoDialog}>
-                    {/*<i className="icon ion-md-calendar fa-lg align-top pr-2" />*/}
-                    Set Emargo
-                  </Button>
-                  {/*  <Button variant="secondary" className="btn-block green"*/}
-                  {/*          onClick={this.props.closeDeleteSubmissionDialog}>*/}
-                  {/*    <i className="icon ion-md-close" />*/}
-                  {/*    Cancel*/}
-                  {/*  </Button>*/}
-                  {/*</Col>*/}
-                  {/*<Col xs={12} md={6} className="text-right">*/}
-                  {/*  <Button variant="secondary" className="btn-block red"*/}
-                  {/*          onClick={this.props.deleteSubmission}>*/}
-                  {/*    <i className="icon ion-md-trash" />*/}
-                  {/*    Delete*/}
-                  {/*  </Button>*/}
                 </Col>
               </Row>
             </Container>
@@ -171,6 +142,7 @@ class EmbargoDatePicker extends React.Component {
 EmbargoDatePicker.propTypes = {
   embargoDate: PropTypes.instanceOf(Date),
   onChange: PropTypes.func.isRequired,
+  setEmbargoPeriod: PropTypes.func,
   showEmbargoDialog: PropTypes.bool,
   openEmbargoDialog: PropTypes.func,
   closeEmbargoDialog: PropTypes.func,
@@ -187,6 +159,9 @@ function mapDispatchToProps(dispatch) {
     onChange: date => dispatch(setEmbargoDate(date)),
     openEmbargoDialog: () => dispatch(showEmbargoDialog()),
     closeEmbargoDialog: () => dispatch(closeEmbargoDialog()),
+    setEmbargoPeriod: (months) => dispatch(setEmbargoDate(
+      new Date().setMonth(new Date().getMonth() + months),
+    )),
   };
 }
 
