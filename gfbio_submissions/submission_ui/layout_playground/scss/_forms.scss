@@ -353,14 +353,23 @@ section.sub-navi {
 
 /* modal */
 .modal-backdrop {
-  //background-color: $gfbio-light-blue-0-6;
+  background-color: $white;
+  opacity: 0.7 !important;
 }
 
 .modal-content {
 
   .modal-header {
-    //border-bottom: 1px solid $form-gray-1;
-    border: none;
+    border-bottom: 1px solid $form-gray-1;
+    //border: none;
+
+    h2, h3, h4, h5, h6 {
+      @include raleway;
+      font-weight: 300;
+      color: $gray-darker;
+      margin: 0;
+
+    }
 
     .modal-title {
       @include raleway;
@@ -734,7 +743,7 @@ form.pagewide-form {
   }
 
   .save-text {
-    padding:  .75rem 1.25rem;
+    padding: .75rem 1.25rem;
     font-size: .9rem;
     color: $gray-700;
   }
@@ -1280,65 +1289,131 @@ form.pagewide-form {
   }
 
   /*
-    Overwrite react-datepicker styles
-   */
-  .react-datepicker {
-    width: 100%;
-  }
+    embargo date styles
 
-  .react-datepicker-wrapper {
-    width: 100%;
-  }
 
-  .react-datepicker__month-container {
-    width: 100%;
-  }
+    .btn-contributor {
+    //border-color: darken($gfbio-green, .2);
+    //background-color: $gfbio-green;
+    //color: $white !important;
+    color: $gfbio-light-blue;
+    background-color: $white;
+    border: none;
 
-  .react-datepicker__input-container {
-    width: 100%;
-  }
-
-  .react-datepicker {
-    @include sans-serif-font;
-    border-color: $form-gray-1;
-  }
-
-  .react-datepicker__header {
-    border-color: $form-gray-1;
-    background-color: $gray-100;
-  }
-
-  .react-datepicker__current-month {
-    font-weight: 400;
-    font-size: 1rem;
-    color: $gray-dark;
-  }
-
-  .react-datepicker__day-name {
-    font-weight: 400;
-    font-size: .9rem;
-    color: $gray-dark;
-  }
-
-  .react-datepicker__day {
-    font-weight: 400;
-    font-size: .8rem;
-    color: $gray-dark;
-    // TODO: focus, hover
     &:focus {
-      border-radius: .3rem;
-      border-color: $gfbio-green;
+      box-shadow: none;
     }
+
+    &:hover, &:not(:disabled):not(.disabled):active,
+    &:not(:disabled):not(.disabled).active {
+      &:focus {
+        box-shadow: none;
+      }
+
+      color: $contrast-1;
+      background-color: $white;
+      border: none;
+      box-shadow: none;
+    }
+
+    i {
+      padding-right: .5rem;
+    }
+
+  }
+
+  */
+  // btn-link overwrite
+  // TODO: make generic as other button classes
+  .btn-link-light-blue {
+    color: $gfbio-light-blue;
+    text-decoration: none;
 
     &:hover {
-      background-color: $gfbio-green;
-      color: $white;
+      color: $contrast-1;
+    }
+
+    i {
+      padding-right: .5rem;
+      font-size: 1.5rem;
+    }
+
+    span {
+      //display: inline-block;
     }
   }
 
-  .react-datepicker__day--selected {
-    background-color: $gfbio-light-blue;
-    color: $white;
+
+}
+
+
+/*
+    Overwrite react-datepicker styles
+   */
+.react-datepicker {
+  //width: 100%;
+}
+
+.react-datepicker-wrapper {
+  //width: 100%;
+}
+
+.react-datepicker__month-container {
+  //width: 100%;
+}
+
+.react-datepicker__input-container {
+  //width: 100%;
+}
+
+.react-datepicker {
+  @include raleway;
+  //border-color: $form-gray-1;
+  border: none;
+}
+
+.react-datepicker__header {
+  //border-color: $form-gray-1;
+  border: none;
+  background-color: $gray-100;
+}
+
+.react-datepicker__current-month {
+  @include sans-serif-font;
+  font-weight: 400;
+  font-size: 1rem;
+  color: $gray-dark;
+}
+
+.react-datepicker__day-name {
+  //font-weight: 400;
+  //font-size: .9rem;
+  //color: $gray-dark;
+}
+
+.react-datepicker__day {
+  //font-weight: 400;
+  font-size: .9rem;
+  color: $gray-700;
+
+  &:focus {
+    //border-radius: .3rem;
+    //border-color: $gfbio-green;
   }
 
+  &:hover {
+    background-color: $gfbio-green;
+    color: $white;
+    border-radius: .25rem;
+    //border: 1px solid $gfbio-green;
+  }
+}
+
+.react-datepicker__day--selected {
+  background-color: $gfbio-light-blue;
+  color: $white;
+}
+
+.react-datepicker__day--outside-month {
+  color: $gray-400;
 }

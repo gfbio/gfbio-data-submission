@@ -15,24 +15,18 @@ import injectReducer from 'utils/injectReducer';
 import FormWrapper from 'components/FormWrapper';
 import reducer from './reducer';
 import saga from './saga';
-import {
-  fetchSubmission,
-  resetForm,
-  setEmbargoDate,
-  submitForm,
-} from './actions';
+import { fetchSubmission, resetForm, submitForm } from './actions';
 import {
   makeSelectBrokerSubmissionId,
-  makeSelectEmbargoDate,
   makeSelectFormWrapper,
-  makeSelectInitialValues, makeSelectPromptOnLeave,
-  makeSelectSaveInProgress, makeSelectShowSaveSuccess,
+  makeSelectInitialValues,
+  makeSelectPromptOnLeave,
+  makeSelectSaveInProgress,
+  makeSelectShowSaveSuccess,
   makeSelectSubmission,
   makeSelectSubmitInProgress,
 } from './selectors';
-import Button from 'react-bootstrap/Button';
 import Collapse from 'react-bootstrap/Collapse';
-import Alert from 'react-bootstrap/Alert';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
@@ -172,8 +166,6 @@ export class SubmissionForm extends React.Component {
           onSubmit={this.props.handleSubmit}
           submitInProgress={this.props.submitInProgress}
           saveInProgress={this.props.saveInProgress}
-          handleDateChange={this.props.handleDateChange}
-          embargoDate={this.props.embargoDate}
           // profile does not work for pre-fill
           profile={this.getProfile()}
           initialValues={this.props.initialValues}
@@ -190,7 +182,6 @@ SubmissionForm.propTypes = {
   handleSubmit: PropTypes.func.isRequired,
   submitInProgress: PropTypes.bool,
   embargoDate: PropTypes.instanceOf(Date),
-  handleDateChange: PropTypes.func,
   reduxFormForm: PropTypes.object,
   initialValues: PropTypes.object,
   submission: PropTypes.object,
@@ -205,7 +196,6 @@ const mapStateToProps = createStructuredSelector({
   reduxFormForm: makeSelectFormWrapper(),
   submitInProgress: makeSelectSubmitInProgress(),
   saveInProgress: makeSelectSaveInProgress(),
-  embargoDate: makeSelectEmbargoDate(),
   initialValues: makeSelectInitialValues(),
   submission: makeSelectSubmission(),
   brokerSubmissionId: makeSelectBrokerSubmissionId(),
@@ -216,7 +206,6 @@ const mapStateToProps = createStructuredSelector({
 function mapDispatchToProps(dispatch) {
   return {
     handleSubmit: form => dispatch(submitForm(form)),
-    handleDateChange: date => dispatch(setEmbargoDate(date)),
     fetchSubmission: brokerSubmissionId => dispatch(fetchSubmission(brokerSubmissionId)),
     resetForm: () => (dispatch(resetForm())),
   };
