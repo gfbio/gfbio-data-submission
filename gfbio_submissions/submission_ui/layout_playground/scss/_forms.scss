@@ -443,6 +443,30 @@ section.sub-navi {
     font-weight: bold;
   }
 
+  .list-start-wrapper {
+    height: 50vh;
+  }
+
+  .list-start {
+    @include raleway;
+    color: $gfbio-light-blue;
+
+    p {
+      color: inherit;
+      font-size: 1.2rem;
+      margin: 0;
+    }
+
+    i {
+      display: block;
+      color: inherit;
+      font-size: 5rem;
+    }
+
+    &:hover {
+      color: $contrast-1;
+    }
+  }
 
   ul {
 
