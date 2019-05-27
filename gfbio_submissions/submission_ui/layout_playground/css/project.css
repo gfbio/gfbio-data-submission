@@ -750,11 +750,19 @@ section.sub-navi .nav .active {
 /* end collapse as success message */
 /* modal */
 .modal-backdrop {
-  background-color: #495057;
+  background-color: #fff;
+  opacity: 0.7 !important;
 }
 
 .modal-content .modal-header {
-  border: none;
+  border-bottom: 1px solid #ced4da;
+}
+
+.modal-content .modal-header h2, .modal-content .modal-header h3, .modal-content .modal-header h4, .modal-content .modal-header h5, .modal-content .modal-header h6 {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 300;
+  color: #343434;
+  margin: 0;
 }
 
 .modal-content .modal-header .modal-title {
@@ -961,9 +969,6 @@ form.pagewide-form {
   }
 
   */
-  /*
-    Overwrite react-datepicker styles
-   */
 }
 
 form.pagewide-form .form-group {
@@ -1483,63 +1488,44 @@ form.pagewide-form .btn-link-light-blue i {
   font-size: 1.5rem;
 }
 
-form.pagewide-form .react-datepicker {
-  width: 100%;
+/*
+    Overwrite react-datepicker styles
+   */
+.react-datepicker {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  border: none;
 }
 
-form.pagewide-form .react-datepicker-wrapper {
-  width: 100%;
-}
-
-form.pagewide-form .react-datepicker__month-container {
-  width: 100%;
-}
-
-form.pagewide-form .react-datepicker__input-container {
-  width: 100%;
-}
-
-form.pagewide-form .react-datepicker {
-  font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  border-color: #ced4da;
-}
-
-form.pagewide-form .react-datepicker__header {
-  border-color: #ced4da;
+.react-datepicker__header {
+  border: none;
   background-color: #f8f8f8;
 }
 
-form.pagewide-form .react-datepicker__current-month {
+.react-datepicker__current-month {
+  font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 400;
   font-size: 1rem;
   color: #666;
 }
 
-form.pagewide-form .react-datepicker__day-name {
-  font-weight: 400;
+.react-datepicker__day {
   font-size: .9rem;
-  color: #666;
+  color: #495057;
 }
 
-form.pagewide-form .react-datepicker__day {
-  font-weight: 400;
-  font-size: .8rem;
-  color: #666;
-}
-
-form.pagewide-form .react-datepicker__day:focus {
-  border-radius: .3rem;
-  border-color: #81B248;
-}
-
-form.pagewide-form .react-datepicker__day:hover {
+.react-datepicker__day:hover {
   background-color: #81B248;
   color: #fff;
+  border-radius: .25rem;
 }
 
-form.pagewide-form .react-datepicker__day--selected {
+.react-datepicker__day--selected {
   background-color: #3CACE4;
   color: #fff;
+}
+
+.react-datepicker__day--outside-month {
+  color: #ced4da;
 }
 
 body,
