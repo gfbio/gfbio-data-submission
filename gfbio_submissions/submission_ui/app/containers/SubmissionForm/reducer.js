@@ -131,6 +131,9 @@ export const initialState = fromJS({
   // uploadNoOfFilesExceeded: false,
   // uploadVolumeExceeded: false,
   showEmbargoDialog: false,
+
+  generalError: false,
+
 });
 
 
@@ -218,9 +221,11 @@ function submissionFormReducer(state = initialState, action) {
         .update('dataset_labels', (dataset_labels) => dataset_labels.splice(action.index, 1));
     case SHOW_UPLOAD_LIMIT:
       return state
+        .set('generalError', true)
         .set('showUploadLimitMessage', true);
     case DISMISS_SHOW_UPLOAD_LIMIT:
       return state
+        .set('generalError', false)
         .set('showUploadLimitMessage', false);
     case ADD_FILE_UPLOAD:
       return state

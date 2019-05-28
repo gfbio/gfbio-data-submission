@@ -18,7 +18,7 @@ import saga from './saga';
 import { fetchSubmission, resetForm, submitForm } from './actions';
 import {
   makeSelectBrokerSubmissionId,
-  makeSelectFormWrapper,
+  makeSelectFormWrapper, makeSelectGeneralError,
   makeSelectInitialValues,
   makeSelectPromptOnLeave,
   makeSelectSaveInProgress,
@@ -171,6 +171,7 @@ export class SubmissionForm extends React.Component {
           initialValues={this.props.initialValues}
           reduxFormWrapper={this.props.reduxFormForm.formWrapper}
           promptOnLeave={this.props.promptOnLeave}
+          generalError={this.props.generalError}
           saveSuccessMessage={saveMessage}
         />
       </div>
@@ -190,6 +191,7 @@ SubmissionForm.propTypes = {
   resetForm: PropTypes.func,
   promptOnLeave: PropTypes.bool,
   showSaveSuccess: PropTypes.bool,
+  generalError: PropTypes.bool,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -201,6 +203,7 @@ const mapStateToProps = createStructuredSelector({
   brokerSubmissionId: makeSelectBrokerSubmissionId(),
   promptOnLeave: makeSelectPromptOnLeave(),
   showSaveSuccess: makeSelectShowSaveSuccess(),
+  generalError: makeSelectGeneralError(),
 });
 
 function mapDispatchToProps(dispatch) {

@@ -165,6 +165,11 @@ const makeSelectShowEmbargoDialog = () =>
     substate.get('showEmbargoDialog'),
   );
 
+const makeSelectGeneralError = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('generalError'),
+  );
+
 
 // const makeSelectDeleteBrokerSubmissionId = () =>
 //   createSelector(selectSubmissionFormDomain, substate =>
@@ -203,4 +208,5 @@ export {
   makeSelectPromptOnLeave,
   makeSelectShowUploadLimitMessage,
   makeSelectShowEmbargoDialog,
+  makeSelectGeneralError,
 };

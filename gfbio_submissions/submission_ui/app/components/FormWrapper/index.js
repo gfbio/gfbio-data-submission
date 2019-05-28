@@ -45,64 +45,66 @@ class FormWrapper extends React.PureComponent {
     return undefined;
   };
 
+  getMutualErrorMessages = () => {
+    let errors = {};
+    let e = this.getSyncErrors();
+    let fields = {};
+    let f = this.getFields();
+    let errorsKeys = new Set();
+    let fieldsKeys = new Set();
+    if (e !== undefined && f !== undefined) {
+      errors = e;
+      fields = f;
+      errorsKeys = new Set(Object.keys(errors));
+      fieldsKeys = new Set(Object.keys(fields));
+    }
+    let mutual = new Set([...errorsKeys].filter(x => fieldsKeys.has(x)));
+    if (this.props.generalError) {
+      errors['General Form Error'] = 'Please check the form for dedicated error messages';
+      mutual.add('General Form Error');
+    }
+    return [mutual, errors];
+  };
+
   prepareErrorNotification = () => {
-    let errors = this.getSyncErrors();
-    let fields = this.getFields();
-    if (errors !== undefined && fields !== undefined) {
-      let errorsKeys = new Set(Object.keys(errors));
-      let fieldsKeys = new Set(Object.keys(fields));
-      let mutual = new Set([...errorsKeys].filter(x => fieldsKeys.has(x)));
-      let errorList = [...mutual].map((errorKey, index) => {
-        return (
-          <li key={index} className="list-group-item">
+    let mutualMessages = this.getMutualErrorMessages();
+    let mutual = mutualMessages[0];
+    let errors = mutualMessages[1];
+
+    let errorList = [...mutual].map((errorKey, index) => {
+      return (
+        <li key={index} className="list-group-item">
             <span className="validation-error-item">
               <i className="ti-layout-line-solid icon " />
               {errorKey}
               <i className="ti-arrow-right icon pl-1" />
               {errors[errorKey]}
             </span>
-          </li>
-        );
-      });
-      return (
-        <Alert variant="light">
-          <Alert.Heading><i className="fa  fa-bolt" /> There are some validation
-            errors you need to take care of</Alert.Heading>
-          <ul className="list-group list-group-flush">
-            {errorList}
-            <li className="list-group-item">
+        </li>
+      );
+    });
+
+    if (Object.keys(errors).length <= 0) {
+      return null;
+    }
+    return (
+      <Alert variant="light">
+        <Alert.Heading><i className="fa  fa-bolt" /> There are some validation
+          errors you need to take care of</Alert.Heading>
+        <ul className="list-group list-group-flush">
+          {errorList}
+          <li className="list-group-item">
               <span className="validation-error-item">
                 Once all errors are resolved, try to 'save' or 'start' again.
               </span>
-            </li>
-          </ul>
-        </Alert>
-      );
-    } else {
-      return null;
-    }
+          </li>
+        </ul>
+      </Alert>
+    );
   };
 
+
   renderNavigationPrompt = () => {
-    // if (this.props.saveInProgress || this.props.submitInProgress) {
-    //   return (<Modal
-    //     show={true}
-    //     centered
-    //   >
-    //     <Modal.Header>
-    //       <Modal.Title className="pl-4">Processing ...</Modal.Title>
-    //     </Modal.Header>
-    //     <Modal.Body>
-    //       <Container>
-    //         <Row className="show-grid text-center">
-    //           <Col xs={12} md={12}>
-    //             <i className="fa fa-cog fa-spin fa-fw fa-lg" />
-    //           </Col>
-    //         </Row>
-    //       </Container>
-    //     </Modal.Body>
-    //   </Modal>);
-    // } else
     if (this.props.pristine === false && this.props.promptOnLeave) {
       return (
         <NavigationPrompt when={true}>
@@ -196,9 +198,9 @@ class FormWrapper extends React.PureComponent {
     }
     let errors = this.prepareErrorNotification();
 
-    console.log('--------------render FormWrapper');
-    console.log(this.props);
-    console.log('###############################');
+    // console.log('--------------render FormWrapper');
+    // console.log(this.props);
+    // console.log('###############################');
 
     return (
       <form
@@ -259,10 +261,7 @@ class FormWrapper extends React.PureComponent {
 
               <MetaDataSchemaForm />
 
-              <EmbargoDatePicker
-                // onChange={this.props.handleDateChange}
-                // embargoDate={this.props.embargoDate}
-              />
+              <EmbargoDatePicker />
             </div>
           </div>
 
@@ -334,6 +333,7 @@ FormWrapper.propTypes = {
   profile: PropTypes.object,
   reduxFormWrapper: PropTypes.object,
   promptOnLeave: PropTypes.bool,
+  generalError: PropTypes.bool,
   saveSuccessMessage: PropTypes.object,
 };
 

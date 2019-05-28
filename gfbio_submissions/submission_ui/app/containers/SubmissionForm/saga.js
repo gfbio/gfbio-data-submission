@@ -2,20 +2,22 @@ import {
   all,
   call,
   cancelled,
+  delay,
   fork,
   put,
   select,
   take,
   takeLatest,
   takeLeading,
-  delay,
 } from 'redux-saga/effects';
 import {
   FETCH_SUBMISSION,
-  SAVE_FORM, SAVE_FORM_SUCCESS,
+  SAVE_FORM,
+  SAVE_FORM_SUCCESS,
   SUBMIT_FORM,
   SUBMIT_FORM_START,
-  UPDATE_SUBMISSION, UPDATE_SUBMISSION_SUCCESS,
+  UPDATE_SUBMISSION,
+  UPDATE_SUBMISSION_SUCCESS,
   UPLOAD_FILES,
 } from './constants';
 import {
@@ -25,7 +27,9 @@ import {
   makeSelectEmbargoDate,
   makeSelectFileUploads,
   makeSelectFormWrapper,
-  makeSelectLicense, makeSelectMetaDataIndex,
+  makeSelectGeneralError,
+  makeSelectLicense,
+  makeSelectMetaDataIndex,
   makeSelectMetaDataSchema,
   makeSelectReduxFormForm,
   makeSelectRelatedPublications,
@@ -46,7 +50,8 @@ import {
   submitFormSuccess,
   updateSubmission,
   updateSubmissionError,
-  updateSubmissionSuccess, updateSubmissionSuccessSubmit,
+  updateSubmissionSuccess,
+  updateSubmissionSuccessSubmit,
   uploadFileError,
   uploadFileProgress,
   uploadFilesSuccess,
@@ -245,7 +250,7 @@ export function* performUpdateSubmissionSaga() {
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
   const updateWithRelease = yield select(makeSelectUpdateWithRelease());
-  console.info('performUpdateSubmissionSaga '+updateWithRelease);
+  console.info('performUpdateSubmissionSaga ' + updateWithRelease);
   const payload = yield prepareRequestData(userId, updateWithRelease);
   try {
     const response = yield call(putSubmission, token, brokerSubmissionId, payload);
@@ -256,8 +261,7 @@ export function* performUpdateSubmissionSaga() {
     if (updateWithRelease) {
       yield put(updateSubmissionSuccessSubmit(response));
       yield put(push('/list'));
-    }
-    else {
+    } else {
       yield put(updateSubmissionSuccess(response));
     }
   } catch (error) {
@@ -266,10 +270,11 @@ export function* performUpdateSubmissionSaga() {
 }
 
 export function* processSubmitFormTypeSaga() {
-  // console.log('processSubmitFormTypeSaga');
+  const generalError = yield select(makeSelectGeneralError());
   const reduxFormForm = yield select(makeSelectReduxFormForm());
-  // console.log(reduxFormForm.workflow);
-  if (reduxFormForm.workflow === 'save') {
+  if (generalError) {
+    yield put(submitFormError());
+  } else if (reduxFormForm.workflow === 'save') {
     yield put(saveForm());
   } else if (reduxFormForm.workflow === 'submit') {
     yield put(submitFormStart());
@@ -343,7 +348,7 @@ TODO: when in edit mode: remove file means delete already uploaded file.
 
 export function* closeSaveMessageSaga() {
   yield takeLatest(SAVE_FORM_SUCCESS, performCloseSaveMessageSaga);
-  yield takeLatest(UPDATE_SUBMISSION_SUCCESS, performCloseSaveMessageSaga)
+  yield takeLatest(UPDATE_SUBMISSION_SUCCESS, performCloseSaveMessageSaga);
 }
 
 export function* uploadFilesSaga() {
