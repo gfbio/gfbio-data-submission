@@ -45,43 +45,97 @@ class FormWrapper extends React.PureComponent {
     return undefined;
   };
 
+  getMutualErrorMessages = () => {
+    let errors = {};
+    let e = this.getSyncErrors();
+    let fields = {};
+    let f = this.getFields();
+    let errorsKeys = new Set();
+    let fieldsKeys = new Set();
+    if (e !== undefined && f !== undefined) {
+      errors = e;
+      fields = f;
+      errorsKeys = new Set(Object.keys(errors));
+      fieldsKeys = new Set(Object.keys(fields));
+    }
+    let mutual = new Set([...errorsKeys].filter(x => fieldsKeys.has(x)));
+    if (this.props.generalError) {
+      errors['General Form Error'] = 'Please check the form for dedicated error messages';
+      mutual.add('General Form Error');
+    }
+    return [mutual, errors];
+  };
+
   prepareErrorNotification = () => {
-    let errors = this.getSyncErrors();
-    let fields = this.getFields();
-    if (errors !== undefined && fields !== undefined) {
-      let errorsKeys = new Set(Object.keys(errors));
-      let fieldsKeys = new Set(Object.keys(fields));
-      let mutual = new Set([...errorsKeys].filter(x => fieldsKeys.has(x)));
-      let errorList = [...mutual].map((errorKey, index) => {
-        return (
-          <li key={index} className="list-group-item">
+    // TODO: to getMutualErrorMessages
+    // let errors = this.getSyncErrors();
+    // let fields = this.getFields();
+    // console.info(typeof errors);
+    // console.info(typeof fields);
+    // if (errors !== undefined && fields !== undefined) {
+
+
+    let mutualMessages = this.getMutualErrorMessages();
+    let mutual = mutualMessages[0];
+    let errors = mutualMessages[1];
+
+
+    console.info('prepareErrorNotification');
+    console.info(mutual);
+    console.info(errors);
+    // console.info(typeof mutual);
+    // if (this.props.generalError) {
+    //   console.info('GENERAL ERROR');
+    //   // errorList.push(
+    //   //   <li key={index} className="list-group-item">
+    //   //     <span className="validation-error-item">
+    //   //       <i className="ti-layout-line-solid icon " />
+    //   //       General Error
+    //   //       <i className="ti-arrow-right icon pl-1" />
+    //   //       General error message
+    //   //     </span>
+    //   //   </li>,
+    //   // );
+    // }
+
+    let errorList = [...mutual].map((errorKey, index) => {
+      // console.info('--------' + errorKey + '  ' + index);
+      return (
+        <li key={index} className="list-group-item">
             <span className="validation-error-item">
               <i className="ti-layout-line-solid icon " />
               {errorKey}
               <i className="ti-arrow-right icon pl-1" />
               {errors[errorKey]}
             </span>
-          </li>
-        );
-      });
-      return (
-        <Alert variant="light">
-          <Alert.Heading><i className="fa  fa-bolt" /> There are some validation
-            errors you need to take care of</Alert.Heading>
-          <ul className="list-group list-group-flush">
-            {errorList}
-            <li className="list-group-item">
+        </li>
+      );
+    });
+
+    console.log('error list ' + errors+ ' '+typeof errors);
+    if (Object.keys(errors).length <= 0) {
+      return null;
+    }
+    return (
+      <Alert variant="light">
+        <Alert.Heading><i className="fa  fa-bolt" /> There are some validation
+          errors you need to take care of</Alert.Heading>
+        <ul className="list-group list-group-flush">
+          {errorList}
+          <li className="list-group-item">
               <span className="validation-error-item">
                 Once all errors are resolved, try to 'save' or 'start' again.
               </span>
-            </li>
-          </ul>
-        </Alert>
-      );
-    } else {
-      return null;
-    }
+          </li>
+        </ul>
+      </Alert>
+    );
+
+    // } else {
+    //   return null;
+    // }
   };
+
 
   renderNavigationPrompt = () => {
     // if (this.props.saveInProgress || this.props.submitInProgress) {
@@ -334,6 +388,7 @@ FormWrapper.propTypes = {
   profile: PropTypes.object,
   reduxFormWrapper: PropTypes.object,
   promptOnLeave: PropTypes.bool,
+  generalError: PropTypes.bool,
   saveSuccessMessage: PropTypes.object,
 };
 
