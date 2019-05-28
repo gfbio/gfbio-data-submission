@@ -8,7 +8,6 @@ import React from 'react';
 import { Field } from 'redux-form/immutable';
 import { DATA_CATEGORY_PREFIX } from '../../containers/SubmissionForm/constants';
 // import PropTypes from 'prop-types';
-// import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
 class DataCategoryForm extends React.PureComponent {
@@ -17,7 +16,6 @@ class DataCategoryForm extends React.PureComponent {
     // console.log('--------------render DataCategoryForm');
     // console.log(this.props);
     // console.log('###############################');
-    // const dataCategoryPrefix = 'data-category ';
     return (
       <div>
         <header className="header header-left form-header-top">

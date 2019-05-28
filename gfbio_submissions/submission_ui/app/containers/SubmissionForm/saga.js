@@ -72,7 +72,6 @@ function* getMetaDataFileName(metaDataIndex, fileUploads) {
   const metaDataFile = fileUploads.get(metaIndex);
   let metaDataFileName = '';
   if (metaDataFile !== undefined) {
-    // console.log(metaDataFile.file.name);
     metaDataFileName = metaDataFile.file.name;
   }
   return metaDataFileName;
@@ -87,11 +86,15 @@ function* prepareRequestData(userId, submit = true) {
   let categories = [];
   for (let f in formValues) {
     if (f.includes('legal-requirement')) {
-      legal_requirements.push(f.replace('legal-requirement ', ''));
+      if (formValues[f] === true) {
+        legal_requirements.push(f.replace('legal-requirement ', ''));
+      }
       delete formValues[f];
     }
     if (f.includes('data-category')) {
-      categories.push(f.replace('data-category ', ''));
+      if (formValues[f] === true) {
+        categories.push(f.replace('data-category ', ''));
+      }
       delete formValues[f];
     }
   }
@@ -100,20 +103,13 @@ function* prepareRequestData(userId, submit = true) {
   const related_publications = yield select(makeSelectRelatedPublications());
   const dataset_labels = yield select(makeSelectDatasetLabels());
   const contributors = yield select(makeSelectContributors());
-  // FIXME: emabrgo date format mismathc frontend/bacend
+
   const embargoDate = yield select(makeSelectEmbargoDate());
   const embargo = dateFormat(embargoDate, 'yyyy-mm-dd');
-  console.log('embargo');
-  console.log(embargo);
-  // console.log(dateFormat(embargo, 'yyyy-mm-dd'));
-
 
   const metaDataIndex = yield select(makeSelectMetaDataIndex());
   const fileUploads = yield select(makeSelectFileUploads());
-
   const metaDataFileName = yield getMetaDataFileName(metaDataIndex, fileUploads);
-  // console.log('metaDataFile.file.name');
-  // console.log(metaDataFileName);
 
   const requirements = Object.assign({
     license,
@@ -126,7 +122,6 @@ function* prepareRequestData(userId, submit = true) {
     metaDataIndex,
     metaDataFileName,
   }, formValues);
-  // const embargoDate = `${embargo.getFullYear()}-${embargo.getMonth()}-${embargo.getDay()}`;
   return {
     // TODO: determine target according to "Target Data center" value. e.g. "ena" = ENA_PANGAEA
     // TODO: change name of non-molecular to sth. else
@@ -151,11 +146,8 @@ function* uploadProgressWatcher(channel, index) {
       const progress = yield take(channel);
       yield put(uploadFileProgress(index, progress));
     } catch (err) {
-      // console.info('ERROR uploadProgressWatcher');
-      // console.info(err);
       yield put(uploadFileError(index, err));
     } finally {
-      // console.log('finally');
       yield put(uploadFileSuccess(index));
       if (yield cancelled()) {
         channel.close();
@@ -168,8 +160,6 @@ function* uploadFile(token, brokerSubmissionId, file, index) {
   // TODO: move to performUploadSaga. before loop.
   // const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
   // const token = yield select(makeSelectToken());
-  // console.log('uploadFile');
-  // console.log(brokerSubmissionId);
   try {
     // true refers to 'attach_to_ticket' parameter of backend endpoint
     //  stating that every uploaded file will be attached to the
@@ -178,14 +168,11 @@ function* uploadFile(token, brokerSubmissionId, file, index) {
       brokerSubmissionId, file.file, true, token);
     yield fork(uploadProgressWatcher, uploadChannel, index);
   } catch (err) {
-    // console.log('yield error action uploadFile');
-    // console.log(err);
     yield put(uploadFileError(index, err));
   }
 }
 
 function* performUploadSaga(brokerSubmissionId) {
-  // console.log('performUploadSaga');
   const fileUploads = yield select(makeSelectFileUploads());
   // const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
   const token = yield select(makeSelectToken());
@@ -195,15 +182,11 @@ function* performUploadSaga(brokerSubmissionId) {
     index++;
   }
   yield put(uploadFilesSuccess({}));
-  // console.log('put upload success is done');
-  // console.log('put push is done');
 }
 
 
 export function* performSubmitFormSaga() {
-  // console.log('performSubmitFormSaga. bsi:');
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
-  // console.log(brokerSubmissionId);
   if (brokerSubmissionId !== '') {
     yield put(updateSubmission(true));
   } else {
@@ -222,9 +205,7 @@ export function* performSubmitFormSaga() {
 }
 
 export function* performSaveFormSaga() {
-  // console.log('performSaveSaga. bsi:');
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
-  // console.log(brokerSubmissionId);
   // TODO: if bsi put update action ....
   if (brokerSubmissionId !== '') {
     yield put(updateSubmission(false));
@@ -244,13 +225,10 @@ export function* performSaveFormSaga() {
 }
 
 export function* performUpdateSubmissionSaga() {
-  // console.log('performUpdateSubmissionSaga. bsi:');
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
-  // console.log(brokerSubmissionId);
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
   const updateWithRelease = yield select(makeSelectUpdateWithRelease());
-  console.info('performUpdateSubmissionSaga ' + updateWithRelease);
   const payload = yield prepareRequestData(userId, updateWithRelease);
   try {
     const response = yield call(putSubmission, token, brokerSubmissionId, payload);
@@ -282,17 +260,12 @@ export function* processSubmitFormTypeSaga() {
 }
 
 export function* performFetchSubmissionSaga() {
-  // console.log('performFetchSubmissionSaga');
   const token = yield select(makeSelectToken());
   const bsi = yield select(makeSelectRequestBrokerSubmissionId());
   try {
     const response = yield call(getSubmission, token, bsi);
-    // console.log('success');
-    // console.log(response);
     yield put(fetchSubmissionSuccess(response));
   } catch (error) {
-    // console.log('error');
-    // console.log(error);
     yield put(fetchSubmissionError(error));
   }
 }
