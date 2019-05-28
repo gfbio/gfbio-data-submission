@@ -67,39 +67,11 @@ class FormWrapper extends React.PureComponent {
   };
 
   prepareErrorNotification = () => {
-    // TODO: to getMutualErrorMessages
-    // let errors = this.getSyncErrors();
-    // let fields = this.getFields();
-    // console.info(typeof errors);
-    // console.info(typeof fields);
-    // if (errors !== undefined && fields !== undefined) {
-
-
     let mutualMessages = this.getMutualErrorMessages();
     let mutual = mutualMessages[0];
     let errors = mutualMessages[1];
 
-
-    console.info('prepareErrorNotification');
-    console.info(mutual);
-    console.info(errors);
-    // console.info(typeof mutual);
-    // if (this.props.generalError) {
-    //   console.info('GENERAL ERROR');
-    //   // errorList.push(
-    //   //   <li key={index} className="list-group-item">
-    //   //     <span className="validation-error-item">
-    //   //       <i className="ti-layout-line-solid icon " />
-    //   //       General Error
-    //   //       <i className="ti-arrow-right icon pl-1" />
-    //   //       General error message
-    //   //     </span>
-    //   //   </li>,
-    //   // );
-    // }
-
     let errorList = [...mutual].map((errorKey, index) => {
-      // console.info('--------' + errorKey + '  ' + index);
       return (
         <li key={index} className="list-group-item">
             <span className="validation-error-item">
@@ -112,7 +84,6 @@ class FormWrapper extends React.PureComponent {
       );
     });
 
-    console.log('error list ' + errors+ ' '+typeof errors);
     if (Object.keys(errors).length <= 0) {
       return null;
     }
@@ -130,33 +101,10 @@ class FormWrapper extends React.PureComponent {
         </ul>
       </Alert>
     );
-
-    // } else {
-    //   return null;
-    // }
   };
 
 
   renderNavigationPrompt = () => {
-    // if (this.props.saveInProgress || this.props.submitInProgress) {
-    //   return (<Modal
-    //     show={true}
-    //     centered
-    //   >
-    //     <Modal.Header>
-    //       <Modal.Title className="pl-4">Processing ...</Modal.Title>
-    //     </Modal.Header>
-    //     <Modal.Body>
-    //       <Container>
-    //         <Row className="show-grid text-center">
-    //           <Col xs={12} md={12}>
-    //             <i className="fa fa-cog fa-spin fa-fw fa-lg" />
-    //           </Col>
-    //         </Row>
-    //       </Container>
-    //     </Modal.Body>
-    //   </Modal>);
-    // } else
     if (this.props.pristine === false && this.props.promptOnLeave) {
       return (
         <NavigationPrompt when={true}>
@@ -250,9 +198,9 @@ class FormWrapper extends React.PureComponent {
     }
     let errors = this.prepareErrorNotification();
 
-    console.log('--------------render FormWrapper');
-    console.log(this.props);
-    console.log('###############################');
+    // console.log('--------------render FormWrapper');
+    // console.log(this.props);
+    // console.log('###############################');
 
     return (
       <form
@@ -313,10 +261,7 @@ class FormWrapper extends React.PureComponent {
 
               <MetaDataSchemaForm />
 
-              <EmbargoDatePicker
-                // onChange={this.props.handleDateChange}
-                // embargoDate={this.props.embargoDate}
-              />
+              <EmbargoDatePicker />
             </div>
           </div>
 
