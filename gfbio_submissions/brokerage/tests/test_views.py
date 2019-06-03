@@ -14,7 +14,7 @@ from rest_framework.test import APIClient
 from config.settings.base import MEDIA_URL
 from gfbio_submissions.brokerage.configuration.settings import \
     HELPDESK_API_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL
-from gfbio_submissions.brokerage.models import SubmissionFileUpload, Submission, \
+from gfbio_submissions.brokerage.models import Submission, \
     SiteConfiguration, ResourceCredential, PrimaryDataFile, AdditionalReference, \
     TaskProgressReport, SubmissionUpload
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
@@ -519,15 +519,31 @@ class TestSubmissionUploadView(TestCase):
         # FIXME: until changed, everyone with permissions can add file, even if not owner of respective submission
         self.assertEqual(201, response.status_code)
 
-    def test_get_list(self):
+    @responses.activate
+    def test_get_list_per_submission(self):
         submission = Submission.objects.first()
-        url = reverse(
-            'brokerage:submissions_upload',
-            kwargs={
-                'broker_submission_id': submission.broker_submission_id
-            })
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        responses.add(responses.POST, url, json={}, status=200)
+        data = self._create_test_data('/tmp/test_primary_data_file')
+        self.api_client.post(url, data, format='multipart')
+        data_2 = self._create_test_data('/tmp/test_primary_data_file_2')
+        self.api_client.post(url, data_2, format='multipart')
+
         response = self.api_client.get(url)
-        self.assertEqual(405, response.status_code)
+        self.assertEqual(200, response.status_code)
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertTrue(isinstance(content, list))
+        self.assertEqual(2, len(content))
+
+    def test_get_list_no_submission(self):
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': uuid4()})
+        response = self.api_client.get(url)
+        self.assertEqual(200, response.status_code)
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertTrue(isinstance(content, list))
+        self.assertEqual(0, len(content))
 
     def test_get_detail(self):
         submission = Submission.objects.all().first()

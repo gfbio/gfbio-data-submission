@@ -289,6 +289,15 @@ class SubmissionUploadView(mixins.CreateModelMixin,
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
+    # TODO: per user filter ?
+    def get_queryset(self):
+        broker_submission_id = self.kwargs.get('broker_submission_id', uuid4())
+        return SubmissionUpload.objects.filter(
+            submission__broker_submission_id=broker_submission_id)
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
 
 class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
                                  mixins.UpdateModelMixin,
