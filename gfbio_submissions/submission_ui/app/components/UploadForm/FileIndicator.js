@@ -46,11 +46,46 @@ class FileIndicator extends React.Component {
     console.log('--------------------------------');
 
     const uploadedFileListElement = this.props.fileUploadsFromServer.map((uploaded, index) => {
+
+      let metaDataCheckButton = (
+        <small className="file-name">
+          <input
+            type="checkbox"
+            id={`uploaded${index}`}
+            // id={`primary${index}`}
+            // value={index}
+            // onChange={this.handleMetadataSelect}
+          />
+          <label htmlFor={`primary${index}`}
+                 className="metadata"></label>
+          <i className="icon ion-md-document pub"></i>
+          {uploaded.file_name}
+        </small>
+      );
+
       return <li
         key={index}
         className={'list-group-item file-upload success'}
       >
-        {uploaded.file}
+        <div className="d-flex justify-content-between align-items-center">
+          <div>
+            {metaDataCheckButton}
+          </div>
+          <div>
+            <small className="mr-5 file-size">
+              {filesize(uploaded.file_size)}
+            </small>
+            <a className="btn btn-download mr-3" href={uploaded.file}>
+              <i className="icon ion-md-download"></i>
+            </a>
+            <button className="btn btn-remove" onClick={(e) => {
+              e.preventDefault();
+              // this.props.handleRemove(index);
+            }}>
+              <i className="fa fa-trash" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
       </li>;
     });
     // for(let f of this.props.fileUploadsFromServer) {
@@ -109,9 +144,10 @@ class FileIndicator extends React.Component {
             <small className="mr-5 file-size">
               {filesize(upload.file.size)}
             </small>
-            <button className="btn btn-download mr-3">
-              <i className="icon ion-md-download"></i>
-            </button>
+            {/*<button className="btn btn-download mr-3">*/}
+            {/*  <i className="icon ion-md-download"></i>*/}
+            {/*</button>*/}
+            <span className="pr-4 mr-3"></span>
             <button className="btn btn-remove" onClick={(e) => {
               e.preventDefault();
               this.props.handleRemove(index);
@@ -155,8 +191,8 @@ class FileIndicator extends React.Component {
 
     return (
       <ul className="list-group list-group-flush">
-        {uploadedFileListElement}
         {listHeader}
+        {uploadedFileListElement}
         {fileListElements}
       </ul>
     );
