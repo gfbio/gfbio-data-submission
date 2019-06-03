@@ -50,6 +50,19 @@ export const getSubmission = (token, brokerSubmissionId) => {
   );
 };
 
+
+export  const getSubmissionUploads = (token, brokerSubmissionId) => {
+  const config = {
+    headers: {
+      'Authorization': 'Token ' + token,
+    },
+  };
+  return axios.get(
+    `${API_ROOT + SUBMISSIONS + brokerSubmissionId+ UPLOAD}`,
+    config,
+  );
+};
+
 // export const requestDeleteSubmission = (token, brokerSubmissionId) => {
 //   const config = {
 //     headers: {

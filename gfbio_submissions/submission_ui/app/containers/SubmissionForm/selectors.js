@@ -109,6 +109,11 @@ const makeSelectFileUploads = () =>
     substate.get('fileUploads'),
   );
 
+const makeSelectFileUploadsFromServer = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('fileUploadsFormServer'),
+  );
+
 const makeSelectBrokerSubmissionId = () =>
   createSelector(selectSubmissionFormDomain, substate =>
     substate.get('brokerSubmissionId'),
@@ -209,4 +214,5 @@ export {
   makeSelectShowUploadLimitMessage,
   makeSelectShowEmbargoDialog,
   makeSelectGeneralError,
+  makeSelectFileUploadsFromServer,
 };

@@ -39,7 +39,7 @@ import {
   makeSelectUserId,
 } from './selectors';
 import {
-  closeSaveSuccess,
+  closeSaveSuccess, fetchFileUploadsError, fetchFileUploadsSuccess,
   fetchSubmissionError,
   fetchSubmissionSuccess,
   saveForm,
@@ -59,7 +59,7 @@ import {
 } from './actions';
 import {
   createUploadFileChannel,
-  getSubmission,
+  getSubmission, getSubmissionUploads,
   postSubmission,
   putSubmission,
 } from './submissionApi';
@@ -267,6 +267,18 @@ export function* performFetchSubmissionSaga() {
     yield put(fetchSubmissionSuccess(response));
   } catch (error) {
     yield put(fetchSubmissionError(error));
+  }
+  console.log('performFetchSubmissionSaga');
+  console.log('get uploads');
+  try {
+    const response = yield call(getSubmissionUploads, token, bsi);
+    console.log('response');
+    console.log(response);
+    yield put(fetchFileUploadsSuccess(response));
+  } catch (error) {
+    console.log('error');
+    console.log(error);
+    yield put(fetchFileUploadsError(error));
   }
 }
 

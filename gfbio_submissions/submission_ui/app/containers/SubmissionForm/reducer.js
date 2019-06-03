@@ -12,8 +12,13 @@ import {
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
-  CHANGE_META_DATA_SCHEMA, CLOSE_EMBARGO_DIALOG, CLOSE_SAVE_SUCCESS,
-  CLOSE_SUBMIT_SUCCESS, DISMISS_SHOW_UPLOAD_LIMIT,
+  CHANGE_META_DATA_SCHEMA,
+  CLOSE_EMBARGO_DIALOG,
+  CLOSE_SAVE_SUCCESS,
+  CLOSE_SUBMIT_SUCCESS,
+  DISMISS_SHOW_UPLOAD_LIMIT,
+  FETCH_FILE_UPLOADS_ERROR,
+  FETCH_FILE_UPLOADS_SUCCESS,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
   FETCH_SUBMISSION_SUCCESS,
@@ -27,7 +32,9 @@ import {
   SAVE_FORM_SUCCESS,
   SET_CONTRIBUTORS,
   SET_EMBARGO_DATE,
-  SET_METADATA_INDEX, SHOW_EMBARGO_DIALOG, SHOW_UPLOAD_LIMIT,
+  SET_METADATA_INDEX,
+  SHOW_EMBARGO_DIALOG,
+  SHOW_UPLOAD_LIMIT,
   SUBMIT_FORM,
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
@@ -36,7 +43,8 @@ import {
   UPDATE_CONTRIBUTOR,
   UPDATE_SUBMISSION,
   UPDATE_SUBMISSION_ERROR,
-  UPDATE_SUBMISSION_SUCCESS, UPDATE_SUBMISSION_SUCCESS_SUBMIT,
+  UPDATE_SUBMISSION_SUCCESS,
+  UPDATE_SUBMISSION_SUCCESS_SUBMIT,
   UPLOAD_FILE_ERROR,
   UPLOAD_FILE_PROGRESS,
   UPLOAD_FILE_SUCCESS,
@@ -116,8 +124,12 @@ export const initialState = fromJS({
   relatedPublications: [],
   currentLabel: '',
   dataset_labels: [],
+
   fileUploads: [],
   fileUploadInProgress: false,
+
+  fileUploadsFromServer: {},
+
   metaDataIndex: '',
   brokerSubmissionId: '',
   requestBrokerSubmissionId: '',
@@ -232,7 +244,7 @@ function submissionFormReducer(state = initialState, action) {
         .set('showUploadLimitMessage', false)
         .update('fileUploads', (fileUploads) => fileUploads.push(...action.value));
     case REMOVE_FILE_UPLOAD:
-      if (state.get('fileUploadInProgress') == false) {
+      if (state.get('fileUploadInProgress') === false) {
         return state
           .set('metaDataIndex', '')
           .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1));
@@ -300,6 +312,15 @@ function submissionFormReducer(state = initialState, action) {
       return setStateFormValues(state, action).set('promptOnLeave', true);
     case FETCH_SUBMISSION_ERROR:
       // console.log('FETCH_SUBMISSION_ERROR');
+      return state;
+    case FETCH_FILE_UPLOADS_SUCCESS:
+      console.log('FETCH_FILE_UPLOADS_SUCCESS');
+      console.log(action.response);
+      console.log(typeof action.response.data);
+      return state.set('fileUploadsFromServer', action.response.data);
+    case FETCH_FILE_UPLOADS_ERROR:
+      console.log('FETCH_FILE_UPLOADS_ERROR');
+      console.log(action.error);
       return state;
     case RESET_FORM:
       // console.log('RESET_FORM');

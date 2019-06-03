@@ -65,6 +65,9 @@ export const SET_METADATA_INDEX = 'app/SubmissionForm/SET_METADATA_INDEX';
 export const SHOW_UPLOAD_LIMIT = 'app/SubmissionForm/SHOW_UPLOAD_LIMIT';
 export const DISMISS_SHOW_UPLOAD_LIMIT = 'app/SubmissionForm/DISMISS_SHOW_UPLOAD_LIMIT';
 
+export const FETCH_FILE_UPLOADS_SUCCESS = 'app/SubmissionForm/FETCH_FILE_UPLOADS_SUCCESS';
+export const FETCH_FILE_UPLOADS_ERROR = 'app/SubmissionForm/FETCH_FILE_UPLOADS_ERROR';
+
 
 /* non redux constants */
 export const DATA_CATEGORY_PREFIX = 'data-category ';
