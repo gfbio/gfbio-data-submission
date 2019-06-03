@@ -3,7 +3,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
 import {
-  makeSelectFileUploads,
+  makeSelectFileUploads, makeSelectFileUploadsFromServer,
   makeSelectMetaDataIndex,
 } from '../../containers/SubmissionForm/selectors';
 import { connect } from 'react-redux';
@@ -41,16 +41,31 @@ class FileIndicator extends React.Component {
 
   render() {
 
-    // console.log('FileIndicator render props');
-    // console.log(this.props.fileUploads);
-    // console.log('--------------------------------');
+    console.log('FileIndicator render props');
+    console.log(this.props);
+    console.log('--------------------------------');
+
+    const uploadedFileListElement = this.props.fileUploadsFromServer.map((uploaded, index) => {
+      return <li
+        key={index}
+        className={'list-group-item file-upload success'}
+      >
+        {uploaded.file}
+      </li>;
+    });
+    // for(let f of this.props.fileUploadsFromServer) {
+    //   console.log('--- ', f);
+    //   // index ...
+    //   // progress => 0
+    //   // file (name)
+    //   // status
+    //
+    // }
 
     const fileListElements = this.props.fileUploads.map((upload, index) => {
       let progressStyle = {
         width: `${upload.progress}%`,
       };
-
-
       let metaDataCheckButton = (
         <small className="file-name">
           <input
@@ -119,8 +134,6 @@ class FileIndicator extends React.Component {
     if (fileListElements.size > 0) {
       listHeader = <li className="list-group-item file-upload mb-3">
 
-        {/*<div className="d-flex justify-content-between align-items-center">*/}
-        {/*  <div className="">*/}
         <OverlayTrigger
           placement="right"
           overlay={
@@ -137,18 +150,12 @@ class FileIndicator extends React.Component {
                   aria-hidden="true"></i>
               </span>
         </OverlayTrigger>
-        {/*  </div>*/}
-        {/*  <div>*/}
-        {/*    <small className="mr-5 file-size">*/}
-        {/*    </small>*/}
-        {/*  </div>*/}
-        {/*</div>*/}
-
       </li>;
     }
 
     return (
       <ul className="list-group list-group-flush">
+        {uploadedFileListElement}
         {listHeader}
         {fileListElements}
       </ul>
@@ -160,6 +167,7 @@ class FileIndicator extends React.Component {
 
 FileIndicator.propTypes = {
   fileUploads: PropTypes.array,
+  fileUploadsFromServer: PropTypes.object,
   metaDataIndex: PropTypes.string,
   handleRemove: PropTypes.func,
   changeMetaDataIndex: PropTypes.func,
@@ -167,6 +175,7 @@ FileIndicator.propTypes = {
 
 const mapStateToProps = createStructuredSelector({
   fileUploads: makeSelectFileUploads(),
+  fileUploadsFromServer: makeSelectFileUploadsFromServer(),
   metaDataIndex: makeSelectMetaDataIndex(),
 });
 

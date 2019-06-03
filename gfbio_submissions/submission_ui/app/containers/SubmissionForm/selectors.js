@@ -111,7 +111,7 @@ const makeSelectFileUploads = () =>
 
 const makeSelectFileUploadsFromServer = () =>
   createSelector(selectSubmissionFormDomain, substate =>
-    substate.get('fileUploadsFormServer'),
+    substate.get('fileUploadsFromServer'),
   );
 
 const makeSelectBrokerSubmissionId = () =>

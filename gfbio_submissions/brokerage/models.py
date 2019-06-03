@@ -673,6 +673,11 @@ class SubmissionUpload(TimeStampedModel):
                   'file will be attached to the main helpdesk ticket'
                   'associated with "submission".',
     )
+    meta_data = models.BooleanField(
+        default=False,
+        help_text='A True/checked value means that this file contains '
+                  'meta-data.'
+    )
     file = models.FileField(
         upload_to=submission_upload_path,
         help_text='The actual file uploaded.',
@@ -684,9 +689,9 @@ class SubmissionUpload(TimeStampedModel):
 
     # TODO: from PrimaryDataFile ...
     @classmethod
-    def raise_ticket_exception(self, no_of_helpdesk_tickets):
+    def raise_ticket_exception(cls, no_of_helpdesk_tickets):
         if no_of_helpdesk_tickets == 0:
-            raise self.NoTicketAvailableError
+            raise cls.NoTicketAvailableError
 
     # TODO: from PrimaryDataFile. new default for attach is -> false
     def save(self, *args, **kwargs):

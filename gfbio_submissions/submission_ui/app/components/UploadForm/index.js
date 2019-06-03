@@ -18,7 +18,7 @@ import { compose } from 'redux';
 import FileIndicator from './FileIndicator';
 import shortid from 'shortid';
 import {
-  makeSelectFileUploads,
+  makeSelectFileUploads, makeSelectFileUploadsFromServer,
   makeSelectShowUploadLimitMessage,
 } from '../../containers/SubmissionForm/selectors';
 import { MAX_TOTAL_UPLOAD_SIZE, MAX_UPLOAD_ITEMS } from '../../globalConstants';
@@ -66,9 +66,9 @@ class UploadForm extends React.PureComponent {
 
   render() {
 
-    // console.log('UPLOAD FORM RENDER: fileUploads');
-    // console.log(this.props);
-    // console.log('--------------------------');
+    console.log('UPLOAD FORM RENDER: fileUploads');
+    console.log(this.props);
+    console.log('--------------------------');
 
     // TODO: needs different styling
     // TODO: needs different position
@@ -120,6 +120,7 @@ class UploadForm extends React.PureComponent {
 UploadForm.propTypes = {
   handleDrop: PropTypes.func,
   fileUploads: PropTypes.array,
+  fileUploadsFromServer: PropTypes.object,
   showUploadLimit: PropTypes.func,
   dismissShowUploadLimit: PropTypes.func,
   showUploadLimitMessage: PropTypes.bool,
@@ -128,6 +129,7 @@ UploadForm.propTypes = {
 const mapStateToProps = createStructuredSelector({
   fileUploads: makeSelectFileUploads(),
   showUploadLimitMessage: makeSelectShowUploadLimitMessage(),
+  fileUploadsFromServer: makeSelectFileUploadsFromServer(),
 });
 
 function mapDispatchToProps(dispatch) {

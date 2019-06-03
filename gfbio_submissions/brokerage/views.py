@@ -9,6 +9,8 @@ from rest_framework.authentication import TokenAuthentication, \
     BasicAuthentication
 from rest_framework.response import Response
 
+from gfbio_submissions.brokerage.serializers import \
+    SubmissionUploadListSerializer
 from .configuration.settings import SUBMISSION_DELAY
 from .models import SubmissionFileUpload, \
     Submission, PrimaryDataFile, RequestLog, SubmissionUpload
@@ -248,7 +250,7 @@ class PrimaryDataFileDetailView(mixins.RetrieveModelMixin,
 
 
 class SubmissionUploadView(mixins.CreateModelMixin,
-                           mixins.ListModelMixin,
+                           # mixins.ListModelMixin,
                            generics.GenericAPIView):
     queryset = SubmissionUpload.objects.all()
     serializer_class = SubmissionUploadSerializer
@@ -289,14 +291,32 @@ class SubmissionUploadView(mixins.CreateModelMixin,
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
-    # TODO: per user filter ?
-    def get_queryset(self):
-        broker_submission_id = self.kwargs.get('broker_submission_id', uuid4())
-        return SubmissionUpload.objects.filter(
-            submission__broker_submission_id=broker_submission_id)
+    # # TODO: per user filter ?
+    # def get_queryset(self):
+    #     broker_submission_id = self.kwargs.get('broker_submission_id', uuid4())
+    #     return SubmissionUpload.objects.filter(
+    #         submission__broker_submission_id=broker_submission_id)
+    #
+    # def get(self, request, *args, **kwargs):
+    #     return self.list(request, *args, **kwargs)
 
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+
+class SubmissionUploadListView(generics.ListAPIView):
+    queryset = SubmissionUpload.objects.all()
+    serializer_class = SubmissionUploadListSerializer
+    parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
+    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated,
+                          permissions.DjangoModelPermissions,
+                          IsOwnerOrReadOnly)
+
+    # def get_queryset(self):
+    #     broker_submission_id = self.kwargs.get('broker_submission_id', uuid4())
+    #     return SubmissionUpload.objects.filter(
+    #         submission__broker_submission_id=broker_submission_id)
+    #
+    # def get(self, request, *args, **kwargs):
+    #     return self.list(request, *args, **kwargs)
 
 
 class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
