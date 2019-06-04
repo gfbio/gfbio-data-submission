@@ -131,6 +131,8 @@ export const initialState = fromJS({
   fileUploadsFromServer: {},
 
   metaDataIndex: '',
+  // uploadListIndex: 0,
+
   brokerSubmissionId: '',
   requestBrokerSubmissionId: '',
   // deleteBrokerSubmissionId: '',
@@ -368,6 +370,9 @@ function submissionFormReducer(state = initialState, action) {
       // console.log('SET_METADATA_INDEX');
       return state
         .set('metaDataIndex', action.metaDataIndex);
+    // case SET_UPLOAD_LIST_INDEX:
+    //   return state
+    //     .set('uploadListIndex', action.listIndex);
     default:
       return state;
   }

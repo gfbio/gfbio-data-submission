@@ -335,6 +335,14 @@ export function setMetaDataIndex(metaDataIndex) {
   };
 }
 
+// export function setUploadListIndex(listIndex) {
+//   return {
+//     type: SET_UPLOAD_LIST_INDEX,
+//     listIndex,
+//   };
+// }
+
+
 export function showUplaodLimit() {
   return {
     type: SHOW_UPLOAD_LIMIT,

@@ -3,7 +3,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
 import {
-  makeSelectFileUploads, makeSelectFileUploadsFromServer,
+  makeSelectFileUploads,
+  makeSelectFileUploadsFromServer,
   makeSelectMetaDataIndex,
 } from '../../containers/SubmissionForm/selectors';
 import { connect } from 'react-redux';
@@ -21,10 +22,21 @@ class FileIndicator extends React.Component {
   constructor(props) {
     super(props);
     this.handleMetadataSelect = this.handleMetadataSelect.bind(this);
+    // this.listIndex = -1;
+    // this.incrementListIndex = this.incrementListIndex.bind(this);
+    // this.getListIndex = this.getListIndex.bind(this);
   }
 
+  // incrementListIndex() {
+  //  this.props.incrementListIndex();
+  // }
+
+  // getListIndex() {
+  //   return this.props.uploadListIndex;
+  // }
+
   handleMetadataSelect(event) {
-    // console.log(event.target.value + '  -  ' + event.target.checked);
+    console.log('handleMetadataSelect: ' + event.target.value + '  -  ' + event.target.checked);
     // console.log(this.props.fileUploads.get(event.target.value));
     // click shows index and checkedvalue (after click[release])
     // if click and checked -> new metadata index
@@ -39,30 +51,65 @@ class FileIndicator extends React.Component {
     }
   }
 
-  render() {
 
-    console.log('FileIndicator render props');
-    console.log(this.props);
-    console.log('--------------------------------');
+  createUploadedListElements() {
+    console.log('createUploadedListElements');
+    // console.log(this.props.uploadListIndex);
+    const uploaded = this.props.fileUploadsFromServer.map((uploaded, index) => {
 
-    const uploadedFileListElement = this.props.fileUploadsFromServer.map((uploaded, index) => {
+      // this.incrementListIndex();
+      // const elementIndex = index + this.getListIndex();
+
+      // let metaDataCheckButton = (
+      //   <small className="file-name">
+      //     <input
+      //       type="checkbox"
+      //       id={`uploaded${index}`}
+      //       // id={`primary${index}`}
+      //       value={'uploaded_'+index}
+      //       onChange={this.handleMetadataSelect}
+      //     />
+      //     <label htmlFor={`primary${index}`}
+      //            className="metadata"></label>
+      //     <i className="icon ion-md-document pub"></i>
+      //     {uploaded.file_name}
+      //   </small>
+      // );
 
       let metaDataCheckButton = (
         <small className="file-name">
           <input
             type="checkbox"
-            id={`uploaded${index}`}
-            // id={`primary${index}`}
-            // value={index}
-            // onChange={this.handleMetadataSelect}
+            id={`primaryUploaded${index}`}
+            value={`uploaded${index}`}
+            onChange={this.handleMetadataSelect}
           />
-          <label htmlFor={`primary${index}`}
+          <label htmlFor={`primaryUploaded${index}`}
                  className="metadata"></label>
           <i className="icon ion-md-document pub"></i>
           {uploaded.file_name}
         </small>
       );
+      if (this.props.metaDataIndex === `uploaded${index}`) {
+        metaDataCheckButton = (
+          <small className="file-name">
+            <input
+              type="checkbox"
+              id={`primaryUploaded${index}`}
+              value={`uploaded${index}`}
+              onChange={this.handleMetadataSelect}
+              checked
+            />
+            <label htmlFor={`primaryUploaded${index}`}
+                   className="metadata"></label>
+            <i className="icon ion-md-document pub"></i>
+            {uploaded.file_name}
+          </small>
+        );
+      }
 
+      // console.log('-- map index ' + index);
+      // console.log('-- map elementIndex ' + elementIndex);
       return <li
         key={index}
         className={'list-group-item file-upload success'}
@@ -88,16 +135,21 @@ class FileIndicator extends React.Component {
         </div>
       </li>;
     });
-    // for(let f of this.props.fileUploadsFromServer) {
-    //   console.log('--- ', f);
-    //   // index ...
-    //   // progress => 0
-    //   // file (name)
-    //   // status
-    //
-    // }
+    console.log('UPLOADED ');
+    console.log(uploaded);
+    // TODO: off by 1 errors, index vs length
+    console.log(uploaded.length);
+    // this.props.setUploadListIndex(this.props.uploadListIndex + uploaded.length - 1);
+    return uploaded;
+  }
 
+
+  createScheduledUploadListElements() {
     const fileListElements = this.props.fileUploads.map((upload, index) => {
+
+      // this.incrementListIndex();
+      // const index = this.getListIndex();
+
       let progressStyle = {
         width: `${upload.progress}%`,
       };
@@ -165,6 +217,26 @@ class FileIndicator extends React.Component {
 
       </li>;
     });
+    return fileListElements;
+  }
+
+  render() {
+
+    console.log('FileIndicator render props');
+    console.log(this.props);
+    console.log('--------------------------------');
+
+    // console.log('###########################');
+    // console.log('list index');
+    // console.log(this.getListIndex());
+    const uploadedFileListElement = this.createUploadedListElements();
+    // console.log(this.getListIndex());
+    // console.log('alreade uploaded list');
+    // for (let u of uploadedFileListElement) {
+    //   console.log(u);
+    // }
+
+    const fileListElements = this.createScheduledUploadListElements();
 
     let listHeader = null;
     if (fileListElements.size > 0) {
@@ -207,18 +279,22 @@ FileIndicator.propTypes = {
   metaDataIndex: PropTypes.string,
   handleRemove: PropTypes.func,
   changeMetaDataIndex: PropTypes.func,
+  // uploadListIndex: PropTypes.number,
+  // setUploadListIndex: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
   fileUploads: makeSelectFileUploads(),
   fileUploadsFromServer: makeSelectFileUploadsFromServer(),
   metaDataIndex: makeSelectMetaDataIndex(),
+  // uploadListIndex: makeSelectUploadListIndex(),
 });
 
 function mapDispatchToProps(dispatch) {
   return {
     handleRemove: index => dispatch(removeFileUpload(index)),
     changeMetaDataIndex: index => dispatch(setMetaDataIndex(index)),
+    // setUploadListIndex: index => dispatch(setUploadListIndex(index)),
   };
 }
 
