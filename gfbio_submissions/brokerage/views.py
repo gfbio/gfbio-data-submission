@@ -250,7 +250,6 @@ class PrimaryDataFileDetailView(mixins.RetrieveModelMixin,
 
 
 class SubmissionUploadView(mixins.CreateModelMixin,
-                           # mixins.ListModelMixin,
                            generics.GenericAPIView):
     queryset = SubmissionUpload.objects.all()
     serializer_class = SubmissionUploadSerializer
@@ -321,7 +320,7 @@ class SubmissionUploadListView(generics.ListAPIView):
 
 class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
                                  mixins.UpdateModelMixin,
-                                 mixins.DestroyModelMixin,
+                                 generics.DestroyAPIView,
                                  generics.GenericAPIView):
     queryset = SubmissionUpload.objects.all()
     serializer_class = SubmissionUploadSerializer

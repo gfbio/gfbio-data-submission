@@ -587,6 +587,29 @@ class TestSubmissionUploadView(TestCase):
         self.assertEqual(405, response.status_code)
 
     @responses.activate
+    def test_delete(self):
+        submission = Submission.objects.first()
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        responses.add(responses.POST, url, json={}, status=200)
+        data = self._create_test_data('/tmp/test_primary_data_file')
+        self.api_client.post(url, data, format='multipart')
+
+        self.assertEqual(1, len(SubmissionUpload.objects.filter(pk=1)))
+
+        url = reverse(
+            'brokerage:submissions_upload_detail',
+            kwargs={
+                'broker_submission_id': submission.broker_submission_id,
+                'pk': 1
+            })
+
+        response = self.api_client.delete(url)
+        self.assertEqual(204, response.status_code)
+        self.assertEqual(b'', response.content)
+        self.assertEqual(0, len(SubmissionUpload.objects.filter(pk=1)))
+
+    @responses.activate
     def test_wrong_submission_put(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
