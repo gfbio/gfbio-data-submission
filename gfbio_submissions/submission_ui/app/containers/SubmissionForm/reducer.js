@@ -61,9 +61,9 @@ if (window.props !== undefined) {
 
 function getInitialContributors(backendParameters) {
   let realName = backendParameters.userRealName || '';
-  console.log('realName ', realName);
+  // console.log('realName ', realName);
   let nameSplit = realName.split(' ');
-  console.log(nameSplit);
+  // console.log(nameSplit);
   let firstName, lastName = '';
   if (nameSplit.length > 1) {
     firstName = nameSplit.shift();
@@ -71,8 +71,8 @@ function getInitialContributors(backendParameters) {
   } else {
     firstName = nameSplit.shift();
   }
-  console.log(firstName);
-  console.log(lastName);
+  // console.log(firstName);
+  // console.log(lastName);
   const initialContributor = {
     firstName: firstName,
     lastName: lastName,
@@ -92,8 +92,8 @@ function getInitialContributors(backendParameters) {
 // };
 //
 const initialContributors = getInitialContributors(backendParameters);
-console.log('initialContibutor');
-console.log(initialContributors);
+// console.log('initialContibutor');
+// console.log(initialContributors);
 
 export const initialState = fromJS({
   license: 'CC BY 4.0',
@@ -163,7 +163,7 @@ function submissionFormReducer(state = initialState, action) {
         // .set('promptOnLeave', false)
         .set('saveInProgress', true);
     case SAVE_FORM_SUCCESS:
-      console.info('SAVE_FORM_SUCCESS');
+      // console.info('SAVE_FORM_SUCCESS');
       // TODO: set bsi etc after success, from then its updates
       return state
         .set('metaDataIndex', '')
@@ -316,13 +316,13 @@ function submissionFormReducer(state = initialState, action) {
       // console.log('FETCH_SUBMISSION_ERROR');
       return state;
     case FETCH_FILE_UPLOADS_SUCCESS:
-      console.log('FETCH_FILE_UPLOADS_SUCCESS');
-      console.log(action.response);
-      console.log(typeof action.response.data);
+      // console.log('FETCH_FILE_UPLOADS_SUCCESS');
+      // console.log(action.response);
+      // console.log(typeof action.response.data);
       return state.set('fileUploadsFromServer', action.response.data);
     case FETCH_FILE_UPLOADS_ERROR:
-      console.log('FETCH_FILE_UPLOADS_ERROR');
-      console.log(action.error);
+      // console.log('FETCH_FILE_UPLOADS_ERROR');
+      // console.log(action.error);
       return state;
     case RESET_FORM:
       // console.log('RESET_FORM');
@@ -336,7 +336,7 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .set('updateWithRelease', action.release);
     case UPDATE_SUBMISSION_SUCCESS:
-      console.log('UPDATE_SUBMISSION_SUCCESS');
+      // console.log('UPDATE_SUBMISSION_SUCCESS');
       // TODO: 2x data: 1 from axios 1 from json-body
       // TODO: refactor to some sort of getter with checks
       // console.log(action.response.data.broker_submission_id);
@@ -349,7 +349,7 @@ function submissionFormReducer(state = initialState, action) {
         .set('metaDataIndex', '')
         .set('updateWithRelease', false);
     case UPDATE_SUBMISSION_SUCCESS_SUBMIT:
-      console.log('UPDATE_SUBMISSION_SUCCESS_SUBMIT');
+      // console.log('UPDATE_SUBMISSION_SUCCESS_SUBMIT');
       // TODO: 2x data: 1 from axios 1 from json-body
       // TODO: refactor to some sort of getter with checks
       // console.log(action.response.data.broker_submission_id);

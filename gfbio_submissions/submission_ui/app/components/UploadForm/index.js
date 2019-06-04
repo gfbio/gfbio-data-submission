@@ -27,7 +27,7 @@ import UploadMessage from './uploadMessage';
 /* eslint-disable react/prefer-stateless-function */
 class UploadForm extends React.PureComponent {
 
-  matchingUploadLimit = (acceptedFiles=[]) => {
+  matchingUploadLimit = (acceptedFiles = []) => {
     let tmpTotalSize = 0;
     for (let a of acceptedFiles) {
       tmpTotalSize += a.size;
@@ -36,8 +36,13 @@ class UploadForm extends React.PureComponent {
     for (let l of this.props.fileUploads) {
       uploadedTotalSize += l.file.size;
     }
-    if ((tmpTotalSize + uploadedTotalSize) <= MAX_TOTAL_UPLOAD_SIZE
-      && (acceptedFiles.length + this.props.fileUploads.size) <= MAX_UPLOAD_ITEMS) {
+    let serverFilesTotalSize = 0;
+    for (let f of this.props.fileUploadsFromServer) {
+      serverFilesTotalSize += f.file_size;
+    }
+    if ((tmpTotalSize + uploadedTotalSize + serverFilesTotalSize) <= MAX_TOTAL_UPLOAD_SIZE
+      && (acceptedFiles.length + this.props.fileUploads.size +
+        this.props.fileUploadsFromServer.length) <= MAX_UPLOAD_ITEMS) {
       this.props.dismissShowUploadLimit();
       return true;
     } else {
@@ -67,7 +72,7 @@ class UploadForm extends React.PureComponent {
   render() {
 
     console.log('UPLOAD FORM RENDER: fileUploads');
-    console.log(this.props);
+    // console.log(this.props);
     console.log('--------------------------');
 
     // TODO: needs different styling

@@ -36,7 +36,7 @@ class FileIndicator extends React.Component {
   // }
 
   handleMetadataSelect(event) {
-    console.log('handleMetadataSelect: ' + event.target.value + '  -  ' + event.target.checked);
+    // console.log('handleMetadataSelect: ' + event.target.value + '  -  ' + event.target.checked);
     // console.log(this.props.fileUploads.get(event.target.value));
     // click shows index and checkedvalue (after click[release])
     // if click and checked -> new metadata index
@@ -53,7 +53,7 @@ class FileIndicator extends React.Component {
 
 
   createUploadedListElements() {
-    console.log('createUploadedListElements');
+    // console.log('createUploadedListElements');
     // console.log(this.props.uploadListIndex);
     const uploaded = this.props.fileUploadsFromServer.map((uploaded, index) => {
 
@@ -135,10 +135,9 @@ class FileIndicator extends React.Component {
         </div>
       </li>;
     });
-    console.log('UPLOADED ');
-    console.log(uploaded);
-    // TODO: off by 1 errors, index vs length
-    console.log(uploaded.length);
+    // console.log('UPLOADED ');
+    // console.log(uploaded);
+    // console.log(uploaded.length);
     // this.props.setUploadListIndex(this.props.uploadListIndex + uploaded.length - 1);
     return uploaded;
   }
@@ -221,10 +220,9 @@ class FileIndicator extends React.Component {
   }
 
   render() {
-
-    console.log('FileIndicator render props');
-    console.log(this.props);
-    console.log('--------------------------------');
+    // console.log('FileIndicator render props');
+    // console.log(this.props);
+    // console.log('--------------------------------');
 
     // console.log('###########################');
     // console.log('list index');
