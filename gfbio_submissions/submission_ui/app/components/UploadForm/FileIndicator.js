@@ -10,6 +10,7 @@ import {
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import {
+  deleteFile,
   removeFileUpload,
   setMetaDataIndex,
 } from '../../containers/SubmissionForm/actions';
@@ -56,25 +57,6 @@ class FileIndicator extends React.Component {
     // console.log('createUploadedListElements');
     // console.log(this.props.uploadListIndex);
     const uploaded = this.props.fileUploadsFromServer.map((uploaded, index) => {
-
-      // this.incrementListIndex();
-      // const elementIndex = index + this.getListIndex();
-
-      // let metaDataCheckButton = (
-      //   <small className="file-name">
-      //     <input
-      //       type="checkbox"
-      //       id={`uploaded${index}`}
-      //       // id={`primary${index}`}
-      //       value={'uploaded_'+index}
-      //       onChange={this.handleMetadataSelect}
-      //     />
-      //     <label htmlFor={`primary${index}`}
-      //            className="metadata"></label>
-      //     <i className="icon ion-md-document pub"></i>
-      //     {uploaded.file_name}
-      //   </small>
-      // );
 
       let metaDataCheckButton = (
         <small className="file-name">
@@ -127,7 +109,7 @@ class FileIndicator extends React.Component {
             </a>
             <button className="btn btn-remove" onClick={(e) => {
               e.preventDefault();
-              // this.props.handleRemove(index);
+              this.props.deleteFile(uploaded.pk);
             }}>
               <i className="fa fa-trash" aria-hidden="true"></i>
             </button>
@@ -237,7 +219,7 @@ class FileIndicator extends React.Component {
     const fileListElements = this.createScheduledUploadListElements();
 
     let listHeader = null;
-    if (fileListElements.size > 0) {
+    if (fileListElements.size > 0 || this.props.fileUploadsFromServer.length > 0) {
       listHeader = <li className="list-group-item file-upload mb-3">
 
         <OverlayTrigger
@@ -279,6 +261,7 @@ FileIndicator.propTypes = {
   changeMetaDataIndex: PropTypes.func,
   // uploadListIndex: PropTypes.number,
   // setUploadListIndex: PropTypes.func,
+  deleteFile: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -293,6 +276,7 @@ function mapDispatchToProps(dispatch) {
     handleRemove: index => dispatch(removeFileUpload(index)),
     changeMetaDataIndex: index => dispatch(setMetaDataIndex(index)),
     // setUploadListIndex: index => dispatch(setUploadListIndex(index)),
+    deleteFile: fileKey => dispatch(deleteFile(fileKey)),
   };
 }
 

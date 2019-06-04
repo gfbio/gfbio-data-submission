@@ -603,7 +603,7 @@ class TestSubmissionUploadView(TestCase):
                 'broker_submission_id': submission.broker_submission_id,
                 'pk': 1
             })
-
+        print(url)
         response = self.api_client.delete(url)
         self.assertEqual(204, response.status_code)
         self.assertEqual(b'', response.content)

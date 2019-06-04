@@ -63,6 +63,18 @@ export const getSubmissionUploads = (token, brokerSubmissionId) => {
   );
 };
 
+// /api/submissions/a2ac6fe5-1eaa-474b-b69e-3af22c38ad9c/upload/1/
+export const deleteSubmissionUpload = (token, brokerSubmissionId, fileKey) => {
+  const config = {
+    headers: {
+      'Authorization': 'Token ' + token,
+    },
+  };
+  return axios.delete(
+    `${API_ROOT + SUBMISSIONS + brokerSubmissionId + UPLOAD+ fileKey}`,
+    config,
+  );
+};
 // export const requestDeleteSubmission = (token, brokerSubmissionId) => {
 //   const config = {
 //     headers: {

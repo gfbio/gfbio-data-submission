@@ -15,7 +15,7 @@ import {
   CHANGE_META_DATA_SCHEMA,
   CLOSE_EMBARGO_DIALOG,
   CLOSE_SAVE_SUCCESS,
-  CLOSE_SUBMIT_SUCCESS,
+  CLOSE_SUBMIT_SUCCESS, DELETE_FILE, DELETE_FILE_ERROR, DELETE_FILE_SUCCESS,
   DISMISS_SHOW_UPLOAD_LIMIT,
   FETCH_FILE_UPLOADS_ERROR,
   FETCH_FILE_UPLOADS_SUCCESS,
@@ -280,6 +280,16 @@ function submissionFormReducer(state = initialState, action) {
       success_upload.status = 'success';
       return state
         .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1, success_upload));
+    case DELETE_FILE:
+      console.log('DELETE_FILE');
+      console.log(action.fileKey);
+      return state;
+    case DELETE_FILE_SUCCESS:
+      console.log('DELETE_FILE_SUCCESS');
+      return state;
+    case DELETE_FILE_ERROR:
+      console.log('DELETE_FILE_ERROR');
+      return state;
     case SET_CONTRIBUTORS:
       // console.log('SET_CONTRIBUTORS');
       // console.log(action.contributors);

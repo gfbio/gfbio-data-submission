@@ -41,6 +41,10 @@ export const UPLOAD_FILE_PROGRESS = 'app/SubmissionForm/UPLOAD_FILE_PROGRESS';
 export const UPLOAD_FILE_ERROR = 'app/SubmissionForm/UPLOAD_FILE_ERROR';
 export const UPLOAD_FILE_SUCCESS = 'app/SubmissionForm/UPLOAD_FILE_SUCCESS';
 
+export const DELETE_FILE = 'app/SubmissionForm/DELETE_FILE';
+export const DELETE_FILE_ERROR = 'app/SubmissionForm/DELETE_FILE_ERROR';
+export const DELETE_FILE_SUCCESS = 'app/SubmissionForm/DELETE_FILE_SUCCESS';
+
 export const SET_CONTRIBUTORS = 'app/SubmissionForm/SET_CONTRIBUTORS';
 export const ADD_CONTRIBUTOR = 'app/SubmissionForm/ADD_CONTRIBUTOR';
 export const UPDATE_CONTRIBUTOR = 'app/SubmissionForm/UPDATE_CONTRIBUTOR';

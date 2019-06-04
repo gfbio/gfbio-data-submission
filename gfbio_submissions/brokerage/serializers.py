@@ -135,4 +135,4 @@ class SubmissionUploadListSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubmissionUpload
         fields = (
-            'site', 'file', 'submission', 'attach_to_ticket', 'file_name', 'file_size', 'meta_data')
+            'site', 'file', 'submission', 'attach_to_ticket', 'file_name', 'file_size', 'meta_data', 'pk')

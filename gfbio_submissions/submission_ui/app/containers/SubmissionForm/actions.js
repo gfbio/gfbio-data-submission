@@ -16,6 +16,9 @@ import {
   CLOSE_EMBARGO_DIALOG,
   CLOSE_SAVE_SUCCESS,
   CLOSE_SUBMIT_SUCCESS,
+  DELETE_FILE,
+  DELETE_FILE_ERROR,
+  DELETE_FILE_SUCCESS,
   DISMISS_SHOW_UPLOAD_LIMIT,
   FETCH_FILE_UPLOADS_ERROR,
   FETCH_FILE_UPLOADS_SUCCESS,
@@ -382,4 +385,26 @@ export function fetchFileUploadsError(error) {
     error,
   };
 }
+
+export function deleteFile(fileKey) {
+  return {
+    type: DELETE_FILE,
+    fileKey,
+  };
+}
+
+export function deleteFileSuccess(response) {
+  return {
+    type: DELETE_FILE_SUCCESS,
+    response,
+  };
+}
+
+export function deleteFileError(error) {
+  return {
+    type: DELETE_FILE_ERROR,
+    error,
+  };
+}
+
 
