@@ -16,6 +16,7 @@ from django.urls import reverse
 from django.utils.encoding import smart_text
 from jira import JIRA, JIRAError
 from mock import patch
+from requests.structures import CaseInsensitiveDict
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
@@ -652,6 +653,48 @@ class TestGFBioJira(TestCase):
         )
         self.assertEqual(204, response.status_code)
         self.assertEqual(0, len(response.content))
+
+    @skip('Test against helpdesk server')
+    def test_add_attachment(self):
+        ticket_key = 'SAND-1535'
+        url = '{0}{1}/{2}/{3}'.format(
+            self.base_url,
+            HELPDESK_API_SUB_URL,
+            ticket_key,
+            HELPDESK_ATTACHMENT_SUB_URL,
+        )
+        headers = CaseInsensitiveDict({'content-type': None,
+                                       'X-Atlassian-Token': 'nocheck'})
+
+        data = TestHelpDeskTicketMethods._create_test_data('/tmp/test_primary_data_file')
+        #files = {'file': file}
+        #files = {'file': open(file, 'rb')}
+        response = requests.post(
+            url=url,
+            auth=('brokeragent', ''),
+            headers=headers,
+            files=data,
+        )
+        print(response.status_code)
+        print(response.content)
+        # 200
+        # b'[{"self":"https://helpdesk.gfbio.org/rest/api/2/attachment/13820",
+        # "id":"13820","filename":"test_primary_data_file","author":
+        # {"self":"https://helpdesk.gfbio.org/rest/api/2/user?username=
+        # brokeragent","name":"brokeragent","key":"brokeragent@gfbio.org",
+        # "emailAddress":"brokeragent@gfbio.org","avatarUrls":{"48x48":
+        # "https://helpdesk.gfbio.org/secure/useravatar?ownerId=
+        # brokeragent%40gfbio.org&avatarId=11100","24x24":
+        # "https://helpdesk.gfbio.org/secure/useravatar?size=small&ownerId=
+        # brokeragent%40gfbio.org&avatarId=11100","16x16":
+        # "https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&ownerId=
+        # brokeragent%40gfbio.org&avatarId=11100","32x32":
+        # "https://helpdesk.gfbio.org/secure/useravatar?size=medium&ownerId=
+        # brokeragent%40gfbio.org&avatarId=11100"},"displayName":
+        # "Broker Agent","active":true,"timeZone":"Europe/Berlin"},
+        # "created":"2019-06-05T20:06:12.318+0000","size":8,
+        # "content":"https://helpdesk.gfbio.org/secure/attachment/
+        # 13820/test_primary_data_file"}]'
 
     @skip('Test against helpdesk server')
     def test_delete_attachment(self):

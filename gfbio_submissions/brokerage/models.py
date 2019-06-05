@@ -673,6 +673,13 @@ class SubmissionUpload(TimeStampedModel):
                   'file will be attached to the main helpdesk ticket'
                   'associated with "submission".',
     )
+    attachment_id = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text='If file is attached to a ticket, it might be useful to store'
+                  ' the primary identifier of the attachment. Needed e.g. for'
+                  ' removing an attachment from a ticket.'
+    )
     meta_data = models.BooleanField(
         default=False,
         help_text='A True/checked value means that this file contains '
