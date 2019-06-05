@@ -3,7 +3,7 @@
  * SubmissionForm reducer
  *
  */
-import { fromJS } from 'immutable';
+import { fromJS, List } from 'immutable';
 import {
   ADD_CONTRIBUTOR,
   ADD_DATASET_LABEL,
@@ -329,7 +329,9 @@ function submissionFormReducer(state = initialState, action) {
       // console.log('FETCH_FILE_UPLOADS_SUCCESS');
       // console.log(action.response);
       // console.log(typeof action.response.data);
-      return state.set('fileUploadsFromServer', action.response.data);
+      return state
+        .set('fileUploads', List())
+        .set('fileUploadsFromServer', action.response.data);
     case FETCH_FILE_UPLOADS_ERROR:
       // console.log('FETCH_FILE_UPLOADS_ERROR');
       // console.log(action.error);

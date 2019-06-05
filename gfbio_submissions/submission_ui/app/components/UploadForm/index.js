@@ -28,6 +28,8 @@ import UploadMessage from './uploadMessage';
 class UploadForm extends React.PureComponent {
 
   matchingUploadLimit = (acceptedFiles = []) => {
+    console.log('matchingUploadLimit');
+    console.log(this.props.fileUploads);
     let tmpTotalSize = 0;
     for (let a of acceptedFiles) {
       tmpTotalSize += a.size;
@@ -40,6 +42,17 @@ class UploadForm extends React.PureComponent {
     for (let f of this.props.fileUploadsFromServer) {
       serverFilesTotalSize += f.file_size;
     }
+
+    console.log(tmpTotalSize);
+    console.log(uploadedTotalSize);
+    console.log(serverFilesTotalSize);
+    // this.props.fileUploads.size +
+    // this.props.fileUploadsFromServer.length
+    console.log(this.props.fileUploads.size);
+    // let fileUploadsLength = 0;
+    // if (this.props.fileUploads.size !== undefined) {
+    //   fileUploadsLength = this.props.fileUploads.size;
+    // }
     if ((tmpTotalSize + uploadedTotalSize + serverFilesTotalSize) <= MAX_TOTAL_UPLOAD_SIZE
       && (acceptedFiles.length + this.props.fileUploads.size +
         this.props.fileUploadsFromServer.length) <= MAX_UPLOAD_ITEMS) {
@@ -47,6 +60,7 @@ class UploadForm extends React.PureComponent {
       return true;
     } else {
       this.props.showUploadLimit();
+      console.log('show limit');
       return false;
     }
   };

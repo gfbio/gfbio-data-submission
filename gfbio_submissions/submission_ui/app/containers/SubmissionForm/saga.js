@@ -247,6 +247,12 @@ export function* performUpdateSubmissionSaga() {
       yield put(push('/list'));
     } else {
       yield put(updateSubmissionSuccess(response));
+      try {
+        const response = yield call(getSubmissionUploads, token, brokerSubmissionId);
+        yield put(fetchFileUploadsSuccess(response));
+      } catch (error) {
+        yield put(fetchFileUploadsError(error));
+      }
     }
   } catch (error) {
     yield put(updateSubmissionError(error));
@@ -274,16 +280,10 @@ export function* performFetchSubmissionSaga() {
   } catch (error) {
     yield put(fetchSubmissionError(error));
   }
-  // console.log('performFetchSubmissionSaga');
-  // console.log('get uploads');
   try {
     const response = yield call(getSubmissionUploads, token, bsi);
-    // console.log('response');
-    // console.log(response);
     yield put(fetchFileUploadsSuccess(response));
   } catch (error) {
-    // console.log('error');
-    // console.log(error);
     yield put(fetchFileUploadsError(error));
   }
 }
