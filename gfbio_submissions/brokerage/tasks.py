@@ -14,7 +14,8 @@ from requests import ConnectionError, Response
 
 from gfbio_submissions.brokerage.configuration.settings import ENA
 from gfbio_submissions.brokerage.utils.gfbio import \
-    gfbio_prepare_create_helpdesk_payload, gfbio_update_helpdesk_ticket
+    gfbio_prepare_create_helpdesk_payload, gfbio_update_helpdesk_ticket, \
+    gfbio_helpdesk_delete_attachment
 from .configuration.settings import BASE_HOST_NAME, \
     PRIMARY_DATA_FILE_MAX_RETRIES, PRIMARY_DATA_FILE_DELAY, \
     SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY, PANGAEA_ISSUE_VIEW_URL
@@ -911,6 +912,33 @@ def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None,
                 no_of_tickets=len(existing_tickets),
             )
             return False
+    else:
+        return TaskProgressReport.CANCELLED
+
+
+@celery.task(max_retries=SUBMISSION_MAX_RETRIES,
+             name='tasks.delete_attachment_task',
+             base=SubmissionTask)
+def delete_attachment_task(kwargs=None, submission_id=None,
+                           submission_upload_id=None):
+    logger.info(
+        msg='delete_attachment_task submission_id={0} | '
+            'submission_upload_id={1}'.format(submission_id,
+                                              submission_upload_id))
+    submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
+        submission_id=submission_id, task=attach_file_to_helpdesk_ticket_task,
+        get_closed_submission=True)
+    if submission is not None and site_configuration is not None:
+
+        response = gfbio_helpdesk_delete_attachment(
+            site_config=site_configuration,
+            attachment_id=0,
+            submission=submission,
+        )
+        apply_default_task_retry_policy(response,
+                                        delete_attachment_task,
+                                        submission)
+        return True
     else:
         return TaskProgressReport.CANCELLED
 
