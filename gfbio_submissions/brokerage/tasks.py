@@ -877,6 +877,7 @@ def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None,
         if len(existing_tickets):
             submission_upload = submission.submissionupload_set.filter(
                 attach_to_ticket=True).filter(pk=submission_upload_id).first()
+            # print('SUBMISSION UPLOAD ', submission_upload)
             if submission_upload:
                 logger.info(
                     msg='attach_file_to_helpdesk_ticket_task SubmissionUpload found {0} '.format(
@@ -894,6 +895,15 @@ def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None,
                 apply_default_task_retry_policy(response,
                                                 attach_file_to_helpdesk_ticket_task,
                                                 submission)
+                # TODO: there may be a more elegant solution for checking
+                # TODO: extract to method
+                content = response.json()
+                if isinstance(content, list) \
+                        and len(content) == 1 \
+                        and isinstance(content[0], dict):
+                    submission_upload.attachment_id = int(content[0].get('id', '-1'))
+                    submission_upload.save(ignore_attach_to_ticket=True)
+
                 return True
             else:
                 logger.info(

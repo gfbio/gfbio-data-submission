@@ -32,7 +32,7 @@ from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, 
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_ena_xml_response, \
-    _get_ena_error_xml_response, _get_jira_response, _get_jira_attach_response, \
+    _get_ena_error_xml_response, _get_jira_attach_response, \
     _get_pangaea_soap_response, _get_pangaea_attach_response, \
     _get_pangaea_comment_response, _get_pangaea_ticket_response
 from gfbio_submissions.users.models import User
@@ -761,7 +761,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         )
         responses.add(responses.POST,
                       url,
-                      json=_get_jira_response(),
+                      json=_get_jira_attach_response(),
                       status=200)
         result = attach_file_to_helpdesk_ticket_task.apply_async(
             kwargs={
@@ -795,6 +795,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         # POST will already trigger attach_file_to_helpdesk_ticket_task
         # via PrimaryDataFile save method
         client.post(url, data, format='multipart')
+
         # attach_file_to_helpdesk_ticket_task was already triggered by POST above
         # via PrimaryDataFile save method
         result = attach_file_to_helpdesk_ticket_task.apply_async(
@@ -805,6 +806,8 @@ class TestGFBioHelpDeskTasks(TestTasks):
         )
         self.assertTrue(result.successful())
         self.assertTrue(result.get())
+        submission_upload = SubmissionUpload.objects.first()
+        self.assertEqual(10814, submission_upload.attachment_id)
 
     @patch(
         'gfbio_submissions.brokerage.tasks.apply_timebased_task_retry_policy')
