@@ -21,7 +21,8 @@ from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
     PANGAEA_ISSUE_BASE_URL, HELPDESK_API_SUB_URL, HELPDESK_COMMENT_SUB_URL, \
-    HELPDESK_ATTACHMENT_SUB_URL, DEFAULT_ENA_CENTER_NAME
+    HELPDESK_ATTACHMENT_SUB_URL, DEFAULT_ENA_CENTER_NAME, \
+    HELPDESK_API_ATTACHMENT_URL
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
     ResourceCredential, SiteConfiguration, RequestLog, AdditionalReference, \
     TaskProgressReport, SubmissionUpload
@@ -37,7 +38,7 @@ from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_get_user_by_id, \
     gfbio_helpdesk_create_ticket, gfbio_helpdesk_comment_on_ticket, \
     gfbio_helpdesk_attach_file_to_ticket, gfbio_prepare_create_helpdesk_payload, \
-    gfbio_update_helpdesk_ticket
+    gfbio_update_helpdesk_ticket, gfbio_helpdesk_delete_attachment
 from gfbio_submissions.brokerage.utils.pangaea import \
     request_pangaea_login_token, parse_pangaea_login_token_response, \
     get_pangaea_login_token, create_pangaea_jira_ticket
@@ -1345,10 +1346,25 @@ class TestHelpDeskTicketMethods(TestCase):
         request_logs = RequestLog.objects.all()
         self.assertEqual(2, len(request_logs))
 
-    # def test_delete_attachment(self):
-    #     # /rest/api/2/attachment/{id}
-    #     # via delete request
-    #     print('test_delete_attachment')
+    @responses.activate
+    def test_delete_attachment(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        url = '{0}{1}/{2}'.format(
+            site_config.helpdesk_server.url,
+            HELPDESK_API_ATTACHMENT_URL,
+            4711)
+        responses.add(responses.DELETE, url, body=b'', status=204)
+        response = gfbio_helpdesk_delete_attachment(
+            site_config, 4711, submission
+        )
+        self.assertEqual(204, response.status_code)
+        self.assertEqual(b'', response.content)
+        rq = RequestLog.objects.first()
+        self.assertEqual(url, rq.url)
+        self.assertEqual(response.status_code, rq.response_status)
+
+        # TODO: asserts
 
     @responses.activate
     def test_attach_multiple_files_to_helpdesk_ticket(self):
