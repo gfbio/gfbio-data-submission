@@ -11,7 +11,8 @@ from gfbio_submissions.brokerage.configuration.settings import \
     HELPDESK_API_SUB_URL, \
     HELPDESK_COMMENT_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL, \
     HELPDESK_LICENSE_MAPPINGS, HELPDESK_METASCHEMA_MAPPINGS, \
-    HELPDESK_DATACENTER_USER_MAPPINGS, HELPDESK_REQUEST_TYPE_MAPPINGS
+    HELPDESK_DATACENTER_USER_MAPPINGS, HELPDESK_REQUEST_TYPE_MAPPINGS, \
+    HELPDESK_API_ATTACHMENT_URL
 from gfbio_submissions.brokerage.models import SiteConfiguration, RequestLog
 
 logger = logging.getLogger(__name__)
@@ -320,6 +321,36 @@ def gfbio_helpdesk_attach_file_to_ticket(site_config, ticket_key, file,
             type=RequestLog.OUTGOING,
             url=url,
             data=files,
+            site_user=submission.submitting_user if submission.submitting_user is not None else '',
+            submission_id=submission.broker_submission_id,
+            response_status=response.status_code,
+            response_content=response.content,
+            request_details={
+                'response_headers': str(details)
+            }
+        )
+    return response
+
+
+def gfbio_helpdesk_delete_attachment(site_config, attachment_id, submission):
+    url = '{0}{1}/{2}'.format(
+        site_config.helpdesk_server.url,
+        HELPDESK_API_ATTACHMENT_URL,
+        attachment_id, )
+    response = requests.delete(
+        url=url,
+        auth=(site_config.helpdesk_server.username,
+              site_config.helpdesk_server.password),
+        headers={
+            'Content-Type': 'application/json'
+        },
+    )
+    with transaction.atomic():
+        details = response.headers or ''
+        request_log = RequestLog.objects.create(
+            type=RequestLog.OUTGOING,
+            url=url,
+            # data=files,
             site_user=submission.submitting_user if submission.submitting_user is not None else '',
             submission_id=submission.broker_submission_id,
             response_status=response.status_code,

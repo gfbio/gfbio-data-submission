@@ -122,6 +122,12 @@ HELPDESK_COMMENT_SUB_URL = getattr(
     'comment'
 )
 
+HELPDESK_API_ATTACHMENT_URL = getattr(
+    settings,
+    'HELPDESK_API_ATTACHMENT_URL',
+    '/rest/api/2/attachment'
+)
+
 HELPDESK_ATTACHMENT_SUB_URL = getattr(
     settings,
     'HELPDESK_ATTACHMENT_SUB_URL',
