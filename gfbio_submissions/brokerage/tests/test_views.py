@@ -594,14 +594,13 @@ class TestSubmissionUploadView(TestCase):
         responses.add(responses.POST, url, json={}, status=200)
         data = self._create_test_data('/tmp/test_primary_data_file')
         self.api_client.post(url, data, format='multipart')
-
-        self.assertEqual(1, len(SubmissionUpload.objects.filter(pk=1)))
+        self.assertEqual(1, len(submission.submissionupload_set.filter()))
 
         url = reverse(
             'brokerage:submissions_upload_detail',
             kwargs={
                 'broker_submission_id': submission.broker_submission_id,
-                'pk': 1
+                'pk': submission.submissionupload_set.filter().first().pk
             })
         print(url)
         response = self.api_client.delete(url)

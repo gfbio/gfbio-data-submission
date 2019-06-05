@@ -701,9 +701,9 @@ class SubmissionUpload(TimeStampedModel):
             raise cls.NoTicketAvailableError
 
     # TODO: from PrimaryDataFile. new default for attach is -> false
-    def save(self, *args, **kwargs):
+    def save(self, ignore_attach_to_ticket=False, *args, **kwargs):
         super(SubmissionUpload, self).save(*args, **kwargs)
-        if self.attach_to_ticket:
+        if self.attach_to_ticket and not ignore_attach_to_ticket:
             from .tasks import \
                 attach_file_to_helpdesk_ticket_task
             attach_file_to_helpdesk_ticket_task.apply_async(
