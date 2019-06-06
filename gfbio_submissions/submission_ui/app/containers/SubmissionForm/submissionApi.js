@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { END, eventChannel } from 'redux-saga';
-import { API_ROOT, SUBMISSIONS, UPLOAD, USER_URL } from '../../globalConstants';
+import { API_ROOT, SUBMISSIONS, UPLOAD, UPLOADS } from '../../globalConstants';
 
 export const postSubmission = (token, dataBody) => {
 
@@ -50,6 +50,31 @@ export const getSubmission = (token, brokerSubmissionId) => {
   );
 };
 
+
+export const getSubmissionUploads = (token, brokerSubmissionId) => {
+  const config = {
+    headers: {
+      'Authorization': 'Token ' + token,
+    },
+  };
+  return axios.get(
+    `${API_ROOT + SUBMISSIONS + brokerSubmissionId + UPLOADS}`,
+    config,
+  );
+};
+
+// /api/submissions/a2ac6fe5-1eaa-474b-b69e-3af22c38ad9c/upload/1/
+export const deleteSubmissionUpload = (token, brokerSubmissionId, fileKey) => {
+  const config = {
+    headers: {
+      'Authorization': 'Token ' + token,
+    },
+  };
+  return axios.delete(
+    `${API_ROOT + SUBMISSIONS + brokerSubmissionId + UPLOAD+ fileKey}`,
+    config,
+  );
+};
 // export const requestDeleteSubmission = (token, brokerSubmissionId) => {
 //   const config = {
 //     headers: {

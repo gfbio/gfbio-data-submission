@@ -3,7 +3,7 @@
  * SubmissionForm reducer
  *
  */
-import { fromJS } from 'immutable';
+import { fromJS, List } from 'immutable';
 import {
   ADD_CONTRIBUTOR,
   ADD_DATASET_LABEL,
@@ -12,8 +12,13 @@ import {
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
-  CHANGE_META_DATA_SCHEMA, CLOSE_EMBARGO_DIALOG, CLOSE_SAVE_SUCCESS,
-  CLOSE_SUBMIT_SUCCESS, DISMISS_SHOW_UPLOAD_LIMIT,
+  CHANGE_META_DATA_SCHEMA,
+  CLOSE_EMBARGO_DIALOG,
+  CLOSE_SAVE_SUCCESS,
+  CLOSE_SUBMIT_SUCCESS, DELETE_FILE, DELETE_FILE_ERROR, DELETE_FILE_SUCCESS,
+  DISMISS_SHOW_UPLOAD_LIMIT,
+  FETCH_FILE_UPLOADS_ERROR,
+  FETCH_FILE_UPLOADS_SUCCESS,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
   FETCH_SUBMISSION_SUCCESS,
@@ -27,7 +32,9 @@ import {
   SAVE_FORM_SUCCESS,
   SET_CONTRIBUTORS,
   SET_EMBARGO_DATE,
-  SET_METADATA_INDEX, SHOW_EMBARGO_DIALOG, SHOW_UPLOAD_LIMIT,
+  SET_METADATA_INDEX,
+  SHOW_EMBARGO_DIALOG,
+  SHOW_UPLOAD_LIMIT,
   SUBMIT_FORM,
   SUBMIT_FORM_ACTIVE,
   SUBMIT_FORM_ERROR,
@@ -36,7 +43,8 @@ import {
   UPDATE_CONTRIBUTOR,
   UPDATE_SUBMISSION,
   UPDATE_SUBMISSION_ERROR,
-  UPDATE_SUBMISSION_SUCCESS, UPDATE_SUBMISSION_SUCCESS_SUBMIT,
+  UPDATE_SUBMISSION_SUCCESS,
+  UPDATE_SUBMISSION_SUCCESS_SUBMIT,
   UPLOAD_FILE_ERROR,
   UPLOAD_FILE_PROGRESS,
   UPLOAD_FILE_SUCCESS,
@@ -53,9 +61,9 @@ if (window.props !== undefined) {
 
 function getInitialContributors(backendParameters) {
   let realName = backendParameters.userRealName || '';
-  console.log('realName ', realName);
+  // console.log('realName ', realName);
   let nameSplit = realName.split(' ');
-  console.log(nameSplit);
+  // console.log(nameSplit);
   let firstName, lastName = '';
   if (nameSplit.length > 1) {
     firstName = nameSplit.shift();
@@ -63,8 +71,8 @@ function getInitialContributors(backendParameters) {
   } else {
     firstName = nameSplit.shift();
   }
-  console.log(firstName);
-  console.log(lastName);
+  // console.log(firstName);
+  // console.log(lastName);
   const initialContributor = {
     firstName: firstName,
     lastName: lastName,
@@ -84,8 +92,8 @@ function getInitialContributors(backendParameters) {
 // };
 //
 const initialContributors = getInitialContributors(backendParameters);
-console.log('initialContibutor');
-console.log(initialContributors);
+// console.log('initialContibutor');
+// console.log(initialContributors);
 
 export const initialState = fromJS({
   license: 'CC BY 4.0',
@@ -116,9 +124,15 @@ export const initialState = fromJS({
   relatedPublications: [],
   currentLabel: '',
   dataset_labels: [],
+
   fileUploads: [],
   fileUploadInProgress: false,
+
+  fileUploadsFromServer: {},
+
   metaDataIndex: '',
+  // uploadListIndex: 0,
+
   brokerSubmissionId: '',
   requestBrokerSubmissionId: '',
   // deleteBrokerSubmissionId: '',
@@ -149,7 +163,7 @@ function submissionFormReducer(state = initialState, action) {
         // .set('promptOnLeave', false)
         .set('saveInProgress', true);
     case SAVE_FORM_SUCCESS:
-      console.info('SAVE_FORM_SUCCESS');
+      // console.info('SAVE_FORM_SUCCESS');
       // TODO: set bsi etc after success, from then its updates
       return state
         .set('metaDataIndex', '')
@@ -232,7 +246,7 @@ function submissionFormReducer(state = initialState, action) {
         .set('showUploadLimitMessage', false)
         .update('fileUploads', (fileUploads) => fileUploads.push(...action.value));
     case REMOVE_FILE_UPLOAD:
-      if (state.get('fileUploadInProgress') == false) {
+      if (state.get('fileUploadInProgress') === false) {
         return state
           .set('metaDataIndex', '')
           .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1));
@@ -266,6 +280,16 @@ function submissionFormReducer(state = initialState, action) {
       success_upload.status = 'success';
       return state
         .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1, success_upload));
+    case DELETE_FILE:
+      console.log('DELETE_FILE');
+      console.log(action.fileKey);
+      return state;
+    case DELETE_FILE_SUCCESS:
+      console.log('DELETE_FILE_SUCCESS');
+      return state;
+    case DELETE_FILE_ERROR:
+      console.log('DELETE_FILE_ERROR');
+      return state;
     case SET_CONTRIBUTORS:
       // console.log('SET_CONTRIBUTORS');
       // console.log(action.contributors);
@@ -301,6 +325,17 @@ function submissionFormReducer(state = initialState, action) {
     case FETCH_SUBMISSION_ERROR:
       // console.log('FETCH_SUBMISSION_ERROR');
       return state;
+    case FETCH_FILE_UPLOADS_SUCCESS:
+      // console.log('FETCH_FILE_UPLOADS_SUCCESS');
+      // console.log(action.response);
+      // console.log(typeof action.response.data);
+      return state
+        .set('fileUploads', List())
+        .set('fileUploadsFromServer', action.response.data);
+    case FETCH_FILE_UPLOADS_ERROR:
+      // console.log('FETCH_FILE_UPLOADS_ERROR');
+      // console.log(action.error);
+      return state;
     case RESET_FORM:
       // console.log('RESET_FORM');
       state = resetStateFormValues(state, getInitialContributors(backendParameters));
@@ -313,7 +348,7 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .set('updateWithRelease', action.release);
     case UPDATE_SUBMISSION_SUCCESS:
-      console.log('UPDATE_SUBMISSION_SUCCESS');
+      // console.log('UPDATE_SUBMISSION_SUCCESS');
       // TODO: 2x data: 1 from axios 1 from json-body
       // TODO: refactor to some sort of getter with checks
       // console.log(action.response.data.broker_submission_id);
@@ -326,7 +361,7 @@ function submissionFormReducer(state = initialState, action) {
         .set('metaDataIndex', '')
         .set('updateWithRelease', false);
     case UPDATE_SUBMISSION_SUCCESS_SUBMIT:
-      console.log('UPDATE_SUBMISSION_SUCCESS_SUBMIT');
+      // console.log('UPDATE_SUBMISSION_SUCCESS_SUBMIT');
       // TODO: 2x data: 1 from axios 1 from json-body
       // TODO: refactor to some sort of getter with checks
       // console.log(action.response.data.broker_submission_id);
@@ -347,6 +382,9 @@ function submissionFormReducer(state = initialState, action) {
       // console.log('SET_METADATA_INDEX');
       return state
         .set('metaDataIndex', action.metaDataIndex);
+    // case SET_UPLOAD_LIST_INDEX:
+    //   return state
+    //     .set('uploadListIndex', action.listIndex);
     default:
       return state;
   }

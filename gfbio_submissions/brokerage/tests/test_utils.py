@@ -4,7 +4,6 @@ import datetime
 import io
 import json
 import os
-from pprint import pprint
 from unittest import skip
 from uuid import uuid4
 
@@ -16,12 +15,14 @@ from django.urls import reverse
 from django.utils.encoding import smart_text
 from jira import JIRA, JIRAError
 from mock import patch
+from requests.structures import CaseInsensitiveDict
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
     PANGAEA_ISSUE_BASE_URL, HELPDESK_API_SUB_URL, HELPDESK_COMMENT_SUB_URL, \
-    HELPDESK_ATTACHMENT_SUB_URL, DEFAULT_ENA_CENTER_NAME
+    HELPDESK_ATTACHMENT_SUB_URL, DEFAULT_ENA_CENTER_NAME, \
+    HELPDESK_API_ATTACHMENT_URL
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
     ResourceCredential, SiteConfiguration, RequestLog, AdditionalReference, \
     TaskProgressReport, SubmissionUpload
@@ -37,7 +38,7 @@ from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_get_user_by_id, \
     gfbio_helpdesk_create_ticket, gfbio_helpdesk_comment_on_ticket, \
     gfbio_helpdesk_attach_file_to_ticket, gfbio_prepare_create_helpdesk_payload, \
-    gfbio_update_helpdesk_ticket
+    gfbio_update_helpdesk_ticket, gfbio_helpdesk_delete_attachment
 from gfbio_submissions.brokerage.utils.pangaea import \
     request_pangaea_login_token, parse_pangaea_login_token_response, \
     get_pangaea_login_token, create_pangaea_jira_ticket
@@ -653,6 +654,105 @@ class TestGFBioJira(TestCase):
         self.assertEqual(0, len(response.content))
 
     @skip('Test against helpdesk server')
+    def test_add_attachment(self):
+        ticket_key = 'SAND-1535'
+        url = '{0}{1}/{2}/{3}'.format(
+            self.base_url,
+            HELPDESK_API_SUB_URL,
+            ticket_key,
+            HELPDESK_ATTACHMENT_SUB_URL,
+        )
+        headers = CaseInsensitiveDict({'content-type': None,
+                                       'X-Atlassian-Token': 'nocheck'})
+
+        data = TestHelpDeskTicketMethods._create_test_data(
+            '/tmp/test_primary_data_file')
+        # files = {'file': file}
+        # files = {'file': open(file, 'rb')}
+        response = requests.post(
+            url=url,
+            auth=('brokeragent', ''),
+            headers=headers,
+            files=data,
+        )
+        # 200
+        # b'[{"self":"https://helpdesk.gfbio.org/rest/api/2/attachment/13820",
+        # "id":"13820","filename":"test_primary_data_file","author":
+        # {"self":"https://helpdesk.gfbio.org/rest/api/2/user?username=
+        # brokeragent","name":"brokeragent","key":"brokeragent@gfbio.org",
+        # "emailAddress":"brokeragent@gfbio.org","avatarUrls":{"48x48":
+        # "https://helpdesk.gfbio.org/secure/useravatar?ownerId=
+        # brokeragent%40gfbio.org&avatarId=11100","24x24":
+        # "https://helpdesk.gfbio.org/secure/useravatar?size=small&ownerId=
+        # brokeragent%40gfbio.org&avatarId=11100","16x16":
+        # "https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&ownerId=
+        # brokeragent%40gfbio.org&avatarId=11100","32x32":
+        # "https://helpdesk.gfbio.org/secure/useravatar?size=medium&ownerId=
+        # brokeragent%40gfbio.org&avatarId=11100"},"displayName":
+        # "Broker Agent","active":true,"timeZone":"Europe/Berlin"},
+        # "created":"2019-06-05T20:06:12.318+0000","size":8,
+        # "content":"https://helpdesk.gfbio.org/secure/attachment/
+        # 13820/test_primary_data_file"}]'
+
+    @skip('Test against helpdesk server')
+    def test_delete_attachment(self):
+        # ticket_key = 'SAND-1535'
+        # testing get ticket -> WORKS
+        #  http://helpdesk.gfbio.org/rest/api/2/issue/SAND-1535
+        # url = '{0}{1}/{2}'.format(self.base_url, HELPDESK_API_SUB_URL,
+        #                           ticket_key, )
+        # response = requests.get(
+        #     url=url,
+        #     auth=('brokeragent', ''),
+        #     headers={
+        #         'Content-Type': 'application/json'
+        #     },
+        # )
+        #
+        # testing get attachment -> WORKS
+        # url = '{0}{1}/{2}'.format(self.base_url, '/rest/api/2/attachment',
+        #                           '13791', )
+        # print(url)
+        # response = requests.get(
+        #     url=url,
+        #     auth=('brokeragent', ''),
+        #     headers={
+        #         'Content-Type': 'application/json'
+        #     },
+        # )
+        # http://helpdesk.gfbio.org/rest/api/2/attachment/13791
+        # 200
+        # b'{"self":"https://helpdesk.gfbio.org/rest/api/2/attachment/13791",
+        # "filename":"File1.forward.fastq.gz","author":{"self":
+        # "https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent",
+        # "key":"brokeragent@gfbio.org","name":"brokeragent","avatarUrls":
+        # {"48x48":"https://helpdesk.gfbio.org/secure/useravatar?ownerId=
+        # brokeragent%40gfbio.org&avatarId=11100","24x24":"https://helpdesk.
+        # gfbio.org/secure/useravatar?size=small&ownerId=brokeragent%40gfbio.
+        # org&avatarId=11100","16x16":"https://helpdesk.gfbio.org/secure/
+        # useravatar?size=xsmall&ownerId=brokeragent%40gfbio.org&avatarId=
+        # 11100","32x32":"https://helpdesk.gfbio.org/secure/useravatar?
+        # size=medium&ownerId=brokeragent%40gfbio.org&avatarId=11100"},
+        # "displayName":"Broker Agent","active":true},"created":
+        # "2019-06-04T19:39:21.138+0000","size":66,"properties":{},
+        # "content":"https://helpdesk.gfbio.org/secure/attachment/13791/
+        # File1.forward.fastq.gz"}'
+
+        # testing delete -> WORKS
+        url = '{0}{1}/{2}'.format(self.base_url, '/rest/api/2/attachment',
+                                  '13791', )
+        response = requests.delete(
+            url=url,
+            auth=('brokeragent', ''),
+            headers={
+                'Content-Type': 'application/json'
+            },
+        )
+        # http://helpdesk.gfbio.org/rest/api/2/attachment/13791
+        # 204
+        # b''
+
+    @skip('Test against helpdesk server')
     def test_update_ticket_with_siteconfig(self):
 
         # WORKS:
@@ -661,7 +761,7 @@ class TestGFBioJira(TestCase):
                                   ticket_key, )
         response = requests.put(
             url=url,
-            auth=('brokeragent', 'puN;7_k[-"_,ZiJi'),
+            auth=('brokeragent', ''),
             headers={
                 'Content-Type': 'application/json'
             },
@@ -700,14 +800,10 @@ class TestGFBioJira(TestCase):
                 }
             })
         )
-        print('URL: ', url)
-        print('response status: ', response.status_code)
-        print('response json: ')
-        pprint(response.content)
         # ######################################
 
         # jira = JIRA(server='http://helpdesk.gfbio.org/',
-        #             basic_auth=('brokeragent', 'puN;7_k[-"_,ZiJi'))
+        #             basic_auth=('brokeragent', ''))
         #
         # issue = jira.issue('SAND-1539')
         # res = issue.update(notify=True, fields={
@@ -729,16 +825,14 @@ class TestGFBioJira(TestCase):
     @skip('Test against helpdesk server')
     def test_python_jira(self):
         jira = JIRA(server='http://helpdesk.gfbio.org/',
-                    basic_auth=('brokeragent', 'puN;7_k[-"_,ZiJi'))
+                    basic_auth=('brokeragent', ''))
         issues = jira.search_issues('assignee="Marc Weber"')
-        pprint(issues)
         issue = jira.issue('SAND-1539')
-        print(issue)
 
     @skip('Test against helpdesk server')
     def test_python_jira_create(self):
         jira = JIRA(server='http://helpdesk.gfbio.org/',
-                    basic_auth=('brokeragent', 'puN;7_k[-"_,ZiJi'))
+                    basic_auth=('brokeragent', ''))
 
         # almost analog to gfbio_prepare_create_helpdesk_payload(...)
         issue_dict = {
@@ -782,14 +876,11 @@ class TestGFBioJira(TestCase):
         }
         try:
             new_issue = jira.create_issue(fields=issue_dict)
-            print(new_issue)
             # SAND-1540
             # works : https://helpdesk.gfbio.org/projects/SAND/queues/custom/21/SAND-1540
             # <class 'jira.resources.Issue'>
         except JIRAError as e:
-            print('JIRA Error:')
-            print(e)
-            print('-----------------')
+            pass
             # print(e.status_code)
             # # 400
             # print(e.response.text)
@@ -808,7 +899,7 @@ class TestGFBioJira(TestCase):
     @skip('Test against helpdesk server')
     def test_python_jira_update(self):
         jira = JIRA(server='http://helpdesk.gfbio.org/',
-                    basic_auth=('brokeragent', 'puN;7_k[-"_,ZiJi'))
+                    basic_auth=('brokeragent', ''))
         issue = jira.issue('SAND-1543')
         # issue.update(summary='new summary', description='A new summary was added')
 
@@ -819,7 +910,6 @@ class TestGFBioJira(TestCase):
 
         res = issue.update(notify=True, fields={'summary': 'new summary',
                                                 'description': 'A new summary was added'})
-        print(res)
 
 
 class TestSubmissionTransferHandler(TestCase):
@@ -1282,6 +1372,24 @@ class TestHelpDeskTicketMethods(TestCase):
         self.assertEqual(200, response.status_code)
         request_logs = RequestLog.objects.all()
         self.assertEqual(2, len(request_logs))
+
+    @responses.activate
+    def test_delete_attachment(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        url = '{0}{1}/{2}'.format(
+            site_config.helpdesk_server.url,
+            HELPDESK_API_ATTACHMENT_URL,
+            4711)
+        responses.add(responses.DELETE, url, body=b'', status=204)
+        response = gfbio_helpdesk_delete_attachment(
+            site_config, 4711, submission
+        )
+        self.assertEqual(204, response.status_code)
+        self.assertEqual(b'', response.content)
+        rq = RequestLog.objects.first()
+        self.assertEqual(url, rq.url)
+        self.assertEqual(response.status_code, rq.response_status)
 
     @responses.activate
     def test_attach_multiple_files_to_helpdesk_ticket(self):

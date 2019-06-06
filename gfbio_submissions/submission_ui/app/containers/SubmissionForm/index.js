@@ -32,8 +32,8 @@ import Collapse from 'react-bootstrap/Collapse';
 export class SubmissionForm extends React.Component {
 
   componentDidMount() {
-    console.log('SFORM did mount props');
-    console.log(this.props);
+    // console.log('SFORM did mount props');
+    // console.log(this.props);
     const { brokerSubmissionId } = this.props.match.params;
     if (brokerSubmissionId !== undefined) {
       this.props.fetchSubmission(brokerSubmissionId);
@@ -122,10 +122,8 @@ export class SubmissionForm extends React.Component {
     // console.log('###############################');
 
     if (this.props.brokerSubmissionId !== '' && this.props.match.path === '/form') {
-      console.log('should RESET');
+      // console.log('should RESET');
       this.props.resetForm();
-    } else {
-      console.log('no RESET');
     }
 
     // TODO: add action for saga to fetch that removes this after a few seconds

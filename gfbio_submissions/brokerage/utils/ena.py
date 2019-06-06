@@ -354,7 +354,7 @@ class Enalizer(object):
         if 'library_layout' in data_dict.keys():
             library_layout = SubElement(root, 'LIBRARY_LAYOUT')
             layout = data_dict.get('library_layout', {}).get(
-                'layout_type').upper()
+                'layout_type', '').upper()
             layout_element = SubElement(library_layout, layout)
             if layout == 'PAIRED':
                 layout_element.set(

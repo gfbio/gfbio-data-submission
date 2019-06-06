@@ -109,6 +109,11 @@ const makeSelectFileUploads = () =>
     substate.get('fileUploads'),
   );
 
+const makeSelectFileUploadsFromServer = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('fileUploadsFromServer'),
+  );
+
 const makeSelectBrokerSubmissionId = () =>
   createSelector(selectSubmissionFormDomain, substate =>
     substate.get('brokerSubmissionId'),
@@ -149,6 +154,11 @@ const makeSelectMetaDataIndex = () =>
   createSelector(selectSubmissionFormDomain, substate =>
     substate.get('metaDataIndex'),
   );
+
+// const makeSelectUploadListIndex = () =>
+//   createSelector(selectSubmissionFormDomain, substate =>
+//     substate.get('uploadListIndex'),
+//   );
 
 const makeSelectPromptOnLeave = () =>
   createSelector(selectSubmissionFormDomain, substate =>
@@ -209,4 +219,6 @@ export {
   makeSelectShowUploadLimitMessage,
   makeSelectShowEmbargoDialog,
   makeSelectGeneralError,
+  makeSelectFileUploadsFromServer,
+  // makeSelectUploadListIndex,
 };

@@ -18,7 +18,7 @@ import { compose } from 'redux';
 import FileIndicator from './FileIndicator';
 import shortid from 'shortid';
 import {
-  makeSelectFileUploads,
+  makeSelectFileUploads, makeSelectFileUploadsFromServer,
   makeSelectShowUploadLimitMessage,
 } from '../../containers/SubmissionForm/selectors';
 import { MAX_TOTAL_UPLOAD_SIZE, MAX_UPLOAD_ITEMS } from '../../globalConstants';
@@ -27,7 +27,9 @@ import UploadMessage from './uploadMessage';
 /* eslint-disable react/prefer-stateless-function */
 class UploadForm extends React.PureComponent {
 
-  matchingUploadLimit = (acceptedFiles=[]) => {
+  matchingUploadLimit = (acceptedFiles = []) => {
+    console.log('matchingUploadLimit');
+    console.log(this.props.fileUploads);
     let tmpTotalSize = 0;
     for (let a of acceptedFiles) {
       tmpTotalSize += a.size;
@@ -36,12 +38,29 @@ class UploadForm extends React.PureComponent {
     for (let l of this.props.fileUploads) {
       uploadedTotalSize += l.file.size;
     }
-    if ((tmpTotalSize + uploadedTotalSize) <= MAX_TOTAL_UPLOAD_SIZE
-      && (acceptedFiles.length + this.props.fileUploads.size) <= MAX_UPLOAD_ITEMS) {
+    let serverFilesTotalSize = 0;
+    for (let f of this.props.fileUploadsFromServer) {
+      serverFilesTotalSize += f.file_size;
+    }
+
+    console.log(tmpTotalSize);
+    console.log(uploadedTotalSize);
+    console.log(serverFilesTotalSize);
+    // this.props.fileUploads.size +
+    // this.props.fileUploadsFromServer.length
+    console.log(this.props.fileUploads.size);
+    // let fileUploadsLength = 0;
+    // if (this.props.fileUploads.size !== undefined) {
+    //   fileUploadsLength = this.props.fileUploads.size;
+    // }
+    if ((tmpTotalSize + uploadedTotalSize + serverFilesTotalSize) <= MAX_TOTAL_UPLOAD_SIZE
+      && (acceptedFiles.length + this.props.fileUploads.size +
+        this.props.fileUploadsFromServer.length) <= MAX_UPLOAD_ITEMS) {
       this.props.dismissShowUploadLimit();
       return true;
     } else {
       this.props.showUploadLimit();
+      console.log('show limit');
       return false;
     }
   };
@@ -66,9 +85,9 @@ class UploadForm extends React.PureComponent {
 
   render() {
 
-    // console.log('UPLOAD FORM RENDER: fileUploads');
+    console.log('UPLOAD FORM RENDER: fileUploads');
     // console.log(this.props);
-    // console.log('--------------------------');
+    console.log('--------------------------');
 
     // TODO: needs different styling
     // TODO: needs different position
@@ -120,6 +139,7 @@ class UploadForm extends React.PureComponent {
 UploadForm.propTypes = {
   handleDrop: PropTypes.func,
   fileUploads: PropTypes.array,
+  fileUploadsFromServer: PropTypes.object,
   showUploadLimit: PropTypes.func,
   dismissShowUploadLimit: PropTypes.func,
   showUploadLimitMessage: PropTypes.bool,
@@ -128,6 +148,7 @@ UploadForm.propTypes = {
 const mapStateToProps = createStructuredSelector({
   fileUploads: makeSelectFileUploads(),
   showUploadLimitMessage: makeSelectShowUploadLimitMessage(),
+  fileUploadsFromServer: makeSelectFileUploadsFromServer(),
 });
 
 function mapDispatchToProps(dispatch) {

@@ -11,6 +11,7 @@ import {
   takeLeading,
 } from 'redux-saga/effects';
 import {
+  DELETE_FILE,
   FETCH_SUBMISSION,
   SAVE_FORM,
   SAVE_FORM_SUCCESS,
@@ -40,6 +41,9 @@ import {
 } from './selectors';
 import {
   closeSaveSuccess,
+  deleteFileError, deleteFileSuccess,
+  fetchFileUploadsError,
+  fetchFileUploadsSuccess,
   fetchSubmissionError,
   fetchSubmissionSuccess,
   saveForm,
@@ -58,14 +62,16 @@ import {
   uploadFileSuccess,
 } from './actions';
 import {
-  createUploadFileChannel,
-  getSubmission,
+  createUploadFileChannel, deleteSubmissionUpload,
+  getSubmission, getSubmissionUploads,
   postSubmission,
   putSubmission,
 } from './submissionApi';
 import dateFormat from 'dateformat';
 
 import { push } from 'connected-react-router/immutable';
+import { DELETE_SUBMISSION } from '../SubmissionList/constants';
+import { takeEvery } from 'redux-saga';
 
 function* getMetaDataFileName(metaDataIndex, fileUploads) {
   const metaIndex = parseInt(metaDataIndex);
@@ -241,6 +247,12 @@ export function* performUpdateSubmissionSaga() {
       yield put(push('/list'));
     } else {
       yield put(updateSubmissionSuccess(response));
+      try {
+        const response = yield call(getSubmissionUploads, token, brokerSubmissionId);
+        yield put(fetchFileUploadsSuccess(response));
+      } catch (error) {
+        yield put(fetchFileUploadsError(error));
+      }
     }
   } catch (error) {
     yield put(updateSubmissionError(error));
@@ -268,6 +280,31 @@ export function* performFetchSubmissionSaga() {
   } catch (error) {
     yield put(fetchSubmissionError(error));
   }
+  try {
+    const response = yield call(getSubmissionUploads, token, bsi);
+    yield put(fetchFileUploadsSuccess(response));
+  } catch (error) {
+    yield put(fetchFileUploadsError(error));
+  }
+}
+
+// TODO: when providing no parameter in listening saga (take ACTION etc..)
+//  first declared paramter IS the actual action per default, as defined as in
+//  actions.js containing type and paramter(s). accessible like in reducer.
+export function* performDeleteUploadedFileSaga(action) {
+  const token = yield select(makeSelectToken());
+  const bsi = yield select(makeSelectRequestBrokerSubmissionId());
+  console.log(' #### performDeleteUploadedFileSaga #### ');
+  console.log(action);
+  try {
+    let response = yield call(deleteSubmissionUpload, token, bsi, action.fileKey);
+    yield put(deleteFileSuccess(response));
+    response = yield call(getSubmissionUploads, token, bsi);
+    yield put(fetchFileUploadsSuccess(response));
+  } catch (error) {
+    yield put(deleteFileError(error));
+  }
+
 }
 
 export function* performCloseSaveMessageSaga() {
@@ -328,6 +365,10 @@ export function* uploadFilesSaga() {
   yield takeLatest(UPLOAD_FILES, performUploadSaga);
 }
 
+export function* deleteUploadedFileSaga() {
+  yield takeLeading(DELETE_FILE, performDeleteUploadedFileSaga);
+}
+
 export function* fetchSubmissionSaga() {
   yield takeLatest(FETCH_SUBMISSION, performFetchSubmissionSaga);
 }
@@ -339,6 +380,6 @@ export function* updateSubmissionSaga() {
 export default function* rootSaga() {
   yield all([checkFormTypeSaga(), saveFormSaga(), submitFormSaga(),
     uploadFilesSaga(), fetchSubmissionSaga(), updateSubmissionSaga(),
-    closeSaveMessageSaga(),
+    closeSaveMessageSaga(), deleteUploadedFileSaga(),
   ]);
 }

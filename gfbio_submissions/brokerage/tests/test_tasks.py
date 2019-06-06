@@ -15,7 +15,7 @@ from rest_framework.test import APIRequestFactory, APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
     HELPDESK_API_SUB_URL, HELPDESK_COMMENT_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL, \
-    PANGAEA_ISSUE_BASE_URL
+    PANGAEA_ISSUE_BASE_URL, HELPDESK_API_ATTACHMENT_URL
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, Submission, AuditableTextData, PersistentIdentifier, \
     BrokerObject, TaskProgressReport, AdditionalReference, PrimaryDataFile, \
@@ -28,11 +28,12 @@ from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, 
     add_pangaealink_to_helpdesk_ticket_task, request_pangaea_login_token_task, \
     create_pangaea_jira_ticket_task, attach_file_to_pangaea_ticket_task, \
     comment_on_pangaea_ticket_task, check_for_pangaea_doi_task, \
-    trigger_submission_transfer, update_helpdesk_ticket_task
+    trigger_submission_transfer, update_helpdesk_ticket_task, \
+    delete_attachment_task
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_ena_xml_response, \
-    _get_ena_error_xml_response, _get_jira_response, _get_jira_attach_response, \
+    _get_ena_error_xml_response, _get_jira_attach_response, \
     _get_pangaea_soap_response, _get_pangaea_attach_response, \
     _get_pangaea_comment_response, _get_pangaea_ticket_response
 from gfbio_submissions.users.models import User
@@ -761,7 +762,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         )
         responses.add(responses.POST,
                       url,
-                      json=_get_jira_response(),
+                      json=_get_jira_attach_response(),
                       status=200)
         result = attach_file_to_helpdesk_ticket_task.apply_async(
             kwargs={
@@ -795,12 +796,56 @@ class TestGFBioHelpDeskTasks(TestTasks):
         # POST will already trigger attach_file_to_helpdesk_ticket_task
         # via PrimaryDataFile save method
         client.post(url, data, format='multipart')
+
         # attach_file_to_helpdesk_ticket_task was already triggered by POST above
         # via PrimaryDataFile save method
         result = attach_file_to_helpdesk_ticket_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
                 'submission_upload_id': SubmissionUpload.objects.first().pk,
+            }
+        )
+        self.assertTrue(result.successful())
+        self.assertTrue(result.get())
+        submission_upload = SubmissionUpload.objects.first()
+        self.assertEqual(10814, submission_upload.attachment_id)
+
+    @responses.activate
+    def test_delete_attachment_task(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        responses.add(responses.POST, url, json={}, status=200)
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          site_config.helpdesk_server.url,
+                          HELPDESK_API_SUB_URL,
+                          'FAKE_KEY',
+                          HELPDESK_ATTACHMENT_SUB_URL,
+                      ),
+                      json=_get_jira_attach_response(),
+                      status=200)
+        data = self._create_test_data('/tmp/test_primary_data_file')
+        data['attach_to_ticket'] = True
+        token = Token.objects.create(user=submission.site)
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        # POST will already trigger attach_file_to_helpdesk_ticket_task
+        # via PrimaryDataFile save method
+        client.post(url, data, format='multipart')
+        # TODO: everything above is only preparation to setup SubmissionUpload
+        #   properly
+        submission_upload = SubmissionUpload.objects.first()
+        url = '{0}{1}/{2}'.format(
+            site_config.helpdesk_server.url,
+            HELPDESK_API_ATTACHMENT_URL,
+            submission_upload.attachment_id)
+        responses.add(responses.DELETE, url, body=b'', status=204)
+        result = delete_attachment_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+                'attachment_id': SubmissionUpload.objects.first().attachment_id,
             }
         )
         self.assertTrue(result.successful())

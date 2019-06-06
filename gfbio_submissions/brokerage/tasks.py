@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
 from json import JSONDecodeError
-from pprint import pprint
 
 import celery
 from celery import Task
@@ -14,7 +13,8 @@ from requests import ConnectionError, Response
 
 from gfbio_submissions.brokerage.configuration.settings import ENA
 from gfbio_submissions.brokerage.utils.gfbio import \
-    gfbio_prepare_create_helpdesk_payload, gfbio_update_helpdesk_ticket
+    gfbio_prepare_create_helpdesk_payload, gfbio_update_helpdesk_ticket, \
+    gfbio_helpdesk_delete_attachment
 from .configuration.settings import BASE_HOST_NAME, \
     PRIMARY_DATA_FILE_MAX_RETRIES, PRIMARY_DATA_FILE_DELAY, \
     SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY, PANGAEA_ISSUE_VIEW_URL
@@ -719,7 +719,6 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
                 data=data,
                 reporter=prev_task_result  # {} if force_ticket_creation else
             )
-            # print('\n----\n', response)
             force_ticket_creation(response, submission_id,
                                   'brokeragent@gfbio.org')
             apply_default_task_retry_policy(response,
@@ -893,6 +892,16 @@ def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None,
                 apply_default_task_retry_policy(response,
                                                 attach_file_to_helpdesk_ticket_task,
                                                 submission)
+                # TODO: there may be a more elegant solution for checking
+                # TODO: extract to method
+                content = response.json()
+                if isinstance(content, list) \
+                        and len(content) == 1 \
+                        and isinstance(content[0], dict):
+                    submission_upload.attachment_id = int(
+                        content[0].get('id', '-1'))
+                    submission_upload.save(ignore_attach_to_ticket=True)
+
                 return True
             else:
                 logger.info(
@@ -911,6 +920,42 @@ def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None,
                 no_of_tickets=len(existing_tickets),
             )
             return False
+    else:
+        return TaskProgressReport.CANCELLED
+
+
+# TODO: continue with proper implemenation of task and add test
+
+
+@celery.task(max_retries=SUBMISSION_MAX_RETRIES,
+             name='tasks.delete_attachment_task',
+             base=SubmissionTask)
+def delete_attachment_task(kwargs=None, submission_id=None,
+                           attachment_id=None):
+    logger.info(
+        msg='delete_attachment_task submission_id={0} '
+            '| attachment_id={1}'.format(submission_id, attachment_id)
+    )
+    submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
+        submission_id=submission_id, task=attach_file_to_helpdesk_ticket_task,
+        get_closed_submission=True)
+    if submission is not None and site_configuration is not None and attachment_id is not None:
+        # TODO: temporary solution until workflow is fix,
+        #   also needs manager method to prevent exceptions here
+        # TODO: maybe attachment id is better than submission upload id, which may be delete
+        #   when task executes
+        # submission_upload = SubmissionUpload.objects.filter(
+        #     pk=submission_upload_id).first()
+        response = gfbio_helpdesk_delete_attachment(
+            site_config=site_configuration,
+            attachment_id=attachment_id,
+            submission=submission,
+        )
+        # TODO: maybe no retry needed, if it fails, attachment my be still there ..
+        apply_default_task_retry_policy(response,
+                                        delete_attachment_task,
+                                        submission)
+        return True
     else:
         return TaskProgressReport.CANCELLED
 

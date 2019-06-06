@@ -12,9 +12,16 @@ import {
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
-  CHANGE_META_DATA_SCHEMA, CLOSE_EMBARGO_DIALOG, CLOSE_SAVE_SUCCESS,
+  CHANGE_META_DATA_SCHEMA,
+  CLOSE_EMBARGO_DIALOG,
+  CLOSE_SAVE_SUCCESS,
   CLOSE_SUBMIT_SUCCESS,
+  DELETE_FILE,
+  DELETE_FILE_ERROR,
+  DELETE_FILE_SUCCESS,
   DISMISS_SHOW_UPLOAD_LIMIT,
+  FETCH_FILE_UPLOADS_ERROR,
+  FETCH_FILE_UPLOADS_SUCCESS,
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
   FETCH_SUBMISSION_SUCCESS,
@@ -28,7 +35,8 @@ import {
   SAVE_FORM_SUCCESS,
   SET_CONTRIBUTORS,
   SET_EMBARGO_DATE,
-  SET_METADATA_INDEX, SHOW_EMBARGO_DIALOG,
+  SET_METADATA_INDEX,
+  SHOW_EMBARGO_DIALOG,
   SHOW_UPLOAD_LIMIT,
   SUBMIT_FORM,
   SUBMIT_FORM_ACTIVE,
@@ -38,7 +46,8 @@ import {
   UPDATE_CONTRIBUTOR,
   UPDATE_SUBMISSION,
   UPDATE_SUBMISSION_ERROR,
-  UPDATE_SUBMISSION_SUCCESS, UPDATE_SUBMISSION_SUCCESS_SUBMIT,
+  UPDATE_SUBMISSION_SUCCESS,
+  UPDATE_SUBMISSION_SUCCESS_SUBMIT,
   UPLOAD_FILE_ERROR,
   UPLOAD_FILE_PROGRESS,
   UPLOAD_FILE_SUCCESS,
@@ -329,6 +338,14 @@ export function setMetaDataIndex(metaDataIndex) {
   };
 }
 
+// export function setUploadListIndex(listIndex) {
+//   return {
+//     type: SET_UPLOAD_LIST_INDEX,
+//     listIndex,
+//   };
+// }
+
+
 export function showUplaodLimit() {
   return {
     type: SHOW_UPLOAD_LIMIT,
@@ -353,4 +370,41 @@ export function closeEmbargoDialog() {
     type: CLOSE_EMBARGO_DIALOG,
   };
 }
+
+
+export function fetchFileUploadsSuccess(response) {
+  return {
+    type: FETCH_FILE_UPLOADS_SUCCESS,
+    response,
+  };
+}
+
+export function fetchFileUploadsError(error) {
+  return {
+    type: FETCH_FILE_UPLOADS_ERROR,
+    error,
+  };
+}
+
+export function deleteFile(fileKey) {
+  return {
+    type: DELETE_FILE,
+    fileKey,
+  };
+}
+
+export function deleteFileSuccess(response) {
+  return {
+    type: DELETE_FILE_SUCCESS,
+    response,
+  };
+}
+
+export function deleteFileError(error) {
+  return {
+    type: DELETE_FILE_ERROR,
+    error,
+  };
+}
+
 

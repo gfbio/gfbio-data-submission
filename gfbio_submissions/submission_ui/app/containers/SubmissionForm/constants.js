@@ -41,6 +41,10 @@ export const UPLOAD_FILE_PROGRESS = 'app/SubmissionForm/UPLOAD_FILE_PROGRESS';
 export const UPLOAD_FILE_ERROR = 'app/SubmissionForm/UPLOAD_FILE_ERROR';
 export const UPLOAD_FILE_SUCCESS = 'app/SubmissionForm/UPLOAD_FILE_SUCCESS';
 
+export const DELETE_FILE = 'app/SubmissionForm/DELETE_FILE';
+export const DELETE_FILE_ERROR = 'app/SubmissionForm/DELETE_FILE_ERROR';
+export const DELETE_FILE_SUCCESS = 'app/SubmissionForm/DELETE_FILE_SUCCESS';
+
 export const SET_CONTRIBUTORS = 'app/SubmissionForm/SET_CONTRIBUTORS';
 export const ADD_CONTRIBUTOR = 'app/SubmissionForm/ADD_CONTRIBUTOR';
 export const UPDATE_CONTRIBUTOR = 'app/SubmissionForm/UPDATE_CONTRIBUTOR';
@@ -61,9 +65,13 @@ export const UPDATE_SUBMISSION_SUCCESS_SUBMIT = 'app/SubmissionForm/UPDATE_SUBMI
 export const UPDATE_SUBMISSION_ERROR = 'app/SubmissionForm/UPDATE_SUBMISSION_ERROR';
 
 export const SET_METADATA_INDEX = 'app/SubmissionForm/SET_METADATA_INDEX';
+// export const SET_UPLOAD_LIST_INDEX = 'app/SubmissionForm/SET_UPLOAD_LIST_INDEX';
 
 export const SHOW_UPLOAD_LIMIT = 'app/SubmissionForm/SHOW_UPLOAD_LIMIT';
 export const DISMISS_SHOW_UPLOAD_LIMIT = 'app/SubmissionForm/DISMISS_SHOW_UPLOAD_LIMIT';
+
+export const FETCH_FILE_UPLOADS_SUCCESS = 'app/SubmissionForm/FETCH_FILE_UPLOADS_SUCCESS';
+export const FETCH_FILE_UPLOADS_ERROR = 'app/SubmissionForm/FETCH_FILE_UPLOADS_ERROR';
 
 
 /* non redux constants */
