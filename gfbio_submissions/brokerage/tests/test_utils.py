@@ -666,9 +666,10 @@ class TestGFBioJira(TestCase):
         headers = CaseInsensitiveDict({'content-type': None,
                                        'X-Atlassian-Token': 'nocheck'})
 
-        data = TestHelpDeskTicketMethods._create_test_data('/tmp/test_primary_data_file')
-        #files = {'file': file}
-        #files = {'file': open(file, 'rb')}
+        data = TestHelpDeskTicketMethods._create_test_data(
+            '/tmp/test_primary_data_file')
+        # files = {'file': file}
+        # files = {'file': open(file, 'rb')}
         response = requests.post(
             url=url,
             auth=('brokeragent', ''),
@@ -698,7 +699,6 @@ class TestGFBioJira(TestCase):
 
     @skip('Test against helpdesk server')
     def test_delete_attachment(self):
-        print('test_delete_attachment')
         # ticket_key = 'SAND-1535'
         # testing get ticket -> WORKS
         #  http://helpdesk.gfbio.org/rest/api/2/issue/SAND-1535
@@ -1406,8 +1406,6 @@ class TestHelpDeskTicketMethods(TestCase):
         rq = RequestLog.objects.first()
         self.assertEqual(url, rq.url)
         self.assertEqual(response.status_code, rq.response_status)
-
-        # TODO: asserts
 
     @responses.activate
     def test_attach_multiple_files_to_helpdesk_ticket(self):

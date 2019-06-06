@@ -320,7 +320,8 @@ class SubmissionUploadListView(generics.ListAPIView):
 
 class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
                                  mixins.UpdateModelMixin,
-                                 generics.DestroyAPIView,
+                                 # generics.DestroyAPIView,
+                                 mixins.DestroyModelMixin,
                                  generics.GenericAPIView):
     queryset = SubmissionUpload.objects.all()
     serializer_class = SubmissionUploadSerializer
@@ -350,3 +351,16 @@ class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
                             status=status.HTTP_404_NOT_FOUND)
         response = self.update(request, *args, **kwargs)
         return response
+
+    def delete(self, request, *args, **kwargs):
+        obj = self.get_object()
+        from gfbio_submissions.brokerage.tasks import \
+            delete_attachment_task
+        delete_attachment_task.apply_async(
+            kwargs={
+                'submission_id': obj.submission.pk,
+                'attachment_id': obj.attachment_id,
+            },
+            countdown=SUBMISSION_DELAY
+        )
+        return self.destroy(request, *args, **kwargs)

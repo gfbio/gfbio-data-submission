@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
 from json import JSONDecodeError
-from pprint import pprint
 
 import celery
 from celery import Task
@@ -901,7 +900,8 @@ def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None,
                 if isinstance(content, list) \
                         and len(content) == 1 \
                         and isinstance(content[0], dict):
-                    submission_upload.attachment_id = int(content[0].get('id', '-1'))
+                    submission_upload.attachment_id = int(
+                        content[0].get('id', '-1'))
                     submission_upload.save(ignore_attach_to_ticket=True)
 
                 return True
@@ -926,25 +926,37 @@ def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None,
         return TaskProgressReport.CANCELLED
 
 
+# TODO: continue with proper implemenation of task and add test
+
+
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
              name='tasks.delete_attachment_task',
              base=SubmissionTask)
 def delete_attachment_task(kwargs=None, submission_id=None,
-                           submission_upload_id=None):
+                           attachment_id=None):
+    print('\n\n----------------\n\n')
     logger.info(
-        msg='delete_attachment_task submission_id={0} | '
-            'submission_upload_id={1}'.format(submission_id,
-                                              submission_upload_id))
+        msg='delete_attachment_task submission_id={0} '
+            '| attachment_id={1}'.format(submission_id, attachment_id)
+    )
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id, task=attach_file_to_helpdesk_ticket_task,
         get_closed_submission=True)
-    if submission is not None and site_configuration is not None:
-
+    if submission is not None and site_configuration is not None and attachment_id is not None:
+        # TODO: temporary solution until workflow is fix,
+        #   also needs manager method to prevent exceptions here
+        # TODO: maybe attachment id is better than submission upload id, which may be delete
+        #   when task executes
+        # submission_upload = SubmissionUpload.objects.filter(
+        #     pk=submission_upload_id).first()
         response = gfbio_helpdesk_delete_attachment(
             site_config=site_configuration,
-            attachment_id=0,
+            attachment_id=attachment_id,
             submission=submission,
         )
+        print('\nresponse in task ', response.status_code)
+        print(response.content)
+        # TODO: maybe no retry needed, if it fails, attachment my be still there ..
         apply_default_task_retry_policy(response,
                                         delete_attachment_task,
                                         submission)

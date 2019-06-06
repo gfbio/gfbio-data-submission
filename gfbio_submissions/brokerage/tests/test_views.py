@@ -606,7 +606,6 @@ class TestSubmissionUploadView(TestCase):
         response = self.api_client.delete(url)
         self.assertEqual(204, response.status_code)
         self.assertEqual(b'', response.content)
-        self.assertEqual(0, len(SubmissionUpload.objects.filter(pk=1)))
 
     @responses.activate
     def test_wrong_submission_put(self):
