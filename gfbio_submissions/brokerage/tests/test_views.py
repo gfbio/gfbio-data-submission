@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import json
-from pprint import pprint
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -533,13 +532,10 @@ class TestSubmissionUploadView(TestCase):
 
         url = reverse('brokerage:submissions_uploads', kwargs={
             'broker_submission_id': submission.broker_submission_id})
-        print('\nurl: ', url)
 
         response = self.api_client.get(url)
         # self.assertEqual(200, response.status_code)
         content = json.loads(response.content.decode('utf-8'))
-        print('status ', response.status_code)
-        pprint(content)
         self.assertTrue(isinstance(content, list))
         self.assertEqual(2, len(content))
 
@@ -559,7 +555,6 @@ class TestSubmissionUploadView(TestCase):
 
         response = self.api_client.get(url)
         content = json.loads(response.content.decode('utf-8'))
-        pprint(content)
         self.assertTrue('file' in content[0].keys())
         self.assertTrue('file_name' in content[0].keys())
         self.assertTrue('file_size' in content[0].keys())
@@ -602,7 +597,6 @@ class TestSubmissionUploadView(TestCase):
                 'broker_submission_id': submission.broker_submission_id,
                 'pk': submission.submissionupload_set.filter().first().pk
             })
-        print(url)
         response = self.api_client.delete(url)
         self.assertEqual(204, response.status_code)
         self.assertEqual(b'', response.content)

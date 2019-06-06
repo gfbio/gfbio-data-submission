@@ -4,7 +4,6 @@ import datetime
 import io
 import json
 import os
-from pprint import pprint
 from unittest import skip
 from uuid import uuid4
 
@@ -676,8 +675,6 @@ class TestGFBioJira(TestCase):
             headers=headers,
             files=data,
         )
-        print(response.status_code)
-        print(response.content)
         # 200
         # b'[{"self":"https://helpdesk.gfbio.org/rest/api/2/attachment/13820",
         # "id":"13820","filename":"test_primary_data_file","author":
@@ -744,7 +741,6 @@ class TestGFBioJira(TestCase):
         # testing delete -> WORKS
         url = '{0}{1}/{2}'.format(self.base_url, '/rest/api/2/attachment',
                                   '13791', )
-        print(url)
         response = requests.delete(
             url=url,
             auth=('brokeragent', ''),
@@ -755,8 +751,6 @@ class TestGFBioJira(TestCase):
         # http://helpdesk.gfbio.org/rest/api/2/attachment/13791
         # 204
         # b''
-        print(response.status_code)
-        print('\n', response.content)
 
     @skip('Test against helpdesk server')
     def test_update_ticket_with_siteconfig(self):
@@ -806,10 +800,6 @@ class TestGFBioJira(TestCase):
                 }
             })
         )
-        print('URL: ', url)
-        print('response status: ', response.status_code)
-        print('response json: ')
-        pprint(response.content)
         # ######################################
 
         # jira = JIRA(server='http://helpdesk.gfbio.org/',
@@ -837,9 +827,7 @@ class TestGFBioJira(TestCase):
         jira = JIRA(server='http://helpdesk.gfbio.org/',
                     basic_auth=('brokeragent', ''))
         issues = jira.search_issues('assignee="Marc Weber"')
-        pprint(issues)
         issue = jira.issue('SAND-1539')
-        print(issue)
 
     @skip('Test against helpdesk server')
     def test_python_jira_create(self):
@@ -888,14 +876,11 @@ class TestGFBioJira(TestCase):
         }
         try:
             new_issue = jira.create_issue(fields=issue_dict)
-            print(new_issue)
             # SAND-1540
             # works : https://helpdesk.gfbio.org/projects/SAND/queues/custom/21/SAND-1540
             # <class 'jira.resources.Issue'>
         except JIRAError as e:
-            print('JIRA Error:')
-            print(e)
-            print('-----------------')
+            pass
             # print(e.status_code)
             # # 400
             # print(e.response.text)
@@ -925,7 +910,6 @@ class TestGFBioJira(TestCase):
 
         res = issue.update(notify=True, fields={'summary': 'new summary',
                                                 'description': 'A new summary was added'})
-        print(res)
 
 
 class TestSubmissionTransferHandler(TestCase):

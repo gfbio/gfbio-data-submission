@@ -719,7 +719,6 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
                 data=data,
                 reporter=prev_task_result  # {} if force_ticket_creation else
             )
-            # print('\n----\n', response)
             force_ticket_creation(response, submission_id,
                                   'brokeragent@gfbio.org')
             apply_default_task_retry_policy(response,
@@ -876,7 +875,6 @@ def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None,
         if len(existing_tickets):
             submission_upload = submission.submissionupload_set.filter(
                 attach_to_ticket=True).filter(pk=submission_upload_id).first()
-            # print('SUBMISSION UPLOAD ', submission_upload)
             if submission_upload:
                 logger.info(
                     msg='attach_file_to_helpdesk_ticket_task SubmissionUpload found {0} '.format(
@@ -934,7 +932,6 @@ def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None,
              base=SubmissionTask)
 def delete_attachment_task(kwargs=None, submission_id=None,
                            attachment_id=None):
-    print('\n\n----------------\n\n')
     logger.info(
         msg='delete_attachment_task submission_id={0} '
             '| attachment_id={1}'.format(submission_id, attachment_id)
@@ -954,8 +951,6 @@ def delete_attachment_task(kwargs=None, submission_id=None,
             attachment_id=attachment_id,
             submission=submission,
         )
-        print('\nresponse in task ', response.status_code)
-        print(response.content)
         # TODO: maybe no retry needed, if it fails, attachment my be still there ..
         apply_default_task_retry_policy(response,
                                         delete_attachment_task,

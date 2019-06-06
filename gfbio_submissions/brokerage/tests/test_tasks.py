@@ -837,7 +837,6 @@ class TestGFBioHelpDeskTasks(TestTasks):
         # TODO: everything above is only preparation to setup SubmissionUpload
         #   properly
         submission_upload = SubmissionUpload.objects.first()
-        print(submission_upload.attachment_id)
         url = '{0}{1}/{2}'.format(
             site_config.helpdesk_server.url,
             HELPDESK_API_ATTACHMENT_URL,
