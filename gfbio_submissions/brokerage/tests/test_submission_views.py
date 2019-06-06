@@ -89,6 +89,14 @@ class TestSubmissionView(TestCase):
             body=json.dumps({'mocked_response': True})
         )
 
+    def _add_update_ticket_response(self):
+        url = '{0}{1}/{2}'.format(
+            self.site_config.helpdesk_server.url,
+            HELPDESK_API_SUB_URL,
+            'no_key_available'
+        )
+        responses.add(responses.PUT, url, body='', status=204)
+
     def _post_submission(self):
         return self.api_client.post(
             '/api/submissions/',
@@ -620,6 +628,7 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
     @responses.activate
     def test_put_submission(self):
         self._add_create_ticket_response()
+        self._add_update_ticket_response()
         self._post_submission()
         submission = Submission.objects.first()
         response = self.api_client.put(
@@ -682,6 +691,7 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
     @responses.activate
     def test_put_submission_min_validation(self):
         self._add_create_ticket_response()
+        self._add_update_ticket_response()
         self._post_submission()
         submission = Submission.objects.first()
         response = self.api_client.put(
@@ -712,6 +722,7 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
     @responses.activate
     def test_put_submission_valid_max_validation(self):
         self._add_create_ticket_response()
+        self._add_update_ticket_response()
         self._post_submission()
         submission = Submission.objects.first()
         response = self.api_client.put(
@@ -754,6 +765,7 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
     @responses.activate
     def test_put_submission_max_validation_without_release(self):
         self._add_create_ticket_response()
+        self._add_update_ticket_response()
         self._post_submission()
         submission = Submission.objects.first()
         response = self.api_client.put(
@@ -775,6 +787,7 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
     @responses.activate
     def test_put_on_submitted_submission(self):
         self._add_create_ticket_response()
+        self._add_update_ticket_response()
         self._post_submission()
         submission = Submission.objects.first()
         submission.release = True
@@ -787,16 +800,18 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
              'data': _get_submission_request_data()},
             format='json'
         )
-        self.assertTrue(400, response.status_code)
-        content = response.content.decode('utf-8')
-        self.assertIn('"status":"SUBMITTED"', content)
-        self.assertIn(
-            '"broker_submission_id":"{0}"'.format(
-                submission.broker_submission_id),
-            content)
-        self.assertIn(
-            '"error":"no modifications allowed with current status"',
-            content)
+        # TODO: 06.06.2019 allow edit of submissions with status SUBMITTED ...
+        self.assertTrue(200, response.status_code)
+        # self.assertTrue(400, response.status_code)
+        # content = response.content.decode('utf-8')
+        # self.assertIn('"status":"SUBMITTED"', content)
+        # self.assertIn(
+        #     '"broker_submission_id":"{0}"'.format(
+        #         submission.broker_submission_id),
+        #     content)
+        # self.assertIn(
+        #     '"error":"no modifications allowed with current status"',
+        #     content)
 
     @responses.activate
     def test_put_on_cancelled_submission(self):
@@ -852,6 +867,7 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
     @responses.activate
     def test_put_on_closed_submission(self):
         self._add_create_ticket_response()
+        self._add_update_ticket_response()
         self._post_submission()
         submission = Submission.objects.first()
         submission.status = Submission.CLOSED

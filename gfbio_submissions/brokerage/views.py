@@ -83,8 +83,9 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        instance = self.get_object()
-        if instance.status == Submission.OPEN:
+        instance = self.get_object()#
+        # TODO: 06.06.2019 allow edit of submissions with status SUBMITTED ...
+        if instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED:
             response = self.update(request, *args, **kwargs)
 
             # FIXME: updates to submission download url are not covered here
