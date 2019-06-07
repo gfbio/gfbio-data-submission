@@ -100,6 +100,7 @@ def flatten_key_with_array_value(key, array_value, separator='_'):
     ]
 
 
+# TODO: used by pangaea utils to add gcdj information to samples
 def flatten_dictionary(dictionary, parent_key='', separator='_'):
     items = []
     for k, v in dictionary.iteritems():
