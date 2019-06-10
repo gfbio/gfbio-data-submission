@@ -5,6 +5,9 @@ from collections import OrderedDict
 import dpath
 from shortid import ShortId
 
+from gfbio_submissions.brokerage.configuration.settings import \
+    CSV_READER_QUOTING
+
 sample_core_fields = [
     'sample_alias',
     'sample_title',
@@ -114,7 +117,7 @@ def extract_experiment(experiment_id, row, sample_id):
 
 # TODO: maybe csv is in a file like implemented or comes as text/string
 def parse_molecular_csv(csv_file):
-    csv_reader = csv.DictReader(csv_file)
+    csv_reader = csv.DictReader(csv_file, quoting=CSV_READER_QUOTING)
     data = {
         'requirements': {
             # minimal_requirements

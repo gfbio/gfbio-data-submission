@@ -1546,3 +1546,7 @@ class TestCsv(TestCase):
     # TODO: real test
     # TODO: test real world scenarion, set up workflow
     # TODO: test errors, non-sense files
+    #
+    # TODO: usemetadata index and filenname
+    # FIXME: errors on new submission
+    # FIXME: errros in file list when navigating from edit to new submission
