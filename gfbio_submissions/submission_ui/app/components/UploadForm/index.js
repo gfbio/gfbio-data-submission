@@ -43,19 +43,22 @@ class UploadForm extends React.PureComponent {
       serverFilesTotalSize += f.file_size;
     }
 
-    console.log(tmpTotalSize);
-    console.log(uploadedTotalSize);
-    console.log(serverFilesTotalSize);
+    // console.log(tmpTotalSize);
+    // console.log(uploadedTotalSize);
+    // console.log(serverFilesTotalSize);
+    // console.log(acceptedFiles.length);
+    // console.log(this.props.fileUploads.size);
+    // console.log(this.props.fileUploadsFromServer.length);
     // this.props.fileUploads.size +
     // this.props.fileUploadsFromServer.length
-    console.log(this.props.fileUploads.size);
-    // let fileUploadsLength = 0;
-    // if (this.props.fileUploads.size !== undefined) {
-    //   fileUploadsLength = this.props.fileUploads.size;
-    // }
+    // console.log(this.props.fileUploads.size);
+    let fileUploadsFromServerLength = 0;
+    if (this.props.fileUploadsFromServer.length !== undefined) {
+      fileUploadsFromServerLength = this.props.fileUploadsFromServer.length;
+    }
     if ((tmpTotalSize + uploadedTotalSize + serverFilesTotalSize) <= MAX_TOTAL_UPLOAD_SIZE
       && (acceptedFiles.length + this.props.fileUploads.size +
-        this.props.fileUploadsFromServer.length) <= MAX_UPLOAD_ITEMS) {
+        fileUploadsFromServerLength) <= MAX_UPLOAD_ITEMS) {
       this.props.dismissShowUploadLimit();
       return true;
     } else {

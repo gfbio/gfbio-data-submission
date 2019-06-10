@@ -77,6 +77,7 @@ export const resetStateFormValues = (state, initialContributors = []) => {
     .set('license', 'CC BY 4.0')
     .set('metaDataSchema', 'None')
     .set('fileUploads', fromJS([]))
+    .set('fileUploadsFromServer', fromJS({}))
     // TODO: need whole submission ?
     .set('submission', {});
 };
