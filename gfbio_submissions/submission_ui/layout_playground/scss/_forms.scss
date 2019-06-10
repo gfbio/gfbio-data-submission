@@ -1393,20 +1393,20 @@ form.pagewide-form {
 .react-datepicker {
   @include raleway;
   //border-color: $form-gray-1;
-  border: none;
+  border: none !important;
 }
 
 .react-datepicker__header {
   //border-color: $form-gray-1;
-  border: none;
-  background-color: $gray-100;
+  border: none !important;
+  background-color: $gray-100 !important;
 }
 
 .react-datepicker__current-month {
   @include sans-serif-font;
-  font-weight: 400;
-  font-size: 1rem;
-  color: $gray-dark;
+  font-weight: 400 !important;
+  font-size: 1rem !important;
+  color: $gray-dark !important;
 }
 
 .react-datepicker__day-name {
@@ -1417,8 +1417,8 @@ form.pagewide-form {
 
 .react-datepicker__day {
   //font-weight: 400;
-  font-size: .9rem;
-  color: $gray-700;
+  font-size: .9rem !important;
+  color: $gray-700 !important;
 
   &:focus {
     //border-radius: .3rem;
@@ -1426,18 +1426,18 @@ form.pagewide-form {
   }
 
   &:hover {
-    background-color: $gfbio-green;
-    color: $white;
-    border-radius: .25rem;
+    background-color: $gfbio-green !important;
+    color: $white !important;
+    border-radius: .25rem !important;
     //border: 1px solid $gfbio-green;
   }
 }
 
 .react-datepicker__day--selected {
-  background-color: $gfbio-light-blue;
-  color: $white;
+  background-color: $gfbio-light-blue !important;
+  color: $white !important;
 }
 
 .react-datepicker__day--outside-month {
-  color: $gray-400;
+  color: $gray-400 !important;
 }
