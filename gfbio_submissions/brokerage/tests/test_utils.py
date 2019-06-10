@@ -1542,3 +1542,7 @@ class TestCsv(TestCase):
                 'molecular_metadata.csv'), 'r') as csv_file:
             data = parse_molecular_csv(csv_file=csv_file)
             pprint(data, indent=2)
+
+    # TODO: real test
+    # TODO: test real world scenarion, set up workflow
+    # TODO: test errors, non-sense files
