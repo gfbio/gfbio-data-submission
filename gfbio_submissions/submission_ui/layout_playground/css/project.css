@@ -1533,6 +1533,11 @@ form.pagewide-form .btn-link-light-blue i {
   color: #666 !important;
 }
 
+.react-datepicker__day-name {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: Raleway !important;
+}
+
 .react-datepicker__day {
   font-size: .9rem !important;
   color: #495057 !important;

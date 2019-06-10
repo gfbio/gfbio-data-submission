@@ -1410,6 +1410,9 @@ form.pagewide-form {
 }
 
 .react-datepicker__day-name {
+  @include raleway;
+  // TODO: gets overwritten in production ...
+  font-family: Raleway !important;
   //font-weight: 400;
   //font-size: .9rem;
   //color: $gray-dark;
