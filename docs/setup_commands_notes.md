@@ -324,7 +324,7 @@ admin users: marc / marcw -> django
 
 - check content of .env 
 - checke that .env IS NOT under version control and/or part of the next commit
-- encrypt .env (use password from password-manager)
+- encrypt .env (use password from password-manager)ssh
         
         gpg -vco encrypted.env.gpg .env
         

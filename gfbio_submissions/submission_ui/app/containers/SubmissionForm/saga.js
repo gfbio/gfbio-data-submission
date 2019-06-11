@@ -26,7 +26,7 @@ import {
   makeSelectContributors,
   makeSelectDatasetLabels,
   makeSelectEmbargoDate,
-  makeSelectFileUploads,
+  makeSelectFileUploads, makeSelectFileUploadsFromServer,
   makeSelectFormWrapper,
   makeSelectGeneralError,
   makeSelectLicense,
@@ -73,13 +73,43 @@ import { push } from 'connected-react-router/immutable';
 import { DELETE_SUBMISSION } from '../SubmissionList/constants';
 import { takeEvery } from 'redux-saga';
 
-function* getMetaDataFileName(metaDataIndex, fileUploads) {
-  const metaIndex = parseInt(metaDataIndex);
-  const metaDataFile = fileUploads.get(metaIndex);
+function* getMetaDataFileName(metaDataIndex, fileUploads, fileUploadsFromServer) {
+  console.log('getMetaDataFileName');
+  console.log(metaDataIndex.indexOf('uploaded_'));
+  console.log('metaDATAindex: ', metaDataIndex);
+
+
+  // let metaDataFile = '';
   let metaDataFileName = '';
-  if (metaDataFile !== undefined) {
-    metaDataFileName = metaDataFile.file.name;
+  if (metaDataIndex.indexOf('uploaded_') > -1) {
+    console.log('UPLOADED INDEX');
+    const strippedIndex = metaDataIndex.replace('uploaded_', '');
+    console.log('stripped ', strippedIndex);
+    const metaIndex = parseInt(strippedIndex);
+    const metaDataFile = fileUploadsFromServer[metaIndex];
+    console.log('metaindex: ', metaIndex);
+    if (metaDataFile !== undefined) {
+      metaDataFileName = metaDataFile.file_name;
+    }
+
+  } else {
+    console.log('no UPLOADED');
+    const metaIndex = parseInt(metaDataIndex);
+    console.log('metaindex: ', metaIndex);
+    const metaDataFile = fileUploads.get(metaIndex);
+    if (metaDataFile !== undefined) {
+      metaDataFileName = metaDataFile.file.name;
+    }
   }
+
+
+  // let metaDataFileName = '';
+  // if (metaDataFile !== undefined && metaDataFileName !== '') {
+  //   metaDataFileName = metaDataFile.file.name;
+  // }
+  // console.log('metaDataFile ', metaDataFile);
+  console.log('metaDataFileName ', metaDataFileName);
+  console.log('##########################');
   return metaDataFileName;
 }
 
@@ -115,7 +145,8 @@ function* prepareRequestData(userId, submit = true) {
 
   const metaDataIndex = yield select(makeSelectMetaDataIndex());
   const fileUploads = yield select(makeSelectFileUploads());
-  const metaDataFileName = yield getMetaDataFileName(metaDataIndex, fileUploads);
+  const fileUploadsFromServer = yield select(makeSelectFileUploadsFromServer());
+  const metaDataFileName = yield getMetaDataFileName(metaDataIndex, fileUploads, fileUploadsFromServer);
 
   const requirements = Object.assign({
     license,

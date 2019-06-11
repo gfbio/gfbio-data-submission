@@ -63,7 +63,7 @@ class FileIndicator extends React.Component {
           <input
             type="checkbox"
             id={`primaryUploaded${index}`}
-            value={`uploaded${index}`}
+            value={`uploaded_${index}`}
             onChange={this.handleMetadataSelect}
           />
           <label htmlFor={`primaryUploaded${index}`}
@@ -72,7 +72,7 @@ class FileIndicator extends React.Component {
           {uploaded.file_name}
         </small>
       );
-      if (this.props.metaDataIndex === `uploaded${index}`) {
+      if (this.props.metaDataIndex === `uploaded_${index}`) {
         metaDataCheckButton = (
           <small className="file-name">
             <input
