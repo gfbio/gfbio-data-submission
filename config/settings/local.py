@@ -97,20 +97,20 @@ LOGGING = {
         },
     },
     'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose'
-        },
-        # 'console-info': {
-        #     'level': 'INFO',
+        # 'console': {
+        #     'level': 'DEBUG',
         #     'class': 'logging.StreamHandler',
         #     'formatter': 'verbose'
-        # }
+        # },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        }
     },
     'loggers': {
         'django': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'handlers': ['console', ],
             'propagate': True,
         },

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import logging
 from json import JSONDecodeError
 
@@ -14,7 +13,8 @@ from requests import ConnectionError, Response
 
 from gfbio_submissions.brokerage.configuration.settings import ENA
 from gfbio_submissions.brokerage.utils.gfbio import \
-    gfbio_prepare_create_helpdesk_payload
+    gfbio_prepare_create_helpdesk_payload, gfbio_update_helpdesk_ticket, \
+    gfbio_helpdesk_delete_attachment
 from .configuration.settings import BASE_HOST_NAME, \
     PRIMARY_DATA_FILE_MAX_RETRIES, PRIMARY_DATA_FILE_DELAY, \
     SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY, PANGAEA_ISSUE_VIEW_URL
@@ -100,7 +100,6 @@ def trigger_submission_transfer_for_updates(broker_submission_id=None):
         submission_id=submission.pk,
         target_archive=submission.target
     )
-    # TODO: update means no new ticket and gfbio-email !!!
     transfer_handler.initiate_submission_process(release=submission.release,
                                                  update=True)
 
@@ -197,8 +196,8 @@ def apply_default_task_retry_policy(response, task, submission):
                 ''.format(task.name, task.request.retries)
         )
         if task.request.retries == SUBMISSION_MAX_RETRIES:
-            logger.info(
-                msg='{} SubmissionTransfer.TransferServerError mail_admins max_retries={}'
+            logger.warning(
+                msg='{} SubmissionTransfer.TransferServerError (mail_admins) max_retries={}'
                     ''.format(task.name, SUBMISSION_MAX_RETRIES)
             )
             mail_admins(
@@ -664,6 +663,31 @@ def get_gfbio_user_email_task(submission_id=None):
         return TaskProgressReport.CANCELLED
 
 
+def force_ticket_creation(response, submission_id, contact):
+    if response.status_code >= 400:
+        try:
+            error_messages = response.json()
+        except JSONDecodeError as e:
+            return response
+        # deal with jira unknown reporter
+        if 'reporter' in error_messages.get('errors', {}).keys():
+            reporter_errors = error_messages.get('errors', {})
+            if 'The reporter specified is not a user' in reporter_errors.get(
+                    'reporter', ''):
+                default = {
+                    'user_email': contact,
+                    'user_full_name': '',
+                    'first_name': '',
+                    'last_name': '',
+                }
+                create_helpdesk_ticket_task.s(prev_task_result=default,
+                                              submission_id=submission_id).set(
+                    countdown=SUBMISSION_RETRY_DELAY)()
+    else:
+        pass
+    return response
+
+
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
              name='tasks.create_helpdesk_ticket_task', base=SubmissionTask)
 def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
@@ -693,8 +717,10 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
                 site_config=site_configuration,
                 submission=submission,
                 data=data,
-                reporter=prev_task_result
+                reporter=prev_task_result  # {} if force_ticket_creation else
             )
+            force_ticket_creation(response, submission_id,
+                                  'brokeragent@gfbio.org')
             apply_default_task_retry_policy(response,
                                             create_helpdesk_ticket_task,
                                             submission)
@@ -720,6 +746,60 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
         return TaskProgressReport.CANCELLED
 
 
+@celery.task(max_retries=SUBMISSION_MAX_RETRIES,
+             name='tasks.update_helpdesk_ticket_task', base=SubmissionTask)
+def update_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
+                                data=None):
+    logger.info(
+        msg='update_helpdesk_ticket_task submission_id={0} | '
+            'prev_task_result={1} | '
+            'data={2}'.format(
+            submission_id, prev_task_result, data)
+    )
+    submission = SubmissionTransferHandler.get_submission_for_task(
+        submission_id=submission_id,
+        task=update_helpdesk_ticket_task,
+        get_closed_submission=True
+    )
+
+    if submission is not None:
+        tickets = submission.additionalreference_set.filter(
+            Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
+        if len(tickets) != 1:
+            return TaskProgressReport.CANCELLED
+        submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
+            submission_id=submission_id,
+            task=update_helpdesk_ticket_task,
+            get_closed_submission=True
+        )
+        if site_configuration is None:
+            return TaskProgressReport.CANCELLED
+
+        ticket = tickets[0]
+
+        # TODO: explicit task for this use case
+        if data is None:
+            data = gfbio_prepare_create_helpdesk_payload(
+                site_config=site_configuration,
+                submission=submission,
+                prepare_for_update=True,
+            )
+
+        response = gfbio_update_helpdesk_ticket(
+            site_configuration=site_configuration,
+            submission=submission,
+            ticket_key=ticket.reference_key,
+            data=data
+        )
+        apply_default_task_retry_policy(response,
+                                        update_helpdesk_ticket_task,
+                                        submission)
+    else:
+        return TaskProgressReport.CANCELLED
+
+
+# TODO: examine all tasks for redundant code and possible generalization e.g.:
+# TODO: more generic like update above
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
              name='tasks.comment_helpdesk_ticket_task', base=SubmissionTask)
 def comment_helpdesk_ticket_task(prev_task_result=None, comment_body=None,
@@ -773,10 +853,12 @@ def comment_helpdesk_ticket_task(prev_task_result=None, comment_body=None,
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
              name='tasks.attach_file_to_helpdesk_ticket_task',
              base=SubmissionTask)
-def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None):
+def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None,
+                                        submission_upload_id=None):
     logger.info(
-        msg='attach_file_to_helpdesk_ticket_task submission_id={} '.format(
-            submission_id))
+        msg='attach_file_to_helpdesk_ticket_task submission_id={0} | '
+            'submission_upload_id={1}'.format(submission_id,
+                                              submission_upload_id))
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id, task=attach_file_to_helpdesk_ticket_task,
         get_closed_submission=True)
@@ -791,21 +873,17 @@ def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None):
         # submission transfer chain that creates the ticket, so a proper retry has to be
         # implemented
         if len(existing_tickets):
-            # TODO: be more specific on PrimaryDataFile to retrieve, same for ticket above
-            # pd = submission.primarydatafile_set.first()
-            # pd = submission.submissionupload_set.get(pk=submission_upload_id)
-            # TODO: extend to loop over all uploads with attach=True
-            pd = submission.submissionupload_set.filter(
-                attach_to_ticket=True).first()
-            if pd:
+            submission_upload = submission.submissionupload_set.filter(
+                attach_to_ticket=True).filter(pk=submission_upload_id).first()
+            if submission_upload:
                 logger.info(
-                    msg='attach_file_to_helpdesk_ticket_task PrimaryDataFile found {0} '.format(
-                        pd))
+                    msg='attach_file_to_helpdesk_ticket_task SubmissionUpload found {0} '.format(
+                        submission_upload))
                 # TODO: access media nginx https://stackoverflow.com/questions/8370658/how-to-serve-django-media-files-via-nginx
                 response = gfbio_helpdesk_attach_file_to_ticket(
                     site_config=site_configuration,
                     ticket_key=existing_tickets.first().reference_key,
-                    file=pd.file,
+                    file=submission_upload.file,
                     submission=submission
                 )
                 logger.info(
@@ -814,22 +892,70 @@ def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None):
                 apply_default_task_retry_policy(response,
                                                 attach_file_to_helpdesk_ticket_task,
                                                 submission)
+                # TODO: there may be a more elegant solution for checking
+                # TODO: extract to method
+                content = response.json()
+                if isinstance(content, list) \
+                        and len(content) == 1 \
+                        and isinstance(content[0], dict):
+                    submission_upload.attachment_id = int(
+                        content[0].get('id', '-1'))
+                    submission_upload.save(ignore_attach_to_ticket=True)
+
                 return True
             else:
                 logger.info(
-                    msg='attach_file_to_helpdesk_ticket_task no PrimaryDataFile found. submission_id={} '.format(
-                        submission_id))
+                    msg='attach_file_to_helpdesk_ticket_task no SubmissionUpload'
+                        ' found. submission_id={0} | submission_upload_id={1}'
+                        ''.format(submission_id, submission_upload_id))
                 return False
         else:
             logger.info(
-                msg='attach_file_to_helpdesk_ticket_task no tickets found. submission_id={} '.format(
-                    submission_id))
+                msg='attach_file_to_helpdesk_ticket_task no tickets found. '
+                    'submission_id={0} | submission_upload_id={1}'
+                    ''.format(submission_id, submission_upload_id))
             apply_timebased_task_retry_policy(
                 task=attach_file_to_helpdesk_ticket_task,
                 submission=submission,
                 no_of_tickets=len(existing_tickets),
             )
             return False
+    else:
+        return TaskProgressReport.CANCELLED
+
+
+# TODO: continue with proper implemenation of task and add test
+
+
+@celery.task(max_retries=SUBMISSION_MAX_RETRIES,
+             name='tasks.delete_attachment_task',
+             base=SubmissionTask)
+def delete_attachment_task(kwargs=None, submission_id=None,
+                           attachment_id=None):
+    logger.info(
+        msg='delete_attachment_task submission_id={0} '
+            '| attachment_id={1}'.format(submission_id, attachment_id)
+    )
+    submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
+        submission_id=submission_id, task=attach_file_to_helpdesk_ticket_task,
+        get_closed_submission=True)
+    if submission is not None and site_configuration is not None and attachment_id is not None:
+        # TODO: temporary solution until workflow is fix,
+        #   also needs manager method to prevent exceptions here
+        # TODO: maybe attachment id is better than submission upload id, which may be delete
+        #   when task executes
+        # submission_upload = SubmissionUpload.objects.filter(
+        #     pk=submission_upload_id).first()
+        response = gfbio_helpdesk_delete_attachment(
+            site_config=site_configuration,
+            attachment_id=attachment_id,
+            submission=submission,
+        )
+        # TODO: maybe no retry needed, if it fails, attachment my be still there ..
+        apply_default_task_retry_policy(response,
+                                        delete_attachment_task,
+                                        submission)
+        return True
     else:
         return TaskProgressReport.CANCELLED
 

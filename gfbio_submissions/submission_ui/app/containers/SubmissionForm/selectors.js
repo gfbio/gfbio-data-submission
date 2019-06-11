@@ -69,7 +69,7 @@ const makeSelectEmbargoDate = () =>
     substate.get('embargoDate'),
   );
 
-const makeSelectInitialValue = () =>
+const makeSelectInitialValues = () =>
   createSelector(selectSubmissionFormDomain, substate =>
     substate.get('initialValues'),
   );
@@ -96,13 +96,95 @@ const makeSelectCurrentRelatedPublication = () =>
 
 const makeSelectDatasetLabels = () =>
   createSelector(selectSubmissionFormDomain, substate =>
-    substate.get('datasetLabels'),
+    substate.get('dataset_labels'),
   );
 
 const makeSelectCurrentLabel = () =>
   createSelector(selectSubmissionFormDomain, substate =>
     substate.get('currentLabel'),
   );
+
+const makeSelectFileUploads = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('fileUploads'),
+  );
+
+const makeSelectFileUploadsFromServer = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('fileUploadsFromServer'),
+  );
+
+const makeSelectBrokerSubmissionId = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('brokerSubmissionId'),
+  );
+
+const makeSelectContributors = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('contributors'),
+  );
+
+const makeSelectSubmission = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('submission'),
+  );
+
+const makeSelectRequestBrokerSubmissionId = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('requestBrokerSubmissionId'),
+  );
+
+const makeSelectShowSubmitSuccess = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('showSubmitSuccess'),
+  );
+
+const makeSelectShowSaveSuccess = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('showSaveSuccess'),
+  );
+
+
+const makeSelectUpdateWithRelease = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('updateWithRelease'),
+  );
+
+const makeSelectMetaDataIndex = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('metaDataIndex'),
+  );
+
+// const makeSelectUploadListIndex = () =>
+//   createSelector(selectSubmissionFormDomain, substate =>
+//     substate.get('uploadListIndex'),
+//   );
+
+const makeSelectPromptOnLeave = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('promptOnLeave'),
+  );
+
+const makeSelectShowUploadLimitMessage = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('showUploadLimitMessage'),
+  );
+
+const makeSelectShowEmbargoDialog = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('showEmbargoDialog'),
+  );
+
+const makeSelectGeneralError = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('generalError'),
+  );
+
+
+// const makeSelectDeleteBrokerSubmissionId = () =>
+//   createSelector(selectSubmissionFormDomain, substate =>
+//     substate.get('deleteBrokerSubmissionId'),
+//   );
 
 export default makeSelectSubmissionForm;
 
@@ -113,10 +195,9 @@ export {
   makeSelectFormWrapper,
   makeSelectReduxFormForm,
   makeSelectSubmitInProgress,
+  makeSelectShowSaveSuccess,
   makeSelectSaveInProgress,
   makeSelectEmbargoDate,
-  // makeSelectFormWrapperErrors,
-  makeSelectInitialValue,
   makeSelectContactForm,
   makeSelectToken,
   makeSelectUserId,
@@ -124,4 +205,20 @@ export {
   makeSelectCurrentRelatedPublication,
   makeSelectCurrentLabel,
   makeSelectDatasetLabels,
+  makeSelectFileUploads,
+  makeSelectBrokerSubmissionId,
+  makeSelectContributors,
+  makeSelectInitialValues,
+  makeSelectSubmission,
+  makeSelectRequestBrokerSubmissionId,
+  makeSelectShowSubmitSuccess,
+  makeSelectUpdateWithRelease,
+  makeSelectMetaDataIndex,
+  // makeSelectDeleteBrokerSubmissionId,
+  makeSelectPromptOnLeave,
+  makeSelectShowUploadLimitMessage,
+  makeSelectShowEmbargoDialog,
+  makeSelectGeneralError,
+  makeSelectFileUploadsFromServer,
+  // makeSelectUploadListIndex,
 };

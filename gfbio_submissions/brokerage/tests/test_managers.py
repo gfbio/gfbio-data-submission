@@ -13,7 +13,7 @@ class SubmissionManagerTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         user = User.objects.create(
-            username="user1"
+            username='user1'
         )
         Submission.objects.create(site=user)
         Submission.objects.create(site=user)
@@ -58,6 +58,60 @@ class SubmissionManagerTest(TestCase):
         submission.save()
         with self.assertRaises(Submission.DoesNotExist) as exc:
             Submission.objects.get_submission_for_task(id=database_id + 12)
+
+
+class TestSubmissionManagerSubmittingUser(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        user = User.objects.create(
+            username='user1',
+            is_site=True,
+            is_user=False,
+        )
+        user_2 = User.objects.create(
+            username='user2',
+            is_site=False,
+            is_user=True,
+        )
+        user_3 = User.objects.create(
+            username='user3',
+            is_site=False,
+            is_user=True,
+            email='user3@user3.com'
+        )
+        Submission.objects.create(site=user)
+        Submission.objects.create(
+            site=user_2, submitting_user='{}'.format(user_2.id))
+        Submission.objects.create(
+            site=user_2, submitting_user='{}'.format(user_2.id))
+        Submission.objects.create(
+            site=user_3, submitting_user='{}'.format(user_3.email))
+
+    def test_db_content(self):
+        self.assertEqual(4, len(Submission.objects.all()))
+
+    def test_get_submissions_of_submitting_user(self):
+        user = User.objects.get(username='user2')
+        submissions = Submission.objects.get_submissions_of_submitting_user(
+            submitting_user_identifier='{}'.format(user.id))
+        self.assertEqual(2, len(submissions))
+        user = User.objects.get(username='user3')
+        submissions = Submission.objects.get_submissions_of_submitting_user(
+            submitting_user_identifier='{}'.format(user.email))
+        self.assertEqual(1, len(submissions))
+
+    def test_get_submissions_for_invalid_submitting_user(self):
+        submissions = Submission.objects.get_submissions_of_submitting_user(
+            submitting_user_identifier='invalid_id')
+        self.assertEqual(0, len(submissions))
+
+    def test_get_submissions_of_empty_submitting_user(self):
+        user = User.objects.get(username='user1')
+        submissions = Submission.objects.filter(site=user)
+        self.assertEqual(1, len(submissions))
+        submissions = Submission.objects.get_submissions_of_submitting_user(
+            submitting_user_identifier='{}'.format(user.id))
+        self.assertEqual(0, len(submissions))
 
 
 class TestAuditableTextDataManager(TestCase):

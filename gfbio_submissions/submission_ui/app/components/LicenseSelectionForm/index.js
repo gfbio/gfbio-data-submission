@@ -21,26 +21,48 @@ import LicenseModals, {
 /* eslint-disable react/prefer-stateless-function */
 class LicenseSelectionForm extends React.PureComponent {
 
-  licenseListElements = Object.keys(licenseDetailData).map(licenseKey => (
-    <li className="list-group-item" key={licenseKey}>
-      <button
-        className="btn btn-primary btn-block btn-license text-left"
-        type="button"
-        data-toggle="collapse show"
-        data-target="#collapseLicense"
-        aria-expanded="false"
-        aria-controls="collapseLicense"
-        onClick={() => this.props.onClickLicense(
-          licenseDetailData[licenseKey].name)}
-      >
-        {licenseDetailData[licenseKey].name}
-        <a className="align-bottom" data-toggle="modal"
-           data-target={'#' + licenseKey}>
-          details
-        </a>
-      </button>
-    </li>
-  ));
+  licenseListElements = Object.keys(licenseDetailData).map(licenseKey => {
+      if (licenseKey === 'OtherLicense') {
+        return (
+          <li className="list-group-item" key={licenseKey}>
+            <button
+              className="btn btn-primary btn-block btn-license text-left"
+              type="button"
+              data-toggle="collapse show"
+              data-target="#collapseLicense"
+              aria-expanded="false"
+              aria-controls="collapseLicense"
+              onClick={() => this.props.onClickLicense(
+                licenseDetailData[licenseKey].name)}
+            >
+              {licenseDetailData[licenseKey].name}
+            </button>
+          </li>
+        );
+      }
+      return (
+        <li className="list-group-item" key={licenseKey}>
+
+          <button
+            className="btn btn-primary btn-block btn-license text-left"
+            type="button"
+            data-toggle="collapse show"
+            data-target="#collapseLicense"
+            aria-expanded="false"
+            aria-controls="collapseLicense"
+            onClick={() => this.props.onClickLicense(
+              licenseDetailData[licenseKey].name)}
+          >
+            {licenseDetailData[licenseKey].name}
+            <a className="align-bottom" data-toggle="modal"
+               data-target={'#' + licenseKey}>
+              details
+            </a>
+          </button>
+        </li>
+      );
+    },
+  );
 
   // TODO:  Maybe a connection to store/reducer is needed
   // TODO: no redux form connection ? set license to form with reeducer ?

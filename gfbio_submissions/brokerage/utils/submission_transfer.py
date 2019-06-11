@@ -112,8 +112,7 @@ class SubmissionTransferHandler(object):
                                                   error))
                 raise error
 
-    # TODO: rename, since this is specifically for ena and pangaea (molecular)
-    def setup_pre_release_chain(self):
+    def pre_process_molecular_data_chain(self):
         from gfbio_submissions.brokerage.tasks import \
             create_broker_objects_from_submission_data_task, \
             prepare_ena_submission_data_task, check_on_hold_status_task
@@ -141,6 +140,7 @@ class SubmissionTransferHandler(object):
             'SubmissionTransferHandler. update={0} release={1}'
             ''.format(update, release)
         )
+        # TODO: update only, without release does nothing ?
         if update and release:
             if self.target_archive == ENA or self.target_archive == ENA_PANGAEA:
                 logger.info(
@@ -149,8 +149,9 @@ class SubmissionTransferHandler(object):
                     'prepare_ena_submission_data_task'
                     ''.format(self.target_archive)
                 )
-                chain = self.setup_pre_release_chain()
+                chain = self.pre_process_molecular_data_chain()
         elif not update:
+            # TODO: use IDM derived email. not old portal email
             chain = get_gfbio_user_email_task.s(
                 submission_id=self.submission_id).set(
                 countdown=SUBMISSION_DELAY) \
@@ -159,7 +160,8 @@ class SubmissionTransferHandler(object):
                 countdown=SUBMISSION_DELAY)
             if release:
                 # TODO: check for Submission Type !
-                chain = chain | self.setup_pre_release_chain()
+                if self.target_archive == ENA or self.target_archive == ENA_PANGAEA:
+                    chain = chain | self.pre_process_molecular_data_chain()
         else:
             return None
         chain()

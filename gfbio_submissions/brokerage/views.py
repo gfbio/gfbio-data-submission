@@ -9,6 +9,8 @@ from rest_framework.authentication import TokenAuthentication, \
     BasicAuthentication
 from rest_framework.response import Response
 
+from gfbio_submissions.brokerage.serializers import \
+    SubmissionUploadListSerializer
 from .configuration.settings import SUBMISSION_DELAY
 from .models import SubmissionFileUpload, \
     Submission, PrimaryDataFile, RequestLog, SubmissionUpload
@@ -81,8 +83,9 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        instance = self.get_object()
-        if instance.status == Submission.OPEN:
+        instance = self.get_object()#
+        # TODO: 06.06.2019 allow edit of submissions with status SUBMITTED ...
+        if instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED:
             response = self.update(request, *args, **kwargs)
 
             # FIXME: updates to submission download url are not covered here
@@ -112,6 +115,18 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         instance.status = Submission.CANCELLED
         instance.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class UserSubmissionDetailView(generics.ListAPIView):
+    serializer_class = SubmissionDetailSerializer
+    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated,
+                          permissions.DjangoModelPermissions,
+                          IsOwnerOrReadOnly)
+
+    def get_queryset(self):
+        submitting_user = self.kwargs['submitting_user']
+        return Submission.objects.filter(submitting_user=submitting_user)
 
 
 # TODO: remove
@@ -236,7 +251,6 @@ class PrimaryDataFileDetailView(mixins.RetrieveModelMixin,
 
 
 class SubmissionUploadView(mixins.CreateModelMixin,
-                           mixins.ListModelMixin,
                            generics.GenericAPIView):
     queryset = SubmissionUpload.objects.all()
     serializer_class = SubmissionUploadSerializer
@@ -277,9 +291,37 @@ class SubmissionUploadView(mixins.CreateModelMixin,
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
+    # # TODO: per user filter ?
+    # def get_queryset(self):
+    #     broker_submission_id = self.kwargs.get('broker_submission_id', uuid4())
+    #     return SubmissionUpload.objects.filter(
+    #         submission__broker_submission_id=broker_submission_id)
+    #
+    # def get(self, request, *args, **kwargs):
+    #     return self.list(request, *args, **kwargs)
+
+
+class SubmissionUploadListView(generics.ListAPIView):
+    queryset = SubmissionUpload.objects.all()
+    serializer_class = SubmissionUploadListSerializer
+    parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
+    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated,
+                          permissions.DjangoModelPermissions,
+                          IsOwnerOrReadOnly)
+
+    # def get_queryset(self):
+    #     broker_submission_id = self.kwargs.get('broker_submission_id', uuid4())
+    #     return SubmissionUpload.objects.filter(
+    #         submission__broker_submission_id=broker_submission_id)
+    #
+    # def get(self, request, *args, **kwargs):
+    #     return self.list(request, *args, **kwargs)
+
 
 class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
                                  mixins.UpdateModelMixin,
+                                 # generics.DestroyAPIView,
                                  mixins.DestroyModelMixin,
                                  generics.GenericAPIView):
     queryset = SubmissionUpload.objects.all()
@@ -310,3 +352,16 @@ class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
                             status=status.HTTP_404_NOT_FOUND)
         response = self.update(request, *args, **kwargs)
         return response
+
+    def delete(self, request, *args, **kwargs):
+        obj = self.get_object()
+        from gfbio_submissions.brokerage.tasks import \
+            delete_attachment_task
+        delete_attachment_task.apply_async(
+            kwargs={
+                'submission_id': obj.submission.pk,
+                'attachment_id': obj.attachment_id,
+            },
+            countdown=SUBMISSION_DELAY
+        )
+        return self.destroy(request, *args, **kwargs)

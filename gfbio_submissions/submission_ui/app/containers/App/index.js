@@ -8,27 +8,35 @@
  */
 
 import React from 'react';
-import { BrowserRouter, Route, Switch } from 'react-router-dom';
+import { Route, Switch } from 'react-router-dom';
 import HomePage from 'containers/HomePage/Loadable';
 import NotFoundPage from 'containers/NotFoundPage/Loadable';
 import SubmissionForm from 'containers/SubmissionForm/Loadable';
+import SubmissionList from 'containers/SubmissionList/Loadable';
+import SubmissionSubNavigation from '../../components/SubmissionSubNavigation';
 
 
 // TODO: set according to root django url, full path from config/urls.py
 //  to APP/urls.py. local development works, but entering URL with prefix
-//  prevents error messages
-const urlPrefix = '/ui/submission';
+//  prevents error messages.
+//  prefix/basename ('/ui/submission') is set in app/utils/history.js which is used
+//  in app/app.js where ConnectedRouter is instantiated.
 export default function App() {
+  // TODO: if services-search style header is desired: extend this
+  //  wrapping container here to display full section (override template
+  //    section block). take care of django messages.
+  //  annonymous div like here should be ok to wrap mulitple sections (like search has)
   return (
     <div>
-      <BrowserRouter basename={urlPrefix}>
-        <Switch>
-          <Route exact path="/" component={HomePage} />
-          {/* TODO: maybe remove /form url and use / instead ? */}
-          <Route exact path="/form" component={SubmissionForm} />
-          <Route component={NotFoundPage} />
-        </Switch>
-      </BrowserRouter>
+      <SubmissionSubNavigation />
+      <Switch>
+        <Route exact path='/' component={HomePage} />
+        {/* TODO: maybe remove /form url and use / instead ? */}
+        <Route exact path='/form' component={SubmissionForm} />
+        <Route path='/form/:brokerSubmissionId' component={SubmissionForm} />
+        <Route exact path='/list' component={SubmissionList} />
+        <Route component={NotFoundPage} />
+      </Switch>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import zipfile
 from wsgiref.util import FileWrapper
 
 from django.contrib import admin
+from django.db.models import Count
 from django.http import HttpResponse
 from django.utils.encoding import smart_bytes
 
@@ -88,7 +89,19 @@ def create_broker_objects_and_ena_xml(modeladmin, request, queryset):
         chain()
 
 
-create_broker_objects_and_ena_xml.short_description = 'Create BrokerObjects + XML'
+create_broker_objects_and_ena_xml.short_description = 'Create BrokerObjects & XML'
+
+
+def delete_broker_objects_and_ena_xml(modeladmin, request, queryset):
+    for obj in queryset.exclude(status=Submission.CLOSED):
+        broker_objects_with_pids = obj.brokerobject_set.annotate(
+            pid_count=Count('persistentidentifier')).filter(pid_count__gte=1)
+        if len(broker_objects_with_pids) == 0:
+            obj.auditabletextdata_set.all().delete()
+            obj.brokerobject_set.all().delete()
+
+
+delete_broker_objects_and_ena_xml.short_description = '(!) Delete BrokerObjects & XML'
 
 
 def download_auditable_text_data(modeladmin, request, queryset):
@@ -146,7 +159,9 @@ class SubmissionAdmin(admin.ModelAdmin):
                AdditionalReferenceInline,)
     actions = [download_auditable_text_data,
                continue_release_submissions,
-               create_broker_objects_and_ena_xml, ]
+               create_broker_objects_and_ena_xml,
+               delete_broker_objects_and_ena_xml,
+               ]
 
 
 class RequestLogAdmin(admin.ModelAdmin):

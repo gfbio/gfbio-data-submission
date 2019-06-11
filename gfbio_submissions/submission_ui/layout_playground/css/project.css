@@ -43,9 +43,61 @@ section#about .btn-about:hover, section#about2 .btn-about:hover {
   font-weight: 300;
 }
 
-#account .login-or {
-  border-radius: .25rem;
-  margin-bottom: 1.5rem;
+#account .gfbio_login, #account .gfbio_signup {
+  margin-bottom: 5rem;
+}
+
+#account .gfbio_login a, #account .gfbio_signup a {
+  display: block;
+  text-decoration: none;
+  color: #666;
+}
+
+#account .gfbio_login a p, #account .gfbio_signup a p {
+  margin-bottom: .75rem;
+}
+
+#account .gfbio_login a .login_background, #account .gfbio_signup a .login_background {
+  display: inline-block;
+  background: url("../images/gfbio_logo.dark.svg") no-repeat center center;
+  padding: 53px 107px 0 0 !important;
+}
+
+#account .gfbio_login a span, #account .gfbio_signup a span {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 400;
+}
+
+#account .gfbio_login a:hover, #account .gfbio_signup a:hover {
+  color: #3CACE4;
+}
+
+#account .gfbio_login a:hover p, #account .gfbio_signup a:hover p {
+  color: #3CACE4;
+}
+
+#account .gfbio_login a:hover .login_background, #account .gfbio_signup a:hover .login_background {
+  display: inline-block;
+  background: url("../images/gfbio_logo.smaller.svg") no-repeat center center;
+  padding: 53px 107px 0 0 !important;
+}
+
+#account .gfbio_login a:hover .localLoginLink, #account .gfbio_signup a:hover .localLoginLink {
+  border-color: #3CACE4;
+  background-color: #fff;
+  color: #3CACE4 !important;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+#account .gfbio_signup {
+  margin-bottom: 1rem;
+}
+
+#account .signup_subtext {
+  text-align: center;
+  margin-bottom: 5rem;
 }
 
 #account .socialaccount_providers {
@@ -61,8 +113,85 @@ section#about .btn-about:hover, section#about2 .btn-about:hover {
   color: #343434;
 }
 
+#account .socialaccount_provider span:hover {
+  color: #3CACE4;
+}
+
+#account .socialaccount_text {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: .9rem;
+}
+
+#account .socialaccount_text i {
+  font-size: 1rem;
+}
+
+#account .localLoginLink {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background-color: #f8f8f8;
+  border-color: #e9ecef;
+  color: #343434;
+}
+
+#account .localLoginLink:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+#account .localLoginLink:hover, #account .localLoginLink:not(:disabled):not(.disabled):active, #account .localLoginLink:not(:disabled):not(.disabled).active {
+  border-color: #3CACE4;
+  background-color: #fff;
+  color: #3CACE4 !important;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+#account .localLoginLink:hover:focus, #account .localLoginLink:not(:disabled):not(.disabled):active:focus, #account .localLoginLink:not(:disabled):not(.disabled).active:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+#account #localLoginForm {
+  margin-top: 1.5rem;
+}
+
+#account label {
+  font-size: .775rem;
+}
+
+#account input {
+  height: calc(1.5em + .5rem + 2px);
+  padding: .25rem .5rem;
+  font-size: .775rem;
+  line-height: 1.5;
+  border-radius: .2rem;
+}
+
+#account input::-webkit-input-placeholder {
+  font-size: 0.775rem;
+}
+
+#account input:-ms-input-placeholder {
+  font-size: 0.775rem;
+}
+
+#account input::-ms-input-placeholder {
+  font-size: 0.775rem;
+}
+
+#account input::placeholder {
+  font-size: 0.775rem;
+}
+
+#account input:focus {
+  border-color: rgba(129, 178, 72, 0.7);
+  -webkit-box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
+  box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
+  outline-color: rgba(129, 178, 72, 0.7);
+}
+
 h4.social {
-  font-family: "Raleway", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 1.5rem;
   line-height: 2rem;
   margin-bottom: 1.5rem;
@@ -355,6 +484,17 @@ section#twitter i {
   color: rgba(255, 255, 255, 0.3);
 }
 
+h1.current-location {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #345AA2;
+  font-weight: 200;
+  margin-bottom: 2rem;
+}
+
+h1.current-location i {
+  color: #345AA2;
+}
+
 .col-form-label {
   font-size: .9rem;
 }
@@ -424,6 +564,34 @@ section#twitter i {
   margin-right: .75rem;
 }
 
+.red {
+  border-color: #dc3444;
+  background-color: #dc3545;
+  color: #fff !important;
+}
+
+.red:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.red:hover, .red:not(:disabled):not(.disabled):active, .red:not(:disabled):not(.disabled).active {
+  border-color: #dc3444;
+  background-color: #fff;
+  color: #dc3545 !important;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.red:hover:focus, .red:not(:disabled):not(.disabled):active:focus, .red:not(:disabled):not(.disabled).active:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.red i {
+  margin-right: .75rem;
+}
+
 .btn-light-blue {
   background-color: #3CACE4;
   border-color: #3bace4;
@@ -485,8 +653,48 @@ section#twitter i {
   color: #fff !important;
 }
 
+.btn-green-inverted {
+  background-color: #fff;
+  color: #81B248 !important;
+  border-color: #80b148;
+}
+
+.btn-green-inverted:hover, .btn-green-inverted:not(:disabled):not(.disabled):active, .btn-green-inverted:not(:disabled):not(.disabled).active {
+  border-color: #80b148;
+  background-color: #81B248;
+  color: #fff !important;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.btn-green-inverted:hover:focus, .btn-green-inverted:not(:disabled):not(.disabled):active:focus, .btn-green-inverted:not(:disabled):not(.disabled).active:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.btn-green-inverted:focus {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.btn-green-inverted:hover {
+  background-color: #81B248;
+  color: #fff !important;
+}
+
+/* copy of parts of _search.scss .search-page-title */
+/* sub navigation section header area */
+.sub-navigation-header {
+  padding: 57px 0 0 0;
+  height: 18.5rem;
+  background-color: #f8f8f8;
+}
+
+/* end sub navigation section header area */
 section.sub-navi {
-  padding: .5rem 0 2rem 0;
+  padding: 0;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #ccc;
 }
 
 section.sub-navi .nav {
@@ -496,24 +704,317 @@ section.sub-navi .nav {
 }
 
 section.sub-navi .nav .nav-link {
-  font-size: .85rem;
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 1rem;
   color: #343a40;
+}
+
+section.sub-navi .nav .nav-link i {
+  padding-right: .5rem;
+}
+
+section.sub-navi .nav .nav-link:hover {
+  background-color: #3CACE4;
+  color: #fff;
 }
 
 section.sub-navi .nav .active {
   font-weight: bold;
 }
 
+/* collapse as success message */
+.success-message {
+  border: 1px solid #dee2e6;
+  border-radius: .25rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+}
+
+.success-message i {
+  font-size: 3.5rem;
+  color: rgba(129, 178, 72, 0.9);
+  display: block;
+}
+
+.success-message i.close {
+  font-size: 2rem;
+  color: rgba(129, 178, 72, 0.9);
+}
+
+.success-message h4 {
+  font-weight: 300;
+  font-size: 1.25rem;
+  margin-bottom: .25rem;
+}
+
+/* end collapse as success message */
+/* modal */
+.modal-backdrop {
+  background-color: #fff;
+  opacity: 0.7 !important;
+}
+
+.modal-content .modal-header {
+  border-bottom: 1px solid #ced4da;
+}
+
+.modal-content .modal-header h2, .modal-content .modal-header h3, .modal-content .modal-header h4, .modal-content .modal-header h5, .modal-content .modal-header h6 {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 300;
+  color: #343434;
+  margin: 0;
+}
+
+.modal-content .modal-header .modal-title {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 300;
+  color: #343434;
+}
+
+.modal-content .modal-body {
+  color: #343434;
+  font-weight: 300;
+}
+
+.modal-content .modal-footer {
+  border: none;
+}
+
+/*
+
+.modal-content {
+  border-color: $white;
+}
+
+
+.modal-header {
+
+  .modal-title {
+    @include raleway;
+    border: none;
+    font-weight: 300;
+  }
+
+  border: none;
+
+}
+
+.modal-body {
+  border: none;
+}
+
+.modal-footer {
+  border: none;
+}
+
+
+*/
+/* end modal */
+/* Submission form wrapper */
+.submission-form-wrapper {
+  padding-left: 1.25rem;
+}
+
+/* end  Submission form wrapper */
+/* Submission List */
+.submission-list-wrapper {
+  padding-left: 1.25rem;
+}
+
+.submission-list-wrapper h6 {
+  text-transform: uppercase;
+  color: #495057;
+  font-size: .8rem;
+  font-weight: bold;
+}
+
+.submission-list-wrapper .list-start-wrapper {
+  height: 50vh;
+}
+
+.submission-list-wrapper .list-start {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #3CACE4;
+}
+
+.submission-list-wrapper .list-start p {
+  color: inherit;
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.submission-list-wrapper .list-start i {
+  display: block;
+  color: inherit;
+  font-size: 5rem;
+}
+
+.submission-list-wrapper .list-start:hover {
+  color: #FF8362;
+}
+
+.submission-list-wrapper ul li {
+  border-color: #ced4da;
+  background-color: #f8f8f8;
+  margin: .5rem 0 .5rem 0;
+  padding: 0;
+  color: #343a40;
+}
+
+.submission-list-wrapper ul li:first-child {
+  border-radius: 0;
+}
+
+.submission-list-wrapper ul li:last-child {
+  border-radius: 0;
+}
+
+.submission-list-wrapper ul li a {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #343a40;
+  text-decoration: none;
+  padding: .5rem;
+  font-size: .9rem;
+  -webkit-transition: all 0ms;
+  transition: all 0ms;
+}
+
+.submission-list-wrapper ul li a span {
+  padding-right: .75rem;
+}
+
+.submission-list-wrapper ul li a .status {
+  font-size: .75rem;
+  font-weight: bold;
+  text-align: left;
+  color: #868e96;
+}
+
+.submission-list-wrapper ul li a i {
+  color: #81B248;
+  padding: 0 .75rem 0 .75rem;
+  font-size: 1rem;
+}
+
+.submission-list-wrapper ul li .actions {
+  text-align: right;
+}
+
+.submission-list-wrapper ul li a.action {
+  padding: .5rem;
+  color: #343a40;
+}
+
+.submission-list-wrapper ul li a.action i {
+  color: #495057;
+  padding: 0 .5rem 0 0;
+}
+
+.submission-list-wrapper ul li:hover {
+  border-color: #62BEEB;
+  color: #fff;
+  background-color: #3CACE4;
+}
+
+.submission-list-wrapper ul li:hover a {
+  color: #fff;
+}
+
+.submission-list-wrapper ul li:hover a .status {
+  color: #fff;
+}
+
+.submission-list-wrapper ul li:hover a i {
+  color: #fff;
+}
+
+.submission-list-wrapper ul li:hover a.action:hover {
+  background-color: #62BEEB;
+}
+
+/* End Submission List */
+/* sticky sidebar */
+.sidebar {
+  top: 57px;
+}
+
+/* end sticky sidebar */
+.tooltip [class$="inner"] {
+  font-size: .8rem;
+  font-weight: 300;
+  background-color: #fff;
+  border: 1px solid #495057;
+  color: #495057;
+}
+
+.tooltip [class$="arrow"]:before {
+  border-right-color: #495057 !important;
+}
+
+/*
+
+.tooltip.bs-tooltip-right .arrow:before {
+    border-right-color: #00cc00 !important;
+}
+.tooltip.bs-t
+*/
 form.pagewide-form {
-  /* modal stuff */
-  /* end modal stuff */
   /*
-    Overwrite react-datepicker styles
-   */
+    embargo date styles
+
+
+    .btn-contributor {
+    //border-color: darken($gfbio-green, .2);
+    //background-color: $gfbio-green;
+    //color: $white !important;
+    color: $gfbio-light-blue;
+    background-color: $white;
+    border: none;
+
+    &:focus {
+      box-shadow: none;
+    }
+
+    &:hover, &:not(:disabled):not(.disabled):active,
+    &:not(:disabled):not(.disabled).active {
+      &:focus {
+        box-shadow: none;
+      }
+
+      color: $contrast-1;
+      background-color: $white;
+      border: none;
+      box-shadow: none;
+    }
+
+    i {
+      padding-right: .5rem;
+    }
+
+  }
+
+  */
 }
 
 form.pagewide-form .form-group {
   margin-bottom: 2rem;
+}
+
+form.pagewide-form .alert-heading {
+  color: #dc3545;
+  font-size: 1.2rem;
+}
+
+form.pagewide-form .alert-heading i {
+  padding: 0 .5rem 0 .5rem;
+}
+
+form.pagewide-form .validation-error-item {
+  font-size: .9rem;
+}
+
+form.pagewide-form .validation-error-item i {
+  padding-right: .5rem;
 }
 
 form.pagewide-form .form-header-top {
@@ -532,6 +1033,28 @@ form.pagewide-form .section-title {
 form.pagewide-form .header {
   letter-spacing: normal;
   border-bottom: 1px solid #ccc;
+}
+
+form.pagewide-form .gray-background {
+  background-color: #f8f8f8;
+  border: 1px solid #e9ecef;
+  border-radius: .25rem;
+  padding: .75rem 0 .25rem 0;
+}
+
+form.pagewide-form .save-header .section-title {
+  font-size: 1.2rem !important;
+}
+
+form.pagewide-form .save-header i {
+  padding: 0 .5rem 0 .5rem;
+  color: #81B248;
+}
+
+form.pagewide-form .save-text {
+  padding: .75rem 1.25rem;
+  font-size: .9rem;
+  color: #495057;
 }
 
 form.pagewide-form .input-error {
@@ -647,6 +1170,134 @@ form.pagewide-form li.publication .btn-remove:hover {
 
 form.pagewide-form li.publication .btn-remove i {
   padding-right: .5rem;
+}
+
+form.pagewide-form .pending {
+  background-color: #fff;
+}
+
+form.pagewide-form .pending:hover {
+  background-color: #f8f8f8;
+}
+
+form.pagewide-form .error {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+form.pagewide-form .error:hover {
+  background-color: rgba(220, 53, 69, 0.3);
+}
+
+form.pagewide-form .success {
+  background-color: rgba(129, 178, 72, 0.1);
+}
+
+form.pagewide-form .success:hover {
+  background-color: rgba(129, 178, 72, 0.3);
+}
+
+form.pagewide-form li.file-upload {
+  font-size: .9rem;
+  border: none;
+  padding: .375rem .75rem .375rem .75rem;
+  margin-bottom: .25rem;
+  color: #495057;
+}
+
+form.pagewide-form li.file-upload .progress {
+  background-color: inherit;
+  height: 2px;
+  z-index: 99;
+  border-radius: 0;
+}
+
+form.pagewide-form li.file-upload .progress .progress-bar {
+  background-color: rgba(129, 178, 72, 0.9);
+}
+
+form.pagewide-form li.file-upload:last-child {
+  margin-bottom: 1rem;
+}
+
+form.pagewide-form li.file-upload small.file-size {
+  font-weight: 400;
+}
+
+form.pagewide-form li.file-upload i.pub {
+  padding-right: 1rem;
+  font-size: 1.25rem;
+  color: #81B248;
+}
+
+form.pagewide-form li.file-upload .btn {
+  font-size: .75rem;
+  padding: .25rem;
+}
+
+form.pagewide-form li.file-upload .btn i {
+  font-size: 1.25rem;
+}
+
+form.pagewide-form li.file-upload .btn-remove {
+  color: #FF6339;
+}
+
+form.pagewide-form li.file-upload .btn-remove:hover {
+  color: #dc3545;
+}
+
+form.pagewide-form li.file-upload .btn-download {
+  color: #3CACE4;
+}
+
+form.pagewide-form li.file-upload .btn-download:hover {
+  color: #345AA2;
+}
+
+form.pagewide-form li.file-upload .btn-metadata i {
+  font-size: 0.75rem;
+}
+
+form.pagewide-form li.file-upload .btn-metadata span {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+form.pagewide-form li.file-upload .upload-header i.help {
+  font-size: 1.25rem;
+  padding-left: .5rem;
+}
+
+form.pagewide-form li.file-upload small.file-name {
+  /* to hide the checkbox itself */
+  /* unchecked icon */
+  /* space between checkbox and label */
+  /* checked icon */
+  /* allow space for check mark */
+}
+
+form.pagewide-form li.file-upload small.file-name label.metadata {
+  font-size: 1.1rem;
+  color: #495057;
+  border-right: 1px dashed #ccc;
+  padding: 0 1rem 0 1.5rem;
+  margin-right: 1rem;
+}
+
+form.pagewide-form li.file-upload small.file-name input[type=checkbox] {
+  display: none;
+}
+
+form.pagewide-form li.file-upload small.file-name input[type=checkbox] + label:before {
+  font-family: "Ionicons";
+  display: inline-block;
+}
+
+form.pagewide-form li.file-upload small.file-name input[type=checkbox] + label:before {
+  content: "\f360";
+}
+
+form.pagewide-form li.file-upload small.file-name input[type=checkbox]:checked + label:before {
+  content: "\f2ba";
 }
 
 form.pagewide-form .template-links a {
@@ -784,27 +1435,6 @@ form.pagewide-form .btn-license-detail:hover {
   color: #3CACE4;
 }
 
-form.pagewide-form .modal-content {
-  border-color: #fff;
-}
-
-form.pagewide-form .modal-content h4 {
-  font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-weight: 300;
-}
-
-form.pagewide-form .modal-header {
-  border: none;
-}
-
-form.pagewide-form .modal-body {
-  border: none;
-}
-
-form.pagewide-form .modal-footer {
-  border: none;
-}
-
 form.pagewide-form .card .form-group {
   margin-bottom: 1rem;
 }
@@ -869,63 +1499,63 @@ form.pagewide-form select:focus {
   box-shadow: 0 0 0 0.2rem rgba(129, 178, 72, 0.3);
 }
 
-form.pagewide-form .react-datepicker {
-  width: 100%;
+form.pagewide-form .btn-link-light-blue {
+  color: #3CACE4;
+  text-decoration: none;
 }
 
-form.pagewide-form .react-datepicker-wrapper {
-  width: 100%;
+form.pagewide-form .btn-link-light-blue:hover {
+  color: #FF8362;
 }
 
-form.pagewide-form .react-datepicker__month-container {
-  width: 100%;
+form.pagewide-form .btn-link-light-blue i {
+  padding-right: .5rem;
+  font-size: 1.5rem;
 }
 
-form.pagewide-form .react-datepicker__input-container {
-  width: 100%;
+/*
+    Overwrite react-datepicker styles
+   */
+.react-datepicker {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  border: none !important;
 }
 
-form.pagewide-form .react-datepicker {
+.react-datepicker__header {
+  border: none !important;
+  background-color: #f8f8f8 !important;
+}
+
+.react-datepicker__current-month {
   font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  border-color: #ced4da;
+  font-weight: 400 !important;
+  font-size: 1rem !important;
+  color: #666 !important;
 }
 
-form.pagewide-form .react-datepicker__header {
-  border-color: #ced4da;
-  background-color: #f8f8f8;
+.react-datepicker__day-name {
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: Raleway !important;
 }
 
-form.pagewide-form .react-datepicker__current-month {
-  font-weight: 400;
-  font-size: 1rem;
-  color: #666;
+.react-datepicker__day {
+  font-size: .9rem !important;
+  color: #495057 !important;
 }
 
-form.pagewide-form .react-datepicker__day-name {
-  font-weight: 400;
-  font-size: .9rem;
-  color: #666;
+.react-datepicker__day:hover {
+  background-color: #81B248 !important;
+  color: #fff !important;
+  border-radius: .25rem !important;
 }
 
-form.pagewide-form .react-datepicker__day {
-  font-weight: 400;
-  font-size: .8rem;
-  color: #666;
+.react-datepicker__day--selected {
+  background-color: #3CACE4 !important;
+  color: #fff !important;
 }
 
-form.pagewide-form .react-datepicker__day:focus {
-  border-radius: .3rem;
-  border-color: #81B248;
-}
-
-form.pagewide-form .react-datepicker__day:hover {
-  background-color: #81B248;
-  color: #fff;
-}
-
-form.pagewide-form .react-datepicker__day--selected {
-  background-color: #3CACE4;
-  color: #fff;
+.react-datepicker__day--outside-month {
+  color: #ced4da !important;
 }
 
 body,
@@ -1029,7 +1659,7 @@ p.lead {
 }
 
 section {
-  padding: 6rem 0;
+  padding: 4rem 0;
 }
 
 .section-heading {

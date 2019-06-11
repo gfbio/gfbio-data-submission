@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import csv
+import datetime
 import io
 import json
 import os
+from pprint import pprint
 from unittest import skip
 from uuid import uuid4
 
@@ -12,13 +14,16 @@ from django.contrib.auth.models import Permission
 from django.test import TestCase
 from django.urls import reverse
 from django.utils.encoding import smart_text
+from jira import JIRA, JIRAError
 from mock import patch
+from requests.structures import CaseInsensitiveDict
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
     PANGAEA_ISSUE_BASE_URL, HELPDESK_API_SUB_URL, HELPDESK_COMMENT_SUB_URL, \
-    HELPDESK_ATTACHMENT_SUB_URL, DEFAULT_ENA_CENTER_NAME
+    HELPDESK_ATTACHMENT_SUB_URL, DEFAULT_ENA_CENTER_NAME, \
+    HELPDESK_API_ATTACHMENT_URL
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
     ResourceCredential, SiteConfiguration, RequestLog, AdditionalReference, \
     TaskProgressReport, SubmissionUpload
@@ -28,13 +33,14 @@ from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_pangaea_soap_body, _get_pangaea_soap_response, \
     _get_pangaea_attach_response, _get_pangaea_comment_response, \
     _get_jira_attach_response, _get_test_data_dir_path
+from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
     send_submission_to_ena, download_submitted_run_files_to_stringIO
 from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_get_user_by_id, \
     gfbio_helpdesk_create_ticket, gfbio_helpdesk_comment_on_ticket, \
     gfbio_helpdesk_attach_file_to_ticket, gfbio_prepare_create_helpdesk_payload, \
-    gfbio_update_helpdesk_ticket
+    gfbio_update_helpdesk_ticket, gfbio_helpdesk_delete_attachment
 from gfbio_submissions.brokerage.utils.pangaea import \
     request_pangaea_login_token, parse_pangaea_login_token_response, \
     get_pangaea_login_token, create_pangaea_jira_ticket
@@ -136,8 +142,6 @@ class EnalizerTest(TestCase):
         self.assertEqual('sample.xml', k)
         submission_samples = submission.brokerobject_set.filter(type='sample')
         # FIXME: order of samples seem to be random
-        print('\n\n-------------------------------------\n\n')
-        print(sample_xml)
         self.assertIn(
             '<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="{1}">'
             '<TITLE>sample title</TITLE>'
@@ -625,10 +629,10 @@ class TestGFBioJira(TestCase):
         ticket_key = 'SAND-1460'
         url = '{0}{1}/{2}'.format(self.base_url, HELPDESK_API_SUB_URL,
                                   ticket_key, )
-        response = requests.get(
-            url=url,
-            auth=('brokeragent', ''),
-        )
+        # response = requests.get(
+        #     url=url,
+        #     auth=('brokeragent', ''),
+        # )
         response = requests.put(
             url=url,
             auth=('brokeragent', ''),
@@ -650,6 +654,264 @@ class TestGFBioJira(TestCase):
         )
         self.assertEqual(204, response.status_code)
         self.assertEqual(0, len(response.content))
+
+    @skip('Test against helpdesk server')
+    def test_add_attachment(self):
+        ticket_key = 'SAND-1535'
+        url = '{0}{1}/{2}/{3}'.format(
+            self.base_url,
+            HELPDESK_API_SUB_URL,
+            ticket_key,
+            HELPDESK_ATTACHMENT_SUB_URL,
+        )
+        headers = CaseInsensitiveDict({'content-type': None,
+                                       'X-Atlassian-Token': 'nocheck'})
+
+        data = TestHelpDeskTicketMethods._create_test_data(
+            '/tmp/test_primary_data_file')
+        # files = {'file': file}
+        # files = {'file': open(file, 'rb')}
+        response = requests.post(
+            url=url,
+            auth=('brokeragent', ''),
+            headers=headers,
+            files=data,
+        )
+        # 200
+        # b'[{"self":"https://helpdesk.gfbio.org/rest/api/2/attachment/13820",
+        # "id":"13820","filename":"test_primary_data_file","author":
+        # {"self":"https://helpdesk.gfbio.org/rest/api/2/user?username=
+        # brokeragent","name":"brokeragent","key":"brokeragent@gfbio.org",
+        # "emailAddress":"brokeragent@gfbio.org","avatarUrls":{"48x48":
+        # "https://helpdesk.gfbio.org/secure/useravatar?ownerId=
+        # brokeragent%40gfbio.org&avatarId=11100","24x24":
+        # "https://helpdesk.gfbio.org/secure/useravatar?size=small&ownerId=
+        # brokeragent%40gfbio.org&avatarId=11100","16x16":
+        # "https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&ownerId=
+        # brokeragent%40gfbio.org&avatarId=11100","32x32":
+        # "https://helpdesk.gfbio.org/secure/useravatar?size=medium&ownerId=
+        # brokeragent%40gfbio.org&avatarId=11100"},"displayName":
+        # "Broker Agent","active":true,"timeZone":"Europe/Berlin"},
+        # "created":"2019-06-05T20:06:12.318+0000","size":8,
+        # "content":"https://helpdesk.gfbio.org/secure/attachment/
+        # 13820/test_primary_data_file"}]'
+
+    @skip('Test against helpdesk server')
+    def test_delete_attachment(self):
+        # ticket_key = 'SAND-1535'
+        # testing get ticket -> WORKS
+        #  http://helpdesk.gfbio.org/rest/api/2/issue/SAND-1535
+        # url = '{0}{1}/{2}'.format(self.base_url, HELPDESK_API_SUB_URL,
+        #                           ticket_key, )
+        # response = requests.get(
+        #     url=url,
+        #     auth=('brokeragent', ''),
+        #     headers={
+        #         'Content-Type': 'application/json'
+        #     },
+        # )
+        #
+        # testing get attachment -> WORKS
+        # url = '{0}{1}/{2}'.format(self.base_url, '/rest/api/2/attachment',
+        #                           '13791', )
+        # print(url)
+        # response = requests.get(
+        #     url=url,
+        #     auth=('brokeragent', ''),
+        #     headers={
+        #         'Content-Type': 'application/json'
+        #     },
+        # )
+        # http://helpdesk.gfbio.org/rest/api/2/attachment/13791
+        # 200
+        # b'{"self":"https://helpdesk.gfbio.org/rest/api/2/attachment/13791",
+        # "filename":"File1.forward.fastq.gz","author":{"self":
+        # "https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent",
+        # "key":"brokeragent@gfbio.org","name":"brokeragent","avatarUrls":
+        # {"48x48":"https://helpdesk.gfbio.org/secure/useravatar?ownerId=
+        # brokeragent%40gfbio.org&avatarId=11100","24x24":"https://helpdesk.
+        # gfbio.org/secure/useravatar?size=small&ownerId=brokeragent%40gfbio.
+        # org&avatarId=11100","16x16":"https://helpdesk.gfbio.org/secure/
+        # useravatar?size=xsmall&ownerId=brokeragent%40gfbio.org&avatarId=
+        # 11100","32x32":"https://helpdesk.gfbio.org/secure/useravatar?
+        # size=medium&ownerId=brokeragent%40gfbio.org&avatarId=11100"},
+        # "displayName":"Broker Agent","active":true},"created":
+        # "2019-06-04T19:39:21.138+0000","size":66,"properties":{},
+        # "content":"https://helpdesk.gfbio.org/secure/attachment/13791/
+        # File1.forward.fastq.gz"}'
+
+        # testing delete -> WORKS
+        url = '{0}{1}/{2}'.format(self.base_url, '/rest/api/2/attachment',
+                                  '13791', )
+        response = requests.delete(
+            url=url,
+            auth=('brokeragent', ''),
+            headers={
+                'Content-Type': 'application/json'
+            },
+        )
+        # http://helpdesk.gfbio.org/rest/api/2/attachment/13791
+        # 204
+        # b''
+
+    @skip('Test against helpdesk server')
+    def test_update_ticket_with_siteconfig(self):
+
+        # WORKS:
+        ticket_key = 'SAND-1539'
+        url = '{0}{1}/{2}'.format(self.base_url, HELPDESK_API_SUB_URL,
+                                  ticket_key, )
+        response = requests.put(
+            url=url,
+            auth=('brokeragent', ''),
+            headers={
+                'Content-Type': 'application/json'
+            },
+            data=json.dumps({
+                # 'fields': {
+                #     'customfield_10205': 'Kevin Horsmeier',
+                #     'customfield_10216': [
+                #         {'value': 'Uncertain'},
+                #     ]
+                # }
+                'fields': {
+                    # 'customfield_10010': 'sand/generic-data',
+                    'customfield_10202': {
+                        'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10805',
+                        'value': 'CC BY-NC-ND 4.0', 'id': '10805'},
+                    'issuetype': {'name': 'Data Submission'},
+                    'customfield_10307': 'pub1',
+                    'description': 'remote debug 4',
+                    'customfield_10208': 'remote debug 4',
+                    'customfield_10311': '',
+                    'customfield_10303': '7e6fa310-6031-4e41-987b-271d89916eb2',
+                    'customfield_10205': ',;', 'customfield_10216': [
+                        {'value': 'Sensitive Personal Information'},
+                        {'value': 'Uncertain'}],
+                    'summary': 'remote debug 4 EDIT TITLE AGAIN Part 2 "Retur...',
+                    # 'reporter': {
+                    #     'name': 'No valid user, name or email available'},
+                    'customfield_10313': 'Algae & Protists, Zoology, Geoscience, Microbiology',
+                    'project': {'key': 'SAND'},
+                    'customfield_10200': '2020-01-24',
+                    'customfield_10314': '',
+                    'customfield_10308': ['LABEL1', 'label2'],
+                    'customfield_10600': '',
+                    'customfield_10229': [{'value': 'Dublin Core'}],
+                    'customfield_10201': 'remote debug 4 EDIT TITLE AGAIN Part 2 "Return of the edit"'
+                }
+            })
+        )
+        # ######################################
+
+        # jira = JIRA(server='http://helpdesk.gfbio.org/',
+        #             basic_auth=('brokeragent', ''))
+        #
+        # issue = jira.issue('SAND-1539')
+        # res = issue.update(notify=True, fields={
+        #     'customfield_10205': 'New Name Marc Weber, Alfred E. Neumann',
+        #     'customfield_10216': [
+        #         {'value': 'Uncertain'},
+        #         {'value': 'Nagoya Protocol'},
+        #         {'value': 'Sensitive Personal Information'},
+        #     ]
+        # })
+        # print(res)
+
+        # issue = jira.issue('SAND-1540')
+        # res = issue.update(notify=True, fields={'summary': 'new summary Part 2',
+        #                                         'description': 'A new summary was added. AGAIN'})
+        # print(res)
+        pass
+
+    @skip('Test against helpdesk server')
+    def test_python_jira(self):
+        jira = JIRA(server='http://helpdesk.gfbio.org/',
+                    basic_auth=('brokeragent', ''))
+        issues = jira.search_issues('assignee="Marc Weber"')
+        issue = jira.issue('SAND-1539')
+
+    @skip('Test against helpdesk server')
+    def test_python_jira_create(self):
+        jira = JIRA(server='http://helpdesk.gfbio.org/',
+                    basic_auth=('brokeragent', ''))
+
+        # almost analog to gfbio_prepare_create_helpdesk_payload(...)
+        issue_dict = {
+            'project': {'key': 'SAND'},
+            'summary': 'New issue from jira-python',
+            'description': 'Look into this one',
+            'issuetype': {
+                'name': 'Data Submission'
+            },
+            'reporter': {
+                'name': 'maweber@mpi-bremen.de'
+            },
+            'assignee': {
+                'name': 'maweber@mpi-bremen.de'  # or data center
+            },
+            'customfield_10010': 'sand/molecular-data',
+            'customfield_10200': '{0}'.format(
+                (datetime.date.today() + datetime.timedelta(
+                    days=365)).isoformat()),
+            'customfield_10201': 'requirements title',
+            'customfield_10208': 'requirements description',
+            'customfield_10303': '7fafa310-6031-4e41-987b-271d89916eb2',
+            # 'customfield_10311': requirements.get('data_collection_time', ''),
+            'customfield_10308': ['LABEL1', 'label2', ],
+            'customfield_10313': ', '.join(
+                ['Algae & Protists', 'Microbiology']),
+            'customfield_10205': 'first_name,last_name;email',
+            'customfield_10307': '; '.join(['publication 1234']),
+            'customfield_10216': [{'value': l} for l in
+                                  ['Sensitive Personal Information',
+                                   'Uncertain']],
+            'customfield_10314': 'potential project id',
+            'customfield_10202': {
+                'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10500',
+                'value': 'other',
+                'id': '10500'
+            },
+            'customfield_10600': 'http://www.downloadurl.com',
+            'customfield_10229': [{'value': 'other'}],
+
+        }
+        try:
+            new_issue = jira.create_issue(fields=issue_dict)
+            # SAND-1540
+            # works : https://helpdesk.gfbio.org/projects/SAND/queues/custom/21/SAND-1540
+            # <class 'jira.resources.Issue'>
+        except JIRAError as e:
+            pass
+            # print(e.status_code)
+            # # 400
+            # print(e.response.text)
+            # {"errorMessages":[],"errors":{"Metadata Description":"data was
+            # not an array","customfield_10202":"Could not find valid 'id' or
+            # 'value' in the Parent Option object."}}
+
+        # new_issue = jira.create_issue(
+        #     project='PROJ_key_or_id',
+        #     summary='New issue from jira-python',
+        #     description='Look into this one',
+        #     issuetype={'name': 'Bug'}
+        # )
+        # print(new_issue)
+
+    @skip('Test against helpdesk server')
+    def test_python_jira_update(self):
+        jira = JIRA(server='http://helpdesk.gfbio.org/',
+                    basic_auth=('brokeragent', ''))
+        issue = jira.issue('SAND-1543')
+        # issue.update(summary='new summary', description='A new summary was added')
+
+        # res = issue.update(notify=False, fields={'summary': 'new summary',
+        #                                    'description': 'A new summary was added'})
+        # jira.exceptions.JIRAError: JiraError HTTP 403 url: https://helpdesk.gfbio.org/rest/api/2/issue/16035?notifyUsers=false
+        # 	text: To discard the user notification either admin or project admin permissions are required.
+
+        res = issue.update(notify=True, fields={'summary': 'new summary',
+                                                'description': 'A new summary was added'})
 
 
 class TestSubmissionTransferHandler(TestCase):
@@ -711,8 +973,9 @@ class TestSubmissionTransferHandler(TestCase):
         sub, conf = \
             SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
                 submission_id=submission.pk)
-        reports = TaskProgressReport.objects.all()
-        self.assertEqual(0, len(reports))
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertEqual(0, len(tprs))
         self.assertIsInstance(sub, Submission)
         self.assertIsInstance(conf, SiteConfiguration)
 
@@ -728,8 +991,9 @@ class TestSubmissionTransferHandler(TestCase):
         sub, conf = \
             SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
                 submission_id=Submission.objects.last().pk)
-        reports = TaskProgressReport.objects.all()
-        self.assertEqual(0, len(reports))
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertEqual(0, len(tprs))
         self.assertIsInstance(conf, SiteConfiguration)
         self.assertEqual('default', conf.title)
 
@@ -777,9 +1041,13 @@ class TestSubmissionTransferHandler(TestCase):
         responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
         sth = SubmissionTransferHandler(submission_id=submission.pk,
                                         target_archive='ENA')
-        self.assertEqual(0, len(TaskProgressReport.objects.all()))
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertEqual(0, len(tprs))
         sth.execute_submission_to_ena()
-        self.assertLess(0, len(TaskProgressReport.objects.all()))
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertLess(0, len(tprs))
 
     @responses.activate
     def test_execute_ena_pangaea(self):
@@ -823,7 +1091,9 @@ class TestSubmissionTransferHandler(TestCase):
             status=200)
         sth = SubmissionTransferHandler(submission_id=submission.pk,
                                         target_archive='ENA_PANGAEA')
-        self.assertEqual(0, len(TaskProgressReport.objects.all()))
+        tprs = TaskProgressReport.objects.exclude(
+            task_name='tasks.update_helpdesk_ticket_task')
+        self.assertEqual(0, len(tprs))
         sth.execute_submission_to_ena_and_pangaea()
         self.assertLess(0, len(TaskProgressReport.objects.all()))
 
@@ -880,6 +1150,84 @@ class TestHelpDeskTicketMethods(TestCase):
     def _delete_test_data():
         SubmissionUpload.objects.all().delete()
 
+    def test_prepare_helpdesk_payload(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'generic_data.json'), 'r') as data_file:
+            data = json.load(data_file)
+        serializer = SubmissionSerializer(data={
+            'target': 'GENERIC',
+            'release': True,
+            'data': data
+        })
+        serializer.is_valid()
+        submission = serializer.save(site=User.objects.first())
+        site_config = SiteConfiguration.objects.first()
+        payload = gfbio_prepare_create_helpdesk_payload(
+            site_config=site_config,
+            submission=submission)
+        self.assertEqual({'name': 'ikostadi'}, payload['fields']['assignee'])
+        self.assertEqual('sand/molecular-data',
+                         payload['fields']['customfield_10010'])
+        self.assertEqual('MIxS',
+                         payload['fields']['customfield_10229'][0]['value'])
+
+        data['requirements'].pop('data_center')
+        serializer = SubmissionSerializer(data={
+            'target': 'GENERIC',
+            'release': True,
+            'data': data
+        })
+        serializer.is_valid()
+        submission = serializer.save(site=User.objects.first())
+        site_config = SiteConfiguration.objects.first()
+        payload = gfbio_prepare_create_helpdesk_payload(
+            site_config=site_config,
+            submission=submission)
+        self.assertNotIn('assignee', payload['fields'].keys())
+        self.assertEqual('sand/generic-data',
+                         payload['fields']['customfield_10010'])
+
+        self.assertEqual('other',
+                         payload['fields']['customfield_10229'][0]['value'])
+
+        data['requirements'][
+            'data_center'] = 'GFBio Data Centers - our curators will suggest the appropriate one(s)'
+        serializer = SubmissionSerializer(data={
+            'target': 'GENERIC',
+            'release': True,
+            'data': data
+        })
+        serializer.is_valid()
+        submission = serializer.save(site=User.objects.first())
+        site_config = SiteConfiguration.objects.first()
+        payload = gfbio_prepare_create_helpdesk_payload(
+            site_config=site_config,
+            submission=submission)
+        self.assertNotIn('assignee', payload['fields'].keys())
+
+    def test_prepare_helpdesk_payload_metadataschema_is_none(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'generic_data.json'), 'r') as data_file:
+            data = json.load(data_file)
+        data['requirements'].pop('data_center')
+        data['requirements']['metadata_schema'] = 'None'
+
+        serializer = SubmissionSerializer(data={
+            'target': 'GENERIC',
+            'release': True,
+            'data': data
+        })
+        serializer.is_valid()
+        submission = serializer.save(site=User.objects.first())
+        site_config = SiteConfiguration.objects.first()
+        payload = gfbio_prepare_create_helpdesk_payload(
+            site_config=site_config,
+            submission=submission)
+        self.assertEqual('other',
+                         payload['fields']['customfield_10229'][0]['value'])
+
     @responses.activate
     def test_create_helpdesk_ticket(self):
         submission = Submission.objects.first()
@@ -925,6 +1273,8 @@ class TestHelpDeskTicketMethods(TestCase):
                             HELPDESK_API_SUB_URL),
             json={'bla': 'blubb'},
             status=200)
+        # datacenter jira user mappings
+        # https://gfbio.biowikifarm.net/internal/Data_Centers_Contact_Persons
         data = gfbio_prepare_create_helpdesk_payload(
             site_config=site_config,
             submission=submission)
@@ -1024,6 +1374,24 @@ class TestHelpDeskTicketMethods(TestCase):
         self.assertEqual(200, response.status_code)
         request_logs = RequestLog.objects.all()
         self.assertEqual(2, len(request_logs))
+
+    @responses.activate
+    def test_delete_attachment(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        url = '{0}{1}/{2}'.format(
+            site_config.helpdesk_server.url,
+            HELPDESK_API_ATTACHMENT_URL,
+            4711)
+        responses.add(responses.DELETE, url, body=b'', status=204)
+        response = gfbio_helpdesk_delete_attachment(
+            site_config, 4711, submission
+        )
+        self.assertEqual(204, response.status_code)
+        self.assertEqual(b'', response.content)
+        rq = RequestLog.objects.first()
+        self.assertEqual(url, rq.url)
+        self.assertEqual(response.status_code, rq.response_status)
 
     @responses.activate
     def test_attach_multiple_files_to_helpdesk_ticket(self):
@@ -1143,3 +1511,23 @@ class TestDownloadEnaReport(TestCase):
         row = reader.next()
         self.assertTrue('STUDY_ID' in row.keys())
         decompressed_file.close()
+
+
+class TestCsv(TestCase):
+
+    def test_prototyping(self):
+        print('test_prototyping')
+
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'molecular_metadata.csv'), 'r') as csv_file:
+            data = parse_molecular_csv(csv_file=csv_file)
+            pprint(data, indent=2)
+
+    # TODO: real test
+    # TODO: test real world scenarion, set up workflow
+    # TODO: test errors, non-sense files
+    #
+    # TODO: usemetadata index and filenname
+    # FIXME: errors on new submission
+    # FIXME: errros in file list when navigating from edit to new submission

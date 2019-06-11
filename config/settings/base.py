@@ -12,7 +12,7 @@ from celery.schedules import crontab
 
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
-VERSION = '1.67.4'
+VERSION = '1.68.0'
 
 ROOT_DIR = environ.Path(
     __file__) - 3  # (gfbio_submissions/config/settings/base.py - 3 = gfbio_submissions/)
@@ -57,9 +57,11 @@ THIRD_PARTY_APPS = [
     'allauth.socialaccount',  # registration
     'allauth.socialaccount.providers.github',  # github
     'allauth.socialaccount.providers.orcid',  # orcid
+    'allauth.socialaccount.providers.google',  # google
     'rest_framework',  # Django REST framework
     'rest_framework.authtoken',  # token authentication
     'corsheaders',  # django cors headers
+    'mozilla_django_oidc',  # mozilla oidc
 ]
 
 # Apps specific for this project go here.
@@ -261,6 +263,7 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
+    'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
 ]
 
 # Some really nice defaults
@@ -271,7 +274,7 @@ ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 # TODO: 06.02.2019 set back to true when in production
 # TODO: set proper value in env !!!
 ACCOUNT_ALLOW_REGISTRATION = env.bool('DJANGO_ACCOUNT_ALLOW_REGISTRATION',
-                                      False)
+                                      True)
 ACCOUNT_ADAPTER = 'gfbio_submissions.users.adapters.AccountAdapter'
 SOCIALACCOUNT_ADAPTER = 'gfbio_submissions.users.adapters.SocialAccountAdapter'
 
@@ -327,3 +330,25 @@ LOCAL_REPOSITORY = env('LOCAL_REPOSITORY',
 REMOTE_REPOSITORY = env('REMOTE_REPOSITORY',
                         default='https://maweber@colab.mpi-bremen.de/stash/scm/gfbio/gfbio-submission-auditing-tests.git')
 ########## END Access AuditableTextData
+
+########## OPENIDCONNECT SETTINGS
+
+OIDC_RP_CLIENT_ID = env('OIDC_RP_CLIENT_ID', default='no_oidc_cl_id')
+OIDC_RP_CLIENT_SECRET = env('OIDC_RP_CLIENT_SECRET',
+                            default='no_oidc_cl_secret')
+
+OIDC_RP_SIGN_ALGO = env('OIDC_RP_SIGN_ALGO', default='HS256')
+OIDC_OP_JWKS_ENDPOINT = env('OIDC_OP_JWKS_ENDPOINT', default='no_jwks_url')
+
+OIDC_OP_AUTHORIZATION_ENDPOINT = 'https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php'
+OIDC_OP_TOKEN_ENDPOINT = 'https://sso.gfbio.org/simplesaml/module.php/oidc/access_token.php'
+OIDC_OP_USER_ENDPOINT = ' https://sso.gfbio.org/simplesaml/module.php/oidc/userinfo.php'
+
+OIDC_USE_NONCE = False  # Default:	True
+
+# FIXME: omiting these causes errors with oidc !
+# FIXME: Problem is that all logins are affected !
+LOGIN_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
+LOGOUT_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
+
+########## END OPENIDCONNECT SETTINGS

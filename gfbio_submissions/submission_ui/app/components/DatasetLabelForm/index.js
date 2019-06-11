@@ -28,8 +28,12 @@ class DatasetLabelForm extends React.PureComponent {
   };
 
   render() {
-
-    const labelList = this.props.datasetLabels.map((label, index) => {
+    // console.log('DatasetLabelForm render');
+    // console.log(this.props);
+    // console.log('----------------------');
+    // console.log(this.state);
+    // console.log('---------------------------------');
+    const labelList = this.props.dataset_labels.map((label, index) => {
       if (label !== '') {
         return <li key={index}
                    className="list-group-item d-flex justify-content-between align-items-center publication">
@@ -84,14 +88,14 @@ class DatasetLabelForm extends React.PureComponent {
 
 DatasetLabelForm.propTypes = {
   currentLabel: PropTypes.string,
-  datasetLabels: PropTypes.array,
+  dataset_labels: PropTypes.array,
   handleAdd: PropTypes.func,
   handleRemove: PropTypes.func,
   handleChange: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
-  datasetLabels: makeSelectDatasetLabels(),
+  dataset_labels: makeSelectDatasetLabels(),
   currentLabel: makeSelectCurrentLabel(),
 });
 

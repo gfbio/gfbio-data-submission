@@ -173,6 +173,9 @@ LOGGING = {
             'format': '%(levelname)s %(asctime)s %(module)s '
                       '%(process)d %(thread)d %(message)s'
         },
+        'simple-debug': {
+            'format': '\t*********\t%(levelname)s %(message)s'
+        },
     },
     'handlers': {
         'sentry': {
@@ -180,9 +183,14 @@ LOGGING = {
             'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
         },
         'console': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose'
+        },
+        'console-debug': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple-debug'
         }
     },
     'loggers': {
@@ -215,6 +223,12 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'INFO',  # TODO: I suggest Info here
             'propagate': True
+        },
+        # TODO: remove this logger
+        'mozilla_django_oidc': {
+            'handlers': ['console', 'console-debug'],
+            'level': 'DEBUG',
+            'propagate': False
         },
     },
 }

@@ -3,15 +3,25 @@
         "title": "Generic Submission Title",
         "description": "Generic Submission with all availabale fields filled.",
         "data_collection_time": "2018-12-01 to 2019-04-13",
-        "dataset_label": "label1;label2",
+        "dataset_label": [
+            "label1",
+            "label2"
+        ],
         "categories": [
             "Geoscience",
             "Microbiology"
         ],
         "dataset_author": "Kevin Horstmeier, Horst Pottschmidt",
         "license": "Other License",
-        "related_publications": "Pub1, Pub2 2017",
+        "related_publications": [
+            "Pub1" ,
+            "Pub2 2017"
+        ],
         "metadata_schema": "Other metadata or documentation",
-        "legal_requirements": ["Uncertain", "Nagoya Protocol"]
+        "legal_requirements": [
+            "Uncertain",
+            "Nagoya Protocol"
+        ],
+        "data_center": "ENA – European Nucleotide Archive"
     }
 }
