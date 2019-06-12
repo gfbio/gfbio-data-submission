@@ -156,8 +156,8 @@ function* prepareRequestData(userId, submit = true) {
     dataset_labels,
     categories,
     contributors,
-    metaDataIndex,
-    metaDataFileName,
+    // metaDataIndex,
+    metadata_file_name: metaDataFileName,
   }, formValues);
   return {
     // TODO: determine target according to "Target Data center" value. e.g. "ena" = ENA_PANGAEA

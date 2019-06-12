@@ -60,6 +60,7 @@ export const setStateFormValues = (state, action) => {
     .set('embargoDate', new Date(action.response.data.embargo))
     .set('license', action.response.data.data.requirements.license)
     .set('metaDataSchema', action.response.data.data.requirements.metadata_schema)
+    .set('metaDataFileName', action.response.data.data.requirements.metadata_file_name)
     // TODO: need whole submission ?
     .set('submission', action.response.data);
 };
@@ -68,6 +69,7 @@ export const resetStateFormValues = (state, initialContributors = []) => {
   return state
     .set('showSubmitSuccess', false)
     .set('metaDataIndex', '')
+    .set('metaDataFileName', '')
     .set('brokerSubmissionId', '')
     .set('initialValues', {})
     .set('relatedPublications', fromJS([]))

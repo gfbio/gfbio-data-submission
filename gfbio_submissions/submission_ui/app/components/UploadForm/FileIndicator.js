@@ -5,7 +5,7 @@ import { createStructuredSelector } from 'reselect';
 import {
   makeSelectFileUploads,
   makeSelectFileUploadsFromServer,
-  makeSelectMetaDataIndex,
+  makeSelectMetaDataIndex, makeSelectMetaFileName,
 } from '../../containers/SubmissionForm/selectors';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
@@ -45,19 +45,37 @@ class FileIndicator extends React.Component {
     // set all other field to display not checked
 
     // 1. if item is removed, set metadataindex to -1
+
+    console.log('handleMetadataSelect');
+    console.log(event);
+    console.log(event.target.checked); // true
+    console.log(event.target.value);  // uploaded_2 new
+    console.log(this.props.metaDataIndex); // uploaded_4 old
+    console.log(this.props.metaDataFileName); // ''
     if (event.target.checked) {
+      console.log('std check');
       this.props.changeMetaDataIndex(event.target.value);
     } else if (!event.target.checked && event.target.value === this.props.metaDataIndex) {
+      console.log('std de-check');
       this.props.changeMetaDataIndex('');
     }
+    // else if (!event.target.checked && this.props.metaDataFileName !== '') {
+    //   console.log('meta de-check');
+    //   this.props.changeMetaDataIndex('');
+    // }
   }
 
 
   createUploadedListElements() {
-    // console.log('createUploadedListElements');
+    console.log('createUploadedListElements');
     // console.log(this.props.uploadListIndex);
     const uploaded = this.props.fileUploadsFromServer.map((uploaded, index) => {
-
+      console.log(' --  ' + uploaded.file_name + ' - ' + index + ' - ' + this.props.metaDataFileName + ' - ');
+      // console.log('---------------------------');
+      // console.log(uploaded.file_name);
+      // console.log(this.props.metaDataFileName);
+      // console.log(`primaryUploaded${index}`);
+      // console.log(this.props.metaDataFileName === uploaded.file_name);
       let metaDataCheckButton = (
         <small className="file-name">
           <input
@@ -65,6 +83,7 @@ class FileIndicator extends React.Component {
             id={`primaryUploaded${index}`}
             value={`uploaded_${index}`}
             onChange={this.handleMetadataSelect}
+            checked={false}
           />
           <label htmlFor={`primaryUploaded${index}`}
                  className="metadata"></label>
@@ -72,15 +91,15 @@ class FileIndicator extends React.Component {
           {uploaded.file_name}
         </small>
       );
-      if (this.props.metaDataIndex === `uploaded_${index}`) {
+      if (this.props.metaDataIndex === `uploaded_${index}` || this.props.metaDataFileName === uploaded.file_name) {
         metaDataCheckButton = (
           <small className="file-name">
             <input
               type="checkbox"
               id={`primaryUploaded${index}`}
-              value={`uploaded${index}`}
+              value={`uploaded_${index}`}
               onChange={this.handleMetadataSelect}
-              checked
+              checked={true}
             />
             <label htmlFor={`primaryUploaded${index}`}
                    className="metadata"></label>
@@ -89,9 +108,6 @@ class FileIndicator extends React.Component {
           </small>
         );
       }
-
-      // console.log('-- map index ' + index);
-      // console.log('-- map elementIndex ' + elementIndex);
       return <li
         key={index}
         className={'list-group-item file-upload success'}
@@ -126,7 +142,9 @@ class FileIndicator extends React.Component {
 
 
   createScheduledUploadListElements() {
+    console.log('createSCHEDULEDListElements');
     const fileListElements = this.props.fileUploads.map((upload, index) => {
+      console.log(' --  ' + upload.file.name + ' - ' + index);
 
       // this.incrementListIndex();
       // const index = this.getListIndex();
@@ -257,6 +275,7 @@ FileIndicator.propTypes = {
   fileUploads: PropTypes.array,
   fileUploadsFromServer: PropTypes.object,
   metaDataIndex: PropTypes.string,
+  metaDataFileName: PropTypes.string,
   handleRemove: PropTypes.func,
   changeMetaDataIndex: PropTypes.func,
   // uploadListIndex: PropTypes.number,
@@ -268,6 +287,7 @@ const mapStateToProps = createStructuredSelector({
   fileUploads: makeSelectFileUploads(),
   fileUploadsFromServer: makeSelectFileUploadsFromServer(),
   metaDataIndex: makeSelectMetaDataIndex(),
+  metaDataFileName: makeSelectMetaFileName(),
   // uploadListIndex: makeSelectUploadListIndex(),
 });
 

@@ -155,6 +155,12 @@ const makeSelectMetaDataIndex = () =>
     substate.get('metaDataIndex'),
   );
 
+const makeSelectMetaFileName = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('metaDataFileName'),
+  );
+
+
 // const makeSelectUploadListIndex = () =>
 //   createSelector(selectSubmissionFormDomain, substate =>
 //     substate.get('uploadListIndex'),
@@ -214,6 +220,7 @@ export {
   makeSelectShowSubmitSuccess,
   makeSelectUpdateWithRelease,
   makeSelectMetaDataIndex,
+  makeSelectMetaFileName,
   // makeSelectDeleteBrokerSubmissionId,
   makeSelectPromptOnLeave,
   makeSelectShowUploadLimitMessage,

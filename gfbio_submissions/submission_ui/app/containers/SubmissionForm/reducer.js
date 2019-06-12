@@ -15,7 +15,10 @@ import {
   CHANGE_META_DATA_SCHEMA,
   CLOSE_EMBARGO_DIALOG,
   CLOSE_SAVE_SUCCESS,
-  CLOSE_SUBMIT_SUCCESS, DELETE_FILE, DELETE_FILE_ERROR, DELETE_FILE_SUCCESS,
+  CLOSE_SUBMIT_SUCCESS,
+  DELETE_FILE,
+  DELETE_FILE_ERROR,
+  DELETE_FILE_SUCCESS,
   DISMISS_SHOW_UPLOAD_LIMIT,
   FETCH_FILE_UPLOADS_ERROR,
   FETCH_FILE_UPLOADS_SUCCESS,
@@ -131,6 +134,7 @@ export const initialState = fromJS({
   fileUploadsFromServer: {},
 
   metaDataIndex: '',
+  metaDataFileName: '',
   // uploadListIndex: 0,
 
   brokerSubmissionId: '',
@@ -150,6 +154,15 @@ export const initialState = fromJS({
 
 });
 
+
+// const getIndexForFileName = (data, fileName) => {
+//   for (let d in data) {
+//     console.log(data[d]);
+//     if (data[d].file_name === fileName) {
+//       return d;
+//     }
+//   }
+// };
 
 function submissionFormReducer(state = initialState, action) {
   switch (action.type) {
@@ -327,11 +340,15 @@ function submissionFormReducer(state = initialState, action) {
       return state;
     case FETCH_FILE_UPLOADS_SUCCESS:
       // console.log('FETCH_FILE_UPLOADS_SUCCESS');
-      // console.log(action.response);
       // console.log(typeof action.response.data);
+      // console.log(action.response);
+      // const metaIndex = 'uploaded_' + action.response.data.indexOf(state.get('metaDataFileName'));
+      // const metaIndex = 'uploaded_' + getIndexForFileName(action.response.data, state.get('metaDataFileName'));
+      // console.log(metaIndex);
       return state
         .set('fileUploads', List())
         .set('fileUploadsFromServer', action.response.data);
+    // .set('metaDataIndex', metaIndex);
     case FETCH_FILE_UPLOADS_ERROR:
       // console.log('FETCH_FILE_UPLOADS_ERROR');
       // console.log(action.error);
@@ -381,6 +398,7 @@ function submissionFormReducer(state = initialState, action) {
     case SET_METADATA_INDEX:
       // console.log('SET_METADATA_INDEX');
       return state
+        .set('metaDataFileName', '')
         .set('metaDataIndex', action.metaDataIndex);
     // case SET_UPLOAD_LIST_INDEX:
     //   return state
