@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import json
-from pprint import pprint
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -543,9 +542,7 @@ class TestSubmissionUploadView(TestCase):
     @responses.activate
     def test_list_uploads_queryset(self):
         submission = Submission.objects.first()
-        print(submission)
         submission_2 = Submission.objects.last()
-        print(submission_2)
         self.assertNotEqual(submission.broker_submission_id,
                             submission_2.broker_submission_id)
 
@@ -570,11 +567,19 @@ class TestSubmissionUploadView(TestCase):
 
         url = reverse('brokerage:submissions_uploads', kwargs={
             'broker_submission_id': submission.broker_submission_id})
-
         response = self.api_client.get(url)
-        # self.assertEqual(200, response.status_code)
         content = json.loads(response.content.decode('utf-8'))
-        pprint(content)
+        self.assertEqual(1, len(content))
+        self.assertTrue(
+            content[0].get('file', '').endswith('test_primary_data_file'))
+
+        url = reverse('brokerage:submissions_uploads', kwargs={
+            'broker_submission_id': submission_2.broker_submission_id})
+        response = self.api_client.get(url)
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(1, len(content))
+        self.assertTrue(
+            content[0].get('file', '').endswith('test_primary_data_file_2'))
 
     @responses.activate
     def test_get_list_per_submission_content(self):

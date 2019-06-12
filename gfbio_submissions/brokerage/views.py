@@ -83,7 +83,7 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        instance = self.get_object()#
+        instance = self.get_object()  #
         # TODO: 06.06.2019 allow edit of submissions with status SUBMITTED ...
         if instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED:
             response = self.update(request, *args, **kwargs)
@@ -310,13 +310,10 @@ class SubmissionUploadListView(generics.ListAPIView):
                           permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
-    # def get_queryset(self):
-    #     broker_submission_id = self.kwargs.get('broker_submission_id', uuid4())
-    #     return SubmissionUpload.objects.filter(
-    #         submission__broker_submission_id=broker_submission_id)
-    #
-    # def get(self, request, *args, **kwargs):
-    #     return self.list(request, *args, **kwargs)
+    def get_queryset(self):
+        broker_submission_id = self.kwargs.get('broker_submission_id', uuid4())
+        return SubmissionUpload.objects.filter(
+            submission__broker_submission_id=broker_submission_id)
 
 
 class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
