@@ -2,10 +2,10 @@
     "technical_requirements": {
         "type": "object",
         "properties": {
-            "metaDataFileName": {
+            "metadata_file_name": {
                 "type": "string"
             },
-            "metaDataIndex": {
+            "metadata_index": {
                 "type": "string"
             }
         }

@@ -180,6 +180,7 @@ function submissionFormReducer(state = initialState, action) {
       // TODO: set bsi etc after success, from then its updates
       return state
         .set('metaDataIndex', '')
+        // .set('metaDataFileName', action.response.data.data.requirements.metadata_file_name)
         .set('brokerSubmissionId', action.response.data.broker_submission_id)
         .set('saveResponse', action.response)
         .set('saveInProgress', false)

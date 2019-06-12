@@ -47,22 +47,36 @@ class FileIndicator extends React.Component {
     // 1. if item is removed, set metadataindex to -1
 
     console.log('handleMetadataSelect');
-    console.log(event);
+    // console.log(event);
     console.log(event.target.checked); // true
     console.log(event.target.value);  // uploaded_2 new
     console.log(this.props.metaDataIndex); // uploaded_4 old
     console.log(this.props.metaDataFileName); // ''
+    console.log(this.props.fileUploads.get(parseInt(event.target.value)));
     if (event.target.checked) {
-      console.log('std check');
+      // console.log('std check');
       this.props.changeMetaDataIndex(event.target.value);
     } else if (!event.target.checked && event.target.value === this.props.metaDataIndex) {
-      console.log('std de-check');
+      // console.log('std de-check');
       this.props.changeMetaDataIndex('');
     }
     // else if (!event.target.checked && this.props.metaDataFileName !== '') {
     //   console.log('meta de-check');
     //   this.props.changeMetaDataIndex('');
     // }
+
+    // TODO: evaluate if it is easier to store actual metaDataFilename in submission meta-data
+    //  and deal with updates server-side. OR to get rid of these infos and do TODOs below
+
+    // TODO: store if metadata in local file object
+    // TODO: only one metadata file, thus reset others after selecting new
+    // TODO: display checked or not depending on file.meta_data value
+    // TODO: when uploading, also set metadata true/false in respective form value
+
+    // TODO: for list from server, also show checked depending on meta_data value
+    // TODO: update or reset meta_data value in both lists
+    // TODO: when updating submission, update SubmissionUploads regarding metadata
+    //  value - maybe file from new upload, maybe other already uploaded file
   }
 
 
@@ -159,6 +173,7 @@ class FileIndicator extends React.Component {
             id={`primary${index}`}
             value={index}
             onChange={this.handleMetadataSelect}
+            checked={false}
           />
           <label htmlFor={`primary${index}`}
                  className="metadata"></label>
@@ -174,7 +189,7 @@ class FileIndicator extends React.Component {
               id={`primary${index}`}
               value={index}
               onChange={this.handleMetadataSelect}
-              checked
+              checked={true}
             />
             <label htmlFor={`primary${index}`}
                    className="metadata"></label>
