@@ -397,8 +397,24 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .set('updateWithRelease', action.release);
     case SET_METADATA_INDEX:
-      // console.log('SET_METADATA_INDEX');
+      console.log('------  ___  SET_METADATA_INDEX');
+      /*
+      *
+      *  case UPLOAD_FILE_PROGRESS:
+      let upload = state.getIn(['fileUploads', action.index]);
+      upload.progress = action.val;
+      // TODO: setIn does not work as described in here: https://thomastuts.com/blog/immutable-js-101-maps-lists.html
+      //    answer maybe here: https://stackoverflow.com/questions/43515723/what-does-getin-do-in-immutable-js
       return state
+        .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1, upload));
+      *
+      *  */
+      const metaDataIndex = parseInt(action.metaDataIndex);
+      let fileUpload = state.getIn(['fileUploads', metaDataIndex]);
+      fileUpload.metaData = true;
+      console.log(state.getIn(['fileUploads', metaDataIndex]));
+      return state
+        .update('fileUploads', (fileUploads) => fileUploads.splice(metaDataIndex, 1, fileUpload))
         .set('metaDataFileName', '')
         .set('metaDataIndex', action.metaDataIndex);
     // case SET_UPLOAD_LIST_INDEX:

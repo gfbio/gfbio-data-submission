@@ -46,20 +46,31 @@ class FileIndicator extends React.Component {
 
     // 1. if item is removed, set metadataindex to -1
 
-    console.log('handleMetadataSelect');
+    console.log('**** handleMetadataSelect ***** ');
     // console.log(event);
-    console.log(event.target.checked); // true
-    console.log(event.target.value);  // uploaded_2 new
-    console.log(this.props.metaDataIndex); // uploaded_4 old
-    console.log(this.props.metaDataFileName); // ''
+    console.log('checked: ', event.target.checked); // true
+    console.log('val: ', event.target.value);  // uploaded_2 new
+    console.log('metaDataIndex:', this.props.metaDataIndex); // uploaded_4 old
+    console.log('metaDataFileName: ', this.props.metaDataFileName); // ''
+    console.log('parsed val: ', parseInt(event.target.value));
     console.log(this.props.fileUploads.get(parseInt(event.target.value)));
-    if (event.target.checked) {
+    const parsedIndex = parseInt(event.target.value);
+    if (this.props.fileUploads.get(parsedIndex) !== undefined) {
+      // TODO: reducer update or setIn action
+      this.props.changeMetaDataIndex(event.target.value);
+      // this.props.fileUploads.get(parsedIndex).metaData = true;
+    }
+    // console.log(this.props.fileUploads.get(parseInt(event.target.value)));
+
+    /*if (event.target.checked) {
       // console.log('std check');
       this.props.changeMetaDataIndex(event.target.value);
     } else if (!event.target.checked && event.target.value === this.props.metaDataIndex) {
       // console.log('std de-check');
       this.props.changeMetaDataIndex('');
-    }
+    }*/
+
+
     // else if (!event.target.checked && this.props.metaDataFileName !== '') {
     //   console.log('meta de-check');
     //   this.props.changeMetaDataIndex('');
@@ -84,7 +95,7 @@ class FileIndicator extends React.Component {
     console.log('createUploadedListElements');
     // console.log(this.props.uploadListIndex);
     const uploaded = this.props.fileUploadsFromServer.map((uploaded, index) => {
-      console.log(' --  ' + uploaded.file_name + ' - ' + index + ' - ' + this.props.metaDataFileName + ' - ');
+      // console.log(' --  ' + uploaded.file_name + ' - ' + index + ' - ' + this.props.metaDataFileName + ' - ');
       // console.log('---------------------------');
       // console.log(uploaded.file_name);
       // console.log(this.props.metaDataFileName);
@@ -158,7 +169,7 @@ class FileIndicator extends React.Component {
   createScheduledUploadListElements() {
     console.log('createSCHEDULEDListElements');
     const fileListElements = this.props.fileUploads.map((upload, index) => {
-      console.log(' --  ' + upload.file.name + ' - ' + index);
+      // console.log(' --  ' + upload.file.name + ' - ' + index);
 
       // this.incrementListIndex();
       // const index = this.getListIndex();
@@ -173,7 +184,7 @@ class FileIndicator extends React.Component {
             id={`primary${index}`}
             value={index}
             onChange={this.handleMetadataSelect}
-            checked={false}
+            checked={upload.metaData}
           />
           <label htmlFor={`primary${index}`}
                  className="metadata"></label>
@@ -181,23 +192,23 @@ class FileIndicator extends React.Component {
           {upload.file.name}
         </small>
       );
-      if (this.props.metaDataIndex === `${index}`) {
-        metaDataCheckButton = (
-          <small className="file-name">
-            <input
-              type="checkbox"
-              id={`primary${index}`}
-              value={index}
-              onChange={this.handleMetadataSelect}
-              checked={true}
-            />
-            <label htmlFor={`primary${index}`}
-                   className="metadata"></label>
-            <i className="icon ion-md-document pub"></i>
-            {upload.file.name}
-          </small>
-        );
-      }
+      // if (this.props.metaDataIndex === `${index}`) {
+      //   metaDataCheckButton = (
+      //     <small className="file-name">
+      //       <input
+      //         type="checkbox"
+      //         id={`primary${index}`}
+      //         value={index}
+      //         onChange={this.handleMetadataSelect}
+      //         checked={true}
+      //       />
+      //       <label htmlFor={`primary${index}`}
+      //              className="metadata"></label>
+      //       <i className="icon ion-md-document pub"></i>
+      //       {upload.file.name}
+      //     </small>
+      //   );
+      // }
 
       return <li
         key={index}
@@ -239,15 +250,7 @@ class FileIndicator extends React.Component {
     // console.log(this.props);
     // console.log('--------------------------------');
 
-    // console.log('###########################');
-    // console.log('list index');
-    // console.log(this.getListIndex());
     const uploadedFileListElement = this.createUploadedListElements();
-    // console.log(this.getListIndex());
-    // console.log('alreade uploaded list');
-    // for (let u of uploadedFileListElement) {
-    //   console.log(u);
-    // }
 
     const fileListElements = this.createScheduledUploadListElements();
 
@@ -277,7 +280,7 @@ class FileIndicator extends React.Component {
     return (
       <ul className="list-group list-group-flush">
         {listHeader}
-        {uploadedFileListElement}
+        {/*{uploadedFileListElement}*/}
         {fileListElements}
       </ul>
     );
