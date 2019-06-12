@@ -423,7 +423,7 @@ TODO: needs improvements :
 
 
 - build docker images (in case requirement have been updated, etc.). may take a few minutes.
-
+- can be build before stopping
         docker-compose -f production.yml build
 
 - apply migrations
