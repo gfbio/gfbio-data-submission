@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+from pprint import pprint
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -538,6 +539,42 @@ class TestSubmissionUploadView(TestCase):
         content = json.loads(response.content.decode('utf-8'))
         self.assertTrue(isinstance(content, list))
         self.assertEqual(2, len(content))
+
+    @responses.activate
+    def test_list_uploads_queryset(self):
+        submission = Submission.objects.first()
+        print(submission)
+        submission_2 = Submission.objects.last()
+        print(submission_2)
+        self.assertNotEqual(submission.broker_submission_id,
+                            submission_2.broker_submission_id)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        responses.add(responses.POST, url, json={}, status=200)
+
+        url_2 = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission_2.broker_submission_id})
+        responses.add(responses.POST, url_2, json={}, status=200)
+
+        data = self._create_test_data('/tmp/test_primary_data_file')
+        self.api_client.post(url, data, format='multipart')
+
+        data_2 = self._create_test_data('/tmp/test_primary_data_file_2')
+        self.api_client.post(url_2, data_2, format='multipart')
+
+        submission = Submission.objects.first()
+        self.assertTrue(1, len(submission.submissionupload_set.all()))
+        submission_2 = Submission.objects.last()
+        self.assertTrue(1, len(submission_2.submissionupload_set.all()))
+
+        url = reverse('brokerage:submissions_uploads', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+
+        response = self.api_client.get(url)
+        # self.assertEqual(200, response.status_code)
+        content = json.loads(response.content.decode('utf-8'))
+        pprint(content)
 
     @responses.activate
     def test_get_list_per_submission_content(self):
