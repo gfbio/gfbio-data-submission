@@ -1,0 +1,13 @@
+{
+    "technical_requirements": {
+        "type": "object",
+        "properties": {
+            "metaDataFileName": {
+                "type": "string"
+            },
+            "metaDataIndex": {
+                "type": "string"
+            }
+        }
+    }
+}

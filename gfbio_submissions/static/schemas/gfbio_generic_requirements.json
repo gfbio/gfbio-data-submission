@@ -10,6 +10,9 @@
                 },
                 {
                     "$ref": "gfbio_generic_definitions.json#/generic"
+                },
+                {
+                    "$ref": "technical_content_definitions.json#/technical_requirements"
                 }
             ]
         }

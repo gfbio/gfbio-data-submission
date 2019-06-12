@@ -19,6 +19,9 @@
                 },
                 {
                     "$ref": "ena_run_definitions.json#/run_array"
+                },
+                {
+                    "$ref": "technical_content_definitions.json#/technical_requirements"
                 }
             ]
         }
