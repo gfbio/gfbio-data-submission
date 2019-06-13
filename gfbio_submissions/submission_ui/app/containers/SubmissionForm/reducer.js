@@ -409,14 +409,23 @@ function submissionFormReducer(state = initialState, action) {
       // let newFileUploads = [];
 
       // TODO: reactor to method -> utils
+      console.log(action.metaDataIndex === state.get('metaDataIndex'));
+      console.log(action.metaDataIndex);
+      console.log(state.get('metaDataIndex'));
+
       let i = 0;
       for (let f of state.get('fileUploads')) {
-        // console.log(i + ' ' + f);
-        if (i === metaDataIndex) {
+        console.log(i + ' ' + f.metaData);
+        if (i === metaDataIndex && f.metaData === false) {
           f.metaData = true;
-        } else {
+        }
+        // else if (i === metaDataIndex && f.metaData === true) {
+        //   f.metaData = false;
+        // }
+        else {
           f.metaData = false;
         }
+        console.log(f);
         // newFileUploads.push(f);
         state.update('fileUploads', (fileUploads) => fileUploads.splice(i, 1, f));
         i++;
@@ -427,12 +436,16 @@ function submissionFormReducer(state = initialState, action) {
         // }
         // newFileUploads.push(fileUploads[f]);
       }
+      let newMetaDataIndex = action.metaDataIndex;
+      if (state.getIn(['fileUploads', metaDataIndex]).metaData === false) {
+        newMetaDataIndex = '';
+      }
       // console.log(newFileUploads);
       return state
       // .update('fileUploads', (fileUploads) => fileUploads.splice(metaDataIndex, 1, fileUpload))
       //   .set('fileUploads', fromJS(newFileUploads))
         .set('metaDataFileName', '')
-        .set('metaDataIndex', action.metaDataIndex);
+        .set('metaDataIndex', newMetaDataIndex);
     // case SET_UPLOAD_LIST_INDEX:
     //   return state
     //     .set('uploadListIndex', action.listIndex);

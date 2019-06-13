@@ -124,7 +124,7 @@ class FileIndicator extends React.Component {
               id={`primaryUploaded${index}`}
               value={`uploaded_${index}`}
               onChange={this.handleMetadataSelect}
-              checked={true}
+              checked={uploaded.meta_data}
             />
             <label htmlFor={`primaryUploaded${index}`}
                    className="metadata"></label>
@@ -280,7 +280,7 @@ class FileIndicator extends React.Component {
     return (
       <ul className="list-group list-group-flush">
         {listHeader}
-        {/*{uploadedFileListElement}*/}
+        {uploadedFileListElement}
         {fileListElements}
       </ul>
     );
