@@ -331,10 +331,11 @@ export function updateSubmissionError(errorResponse) {
   };
 }
 
-export function setMetaDataIndex(metaDataIndex) {
+export function setMetaDataIndex(metaDataIndex, changeScheduledUploads) {
   return {
     type: SET_METADATA_INDEX,
     metaDataIndex,
+    changeScheduledUploads,
   };
 }
 

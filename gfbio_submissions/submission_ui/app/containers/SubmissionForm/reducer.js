@@ -55,7 +55,11 @@ import {
   UPLOAD_FILES_ERROR,
   UPLOAD_FILES_SUCCESS,
 } from './constants';
-import { resetStateFormValues, setStateFormValues } from './utils';
+import {
+  markMetaDataInScheduledUploads, markMetaDataInUploadsFromServer,
+  resetStateFormValues,
+  setStateFormValues,
+} from './utils';
 
 let backendParameters = {};
 if (window.props !== undefined) {
@@ -163,6 +167,7 @@ export const initialState = fromJS({
 //     }
 //   }
 // };
+
 
 function submissionFormReducer(state = initialState, action) {
   switch (action.type) {
@@ -398,57 +403,17 @@ function submissionFormReducer(state = initialState, action) {
         .set('updateWithRelease', action.release);
     case SET_METADATA_INDEX:
       console.log('------  ___  SET_METADATA_INDEX');
-      /*
-      TODO: setIn does not work as described in here: https://thomastuts.com/blog/immutable-js-101-maps-lists.html
-         answer maybe here: https://stackoverflow.com/questions/43515723/what-does-getin-do-in-immutable-js
-      */
-      const metaDataIndex = parseInt(action.metaDataIndex);
-      // let fileUpload = state.getIn(['fileUploads', metaDataIndex]);
-      // fileUpload.metaData = true;
-      // const fileUploads = state.get('fileUploads');
-      // let newFileUploads = [];
-
-      // TODO: reactor to method -> utils
-      console.log(action.metaDataIndex === state.get('metaDataIndex'));
-      console.log(action.metaDataIndex);
-      console.log(state.get('metaDataIndex'));
-
-      let i = 0;
-      for (let f of state.get('fileUploads')) {
-        console.log(i + ' ' + f.metaData);
-        if (i === metaDataIndex && f.metaData === false) {
-          f.metaData = true;
-        }
-        // else if (i === metaDataIndex && f.metaData === true) {
-        //   f.metaData = false;
-        // }
-        else {
-          f.metaData = false;
-        }
-        console.log(f);
-        // newFileUploads.push(f);
-        state.update('fileUploads', (fileUploads) => fileUploads.splice(i, 1, f));
-        i++;
-        // if (f === action.metaDataIndex) {
-        //   fileUploads[f].metaData = true;
-        // } else {
-        //   fileUploads[f].metaData = false;
-        // }
-        // newFileUploads.push(fileUploads[f]);
+      let newMetaDataIndex = '';
+      if (action.changeScheduledUploads) {
+        newMetaDataIndex = markMetaDataInScheduledUploads(state, action);
+      } else {
+        newMetaDataIndex = markMetaDataInUploadsFromServer(state, action);
       }
-      let newMetaDataIndex = action.metaDataIndex;
-      if (state.getIn(['fileUploads', metaDataIndex]).metaData === false) {
-        newMetaDataIndex = '';
-      }
-      // console.log(newFileUploads);
+      state.set('metaDataIndex', newMetaDataIndex);
       return state
-      // .update('fileUploads', (fileUploads) => fileUploads.splice(metaDataIndex, 1, fileUpload))
-      //   .set('fileUploads', fromJS(newFileUploads))
+      // TODO: useless ?
         .set('metaDataFileName', '')
         .set('metaDataIndex', newMetaDataIndex);
-    // case SET_UPLOAD_LIST_INDEX:
-    //   return state
-    //     .set('uploadListIndex', action.listIndex);
     default:
       return state;
   }

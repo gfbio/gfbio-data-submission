@@ -83,3 +83,62 @@ export const resetStateFormValues = (state, initialContributors = []) => {
     // TODO: need whole submission ?
     .set('submission', {});
 };
+
+export const markMetaDataInScheduledUploads = (state, action) => {
+  const metaDataIndex = parseInt(action.metaDataIndex);
+  // mark in scheduled
+  let i = 0;
+  for (let f of state.get('fileUploads')) {
+    if (i === metaDataIndex && f.metaData === false) {
+      f.metaData = true;
+    } else {
+      f.metaData = false;
+    }
+    state.update('fileUploads', (fileUploads) => fileUploads.splice(i, 1, f));
+    i++;
+  }
+  let newMetaDataIndex = action.metaDataIndex;
+  if (state.getIn(['fileUploads', metaDataIndex]).metaData === false) {
+    newMetaDataIndex = '';
+  }
+  i = 0;
+  // de-mark all uploadsFromServer
+  for (let f of state.get('fileUploadsFromServer')) {
+    console.log('serverupload');
+    console.log(f);
+    f.meta_data = false;
+    state.update('fileUploadsFromServer', (fileUploadsFromServer) => fileUploadsFromServer.splice(i, 1, f));
+    i++;
+  }
+  return newMetaDataIndex;
+};
+
+export const markMetaDataInUploadsFromServer = (state, action) => {
+  const metaDataIndex = parseInt(action.metaDataIndex.replace('uploaded_', ''));
+  console.log('metaDataInex ' + metaDataIndex + ' action index ' + action.metaDataIndex);
+  // mark in all uploadsFromServer
+  let i = 0;
+  for (let f of state.get('fileUploadsFromServer')) {
+    console.log('serverupload ' + metaDataIndex);
+    console.log(f);
+    if (i === metaDataIndex && f.meta_data === false) {
+      f.meta_data = true;
+    } else {
+      f.meta_data = false;
+    }
+    state.update('fileUploadsFromServer', (fileUploadsFromServer) => fileUploadsFromServer.splice(i, 1, f));
+    i++;
+  }
+  let newMetaDataIndex = action.metaDataIndex;
+  if (state.get('fileUploadsFromServer')[metaDataIndex].meta_data === false) {
+    newMetaDataIndex = '';
+  }
+  i = 0;
+  // de-mark scheduled
+  for (let f of state.get('fileUploads')) {
+    f.metaData = false;
+    state.update('fileUploads', (fileUploads) => fileUploads.splice(i, 1, f));
+    i++;
+  }
+  return newMetaDataIndex;
+};

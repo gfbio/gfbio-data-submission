@@ -54,12 +54,21 @@ class FileIndicator extends React.Component {
     console.log('metaDataFileName: ', this.props.metaDataFileName); // ''
     console.log('parsed val: ', parseInt(event.target.value));
     console.log(this.props.fileUploads.get(parseInt(event.target.value)));
-    const parsedIndex = parseInt(event.target.value);
-    if (this.props.fileUploads.get(parsedIndex) !== undefined) {
+
+    if (event.target.value.indexOf('uploaded_') > -1) {
+      // const parsedIndex = event.target.value.replace('uploaded_', '');
+      // console.log('index from uploaded ' + parsedIndex);
+      this.props.changeMetaDataIndex(event.target.value, false);
+    } else {
+      const parsedIndex = parseInt(event.target.value);
+      // if (this.props.fileUploads.get(parsedIndex) !== undefined) {
       // TODO: reducer update or setIn action
-      this.props.changeMetaDataIndex(event.target.value);
+      this.props.changeMetaDataIndex(event.target.value, true);
       // this.props.fileUploads.get(parsedIndex).metaData = true;
+      // }
     }
+
+
     // console.log(this.props.fileUploads.get(parseInt(event.target.value)));
 
     /*if (event.target.checked) {
@@ -312,7 +321,8 @@ const mapStateToProps = createStructuredSelector({
 function mapDispatchToProps(dispatch) {
   return {
     handleRemove: index => dispatch(removeFileUpload(index)),
-    changeMetaDataIndex: index => dispatch(setMetaDataIndex(index)),
+    changeMetaDataIndex: (index, changeScheduledUploads) =>
+      dispatch(setMetaDataIndex(index, changeScheduledUploads)),
     // setUploadListIndex: index => dispatch(setUploadListIndex(index)),
     deleteFile: fileKey => dispatch(deleteFile(fileKey)),
   };
