@@ -84,6 +84,20 @@ export const resetStateFormValues = (state, initialContributors = []) => {
     .set('submission', {});
 };
 
+function removeMetaDataFlag(state, listName = '') {
+  let i = 0;
+  for (let f of state.get(listName)) {
+    if (f.meta_data !== undefined) {
+      f.meta_data = false;
+    }
+    if (f.metaData !== undefined) {
+      f.metaData = false;
+    }
+    state.update(listName, (uploads) => uploads.splice(i, 1, f));
+    i++;
+  }
+}
+
 export const markMetaDataInScheduledUploads = (state, action) => {
   const metaDataIndex = parseInt(action.metaDataIndex);
   // mark in scheduled
@@ -101,15 +115,7 @@ export const markMetaDataInScheduledUploads = (state, action) => {
   if (state.getIn(['fileUploads', metaDataIndex]).metaData === false) {
     newMetaDataIndex = '';
   }
-  i = 0;
-  // de-mark all uploadsFromServer
-  for (let f of state.get('fileUploadsFromServer')) {
-    console.log('serverupload');
-    console.log(f);
-    f.meta_data = false;
-    state.update('fileUploadsFromServer', (fileUploadsFromServer) => fileUploadsFromServer.splice(i, 1, f));
-    i++;
-  }
+  removeMetaDataFlag(state, 'fileUploadsFromServer');
   return newMetaDataIndex;
 };
 
@@ -133,12 +139,6 @@ export const markMetaDataInUploadsFromServer = (state, action) => {
   if (state.get('fileUploadsFromServer')[metaDataIndex].meta_data === false) {
     newMetaDataIndex = '';
   }
-  i = 0;
-  // de-mark scheduled
-  for (let f of state.get('fileUploads')) {
-    f.metaData = false;
-    state.update('fileUploads', (fileUploads) => fileUploads.splice(i, 1, f));
-    i++;
-  }
+  removeMetaDataFlag(state, 'fileUploads');
   return newMetaDataIndex;
 };
