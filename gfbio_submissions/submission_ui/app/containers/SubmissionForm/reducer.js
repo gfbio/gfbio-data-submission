@@ -403,6 +403,9 @@ function submissionFormReducer(state = initialState, action) {
         .set('updateWithRelease', action.release);
     case SET_METADATA_INDEX:
       console.log('------  ___  SET_METADATA_INDEX');
+      // TODO: maybe split to second case where already uploaded
+      //  files are treated the same way but a saga is scheduled
+      //  to change the actual file on server
       let newMetaDataIndex = '';
       if (action.changeScheduledUploads) {
         newMetaDataIndex = markMetaDataInScheduledUploads(state, action);

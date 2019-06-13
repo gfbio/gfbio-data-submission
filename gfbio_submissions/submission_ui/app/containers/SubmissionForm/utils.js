@@ -84,61 +84,48 @@ export const resetStateFormValues = (state, initialContributors = []) => {
     .set('submission', {});
 };
 
-function removeMetaDataFlag(state, listName = '') {
+function removeMetaDataFlag(state, listName = '', fieldName = 'none') {
   let i = 0;
   for (let f of state.get(listName)) {
-    if (f.meta_data !== undefined) {
-      f.meta_data = false;
-    }
-    if (f.metaData !== undefined) {
-      f.metaData = false;
+    if (f[fieldName] !== undefined) {
+      f[fieldName] = false;
     }
     state.update(listName, (uploads) => uploads.splice(i, 1, f));
     i++;
   }
 }
 
-export const markMetaDataInScheduledUploads = (state, action) => {
-  const metaDataIndex = parseInt(action.metaDataIndex);
-  // mark in scheduled
+function setMetaDataFlag(state, listName = '', indexName, fieldName = 'none') {
+  const metaDataIndex = parseInt(indexName.replace('uploaded_', ''));
   let i = 0;
-  for (let f of state.get('fileUploads')) {
-    if (i === metaDataIndex && f.metaData === false) {
-      f.metaData = true;
+  for (let f of state.get(listName)) {
+    if (i === metaDataIndex && f[fieldName] === false) {
+      f[fieldName] = true;
     } else {
-      f.metaData = false;
+      f[fieldName] = false;
     }
-    state.update('fileUploads', (fileUploads) => fileUploads.splice(i, 1, f));
+    state.update(listName, (uploads) => uploads.splice(i, 1, f));
     i++;
   }
-  let newMetaDataIndex = action.metaDataIndex;
-  if (state.getIn(['fileUploads', metaDataIndex]).metaData === false) {
+  let newMetaDataIndex = indexName;
+  if (
+    state.getIn([listName, metaDataIndex]) !== undefined &&
+    state.getIn([listName, metaDataIndex])[fieldName] === false) {
+    newMetaDataIndex = '';
+  } else if (
+    state.get('fileUploadsFromServer')[metaDataIndex][fieldName] === false
+  ) {
     newMetaDataIndex = '';
   }
-  removeMetaDataFlag(state, 'fileUploadsFromServer');
   return newMetaDataIndex;
+}
+
+export const markMetaDataInScheduledUploads = (state, action) => {
+  removeMetaDataFlag(state, 'fileUploadsFromServer', 'meta_data');
+  return setMetaDataFlag(state, 'fileUploads', action.metaDataIndex, 'metaData');
 };
 
 export const markMetaDataInUploadsFromServer = (state, action) => {
-  const metaDataIndex = parseInt(action.metaDataIndex.replace('uploaded_', ''));
-  console.log('metaDataInex ' + metaDataIndex + ' action index ' + action.metaDataIndex);
-  // mark in all uploadsFromServer
-  let i = 0;
-  for (let f of state.get('fileUploadsFromServer')) {
-    console.log('serverupload ' + metaDataIndex);
-    console.log(f);
-    if (i === metaDataIndex && f.meta_data === false) {
-      f.meta_data = true;
-    } else {
-      f.meta_data = false;
-    }
-    state.update('fileUploadsFromServer', (fileUploadsFromServer) => fileUploadsFromServer.splice(i, 1, f));
-    i++;
-  }
-  let newMetaDataIndex = action.metaDataIndex;
-  if (state.get('fileUploadsFromServer')[metaDataIndex].meta_data === false) {
-    newMetaDataIndex = '';
-  }
-  removeMetaDataFlag(state, 'fileUploads');
-  return newMetaDataIndex;
+  removeMetaDataFlag(state, 'fileUploads', 'metaData');
+  return setMetaDataFlag(state, 'fileUploadsFromServer', action.metaDataIndex, 'meta_data');
 };
