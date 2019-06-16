@@ -60,7 +60,7 @@ class FileIndicator extends React.Component {
       // console.log('index from uploaded ' + parsedIndex);
       this.props.changeMetaDataIndex(event.target.value, false);
     } else {
-      const parsedIndex = parseInt(event.target.value);
+      // const parsedIndex = parseInt(event.target.value);
       // if (this.props.fileUploads.get(parsedIndex) !== undefined) {
       // TODO: reducer update or setIn action
       this.props.changeMetaDataIndex(event.target.value, true);
@@ -117,7 +117,7 @@ class FileIndicator extends React.Component {
             id={`primaryUploaded${index}`}
             value={`uploaded_${index}`}
             onChange={this.handleMetadataSelect}
-            checked={false}
+            checked={uploaded.meta_data}
           />
           <label htmlFor={`primaryUploaded${index}`}
                  className="metadata"></label>
@@ -125,23 +125,23 @@ class FileIndicator extends React.Component {
           {uploaded.file_name}
         </small>
       );
-      if (this.props.metaDataIndex === `uploaded_${index}` || this.props.metaDataFileName === uploaded.file_name) {
-        metaDataCheckButton = (
-          <small className="file-name">
-            <input
-              type="checkbox"
-              id={`primaryUploaded${index}`}
-              value={`uploaded_${index}`}
-              onChange={this.handleMetadataSelect}
-              checked={uploaded.meta_data}
-            />
-            <label htmlFor={`primaryUploaded${index}`}
-                   className="metadata"></label>
-            <i className="icon ion-md-document pub"></i>
-            {uploaded.file_name}
-          </small>
-        );
-      }
+      // if (this.props.metaDataIndex === `uploaded_${index}` || this.props.metaDataFileName === uploaded.file_name) {
+      //   metaDataCheckButton = (
+      //     <small className="file-name">
+      //       <input
+      //         type="checkbox"
+      //         id={`primaryUploaded${index}`}
+      //         value={`uploaded_${index}`}
+      //         onChange={this.handleMetadataSelect}
+      //         checked={uploaded.meta_data}
+      //       />
+      //       <label htmlFor={`primaryUploaded${index}`}
+      //              className="metadata"></label>
+      //       <i className="icon ion-md-document pub"></i>
+      //       {uploaded.file_name}
+      //     </small>
+      //   );
+      // }
       return <li
         key={index}
         className={'list-group-item file-upload success'}
