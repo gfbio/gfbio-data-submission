@@ -398,6 +398,10 @@ export function* uploadFilesSaga() {
   yield takeLatest(UPLOAD_FILES, performUploadSaga);
 }
 
+export function* updateUploadedFilesSaga() {
+  yield takeLatest(SET_METADATA_ON_SERVER, )
+}
+
 export function* deleteUploadedFileSaga() {
   yield takeLeading(DELETE_FILE, performDeleteUploadedFileSaga);
 }

@@ -347,8 +347,7 @@ class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
                                            'broker_submission_id '
                                            '{0}'.format(broker_submission_id)},
                             status=status.HTTP_404_NOT_FOUND)
-        response = self.update(request, *args, **kwargs)
-        return response
+        return self.update(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
         obj = self.get_object()
@@ -362,3 +361,34 @@ class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
             countdown=SUBMISSION_DELAY
         )
         return self.destroy(request, *args, **kwargs)
+
+
+class SubmissionUploadPatchView(mixins.UpdateModelMixin,
+                                generics.GenericAPIView):
+    queryset = SubmissionUpload.objects.all()
+    serializer_class = SubmissionUploadSerializer
+    parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
+    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated,
+                          permissions.DjangoModelPermissions,
+                          IsOwnerOrReadOnly)
+
+    def patch(self, request, *args, **kwargs):
+        broker_submission_id = kwargs.get('broker_submission_id', uuid4())
+        instance = self.get_object()
+        if instance.submission.broker_submission_id != UUID(
+                broker_submission_id):
+            return Response({'submission': 'No link to this '
+                                           'broker_submission_id '
+                                           '{0}'.format(broker_submission_id)},
+                            status=status.HTTP_400_BAD_REQUEST)
+        try:
+            Submission.objects.get(
+                broker_submission_id=broker_submission_id
+            )
+        except Submission.DoesNotExist as e:
+            return Response({'submission': 'No submission for this '
+                                           'broker_submission_id '
+                                           '{0}'.format(broker_submission_id)},
+                            status=status.HTTP_404_NOT_FOUND)
+        return self.partial_update(request, *args, **kwargs)
