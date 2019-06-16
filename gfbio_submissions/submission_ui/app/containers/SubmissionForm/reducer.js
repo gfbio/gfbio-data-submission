@@ -142,7 +142,7 @@ export const initialState = fromJS({
   fileUploadsFromServer: {},
 
   metaDataIndex: '',
-  metaDataFileName: '',
+  // metaDataFileName: '',
   // uploadListIndex: 0,
 
   brokerSubmissionId: '',
@@ -412,7 +412,7 @@ function submissionFormReducer(state = initialState, action) {
       state.set('metaDataIndex', newMetaDataIndex);
       return state
       // TODO: useless ?
-        .set('metaDataFileName', '')
+      //   .set('metaDataFileName', '')
         .set('metaDataIndex', newMetaDataIndex);
     case SET_METADATA_ON_SERVER:
       console.log('------  ___  SET_METADATA_ON_SERVER');
@@ -421,7 +421,7 @@ function submissionFormReducer(state = initialState, action) {
       state.set('metaDataIndex', newMetaDataIndex_);
       return state
       // TODO: useless ?
-        .set('metaDataFileName', '')
+      //   .set('metaDataFileName', '')
         .set('metaDataIndex', newMetaDataIndex_);
     case SET_METADATA_ON_SERVER_SUCCESS:
       return state;

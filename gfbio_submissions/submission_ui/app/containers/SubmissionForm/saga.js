@@ -26,7 +26,8 @@ import {
   makeSelectContributors,
   makeSelectDatasetLabels,
   makeSelectEmbargoDate,
-  makeSelectFileUploads, makeSelectFileUploadsFromServer,
+  makeSelectFileUploads,
+  makeSelectFileUploadsFromServer,
   makeSelectFormWrapper,
   makeSelectGeneralError,
   makeSelectLicense,
@@ -41,7 +42,8 @@ import {
 } from './selectors';
 import {
   closeSaveSuccess,
-  deleteFileError, deleteFileSuccess,
+  deleteFileError,
+  deleteFileSuccess,
   fetchFileUploadsError,
   fetchFileUploadsSuccess,
   fetchSubmissionError,
@@ -62,56 +64,56 @@ import {
   uploadFileSuccess,
 } from './actions';
 import {
-  createUploadFileChannel, deleteSubmissionUpload,
-  getSubmission, getSubmissionUploads,
+  createUploadFileChannel,
+  deleteSubmissionUpload,
+  getSubmission,
+  getSubmissionUploads,
   postSubmission,
   putSubmission,
 } from './submissionApi';
 import dateFormat from 'dateformat';
 
 import { push } from 'connected-react-router/immutable';
-import { DELETE_SUBMISSION } from '../SubmissionList/constants';
-import { takeEvery } from 'redux-saga';
 
-function* getMetaDataFileName(metaDataIndex, fileUploads, fileUploadsFromServer) {
-  console.log('getMetaDataFileName');
-  console.log(metaDataIndex.indexOf('uploaded_'));
-  console.log('metaDATAindex: ', metaDataIndex);
-
-
-  // let metaDataFile = '';
-  let metaDataFileName = '';
-  if (metaDataIndex.indexOf('uploaded_') > -1) {
-    console.log('UPLOADED INDEX');
-    const strippedIndex = metaDataIndex.replace('uploaded_', '');
-    console.log('stripped ', strippedIndex);
-    const metaIndex = parseInt(strippedIndex);
-    const metaDataFile = fileUploadsFromServer[metaIndex];
-    console.log('metaindex: ', metaIndex);
-    if (metaDataFile !== undefined) {
-      metaDataFileName = metaDataFile.file_name;
-    }
-
-  } else {
-    console.log('no UPLOADED');
-    const metaIndex = parseInt(metaDataIndex);
-    console.log('metaindex: ', metaIndex);
-    const metaDataFile = fileUploads.get(metaIndex);
-    if (metaDataFile !== undefined) {
-      metaDataFileName = metaDataFile.file.name;
-    }
-  }
-
-
-  // let metaDataFileName = '';
-  // if (metaDataFile !== undefined && metaDataFileName !== '') {
-  //   metaDataFileName = metaDataFile.file.name;
-  // }
-  // console.log('metaDataFile ', metaDataFile);
-  console.log('metaDataFileName ', metaDataFileName);
-  console.log('##########################');
-  return metaDataFileName;
-}
+// function* getMetaDataFileName(metaDataIndex, fileUploads, fileUploadsFromServer) {
+//   console.log('getMetaDataFileName');
+//   console.log(metaDataIndex.indexOf('uploaded_'));
+//   console.log('metaDATAindex: ', metaDataIndex);
+//
+//
+//   // let metaDataFile = '';
+//   let metaDataFileName = '';
+//   if (metaDataIndex.indexOf('uploaded_') > -1) {
+//     console.log('UPLOADED INDEX');
+//     const strippedIndex = metaDataIndex.replace('uploaded_', '');
+//     console.log('stripped ', strippedIndex);
+//     const metaIndex = parseInt(strippedIndex);
+//     const metaDataFile = fileUploadsFromServer[metaIndex];
+//     console.log('metaindex: ', metaIndex);
+//     if (metaDataFile !== undefined) {
+//       metaDataFileName = metaDataFile.file_name;
+//     }
+//
+//   } else {
+//     console.log('no UPLOADED');
+//     const metaIndex = parseInt(metaDataIndex);
+//     console.log('metaindex: ', metaIndex);
+//     const metaDataFile = fileUploads.get(metaIndex);
+//     if (metaDataFile !== undefined) {
+//       metaDataFileName = metaDataFile.file.name;
+//     }
+//   }
+//
+//
+//   // let metaDataFileName = '';
+//   // if (metaDataFile !== undefined && metaDataFileName !== '') {
+//   //   metaDataFileName = metaDataFile.file.name;
+//   // }
+//   // console.log('metaDataFile ', metaDataFile);
+//   console.log('metaDataFileName ', metaDataFileName);
+//   console.log('##########################');
+//   return metaDataFileName;
+// }
 
 // TODO: move logic to utils.js. here only workflow
 function* prepareRequestData(userId, submit = true) {
@@ -146,7 +148,7 @@ function* prepareRequestData(userId, submit = true) {
   const metaDataIndex = yield select(makeSelectMetaDataIndex());
   const fileUploads = yield select(makeSelectFileUploads());
   const fileUploadsFromServer = yield select(makeSelectFileUploadsFromServer());
-  const metaDataFileName = yield getMetaDataFileName(metaDataIndex, fileUploads, fileUploadsFromServer);
+  // const metaDataFileName = yield getMetaDataFileName(metaDataIndex, fileUploads, fileUploadsFromServer);
 
   const requirements = Object.assign({
     license,
@@ -157,7 +159,7 @@ function* prepareRequestData(userId, submit = true) {
     categories,
     contributors,
     // metaDataIndex,
-    metadata_file_name: metaDataFileName,
+    // metadata_file_name: metaDataFileName,
   }, formValues);
   return {
     // TODO: determine target according to "Target Data center" value. e.g. "ena" = ENA_PANGAEA
@@ -202,7 +204,7 @@ function* uploadFile(token, brokerSubmissionId, file, index) {
     //  stating that every uploaded file will be attached to the
     //  respective ticket
     const uploadChannel = yield call(createUploadFileChannel,
-      brokerSubmissionId, file.file, true, token);
+      brokerSubmissionId, file.file, true, file.metaData, token);
     yield fork(uploadProgressWatcher, uploadChannel, index);
   } catch (err) {
     yield put(uploadFileError(index, err));

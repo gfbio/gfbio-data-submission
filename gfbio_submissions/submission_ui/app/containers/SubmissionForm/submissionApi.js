@@ -122,11 +122,12 @@ export const postFile = (token, brokerSubmissionId, file) => {
 
 
 // TODO: from: https://gist.github.com/jpgorman/f49501076a13cecfaa17d30e8d569be0
-export function createUploadFileChannel(brokerSubmissionId, file, attach_to_ticket, token) {
+export function createUploadFileChannel(brokerSubmissionId, file, attach_to_ticket, meta_data, token) {
   return eventChannel(emit => {
     let formData = new FormData();
     formData.append('file', file);
     formData.append('attach_to_ticket', attach_to_ticket);
+    formData.append('meta_data', meta_data);
 
     // const onProgress = ({ total, loaded }) => {
     //   const progress = Math.round((loaded * 100) / total);

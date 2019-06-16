@@ -182,7 +182,7 @@ FileIndicator.propTypes = {
   fileUploads: PropTypes.array,
   fileUploadsFromServer: PropTypes.object,
   metaDataIndex: PropTypes.string,
-  metaDataFileName: PropTypes.string,
+  // metaDataFileName: PropTypes.string,
   handleRemove: PropTypes.func,
   changeMetaDataIndex: PropTypes.func,
   changeMetaDataOnServer: PropTypes.func,
@@ -193,7 +193,7 @@ const mapStateToProps = createStructuredSelector({
   fileUploads: makeSelectFileUploads(),
   fileUploadsFromServer: makeSelectFileUploadsFromServer(),
   metaDataIndex: makeSelectMetaDataIndex(),
-  metaDataFileName: makeSelectMetaFileName(),
+  // metaDataFileName: makeSelectMetaFileName(),
 });
 
 function mapDispatchToProps(dispatch) {
