@@ -66,6 +66,10 @@ export const UPDATE_SUBMISSION_ERROR = 'app/SubmissionForm/UPDATE_SUBMISSION_ERR
 
 export const SET_METADATA_INDEX = 'app/SubmissionForm/SET_METADATA_INDEX';
 // export const SET_UPLOAD_LIST_INDEX = 'app/SubmissionForm/SET_UPLOAD_LIST_INDEX';
+export const SET_METADATA_ON_SERVER = 'app/SubmissionForm/SET_METADATA_ON_SERVER';
+export const SET_METADATA_ON_SERVER_SUCCESS = 'app/SubmissionForm/SET_METADATA_ON_SERVER_SUCCESS';
+export const SET_METADATA_ON_SERVER_ERROR = 'app/SubmissionForm/SET_METADATA_ON_SERVER_ERROR';
+
 
 export const SHOW_UPLOAD_LIMIT = 'app/SubmissionForm/SHOW_UPLOAD_LIMIT';
 export const DISMISS_SHOW_UPLOAD_LIMIT = 'app/SubmissionForm/DISMISS_SHOW_UPLOAD_LIMIT';

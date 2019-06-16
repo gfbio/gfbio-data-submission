@@ -36,6 +36,9 @@ import {
   SET_CONTRIBUTORS,
   SET_EMBARGO_DATE,
   SET_METADATA_INDEX,
+  SET_METADATA_ON_SERVER,
+  SET_METADATA_ON_SERVER_ERROR,
+  SET_METADATA_ON_SERVER_SUCCESS,
   SHOW_EMBARGO_DIALOG,
   SHOW_UPLOAD_LIMIT,
   SUBMIT_FORM,
@@ -56,7 +59,8 @@ import {
   UPLOAD_FILES_SUCCESS,
 } from './constants';
 import {
-  markMetaDataInScheduledUploads, markMetaDataInUploadsFromServer,
+  markMetaDataInScheduledUploads,
+  markMetaDataInUploadsFromServer,
   resetStateFormValues,
   setStateFormValues,
 } from './utils';
@@ -407,16 +411,38 @@ function submissionFormReducer(state = initialState, action) {
       //  files are treated the same way but a saga is scheduled
       //  to change the actual file on server
       let newMetaDataIndex = '';
-      if (action.changeScheduledUploads) {
-        newMetaDataIndex = markMetaDataInScheduledUploads(state, action);
-      } else {
-        newMetaDataIndex = markMetaDataInUploadsFromServer(state, action);
-      }
+      newMetaDataIndex = markMetaDataInScheduledUploads(state, action);
+      // if (action.changeScheduledUploads) {
+      //   newMetaDataIndex = markMetaDataInScheduledUploads(state, action);
+      // } else {
+      //   newMetaDataIndex = markMetaDataInUploadsFromServer(state, action);
+      // }
       state.set('metaDataIndex', newMetaDataIndex);
       return state
       // TODO: useless ?
         .set('metaDataFileName', '')
         .set('metaDataIndex', newMetaDataIndex);
+    case SET_METADATA_ON_SERVER:
+      console.log('------  ___  SET_METADATA_ON_SERVER');
+      // TODO: maybe split to second case where already uploaded
+      //  files are treated the same way but a saga is scheduled
+      //  to change the actual file on server
+      let newMetaDataIndex_ = '';
+      newMetaDataIndex_ = markMetaDataInUploadsFromServer(state, action);
+      // if (action.changeScheduledUploads) {
+      //   newMetaDataIndex_ = markMetaDataInScheduledUploads(state, action);
+      // } else {
+      //   newMetaDataIndex_ = markMetaDataInUploadsFromServer(state, action);
+      // }
+      state.set('metaDataIndex', newMetaDataIndex_);
+      return state
+      // TODO: useless ?
+        .set('metaDataFileName', '')
+        .set('metaDataIndex', newMetaDataIndex_);
+    case SET_METADATA_ON_SERVER_SUCCESS:
+      return state;
+    case SET_METADATA_ON_SERVER_ERROR:
+      return state;
     default:
       return state;
   }

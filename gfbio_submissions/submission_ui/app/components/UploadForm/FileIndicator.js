@@ -5,7 +5,8 @@ import { createStructuredSelector } from 'reselect';
 import {
   makeSelectFileUploads,
   makeSelectFileUploadsFromServer,
-  makeSelectMetaDataIndex, makeSelectMetaFileName,
+  makeSelectMetaDataIndex,
+  makeSelectMetaFileName,
 } from '../../containers/SubmissionForm/selectors';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
@@ -13,6 +14,7 @@ import {
   deleteFile,
   removeFileUpload,
   setMetaDataIndex,
+  setMetaDataOnServer,
 } from '../../containers/SubmissionForm/actions';
 import filesize from 'filesize';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
@@ -58,12 +60,12 @@ class FileIndicator extends React.Component {
     if (event.target.value.indexOf('uploaded_') > -1) {
       // const parsedIndex = event.target.value.replace('uploaded_', '');
       // console.log('index from uploaded ' + parsedIndex);
-      this.props.changeMetaDataIndex(event.target.value, false);
+      this.props.changeMetaDataOnServer(event.target.value);
     } else {
       // const parsedIndex = parseInt(event.target.value);
       // if (this.props.fileUploads.get(parsedIndex) !== undefined) {
       // TODO: reducer update or setIn action
-      this.props.changeMetaDataIndex(event.target.value, true);
+      this.props.changeMetaDataIndex(event.target.value);
       // this.props.fileUploads.get(parsedIndex).metaData = true;
       // }
     }
@@ -305,6 +307,7 @@ FileIndicator.propTypes = {
   metaDataFileName: PropTypes.string,
   handleRemove: PropTypes.func,
   changeMetaDataIndex: PropTypes.func,
+  changeMetaDataOnServer: PropTypes.func,
   // uploadListIndex: PropTypes.number,
   // setUploadListIndex: PropTypes.func,
   deleteFile: PropTypes.func,
@@ -323,6 +326,8 @@ function mapDispatchToProps(dispatch) {
     handleRemove: index => dispatch(removeFileUpload(index)),
     changeMetaDataIndex: (index, changeScheduledUploads) =>
       dispatch(setMetaDataIndex(index, changeScheduledUploads)),
+    changeMetaDataOnServer: (index, changeScheduledUploads) =>
+      dispatch(setMetaDataOnServer(index, changeScheduledUploads)),
     // setUploadListIndex: index => dispatch(setUploadListIndex(index)),
     deleteFile: fileKey => dispatch(deleteFile(fileKey)),
   };
