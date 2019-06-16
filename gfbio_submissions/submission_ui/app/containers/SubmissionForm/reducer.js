@@ -407,16 +407,8 @@ function submissionFormReducer(state = initialState, action) {
         .set('updateWithRelease', action.release);
     case SET_METADATA_INDEX:
       console.log('------  ___  SET_METADATA_INDEX');
-      // TODO: maybe split to second case where already uploaded
-      //  files are treated the same way but a saga is scheduled
-      //  to change the actual file on server
       let newMetaDataIndex = '';
       newMetaDataIndex = markMetaDataInScheduledUploads(state, action);
-      // if (action.changeScheduledUploads) {
-      //   newMetaDataIndex = markMetaDataInScheduledUploads(state, action);
-      // } else {
-      //   newMetaDataIndex = markMetaDataInUploadsFromServer(state, action);
-      // }
       state.set('metaDataIndex', newMetaDataIndex);
       return state
       // TODO: useless ?
@@ -424,16 +416,8 @@ function submissionFormReducer(state = initialState, action) {
         .set('metaDataIndex', newMetaDataIndex);
     case SET_METADATA_ON_SERVER:
       console.log('------  ___  SET_METADATA_ON_SERVER');
-      // TODO: maybe split to second case where already uploaded
-      //  files are treated the same way but a saga is scheduled
-      //  to change the actual file on server
       let newMetaDataIndex_ = '';
       newMetaDataIndex_ = markMetaDataInUploadsFromServer(state, action);
-      // if (action.changeScheduledUploads) {
-      //   newMetaDataIndex_ = markMetaDataInScheduledUploads(state, action);
-      // } else {
-      //   newMetaDataIndex_ = markMetaDataInUploadsFromServer(state, action);
-      // }
       state.set('metaDataIndex', newMetaDataIndex_);
       return state
       // TODO: useless ?

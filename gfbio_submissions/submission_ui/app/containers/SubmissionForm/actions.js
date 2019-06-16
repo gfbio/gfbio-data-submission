@@ -363,13 +363,6 @@ export function setMetaDataOnServerError(error) {
   };
 }
 
-// export function setUploadListIndex(listIndex) {
-//   return {
-//     type: SET_UPLOAD_LIST_INDEX,
-//     listIndex,
-//   };
-// }
-
 
 export function showUplaodLimit() {
   return {

@@ -161,11 +161,6 @@ const makeSelectMetaFileName = () =>
   );
 
 
-// const makeSelectUploadListIndex = () =>
-//   createSelector(selectSubmissionFormDomain, substate =>
-//     substate.get('uploadListIndex'),
-//   );
-
 const makeSelectPromptOnLeave = () =>
   createSelector(selectSubmissionFormDomain, substate =>
     substate.get('promptOnLeave'),
@@ -227,5 +222,4 @@ export {
   makeSelectShowEmbargoDialog,
   makeSelectGeneralError,
   makeSelectFileUploadsFromServer,
-  // makeSelectUploadListIndex,
 };
