@@ -342,17 +342,18 @@ export function setMetaDataIndex(metaDataIndex) {
   };
 }
 
-export function setMetaDataOnServer(metaDataIndex) {
+export function setMetaDataOnServer(metaDataIndex, file) {
   return {
     type: SET_METADATA_ON_SERVER,
     metaDataIndex,
+    file,
   };
 }
 
-export function setMetaDataOnServerSuccess(response) {
+export function setMetaDataOnServerSuccess(metaDataIndex) {
   return {
     type: SET_METADATA_ON_SERVER_SUCCESS,
-    response,
+    metaDataIndex,
   };
 }
 

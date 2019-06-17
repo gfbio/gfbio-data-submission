@@ -6,7 +6,7 @@ import {
   fork,
   put,
   select,
-  take,
+  take, takeEvery,
   takeLatest,
   takeLeading,
 } from 'redux-saga/effects';
@@ -15,6 +15,7 @@ import {
   FETCH_SUBMISSION,
   SAVE_FORM,
   SAVE_FORM_SUCCESS,
+  SET_METADATA_ON_SERVER,
   SUBMIT_FORM,
   SUBMIT_FORM_START,
   UPDATE_SUBMISSION,
@@ -50,7 +51,7 @@ import {
   fetchSubmissionSuccess,
   saveForm,
   saveFormError,
-  saveFormSuccess,
+  saveFormSuccess, setMetaDataOnServerError, setMetaDataOnServerSuccess,
   submitFormError,
   submitFormStart,
   submitFormSuccess,
@@ -69,7 +70,7 @@ import {
   getSubmission,
   getSubmissionUploads,
   postSubmission,
-  putSubmission,
+  putSubmission, setMetaDataFlag,
 } from './submissionApi';
 import dateFormat from 'dateformat';
 
@@ -327,8 +328,7 @@ export function* performFetchSubmissionSaga() {
 export function* performDeleteUploadedFileSaga(action) {
   const token = yield select(makeSelectToken());
   const bsi = yield select(makeSelectRequestBrokerSubmissionId());
-  console.log(' #### performDeleteUploadedFileSaga #### ');
-  console.log(action);
+
   try {
     let response = yield call(deleteSubmissionUpload, token, bsi, action.fileKey);
     yield put(deleteFileSuccess(response));
@@ -336,6 +336,20 @@ export function* performDeleteUploadedFileSaga(action) {
     yield put(fetchFileUploadsSuccess(response));
   } catch (error) {
     yield put(deleteFileError(error));
+  }
+}
+
+export function* performUpdateUploadedFileSaga(action) {
+  console.log(' #### performUpdateUploadedFileSaga #### ');
+  console.log(action);
+  const token = yield select(makeSelectToken());
+  const bsi = yield select(makeSelectRequestBrokerSubmissionId());
+  try {
+    let response = yield call(setMetaDataFlag, bsi, action.file.pk, action.file.meta_data, token);
+    // yield put(setMetaDataOnServerSuccess(action.metaDataIndex));
+  } catch (error) {
+    console.log(error);
+    yield put(setMetaDataOnServerError(error));
   }
 
 }
@@ -399,7 +413,7 @@ export function* uploadFilesSaga() {
 }
 
 export function* updateUploadedFilesSaga() {
-  yield takeLatest(SET_METADATA_ON_SERVER, )
+  yield takeEvery(SET_METADATA_ON_SERVER, performUpdateUploadedFileSaga);
 }
 
 export function* deleteUploadedFileSaga() {
@@ -417,6 +431,6 @@ export function* updateSubmissionSaga() {
 export default function* rootSaga() {
   yield all([checkFormTypeSaga(), saveFormSaga(), submitFormSaga(),
     uploadFilesSaga(), fetchSubmissionSaga(), updateSubmissionSaga(),
-    closeSaveMessageSaga(), deleteUploadedFileSaga(),
+    closeSaveMessageSaga(), deleteUploadedFileSaga(), updateUploadedFilesSaga(),
   ]);
 }

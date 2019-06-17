@@ -1,6 +1,12 @@
 import axios from 'axios';
 import { END, eventChannel } from 'redux-saga';
-import { API_ROOT, SUBMISSIONS, UPLOAD, UPLOADS } from '../../globalConstants';
+import {
+  API_ROOT,
+  SUBMISSIONS,
+  UPLOAD,
+  UPLOAD_PATCH,
+  UPLOADS,
+} from '../../globalConstants';
 
 export const postSubmission = (token, dataBody) => {
 
@@ -71,7 +77,7 @@ export const deleteSubmissionUpload = (token, brokerSubmissionId, fileKey) => {
     },
   };
   return axios.delete(
-    `${API_ROOT + SUBMISSIONS + brokerSubmissionId + UPLOAD+ fileKey}`,
+    `${API_ROOT + SUBMISSIONS + brokerSubmissionId + UPLOAD + fileKey}`,
     config,
   );
 };
@@ -120,6 +126,22 @@ export const postFile = (token, brokerSubmissionId, file) => {
   // return axios.post(API_ROOT + SUBMISSIONS + brokerSubmissionId + '/upload/', formData, config);
 };
 
+export const setMetaDataFlag = (brokerSubmissionId, fileKey, meta_data, token) => {
+  let formData = new FormData();
+  formData.append('meta_data', meta_data);
+  formData.append('attach_to_ticket', false);
+  console.log(token);
+  const config = {
+    headers: {
+      'Authorization': 'Token ' + token,
+    },
+  };
+  return axios.patch(
+    `${API_ROOT + SUBMISSIONS + brokerSubmissionId + UPLOAD + UPLOAD_PATCH + fileKey + '/'}`,
+    formData,
+    config,
+  );
+};
 
 // TODO: from: https://gist.github.com/jpgorman/f49501076a13cecfaa17d30e8d569be0
 export function createUploadFileChannel(brokerSubmissionId, file, attach_to_ticket, meta_data, token) {
@@ -128,11 +150,6 @@ export function createUploadFileChannel(brokerSubmissionId, file, attach_to_tick
     formData.append('file', file);
     formData.append('attach_to_ticket', attach_to_ticket);
     formData.append('meta_data', meta_data);
-
-    // const onProgress = ({ total, loaded }) => {
-    //   const progress = Math.round((loaded * 100) / total);
-    //   emit(progress);
-    // };
 
     const config = {
       headers: {
@@ -148,15 +165,12 @@ export function createUploadFileChannel(brokerSubmissionId, file, attach_to_tick
       formData,
       config,
     ).then(() => {
-      // console.log('channel. fulfilled emit END');
       emit(END);
     }).catch(err => {
       emit(new Error(err.message));
-      // console.log('channel. Error emit END');
       emit(END);
     });
     const unsubscribe = () => {
-      // console.log('channel. UNSUBSCRIBE');
     };
     return unsubscribe;
   });

@@ -408,8 +408,8 @@ function submissionFormReducer(state = initialState, action) {
     case SET_METADATA_INDEX:
       console.log('------  ___  SET_METADATA_INDEX');
       let newMetaDataIndex = '';
-      newMetaDataIndex = markMetaDataInScheduledUploads(state, action);
-      state.set('metaDataIndex', newMetaDataIndex);
+      newMetaDataIndex = markMetaDataInScheduledUploads(state, action.metaDataIndex);
+      // state.set('metaDataIndex', newMetaDataIndex);
       return state
       // TODO: useless ?
       //   .set('metaDataFileName', '')
@@ -417,14 +417,17 @@ function submissionFormReducer(state = initialState, action) {
     case SET_METADATA_ON_SERVER:
       console.log('------  ___  SET_METADATA_ON_SERVER');
       let newMetaDataIndex_ = '';
-      newMetaDataIndex_ = markMetaDataInUploadsFromServer(state, action);
-      state.set('metaDataIndex', newMetaDataIndex_);
+      newMetaDataIndex_ = markMetaDataInUploadsFromServer(state, action.metaDataIndex);
+      // state.set('metaDataIndex', newMetaDataIndex_);
       return state
-      // TODO: useless ?
-      //   .set('metaDataFileName', '')
-        .set('metaDataIndex', newMetaDataIndex_);
-    case SET_METADATA_ON_SERVER_SUCCESS:
-      return state;
+    // TODO: useless ?
+    //   .set('metaDataFileName', '')
+      .set('metaDataIndex', newMetaDataIndex_);
+    // case SET_METADATA_ON_SERVER_SUCCESS:
+    //   let mIndex = '';
+    //   mIndex = markMetaDataInUploadsFromServer(state, action.metaDataIndex);
+    //   state.set('metaDataIndex', mIndex);
+    //   return state;
     case SET_METADATA_ON_SERVER_ERROR:
       return state;
     default:

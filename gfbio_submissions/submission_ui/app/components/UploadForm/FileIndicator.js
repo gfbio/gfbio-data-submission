@@ -27,9 +27,9 @@ class FileIndicator extends React.Component {
     this.handleMetadataSelect = this.handleMetadataSelect.bind(this);
   }
 
-  handleMetadataSelect(event) {
+  handleMetadataSelect(event, file={}) {
     if (event.target.value.indexOf('uploaded_') > -1) {
-      this.props.changeMetaDataOnServer(event.target.value);
+      this.props.changeMetaDataOnServer(event.target.value, file);
     } else {
       this.props.changeMetaDataIndex(event.target.value);
     }
@@ -44,7 +44,13 @@ class FileIndicator extends React.Component {
             type="checkbox"
             id={`primaryUploaded${index}`}
             value={`uploaded_${index}`}
-            onChange={this.handleMetadataSelect}
+            // onChange={this.handleMetadataSelect}
+            onChange={(e) => {
+              // e.preventDefault();
+              console.log(e);
+              console.log(uploaded.pk);
+              this.handleMetadataSelect(e, uploaded);
+            }}
             checked={uploaded.meta_data}
           />
           <label htmlFor={`primaryUploaded${index}`}
@@ -187,6 +193,7 @@ FileIndicator.propTypes = {
   changeMetaDataIndex: PropTypes.func,
   changeMetaDataOnServer: PropTypes.func,
   deleteFile: PropTypes.func,
+  // handleMetadataSelect: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -199,10 +206,10 @@ const mapStateToProps = createStructuredSelector({
 function mapDispatchToProps(dispatch) {
   return {
     handleRemove: index => dispatch(removeFileUpload(index)),
-    changeMetaDataIndex: (index, changeScheduledUploads) =>
-      dispatch(setMetaDataIndex(index, changeScheduledUploads)),
-    changeMetaDataOnServer: (index, changeScheduledUploads) =>
-      dispatch(setMetaDataOnServer(index, changeScheduledUploads)),
+    changeMetaDataIndex: (index) =>
+      dispatch(setMetaDataIndex(index)),
+    changeMetaDataOnServer: (index, primaryKey) =>
+      dispatch(setMetaDataOnServer(index, primaryKey)),
     deleteFile: fileKey => dispatch(deleteFile(fileKey)),
   };
 }

@@ -12,6 +12,7 @@ export const SUBMISSIONS = '/api/submissions/';
 export const USER_URL = 'user/';
 export const UPLOAD = '/upload/';
 export const UPLOADS = '/uploads/';
+export const UPLOAD_PATCH = 'patch/';
 
 export const STATUS_CANCELLED = 'CANCELLED';
 

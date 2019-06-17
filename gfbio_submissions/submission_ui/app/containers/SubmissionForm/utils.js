@@ -120,12 +120,12 @@ function setMetaDataFlag(state, listName = '', indexName, fieldName = 'none') {
   return newMetaDataIndex;
 }
 
-export const markMetaDataInScheduledUploads = (state, action) => {
+export const markMetaDataInScheduledUploads = (state, metaDataIndex) => {
   removeMetaDataFlag(state, 'fileUploadsFromServer', 'meta_data');
-  return setMetaDataFlag(state, 'fileUploads', action.metaDataIndex, 'metaData');
+  return setMetaDataFlag(state, 'fileUploads', metaDataIndex, 'metaData');
 };
 
-export const markMetaDataInUploadsFromServer = (state, action) => {
+export const markMetaDataInUploadsFromServer = (state, metaDataIndex) => {
   removeMetaDataFlag(state, 'fileUploads', 'metaData');
-  return setMetaDataFlag(state, 'fileUploadsFromServer', action.metaDataIndex, 'meta_data');
+  return setMetaDataFlag(state, 'fileUploadsFromServer', metaDataIndex, 'meta_data');
 };
