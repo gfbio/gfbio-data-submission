@@ -58,6 +58,11 @@ urlpatterns = [
         view=views.SubmissionUploadDetailView.as_view(),
         name='submissions_upload_detail'
     ),
+    url(
+        regex=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/patch/(?P<pk>[0-9]+)/$',
+        view=views.SubmissionUploadPatchView.as_view(),
+        name='submissions_upload_patch'
+    ),
     # http://0.0.0.0:8000/api/docs/?format=openapi
     # url(r'^docs/$', schema_view, name='rest_api_documentation'),
 ]

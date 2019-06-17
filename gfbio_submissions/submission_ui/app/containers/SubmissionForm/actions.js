@@ -36,6 +36,9 @@ import {
   SET_CONTRIBUTORS,
   SET_EMBARGO_DATE,
   SET_METADATA_INDEX,
+  SET_METADATA_ON_SERVER,
+  SET_METADATA_ON_SERVER_ERROR,
+  SET_METADATA_ON_SERVER_SUCCESS,
   SHOW_EMBARGO_DIALOG,
   SHOW_UPLOAD_LIMIT,
   SUBMIT_FORM,
@@ -331,6 +334,7 @@ export function updateSubmissionError(errorResponse) {
   };
 }
 
+// TODO: remove changeScheduledUploads once second action is in place
 export function setMetaDataIndex(metaDataIndex) {
   return {
     type: SET_METADATA_INDEX,
@@ -338,12 +342,27 @@ export function setMetaDataIndex(metaDataIndex) {
   };
 }
 
-// export function setUploadListIndex(listIndex) {
-//   return {
-//     type: SET_UPLOAD_LIST_INDEX,
-//     listIndex,
-//   };
-// }
+export function setMetaDataOnServer(metaDataIndex, file) {
+  return {
+    type: SET_METADATA_ON_SERVER,
+    metaDataIndex,
+    file,
+  };
+}
+
+export function setMetaDataOnServerSuccess(metaDataIndex) {
+  return {
+    type: SET_METADATA_ON_SERVER_SUCCESS,
+    metaDataIndex,
+  };
+}
+
+export function setMetaDataOnServerError(error) {
+  return {
+    type: SET_METADATA_ON_SERVER_ERROR,
+    error,
+  };
+}
 
 
 export function showUplaodLimit() {

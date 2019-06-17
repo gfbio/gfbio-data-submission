@@ -6,7 +6,7 @@ import {
   fork,
   put,
   select,
-  take,
+  take, takeEvery,
   takeLatest,
   takeLeading,
 } from 'redux-saga/effects';
@@ -15,6 +15,7 @@ import {
   FETCH_SUBMISSION,
   SAVE_FORM,
   SAVE_FORM_SUCCESS,
+  SET_METADATA_ON_SERVER,
   SUBMIT_FORM,
   SUBMIT_FORM_START,
   UPDATE_SUBMISSION,
@@ -27,6 +28,7 @@ import {
   makeSelectDatasetLabels,
   makeSelectEmbargoDate,
   makeSelectFileUploads,
+  makeSelectFileUploadsFromServer,
   makeSelectFormWrapper,
   makeSelectGeneralError,
   makeSelectLicense,
@@ -41,14 +43,15 @@ import {
 } from './selectors';
 import {
   closeSaveSuccess,
-  deleteFileError, deleteFileSuccess,
+  deleteFileError,
+  deleteFileSuccess,
   fetchFileUploadsError,
   fetchFileUploadsSuccess,
   fetchSubmissionError,
   fetchSubmissionSuccess,
   saveForm,
   saveFormError,
-  saveFormSuccess,
+  saveFormSuccess, setMetaDataOnServerError, setMetaDataOnServerSuccess,
   submitFormError,
   submitFormStart,
   submitFormSuccess,
@@ -62,26 +65,56 @@ import {
   uploadFileSuccess,
 } from './actions';
 import {
-  createUploadFileChannel, deleteSubmissionUpload,
-  getSubmission, getSubmissionUploads,
+  createUploadFileChannel,
+  deleteSubmissionUpload,
+  getSubmission,
+  getSubmissionUploads,
   postSubmission,
-  putSubmission,
+  putSubmission, setMetaDataFlag,
 } from './submissionApi';
 import dateFormat from 'dateformat';
 
 import { push } from 'connected-react-router/immutable';
-import { DELETE_SUBMISSION } from '../SubmissionList/constants';
-import { takeEvery } from 'redux-saga';
 
-function* getMetaDataFileName(metaDataIndex, fileUploads) {
-  const metaIndex = parseInt(metaDataIndex);
-  const metaDataFile = fileUploads.get(metaIndex);
-  let metaDataFileName = '';
-  if (metaDataFile !== undefined) {
-    metaDataFileName = metaDataFile.file.name;
-  }
-  return metaDataFileName;
-}
+// function* getMetaDataFileName(metaDataIndex, fileUploads, fileUploadsFromServer) {
+//   console.log('getMetaDataFileName');
+//   console.log(metaDataIndex.indexOf('uploaded_'));
+//   console.log('metaDATAindex: ', metaDataIndex);
+//
+//
+//   // let metaDataFile = '';
+//   let metaDataFileName = '';
+//   if (metaDataIndex.indexOf('uploaded_') > -1) {
+//     console.log('UPLOADED INDEX');
+//     const strippedIndex = metaDataIndex.replace('uploaded_', '');
+//     console.log('stripped ', strippedIndex);
+//     const metaIndex = parseInt(strippedIndex);
+//     const metaDataFile = fileUploadsFromServer[metaIndex];
+//     console.log('metaindex: ', metaIndex);
+//     if (metaDataFile !== undefined) {
+//       metaDataFileName = metaDataFile.file_name;
+//     }
+//
+//   } else {
+//     console.log('no UPLOADED');
+//     const metaIndex = parseInt(metaDataIndex);
+//     console.log('metaindex: ', metaIndex);
+//     const metaDataFile = fileUploads.get(metaIndex);
+//     if (metaDataFile !== undefined) {
+//       metaDataFileName = metaDataFile.file.name;
+//     }
+//   }
+//
+//
+//   // let metaDataFileName = '';
+//   // if (metaDataFile !== undefined && metaDataFileName !== '') {
+//   //   metaDataFileName = metaDataFile.file.name;
+//   // }
+//   // console.log('metaDataFile ', metaDataFile);
+//   console.log('metaDataFileName ', metaDataFileName);
+//   console.log('##########################');
+//   return metaDataFileName;
+// }
 
 // TODO: move logic to utils.js. here only workflow
 function* prepareRequestData(userId, submit = true) {
@@ -115,7 +148,8 @@ function* prepareRequestData(userId, submit = true) {
 
   const metaDataIndex = yield select(makeSelectMetaDataIndex());
   const fileUploads = yield select(makeSelectFileUploads());
-  const metaDataFileName = yield getMetaDataFileName(metaDataIndex, fileUploads);
+  const fileUploadsFromServer = yield select(makeSelectFileUploadsFromServer());
+  // const metaDataFileName = yield getMetaDataFileName(metaDataIndex, fileUploads, fileUploadsFromServer);
 
   const requirements = Object.assign({
     license,
@@ -125,8 +159,8 @@ function* prepareRequestData(userId, submit = true) {
     dataset_labels,
     categories,
     contributors,
-    metaDataIndex,
-    metaDataFileName,
+    // metaDataIndex,
+    // metadata_file_name: metaDataFileName,
   }, formValues);
   return {
     // TODO: determine target according to "Target Data center" value. e.g. "ena" = ENA_PANGAEA
@@ -171,7 +205,7 @@ function* uploadFile(token, brokerSubmissionId, file, index) {
     //  stating that every uploaded file will be attached to the
     //  respective ticket
     const uploadChannel = yield call(createUploadFileChannel,
-      brokerSubmissionId, file.file, true, token);
+      brokerSubmissionId, file.file, true, file.metaData, token);
     yield fork(uploadProgressWatcher, uploadChannel, index);
   } catch (err) {
     yield put(uploadFileError(index, err));
@@ -294,8 +328,7 @@ export function* performFetchSubmissionSaga() {
 export function* performDeleteUploadedFileSaga(action) {
   const token = yield select(makeSelectToken());
   const bsi = yield select(makeSelectRequestBrokerSubmissionId());
-  console.log(' #### performDeleteUploadedFileSaga #### ');
-  console.log(action);
+
   try {
     let response = yield call(deleteSubmissionUpload, token, bsi, action.fileKey);
     yield put(deleteFileSuccess(response));
@@ -303,6 +336,20 @@ export function* performDeleteUploadedFileSaga(action) {
     yield put(fetchFileUploadsSuccess(response));
   } catch (error) {
     yield put(deleteFileError(error));
+  }
+}
+
+export function* performUpdateUploadedFileSaga(action) {
+  console.log(' #### performUpdateUploadedFileSaga #### ');
+  console.log(action);
+  const token = yield select(makeSelectToken());
+  const bsi = yield select(makeSelectRequestBrokerSubmissionId());
+  try {
+    let response = yield call(setMetaDataFlag, bsi, action.file.pk, action.file.meta_data, token);
+    // yield put(setMetaDataOnServerSuccess(action.metaDataIndex));
+  } catch (error) {
+    console.log(error);
+    yield put(setMetaDataOnServerError(error));
   }
 
 }
@@ -365,6 +412,10 @@ export function* uploadFilesSaga() {
   yield takeLatest(UPLOAD_FILES, performUploadSaga);
 }
 
+export function* updateUploadedFilesSaga() {
+  yield takeEvery(SET_METADATA_ON_SERVER, performUpdateUploadedFileSaga);
+}
+
 export function* deleteUploadedFileSaga() {
   yield takeLeading(DELETE_FILE, performDeleteUploadedFileSaga);
 }
@@ -380,6 +431,6 @@ export function* updateSubmissionSaga() {
 export default function* rootSaga() {
   yield all([checkFormTypeSaga(), saveFormSaga(), submitFormSaga(),
     uploadFilesSaga(), fetchSubmissionSaga(), updateSubmissionSaga(),
-    closeSaveMessageSaga(), deleteUploadedFileSaga(),
+    closeSaveMessageSaga(), deleteUploadedFileSaga(), updateUploadedFilesSaga(),
   ]);
 }

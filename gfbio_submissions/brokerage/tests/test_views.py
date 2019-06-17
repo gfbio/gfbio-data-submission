@@ -540,6 +540,48 @@ class TestSubmissionUploadView(TestCase):
         self.assertEqual(2, len(content))
 
     @responses.activate
+    def test_list_uploads_queryset(self):
+        submission = Submission.objects.first()
+        submission_2 = Submission.objects.last()
+        self.assertNotEqual(submission.broker_submission_id,
+                            submission_2.broker_submission_id)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        responses.add(responses.POST, url, json={}, status=200)
+
+        url_2 = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission_2.broker_submission_id})
+        responses.add(responses.POST, url_2, json={}, status=200)
+
+        data = self._create_test_data('/tmp/test_primary_data_file')
+        self.api_client.post(url, data, format='multipart')
+
+        data_2 = self._create_test_data('/tmp/test_primary_data_file_2')
+        self.api_client.post(url_2, data_2, format='multipart')
+
+        submission = Submission.objects.first()
+        self.assertTrue(1, len(submission.submissionupload_set.all()))
+        submission_2 = Submission.objects.last()
+        self.assertTrue(1, len(submission_2.submissionupload_set.all()))
+
+        url = reverse('brokerage:submissions_uploads', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        response = self.api_client.get(url)
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(1, len(content))
+        self.assertTrue(
+            content[0].get('file', '').endswith('test_primary_data_file'))
+
+        url = reverse('brokerage:submissions_uploads', kwargs={
+            'broker_submission_id': submission_2.broker_submission_id})
+        response = self.api_client.get(url)
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(1, len(content))
+        self.assertTrue(
+            content[0].get('file', '').endswith('test_primary_data_file_2'))
+
+    @responses.activate
     def test_get_list_per_submission_content(self):
         submission = Submission.objects.first()
         url = reverse('brokerage:submissions_upload', kwargs={
@@ -750,3 +792,37 @@ class TestSubmissionUploadView(TestCase):
         response = self.api_client.post(url, {}, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(b'No file was submitted.', response.content)
+
+    @responses.activate
+    def test_valid_file_patch_no_task(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        url = reverse(
+            'brokerage:submissions_upload',
+            kwargs={
+                'broker_submission_id': submission.broker_submission_id
+            })
+        responses.add(responses.POST, url, json={}, status=200)
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          site_config.helpdesk_server.url,
+                          HELPDESK_API_SUB_URL,
+                          'FAKE_KEY',
+                          HELPDESK_ATTACHMENT_SUB_URL,
+                      ),
+                      json=_get_jira_attach_response(),
+                      status=200)
+        data = self._create_test_data('/tmp/test_primary_data_file_1111')
+        response = self.api_client.post(url, data, format='multipart')
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertFalse(SubmissionUpload.objects.first().meta_data)
+
+        url = reverse(
+            'brokerage:submissions_upload_patch',
+            kwargs={
+                'broker_submission_id': submission.broker_submission_id,
+                'pk': content.get('id')
+            })
+        response = self.api_client.patch(url, {'meta_data': True})
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(SubmissionUpload.objects.first().meta_data)

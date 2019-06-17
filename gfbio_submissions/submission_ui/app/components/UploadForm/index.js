@@ -77,6 +77,7 @@ class UploadForm extends React.PureComponent {
         progress: 0,
         file: a,
         status: 'pending', // 'success' 'error' 'uploading'
+        metaData: false,
         messages: {},
       });
     }
