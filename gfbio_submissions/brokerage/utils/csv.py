@@ -5,9 +5,6 @@ from collections import OrderedDict
 import dpath
 from shortid import ShortId
 
-from gfbio_submissions.brokerage.configuration.settings import \
-    CSV_READER_QUOTING
-
 sample_core_fields = [
     'sample_alias',
     'sample_title',
@@ -54,26 +51,22 @@ unit_mapping = {
 unit_mapping_keys = unit_mapping.keys()
 
 
-def extract_sample(row, row_keys, sample_id):
+def extract_sample(row, field_names, sample_id):
     sample_attributes = [
         OrderedDict(
-            [('tag', o), ('value', row[o]), ('unit', unit_mapping[o])])
+            [('tag', o), ('value', row[o]),
+             ('unit', unit_mapping[o])])
         if o in unit_mapping_keys
         else OrderedDict([('tag', o), ('value', row[o])])
-        for o in row_keys if o not in core_fields
+        for o in field_names if o not in core_fields
     ]
     sample = {
         'sample_title': row.get('sample_title', ''),
         'sample_alias': sample_id,
-        'sample_description': row.get('sample_description', ''),
+        'sample_description': row.get('sample_description', '').replace('"',
+                                                                        ''),
         'taxon_id': int(row.get('taxon_id', '-1')),
     }
-    # sample = OrderedDict([
-    #     ('sample_title', row.get('sample_title', '')),
-    #     ('sample_alias', sample_id),
-    #     ('sample_description', row.get('sample_description', '')),
-    #     ('taxon_id', int(row.get('taxon_id', '-1'))),
-    # ])
     if len(sample_attributes):
         sample['sample_attributes'] = sample_attributes
     return sample
@@ -117,7 +110,15 @@ def extract_experiment(experiment_id, row, sample_id):
 
 # TODO: maybe csv is in a file like implemented or comes as text/string
 def parse_molecular_csv(csv_file):
-    csv_reader = csv.DictReader(csv_file, quoting=CSV_READER_QUOTING)
+    csv_reader = csv.DictReader(
+        csv_file,
+        quoting=csv.QUOTE_ALL,
+        delimiter=',',
+        quotechar='"',
+        skipinitialspace=True,
+        restkey='extra_columns_found',
+        restval='extra_value_found',
+    )
     data = {
         'requirements': {
             # minimal_requirements
@@ -132,14 +133,14 @@ def parse_molecular_csv(csv_file):
             # 'runs': [],
         }
     }
-
+    field_names = csv_reader.fieldnames
+    # print(field_names)
     short_id = ShortId()
     for row in csv_reader:
         # every row is one sample (except header)
         sample_id = short_id.generate()
         experiment_id = short_id.generate()
-        row_keys = row.keys()
-        sample = extract_sample(row, row_keys, sample_id)
+        sample = extract_sample(row, field_names, sample_id)
         experiment = extract_experiment(experiment_id, row, sample_id)
         data['requirements']['samples'].append(
             sample
