@@ -2,6 +2,7 @@
 import base64
 import datetime
 import json
+import os
 import urllib
 from pprint import pprint
 from urllib.parse import urlencode
@@ -9,17 +10,18 @@ from uuid import UUID, uuid4
 
 import responses
 from django.contrib.auth.models import Permission
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
-from django.urls import reverse
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIRequestFactory, APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    HELPDESK_API_SUB_URL
+    HELPDESK_API_SUB_URL, GENERIC, ENA
 from gfbio_submissions.brokerage.models import Submission, RequestLog, \
     SiteConfiguration, ResourceCredential, TaskProgressReport
 from gfbio_submissions.brokerage.tests.utils import \
-    _get_submission_request_data, _get_submission_post_response
+    _get_submission_request_data, _get_submission_post_response, \
+    _get_test_data_dir_path
 from gfbio_submissions.users.models import User
 
 
@@ -397,71 +399,6 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual('', submission.download_url)
 
     @responses.activate
-    def test_generic_max_post_with_ena_datacenter(self):
-        self._add_create_ticket_response()
-        # self.assertEqual(0, len(Submission.objects.all()))
-        # since no generic field is mandatory
-        response = self.api_client.post(
-            '/api/submissions/',
-            {'target': 'GENERIC', 'release': False,
-             'data': {
-                 'requirements': {
-                     'title': 'A Title',
-                     'description': 'A Description',
-                     'data_center': 'ENA – European Nucleotide Archive'}}},
-            format='json'
-        )
-        # self.assertEqual(201, response.status_code)
-        content = json.loads(response.content.decode('utf-8'))
-        pprint(content)
-        print('\n##############################\n')
-        submission = Submission.objects.first()
-        url = reverse('brokerage:submissions_upload', kwargs={
-            'broker_submission_id': submission.broker_submission_id})
-        responses.add(responses.POST, url, json={}, status=200)
-        path = '/tmp/test_primary_data_file'
-        f = open(path, 'w')
-        f.write('test123\n')
-        f.close()
-        f = open(path, 'rb')
-        data = {
-            'file': f,
-        }
-        response = self.api_client.post(url, data, format='multipart')
-        content = json.loads(response.content.decode('utf-8'))
-        pprint(content)
-        print('\n##############################\n')
-
-        # never reaches check for csv since with target ena validation fails this way
-        # response = self.api_client.post(
-        #     '/api/submissions/',
-        #     {'target': 'ENA', 'release': True,
-        #      'data': {
-        #          'requirements': {
-        #              'title': 'A Title',
-        #              'description': 'A Description',
-        #              'data_center': 'Some other Data Center'}}},
-        #     format='json'
-        # )
-        # # self.assertEqual(201, response.status_code)
-        # content = json.loads(response.content.decode('utf-8'))
-        # pprint(content)
-
-        # expected = _get_submission_post_response()
-        # expected['embargo'] = '{0}'.format(
-        #     datetime.date.today() + datetime.timedelta(days=365))
-        # expected['broker_submission_id'] = content['broker_submission_id']
-        # self.assertDictEqual(expected, content)
-        # self.assertNotIn('download_url', content['data']['requirements'].keys())
-        # self.assertEqual(1, len(Submission.objects.all()))
-        # submission = Submission.objects.first()
-        # # self.assertEqual(UUID(expected['broker_submission_id']),
-        # #                  submission.broker_submission_id)
-        # self.assertEqual(Submission.SUBMITTED,
-        #                  content.get('status', 'NOPE'))
-        # self.assertEqual('', submission.download_url)
-
-    @responses.activate
     def test_valid_max_post_with_data_url(self):
         self._add_create_ticket_response()
         self.assertEqual(0, len(Submission.objects.all()))
@@ -508,6 +445,91 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(400, response.status_code)
         self.assertIn('description', response.content.decode('utf-8'))
         self.assertEqual(0, len(Submission.objects.all()))
+
+
+class TestSubmissionViewDataCenterCheck(TestSubmissionView):
+
+    @responses.activate
+    def test_ena_datacenter_no_files(self):
+        self._add_create_ticket_response()
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'GENERIC', 'release': True,
+             'data': {
+                 'requirements': {
+                     'title': 'A Title',
+                     'description': 'A Description',
+                     'data_center': 'ENA – European Nucleotide Archive'}}},
+            format='json'
+        )
+        self.assertEqual(201, response.status_code)
+        submission = Submission.objects.first()
+        self.assertEqual(GENERIC, submission.target)
+        expected_tasks = ['tasks.trigger_submission_transfer',
+                          'tasks.get_gfbio_user_email_task',
+                          'tasks.create_helpdesk_ticket_task',
+                          'tasks.check_on_hold_status_task']
+        for t in TaskProgressReport.objects.filter(
+                submission=submission).order_by('created'):
+            self.assertIn(t.task_name, expected_tasks)
+
+    @responses.activate
+    def test_ena_datacenter_with_suitable_file_after_put(self):
+        self._add_create_ticket_response()
+        self._add_update_ticket_response()
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'GENERIC', 'release': False,
+             'data': {
+                 'requirements': {
+                     'title': 'A Title',
+                     'description': 'A Description',
+                     'data_center': 'ENA – European Nucleotide Archive'}}},
+            format='json'
+        )
+        self.assertEqual(201, response.status_code)
+        submission = Submission.objects.first()
+        self.assertEqual(GENERIC, submission.target)
+        with open(os.path.join(_get_test_data_dir_path(),
+                               'molecular_metadata.csv'), 'rb') as csv_file:
+            uploaded_file = SimpleUploadedFile(
+                name='molecular.csv',
+                content_type='text/csv',
+                content=csv_file.read()
+            )
+
+        submission.submissionupload_set.create(
+            submission=submission,
+            site=User.objects.first(),
+            user=User.objects.first(),
+            meta_data=True,
+            file=uploaded_file,
+        )
+        self.assertEqual(1, len(
+            submission.submissionupload_set.filter(meta_data=True)))
+        response = self.api_client.put(
+            '/api/submissions/{0}/'.format(submission.broker_submission_id),
+            {'target': 'GENERIC', 'release': True,
+             'data': {
+                 'requirements': {
+                     'title': 'A Title',
+                     'description': 'A Description',
+                     'data_center': 'ENA – European Nucleotide Archive'}}},
+            format='json'
+        )
+        self.assertEqual(200, response.status_code)
+        submission = Submission.objects.first()
+        self.assertEqual(ENA, submission.target)
+        expected_tasks = ['tasks.trigger_submission_transfer',
+                          'tasks.get_gfbio_user_email_task',
+                          'tasks.create_helpdesk_ticket_task',
+                          'tasks.update_helpdesk_ticket_task',  # x2
+                          'tasks.trigger_submission_transfer_for_updates',
+                          'tasks.create_broker_objects_from_submission_data_task',
+                          'tasks.prepare_ena_submission_data_task']
+        for t in TaskProgressReport.objects.filter(
+                submission=submission).order_by('created'):
+            self.assertIn(t.task_name, expected_tasks)
 
 
 # FIXME: duplicate of below ?
@@ -558,7 +580,8 @@ class TestSubmissionViewGetRequest(TestSubmissionView):
     def test_no_submission_for_id(self):
         self._add_create_ticket_response()
         self._post_submission()
-        response = self.api_client.get('/api/submissions/{0}/'.format(uuid4()))
+        response = self.api_client.get(
+            '/api/submissions/{0}/'.format(uuid4()))
         self.assertEqual(404, response.status_code)
 
 
@@ -1102,12 +1125,14 @@ class TestSubmissionViewPermissions(TestSubmissionView):
 
     def test_invalid_token_authentication(self):
         client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token afafff4f3f3f77faff2f71f')
+        client.credentials(
+            HTTP_AUTHORIZATION='Token afafff4f3f3f77faff2f71f')
         response = client.post('/api/submissions/', {'some': 'data'})
         self.assertEqual(401, response.status_code)
 
     def test_valid_token_authentication(self):
-        token = Token.objects.create(user=User.objects.get(username='horst'))
+        token = Token.objects.create(
+            user=User.objects.get(username='horst'))
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token {0}'.format(token.key))
 

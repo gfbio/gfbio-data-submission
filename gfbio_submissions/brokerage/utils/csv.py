@@ -2,7 +2,6 @@
 import csv
 import json
 from collections import OrderedDict
-from pprint import pprint
 
 import dpath
 from shortid import ShortId
@@ -125,19 +124,19 @@ def parse_molecular_csv(csv_file):
         restkey='extra_columns_found',
         restval='extra_value_found',
     )
-    data = {
-        'requirements': {
-            # minimal_requirements
-            'title': 't',
-            'description': 'd',
-            # study_reqs
-            'study_type': 'enum_value',
-            # sample, experiment, runs reqs
-            'samples': [],
-            'experiments': [],
-            # no explicit runs from csv. files in experiments
-            # 'runs': [],
-        }
+    molecular_requirements = {
+        # 'requirements': {
+        # minimal_requirements
+        # 'title': title,
+        # 'description': description,
+        # study_reqs
+        'study_type': 'Other',
+        # sample, experiment, runs reqs
+        'samples': [],
+        'experiments': [],
+        # no explicit runs from csv. files in experiments
+        # 'runs': [],
+        # }
     }
     field_names = csv_reader.fieldnames
     # print(field_names)
@@ -148,58 +147,48 @@ def parse_molecular_csv(csv_file):
         experiment_id = short_id.generate()
         sample = extract_sample(row, field_names, sample_id)
         experiment = extract_experiment(experiment_id, row, sample_id)
-        data['requirements']['samples'].append(
+        molecular_requirements['samples'].append(
             sample
         )
-        data['requirements']['experiments'].append(
+        molecular_requirements['experiments'].append(
             experiment
         )
-    return data
+    return molecular_requirements
 
 
 # TODO: may move to other location, perhaps model, serializer or manager method
-def check_for_ena_data_center(submission):
-    print('check_for_ena_data_center ', submission)
+def check_for_molecular_content(submission):
+    if submission.target == ENA or submission.target == ENA_PANGAEA:
+        return True
     # TODO: consider HELPDESK_REQUEST_TYPE_MAPPINGS for data_center mappings
-    if submission.release and submission.target == GENERIC \
+    elif submission.release and submission.target == GENERIC \
             and submission.data.get('requirements', {}) \
             .get('data_center', '').count('ENA'):
-        print('REQS MET TO CHANGE TO TARGET ENA\n')
         meta_data_files = submission.submissionupload_set.filter(meta_data=True)
-        print(meta_data_files)
         if len(meta_data_files) != 1:
             # TODO: add some sort of error to submission.data / validation hint
             return False
         meta_data_file = meta_data_files.first()
-        print(meta_data_file.file)
         with open(meta_data_file.file.path, 'r') as file:
-            # print(file.readlines())
-            data = parse_molecular_csv(file)
-            print('data ', data)
-
-        # pprint(submission.data)
+            molecular_requirements = parse_molecular_csv(
+                file,
+            )
+        submission.data.get('requirements', {}).update(molecular_requirements)
         fake_request_data = {
             'target': ENA,
             'release': True,
-            'data': data,
+            'data': submission.data,
         }
-        # pprint(fake_request_data)
         serializer = SubmissionDetailSerializer(data=fake_request_data)
         valid = serializer.is_valid()
         print('valid ', valid)
         print('errors ', serializer.errors)
         print(json.dumps(serializer.errors))
-
-    return False
-
-        # validate_data = serializer.validate(fake_request_data)
-        # pprint(validate_data)
-
-        # submission.target = ENA
-        # submission.save(allow_update=False)
-
-    # unlikely to be reached ..
-    # if submission.target == ENA or submission.target == ENA_PANGAEA \
-    #         and submission.data.get('requirements', {}) \
-    #         .get('data_center', 'ENA').count('ENA') == 0:
-    #     print('ENA target with data_centet in data that is no ena related')
+        submission.target = ENA
+        submission.save(allow_update=False)
+        if valid:
+            return True
+        else:
+            return False
+    else:
+        return False

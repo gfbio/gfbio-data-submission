@@ -31,7 +31,6 @@ class SubmissionsView(mixins.ListModelMixin,
                           IsOwnerOrReadOnly)
 
     def perform_create(self, serializer):
-        # print('----------- CREATE ', self.request.data)
         # TODO:
         #  - only if reqular submit -> release=True
         #  - if target ENA ect proceed as usual ...
@@ -97,8 +96,6 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         instance = self.get_object()  #
         # TODO: 06.06.2019 allow edit of submissions with status SUBMITTED ...
         if instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED:
-            # print('------ PUT    ', request.data)
-            # print(instance.target)
             response = self.update(request, *args, **kwargs)
 
             # FIXME: updates to submission download url are not covered here

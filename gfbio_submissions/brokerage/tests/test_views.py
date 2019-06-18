@@ -22,7 +22,7 @@ from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.test_submission_views import \
     TestSubmissionView
 from gfbio_submissions.brokerage.tests.utils import _get_jira_attach_response
-from gfbio_submissions.brokerage.utils.csv import check_for_ena_data_center
+from gfbio_submissions.brokerage.utils.csv import check_for_molecular_content
 from gfbio_submissions.users.models import User
 
 
@@ -482,7 +482,7 @@ class TestSubmissionUploadView(TestCase):
         self.assertTrue(upload.meta_data)
         print('\n##############################\n')
 
-        res = check_for_ena_data_center(submission)
+        res = check_for_molecular_content(submission)
         print('RES OF CHECK ', res)
 
 

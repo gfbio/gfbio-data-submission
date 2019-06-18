@@ -28,14 +28,12 @@ class SubmissionSerializer(serializers.ModelSerializer):
     data = serializers.JSONField()
     status = serializers.CharField(read_only=True)
 
-    def create(self, validated_data):
-        print('------- SubmissionSerializer CREATE ************')
-        obj = Submission(**validated_data)
-        obj.save()
-        return obj
+    # def create(self, validated_data):
+    #     obj = Submission(**validated_data)
+    #     obj.save()
+    #     return obj
 
     def validate(self, data):
-        print('------- SubmissionSerializer VALIDATE')
         if data.get('release', False):
             target = data.get('target', 'NO_TARGET_PROVIDED')
             valid, errors = validate_data_full(data=data.get('data', {}),
@@ -63,7 +61,6 @@ class SubmissionSerializer(serializers.ModelSerializer):
 
 class SubmissionDetailSerializer(SubmissionSerializer):
     def validate(self, data):
-        print('------- SubmissionDetailSerializer VALIDATE')
         if data.get('release', False):
             target = data.get('target', 'NO_TARGET_PROVIDED')
             valid, errors = validate_data_full(data=data.get('data', {}),

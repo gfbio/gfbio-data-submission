@@ -12,7 +12,8 @@ from django.utils.encoding import smart_text
 from requests import ConnectionError, Response
 
 from gfbio_submissions.brokerage.configuration.settings import ENA
-from gfbio_submissions.brokerage.utils.csv import check_for_ena_data_center
+from gfbio_submissions.brokerage.utils.csv import \
+    check_for_molecular_content
 from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_prepare_create_helpdesk_payload, gfbio_update_helpdesk_ticket, \
     gfbio_helpdesk_delete_attachment
@@ -78,14 +79,17 @@ def trigger_submission_transfer(submission_id=None):
         submission_id=submission_id, task=trigger_submission_transfer
     )
 
-    ena_data_available = check_for_ena_data_center(submission)
-    print('ena data available ', ena_data_available)
+    molecular_data_available = check_for_molecular_content(
+        submission)
 
     transfer_handler = SubmissionTransferHandler(
         submission_id=submission.pk,
         target_archive=submission.target
     )
-    transfer_handler.initiate_submission_process(release=submission.release)
+    transfer_handler.initiate_submission_process(
+        release=submission.release,
+        molecular_data_available=molecular_data_available
+    )
 
 
 @celery.task(name='tasks.trigger_submission_transfer_for_updates',
@@ -102,14 +106,18 @@ def trigger_submission_transfer_for_updates(broker_submission_id=None):
         task=trigger_submission_transfer_for_updates
     )
 
-    check_for_ena_data_center(submission)
+    molecular_data_available = check_for_molecular_content(
+        submission)
 
     transfer_handler = SubmissionTransferHandler(
         submission_id=submission.pk,
         target_archive=submission.target
     )
-    transfer_handler.initiate_submission_process(release=submission.release,
-                                                 update=True)
+    transfer_handler.initiate_submission_process(
+        release=submission.release,
+        update=True,
+        molecular_data_available=molecular_data_available
+    )
 
 
 @celery.task(name='tasks.check_on_hold_status_task', base=SubmissionTask)
