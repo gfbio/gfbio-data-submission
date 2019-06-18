@@ -521,6 +521,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         submission = Submission.objects.first()
         self.assertEqual(ENA, submission.target)
         expected_tasks = ['tasks.trigger_submission_transfer',
+                          'tasks.check_on_hold_status_task',
                           'tasks.get_gfbio_user_email_task',
                           'tasks.create_helpdesk_ticket_task',
                           'tasks.update_helpdesk_ticket_task',  # x2
@@ -529,6 +530,117 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
                           'tasks.prepare_ena_submission_data_task']
         for t in TaskProgressReport.objects.filter(
                 submission=submission).order_by('created'):
+            self.assertIn(t.task_name, expected_tasks)
+
+    @responses.activate
+    def test_ena_datacenter_with_unsuitable_file_after_put(self):
+        self._add_create_ticket_response()
+        self._add_update_ticket_response()
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'GENERIC', 'release': False,
+             'data': {
+                 'requirements': {
+                     'title': 'A Title',
+                     'description': 'A Description',
+                     'data_center': 'ENA – European Nucleotide Archive'}}},
+            format='json'
+        )
+        self.assertEqual(201, response.status_code)
+        submission = Submission.objects.first()
+        self.assertEqual(GENERIC, submission.target)
+        with open(os.path.join(_get_test_data_dir_path(),
+                               'ena_data.json'), 'rb') as csv_file:
+            uploaded_file = SimpleUploadedFile(
+                name='molecular.csv',
+                content_type='text/json',
+                content=csv_file.read()
+            )
+
+        submission.submissionupload_set.create(
+            submission=submission,
+            site=User.objects.first(),
+            user=User.objects.first(),
+            meta_data=True,
+            file=uploaded_file,
+        )
+        self.assertEqual(1, len(
+            submission.submissionupload_set.filter(meta_data=True)))
+        response = self.api_client.put(
+            '/api/submissions/{0}/'.format(submission.broker_submission_id),
+            {'target': 'GENERIC', 'release': True,
+             'data': {
+                 'requirements': {
+                     'title': 'A Title',
+                     'description': 'A Description',
+                     'data_center': 'ENA – European Nucleotide Archive'}}},
+            format='json'
+        )
+        self.assertEqual(200, response.status_code)
+        submission = Submission.objects.first()
+        self.assertEqual(ENA, submission.target)
+        expected_tasks = ['tasks.trigger_submission_transfer',
+                          'tasks.get_gfbio_user_email_task',
+                          'tasks.create_helpdesk_ticket_task',
+                          'tasks.update_helpdesk_ticket_task',
+                          'tasks.trigger_submission_transfer_for_updates',
+                          'tasks.check_on_hold_status_task'
+                          ]
+        for t in TaskProgressReport.objects.filter(
+                submission=submission).order_by('created'):
+            print(t.task_name, ' ', t.created)
+            self.assertIn(t.task_name, expected_tasks)
+
+    @responses.activate
+    def test_ena_datacenter_with_binary_file_after_put(self):
+        self._add_create_ticket_response()
+        self._add_update_ticket_response()
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'GENERIC', 'release': False,
+             'data': {
+                 'requirements': {
+                     'title': 'A Title',
+                     'description': 'A Description',
+                     'data_center': 'ENA – European Nucleotide Archive'}}},
+            format='json'
+        )
+        self.assertEqual(201, response.status_code)
+        submission = Submission.objects.first()
+        self.assertEqual(GENERIC, submission.target)
+
+        submission.submissionupload_set.create(
+            submission=submission,
+            site=User.objects.first(),
+            user=User.objects.first(),
+            meta_data=True,
+            file=SimpleUploadedFile('test.png', b'\x00\x01\x02\x03'),
+        )
+        self.assertEqual(1, len(
+            submission.submissionupload_set.filter(meta_data=True)))
+        response = self.api_client.put(
+            '/api/submissions/{0}/'.format(submission.broker_submission_id),
+            {'target': 'GENERIC', 'release': True,
+             'data': {
+                 'requirements': {
+                     'title': 'A Title',
+                     'description': 'A Description',
+                     'data_center': 'ENA – European Nucleotide Archive'}}},
+            format='json'
+        )
+        self.assertEqual(200, response.status_code)
+        submission = Submission.objects.first()
+        self.assertEqual(ENA, submission.target)
+        expected_tasks = ['tasks.trigger_submission_transfer',
+                          'tasks.get_gfbio_user_email_task',
+                          'tasks.create_helpdesk_ticket_task',
+                          'tasks.update_helpdesk_ticket_task',
+                          'tasks.trigger_submission_transfer_for_updates',
+                          'tasks.check_on_hold_status_task'
+                          ]
+        for t in TaskProgressReport.objects.filter(
+                submission=submission).order_by('created'):
+            print(t.task_name, ' ', t.created)
             self.assertIn(t.task_name, expected_tasks)
 
 

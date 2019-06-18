@@ -3,6 +3,7 @@ import csv
 import json
 from collections import OrderedDict
 
+import _csv
 import dpath
 from shortid import ShortId
 
@@ -138,7 +139,11 @@ def parse_molecular_csv(csv_file):
         # 'runs': [],
         # }
     }
-    field_names = csv_reader.fieldnames
+    try:
+        field_names = csv_reader.fieldnames
+    except _csv.Error as e:
+        print('ERROR ', e)
+        return molecular_requirements
     # print(field_names)
     short_id = ShortId()
     for row in csv_reader:
@@ -182,8 +187,8 @@ def check_for_molecular_content(submission):
         serializer = SubmissionDetailSerializer(data=fake_request_data)
         valid = serializer.is_valid()
         print('valid ', valid)
-        print('errors ', serializer.errors)
-        print(json.dumps(serializer.errors))
+        # print('errors ', serializer.errors)
+        # print(json.dumps(serializer.errors))
         submission.target = ENA
         submission.save(allow_update=False)
         if valid:

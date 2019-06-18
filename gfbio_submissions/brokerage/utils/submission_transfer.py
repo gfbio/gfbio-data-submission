@@ -112,17 +112,16 @@ class SubmissionTransferHandler(object):
                                                   error))
                 raise error
 
-    def pre_process_molecular_data_chain(self, molecular_data_available=True):
+    def pre_process_molecular_data_chain(self):
         from gfbio_submissions.brokerage.tasks import \
             create_broker_objects_from_submission_data_task, \
             prepare_ena_submission_data_task
-        if molecular_data_available:
-            return create_broker_objects_from_submission_data_task.s(
-                submission_id=self.submission_id).set(
-                countdown=SUBMISSION_DELAY) \
-                   | prepare_ena_submission_data_task.s(
-                submission_id=self.submission_id).set(
-                countdown=SUBMISSION_DELAY)
+        return create_broker_objects_from_submission_data_task.s(
+            submission_id=self.submission_id).set(
+            countdown=SUBMISSION_DELAY) \
+               | prepare_ena_submission_data_task.s(
+            submission_id=self.submission_id).set(
+            countdown=SUBMISSION_DELAY)
         # \
         #        | check_on_hold_status_task.s(
         #     submission_id=self.submission_id).set(
@@ -159,8 +158,8 @@ class SubmissionTransferHandler(object):
                     'prepare_ena_submission_data_task'
                     ''.format(self.target_archive)
                 )
-                chain = self.pre_process_molecular_data_chain(
-                    molecular_data_available)
+                if molecular_data_available:
+                    chain = chain | self.pre_process_molecular_data_chain()
         elif not update:
             # TODO: use IDM derived email. not old portal email
             chain = get_gfbio_user_email_task.s(
@@ -175,8 +174,8 @@ class SubmissionTransferHandler(object):
                     countdown=SUBMISSION_DELAY)
                 if self.target_archive == ENA \
                         or self.target_archive == ENA_PANGAEA:
-                    chain = chain | self.pre_process_molecular_data_chain(
-                        molecular_data_available)
+                    if molecular_data_available:
+                        chain = chain | self.pre_process_molecular_data_chain()
         else:
             return None
         chain()
