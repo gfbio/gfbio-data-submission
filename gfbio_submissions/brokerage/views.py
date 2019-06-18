@@ -31,6 +31,17 @@ class SubmissionsView(mixins.ListModelMixin,
                           IsOwnerOrReadOnly)
 
     def perform_create(self, serializer):
+        # print('----------- CREATE ', self.request.data)
+        # TODO:
+        #  - only if reqular submit -> release=True
+        #  - if target ENA ect proceed as usual ...
+        #  - if target ENA but data.requirements.data_center available and not contain ENA:
+        #       - change target to GENERIC (... change back/correct ...)
+        #  - if target GENERIC and data.requirements.data_center contains ENA:
+        #       - change target to ENA
+        #       - check for single pr.datafile, if multiple cancel ..
+        #       - try to parse as csv, cancle on error
+        #       - add json to submission (store validation errors ?)
         submission = serializer.save(site=self.request.user, )
         with transaction.atomic():
             RequestLog.objects.create(
@@ -86,6 +97,8 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         instance = self.get_object()  #
         # TODO: 06.06.2019 allow edit of submissions with status SUBMITTED ...
         if instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED:
+            # print('------ PUT    ', request.data)
+            # print(instance.target)
             response = self.update(request, *args, **kwargs)
 
             # FIXME: updates to submission download url are not covered here

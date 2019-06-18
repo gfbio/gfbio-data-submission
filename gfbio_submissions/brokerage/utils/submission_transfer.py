@@ -142,6 +142,10 @@ class SubmissionTransferHandler(object):
         )
         # TODO: update only, without release does nothing ?
         if update and release:
+
+            # TODO: add csv parsing to chain when conditions indicate it
+            #  ... see perform_create TODOs
+
             if self.target_archive == ENA or self.target_archive == ENA_PANGAEA:
                 logger.info(
                     'SubmissionTransferHandler. target_archive={0} trigger '

@@ -3,12 +3,14 @@ import base64
 import datetime
 import json
 import urllib
+from pprint import pprint
 from urllib.parse import urlencode
 from uuid import UUID, uuid4
 
 import responses
 from django.contrib.auth.models import Permission
 from django.test import TestCase
+from django.urls import reverse
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIRequestFactory, APIClient
 
@@ -247,6 +249,9 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
         self.assertDictEqual(expected, content)
         self.assertEqual(1, len(Submission.objects.all()))
         submission = Submission.objects.last()
+
+        pprint(submission.data)
+
         self.assertEqual(UUID(content['broker_submission_id']),
                          submission.broker_submission_id)
         # self.assertIsNotNone(submission.embargo)
@@ -390,6 +395,71 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(Submission.SUBMITTED,
                          content.get('status', 'NOPE'))
         self.assertEqual('', submission.download_url)
+
+    @responses.activate
+    def test_generic_max_post_with_ena_datacenter(self):
+        self._add_create_ticket_response()
+        # self.assertEqual(0, len(Submission.objects.all()))
+        # since no generic field is mandatory
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'GENERIC', 'release': False,
+             'data': {
+                 'requirements': {
+                     'title': 'A Title',
+                     'description': 'A Description',
+                     'data_center': 'ENA – European Nucleotide Archive'}}},
+            format='json'
+        )
+        # self.assertEqual(201, response.status_code)
+        content = json.loads(response.content.decode('utf-8'))
+        pprint(content)
+        print('\n##############################\n')
+        submission = Submission.objects.first()
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        responses.add(responses.POST, url, json={}, status=200)
+        path = '/tmp/test_primary_data_file'
+        f = open(path, 'w')
+        f.write('test123\n')
+        f.close()
+        f = open(path, 'rb')
+        data = {
+            'file': f,
+        }
+        response = self.api_client.post(url, data, format='multipart')
+        content = json.loads(response.content.decode('utf-8'))
+        pprint(content)
+        print('\n##############################\n')
+
+        # never reaches check for csv since with target ena validation fails this way
+        # response = self.api_client.post(
+        #     '/api/submissions/',
+        #     {'target': 'ENA', 'release': True,
+        #      'data': {
+        #          'requirements': {
+        #              'title': 'A Title',
+        #              'description': 'A Description',
+        #              'data_center': 'Some other Data Center'}}},
+        #     format='json'
+        # )
+        # # self.assertEqual(201, response.status_code)
+        # content = json.loads(response.content.decode('utf-8'))
+        # pprint(content)
+
+        # expected = _get_submission_post_response()
+        # expected['embargo'] = '{0}'.format(
+        #     datetime.date.today() + datetime.timedelta(days=365))
+        # expected['broker_submission_id'] = content['broker_submission_id']
+        # self.assertDictEqual(expected, content)
+        # self.assertNotIn('download_url', content['data']['requirements'].keys())
+        # self.assertEqual(1, len(Submission.objects.all()))
+        # submission = Submission.objects.first()
+        # # self.assertEqual(UUID(expected['broker_submission_id']),
+        # #                  submission.broker_submission_id)
+        # self.assertEqual(Submission.SUBMITTED,
+        #                  content.get('status', 'NOPE'))
+        # self.assertEqual('', submission.download_url)
 
     @responses.activate
     def test_valid_max_post_with_data_url(self):

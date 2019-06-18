@@ -245,7 +245,8 @@ class Submission(models.Model):
 
     objects = SubmissionManager()
 
-    def save(self, *args, **kwargs):
+    # FIXME: remove ALL custom action from save method ! too much code here !
+    def save(self, allow_update=True, *args, **kwargs):
         previous_state = None
         update = False
         # update, no creation
@@ -253,7 +254,7 @@ class Submission(models.Model):
             update = True
             previous_state = Submission.objects.filter(pk=self.pk).first()
         super(Submission, self).save(*args, **kwargs)
-        if update:
+        if update and allow_update:
             from .tasks import update_helpdesk_ticket_task
             update_helpdesk_ticket_task.apply_async(
                 kwargs={

@@ -12,6 +12,7 @@ from django.utils.encoding import smart_text
 from requests import ConnectionError, Response
 
 from gfbio_submissions.brokerage.configuration.settings import ENA
+from gfbio_submissions.brokerage.utils.csv import check_for_ena_data_center
 from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_prepare_create_helpdesk_payload, gfbio_update_helpdesk_ticket, \
     gfbio_helpdesk_delete_attachment
@@ -76,6 +77,10 @@ def trigger_submission_transfer(submission_id=None):
     submission = SubmissionTransferHandler.get_submission_for_task(
         submission_id=submission_id, task=trigger_submission_transfer
     )
+
+    ena_data_available = check_for_ena_data_center(submission)
+    print('ena data available ', ena_data_available)
+
     transfer_handler = SubmissionTransferHandler(
         submission_id=submission.pk,
         target_archive=submission.target
@@ -96,6 +101,9 @@ def trigger_submission_transfer_for_updates(broker_submission_id=None):
         submission_id=submission_id,
         task=trigger_submission_transfer_for_updates
     )
+
+    check_for_ena_data_center(submission)
+
     transfer_handler = SubmissionTransferHandler(
         submission_id=submission.pk,
         target_archive=submission.target

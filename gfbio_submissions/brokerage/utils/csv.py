@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
 import csv
+import json
 from collections import OrderedDict
+from pprint import pprint
 
 import dpath
 from shortid import ShortId
+
+from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
+    ENA_PANGAEA, ENA
+from gfbio_submissions.brokerage.serializers import SubmissionDetailSerializer
 
 sample_core_fields = [
     'sample_alias',
@@ -149,3 +155,51 @@ def parse_molecular_csv(csv_file):
             experiment
         )
     return data
+
+
+# TODO: may move to other location, perhaps model, serializer or manager method
+def check_for_ena_data_center(submission):
+    print('check_for_ena_data_center ', submission)
+    # TODO: consider HELPDESK_REQUEST_TYPE_MAPPINGS for data_center mappings
+    if submission.release and submission.target == GENERIC \
+            and submission.data.get('requirements', {}) \
+            .get('data_center', '').count('ENA'):
+        print('REQS MET TO CHANGE TO TARGET ENA\n')
+        meta_data_files = submission.submissionupload_set.filter(meta_data=True)
+        print(meta_data_files)
+        if len(meta_data_files) != 1:
+            # TODO: add some sort of error to submission.data / validation hint
+            return False
+        meta_data_file = meta_data_files.first()
+        print(meta_data_file.file)
+        with open(meta_data_file.file.path, 'r') as file:
+            # print(file.readlines())
+            data = parse_molecular_csv(file)
+            print('data ', data)
+
+        # pprint(submission.data)
+        fake_request_data = {
+            'target': ENA,
+            'release': True,
+            'data': data,
+        }
+        # pprint(fake_request_data)
+        serializer = SubmissionDetailSerializer(data=fake_request_data)
+        valid = serializer.is_valid()
+        print('valid ', valid)
+        print('errors ', serializer.errors)
+        print(json.dumps(serializer.errors))
+
+    return False
+
+        # validate_data = serializer.validate(fake_request_data)
+        # pprint(validate_data)
+
+        # submission.target = ENA
+        # submission.save(allow_update=False)
+
+    # unlikely to be reached ..
+    # if submission.target == ENA or submission.target == ENA_PANGAEA \
+    #         and submission.data.get('requirements', {}) \
+    #         .get('data_center', 'ENA').count('ENA') == 0:
+    #     print('ENA target with data_centet in data that is no ena related')
