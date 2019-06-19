@@ -494,6 +494,29 @@ TODO: needs improvements :
     - redirect to sign in page with message that email is confirmed
     - click on github login link and login successful
 
+#### gfbio.submissions.org
+
+        Register a new OAuth application
+        Application name
+        GFBio Submissions
+        Something users will recognize and trust.
+        
+        Homepage URL
+        https://submissions.gfbio.org/
+        The full URL to your application homepage.
+        
+        Application description
+        GFBio Submission Services
+        This is displayed to all users of your application.
+        
+        Authorization callback URL
+        https://submissions.gfbio.org/accounts/github/login/callback/
+        Your application’s callback URL. Read our OAuth documentation for more information
+        
+- https://github.com/settings/applications/1084864
+
+
+
 ### ORCID
 
 - login to https://orcid.org user maweber@mpi-bremen.de
@@ -513,6 +536,12 @@ TODO: needs improvements :
     - once entered: message that verification email has been sent with finalize link
     - link in mail leads to djangourl with button to verify for email x@y.de
     - click confirm leads to signin page, click on orcid login button and login is successful
+ 
+#### gfbio.submissions.org
+
+-  add another call back url for submission.gfbio.org
+
+
     
 #### Google
 
@@ -523,6 +552,9 @@ TODO: needs improvements :
     - password prompt then redirect to django landingpage with success ful login
     - automatic username 'Marc82'
     - resend verification failed (uwe mailserver ?) 
+    
+#### gfbio.submissions.org
+
 
 #### GWDG
 

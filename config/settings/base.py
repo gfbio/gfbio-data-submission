@@ -12,7 +12,7 @@ from celery.schedules import crontab
 
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
-VERSION = '1.69.0'
+VERSION = '1.69.1'
 
 ROOT_DIR = environ.Path(
     __file__) - 3  # (gfbio_submissions/config/settings/base.py - 3 = gfbio_submissions/)
@@ -348,7 +348,7 @@ OIDC_USE_NONCE = False  # Default:	True
 
 # FIXME: omiting these causes errors with oidc !
 # FIXME: Problem is that all logins are affected !
-LOGIN_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
-LOGOUT_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
+# LOGIN_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
+# LOGOUT_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
 
 ########## END OPENIDCONNECT SETTINGS
