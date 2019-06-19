@@ -371,7 +371,7 @@ admin users: marc / marcw -> django
             ---------------
             successfully created backup backup_2018_08_29T20_23_57.sql.gz
 
-
+- NO: build first then restart supervisord
 - OPTIONAL (but remaining commands seem to run slowly)
     - stop docker containers via supervisor process manager
             
