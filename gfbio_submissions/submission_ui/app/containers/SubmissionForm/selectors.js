@@ -155,10 +155,10 @@ const makeSelectMetaDataIndex = () =>
     substate.get('metaDataIndex'),
   );
 
-const makeSelectMetaFileName = () =>
-  createSelector(selectSubmissionFormDomain, substate =>
-    substate.get('metaDataFileName'),
-  );
+// const makeSelectMetaFileName = () =>
+//   createSelector(selectSubmissionFormDomain, substate =>
+//     substate.get('metaDataFileName'),
+//   );
 
 
 const makeSelectPromptOnLeave = () =>
