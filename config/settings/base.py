@@ -348,7 +348,7 @@ OIDC_USE_NONCE = False  # Default:	True
 
 # FIXME: omiting these causes errors with oidc !
 # FIXME: Problem is that all logins are affected !
-LOGIN_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
-LOGOUT_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
+# LOGIN_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
+# LOGOUT_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
 
 ########## END OPENIDCONNECT SETTINGS
