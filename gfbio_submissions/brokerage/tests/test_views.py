@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+from pprint import pprint
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -13,12 +14,15 @@ from rest_framework.test import APIClient
 
 from config.settings.base import MEDIA_URL
 from gfbio_submissions.brokerage.configuration.settings import \
-    HELPDESK_API_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL
+    HELPDESK_API_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL, GENERIC
 from gfbio_submissions.brokerage.models import Submission, \
     SiteConfiguration, ResourceCredential, PrimaryDataFile, AdditionalReference, \
     TaskProgressReport, SubmissionUpload
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
+from gfbio_submissions.brokerage.tests.test_submission_views import \
+    TestSubmissionView
 from gfbio_submissions.brokerage.tests.utils import _get_jira_attach_response
+from gfbio_submissions.brokerage.utils.csv import check_for_molecular_content
 from gfbio_submissions.users.models import User
 
 
@@ -443,6 +447,62 @@ class TestSubmissionUploadView(TestCase):
         # TODO: no task is triggered yet
         self.assertEqual(len(TaskProgressReport.objects.all()), reports_len)
         self.assertGreater(len(SubmissionUpload.objects.all()), uploads_len)
+
+    # TODO: move to dedicatet test class
+    @responses.activate
+    def test_meta_data_parsing(self):
+        submission = Submission.objects.all().first()
+        submission.target = GENERIC
+        submission.data = {
+            'requirements': {
+                'title': 'A Title',
+                'description': 'A Description',
+                'data_center': 'ENA – European Nucleotide Archive'}
+        }
+        submission.save(allow_update=False)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        responses.add(responses.POST, url, json={}, status=200)
+        data = self._create_test_data('/tmp/test_primary_data_file')
+        data['meta_data'] = True
+        response = self.api_client.post(url, data, format='multipart')
+
+        # expected state of submission with on (meta_data) file
+        self.assertEqual(GENERIC, submission.target)
+        self.assertTrue(submission.release)
+        self.assertIn('data_center',
+                      submission.data.get('requirements', {}).keys())
+        self.assertIn('ENA',
+                      submission.data.get('requirements', {}).get('data_center',
+                                                                  ''))
+        print(submission.submissionupload_set.all())
+        self.assertEqual(1, len(submission.submissionupload_set.all()))
+        upload = submission.submissionupload_set.first()
+        self.assertTrue(upload.meta_data)
+        print('\n##############################\n')
+
+        res = check_for_molecular_content(submission)
+        print('RES OF CHECK ', res)
+
+
+        # content = json.loads(response.content.decode('utf-8'))
+        # pprint(content)
+
+
+
+
+        # self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # self.assertIn(b'broker_submission_id', response.content)
+        # self.assertIn(b'"id"', response.content)
+        # self.assertIn(b'site', response.content)
+        # self.assertEqual(User.objects.first().username, response.data['site'])
+        # self.assertIn(b'file', response.content)
+        # self.assertTrue(
+        #     urlparse(response.data['file']).path.startswith(MEDIA_URL))
+        # # TODO: no task is triggered yet
+        # self.assertEqual(len(TaskProgressReport.objects.all()), reports_len)
+        # self.assertGreater(len(SubmissionUpload.objects.all()), uploads_len)
 
     def test_upload_of_multiple_files(self):
         submission = Submission.objects.all().first()

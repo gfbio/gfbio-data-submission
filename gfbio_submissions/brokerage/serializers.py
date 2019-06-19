@@ -28,6 +28,11 @@ class SubmissionSerializer(serializers.ModelSerializer):
     data = serializers.JSONField()
     status = serializers.CharField(read_only=True)
 
+    # def create(self, validated_data):
+    #     obj = Submission(**validated_data)
+    #     obj.save()
+    #     return obj
+
     def validate(self, data):
         if data.get('release', False):
             target = data.get('target', 'NO_TARGET_PROVIDED')
@@ -135,4 +140,5 @@ class SubmissionUploadListSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubmissionUpload
         fields = (
-            'site', 'file', 'submission', 'attach_to_ticket', 'file_name', 'file_size', 'meta_data', 'pk')
+            'site', 'file', 'submission', 'attach_to_ticket', 'file_name',
+            'file_size', 'meta_data', 'pk')

@@ -118,14 +118,13 @@ export const initialState = fromJS({
 
   showSaveSuccess: false,
 
-  // embargoDate: new Date(),
   embargoDate: new Date().setFullYear(new Date().getFullYear() + 1),
-  // userId: backendParameters.userId || -1,
-  // FIXME: replace. development default of 2
+  // TODO: replace. development default of 2
   userId: backendParameters.userId || 2,
-  // token: backendParameters['token'] || 'NO_TOKEN',
-  // FIXME: replace. during development token defaults to test-server user
+  // userId: backendParameters.userId || -1,
+  // TODO: replace. during development token defaults to test-server user
   token: backendParameters['token'] || '5639b56bd077fb3e12d7e4a0ada244aaa970c2fd',
+  // token: backendParameters['token'] || 'NO_TOKEN',
   userName: backendParameters.userName || '',
   // TODO: decide what from actual response is needed, then put in reducer
   submitResponse: {},

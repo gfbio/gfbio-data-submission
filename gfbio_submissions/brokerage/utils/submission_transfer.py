@@ -115,26 +115,28 @@ class SubmissionTransferHandler(object):
     def pre_process_molecular_data_chain(self):
         from gfbio_submissions.brokerage.tasks import \
             create_broker_objects_from_submission_data_task, \
-            prepare_ena_submission_data_task, check_on_hold_status_task
-
+            prepare_ena_submission_data_task
         return create_broker_objects_from_submission_data_task.s(
             submission_id=self.submission_id).set(
             countdown=SUBMISSION_DELAY) \
                | prepare_ena_submission_data_task.s(
             submission_id=self.submission_id).set(
-            countdown=SUBMISSION_DELAY) \
-               | check_on_hold_status_task.s(
-            submission_id=self.submission_id).set(
             countdown=SUBMISSION_DELAY)
+        # \
+        #        | check_on_hold_status_task.s(
+        #     submission_id=self.submission_id).set(
+        #     countdown=SUBMISSION_DELAY)
 
     # TODO: better name !
-    def initiate_submission_process(self, release=False, update=False):
+    def initiate_submission_process(self, release=False, update=False,
+                                    molecular_data_available=True):
         logger.info(
             'SubmissionTransferHandler. initiate_submission_process. '
             'submission_id={0} target_archive={1}'.format(self.submission_id,
                                                           self.target_archive))
         from gfbio_submissions.brokerage.tasks import \
-            create_helpdesk_ticket_task, get_gfbio_user_email_task
+            create_helpdesk_ticket_task, get_gfbio_user_email_task, \
+            check_on_hold_status_task
 
         logger.info(
             'SubmissionTransferHandler. update={0} release={1}'
@@ -142,14 +144,22 @@ class SubmissionTransferHandler(object):
         )
         # TODO: update only, without release does nothing ?
         if update and release:
-            if self.target_archive == ENA or self.target_archive == ENA_PANGAEA:
+
+            # TODO: add csv parsing to chain when conditions indicate it
+            #  ... see perform_create TODOs
+            chain = check_on_hold_status_task.s(
+                submission_id=self.submission_id).set(
+                countdown=SUBMISSION_DELAY)
+            if self.target_archive == ENA \
+                    or self.target_archive == ENA_PANGAEA:
                 logger.info(
                     'SubmissionTransferHandler. target_archive={0} trigger '
                     'create_broker_objects_from_submission_data_task and '
                     'prepare_ena_submission_data_task'
                     ''.format(self.target_archive)
                 )
-                chain = self.pre_process_molecular_data_chain()
+                if molecular_data_available:
+                    chain = chain | self.pre_process_molecular_data_chain()
         elif not update:
             # TODO: use IDM derived email. not old portal email
             chain = get_gfbio_user_email_task.s(
@@ -159,9 +169,13 @@ class SubmissionTransferHandler(object):
                 submission_id=self.submission_id).set(
                 countdown=SUBMISSION_DELAY)
             if release:
-                # TODO: check for Submission Type !
-                if self.target_archive == ENA or self.target_archive == ENA_PANGAEA:
-                    chain = chain | self.pre_process_molecular_data_chain()
+                chain = chain | check_on_hold_status_task.s(
+                    submission_id=self.submission_id).set(
+                    countdown=SUBMISSION_DELAY)
+                if self.target_archive == ENA \
+                        or self.target_archive == ENA_PANGAEA:
+                    if molecular_data_available:
+                        chain = chain | self.pre_process_molecular_data_chain()
         else:
             return None
         chain()
