@@ -60,6 +60,7 @@ export const setStateFormValues = (state, action) => {
     .set('embargoDate', new Date(action.response.data.embargo))
     .set('license', action.response.data.data.requirements.license)
     .set('metaDataSchema', action.response.data.data.requirements.metadata_schema)
+    // .set('metaDataFileName', action.response.data.data.requirements.metadata_file_name)
     // TODO: need whole submission ?
     .set('submission', action.response.data);
 };
@@ -68,6 +69,7 @@ export const resetStateFormValues = (state, initialContributors = []) => {
   return state
     .set('showSubmitSuccess', false)
     .set('metaDataIndex', '')
+    // .set('metaDataFileName', '')
     .set('brokerSubmissionId', '')
     .set('initialValues', {})
     .set('relatedPublications', fromJS([]))
@@ -80,4 +82,50 @@ export const resetStateFormValues = (state, initialContributors = []) => {
     .set('fileUploadsFromServer', fromJS({}))
     // TODO: need whole submission ?
     .set('submission', {});
+};
+
+function removeMetaDataFlag(state, listName = '', fieldName = 'none') {
+  let i = 0;
+  for (let f of state.get(listName)) {
+    if (f[fieldName] !== undefined) {
+      f[fieldName] = false;
+    }
+    state.update(listName, (uploads) => uploads.splice(i, 1, f));
+    i++;
+  }
+}
+
+function setMetaDataFlag(state, listName = '', indexName, fieldName = 'none') {
+  const metaDataIndex = parseInt(indexName.replace('uploaded_', ''));
+  let i = 0;
+  for (let f of state.get(listName)) {
+    if (i === metaDataIndex && f[fieldName] === false) {
+      f[fieldName] = true;
+    } else {
+      f[fieldName] = false;
+    }
+    state.update(listName, (uploads) => uploads.splice(i, 1, f));
+    i++;
+  }
+  let newMetaDataIndex = indexName;
+  if (
+    state.getIn([listName, metaDataIndex]) !== undefined &&
+    state.getIn([listName, metaDataIndex])[fieldName] === false) {
+    newMetaDataIndex = '';
+  } else if (
+    state.get('fileUploadsFromServer')[metaDataIndex][fieldName] === false
+  ) {
+    newMetaDataIndex = '';
+  }
+  return newMetaDataIndex;
+}
+
+export const markMetaDataInScheduledUploads = (state, metaDataIndex) => {
+  removeMetaDataFlag(state, 'fileUploadsFromServer', 'meta_data');
+  return setMetaDataFlag(state, 'fileUploads', metaDataIndex, 'metaData');
+};
+
+export const markMetaDataInUploadsFromServer = (state, metaDataIndex) => {
+  removeMetaDataFlag(state, 'fileUploads', 'metaData');
+  return setMetaDataFlag(state, 'fileUploadsFromServer', metaDataIndex, 'meta_data');
 };

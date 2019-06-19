@@ -31,6 +31,16 @@ class SubmissionsView(mixins.ListModelMixin,
                           IsOwnerOrReadOnly)
 
     def perform_create(self, serializer):
+        # TODO:
+        #  - only if reqular submit -> release=True
+        #  - if target ENA ect proceed as usual ...
+        #  - if target ENA but data.requirements.data_center available and not contain ENA:
+        #       - change target to GENERIC (... change back/correct ...)
+        #  - if target GENERIC and data.requirements.data_center contains ENA:
+        #       - change target to ENA
+        #       - check for single pr.datafile, if multiple cancel ..
+        #       - try to parse as csv, cancle on error
+        #       - add json to submission (store validation errors ?)
         submission = serializer.save(site=self.request.user, )
         with transaction.atomic():
             RequestLog.objects.create(
@@ -83,7 +93,7 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        instance = self.get_object()#
+        instance = self.get_object()  #
         # TODO: 06.06.2019 allow edit of submissions with status SUBMITTED ...
         if instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED:
             response = self.update(request, *args, **kwargs)
@@ -310,13 +320,10 @@ class SubmissionUploadListView(generics.ListAPIView):
                           permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
-    # def get_queryset(self):
-    #     broker_submission_id = self.kwargs.get('broker_submission_id', uuid4())
-    #     return SubmissionUpload.objects.filter(
-    #         submission__broker_submission_id=broker_submission_id)
-    #
-    # def get(self, request, *args, **kwargs):
-    #     return self.list(request, *args, **kwargs)
+    def get_queryset(self):
+        broker_submission_id = self.kwargs.get('broker_submission_id', uuid4())
+        return SubmissionUpload.objects.filter(
+            submission__broker_submission_id=broker_submission_id)
 
 
 class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
@@ -350,8 +357,7 @@ class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
                                            'broker_submission_id '
                                            '{0}'.format(broker_submission_id)},
                             status=status.HTTP_404_NOT_FOUND)
-        response = self.update(request, *args, **kwargs)
-        return response
+        return self.update(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
         obj = self.get_object()
@@ -365,3 +371,34 @@ class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
             countdown=SUBMISSION_DELAY
         )
         return self.destroy(request, *args, **kwargs)
+
+
+class SubmissionUploadPatchView(mixins.UpdateModelMixin,
+                                generics.GenericAPIView):
+    queryset = SubmissionUpload.objects.all()
+    serializer_class = SubmissionUploadSerializer
+    parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
+    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated,
+                          permissions.DjangoModelPermissions,
+                          IsOwnerOrReadOnly)
+
+    def patch(self, request, *args, **kwargs):
+        broker_submission_id = kwargs.get('broker_submission_id', uuid4())
+        instance = self.get_object()
+        if instance.submission.broker_submission_id != UUID(
+                broker_submission_id):
+            return Response({'submission': 'No link to this '
+                                           'broker_submission_id '
+                                           '{0}'.format(broker_submission_id)},
+                            status=status.HTTP_400_BAD_REQUEST)
+        try:
+            Submission.objects.get(
+                broker_submission_id=broker_submission_id
+            )
+        except Submission.DoesNotExist as e:
+            return Response({'submission': 'No submission for this '
+                                           'broker_submission_id '
+                                           '{0}'.format(broker_submission_id)},
+                            status=status.HTTP_404_NOT_FOUND)
+        return self.partial_update(request, *args, **kwargs)

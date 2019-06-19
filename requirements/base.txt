@@ -74,3 +74,6 @@ mozilla-django-oidc==1.2.1
 
 # python jira
 jira>=2.0.0
+
+# short unique ids
+shortid==0.1.2

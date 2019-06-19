@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+from pprint import pprint
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -13,12 +14,15 @@ from rest_framework.test import APIClient
 
 from config.settings.base import MEDIA_URL
 from gfbio_submissions.brokerage.configuration.settings import \
-    HELPDESK_API_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL
+    HELPDESK_API_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL, GENERIC
 from gfbio_submissions.brokerage.models import Submission, \
     SiteConfiguration, ResourceCredential, PrimaryDataFile, AdditionalReference, \
     TaskProgressReport, SubmissionUpload
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
+from gfbio_submissions.brokerage.tests.test_submission_views import \
+    TestSubmissionView
 from gfbio_submissions.brokerage.tests.utils import _get_jira_attach_response
+from gfbio_submissions.brokerage.utils.csv import check_for_molecular_content
 from gfbio_submissions.users.models import User
 
 
@@ -444,6 +448,62 @@ class TestSubmissionUploadView(TestCase):
         self.assertEqual(len(TaskProgressReport.objects.all()), reports_len)
         self.assertGreater(len(SubmissionUpload.objects.all()), uploads_len)
 
+    # TODO: move to dedicatet test class
+    @responses.activate
+    def test_meta_data_parsing(self):
+        submission = Submission.objects.all().first()
+        submission.target = GENERIC
+        submission.data = {
+            'requirements': {
+                'title': 'A Title',
+                'description': 'A Description',
+                'data_center': 'ENA – European Nucleotide Archive'}
+        }
+        submission.save(allow_update=False)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        responses.add(responses.POST, url, json={}, status=200)
+        data = self._create_test_data('/tmp/test_primary_data_file')
+        data['meta_data'] = True
+        response = self.api_client.post(url, data, format='multipart')
+
+        # expected state of submission with on (meta_data) file
+        self.assertEqual(GENERIC, submission.target)
+        self.assertTrue(submission.release)
+        self.assertIn('data_center',
+                      submission.data.get('requirements', {}).keys())
+        self.assertIn('ENA',
+                      submission.data.get('requirements', {}).get('data_center',
+                                                                  ''))
+        print(submission.submissionupload_set.all())
+        self.assertEqual(1, len(submission.submissionupload_set.all()))
+        upload = submission.submissionupload_set.first()
+        self.assertTrue(upload.meta_data)
+        print('\n##############################\n')
+
+        res = check_for_molecular_content(submission)
+        print('RES OF CHECK ', res)
+
+
+        # content = json.loads(response.content.decode('utf-8'))
+        # pprint(content)
+
+
+
+
+        # self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # self.assertIn(b'broker_submission_id', response.content)
+        # self.assertIn(b'"id"', response.content)
+        # self.assertIn(b'site', response.content)
+        # self.assertEqual(User.objects.first().username, response.data['site'])
+        # self.assertIn(b'file', response.content)
+        # self.assertTrue(
+        #     urlparse(response.data['file']).path.startswith(MEDIA_URL))
+        # # TODO: no task is triggered yet
+        # self.assertEqual(len(TaskProgressReport.objects.all()), reports_len)
+        # self.assertGreater(len(SubmissionUpload.objects.all()), uploads_len)
+
     def test_upload_of_multiple_files(self):
         submission = Submission.objects.all().first()
         site_config = SiteConfiguration.objects.first()
@@ -538,6 +598,48 @@ class TestSubmissionUploadView(TestCase):
         content = json.loads(response.content.decode('utf-8'))
         self.assertTrue(isinstance(content, list))
         self.assertEqual(2, len(content))
+
+    @responses.activate
+    def test_list_uploads_queryset(self):
+        submission = Submission.objects.first()
+        submission_2 = Submission.objects.last()
+        self.assertNotEqual(submission.broker_submission_id,
+                            submission_2.broker_submission_id)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        responses.add(responses.POST, url, json={}, status=200)
+
+        url_2 = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission_2.broker_submission_id})
+        responses.add(responses.POST, url_2, json={}, status=200)
+
+        data = self._create_test_data('/tmp/test_primary_data_file')
+        self.api_client.post(url, data, format='multipart')
+
+        data_2 = self._create_test_data('/tmp/test_primary_data_file_2')
+        self.api_client.post(url_2, data_2, format='multipart')
+
+        submission = Submission.objects.first()
+        self.assertTrue(1, len(submission.submissionupload_set.all()))
+        submission_2 = Submission.objects.last()
+        self.assertTrue(1, len(submission_2.submissionupload_set.all()))
+
+        url = reverse('brokerage:submissions_uploads', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        response = self.api_client.get(url)
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(1, len(content))
+        self.assertTrue(
+            content[0].get('file', '').endswith('test_primary_data_file'))
+
+        url = reverse('brokerage:submissions_uploads', kwargs={
+            'broker_submission_id': submission_2.broker_submission_id})
+        response = self.api_client.get(url)
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(1, len(content))
+        self.assertTrue(
+            content[0].get('file', '').endswith('test_primary_data_file_2'))
 
     @responses.activate
     def test_get_list_per_submission_content(self):
@@ -750,3 +852,37 @@ class TestSubmissionUploadView(TestCase):
         response = self.api_client.post(url, {}, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(b'No file was submitted.', response.content)
+
+    @responses.activate
+    def test_valid_file_patch_no_task(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        url = reverse(
+            'brokerage:submissions_upload',
+            kwargs={
+                'broker_submission_id': submission.broker_submission_id
+            })
+        responses.add(responses.POST, url, json={}, status=200)
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          site_config.helpdesk_server.url,
+                          HELPDESK_API_SUB_URL,
+                          'FAKE_KEY',
+                          HELPDESK_ATTACHMENT_SUB_URL,
+                      ),
+                      json=_get_jira_attach_response(),
+                      status=200)
+        data = self._create_test_data('/tmp/test_primary_data_file_1111')
+        response = self.api_client.post(url, data, format='multipart')
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertFalse(SubmissionUpload.objects.first().meta_data)
+
+        url = reverse(
+            'brokerage:submissions_upload_patch',
+            kwargs={
+                'broker_submission_id': submission.broker_submission_id,
+                'pk': content.get('id')
+            })
+        response = self.api_client.patch(url, {'meta_data': True})
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(SubmissionUpload.objects.first().meta_data)

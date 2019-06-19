@@ -324,7 +324,7 @@ admin users: marc / marcw -> django
 
 - check content of .env 
 - checke that .env IS NOT under version control and/or part of the next commit
-- encrypt .env (use password from password-manager)
+- encrypt .env (use password from password-manager)ssh
         
         gpg -vco encrypted.env.gpg .env
         
@@ -371,7 +371,7 @@ admin users: marc / marcw -> django
             ---------------
             successfully created backup backup_2018_08_29T20_23_57.sql.gz
 
-
+- NO: build first then restart supervisord
 - OPTIONAL (but remaining commands seem to run slowly)
     - stop docker containers via supervisor process manager
             
@@ -423,7 +423,7 @@ TODO: needs improvements :
 
 
 - build docker images (in case requirement have been updated, etc.). may take a few minutes.
-
+- can be build before stopping
         docker-compose -f production.yml build
 
 - apply migrations

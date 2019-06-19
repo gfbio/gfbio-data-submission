@@ -45,6 +45,9 @@ class SubmissionFrontendView(LoginRequiredMixin, TemplateView):
         user_email = user.email
         # TODO: refactor/extract to other position
         # TODO: render warning if no token available
+        # User-name that identifies local site that (self-)hosts react app
+        # User object with this name has to exist, has to be site, token has
+        # to be generated
         token = ''
         try:
             token = Token.objects.get(

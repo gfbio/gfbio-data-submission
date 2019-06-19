@@ -126,6 +126,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
         requirements.get('data_center', ''),
         HELPDESK_REQUEST_TYPE_MAPPINGS.get('default', '')
     )
+    # TODO: generic is failing to send emails
     jira_request_type = 'dsub/{0}'.format(jira_request_target) \
         if site_config.jira_project_key == SiteConfiguration.DSUB \
         else 'sand/{0}-data'.format(jira_request_target)

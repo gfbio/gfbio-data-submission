@@ -15,7 +15,10 @@ import {
   CHANGE_META_DATA_SCHEMA,
   CLOSE_EMBARGO_DIALOG,
   CLOSE_SAVE_SUCCESS,
-  CLOSE_SUBMIT_SUCCESS, DELETE_FILE, DELETE_FILE_ERROR, DELETE_FILE_SUCCESS,
+  CLOSE_SUBMIT_SUCCESS,
+  DELETE_FILE,
+  DELETE_FILE_ERROR,
+  DELETE_FILE_SUCCESS,
   DISMISS_SHOW_UPLOAD_LIMIT,
   FETCH_FILE_UPLOADS_ERROR,
   FETCH_FILE_UPLOADS_SUCCESS,
@@ -33,6 +36,9 @@ import {
   SET_CONTRIBUTORS,
   SET_EMBARGO_DATE,
   SET_METADATA_INDEX,
+  SET_METADATA_ON_SERVER,
+  SET_METADATA_ON_SERVER_ERROR,
+  SET_METADATA_ON_SERVER_SUCCESS,
   SHOW_EMBARGO_DIALOG,
   SHOW_UPLOAD_LIMIT,
   SUBMIT_FORM,
@@ -52,7 +58,12 @@ import {
   UPLOAD_FILES_ERROR,
   UPLOAD_FILES_SUCCESS,
 } from './constants';
-import { resetStateFormValues, setStateFormValues } from './utils';
+import {
+  markMetaDataInScheduledUploads,
+  markMetaDataInUploadsFromServer,
+  resetStateFormValues,
+  setStateFormValues,
+} from './utils';
 
 let backendParameters = {};
 if (window.props !== undefined) {
@@ -107,14 +118,13 @@ export const initialState = fromJS({
 
   showSaveSuccess: false,
 
-  // embargoDate: new Date(),
   embargoDate: new Date().setFullYear(new Date().getFullYear() + 1),
-  // userId: backendParameters.userId || -1,
-  // FIXME: replace. development default of 2
+  // TODO: replace. development default of 2
   userId: backendParameters.userId || 2,
-  // token: backendParameters['token'] || 'NO_TOKEN',
-  // FIXME: replace. during development token defaults to test-server user
+  // userId: backendParameters.userId || -1,
+  // TODO: replace. during development token defaults to test-server user
   token: backendParameters['token'] || '5639b56bd077fb3e12d7e4a0ada244aaa970c2fd',
+  // token: backendParameters['token'] || 'NO_TOKEN',
   userName: backendParameters.userName || '',
   // TODO: decide what from actual response is needed, then put in reducer
   submitResponse: {},
@@ -131,6 +141,7 @@ export const initialState = fromJS({
   fileUploadsFromServer: {},
 
   metaDataIndex: '',
+  // metaDataFileName: '',
   // uploadListIndex: 0,
 
   brokerSubmissionId: '',
@@ -151,6 +162,16 @@ export const initialState = fromJS({
 });
 
 
+// const getIndexForFileName = (data, fileName) => {
+//   for (let d in data) {
+//     console.log(data[d]);
+//     if (data[d].file_name === fileName) {
+//       return d;
+//     }
+//   }
+// };
+
+
 function submissionFormReducer(state = initialState, action) {
   switch (action.type) {
     case CHANGE_LICENSE:
@@ -167,6 +188,7 @@ function submissionFormReducer(state = initialState, action) {
       // TODO: set bsi etc after success, from then its updates
       return state
         .set('metaDataIndex', '')
+        // .set('metaDataFileName', action.response.data.data.requirements.metadata_file_name)
         .set('brokerSubmissionId', action.response.data.broker_submission_id)
         .set('saveResponse', action.response)
         .set('saveInProgress', false)
@@ -327,11 +349,15 @@ function submissionFormReducer(state = initialState, action) {
       return state;
     case FETCH_FILE_UPLOADS_SUCCESS:
       // console.log('FETCH_FILE_UPLOADS_SUCCESS');
-      // console.log(action.response);
       // console.log(typeof action.response.data);
+      // console.log(action.response);
+      // const metaIndex = 'uploaded_' + action.response.data.indexOf(state.get('metaDataFileName'));
+      // const metaIndex = 'uploaded_' + getIndexForFileName(action.response.data, state.get('metaDataFileName'));
+      // console.log(metaIndex);
       return state
         .set('fileUploads', List())
         .set('fileUploadsFromServer', action.response.data);
+    // .set('metaDataIndex', metaIndex);
     case FETCH_FILE_UPLOADS_ERROR:
       // console.log('FETCH_FILE_UPLOADS_ERROR');
       // console.log(action.error);
@@ -379,12 +405,30 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .set('updateWithRelease', action.release);
     case SET_METADATA_INDEX:
-      // console.log('SET_METADATA_INDEX');
+      console.log('------  ___  SET_METADATA_INDEX');
+      let newMetaDataIndex = '';
+      newMetaDataIndex = markMetaDataInScheduledUploads(state, action.metaDataIndex);
+      // state.set('metaDataIndex', newMetaDataIndex);
       return state
-        .set('metaDataIndex', action.metaDataIndex);
-    // case SET_UPLOAD_LIST_INDEX:
-    //   return state
-    //     .set('uploadListIndex', action.listIndex);
+      // TODO: useless ?
+      //   .set('metaDataFileName', '')
+        .set('metaDataIndex', newMetaDataIndex);
+    case SET_METADATA_ON_SERVER:
+      console.log('------  ___  SET_METADATA_ON_SERVER');
+      let newMetaDataIndex_ = '';
+      newMetaDataIndex_ = markMetaDataInUploadsFromServer(state, action.metaDataIndex);
+      // state.set('metaDataIndex', newMetaDataIndex_);
+      return state
+    // TODO: useless ?
+    //   .set('metaDataFileName', '')
+      .set('metaDataIndex', newMetaDataIndex_);
+    // case SET_METADATA_ON_SERVER_SUCCESS:
+    //   let mIndex = '';
+    //   mIndex = markMetaDataInUploadsFromServer(state, action.metaDataIndex);
+    //   state.set('metaDataIndex', mIndex);
+    //   return state;
+    case SET_METADATA_ON_SERVER_ERROR:
+      return state;
     default:
       return state;
   }
