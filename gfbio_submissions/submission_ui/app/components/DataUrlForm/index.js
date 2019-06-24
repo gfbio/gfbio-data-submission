@@ -46,7 +46,7 @@ class DataUrlForm extends React.PureComponent {
             className="form-control"
             component={this.renderInputField}
             type="text"
-            placeholder="Link to your dataset or other online resource"
+            placeholder="Link to your data, e.g. cloud storage"
             validate={urlValidation}
           />
         </div>

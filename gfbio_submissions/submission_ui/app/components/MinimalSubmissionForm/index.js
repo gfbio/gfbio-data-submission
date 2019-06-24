@@ -70,7 +70,7 @@ class MinimalSubmissionForm extends React.PureComponent {
             className="form-control"
             component={this.renderInputField}
             type="text"
-            placeholder="Enter a title for your submission"
+            placeholder="Enter a title for your dataset"
             validate={required}
           />
         </div>
@@ -85,7 +85,7 @@ class MinimalSubmissionForm extends React.PureComponent {
             className="form-control"
             component={this.renderTextAreaField}
             rows="7"
-            placeholder="Enter some text describing your submission"
+            placeholder="Describe your dataset"
             validate={required}
           />
         </div>

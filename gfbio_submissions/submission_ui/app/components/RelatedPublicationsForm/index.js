@@ -58,7 +58,7 @@ class RelatedPublicationsForm extends React.PureComponent {
             <input className="form-control" type="text"
                    id="relatedPublication"
                    value={this.props.currentRelatedPublication}
-                   placeholder="Enter a publication or reference"
+                   placeholder="Enter a full citation or a DOI"
                    onChange={this.handleChange}
             />
           </div>
