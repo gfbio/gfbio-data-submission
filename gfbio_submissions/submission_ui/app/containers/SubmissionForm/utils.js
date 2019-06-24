@@ -113,6 +113,7 @@ function setMetaDataFlag(state, listName = '', indexName, fieldName = 'none') {
     state.getIn([listName, metaDataIndex])[fieldName] === false) {
     newMetaDataIndex = '';
   } else if (
+    state.get('fileUploadsFromServer')[metaDataIndex] !== undefined &&
     state.get('fileUploadsFromServer')[metaDataIndex][fieldName] === false
   ) {
     newMetaDataIndex = '';
