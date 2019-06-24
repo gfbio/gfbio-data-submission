@@ -27,7 +27,7 @@ class FileIndicator extends React.Component {
     this.handleMetadataSelect = this.handleMetadataSelect.bind(this);
   }
 
-  handleMetadataSelect(event, file={}) {
+  handleMetadataSelect(event, file = {}) {
     if (event.target.value.indexOf('uploaded_') > -1) {
       this.props.changeMetaDataOnServer(event.target.value, file);
     } else {
@@ -157,8 +157,8 @@ class FileIndicator extends React.Component {
           placement="right"
           overlay={
             <Tooltip id="tooltip-right">
-              {/*Tooltip on <strong>RIGHT</strong>.*/}
-              select <strong>meta-data</strong> (optional)
+              select the primary metadata file, e.g. metadata
+              template
             </Tooltip>
           }
         >

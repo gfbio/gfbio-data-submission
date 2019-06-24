@@ -36,18 +36,18 @@ class EmbargoDatePicker extends React.Component {
     return (
       <div>
         <header className="header header-left form-header-top">
-          <h2 className="section-title">Set Embargo</h2>
+          <h2 className="section-title">Data Embargo</h2>
           <p className="section-subtitle" />
         </header>
 
         <p className="text-center">
-          <span>{dateFormat(this.props.embargoDate, 'dd mmmm yyyy')}</span>
+          <h4>{dateFormat(this.props.embargoDate, 'dd mmmm yyyy')}</h4>
         </p>
 
         <Button variant="link" className="btn-block btn-link-light-blue"
                 onClick={this.props.openEmbargoDialog}>
           <i className="icon ion-md-calendar align-top" />
-          <span className="">set embargo date</span>
+          <span className="">Change embargo date</span>
         </Button>
 
         <Modal

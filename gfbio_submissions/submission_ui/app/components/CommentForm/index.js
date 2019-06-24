@@ -15,7 +15,7 @@ class CommentForm extends React.PureComponent {
     return (
       <div>
         <header className="header header-left form-header-top">
-          <h2 className="section-title">Add a comment</h2>
+          <h2 className="section-title">Leave a comment for the curator</h2>
           <p className="section-subtitle">(optional)</p>
         </header>
         <div className="form-group">

@@ -36,11 +36,12 @@ function UploadMessage(showUploadLimitMessage, dismissMessage) {
       <div className="form-group col-md-12">
         <div role="alert" className="fade alert alert-light show">
           <div className="alert-heading h4"><i
-            className="fa  fa-bolt"></i> Upload-limit exceeded
+            className="fa  fa-bolt"></i> Upload limit exceeded
           </div>
           <p>
-            You are only allowed to upload up to 20 Files, with an accumulated
-            volume of 200 MB.
+            If you need to a upload more than 20 files, or more than 200 MB,
+            either provide a URL in the field below, or leave a comment for
+            the curator at the bottom.
           </p>
           {/*<Button variant="secondary"*/}
           {/*        onClick={dismissMessage}>*/}
