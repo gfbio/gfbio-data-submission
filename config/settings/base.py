@@ -346,9 +346,7 @@ OIDC_OP_USER_ENDPOINT = ' https://sso.gfbio.org/simplesaml/module.php/oidc/useri
 
 OIDC_USE_NONCE = False  # Default:	True
 
-# FIXME: omiting these causes errors with oidc !
-# FIXME: Problem is that all logins are affected !
-# LOGIN_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
-# LOGOUT_REDIRECT_URL = 'https://c103-171.cloud.gwdg.de/'
+LOGIN_REDIRECT_URL = '/ui/submission/list'
+LOGOUT_REDIRECT_URL = '/'
 
 ########## END OPENIDCONNECT SETTINGS
