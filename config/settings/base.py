@@ -269,7 +269,7 @@ AUTHENTICATION_BACKENDS = [
 # Some really nice defaults
 ACCOUNT_AUTHENTICATION_METHOD = 'username'
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_EMAIL_VERIFICATION = 'optional'  # "mandatory", "optional", or "none"
 
 # TODO: 06.02.2019 set back to true when in production
 # TODO: set proper value in env !!!
