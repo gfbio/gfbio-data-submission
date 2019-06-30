@@ -38,7 +38,6 @@ import {
   SET_METADATA_INDEX,
   SET_METADATA_ON_SERVER,
   SET_METADATA_ON_SERVER_ERROR,
-  SET_METADATA_ON_SERVER_SUCCESS,
   SHOW_EMBARGO_DIALOG,
   SHOW_UPLOAD_LIMIT,
   SUBMIT_FORM,
@@ -174,6 +173,8 @@ export const initialState = fromJS({
 
 function submissionFormReducer(state = initialState, action) {
   switch (action.type) {
+    // case SET_BROKER_SUBMISSION_ID:
+    //   return state.set('brokerSubmissionId', action.bsi);
     case CHANGE_LICENSE:
       return state.set('license', action.license);
     case CHANGE_META_DATA_SCHEMA:
@@ -363,7 +364,7 @@ function submissionFormReducer(state = initialState, action) {
       console.log(action.error);
       return state;
     case RESET_FORM:
-      // console.log('RESET_FORM');
+      console.log('RESET_FORM');
       state = resetStateFormValues(state, getInitialContributors(backendParameters));
       // return state.set('promptOnLeave', true);
       return state;

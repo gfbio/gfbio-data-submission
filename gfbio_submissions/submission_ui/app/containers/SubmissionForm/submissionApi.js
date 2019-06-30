@@ -130,14 +130,16 @@ export const setMetaDataFlag = (brokerSubmissionId, fileKey, meta_data, token) =
   let formData = new FormData();
   formData.append('meta_data', meta_data);
   formData.append('attach_to_ticket', false);
-  console.log(token);
+  // console.log(token);
   const config = {
     headers: {
       'Authorization': 'Token ' + token,
     },
   };
+  const url = `${API_ROOT + SUBMISSIONS + brokerSubmissionId + UPLOAD + UPLOAD_PATCH + fileKey + '/'}`;
+  console.log('URL ', url);
   return axios.patch(
-    `${API_ROOT + SUBMISSIONS + brokerSubmissionId + UPLOAD + UPLOAD_PATCH + fileKey + '/'}`,
+    url,
     formData,
     config,
   );

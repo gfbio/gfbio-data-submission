@@ -76,6 +76,7 @@ export const DISMISS_SHOW_UPLOAD_LIMIT = 'app/SubmissionForm/DISMISS_SHOW_UPLOAD
 export const FETCH_FILE_UPLOADS_SUCCESS = 'app/SubmissionForm/FETCH_FILE_UPLOADS_SUCCESS';
 export const FETCH_FILE_UPLOADS_ERROR = 'app/SubmissionForm/FETCH_FILE_UPLOADS_ERROR';
 
+// export const SET_BROKER_SUBMISSION_ID = 'app/SubmissionForm/SET_BROKER_SUBMISSION_ID';
 
 /* non redux constants */
 export const DATA_CATEGORY_PREFIX = 'data-category ';
