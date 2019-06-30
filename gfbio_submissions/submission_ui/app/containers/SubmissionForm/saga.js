@@ -246,6 +246,7 @@ export function* performSubmitFormSaga() {
 
 export function* performSaveFormSaga() {
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
+  let bsi = 'no_brokersubmission_id';
   // TODO: if bsi put update action ....
   if (brokerSubmissionId !== '') {
     yield put(updateSubmission(false));
@@ -255,8 +256,16 @@ export function* performSaveFormSaga() {
     const payload = yield prepareRequestData(userId, false);
     try {
       const response = yield call(postSubmission, token, payload);
-      yield call(performUploadSaga, response.data.broker_submission_id);
+      bsi = response.data.broker_submission_id;
+      yield call(performUploadSaga, bsi);
       yield put(saveFormSuccess(response));
+      // TODO: better worklflow design needed, comare ena_redux yield[ put(ACTION), put ...]
+      try {
+        const response = yield call(getSubmissionUploads, token, bsi);
+        yield put(fetchFileUploadsSuccess(response));
+      } catch (error) {
+        yield put(fetchFileUploadsError(error));
+      }
       // yield put(push('/list'));
     } catch (error) {
       yield put(saveFormError(error));
@@ -281,6 +290,7 @@ export function* performUpdateSubmissionSaga() {
       yield put(push('/list'));
     } else {
       yield put(updateSubmissionSuccess(response));
+      // TODO: better worklflow design needed, comare ena_redux yield[ put(ACTION), put ...]
       try {
         const response = yield call(getSubmissionUploads, token, brokerSubmissionId);
         yield put(fetchFileUploadsSuccess(response));

@@ -359,8 +359,8 @@ function submissionFormReducer(state = initialState, action) {
         .set('fileUploadsFromServer', action.response.data);
     // .set('metaDataIndex', metaIndex);
     case FETCH_FILE_UPLOADS_ERROR:
-      // console.log('FETCH_FILE_UPLOADS_ERROR');
-      // console.log(action.error);
+      console.log('FETCH_FILE_UPLOADS_ERROR');
+      console.log(action.error);
       return state;
     case RESET_FORM:
       // console.log('RESET_FORM');
