@@ -248,43 +248,43 @@ export function* performSubmitFormSaga() {
 }
 
 export function* performSaveFormSaga() {
-  console.log('\nperform SAve SAGA');
+  // console.log('\nperform SAve SAGA');
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
   let bsi = 'no_brokersubmission_id';
-  console.log('bsi:  ', bsi);
-  console.log('brokerSubmissionId: ', brokerSubmissionId);
+  // console.log('bsi:  ', bsi);
+  // console.log('brokerSubmissionId: ', brokerSubmissionId);
   // TODO: if bsi put update action ....
   if (brokerSubmissionId !== '') {
-    console.log('brokerSubmission id NOT empty, do update (without release)');
+    // console.log('brokerSubmission id NOT empty, do update (without release)');
     yield put(updateSubmission(false));
   } else {
-    console.log('brokerSID emty NEW SAVE ', brokerSubmissionId);
+    // console.log('brokerSID emty NEW SAVE ', brokerSubmissionId);
     const token = yield select(makeSelectToken());
     const userId = yield select(makeSelectUserId());
     const payload = yield prepareRequestData(userId, false);
     try {
-      console.log('do post subm.');
+      // console.log('do post subm.');
       let response = yield call(postSubmission, token, payload);
       bsi = response.data.broker_submission_id;
-      console.log('upload with bsi: ', bsi);
+      // console.log('upload with bsi: ', bsi);
       yield call(performUploadSaga, bsi);
-      console.log('put with response');
+      // console.log('put with response');
       yield put(saveFormSuccess(response));
       // TODO: better worklflow design needed, comare ena_redux yield[ put(ACTION), put ...]
       // try {
-      console.log('get submission uploads with bsi: ', bsi);
-      response = yield call(getSubmissionUploads, token, bsi);
-      console.log('put uploads success with response');
-      yield put(fetchFileUploadsSuccess(response));
+      // console.log('get submission uploads with bsi: ', bsi);
+      // response = yield call(getSubmissionUploads, token, bsi);
+      // console.log('put uploads success with response');
+      // yield put(fetchFileUploadsSuccess(response));
       // } catch (error) {
       //   yield put(fetchFileUploadsError(error));
       // }
-      console.log('forward to new subm.');
+      // console.log('forward to new subm.');
       // yield put(setBrokerSubmissionId(bsi));
-      yield put(push('/form/'+bsi));
+      yield put(push('/list'));
     } catch (error) {
-      console.log('ERROR IN SAVE');
-      console.log(error);
+      // console.log('ERROR IN SAVE');
+      // console.log(error);
       yield put(saveFormError(error));
     }
   }
@@ -309,8 +309,9 @@ export function* performUpdateSubmissionSaga() {
       yield put(updateSubmissionSuccess(response));
       // TODO: better worklflow design needed, comare ena_redux yield[ put(ACTION), put ...]
       // try {
-      response = yield call(getSubmissionUploads, token, brokerSubmissionId);
-      yield put(fetchFileUploadsSuccess(response));
+      // response = yield call(getSubmissionUploads, token, brokerSubmissionId);
+      // yield put(fetchFileUploadsSuccess(response));
+      yield put(push('/list'));
       // } catch (error) {
       //   yield put(fetchFileUploadsError(error));
       // }
@@ -367,18 +368,18 @@ export function* performDeleteUploadedFileSaga(action) {
 }
 
 export function* performUpdateUploadedFileSaga(action) {
-  console.log(' #### performUpdateUploadedFileSaga #### ');
-  console.log(action);
+  // console.log(' #### performUpdateUploadedFileSaga #### ');
+  // console.log(action);
   const token = yield select(makeSelectToken());
   const bsi = yield select(makeSelectRequestBrokerSubmissionId());
-  console.log('bsi ', bsi);
+  // console.log('bsi ', bsi);
   const bsi2 = yield select(makeSelectBrokerSubmissionId());
-  console.log('bsi2 ', bsi2);
+  // console.log('bsi2 ', bsi2);
   try {
     let response = yield call(setMetaDataFlag, bsi2, action.file.pk, action.file.meta_data, token);
     // yield put(setMetaDataOnServerSuccess(action.metaDataIndex));
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     yield put(setMetaDataOnServerError(error));
   }
 

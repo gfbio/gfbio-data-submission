@@ -137,7 +137,7 @@ export const setMetaDataFlag = (brokerSubmissionId, fileKey, meta_data, token) =
     },
   };
   const url = `${API_ROOT + SUBMISSIONS + brokerSubmissionId + UPLOAD + UPLOAD_PATCH + fileKey + '/'}`;
-  console.log('URL ', url);
+  // console.log('URL ', url);
   return axios.patch(
     url,
     formData,
