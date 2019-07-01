@@ -60,9 +60,10 @@ class SubmissionFrontendView(LoginRequiredMixin, TemplateView):
             logger.warning('Error getting token for SubmissionFrontendView. '
                            'Token for User {0} does not exist:  '
                            '{1}'.format(HOSTING_SITE, e))
+
         context['parameters'] = {
             'userName': user_name,
-            'userRealName': user.name,
+            'userRealName': user.name if user.name != '' else user_name,
             'userEmail': user_email,
             'userId': user.id,
             'token': str(token),
