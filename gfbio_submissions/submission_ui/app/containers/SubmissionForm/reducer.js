@@ -38,7 +38,6 @@ import {
   SET_METADATA_INDEX,
   SET_METADATA_ON_SERVER,
   SET_METADATA_ON_SERVER_ERROR,
-  SET_METADATA_ON_SERVER_SUCCESS,
   SHOW_EMBARGO_DIALOG,
   SHOW_UPLOAD_LIMIT,
   SUBMIT_FORM,
@@ -174,13 +173,16 @@ export const initialState = fromJS({
 
 function submissionFormReducer(state = initialState, action) {
   switch (action.type) {
+    // case SET_BROKER_SUBMISSION_ID:
+    //   return state.set('brokerSubmissionId', action.bsi);
     case CHANGE_LICENSE:
       return state.set('license', action.license);
     case CHANGE_META_DATA_SCHEMA:
       return state.set('metaDataSchema', action.metaDataSchema);
     case SAVE_FORM:
       return state
-        .set('showSaveSuccess', false)
+      // TODO: need showSaveSuccess later
+        // .set('showSaveSuccess', false)
         // .set('promptOnLeave', false)
         .set('saveInProgress', true);
     case SAVE_FORM_SUCCESS:
@@ -192,10 +194,10 @@ function submissionFormReducer(state = initialState, action) {
         .set('brokerSubmissionId', action.response.data.broker_submission_id)
         .set('saveResponse', action.response)
         .set('saveInProgress', false)
-        .set('showSaveSuccess', true);
+        // .set('showSaveSuccess', true);
     case CLOSE_SAVE_SUCCESS:
       return state
-        .set('showSaveSuccess', false);
+        // .set('showSaveSuccess', false);
     case CLOSE_SUBMIT_SUCCESS:
       return state
         .set('showSubmitSuccess', false);
@@ -303,14 +305,14 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .update('fileUploads', (fileUploads) => fileUploads.splice(action.index, 1, success_upload));
     case DELETE_FILE:
-      console.log('DELETE_FILE');
-      console.log(action.fileKey);
+      // console.log('DELETE_FILE');
+      // console.log(action.fileKey);
       return state;
     case DELETE_FILE_SUCCESS:
-      console.log('DELETE_FILE_SUCCESS');
+      // console.log('DELETE_FILE_SUCCESS');
       return state;
     case DELETE_FILE_ERROR:
-      console.log('DELETE_FILE_ERROR');
+      // console.log('DELETE_FILE_ERROR');
       return state;
     case SET_CONTRIBUTORS:
       // console.log('SET_CONTRIBUTORS');
@@ -383,7 +385,7 @@ function submissionFormReducer(state = initialState, action) {
         .set('saveInProgress', false)
         .set('submitInProgress', false)
         // .set('showSubmitSuccess', true)
-        .set('showSaveSuccess', true)
+        // .set('showSaveSuccess', true)
         .set('metaDataIndex', '')
         .set('updateWithRelease', false);
     case UPDATE_SUBMISSION_SUCCESS_SUBMIT:
@@ -405,7 +407,7 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .set('updateWithRelease', action.release);
     case SET_METADATA_INDEX:
-      console.log('------  ___  SET_METADATA_INDEX');
+      // console.log('------  ___  SET_METADATA_INDEX');
       let newMetaDataIndex = '';
       newMetaDataIndex = markMetaDataInScheduledUploads(state, action.metaDataIndex);
       // state.set('metaDataIndex', newMetaDataIndex);
@@ -414,7 +416,7 @@ function submissionFormReducer(state = initialState, action) {
       //   .set('metaDataFileName', '')
         .set('metaDataIndex', newMetaDataIndex);
     case SET_METADATA_ON_SERVER:
-      console.log('------  ___  SET_METADATA_ON_SERVER');
+      // console.log('------  ___  SET_METADATA_ON_SERVER');
       let newMetaDataIndex_ = '';
       newMetaDataIndex_ = markMetaDataInUploadsFromServer(state, action.metaDataIndex);
       // state.set('metaDataIndex', newMetaDataIndex_);

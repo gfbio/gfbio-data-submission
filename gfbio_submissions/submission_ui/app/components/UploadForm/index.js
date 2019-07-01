@@ -28,8 +28,8 @@ import UploadMessage from './uploadMessage';
 class UploadForm extends React.PureComponent {
 
   matchingUploadLimit = (acceptedFiles = []) => {
-    console.log('matchingUploadLimit');
-    console.log(this.props.fileUploads);
+    // console.log('matchingUploadLimit');
+    // console.log(this.props.fileUploads);
     let tmpTotalSize = 0;
     for (let a of acceptedFiles) {
       tmpTotalSize += a.size;
@@ -63,7 +63,7 @@ class UploadForm extends React.PureComponent {
       return true;
     } else {
       this.props.showUploadLimit();
-      console.log('show limit');
+      // console.log('show limit');
       return false;
     }
   };
@@ -89,9 +89,9 @@ class UploadForm extends React.PureComponent {
 
   render() {
 
-    console.log('UPLOAD FORM RENDER: fileUploads');
+    // console.log('UPLOAD FORM RENDER: fileUploads');
     // console.log(this.props);
-    console.log('--------------------------');
+    // console.log('--------------------------');
 
     // TODO: needs different styling
     // TODO: needs different position

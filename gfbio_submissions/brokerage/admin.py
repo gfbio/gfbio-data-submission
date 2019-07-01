@@ -179,6 +179,14 @@ class SubmissionFileUploadAdmin(admin.ModelAdmin):
     pass
 
 
+class PrimaryDataFileAdmin(admin.ModelAdmin):
+    pass
+
+
+class SubmissionUploadAdmin(admin.ModelAdmin):
+    pass
+
+
 class TaskProgressReportAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
     list_filter = ('status', 'task_name',)
@@ -195,8 +203,8 @@ admin.site.register(AdditionalReference)
 admin.site.register(TaskProgressReport, TaskProgressReportAdmin)
 
 admin.site.register(SubmissionFileUpload, SubmissionFileUploadAdmin)
-admin.site.register(PrimaryDataFile)
-admin.site.register(SubmissionUpload)
+admin.site.register(PrimaryDataFile, PrimaryDataFileAdmin)
+admin.site.register(SubmissionUpload, SubmissionUploadAdmin)
 
 admin.site.register(AuditableTextData)
 admin.site.register(CenterName)

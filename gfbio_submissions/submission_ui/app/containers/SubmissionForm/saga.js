@@ -6,7 +6,8 @@ import {
   fork,
   put,
   select,
-  take, takeEvery,
+  take,
+  takeEvery,
   takeLatest,
   takeLeading,
 } from 'redux-saga/effects';
@@ -51,7 +52,8 @@ import {
   fetchSubmissionSuccess,
   saveForm,
   saveFormError,
-  saveFormSuccess, setMetaDataOnServerError, setMetaDataOnServerSuccess,
+  saveFormSuccess,
+  setMetaDataOnServerError,
   submitFormError,
   submitFormStart,
   submitFormSuccess,
@@ -70,7 +72,8 @@ import {
   getSubmission,
   getSubmissionUploads,
   postSubmission,
-  putSubmission, setMetaDataFlag,
+  putSubmission,
+  setMetaDataFlag,
 } from './submissionApi';
 import dateFormat from 'dateformat';
 
@@ -245,20 +248,43 @@ export function* performSubmitFormSaga() {
 }
 
 export function* performSaveFormSaga() {
+  // console.log('\nperform SAve SAGA');
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
+  let bsi = 'no_brokersubmission_id';
+  // console.log('bsi:  ', bsi);
+  // console.log('brokerSubmissionId: ', brokerSubmissionId);
   // TODO: if bsi put update action ....
   if (brokerSubmissionId !== '') {
+    // console.log('brokerSubmission id NOT empty, do update (without release)');
     yield put(updateSubmission(false));
   } else {
+    // console.log('brokerSID emty NEW SAVE ', brokerSubmissionId);
     const token = yield select(makeSelectToken());
     const userId = yield select(makeSelectUserId());
     const payload = yield prepareRequestData(userId, false);
     try {
-      const response = yield call(postSubmission, token, payload);
-      yield call(performUploadSaga, response.data.broker_submission_id);
+      // console.log('do post subm.');
+      let response = yield call(postSubmission, token, payload);
+      bsi = response.data.broker_submission_id;
+      // console.log('upload with bsi: ', bsi);
+      yield call(performUploadSaga, bsi);
+      // console.log('put with response');
       yield put(saveFormSuccess(response));
-      // yield put(push('/list'));
+      // TODO: better worklflow design needed, comare ena_redux yield[ put(ACTION), put ...]
+      // try {
+      // console.log('get submission uploads with bsi: ', bsi);
+      // response = yield call(getSubmissionUploads, token, bsi);
+      // console.log('put uploads success with response');
+      // yield put(fetchFileUploadsSuccess(response));
+      // } catch (error) {
+      //   yield put(fetchFileUploadsError(error));
+      // }
+      // console.log('forward to new subm.');
+      // yield put(setBrokerSubmissionId(bsi));
+      yield put(push('/list'));
     } catch (error) {
+      // console.log('ERROR IN SAVE');
+      // console.log(error);
       yield put(saveFormError(error));
     }
   }
@@ -271,7 +297,7 @@ export function* performUpdateSubmissionSaga() {
   const updateWithRelease = yield select(makeSelectUpdateWithRelease());
   const payload = yield prepareRequestData(userId, updateWithRelease);
   try {
-    const response = yield call(putSubmission, token, brokerSubmissionId, payload);
+    let response = yield call(putSubmission, token, brokerSubmissionId, payload);
     // TODO: updates of file are handled in extra story
     // NOOPE: yield put(uploadFiles());
     // yield call(performUploadSaga);
@@ -281,12 +307,14 @@ export function* performUpdateSubmissionSaga() {
       yield put(push('/list'));
     } else {
       yield put(updateSubmissionSuccess(response));
-      try {
-        const response = yield call(getSubmissionUploads, token, brokerSubmissionId);
-        yield put(fetchFileUploadsSuccess(response));
-      } catch (error) {
-        yield put(fetchFileUploadsError(error));
-      }
+      // TODO: better worklflow design needed, comare ena_redux yield[ put(ACTION), put ...]
+      // try {
+      // response = yield call(getSubmissionUploads, token, brokerSubmissionId);
+      // yield put(fetchFileUploadsSuccess(response));
+      yield put(push('/list'));
+      // } catch (error) {
+      //   yield put(fetchFileUploadsError(error));
+      // }
     }
   } catch (error) {
     yield put(updateSubmissionError(error));
@@ -340,15 +368,18 @@ export function* performDeleteUploadedFileSaga(action) {
 }
 
 export function* performUpdateUploadedFileSaga(action) {
-  console.log(' #### performUpdateUploadedFileSaga #### ');
-  console.log(action);
+  // console.log(' #### performUpdateUploadedFileSaga #### ');
+  // console.log(action);
   const token = yield select(makeSelectToken());
   const bsi = yield select(makeSelectRequestBrokerSubmissionId());
+  // console.log('bsi ', bsi);
+  const bsi2 = yield select(makeSelectBrokerSubmissionId());
+  // console.log('bsi2 ', bsi2);
   try {
-    let response = yield call(setMetaDataFlag, bsi, action.file.pk, action.file.meta_data, token);
+    let response = yield call(setMetaDataFlag, bsi2, action.file.pk, action.file.meta_data, token);
     // yield put(setMetaDataOnServerSuccess(action.metaDataIndex));
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     yield put(setMetaDataOnServerError(error));
   }
 
