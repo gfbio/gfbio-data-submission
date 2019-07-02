@@ -768,8 +768,7 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
             msg='create_helpdesk_ticket_task submission_id={} | summary={} | description={}'.format(
                 submission_id, summary, description))
         if len(existing_tickets):
-            response = gfbio_helpdesk_comment_on_tick
-            et(
+            response = gfbio_helpdesk_comment_on_ticket(
                 site_config=site_configuration,
                 ticket_key=existing_tickets.first().reference_key,
                 comment_body='{}. {}'.format(summary, description),
@@ -786,7 +785,8 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
                 data=data,
             )
             force_ticket_creation(response, submission_id,
-                                  'brokeragent@gfbio.org')
+                                  # 'brokeragent@gfbio.org')
+                                  'maweber@mpi-bremen.de')
             apply_default_task_retry_policy(response,
                                             create_helpdesk_ticket_task,
                                             submission)
