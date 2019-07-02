@@ -165,7 +165,8 @@ function* prepareRequestData(userId, submit = true) {
     // metaDataIndex,
     // metadata_file_name: metaDataFileName,
   }, formValues);
-  return {
+
+  let res = {
     // TODO: determine target according to "Target Data center" value. e.g. "ena" = ENA_PANGAEA
     // TODO: change name of non-molecular to sth. else
     target: 'GENERIC',
@@ -181,6 +182,14 @@ function* prepareRequestData(userId, submit = true) {
       requirements: requirements,
     },
   };
+  console.log('-----------   prepareRequestData  -----------------');
+
+  console.log(res);
+
+  console.log('');
+  console.log('');
+
+  return res;
 }
 
 function* uploadProgressWatcher(channel, index) {

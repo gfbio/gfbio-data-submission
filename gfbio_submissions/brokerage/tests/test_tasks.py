@@ -23,7 +23,7 @@ from gfbio_submissions.brokerage.models import ResourceCredential, \
 from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, \
     transfer_data_to_ena_task, process_ena_response_task, \
     create_broker_objects_from_submission_data_task, check_on_hold_status_task, \
-    get_gfbio_user_email_task, create_helpdesk_ticket_task, \
+    get_user_email_task, create_helpdesk_ticket_task, \
     comment_helpdesk_ticket_task, attach_file_to_helpdesk_ticket_task, \
     add_pangaealink_to_helpdesk_ticket_task, request_pangaea_login_token_task, \
     create_pangaea_jira_ticket_task, attach_file_to_pangaea_ticket_task, \
@@ -102,7 +102,7 @@ class TestInitialChainTasks(TestCase):
             }))
         self.assertEqual(201, min_response.status_code)
         task_reports = TaskProgressReport.objects.all()
-        expected_tasknames = ['tasks.get_gfbio_user_email_task',
+        expected_tasknames = ['tasks.get_user_email_task',
                               'tasks.create_helpdesk_ticket_task',
                               'tasks.trigger_submission_transfer', ]
         self.assertEqual(3, len(task_reports))
@@ -129,7 +129,7 @@ class TestInitialChainTasks(TestCase):
             }))
         self.assertEqual(201, min_response.status_code)
         task_reports = TaskProgressReport.objects.all()
-        expected_tasknames = ['tasks.get_gfbio_user_email_task',
+        expected_tasknames = ['tasks.get_user_email_task',
                               'tasks.create_helpdesk_ticket_task',
                               'tasks.trigger_submission_transfer', ]
         self.assertEqual(3, len(task_reports))
@@ -151,7 +151,7 @@ class TestInitialChainTasks(TestCase):
             }))
         self.assertEqual(201, max_response.status_code)
         task_reports = TaskProgressReport.objects.all()
-        expected_tasknames = ['tasks.get_gfbio_user_email_task',
+        expected_tasknames = ['tasks.get_user_email_task',
                               'tasks.create_helpdesk_ticket_task',
                               'tasks.trigger_submission_transfer',
                               'tasks.create_broker_objects_from_submission_data_task',
@@ -179,7 +179,7 @@ class TestInitialChainTasks(TestCase):
             }))
         self.assertEqual(201, max_response.status_code)
         task_reports = TaskProgressReport.objects.all()
-        expected_tasknames = ['tasks.get_gfbio_user_email_task',
+        expected_tasknames = ['tasks.get_user_email_task',
                               'tasks.create_helpdesk_ticket_task',
                               'tasks.trigger_submission_transfer', ]
         self.assertEqual(3, len(task_reports))
@@ -209,7 +209,7 @@ class TestInitialChainTasks(TestCase):
         task_reports = TaskProgressReport.objects.all()
         # trigger_submission_transfer from initial post
         # trigger_submission_transfer_for_updates
-        expected_tasknames = ['tasks.get_gfbio_user_email_task',
+        expected_tasknames = ['tasks.get_user_email_task',
                               'tasks.create_helpdesk_ticket_task',
                               'tasks.trigger_submission_transfer',
                               'tasks.trigger_submission_transfer_for_updates',
@@ -508,7 +508,7 @@ class TestPortalServiceTasks(TestTasks):
 
     # TODO: check all test, even if passing, for json exceptions that need repsonse mock
     @responses.activate
-    def test_get_gfbio_user_email_task_success(self):
+    def test_get_user_email_task_success(self):
         submission = Submission.objects.last()
         config = SiteConfiguration.objects.first()
         config.use_gfbio_services = True
@@ -528,18 +528,18 @@ class TestPortalServiceTasks(TestTasks):
                   'screenname': 'maweber', 'userid': 16250,
                   'lastname': 'Weber'})
 
-        result = get_gfbio_user_email_task.apply_async(
+        result = get_user_email_task.apply_async(
             kwargs={
                 'submission_id': submission.id
             }
         )
         self.assertTrue(result.successful())
-        self.assertDictEqual({'first_name': 'Marc', 'last_name': 'Weber',
+        self.assertDictEqual({'user_full_name': 'Marc Weber',
                               'user_email': 'maweber@mpi-bremen.de',
-                              'user_full_name': 'Marc Weber'}, result.get())
+                              'last_name': '', 'first_name': ''}, result.get())
 
     @responses.activate
-    def test_get_gfbio_user_email_task_no_gfbio_services(self):
+    def test_get_user_email_task_no_gfbio_services(self):
         submission = Submission.objects.last()
         config = SiteConfiguration.objects.first()
         config.use_gfbio_services = False
@@ -551,7 +551,7 @@ class TestPortalServiceTasks(TestTasks):
             config.gfbio_server.url, data)
         responses.add(responses.GET, url, status=200,
                       json={})
-        result = get_gfbio_user_email_task.apply_async(
+        result = get_user_email_task.apply_async(
             kwargs={
                 'submission_id': submission.id
             }
@@ -562,7 +562,7 @@ class TestPortalServiceTasks(TestTasks):
                           'user_full_name': ''}, result.get())
 
     @responses.activate
-    def test_get_gfbio_user_email_task_error_response(self):
+    def test_get_user_email_task_error_response(self):
         submission = Submission.objects.last()
         config = SiteConfiguration.objects.first()
         config.use_gfbio_services = False
@@ -573,7 +573,7 @@ class TestPortalServiceTasks(TestTasks):
         url = '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'.format(
             config.gfbio_server.url, data)
         responses.add(responses.GET, url, status=200, json={})
-        result = get_gfbio_user_email_task.apply_async(
+        result = get_user_email_task.apply_async(
             kwargs={
                 'submission_id': submission.id
             }
@@ -584,7 +584,7 @@ class TestPortalServiceTasks(TestTasks):
                           'user_full_name': ''}, result.get())
 
     @responses.activate
-    def test_get_gfbio_user_email_task_corrupt_response(self):
+    def test_get_user_email_task_corrupt_response(self):
         submission = Submission.objects.last()
         config = SiteConfiguration.objects.first()
         config.use_gfbio_services = True
@@ -600,7 +600,7 @@ class TestPortalServiceTasks(TestTasks):
             },
             body='xyz')
 
-        result = get_gfbio_user_email_task.apply_async(
+        result = get_user_email_task.apply_async(
             kwargs={
                 'submission_id': submission.id
             }
@@ -611,7 +611,7 @@ class TestPortalServiceTasks(TestTasks):
                           'user_full_name': ''}, result.get())
 
     @responses.activate
-    def test_get_gfbio_user_email_task_400_response(self):
+    def test_get_user_email_task_400_response(self):
         submission = Submission.objects.last()
         config = SiteConfiguration.objects.first()
         config.use_gfbio_services = True
@@ -626,7 +626,7 @@ class TestPortalServiceTasks(TestTasks):
                 'Accept': 'application/json'
             },
             json='')
-        result = get_gfbio_user_email_task.apply_async(
+        result = get_user_email_task.apply_async(
             kwargs={
                 'submission_id': submission.id
             }
@@ -1494,9 +1494,11 @@ class TestTaskProgressReportInTasks(TestTasks):
         tprs = TaskProgressReport.objects.exclude(
             task_name='tasks.update_helpdesk_ticket_task')
         self.assertEqual(0, len(tprs))
+
         self._run_task(submission_id=submission.pk)
         task_reports = TaskProgressReport.objects.all()
-        self.assertEqual(5, len(task_reports))
+
+        self.assertEqual(2, len(task_reports))
         report = TaskProgressReport.objects.exclude(
             task_name='tasks.update_helpdesk_ticket_task').first()
         self.assertEqual(

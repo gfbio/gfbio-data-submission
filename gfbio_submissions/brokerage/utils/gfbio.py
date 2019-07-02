@@ -121,15 +121,23 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
     if len(summary) >= 45:
         summary = '{0}{1}'.format(summary[:45], '...')
 
+    user_full_name = reporter.get('user_full_name', '')
+
     # molecular or generic
     jira_request_target = HELPDESK_REQUEST_TYPE_MAPPINGS.get(
         requirements.get('data_center', ''),
         HELPDESK_REQUEST_TYPE_MAPPINGS.get('default', '')
     )
-    # TODO: generic is failing to send emails
-    jira_request_type = 'dsub/{0}'.format(jira_request_target) \
-        if site_config.jira_project_key == SiteConfiguration.DSUB \
-        else 'sand/{0}-data'.format(jira_request_target)
+    # TODO: generic is failing to send emails -> corect value is: dsub/general-data-submission
+    # jira_request_type = 'dsub/{0}'.format(jira_request_target) \
+    #     if site_config.jira_project_key == SiteConfiguration.DSUB \
+    #     else 'sand/{0}-data'.format(jira_request_target)
+    jira_request_type = 'sand/{0}-data'.format(jira_request_target)
+    if site_config.jira_project_key == SiteConfiguration.DSUB:
+        jira_request_type = 'dsub/{0}'.format(jira_request_target) \
+            if jira_request_type == 'molecular' \
+            else 'dsub/general-data-submission'
+
     mutual_data = {
         'project': {
             'key': site_config.jira_project_key
@@ -139,11 +147,9 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
         'issuetype': {
             'name': 'Data Submission'
         },
-        # 'reporter': {
-        #     'name': reporter.get('user_email',
-        #                          'No valid user, name or email available')
-        # },
-        # 'customfield_10010': jira_request_type,
+        'reporter': {
+            'name': reporter.get('user_email', site_config.contact)
+        },
         'customfield_10200': '{0}'.format(submission.embargo.isoformat())
         if submission.embargo is not None
         else '{0}'.format(
@@ -158,9 +164,8 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
         'customfield_10308': requirements.get('dataset_labels', []),
         'customfield_10313': ', '.join(
             requirements.get('categories', [])),
-        'customfield_10205': '{0},{1};{2}'.format(
-            reporter.get('first_name', ''),
-            reporter.get('last_name', ''),
+        'customfield_10205': '{0};{1}'.format(
+            user_full_name,
             reporter.get('user_email', '')),
         'customfield_10307': '; '.join(
             requirements.get('related_publications', [])),
@@ -189,18 +194,12 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
     ]
     mutual_data['customfield_10229'] = metadata_schema_value
 
-    if reporter != {}:
-        mutual_data['reporter'] = {
-            'name': reporter.get(
-                'user_email',
-                'No valid user, name or email available')
-        }
     if not prepare_for_update:
         mutual_data['customfield_10010'] = jira_request_type
     return {'fields': mutual_data}
 
 
-def gfbio_helpdesk_create_ticket(site_config, submission, data={}, reporter={}):
+def gfbio_helpdesk_create_ticket(site_config, submission, data={}):
     url = '{0}{1}'.format(
         site_config.helpdesk_server.url,
         HELPDESK_API_SUB_URL
