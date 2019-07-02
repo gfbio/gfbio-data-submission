@@ -200,6 +200,34 @@ def apply_timebased_task_retry_policy(task, submission, no_of_tickets):
             )
 
 
+# TODO: refactor/move to submission_transfer_handler and combine with
+#  apply_default_task_retry_policy
+def force_ticket_creation(response, submission_id, contact):
+    if response.status_code >= 400:
+        try:
+            error_messages = response.json()
+        except JSONDecodeError as e:
+            return response
+        # deal with jira unknown reporter
+        if 'reporter' in error_messages.get('errors', {}).keys():
+            reporter_errors = error_messages.get('errors', {})
+            if 'The reporter specified is not a user' in reporter_errors.get(
+                    'reporter', ''):
+                default = {
+                    'user_email': contact,
+                    'user_full_name': '',
+                    'first_name': '',
+                    'last_name': '',
+                }
+                create_helpdesk_ticket_task.s(prev_task_result=default,
+                                              submission_id=submission_id).set(
+                    countdown=SUBMISSION_RETRY_DELAY)()
+                return False
+    # else:
+    #     pass
+    return True
+
+
 # TODO: refactor/move to submission_transfer_handler
 def apply_default_task_retry_policy(response, task, submission):
     try:
@@ -727,31 +755,6 @@ def get_user_email_task(submission_id=None):
                 TaskProgressReport.CANCELLED)
         )
         return TaskProgressReport.CANCELLED
-
-
-def force_ticket_creation(response, submission_id, contact):
-    if response.status_code >= 400:
-        try:
-            error_messages = response.json()
-        except JSONDecodeError as e:
-            return response
-        # deal with jira unknown reporter
-        if 'reporter' in error_messages.get('errors', {}).keys():
-            reporter_errors = error_messages.get('errors', {})
-            if 'The reporter specified is not a user' in reporter_errors.get(
-                    'reporter', ''):
-                default = {
-                    'user_email': contact,
-                    'user_full_name': '',
-                    'first_name': '',
-                    'last_name': '',
-                }
-                create_helpdesk_ticket_task.s(prev_task_result=default,
-                                              submission_id=submission_id).set(
-                    countdown=SUBMISSION_RETRY_DELAY)()
-    else:
-        pass
-    return response
 
 
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,

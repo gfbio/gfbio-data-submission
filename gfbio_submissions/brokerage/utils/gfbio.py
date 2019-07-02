@@ -14,6 +14,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
     HELPDESK_DATACENTER_USER_MAPPINGS, HELPDESK_REQUEST_TYPE_MAPPINGS, \
     HELPDESK_API_ATTACHMENT_URL
 from gfbio_submissions.brokerage.models import SiteConfiguration, RequestLog
+from gfbio_submissions.users.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -122,6 +123,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
         summary = '{0}{1}'.format(summary[:45], '...')
 
     user_full_name = reporter.get('user_full_name', '')
+    user_email = reporter.get('user_email', '')
 
     # molecular or generic
     jira_request_target = HELPDESK_REQUEST_TYPE_MAPPINGS.get(
@@ -137,6 +139,18 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
         jira_request_type = 'dsub/{0}'.format(jira_request_target) \
             if jira_request_type == 'molecular' \
             else 'dsub/general-data-submission'
+
+    author = '{0};{1}'.format(user_full_name, user_email)
+    if user_email == site_config.contact:
+        try:
+            local_user = User.objects.get(pk=submission.submitting_user)
+            author = '{0};{1}'.format(user_full_name, local_user.email)
+        except User.DoesNotExist:
+            pass
+        except ValueError:
+            pass
+
+    print('AUTHOR ', author)
 
     mutual_data = {
         'project': {
@@ -164,9 +178,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
         'customfield_10308': requirements.get('dataset_labels', []),
         'customfield_10313': ', '.join(
             requirements.get('categories', [])),
-        'customfield_10205': '{0};{1}'.format(
-            user_full_name,
-            reporter.get('user_email', '')),
+        'customfield_10205': author,
         'customfield_10307': '; '.join(
             requirements.get('related_publications', [])),
         'customfield_10216': [{'value': l} for l in
