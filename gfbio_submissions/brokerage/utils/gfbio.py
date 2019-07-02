@@ -158,10 +158,11 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
         'customfield_10308': requirements.get('dataset_labels', []),
         'customfield_10313': ', '.join(
             requirements.get('categories', [])),
-        'customfield_10205': '{0},{1};{2}'.format(
-            reporter.get('first_name', ''),
-            reporter.get('last_name', ''),
-            reporter.get('user_email', '')),
+        'customfield_10205': '{0};{1}'.format(
+            # reporter.get('first_name', ''),
+            # reporter.get('last_name', ''),
+            reporter.get('user_full_name', ''),
+            reporter.get('user_email', site_config.contact)),
         'customfield_10307': '; '.join(
             requirements.get('related_publications', [])),
         'customfield_10216': [{'value': l} for l in
@@ -200,7 +201,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
     return {'fields': mutual_data}
 
 
-def gfbio_helpdesk_create_ticket(site_config, submission, data={}, reporter={}):
+def gfbio_helpdesk_create_ticket(site_config, submission, data={}):
     url = '{0}{1}'.format(
         site_config.helpdesk_server.url,
         HELPDESK_API_SUB_URL
