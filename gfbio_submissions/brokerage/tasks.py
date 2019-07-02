@@ -202,7 +202,7 @@ def apply_timebased_task_retry_policy(task, submission, no_of_tickets):
 
 # TODO: refactor/move to submission_transfer_handler and combine with
 #  apply_default_task_retry_policy
-def force_ticket_creation(response, submission_id, contact):
+def force_ticket_creation(response, submission, site_configuration):
     if response.status_code >= 400:
         try:
             error_messages = response.json()
@@ -214,18 +214,27 @@ def force_ticket_creation(response, submission_id, contact):
             if 'The reporter specified is not a user' in reporter_errors.get(
                     'reporter', ''):
                 default = {
-                    'user_email': contact,
+                    'user_email': 'maweber@mpi-bremen.de',
+                    # brokeragent@gfbio.org
                     'user_full_name': '',
                     'first_name': '',
                     'last_name': '',
                 }
-                create_helpdesk_ticket_task.s(prev_task_result=default,
-                                              submission_id=submission_id).set(
-                    countdown=SUBMISSION_RETRY_DELAY)()
-                return False
-    # else:
-    #     pass
-    return True
+                # create_helpdesk_ticket_task.s(prev_task_result=default,
+                #                               submission_id=submission_id).set(
+                #     countdown=SUBMISSION_RETRY_DELAY)()
+                data = gfbio_prepare_create_helpdesk_payload(
+                    reporter=default,
+                    site_config=site_configuration,
+                    submission=submission)
+                return gfbio_helpdesk_create_ticket(
+                    site_config=site_configuration,
+                    submission=submission,
+                    data=data,
+                )
+        else:
+            return response
+    return response
 
 
 # TODO: refactor/move to submission_transfer_handler
@@ -782,14 +791,20 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
                 reporter=prev_task_result,
                 site_config=site_configuration,
                 submission=submission)
+            print('TRY REGULAR CREATION')
             response = gfbio_helpdesk_create_ticket(
                 site_config=site_configuration,
                 submission=submission,
                 data=data,
             )
-            force_ticket_creation(response, submission_id,
-                                  # 'brokeragent@gfbio.org')
-                                  'maweber@mpi-bremen.de')
+            print('response:\n', response)
+            print('ENTER FORCED CREATION')
+            response = force_ticket_creation(
+                response=response,
+                submission=submission,
+                site_configuration=site_configuration,
+            )
+            print('response:\n', response)
             apply_default_task_retry_policy(response,
                                             create_helpdesk_ticket_task,
                                             submission)

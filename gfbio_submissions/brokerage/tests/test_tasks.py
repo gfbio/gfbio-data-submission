@@ -682,7 +682,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         self.assertTrue(result.successful())
         tprs = TaskProgressReport.objects.exclude(
             task_name='tasks.update_helpdesk_ticket_task')
-        self.assertEqual(2, len(tprs))
+        self.assertEqual(1, len(tprs))
 
     @responses.activate
     def test_create_helpdesk_ticket_task_unicode_text(self):
