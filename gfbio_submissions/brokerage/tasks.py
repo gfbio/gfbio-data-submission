@@ -12,6 +12,7 @@ from django.utils.encoding import smart_text
 from requests import ConnectionError, Response
 
 from gfbio_submissions.brokerage.configuration.settings import ENA
+from gfbio_submissions.brokerage.models import SubmissionUpload
 from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content
 from gfbio_submissions.brokerage.utils.gfbio import \
@@ -21,7 +22,7 @@ from gfbio_submissions.users.models import User
 from .configuration.settings import BASE_HOST_NAME, \
     PRIMARY_DATA_FILE_MAX_RETRIES, PRIMARY_DATA_FILE_DELAY, \
     SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY, PANGAEA_ISSUE_VIEW_URL
-from .models import PrimaryDataFile, BrokerObject, \
+from .models import BrokerObject, \
     AuditableTextData, RequestLog, AdditionalReference, ResourceCredential, \
     TaskProgressReport, Submission
 from .utils.ena import prepare_ena_data, \
@@ -166,14 +167,14 @@ def check_on_hold_status_task(previous_task_result=None, submission_id=None):
 
 def apply_timebased_task_retry_policy(task, submission, no_of_tickets):
     try:
-        PrimaryDataFile.raise_ticket_exeptions(no_of_tickets)
-    except PrimaryDataFile.NoTicketAvailableError as e:
+        SubmissionUpload.raise_ticket_exeptions(no_of_tickets)
+    except SubmissionUpload.NoTicketAvailableError as e:
         logger.warning(
-            msg='{} PrimaryDataFile.NoTicketAvailableError {}'.format(
+            msg='{} SubmissionUpload.NoTicketAvailableError {}'.format(
                 task.name, e)
         )
         logger.info(
-            msg='{} PrimaryDataFile.NoTicketAvailableError number_of_retries={}'
+            msg='{} SubmissionUpload.NoTicketAvailableError number_of_retries={}'
                 ''.format(task.name, task.request.retries)
         )
         if task.request.retries == PRIMARY_DATA_FILE_MAX_RETRIES:
@@ -767,7 +768,8 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
             msg='create_helpdesk_ticket_task submission_id={} | summary={} | description={}'.format(
                 submission_id, summary, description))
         if len(existing_tickets):
-            response = gfbio_helpdesk_comment_on_ticket(
+            response = gfbio_helpdesk_comment_on_tick
+            et(
                 site_config=site_configuration,
                 ticket_key=existing_tickets.first().reference_key,
                 comment_body='{}. {}'.format(summary, description),
