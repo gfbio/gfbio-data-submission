@@ -717,7 +717,7 @@ class SubmissionUpload(TimeStampedModel):
             )
 
     def __str__(self):
-        return ' | '.join(reversed(self.file.name.split(os.sep)))
+        return ' / '.join(reversed(self.file.name.split(os.sep)))
 
 
 class AuditableTextData(models.Model):
