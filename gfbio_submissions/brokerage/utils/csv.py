@@ -189,7 +189,7 @@ def check_for_molecular_content(submission):
         print('valid ', valid)
         # print('errors ', serializer.errors)
         # print(json.dumps(serializer.errors))
-        submission.target = ENA
+        submission.target = ENA_PANGAEA
         submission.save(allow_update=False)
         if valid:
             return True
