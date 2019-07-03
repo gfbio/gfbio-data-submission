@@ -36,7 +36,7 @@ class FileIndicator extends React.Component {
   }
 
   createUploadedListElements() {
-    console.log('createUploadedListElements');
+    // console.log('createUploadedListElements');
     const uploaded = this.props.fileUploadsFromServer.map((uploaded, index) => {
       let metaDataCheckButton = (
         <small className="file-name">
@@ -47,8 +47,8 @@ class FileIndicator extends React.Component {
             // onChange={this.handleMetadataSelect}
             onChange={(e) => {
               // e.preventDefault();
-              console.log(e);
-              console.log(uploaded.pk);
+              // console.log(e);
+              // console.log(uploaded.pk);
               this.handleMetadataSelect(e, uploaded);
             }}
             checked={uploaded.meta_data}
@@ -89,7 +89,7 @@ class FileIndicator extends React.Component {
 
 
   createScheduledUploadListElements() {
-    console.log('createSCHEDULEDListElements');
+    // console.log('createSCHEDULEDListElements');
     const fileListElements = this.props.fileUploads.map((upload, index) => {
       let progressStyle = {
         width: `${upload.progress}%`,

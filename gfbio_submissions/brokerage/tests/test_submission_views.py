@@ -262,8 +262,11 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
         self.assertEqual(0, len(submission.site_project_id))
         self.assertEqual(Submission.OPEN, submission.status)
         self.assertEqual(0, len(submission.submitting_user))
-        self.assertEqual(0,
-                         len(submission.submitting_user_common_information))
+        # self.assertEqual(0,
+        #                  len(submission.submitting_user_common_information))
+        site_config = SiteConfiguration.objects.first()
+        self.assertIn(site_config.contact,
+                      submission.submitting_user_common_information)
         self.assertEqual('ENA', submission.target)
         request_logs = RequestLog.objects.filter(type=RequestLog.INCOMING)
         self.assertEqual(1, len(request_logs))
@@ -466,7 +469,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         submission = Submission.objects.first()
         self.assertEqual(GENERIC, submission.target)
         expected_tasks = ['tasks.trigger_submission_transfer',
-                          'tasks.get_gfbio_user_email_task',
+                          'tasks.get_user_email_task',
                           'tasks.create_helpdesk_ticket_task',
                           'tasks.check_on_hold_status_task']
         for t in TaskProgressReport.objects.filter(
@@ -522,7 +525,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         self.assertEqual(ENA, submission.target)
         expected_tasks = ['tasks.trigger_submission_transfer',
                           'tasks.check_on_hold_status_task',
-                          'tasks.get_gfbio_user_email_task',
+                          'tasks.get_user_email_task',
                           'tasks.create_helpdesk_ticket_task',
                           'tasks.update_helpdesk_ticket_task',  # x2
                           'tasks.trigger_submission_transfer_for_updates',
@@ -580,7 +583,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         submission = Submission.objects.first()
         self.assertEqual(ENA, submission.target)
         expected_tasks = ['tasks.trigger_submission_transfer',
-                          'tasks.get_gfbio_user_email_task',
+                          'tasks.get_user_email_task',
                           'tasks.create_helpdesk_ticket_task',
                           'tasks.update_helpdesk_ticket_task',
                           'tasks.trigger_submission_transfer_for_updates',
@@ -632,7 +635,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         submission = Submission.objects.first()
         self.assertEqual(ENA, submission.target)
         expected_tasks = ['tasks.trigger_submission_transfer',
-                          'tasks.get_gfbio_user_email_task',
+                          'tasks.get_user_email_task',
                           'tasks.create_helpdesk_ticket_task',
                           'tasks.update_helpdesk_ticket_task',
                           'tasks.trigger_submission_transfer_for_updates',
@@ -874,6 +877,7 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
         submission.save()
         update_tasks = TaskProgressReport.objects.filter(
             task_name='tasks.update_helpdesk_ticket_task')
+        print(update_tasks)
         self.assertEqual(1, len(update_tasks))
 
     @responses.activate
@@ -1345,8 +1349,8 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
         self.assertEqual(0, len(submission.site_project_id))
         self.assertEqual(Submission.OPEN, submission.status)
         self.assertEqual(0, len(submission.submitting_user))
-        self.assertEqual(0,
-                         len(submission.submitting_user_common_information))
+        site_config = SiteConfiguration.objects.first()
+        self.assertIn(site_config.contact, submission.submitting_user_common_information)
         self.assertEqual('GENERIC', submission.target)
         request_logs = RequestLog.objects.filter(type=RequestLog.INCOMING)
         self.assertEqual(1, len(request_logs))

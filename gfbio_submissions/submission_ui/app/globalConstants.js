@@ -7,9 +7,9 @@ export const API_ROOT = '';
 
 // TODO: check/remove fallback values of userid, token, etc. in reducers
 
+export const USER_URL = 'user/';
 // TODO: merge redundant code of api-access-code like in this file
 export const SUBMISSIONS = '/api/submissions/';
-export const USER_URL = 'user/';
 export const UPLOAD = '/upload/';
 export const UPLOADS = '/uploads/';
 export const UPLOAD_PATCH = 'patch/';

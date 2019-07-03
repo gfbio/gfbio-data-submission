@@ -12,15 +12,17 @@ from django.utils.encoding import smart_text
 from requests import ConnectionError, Response
 
 from gfbio_submissions.brokerage.configuration.settings import ENA
+from gfbio_submissions.brokerage.models import SubmissionUpload
 from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content
 from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_prepare_create_helpdesk_payload, gfbio_update_helpdesk_ticket, \
     gfbio_helpdesk_delete_attachment
+from gfbio_submissions.users.models import User
 from .configuration.settings import BASE_HOST_NAME, \
     PRIMARY_DATA_FILE_MAX_RETRIES, PRIMARY_DATA_FILE_DELAY, \
     SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY, PANGAEA_ISSUE_VIEW_URL
-from .models import PrimaryDataFile, BrokerObject, \
+from .models import BrokerObject, \
     AuditableTextData, RequestLog, AdditionalReference, ResourceCredential, \
     TaskProgressReport, Submission
 from .utils.ena import prepare_ena_data, \
@@ -165,14 +167,14 @@ def check_on_hold_status_task(previous_task_result=None, submission_id=None):
 
 def apply_timebased_task_retry_policy(task, submission, no_of_tickets):
     try:
-        PrimaryDataFile.raise_ticket_exeptions(no_of_tickets)
-    except PrimaryDataFile.NoTicketAvailableError as e:
+        SubmissionUpload.raise_ticket_exeptions(no_of_tickets)
+    except SubmissionUpload.NoTicketAvailableError as e:
         logger.warning(
-            msg='{} PrimaryDataFile.NoTicketAvailableError {}'.format(
+            msg='{} SubmissionUpload.NoTicketAvailableError {}'.format(
                 task.name, e)
         )
         logger.info(
-            msg='{} PrimaryDataFile.NoTicketAvailableError number_of_retries={}'
+            msg='{} SubmissionUpload.NoTicketAvailableError number_of_retries={}'
                 ''.format(task.name, task.request.retries)
         )
         if task.request.retries == PRIMARY_DATA_FILE_MAX_RETRIES:
@@ -196,6 +198,43 @@ def apply_timebased_task_retry_policy(task, submission, no_of_tickets):
                 exc=e,
                 countdown=(task.request.retries + 1) * PRIMARY_DATA_FILE_DELAY,
             )
+
+
+# TODO: refactor/move to submission_transfer_handler and combine with
+#  apply_default_task_retry_policy
+def force_ticket_creation(response, submission, site_configuration):
+    if response.status_code >= 400:
+        try:
+            error_messages = response.json()
+        except JSONDecodeError as e:
+            return response
+        # deal with jira unknown reporter
+        if 'reporter' in error_messages.get('errors', {}).keys():
+            reporter_errors = error_messages.get('errors', {})
+            if 'The reporter specified is not a user' in reporter_errors.get(
+                    'reporter', ''):
+                default = {
+                    'user_email': 'maweber@mpi-bremen.de',
+                    # brokeragent@gfbio.org
+                    'user_full_name': '',
+                    'first_name': '',
+                    'last_name': '',
+                }
+                # create_helpdesk_ticket_task.s(prev_task_result=default,
+                #                               submission_id=submission_id).set(
+                #     countdown=SUBMISSION_RETRY_DELAY)()
+                data = gfbio_prepare_create_helpdesk_payload(
+                    reporter=default,
+                    site_config=site_configuration,
+                    submission=submission)
+                return gfbio_helpdesk_create_ticket(
+                    site_config=site_configuration,
+                    submission=submission,
+                    data=data,
+                )
+        else:
+            return response
+    return response
 
 
 # TODO: refactor/move to submission_transfer_handler
@@ -639,14 +678,18 @@ def check_for_pangaea_doi_task(resource_credential_id=None):
 
 # HELP-DESK TASKS --------------------------------------------------------------
 
+# FIXME/TODO: once only local users are used, even with social logins,
+#  gfbio stuff is obsolete and getting userinformation need no extra task.
+#  Thus remove this
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
-             name='tasks.get_gfbio_user_email_task', base=SubmissionTask)
-def get_gfbio_user_email_task(submission_id=None):
+             name='tasks.get_user_email_task', base=SubmissionTask)
+def get_user_email_task(submission_id=None):
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-        submission_id=submission_id, task=get_gfbio_user_email_task)
+        submission_id=submission_id, task=get_user_email_task)
     logger.info(
-        msg='get_gfbio_user_email_task submission_id={0}'.format(submission_id)
+        msg='get_user_email_task submission_id={0}'.format(submission_id)
     )
+    print('-------- ', site_configuration.contact)
     res = {
         'user_email': site_configuration.contact,
         'user_full_name': '',
@@ -655,6 +698,12 @@ def get_gfbio_user_email_task(submission_id=None):
     }
     if submission is not None and site_configuration is not None:
         if site_configuration.use_gfbio_services:
+            print('USING GFBIO SERVICES ',
+                  site_configuration.use_gfbio_services)
+            logger.info(
+                msg='get_user_email_task submission_id={0} | use_gfbio_services={1}'.format(
+                    submission_id, site_configuration.use_gfbio_services)
+            )
             response = gfbio_get_user_by_id(submission.submitting_user,
                                             site_configuration, submission)
             try:
@@ -665,43 +714,56 @@ def get_gfbio_user_email_task(submission_id=None):
                 res['user_email'] = content.get('emailaddress',
                                                 site_configuration.contact)
                 res['user_full_name'] = content.get('fullname', '')
-                res['first_name'] = content.get('firstname', '')
-                res['last_name'] = content.get('lastname', '')
-                submission.submitting_user_common_information = '{0},{1};{2}'.format(
-                    res['last_name'], res['first_name'], res['user_email'])
-                submission.save()
+                # res['first_name'] = content.get('firstname', '')
+                # res['last_name'] = content.get('lastname', '')
             except ValueError as e:
                 logger.error(
-                    msg='get_gfbio_user_email_task. load json response. '
+                    msg='get_user_email_task. load json response. '
                         'Value error: {}'.format(e))
+        else:
+            logger.info(
+                msg='get_user_email_task submission_id={0} | '
+                    'use_gfbio_services={1} | get django user with '
+                    'user_id={2}'.format(submission_id,
+                                         site_configuration.use_gfbio_services,
+                                         submission.submitting_user))
+            try:
+                user = User.objects.get(pk=submission.submitting_user)
+                print('USER ', user)
+                res['user_email'] = user.email
+                res['user_full_name'] = user.name
+            except ValueError as e:
+                print('VALUE ERROR ', e)
+                logger.error(
+                    msg='get_user_email_task submission_id={0} | '
+                        'value error. error: {1}'.format(submission_id, e))
+            except User.DoesNotExist as e:
+                print('USER ERROR ', e)
+                logger.error(
+                    msg='get_user_email_task submission_id={0} | '
+                        'user does not exist. error: {1}'.format(submission_id,
+                                                                 e))
+
+        logger.info(
+            msg='get_user_email_task submission_id={0} | use_gfbio_services={1} | return={2}'.format(
+                submission_id, site_configuration.use_gfbio_services,
+                res)
+        )
+        # print('\n\nRETURNING ', res)
+        # print('\n get local user based on submission submitting user')
+        # user = User.objects.filter(pk=submission.submitting_user)
+        # print(user.first().email)
+        submission.submitting_user_common_information = '{0};{1}'.format(
+            res['user_full_name'], res['user_email'])
+        submission.save(allow_update=False)
         return res
     else:
+        logger.info(
+            msg='get_user_email_task submission_id={0} | use_gfbio_services={1} | return={2}'.format(
+                submission_id, site_configuration.use_gfbio_services,
+                TaskProgressReport.CANCELLED)
+        )
         return TaskProgressReport.CANCELLED
-
-
-def force_ticket_creation(response, submission_id, contact):
-    if response.status_code >= 400:
-        try:
-            error_messages = response.json()
-        except JSONDecodeError as e:
-            return response
-        # deal with jira unknown reporter
-        if 'reporter' in error_messages.get('errors', {}).keys():
-            reporter_errors = error_messages.get('errors', {})
-            if 'The reporter specified is not a user' in reporter_errors.get(
-                    'reporter', ''):
-                default = {
-                    'user_email': contact,
-                    'user_full_name': '',
-                    'first_name': '',
-                    'last_name': '',
-                }
-                create_helpdesk_ticket_task.s(prev_task_result=default,
-                                              submission_id=submission_id).set(
-                    countdown=SUBMISSION_RETRY_DELAY)()
-    else:
-        pass
-    return response
 
 
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
@@ -729,14 +791,20 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
                 reporter=prev_task_result,
                 site_config=site_configuration,
                 submission=submission)
+            print('TRY REGULAR CREATION')
             response = gfbio_helpdesk_create_ticket(
                 site_config=site_configuration,
                 submission=submission,
                 data=data,
-                reporter=prev_task_result  # {} if force_ticket_creation else
             )
-            force_ticket_creation(response, submission_id,
-                                  'brokeragent@gfbio.org')
+            print('response:\n', response)
+            print('ENTER FORCED CREATION')
+            response = force_ticket_creation(
+                response=response,
+                submission=submission,
+                site_configuration=site_configuration,
+            )
+            print('response:\n', response)
             apply_default_task_retry_policy(response,
                                             create_helpdesk_ticket_task,
                                             submission)
