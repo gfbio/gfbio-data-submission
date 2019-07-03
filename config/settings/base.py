@@ -12,7 +12,7 @@ from celery.schedules import crontab
 
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
-VERSION = '1.71.0'
+VERSION = '1.72.0'
 
 ROOT_DIR = environ.Path(
     __file__) - 3  # (gfbio_submissions/config/settings/base.py - 3 = gfbio_submissions/)
