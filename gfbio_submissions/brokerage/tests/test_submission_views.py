@@ -137,7 +137,7 @@ class TestSubmissionView(TestCase):
         )
 
     @classmethod
-    def _create_test_meta_data(cls, path, delete=True):
+    def _create_test_meta_data(cls, delete=True):
         if delete:
             cls._delete_test_data()
         csv_file = open(
@@ -146,6 +146,7 @@ class TestSubmissionView(TestCase):
         )
         return {
             'file': csv_file,
+            'meta_data': True,
         }
 
     @staticmethod
@@ -444,22 +445,19 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             },
             format='json'
         )
-        content = json.loads(response.content.decode('utf-8'))
-        pprint(content)
-
+        self.assertEqual(201, response.status_code)
+        self.assertEqual(1, len(Submission.objects.all()))
         submission = Submission.objects.first()
-        print('\n\n', submission, '\n\n')
+        self.assertEqual(GENERIC, submission.target)
 
         url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
-        print(url)
         responses.add(responses.POST, url, json={}, status=200)
-        data = self._create_test_meta_data(
-            '/tmp/test_primary_data_file')
-        data['meta_data'] = True
+        data = self._create_test_meta_data()
         response = self.api_client.post(url, data, format='multipart')
-        content = json.loads(response.content.decode('utf-8'))
-        pprint(content)
+        self.assertEqual(201, response.status_code)
+        self.assertEqual(1, len(submission.submissionupload_set.all()))
+        self.assertTrue(submission.submissionupload_set.first().meta_data)
 
         response = self.api_client.put(
             '/api/submissions/{0}/'.format(submission.broker_submission_id),
@@ -475,12 +473,26 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             },
             format='json'
         )
-
-        all_task_reports = TaskProgressReport.objects.all().order_by('created')
+        self.assertEqual(200, response.status_code)
+        expected_task_names = [
+            'tasks.trigger_submission_transfer',
+            'tasks.get_user_email_task',
+            'tasks.create_helpdesk_ticket_task',
+            'tasks.update_helpdesk_ticket_task',
+            'tasks.trigger_submission_transfer_for_updates',
+            'tasks.check_on_hold_status_task',
+            'tasks.create_broker_objects_from_submission_data_task',
+            'tasks.prepare_ena_submission_data_task',
+        ]
+        all_task_reports = list(
+            TaskProgressReport.objects.values_list(
+                'task_name', flat=True).order_by('created')
+        )
+        self.assertListEqual(expected_task_names, all_task_reports)
         i = 0
         for a in all_task_reports:
             i += 1
-            print(i, ') ', a.task_name)
+            print(i, ') ', a)
 
             # submission = Submission.objects.all().first()
             # submission.target = GENERIC
