@@ -147,6 +147,9 @@ class SubmissionTransferHandler(object):
 
             # TODO: add csv parsing to chain when conditions indicate it
             #  ... see perform_create TODOs
+
+            # TODO: check for molecular data before on_hold since there the target is crucial ???
+
             chain = check_on_hold_status_task.s(
                 submission_id=self.submission_id).set(
                 countdown=SUBMISSION_DELAY)

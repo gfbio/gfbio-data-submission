@@ -710,6 +710,6 @@ class TestSubmissionUpload(TestCase):
             file=SimpleUploadedFile('test_submission_upload.txt',
                                     b'these are the file contents!'),
         )
-        self.assertIn('.txt | {0}'.format(
+        self.assertIn('.txt / {0}'.format(
             Submission.objects.first().broker_submission_id),
                          submission_upload.__str__())

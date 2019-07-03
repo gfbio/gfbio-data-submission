@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import json
-from pprint import pprint
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -16,11 +15,9 @@ from config.settings.base import MEDIA_URL
 from gfbio_submissions.brokerage.configuration.settings import \
     HELPDESK_API_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL, GENERIC
 from gfbio_submissions.brokerage.models import Submission, \
-    SiteConfiguration, ResourceCredential, PrimaryDataFile, AdditionalReference, \
+    SiteConfiguration, ResourceCredential, AdditionalReference, \
     TaskProgressReport, SubmissionUpload
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
-from gfbio_submissions.brokerage.tests.test_submission_views import \
-    TestSubmissionView
 from gfbio_submissions.brokerage.tests.utils import _get_jira_attach_response
 from gfbio_submissions.brokerage.utils.csv import check_for_molecular_content
 from gfbio_submissions.users.models import User
@@ -417,7 +414,7 @@ class TestSubmissionUploadView(TestCase):
 
     @staticmethod
     def _delete_test_data():
-        PrimaryDataFile.objects.all().delete()
+        SubmissionUpload.objects.all().delete()
 
     def test_empty_relation(self):
         submission = Submission.objects.first()
@@ -485,12 +482,8 @@ class TestSubmissionUploadView(TestCase):
         res = check_for_molecular_content(submission)
         print('RES OF CHECK ', res)
 
-
         # content = json.loads(response.content.decode('utf-8'))
         # pprint(content)
-
-
-
 
         # self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         # self.assertIn(b'broker_submission_id', response.content)
@@ -586,9 +579,10 @@ class TestSubmissionUploadView(TestCase):
             'broker_submission_id': submission.broker_submission_id})
         responses.add(responses.POST, url, json={}, status=200)
         data = self._create_test_data('/tmp/test_primary_data_file')
-        self.api_client.post(url, data, format='multipart')
-        data_2 = self._create_test_data('/tmp/test_primary_data_file_2')
-        self.api_client.post(url, data_2, format='multipart')
+        r = self.api_client.post(url, data, format='multipart')
+        data_2 = self._create_test_data('/tmp/test_primary_data_file_2',
+                                        delete=False)
+        r2 = self.api_client.post(url, data_2, format='multipart')
 
         url = reverse('brokerage:submissions_uploads', kwargs={
             'broker_submission_id': submission.broker_submission_id})
@@ -617,7 +611,8 @@ class TestSubmissionUploadView(TestCase):
         data = self._create_test_data('/tmp/test_primary_data_file')
         self.api_client.post(url, data, format='multipart')
 
-        data_2 = self._create_test_data('/tmp/test_primary_data_file_2')
+        data_2 = self._create_test_data('/tmp/test_primary_data_file_2',
+                                        delete=False)
         self.api_client.post(url_2, data_2, format='multipart')
 
         submission = Submission.objects.first()

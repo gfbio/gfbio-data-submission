@@ -28,6 +28,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
 from gfbio_submissions.brokerage.models import AuditableTextData
 
 logger = logging.getLogger(__name__)
+dicttoxml.LOG.setLevel(logging.ERROR)
 
 
 #  ENALIZER  xml for ena -------------------------------------------------------

@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
+import _csv
 import csv
-import json
 from collections import OrderedDict
 
-import _csv
 import dpath
 from shortid import ShortId
 
@@ -163,7 +162,14 @@ def parse_molecular_csv(csv_file):
 
 # TODO: may move to other location, perhaps model, serializer or manager method
 def check_for_molecular_content(submission):
+    print('\n\ncheck_for_molecular_content: ', submission.target, ' ',
+          submission.release, ' ', submission.data.get('requirements', {}) \
+          .get('data_center', '').count('ENA'), ' ',
+          submission.submissionupload_set.filter(meta_data=True))
+
     if submission.target == ENA or submission.target == ENA_PANGAEA:
+        print('\n\tTarget ENA default return True')
+        print('\n\n')
         return True
     # TODO: consider HELPDESK_REQUEST_TYPE_MAPPINGS for data_center mappings
     elif submission.release and submission.target == GENERIC \
@@ -172,6 +178,8 @@ def check_for_molecular_content(submission):
         meta_data_files = submission.submissionupload_set.filter(meta_data=True)
         if len(meta_data_files) != 1:
             # TODO: add some sort of error to submission.data / validation hint
+            print('\n\tno/multi files return False')
+            print('\n\n')
             return False
         meta_data_file = meta_data_files.first()
         with open(meta_data_file.file.path, 'r') as file:
@@ -192,8 +200,14 @@ def check_for_molecular_content(submission):
         submission.target = ENA_PANGAEA
         submission.save(allow_update=False)
         if valid:
+            print('\n\tvalid return True')
+            print('\n\n')
             return True
         else:
+            print('\n\t in-valid return False')
+            print('\n\n')
             return False
     else:
+        print('\n\treturn default False')
+        print('\n\n')
         return False
