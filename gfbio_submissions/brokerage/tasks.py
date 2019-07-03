@@ -71,8 +71,29 @@ class SubmissionTask(Task):
 
 # common tasks -----------------------------------------------------------------
 
+@celery.task(name='tasks.check_for_molecular_content_in_submission_task',
+             base=SubmissionTask)
+def check_for_molecular_content_in_submission_task(submission_id=None):
+    logger.info(
+        msg='check_for_molecular_content_in_submission_task. get submission'
+            ' with pk={}.'.format(submission_id))
+    submission = SubmissionTransferHandler.get_submission_for_task(
+        submission_id=submission_id,
+        task=check_for_molecular_content_in_submission_task
+    )
+    logger.info(
+        msg='check_for_molecular_content_in_submission_task. '
+            'process submission={}.'.format(submission.broker_submission_id))
+    molecular_data_available = check_for_molecular_content(submission)
+    logger.info(
+        msg='check_for_molecular_content_in_submission_task. '
+            'valid molecular data available={0}'
+            ''.format(molecular_data_available)
+    )
+
+
 @celery.task(name='tasks.trigger_submission_transfer', base=SubmissionTask)
-def trigger_submission_transfer(submission_id=None):
+def trigger_submission_transfer(previous_task_result=None, submission_id=None):
     logger.info(
         msg='trigger_submission_transfer. get submission with pk={}.'.format(
             submission_id)
@@ -81,8 +102,8 @@ def trigger_submission_transfer(submission_id=None):
         submission_id=submission_id, task=trigger_submission_transfer
     )
 
-    molecular_data_available = check_for_molecular_content(
-        submission)
+    # molecular_data_available = check_for_molecular_content(
+    #     submission)
 
     transfer_handler = SubmissionTransferHandler(
         submission_id=submission.pk,
@@ -90,13 +111,14 @@ def trigger_submission_transfer(submission_id=None):
     )
     transfer_handler.initiate_submission_process(
         release=submission.release,
-        molecular_data_available=molecular_data_available
+        # molecular_data_available=molecular_data_available
     )
 
 
 @celery.task(name='tasks.trigger_submission_transfer_for_updates',
              base=SubmissionTask)
-def trigger_submission_transfer_for_updates(broker_submission_id=None):
+def trigger_submission_transfer_for_updates(previous_task_result=None,
+                                            broker_submission_id=None):
     logger.info(
         msg='trigger_submission_transfer_for_updates. get submission_id with broker_submission_id={}.'.format(
             broker_submission_id)
@@ -108,8 +130,8 @@ def trigger_submission_transfer_for_updates(broker_submission_id=None):
         task=trigger_submission_transfer_for_updates
     )
 
-    molecular_data_available = check_for_molecular_content(
-        submission)
+    # molecular_data_available = check_for_molecular_content(
+    #     submission)
 
     transfer_handler = SubmissionTransferHandler(
         submission_id=submission.pk,
@@ -118,10 +140,13 @@ def trigger_submission_transfer_for_updates(broker_submission_id=None):
     transfer_handler.initiate_submission_process(
         release=submission.release,
         update=True,
-        molecular_data_available=molecular_data_available
+        # molecular_data_available=molecular_data_available
     )
 
 
+# TODO: on_hold check is in this form obsolete, if target is ENA etc
+#   submission to ena is triggered without prior creation of BOs and XML
+#   all other target do nothing
 @celery.task(name='tasks.check_on_hold_status_task', base=SubmissionTask)
 def check_on_hold_status_task(previous_task_result=None, submission_id=None):
     logger.info(

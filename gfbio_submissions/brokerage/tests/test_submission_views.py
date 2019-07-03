@@ -475,10 +475,12 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         )
         self.assertEqual(200, response.status_code)
         expected_task_names = [
+            'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer',
             'tasks.get_user_email_task',
             'tasks.create_helpdesk_ticket_task',
             'tasks.update_helpdesk_ticket_task',
+            'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer_for_updates',
             'tasks.check_on_hold_status_task',
             'tasks.create_broker_objects_from_submission_data_task',
@@ -490,59 +492,12 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         )
         self.assertListEqual(expected_task_names, all_task_reports)
         i = 0
-        for a in all_task_reports:
+        for a in TaskProgressReport.objects.all().order_by('created'):
             i += 1
-            print(i, ') ', a)
+            print(i, ') ', a.task_name)
+            # print(a.task_exception)
+            # print(a.task_exception_info)
 
-            # submission = Submission.objects.all().first()
-            # submission.target = GENERIC
-            # submission.data = {
-            #     'requirements': {
-            #         'title': 'A Title',
-            #         'description': 'A Description',
-            #         'data_center': 'ENA – European Nucleotide Archive'}
-            # }
-            # submission.save(allow_update=False)
-            #
-            # url = reverse('brokerage:submissions_upload', kwargs={
-            #     'broker_submission_id': submission.broker_submission_id})
-            # responses.add(responses.POST, url, json={}, status=200)
-            # data = self._create_test_data('/tmp/test_primary_data_file')
-            # data['meta_data'] = True
-            # response = self.api_client.post(url, data, format='multipart')
-            #
-            # # expected state of submission with on (meta_data) file
-            # self.assertEqual(GENERIC, submission.target)
-            # self.assertTrue(submission.release)
-            # self.assertIn('data_center',
-            #               submission.data.get('requirements', {}).keys())
-            # self.assertIn('ENA',
-            #               submission.data.get('requirements', {}).get(
-            #                   'data_center',
-            #                   ''))
-            # print(submission.submissionupload_set.all())
-            # self.assertEqual(1, len(submission.submissionupload_set.all()))
-            # upload = submission.submissionupload_set.first()
-            # self.assertTrue(upload.meta_data)
-            # print('\n##############################\n')
-            #
-            # res = check_for_molecular_content(submission)
-            # print('RES OF CHECK ', res)
-
-            # content = json.loads(response.content.decode('utf-8'))
-            # pprint(content)
-
-            # self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-            # self.assertIn(b'broker_submission_id', response.content)
-            # self.assertIn(b'"id"', response.content)
-            # self.assertIn(b'site', response.content)
-            # self.assertEqual(User.objects.first().username, response.data['site'])
-            # self.assertIn(b'file', response.content)
-            # self.assertTrue(
-            #     urlparse(response.data['file']).path.startswith(MEDIA_URL))
-            # # TODO: no task is triggered yet
-            # self.assertEqual(len(TaskProgressReport.objects.all()), reports_len)
-            # self.assertGreater(len(SubmissionUpload.objects.all()), uploads_len)
 
         @responses.activate
         def test_valid_max_post_with_data_url(self):

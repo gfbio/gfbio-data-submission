@@ -128,8 +128,7 @@ class SubmissionTransferHandler(object):
         #     countdown=SUBMISSION_DELAY)
 
     # TODO: better name !
-    def initiate_submission_process(self, release=False, update=False,
-                                    molecular_data_available=True):
+    def initiate_submission_process(self, release=False, update=False):
         logger.info(
             'SubmissionTransferHandler. initiate_submission_process. '
             'submission_id={0} target_archive={1}'.format(self.submission_id,
@@ -161,8 +160,8 @@ class SubmissionTransferHandler(object):
                     'prepare_ena_submission_data_task'
                     ''.format(self.target_archive)
                 )
-                if molecular_data_available:
-                    chain = chain | self.pre_process_molecular_data_chain()
+                # if molecular_data_available:
+                chain = chain | self.pre_process_molecular_data_chain()
         elif not update:
             # TODO: use IDM derived email. not old portal email
             chain = get_user_email_task.s(
@@ -177,8 +176,8 @@ class SubmissionTransferHandler(object):
                     countdown=SUBMISSION_DELAY)
                 if self.target_archive == ENA \
                         or self.target_archive == ENA_PANGAEA:
-                    if molecular_data_available:
-                        chain = chain | self.pre_process_molecular_data_chain()
+                    # if molecular_data_available:
+                    chain = chain | self.pre_process_molecular_data_chain()
         else:
             return None
         chain()
