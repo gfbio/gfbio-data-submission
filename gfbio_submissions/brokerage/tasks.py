@@ -84,12 +84,16 @@ def check_for_molecular_content_in_submission_task(submission_id=None):
     logger.info(
         msg='check_for_molecular_content_in_submission_task. '
             'process submission={}.'.format(submission.broker_submission_id))
-    molecular_data_available = check_for_molecular_content(submission)
+    molecular_data_available, errors = check_for_molecular_content(submission)
     logger.info(
         msg='check_for_molecular_content_in_submission_task. '
             'valid molecular data available={0}'
             ''.format(molecular_data_available)
     )
+    return {
+        'molecular_data_available': molecular_data_available,
+        'errors': errors,
+    }
 
 
 @celery.task(name='tasks.trigger_submission_transfer', base=SubmissionTask)

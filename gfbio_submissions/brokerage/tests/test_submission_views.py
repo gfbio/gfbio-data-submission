@@ -585,7 +585,6 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(GENERIC, submission.target)
         self.assertIn('validation', submission.data.keys())
         self.assertEqual(2, len(submission.data.get('validation', [])))
-        pprint(submission.data)
 
         expected_task_names = [
             'tasks.check_for_molecular_content_in_submission_task',
@@ -605,40 +604,10 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(0, len(submission.brokerobject_set.all()))
         self.assertEqual(0, len(submission.auditabletextdata_set.all()))
 
-        #
-        # self.assertEqual(
-        #     1,
-        #     len(submission.brokerobject_set.filter(type='study'))
-        # )
-        # study = submission.brokerobject_set.filter(type='study').first()
-        # self.assertEqual(title, study.data.get('study_title', ''))
-        #
-        # self.assertEqual(
-        #     3,
-        #     len(submission.brokerobject_set.filter(type='sample'))
-        # )
-        # sample = submission.brokerobject_set.filter(type='sample').first()
-        # self.assertEqual('Sample No. 1', sample.data.get('sample_title', ''))
-        #
-        # self.assertEqual(
-        #     3,
-        #     len(submission.brokerobject_set.filter(type='experiment'))
-        # )
-        # experiment = submission.brokerobject_set.filter(
-        #     type='experiment').first()
-        # self.assertIn('files', experiment.data.get('design', {}).keys())
-        #
-        # submission_text_data = list(
-        #     submission.auditabletextdata_set.values_list(
-        #         'name', flat=True).order_by('created')
-        # )
-        # expected_text_data_names = [
-        #     'study.xml',
-        #     'sample.xml',
-        #     'experiment.xml',
-        # ]
-        # for s in submission_text_data:
-        #     self.assertIn(s, expected_text_data_names)
+        check_tasks = TaskProgressReport.objects.filter(
+            task_name='tasks.check_for_molecular_content_in_submission_task')
+        for c in check_tasks:
+            self.assertIn('errors', c.task_return_value)
 
     @responses.activate
     def test_valid_max_post_with_data_url(self):

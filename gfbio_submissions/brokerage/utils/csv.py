@@ -3,14 +3,12 @@ import _csv
 import csv
 import logging
 from collections import OrderedDict
-from pprint import pprint
 
 import dpath
 from shortid import ShortId
 
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
     ENA_PANGAEA, ENA
-from gfbio_submissions.brokerage.serializers import SubmissionDetailSerializer
 from gfbio_submissions.brokerage.utils.schema_validation import \
     validate_data_full
 
@@ -150,7 +148,7 @@ def parse_molecular_csv(csv_file):
     try:
         field_names = csv_reader.fieldnames
     except _csv.Error as e:
-        print('ERROR ', e)
+        # print('ERROR ', e)
         return molecular_requirements
     short_id = ShortId()
     for row in csv_reader:
@@ -185,21 +183,24 @@ def check_for_molecular_content(submission):
         logger.info(
             msg='check_for_molecular_content | '
                 'ena is default target return=True')
-        return True
+        return True, []
     # TODO: consider HELPDESK_REQUEST_TYPE_MAPPINGS for data_center mappings
     elif submission.release and submission.target == GENERIC \
             and submission.data.get('requirements', {}) \
             .get('data_center', '').count('ENA'):
         meta_data_files = submission.submissionupload_set.filter(meta_data=True)
-        if len(meta_data_files) != 1:
+        no_of_meta_data_files = len(meta_data_files)
+        if no_of_meta_data_files != 1:
             # TODO: add some sort of error to submission.data / validation hint
             # print('\n\tno/multi files return=False')
             # print('\n\n')
             logger.info(
                 msg='check_for_molecular_content | '
-                    'invalid no. of meta_data_files, len={0} | return=False'
-                    ''.format(len(meta_data_files)))
-            return False
+                    'invalid no. of meta_data_files, {0} | return=False'
+                    ''.format(no_of_meta_data_files))
+            return False, [
+                'invalid no. of meta_data_files, {0}'.format(no_of_meta_data_files)
+            ]
         meta_data_file = meta_data_files.first()
         with open(meta_data_file.file.path, 'r') as file:
             molecular_requirements = parse_molecular_csv(
@@ -219,8 +220,8 @@ def check_for_molecular_content(submission):
             target=ENA_PANGAEA
         )
 
-        print('\nFULL_VALID ', valid)
-        print('\nFULL_ERRORS ', [e.message for e in full_errors])
+        # print('\nFULL_VALID ', valid)
+        # print('\nFULL_ERRORS ', [e.message for e in full_errors])
 
         if valid:
             # print('\n\tvalid return True')
@@ -230,22 +231,24 @@ def check_for_molecular_content(submission):
             logger.info(
                 msg='check_for_molecular_content | valid data from csv |'
                     ' return=True')
-            return True
+            return True, []
         else:
-            print('\n\t in-valid return False')
+            # print('\n\t in-valid return False')
             # print(serializer.errors)
             # print([e for e in serializer.errors.get('data')])
-            print('\n\n')
-            submission.data.update({'validation': [e.message for e in full_errors]})
+            # print('\n\n')
+            error_messages = [e.message for e in full_errors]
+            submission.data.update(
+                {'validation': error_messages})
             submission.save(allow_update=False)
             logger.info(
                 msg='check_for_molecular_content  | invalid data from csv |'
                     ' return=False')
-            return False
+            return False, error_messages
     else:
         # print('\n\treturn default False')
         # print('\n\n')
         logger.info(
             msg='check_for_molecular_content | no criteria matched | '
                 'return=False')
-        return False
+        return False, ['no criteria matched']
