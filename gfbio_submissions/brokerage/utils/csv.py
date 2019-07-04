@@ -3,6 +3,7 @@ import _csv
 import csv
 import logging
 from collections import OrderedDict
+from pprint import pprint
 
 import dpath
 from shortid import ShortId
@@ -10,6 +11,8 @@ from shortid import ShortId
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
     ENA_PANGAEA, ENA
 from gfbio_submissions.brokerage.serializers import SubmissionDetailSerializer
+from gfbio_submissions.brokerage.utils.schema_validation import \
+    validate_data_full
 
 logger = logging.getLogger(__name__)
 
@@ -67,19 +70,32 @@ def extract_sample(row, field_names, sample_id):
         else OrderedDict([('tag', o), ('value', row[o])])
         for o in field_names if o not in core_fields
     ]
+    try:
+        taxon_id = int(row.get('taxon_id', '-1'))
+    except ValueError as e:
+        taxon_id = -1
     sample = {
         'sample_title': row.get('sample_title', ''),
         'sample_alias': sample_id,
         'sample_description': row.get('sample_description', '').replace('"',
                                                                         ''),
-        'taxon_id': int(row.get('taxon_id', '-1')),
+        'taxon_id': taxon_id,
     }
     if len(sample_attributes):
         sample['sample_attributes'] = sample_attributes
+
     return sample
 
 
 def extract_experiment(experiment_id, row, sample_id):
+    try:
+        design_description = int(row.get('design_description', '-1'))
+    except ValueError as e:
+        design_description = -1
+    try:
+        nominal_length = int(row.get('nominal_length', '-1'))
+    except ValueError as e:
+        nominal_length = -1
     experiment = {
         'experiment_alias': experiment_id,
         'platform': row.get('sequencing_platform', '')
@@ -105,12 +121,12 @@ def extract_experiment(experiment_id, row, sample_id):
                    row.get('reverse_read_file_checksum', ''))
     if len(row.get('design_description', '').strip()):
         dpath.util.new(experiment, 'design/design_description',
-                       int(row.get('design_description', '-1')))
+                       design_description)
     if row.get('library_layout', '') == 'paired':
         dpath.util.new(
             experiment,
             'design/library_descriptor/library_layout/nominal_length',
-            int(row.get('nominal_length', '-1'))
+            nominal_length
         )
     return experiment
 
@@ -190,28 +206,38 @@ def check_for_molecular_content(submission):
                 file,
             )
         submission.data.get('requirements', {}).update(molecular_requirements)
-        fake_request_data = {
-            'target': ENA,
-            'release': True,
-            'data': submission.data,
-        }
-        serializer = SubmissionDetailSerializer(data=fake_request_data)
-        valid = serializer.is_valid()
-        # print('valid ', valid)
-        # print('errors ', serializer.errors)
-        # print(json.dumps(serializer.errors))
-        submission.target = ENA_PANGAEA
-        submission.save(allow_update=False)
+        # fake_request_data = {
+        #     'target': ENA,
+        #     'release': True,
+        #     'data': submission.data,
+        # }
+        # serializer = SubmissionDetailSerializer(data=fake_request_data)
+        # valid = serializer.is_valid()
+
+        valid, full_errors = validate_data_full(
+            data=submission.data,
+            target=ENA_PANGAEA
+        )
+
+        print('\nFULL_VALID ', valid)
+        print('\nFULL_ERRORS ', [e.message for e in full_errors])
+
         if valid:
             # print('\n\tvalid return True')
             # print('\n\n')
+            submission.target = ENA_PANGAEA
+            submission.save(allow_update=False)
             logger.info(
                 msg='check_for_molecular_content | valid data from csv |'
                     ' return=True')
             return True
         else:
-            # print('\n\t in-valid return False')
-            # print('\n\n')
+            print('\n\t in-valid return False')
+            # print(serializer.errors)
+            # print([e for e in serializer.errors.get('data')])
+            print('\n\n')
+            submission.data.update({'validation': [e.message for e in full_errors]})
+            submission.save(allow_update=False)
             logger.info(
                 msg='check_for_molecular_content  | invalid data from csv |'
                     ' return=False')

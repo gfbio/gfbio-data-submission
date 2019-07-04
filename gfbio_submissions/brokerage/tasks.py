@@ -101,6 +101,9 @@ def trigger_submission_transfer(previous_task_result=None, submission_id=None):
     submission = SubmissionTransferHandler.get_submission_for_task(
         submission_id=submission_id, task=trigger_submission_transfer
     )
+    print('\n\n-----------------------------\n')
+    print('prev res ', previous_task_result)
+    print('sub target ', submission.target)
 
     # molecular_data_available = check_for_molecular_content(
     #     submission)
@@ -129,6 +132,9 @@ def trigger_submission_transfer_for_updates(previous_task_result=None,
         submission_id=submission_id,
         task=trigger_submission_transfer_for_updates
     )
+    print('\n\n-----------------------------\n')
+    print('prev res ', previous_task_result)
+    print('sub target ', submission.target)
 
     # molecular_data_available = check_for_molecular_content(
     #     submission)
@@ -714,7 +720,7 @@ def get_user_email_task(submission_id=None):
     logger.info(
         msg='get_user_email_task submission_id={0}'.format(submission_id)
     )
-    print('-------- ', site_configuration.contact)
+    # print('-------- ', site_configuration.contact)
     res = {
         'user_email': site_configuration.contact,
         'user_full_name': '',
@@ -723,8 +729,8 @@ def get_user_email_task(submission_id=None):
     }
     if submission is not None and site_configuration is not None:
         if site_configuration.use_gfbio_services:
-            print('USING GFBIO SERVICES ',
-                  site_configuration.use_gfbio_services)
+            # print('USING GFBIO SERVICES ',
+            #       site_configuration.use_gfbio_services)
             logger.info(
                 msg='get_user_email_task submission_id={0} | use_gfbio_services={1}'.format(
                     submission_id, site_configuration.use_gfbio_services)
@@ -754,16 +760,16 @@ def get_user_email_task(submission_id=None):
                                          submission.submitting_user))
             try:
                 user = User.objects.get(pk=submission.submitting_user)
-                print('USER ', user)
+                # print('USER ', user)
                 res['user_email'] = user.email
                 res['user_full_name'] = user.name
             except ValueError as e:
-                print('VALUE ERROR ', e)
+                # print('VALUE ERROR ', e)
                 logger.error(
                     msg='get_user_email_task submission_id={0} | '
                         'value error. error: {1}'.format(submission_id, e))
             except User.DoesNotExist as e:
-                print('USER ERROR ', e)
+                # print('USER ERROR ', e)
                 logger.error(
                     msg='get_user_email_task submission_id={0} | '
                         'user does not exist. error: {1}'.format(submission_id,
@@ -816,20 +822,20 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
                 reporter=prev_task_result,
                 site_config=site_configuration,
                 submission=submission)
-            print('TRY REGULAR CREATION')
+            # print('TRY REGULAR CREATION')
             response = gfbio_helpdesk_create_ticket(
                 site_config=site_configuration,
                 submission=submission,
                 data=data,
             )
-            print('response:\n', response)
-            print('ENTER FORCED CREATION')
+            # print('response:\n', response)
+            # print('ENTER FORCED CREATION')
             response = force_ticket_creation(
                 response=response,
                 submission=submission,
                 site_configuration=site_configuration,
             )
-            print('response:\n', response)
+            # print('response:\n', response)
             apply_default_task_retry_policy(response,
                                             create_helpdesk_ticket_task,
                                             submission)
