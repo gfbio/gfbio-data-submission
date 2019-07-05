@@ -177,6 +177,7 @@ def validate_data_full(data, target):
         schema_location)
     print('path ', path)
     print('exists ', os.path.exists(path))
+    print(os.listdir(settings.STATIC_ROOT+'/schemas/'))
     valid, errors = validate_data(
         data=data, schema_file=os.path.join(
             settings.STATIC_ROOT,
