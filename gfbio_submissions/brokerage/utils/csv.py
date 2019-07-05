@@ -2,6 +2,7 @@
 import _csv
 import csv
 import logging
+import os
 from collections import OrderedDict
 
 import dpath
@@ -10,7 +11,7 @@ from shortid import ShortId
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
     ENA_PANGAEA, ENA
 from gfbio_submissions.brokerage.utils.schema_validation import \
-    validate_data_full
+    validate_data_full, TARGET_SCHEMA_MAPPINGS
 
 logger = logging.getLogger(__name__)
 
@@ -188,7 +189,8 @@ def check_for_molecular_content(submission):
                     'invalid no. of meta_data_files, {0} | return=False'
                     ''.format(no_of_meta_data_files))
             return False, [
-                'invalid no. of meta_data_files, {0}'.format(no_of_meta_data_files)
+                'invalid no. of meta_data_files, {0}'.format(
+                    no_of_meta_data_files)
             ]
         meta_data_file = meta_data_files.first()
         with open(meta_data_file.file.path, 'r') as file:
@@ -203,6 +205,18 @@ def check_for_molecular_content(submission):
         # }
         # serializer = SubmissionDetailSerializer(data=fake_request_data)
         # valid = serializer.is_valid()
+
+        print('\nBEFORE VALIDATE')
+        print('current working dir ', os.getcwd())
+        schema_location = TARGET_SCHEMA_MAPPINGS[ENA_PANGAEA]
+        print('schema location ', schema_location)
+        from django.conf import settings
+        path = os.path.join(
+            settings.STATIC_ROOT,
+            schema_location)
+        print('path ', path)
+        print('exists ', os.path.exists(path))
+        print(os.listdir(settings.STATIC_ROOT))
 
         valid, full_errors = validate_data_full(
             data=submission.data,

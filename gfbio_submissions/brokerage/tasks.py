@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+import os
 from json import JSONDecodeError
 
 import celery
@@ -11,13 +12,15 @@ from django.db.utils import IntegrityError
 from django.utils.encoding import smart_text
 from requests import ConnectionError, Response
 
-from gfbio_submissions.brokerage.configuration.settings import ENA
+from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA
 from gfbio_submissions.brokerage.models import SubmissionUpload
 from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content
 from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_prepare_create_helpdesk_payload, gfbio_update_helpdesk_ticket, \
     gfbio_helpdesk_delete_attachment
+from gfbio_submissions.brokerage.utils.schema_validation import \
+    TARGET_SCHEMA_MAPPINGS
 from gfbio_submissions.users.models import User
 from .configuration.settings import BASE_HOST_NAME, \
     PRIMARY_DATA_FILE_MAX_RETRIES, PRIMARY_DATA_FILE_DELAY, \
@@ -84,6 +87,18 @@ def check_for_molecular_content_in_submission_task(submission_id=None):
     logger.info(
         msg='check_for_molecular_content_in_submission_task. '
             'process submission={}.'.format(submission.broker_submission_id))
+
+    print('\nBEFORE CHECK MOL CONTENT')
+    print('current working dir ', os.getcwd())
+    schema_location = TARGET_SCHEMA_MAPPINGS[ENA_PANGAEA]
+    print('schema location ', schema_location)
+    from django.conf import settings
+    path = os.path.join(
+        settings.STATIC_ROOT,
+        schema_location)
+    print('path ', path)
+    print('exists ', os.path.exists(path))
+    print(os.listdir(settings.STATIC_ROOT))
     molecular_data_available, errors = check_for_molecular_content(submission)
     logger.info(
         msg='check_for_molecular_content_in_submission_task. '
