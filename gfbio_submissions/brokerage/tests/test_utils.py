@@ -4,7 +4,6 @@ import datetime
 import io
 import json
 import os
-from pprint import pprint
 from unittest import skip
 from uuid import uuid4
 
@@ -34,7 +33,6 @@ from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_pangaea_attach_response, _get_pangaea_comment_response, \
     _get_jira_attach_response, _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils import csv
-from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
     send_submission_to_ena, download_submitted_run_files_to_stringIO
 from gfbio_submissions.brokerage.utils.gfbio import \
@@ -1512,25 +1510,3 @@ class TestDownloadEnaReport(TestCase):
         row = reader.next()
         self.assertTrue('STUDY_ID' in row.keys())
         decompressed_file.close()
-
-
-class TestCsv(TestCase):
-
-    def test_prototyping(self):
-        print('test_prototyping')
-
-        with open(os.path.join(
-                _get_test_data_dir_path(),
-                'molecular_metadata.csv'), 'r') as csv_file:
-            data = parse_molecular_csv(csv_file=csv_file)
-            pprint(data, indent=4)
-            print('+++++++++++++++++++++++++++++')
-            print(json.dumps(data, indent=4))
-
-    # TODO: real test
-    # TODO: test real world scenarion, set up workflow
-    # TODO: test errors, non-sense files
-    #
-    # TODO: usemetadata index and filenname
-    # FIXME: errors on new submission
-    # FIXME: errros in file list when navigating from edit to new submission

@@ -4,7 +4,6 @@ import datetime
 import json
 import os
 import urllib
-from pprint import pprint
 from urllib.parse import urlencode
 from uuid import UUID, uuid4
 
@@ -17,7 +16,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIRequestFactory, APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    HELPDESK_API_SUB_URL, GENERIC, ENA, ENA_PANGAEA
+    HELPDESK_API_SUB_URL, GENERIC, ENA_PANGAEA
 from gfbio_submissions.brokerage.models import Submission, RequestLog, \
     SiteConfiguration, ResourceCredential, TaskProgressReport, SubmissionUpload
 from gfbio_submissions.brokerage.tests.utils import \
@@ -281,8 +280,6 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
         self.assertEqual(1, len(Submission.objects.all()))
         submission = Submission.objects.last()
 
-        pprint(submission.data)
-
         self.assertEqual(UUID(content['broker_submission_id']),
                          submission.broker_submission_id)
         # self.assertIsNotNone(submission.embargo)
@@ -535,8 +532,6 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         for s in submission_text_data:
             self.assertIn(s, expected_text_data_names)
 
-        pprint(submission.data)
-
     # TODO: move to dedicatet test class
     @responses.activate
     def test_update_with_molecular_meta_data_csv(self):
@@ -580,13 +575,8 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         submission = Submission.objects.first()
         self.assertEqual(ENA_PANGAEA, submission.target)
 
-        # data_before_update = submission.data
-        # print('\n--------------------------\n')
-        # pprint(data_before_update)
-
         data = self._create_test_meta_data(delete=False, update=True)
         response = self.api_client.post(url, data, format='multipart')
-        print(submission.submissionupload_set.all())
         self.assertEqual(2, len(submission.submissionupload_set.all()))
         original_upload = submission.submissionupload_set.get(
             file='{0}/molecular_metadata.csv'.format(
@@ -606,9 +596,6 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(7, len(submission.brokerobject_set.all()))
         self.assertEqual(3, len(submission.auditabletextdata_set.all()))
 
-        # print('\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n')
-        # print('\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n')
-
         response = self.api_client.put(
             '/api/submissions/{0}/'.format(submission.broker_submission_id),
             {
@@ -624,96 +611,31 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             format='json'
         )
         submission = Submission.objects.first()
-        # pprint(submission.data)
-
         sample = submission.brokerobject_set.filter(type='sample').first()
         self.assertEqual('Update-Sample No. 1',
                          sample.data.get('sample_title', ''))
 
-        print('BOs ', len(submission.brokerobject_set.all()))
-        print('ATs ', len(submission.auditabletextdata_set.all()))
+        self.assertEqual(7, len(submission.brokerobject_set.all()))
+        self.assertEqual(3, len(submission.auditabletextdata_set.all()))
 
-        # print('\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n')
-        # print('\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n')
-        #
-        # data = self._create_test_meta_data(delete=True, invalid=True)
-        # response = self.api_client.post(url, data, format='multipart')
-        # print(submission.submissionupload_set.all())
-        # response = self.api_client.put(
-        #     '/api/submissions/{0}/'.format(submission.broker_submission_id),
-        #     {
-        #         'target': 'GENERIC', 'release': True,
-        #         'data': {
-        #             'requirements': {
-        #                 'title': title,
-        #                 'description': 'A Description',
-        #                 'data_center': 'ENA – European Nucleotide Archive'
-        #             }
-        #         }
-        #     },
-        #     format='json'
-        # )
-        # submission = Submission.objects.first()
-        #
-        # print('BOs ', len(submission.brokerobject_set.all()))
-        # print('ATs ', len(submission.auditabletextdata_set.all()))
-        #
-        # pprint(submission.data)
-
-        # expected_task_names = [
-        #     'tasks.check_for_molecular_content_in_submission_task',
-        #     'tasks.trigger_submission_transfer',
-        #     'tasks.get_user_email_task',
-        #     'tasks.create_helpdesk_ticket_task',
-        #     'tasks.update_helpdesk_ticket_task',
-        #     'tasks.check_for_molecular_content_in_submission_task',
-        #     'tasks.trigger_submission_transfer_for_updates',
-        #     'tasks.check_on_hold_status_task',
-        #     'tasks.create_broker_objects_from_submission_data_task',
-        #     'tasks.prepare_ena_submission_data_task',
-        # ]
-        # all_task_reports = list(
-        #     TaskProgressReport.objects.values_list(
-        #         'task_name', flat=True).order_by('created')
-        # )
-        # self.assertListEqual(expected_task_names, all_task_reports)
-        #
-        # self.assertEqual(
-        #     1,
-        #     len(submission.brokerobject_set.filter(type='study'))
-        # )
-        # study = submission.brokerobject_set.filter(type='study').first()
-        # self.assertEqual(title, study.data.get('study_title', ''))
-        #
-        # self.assertEqual(
-        #     3,
-        #     len(submission.brokerobject_set.filter(type='sample'))
-        # )
-        # sample = submission.brokerobject_set.filter(type='sample').first()
-        # self.assertEqual('Sample No. 1',
-        #                  sample.data.get('sample_title', ''))
-        #
-        # self.assertEqual(
-        #     3,
-        #     len(submission.brokerobject_set.filter(type='experiment'))
-        # )
-        # experiment = submission.brokerobject_set.filter(
-        #     type='experiment').first()
-        # self.assertIn('files', experiment.data.get('design', {}).keys())
-        #
-        # submission_text_data = list(
-        #     submission.auditabletextdata_set.values_list(
-        #         'name', flat=True).order_by('created')
-        # )
-        # expected_text_data_names = [
-        #     'study.xml',
-        #     'sample.xml',
-        #     'experiment.xml',
-        # ]
-        # for s in submission_text_data:
-        #     self.assertIn(s, expected_text_data_names)
-        #
-        # pprint(submission.data)
+        data = self._create_test_meta_data(delete=True, invalid=True)
+        response = self.api_client.post(url, data, format='multipart')
+        response = self.api_client.put(
+            '/api/submissions/{0}/'.format(submission.broker_submission_id),
+            {
+                'target': 'GENERIC', 'release': True,
+                'data': {
+                    'requirements': {
+                        'title': title,
+                        'description': 'A Description',
+                        'data_center': 'ENA – European Nucleotide Archive'
+                    }
+                }
+            },
+            format='json'
+        )
+        submission = Submission.objects.first()
+        self.assertEqual(GENERIC, submission.target)
 
     # TODO: move to dedicatet test class
     @responses.activate
@@ -988,7 +910,6 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         ]
         for t in TaskProgressReport.objects.filter(
                 submission=submission).order_by('created'):
-            print(t.task_name, ' ', t.created)
             self.assertIn(t.task_name, expected_tasks)
 
     @responses.activate
@@ -1042,7 +963,6 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         ]
         for t in TaskProgressReport.objects.filter(
                 submission=submission).order_by('created'):
-            print(t.task_name, ' ', t.created)
             self.assertIn(t.task_name, expected_tasks)
 
 
@@ -1276,7 +1196,6 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
         submission.save()
         update_tasks = TaskProgressReport.objects.filter(
             task_name='tasks.update_helpdesk_ticket_task')
-        print(update_tasks)
         self.assertEqual(1, len(update_tasks))
 
     @responses.activate

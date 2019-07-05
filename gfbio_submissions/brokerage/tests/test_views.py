@@ -473,14 +473,11 @@ class TestSubmissionUploadView(TestCase):
         self.assertIn('ENA',
                       submission.data.get('requirements', {}).get('data_center',
                                                                   ''))
-        print(submission.submissionupload_set.all())
         self.assertEqual(1, len(submission.submissionupload_set.all()))
         upload = submission.submissionupload_set.first()
         self.assertTrue(upload.meta_data)
-        print('\n##############################\n')
 
         res = check_for_molecular_content(submission)
-        print('RES OF CHECK ', res)
 
         # content = json.loads(response.content.decode('utf-8'))
         # pprint(content)

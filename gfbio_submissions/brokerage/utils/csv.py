@@ -148,7 +148,6 @@ def parse_molecular_csv(csv_file):
     try:
         field_names = csv_reader.fieldnames
     except _csv.Error as e:
-        # print('ERROR ', e)
         return molecular_requirements
     short_id = ShortId()
     for row in csv_reader:
@@ -172,14 +171,7 @@ def check_for_molecular_content(submission):
         msg='check_for_molecular_content | '
             'process submission={0} | target={1} '
             ''.format(submission.broker_submission_id, submission.target))
-    # print('\n\ncheck_for_molecular_content: ', submission.target, ' ',
-    #       submission.release, ' ', submission.data.get('requirements', {}) \
-    #       .get('data_center', '').count('ENA'), ' ',
-    #       submission.submissionupload_set.filter(meta_data=True))
-
     if submission.target == ENA or submission.target == ENA_PANGAEA:
-        # print('\n\tTarget ENA default return True')
-        # print('\n\n')
         logger.info(
             msg='check_for_molecular_content | '
                 'ena is default target return=True')
@@ -191,9 +183,6 @@ def check_for_molecular_content(submission):
         meta_data_files = submission.submissionupload_set.filter(meta_data=True)
         no_of_meta_data_files = len(meta_data_files)
         if no_of_meta_data_files != 1:
-            # TODO: add some sort of error to submission.data / validation hint
-            # print('\n\tno/multi files return=False')
-            # print('\n\n')
             logger.info(
                 msg='check_for_molecular_content | '
                     'invalid no. of meta_data_files, {0} | return=False'
@@ -220,12 +209,7 @@ def check_for_molecular_content(submission):
             target=ENA_PANGAEA
         )
 
-        # print('\nFULL_VALID ', valid)
-        # print('\nFULL_ERRORS ', [e.message for e in full_errors])
-
         if valid:
-            # print('\n\tvalid return True')
-            # print('\n\n')
             submission.target = ENA_PANGAEA
             submission.save(allow_update=False)
             logger.info(
@@ -233,10 +217,6 @@ def check_for_molecular_content(submission):
                     ' return=True')
             return True, []
         else:
-            # print('\n\t in-valid return False')
-            # print(serializer.errors)
-            # print([e for e in serializer.errors.get('data')])
-            # print('\n\n')
             error_messages = [e.message for e in full_errors]
             submission.data.update(
                 {'validation': error_messages})
@@ -246,8 +226,6 @@ def check_for_molecular_content(submission):
                     ' return=False')
             return False, error_messages
     else:
-        # print('\n\treturn default False')
-        # print('\n\n')
         logger.info(
             msg='check_for_molecular_content | no criteria matched | '
                 'return=False')
