@@ -338,6 +338,7 @@ def create_broker_objects_from_submission_data_task(
     if submission is not None:
         try:
             with transaction.atomic():
+                submission.brokerobject_set.all().delete()
                 BrokerObject.objects.add_submission_data(submission)
         except IntegrityError as e:
             logger.error(
@@ -404,6 +405,8 @@ def prepare_ena_submission_data_task(prev_task_result=None, submission_id=None):
     # prev_task_result != TaskProgressReport.CANCELLED and
     if submission is not None and len(
             submission.brokerobject_set.all()) > 0:
+        with transaction.atomic():
+            submission.auditabletextdata_set.all().delete()
         ena_submission_data = prepare_ena_data(submission=submission)
         logger.info(
             msg='prepare_ena_submission_data_task. finished prepare_ena_data '

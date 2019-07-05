@@ -579,10 +579,11 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         )
         submission = Submission.objects.first()
         self.assertEqual(ENA_PANGAEA, submission.target)
-        data_before_update = submission.data
-        print('\n--------------------------\n')
 
+        # data_before_update = submission.data
+        # print('\n--------------------------\n')
         # pprint(data_before_update)
+
         data = self._create_test_meta_data(delete=False, update=True)
         response = self.api_client.post(url, data, format='multipart')
         print(submission.submissionupload_set.all())
@@ -605,10 +606,8 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(7, len(submission.brokerobject_set.all()))
         self.assertEqual(3, len(submission.auditabletextdata_set.all()))
 
-        pprint(submission.data)
-
-        print('\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n')
-        print('\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n')
+        # print('\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n')
+        # print('\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n')
 
         response = self.api_client.put(
             '/api/submissions/{0}/'.format(submission.broker_submission_id),
@@ -625,9 +624,41 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             format='json'
         )
         submission = Submission.objects.first()
+        # pprint(submission.data)
+
+        sample = submission.brokerobject_set.filter(type='sample').first()
+        self.assertEqual('Update-Sample No. 1',
+                         sample.data.get('sample_title', ''))
+
         print('BOs ', len(submission.brokerobject_set.all()))
         print('ATs ', len(submission.auditabletextdata_set.all()))
-        pprint(submission.data)
+
+        # print('\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n')
+        # print('\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n')
+        #
+        # data = self._create_test_meta_data(delete=True, invalid=True)
+        # response = self.api_client.post(url, data, format='multipart')
+        # print(submission.submissionupload_set.all())
+        # response = self.api_client.put(
+        #     '/api/submissions/{0}/'.format(submission.broker_submission_id),
+        #     {
+        #         'target': 'GENERIC', 'release': True,
+        #         'data': {
+        #             'requirements': {
+        #                 'title': title,
+        #                 'description': 'A Description',
+        #                 'data_center': 'ENA – European Nucleotide Archive'
+        #             }
+        #         }
+        #     },
+        #     format='json'
+        # )
+        # submission = Submission.objects.first()
+        #
+        # print('BOs ', len(submission.brokerobject_set.all()))
+        # print('ATs ', len(submission.auditabletextdata_set.all()))
+        #
+        # pprint(submission.data)
 
         # expected_task_names = [
         #     'tasks.check_for_molecular_content_in_submission_task',
@@ -828,10 +859,12 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         self.assertEqual(201, response.status_code)
         submission = Submission.objects.first()
         self.assertEqual(GENERIC, submission.target)
-        expected_tasks = ['tasks.trigger_submission_transfer',
-                          'tasks.get_user_email_task',
-                          'tasks.create_helpdesk_ticket_task',
-                          'tasks.check_on_hold_status_task']
+        expected_tasks = [
+            'tasks.check_for_molecular_content_in_submission_task',
+            'tasks.trigger_submission_transfer',
+            'tasks.get_user_email_task',
+            'tasks.create_helpdesk_ticket_task',
+            'tasks.check_on_hold_status_task']
         for t in TaskProgressReport.objects.filter(
                 submission=submission).order_by('created'):
             self.assertIn(t.task_name, expected_tasks)
@@ -882,15 +915,17 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         )
         self.assertEqual(200, response.status_code)
         submission = Submission.objects.first()
-        self.assertEqual(ENA, submission.target)
-        expected_tasks = ['tasks.trigger_submission_transfer',
-                          'tasks.check_on_hold_status_task',
-                          'tasks.get_user_email_task',
-                          'tasks.create_helpdesk_ticket_task',
-                          'tasks.update_helpdesk_ticket_task',  # x2
-                          'tasks.trigger_submission_transfer_for_updates',
-                          'tasks.create_broker_objects_from_submission_data_task',
-                          'tasks.prepare_ena_submission_data_task']
+        self.assertEqual(ENA_PANGAEA, submission.target)
+        expected_tasks = [
+            'tasks.check_for_molecular_content_in_submission_task',
+            'tasks.trigger_submission_transfer',
+            'tasks.check_on_hold_status_task',
+            'tasks.get_user_email_task',
+            'tasks.create_helpdesk_ticket_task',
+            'tasks.update_helpdesk_ticket_task',  # x2
+            'tasks.trigger_submission_transfer_for_updates',
+            'tasks.create_broker_objects_from_submission_data_task',
+            'tasks.prepare_ena_submission_data_task']
         for t in TaskProgressReport.objects.filter(
                 submission=submission).order_by('created'):
             self.assertIn(t.task_name, expected_tasks)
@@ -941,14 +976,16 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         )
         self.assertEqual(200, response.status_code)
         submission = Submission.objects.first()
-        self.assertEqual(ENA, submission.target)
-        expected_tasks = ['tasks.trigger_submission_transfer',
-                          'tasks.get_user_email_task',
-                          'tasks.create_helpdesk_ticket_task',
-                          'tasks.update_helpdesk_ticket_task',
-                          'tasks.trigger_submission_transfer_for_updates',
-                          'tasks.check_on_hold_status_task'
-                          ]
+        self.assertEqual(GENERIC, submission.target)
+        expected_tasks = [
+            'tasks.check_for_molecular_content_in_submission_task',
+            'tasks.trigger_submission_transfer',
+            'tasks.get_user_email_task',
+            'tasks.create_helpdesk_ticket_task',
+            'tasks.update_helpdesk_ticket_task',
+            'tasks.trigger_submission_transfer_for_updates',
+            'tasks.check_on_hold_status_task'
+        ]
         for t in TaskProgressReport.objects.filter(
                 submission=submission).order_by('created'):
             print(t.task_name, ' ', t.created)
@@ -993,14 +1030,16 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         )
         self.assertEqual(200, response.status_code)
         submission = Submission.objects.first()
-        self.assertEqual(ENA, submission.target)
-        expected_tasks = ['tasks.trigger_submission_transfer',
-                          'tasks.get_user_email_task',
-                          'tasks.create_helpdesk_ticket_task',
-                          'tasks.update_helpdesk_ticket_task',
-                          'tasks.trigger_submission_transfer_for_updates',
-                          'tasks.check_on_hold_status_task'
-                          ]
+        self.assertEqual(GENERIC, submission.target)
+        expected_tasks = [
+            'tasks.check_for_molecular_content_in_submission_task',
+            'tasks.trigger_submission_transfer',
+            'tasks.get_user_email_task',
+            'tasks.create_helpdesk_ticket_task',
+            'tasks.update_helpdesk_ticket_task',
+            'tasks.trigger_submission_transfer_for_updates',
+            'tasks.check_on_hold_status_task'
+        ]
         for t in TaskProgressReport.objects.filter(
                 submission=submission).order_by('created'):
             print(t.task_name, ' ', t.created)
