@@ -71,8 +71,33 @@ class SubmissionTask(Task):
 
 # common tasks -----------------------------------------------------------------
 
+@celery.task(name='tasks.check_for_molecular_content_in_submission_task',
+             base=SubmissionTask)
+def check_for_molecular_content_in_submission_task(submission_id=None):
+    logger.info(
+        msg='check_for_molecular_content_in_submission_task. get submission'
+            ' with pk={}.'.format(submission_id))
+    submission = SubmissionTransferHandler.get_submission_for_task(
+        submission_id=submission_id,
+        task=check_for_molecular_content_in_submission_task
+    )
+    logger.info(
+        msg='check_for_molecular_content_in_submission_task. '
+            'process submission={}.'.format(submission.broker_submission_id))
+    molecular_data_available, errors = check_for_molecular_content(submission)
+    logger.info(
+        msg='check_for_molecular_content_in_submission_task. '
+            'valid molecular data available={0}'
+            ''.format(molecular_data_available)
+    )
+    return {
+        'molecular_data_available': molecular_data_available,
+        'errors': errors,
+    }
+
+
 @celery.task(name='tasks.trigger_submission_transfer', base=SubmissionTask)
-def trigger_submission_transfer(submission_id=None):
+def trigger_submission_transfer(previous_task_result=None, submission_id=None):
     logger.info(
         msg='trigger_submission_transfer. get submission with pk={}.'.format(
             submission_id)
@@ -81,22 +106,19 @@ def trigger_submission_transfer(submission_id=None):
         submission_id=submission_id, task=trigger_submission_transfer
     )
 
-    molecular_data_available = check_for_molecular_content(
-        submission)
-
     transfer_handler = SubmissionTransferHandler(
         submission_id=submission.pk,
         target_archive=submission.target
     )
     transfer_handler.initiate_submission_process(
         release=submission.release,
-        molecular_data_available=molecular_data_available
     )
 
 
 @celery.task(name='tasks.trigger_submission_transfer_for_updates',
              base=SubmissionTask)
-def trigger_submission_transfer_for_updates(broker_submission_id=None):
+def trigger_submission_transfer_for_updates(previous_task_result=None,
+                                            broker_submission_id=None):
     logger.info(
         msg='trigger_submission_transfer_for_updates. get submission_id with broker_submission_id={}.'.format(
             broker_submission_id)
@@ -108,9 +130,6 @@ def trigger_submission_transfer_for_updates(broker_submission_id=None):
         task=trigger_submission_transfer_for_updates
     )
 
-    molecular_data_available = check_for_molecular_content(
-        submission)
-
     transfer_handler = SubmissionTransferHandler(
         submission_id=submission.pk,
         target_archive=submission.target
@@ -118,10 +137,12 @@ def trigger_submission_transfer_for_updates(broker_submission_id=None):
     transfer_handler.initiate_submission_process(
         release=submission.release,
         update=True,
-        molecular_data_available=molecular_data_available
     )
 
 
+# TODO: on_hold check is in this form obsolete, if target is ENA etc
+#   submission to ena is triggered without prior creation of BOs and XML
+#   all other target do nothing
 @celery.task(name='tasks.check_on_hold_status_task', base=SubmissionTask)
 def check_on_hold_status_task(previous_task_result=None, submission_id=None):
     logger.info(
@@ -303,6 +324,7 @@ def create_broker_objects_from_submission_data_task(
     if submission is not None:
         try:
             with transaction.atomic():
+                submission.brokerobject_set.all().delete()
                 BrokerObject.objects.add_submission_data(submission)
         except IntegrityError as e:
             logger.error(
@@ -369,6 +391,8 @@ def prepare_ena_submission_data_task(prev_task_result=None, submission_id=None):
     # prev_task_result != TaskProgressReport.CANCELLED and
     if submission is not None and len(
             submission.brokerobject_set.all()) > 0:
+        with transaction.atomic():
+            submission.auditabletextdata_set.all().delete()
         ena_submission_data = prepare_ena_data(submission=submission)
         logger.info(
             msg='prepare_ena_submission_data_task. finished prepare_ena_data '
@@ -689,7 +713,6 @@ def get_user_email_task(submission_id=None):
     logger.info(
         msg='get_user_email_task submission_id={0}'.format(submission_id)
     )
-    print('-------- ', site_configuration.contact)
     res = {
         'user_email': site_configuration.contact,
         'user_full_name': '',
@@ -698,8 +721,6 @@ def get_user_email_task(submission_id=None):
     }
     if submission is not None and site_configuration is not None:
         if site_configuration.use_gfbio_services:
-            print('USING GFBIO SERVICES ',
-                  site_configuration.use_gfbio_services)
             logger.info(
                 msg='get_user_email_task submission_id={0} | use_gfbio_services={1}'.format(
                     submission_id, site_configuration.use_gfbio_services)
@@ -729,16 +750,13 @@ def get_user_email_task(submission_id=None):
                                          submission.submitting_user))
             try:
                 user = User.objects.get(pk=submission.submitting_user)
-                print('USER ', user)
                 res['user_email'] = user.email
                 res['user_full_name'] = user.name
             except ValueError as e:
-                print('VALUE ERROR ', e)
                 logger.error(
                     msg='get_user_email_task submission_id={0} | '
                         'value error. error: {1}'.format(submission_id, e))
             except User.DoesNotExist as e:
-                print('USER ERROR ', e)
                 logger.error(
                     msg='get_user_email_task submission_id={0} | '
                         'user does not exist. error: {1}'.format(submission_id,
@@ -749,10 +767,6 @@ def get_user_email_task(submission_id=None):
                 submission_id, site_configuration.use_gfbio_services,
                 res)
         )
-        # print('\n\nRETURNING ', res)
-        # print('\n get local user based on submission submitting user')
-        # user = User.objects.filter(pk=submission.submitting_user)
-        # print(user.first().email)
         submission.submitting_user_common_information = '{0};{1}'.format(
             res['user_full_name'], res['user_email'])
         submission.save(allow_update=False)
@@ -791,20 +805,16 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
                 reporter=prev_task_result,
                 site_config=site_configuration,
                 submission=submission)
-            print('TRY REGULAR CREATION')
             response = gfbio_helpdesk_create_ticket(
                 site_config=site_configuration,
                 submission=submission,
                 data=data,
             )
-            print('response:\n', response)
-            print('ENTER FORCED CREATION')
             response = force_ticket_creation(
                 response=response,
                 submission=submission,
                 site_configuration=site_configuration,
             )
-            print('response:\n', response)
             apply_default_task_retry_policy(response,
                                             create_helpdesk_ticket_task,
                                             submission)

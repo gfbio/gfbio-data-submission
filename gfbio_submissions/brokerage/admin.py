@@ -184,7 +184,11 @@ class PrimaryDataFileAdmin(admin.ModelAdmin):
 
 
 class SubmissionUploadAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('__str__', 'meta_data', 'site', 'user', 'attachment_id',
+                    'attach_to_ticket')
+    date_hierarchy = 'created'
+    list_filter = ('site', 'meta_data', 'attach_to_ticket')
+    search_fields = ['submission__broker_submission_id']
 
 
 class TaskProgressReportAdmin(admin.ModelAdmin):

@@ -150,8 +150,6 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
         except ValueError:
             pass
 
-    print('AUTHOR ', author)
-
     mutual_data = {
         'project': {
             'key': site_config.jira_project_key

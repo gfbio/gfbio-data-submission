@@ -4,7 +4,6 @@ import datetime
 import json
 import os
 import urllib
-from pprint import pprint
 from urllib.parse import urlencode
 from uuid import UUID, uuid4
 
@@ -12,13 +11,14 @@ import responses
 from django.contrib.auth.models import Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
+from django.urls import reverse
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIRequestFactory, APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    HELPDESK_API_SUB_URL, GENERIC, ENA
+    HELPDESK_API_SUB_URL, GENERIC, ENA_PANGAEA
 from gfbio_submissions.brokerage.models import Submission, RequestLog, \
-    SiteConfiguration, ResourceCredential, TaskProgressReport
+    SiteConfiguration, ResourceCredential, TaskProgressReport, SubmissionUpload
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_submission_post_response, \
     _get_test_data_dir_path
@@ -36,6 +36,13 @@ class TestSubmissionView(TestCase):
             username='horst', email='horst@horst.de', password='password',
             is_site=True)
         user.user_permissions.add(*cls.permissions)
+
+        upload_permissions = Permission.objects.filter(
+            content_type__app_label='brokerage',
+            codename__endswith='submissionupload'
+        )
+        user.user_permissions.add(*upload_permissions)
+
         user = User.objects.create_user(
             username='kevin', email='kevin@kevin.de', password='secret',
             is_staff=True, is_site=True)
@@ -127,6 +134,27 @@ class TestSubmissionView(TestCase):
             },
             format='json'
         )
+
+    @classmethod
+    def _create_test_meta_data(cls, delete=True, invalid=False, update=False):
+        file_name = 'invalid_molecular_metadata.csv' if invalid else 'molecular_metadata.csv'
+        if update:
+            file_name = 'molecular_metadata_for_update.csv'
+
+        if delete:
+            cls._delete_test_data()
+        csv_file = open(
+            os.path.join(_get_test_data_dir_path(), file_name),
+            'rb'
+        )
+        return {
+            'file': csv_file,
+            'meta_data': True,
+        }
+
+    @staticmethod
+    def _delete_test_data():
+        SubmissionUpload.objects.all().delete()
 
 
 class TestSubmissionViewSimple(TestSubmissionView):
@@ -251,8 +279,6 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
         self.assertDictEqual(expected, content)
         self.assertEqual(1, len(Submission.objects.all()))
         submission = Submission.objects.last()
-
-        pprint(submission.data)
 
         self.assertEqual(UUID(content['broker_submission_id']),
                          submission.broker_submission_id)
@@ -401,6 +427,293 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
                          content.get('status', 'NOPE'))
         self.assertEqual('', submission.download_url)
 
+    # TODO: move to dedicatet test class
+    @responses.activate
+    def test_valid_generic_post_with_molecular_meta_data(self):
+        self._add_create_ticket_response()
+        self._add_update_ticket_response()
+        title = 'A Title for meta-data in GENERIC'
+        response = self.api_client.post(
+            '/api/submissions/',
+            {
+                'target': 'GENERIC', 'release': False,
+                'data': {
+                    'requirements': {
+                        'title': title,
+                        'description': 'A Description',
+                        'data_center': 'ENA – European Nucleotide Archive'
+                    }
+                }
+            },
+            format='json'
+        )
+        self.assertEqual(201, response.status_code)
+        self.assertEqual(1, len(Submission.objects.all()))
+        submission = Submission.objects.first()
+        self.assertEqual(GENERIC, submission.target)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        responses.add(responses.POST, url, json={}, status=200)
+        data = self._create_test_meta_data()
+        response = self.api_client.post(url, data, format='multipart')
+        self.assertEqual(201, response.status_code)
+        self.assertEqual(1, len(submission.submissionupload_set.all()))
+        self.assertTrue(submission.submissionupload_set.first().meta_data)
+
+        response = self.api_client.put(
+            '/api/submissions/{0}/'.format(submission.broker_submission_id),
+            {
+                'target': 'GENERIC', 'release': True,
+                'data': {
+                    'requirements': {
+                        'title': title,
+                        'description': 'A Description',
+                        'data_center': 'ENA – European Nucleotide Archive'
+                    }
+                }
+            },
+            format='json'
+        )
+        self.assertEqual(200, response.status_code)
+        submission = Submission.objects.first()
+        self.assertEqual(ENA_PANGAEA, submission.target)
+        self.assertNotIn('validation', submission.data.keys())
+
+        expected_task_names = [
+            'tasks.check_for_molecular_content_in_submission_task',
+            'tasks.trigger_submission_transfer',
+            'tasks.get_user_email_task',
+            'tasks.create_helpdesk_ticket_task',
+            'tasks.update_helpdesk_ticket_task',
+            'tasks.check_for_molecular_content_in_submission_task',
+            'tasks.trigger_submission_transfer_for_updates',
+            'tasks.check_on_hold_status_task',
+            'tasks.create_broker_objects_from_submission_data_task',
+            'tasks.prepare_ena_submission_data_task',
+        ]
+        all_task_reports = list(
+            TaskProgressReport.objects.values_list(
+                'task_name', flat=True).order_by('created')
+        )
+        self.assertListEqual(expected_task_names, all_task_reports)
+
+        self.assertEqual(
+            1,
+            len(submission.brokerobject_set.filter(type='study'))
+        )
+        study = submission.brokerobject_set.filter(type='study').first()
+        self.assertEqual(title, study.data.get('study_title', ''))
+
+        self.assertEqual(
+            3,
+            len(submission.brokerobject_set.filter(type='sample'))
+        )
+        sample = submission.brokerobject_set.filter(type='sample').first()
+        self.assertEqual('Sample No. 1', sample.data.get('sample_title', ''))
+
+        self.assertEqual(
+            3,
+            len(submission.brokerobject_set.filter(type='experiment'))
+        )
+        experiment = submission.brokerobject_set.filter(
+            type='experiment').first()
+        self.assertIn('files', experiment.data.get('design', {}).keys())
+
+        submission_text_data = list(
+            submission.auditabletextdata_set.values_list(
+                'name', flat=True).order_by('created')
+        )
+        expected_text_data_names = [
+            'study.xml',
+            'sample.xml',
+            'experiment.xml',
+        ]
+        for s in submission_text_data:
+            self.assertIn(s, expected_text_data_names)
+
+    # TODO: move to dedicatet test class
+    @responses.activate
+    def test_update_with_molecular_meta_data_csv(self):
+        self._add_create_ticket_response()
+        self._add_update_ticket_response()
+        title = 'A Title for meta-data in GENERIC'
+        response = self.api_client.post(
+            '/api/submissions/',
+            {
+                'target': 'GENERIC', 'release': False,
+                'data': {
+                    'requirements': {
+                        'title': title,
+                        'description': 'A Description',
+                        'data_center': 'ENA – European Nucleotide Archive'
+                    }
+                }
+            },
+            format='json'
+        )
+        submission = Submission.objects.first()
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        responses.add(responses.POST, url, json={}, status=200)
+        data = self._create_test_meta_data()
+        response = self.api_client.post(url, data, format='multipart')
+        response = self.api_client.put(
+            '/api/submissions/{0}/'.format(submission.broker_submission_id),
+            {
+                'target': 'GENERIC', 'release': True,
+                'data': {
+                    'requirements': {
+                        'title': title,
+                        'description': 'A Description',
+                        'data_center': 'ENA – European Nucleotide Archive'
+                    }
+                }
+            },
+            format='json'
+        )
+        submission = Submission.objects.first()
+        self.assertEqual(ENA_PANGAEA, submission.target)
+
+        data = self._create_test_meta_data(delete=False, update=True)
+        response = self.api_client.post(url, data, format='multipart')
+        self.assertEqual(2, len(submission.submissionupload_set.all()))
+        original_upload = submission.submissionupload_set.get(
+            file='{0}/molecular_metadata.csv'.format(
+                submission.broker_submission_id
+            )
+        )
+        update_upload = submission.submissionupload_set.get(
+            file='{0}/molecular_metadata_for_update.csv'.format(
+                submission.broker_submission_id
+            )
+        )
+        original_upload.meta_data = False
+        original_upload.save()
+        self.assertFalse(original_upload.meta_data)
+        self.assertTrue(update_upload.meta_data)
+
+        self.assertEqual(7, len(submission.brokerobject_set.all()))
+        self.assertEqual(3, len(submission.auditabletextdata_set.all()))
+
+        response = self.api_client.put(
+            '/api/submissions/{0}/'.format(submission.broker_submission_id),
+            {
+                'target': 'GENERIC', 'release': True,
+                'data': {
+                    'requirements': {
+                        'title': title,
+                        'description': 'A Description',
+                        'data_center': 'ENA – European Nucleotide Archive'
+                    }
+                }
+            },
+            format='json'
+        )
+        submission = Submission.objects.first()
+        sample = submission.brokerobject_set.filter(type='sample').first()
+        self.assertEqual('Update-Sample No. 1',
+                         sample.data.get('sample_title', ''))
+
+        self.assertEqual(7, len(submission.brokerobject_set.all()))
+        self.assertEqual(3, len(submission.auditabletextdata_set.all()))
+
+        data = self._create_test_meta_data(delete=True, invalid=True)
+        response = self.api_client.post(url, data, format='multipart')
+        response = self.api_client.put(
+            '/api/submissions/{0}/'.format(submission.broker_submission_id),
+            {
+                'target': 'GENERIC', 'release': True,
+                'data': {
+                    'requirements': {
+                        'title': title,
+                        'description': 'A Description',
+                        'data_center': 'ENA – European Nucleotide Archive'
+                    }
+                }
+            },
+            format='json'
+        )
+        submission = Submission.objects.first()
+        self.assertEqual(GENERIC, submission.target)
+
+    # TODO: move to dedicatet test class
+    @responses.activate
+    def test_valid_generic_post_with_invalid_molecular_meta_data(self):
+        self._add_create_ticket_response()
+        self._add_update_ticket_response()
+        title = 'A Title for meta-data in GENERIC'
+        response = self.api_client.post(
+            '/api/submissions/',
+            {
+                'target': 'GENERIC', 'release': False,
+                'data': {
+                    'requirements': {
+                        'title': title,
+                        'description': 'A Description',
+                        'data_center': 'ENA – European Nucleotide Archive'
+                    }
+                }
+            },
+            format='json'
+        )
+        self.assertEqual(201, response.status_code)
+        self.assertEqual(1, len(Submission.objects.all()))
+        submission = Submission.objects.first()
+        self.assertEqual(GENERIC, submission.target)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+        responses.add(responses.POST, url, json={}, status=200)
+        data = self._create_test_meta_data(invalid=True)
+        response = self.api_client.post(url, data, format='multipart')
+        self.assertEqual(201, response.status_code)
+        self.assertEqual(1, len(submission.submissionupload_set.all()))
+        self.assertTrue(submission.submissionupload_set.first().meta_data)
+
+        response = self.api_client.put(
+            '/api/submissions/{0}/'.format(submission.broker_submission_id),
+            {
+                'target': 'GENERIC', 'release': True,
+                'data': {
+                    'requirements': {
+                        'title': title,
+                        'description': 'A Description',
+                        'data_center': 'ENA – European Nucleotide Archive'
+                    }
+                }
+            },
+            format='json'
+        )
+        self.assertEqual(200, response.status_code)
+        submission = Submission.objects.first()
+        self.assertEqual(GENERIC, submission.target)
+        self.assertIn('validation', submission.data.keys())
+        self.assertEqual(2, len(submission.data.get('validation', [])))
+
+        expected_task_names = [
+            'tasks.check_for_molecular_content_in_submission_task',
+            'tasks.trigger_submission_transfer',
+            'tasks.get_user_email_task',
+            'tasks.create_helpdesk_ticket_task',
+            'tasks.update_helpdesk_ticket_task',
+            'tasks.check_for_molecular_content_in_submission_task',
+            'tasks.trigger_submission_transfer_for_updates',
+            'tasks.check_on_hold_status_task']
+        all_task_reports = list(
+            TaskProgressReport.objects.values_list(
+                'task_name', flat=True).order_by('created')
+        )
+        self.assertListEqual(expected_task_names, all_task_reports)
+
+        self.assertEqual(0, len(submission.brokerobject_set.all()))
+        self.assertEqual(0, len(submission.auditabletextdata_set.all()))
+
+        check_tasks = TaskProgressReport.objects.filter(
+            task_name='tasks.check_for_molecular_content_in_submission_task')
+        for c in check_tasks:
+            self.assertIn('errors', c.task_return_value)
+
     @responses.activate
     def test_valid_max_post_with_data_url(self):
         self._add_create_ticket_response()
@@ -468,10 +781,12 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         self.assertEqual(201, response.status_code)
         submission = Submission.objects.first()
         self.assertEqual(GENERIC, submission.target)
-        expected_tasks = ['tasks.trigger_submission_transfer',
-                          'tasks.get_user_email_task',
-                          'tasks.create_helpdesk_ticket_task',
-                          'tasks.check_on_hold_status_task']
+        expected_tasks = [
+            'tasks.check_for_molecular_content_in_submission_task',
+            'tasks.trigger_submission_transfer',
+            'tasks.get_user_email_task',
+            'tasks.create_helpdesk_ticket_task',
+            'tasks.check_on_hold_status_task']
         for t in TaskProgressReport.objects.filter(
                 submission=submission).order_by('created'):
             self.assertIn(t.task_name, expected_tasks)
@@ -522,15 +837,17 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         )
         self.assertEqual(200, response.status_code)
         submission = Submission.objects.first()
-        self.assertEqual(ENA, submission.target)
-        expected_tasks = ['tasks.trigger_submission_transfer',
-                          'tasks.check_on_hold_status_task',
-                          'tasks.get_user_email_task',
-                          'tasks.create_helpdesk_ticket_task',
-                          'tasks.update_helpdesk_ticket_task',  # x2
-                          'tasks.trigger_submission_transfer_for_updates',
-                          'tasks.create_broker_objects_from_submission_data_task',
-                          'tasks.prepare_ena_submission_data_task']
+        self.assertEqual(ENA_PANGAEA, submission.target)
+        expected_tasks = [
+            'tasks.check_for_molecular_content_in_submission_task',
+            'tasks.trigger_submission_transfer',
+            'tasks.check_on_hold_status_task',
+            'tasks.get_user_email_task',
+            'tasks.create_helpdesk_ticket_task',
+            'tasks.update_helpdesk_ticket_task',  # x2
+            'tasks.trigger_submission_transfer_for_updates',
+            'tasks.create_broker_objects_from_submission_data_task',
+            'tasks.prepare_ena_submission_data_task']
         for t in TaskProgressReport.objects.filter(
                 submission=submission).order_by('created'):
             self.assertIn(t.task_name, expected_tasks)
@@ -581,17 +898,18 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         )
         self.assertEqual(200, response.status_code)
         submission = Submission.objects.first()
-        self.assertEqual(ENA, submission.target)
-        expected_tasks = ['tasks.trigger_submission_transfer',
-                          'tasks.get_user_email_task',
-                          'tasks.create_helpdesk_ticket_task',
-                          'tasks.update_helpdesk_ticket_task',
-                          'tasks.trigger_submission_transfer_for_updates',
-                          'tasks.check_on_hold_status_task'
-                          ]
+        self.assertEqual(GENERIC, submission.target)
+        expected_tasks = [
+            'tasks.check_for_molecular_content_in_submission_task',
+            'tasks.trigger_submission_transfer',
+            'tasks.get_user_email_task',
+            'tasks.create_helpdesk_ticket_task',
+            'tasks.update_helpdesk_ticket_task',
+            'tasks.trigger_submission_transfer_for_updates',
+            'tasks.check_on_hold_status_task'
+        ]
         for t in TaskProgressReport.objects.filter(
                 submission=submission).order_by('created'):
-            print(t.task_name, ' ', t.created)
             self.assertIn(t.task_name, expected_tasks)
 
     @responses.activate
@@ -633,17 +951,18 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         )
         self.assertEqual(200, response.status_code)
         submission = Submission.objects.first()
-        self.assertEqual(ENA, submission.target)
-        expected_tasks = ['tasks.trigger_submission_transfer',
-                          'tasks.get_user_email_task',
-                          'tasks.create_helpdesk_ticket_task',
-                          'tasks.update_helpdesk_ticket_task',
-                          'tasks.trigger_submission_transfer_for_updates',
-                          'tasks.check_on_hold_status_task'
-                          ]
+        self.assertEqual(GENERIC, submission.target)
+        expected_tasks = [
+            'tasks.check_for_molecular_content_in_submission_task',
+            'tasks.trigger_submission_transfer',
+            'tasks.get_user_email_task',
+            'tasks.create_helpdesk_ticket_task',
+            'tasks.update_helpdesk_ticket_task',
+            'tasks.trigger_submission_transfer_for_updates',
+            'tasks.check_on_hold_status_task'
+        ]
         for t in TaskProgressReport.objects.filter(
                 submission=submission).order_by('created'):
-            print(t.task_name, ' ', t.created)
             self.assertIn(t.task_name, expected_tasks)
 
 
@@ -877,7 +1196,6 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
         submission.save()
         update_tasks = TaskProgressReport.objects.filter(
             task_name='tasks.update_helpdesk_ticket_task')
-        print(update_tasks)
         self.assertEqual(1, len(update_tasks))
 
     @responses.activate
@@ -1350,7 +1668,8 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
         self.assertEqual(Submission.OPEN, submission.status)
         self.assertEqual(0, len(submission.submitting_user))
         site_config = SiteConfiguration.objects.first()
-        self.assertIn(site_config.contact, submission.submitting_user_common_information)
+        self.assertIn(site_config.contact,
+                      submission.submitting_user_common_information)
         self.assertEqual('GENERIC', submission.target)
         request_logs = RequestLog.objects.filter(type=RequestLog.INCOMING)
         self.assertEqual(1, len(request_logs))
