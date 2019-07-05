@@ -5,7 +5,9 @@ export const API_ROOT = '';
 // TODO: for rapid js standalone development, full servername is needed though.
 // export const API_ROOT = 'http://0.0.0.0:8000';
 
-// TODO: check/remove fallback values of userid, token, etc. in reducers
+// TODO FOR RELEASE: check/remove fallback values of userid, token, etc. in reducers
+//  -> SubmissionForm/reducer
+//  -> SubmissionList/reducer
 
 export const USER_URL = 'user/';
 // TODO: merge redundant code of api-access-code like in this file

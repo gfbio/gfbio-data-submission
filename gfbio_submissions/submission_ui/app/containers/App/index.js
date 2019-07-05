@@ -14,6 +14,7 @@ import NotFoundPage from 'containers/NotFoundPage/Loadable';
 import SubmissionForm from 'containers/SubmissionForm/Loadable';
 import SubmissionList from 'containers/SubmissionList/Loadable';
 import SubmissionSubNavigation from '../../components/SubmissionSubNavigation';
+import { HelpContent } from 'containers/HelpContent';
 
 
 // TODO: set according to root django url, full path from config/urls.py
@@ -35,6 +36,7 @@ export default function App() {
         <Route exact path='/form' component={SubmissionForm} />
         <Route path='/form/:brokerSubmissionId' component={SubmissionForm} />
         <Route exact path='/list' component={SubmissionList} />
+        <Route exact path='/help' component={HelpContent} />
         <Route component={NotFoundPage} />
       </Switch>
     </div>

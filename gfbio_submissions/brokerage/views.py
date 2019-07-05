@@ -53,13 +53,20 @@ class SubmissionsView(mixins.ListModelMixin,
             )
 
         from gfbio_submissions.brokerage.tasks import \
+            check_for_molecular_content_in_submission_task, \
             trigger_submission_transfer
-        trigger_submission_transfer.apply_async(
-            kwargs={
-                'submission_id': submission.pk,
-            },
-            countdown=SUBMISSION_DELAY
-        )
+        chain = check_for_molecular_content_in_submission_task.s(
+            submission_id=submission.pk
+        ).set(countdown=SUBMISSION_DELAY) | trigger_submission_transfer.s(
+            submission_id=submission.pk
+        ).set(countdown=SUBMISSION_DELAY)
+        chain()
+        # trigger_submission_transfer.apply_async(
+        #     kwargs={
+        #         'submission_id': submission.pk,
+        #     },
+        #     countdown=SUBMISSION_DELAY
+        # )
 
     def get_queryset(self):
         site = self.request.user
@@ -102,14 +109,24 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
             # affected_submissions = instance.submission_set.filter(broker_submission_id=instance.broker_submission_id)
 
             from gfbio_submissions.brokerage.tasks import \
+                check_for_molecular_content_in_submission_task, \
                 trigger_submission_transfer_for_updates
-            trigger_submission_transfer_for_updates.apply_async(
-                kwargs={
-                    'broker_submission_id': '{0}'.format(
-                        instance.broker_submission_id),
-                },
-                countdown=SUBMISSION_DELAY
-            )
+            chain = check_for_molecular_content_in_submission_task.s(
+                submission_id=instance.pk
+            ).set(countdown=SUBMISSION_DELAY) | \
+                trigger_submission_transfer_for_updates.s(
+                    broker_submission_id='{0}'.format(
+                        instance.broker_submission_id
+                    )
+                ).set(countdown=SUBMISSION_DELAY)
+            chain()
+            # trigger_submission_transfer_for_updates.apply_async(
+            #     kwargs={
+            #         'broker_submission_id': '{0}'.format(
+            #             instance.broker_submission_id),
+            #     },
+            #     countdown=SUBMISSION_DELAY
+            # )
             return response
         else:
             return Response(

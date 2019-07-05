@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
+import _csv
 import csv
-import json
+import logging
 from collections import OrderedDict
 
-import _csv
 import dpath
 from shortid import ShortId
 
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
     ENA_PANGAEA, ENA
-from gfbio_submissions.brokerage.serializers import SubmissionDetailSerializer
+from gfbio_submissions.brokerage.utils.schema_validation import \
+    validate_data_full
+
+logger = logging.getLogger(__name__)
 
 sample_core_fields = [
     'sample_alias',
@@ -37,7 +40,6 @@ experiment_core_fields = [
     'checksum_method'
 ]
 
-# everthing else is optional and goes to sample attributes
 core_fields = sample_core_fields + experiment_core_fields
 
 unit_mapping = {
@@ -66,19 +68,32 @@ def extract_sample(row, field_names, sample_id):
         else OrderedDict([('tag', o), ('value', row[o])])
         for o in field_names if o not in core_fields
     ]
+    try:
+        taxon_id = int(row.get('taxon_id', '-1'))
+    except ValueError as e:
+        taxon_id = -1
     sample = {
         'sample_title': row.get('sample_title', ''),
         'sample_alias': sample_id,
         'sample_description': row.get('sample_description', '').replace('"',
                                                                         ''),
-        'taxon_id': int(row.get('taxon_id', '-1')),
+        'taxon_id': taxon_id,
     }
     if len(sample_attributes):
         sample['sample_attributes'] = sample_attributes
+
     return sample
 
 
 def extract_experiment(experiment_id, row, sample_id):
+    try:
+        design_description = int(row.get('design_description', '-1'))
+    except ValueError as e:
+        design_description = -1
+    try:
+        nominal_length = int(row.get('nominal_length', '-1'))
+    except ValueError as e:
+        nominal_length = -1
     experiment = {
         'experiment_alias': experiment_id,
         'platform': row.get('sequencing_platform', '')
@@ -104,12 +119,12 @@ def extract_experiment(experiment_id, row, sample_id):
                    row.get('reverse_read_file_checksum', ''))
     if len(row.get('design_description', '').strip()):
         dpath.util.new(experiment, 'design/design_description',
-                       int(row.get('design_description', '-1')))
+                       design_description)
     if row.get('library_layout', '') == 'paired':
         dpath.util.new(
             experiment,
             'design/library_descriptor/library_layout/nominal_length',
-            int(row.get('nominal_length', '-1'))
+            nominal_length
         )
     return experiment
 
@@ -126,25 +141,14 @@ def parse_molecular_csv(csv_file):
         restval='extra_value_found',
     )
     molecular_requirements = {
-        # 'requirements': {
-        # minimal_requirements
-        # 'title': title,
-        # 'description': description,
-        # study_reqs
         'study_type': 'Other',
-        # sample, experiment, runs reqs
         'samples': [],
         'experiments': [],
-        # no explicit runs from csv. files in experiments
-        # 'runs': [],
-        # }
     }
     try:
         field_names = csv_reader.fieldnames
     except _csv.Error as e:
-        print('ERROR ', e)
         return molecular_requirements
-    # print(field_names)
     short_id = ShortId()
     for row in csv_reader:
         # every row is one sample (except header)
@@ -163,37 +167,66 @@ def parse_molecular_csv(csv_file):
 
 # TODO: may move to other location, perhaps model, serializer or manager method
 def check_for_molecular_content(submission):
+    logger.info(
+        msg='check_for_molecular_content | '
+            'process submission={0} | target={1} '
+            ''.format(submission.broker_submission_id, submission.target))
     if submission.target == ENA or submission.target == ENA_PANGAEA:
-        return True
+        logger.info(
+            msg='check_for_molecular_content | '
+                'ena is default target return=True')
+        return True, []
     # TODO: consider HELPDESK_REQUEST_TYPE_MAPPINGS for data_center mappings
     elif submission.release and submission.target == GENERIC \
             and submission.data.get('requirements', {}) \
             .get('data_center', '').count('ENA'):
         meta_data_files = submission.submissionupload_set.filter(meta_data=True)
-        if len(meta_data_files) != 1:
-            # TODO: add some sort of error to submission.data / validation hint
-            return False
+        no_of_meta_data_files = len(meta_data_files)
+        if no_of_meta_data_files != 1:
+            logger.info(
+                msg='check_for_molecular_content | '
+                    'invalid no. of meta_data_files, {0} | return=False'
+                    ''.format(no_of_meta_data_files))
+            return False, [
+                'invalid no. of meta_data_files, {0}'.format(no_of_meta_data_files)
+            ]
         meta_data_file = meta_data_files.first()
         with open(meta_data_file.file.path, 'r') as file:
             molecular_requirements = parse_molecular_csv(
                 file,
             )
         submission.data.get('requirements', {}).update(molecular_requirements)
-        fake_request_data = {
-            'target': ENA,
-            'release': True,
-            'data': submission.data,
-        }
-        serializer = SubmissionDetailSerializer(data=fake_request_data)
-        valid = serializer.is_valid()
-        print('valid ', valid)
-        # print('errors ', serializer.errors)
-        # print(json.dumps(serializer.errors))
-        submission.target = ENA
-        submission.save(allow_update=False)
+        # fake_request_data = {
+        #     'target': ENA,
+        #     'release': True,
+        #     'data': submission.data,
+        # }
+        # serializer = SubmissionDetailSerializer(data=fake_request_data)
+        # valid = serializer.is_valid()
+
+        valid, full_errors = validate_data_full(
+            data=submission.data,
+            target=ENA_PANGAEA
+        )
+
         if valid:
-            return True
+            submission.target = ENA_PANGAEA
+            submission.save(allow_update=False)
+            logger.info(
+                msg='check_for_molecular_content | valid data from csv |'
+                    ' return=True')
+            return True, []
         else:
-            return False
+            error_messages = [e.message for e in full_errors]
+            submission.data.update(
+                {'validation': error_messages})
+            submission.save(allow_update=False)
+            logger.info(
+                msg='check_for_molecular_content  | invalid data from csv |'
+                    ' return=False')
+            return False, error_messages
     else:
-        return False
+        logger.info(
+            msg='check_for_molecular_content | no criteria matched | '
+                'return=False')
+        return False, ['no criteria matched']
