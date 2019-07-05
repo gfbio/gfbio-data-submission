@@ -30,8 +30,11 @@ INSTALLED_APPS += ['raven.contrib.django.raven_compat', ]
 
 # Use Whitenoise to serve static files
 # See: https://whitenoise.readthedocs.io/
-WHITENOISE_MIDDLEWARE = ['whitenoise.middleware.WhiteNoiseMiddleware', ]
-MIDDLEWARE = WHITENOISE_MIDDLEWARE + MIDDLEWARE
+
+
+# WHITENOISE_MIDDLEWARE = ['whitenoise.middleware.WhiteNoiseMiddleware', ]
+# MIDDLEWARE = WHITENOISE_MIDDLEWARE + MIDDLEWARE
+
 RAVEN_MIDDLEWARE = [
     'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware']
 MIDDLEWARE = RAVEN_MIDDLEWARE + MIDDLEWARE
@@ -97,7 +100,7 @@ AWS_HEADERS = {
 
 # Static Assets
 # ------------------------
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # EMAIL
 # ------------------------------------------------------------------------------
