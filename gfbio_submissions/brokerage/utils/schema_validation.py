@@ -168,7 +168,15 @@ def validate_ena_relations(data):
 # FIXME: id to /app/staticfiles/schemas/ena_requirements.json
 # FIXME: since id determins root for looking up included files
 def validate_data_full(data, target):
+    print('\nvalidate_data_full -> ', target)
+    print('current working dir ', os.getcwd())
     schema_location = TARGET_SCHEMA_MAPPINGS[target]
+    print('schema location ', schema_location)
+    path = os.path.join(
+        settings.STATIC_ROOT,
+        schema_location)
+    print('path ', path)
+    print('exists ', os.path.exists(path))
     valid, errors = validate_data(
         data=data, schema_file=os.path.join(
             settings.STATIC_ROOT,
