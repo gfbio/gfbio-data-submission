@@ -98,7 +98,7 @@ def check_for_molecular_content_in_submission_task(submission_id=None):
         schema_location)
     print('path ', path)
     print('exists ', os.path.exists(path))
-    print(os.listdir(settings.STATIC_ROOT))
+    # print(os.listdir(settings.STATIC_ROOT))
     molecular_data_available, errors = check_for_molecular_content(submission)
     logger.info(
         msg='check_for_molecular_content_in_submission_task. '
