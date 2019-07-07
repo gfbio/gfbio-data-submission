@@ -94,7 +94,12 @@ def check_for_molecular_content_in_submission_task(submission_id=None):
     print(os.listdir(os.getcwd()))
     path = os.path.join(
         os.getcwd(),
-        'LICENSE')
+        'gfbio_services/brokerage/schemas')
+    print('path ', path)
+    print('exists ', path)
+    path = os.path.join(
+        os.getcwd(),
+        'gfbio_services/brokerage/schemas/ena_requirements.json')
     print('path ', path)
     print('exists ', path)
     # schema_location = TARGET_SCHEMA_MAPPINGS[ENA_PANGAEA]

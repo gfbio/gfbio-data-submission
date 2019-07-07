@@ -209,20 +209,20 @@ def check_for_molecular_content(submission):
 
         print('\nBEFORE VALIDATE')
         print('current working dir ', os.getcwd())
-        schema_location = TARGET_SCHEMA_MAPPINGS[ENA_PANGAEA]
-        print('schema location ', schema_location)
-        from django.conf import settings
+        # schema_location = TARGET_SCHEMA_MAPPINGS[ENA_PANGAEA]
+        # print('schema location ', schema_location)
+        # from django.conf import settings
         path = os.path.join(
-            settings.STATIC_ROOT,
-            schema_location)
+            os.getcwd(),
+            'gfbio_services/brokerage/schemas/ena_requirements.json')
         print('path ', path)
         print('exists ', os.path.exists(path))
         # print(os.listdir(settings.STATIC_ROOT))
 
-        print('TRY USING SERIALIZER')
-        serializer = SubmissionDetailSerializer(data=submission.data)
-        valid = serializer.is_valid()
-        print('VALID ', valid)
+        # print('TRY USING SERIALIZER')
+        # serializer = SubmissionDetailSerializer(data=submission.data)
+        # valid = serializer.is_valid()
+        # print('VALID ', valid)
         valid, full_errors = validate_data_full(
             data=submission.data,
             target=ENA_PANGAEA
