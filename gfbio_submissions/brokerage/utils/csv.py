@@ -214,7 +214,7 @@ def check_for_molecular_content(submission):
         # from django.conf import settings
         path = os.path.join(
             os.getcwd(),
-            'gfbio_services/brokerage/schemas/ena_requirements.json')
+            'gfbio_submissions/brokerage/schemas/ena_requirements.json')
         print('path ', path)
         print('exists ', os.path.exists(path))
         # print(os.listdir(settings.STATIC_ROOT))

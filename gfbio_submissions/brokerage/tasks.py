@@ -92,16 +92,16 @@ def check_for_molecular_content_in_submission_task(submission_id=None):
     print('current working dir ', os.getcwd())
     print('exists ', os.path.exists(os.getcwd()))
     print(os.listdir(os.getcwd()))
+    # path = os.path.join(
+    #     os.getcwd(),
+    #     'gfbio_submissions/brokerage/schemas')
+    # print('path ', path)
+    # print('exists ', path)
     path = os.path.join(
         os.getcwd(),
-        'gfbio_services/brokerage/schemas')
+        'gfbio_submissions/brokerage/schemas/ena_requirements.json')
     print('path ', path)
-    print('exists ', path)
-    path = os.path.join(
-        os.getcwd(),
-        'gfbio_services/brokerage/schemas/ena_requirements.json')
-    print('path ', path)
-    print('exists ', path)
+    print('exists ', os.path.exists(path))
     # schema_location = TARGET_SCHEMA_MAPPINGS[ENA_PANGAEA]
     # print('schema location ', schema_location)
     # from django.conf import settings
