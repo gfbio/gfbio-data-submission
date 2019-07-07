@@ -10,9 +10,8 @@ from shortid import ShortId
 
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
     ENA_PANGAEA, ENA
-from gfbio_submissions.brokerage.serializers import SubmissionDetailSerializer
 from gfbio_submissions.brokerage.utils.schema_validation import \
-    validate_data_full, TARGET_SCHEMA_MAPPINGS
+    validate_data_full
 
 logger = logging.getLogger(__name__)
 
@@ -225,7 +224,8 @@ def check_for_molecular_content(submission):
         # print('VALID ', valid)
         valid, full_errors = validate_data_full(
             data=submission.data,
-            target=ENA_PANGAEA
+            target=ENA_PANGAEA,
+            schema_location=path,
         )
 
         if valid:
