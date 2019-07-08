@@ -88,27 +88,9 @@ def check_for_molecular_content_in_submission_task(submission_id=None):
         msg='check_for_molecular_content_in_submission_task. '
             'process submission={}.'.format(submission.broker_submission_id))
 
-    print('\nBEFORE CHECK MOL CONTENT')
-    print('current working dir ', os.getcwd())
-    print('exists ', os.path.exists(os.getcwd()))
-    print(os.listdir(os.getcwd()))
-    # path = os.path.join(
-    #     os.getcwd(),
-    #     'gfbio_submissions/brokerage/schemas')
-    # print('path ', path)
-    # print('exists ', path)
     path = os.path.join(
         os.getcwd(),
         'gfbio_submissions/brokerage/schemas/ena_requirements.json')
-    print('path ', path)
-    print('exists ', os.path.exists(path))
-    # schema_location = TARGET_SCHEMA_MAPPINGS[ENA_PANGAEA]
-    # print('schema location ', schema_location)
-    # from django.conf import settings
-
-    # print('path ', path)
-    # print('exists ', os.path.exists(path))
-    # # print(os.listdir(settings.STATIC_ROOT))
     molecular_data_available, errors = check_for_molecular_content(submission)
     logger.info(
         msg='check_for_molecular_content_in_submission_task. '
