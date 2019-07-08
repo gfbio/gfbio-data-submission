@@ -2,6 +2,7 @@
 import _csv
 import csv
 import logging
+import os
 from collections import OrderedDict
 
 import dpath
@@ -188,7 +189,8 @@ def check_for_molecular_content(submission):
                     'invalid no. of meta_data_files, {0} | return=False'
                     ''.format(no_of_meta_data_files))
             return False, [
-                'invalid no. of meta_data_files, {0}'.format(no_of_meta_data_files)
+                'invalid no. of meta_data_files, {0}'.format(
+                    no_of_meta_data_files)
             ]
         meta_data_file = meta_data_files.first()
         with open(meta_data_file.file.path, 'r') as file:
@@ -196,17 +198,13 @@ def check_for_molecular_content(submission):
                 file,
             )
         submission.data.get('requirements', {}).update(molecular_requirements)
-        # fake_request_data = {
-        #     'target': ENA,
-        #     'release': True,
-        #     'data': submission.data,
-        # }
-        # serializer = SubmissionDetailSerializer(data=fake_request_data)
-        # valid = serializer.is_valid()
-
+        path = os.path.join(
+            os.getcwd(),
+            'gfbio_submissions/brokerage/schemas/ena_requirements.json')
         valid, full_errors = validate_data_full(
             data=submission.data,
-            target=ENA_PANGAEA
+            target=ENA_PANGAEA,
+            schema_location=path,
         )
 
         if valid:

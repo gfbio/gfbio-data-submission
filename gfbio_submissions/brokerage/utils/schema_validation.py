@@ -167,12 +167,12 @@ def validate_ena_relations(data):
 # FIXME: when running docker-compose with dev.yml
 # FIXME: id to /app/staticfiles/schemas/ena_requirements.json
 # FIXME: since id determins root for looking up included files
-def validate_data_full(data, target):
-    schema_location = TARGET_SCHEMA_MAPPINGS[target]
+def validate_data_full(data, target, schema_location=None):
+    if schema_location is None:
+        schema_location = os.path.join(
+            settings.STATIC_ROOT, TARGET_SCHEMA_MAPPINGS[target])
     valid, errors = validate_data(
-        data=data, schema_file=os.path.join(
-            settings.STATIC_ROOT,
-            schema_location),
+        data=data, schema_file=schema_location,
         use_draft04_validator=True
     )
     if valid and (target == ENA or target == ENA_PANGAEA):
