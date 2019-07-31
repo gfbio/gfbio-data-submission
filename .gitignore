@@ -72,6 +72,7 @@ stats.json
 # virtual environments
 .env
 dev-server.env
+.envs
 
 # User-uploaded media
 gfbio_submissions/media/*
