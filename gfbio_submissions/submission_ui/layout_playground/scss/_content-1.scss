@@ -1,0 +1,121 @@
+// TODO: this might become standard content scss
+// TODO: or better move this to globals, except form stuff
+
+.page-title {
+    // margin to adept for nav height
+    margin-top: 57px;
+    // height: 240px;
+    background-color: $gray-100;
+}
+
+.page-title-bg-blue {
+    @extend .page-title;
+    //background: url('../images/unsplash_grass_blue.jpeg') center center;
+}
+
+.page-title-bg-green {
+    @extend .page-title;
+    //background-image: url('../images/unsplash_grass.jpeg');
+    background-position: center center;
+}
+
+.page-title-bg-bw {
+    @extend .page-title;
+    //background-image: url('../images/unsplash_grass_bw.jpeg');
+    //background-position: center center;
+}
+
+h5 {
+    @include raleway;
+    color: $gray-darkest;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 1rem;
+    font-weight: 400;
+    margin-bottom: 1.6rem;
+}
+
+.col-margin-bottom {
+    margin-bottom: 2rem;
+}
+
+.text-90deg {
+
+    -webkit-transform: rotate(90deg);
+    -moz-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+    -o-transform: rotate(90deg);
+    transform: rotate(90deg);
+}
+
+.text-270deg {
+
+    -webkit-transform: rotate(270deg);
+    -moz-transform: rotate(270deg);
+    -ms-transform: rotate(270deg);
+    -o-transform: rotate(270deg);
+    transform: rotate(270deg);
+}
+
+.text-big {
+    opacity: .4;
+    font-size: 6rem;
+    position: absolute;
+
+    z-index: -1;
+    right: 0;
+    bottom: 6rem;
+    left: 0;
+    margin: auto;
+
+    text-transform: lowercase;
+}
+
+.blue {
+    color: $gfbio-blue;
+}
+
+.green {
+    color: $gfbio-green;
+}
+
+.side-col {
+    h6 {
+        @include raleway;
+    }
+
+    hr {
+        max-width: none;
+        border-top: 1px solid $gray-dark-2;
+        width: 100%;
+    }
+}
+
+.header {
+    letter-spacing: 2px;
+    border-bottom: 1px solid $gray-dark-2;
+}
+
+.section-title {
+    display: inline-block;
+    text-transform: uppercase;
+    font-size: 1.5rem;
+    font-weight: 400;
+}
+
+.header-right .section-title::before,
+.header-left .section-title::after {
+    display: inline-block;
+    content: '';
+
+    margin: 0 6px;
+
+    width: 3px;
+    height: 3px;
+}
+
+.section-subtitle {
+    display: inline-block;
+    text-transform: lowercase;
+    margin: 0;
+}

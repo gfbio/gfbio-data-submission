@@ -79,6 +79,8 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 - copy static files
 - copy templates
 
+- copy submission_ui app (not registered under APPS ...)
+
 ## Libraries to inspect
 
 - https://github.com/core-api/python-client
