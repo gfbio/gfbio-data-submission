@@ -1,12 +1,21 @@
 {% extends "account/base.html" %}
-
+{% load static %}
 {% load i18n %}
 
 {% block head_title %}{% trans "Account Inactive" %}{% endblock %}
 
 {% block inner %}
-<h1>{% trans "Account Inactive" %}</h1>
 
-<p>{% trans "This account is inactive." %}</p>
+    <div class="text-center">
+        <a href="{% url 'home' %}" class="text-center account-logo">
+            <img src="{% static 'images/gfbio_logo.svg' %}">
+        </a>
+        <h4 class="mt-3">
+            {% trans "Account Inactive" %}
+        </h4>
+    </div>
+    <div class="boxed">
+        <p class="text-center">{% trans "This account is inactive." %}</p>
+    </div>
 {% endblock %}
 

@@ -1,12 +1,21 @@
 {% extends "account/base.html" %}
+{% load static %}
 
 {% load i18n %}
 
 {% block head_title %}{% trans "Sign Up Closed" %}{% endblock %}
 
 {% block inner %}
-<h1>{% trans "Sign Up Closed" %}</h1>
-
-<p>{% trans "We are sorry, but the sign up is currently closed." %}</p>
+    <div class="text-center">
+        <a href="{% url 'home' %}" class="text-center account-logo">
+            <img src="{% static 'images/gfbio_logo.svg' %}">
+        </a>
+        <h4 class="mt-3">
+            {% trans "Sign Up Closed" %}
+        </h4>
+    </div>
+    <div class="boxed">
+        <p>{% trans "We are sorry, but the sign up is currently closed." %}</p>
+    </div>
 {% endblock %}
 

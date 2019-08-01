@@ -1,0 +1,64 @@
+{% load socialaccount %}
+{% load static %}
+{% get_providers as socialaccount_providers %}
+
+{% for provider in socialaccount_providers %}
+    {% if provider.id == "openid" %}
+        {% for brand in provider.get_brands %}
+            <li>
+                <a title="{{ brand.name }}"
+                   class="socialaccount_provider {{ provider.id }} {{ brand.id }}"
+                   href="{% provider_login_url provider.id openid=brand.openid_url process=process %}">
+                    {{ brand.name }}
+                </a>
+            </li>
+        {% endfor %}
+    {% endif %}
+
+
+    <li class="list-inline-item ml-2 mr-2">
+        {% if provider.name == "GitHub" %}
+            <a title="{{ provider.name }}"
+               class="socialaccount_provider {{ provider.id }}"
+               href="{% provider_login_url provider.id process=process scope=scope auth_params=auth_params %}">
+                <span class="socialaccount_text">
+                                    {{ provider.name }}
+                    <i class="icon ion-logo-github"></i>
+                                </span>
+            </a>
+        {% elif provider.name == "Orcid.org" %}
+            <a title="{{ provider.name }}"
+               class="socialaccount_provider {{ provider.id }}"
+               href="{% provider_login_url provider.id process=process scope=scope auth_params=auth_params %}">
+                <span class="socialaccount_text">
+                    {{ provider.name }}
+
+                    <img src="{% static 'images/orcid_icon-bw.svg' %}">
+                </span>
+
+            </a>
+        {% elif provider.name == "Google" %}
+            <a title="{{ provider.name }}"
+               class="socialaccount_provider {{ provider.id }}"
+               href="{% provider_login_url provider.id process=process scope=scope auth_params=auth_params %}">
+                <span class="socialaccount_text">
+                    {{ provider.name }}
+                    <i class="icon ion-logo-google"></i>
+                </span>
+
+            </a>
+        {% else %}
+            <a title="{{ provider.name }}"
+               class="socialaccount_provider {{ provider.id }}"
+               href="{% provider_login_url provider.id process=process scope=scope auth_params=auth_params %}">
+                {{ provider.name }}
+            </a>
+        {% endif %}
+    </li>
+
+
+{% endfor %}
+{# TODO: style openid connect link to gwdg #}
+{#<li>#}
+{#    mozilla oidc: <a href="{% url 'oidc_authentication_init' %}">Login</a>#}
+{#</li>#}

@@ -1,114 +1,417 @@
-{% load static i18n %}<!DOCTYPE html>
-<html lang="en">
-  <head>
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
+
     <title>{% block title %}GFBio Submissions{% endblock title %}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <meta name="description" content="GFBio Submissions">
+    <meta name="author" content="Marc Weber">
 
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
     <![endif]-->
 
-    <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}">
-
     {% block css %}
-    
-    <!-- Latest compiled and minified Bootstrap CSS -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    
 
-    <!-- Your stuff: Third-party CSS libraries go here -->
-    
-    <!-- This file stores project-specific CSS -->
-    
-    <link href="{% static 'css/project.css' %}" rel="stylesheet">
-    
-    
+        <!-- Latest compiled and minified Bootstrap 4 beta CSS -->
+        <link rel="stylesheet"
+              href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+              integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
+              crossorigin="anonymous">
+
+
+        <!-- Your stuff: Third-party CSS libraries go here -->
+        <!-- Icons -->
+        <link rel="stylesheet"
+              href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+              integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"
+              crossorigin="anonymous">
+
+        <!-- TODO: consider https://github.com/linea-io/linea-scss -->
+        <link href="{% static 'vendor/linea_icons/_basic/_ICONFONT/styles.css' %}"
+              rel="stylesheet" type="text/css">
+
+        <!-- TODO: consider https://github.com/aastrong/themify-icons.scss -->
+        <link href="{% static 'vendor/themify-icons/themify-icons.css' %}"
+              rel="stylesheet"
+              type="text/css">
+
+        <link href="https://unpkg.com/ionicons@4.2.2/dist/css/ionicons.min.css"
+              rel="stylesheet">
+        <!-- Google Fonts -->
+        <!-- TODO: strip from unused fonts+sizes+styles -->
+        <link href="https://fonts.googleapis.com/css?family=Amiri:400,400i,700,700i|Cinzel:400,700,900|Cormorant+Garamond:300,300i,400,400i,500,500i,600,600i,700,700i|Crimson+Text:400,400i,600,600i,700,700i|EB+Garamond:400,400i,500,500i,600,600i,700,700i,800,800i|Lora:400,400i,700,700i|Lustria|Merriweather:300,300i,400,400i,700,700i,900,900i|Neuton:200,300,400,400i,700,800|Open+Sans:300,300i,400,400i,600,600i,700,700i,800,800i|Raleway:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i|Roboto+Slab:100,300,400,700|Scheherazade:400,700|Slabo+13px|Slabo+27px|Zilla+Slab:300,300i,400,400i,500,500i,600,600i,700,700i"
+              rel="stylesheet">
+        {#        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800"#}
+        {#              rel="stylesheet" type="text/css">#}
+        {#        <link href="https://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic,900,900italic"#}
+        {#              rel="stylesheet" type="text/css">#}
+        {#        <link href="https://fonts.googleapis.com/css?family=Raleway:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i"#}
+        {#              rel="stylesheet">#}
+
+        <!-- This file stores project-specific CSS -->
+
+        <link href="{% static 'css/project.css' %}" rel="stylesheet">
+
+
     {% endblock %}
 
-  </head>
+</head>
 
-  <body>
+<body>
 
-    <div class="mb-1">
-      <nav class="navbar navbar-expand-md navbar-light bg-light">
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
+{% block navigation %}
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top"
+            {# TODO: check if there is a more elegant way to differ navi ids #}
+            {% block navigation-id %}
+         id="mainNav"
+            {% endblock navigation-id %}
+    >
+        <div class="container-fluid">
+            {# TODO: keep optional js-scroll-trigger in mind, for now it is not used  #}
+            <a class="navbar-brand " href="{% url 'home' %}">
+                GFBio
+                <small>Submissions</small>
+            </a>
+            <button class="navbar-toggler navbar-toggler-right" type="button"
+                    data-toggle="collapse" data-target="#navbarResponsive"
+                    aria-controls="navbarResponsive" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarResponsive">
+                <ul class="navbar-nav ml-auto">
+
+                    {#                    <li class="nav-item">#}
+                    {#                        <a class="nav-link "#}
+                    {#                           href="{% url 'home' %}">Home</a>#}
+                    {#                    </li>#}
+                    {##}
+                    {#                    <li class="nav-item">#}
+                    {#                        <a class="nav-link "#}
+                    {#                           href="{% url 'about' %}">About</a>#}
+                    {#                    </li>#}
+                    {##}
+                    {#                    <li class="nav-item dropdown">#}
+                    {#                        <a class="nav-link has-dropdown" data-toggle="dropdown"#}
+                    {#                           href="#" role="button" aria-haspopup="true"#}
+                    {#                           aria-expanded="false">Dropdown</a>#}
+                    {#                        <div class="dropdown-menu">#}
+                    {#                            <a class="dropdown-item" href="#">Action</a>#}
+                    {#                            <a class="dropdown-item" href="#">Another action</a>#}
+                    {#                            <a class="dropdown-item" href="#">Something else#}
+                    {#                                here</a>#}
+                    {#                            <div class="dropdown-divider"></div>#}
+                    {#                            <a class="dropdown-item" href="#">Separated link</a>#}
+                    {#                        </div>#}
+                    {#                    </li>#}
+
+
+                    {% if request.user.is_authenticated %}
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link has-dropdown"
+                               data-toggle="dropdown"
+                               href="#" role="button" aria-haspopup="true"
+                               aria-expanded="false">{{ request.user.username }}</a>
+                            <div class="dropdown-menu">
+                                {# URL provided by django-allauth/account/urls.py #}
+                                <a class="dropdown-item"
+                                   href="{% url 'users:detail' request.user.username %}">My
+                                    Profile</a>
+                                <a class="dropdown-item" href="#">Support</a>
+                                <a class="dropdown-item" href="#">Settings</a>
+                                <div class="dropdown-divider"></div>
+                                {# URL provided by django-allauth/account/urls.py #}
+                                <a class="dropdown-item user-signout"
+                                   href="{% url 'account_logout' %}">Sign
+                                    Out</a>
+                            </div>
+                        </li>
+                        {% comment %}<li class="nav-item">
+                        {# URL provided by django-allauth/account/urls.py #}
+                        <a class="nav-link user-profile"
+                           href="{% url 'users:detail' request.user.username %}">{% trans "My Profile" %}</a>
+                    </li>{% endcomment %}
+
+                        {% comment %}<li class="nav-item">
+                        {# URL provided by django-allauth/account/urls.py #}
+                        <a class="nav-link btn btn-secondary btn-sm sign-out"
+                           href="{% url 'account_logout' %}">
+                            Sign Out
+                        </a>
+                    </li>{% endcomment %}
+
+                        {% comment %}<li class="nav-item">
+                        <a class="nav-link " href="{% url 'account_logout' %}">Sign
+                            Out</a>
+                    </li>{% endcomment %}
+
+                    {% else %}
+                        <li class="nav-item">
+                            {# URL provided by django-allauth/account/urls.py #}
+                            <a class="nav-link btn btn-secondary btn-sm sign-up"
+                               href="{% url 'account_signup' %}">
+                                Sign Up
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            {# URL provided by django-allauth/account/urls.py #}
+                            <a class="nav-link btn btn-secondary btn-sm sign-in"
+                               href="{% url 'account_login' %}">
+                                Sign In
+                            </a>
+                        </li>
+                    {% endif %}
+
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+{% endblock navigation %}
+
+{% comment %}<div class="m-b-1">
+    <nav class="navbar navbar-expand-md navbar-light bg-light">
+        <button class="navbar-toggler navbar-toggler-right" type="button"
+                data-toggle="collapse" data-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
         </button>
         <a class="navbar-brand" href="{% url 'home' %}">GFBio Submissions</a>
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-              <a class="nav-link" href="{% url 'home' %}">Home <span class="sr-only">(current)</span></a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'about' %}">About</a>
-            </li>
-            {% if request.user.is_authenticated %}
-              <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a class="nav-link" href="{% url 'users:detail' request.user.username  %}">{% trans "My Profile" %}</a>
-              </li>
-              <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a class="nav-link" href="{% url 'account_logout' %}">{% trans "Sign Out" %}</a>
-              </li>
-            {% else %}
-              <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a id="sign-up-link" class="nav-link" href="{% url 'account_signup' %}">{% trans "Sign Up" %}</a>
-              </li>
-              <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">{% trans "Sign In" %}</a>
-              </li>
-            {% endif %}
-          </ul>
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="{% url 'home' %}">Home <span
+                            class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'about' %}">About</a>
+                </li>
+                {% if request.user.is_authenticated %}
+                    <li class="nav-item">
+ URL provided by django-allauth/account/urls.py
+                        <a class="nav-link"
+                           href="{% url 'users:detail' request.user.username %}">{% trans "My Profile" %}</a>
+                    </li>
+                    <li class="nav-item">
+ URL provided by django-allauth/account/urls.py
+                        <a class="nav-link"
+                           href="{% url 'account_logout' %}">{% trans "Sign Out" %}</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+ URL provided by django-allauth/account/urls.py
+                        <a id="sign-up-link" class="nav-link"
+                           href="{% url 'account_signup' %}">{% trans "Sign Up" %}</a>
+                    </li>
+                    <li class="nav-item">
+ URL provided by django-allauth/account/urls.py
+                        <a id="log-in-link" class="nav-link"
+                           href="{% url 'account_login' %}">{% trans "Sign In" %}</a>
+                    </li>
+                {% endif %}
+            </ul>
         </div>
-      </nav>
+    </nav>
 
-    </div>
+</div>{% endcomment %}
 
-    <div class="container">
+{% block content-wrapper %}
 
-      {% if messages %}
-          {% for message in messages %}
-              <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">{{ message }}<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>
-          {% endfor %}
-      {% endif %}
+    {% block page-title %}
 
-      {% block content %}
+        {#        <section class="page-title bg-secondary">#}
+        {#            <div class="container">#}
+        {#                <div class="row">#}
+        {#                    <div class="col-md-6">#}
+        {#                        <h3 class="uppercase">#}
+        {#                            <i class="ti-pencil-alt"></i> Form Inputs</h3>#}
+        {#                    </div>#}
+        {#                </div>#}
+        {#                <!--end of row-->#}
+        {#            </div>#}
+        {#            <!--end of container-->#}
+        {#        </section>#}
+
+    {% endblock page-title %}
+
+    {% block section %}
+
+        <section id="mainSection">
+            <div class="container">
+                {# TODO: replace for clickable/removable messages OR remove completely  #}
+                {#  If you don’t want to use messages, you can remove 'django.contrib.messages' from your INSTALLED_APPS, the MessageMiddleware line from MIDDLEWARE, and the messages context processor from TEMPLATES. #}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="close"
+                                    data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% block content %}
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <p>Use this document as a way to quick start any new
+                                project.</p>
+                        </div>
+                    </div> <!-- /row -->
+                    <div class="row">
+                        <div class="col">
+                            <div style="height: 2000px;">Spacer. height 2000px
+                            </div>
+                        </div>
+                    </div>
+                {% endblock content %}
+
+            </div> <!-- /container -->
+        </section>
+    {% endblock section %}
+
+{% endblock content-wrapper %}
+
+{% comment %}<div class="container">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    {% block content %}
         <p>Use this document as a way to quick start any new project.</p>
-      {% endblock content %}
+    {% endblock content %}
 
-    </div> <!-- /container -->
+</div> <!-- /container -->{% endcomment %}
 
-    {% block modal %}{% endblock modal %}
 
-    <!-- Le javascript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    {% block javascript %}
-      
-      <!-- Bootstrap JS and its dependencies-->
-      <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
-      <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+{% block footer %}
 
-      <!-- Your stuff: Third-party javascript libraries go here -->
-      
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 col-sm-6">
+                    <a href="https://www.gfbio.org/">
+                        <img src="{% static 'images/gfbio_logo.grey.svg' %}">
+                    </a>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <h6>GFBio</h6>
+                    <hr>
+                    <ul class="list-unstyled">
+                        <li>
+                            <a href="https://www.gfbio.org/">GFBio Project</a>
+                        </li>
+                        <li>
+                            <a href="https://www.gfbio.org/gfbio_ev">GFBio
+                                e.V.</a>
+                        </li>
 
-      <!-- place project specific Javascript in this file -->
-      
-      <script src="{% static 'js/project.js' %}"></script>
-      
+                        <li>
+                            <a href="https://www.gfbio.org/about/legal-notice">Legal
+                                Notice</a>
+                        </li>
+                        <li>
+                            <a href="https://www.gfbio.org/about/privacy-policy">Privacy
+                                Policy</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <h6>Services</h6>
+                    <hr>
+                    <ul class="list-unstyled">
+                        <li>
+                            <a href="https://services.gfbio.org/search/">
+                                <i class="ti-search icon"></i>
+                                Find
+                                Data</a>
+                        </li>
+                        <li>
+                            <a href="/submission/molecular/">
+                                <i class="ti-upload icon"></i>
+                                Submit
+                                Data</a>
+                        </li>
+                        <li>
+                            <a href="https://www.gfbio.org/data/plan/dmpt">
+                                <i class="ti-check-box icon"></i>
+                                Data Management Plan
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <h6>Get in touch</h6>
+                    <hr>
+                    <ul class="list-unstyled">
+                        <li>
+                            <a href="https://twitter.com/GFBio_Project">
+                                <i class="ti-twitter-alt icon"></i>
+                                Twitter
+                            </a>
+                        </li>
+                        <li>
+                            <a href="mailto:info@gfbio.org">
+                                <i class="ti-email icon"></i>
+                                Email
+                                us
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
 
-    {% endblock javascript %}
-  </body>
+{% endblock footer %}
+
+{% block modal %}{% endblock modal %}
+
+<!-- Le javascript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+{% block javascript %}
+
+    <!-- Required by Bootstrap v4 beta -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+            crossorigin="anonymous"></script>
+    <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+            integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+            crossorigin="anonymous"></script>
+    <script
+            src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+            integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+            crossorigin="anonymous"></script>
+
+    <!-- Your stuff: Third-party javascript libraries go here -->
+    {% block thirdPartyJavaScript %}
+        {#        <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>#}
+        {#        <script src="{% static 'vendor/scrollreveal/scrollreveal.min.js' %}"></script>#}
+        {#        <script src="{% static 'vendor/magnific-popup/jquery.magnific-popup.min.js' %}"></script>#}
+    {% endblock thirdPartyJavaScript %}
+
+    <!-- place project specific Javascript in this file -->
+    <script src="{% static 'js/project.js' %}"></script>
+
+
+{% endblock javascript %}
+</body>
 </html>
  
