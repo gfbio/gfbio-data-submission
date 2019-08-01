@@ -76,6 +76,8 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 - docker-compose -f local.yml run --rm django python manage.py createsuperuser
 - add & update requirements for brokerage app
 - add & adapt settings (base & production)
+- copy static files
+- copy templates
 
 ## Libraries to inspect
 
