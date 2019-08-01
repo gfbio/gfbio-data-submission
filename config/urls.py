@@ -1,21 +1,34 @@
 from django.conf import settings
-from django.urls import include, path
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.views.generic import TemplateView
+from django.urls import include, path
 from django.views import defaults as default_views
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
     path(
         "about/", TemplateView.as_view(template_name="pages/about.html"), name="about"
     ),
+
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
+
     # User management
     path("users/", include("gfbio_submissions.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
+
+    # original: url(r"^oidc/", include("mozilla_django_oidc.urls")),
+    path("oidc/", include("mozilla_django_oidc.urls")),
+
     # Your stuff: custom urls includes go here
+    # orginal:
+    # url(r'^api/', include('gfbio_submissions.brokerage.urls', namespace='brokerage')),
+    # url(r'^ui/', include('gfbio_submissions.submission_ui.urls', namespace='userinterface')),
+
+    # path("api/", include("gfbio_submissions.brokerage.urls", namespace="brokerage")),
+    path("ui/", include("gfbio_submissions.submission_ui.urls", namespace="userinterface")),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
