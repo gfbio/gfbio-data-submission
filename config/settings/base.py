@@ -4,8 +4,12 @@ Base settings to build other settings files upon.
 
 import environ
 
+# VERSION NUMBER
+# ------------------------------------------------------------------------------#
+VERSION = '1.75.0'
+
 ROOT_DIR = (
-    environ.Path(__file__) - 3
+        environ.Path(__file__) - 3
 )  # (gfbio_submissions/config/settings/base.py - 3 = gfbio_submissions/)
 APPS_DIR = ROOT_DIR.path("gfbio_submissions")
 
@@ -24,7 +28,7 @@ DEBUG = env.bool("DJANGO_DEBUG", False)
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # though not all of them may be available with every OS.
 # In Windows, this must be set to your system time zone.
-TIME_ZONE = "UTC"
+TIME_ZONE = "Europe/Berlin"
 # https://docs.djangoproject.com/en/dev/ref/settings/#language-code
 LANGUAGE_CODE = "en-us"
 # https://docs.djangoproject.com/en/dev/ref/settings/#site-id
@@ -68,13 +72,20 @@ THIRD_PARTY_APPS = [
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
+    "allauth.socialaccount.providers.github",
+    "allauth.socialaccount.providers.orcid",
+    "allauth.socialaccount.providers.google",
     "rest_framework",
+    "rest_framework.authtoken",
     "django_celery_beat",
+    "corsheaders",
+    "mozilla_django_oidc",
 ]
 
 LOCAL_APPS = [
     "gfbio_submissions.users.apps.UsersConfig",
     # Your stuff: custom apps go here
+    # "gfbio_submissions.brokerage",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -90,6 +101,7 @@ MIGRATION_MODULES = {"sites": "gfbio_submissions.contrib.sites.migrations"}
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
+    "mozilla_django_oidc.auth.OIDCAuthenticationBackend",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-user-model
 AUTH_USER_MODEL = "users.User"
@@ -113,15 +125,22 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
     },
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"
+    },
 ]
 
 # MIDDLEWARE
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#middleware
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
@@ -206,7 +225,8 @@ X_FRAME_OPTIONS = "DENY"
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 EMAIL_BACKEND = env(
-    "DJANGO_EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend"
+    "DJANGO_EMAIL_BACKEND",
+    default="django.core.mail.backends.smtp.EmailBackend"
 )
 # https://docs.djangoproject.com/en/2.2/ref/settings/#email-timeout
 EMAIL_TIMEOUT = 5
@@ -216,7 +236,10 @@ EMAIL_TIMEOUT = 5
 # Django Admin URL.
 ADMIN_URL = "admin/"
 # https://docs.djangoproject.com/en/dev/ref/settings/#admins
-ADMINS = [("""Marc Weber""", "maweber@mpi-bremen.de")]
+ADMINS = [
+    ("""Marc Weber""", "maweber@mpi-bremen.de"),
+    ("""Ivaylo Kostadinov""", 'ikostadi@mpi-bremen.de'),
+]
 # https://docs.djangoproject.com/en/dev/ref/settings/#managers
 MANAGERS = ADMINS
 
@@ -231,7 +254,7 @@ LOGGING = {
     "formatters": {
         "verbose": {
             "format": "%(levelname)s %(asctime)s %(module)s "
-            "%(process)d %(thread)d %(message)s"
+                      "%(process)d %(thread)d %(message)s"
         }
     },
     "handlers": {
@@ -275,12 +298,39 @@ ACCOUNT_AUTHENTICATION_METHOD = "username"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_EMAIL_REQUIRED = True
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+# "mandatory", "optional", or "none"
+ACCOUNT_EMAIL_VERIFICATION = "optional"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_ADAPTER = "gfbio_submissions.users.adapters.AccountAdapter"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 SOCIALACCOUNT_ADAPTER = "gfbio_submissions.users.adapters.SocialAccountAdapter"
 
-
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+# GIT access for AuditableTextData
+# ------------------------------------------------------------------------------
+LOCAL_REPOSITORY = env('LOCAL_REPOSITORY',
+                       default='/gfbio-submission-auditing-tests')
+REMOTE_REPOSITORY = env('REMOTE_REPOSITORY',
+                        default='https://maweber@colab.mpi-bremen.de/stash/scm/gfbio/gfbio-submission-auditing-tests.git')
+
+# OpenIDConnect SETTINGS
+# ------------------------------------------------------------------------------
+
+OIDC_RP_CLIENT_ID = env('OIDC_RP_CLIENT_ID', default='no_oidc_cl_id')
+OIDC_RP_CLIENT_SECRET = env('OIDC_RP_CLIENT_SECRET',
+                            default='no_oidc_cl_secret')
+
+OIDC_RP_SIGN_ALGO = env('OIDC_RP_SIGN_ALGO', default='HS256')
+OIDC_OP_JWKS_ENDPOINT = env('OIDC_OP_JWKS_ENDPOINT', default='no_jwks_url')
+
+OIDC_OP_AUTHORIZATION_ENDPOINT = 'https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php'
+OIDC_OP_TOKEN_ENDPOINT = 'https://sso.gfbio.org/simplesaml/module.php/oidc/access_token.php'
+OIDC_OP_USER_ENDPOINT = ' https://sso.gfbio.org/simplesaml/module.php/oidc/userinfo.php'
+
+OIDC_USE_NONCE = False  # Default:	True
+
+LOGIN_REDIRECT_URL = '/ui/submission/list'
+LOGOUT_REDIRECT_URL = '/'
+

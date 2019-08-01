@@ -72,6 +72,11 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
         Bypass password validation and create user anyway? [y/N]: y
         Superuser created successfully.
 
+- intital run for images
+- docker-compose -f local.yml run --rm django python manage.py createsuperuser
+- add & update requirements for brokerage app
+- add & adapt settings (base & production)
+
 ## Libraries to inspect
 
 - https://github.com/core-api/python-client
