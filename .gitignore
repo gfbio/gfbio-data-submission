@@ -56,7 +56,6 @@ htmlcov
 !.idea/webResources.xml
 
 # Vim
-
 *~
 *.swp
 *.swo
@@ -78,3 +77,5 @@ dev-server.env
 gfbio_submissions/media/*
 
 staticfiles/
+
+celerybeat.pid
