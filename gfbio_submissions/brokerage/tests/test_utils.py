@@ -14,7 +14,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils.encoding import smart_text
 from jira import JIRA, JIRAError
-from mock import patch
+from unittest.mock import patch
 from requests.structures import CaseInsensitiveDict
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
