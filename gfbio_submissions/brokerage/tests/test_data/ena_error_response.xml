@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
+<RECEIPT receiptDate="2015-08-04T11:50:22.438+01:00"
+         submissionFile="submission.xml" success="false">
+    <STUDY alias="a" status="PUBLIC"/>
+    <SUBMISSION alias="ADD_SUBMISSION_ALIAS"/>
+    <MESSAGES>
+        <ERROR>Please provide an abstract to describe your study(null) in
+            details
+        </ERROR>
+        <INFO>
+            VALIDATE action for the following XML: study.xml sample.xml
+        </INFO>
+    </MESSAGES>
+    <ACTIONS>VALIDATE</ACTIONS>
+    <ACTIONS>VALIDATE</ACTIONS>
+    <ACTIONS>HOLD
+    </ACTIONS>
+</RECEIPT>

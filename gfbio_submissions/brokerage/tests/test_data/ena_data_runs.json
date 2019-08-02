@@ -1,0 +1,187 @@
+{
+    "requirements": {
+        "title": "Test Data Submission",
+        "description": "Test data for unit and integration tests",
+        "study_type": "Metagenomics",
+        "samples": [
+            {
+                "taxon_id": 530564,
+                "description": "Pirellula staleyi DSM 6068, ...",
+                "sample_alias": "sample_j09gp7e9",
+                "sample_title": "Sample No. 1",
+                "sample_attributes": [
+                    {
+                        "tag": "investigation type",
+                        "value": "mimarks-survey"
+                    },
+                    {
+                        "tag": "environmental package",
+                        "value": "coffee"
+                    },
+                    {
+                        "tag": "collection date",
+                        "value": "2014-11"
+                    }
+                ]
+            },
+            {
+                "taxon_id": 1081887,
+                "description": "Escherichia coli 09BKT078844, ...",
+                "sample_alias": "sample_j09gp7eb",
+                "sample_title": "Sample No. 2"
+            },
+            {
+                "taxon_id": 2056630,
+                "description": "Candidatus Korarchaeota archaeon, ..",
+                "sample_alias": "sample_j09gp7ed",
+                "sample_title": "Sample No. 3"
+            },
+            {
+                "taxon_id": 1126011,
+                "description": "Listeria monocytogenes 07PF0776, , , ..., ",
+                "sample_alias": "sample_j09gp7ef",
+                "sample_title": "Sample No. 4"
+            },
+            {
+                "taxon_id": 224325,
+                "description": "Archaeoglobus fulgidus DSM 4304, lorem ipsum.",
+                "sample_alias": "sample_j09gp7eh",
+                "sample_title": "Sample No. 5"
+            }
+        ],
+        "experiments": [
+            {
+                "files": {
+                    "forward_read_file_name": "File1.forward.fastq.gz",
+                    "reverse_read_file_name": "File1.reverse.fastq.gz",
+                    "forward_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1",
+                    "reverse_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1"
+                },
+                "design": {
+                    "sample_descriptor": "sample_j09gp7e9",
+                    "library_descriptor": {
+                        "library_layout": {
+                            "layout_type": "paired",
+                            "nominal_length": 420
+                        },
+                        "library_source": "METAGENOMIC",
+                        "library_strategy": "AMPLICON",
+                        "library_selection": "PCR"
+                    }
+                },
+                "platform": "Illumina HiSeq 1000",
+                "experiment_alias": "experiment_j09gp7ea"
+            },
+            {
+                "files": {
+                    "forward_read_file_name": "File2.forward.fastq.gz",
+                    "reverse_read_file_name": "File2.reverse.fastq.gz",
+                    "forward_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1",
+                    "reverse_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1"
+                },
+                "design": {
+                    "sample_descriptor": "sample_j09gp7eb",
+                    "library_descriptor": {
+                        "library_layout": {
+                            "layout_type": "paired",
+                            "nominal_length": 420
+                        },
+                        "library_source": "METAGENOMIC",
+                        "library_strategy": "AMPLICON",
+                        "library_selection": "PCR"
+                    }
+                },
+                "platform": "Illumina HiSeq 1000",
+                "experiment_alias": "experiment_j09gp7ec"
+            },
+            {
+                "files": {
+                    "forward_read_file_name": "File3.forward.fastq.gz",
+                    "reverse_read_file_name": "File3.reverse.fastq.gz",
+                    "forward_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1",
+                    "reverse_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1"
+                },
+                "design": {
+                    "sample_descriptor": "sample_j09gp7ed",
+                    "library_descriptor": {
+                        "library_layout": {
+                            "layout_type": "paired",
+                            "nominal_length": 420
+                        },
+                        "library_source": "METAGENOMIC",
+                        "library_strategy": "AMPLICON",
+                        "library_selection": "PCR"
+                    }
+                },
+                "platform": "Illumina HiSeq 1000",
+                "experiment_alias": "experiment_j09gp7ee"
+            },
+            {
+                "files": {
+                    "forward_read_file_name": "File4.forward.fastq.gz",
+                    "reverse_read_file_name": "File4.reverse.fastq.gz",
+                    "forward_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1",
+                    "reverse_read_file_checksum": "197bb2c9becec16f66dc5cf9e1fa75d1"
+                },
+                "design": {
+                    "sample_descriptor": "sample_j09gp7ef",
+                    "library_descriptor": {
+                        "library_layout": {
+                            "layout_type": "paired",
+                            "nominal_length": 420
+                        },
+                        "library_source": "METAGENOMIC",
+                        "library_strategy": "AMPLICON",
+                        "library_selection": "PCR"
+                    }
+                },
+                "platform": "Illumina HiSeq 1000",
+                "experiment_alias": "experiment_j09gp7eg"
+            },
+            {
+                "design": {
+                    "sample_descriptor": "sample_j09gp7eh",
+                    "library_descriptor": {
+                        "library_layout": {
+                            "layout_type": "paired",
+                            "nominal_length": 420
+                        },
+                        "library_source": "METAGENOMIC",
+                        "library_strategy": "AMPLICON",
+                        "library_selection": "PCR"
+                    }
+                },
+                "platform": "Illumina HiSeq 1000",
+                "experiment_alias": "experiment_no_file_block"
+            }
+        ],
+        "runs": [
+            {
+                "experiment_ref": "experiment_no_file_block",
+                "data_block": {
+                    "files": [
+                        {
+                            "filename": "aFile",
+                            "filetype": "fastq",
+                            "checksum_method": "MD5",
+                            "checksum": "12345"
+                        }
+                    ]
+                }
+            },
+            {
+                "experiment_ref": "experiment_no_file_block",
+                "data_block": {
+                    "files": [
+                        {
+                            "filename": "aFile2",
+                            "filetype": "fastq",
+                            "checksum_method": "MD5",
+                            "checksum": "12345"
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

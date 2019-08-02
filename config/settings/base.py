@@ -85,7 +85,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "gfbio_submissions.users.apps.UsersConfig",
     # Your stuff: custom apps go here
-    # "gfbio_submissions.brokerage",
+    "gfbio_submissions.brokerage",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -333,4 +333,5 @@ OIDC_USE_NONCE = False  # Default:	True
 
 LOGIN_REDIRECT_URL = '/ui/submission/list'
 LOGOUT_REDIRECT_URL = '/'
+
 
