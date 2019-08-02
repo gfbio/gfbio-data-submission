@@ -3,6 +3,7 @@ from django.conf.urls import url
 
 from . import views
 
+app_name = "brokerage"
 urlpatterns = [
     # TODO: use '/' since viewset will do the same
     url(

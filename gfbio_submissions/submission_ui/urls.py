@@ -4,6 +4,7 @@ from django.views.generic import TemplateView
 
 from . import views
 
+app_name = "submisison_ui"
 urlpatterns = [
     url(
         regex=r'submission/mock.$',

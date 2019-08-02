@@ -26,7 +26,7 @@ urlpatterns = [
     # url(r'^api/', include('gfbio_submissions.brokerage.urls', namespace='brokerage')),
     # url(r'^ui/', include('gfbio_submissions.submission_ui.urls', namespace='userinterface')),
 
-    # path("api/", include("gfbio_submissions.brokerage.urls", namespace="brokerage")),
+    path("api/", include("gfbio_submissions.brokerage.urls", namespace="brokerage")),
     path("ui/", include("gfbio_submissions.submission_ui.urls", namespace="userinterface")),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
