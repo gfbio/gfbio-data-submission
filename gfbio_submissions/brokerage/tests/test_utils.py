@@ -1434,6 +1434,9 @@ class TestHelpDeskTicketMethods(TestCase):
 
     @responses.activate
     def test_attach_template_without_submitting_user(self):
+        responses.add(responses.PUT,
+                      'https://www.example.com/rest/api/2/issue/FAKE_KEY',
+                      body='', status=200)
         submission = Submission.objects.first()
         submission.submitting_user = None
         submission.save()

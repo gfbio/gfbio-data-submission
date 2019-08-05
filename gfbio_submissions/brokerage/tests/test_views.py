@@ -549,6 +549,9 @@ class TestSubmissionUploadView(TestCase):
 
     @responses.activate
     def test_not_owner_file_upload(self):
+        responses.add(responses.PUT,
+                      'https://www.example.com/rest/api/2/issue/FAKE_KEY',
+                      body='', status=200)
         submission = Submission.objects.first()
         submission.site = User.objects.last()
         submission.save()
