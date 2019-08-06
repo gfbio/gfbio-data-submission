@@ -5,6 +5,7 @@ from json import JSONDecodeError
 
 import celery
 from celery import Task
+from celery.exceptions import MaxRetriesExceededError
 from django.core.mail import mail_admins
 from django.db import transaction
 from django.db.models import Q
@@ -267,6 +268,9 @@ def force_ticket_creation(response, submission, site_configuration):
 
 # TODO: refactor/move to submission_transfer_handler
 def apply_default_task_retry_policy(response, task, submission):
+    print('\n\napply_default_task_retry_policy\n', response, '\n ', task, '\n ',
+          submission.broker_submission_id, '\n\n')
+    print(response.content)
     try:
         SubmissionTransferHandler.raise_response_exceptions(response)
     except SubmissionTransferHandler.TransferServerError as e:
@@ -278,11 +282,15 @@ def apply_default_task_retry_policy(response, task, submission):
             msg='{} SubmissionTransfer.TransferServerError number_of_retries={}'
                 ''.format(task.name, task.request.retries)
         )
+        print('\n\n', task.request.retries)
         if task.request.retries == SUBMISSION_MAX_RETRIES:
+            print('retries reached ', task.request.retries, ' ',
+                  SUBMISSION_MAX_RETRIES, '\n\n')
             logger.warning(
                 msg='{} SubmissionTransfer.TransferServerError (mail_admins) max_retries={}'
                     ''.format(task.name, SUBMISSION_MAX_RETRIES)
             )
+            print('\nMAIL ADMINS\n')
             mail_admins(
                 subject='Failed "{}" for submission {}'.format(
                     task.name, submission.broker_submission_id),
@@ -291,14 +299,25 @@ def apply_default_task_retry_policy(response, task, submission):
                     submission.broker_submission_id, e),
             )
         else:
+            print('increase retry ',
+                  (task.request.retries + 1) * SUBMISSION_RETRY_DELAY)
             logger.info(
                 msg='{} SubmissionTransfer.TransferServerError retry after delay'
                     ''.format(task.name)
             )
+            # try:
+            print('\n---------- raise retry (as before )-------------\n')
             raise task.retry(
                 exc=e,
+                throw=False,
                 countdown=(task.request.retries + 1) * SUBMISSION_RETRY_DELAY,
             )
+            # except celery.exceptions.Retry as e:
+            #     print('\n--------- exceptr retry --------------\n')
+            #     print(e.exc)
+            #     print(e.message)
+            #     print(e.humanize())
+
     except SubmissionTransferHandler.TransferClientError as e:
         logger.warning(
             msg='{} SubmissionTransfer.TransferClientError {}'.format(
@@ -1099,12 +1118,33 @@ def generic_comment_helpdesk_ticket_task(prev_task_result=None,
 #              )
 # def add_pangaealink_to_helpdesk_ticket_task(self, prev_task_result=None,
 #                                             submission_id=None):
+
+
+# @celery.task(
+#     base=SubmissionTask,
+#     bind=True,
+#     name='tasks.add_pangaealink_to_helpdesk_ticket_task',
+#
+#     # approach 2: https://coderbook.com/@marcus/how-to-automatically-retry-failed-tasks-with-celery/
+#     max_retries=SUBMISSION_MAX_RETRIES,
+#
+#     # approach 1 https://www.distributedpython.com/2018/09/04/error-handling-retry/
+#     # known expeptions: http://docs.celeryq.org/en/latest/userguide/tasks.html#automatic-retry-for-known-exceptions
+#
+#     # throws=(SubmissionTransferHandler.TransferServerError,),
+#     # autoretry_for=(SubmissionTransferHandler.TransferServerError,),
+#     # exponential_backoff=2,
+#     # retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
+#     # retry_jitter=False  # 4.2
+# )
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
              name='tasks.add_pangaealink_to_helpdesk_ticket_task',
              base=SubmissionTask
              )
-def add_pangaealink_to_helpdesk_ticket_task(prev_task_result=None,
-                                            submission_id=None):
+def add_pangaealink_to_helpdesk_ticket_task(
+        # self, # approach 1
+        prev_task_result=None,
+        submission_id=None):
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id,
         task=add_pangaealink_to_helpdesk_ticket_task,
@@ -1132,8 +1172,29 @@ def add_pangaealink_to_helpdesk_ticket_task(prev_task_result=None,
                 submission=submission,
             )
 
+            print('\n\nRESPONSE ', response, ' ', response.content, ' retries ',
+                  # self.request.retries
+                  )
+
+            # if not response.ok:
+            # approach 2 thought further
+            # try:
+            #                                                     # do not throw retry exception
+            #     self.retry(countdown=3**self.request.retries, throw=False)
+            # except MaxRetriesExceededError as e:
+            #     print('MAX RETRIES ', e)
+            #     return TaskProgressReport.CANCELLED
+
+            # approach 1, a bit further
+            # if self.request.retries == SUBMISSION_MAX_RETRIES:
+            #     return TaskProgressReport.CANCELLED
+            # raise SubmissionTransferHandler.TransferServerError(
+            #     f'gfbio_helpdesk_comment_on_ticket returned unexpected '
+            #     f'response code: {response.status_code}')
+
             apply_default_task_retry_policy(response,
                                             add_pangaealink_to_helpdesk_ticket_task,
                                             submission)
+            return True
     else:
         return TaskProgressReport.CANCELLED
