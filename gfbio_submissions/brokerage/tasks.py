@@ -1140,10 +1140,12 @@ def generic_comment_helpdesk_ticket_task(prev_task_result=None,
     #
     # throws=(SubmissionTransferHandler.TransferServerError,
     #         SubmissionTransferHandler.TransferClientError,),
+    # throws=(SubmissionTransferHandler.TransferClientError, ),
     # autoretry_for=(SubmissionTransferHandler.TransferServerError,),
     # exponential_backoff=2,
-    # retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES+7},
-    # retry_jitter=False  # 4.2
+    # retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES+2},
+    # retry_backoff=10,
+    # retry_jitter=True  # 4.2
 )
 # current:
 # @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
@@ -1181,9 +1183,9 @@ def add_pangaealink_to_helpdesk_ticket_task(
                 submission=submission,
             )
 
-            print('\n\nRESPONSE ', response, ' ', response.content, ' retries ',
-                  self.request.retries
-                  )
+            # print('\n\nRESPONSE ', response, ' ', response.content, ' retries ',
+            #       self.request.retries
+            #       )
 
             if not response.ok:
                 # approach 3
@@ -1195,17 +1197,19 @@ def add_pangaealink_to_helpdesk_ticket_task(
                 #     # raise SubmissionTransferHandler.TransferClientError
 
                 # approach 2 thought further
-                try:
+                # try:
                     # do not throw retry exception
-                    # self.retry(countdown=3 ** self.request.retries, throw=False)
-                    self.retry(
-                        countdown=(self.request.retries + 1) * SUBMISSION_RETRY_DELAY,
-                        throw=False
-                    )
+                try:
+                    self.retry(countdown=3 ** self.request.retries, throw=False)
                 except MaxRetriesExceededError as e:
                     print('MAX RETRIES ', e)
-                    raise SubmissionTransferHandler.TransferServerError
-                    # return TaskProgressReport.CANCELLED
+                    # self.retry(
+                    #     countdown=(self.request.retries + 1) * SUBMISSION_RETRY_DELAY,
+                    #     throw=False
+                    # )
+                # except MaxRetriesExceededError as e:
+                #     print('MAX RETRIES ', e)
+                #     return TaskProgressReport.CANCELLED
 
                 # approach 1, a bit further
                 # if self.request.retries == SUBMISSION_MAX_RETRIES:
