@@ -1127,6 +1127,14 @@ def generic_comment_helpdesk_ticket_task(prev_task_result=None,
 #                                             submission_id=None):
 
 #
+
+def new_retry(response, task):
+    if not response.ok:
+        try:
+            task.retry(countdown=3 ** task.request.retries, throw=False)
+        except MaxRetriesExceededError as e:
+            print('new_retry MAX RETRIES ', e)
+
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -1182,6 +1190,9 @@ def add_pangaealink_to_helpdesk_ticket_task(
                 comment_body=comment_body,
                 submission=submission,
             )
+
+            # refactored approach 2, similar to actual retry policy
+            #new_retry(response, self)
 
             # print('\n\nRESPONSE ', response, ' ', response.content, ' retries ',
             #       self.request.retries
