@@ -48,7 +48,7 @@ class SubmissionTask(Task):
     abstract = True
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
-        print('+++++++++ on_retry')
+        # print('+++++++++ on_retry')
         # TODO: capture this idea of reporting to sentry
         # sentrycli.captureException(exc)
         TaskProgressReport.objects.update_report_on_exception(
@@ -56,20 +56,20 @@ class SubmissionTask(Task):
         super(SubmissionTask, self).on_retry(exc, task_id, args, kwargs, einfo)
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
-        print('+++++++++ on_failure')
+        # print('+++++++++ on_failure')
         TaskProgressReport.objects.update_report_on_exception(
             'FAILURE', exc, task_id, args, kwargs, einfo)
         super(SubmissionTask, self).on_failure(exc, task_id, args, kwargs,
                                                einfo)
 
     def on_success(self, retval, task_id, args, kwargs):
-        print('+++++++++ on_success')
+        # print('+++++++++ on_success')
         TaskProgressReport.objects.update_report_on_success(
             retval, task_id, args, kwargs)
         super(SubmissionTask, self).on_success(retval, task_id, args, kwargs)
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        print('+++++++++ after return')
+        # print('+++++++++ after return')
         TaskProgressReport.objects.update_report_after_return(status, task_id)
         super(SubmissionTask, self).after_return(
             status, retval, task_id, args, kwargs, einfo)
@@ -270,8 +270,8 @@ def force_ticket_creation(response, submission, site_configuration):
 
 # TODO: refactor/move to submission_transfer_handler
 def apply_default_task_retry_policy(response, task, submission):
-    print('\n\napply_default_task_retry_policy\n', response, '\n ', task, '\n ',
-          submission.broker_submission_id, '\n\n')
+    # print('\n\napply_default_task_retry_policy\n', response, '\n ', task, '\n ',
+    #       submission.broker_submission_id, '\n\n')
     # print(response.content)
     try:
         SubmissionTransferHandler.raise_response_exceptions(response)
@@ -284,15 +284,15 @@ def apply_default_task_retry_policy(response, task, submission):
             msg='{} SubmissionTransfer.TransferServerError number_of_retries={}'
                 ''.format(task.name, task.request.retries)
         )
-        print('\n\n', task.request.retries)
+        # print('\n\n', task.request.retries)
         if task.request.retries == SUBMISSION_MAX_RETRIES:
-            print('retries reached ', task.request.retries, ' ',
-                  SUBMISSION_MAX_RETRIES, '\n\n')
+            # print('retries reached ', task.request.retries, ' ',
+            #       SUBMISSION_MAX_RETRIES, '\n\n')
             logger.warning(
                 msg='{} SubmissionTransfer.TransferServerError (mail_admins) max_retries={}'
                     ''.format(task.name, SUBMISSION_MAX_RETRIES)
             )
-            print('\nMAIL ADMINS\n')
+            # print('\nMAIL ADMINS\n')
             mail_admins(
                 subject='Failed "{}" for submission {}'.format(
                     task.name, submission.broker_submission_id),
@@ -301,14 +301,14 @@ def apply_default_task_retry_policy(response, task, submission):
                     submission.broker_submission_id, e),
             )
         else:
-            print('increase retry ',
-                  (task.request.retries + 1) * SUBMISSION_RETRY_DELAY)
+            # print('increase retry ',
+            #       (task.request.retries + 1) * SUBMISSION_RETRY_DELAY)
             logger.info(
                 msg='{} SubmissionTransfer.TransferServerError retry after delay'
                     ''.format(task.name)
             )
             # try:
-            print('\n---------- raise retry (as before )-------------\n')
+            # print('\n---------- raise retry (as before )-------------\n')
             # raise task.retry(
             #     exc=e,
             #     throw=False,
@@ -1128,12 +1128,12 @@ def generic_comment_helpdesk_ticket_task(prev_task_result=None,
 
 #
 # extracted approach 2
-def new_retry(response, task):
-    if not response.ok:
-        try:
-            task.retry(countdown=3 ** task.request.retries, throw=False)
-        except MaxRetriesExceededError as e:
-            print('new_retry MAX RETRIES ', task.request.retries, ' ', e)
+# def new_retry(response, task):
+#     if not response.ok:
+#         try:
+#             task.retry(countdown=3 ** task.request.retries, throw=False)
+#         except MaxRetriesExceededError as e:
+#             print('new_retry MAX RETRIES ', task.request.retries, ' ', e)
 
 @celery.task(
     base=SubmissionTask,
