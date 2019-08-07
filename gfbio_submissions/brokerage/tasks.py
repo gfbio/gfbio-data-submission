@@ -272,7 +272,7 @@ def force_ticket_creation(response, submission, site_configuration):
 def apply_default_task_retry_policy(response, task, submission):
     print('\n\napply_default_task_retry_policy\n', response, '\n ', task, '\n ',
           submission.broker_submission_id, '\n\n')
-    print(response.content)
+    # print(response.content)
     try:
         SubmissionTransferHandler.raise_response_exceptions(response)
     except SubmissionTransferHandler.TransferServerError as e:
@@ -468,8 +468,8 @@ def transfer_data_to_ena_task(prepare_result=None, submission_id=None):
     if submission is not None and site_configuration is not None:
         ena_submission_data = AuditableTextData.objects.assemble_ena_submission_data(
             submission=submission)
-        logger.info('\nena_submission_data')
-        logger.info('{}'.format(ena_submission_data))
+        # logger.info('\nena_submission_data')
+        # logger.info('{}'.format(ena_submission_data))
         if ena_submission_data == {}:
             return TaskProgressReport.CANCELLED
         try:
@@ -477,14 +477,14 @@ def transfer_data_to_ena_task(prepare_result=None, submission_id=None):
                                                           site_configuration.ena_server,
                                                           ena_submission_data,
                                                           )
-            logger.info('\nresponse request id {}'.format(request_id))
-            logger.info('\nresponse \n{}\n'.format(response))
+            # logger.info('\nresponse request id {}'.format(request_id))
+            # logger.info('\nresponse \n{}\n'.format(response))
             apply_default_task_retry_policy(
                 response,
                 transfer_data_to_ena_task,
                 submission,
             )
-            logger.info('\nafter retry policy')
+            # logger.info('\nafter retry policy')
         except ConnectionError as e:
             logger.error(
                 msg='connection_error {}.url={} title={}'.format(
@@ -493,11 +493,11 @@ def transfer_data_to_ena_task(prepare_result=None, submission_id=None):
                     site_configuration.ena_server.title)
             )
             response = Response()
-        logger.info(
-            '\nreturn from task {}\n{}\n{}\n'.format(str(request_id),
-                                                     response.status_code,
-                                                     response.content)
-        )
+        # logger.info(
+        #     '\nreturn from task {}\n{}\n{}\n'.format(str(request_id),
+        #                                              response.status_code,
+        #                                              response.content)
+        # )
         return str(request_id), response.status_code, smart_text(
             response.content)
     else:
@@ -1127,13 +1127,13 @@ def generic_comment_helpdesk_ticket_task(prev_task_result=None,
 #                                             submission_id=None):
 
 #
-
+# extracted approach 2
 def new_retry(response, task):
     if not response.ok:
         try:
             task.retry(countdown=3 ** task.request.retries, throw=False)
         except MaxRetriesExceededError as e:
-            print('new_retry MAX RETRIES ', e)
+            print('new_retry MAX RETRIES ', task.request.retries, ' ', e)
 
 @celery.task(
     base=SubmissionTask,
@@ -1198,22 +1198,22 @@ def add_pangaealink_to_helpdesk_ticket_task(
             #       self.request.retries
             #       )
 
-            if not response.ok:
-                # approach 3
-                # if 500 <= response.status_code < 600:
-                #     # as noted in decorator for retry
-                #     raise SubmissionTransferHandler.TransferServerError
-                #
-                #     # not working this way: no retry, because of dec. will causer exception when not in 'throws', else accepted error
-                #     # raise SubmissionTransferHandler.TransferClientError
-
-                # approach 2 thought further
-                # try:
-                    # do not throw retry exception
-                try:
-                    self.retry(countdown=3 ** self.request.retries, throw=False)
-                except MaxRetriesExceededError as e:
-                    print('MAX RETRIES ', e)
+            # if not response.ok:
+            #     # approach 3
+            #     # if 500 <= response.status_code < 600:
+            #     #     # as noted in decorator for retry
+            #     #     raise SubmissionTransferHandler.TransferServerError
+            #     #
+            #     #     # not working this way: no retry, because of dec. will causer exception when not in 'throws', else accepted error
+            #     #     # raise SubmissionTransferHandler.TransferClientError
+            #
+            #     # approach 2 thought further
+            #     # try:
+            #         # do not throw retry exception
+            #     try:
+            #         self.retry(countdown=3 ** self.request.retries, throw=False)
+            #     except MaxRetriesExceededError as e:
+            #         print('MAX RETRIES ', e)
                     # self.retry(
                     #     countdown=(self.request.retries + 1) * SUBMISSION_RETRY_DELAY,
                     #     throw=False
@@ -1229,9 +1229,9 @@ def add_pangaealink_to_helpdesk_ticket_task(
                 #     f'gfbio_helpdesk_comment_on_ticket returned unexpected '
                 #     f'response code: {response.status_code}')
 
-            # apply_default_task_retry_policy(response,
-            #                                 add_pangaealink_to_helpdesk_ticket_task,
-            #                                 submission)
+            apply_default_task_retry_policy(response,
+                                            add_pangaealink_to_helpdesk_ticket_task,
+                                            submission)
             return True
     else:
         return TaskProgressReport.CANCELLED
