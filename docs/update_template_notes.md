@@ -130,6 +130,10 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 
 - docker-compose -f production.yml build --no-cache
 - set traefik.toml for domain c103-171.cloud.gwdg.de
+- docker-compose -f production.yml build
+- 
+
+docker-compose -f production.yml up
 
 ## Libraries to inspect
 
