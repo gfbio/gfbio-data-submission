@@ -131,9 +131,22 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 - docker-compose -f production.yml build --no-cache
 - set traefik.toml for domain c103-171.cloud.gwdg.de
 - docker-compose -f production.yml build
-- 
 
-docker-compose -f production.yml up
+- add git deps to production docker file
+- add images to static dir and push/pull via git
+- fix white noise error with image file:
+  
+        chmod 755 gfbio_logo.dark.svg
+
+- rebuild: docker-compose -f production.yml build
+- docker-compose -f production.yml run --rm django python manage.py collectstatic
+- docker-compose -f production.yml up
+
+- apply migrations (packages, models)
+
+        docker-compose -f production.yml run --rm django python manage.py migrate
+
+
 
 ## Libraries to inspect
 
