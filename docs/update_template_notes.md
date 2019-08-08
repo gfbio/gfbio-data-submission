@@ -81,7 +81,58 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 
 - copy submission_ui app (not registered under APPS ...)
 
+## Initial deploy on dev server for testing
+
+### update machine
+
+- apt-get update
+- apt-get upgrade
+
+- restart via gwdg web-interface
+
+### backup database
+
+- git branch -> currently on develop
+- docker-compose -f production.yml run --rm postgres backu
+- docker ps to get psotgres container id
+- docker cp 9059e90210e8:/backups/backup_2019_08_08T12_10_47.sql.gz /var/www/gfbio_submissions/
+
+### pull feature branch
+
+- supervisorctl stop devgfbiosubmissions
+- docker-compose -f production.yml down
+- git fetch
+- git stash (because of renamed dev server caddyfile)
+- git checkout feature/GFBIO-2448-major-update
+
+### prepare & build
+
+- first: manual scp of env directory: 
+
+        maweber@makrele:~/devel/gfbio_submissions$ scp -r .envs/ root@141.5.103.171:/var/www/gfbio_submissions/
+
+- docker-compose -f production.yml build --no-cache
+- docker-compose -f production.yml up . for initial pulling/building of images
+
+#### copy .envs for development server
+
+- cp .envs to .envs-development and adapt values to dev-server.env values
+- scp to development server:
+
+        scp -r .envs-development/ root@141.5.103.171:/var/www/gfbio_submissions/
+
+- on develoment server mv current settings to other name and move development settings to replace them:
+
+        mv .envs .envs-production
+        mv .envs-development/ .envs
+
+#### continue set up
+
+- docker-compose -f production.yml build --no-cache
+- set traefik.toml for domain c103-171.cloud.gwdg.de
+
 ## Libraries to inspect
 
 - https://github.com/core-api/python-client
 - https://github.com/core-api/core-api/
+

@@ -38,4 +38,5 @@ OnHostRule = true
     [frontends.django.headers]
       HostsProxyHeaders = ['X-CSRFToken']
     [frontends.django.routes.dr1]
-      rule = "Host:submissions.gfbio.org"
+      # rule = "Host:submissions.gfbio.org"
+      rule = "Host:c103-171.cloud.gwdg.de"
