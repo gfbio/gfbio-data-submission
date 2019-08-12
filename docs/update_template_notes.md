@@ -93,7 +93,7 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 ### backup database (IMPORTANT !!!)
 
 - git branch -> currently on develop
-- docker-compose -f production.yml run --rm postgres backu
+- docker-compose -f production.yml run --rm postgres backup
 - docker ps to get psotgres container id
 - docker cp 9059e90210e8:/backups/backup_2019_08_08T12_10_47.sql.gz /var/www/gfbio_submissions/
 
@@ -179,17 +179,74 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
          docker-compose -f local.yml run --rm django python manage.py migrate users --fake-initial
          docker-compose -f local.yml run --rm django python manage.py showmigrations
 
+--------------------------------------------------------------------------------
+ 
+### media files & uploaded data
+
+- docker exec -it gfbio_submissions_django_1_f08faa3561e2 sh
+- for root: docker exec -u 0 -it gfbio_submissions_django_1_f08faa3561e2 sh
+- after initial build vlume still available, data is there
+- /app/gfbio_submissions $ ls -l
+        
+        (...)
+        drwxr-xr-x   23 999      root          4096 Jul  7 23:00 media
+        (...)
+       
+- cd gfbio_submissions/
+- chown -R django media/
+- chgrp -R root media/
+
+- build again for testing permissions ...
+- permissions ok
+- changeing submisisonUpload file in admin works
+
+- --> BACKUP media on production
+
+- consider cleaning via prune. make sure main system running to keep needed stuff used
+- docker volume prune
+- docker image prune (take some time, seems to free a lot of space)
 
 --------------------------------------------------------------------------------
        
 - check supervisor configuration in /etc/supervisor/conf.d (still working)
 
---------------------------------------------------------------
-
-
+--------------------------------------------------------------------------------
 
 - flower ? added port 5555 tcp & udp in gwdg sec. group default rules
 
+--------------------------------------------------------------------------------
+
+## Protocol of first deploy on production server
+
+### backup older react app
+
+- on server: cloud@mastodon:/var/www/gfbio_submissions/gfbio_submissions/static$ cp -r ui/ /var/www/
+- local: maweber@makrele:~/devel/gfbio_submissions/backup_tmp$ scp -r cloud@141.5.106.43:/var/www/ui .
+
+### backup production database
+
+- docker-compose -f production.yml run --rm postgres backup
+
+        creating backup
+        ---------------
+        successfully created backup backup_2019_08_09T20_13_32.sql.gz
+        
+- docker ps
+
+        CONTAINER ID        IMAGE                            COMMAND                  CREATED             STATUS              PORTS                                                NAMES
+        5bf287ee6825        gfbio_submissions_caddy          "/usr/bin/caddy --co…"   4 weeks ago         Up 4 weeks          0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp, 2015/tcp   gfbio_submissions_caddy_1_948a033875ef
+        df5e5092995c        gfbio_submissions_django         "/entrypoint.sh /gun…"   4 weeks ago         Up 4 weeks                                                               gfbio_submissions_django_1_8fc8e8f6cadd
+        4f2150f71c3e        gfbio_submissions_celeryworker   "/entrypoint.sh /sta…"   4 weeks ago         Up 4 weeks                                                               gfbio_submissions_celeryworker_1_c75cffd37edb
+        10b2578aff2a        gfbio_submissions_postgres       "docker-entrypoint.s…"   6 weeks ago         Up 6 weeks          5432/tcp                                             gfbio_submissions_postgres_1_d12a9d4cf59f
+        21ee1fb84eac        redis:3.0                        "docker-entrypoint.s…"   6 weeks ago         Up 6 weeks          6379/tcp                                             gfbio_submissions_redis_1_f9158e72adeb
+
+- sudo docker cp 10b2578aff2a:/backups/backup_2019_08_09T20_13_32.sql.gz .
+- ls
+    
+        (... ) backup_2019_08_09T20_13_32.sql.gz  (...) backups
+                  
+ 
+ 
 
 ## Libraries to inspect
 
