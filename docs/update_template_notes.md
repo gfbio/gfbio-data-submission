@@ -218,6 +218,18 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 
 ## Protocol of first deploy on production server
 
+- ssh -l cloud 141.5.106.43
+
+### clean production server
+
+- docker volume prune
+- docker image prune
+
+### backup file uploads
+
+- sudo mkdir media_backup
+- sudo docker cp df5e5092995c:/app/gfbio_submissions/media/ media_backup/
+
 ### backup older react app
 
 - on server: cloud@mastodon:/var/www/gfbio_submissions/gfbio_submissions/static$ cp -r ui/ /var/www/
@@ -245,8 +257,18 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
     
         (... ) backup_2019_08_09T20_13_32.sql.gz  (...) backups
                   
- 
- 
+- scp -r cloud@141.5.106.43:/var/www/gfbio_submissions/backup_20* .
+
+### update system
+
+- sudo supervisorctl stop gfbio_submissions
+- sudo apt update && sudo apt upgrade
+- restart via gwdg web-interface
+
+### update 
+
+- sudo supervisorctl stop gfbio_submissions
+- docker-compose -f production.yml down
 
 ## Libraries to inspect
 
