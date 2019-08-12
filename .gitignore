@@ -73,6 +73,7 @@ stats.json
 dev-server.env
 .envs
 .envs-development
+.envs-production
 
 # User-uploaded media
 gfbio_submissions/media
