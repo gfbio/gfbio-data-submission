@@ -1,61 +1,53 @@
 """
-Test settings for GFBio Submissions project.
-
-- Used to run tests fast on the continuous integration server and locally
+With these settings, tests run faster.
 """
 
 from .base import *  # noqa
+from .base import env
 
-
-# DEBUG
+# GENERAL
 # ------------------------------------------------------------------------------
-# Turn debug off so tests run faster
+# https://docs.djangoproject.com/en/dev/ref/settings/#debug
 DEBUG = False
-TEMPLATES[0]['OPTIONS']['debug'] = False
+# https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
+SECRET_KEY = env(
+    "DJANGO_SECRET_KEY",
+    default="H199xxrHqXY5gjpcfQqid8gp5exRf3sZCSWT1mVYDfQatOj5La0p2YGZxwq5yilz",
+)
+# https://docs.djangoproject.com/en/dev/ref/settings/#test-runner
+TEST_RUNNER = "django.test.runner.DiscoverRunner"
 
-# SECRET CONFIGURATION
+# CACHES
 # ------------------------------------------------------------------------------
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
-# Note: This key only used for development and testing.
-SECRET_KEY = env('DJANGO_SECRET_KEY', default='CHANGEME!!!')
-
-# Mail settings
-# ------------------------------------------------------------------------------
-EMAIL_HOST = 'localhost'
-EMAIL_PORT = 1025
-
-# In-memory email backend stores messages in django.core.mail.outbox
-# for unit testing purposes
-EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
-
-# CACHING
-# ------------------------------------------------------------------------------
-# Speed advantages of in-memory caching without having to run Memcached
+# https://docs.djangoproject.com/en/dev/ref/settings/#caches
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': ''
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "",
     }
 }
 
-# TESTING
+# PASSWORDS
 # ------------------------------------------------------------------------------
-TEST_RUNNER = 'django.test.runner.DiscoverRunner'
+# https://docs.djangoproject.com/en/dev/ref/settings/#password-hashers
+PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
-
-# PASSWORD HASHING
+# TEMPLATES
 # ------------------------------------------------------------------------------
-# Use fast password hasher so tests run faster
-PASSWORD_HASHERS = [
-    'django.contrib.auth.hashers.MD5PasswordHasher',
+TEMPLATES[0]["OPTIONS"]["loaders"] = [  # noqa F405
+    (
+        "django.template.loaders.cached.Loader",
+        [
+            "django.template.loaders.filesystem.Loader",
+            "django.template.loaders.app_directories.Loader",
+        ],
+    )
 ]
 
-# TEMPLATE LOADERS
+# EMAIL
 # ------------------------------------------------------------------------------
-# Keep templates in memory so tests run faster
-TEMPLATES[0]['OPTIONS']['loaders'] = [
-    ['django.template.loaders.cached.Loader', [
-        'django.template.loaders.filesystem.Loader',
-        'django.template.loaders.app_directories.Loader',
-    ], ],
-]
+# https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
+EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+
+# Your stuff...
+# ------------------------------------------------------------------------------

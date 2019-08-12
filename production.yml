@@ -1,9 +1,9 @@
-version: '2'
+version: '3'
 
 volumes:
-  postgres_data: {}
-  postgres_backup: {}
-  caddy: {}
+  production_postgres_data: {}
+  production_postgres_data_backups: {}
+  production_traefik: {}
   django_media: {}
 
 services:
@@ -11,77 +11,68 @@ services:
     build:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
+    image: gfbio_submissions_production_django
     depends_on:
       - postgres
       - redis
-      # TODO: 23.11.2018: from gds src. I comment this for comparision. Redis should be sufficient as broker.
-      # - rabbit
-    env_file: .env
+    env_file:
+      - ./.envs/.production/.django
+      - ./.envs/.production/.postgres
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - django_media:/app/gfbio_submissions/media
       # git has to be initialized, remote origin has to be set.
       - /var/www/gfbio-submission-auditing:/gfbio-submission-auditing
-    command: /gunicorn.sh
+    command: /start
 
   postgres:
     build:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
+    image: gfbio_submissions_production_postgres
     volumes:
-      # - /etc/localtime:/etc/localtime:ro
-      - postgres_data:/var/lib/postgresql/data
-      - postgres_backup:/backups
-    env_file: .env
+      - production_postgres_data:/var/lib/postgresql/data
+      - production_postgres_data_backups:/backups
+    env_file:
+      - ./.envs/.production/.postgres
 
-  caddy:
+  traefik:
     build:
       context: .
-      dockerfile: ./compose/production/caddy/Dockerfile
+      dockerfile: ./compose/production/traefik/Dockerfile
+    image: gfbio_submissions_production_traefik
     depends_on:
       - django
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - caddy:/root/.caddy
-    env_file: .env
+      - production_traefik:/etc/traefik/acme
     ports:
       - "0.0.0.0:80:80"
       - "0.0.0.0:443:443"
 
   redis:
-    image: redis:3.0
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-
-  # TODO: 23.11.2018: from gds src. I comment this for comparision. Redis should be sufficient as broker.
-  # https://stackoverflow.com/questions/43264838/celery-when-should-you-choose-redis-as-a-message-broker-over-rabbitmq
-  #  rabbit:
-  #    hostname: rabbit
-  #    image: rabbitmq:latest
-  #    env_file: .env
-  #    #    ports:
-  #    #      - "5672"  # we forward this port because it's useful for debugging
-  #    #      - "15672"  # here, we can access rabbitmq management plugin
+    image: redis:5.0
 
   celeryworker:
     <<: *django
-    depends_on:
-      - postgres
-      - redis
-      # TODO: 23.11.2018: from gds src. I comment this for comparision. Redis should be sufficient as broker.
-      # - rabbit
-    command: /start-celeryworker.sh
-    volumes:
-      # - /etc/localtime:/etc/localtime:ro
-      - django_media:/app/gfbio_submissions/media
-      - /var/www/gfbio-submission-auditing:/gfbio-submission-auditing
+    image: gfbio_submissions_production_celeryworker
+    command: /start-celeryworker
 
   celerybeat:
     <<: *django
-    depends_on:
-      - postgres
-      - redis
-      # TODO: 23.11.2018: from gds src. I comment this for comparision. Redis should be sufficient as broker.
-      # - rabbit
-    command: /start-celerybeat.sh
+    image: gfbio_submissions_production_celerybeat
+    command: /start-celerybeat
 
+  flower:
+    <<: *django
+    image: gfbio_submissions_production_flower
+    ports:
+      - "5555:5555"
+    command: /start-flower
+  awscli:
+    build:
+      context: .
+      dockerfile: ./compose/production/aws/Dockerfile
+    env_file:
+      - ./.envs/.production/.django
+    volumes:
+      - production_postgres_data_backups:/backups

@@ -6,6 +6,9 @@ Submission services provided by GFBio
 .. image:: https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg
      :target: https://github.com/pydanny/cookiecutter-django/
      :alt: Built with Cookiecutter Django
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+     :target: https://github.com/ambv/black
+     :alt: Black code style
 
 
 :License: MIT
@@ -32,12 +35,21 @@ Setting Up Your Users
 
 For convenience, you can keep your normal user logged in on Chrome and your superuser logged in on Firefox (or similar), so that you can see how the site behaves for both kinds of users.
 
+Type checks
+^^^^^^^^^^^
+
+Running type checks with mypy:
+
+::
+
+  $ mypy gfbio_submissions
+
 Test coverage
 ^^^^^^^^^^^^^
 
 To run the tests, check your test coverage, and generate an HTML coverage report::
 
-    $ coverage run manage.py test
+    $ coverage run -m pytest
     $ coverage html
     $ open htmlcov/index.html
 
@@ -46,7 +58,7 @@ Running tests with py.test
 
 ::
 
-  $ py.test
+  $ pytest
 
 Live reloading and Sass CSS compilation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -67,7 +79,7 @@ To run a celery worker:
 .. code-block:: bash
 
     cd gfbio_submissions
-    celery -A gfbio_submissions.taskapp worker -l info
+    celery -A config.celery_app worker -l info
 
 Please note: For Celery's import magic to work, it is important *where* the celery commands are run. If you are in the same folder with *manage.py*, you should be right.
 

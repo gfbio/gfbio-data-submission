@@ -4,7 +4,7 @@ import uuid
 import responses
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
-from mock import patch
+from unittest.mock import patch
 
 from gfbio_submissions.brokerage.admin import download_auditable_text_data
 from gfbio_submissions.brokerage.models import ResourceCredential, \

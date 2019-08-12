@@ -5,6 +5,7 @@ from json import JSONDecodeError
 
 import celery
 from celery import Task
+from celery.exceptions import MaxRetriesExceededError
 from django.core.mail import mail_admins
 from django.db import transaction
 from django.db.models import Q
@@ -12,15 +13,13 @@ from django.db.utils import IntegrityError
 from django.utils.encoding import smart_text
 from requests import ConnectionError, Response
 
-from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA
+from gfbio_submissions.brokerage.configuration.settings import ENA
 from gfbio_submissions.brokerage.models import SubmissionUpload
 from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content
 from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_prepare_create_helpdesk_payload, gfbio_update_helpdesk_ticket, \
     gfbio_helpdesk_delete_attachment
-from gfbio_submissions.brokerage.utils.schema_validation import \
-    TARGET_SCHEMA_MAPPINGS
 from gfbio_submissions.users.models import User
 from .configuration.settings import BASE_HOST_NAME, \
     PRIMARY_DATA_FILE_MAX_RETRIES, PRIMARY_DATA_FILE_DELAY, \
@@ -49,6 +48,7 @@ class SubmissionTask(Task):
     abstract = True
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
+        # print('+++++++++ on_retry')
         # TODO: capture this idea of reporting to sentry
         # sentrycli.captureException(exc)
         TaskProgressReport.objects.update_report_on_exception(
@@ -56,17 +56,20 @@ class SubmissionTask(Task):
         super(SubmissionTask, self).on_retry(exc, task_id, args, kwargs, einfo)
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
+        # print('+++++++++ on_failure')
         TaskProgressReport.objects.update_report_on_exception(
             'FAILURE', exc, task_id, args, kwargs, einfo)
         super(SubmissionTask, self).on_failure(exc, task_id, args, kwargs,
                                                einfo)
 
     def on_success(self, retval, task_id, args, kwargs):
+        # print('+++++++++ on_success')
         TaskProgressReport.objects.update_report_on_success(
             retval, task_id, args, kwargs)
         super(SubmissionTask, self).on_success(retval, task_id, args, kwargs)
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
+        # print('+++++++++ after return')
         TaskProgressReport.objects.update_report_after_return(status, task_id)
         super(SubmissionTask, self).after_return(
             status, retval, task_id, args, kwargs, einfo)
@@ -267,6 +270,9 @@ def force_ticket_creation(response, submission, site_configuration):
 
 # TODO: refactor/move to submission_transfer_handler
 def apply_default_task_retry_policy(response, task, submission):
+    # print('\n\napply_default_task_retry_policy\n', response, '\n ', task, '\n ',
+    #       submission.broker_submission_id, '\n\n')
+    # print(response.content)
     try:
         SubmissionTransferHandler.raise_response_exceptions(response)
     except SubmissionTransferHandler.TransferServerError as e:
@@ -278,11 +284,15 @@ def apply_default_task_retry_policy(response, task, submission):
             msg='{} SubmissionTransfer.TransferServerError number_of_retries={}'
                 ''.format(task.name, task.request.retries)
         )
+        # print('\n\n', task.request.retries)
         if task.request.retries == SUBMISSION_MAX_RETRIES:
+            # print('retries reached ', task.request.retries, ' ',
+            #       SUBMISSION_MAX_RETRIES, '\n\n')
             logger.warning(
                 msg='{} SubmissionTransfer.TransferServerError (mail_admins) max_retries={}'
                     ''.format(task.name, SUBMISSION_MAX_RETRIES)
             )
+            # print('\nMAIL ADMINS\n')
             mail_admins(
                 subject='Failed "{}" for submission {}'.format(
                     task.name, submission.broker_submission_id),
@@ -291,14 +301,30 @@ def apply_default_task_retry_policy(response, task, submission):
                     submission.broker_submission_id, e),
             )
         else:
+            # print('increase retry ',
+            #       (task.request.retries + 1) * SUBMISSION_RETRY_DELAY)
             logger.info(
                 msg='{} SubmissionTransfer.TransferServerError retry after delay'
                     ''.format(task.name)
             )
-            raise task.retry(
+            # try:
+            # print('\n---------- raise retry (as before )-------------\n')
+            # raise task.retry(
+            #     exc=e,
+            #     throw=False,
+            #     countdown=(task.request.retries + 1) * SUBMISSION_RETRY_DELAY,
+            # )
+            task.retry(
                 exc=e,
+                throw=False,
                 countdown=(task.request.retries + 1) * SUBMISSION_RETRY_DELAY,
             )
+            # except celery.exceptions.Retry as e:
+            #     print('\n--------- exceptr retry --------------\n')
+            #     print(e.exc)
+            #     print(e.message)
+            #     print(e.humanize())
+
     except SubmissionTransferHandler.TransferClientError as e:
         logger.warning(
             msg='{} SubmissionTransfer.TransferClientError {}'.format(
@@ -442,8 +468,8 @@ def transfer_data_to_ena_task(prepare_result=None, submission_id=None):
     if submission is not None and site_configuration is not None:
         ena_submission_data = AuditableTextData.objects.assemble_ena_submission_data(
             submission=submission)
-        logger.info('\nena_submission_data')
-        logger.info('{}'.format(ena_submission_data))
+        # logger.info('\nena_submission_data')
+        # logger.info('{}'.format(ena_submission_data))
         if ena_submission_data == {}:
             return TaskProgressReport.CANCELLED
         try:
@@ -451,14 +477,14 @@ def transfer_data_to_ena_task(prepare_result=None, submission_id=None):
                                                           site_configuration.ena_server,
                                                           ena_submission_data,
                                                           )
-            logger.info('\nresponse request id {}'.format(request_id))
-            logger.info('\nresponse \n{}\n'.format(response))
+            # logger.info('\nresponse request id {}'.format(request_id))
+            # logger.info('\nresponse \n{}\n'.format(response))
             apply_default_task_retry_policy(
                 response,
                 transfer_data_to_ena_task,
                 submission,
             )
-            logger.info('\nafter retry policy')
+            # logger.info('\nafter retry policy')
         except ConnectionError as e:
             logger.error(
                 msg='connection_error {}.url={} title={}'.format(
@@ -467,11 +493,11 @@ def transfer_data_to_ena_task(prepare_result=None, submission_id=None):
                     site_configuration.ena_server.title)
             )
             response = Response()
-        logger.info(
-            '\nreturn from task {}\n{}\n{}\n'.format(str(request_id),
-                                                     response.status_code,
-                                                     response.content)
-        )
+        # logger.info(
+        #     '\nreturn from task {}\n{}\n{}\n'.format(str(request_id),
+        #                                              response.status_code,
+        #                                              response.content)
+        # )
         return str(request_id), response.status_code, smart_text(
             response.content)
     else:
@@ -1099,12 +1125,45 @@ def generic_comment_helpdesk_ticket_task(prev_task_result=None,
 #              )
 # def add_pangaealink_to_helpdesk_ticket_task(self, prev_task_result=None,
 #                                             submission_id=None):
-@celery.task(max_retries=SUBMISSION_MAX_RETRIES,
-             name='tasks.add_pangaealink_to_helpdesk_ticket_task',
-             base=SubmissionTask
-             )
-def add_pangaealink_to_helpdesk_ticket_task(prev_task_result=None,
-                                            submission_id=None):
+
+#
+# extracted approach 2
+# def new_retry(response, task):
+#     if not response.ok:
+#         try:
+#             task.retry(countdown=3 ** task.request.retries, throw=False)
+#         except MaxRetriesExceededError as e:
+#             print('new_retry MAX RETRIES ', task.request.retries, ' ', e)
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.add_pangaealink_to_helpdesk_ticket_task',
+
+    #     # approach 2: https://coderbook.com/@marcus/how-to-automatically-retry-failed-tasks-with-celery/
+    max_retries=SUBMISSION_MAX_RETRIES,
+
+    #     # approach 1 https://www.distributedpython.com/2018/09/04/error-handling-retry/ https://medium.com/@dwernychukjosh/retrying-asynchronous-tasks-with-celery-221acd385d34
+    #     # known expeptions: http://docs.celeryq.org/en/latest/userguide/tasks.html#automatic-retry-for-known-exceptions
+    #
+    # throws=(SubmissionTransferHandler.TransferServerError,
+    #         SubmissionTransferHandler.TransferClientError,),
+    # throws=(SubmissionTransferHandler.TransferClientError, ),
+    # autoretry_for=(SubmissionTransferHandler.TransferServerError,),
+    # exponential_backoff=2,
+    # retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES+2},
+    # retry_backoff=10,
+    # retry_jitter=True  # 4.2
+)
+# current:
+# @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
+#              name='tasks.add_pangaealink_to_helpdesk_ticket_task',
+#              base=SubmissionTask
+#              )
+def add_pangaealink_to_helpdesk_ticket_task(
+        self,  # approach 1, 2
+        prev_task_result=None,
+        submission_id=None):
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id,
         task=add_pangaealink_to_helpdesk_ticket_task,
@@ -1132,8 +1191,47 @@ def add_pangaealink_to_helpdesk_ticket_task(prev_task_result=None,
                 submission=submission,
             )
 
+            # refactored approach 2, similar to actual retry policy
+            #new_retry(response, self)
+
+            # print('\n\nRESPONSE ', response, ' ', response.content, ' retries ',
+            #       self.request.retries
+            #       )
+
+            # if not response.ok:
+            #     # approach 3
+            #     # if 500 <= response.status_code < 600:
+            #     #     # as noted in decorator for retry
+            #     #     raise SubmissionTransferHandler.TransferServerError
+            #     #
+            #     #     # not working this way: no retry, because of dec. will causer exception when not in 'throws', else accepted error
+            #     #     # raise SubmissionTransferHandler.TransferClientError
+            #
+            #     # approach 2 thought further
+            #     # try:
+            #         # do not throw retry exception
+            #     try:
+            #         self.retry(countdown=3 ** self.request.retries, throw=False)
+            #     except MaxRetriesExceededError as e:
+            #         print('MAX RETRIES ', e)
+                    # self.retry(
+                    #     countdown=(self.request.retries + 1) * SUBMISSION_RETRY_DELAY,
+                    #     throw=False
+                    # )
+                # except MaxRetriesExceededError as e:
+                #     print('MAX RETRIES ', e)
+                #     return TaskProgressReport.CANCELLED
+
+                # approach 1, a bit further
+                # if self.request.retries == SUBMISSION_MAX_RETRIES:
+                #     return TaskProgressReport.CANCELLED
+                # raise SubmissionTransferHandler.TransferClientError(
+                #     f'gfbio_helpdesk_comment_on_ticket returned unexpected '
+                #     f'response code: {response.status_code}')
+
             apply_default_task_retry_policy(response,
                                             add_pangaealink_to_helpdesk_ticket_task,
                                             submission)
+            return True
     else:
         return TaskProgressReport.CANCELLED

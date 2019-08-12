@@ -1,8 +1,8 @@
-version: '2'
+version: '3'
 
 volumes:
-  postgres_data_local: {}
-  postgres_backup_local: {}
+  local_postgres_data: {}
+  local_postgres_data_backups: {}
   django_media: {}
 
 services:
@@ -10,6 +10,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/local/django/Dockerfile
+    image: gfbio_submissions_local_django
     depends_on:
       - postgres
     volumes:
@@ -18,43 +19,50 @@ services:
       - django_media:/app/gfbio_submissions/media
       # git has to be initialized, remote origin has to be set.
       - /home/maweber/devel/git-python-test:/gfbio-submission-auditing-tests
-    environment:
-      - POSTGRES_USER=gfbio_submissions
-      - USE_DOCKER=yes
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgres
     ports:
       - "8000:8000"
-    command: /start.sh
+    command: /start
 
   postgres:
     build:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
+    image: gfbio_submissions_production_postgres
     volumes:
-      # - /etc/localtime:/etc/localtime:ro
-      - postgres_data_local:/var/lib/postgresql/data
-      - postgres_backup_local:/backups
-    environment:
-      - POSTGRES_USER=gfbio_submissions
-
+      - local_postgres_data:/var/lib/postgresql/data
+      - local_postgres_data_backups:/backups
+    env_file:
+      - ./.envs/.local/.postgres
 
   redis:
-    image: redis:3.0
+    image: redis:5.0
 
   celeryworker:
-    # https://github.com/docker/compose/issues/3220
     <<: *django
+    image: gfbio_submissions_local_celeryworker
     depends_on:
       - redis
       - postgres
+
     ports: []
-    command: /start-celeryworker.sh
+    command: /start-celeryworker
 
   celerybeat:
-    # https://github.com/docker/compose/issues/3220
     <<: *django
+    image: gfbio_submissions_local_celerybeat
     depends_on:
       - redis
       - postgres
-    ports: []
-    command: /start-celerybeat.sh
 
+    ports: []
+    command: /start-celerybeat
+
+  flower:
+    <<: *django
+    image: gfbio_submissions_local_flower
+    ports:
+      - "5555:5555"
+    command: /start-flower
