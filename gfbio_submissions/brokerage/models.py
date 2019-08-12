@@ -72,7 +72,8 @@ class SiteConfiguration(models.Model):
                              help_text=
                              'Enter a descriptive title for this instance.')
     site = models.ForeignKey(AUTH_USER_MODEL, null=True,
-                             blank=True, related_name='siteconfiguration')
+                             blank=True, related_name='siteconfiguration',
+                             on_delete=models.SET_NULL)
 
     contact = models.EmailField(
         default=ADMINS[0][1],
@@ -90,7 +91,8 @@ class SiteConfiguration(models.Model):
         ResourceCredential,
         related_name='SiteConfiguration.ena_server+',
         help_text='Select which server and/or account this configuration '
-                  'should use to connect to ENA.'
+                  'should use to connect to ENA.',
+        on_delete=models.PROTECT
     )
     ena_ftp = models.ForeignKey(
         ResourceCredential,
@@ -98,13 +100,15 @@ class SiteConfiguration(models.Model):
         blank=True,
         related_name='SiteConfiguration.ena_ftp+',
         help_text='Select which server and/or account this configuration '
-                  'should use to connect to access ENA FTP-server.'
+                  'should use to connect to access ENA FTP-server.',
+        on_delete=models.PROTECT
     )
     pangaea_server = models.ForeignKey(
         ResourceCredential,
         related_name='SiteConfiguration.pangaea_server+',
         help_text='Select which server and/or account this configuration '
-                  'should use to connect to Pangaea.'
+                  'should use to connect to Pangaea.',
+        on_delete=models.PROTECT
     )
 
     gfbio_server = models.ForeignKey(
@@ -114,7 +118,8 @@ class SiteConfiguration(models.Model):
         related_name='SiteConfiguration.gfbio_server+',
         help_text='Select which server and/or account this configuration '
                   'should use to connect to the GFBio portal database for '
-                  'accessing submission-registry, research_object, and so on.'
+                  'accessing submission-registry, research_object, and so on.',
+        on_delete=models.PROTECT
     )
 
     use_gfbio_services = models.BooleanField(
@@ -130,7 +135,8 @@ class SiteConfiguration(models.Model):
         related_name='SiteConfiguration.helpdesk_server+',
         help_text='Select which server and/or account this configuration '
                   'should use to connect to a JIRA based helpdesk system. In '
-                  '99 % of all cases this means the GFBio JIRA helpdesk.'
+                  '99 % of all cases this means the GFBio JIRA helpdesk.',
+        on_delete=models.PROTECT
     )
 
     jira_project_key = models.CharField(choices=JIRA_PROJECT_KEYS, max_length=4,
@@ -157,7 +163,8 @@ class TicketLabel(models.Model):
         (PANGAEA_JIRA, 'Pangaea JIRA'),
         (GFBIO_HELPDESK_JIRA, 'GFBio-Helpdesk JIRA'),
     )
-    site_configuration = models.ForeignKey(SiteConfiguration, null=False)
+    site_configuration = models.ForeignKey(SiteConfiguration, null=False,
+                                           on_delete=models.PROTECT)
     label_type = models.CharField(max_length=1, choices=LABEL_TYPES)
     label = models.CharField(max_length=256, default='')
 
@@ -203,7 +210,8 @@ class Submission(models.Model):
     # TODO: I see possible conflict with regular users here. Add dedicated user-subclass for 'site'
     site = models.ForeignKey(AUTH_USER_MODEL,
                              null=True,
-                             related_name='submission')
+                             related_name='submission',
+                             on_delete=models.SET_NULL)
     # TODO: still needed ?
     site_project_id = models.CharField(max_length=128, blank=True, default='')
     target = models.CharField(max_length=16, choices=TARGETS)
@@ -229,7 +237,8 @@ class Submission(models.Model):
     # TODO: this might be to specific for a general submission model ?
     # TODO: discuss general submission model with subclasses like molecular or similar
     download_url = models.URLField(default='', blank=True)
-    center_name = models.ForeignKey(CenterName, null=True)
+    center_name = models.ForeignKey(CenterName, null=True,
+                                    on_delete=models.SET_NULL)
 
     data = JsonDictField(default=dict)
     # default to today + 1 year
@@ -384,7 +393,7 @@ class BrokerObject(models.Model):
         ('submission', 'submission'),
     )
     type = models.CharField(choices=ENTITY_TYPES, max_length=12)
-    site = models.ForeignKey(AUTH_USER_MODEL)
+    site = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.PROTECT)
     site_project_id = models.CharField(max_length=128, blank=True, default='')
     site_object_id = models.CharField(max_length=128, blank=True, default='')
 
@@ -441,7 +450,7 @@ class PersistentIdentifier(models.Model):
     pid_type = models.CharField(choices=PID_TYPES, max_length=3, default='ACC')
     pid = models.CharField(max_length=256, default='')
     resolver_url = models.URLField(max_length=256, default='', blank=True)
-    broker_object = models.ForeignKey(BrokerObject)
+    broker_object = models.ForeignKey(BrokerObject, on_delete=models.CASCADE)
     outgoing_request_id = models.UUIDField(primary_key=False, null=True,
                                            blank=True)
 
@@ -496,7 +505,9 @@ class RequestLog(models.Model):
         blank=True,
         help_text='This will be null for incoming requests Otherwise '
                   '(outgoing request) it will show the id of the incoming '
-                  'request, that has triggered this request')
+                  'request, that has triggered this request',
+        on_delete=models.SET_NULL,
+    )
     request_details = JsonDictField(
         default=dict,
         help_text='This may contain meta-information regarding this request'
@@ -517,7 +528,7 @@ class AdditionalReference(models.Model):
         (GFBIO_HELPDESK_TICKET, 'gfbio_helpdesk_ticket'),
         (PANGAEA_JIRA_TICKET, 'pangaea_jira_ticket'),
     )
-    submission = models.ForeignKey(Submission)
+    submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
     type = models.CharField(max_length=1, choices=REFERENCE_TYPES,
                             default=GFBIO_HELPDESK_TICKET)
     primary = models.BooleanField(
@@ -545,7 +556,8 @@ class TaskProgressReport(models.Model):
     RUNNING = 'RUNNING'
     CANCELLED = 'CANCELLED'
     submission = models.ForeignKey(Submission, null=True, blank=True,
-                                   help_text='Submission this Task is working on')
+                                   help_text='Submission this Task is working on',
+                                   on_delete=models.SET_NULL)
     task_name = models.CharField(max_length=128,
                                  help_text='Name of Task, as registered in celery')
     task_id = models.UUIDField(default=uuid.uuid4, primary_key=True,
@@ -582,8 +594,11 @@ class SubmissionFileUpload(models.Model):
     submission = models.ForeignKey(
         Submission, null=True,
         blank=True,
-        help_text='Submission this File belongs to.')
-    site = models.ForeignKey(AUTH_USER_MODEL, related_name='submissionupload')
+        help_text='Submission this File belongs to.',
+        on_delete=models.CASCADE
+    )
+    site = models.ForeignKey(AUTH_USER_MODEL, related_name='submissionupload',
+                             on_delete=models.PROTECT)
     file = models.FileField(upload_to=submission_upload_path)
     migrated = models.BooleanField(default=False)
 
@@ -603,9 +618,11 @@ class PrimaryDataFile(models.Model):
         Submission,
         null=False,
         blank=False,
-        help_text='Associated Submission for this File'
+        help_text='Associated Submission for this File',
+        on_delete=models.CASCADE
     )
-    site = models.ForeignKey(AUTH_USER_MODEL, related_name='primarydatafile')
+    site = models.ForeignKey(AUTH_USER_MODEL, related_name='primarydatafile',
+                             on_delete=models.PROTECT)
     data_file = models.FileField(
         upload_to=submission_primary_data_file_upload_path,
         help_text='A file containing primary submission data, '
@@ -650,7 +667,8 @@ class SubmissionUpload(TimeStampedModel):
         Submission,
         null=True,
         blank=True,
-        help_text='Submission associated with this Upload.'
+        help_text='Submission associated with this Upload.',
+        on_delete=models.CASCADE
     )
     site = models.ForeignKey(
         AUTH_USER_MODEL,
@@ -658,6 +676,7 @@ class SubmissionUpload(TimeStampedModel):
         blank=True,
         related_name='site_upload',
         help_text='Related "Site". E.g. gfbio-portal or silva.',
+        on_delete=models.PROTECT
     )
     # TODO: once IDM in place, it will be possible to directly assign real users
     user = models.ForeignKey(
@@ -667,6 +686,7 @@ class SubmissionUpload(TimeStampedModel):
         related_name='user_upload',
         help_text='Related "User". E.g. a real person that uses '
                   'the submission frontend',
+        on_delete=models.PROTECT
     )
     attach_to_ticket = models.BooleanField(
         default=False,
@@ -727,7 +747,8 @@ class AuditableTextData(models.Model):
         Submission,
         null=False,
         blank=False,
-        help_text='Associated Submission for this object'
+        help_text='Associated Submission for this object',
+        on_delete=models.CASCADE
     )
     text_data = models.TextField(
         default='',

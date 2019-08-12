@@ -93,18 +93,23 @@ class SubmissionTransferHandler(object):
 
     @classmethod
     def raise_response_exceptions(cls, response):
+        print(' ############ raise reponse exceptions ', response)
         error = None
         if not response.ok:
             if 400 <= response.status_code < 500:
+                print(' ############ 4xx ',)
                 error = cls.TransferClientError(
                     response.status_code,
                     response.content
                 )
             elif 500 <= response.status_code < 600:
+                print(' ############ 5xx ', response)
                 error = cls.TransferServerError(response.status_code)
             else:
+                print(' ############ unknown ', response)
                 error = cls.TransferUnknownError(response.status_code)
             if error:
+                print(' ############ error ', error)
                 logger.error(
                     msg='SubmissionTransferError: '
                         'Aborted with status_code {0} '

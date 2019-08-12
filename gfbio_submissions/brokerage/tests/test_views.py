@@ -5,8 +5,9 @@ from uuid import uuid4
 
 import responses
 from django.contrib.auth.models import Permission
-from django.core.urlresolvers import reverse
+# from django.core.urlresolvers import reverse
 from django.test import TestCase
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
@@ -548,6 +549,9 @@ class TestSubmissionUploadView(TestCase):
 
     @responses.activate
     def test_not_owner_file_upload(self):
+        responses.add(responses.PUT,
+                      'https://www.example.com/rest/api/2/issue/FAKE_KEY',
+                      body='', status=200)
         submission = Submission.objects.first()
         submission.site = User.objects.last()
         submission.save()

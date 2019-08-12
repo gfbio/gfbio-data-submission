@@ -56,7 +56,6 @@ htmlcov
 !.idea/webResources.xml
 
 # Vim
-
 *~
 *.swp
 *.swo
@@ -72,8 +71,15 @@ stats.json
 # virtual environments
 .env
 dev-server.env
+.envs
+.envs-development
+.envs-production
 
 # User-uploaded media
+gfbio_submissions/media
 gfbio_submissions/media/*
 
+
 staticfiles/
+
+celerybeat.pid
