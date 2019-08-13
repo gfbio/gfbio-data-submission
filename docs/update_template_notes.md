@@ -295,6 +295,21 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 - sudo docker-compose -f production.yml build --no-cache
 - for inital pulling of images etc.: docker-compose -f production.yml up
 
+#### fix traefik.toml
+
+- git checkout develop
+- sudo git fetch
+- sudo git pull origin develop
+- time sudo docker-compose -f production.yml build
+
+        real	64m41,782s
+        user	3m48,316s
+        sys	9m5,209s
+
+- docker-compose -f production.yml up
+
+
+
 ## Libraries to inspect
 
 - https://github.com/core-api/python-client
