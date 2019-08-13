@@ -140,7 +140,7 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 
 - rebuild: docker-compose -f production.yml build
 - docker-compose -f production.yml run --rm django python manage.py collectstatic
-- docker-compose -f production.yml up
+- - docker-compose -f production.yml up
 
 - add vendors and push/pull via git
 - rebuild: docker-compose -f production.yml build
@@ -265,10 +265,35 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 - sudo apt update && sudo apt upgrade
 - restart via gwdg web-interface
 
-### update 
+### update app
+
+- git flow release start 1.75.0
+- git flow release finish 1.75.0
+- git push origin develop master --tags
 
 - sudo supervisorctl stop gfbio_submissions
 - docker-compose -f production.yml down
+
+- sudo git fetch
+- git branch 
+- git checkout develop 
+- sudo git checkout develop 
+- sudo git pull origin develop 
+
+- rsync -av .envs/ cloud@141.5.106.43:/home/cloud/ 
+- cloud@mastodon:~$ pwd
+
+        /home/cloud
+        
+- sudo cp -r .envs/ /var/www/gfbio_submissions/
+
+- sudo git checkout 1.75.0
+- git branch 
+
+        * (HEAD detached at 1.75.0)
+
+- sudo docker-compose -f production.yml build --no-cache
+- for inital pulling of images etc.: docker-compose -f production.yml up
 
 ## Libraries to inspect
 
