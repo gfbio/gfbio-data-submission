@@ -172,12 +172,12 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 
 - some commands:
 
-         docker-compose -f local.yml run --rm django python manage.py makemigrations
-         docker-compose -f local.yml run --rm django python manage.py migrate
-         docker-compose -f local.yml run --rm django python manage.py showmigrations
-         docker-compose -f local.yml run --rm django python manage.py migrate --fake users zero
-         docker-compose -f local.yml run --rm django python manage.py migrate users --fake-initial
-         docker-compose -f local.yml run --rm django python manage.py showmigrations
+         docker-compose -f production.yml run --rm django python manage.py makemigrations
+         docker-compose -f production.yml run --rm django python manage.py migrate
+         docker-compose -f production.yml run --rm django python manage.py showmigrations
+         docker-compose -f production.yml run --rm django python manage.py migrate --fake users zero
+         docker-compose -f production.yml run --rm django python manage.py migrate users --fake-initial
+         docker-compose -f production.yml run --rm django python manage.py showmigrations
 
 --------------------------------------------------------------------------------
  
@@ -307,6 +307,118 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
         sys	9m5,209s
 
 - docker-compose -f production.yml up
+- fix error in treafik.toml, push/pull again
+- check content of traefik.tom on server
+- time sudo docker-compose -f production.yml build
+
+        real	68m29,781s
+        user	3m54,390s
+        sys	9m7,672s
+        
+- docker-compose -f production.yml up
+
+--------------------------------------------------------------------------------
+
+- docker-compose -f production.yml run --rm django python manage.py collectstatic
+
+### setup database & import dump
+
+- time docker-compose -f production.yml run --rm django python manage.py migrate
+- docker-compose -f production.yml run --rm django python manage.py showmigrations
+
+- sudo docker cp backup_2019_08_12T12_29_07.sql.gz 3ec75df28b13:/backups
+
+- docker-compose -f production.yml exec postgres restore backup_2019_08_12T12_29_07.sql.gz
+
+        SUCCESS: The 'gfbio_submissions' database has been restored from the '/backups/backup_2019_08_12T12_29_07.sql.gz' backup.
+        
+- docker-compose -f production.yml run --rm django python manage.py migrate
+
+        (...)
+          Apply all migrations: account, admin, auth, authtoken, brokerage, contenttypes, django_celery_beat, sessions, sites, socialaccount, users
+        Running migrations:
+          Applying admin.0003_logentry_add_action_flag_choices... OK
+          Applying auth.0009_alter_user_last_name_max_length... OK
+          Applying auth.0010_alter_group_name_max_length... OK
+          Applying auth.0011_update_proxy_permissions... OK
+          Applying django_celery_beat.0001_initial... OK
+          Applying django_celery_beat.0002_auto_20161118_0346... OK
+          Applying django_celery_beat.0003_auto_20161209_0049... OK
+          Applying django_celery_beat.0004_auto_20170221_0000... OK
+          Applying django_celery_beat.0005_add_solarschedule_events_choices... OK
+          Applying django_celery_beat.0006_auto_20180322_0932... OK
+          Applying django_celery_beat.0007_auto_20180521_0826... OK
+          Applying django_celery_beat.0008_auto_20180914_1922... OK
+          Applying django_celery_beat.0006_auto_20180210_1226... OK
+          Applying django_celery_beat.0006_periodictask_priority... OK
+          Applying django_celery_beat.0009_periodictask_headers... OK
+          Applying django_celery_beat.0010_auto_20190429_0326... OK
+          Applying django_celery_beat.0011_auto_20190508_0153... OK
+          Applying users.0002_auto_20190802_1246...Traceback (most recent call last):
+          File "/usr/local/lib/python3.6/site-packages/django/db/backends/utils.py", line 84, in _execute
+            return self.cursor.execute(sql, params)
+        psycopg2.errors.DuplicateColumn: column "is_site" of relation "users_user" already exists
+        (...)
+        django.db.utils.ProgrammingError: column "is_site" of relation "users_user" already exists
+
+- docker-compose -f production.yml run --rm django python manage.py migrate users 0002_auto_20190802_1246 --fake
+- docker-compose -f production.yml run --rm django python manage.py showmigrations
+
+        (...)
+        account
+         [X] 0001_initial
+         [X] 0002_email_max_length
+        admin
+         [X] 0001_initial
+         [X] 0002_logentry_remove_auto_add
+         [X] 0003_logentry_add_action_flag_choices
+        auth
+         [X] 0001_initial
+         [X] 0002_alter_permission_name_max_length
+         [X] 0003_alter_user_email_max_length
+         [X] 0004_alter_user_username_opts
+         [X] 0005_alter_user_last_login_null
+         [X] 0006_require_contenttypes_0002
+         [X] 0007_alter_validators_add_error_messages
+         [X] 0008_alter_user_username_max_length
+         [X] 0009_alter_user_last_name_max_length
+         [X] 0010_alter_group_name_max_length
+         [X] 0011_update_proxy_permissions
+        authtoken
+         [X] 0001_initial
+         [X] 0002_auto_20160226_1747
+        brokerage
+         [X] 0001_initial
+        contenttypes
+         [X] 0001_initial
+         [X] 0002_remove_content_type_name
+        django_celery_beat
+         [X] 0001_initial
+         [X] 0002_auto_20161118_0346
+         [X] 0003_auto_20161209_0049
+         [X] 0004_auto_20170221_0000
+         [X] 0005_add_solarschedule_events_choices
+         [X] 0006_auto_20180322_0932
+         [X] 0007_auto_20180521_0826
+         [X] 0008_auto_20180914_1922
+         [X] 0006_auto_20180210_1226
+         [X] 0006_periodictask_priority
+         [X] 0009_periodictask_headers
+         [X] 0010_auto_20190429_0326
+         [X] 0011_auto_20190508_0153
+        sessions
+         [X] 0001_initial
+        sites
+         [X] 0001_initial
+         [X] 0002_alter_domain_unique
+         [X] 0003_set_site_domain_and_name
+        socialaccount
+         [X] 0001_initial
+         [X] 0002_token_max_lengths
+         [X] 0003_extra_data_default_dict
+        users
+         [X] 0001_initial
+         [X] 0002_auto_20190802_1246
 
 
 
