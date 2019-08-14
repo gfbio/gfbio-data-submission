@@ -420,6 +420,36 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
          [X] 0001_initial
          [X] 0002_auto_20190802_1246
 
+### media files & uploads
+
+- docker ps
+
+        CONTAINER ID        IMAGE                                       COMMAND                  CREATED             STATUS              PORTS                                      NAMES
+        c1c21c3d04cf        gfbio_submissions_production_traefik        "/entrypoint.sh trae…"   13 hours ago        Up 11 hours         0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp   gfbio_submissions_traefik_1_309dd0c514ca
+        480da73c9374        gfbio_submissions_production_django         "/entrypoint /start"     13 hours ago        Up 11 hours                                                    gfbio_submissions_django_1_b34b3e516163
+        6a0ca2bd2392        gfbio_submissions_production_flower         "/entrypoint /start-…"   13 hours ago        Up 11 hours         0.0.0.0:5555->5555/tcp                     gfbio_submissions_flower_1_683d3b750315
+        cbf2c5eff2ee        gfbio_submissions_production_celeryworker   "/entrypoint /start-…"   13 hours ago        Up 11 hours                                                    gfbio_submissions_celeryworker_1_14e0b2a6ae5b
+        3ec75df28b13        gfbio_submissions_production_postgres       "docker-entrypoint.s…"   16 hours ago        Up 11 hours         5432/tcp                                   gfbio_submissions_postgres_1_c9ce6411f649
+        81720d4636ed        redis:5.0                                   "docker-entrypoint.s…"   16 hours ago        Up 11 hours         6379/tcp                                   gfbio_submissions_redis_1_ce86117f9c80
+        
+- docker exec -u 0 -it gfbio_submissions_django_1_b34b3e516163 sh
+
+
+- /app/gfbio_submissions # ls -lh
+
+        (...)
+        drwxr-xr-x  123 999      root       12.0K Aug  1 09:22 media
+        drwxr-xr-x    1 django   root        4.0K Aug 12 15:38 static
+        (...)
+        
+- /app/gfbio_submissions # chown -R django media/
+- /app/gfbio_submissions # chgrp -R root media/
+- /app/gfbio_submissions # ls -lh
+
+        (...)
+        drwxr-xr-x  123 django   root       12.0K Aug  1 09:22 media
+        drwxr-xr-x    1 django   root        4.0K Aug 12 15:38 static
+        (...)
 
 
 ## Libraries to inspect
