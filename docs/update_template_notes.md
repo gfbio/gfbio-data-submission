@@ -140,7 +140,7 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 
 - rebuild: docker-compose -f production.yml build
 - docker-compose -f production.yml run --rm django python manage.py collectstatic
-- docker-compose -f production.yml up
+- - docker-compose -f production.yml up
 
 - add vendors and push/pull via git
 - rebuild: docker-compose -f production.yml build
@@ -172,12 +172,12 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 
 - some commands:
 
-         docker-compose -f local.yml run --rm django python manage.py makemigrations
-         docker-compose -f local.yml run --rm django python manage.py migrate
-         docker-compose -f local.yml run --rm django python manage.py showmigrations
-         docker-compose -f local.yml run --rm django python manage.py migrate --fake users zero
-         docker-compose -f local.yml run --rm django python manage.py migrate users --fake-initial
-         docker-compose -f local.yml run --rm django python manage.py showmigrations
+         docker-compose -f production.yml run --rm django python manage.py makemigrations
+         docker-compose -f production.yml run --rm django python manage.py migrate
+         docker-compose -f production.yml run --rm django python manage.py showmigrations
+         docker-compose -f production.yml run --rm django python manage.py migrate --fake users zero
+         docker-compose -f production.yml run --rm django python manage.py migrate users --fake-initial
+         docker-compose -f production.yml run --rm django python manage.py showmigrations
 
 --------------------------------------------------------------------------------
  
@@ -265,10 +265,192 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 - sudo apt update && sudo apt upgrade
 - restart via gwdg web-interface
 
-### update 
+### update app
+
+- git flow release start 1.75.0
+- git flow release finish 1.75.0
+- git push origin develop master --tags
 
 - sudo supervisorctl stop gfbio_submissions
 - docker-compose -f production.yml down
+
+- sudo git fetch
+- git branch 
+- git checkout develop 
+- sudo git checkout develop 
+- sudo git pull origin develop 
+
+- rsync -av .envs/ cloud@141.5.106.43:/home/cloud/ 
+- cloud@mastodon:~$ pwd
+
+        /home/cloud
+        
+- sudo cp -r .envs/ /var/www/gfbio_submissions/
+
+- sudo git checkout 1.75.0
+- git branch 
+
+        * (HEAD detached at 1.75.0)
+
+- sudo docker-compose -f production.yml build --no-cache
+- for inital pulling of images etc.: docker-compose -f production.yml up
+
+#### fix traefik.toml
+
+- git checkout develop
+- sudo git fetch
+- sudo git pull origin develop
+- time sudo docker-compose -f production.yml build
+
+        real	64m41,782s
+        user	3m48,316s
+        sys	9m5,209s
+
+- docker-compose -f production.yml up
+- fix error in treafik.toml, push/pull again
+- check content of traefik.tom on server
+- time sudo docker-compose -f production.yml build
+
+        real	68m29,781s
+        user	3m54,390s
+        sys	9m7,672s
+        
+- docker-compose -f production.yml up
+
+--------------------------------------------------------------------------------
+
+- docker-compose -f production.yml run --rm django python manage.py collectstatic
+
+### setup database & import dump
+
+- time docker-compose -f production.yml run --rm django python manage.py migrate
+- docker-compose -f production.yml run --rm django python manage.py showmigrations
+
+- sudo docker cp backup_2019_08_12T12_29_07.sql.gz 3ec75df28b13:/backups
+
+- docker-compose -f production.yml exec postgres restore backup_2019_08_12T12_29_07.sql.gz
+
+        SUCCESS: The 'gfbio_submissions' database has been restored from the '/backups/backup_2019_08_12T12_29_07.sql.gz' backup.
+        
+- docker-compose -f production.yml run --rm django python manage.py migrate
+
+        (...)
+          Apply all migrations: account, admin, auth, authtoken, brokerage, contenttypes, django_celery_beat, sessions, sites, socialaccount, users
+        Running migrations:
+          Applying admin.0003_logentry_add_action_flag_choices... OK
+          Applying auth.0009_alter_user_last_name_max_length... OK
+          Applying auth.0010_alter_group_name_max_length... OK
+          Applying auth.0011_update_proxy_permissions... OK
+          Applying django_celery_beat.0001_initial... OK
+          Applying django_celery_beat.0002_auto_20161118_0346... OK
+          Applying django_celery_beat.0003_auto_20161209_0049... OK
+          Applying django_celery_beat.0004_auto_20170221_0000... OK
+          Applying django_celery_beat.0005_add_solarschedule_events_choices... OK
+          Applying django_celery_beat.0006_auto_20180322_0932... OK
+          Applying django_celery_beat.0007_auto_20180521_0826... OK
+          Applying django_celery_beat.0008_auto_20180914_1922... OK
+          Applying django_celery_beat.0006_auto_20180210_1226... OK
+          Applying django_celery_beat.0006_periodictask_priority... OK
+          Applying django_celery_beat.0009_periodictask_headers... OK
+          Applying django_celery_beat.0010_auto_20190429_0326... OK
+          Applying django_celery_beat.0011_auto_20190508_0153... OK
+          Applying users.0002_auto_20190802_1246...Traceback (most recent call last):
+          File "/usr/local/lib/python3.6/site-packages/django/db/backends/utils.py", line 84, in _execute
+            return self.cursor.execute(sql, params)
+        psycopg2.errors.DuplicateColumn: column "is_site" of relation "users_user" already exists
+        (...)
+        django.db.utils.ProgrammingError: column "is_site" of relation "users_user" already exists
+
+- docker-compose -f production.yml run --rm django python manage.py migrate users 0002_auto_20190802_1246 --fake
+- docker-compose -f production.yml run --rm django python manage.py showmigrations
+
+        (...)
+        account
+         [X] 0001_initial
+         [X] 0002_email_max_length
+        admin
+         [X] 0001_initial
+         [X] 0002_logentry_remove_auto_add
+         [X] 0003_logentry_add_action_flag_choices
+        auth
+         [X] 0001_initial
+         [X] 0002_alter_permission_name_max_length
+         [X] 0003_alter_user_email_max_length
+         [X] 0004_alter_user_username_opts
+         [X] 0005_alter_user_last_login_null
+         [X] 0006_require_contenttypes_0002
+         [X] 0007_alter_validators_add_error_messages
+         [X] 0008_alter_user_username_max_length
+         [X] 0009_alter_user_last_name_max_length
+         [X] 0010_alter_group_name_max_length
+         [X] 0011_update_proxy_permissions
+        authtoken
+         [X] 0001_initial
+         [X] 0002_auto_20160226_1747
+        brokerage
+         [X] 0001_initial
+        contenttypes
+         [X] 0001_initial
+         [X] 0002_remove_content_type_name
+        django_celery_beat
+         [X] 0001_initial
+         [X] 0002_auto_20161118_0346
+         [X] 0003_auto_20161209_0049
+         [X] 0004_auto_20170221_0000
+         [X] 0005_add_solarschedule_events_choices
+         [X] 0006_auto_20180322_0932
+         [X] 0007_auto_20180521_0826
+         [X] 0008_auto_20180914_1922
+         [X] 0006_auto_20180210_1226
+         [X] 0006_periodictask_priority
+         [X] 0009_periodictask_headers
+         [X] 0010_auto_20190429_0326
+         [X] 0011_auto_20190508_0153
+        sessions
+         [X] 0001_initial
+        sites
+         [X] 0001_initial
+         [X] 0002_alter_domain_unique
+         [X] 0003_set_site_domain_and_name
+        socialaccount
+         [X] 0001_initial
+         [X] 0002_token_max_lengths
+         [X] 0003_extra_data_default_dict
+        users
+         [X] 0001_initial
+         [X] 0002_auto_20190802_1246
+
+### media files & uploads
+
+- docker ps
+
+        CONTAINER ID        IMAGE                                       COMMAND                  CREATED             STATUS              PORTS                                      NAMES
+        c1c21c3d04cf        gfbio_submissions_production_traefik        "/entrypoint.sh trae…"   13 hours ago        Up 11 hours         0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp   gfbio_submissions_traefik_1_309dd0c514ca
+        480da73c9374        gfbio_submissions_production_django         "/entrypoint /start"     13 hours ago        Up 11 hours                                                    gfbio_submissions_django_1_b34b3e516163
+        6a0ca2bd2392        gfbio_submissions_production_flower         "/entrypoint /start-…"   13 hours ago        Up 11 hours         0.0.0.0:5555->5555/tcp                     gfbio_submissions_flower_1_683d3b750315
+        cbf2c5eff2ee        gfbio_submissions_production_celeryworker   "/entrypoint /start-…"   13 hours ago        Up 11 hours                                                    gfbio_submissions_celeryworker_1_14e0b2a6ae5b
+        3ec75df28b13        gfbio_submissions_production_postgres       "docker-entrypoint.s…"   16 hours ago        Up 11 hours         5432/tcp                                   gfbio_submissions_postgres_1_c9ce6411f649
+        81720d4636ed        redis:5.0                                   "docker-entrypoint.s…"   16 hours ago        Up 11 hours         6379/tcp                                   gfbio_submissions_redis_1_ce86117f9c80
+        
+- docker exec -u 0 -it gfbio_submissions_django_1_b34b3e516163 sh
+
+
+- /app/gfbio_submissions # ls -lh
+
+        (...)
+        drwxr-xr-x  123 999      root       12.0K Aug  1 09:22 media
+        drwxr-xr-x    1 django   root        4.0K Aug 12 15:38 static
+        (...)
+        
+- /app/gfbio_submissions # chown -R django media/
+- /app/gfbio_submissions # chgrp -R root media/
+- /app/gfbio_submissions # ls -lh
+
+        (...)
+        drwxr-xr-x  123 django   root       12.0K Aug  1 09:22 media
+        drwxr-xr-x    1 django   root        4.0K Aug 12 15:38 static
+        (...)
+
 
 ## Libraries to inspect
 
