@@ -451,6 +451,40 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
         drwxr-xr-x    1 django   root        4.0K Aug 12 15:38 static
         (...)
 
+## 14.08. disk full sentry error (1.75.1)
+
+- docker volume prune ~4 Gb
+- docker image prune ~ 112 Gb
+- df -h
+
+        Filesystem      Size  Used Avail Use% Mounted on
+        udev            7,9G     0  7,9G   0% /dev
+        tmpfs           1,6G  8,9M  1,6G   1% /run
+        /dev/vda1       158G   40G  112G  26% /
+        tmpfs           7,9G     0  7,9G   0% /dev/shm
+        tmpfs           5,0M     0  5,0M   0% /run/lock
+        tmpfs           7,9G     0  7,9G   0% /sys/fs/cgroup
+        tmpfs           1,6G     0  1,6G   0% /run/user/1000
+
+
+- time sudo docker-compose -f production.yml build
+
+        real	70m47,452s
+        user	2m36,691s
+        sys	5m15,362s
+- sudo supervisorctl stop gfbio_submissions
+ -df -h
+ 
+        Filesystem      Size  Used Avail Use% Mounted on
+        udev            7,9G     0  7,9G   0% /dev
+        tmpfs           1,6G  8,3M  1,6G   1% /run
+        /dev/vda1       158G   71G   81G  47% /
+        tmpfs           7,9G     0  7,9G   0% /dev/shm
+        tmpfs           5,0M     0  5,0M   0% /run/lock
+        tmpfs           7,9G     0  7,9G   0% /sys/fs/cgroup
+        tmpfs           1,6G     0  1,6G   0% /run/user/1000
+
+- sudo supervisorctl start gfbio_submissions
 
 ## Libraries to inspect
 
