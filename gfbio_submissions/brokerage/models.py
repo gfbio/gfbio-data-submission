@@ -256,7 +256,6 @@ class Submission(models.Model):
 
     # FIXME: remove ALL custom action from save method ! too much code here !
     def save(self, allow_update=True, *args, **kwargs):
-        previous_state = None
         update = False
         # update, no creation
         if self.pk:
@@ -272,19 +271,6 @@ class Submission(models.Model):
                 },
                 countdown=SUBMISSION_SAVE_TRIGGER_DELAY
             )
-        # TODO: refactor -> extract
-        # TODO GFBIO-2556: remove and add admin action to re-create xml
-        if previous_state and previous_state.center_name != self.center_name:
-            # instance difference, delete and create new
-            from .tasks import delete_related_auditable_textdata_task, \
-                prepare_ena_submission_data_task
-            chain = delete_related_auditable_textdata_task.s(
-                submission_id=self.pk).set(
-                countdown=SUBMISSION_SAVE_TRIGGER_DELAY) \
-                    | prepare_ena_submission_data_task.s(
-                submission_id=self.pk).set(
-                countdown=SUBMISSION_SAVE_TRIGGER_DELAY)
-            chain()
 
     # TODO: refactor/move: too specific (molecular submission)
     def get_json_with_aliases(self, alias_postfix):
