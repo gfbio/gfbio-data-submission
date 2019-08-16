@@ -619,42 +619,6 @@ def create_pangaea_jira_ticket_task(login_token=None, submission_id=None):
 # TODO: this one relies on prevoius task: create_pangaea_jira_ticket_task
 # TODO: this task relies on additional kwargs, as returned from task above
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
-             name='tasks.attach_file_to_pangaea_ticket_task',
-             base=SubmissionTask)
-def attach_file_to_pangaea_ticket_task(kwargs=None, submission_id=None):
-    submission = SubmissionTransferHandler.get_submission_for_task(
-        submission_id=submission_id, task=attach_file_to_pangaea_ticket_task)
-    if submission is not None:
-        login_token = None
-        ticket_key = None
-        if isinstance(kwargs, dict):
-            login_token = kwargs.get('login_token', None)
-            ticket_key = kwargs.get('ticket_key', None)
-        if login_token and ticket_key:
-            csv_from_samples = get_csv_from_samples(submission)
-            response = attach_file_to_pangaea_ticket(
-                login_token=login_token,
-                ticket_key=ticket_key,
-                file_name='contextual_data.csv',
-                content_string=csv_from_samples,
-                submission=submission,
-            )
-            apply_default_task_retry_policy(response,
-                                            attach_file_to_pangaea_ticket_task,
-                                            submission)
-            return {
-                'login_token': login_token,
-                'ticket_key': ticket_key
-            }
-        else:
-            return None
-    else:
-        return TaskProgressReport.CANCELLED
-
-
-# TODO: this one relies on prevoius task: attach_file_to_pangaea_ticket_task
-# TODO: this task relies on additional kwargs, as returned from task above
-@celery.task(max_retries=SUBMISSION_MAX_RETRIES,
              name='tasks.comment_on_pangaea_ticket_task', base=SubmissionTask)
 def comment_on_pangaea_ticket_task(kwargs=None, submission_id=None,
                                    comment_body=''):
@@ -689,6 +653,42 @@ def comment_on_pangaea_ticket_task(kwargs=None, submission_id=None,
                 logger.error(
                     msg='comment_on_pangaea_ticket_task. Cannot access PersistendIdentifier for study')
                 return None
+        else:
+            return None
+    else:
+        return TaskProgressReport.CANCELLED
+
+
+# TODO: this one relies on prevoius task: attach_file_to_pangaea_ticket_task
+# TODO: this task relies on additional kwargs, as returned from task above
+@celery.task(max_retries=SUBMISSION_MAX_RETRIES,
+             name='tasks.attach_file_to_pangaea_ticket_task',
+             base=SubmissionTask)
+def attach_file_to_pangaea_ticket_task(kwargs=None, submission_id=None):
+    submission = SubmissionTransferHandler.get_submission_for_task(
+        submission_id=submission_id, task=attach_file_to_pangaea_ticket_task)
+    if submission is not None:
+        login_token = None
+        ticket_key = None
+        if isinstance(kwargs, dict):
+            login_token = kwargs.get('login_token', None)
+            ticket_key = kwargs.get('ticket_key', None)
+        if login_token and ticket_key:
+            csv_from_samples = get_csv_from_samples(submission)
+            response = attach_file_to_pangaea_ticket(
+                login_token=login_token,
+                ticket_key=ticket_key,
+                file_name='contextual_data.csv',
+                content_string=csv_from_samples,
+                submission=submission,
+            )
+            apply_default_task_retry_policy(response,
+                                            attach_file_to_pangaea_ticket_task,
+                                            submission)
+            return {
+                'login_token': login_token,
+                'ticket_key': ticket_key
+            }
         else:
             return None
     else:
