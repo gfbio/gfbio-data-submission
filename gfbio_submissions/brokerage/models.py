@@ -263,6 +263,7 @@ class Submission(models.Model):
             update = True
             previous_state = Submission.objects.filter(pk=self.pk).first()
         super(Submission, self).save(*args, **kwargs)
+        # TODO GFBIO-2556: remove completely, update via explicit call, e.g. in a task
         if update and allow_update:
             from .tasks import update_helpdesk_ticket_task
             update_helpdesk_ticket_task.apply_async(
@@ -272,6 +273,7 @@ class Submission(models.Model):
                 countdown=SUBMISSION_SAVE_TRIGGER_DELAY
             )
         # TODO: refactor -> extract
+        # TODO GFBIO-2556: remove and add admin action to re-create xml
         if previous_state and previous_state.center_name != self.center_name:
             # instance difference, delete and create new
             from .tasks import delete_related_auditable_textdata_task, \
