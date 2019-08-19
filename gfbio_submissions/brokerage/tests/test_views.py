@@ -457,7 +457,7 @@ class TestSubmissionUploadView(TestCase):
                 'description': 'A Description',
                 'data_center': 'ENA – European Nucleotide Archive'}
         }
-        submission.save(allow_update=False)
+        submission.save()
 
         url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
@@ -626,8 +626,7 @@ class TestSubmissionUploadView(TestCase):
         response = self.api_client.get(url)
         content = json.loads(response.content.decode('utf-8'))
         self.assertEqual(1, len(content))
-        self.assertTrue(
-            content[0].get('file', '').endswith('test_primary_data_file'))
+        self.assertIn('test_primary_data_file', content[0].get('file', ''))
 
         url = reverse('brokerage:submissions_uploads', kwargs={
             'broker_submission_id': submission_2.broker_submission_id})

@@ -9,6 +9,7 @@ from celery import chain
 from django.contrib.auth.models import Permission
 from django.test import TestCase
 from django.urls import reverse
+from unittest import skip
 from unittest.mock import patch
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIRequestFactory, APIClient
@@ -296,6 +297,7 @@ class TestTasks(TestCase):
         PrimaryDataFile.objects.all().delete()
 
 
+@skip('center-name feature was removed in GFBIO-2556')
 class TestTasksTriggeredBySubmissionSave(TestTasks):
 
     def test_center_name_change(self):
@@ -1518,16 +1520,13 @@ class TestTaskProgressReportInTasks(TestTasks):
 
     def test_task_report_creation(self):
         submission = Submission.objects.first()
-        tprs = TaskProgressReport.objects.exclude(
-            task_name='tasks.update_helpdesk_ticket_task')
-        self.assertEqual(0, len(tprs))
+        self.assertEqual(0, len(TaskProgressReport.objects.all()))
 
         self._run_task(submission_id=submission.pk)
         task_reports = TaskProgressReport.objects.all()
 
-        self.assertEqual(2, len(task_reports))
-        report = TaskProgressReport.objects.exclude(
-            task_name='tasks.update_helpdesk_ticket_task').first()
+        self.assertEqual(1, len(task_reports))
+        report = TaskProgressReport.objects.first()
         self.assertEqual(
             'tasks.create_broker_objects_from_submission_data_task',
             report.task_name

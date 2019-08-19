@@ -802,7 +802,7 @@ def get_user_email_task(submission_id=None):
         )
         submission.submitting_user_common_information = '{0};{1}'.format(
             res['user_full_name'], res['user_email'])
-        submission.save(allow_update=False)
+        submission.save()
         return res
     else:
         logger.info(

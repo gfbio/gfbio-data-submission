@@ -251,7 +251,7 @@ class BrokerObjectManager(models.Manager):
                     'site_object_id'] = obj.site_object_id
 
         submission.data = data
-        submission.save(allow_update=False)
+        submission.save()
 
     # TODO: rename, since this here is mostly ena specific
     # TODO: refactor for generic solution

@@ -209,7 +209,7 @@ def check_for_molecular_content(submission):
 
         if valid:
             submission.target = ENA_PANGAEA
-            submission.save(allow_update=False)
+            submission.save()
             logger.info(
                 msg='check_for_molecular_content | valid data from csv |'
                     ' return=True')
@@ -218,7 +218,7 @@ def check_for_molecular_content(submission):
             error_messages = [e.message for e in full_errors]
             submission.data.update(
                 {'validation': error_messages})
-            submission.save(allow_update=False)
+            submission.save()
             logger.info(
                 msg='check_for_molecular_content  | invalid data from csv |'
                     ' return=False')
