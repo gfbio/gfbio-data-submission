@@ -14,7 +14,7 @@ from model_utils.models import TimeStampedModel
 
 from config.settings.base import ADMINS, AUTH_USER_MODEL, LOCAL_REPOSITORY
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
-    DEFAULT_ENA_CENTER_NAME, SUBMISSION_SAVE_TRIGGER_DELAY
+    DEFAULT_ENA_CENTER_NAME
 from .configuration.settings import ENA, ENA_PANGAEA
 from .configuration.settings import PRIMARY_DATA_FILE_DELAY
 from .fields import JsonDictField
@@ -253,36 +253,6 @@ class Submission(models.Model):
     changed = models.DateTimeField(auto_now=True)
 
     objects = SubmissionManager()
-
-    # FIXME: remove ALL custom action from save method ! too much code here !
-    def save(self, allow_update=True, *args, **kwargs):
-        previous_state = None
-        update = False
-        # update, no creation
-        if self.pk:
-            update = True
-            previous_state = Submission.objects.filter(pk=self.pk).first()
-        super(Submission, self).save(*args, **kwargs)
-        if update and allow_update:
-            from .tasks import update_helpdesk_ticket_task
-            update_helpdesk_ticket_task.apply_async(
-                kwargs={
-                    'submission_id': '{0}'.format(self.pk),
-                },
-                countdown=SUBMISSION_SAVE_TRIGGER_DELAY
-            )
-        # TODO: refactor -> extract
-        if previous_state and previous_state.center_name != self.center_name:
-            # instance difference, delete and create new
-            from .tasks import delete_related_auditable_textdata_task, \
-                prepare_ena_submission_data_task
-            chain = delete_related_auditable_textdata_task.s(
-                submission_id=self.pk).set(
-                countdown=SUBMISSION_SAVE_TRIGGER_DELAY) \
-                    | prepare_ena_submission_data_task.s(
-                submission_id=self.pk).set(
-                countdown=SUBMISSION_SAVE_TRIGGER_DELAY)
-            chain()
 
     # TODO: refactor/move: too specific (molecular submission)
     def get_json_with_aliases(self, alias_postfix):

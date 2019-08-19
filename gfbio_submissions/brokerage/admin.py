@@ -92,6 +92,22 @@ def create_broker_objects_and_ena_xml(modeladmin, request, queryset):
 create_broker_objects_and_ena_xml.short_description = 'Create BrokerObjects & XML'
 
 
+def re_create_ena_xml(model_admin, request, queryset):
+    from gfbio_submissions.brokerage.tasks import \
+        prepare_ena_submission_data_task
+    for obj in queryset:
+        obj.auditabletextdata_set.all().delete()
+        prepare_ena_submission_data_task.apply_async(
+            kwargs={
+                'submission_id': obj.pk,
+            },
+            countdown=SUBMISSION_DELAY,
+        )
+
+
+re_create_ena_xml.short_description = 'Re-Create XML (ENA)'
+
+
 def delete_broker_objects_and_ena_xml(modeladmin, request, queryset):
     for obj in queryset.exclude(status=Submission.CLOSED):
         broker_objects_with_pids = obj.brokerobject_set.annotate(
@@ -159,6 +175,7 @@ class SubmissionAdmin(admin.ModelAdmin):
                AdditionalReferenceInline,)
     actions = [download_auditable_text_data,
                continue_release_submissions,
+               re_create_ena_xml,
                create_broker_objects_and_ena_xml,
                delete_broker_objects_and_ena_xml,
                ]

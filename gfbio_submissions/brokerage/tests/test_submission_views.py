@@ -4,6 +4,7 @@ import datetime
 import json
 import os
 import urllib
+from unittest import skip
 from urllib.parse import urlencode
 from uuid import UUID, uuid4
 
@@ -485,7 +486,6 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             'tasks.trigger_submission_transfer',
             'tasks.get_user_email_task',
             'tasks.create_helpdesk_ticket_task',
-            'tasks.update_helpdesk_ticket_task',
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer_for_updates',
             'tasks.check_on_hold_status_task',
@@ -696,7 +696,6 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             'tasks.trigger_submission_transfer',
             'tasks.get_user_email_task',
             'tasks.create_helpdesk_ticket_task',
-            'tasks.update_helpdesk_ticket_task',
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer_for_updates',
             'tasks.check_on_hold_status_task']
@@ -1172,6 +1171,7 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
         self.assertIn('0815', content['data']['requirements']['title'])
         self.assertEqual(1, len(Submission.objects.all()))
 
+    @skip('refactor for future update ticket tests')
     @responses.activate
     def test_put_submission_with_ticket_update(self):
         self._add_create_ticket_response()
