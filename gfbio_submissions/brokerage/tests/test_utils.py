@@ -4,6 +4,7 @@ import datetime
 import io
 import json
 import os
+from pprint import pprint
 from unittest import skip
 from uuid import uuid4
 
@@ -15,6 +16,8 @@ from django.urls import reverse
 from django.utils.encoding import smart_text
 from jira import JIRA, JIRAError
 from unittest.mock import patch
+
+from requests import ConnectionError
 from requests.structures import CaseInsensitiveDict
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
@@ -40,6 +43,7 @@ from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_helpdesk_create_ticket, gfbio_helpdesk_comment_on_ticket, \
     gfbio_helpdesk_attach_file_to_ticket, gfbio_prepare_create_helpdesk_payload, \
     gfbio_update_helpdesk_ticket, gfbio_helpdesk_delete_attachment
+from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.brokerage.utils.pangaea import \
     request_pangaea_login_token, parse_pangaea_login_token_response, \
     get_pangaea_login_token, create_pangaea_jira_ticket
@@ -823,12 +827,162 @@ class TestGFBioJira(TestCase):
         # print(res)
         pass
 
-    @skip('Test against helpdesk server')
-    def test_python_jira(self):
-        jira = JIRA(server='http://helpdesk.gfbio.org/',
-                    basic_auth=('brokeragent', ''))
-        issues = jira.search_issues('assignee="Marc Weber"')
-        issue = jira.issue('SAND-1539')
+    # @skip('Test against helpdesk server')
+    @responses.activate
+    def test_python_jira_500(self):
+        # jira-python fires multiple requests to respective jira servers
+        # mocking this one provokes a 500 exception like one to be expected on server errors
+
+        # if mocked request does not match url python-jiras own retry policy will apply
+        # e.g. get_server_info=True. Then exception is thrown
+
+        responses.add(responses.GET,
+                      'http://helpdesk.gfbio.org/rest/api/2/field',
+                      json={'server_error': 'mocked'}, status=500)
+
+        options = {
+            'server': 'http://helpdesk.gfbio.org/'
+        }
+
+        # alternativ
+        # jira = JIRA(server='http://helpdesk.gfbio.org/',
+        #             basic_auth=('brokeragent', ''))
+
+        try:
+            jira = JIRA(options=options,
+                        basic_auth=('brokeragent', ''),
+                        max_retries=1, get_server_info=True)
+        except ConnectionError as ex:
+            print('GENERIC EXCEPTION ', ex)
+            print(ex.__dict__)
+            print(ex.request.__dict__)
+        except JIRAError as e:
+            print(e.__dict__)
+            print('status_code ', e.status_code)
+            print('text ', e.text)
+            print('response ', e.response)
+            print('response. status_code ', e.response.status_code)
+
+    # @skip('Test against helpdesk server')
+    @responses.activate
+    def test_python_jira_400(self):
+
+        responses.add(responses.GET,
+                      'http://helpdesk.gfbio.org/rest/api/2/field',
+                      json={'client_error': 'mocked'}, status=400)
+        options = {
+            'server': 'http://helpdesk.gfbio.org/'
+        }
+
+        # alternativ
+        # jira = JIRA(server='http://helpdesk.gfbio.org/',
+        #             basic_auth=('brokeragent', ''))
+
+        try:
+            jira = JIRA(options=options,
+                        basic_auth=('brokeragent', ''),
+                        max_retries=1, get_server_info=False)
+        except JIRAError as e:
+            print('JIRA ERROR ', e)
+            # print('status_code ', e.status_code)
+            # print('text ', e.text)
+            # print('response ', e.response)
+            # print('response. status_code ', e.response.status_code)
+        # issues = jira.search_issues('assignee="Marc Weber"')
+        # issue = jira.issue('SAND-1539')
+
+        # pprint(issue.__dict__)
+        # print('\n\n')
+
+        # print(issue.fields.summary)
+        # print('issues ', issues)
+        # try:
+        #     issue = jira.issue('SAND-1539xx')
+        #     print(issue.fields.summary)
+        #     print('issues ', issues)
+        # except JIRAError as e:
+        #     print(e.__dict__)
+        #     print('status_code ', e.status_code)
+        #     print('text ', e.text)
+        #     print('response ', e.response)
+        #     print('response. status_code ', e.response.status_code)
+
+        # responses.add(responses.GET, 'http://helpdesk.gfbio.org/rest/api/2/field',
+        #               json={'what': 'fake_response'}, status=500)
+        # try:
+        #     issue = jira.issue('SAND-1539oo')
+        #     print(issue.fields.summary)
+        #     print('issues ', issues)
+        # except requests.exceptions.ConnectionError as e:
+        #     print(e)
+        # except JIRAError as e:
+        #     print(e.__dict__)
+        #     print('status_code ', e.status_code)
+        #     print('text ', e.text)
+        #     print('response ', e.response)
+        #     print('response. status_code ', e.response.status_code)
+
+    # TODO: move to dedicated JIRA Client tzest class
+    # @skip('Test agains real servers')
+    def test_jira_client_with_pangaea(self):
+        token_resource = ResourceCredential.objects.create(
+            title='token',
+            url='https://ws.pangaea.de/ws/services/PanLogin',
+            authentication_string='-',
+            username='gfbio-broker',
+            password='h_qB-RxCY)7y',
+            comment='-'
+        )
+        jira_resource = ResourceCredential.objects.create(
+            title='jira instance',
+            url='https://issues.pangaea.de',
+            authentication_string='-',
+            username='gfbio-broker',
+            password='',
+            comment='-'
+        )
+        client = JiraClient(resource=jira_resource,
+                            token_resource=token_resource)
+
+    # TODO: move to dedicated JIRA Client tzest class
+    # @skip('Test agains real servers')
+    def test_jira_client_with_helpdesk(self):
+        jira_resource = ResourceCredential.objects.create(
+            title='jira instance',
+            url='http://helpdesk.gfbio.org',
+            authentication_string='-',
+            username='brokeragent',
+            password='puN;7_k[-"_,ZiJi',
+            comment='-'
+        )
+        client = JiraClient(resource=jira_resource)
+
+    @skip('Test against pangaea servers')
+    def test_pangaea_jira(self):
+        rc = ResourceCredential.objects.create(
+            title='t',
+            url='https://ws.pangaea.de/ws/services/PanLogin',
+            authentication_string='-',
+            username='gfbio-broker',
+            password='',
+            comment='-'
+        )
+        login_token = get_pangaea_login_token(rc)
+        cookies = dict(PanLoginID=login_token)
+        print('COOKIES ', cookies)
+
+        options = {
+            'server': 'https://issues.pangaea.de',
+            'cookies': cookies,
+        }
+        jira = JIRA(options)
+        print(jira)
+        print('projects', jira.projects)
+        # PDI-21091
+        issues = jira.search_issues('assignee="brokeragent"')
+        print('issues ', issues)
+        issue = jira.issue('PDI-21091')
+        print('issue ', issue.fields.summary)
 
     @skip('Test against helpdesk server')
     def test_python_jira_create(self):
