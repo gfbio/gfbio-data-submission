@@ -4,8 +4,8 @@ import datetime
 import io
 import json
 import os
-from pprint import pprint
 from unittest import skip
+from unittest.mock import patch
 from uuid import uuid4
 
 import requests
@@ -15,8 +15,6 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils.encoding import smart_text
 from jira import JIRA, JIRAError
-from unittest.mock import patch
-
 from requests import ConnectionError
 from requests.structures import CaseInsensitiveDict
 from rest_framework.authtoken.models import Token
@@ -922,41 +920,6 @@ class TestGFBioJira(TestCase):
         #     print('response ', e.response)
         #     print('response. status_code ', e.response.status_code)
 
-    # TODO: move to dedicated JIRA Client tzest class
-    # @skip('Test agains real servers')
-    def test_jira_client_with_pangaea(self):
-        token_resource = ResourceCredential.objects.create(
-            title='token',
-            url='https://ws.pangaea.de/ws/services/PanLogin',
-            authentication_string='-',
-            username='gfbio-broker',
-            password='h_qB-RxCY)7y',
-            comment='-'
-        )
-        jira_resource = ResourceCredential.objects.create(
-            title='jira instance',
-            url='https://issues.pangaea.de',
-            authentication_string='-',
-            username='gfbio-broker',
-            password='',
-            comment='-'
-        )
-        client = JiraClient(resource=jira_resource,
-                            token_resource=token_resource)
-
-    # TODO: move to dedicated JIRA Client tzest class
-    # @skip('Test agains real servers')
-    def test_jira_client_with_helpdesk(self):
-        jira_resource = ResourceCredential.objects.create(
-            title='jira instance',
-            url='http://helpdesk.gfbio.org',
-            authentication_string='-',
-            username='brokeragent',
-            password='puN;7_k[-"_,ZiJi',
-            comment='-'
-        )
-        client = JiraClient(resource=jira_resource)
-
     @skip('Test against pangaea servers')
     def test_pangaea_jira(self):
         rc = ResourceCredential.objects.create(
@@ -1065,6 +1028,42 @@ class TestGFBioJira(TestCase):
 
         res = issue.update(notify=True, fields={'summary': 'new summary',
                                                 'description': 'A new summary was added'})
+
+
+class TestJiraClient(TestCase):
+
+    # @skip('Test agains real servers')
+    def test_jira_client_with_pangaea(self):
+        token_resource = ResourceCredential.objects.create(
+            title='token',
+            url='https://ws.pangaea.de/ws/services/PanLogin',
+            authentication_string='-',
+            username='gfbio-broker',
+            password='',
+            comment='-'
+        )
+        jira_resource = ResourceCredential.objects.create(
+            title='jira instance',
+            url='https://issues.pangaea.de',
+            authentication_string='-',
+            username='gfbio-broker',
+            password='',
+            comment='-'
+        )
+        client = JiraClient(resource=jira_resource,
+                            token_resource=token_resource)
+
+    # @skip('Test agains real servers')
+    def test_jira_client_with_helpdesk(self):
+        jira_resource = ResourceCredential.objects.create(
+            title='jira instance',
+            url='http://helpdesk.gfbio.org',
+            authentication_string='-',
+            username='brokeragent',
+            password='',
+            comment='-'
+        )
+        client = JiraClient(resource=jira_resource)
 
 
 class TestSubmissionTransferHandler(TestCase):
