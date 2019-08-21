@@ -36,7 +36,8 @@ from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_ena_xml_response, \
     _get_ena_error_xml_response, _get_jira_attach_response, \
     _get_pangaea_soap_response, _get_pangaea_attach_response, \
-    _get_pangaea_comment_response, _get_pangaea_ticket_response
+    _get_pangaea_comment_response, _get_pangaea_ticket_response, \
+    _get_jira_issue_response
 from gfbio_submissions.users.models import User
 
 
@@ -73,7 +74,15 @@ class TestInitialChainTasks(TestCase):
         )
         cls.api_client = client
 
+    def _add_jira_client_responses(self):
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(self.site_config.helpdesk_server.url),
+            status=200,
+        )
+
     def _add_create_ticket_response(self):
+        self._add_jira_client_responses()
         responses.add(
             responses.POST,
             '{0}{1}'.format(
@@ -279,6 +288,7 @@ class TestTasks(TestCase):
             helpdesk_server=resource_cred,
             comment='Default configuration 2',
         )
+        cls.issue_json = _get_jira_issue_response()
 
     @classmethod
     def _create_test_data(cls, path, delete=True):
@@ -655,16 +665,32 @@ class TestPortalServiceTasks(TestTasks):
 
 class TestGFBioHelpDeskTasks(TestTasks):
 
+    # @classmethod
+    # def setUpTestData(cls):
+    #     cls.issue_json = _get_jira_issue_response()
+
     @responses.activate
     def test_create_helpdesk_ticket_task_success(self):
         submission = Submission.objects.last()
         site_config = SiteConfiguration.objects.first()
         responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
+        responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.helpdesk_server.url,
                             HELPDESK_API_SUB_URL),
-            json={'bla': 'blubb'},
+            json=self.issue_json,
             status=200)
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/SAND-1661'.format(
+                site_config.helpdesk_server.url),
+            json=self.issue_json
+        )
+
         self.assertEqual(0, len(submission.additionalreference_set.all()))
         result = create_helpdesk_ticket_task.apply_async(
             kwargs={
@@ -673,11 +699,17 @@ class TestGFBioHelpDeskTasks(TestTasks):
         )
         self.assertTrue(result.successful())
         self.assertEqual(1, len(submission.additionalreference_set.all()))
+        print('ADDREF: ', submission.additionalreference_set.first())
 
     @responses.activate
     def test_create_helpdesk_ticket_task_for_unknown_reporter(self):
         submission = Submission.objects.last()
         site_config = SiteConfiguration.objects.first()
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
         responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.helpdesk_server.url,
@@ -688,8 +720,14 @@ class TestGFBioHelpDeskTasks(TestTasks):
             responses.POST,
             '{0}{1}'.format(site_config.helpdesk_server.url,
                             HELPDESK_API_SUB_URL),
-            body='',
+            json=self.issue_json,
             status=200)
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/SAND-1661'.format(
+                site_config.helpdesk_server.url),
+            json=self.issue_json
+        )
         result = create_helpdesk_ticket_task.apply_async(
             kwargs={
                 'submission_id': submission.id,
@@ -699,6 +737,8 @@ class TestGFBioHelpDeskTasks(TestTasks):
         tprs = TaskProgressReport.objects.exclude(
             task_name='tasks.update_helpdesk_ticket_task')
         self.assertEqual(1, len(tprs))
+        self.assertEqual(1, len(submission.additionalreference_set.all()))
+        print('ADDREF: ', submission.additionalreference_set.first())
 
     @responses.activate
     def test_create_helpdesk_ticket_task_unicode_text(self):
@@ -706,12 +746,23 @@ class TestGFBioHelpDeskTasks(TestTasks):
         site_config = SiteConfiguration.objects.first()
         self.assertEqual(0, len(submission.additionalreference_set.all()))
         responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
+        responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.helpdesk_server.url,
                             HELPDESK_API_SUB_URL
                             ),
-            json={'bla': 'blubb'},
+            json=self.issue_json,
             status=200)
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/SAND-1661'.format(
+                site_config.helpdesk_server.url),
+            json=self.issue_json
+        )
         result = create_helpdesk_ticket_task.apply_async(
             kwargs={
                 'submission_id': submission.id,
@@ -943,6 +994,11 @@ class TestGFBioHelpDeskTasks(TestTasks):
         submission = Submission.objects.last()
         site_config = SiteConfiguration.objects.first()
         responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
+        responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.helpdesk_server.url,
                             HELPDESK_API_SUB_URL),
@@ -959,6 +1015,11 @@ class TestGFBioHelpDeskTasks(TestTasks):
     def test_create_helpdesk_ticket_task_server_error(self):
         submission = Submission.objects.last()
         site_config = SiteConfiguration.objects.first()
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
         responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.helpdesk_server.url,
@@ -1440,6 +1501,11 @@ class TestTaskChains(TestTasks):
                             'screenname': 'maweber', 'userid': 16250,
                             'lastname': 'Weber'})
 
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
         responses.add(responses.POST,
                       '{0}{1}'.format(site_config.helpdesk_server.url,
                                       HELPDESK_API_SUB_URL

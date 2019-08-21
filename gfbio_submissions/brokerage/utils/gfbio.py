@@ -4,6 +4,7 @@ import json
 import logging
 
 import requests
+from IPython.lib.pretty import pprint
 from django.db import transaction
 from requests.structures import CaseInsensitiveDict
 
@@ -206,7 +207,12 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
 
     if not prepare_for_update:
         mutual_data['customfield_10010'] = jira_request_type
-    return {'fields': mutual_data}
+
+    print('\n\nreturn from prepaere ')
+    pprint({'fields': mutual_data})
+    print('\n-------------------------------\n')
+    # return {'fields': mutual_data}
+    return mutual_data
 
 
 def gfbio_helpdesk_create_ticket(site_config, submission, data={}):

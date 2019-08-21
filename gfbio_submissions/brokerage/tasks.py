@@ -870,6 +870,11 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
         jira_client.create_submission_issue(reporter=prev_task_result,
                                             site_config=site_configuration,
                                             submission=submission)
+        # print('\n\nIN TASK')
+        # print(type(jira_client.issue.key))
+        # # print(jira_client.error.__dict__)
+        #
+        # print('\n\n--------------------------\n\n')
         ############
 
         # TODO: jira.issue or jira.error are None
@@ -896,7 +901,7 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
             apply_default_task_retry_policy(jira_client.error.response,
                                             create_helpdesk_ticket_task,
                                             submission)
-        else:
+        elif jira_client.issue:
             submission.additionalreference_set.create(
                 type=AdditionalReference.GFBIO_HELPDESK_TICKET,
                 reference_key=jira_client.issue.key,

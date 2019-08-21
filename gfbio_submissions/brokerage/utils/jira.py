@@ -56,11 +56,12 @@ class JiraClient(object):
     # generic methods ----------------------------------------------------------
 
     def create_issue(self, fields={}):
+        print('\n\ncreate issue ', fields)
         try:
             self.issue = self.jira.create_issue(fields=fields)
             self.error = None
         except JIRAError as e:
-            logger.warning('JiraClient | create_issue | JIRAError ', e)
+            logger.warning('JiraClient | create_issue | JIRAError {0} | {1}'.format(e, e.text))
             self.issue = None
             self.error = e
 

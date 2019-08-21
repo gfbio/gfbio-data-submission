@@ -1,0 +1,308 @@
+{
+    "_base_url": "{server}/rest/{rest_path}/{rest_api_version}/{path}",
+    "_options": {
+        "agile_rest_api_version": "1.0",
+        "agile_rest_path": "greenhopper",
+        "async": false,
+        "async_workers": 5,
+        "auth_url": "/rest/auth/1/session",
+        "check_update": false,
+        "client_cert": null,
+        "context_path": "/",
+        "headers": {
+            "Cache-Control": "no-cache",
+            "Content-Type": "application/json",
+            "X-Atlassian-Token": "no-check"
+        },
+        "resilient": true,
+        "rest_api_version": "2",
+        "rest_path": "api",
+        "server": "http://helpdesk.gfbio.org",
+        "verify": true
+    },
+    "_resource": "issue/{0}",
+    "_session": "<jira.resilientsession.ResilientSession object at 0x7f2bf5b5f780>",
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "fields": "<class 'jira.resources.PropertyHolder'>",
+    "id": "16814",
+    "key": "SAND-1661",
+    "raw": {
+        "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+        "fields": {
+            "aggregateprogress": {
+                "progress": 0,
+                "total": 0
+            },
+            "aggregatetimeestimate": null,
+            "aggregatetimeoriginalestimate": null,
+            "aggregatetimespent": null,
+            "assignee": {
+                "active": true,
+                "avatarUrls": {
+                    "16x16": "https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&avatarId=10335",
+                    "24x24": "https://helpdesk.gfbio.org/secure/useravatar?size=small&avatarId=10335",
+                    "32x32": "https://helpdesk.gfbio.org/secure/useravatar?size=medium&avatarId=10335",
+                    "48x48": "https://helpdesk.gfbio.org/secure/useravatar?avatarId=10335"
+                },
+                "displayName": "Marc Weber",
+                "emailAddress": "maweber@mpi-bremen.de",
+                "key": "maweber@mpi-bremen.de",
+                "name": "maweber@mpi-bremen.de",
+                "self": "https://helpdesk.gfbio.org/rest/api/2/user?username=maweber%40mpi-bremen.de",
+                "timeZone": "Europe/Berlin"
+            },
+            "attachment": [],
+            "comment": {
+                "comments": [],
+                "maxResults": 0,
+                "startAt": 0,
+                "total": 0
+            },
+            "components": [],
+            "created": "2019-08-21T13:25:40.949+0000",
+            "creator": {
+                "active": true,
+                "avatarUrls": {
+                    "16x16": "https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&ownerId=brokeragent%40gfbio.org&avatarId=11100",
+                    "24x24": "https://helpdesk.gfbio.org/secure/useravatar?size=small&ownerId=brokeragent%40gfbio.org&avatarId=11100",
+                    "32x32": "https://helpdesk.gfbio.org/secure/useravatar?size=medium&ownerId=brokeragent%40gfbio.org&avatarId=11100",
+                    "48x48": "https://helpdesk.gfbio.org/secure/useravatar?ownerId=brokeragent%40gfbio.org&avatarId=11100"
+                },
+                "displayName": "Broker Agent",
+                "emailAddress": "brokeragent@gfbio.org",
+                "key": "brokeragent@gfbio.org",
+                "name": "brokeragent",
+                "self": "https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent",
+                "timeZone": "Europe/Berlin"
+            },
+            "customfield_10000": null,
+            "customfield_10001": null,
+            "customfield_10004": null,
+            "customfield_10006": null,
+            "customfield_10009": "0|i00nyf:",
+            "customfield_10010": {
+                "_links": {
+                    "jiraRest": "https://helpdesk.gfbio.org/rest/api/2/issue/16814",
+                    "self": "https://helpdesk.gfbio.org/rest/servicedeskapi/request/16814",
+                    "web": "https://helpdesk.gfbio.org/servicedesk/customer/portal/2/SAND-1661"
+                },
+                "currentStatus": {
+                    "status": "UNDER REVIEW",
+                    "statusDate": {
+                        "epochMillis": 1566393940949,
+                        "friendly": "Just now",
+                        "iso8601": "2019-08-21T15:25:40+0200",
+                        "jira": "2019-08-21T13:25:40.949+0000"
+                    }
+                },
+                "requestType": {
+                    "_links": {
+                        "self": "https://helpdesk.gfbio.org/rest/servicedeskapi/servicedesk/2/requesttype/61"
+                    },
+                    "description": "",
+                    "groupIds": [],
+                    "helpText": "",
+                    "icon": {
+                        "_links": {
+                            "iconUrls": {
+                                "16x16": "https://helpdesk.gfbio.org/secure/viewavatar?avatarType=SD_REQTYPE&size=xsmall&avatarId=11222",
+                                "24x24": "https://helpdesk.gfbio.org/secure/viewavatar?avatarType=SD_REQTYPE&size=small&avatarId=11222",
+                                "32x32": "https://helpdesk.gfbio.org/secure/viewavatar?avatarType=SD_REQTYPE&size=medium&avatarId=11222",
+                                "48x48": "https://helpdesk.gfbio.org/secure/viewavatar?avatarType=SD_REQTYPE&size=large&avatarId=11222"
+                            }
+                        },
+                        "id": "11222"
+                    },
+                    "id": "61",
+                    "name": "Molecular Data",
+                    "serviceDeskId": "2"
+                }
+            },
+            "customfield_10011": [],
+            "customfield_10100": null,
+            "customfield_10101": null,
+            "customfield_10200": "2020-08-20",
+            "customfield_10201": "requirements title",
+            "customfield_10202": {
+                "id": "10500",
+                "self": "https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10500",
+                "value": "other"
+            },
+            "customfield_10203": null,
+            "customfield_10204": null,
+            "customfield_10205": "first_name,last_name;email",
+            "customfield_10206": null,
+            "customfield_10207": null,
+            "customfield_10208": "requirements description",
+            "customfield_10209": null,
+            "customfield_10210": null,
+            "customfield_10214": null,
+            "customfield_10215": null,
+            "customfield_10216": [
+                {
+                    "id": "10203",
+                    "self": "https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10203",
+                    "value": "Sensitive Personal Information"
+                },
+                {
+                    "id": "10157",
+                    "self": "https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10157",
+                    "value": "Uncertain"
+                }
+            ],
+            "customfield_10217": null,
+            "customfield_10218": null,
+            "customfield_10220": null,
+            "customfield_10221": null,
+            "customfield_10222": null,
+            "customfield_10223": null,
+            "customfield_10224": null,
+            "customfield_10225": null,
+            "customfield_10227": null,
+            "customfield_10228": null,
+            "customfield_10229": [
+                {
+                    "id": "10300",
+                    "self": "https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10300",
+                    "value": "other"
+                }
+            ],
+            "customfield_10230": null,
+            "customfield_10231": null,
+            "customfield_10232": null,
+            "customfield_10233": null,
+            "customfield_10234": null,
+            "customfield_10236": null,
+            "customfield_10300": null,
+            "customfield_10301": null,
+            "customfield_10302": null,
+            "customfield_10303": "7fafa310-6031-4e41-987b-271d89916eb2",
+            "customfield_10304": null,
+            "customfield_10305": null,
+            "customfield_10306": null,
+            "customfield_10307": "publication 1234",
+            "customfield_10308": [
+                "LABEL1",
+                "label2"
+            ],
+            "customfield_10309": null,
+            "customfield_10310": null,
+            "customfield_10311": null,
+            "customfield_10312": null,
+            "customfield_10313": "Algae & Protists, Microbiology",
+            "customfield_10314": "potential project id",
+            "customfield_10315": null,
+            "customfield_10500": null,
+            "customfield_10600": "http://www.downloadurl.com",
+            "customfield_10700": null,
+            "customfield_10800": {
+                "id": "10701",
+                "self": "https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10701",
+                "value": "false"
+            },
+            "customfield_10900": null,
+            "customfield_10901": [],
+            "customfield_10902": null,
+            "customfield_10903": null,
+            "customfield_11000": null,
+            "customfield_11001": null,
+            "customfield_11100": "{}",
+            "customfield_11200": null,
+            "customfield_11201": null,
+            "description": "Look into this one",
+            "duedate": null,
+            "environment": null,
+            "fixVersions": [],
+            "issuelinks": [],
+            "issuetype": {
+                "avatarId": 10310,
+                "description": "",
+                "iconUrl": "https://helpdesk.gfbio.org/secure/viewavatar?size=xsmall&avatarId=10310&avatarType=issuetype",
+                "id": "10200",
+                "name": "Data Submission",
+                "self": "https://helpdesk.gfbio.org/rest/api/2/issuetype/10200",
+                "subtask": false
+            },
+            "labels": [],
+            "lastViewed": null,
+            "priority": {
+                "iconUrl": "https://helpdesk.gfbio.org/images/icons/priorities/medium.svg",
+                "id": "3",
+                "name": "Medium",
+                "self": "https://helpdesk.gfbio.org/rest/api/2/priority/3"
+            },
+            "progress": {
+                "progress": 0,
+                "total": 0
+            },
+            "project": {
+                "avatarUrls": {
+                    "16x16": "https://helpdesk.gfbio.org/secure/projectavatar?size=xsmall&pid=10001&avatarId=10205",
+                    "24x24": "https://helpdesk.gfbio.org/secure/projectavatar?size=small&pid=10001&avatarId=10205",
+                    "32x32": "https://helpdesk.gfbio.org/secure/projectavatar?size=medium&pid=10001&avatarId=10205",
+                    "48x48": "https://helpdesk.gfbio.org/secure/projectavatar?pid=10001&avatarId=10205"
+                },
+                "id": "10001",
+                "key": "SAND",
+                "name": "Sandbox",
+                "projectTypeKey": "service_desk",
+                "self": "https://helpdesk.gfbio.org/rest/api/2/project/10001"
+            },
+            "reporter": {
+                "active": true,
+                "avatarUrls": {
+                    "16x16": "https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&avatarId=10335",
+                    "24x24": "https://helpdesk.gfbio.org/secure/useravatar?size=small&avatarId=10335",
+                    "32x32": "https://helpdesk.gfbio.org/secure/useravatar?size=medium&avatarId=10335",
+                    "48x48": "https://helpdesk.gfbio.org/secure/useravatar?avatarId=10335"
+                },
+                "displayName": "Marc Weber",
+                "emailAddress": "maweber@mpi-bremen.de",
+                "key": "maweber@mpi-bremen.de",
+                "name": "maweber@mpi-bremen.de",
+                "self": "https://helpdesk.gfbio.org/rest/api/2/user?username=maweber%40mpi-bremen.de",
+                "timeZone": "Europe/Berlin"
+            },
+            "resolution": null,
+            "resolutiondate": null,
+            "status": {
+                "description": "The GFBio data center curators are reviewing the submission, deciding which data center is appropriate.",
+                "iconUrl": "https://helpdesk.gfbio.org/images/icons/statuses/open.png",
+                "id": "1",
+                "name": "UNDER REVIEW",
+                "self": "https://helpdesk.gfbio.org/rest/api/2/status/1",
+                "statusCategory": {
+                    "colorName": "blue-gray",
+                    "id": 2,
+                    "key": "new",
+                    "name": "To Do",
+                    "self": "https://helpdesk.gfbio.org/rest/api/2/statuscategory/2"
+                }
+            },
+            "subtasks": [],
+            "summary": "New issue from jira-python",
+            "timeestimate": null,
+            "timeoriginalestimate": null,
+            "timespent": null,
+            "timetracking": {},
+            "updated": "2019-08-21T13:25:40.949+0000",
+            "versions": [],
+            "watches": {
+                "isWatching": true,
+                "self": "https://helpdesk.gfbio.org/rest/api/2/issue/SAND-1661/watchers",
+                "watchCount": 1
+            },
+            "worklog": {
+                "maxResults": 20,
+                "startAt": 0,
+                "total": 0,
+                "worklogs": []
+            },
+            "workratio": -1
+        },
+        "id": "16814",
+        "key": "SAND-1661",
+        "self": "https://helpdesk.gfbio.org/rest/api/2/issue/16814"
+    },
+    "self": "https://helpdesk.gfbio.org/rest/api/2/issue/16814"
+}

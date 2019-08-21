@@ -91,6 +91,7 @@ class TestSubmissionView(TestCase):
         cls.other_api_client = other_client
 
     def _add_create_ticket_response(self):
+        self._add_jira_client_responses()
         responses.add(
             responses.POST,
             '{0}{1}'.format(
@@ -99,6 +100,13 @@ class TestSubmissionView(TestCase):
             ),
             status=200,
             body=json.dumps({'mocked_response': True})
+        )
+
+    def _add_jira_client_responses(self):
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(self.site_config.helpdesk_server.url),
+            status=200,
         )
 
     def _add_update_ticket_response(self):
@@ -766,7 +774,9 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
 
     @responses.activate
     def test_ena_datacenter_no_files(self):
+        self._add_jira_client_responses()
         self._add_create_ticket_response()
+
         response = self.api_client.post(
             '/api/submissions/',
             {'target': 'GENERIC', 'release': True,
@@ -792,6 +802,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
 
     @responses.activate
     def test_ena_datacenter_with_suitable_file_after_put(self):
+        self._add_jira_client_responses()
         self._add_create_ticket_response()
         self._add_update_ticket_response()
         response = self.api_client.post(
@@ -853,6 +864,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
 
     @responses.activate
     def test_ena_datacenter_with_unsuitable_file_after_put(self):
+        self._add_jira_client_responses()
         self._add_create_ticket_response()
         self._add_update_ticket_response()
         response = self.api_client.post(
@@ -913,6 +925,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
 
     @responses.activate
     def test_ena_datacenter_with_binary_file_after_put(self):
+        self._add_jira_client_responses()
         self._add_create_ticket_response()
         self._add_update_ticket_response()
         response = self.api_client.post(

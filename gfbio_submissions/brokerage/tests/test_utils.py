@@ -1126,6 +1126,26 @@ class TestJiraClient(TestCase):
         print('\n\nerror')
         print(client.error)
 
+    @skip('Test against helpdesk server')
+    def test_jira_client_get_issue(self):
+        jira_resource = ResourceCredential.objects.create(
+            title='jira instance',
+            url='http://helpdesk.gfbio.org',
+            authentication_string='-',
+            username='brokeragent',
+            password='',
+            comment='-'
+        )
+        client = JiraClient(resource=jira_resource)
+        issue = client.jira.issue("SAND-1661")
+
+
+        print('\n\nissue')
+        # print(issue)
+        pprint(issue.__dict__)
+        # print('\n\nerror')
+        # print(client.error)
+
 
 class TestSubmissionTransferHandler(TestCase):
 
