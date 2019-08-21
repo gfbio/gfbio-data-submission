@@ -1399,11 +1399,11 @@ class TestHelpDeskTicketMethods(TestCase):
         payload = gfbio_prepare_create_helpdesk_payload(
             site_config=site_config,
             submission=submission)
-        self.assertEqual({'name': 'ikostadi'}, payload['fields']['assignee'])
+        self.assertEqual({'name': 'ikostadi'}, payload['assignee'])
         self.assertEqual('sand/molecular-data',
-                         payload['fields']['customfield_10010'])
+                         payload['customfield_10010'])
         self.assertEqual('MIxS',
-                         payload['fields']['customfield_10229'][0]['value'])
+                         payload['customfield_10229'][0]['value'])
 
         data['requirements'].pop('data_center')
         serializer = SubmissionSerializer(data={
@@ -1417,12 +1417,12 @@ class TestHelpDeskTicketMethods(TestCase):
         payload = gfbio_prepare_create_helpdesk_payload(
             site_config=site_config,
             submission=submission)
-        self.assertNotIn('assignee', payload['fields'].keys())
+        self.assertNotIn('assignee', payload.keys())
         self.assertEqual('sand/generic-data',
-                         payload['fields']['customfield_10010'])
+                         payload['customfield_10010'])
 
         self.assertEqual('other',
-                         payload['fields']['customfield_10229'][0]['value'])
+                         payload['customfield_10229'][0]['value'])
 
         data['requirements'][
             'data_center'] = 'GFBio Data Centers - our curators will suggest the appropriate one(s)'
@@ -1437,7 +1437,7 @@ class TestHelpDeskTicketMethods(TestCase):
         payload = gfbio_prepare_create_helpdesk_payload(
             site_config=site_config,
             submission=submission)
-        self.assertNotIn('assignee', payload['fields'].keys())
+        self.assertNotIn('assignee', payload.keys())
 
     def test_prepare_helpdesk_payload_metadataschema_is_none(self):
         with open(os.path.join(
@@ -1459,7 +1459,7 @@ class TestHelpDeskTicketMethods(TestCase):
             site_config=site_config,
             submission=submission)
         self.assertEqual('other',
-                         payload['fields']['customfield_10229'][0]['value'])
+                         payload['customfield_10229'][0]['value'])
 
     @responses.activate
     def test_create_helpdesk_ticket(self):
