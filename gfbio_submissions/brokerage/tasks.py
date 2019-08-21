@@ -885,13 +885,24 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
 
         ############
 
-
-
         # TODO: python-jira has own retry policy. decide if deactivate and use this one
         # TODO: need refactoring too because of jira refactorings. logging also.
         # apply_default_task_retry_policy(response,
         #                                 create_helpdesk_ticket_task,
         #                                 submission)
+
+        # with python-jira retries de-activated:
+        if jira_client.error:
+            apply_default_task_retry_policy(jira_client.error.response,
+                                            create_helpdesk_ticket_task,
+                                            submission)
+        else:
+            submission.additionalreference_set.create(
+                type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+                reference_key=jira_client.issue.key,
+                primary=True
+            )
+
         # TODO: more explicit: if no prior tickets, if new ticket parse and create reeference
         # TODO: minor. rename additional reference ? Reference only ?
         # TODO: abstract to method

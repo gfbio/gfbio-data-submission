@@ -20,11 +20,9 @@ class JiraClient(object):
         self.resource = resource
         self.token_resource = token_resource
         if token_resource is None:
-            print('TOKEN RES IS NULL')
             self.jira = self._get_connection()
             print(self.jira)
         else:
-            print('TOKENRES NOT NULL')
             self.jira = self._get_connection(
                 options={'cookies': self._get_pangaea_token()})
             print(self.jira)
@@ -62,6 +60,7 @@ class JiraClient(object):
             self.issue = self.jira.create_issue(fields=fields)
             self.error = None
         except JIRAError as e:
+            logger.warning('JiraClient | create_issue | JIRAError ', e)
             self.issue = None
             self.error = e
 

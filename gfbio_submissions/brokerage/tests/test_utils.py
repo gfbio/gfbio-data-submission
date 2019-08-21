@@ -4,6 +4,8 @@ import datetime
 import io
 import json
 import os
+import pprint
+from pprint import pprint
 from unittest import skip
 from unittest.mock import patch
 from uuid import uuid4
@@ -1032,7 +1034,7 @@ class TestGFBioJira(TestCase):
 
 class TestJiraClient(TestCase):
 
-    # @skip('Test agains real servers')
+    @skip('Test against real server')
     def test_jira_client_with_pangaea(self):
         token_resource = ResourceCredential.objects.create(
             title='token',
@@ -1053,7 +1055,7 @@ class TestJiraClient(TestCase):
         client = JiraClient(resource=jira_resource,
                             token_resource=token_resource)
 
-    # @skip('Test agains real servers')
+    @skip('Test against real server')
     def test_jira_client_with_helpdesk(self):
         jira_resource = ResourceCredential.objects.create(
             title='jira instance',
@@ -1064,6 +1066,65 @@ class TestJiraClient(TestCase):
             comment='-'
         )
         client = JiraClient(resource=jira_resource)
+
+    @skip('Test against helpdesk server')
+    def test_jira_client_create_issue(self):
+        jira_resource = ResourceCredential.objects.create(
+            title='jira instance',
+            url='http://helpdesk.gfbio.org',
+            authentication_string='-',
+            username='brokeragent',
+            password='',
+            comment='-'
+        )
+        client = JiraClient(resource=jira_resource)
+
+        # almost analog to gfbio_prepare_create_helpdesk_payload(...)
+        issue_dict = {
+            'project': {'key': 'SAND'},
+            'summary': 'New issue from jira-python',
+            'description': 'Look into this one',
+            'issuetype': {
+                'name': 'Data Submission'
+            },
+            'reporter': {
+                'name': 'maweber@mpi-bremen.de'
+            },
+            'assignee': {
+                'name': 'maweber@mpi-bremen.de'  # or data center
+            },
+            'customfield_10010': 'sand/molecular-data',
+            'customfield_10200': '{0}'.format(
+                (datetime.date.today() + datetime.timedelta(
+                    days=365)).isoformat()),
+            'customfield_10201': 'requirements title',
+            'customfield_10208': 'requirements description',
+            'customfield_10303': '7fafa310-6031-4e41-987b-271d89916eb2',
+            # 'customfield_10311': requirements.get('data_collection_time', ''),
+            'customfield_10308': ['LABEL1', 'label2', ],
+            'customfield_10313': ', '.join(
+                ['Algae & Protists', 'Microbiology']),
+            'customfield_10205': 'first_name,last_name;email',
+            'customfield_10307': '; '.join(['publication 1234']),
+            'customfield_10216': [{'value': l} for l in
+                                  ['Sensitive Personal Information',
+                                   'Uncertain']],
+            'customfield_10314': 'potential project id',
+            'customfield_10202': {
+                'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10500',
+                'value': 'other',
+                'id': '10500'
+            },
+            'customfield_10600': 'http://www.downloadurl.com',
+            'customfield_10229': [{'value': 'other'}],
+
+        }
+        client.create_issue(issue_dict)
+        print('\n\nissue')
+        print(client.issue)
+        pprint(client.issue.__dict__)
+        print('\n\nerror')
+        print(client.error)
 
 
 class TestSubmissionTransferHandler(TestCase):
