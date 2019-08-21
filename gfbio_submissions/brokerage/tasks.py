@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-import pprint
 from json import JSONDecodeError
-from pprint import pprint
 
 import celery
 from celery import Task
@@ -21,6 +19,7 @@ from gfbio_submissions.brokerage.utils.csv import \
 from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_prepare_create_helpdesk_payload, gfbio_update_helpdesk_ticket, \
     gfbio_helpdesk_delete_attachment
+from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.users.models import User
 from .configuration.settings import BASE_HOST_NAME, \
     PRIMARY_DATA_FILE_MAX_RETRIES, PRIMARY_DATA_FILE_DELAY, \
@@ -234,39 +233,39 @@ def apply_timebased_task_retry_policy(task, submission, no_of_tickets):
 
 # TODO: refactor/move to submission_transfer_handler and combine with
 #  apply_default_task_retry_policy
-def force_ticket_creation(response, submission, site_configuration):
-    if response.status_code >= 400:
-        try:
-            error_messages = response.json()
-        except JSONDecodeError as e:
-            return response
-        # deal with jira unknown reporter
-        if 'reporter' in error_messages.get('errors', {}).keys():
-            reporter_errors = error_messages.get('errors', {})
-            if 'The reporter specified is not a user' in reporter_errors.get(
-                    'reporter', ''):
-                default = {
-                    'user_email': 'maweber@mpi-bremen.de',
-                    # brokeragent@gfbio.org
-                    'user_full_name': '',
-                    'first_name': '',
-                    'last_name': '',
-                }
-                # create_helpdesk_ticket_task.s(prev_task_result=default,
-                #                               submission_id=submission_id).set(
-                #     countdown=SUBMISSION_RETRY_DELAY)()
-                data = gfbio_prepare_create_helpdesk_payload(
-                    reporter=default,
-                    site_config=site_configuration,
-                    submission=submission)
-                return gfbio_helpdesk_create_ticket(
-                    site_config=site_configuration,
-                    submission=submission,
-                    data=data,
-                )
-        else:
-            return response
-    return response
+# def force_ticket_creation(response, submission, site_configuration):
+#     if response.status_code >= 400:
+#         try:
+#             error_messages = response.json()
+#         except JSONDecodeError as e:
+#             return response
+#         # deal with jira unknown reporter
+#         if 'reporter' in error_messages.get('errors', {}).keys():
+#             reporter_errors = error_messages.get('errors', {})
+#             if 'The reporter specified is not a user' in reporter_errors.get(
+#                     'reporter', ''):
+#                 default = {
+#                     'user_email': 'maweber@mpi-bremen.de',
+#                     # brokeragent@gfbio.org
+#                     'user_full_name': '',
+#                     'first_name': '',
+#                     'last_name': '',
+#                 }
+#                 # create_helpdesk_ticket_task.s(prev_task_result=default,
+#                 #                               submission_id=submission_id).set(
+#                 #     countdown=SUBMISSION_RETRY_DELAY)()
+#                 data = gfbio_prepare_create_helpdesk_payload(
+#                     reporter=default,
+#                     site_config=site_configuration,
+#                     submission=submission)
+#                 return gfbio_helpdesk_create_ticket(
+#                     site_config=site_configuration,
+#                     submission=submission,
+#                     data=data,
+#                 )
+#         else:
+#             return response
+#     return response
 
 
 # TODO: refactor/move to submission_transfer_handler
@@ -850,63 +849,69 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
         # else:
         # TODO: may require dedicated improvemens ? less parameters ?
         # TODO: call directly as param in new jira methods for ticket creation
-        data = gfbio_prepare_create_helpdesk_payload(
-            reporter=prev_task_result,
-            site_config=site_configuration,
-            submission=submission)
-
-        print('\ncreate_helpdesk_ticket_task. data ')
-        pprint(data)
-
+        # data = gfbio_prepare_create_helpdesk_payload(
+        #     reporter=prev_task_result,
+        #     site_config=site_configuration,
+        #     submission=submission)
+        #
+        # print('\ncreate_helpdesk_ticket_task. data ')
+        # pprint(data)
 
         # TODO: main refactoring of jira access will replace this
         # TODO: use absolutly gerenic "create ticket" funktion where params
         #  or connection decides where to create
-        response = gfbio_helpdesk_create_ticket(
-            site_config=site_configuration,
-            submission=submission,
-            data=data,
-        )
+        # response = gfbio_helpdesk_create_ticket(
+        #     site_config=site_configuration,
+        #     submission=submission,
+        #     data=data,
+        # )
+        # --> jira-client-crteate-ticket
+        jira_client = JiraClient(resource=site_configuration.helpdesk_server)
+        jira_client.create_submission_issue(reporter=prev_task_result,
+                                            site_config=site_configuration,
+                                            submission=submission)
+        ############
+
+        # TODO: jira.issue or jira.error are None
+
+        ###############
+
+        # TODO: main refactoring also for this particular client error
+        # response = force_ticket_creation(
+        #     response=response,
+        #     submission=submission,
+        #     site_configuration=site_configuration,
+        # )
 
         ############
 
 
 
-        ###############
-
-
-        # TODO: main refactoring also for this particular client error
-        response = force_ticket_creation(
-            response=response,
-            submission=submission,
-            site_configuration=site_configuration,
-        )
-
         # TODO: python-jira has own retry policy. decide if deactivate and use this one
         # TODO: need refactoring too because of jira refactorings. logging also.
-        apply_default_task_retry_policy(response,
-                                        create_helpdesk_ticket_task,
-                                        submission)
+        # apply_default_task_retry_policy(response,
+        #                                 create_helpdesk_ticket_task,
+        #                                 submission)
         # TODO: more explicit: if no prior tickets, if new ticket parse and create reeference
         # TODO: minor. rename additional reference ? Reference only ?
         # TODO: abstract to method
         # if not len(existing_tickets):
-        try:
-            content = response.json()
-        except JSONDecodeError as e:
-            logger.warning(
-                'create_helpdesk_ticket_task submission_id={0} JSONDecodeError={1}'.format(
-                    submission_id, e))
-            content = {}
-        submission.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            # reference_key=json.loads(response.content).get('key',
-            #                                                'no_key_available'),
-            reference_key=content.get('key', 'no_key_available'),
-            # reference_key=json.loads(response.content.decode('utf-8')).get(
-            #     'key', 'no_key_available'),
-            primary=True
-        )
+        # try:
+        #     content = response.json()
+        # except JSONDecodeError as e:
+        #     logger.warning(
+        #         'create_helpdesk_ticket_task submission_id={0} JSONDecodeError={1}'.format(
+        #             submission_id, e))
+        #     content = {}
+        # submission.additionalreference_set.create(
+        #     type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+        #     # reference_key=json.loads(response.content).get('key',
+        #     #                                                'no_key_available'),
+        #     reference_key=content.get('key', 'no_key_available'),
+        #     # reference_key=json.loads(response.content.decode('utf-8')).get(
+        #     #     'key', 'no_key_available'),
+        #     primary=True
+        # )
 
     else:
         return TaskProgressReport.CANCELLED
