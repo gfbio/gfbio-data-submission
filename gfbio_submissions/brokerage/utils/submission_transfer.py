@@ -97,7 +97,7 @@ class SubmissionTransferHandler(object):
         error = None
         if not response.ok:
             if 400 <= response.status_code < 500:
-                print(' ############ 4xx ',)
+                print(' ############ 4xx ', )
                 error = cls.TransferClientError(
                     response.status_code,
                     response.content
@@ -211,8 +211,8 @@ class SubmissionTransferHandler(object):
                 self.target_archive))
         from gfbio_submissions.brokerage.tasks import \
             transfer_data_to_ena_task, process_ena_response_task, \
-            add_accession_to_issue_task, request_pangaea_login_token_task, \
-            create_pangaea_jira_ticket_task, \
+            add_accession_to_issue_task, \
+            create_pangaea_issue_task, \
             attach_file_to_pangaea_ticket_task, \
             comment_on_pangaea_ticket_task, \
             add_pangaealink_to_helpdesk_ticket_task
@@ -225,9 +225,7 @@ class SubmissionTransferHandler(object):
                 | add_accession_to_issue_task.s(
             submission_id=self.submission_id,
             target_archive=ENA).set(countdown=SUBMISSION_DELAY) \
-                | request_pangaea_login_token_task.s(
-            submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
-                | create_pangaea_jira_ticket_task.s(
+                | create_pangaea_issue_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
                 | attach_file_to_pangaea_ticket_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \

@@ -120,6 +120,32 @@ def get_csv_from_samples(submission):
     return csv_from_samples
 
 
+def prepare_pangaea_issue_content(site_configuration, submission):
+    data = json.dumps({
+        # 'fields': {
+        'customfield_10002':
+            submission.submitting_user_common_information
+            if submission.submitting_user_common_information != ''
+            else site_configuration.contact,
+        'customfield_10004': submission.data.get('requirements', {}).get(
+            'title', ''),
+        'project': {
+            'key': 'PDI'
+        },
+        'issuetype': {
+            # name needed to identidy correct type
+            "name": "Data Submission",
+        },
+        'description': submission.data.get('requirements', {}).get(
+            'description', ''),
+        'summary': 'Automated request by GFBio BrokerAgent',
+        'labels': site_configuration.get_ticket_labels(
+            label_type=TicketLabel.PANGAEA_JIRA)
+        # }
+    })
+    return data
+
+
 # TODO: refactor to be independent from Pangaea url, since JIRA API works for all installations of JIRA
 # TODO: move to jira-python once login is possible with this
 def create_pangaea_jira_ticket(login_token, site_configuration, submission):
@@ -130,28 +156,7 @@ def create_pangaea_jira_ticket(login_token, site_configuration, submission):
         'Content-Type': 'application/json'
     }
     # TODO: configure hardcoded content ???
-    data = json.dumps({
-        'fields': {
-            'customfield_10002':
-                submission.submitting_user_common_information
-                if submission.submitting_user_common_information != ''
-                else site_configuration.contact,
-            'customfield_10004': submission.data.get('requirements', {}).get(
-                'title', ''),
-            'project': {
-                'key': 'PDI'
-            },
-            'issuetype': {
-                # name needed to identidy correct type
-                "name": "Data Submission",
-            },
-            'description': submission.data.get('requirements', {}).get(
-                'description', ''),
-            'summary': 'Automated request by GFBio BrokerAgent',
-            'labels': site_configuration.get_ticket_labels(
-                label_type=TicketLabel.PANGAEA_JIRA)
-        }
-    })
+    data = prepare_pangaea_issue_content(site_configuration, submission)
     # requestlog: ok
     response = requests.post(
         url=url,

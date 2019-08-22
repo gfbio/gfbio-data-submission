@@ -95,7 +95,7 @@ class SiteConfigurationTest(TestCase):
         self.assertIsInstance(site_config, SiteConfiguration)
         self.assertIsInstance(site_config.site, User)
         self.assertIsInstance(site_config.ena_server, ResourceCredential)
-        self.assertIsInstance(site_config.pangaea_server, ResourceCredential)
+        self.assertIsInstance(site_config.pangaea_token_server, ResourceCredential)
         self.assertIsInstance(site_config.gfbio_server, ResourceCredential)
         self.assertIsInstance(site_config.helpdesk_server, ResourceCredential)
         self.assertFalse(site_config.release_submissions)

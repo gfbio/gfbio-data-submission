@@ -103,14 +103,27 @@ class SiteConfiguration(models.Model):
                   'should use to connect to access ENA FTP-server.',
         on_delete=models.PROTECT
     )
-    pangaea_server = models.ForeignKey(
+    pangaea_token_server = models.ForeignKey(
         ResourceCredential,
-        related_name='SiteConfiguration.pangaea_server+',
+        null=True,
+        blank=True,
+        related_name='SiteConfiguration.pangaea_token_server+',
         help_text='Select which server and/or account this configuration '
-                  'should use to connect to Pangaea.',
+                  'should use to connect to Pangaea token server. Via this server, the'
+                  'token necessary to access Pangaea-Jira is obtained',
         on_delete=models.PROTECT
     )
-
+    pangaea_jira_server = models.ForeignKey(
+        ResourceCredential,
+        null=True,
+        blank=True,
+        related_name='SiteConfiguration.pangaea_jira_server+',
+        help_text='Select which server and/or account this configuration '
+                  'should use to connect to Pangaea-Jira. This Server'
+                  'represents the actual jira-instance of Pangaea',
+        on_delete=models.PROTECT
+    )
+    # TODO: remove
     gfbio_server = models.ForeignKey(
         ResourceCredential,
         null=True,
@@ -121,7 +134,7 @@ class SiteConfiguration(models.Model):
                   'accessing submission-registry, research_object, and so on.',
         on_delete=models.PROTECT
     )
-
+    # TODO: remove
     use_gfbio_services = models.BooleanField(
         default=False,
         help_text='If checked additional gfbio-related services will be used '

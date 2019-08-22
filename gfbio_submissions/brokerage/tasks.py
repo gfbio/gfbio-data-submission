@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from json import JSONDecodeError
 
 import celery
 from celery import Task
@@ -31,11 +30,11 @@ from .utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data, send_submission_to_ena, \
     parse_ena_submission_response
 from .utils.gfbio import \
-    gfbio_helpdesk_comment_on_ticket, gfbio_helpdesk_create_ticket, \
-    gfbio_get_user_by_id, gfbio_helpdesk_attach_file_to_ticket
+    gfbio_helpdesk_comment_on_ticket, gfbio_get_user_by_id, \
+    gfbio_helpdesk_attach_file_to_ticket
 from .utils.pangaea import request_pangaea_login_token, \
-    parse_pangaea_login_token_response, create_pangaea_jira_ticket, \
-    attach_file_to_pangaea_ticket, get_csv_from_samples, \
+    parse_pangaea_login_token_response, attach_file_to_pangaea_ticket, \
+    get_csv_from_samples, \
     comment_on_pangaea_ticket, pull_pangaea_dois
 from .utils.submission_transfer import SubmissionTransferHandler
 
@@ -560,63 +559,80 @@ def process_ena_response_task(transfer_result=None, submission_id=None,
 # Pangea submission transfer tasks ---------------------------------------------
 
 # TODO: result of this task is input for next task
-@celery.task(max_retries=SUBMISSION_MAX_RETRIES,
-             name='tasks.request_pangaea_login_token_task', base=SubmissionTask)
-def request_pangaea_login_token_task(previous_task_result=None,
-                                     submission_id=None):
-    submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-        submission_id=submission_id, task=request_pangaea_login_token_task
-    )
-    if submission is not None and site_configuration is not None:
-        response = request_pangaea_login_token(
-            resource_credential=site_configuration.pangaea_server)
-        apply_default_task_retry_policy(response,
-                                        request_pangaea_login_token_task,
-                                        submission)
-        login_token = parse_pangaea_login_token_response(response)
-        return login_token
-    else:
-        return 'CANCELLED'
+# @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
+#              name='tasks.request_pangaea_login_token_task', base=SubmissionTask)
+# def request_pangaea_login_token_task(previous_task_result=None,
+#                                      submission_id=None):
+#     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
+#         submission_id=submission_id, task=request_pangaea_login_token_task
+#     )
+#     if submission is not None and site_configuration is not None:
+#         response = request_pangaea_login_token(
+#             resource_credential=site_configuration.pangaea_server)
+#         apply_default_task_retry_policy(response,
+#                                         request_pangaea_login_token_task,
+#                                         submission)
+#         login_token = parse_pangaea_login_token_response(response)
+#         return login_token
+#     else:
+#         return 'CANCELLED'
 
 
 # TODO: this one relies on prevoius task: request_pangaea_login_token_task
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
-             name='tasks.create_pangaea_jira_ticket_task', base=SubmissionTask)
-def create_pangaea_jira_ticket_task(login_token=None, submission_id=None):
+             name='tasks.create_pangaea_issue_task', base=SubmissionTask)
+def create_pangaea_issue_task(login_token=None, submission_id=None):
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-        submission_id=submission_id, task=create_pangaea_jira_ticket_task
+        submission_id=submission_id, task=create_pangaea_issue_task
     )
     if submission is not None and site_configuration is not None:
-        response = create_pangaea_jira_ticket(login_token=login_token,
-                                              site_configuration=site_configuration,
-                                              submission=submission)
-        apply_default_task_retry_policy(response,
-                                        create_pangaea_jira_ticket_task,
-                                        submission)
-        try:
-            # content = json.loads(response.content)
-            content = response.json()
-            ticket_key = content.get('key', 'no_key_available')
-            with transaction.atomic():
-                submission.additionalreference_set.create(
-                    type=AdditionalReference.PANGAEA_JIRA_TICKET,
-                    reference_key=ticket_key,
-                    primary=True
-                )
-            return {
-                'login_token': login_token,
-                'ticket_key': ticket_key
-            }
-        except ValueError as e:
-            logger.error(
-                'ValueError. create_pangaea_jira_ticket_task. Error: {}'.format(
-                    e))
-            return None
+        jira_client = JiraClient(
+            resource=site_configuration.pangaea_jira_server,
+            token_resource=site_configuration.pangaea_token_server)
+        jira_client.create_pangaea_issue(site_config=site_configuration,
+                                         submission=submission)
+        # response = create_pangaea_jira_ticket(login_token=login_token,
+        #                                       site_configuration=site_configuration,
+        #                                       submission=submission)
+        # apply_default_task_retry_policy(response,
+        #                                 create_pangaea_issue_task,
+        #                                 submission)
+        if jira_client.error:
+            apply_default_task_retry_policy(
+                jira_client.error.response,
+                create_pangaea_issue_task,
+                submission
+            )
+        if jira_client.issue:
+            submission.additionalreference_set.create(
+                type=AdditionalReference.PANGAEA_JIRA_TICKET,
+                reference_key=jira_client.issue.key,
+                primary=True
+            )
+        # try:
+        #     # content = json.loads(response.content)
+        #     content = response.json()
+        #     ticket_key = content.get('key', 'no_key_available')
+        #     with transaction.atomic():
+        #         submission.additionalreference_set.create(
+        #             type=AdditionalReference.PANGAEA_JIRA_TICKET,
+        #             reference_key=ticket_key,
+        #             primary=True
+        #         )
+        #     return {
+        #         'login_token': login_token,
+        #         'ticket_key': ticket_key
+        #     }
+        # except ValueError as e:
+        #     logger.error(
+        #         'ValueError. create_pangaea_issue_task. Error: {}'.format(
+        #             e))
+        #     return None
     else:
         return TaskProgressReport.CANCELLED
 
 
-# TODO: this one relies on prevoius task: create_pangaea_jira_ticket_task
+# TODO: this one relies on prevoius task: create_pangaea_issue_task
 # TODO: this task relies on additional kwargs, as returned from task above
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
              name='tasks.comment_on_pangaea_ticket_task', base=SubmissionTask)

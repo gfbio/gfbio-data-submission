@@ -8,12 +8,16 @@ from requests import ConnectionError
 
 from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_prepare_create_helpdesk_payload
+from gfbio_submissions.brokerage.utils.pangaea import \
+    prepare_pangaea_issue_content
 from .pangaea import request_pangaea_login_token, \
     parse_pangaea_login_token_response
 
 logger = logging.getLogger(__name__)
 
 
+# FIXME: Class and all methods need explicit tests
+# TODO: compare tests for pangaea token
 class JiraClient(object):
 
     def __init__(self, resource, token_resource=None):
@@ -70,7 +74,7 @@ class JiraClient(object):
         except JIRAError as e:
             logger.warning(
                 'JiraClient | add_comment | JIRAError {0} | {1}'.format(e,
-                                                                         e.text))
+                                                                        e.text))
             self.comment = None
             self.error = e
 
@@ -110,3 +114,9 @@ class JiraClient(object):
                         submission=submission,
                         site_config=site_config
                     )
+
+    def create_pangaea_issue(self, site_config, submission):
+        self.create_issue(
+            fields=prepare_pangaea_issue_content(
+                site_configuration=site_config, submission=submission)
+        )
