@@ -2,6 +2,8 @@
 import base64
 import json
 import uuid
+from unittest import skip
+from unittest.mock import patch
 from uuid import uuid4
 
 import responses
@@ -9,8 +11,6 @@ from celery import chain
 from django.contrib.auth.models import Permission
 from django.test import TestCase
 from django.urls import reverse
-from unittest import skip
-from unittest.mock import patch
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIRequestFactory, APIClient
 
@@ -1029,9 +1029,6 @@ class TestGFBioHelpDeskTasks(TestTasks):
         result = create_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
-                'summary': 'Test',
-                'description': 'Test'
-
             }
         )
         self.assertTrue(result.successful())
