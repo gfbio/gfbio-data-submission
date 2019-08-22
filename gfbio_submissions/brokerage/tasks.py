@@ -12,7 +12,7 @@ from django.db.utils import IntegrityError
 from django.utils.encoding import smart_text
 from requests import ConnectionError, Response
 
-from gfbio_submissions.brokerage.configuration.settings import ENA
+from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA
 from gfbio_submissions.brokerage.models import SubmissionUpload
 from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content
@@ -251,7 +251,7 @@ def apply_timebased_task_retry_policy(task, submission, no_of_tickets):
 #                     'first_name': '',
 #                     'last_name': '',
 #                 }
-#                 # create_helpdesk_ticket_task.s(prev_task_result=default,
+#                 # create_submission_issue_task.s(prev_task_result=default,
 #                 #                               submission_id=submission_id).set(
 #                 #     countdown=SUBMISSION_RETRY_DELAY)()
 #                 data = gfbio_prepare_create_helpdesk_payload(
@@ -814,13 +814,14 @@ def get_user_email_task(submission_id=None):
 
 
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
-             name='tasks.create_helpdesk_ticket_task', base=SubmissionTask)
-def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
-                                summary=None,
-                                description=None):
+             name='tasks.create_submission_issue_task', base=SubmissionTask)
+def create_submission_issue_task(prev_task_result=None, submission_id=None):
     # TODO: refactor after jira access has been refactored
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-        submission_id=submission_id, task=create_helpdesk_ticket_task)
+        submission_id=submission_id, task=create_submission_issue_task)
+
+    # TODO: test task without check for null, what happens when errors occur here, not caused inside a
+    #  method called here
 
     # TODO: like TODO above, perhaps this check can be omitted if above is re-implemented to prevent NONE
     if submission is not None and site_configuration is not None:
@@ -834,72 +835,17 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
         # TODO: abstract/capsule logging. keep extensive logging while calls to log
         #  are abstracted for cleaber code in task
         logger.info(
-            msg='create_helpdesk_ticket_task submission_id={} | summary={} | description={}'.format(
-                submission_id, summary, description))
+            msg='create_submission_issue_task submission_id={}'.format(
+                submission_id, ))
 
-        # TODO: remove comment section
-        # if len(existing_tickets):
-        #     response = gfbio_helpdesk_comment_on_ticket(
-        #         site_config=site_configuration,
-        #         ticket_key=existing_tickets.first().reference_key,
-        #         comment_body='{}. {}'.format(summary, description),
-        #         submission=submission,
-        #     )
-        #
-        # else:
-        # TODO: may require dedicated improvemens ? less parameters ?
-        # TODO: call directly as param in new jira methods for ticket creation
-        # data = gfbio_prepare_create_helpdesk_payload(
-        #     reporter=prev_task_result,
-        #     site_config=site_configuration,
-        #     submission=submission)
-        #
-        # print('\ncreate_helpdesk_ticket_task. data ')
-        # pprint(data)
-
-        # TODO: main refactoring of jira access will replace this
-        # TODO: use absolutly gerenic "create ticket" funktion where params
-        #  or connection decides where to create
-        # response = gfbio_helpdesk_create_ticket(
-        #     site_config=site_configuration,
-        #     submission=submission,
-        #     data=data,
-        # )
-        # --> jira-client-crteate-ticket
         jira_client = JiraClient(resource=site_configuration.helpdesk_server)
         jira_client.create_submission_issue(reporter=prev_task_result,
                                             site_config=site_configuration,
                                             submission=submission)
-        # print('\n\nIN TASK')
-        # print(type(jira_client.issue.key))
-        # # print(jira_client.error.__dict__)
-        #
-        # print('\n\n--------------------------\n\n')
-        ############
 
-        # TODO: jira.issue or jira.error are None
-
-        ###############
-
-        # TODO: main refactoring also for this particular client error
-        # response = force_ticket_creation(
-        #     response=response,
-        #     submission=submission,
-        #     site_configuration=site_configuration,
-        # )
-
-        ############
-
-        # TODO: python-jira has own retry policy. decide if deactivate and use this one
-        # TODO: need refactoring too because of jira refactorings. logging also.
-        # apply_default_task_retry_policy(response,
-        #                                 create_helpdesk_ticket_task,
-        #                                 submission)
-
-        # with python-jira retries de-activated:
         if jira_client.error:
             apply_default_task_retry_policy(jira_client.error.response,
-                                            create_helpdesk_ticket_task,
+                                            create_submission_issue_task,
                                             submission)
         elif jira_client.issue:
             submission.additionalreference_set.create(
@@ -907,28 +853,6 @@ def create_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
                 reference_key=jira_client.issue.key,
                 primary=True
             )
-
-        # TODO: more explicit: if no prior tickets, if new ticket parse and create reeference
-        # TODO: minor. rename additional reference ? Reference only ?
-        # TODO: abstract to method
-        # if not len(existing_tickets):
-        # try:
-        #     content = response.json()
-        # except JSONDecodeError as e:
-        #     logger.warning(
-        #         'create_helpdesk_ticket_task submission_id={0} JSONDecodeError={1}'.format(
-        #             submission_id, e))
-        #     content = {}
-        # submission.additionalreference_set.create(
-        #     type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-        #     # reference_key=json.loads(response.content).get('key',
-        #     #                                                'no_key_available'),
-        #     reference_key=content.get('key', 'no_key_available'),
-        #     # reference_key=json.loads(response.content.decode('utf-8')).get(
-        #     #     'key', 'no_key_available'),
-        #     primary=True
-        # )
-
     else:
         return TaskProgressReport.CANCELLED
 
@@ -988,11 +912,11 @@ def update_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
 # TODO: examine all tasks for redundant code and possible generalization e.g.:
 # TODO: more generic like update above
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
-             name='tasks.comment_helpdesk_ticket_task', base=SubmissionTask)
-def comment_helpdesk_ticket_task(prev_task_result=None, comment_body=None,
-                                 submission_id=None, target_archive=None):
+             name='tasks.add_accession_to_issue_task', base=SubmissionTask)
+def add_accession_to_issue_task(prev_task_result=None, comment_body=None,
+                                submission_id=None, target_archive=None):
     logger.info(
-        msg='comment_helpdesk_ticket_task submission_id={0} | '
+        msg='add_accession_to_issue_task submission_id={0} | '
             'prev_task_result={1} | '
             'comment_body={2} | '
             'target_archive={3}'.format(
@@ -1001,28 +925,47 @@ def comment_helpdesk_ticket_task(prev_task_result=None, comment_body=None,
 
     # No submission will be returned if submission.status is error
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-        submission_id=submission_id, task=comment_helpdesk_ticket_task,
+        submission_id=submission_id, task=add_accession_to_issue_task,
         get_closed_submission=True)
 
     if submission is not None and site_configuration is not None:
+
+        # TODO: althouht filter for primary should deliver only on ticket, a dedicated manager method
+        #   would be cleaner (no .first() on query set)
+        # TODO: result is a list of GFbio helpdesk tickets wich are primary,
+        #   tecnically len can only be 1, due to model.save ...
         existing_tickets = submission.additionalreference_set.filter(
             Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
+
+        # TODO: previous task is process_ena_response_task, if ena responded successfully
+        #  and delievered accesstions, theses are appended as persistentidentifiers
+        #  if all worked Pids shoul be in DB and process returns true
+        # TODO: makes sense only for ENA or ENA_PANGAEA targets
         if prev_task_result is True:
-            if target_archive == ENA:
-                study_pid = submission.brokerobject_set.filter(type='study'). \
-                    first().persistentidentifier_set.filter(
-                    pid_type='PRJ').first()
+
+            if target_archive == ENA or target_archive == ENA_PANGAEA:
+                study_pid = submission.brokerobject_set.filter(
+                    type='study'
+                ).first().persistentidentifier_set.filter(
+                    pid_type='PRJ'
+                ).first()
+
                 comment_body = 'Submission to ENA has been successful. Study is accessible via ENA ' \
                                'Accession No. {}. broker_submission_id: {}.'.format(
                     study_pid.pid, submission.broker_submission_id)
-            elif target_archive == Submission.PANGAEA:
-                pass
-            else:
-                pass
+
+            # elif target_archive == Submission.PANGAEA:
+            #     pass
+            # else:
+            #     pass
+
+        # TODO: this makes no sense to report, customer will see this. only as internal
+        #   or visibilty to admins would make sense
         else:
             comment_body = 'Submission to {} returned error(s). ' \
                            'broker_submission_id: {}.'.format(target_archive,
                                                               submission.broker_submission_id)
+
         if len(existing_tickets):
             response = gfbio_helpdesk_comment_on_ticket(
                 site_config=site_configuration,
@@ -1031,8 +974,9 @@ def comment_helpdesk_ticket_task(prev_task_result=None, comment_body=None,
                 submission=submission,
             )
             apply_default_task_retry_policy(response,
-                                            comment_helpdesk_ticket_task,
+                                            add_accession_to_issue_task,
                                             submission)
+
     else:
         return TaskProgressReport.CANCELLED
 
@@ -1153,7 +1097,7 @@ def delete_attachment_task(kwargs=None, submission_id=None,
 def generic_comment_helpdesk_ticket_task(prev_task_result=None,
                                          comment_body=None, submission_id=None):
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-        submission_id=submission_id, task=comment_helpdesk_ticket_task,
+        submission_id=submission_id, task=add_accession_to_issue_task,
         get_closed_submission=True)
     if submission is not None and site_configuration is not None:
         existing_tickets = submission.additionalreference_set.filter(

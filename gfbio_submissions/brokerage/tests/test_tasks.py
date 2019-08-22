@@ -24,8 +24,8 @@ from gfbio_submissions.brokerage.models import ResourceCredential, \
 from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, \
     transfer_data_to_ena_task, process_ena_response_task, \
     create_broker_objects_from_submission_data_task, check_on_hold_status_task, \
-    get_user_email_task, create_helpdesk_ticket_task, \
-    comment_helpdesk_ticket_task, attach_file_to_helpdesk_ticket_task, \
+    get_user_email_task, create_submission_issue_task, \
+    add_accession_to_issue_task, attach_file_to_helpdesk_ticket_task, \
     add_pangaealink_to_helpdesk_ticket_task, request_pangaea_login_token_task, \
     create_pangaea_jira_ticket_task, attach_file_to_pangaea_ticket_task, \
     comment_on_pangaea_ticket_task, check_for_pangaea_doi_task, \
@@ -113,7 +113,7 @@ class TestInitialChainTasks(TestCase):
         self.assertEqual(201, min_response.status_code)
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_user_email_task',
-                              'tasks.create_helpdesk_ticket_task',
+                              'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer', ]
         self.assertEqual(4, len(task_reports))
@@ -141,7 +141,7 @@ class TestInitialChainTasks(TestCase):
         self.assertEqual(201, min_response.status_code)
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_user_email_task',
-                              'tasks.create_helpdesk_ticket_task',
+                              'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer', ]
         self.assertEqual(4, len(task_reports))
@@ -164,7 +164,7 @@ class TestInitialChainTasks(TestCase):
         self.assertEqual(201, max_response.status_code)
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_user_email_task',
-                              'tasks.create_helpdesk_ticket_task',
+                              'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer',
                               'tasks.create_broker_objects_from_submission_data_task',
@@ -193,7 +193,7 @@ class TestInitialChainTasks(TestCase):
         self.assertEqual(201, max_response.status_code)
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_user_email_task',
-                              'tasks.create_helpdesk_ticket_task',
+                              'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer', ]
         self.assertEqual(4, len(task_reports))
@@ -227,7 +227,7 @@ class TestInitialChainTasks(TestCase):
         # # trigger_submission_transfer from initial post
         # # trigger_submission_transfer_for_updates
         # expected_tasknames = ['tasks.get_user_email_task',
-        #                       'tasks.create_helpdesk_ticket_task',
+        #                       'tasks.create_submission_issue_task',
         #                       'tasks.trigger_submission_transfer',
         #                       'tasks.check_for_molecular_content_in_submission_task',
         #                       'tasks.trigger_submission_transfer_for_updates',
@@ -692,7 +692,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         )
 
         self.assertEqual(0, len(submission.additionalreference_set.all()))
-        result = create_helpdesk_ticket_task.apply_async(
+        result = create_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.id,
             }
@@ -728,7 +728,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
                 site_config.helpdesk_server.url),
             json=self.issue_json
         )
-        result = create_helpdesk_ticket_task.apply_async(
+        result = create_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.id,
             }
@@ -763,7 +763,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
                 site_config.helpdesk_server.url),
             json=self.issue_json
         )
-        result = create_helpdesk_ticket_task.apply_async(
+        result = create_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.id,
             }
@@ -808,7 +808,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         )
         responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
         submission = Submission.objects.first()
-        result = comment_helpdesk_ticket_task.apply_async(
+        result = add_accession_to_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.id,
                 'comment_body': 'test-comment'
@@ -1004,7 +1004,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
                             HELPDESK_API_SUB_URL),
             json={},
             status=400)
-        result = create_helpdesk_ticket_task.apply_async(
+        result = create_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
             }
@@ -1026,7 +1026,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
                             HELPDESK_API_SUB_URL),
             json={},
             status=500)
-        result = create_helpdesk_ticket_task.apply_async(
+        result = create_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
                 'summary': 'Test',

@@ -21,12 +21,11 @@ class JiraClient(object):
         self.token_resource = token_resource
         if token_resource is None:
             self.jira = self._get_connection()
-            print(self.jira)
         else:
             self.jira = self._get_connection(
                 options={'cookies': self._get_pangaea_token()})
-            print(self.jira)
         self.issue = None
+        self.comment = None
         self.error = None
 
     def _get_connection(self, max_retries=0, get_server_info=False, options={}):
@@ -47,22 +46,32 @@ class JiraClient(object):
         return None
 
     def _get_pangaea_token(self):
-        print('GET TOKEN')
         response = request_pangaea_login_token(
             resource_credential=self.token_resource)
-        print(response)
         return dict(PanLoginID=parse_pangaea_login_token_response(response))
 
     # generic methods ----------------------------------------------------------
 
     def create_issue(self, fields={}):
-        print('\n\ncreate issue ', fields)
         try:
             self.issue = self.jira.create_issue(fields=fields)
             self.error = None
         except JIRAError as e:
-            logger.warning('JiraClient | create_issue | JIRAError {0} | {1}'.format(e, e.text))
+            logger.warning(
+                'JiraClient | create_issue | JIRAError {0} | {1}'.format(e,
+                                                                         e.text))
             self.issue = None
+            self.error = e
+
+    def add_comment(self, key_or_issue, text):
+        try:
+            self.comment = self.jira.add_comment(key_or_issue, text)
+            self.error = None
+        except JIRAError as e:
+            logger.warning(
+                'JiraClient | create_issue | JIRAError {0} | {1}'.format(e,
+                                                                         e.text))
+            self.comment = None
             self.error = e
 
     # specialized methods ------------------------------------------------------
@@ -101,13 +110,3 @@ class JiraClient(object):
                         submission=submission,
                         site_config=site_config
                     )
-
-# def create_issue():
-#     options = {
-#         'server': 'http://helpdesk.gfbio.org/'
-#     }
-#     # may cause exceptions
-#     jira = JIRA(options=options,
-#                 basic_auth=('brokeragent', ''),
-#                 max_retries=1, get_server_info=True)
-#     new_issue = jira.create_issue(fields={})

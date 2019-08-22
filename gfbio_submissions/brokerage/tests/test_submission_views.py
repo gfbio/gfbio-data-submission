@@ -493,7 +493,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer',
             'tasks.get_user_email_task',
-            'tasks.create_helpdesk_ticket_task',
+            'tasks.create_submission_issue_task',
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer_for_updates',
             'tasks.check_on_hold_status_task',
@@ -703,7 +703,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer',
             'tasks.get_user_email_task',
-            'tasks.create_helpdesk_ticket_task',
+            'tasks.create_submission_issue_task',
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer_for_updates',
             'tasks.check_on_hold_status_task']
@@ -794,7 +794,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer',
             'tasks.get_user_email_task',
-            'tasks.create_helpdesk_ticket_task',
+            'tasks.create_submission_issue_task',
             'tasks.check_on_hold_status_task']
         for t in TaskProgressReport.objects.filter(
                 submission=submission).order_by('created'):
@@ -853,7 +853,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             'tasks.trigger_submission_transfer',
             'tasks.check_on_hold_status_task',
             'tasks.get_user_email_task',
-            'tasks.create_helpdesk_ticket_task',
+            'tasks.create_submission_issue_task',
             'tasks.update_helpdesk_ticket_task',  # x2
             'tasks.trigger_submission_transfer_for_updates',
             'tasks.create_broker_objects_from_submission_data_task',
@@ -914,7 +914,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer',
             'tasks.get_user_email_task',
-            'tasks.create_helpdesk_ticket_task',
+            'tasks.create_submission_issue_task',
             'tasks.update_helpdesk_ticket_task',
             'tasks.trigger_submission_transfer_for_updates',
             'tasks.check_on_hold_status_task'
@@ -968,7 +968,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer',
             'tasks.get_user_email_task',
-            'tasks.create_helpdesk_ticket_task',
+            'tasks.create_submission_issue_task',
             'tasks.update_helpdesk_ticket_task',
             'tasks.trigger_submission_transfer_for_updates',
             'tasks.check_on_hold_status_task'
