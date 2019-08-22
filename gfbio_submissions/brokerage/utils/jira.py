@@ -69,7 +69,7 @@ class JiraClient(object):
             self.error = None
         except JIRAError as e:
             logger.warning(
-                'JiraClient | create_issue | JIRAError {0} | {1}'.format(e,
+                'JiraClient | add_comment | JIRAError {0} | {1}'.format(e,
                                                                          e.text))
             self.comment = None
             self.error = e

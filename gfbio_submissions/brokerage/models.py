@@ -345,9 +345,18 @@ class Submission(models.Model):
                      self.brokerobject_set.filter(type='run')]
         }
 
-    def get_primary_additional_reference(self, reference_type):
+    def get_primary_pangaea_references(self):
         return self.additionalreference_set.filter(
-            Q(type=reference_type) & Q(primary=True))
+            Q(type=AdditionalReference.PANGAEA_JIRA_TICKET) & Q(primary=True))
+
+    def get_primary_helpdesk_references(self):
+        issues = self.additionalreference_set.filter(
+            Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True)
+        )
+        if len(issues):
+            return issues.first()
+        else:
+            return None
 
     def __str__(self):
         return '{}_{}'.format(self.pk, self.broker_submission_id)

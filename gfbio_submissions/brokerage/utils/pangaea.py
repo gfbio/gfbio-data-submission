@@ -17,8 +17,7 @@ from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY,
     CSV_WRITER_QUOTING, SEPARATOR, PANGAEA_ISSUE_BASE_URL, \
     PANGAEA_ISSUE_DOI_FIELD_NAME
 from gfbio_submissions.brokerage.forms import Gcdj2CsvForm
-from gfbio_submissions.brokerage.models import TicketLabel, AdditionalReference, \
-    Submission
+from gfbio_submissions.brokerage.models import TicketLabel, Submission
 from gfbio_submissions.brokerage.utils.gcdj_utils import flatten_dictionary
 
 logger = logging.getLogger(__name__)
@@ -307,9 +306,7 @@ def check_for_pangaea_doi(ticket_key, login_token, submission):
 
 
 def pull_pangaea_dois(submission, login_token):
-    references = submission.get_primary_additional_reference(
-        reference_type=AdditionalReference.PANGAEA_JIRA_TICKET
-    )
+    references = submission.get_primary_pangaea_references()
     for p in references:
         # TODO: add RequestLog ?
         doi = check_for_pangaea_doi(

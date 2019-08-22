@@ -934,15 +934,15 @@ def add_accession_to_issue_task(prev_task_result=None, comment_body=None,
         #   would be cleaner (no .first() on query set)
         # TODO: result is a list of GFbio helpdesk tickets wich are primary,
         #   tecnically len can only be 1, due to model.save ...
-        existing_tickets = submission.additionalreference_set.filter(
-            Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
+        # existing_tickets = submission.additionalreference_set.filter(
+        #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
+        reference = submission.get_primary_helpdesk_references()
 
         # TODO: previous task is process_ena_response_task, if ena responded successfully
         #  and delievered accesstions, theses are appended as persistentidentifiers
         #  if all worked Pids shoul be in DB and process returns true
         # TODO: makes sense only for ENA or ENA_PANGAEA targets
-        if prev_task_result is True:
-
+        if reference and prev_task_result is True:
             if target_archive == ENA or target_archive == ENA_PANGAEA:
                 study_pid = submission.brokerobject_set.filter(
                     type='study'
@@ -950,10 +950,24 @@ def add_accession_to_issue_task(prev_task_result=None, comment_body=None,
                     pid_type='PRJ'
                 ).first()
 
-                comment_body = 'Submission to ENA has been successful. Study is accessible via ENA ' \
-                               'Accession No. {}. broker_submission_id: {}.'.format(
-                    study_pid.pid, submission.broker_submission_id)
+                # comment_body = 'Submission to ENA has been successful. Study is accessible via ENA ' \
+                #                'Accession No. {}. broker_submission_id: {}.'.format(
+                #     study_pid.pid, submission.broker_submission_id)
 
+                jira_client = JiraClient(
+                    resource=site_configuration.helpdesk_server)
+                jira_client.add_comment(
+                    key_or_issue=reference.reference_key,
+                    text='Submission to ENA has been successful. '
+                         'Study is accessible via ENA Accession No. {0}. '
+                         'broker_submission_id: {1}.'.format(study_pid.pid,
+                                                             submission.broker_submission_id))
+                if jira_client.error:
+                    apply_default_task_retry_policy(
+                        jira_client.error.response,
+                        add_accession_to_issue_task,
+                        submission
+                    )
             # elif target_archive == Submission.PANGAEA:
             #     pass
             # else:
@@ -961,21 +975,21 @@ def add_accession_to_issue_task(prev_task_result=None, comment_body=None,
 
         # TODO: this makes no sense to report, customer will see this. only as internal
         #   or visibilty to admins would make sense
-        else:
-            comment_body = 'Submission to {} returned error(s). ' \
-                           'broker_submission_id: {}.'.format(target_archive,
-                                                              submission.broker_submission_id)
-
-        if len(existing_tickets):
-            response = gfbio_helpdesk_comment_on_ticket(
-                site_config=site_configuration,
-                ticket_key=existing_tickets.first().reference_key,
-                comment_body=comment_body,
-                submission=submission,
-            )
-            apply_default_task_retry_policy(response,
-                                            add_accession_to_issue_task,
-                                            submission)
+        # else:
+        #     comment_body = 'Submission to {} returned error(s). ' \
+        #                    'broker_submission_id: {}.'.format(target_archive,
+        #                                                       submission.broker_submission_id)
+        #
+        # if len(existing_tickets):
+        #     response = gfbio_helpdesk_comment_on_ticket(
+        #         site_config=site_configuration,
+        #         ticket_key=existing_tickets.first().reference_key,
+        #         comment_body=comment_body,
+        #         submission=submission,
+        #     )
+        #     apply_default_task_retry_policy(response,
+        #                                     add_accession_to_issue_task,
+        #                                     submission)
 
     else:
         return TaskProgressReport.CANCELLED
