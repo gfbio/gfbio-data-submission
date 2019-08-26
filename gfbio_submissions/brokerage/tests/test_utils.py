@@ -71,7 +71,8 @@ class EnalizerTest(TestCase):
             title='Default',
             site=None,
             ena_server=resource_cred,
-            pangaea_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
             gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
@@ -421,7 +422,8 @@ class PangaeaTicketTest(TestCase):
             title='Title',
             site=user,
             ena_server=resource_cred,
-            pangaea_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
             gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Comment',
@@ -460,14 +462,14 @@ class PangaeaTicketTest(TestCase):
     @skip('request to PANGAEA server')
     def test_create_pangaea_ticket(self):
         site_config = SiteConfiguration.objects.first()
-        login_token = get_pangaea_login_token(site_config.pangaea_server)
+        login_token = get_pangaea_login_token(site_config.pangaea_token_server)
         response = create_pangaea_jira_ticket(login_token,
                                               site_configuration=site_config)
 
     @skip('request to PANGAEA server')
     def test_doi_parsing(self):
         site_config = SiteConfiguration.objects.first()
-        login_token = get_pangaea_login_token(site_config.pangaea_server)
+        login_token = get_pangaea_login_token(site_config.pangaea_token_server)
         ticket_key = 'PDI-12428'
         url = '{0}{1}'.format(PANGAEA_ISSUE_BASE_URL, ticket_key)
         cookies = dict(PanLoginID=login_token)
@@ -549,7 +551,8 @@ class TestServiceMethods(TestCase):
             title='default',
             site=None,
             ena_server=resource_credential,
-            pangaea_server=resource_credential,
+            pangaea_token_server=resource_credential,
+            pangaea_jira_server=resource_credential,
             gfbio_server=resource_credential,
             helpdesk_server=resource_credential,
             comment='',
@@ -1139,7 +1142,6 @@ class TestJiraClient(TestCase):
         client = JiraClient(resource=jira_resource)
         issue = client.jira.issue("SAND-1661")
 
-
         print('\n\nissue')
         # print(issue)
         pprint(issue.__dict__)
@@ -1169,7 +1171,8 @@ class TestSubmissionTransferHandler(TestCase):
             title='Title',
             site=user,
             ena_server=resource_cred_2,
-            pangaea_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
             gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Comment',
@@ -1178,7 +1181,8 @@ class TestSubmissionTransferHandler(TestCase):
             title='default',
             site=None,
             ena_server=resource_cred_2,
-            pangaea_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
             gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Comment',
@@ -1301,7 +1305,7 @@ class TestSubmissionTransferHandler(TestCase):
         responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
         responses.add(
             responses.POST,
-            conf.pangaea_server.url,
+            conf.pangaea_token_server.url,
             body=_get_pangaea_soap_response(),
             status=200)
         responses.add(
@@ -1354,7 +1358,8 @@ class TestHelpDeskTicketMethods(TestCase):
             title='default',
             site=None,
             ena_server=resource_cred,
-            pangaea_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
             gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
@@ -1716,7 +1721,8 @@ class TestDownloadEnaReport(TestCase):
             title='default',
             site=None,
             ena_server=resource_cred,
-            pangaea_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
             gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',

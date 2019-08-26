@@ -57,6 +57,7 @@ class JiraClient(object):
     # generic methods ----------------------------------------------------------
 
     def create_issue(self, fields={}):
+        print('CReATE ', fields)
         try:
             self.issue = self.jira.create_issue(fields=fields)
             self.error = None
@@ -66,6 +67,8 @@ class JiraClient(object):
                                                                          e.text))
             self.issue = None
             self.error = e
+        # except TypeError as t:
+        #     print(t)
 
     def add_comment(self, key_or_issue, text):
         try:
@@ -79,6 +82,7 @@ class JiraClient(object):
             self.error = e
 
     # specialized methods ------------------------------------------------------
+    # TODO: ADD RequestLogs or aquivalent ...
 
     def create_submission_issue(self, reporter, site_config, submission):
         self.create_issue(

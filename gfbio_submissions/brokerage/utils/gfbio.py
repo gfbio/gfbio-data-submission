@@ -208,9 +208,9 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
     if not prepare_for_update:
         mutual_data['customfield_10010'] = jira_request_type
 
-    print('\n\nreturn from prepaere ')
-    pprint({'fields': mutual_data})
-    print('\n-------------------------------\n')
+    # print('\n\nreturn from prepaere ')
+    # pprint({'fields': mutual_data})
+    # print('\n-------------------------------\n')
     # return {'fields': mutual_data}
     return mutual_data
 

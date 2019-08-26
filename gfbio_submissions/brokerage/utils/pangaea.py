@@ -121,17 +121,19 @@ def get_csv_from_samples(submission):
 
 
 def prepare_pangaea_issue_content(site_configuration, submission):
-    data = json.dumps({
+    data = {
         # 'fields': {
+        'project': {
+            'key': 'PDI',
+            # 'id': 'PDI'
+        },
         'customfield_10002':
             submission.submitting_user_common_information
             if submission.submitting_user_common_information != ''
             else site_configuration.contact,
         'customfield_10004': submission.data.get('requirements', {}).get(
             'title', ''),
-        'project': {
-            'key': 'PDI'
-        },
+        # 'project': 'PDI',
         'issuetype': {
             # name needed to identidy correct type
             "name": "Data Submission",
@@ -142,7 +144,7 @@ def prepare_pangaea_issue_content(site_configuration, submission):
         'labels': site_configuration.get_ticket_labels(
             label_type=TicketLabel.PANGAEA_JIRA)
         # }
-    })
+    }
     return data
 
 

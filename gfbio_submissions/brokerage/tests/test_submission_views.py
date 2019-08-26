@@ -72,7 +72,8 @@ class TestSubmissionView(TestCase):
             release_submissions=False,
             use_gfbio_services=False,
             ena_server=resource_cred,
-            pangaea_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
             gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
@@ -774,7 +775,6 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
 
     @responses.activate
     def test_ena_datacenter_no_files(self):
-        self._add_jira_client_responses()
         self._add_create_ticket_response()
 
         response = self.api_client.post(
@@ -802,7 +802,6 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
 
     @responses.activate
     def test_ena_datacenter_with_suitable_file_after_put(self):
-        self._add_jira_client_responses()
         self._add_create_ticket_response()
         self._add_update_ticket_response()
         response = self.api_client.post(
@@ -864,7 +863,6 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
 
     @responses.activate
     def test_ena_datacenter_with_unsuitable_file_after_put(self):
-        self._add_jira_client_responses()
         self._add_create_ticket_response()
         self._add_update_ticket_response()
         response = self.api_client.post(
@@ -925,7 +923,6 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
 
     @responses.activate
     def test_ena_datacenter_with_binary_file_after_put(self):
-        self._add_jira_client_responses()
         self._add_create_ticket_response()
         self._add_update_ticket_response()
         response = self.api_client.post(

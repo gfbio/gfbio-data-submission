@@ -586,6 +586,7 @@ def create_pangaea_issue_task(login_token=None, submission_id=None):
         submission_id=submission_id, task=create_pangaea_issue_task
     )
     if submission is not None and site_configuration is not None:
+        print('TASK ', login_token, ' submission: ', submission_id)
         jira_client = JiraClient(
             resource=site_configuration.pangaea_jira_server,
             token_resource=site_configuration.pangaea_token_server)
