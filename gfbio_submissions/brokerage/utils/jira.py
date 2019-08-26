@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
+from io import StringIO
 from json import JSONDecodeError
 
 from jira import JIRA, JIRAError
@@ -9,7 +10,7 @@ from requests import ConnectionError
 from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_prepare_create_helpdesk_payload
 from gfbio_submissions.brokerage.utils.pangaea import \
-    prepare_pangaea_issue_content
+    prepare_pangaea_issue_content, get_csv_from_samples
 from .pangaea import request_pangaea_login_token, \
     parse_pangaea_login_token_response
 
@@ -56,8 +57,8 @@ class JiraClient(object):
 
     # generic methods ----------------------------------------------------------
 
+    # https://jira.readthedocs.io/en/master/examples.html#issues
     def create_issue(self, fields={}):
-        print('CReATE ', fields)
         try:
             self.issue = self.jira.create_issue(fields=fields)
             self.error = None
@@ -67,9 +68,19 @@ class JiraClient(object):
                                                                          e.text))
             self.issue = None
             self.error = e
-        # except TypeError as t:
-        #     print(t)
 
+    def get_issue(self, key=''):
+        try:
+            self.issue = self.jira.issue(key)
+            self.error = None
+        except JIRAError as e:
+            logger.warning(
+                'JiraClient | get_issue | JIRAError {0} | {1}'.format(e,
+                                                                      e.text))
+            self.issue = None
+            self.error = e
+
+    # https://jira.readthedocs.io/en/master/examples.html#comments
     def add_comment(self, key_or_issue, text):
         try:
             self.comment = self.jira.add_comment(key_or_issue, text)
@@ -79,6 +90,22 @@ class JiraClient(object):
                 'JiraClient | add_comment | JIRAError {0} | {1}'.format(e,
                                                                         e.text))
             self.comment = None
+            self.error = e
+
+    # https://jira.readthedocs.io/en/master/examples.html#attachments
+    # file-like, string-path, stringIO (requires filename)
+    def add_attachment(self, key, file, file_name=None):
+        self.get_issue(key)
+        try:
+            if file_name:
+                self.jira.add_attachment(issue=self.issue, attachment=file,
+                                         filename=file_name)
+            else:
+                self.jira.add_attachment(issue=self.issue, attachment=file)
+        except JIRAError as e:
+            logger.warning(
+                'JiraClient | add_attachment | JIRAError {0} | {1}'.format(e,
+                                                                           e.text))
             self.error = e
 
     # specialized methods ------------------------------------------------------
@@ -124,3 +151,10 @@ class JiraClient(object):
             fields=prepare_pangaea_issue_content(
                 site_configuration=site_config, submission=submission)
         )
+
+    def attach_to_pangaea_issue(self, key, submission):
+        attachment = StringIO()
+        attachment.write(get_csv_from_samples(submission=submission))
+        self.add_attachment(key=key, file=attachment,
+                            file_name='contextual_data.csv')
+        attachment.close()

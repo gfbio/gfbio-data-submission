@@ -114,6 +114,7 @@ def get_csv_from_samples(submission):
         if contains_csv:
             writer.writerow(csv_data.keys())
             writer.writerow(csv_data.values())
+
     csv_from_samples = output.getvalue().replace('True', 'true').replace(
         'False', 'false')
     output.close()

@@ -213,7 +213,7 @@ class SubmissionTransferHandler(object):
             transfer_data_to_ena_task, process_ena_response_task, \
             add_accession_to_issue_task, \
             create_pangaea_issue_task, \
-            attach_file_to_pangaea_ticket_task, \
+            attach_to_pangaea_issue_task, \
             comment_on_pangaea_ticket_task, \
             add_pangaealink_to_helpdesk_ticket_task
 
@@ -227,7 +227,7 @@ class SubmissionTransferHandler(object):
             target_archive=ENA).set(countdown=SUBMISSION_DELAY) \
                 | create_pangaea_issue_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
-                | attach_file_to_pangaea_ticket_task.s(
+                | attach_to_pangaea_issue_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
                 | comment_on_pangaea_ticket_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \

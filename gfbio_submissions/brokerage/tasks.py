@@ -586,7 +586,6 @@ def create_pangaea_issue_task(login_token=None, submission_id=None):
         submission_id=submission_id, task=create_pangaea_issue_task
     )
     if submission is not None and site_configuration is not None:
-        print('TASK ', login_token, ' submission: ', submission_id)
         jira_client = JiraClient(
             resource=site_configuration.pangaea_jira_server,
             token_resource=site_configuration.pangaea_token_server)
@@ -610,6 +609,9 @@ def create_pangaea_issue_task(login_token=None, submission_id=None):
                 reference_key=jira_client.issue.key,
                 primary=True
             )
+            return {
+                'issue_key': jira_client.issue.key,
+            }
         # try:
         #     # content = json.loads(response.content)
         #     content = response.json()
@@ -676,38 +678,55 @@ def comment_on_pangaea_ticket_task(kwargs=None, submission_id=None,
         return TaskProgressReport.CANCELLED
 
 
-# TODO: this one relies on prevoius task: attach_file_to_pangaea_ticket_task
+# TODO: this one relies on prevoius task: attach_to_pangaea_issue_task
 # TODO: this task relies on additional kwargs, as returned from task above
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
-             name='tasks.attach_file_to_pangaea_ticket_task',
+             name='tasks.attach_to_pangaea_issue_task',
              base=SubmissionTask)
-def attach_file_to_pangaea_ticket_task(kwargs=None, submission_id=None):
-    submission = SubmissionTransferHandler.get_submission_for_task(
-        submission_id=submission_id, task=attach_file_to_pangaea_ticket_task)
-    if submission is not None:
-        login_token = None
-        ticket_key = None
-        if isinstance(kwargs, dict):
-            login_token = kwargs.get('login_token', None)
-            ticket_key = kwargs.get('ticket_key', None)
-        if login_token and ticket_key:
-            csv_from_samples = get_csv_from_samples(submission)
-            response = attach_file_to_pangaea_ticket(
-                login_token=login_token,
-                ticket_key=ticket_key,
-                file_name='contextual_data.csv',
-                content_string=csv_from_samples,
-                submission=submission,
+def attach_to_pangaea_issue_task(kwargs={}, submission_id=None):
+    submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
+        submission_id=submission_id, task=attach_to_pangaea_issue_task
+    )
+    if submission is not None and site_configuration is not None \
+            and 'issue_key' in kwargs.keys():
+        # login_token = None
+        # ticket_key = None
+        # if isinstance(kwargs, dict):
+        # login_token = kwargs.get('login_token', None)
+
+        ticket_key = kwargs.get('issue_key', 'None')
+        jira_client = JiraClient(
+            resource=site_configuration.pangaea_jira_server,
+            token_resource=site_configuration.pangaea_token_server
+        )
+        jira_client.attach_to_pangaea_issue(key=ticket_key,
+                                            submission=submission)
+        if jira_client.error:
+            apply_default_task_retry_policy(
+                jira_client.error.response,
+                attach_to_pangaea_issue_task,
+                submission
             )
-            apply_default_task_retry_policy(response,
-                                            attach_file_to_pangaea_ticket_task,
-                                            submission)
-            return {
-                'login_token': login_token,
-                'ticket_key': ticket_key
-            }
-        else:
-            return None
+        return {'issue_key': ticket_key}
+
+        # if login_token and ticket_key:
+        #     csv_from_samples = get_csv_from_samples(submission)
+        #     response = attach_file_to_pangaea_ticket(
+        #         login_token=login_token,
+        #         ticket_key=ticket_key,
+        #         file_name='contextual_data.csv',
+        #         content_string=csv_from_samples,
+        #         submission=submission,
+        #     )
+        #     apply_default_task_retry_policy(response,
+        #                                     attach_to_pangaea_issue_task,
+        #                                     submission)
+        #     return {
+        #         'login_token': login_token,
+        #         'ticket_key': ticket_key
+        #     }
+        # else:
+        #     return None
     else:
         return TaskProgressReport.CANCELLED
 
