@@ -1062,6 +1062,7 @@ def add_accession_to_submission_issue_task(prev_task_result=None,
     else:
         return TaskProgressReport.CANCELLED
 
+
 # FIXME: here problems while using new jirclient to attach, especiall while put submissionupload
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
              name='tasks.attach_to_submission_issue_task',
@@ -1200,12 +1201,12 @@ def attach_to_submission_issue_task(kwargs=None, submission_id=None,
 
 
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
-             name='tasks.delete_attachment_task',
+             name='tasks.delete_submission_issue_attachment_task',
              base=SubmissionTask)
-def delete_attachment_task(kwargs=None, submission_id=None,
-                           attachment_id=None):
+def delete_submission_issue_attachment_task(kwargs=None, submission_id=None,
+                                            attachment_id=None):
     logger.info(
-        msg='delete_attachment_task submission_id={0} '
+        msg='delete_submission_issue_attachment_task submission_id={0} '
             '| attachment_id={1}'.format(submission_id, attachment_id)
     )
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
@@ -1218,16 +1219,27 @@ def delete_attachment_task(kwargs=None, submission_id=None,
         #   when task executes
         # submission_upload = SubmissionUpload.objects.filter(
         #     pk=submission_upload_id).first()
-        response = gfbio_helpdesk_delete_attachment(
-            site_config=site_configuration,
-            attachment_id=attachment_id,
-            submission=submission,
+
+        jira_client = JiraClient(
+            resource=site_configuration.helpdesk_server,
         )
-        # TODO: maybe no retry needed, if it fails, attachment my be still there ..
-        apply_default_task_retry_policy(response,
-                                        delete_attachment_task,
-                                        submission)
-        return True
+
+        jira_client.delete_attachment(attachment_id)
+
+        # response = gfbio_helpdesk_delete_attachment(
+        #     site_config=site_configuration,
+        #     attachment_id=attachment_id,
+        #     submission=submission,
+        # )
+        if jira_client.error:
+            # TODO: maybe no retry needed, if it fails, attachment my be still there ..
+            apply_default_task_retry_policy(
+                # response,
+                jira_client.error.response,
+                delete_submission_issue_attachment_task,
+                submission)
+        else:
+            return True
     else:
         return TaskProgressReport.CANCELLED
 

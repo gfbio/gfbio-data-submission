@@ -379,8 +379,8 @@ class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
     def delete(self, request, *args, **kwargs):
         obj = self.get_object()
         from gfbio_submissions.brokerage.tasks import \
-            delete_attachment_task
-        delete_attachment_task.apply_async(
+            delete_submission_issue_attachment_task
+        delete_submission_issue_attachment_task.apply_async(
             kwargs={
                 'submission_id': obj.submission.pk,
                 'attachment_id': obj.attachment_id,

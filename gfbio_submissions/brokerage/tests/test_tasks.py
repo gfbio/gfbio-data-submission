@@ -30,7 +30,7 @@ from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, 
     create_pangaea_issue_task, attach_to_pangaea_issue_task, \
     add_accession_to_pangaea_issue_task, check_for_pangaea_doi_task, \
     trigger_submission_transfer, \
-    delete_attachment_task
+    delete_submission_issue_attachment_task
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_ena_xml_response, \
@@ -901,6 +901,11 @@ class TestGFBioHelpDeskTasks(TestTasks):
         url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
         responses.add(responses.POST, url, json={}, status=200)
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
         responses.add(responses.POST,
                       '{0}{1}/{2}/{3}'.format(
                           site_config.helpdesk_server.url,
@@ -926,7 +931,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
             HELPDESK_API_ATTACHMENT_URL,
             submission_upload.attachment_id)
         responses.add(responses.DELETE, url, body=b'', status=204)
-        result = delete_attachment_task.apply_async(
+        result = delete_submission_issue_attachment_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
                 'attachment_id': SubmissionUpload.objects.first().attachment_id,

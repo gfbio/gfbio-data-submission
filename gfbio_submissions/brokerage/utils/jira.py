@@ -130,6 +130,17 @@ class JiraClient(object):
                                                                            e.text))
             self.error = e
 
+    def delete_attachment(self, id):
+        try:
+            self.jira.delete_attachment(id)
+            self.error = None
+        except JIRAError as e:
+            logger.warning(
+                'JiraClient | delete_attachment | JIRAError {0} | {1}'.format(e,
+                                                                           e.text))
+            self.error = e
+
+
     # specialized methods ------------------------------------------------------
     # TODO: ADD RequestLogs or aquivalent ...
 
