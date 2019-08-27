@@ -1535,9 +1535,15 @@ class TestPangaeaTasks(TestTasks):
         #     request_logs.first().url)
 
     @responses.activate
-    def test_check_for_pangaea_doi_task_success(self, ):
+    def test_check_for_pangaea_doi_task_success(self):
+        site_config = SiteConfiguration.objects.first()
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
         responses.add(responses.PUT,
-                      'https://www.example.com/rest/api/2/issue/FAKE_KEY',
+                      '{0}/rest/api/2/issue/FAKE_KEY'.format(site_config.helpdesk_server.url),
                       body='', status=200)
         site_config = SiteConfiguration.objects.first()
         persistent_identifiers = PersistentIdentifier.objects.all()

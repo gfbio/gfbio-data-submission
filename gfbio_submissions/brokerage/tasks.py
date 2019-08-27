@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from io import StringIO
 
 import celery
 from celery import Task
-from django.core.files.storage import DefaultStorage
 from django.core.mail import mail_admins
 from django.db import transaction
 from django.db.models import Q
@@ -18,7 +16,7 @@ from gfbio_submissions.brokerage.models import SubmissionUpload
 from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content
 from gfbio_submissions.brokerage.utils.gfbio import \
-    gfbio_helpdesk_delete_attachment, gfbio_helpdesk_attach_file_to_ticket
+    gfbio_helpdesk_attach_file_to_ticket
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.users.models import User
 from .configuration.settings import BASE_HOST_NAME, \
@@ -1244,30 +1242,53 @@ def delete_submission_issue_attachment_task(kwargs=None, submission_id=None,
         return TaskProgressReport.CANCELLED
 
 
+# TODO: add tests ...
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
-             name='tasks.generic_comment_helpdesk_ticket_task',
+             name='tasks.add_pangaea_doi_task',
              base=SubmissionTask)
-def generic_comment_helpdesk_ticket_task(prev_task_result=None,
-                                         comment_body=None, submission_id=None):
+def add_pangaea_doi_task(prev_task_result=None,
+                         pangaea_doi=None, submission_id=None):
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id,
         task=add_accession_to_submission_issue_task,
         get_closed_submission=True)
     if submission is not None and site_configuration is not None:
-        existing_tickets = submission.additionalreference_set.filter(
-            Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
-        comment_body += ' broker_submisson_id: {}'.format(
-            submission.broker_submission_id)
-        if len(existing_tickets):
-            response = gfbio_helpdesk_comment_on_ticket(
-                site_config=site_configuration,
-                ticket_key=existing_tickets.first().reference_key,
-                comment_body=comment_body,
-                submission=submission,
+
+        reference = submission.get_primary_helpdesk_reference()
+
+        # existing_tickets = submission.additionalreference_set.filter(
+        #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
+
+        # comment_body += ' broker_submisson_id: {}'.format(
+        #     submission.broker_submission_id)
+        # 'Pangaea DOI: {}'.format(
+        #     persistent_identifier.pid)
+        if reference:
+            jira_client = JiraClient(
+                resource=site_configuration.helpdesk_server,
             )
-            apply_default_task_retry_policy(response,
-                                            generic_comment_helpdesk_ticket_task,
-                                            submission)
+            jira_client.add_comment(
+                key_or_issue=reference.reference_key,
+                text='Pangaea DOI: {0}. broker_submission_id: {1}'.format(
+                    pangaea_doi, submission.broker_submission_id)
+            )
+            if jira_client.error:
+                apply_default_task_retry_policy(
+                    jira_client.error.response,
+                    add_pangaea_doi_task,
+                    submission)
+
+        # if len(existing_tickets):
+        #     response = gfbio_helpdesk_comment_on_ticket(
+        #         site_config=site_configuration,
+        #         ticket_key=existing_tickets.first().reference_key,
+        #         comment_body=comment_body,
+        #         submission=submission,
+        #     )
+        #
+        #     apply_default_task_retry_policy(response,
+        #                                     add_pangaea_doi_task,
+        #                                     submission)
     else:
         return TaskProgressReport.CANCELLED
 

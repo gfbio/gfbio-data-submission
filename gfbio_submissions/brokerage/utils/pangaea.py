@@ -340,12 +340,13 @@ def pull_pangaea_dois(submission, login_token):
                 msg='pull_pangaea_dois. add comment with pangea doi '
                     'to helpdeskticket. submission_id={}'.format(submission.pk))
             from gfbio_submissions.brokerage.tasks import \
-                generic_comment_helpdesk_ticket_task
-            generic_comment_helpdesk_ticket_task.apply_async(
+                add_pangaea_doi_task
+
+
+            add_pangaea_doi_task.apply_async(
                 kwargs={
                     'submission_id': submission.pk,
-                    'comment_body': 'Pangaea DOI: {}'.format(
-                        persistent_identifier.pid)
+                    'pangaea_doi': persistent_identifier.pid,
                 },
                 countdown=SUBMISSION_DELAY
             )
