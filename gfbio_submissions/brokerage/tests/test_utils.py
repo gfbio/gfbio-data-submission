@@ -33,8 +33,9 @@ from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_pangaea_soap_body, _get_pangaea_soap_response, \
-    _get_pangaea_attach_response, _get_pangaea_comment_response, \
-    _get_jira_attach_response, _get_test_data_dir_path
+    _get_pangaea_attach_response, _get_jira_attach_response, \
+    _get_test_data_dir_path, _get_pangaea_comment_response, \
+    _get_pangaea_ticket_response
 from gfbio_submissions.brokerage.utils import csv
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
     send_submission_to_ena, download_submitted_run_files_to_stringIO
@@ -1289,43 +1290,84 @@ class TestSubmissionTransferHandler(TestCase):
     @responses.activate
     def test_execute_ena_pangaea(self):
         submission = Submission.objects.first()
-        conf = SiteConfiguration.objects.first()
+        site_config = SiteConfiguration.objects.first()
+
         responses.add(
             responses.POST,
-            conf.ena_server.url,
+            site_config.ena_server.url,
             status=200,
             body=_get_ena_xml_response()
         )
         url = '{0}{1}/{2}/{3}'.format(
-            conf.helpdesk_server.url,
+            site_config.helpdesk_server.url,
             HELPDESK_API_SUB_URL,
             'FAKE_KEY',
             HELPDESK_COMMENT_SUB_URL,
         )
         responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
+
         responses.add(
             responses.POST,
-            conf.pangaea_token_server.url,
+            site_config.pangaea_token_server.url,
             body=_get_pangaea_soap_response(),
             status=200)
         responses.add(
-            responses.POST,
-            PANGAEA_ISSUE_BASE_URL,
-            json={'id': '31444', 'key': 'PANGAEA_FAKE_KEY',
-                  'self': 'http://issues.pangaea.de/rest/api/2/issue/31444'},
-            status=201)
+            responses.GET,
+            '{0}/rest/api/2/field'.format(
+                site_config.pangaea_jira_server.url),
+            status=200,
+        )
         responses.add(
             responses.POST,
-            '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
-                                        'PANGAEA_FAKE_KEY'),
-            json=_get_pangaea_attach_response(),
+            '{0}{1}'.format(site_config.pangaea_jira_server.url,
+                            HELPDESK_API_SUB_URL),
+            json=_get_pangaea_ticket_response(),
             status=200)
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/PDI-12428'.format(
+                site_config.helpdesk_server.url),
+            json=_get_pangaea_ticket_response()
+        )
+
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          site_config.pangaea_jira_server.url,
+                          HELPDESK_API_SUB_URL,
+                          'PDI-12428',
+                          HELPDESK_ATTACHMENT_SUB_URL,
+                      ),
+                      json=_get_pangaea_attach_response(),
+                      status=200)
         responses.add(
             responses.POST,
             '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
                                     'PANGAEA_FAKE_KEY'),
             json=_get_pangaea_comment_response(),
             status=200)
+        # responses.add(
+        #     responses.POST,
+        #     site_config.pangaea_token_server.url,
+        #     body=_get_pangaea_soap_response(),
+        #     status=200)
+        # responses.add(
+        #     responses.POST,
+        #     PANGAEA_ISSUE_BASE_URL,
+        #     json={'id': '31444', 'key': 'PANGAEA_FAKE_KEY',
+        #           'self': 'http://issues.pangaea.de/rest/api/2/issue/31444'},
+        #     status=201)
+        # responses.add(
+        #     responses.POST,
+        #     '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
+        #                                 'PANGAEA_FAKE_KEY'),
+        #     json=_get_pangaea_attach_response(),
+        #     status=200)
+        # responses.add(
+        #     responses.POST,
+        #     '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
+        #                             'PANGAEA_FAKE_KEY'),
+        #     json=_get_pangaea_comment_response(),
+        #     status=200)
         sth = SubmissionTransferHandler(submission_id=submission.pk,
                                         target_archive='ENA_PANGAEA')
         tprs = TaskProgressReport.objects.exclude(

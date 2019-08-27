@@ -638,42 +638,69 @@ def create_pangaea_issue_task(login_token=None, submission_id=None):
 # TODO: this one relies on prevoius task: create_pangaea_issue_task
 # TODO: this task relies on additional kwargs, as returned from task above
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
-             name='tasks.comment_on_pangaea_ticket_task', base=SubmissionTask)
-def comment_on_pangaea_ticket_task(kwargs=None, submission_id=None,
-                                   comment_body=''):
-    submission = SubmissionTransferHandler.get_submission_for_task(
-        submission_id=submission_id, task=comment_on_pangaea_ticket_task)
-    if submission is not None:
-        login_token = None
-        ticket_key = None
-        if isinstance(kwargs, dict):
-            login_token = kwargs.get('login_token', None)
-            ticket_key = kwargs.get('ticket_key', None)
-        if login_token and ticket_key:
-            study_pid = submission.brokerobject_set.filter(
-                type='study').first().persistentidentifier_set.filter(
-                pid_type='PRJ').first()
-            if study_pid:
-                comment_body = 'ENA Accession No. of study {}. broker_submission_id: ' \
-                               '{}. {}'.format(study_pid.pid,
-                                               submission.broker_submission_id,
-                                               comment_body)
-                response = comment_on_pangaea_ticket(
-                    login_token=login_token,
-                    ticket_key=ticket_key,
-                    comment_body=comment_body,
-                    submission=submission,
+             name='tasks.add_accession_to_pangaea_issue_task',
+             base=SubmissionTask)
+def add_accession_to_pangaea_issue_task(kwargs=None, submission_id=None):
+    submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
+        submission_id=submission_id, task=add_accession_to_pangaea_issue_task
+    )
+    if submission is not None and site_configuration is not None \
+            and 'issue_key' in kwargs.keys():
+
+        # TODO: manager method to get panagea issue without needing pre-chain result
+        print('\nkwargs ', kwargs)
+
+        ticket_key = kwargs.get('issue_key', 'None')
+        study_pid = submission.brokerobject_set.filter(
+            type='study').first().persistentidentifier_set.filter(
+            pid_type='PRJ').first()
+        if study_pid:
+            jira_client = JiraClient(
+                resource=site_configuration.pangaea_jira_server,
+                token_resource=site_configuration.pangaea_token_server)
+            jira_client.add_comment(
+                key_or_issue=ticket_key,
+                text='ENA Accession No. of study {}. broker_submission_id: '
+                     '{0}. {1}'.format(study_pid.pid,
+                                       submission.broker_submission_id))
+
+            if jira_client.error:
+                apply_default_task_retry_policy(
+                    jira_client.error.response,
+                    add_accession_to_pangaea_issue_task,
+                    submission
                 )
-                apply_default_task_retry_policy(response,
-                                                comment_on_pangaea_ticket_task,
-                                                submission)
-                return True
-            else:
-                logger.error(
-                    msg='comment_on_pangaea_ticket_task. Cannot access PersistendIdentifier for study')
-                return None
-        else:
-            return None
+
+                # login_token = None
+        # ticket_key = None
+        # if isinstance(kwargs, dict):
+        #     login_token = kwargs.get('login_token', None)
+        #     ticket_key = kwargs.get('ticket_key', None)
+        # if login_token and ticket_key:
+        #     study_pid = submission.brokerobject_set.filter(
+        #         type='study').first().persistentidentifier_set.filter(
+        #         pid_type='PRJ').first()
+        #     if study_pid:
+        #         comment_body = 'ENA Accession No. of study {}. broker_submission_id: ' \
+        #                        '{}. {}'.format(study_pid.pid,
+        #                                        submission.broker_submission_id,
+        #                                        comment_body)
+        #         response = comment_on_pangaea_ticket(
+        #             login_token=login_token,
+        #             ticket_key=ticket_key,
+        #             comment_body=comment_body,
+        #             submission=submission,
+        #         )
+        #         apply_default_task_retry_policy(response,
+        #                                         add_accession_to_pangaea_issue_task,
+        #                                         submission)
+        #         return True
+        #     else:
+        #         logger.error(
+        #             msg='add_accession_to_pangaea_issue_task. Cannot access PersistendIdentifier for study')
+        #         return None
+        # else:
+        #     return None
     else:
         return TaskProgressReport.CANCELLED
 
@@ -949,14 +976,13 @@ def update_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
 # TODO: more generic like update above
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
              name='tasks.add_accession_to_issue_task', base=SubmissionTask)
-def add_accession_to_issue_task(prev_task_result=None, comment_body=None,
-                                submission_id=None, target_archive=None):
+def add_accession_to_issue_task(prev_task_result=None, submission_id=None,
+                                target_archive=None):
     logger.info(
         msg='add_accession_to_issue_task submission_id={0} | '
             'prev_task_result={1} | '
-            'comment_body={2} | '
-            'target_archive={3}'.format(
-            submission_id, prev_task_result, comment_body, target_archive)
+            'target_archive={2}'.format(submission_id, prev_task_result,
+                                        target_archive)
     )
 
     # No submission will be returned if submission.status is error
