@@ -659,8 +659,8 @@ class PrimaryDataFile(models.Model):
         super(PrimaryDataFile, self).save(*args, **kwargs)
         if attach:
             from .tasks import \
-                attach_file_to_helpdesk_ticket_task
-            attach_file_to_helpdesk_ticket_task.apply_async(
+                attach_to_submission_issue_task
+            attach_to_submission_issue_task.apply_async(
                 kwargs={
                     'submission_id': '{0}'.format(self.submission.pk),
                 },
@@ -732,8 +732,8 @@ class SubmissionUpload(TimeStampedModel):
         super(SubmissionUpload, self).save(*args, **kwargs)
         if self.attach_to_ticket and not ignore_attach_to_ticket:
             from .tasks import \
-                attach_file_to_helpdesk_ticket_task
-            attach_file_to_helpdesk_ticket_task.apply_async(
+                attach_to_submission_issue_task
+            attach_to_submission_issue_task.apply_async(
                 kwargs={
                     'submission_id': '{0}'.format(self.submission.pk),
                     'submission_upload_id': '{0}'.format(self.pk)

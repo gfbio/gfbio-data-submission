@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+from io import StringIO
 
 import celery
 from celery import Task
+from django.core.files.storage import DefaultStorage
 from django.core.mail import mail_admins
 from django.db import transaction
 from django.db.models import Q
@@ -16,8 +18,7 @@ from gfbio_submissions.brokerage.models import SubmissionUpload
 from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content
 from gfbio_submissions.brokerage.utils.gfbio import \
-    gfbio_prepare_create_helpdesk_payload, gfbio_update_helpdesk_ticket, \
-    gfbio_helpdesk_delete_attachment
+    gfbio_helpdesk_delete_attachment, gfbio_helpdesk_attach_file_to_ticket
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.users.models import User
 from .configuration.settings import BASE_HOST_NAME, \
@@ -30,8 +31,7 @@ from .utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data, send_submission_to_ena, \
     parse_ena_submission_response
 from .utils.gfbio import \
-    gfbio_helpdesk_comment_on_ticket, gfbio_get_user_by_id, \
-    gfbio_helpdesk_attach_file_to_ticket
+    gfbio_helpdesk_comment_on_ticket, gfbio_get_user_by_id
 from .utils.pangaea import request_pangaea_login_token, \
     parse_pangaea_login_token_response, pull_pangaea_dois
 from .utils.submission_transfer import SubmissionTransferHandler
@@ -44,6 +44,9 @@ logger = logging.getLogger(__name__)
 class SubmissionTask(Task):
     abstract = True
 
+    # TODO: consider a report for every def here OR refactor taskreport to
+    #  keep track in one report. Keep in mind to resume chains from a certain
+    #  point, add a DB clean up task to remove from database
     def on_retry(self, exc, task_id, args, kwargs, einfo):
         # print('+++++++++ on_retry')
         # TODO: capture this idea of reporting to sentry
@@ -74,6 +77,7 @@ class SubmissionTask(Task):
 
 # common tasks -----------------------------------------------------------------
 
+# TODO: re-consider if needed when workflow is clear
 @celery.task(name='tasks.check_for_molecular_content_in_submission_task',
              base=SubmissionTask)
 def check_for_molecular_content_in_submission_task(submission_id=None):
@@ -918,66 +922,69 @@ def create_submission_issue_task(prev_task_result=None, submission_id=None):
         return TaskProgressReport.CANCELLED
 
 
-@celery.task(max_retries=SUBMISSION_MAX_RETRIES,
-             name='tasks.update_helpdesk_ticket_task', base=SubmissionTask)
-def update_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
-                                data=None):
-    logger.info(
-        msg='update_helpdesk_ticket_task submission_id={0} | '
-            'prev_task_result={1} | '
-            'data={2}'.format(
-            submission_id, prev_task_result, data)
-    )
-    submission = SubmissionTransferHandler.get_submission_for_task(
-        submission_id=submission_id,
-        task=update_helpdesk_ticket_task,
-        get_closed_submission=True
-    )
-
-    if submission is not None:
-        tickets = submission.additionalreference_set.filter(
-            Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
-        if len(tickets) != 1:
-            return TaskProgressReport.CANCELLED
-        submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-            submission_id=submission_id,
-            task=update_helpdesk_ticket_task,
-            get_closed_submission=True
-        )
-        if site_configuration is None:
-            return TaskProgressReport.CANCELLED
-
-        ticket = tickets[0]
-
-        # TODO: explicit task for this use case
-        if data is None:
-            data = gfbio_prepare_create_helpdesk_payload(
-                site_config=site_configuration,
-                submission=submission,
-                prepare_for_update=True,
-            )
-
-        response = gfbio_update_helpdesk_ticket(
-            site_configuration=site_configuration,
-            submission=submission,
-            ticket_key=ticket.reference_key,
-            data=data
-        )
-        apply_default_task_retry_policy(response,
-                                        update_helpdesk_ticket_task,
-                                        submission)
-    else:
-        return TaskProgressReport.CANCELLED
+# TODO: currently not use any where. If needed refactor and use jira client
+# @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
+#              name='tasks.update_helpdesk_ticket_task', base=SubmissionTask)
+# def update_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
+#                                 data=None):
+#     logger.info(
+#         msg='update_helpdesk_ticket_task submission_id={0} | '
+#             'prev_task_result={1} | '
+#             'data={2}'.format(
+#             submission_id, prev_task_result, data)
+#     )
+#     submission = SubmissionTransferHandler.get_submission_for_task(
+#         submission_id=submission_id,
+#         task=update_helpdesk_ticket_task,
+#         get_closed_submission=True
+#     )
+#
+#     if submission is not None:
+#         tickets = submission.additionalreference_set.filter(
+#             Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
+#         if len(tickets) != 1:
+#             return TaskProgressReport.CANCELLED
+#         submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
+#             submission_id=submission_id,
+#             task=update_helpdesk_ticket_task,
+#             get_closed_submission=True
+#         )
+#         if site_configuration is None:
+#             return TaskProgressReport.CANCELLED
+#
+#         ticket = tickets[0]
+#
+#         # TODO: explicit task for this use case
+#         if data is None:
+#             data = gfbio_prepare_create_helpdesk_payload(
+#                 site_config=site_configuration,
+#                 submission=submission,
+#                 prepare_for_update=True,
+#             )
+#
+#         response = gfbio_update_helpdesk_ticket(
+#             site_configuration=site_configuration,
+#             submission=submission,
+#             ticket_key=ticket.reference_key,
+#             data=data
+#         )
+#         apply_default_task_retry_policy(response,
+#                                         update_helpdesk_ticket_task,
+#                                         submission)
+#     else:
+#         return TaskProgressReport.CANCELLED
 
 
 # TODO: examine all tasks for redundant code and possible generalization e.g.:
 # TODO: more generic like update above
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
-             name='tasks.add_accession_to_issue_task', base=SubmissionTask)
-def add_accession_to_issue_task(prev_task_result=None, submission_id=None,
-                                target_archive=None):
+             name='tasks.add_accession_to_submission_issue_task',
+             base=SubmissionTask)
+def add_accession_to_submission_issue_task(prev_task_result=None,
+                                           submission_id=None,
+                                           target_archive=None):
     logger.info(
-        msg='add_accession_to_issue_task submission_id={0} | '
+        msg='add_accession_to_submission_issue_task submission_id={0} | '
             'prev_task_result={1} | '
             'target_archive={2}'.format(submission_id, prev_task_result,
                                         target_archive)
@@ -985,7 +992,8 @@ def add_accession_to_issue_task(prev_task_result=None, submission_id=None,
 
     # No submission will be returned if submission.status is error
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-        submission_id=submission_id, task=add_accession_to_issue_task,
+        submission_id=submission_id,
+        task=add_accession_to_submission_issue_task,
         get_closed_submission=True)
 
     if submission is not None and site_configuration is not None:
@@ -1025,7 +1033,7 @@ def add_accession_to_issue_task(prev_task_result=None, submission_id=None,
                 if jira_client.error:
                     apply_default_task_retry_policy(
                         jira_client.error.response,
-                        add_accession_to_issue_task,
+                        add_accession_to_submission_issue_task,
                         submission
                     )
             # elif target_archive == Submission.PANGAEA:
@@ -1048,57 +1056,114 @@ def add_accession_to_issue_task(prev_task_result=None, submission_id=None,
         #         submission=submission,
         #     )
         #     apply_default_task_retry_policy(response,
-        #                                     add_accession_to_issue_task,
+        #                                     add_accession_to_submission_issue_task,
         #                                     submission)
 
     else:
         return TaskProgressReport.CANCELLED
 
-
+# FIXME: here problems while using new jirclient to attach, especiall while put submissionupload
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
-             name='tasks.attach_file_to_helpdesk_ticket_task',
+             name='tasks.attach_to_submission_issue_task',
              base=SubmissionTask)
-def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None,
-                                        submission_upload_id=None):
+def attach_to_submission_issue_task(kwargs=None, submission_id=None,
+                                    submission_upload_id=None):
     logger.info(
-        msg='attach_file_to_helpdesk_ticket_task submission_id={0} | '
+        msg='attach_to_submission_issue_task submission_id={0} | '
             'submission_upload_id={1}'.format(submission_id,
                                               submission_upload_id))
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-        submission_id=submission_id, task=attach_file_to_helpdesk_ticket_task,
+        submission_id=submission_id, task=attach_to_submission_issue_task,
         get_closed_submission=True)
     if submission is not None and site_configuration is not None:
-        existing_tickets = submission.additionalreference_set.filter(
-            Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
-        logger.info(
-            msg='attach_file_to_helpdesk_ticket_task tickets found={0}'.format(
-                existing_tickets))
+
+        reference = submission.get_primary_helpdesk_reference()
+
+        print('REFERENCE ', reference)
+
+        # existing_tickets = submission.additionalreference_set.filter(
+        #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
+        # logger.info(
+        #     msg='attach_to_submission_issue_task tickets found={0}'.format(
+        #         existing_tickets))
 
         # TODO: if no ticket available, the reason may that this task is started independened of
         # submission transfer chain that creates the ticket, so a proper retry has to be
         # implemented
-        if len(existing_tickets):
+        if reference:
+            # if len(existing_tickets):
             submission_upload = submission.submissionupload_set.filter(
                 attach_to_ticket=True).filter(pk=submission_upload_id).first()
+
             if submission_upload:
-                logger.info(
-                    msg='attach_file_to_helpdesk_ticket_task SubmissionUpload found {0} '.format(
-                        submission_upload))
+
+                # logger.info(
+                #     msg='attach_to_submission_issue_task SubmissionUpload found {0} '.format(
+                #         submission_upload))
+
                 # TODO: access media nginx https://stackoverflow.com/questions/8370658/how-to-serve-django-media-files-via-nginx
+                # jira_client = JiraClient(
+                #     resource=site_configuration.helpdesk_server,
+                # )
+                #
+                # print('\n\nJIRA client ', jira_client)
+                # print('ref', reference.reference_key)
+                # print(submission_upload)
+                # print(type(submission_upload.file))
+                #
+                # print('\n-------------\n', os.listdir('/app/gfbio_submissions/'))
+                #
+                # storage = DefaultStorage()
+                # f = storage.open(submission_upload.file.name, mode='rb')
+                # # with open(submission_upload.file, 'rb') as f:
+                # # print(f.read())
+                #
+                # mem_file = StringIO()
+                #
+                # mem_file.write('xxxxxx')
+                # # print(mem_file)
+                # # print(mem_file.getvalue())
+                #
+                #
+                # jira_client.add_attachment(
+                #     key=reference.reference_key,
+                #     file=mem_file,
+                #     file_name='memfile'
+                # )
+                # mem_file.close()
+
                 response = gfbio_helpdesk_attach_file_to_ticket(
                     site_config=site_configuration,
-                    ticket_key=existing_tickets.first().reference_key,
+                    ticket_key=reference.reference_key,
                     file=submission_upload.file,
                     submission=submission
                 )
                 logger.info(
-                    msg='attach_file_to_helpdesk_ticket_task repsonse status={0} content={1}'.format(
+                    msg='attach_to_submission_issue_task repsonse status={0} content={1}'.format(
                         response.status_code, response.content))
                 apply_default_task_retry_policy(response,
-                                                attach_file_to_helpdesk_ticket_task,
+                                                attach_to_submission_issue_task,
                                                 submission)
+
+                # if jira_client.error:
+                #     apply_default_task_retry_policy(
+                #         jira_client.error.response,
+                #         attach_to_submission_issue_task,
+                #         submission
+                #     )
+
                 # TODO: there may be a more elegant solution for checking
                 # TODO: extract to method
+
+                # TODO/FIXME: storing ID may not be need due to usage of jira-python
+                # for attachment in issue.fields.attachment: (...)
+                # for i in query['issues']:
+                #     for a in i['fields']['attachment']:
+                #         print(
+                #             "For issue {0}, found attach: '{1}' [{2}].".format(
+                #                 i['key'], a['filename'], a['id']))
+                #         jira.delete_attachment(a['id'])
+                #####################################
                 content = response.json()
                 if isinstance(content, list) \
                         and len(content) == 1 \
@@ -1110,19 +1175,21 @@ def attach_file_to_helpdesk_ticket_task(kwargs=None, submission_id=None,
                 return True
             else:
                 logger.info(
-                    msg='attach_file_to_helpdesk_ticket_task no SubmissionUpload'
+                    msg='attach_to_submission_issue_task no SubmissionUpload'
                         ' found. submission_id={0} | submission_upload_id={1}'
                         ''.format(submission_id, submission_upload_id))
                 return False
         else:
             logger.info(
-                msg='attach_file_to_helpdesk_ticket_task no tickets found. '
+                msg='attach_to_submission_issue_task no tickets found. '
                     'submission_id={0} | submission_upload_id={1}'
                     ''.format(submission_id, submission_upload_id))
             apply_timebased_task_retry_policy(
-                task=attach_file_to_helpdesk_ticket_task,
+                task=attach_to_submission_issue_task,
                 submission=submission,
-                no_of_tickets=len(existing_tickets),
+                # no_of_tickets=len(existing_tickets),
+                no_of_tickets=1 if reference else 0
+                # always 1 if available due to filter rules
             )
             return False
     else:
@@ -1142,7 +1209,7 @@ def delete_attachment_task(kwargs=None, submission_id=None,
             '| attachment_id={1}'.format(submission_id, attachment_id)
     )
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-        submission_id=submission_id, task=attach_file_to_helpdesk_ticket_task,
+        submission_id=submission_id, task=attach_to_submission_issue_task,
         get_closed_submission=True)
     if submission is not None and site_configuration is not None and attachment_id is not None:
         # TODO: temporary solution until workflow is fix,
@@ -1171,7 +1238,8 @@ def delete_attachment_task(kwargs=None, submission_id=None,
 def generic_comment_helpdesk_ticket_task(prev_task_result=None,
                                          comment_body=None, submission_id=None):
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-        submission_id=submission_id, task=add_accession_to_issue_task,
+        submission_id=submission_id,
+        task=add_accession_to_submission_issue_task,
         get_closed_submission=True)
     if submission is not None and site_configuration is not None:
         existing_tickets = submission.additionalreference_set.filter(

@@ -4,16 +4,15 @@ import json
 import logging
 
 import requests
-from IPython.lib.pretty import pprint
 from django.db import transaction
 from requests.structures import CaseInsensitiveDict
 
 from gfbio_submissions.brokerage.configuration.settings import \
     HELPDESK_API_SUB_URL, \
-    HELPDESK_COMMENT_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL, \
-    HELPDESK_LICENSE_MAPPINGS, HELPDESK_METASCHEMA_MAPPINGS, \
+    HELPDESK_COMMENT_SUB_URL, HELPDESK_LICENSE_MAPPINGS, \
+    HELPDESK_METASCHEMA_MAPPINGS, \
     HELPDESK_DATACENTER_USER_MAPPINGS, HELPDESK_REQUEST_TYPE_MAPPINGS, \
-    HELPDESK_API_ATTACHMENT_URL
+    HELPDESK_API_ATTACHMENT_URL, HELPDESK_ATTACHMENT_SUB_URL
 from gfbio_submissions.brokerage.models import SiteConfiguration, RequestLog
 from gfbio_submissions.users.models import User
 
@@ -311,6 +310,7 @@ def gfbio_helpdesk_comment_on_ticket(site_config, ticket_key, comment_body,
     return response
 
 
+# TODO: oboslete ?
 def gfbio_helpdesk_attach_file_to_ticket(site_config, ticket_key, file,
                                          submission):
     url = '{0}{1}/{2}/{3}'.format(
@@ -322,6 +322,7 @@ def gfbio_helpdesk_attach_file_to_ticket(site_config, ticket_key, file,
     headers = CaseInsensitiveDict({'content-type': None,
                                    'X-Atlassian-Token': 'nocheck'})
     files = {'file': file}
+    print('TYPE FILE ', type(file))
     # files = {'file': open(file, 'rb')}
     response = requests.post(
         url=url,

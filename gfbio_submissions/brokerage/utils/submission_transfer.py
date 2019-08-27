@@ -194,13 +194,13 @@ class SubmissionTransferHandler(object):
                 self.target_archive))
         from gfbio_submissions.brokerage.tasks import \
             transfer_data_to_ena_task, process_ena_response_task, \
-            add_accession_to_issue_task
+            add_accession_to_submission_issue_task
 
         chain = transfer_data_to_ena_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
                 | process_ena_response_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
-                | add_accession_to_issue_task.s(
+                | add_accession_to_submission_issue_task.s(
             submission_id=self.submission_id,
             target_archive=ENA).set(countdown=SUBMISSION_DELAY)
         chain()
@@ -211,7 +211,7 @@ class SubmissionTransferHandler(object):
                 self.target_archive))
         from gfbio_submissions.brokerage.tasks import \
             transfer_data_to_ena_task, process_ena_response_task, \
-            add_accession_to_issue_task, \
+            add_accession_to_submission_issue_task, \
             create_pangaea_issue_task, \
             attach_to_pangaea_issue_task, \
             add_accession_to_pangaea_issue_task, \
@@ -222,7 +222,7 @@ class SubmissionTransferHandler(object):
                 | process_ena_response_task.s(submission_id=self.submission_id,
                                               close_submission_on_success=False).set(
             countdown=SUBMISSION_DELAY) \
-                | add_accession_to_issue_task.s(
+                | add_accession_to_submission_issue_task.s(
             submission_id=self.submission_id,
             target_archive=ENA).set(countdown=SUBMISSION_DELAY) \
                 | create_pangaea_issue_task.s(

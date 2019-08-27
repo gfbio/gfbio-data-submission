@@ -14,7 +14,6 @@ import requests
 import responses
 from django.contrib.auth.models import Permission
 from django.test import TestCase
-from django.urls import reverse
 from django.utils.encoding import smart_text
 from jira import JIRA, JIRAError
 from requests import ConnectionError
@@ -33,8 +32,8 @@ from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_pangaea_soap_body, _get_pangaea_soap_response, \
-    _get_pangaea_attach_response, _get_jira_attach_response, \
-    _get_test_data_dir_path, _get_pangaea_comment_response, \
+    _get_pangaea_attach_response, _get_test_data_dir_path, \
+    _get_pangaea_comment_response, \
     _get_pangaea_ticket_response
 from gfbio_submissions.brokerage.utils import csv
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
@@ -42,7 +41,7 @@ from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
 from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_get_user_by_id, \
     gfbio_helpdesk_create_ticket, gfbio_helpdesk_comment_on_ticket, \
-    gfbio_helpdesk_attach_file_to_ticket, gfbio_prepare_create_helpdesk_payload, \
+    gfbio_prepare_create_helpdesk_payload, \
     gfbio_update_helpdesk_ticket, gfbio_helpdesk_delete_attachment
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.brokerage.utils.pangaea import \
@@ -1629,31 +1628,31 @@ class TestHelpDeskTicketMethods(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual(1, len(RequestLog.objects.all()))
 
-    @responses.activate
-    def test_attach_template_to_helpdesk_ticket(self):
-        submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-        url = reverse('brokerage:submissions_upload', kwargs={
-            'broker_submission_id': submission.broker_submission_id})
-        responses.add(responses.POST, url, json={}, status=200)
-        responses.add(responses.POST,
-                      '{0}{1}/{2}/{3}'.format(
-                          site_config.helpdesk_server.url,
-                          HELPDESK_API_SUB_URL,
-                          'FAKE_KEY',
-                          HELPDESK_ATTACHMENT_SUB_URL,
-                      ),
-                      json=_get_jira_attach_response(),
-                      status=200)
-        data = self._create_test_data('/tmp/test_primary_data_file')
-        data['attach_to_ticket'] = True
-        self.api_client.post(url, data, format='multipart')
-        pd = submission.submissionupload_set.first()
-        response = gfbio_helpdesk_attach_file_to_ticket(
-            site_config, 'FAKE_KEY', pd.file, submission)
-        self.assertEqual(200, response.status_code)
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(2, len(request_logs))
+    # @responses.activate
+    # def test_attach_template_to_helpdesk_ticket(self):
+    #     submission = Submission.objects.first()
+    #     site_config = SiteConfiguration.objects.first()
+    #     url = reverse('brokerage:submissions_upload', kwargs={
+    #         'broker_submission_id': submission.broker_submission_id})
+    #     responses.add(responses.POST, url, json={}, status=200)
+    #     responses.add(responses.POST,
+    #                   '{0}{1}/{2}/{3}'.format(
+    #                       site_config.helpdesk_server.url,
+    #                       HELPDESK_API_SUB_URL,
+    #                       'FAKE_KEY',
+    #                       HELPDESK_ATTACHMENT_SUB_URL,
+    #                   ),
+    #                   json=_get_jira_attach_response(),
+    #                   status=200)
+    #     data = self._create_test_data('/tmp/test_primary_data_file')
+    #     data['attach_to_ticket'] = True
+    #     self.api_client.post(url, data, format='multipart')
+    #     pd = submission.submissionupload_set.first()
+    #     response = gfbio_helpdesk_attach_file_to_ticket(
+    #         site_config, 'FAKE_KEY', pd.file, submission)
+    #     self.assertEqual(200, response.status_code)
+    #     request_logs = RequestLog.objects.all()
+    #     self.assertEqual(2, len(request_logs))
 
     @responses.activate
     def test_delete_attachment(self):
@@ -1673,81 +1672,81 @@ class TestHelpDeskTicketMethods(TestCase):
         self.assertEqual(url, rq.url)
         self.assertEqual(response.status_code, rq.response_status)
 
-    @responses.activate
-    def test_attach_multiple_files_to_helpdesk_ticket(self):
-        submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-        url = reverse('brokerage:submissions_upload', kwargs={
-            'broker_submission_id': submission.broker_submission_id})
-        responses.add(responses.POST, url, json={}, status=200)
-        response_json = _get_jira_attach_response()
-        responses.add(responses.POST,
-                      '{0}{1}/{2}/{3}'.format(
-                          site_config.helpdesk_server.url,
-                          HELPDESK_API_SUB_URL,
-                          'FAKE_KEY',
-                          HELPDESK_ATTACHMENT_SUB_URL,
-                      ),
-                      json=response_json,
-                      status=200)
-        data = self._create_test_data('/tmp/test_primary_data_file_1')
-        data['attach_to_ticket'] = True
-        self.api_client.post(url, data, format='multipart')
-        pd = submission.submissionupload_set.first()
-        gfbio_helpdesk_attach_file_to_ticket(
-            site_config, 'FAKE_KEY', pd.file, submission)
-        self.assertEqual(
-            1,
-            len(SubmissionUpload.objects.filter(submission=submission))
-        )
+    # @responses.activate
+    # def test_attach_multiple_files_to_helpdesk_ticket(self):
+    #     submission = Submission.objects.first()
+    #     site_config = SiteConfiguration.objects.first()
+    #     url = reverse('brokerage:submissions_upload', kwargs={
+    #         'broker_submission_id': submission.broker_submission_id})
+    #     responses.add(responses.POST, url, json={}, status=200)
+    #     response_json = _get_jira_attach_response()
+    #     responses.add(responses.POST,
+    #                   '{0}{1}/{2}/{3}'.format(
+    #                       site_config.helpdesk_server.url,
+    #                       HELPDESK_API_SUB_URL,
+    #                       'FAKE_KEY',
+    #                       HELPDESK_ATTACHMENT_SUB_URL,
+    #                   ),
+    #                   json=response_json,
+    #                   status=200)
+    #     data = self._create_test_data('/tmp/test_primary_data_file_1')
+    #     data['attach_to_ticket'] = True
+    #     self.api_client.post(url, data, format='multipart')
+    #     pd = submission.submissionupload_set.first()
+    #     gfbio_helpdesk_attach_file_to_ticket(
+    #         site_config, 'FAKE_KEY', pd.file, submission)
+    #     self.assertEqual(
+    #         1,
+    #         len(SubmissionUpload.objects.filter(submission=submission))
+    #     )
+    #
+    #     data = self._create_test_data('/tmp/test_primary_data_file_2',
+    #                                   delete=False)
+    #     data['attach_to_ticket'] = True
+    #     self.api_client.post(url, data, format='multipart')
+    #     pd = submission.submissionupload_set.last()
+    #     response = gfbio_helpdesk_attach_file_to_ticket(
+    #         site_config, 'FAKE_KEY', pd.file, submission)
+    #     self.assertEqual(
+    #         2,
+    #         len(SubmissionUpload.objects.filter(submission=submission))
+    #     )
 
-        data = self._create_test_data('/tmp/test_primary_data_file_2',
-                                      delete=False)
-        data['attach_to_ticket'] = True
-        self.api_client.post(url, data, format='multipart')
-        pd = submission.submissionupload_set.last()
-        response = gfbio_helpdesk_attach_file_to_ticket(
-            site_config, 'FAKE_KEY', pd.file, submission)
-        self.assertEqual(
-            2,
-            len(SubmissionUpload.objects.filter(submission=submission))
-        )
-
-    @responses.activate
-    def test_attach_template_without_submitting_user(self):
-        responses.add(responses.PUT,
-                      'https://www.example.com/rest/api/2/issue/FAKE_KEY',
-                      body='', status=200)
-        submission = Submission.objects.first()
-        submission.submitting_user = None
-        submission.save()
-        site_config = SiteConfiguration.objects.first()
-        url = reverse('brokerage:submissions_upload', kwargs={
-            'broker_submission_id': submission.broker_submission_id})
-        responses.add(responses.POST, url, json={}, status=200)
-        responses.add(responses.POST,
-                      '{0}{1}/{2}/{3}'.format(
-                          site_config.helpdesk_server.url,
-                          HELPDESK_API_SUB_URL,
-                          'FAKE_KEY',
-                          HELPDESK_ATTACHMENT_SUB_URL,
-                      ),
-                      json=_get_jira_attach_response(),
-                      status=200)
-        data = self._create_test_data('/tmp/test_primary_data_file')
-        data['attach_to_ticket'] = True
-        self.api_client.post(url, data, format='multipart')
-        pd = submission.submissionupload_set.first()
-        response = gfbio_helpdesk_attach_file_to_ticket(site_config, 'FAKE_KEY',
-                                                        pd.file,
-                                                        submission)
-        self.assertEqual(200, response.status_code)
-        request_logs = RequestLog.objects.all()
-        for r in request_logs:
-            print(r.submission_id, ' ', r.url, ' ', r.data)
-
-        # self.assertEqual(2, len(request_logs))
-        self.assertEqual('', request_logs.first().site_user)
+    # @responses.activate
+    # def test_attach_template_without_submitting_user(self):
+    #     responses.add(responses.PUT,
+    #                   'https://www.example.com/rest/api/2/issue/FAKE_KEY',
+    #                   body='', status=200)
+    #     submission = Submission.objects.first()
+    #     submission.submitting_user = None
+    #     submission.save()
+    #     site_config = SiteConfiguration.objects.first()
+    #     url = reverse('brokerage:submissions_upload', kwargs={
+    #         'broker_submission_id': submission.broker_submission_id})
+    #     responses.add(responses.POST, url, json={}, status=200)
+    #     responses.add(responses.POST,
+    #                   '{0}{1}/{2}/{3}'.format(
+    #                       site_config.helpdesk_server.url,
+    #                       HELPDESK_API_SUB_URL,
+    #                       'FAKE_KEY',
+    #                       HELPDESK_ATTACHMENT_SUB_URL,
+    #                   ),
+    #                   json=_get_jira_attach_response(),
+    #                   status=200)
+    #     data = self._create_test_data('/tmp/test_primary_data_file')
+    #     data['attach_to_ticket'] = True
+    #     self.api_client.post(url, data, format='multipart')
+    #     pd = submission.submissionupload_set.first()
+    #     response = gfbio_helpdesk_attach_file_to_ticket(site_config, 'FAKE_KEY',
+    #                                                     pd.file,
+    #                                                     submission)
+    #     self.assertEqual(200, response.status_code)
+    #     request_logs = RequestLog.objects.all()
+    #     for r in request_logs:
+    #         print(r.submission_id, ' ', r.url, ' ', r.data)
+    #
+    #     # self.assertEqual(2, len(request_logs))
+    #     self.assertEqual('', request_logs.first().site_user)
 
 
 class TestDownloadEnaReport(TestCase):

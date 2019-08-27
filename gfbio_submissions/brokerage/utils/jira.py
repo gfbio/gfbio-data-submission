@@ -4,6 +4,7 @@ import logging
 from io import StringIO
 from json import JSONDecodeError
 
+import sys
 from jira import JIRA, JIRAError
 from requests import ConnectionError
 
@@ -70,14 +71,28 @@ class JiraClient(object):
             self.error = e
 
     def get_issue(self, key=''):
+        print('GET_ISSUE ', key)
         try:
+            print('try')
             self.issue = self.jira.issue(key)
             self.error = None
+            print('end of try')
         except JIRAError as e:
             logger.warning(
                 'JiraClient | get_issue | JIRAError {0} | {1}'.format(e,
                                                                       e.text))
             self.issue = None
+            self.error = e
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+        print('leave get')
+
+    def update_issue(self, key='', fields={}):
+        self.get_issue(key)
+        try:
+            self.issue.update(fields=fields)
+            self.error = None
+        except JIRAError as e:
             self.error = e
 
     # https://jira.readthedocs.io/en/master/examples.html#comments
@@ -96,11 +111,18 @@ class JiraClient(object):
     # file-like, string-path, stringIO (requires filename)
     def add_attachment(self, key, file, file_name=None):
         self.get_issue(key)
+        # print('KEY ', key)
+        # try:
+        #     print('ISSUE ', self.issue)
+        # except TypeError as t:
+        #     print("add_attachment Unexpected error:", sys.exc_info()[0], " -- >  ", t)
         try:
             if file_name:
                 self.jira.add_attachment(issue=self.issue, attachment=file,
                                          filename=file_name)
             else:
+                print('Try attach .... ')
+                print(file)
                 self.jira.add_attachment(issue=self.issue, attachment=file)
         except JIRAError as e:
             logger.warning(

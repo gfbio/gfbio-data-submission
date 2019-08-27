@@ -25,11 +25,11 @@ from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, 
     transfer_data_to_ena_task, process_ena_response_task, \
     create_broker_objects_from_submission_data_task, check_on_hold_status_task, \
     get_user_email_task, create_submission_issue_task, \
-    add_accession_to_issue_task, attach_file_to_helpdesk_ticket_task, \
+    add_accession_to_submission_issue_task, attach_to_submission_issue_task, \
     add_pangaealink_to_submission_issue_task, \
     create_pangaea_issue_task, attach_to_pangaea_issue_task, \
     add_accession_to_pangaea_issue_task, check_for_pangaea_doi_task, \
-    trigger_submission_transfer, update_helpdesk_ticket_task, \
+    trigger_submission_transfer, \
     delete_attachment_task
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import \
@@ -788,31 +788,31 @@ class TestGFBioHelpDeskTasks(TestTasks):
         self.assertTrue(result.successful())
         self.assertEqual(1, len(submission.additionalreference_set.all()))
 
-    @responses.activate
-    def test_update_helpdesk_ticket_task_success(self):
-        submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-        url = '{0}{1}/{2}'.format(
-            site_config.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
-            'FAKE_KEY'
-        )
-        responses.add(responses.PUT, url, body='', status=204)
-        data = {
-            'fields': {
-                'customfield_10205': 'New Name Marc Weber, Alfred E. Neumann',
-            }
-        }
-        result = update_helpdesk_ticket_task.apply_async(
-            kwargs={
-                'submission_id': submission.id,
-                'data': data
-            }
-        )
-        self.assertTrue(result.successful())
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(1, len(request_logs))
-        self.assertTrue(request_logs[0].url.endswith('FAKE_KEY'))
+    # @responses.activate
+    # def test_update_helpdesk_ticket_task_success(self):
+    #     submission = Submission.objects.first()
+    #     site_config = SiteConfiguration.objects.first()
+    #     url = '{0}{1}/{2}'.format(
+    #         site_config.helpdesk_server.url,
+    #         HELPDESK_API_SUB_URL,
+    #         'FAKE_KEY'
+    #     )
+    #     responses.add(responses.PUT, url, body='', status=204)
+    #     data = {
+    #         'fields': {
+    #             'customfield_10205': 'New Name Marc Weber, Alfred E. Neumann',
+    #         }
+    #     }
+    #     result = update_helpdesk_ticket_task.apply_async(
+    #         kwargs={
+    #             'submission_id': submission.id,
+    #             'data': data
+    #         }
+    #     )
+    #     self.assertTrue(result.successful())
+    #     request_logs = RequestLog.objects.all()
+    #     self.assertEqual(1, len(request_logs))
+    #     self.assertTrue(request_logs[0].url.endswith('FAKE_KEY'))
 
     @responses.activate
     def test_comment_helpdesk_ticket_task_success(self):
@@ -825,7 +825,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         )
         responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
         submission = Submission.objects.first()
-        result = add_accession_to_issue_task.apply_async(
+        result = add_accession_to_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.id,
                 # 'comment_body': 'test-comment'
@@ -848,7 +848,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
                       url,
                       json=_get_jira_attach_response(),
                       status=200)
-        result = attach_file_to_helpdesk_ticket_task.apply_async(
+        result = attach_to_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
             }
@@ -877,13 +877,13 @@ class TestGFBioHelpDeskTasks(TestTasks):
         token = Token.objects.create(user=submission.site)
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        # POST will already trigger attach_file_to_helpdesk_ticket_task
+        # POST will already trigger attach_to_submission_issue_task
         # via PrimaryDataFile save method
         client.post(url, data, format='multipart')
 
-        # attach_file_to_helpdesk_ticket_task was already triggered by POST above
+        # attach_to_submission_issue_task was already triggered by POST above
         # via PrimaryDataFile save method
-        result = attach_file_to_helpdesk_ticket_task.apply_async(
+        result = attach_to_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
                 'submission_upload_id': SubmissionUpload.objects.first().pk,
@@ -915,7 +915,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         token = Token.objects.create(user=submission.site)
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        # POST will already trigger attach_file_to_helpdesk_ticket_task
+        # POST will already trigger attach_to_submission_issue_task
         # via PrimaryDataFile save method
         client.post(url, data, format='multipart')
         # TODO: everything above is only preparation to setup SubmissionUpload
@@ -939,7 +939,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         'gfbio_submissions.brokerage.tasks.apply_timebased_task_retry_policy')
     def test_attach_primarydatafile_without_ticket(self, mock):
         submission = Submission.objects.last()
-        attach_file_to_helpdesk_ticket_task.apply_async(
+        attach_to_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
             }
