@@ -6,7 +6,6 @@ import celery
 from celery import Task
 from django.core.mail import mail_admins
 from django.db import transaction
-from django.db.models import Q
 from django.db.utils import IntegrityError
 from django.utils.encoding import smart_text
 from requests import ConnectionError, Response
@@ -29,7 +28,7 @@ from .utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data, send_submission_to_ena, \
     parse_ena_submission_response
 from .utils.gfbio import \
-    gfbio_helpdesk_comment_on_ticket, gfbio_get_user_by_id
+    gfbio_get_user_by_id
 from .utils.pangaea import request_pangaea_login_token, \
     parse_pangaea_login_token_response, pull_pangaea_dois
 from .utils.submission_transfer import SubmissionTransferHandler
@@ -1208,7 +1207,8 @@ def delete_submission_issue_attachment_task(kwargs=None, submission_id=None,
             '| attachment_id={1}'.format(submission_id, attachment_id)
     )
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-        submission_id=submission_id, task=delete_submission_issue_attachment_task,
+        submission_id=submission_id,
+        task=delete_submission_issue_attachment_task,
         get_closed_submission=True)
     if submission is not None and site_configuration is not None and attachment_id is not None:
         # TODO: temporary solution until workflow is fix,
