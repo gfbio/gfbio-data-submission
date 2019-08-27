@@ -26,7 +26,7 @@ from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, 
     create_broker_objects_from_submission_data_task, check_on_hold_status_task, \
     get_user_email_task, create_submission_issue_task, \
     add_accession_to_issue_task, attach_file_to_helpdesk_ticket_task, \
-    add_pangaealink_to_helpdesk_ticket_task, \
+    add_pangaealink_to_submission_issue_task, \
     create_pangaea_issue_task, attach_to_pangaea_issue_task, \
     add_accession_to_pangaea_issue_task, check_for_pangaea_doi_task, \
     trigger_submission_transfer, update_helpdesk_ticket_task, \
@@ -950,6 +950,12 @@ class TestGFBioHelpDeskTasks(TestTasks):
     def test_add_pangaealink_to_helpdesk_ticket_task_success(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
+
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
         url = '{0}{1}/{2}/{3}'.format(
             site_config.helpdesk_server.url,
             HELPDESK_API_SUB_URL,
@@ -959,7 +965,16 @@ class TestGFBioHelpDeskTasks(TestTasks):
         responses.add(responses.POST, url,
                       json={'bla': 'blubb'},
                       status=200)
-        result = add_pangaealink_to_helpdesk_ticket_task.apply_async(
+
+        # url = '{0}{1}/{2}/{3}'.format(
+        #     site_config.helpdesk_server.url,
+        #     HELPDESK_API_SUB_URL,
+        #     'FAKE_KEY',
+        #     HELPDESK_COMMENT_SUB_URL,
+        # )
+        # responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
+
+        result = add_pangaealink_to_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.id,
             }
@@ -970,6 +985,11 @@ class TestGFBioHelpDeskTasks(TestTasks):
     def test_add_pangaealink_to_helpdesk_ticket_task_client_error(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
         url = '{0}{1}/{2}/{3}'.format(
             site_config.helpdesk_server.url,
             HELPDESK_API_SUB_URL,
@@ -977,7 +997,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
             HELPDESK_COMMENT_SUB_URL,
         )
         responses.add(responses.POST, url, status=400, json={'bla': 'blubb'})
-        result = add_pangaealink_to_helpdesk_ticket_task.apply_async(
+        result = add_pangaealink_to_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
             }
@@ -989,6 +1009,11 @@ class TestGFBioHelpDeskTasks(TestTasks):
     def test_add_pangaealink_to_helpdesk_ticket_task_server_error(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
         url = '{0}{1}/{2}/{3}'.format(
             site_config.helpdesk_server.url,
             HELPDESK_API_SUB_URL,
@@ -996,7 +1021,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
             HELPDESK_COMMENT_SUB_URL,
         )
         responses.add(responses.POST, url, status=500, json={'bla': 'blubb'})
-        result = add_pangaealink_to_helpdesk_ticket_task.apply_async(
+        result = add_pangaealink_to_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
             }

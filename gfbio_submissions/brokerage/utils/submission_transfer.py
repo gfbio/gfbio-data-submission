@@ -215,7 +215,7 @@ class SubmissionTransferHandler(object):
             create_pangaea_issue_task, \
             attach_to_pangaea_issue_task, \
             add_accession_to_pangaea_issue_task, \
-            add_pangaealink_to_helpdesk_ticket_task
+            add_pangaealink_to_submission_issue_task
 
         chain = transfer_data_to_ena_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
@@ -231,7 +231,7 @@ class SubmissionTransferHandler(object):
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
                 | add_accession_to_pangaea_issue_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
-                | add_pangaealink_to_helpdesk_ticket_task.s(
+                | add_pangaealink_to_submission_issue_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
         chain()
 

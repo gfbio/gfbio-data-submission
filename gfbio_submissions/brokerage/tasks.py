@@ -33,9 +33,7 @@ from .utils.gfbio import \
     gfbio_helpdesk_comment_on_ticket, gfbio_get_user_by_id, \
     gfbio_helpdesk_attach_file_to_ticket
 from .utils.pangaea import request_pangaea_login_token, \
-    parse_pangaea_login_token_response, attach_file_to_pangaea_ticket, \
-    get_csv_from_samples, \
-    comment_on_pangaea_ticket, pull_pangaea_dois
+    parse_pangaea_login_token_response, pull_pangaea_dois
 from .utils.submission_transfer import SubmissionTransferHandler
 
 logger = logging.getLogger(__name__)
@@ -998,7 +996,7 @@ def add_accession_to_issue_task(prev_task_result=None, submission_id=None,
         #   tecnically len can only be 1, due to model.save ...
         # existing_tickets = submission.additionalreference_set.filter(
         #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
-        reference = submission.get_primary_helpdesk_references()
+        reference = submission.get_primary_helpdesk_reference()
 
         # TODO: previous task is process_ena_response_task, if ena responded successfully
         #  and delievered accesstions, theses are appended as persistentidentifiers
@@ -1200,10 +1198,10 @@ def generic_comment_helpdesk_ticket_task(prev_task_result=None,
 #      https://github.com/celery/celery/issues/4898
 # TODO: reminder: always_eager = True for local settings
 # @celery.task(bind=True, max_retries=SUBMISSION_MAX_RETRIES,
-#              name='tasks.add_pangaealink_to_helpdesk_ticket_task',
+#              name='tasks.add_pangaealink_to_submission_issue_task',
 #              base=SubmissionTask
 #              )
-# def add_pangaealink_to_helpdesk_ticket_task(self, prev_task_result=None,
+# def add_pangaealink_to_submission_issue_task(self, prev_task_result=None,
 #                                             submission_id=None):
 
 #
@@ -1218,7 +1216,7 @@ def generic_comment_helpdesk_ticket_task(prev_task_result=None,
 @celery.task(
     base=SubmissionTask,
     bind=True,
-    name='tasks.add_pangaealink_to_helpdesk_ticket_task',
+    name='tasks.add_pangaealink_to_submission_issue_task',
 
     #     # approach 2: https://coderbook.com/@marcus/how-to-automatically-retry-failed-tasks-with-celery/
     max_retries=SUBMISSION_MAX_RETRIES,
@@ -1237,81 +1235,105 @@ def generic_comment_helpdesk_ticket_task(prev_task_result=None,
 )
 # current:
 # @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
-#              name='tasks.add_pangaealink_to_helpdesk_ticket_task',
+#              name='tasks.add_pangaealink_to_submission_issue_task',
 #              base=SubmissionTask
 #              )
-def add_pangaealink_to_helpdesk_ticket_task(
+def add_pangaealink_to_submission_issue_task(
         self,  # approach 1, 2
         prev_task_result=None,
         submission_id=None):
+    print('\n\nprev res: ', prev_task_result, ' subm. id.: ', submission_id)
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id,
-        task=add_pangaealink_to_helpdesk_ticket_task,
+        task=add_pangaealink_to_submission_issue_task,
         get_closed_submission=True
     )
     if submission is not None and site_configuration is not None:
+        helpdesk_reference = submission.get_primary_helpdesk_reference()
+        pangaea_reference = submission.get_primary_pangaea_reference()
 
-        existing_tickets = submission.additionalreference_set.filter(
-            Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
+        if helpdesk_reference and pangaea_reference:
 
-        pangaea_tickets = submission.additionalreference_set.filter(
-            Q(type=AdditionalReference.PANGAEA_JIRA_TICKET) & Q(primary=True))
+            jira_client = JiraClient(
+                resource=site_configuration.helpdesk_server)
 
-        latest_ticket = pangaea_tickets.last()
-
-        comment_body = '[Pangaea Ticket {1}|{0}{1}]'.format(
-            PANGAEA_ISSUE_VIEW_URL,
-            latest_ticket.reference_key)
-
-        if len(existing_tickets):
-            response = gfbio_helpdesk_comment_on_ticket(
-                site_config=site_configuration,
-                ticket_key=existing_tickets.first().reference_key,
-                comment_body=comment_body,
-                submission=submission,
+            jira_client.add_comment(
+                key_or_issue=helpdesk_reference.reference_key,
+                text='[Pangaea Ticket {1}|{0}{1}]'.format(
+                    PANGAEA_ISSUE_VIEW_URL,
+                    pangaea_reference.reference_key)
             )
+            if jira_client.error:
+                apply_default_task_retry_policy(
+                    jira_client.error.response,
+                    add_pangaealink_to_submission_issue_task,
+                    submission
+                )
 
-            # refactored approach 2, similar to actual retry policy
-            # new_retry(response, self)
+        # existing_tickets = submission.additionalreference_set.filter(
+        #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
+        #
+        # pangaea_tickets = submission.additionalreference_set.filter(
+        #     Q(type=AdditionalReference.PANGAEA_JIRA_TICKET) & Q(primary=True))
+        #
+        # latest_ticket = pangaea_tickets.last()
+        #
+        # comment_body = '[Pangaea Ticket {1}|{0}{1}]'.format(
+        #     PANGAEA_ISSUE_VIEW_URL,
+        #     latest_ticket.reference_key)
+        #
+        # if len(existing_tickets):
+        #     response = gfbio_helpdesk_comment_on_ticket(
+        #         site_config=site_configuration,
+        #         ticket_key=existing_tickets.first().reference_key,
+        #         comment_body=comment_body,
+        #         submission=submission,
+        #     )
+        #
+        #############################################################
+        # refactored approach 2, similar to actual retry policy
+        # new_retry(response, self)
 
-            # print('\n\nRESPONSE ', response, ' ', response.content, ' retries ',
-            #       self.request.retries
-            #       )
+        # print('\n\nRESPONSE ', response, ' ', response.content, ' retries ',
+        #       self.request.retries
+        #       )
 
-            # if not response.ok:
-            #     # approach 3
-            #     # if 500 <= response.status_code < 600:
-            #     #     # as noted in decorator for retry
-            #     #     raise SubmissionTransferHandler.TransferServerError
-            #     #
-            #     #     # not working this way: no retry, because of dec. will causer exception when not in 'throws', else accepted error
-            #     #     # raise SubmissionTransferHandler.TransferClientError
-            #
-            #     # approach 2 thought further
-            #     # try:
-            #         # do not throw retry exception
-            #     try:
-            #         self.retry(countdown=3 ** self.request.retries, throw=False)
-            #     except MaxRetriesExceededError as e:
-            #         print('MAX RETRIES ', e)
-            # self.retry(
-            #     countdown=(self.request.retries + 1) * SUBMISSION_RETRY_DELAY,
-            #     throw=False
-            # )
-            # except MaxRetriesExceededError as e:
-            #     print('MAX RETRIES ', e)
-            #     return TaskProgressReport.CANCELLED
+        # if not response.ok:
+        #     # approach 3
+        #     # if 500 <= response.status_code < 600:
+        #     #     # as noted in decorator for retry
+        #     #     raise SubmissionTransferHandler.TransferServerError
+        #     #
+        #     #     # not working this way: no retry, because of dec. will causer exception when not in 'throws', else accepted error
+        #     #     # raise SubmissionTransferHandler.TransferClientError
+        #
+        #     # approach 2 thought further
+        #     # try:
+        #         # do not throw retry exception
+        #     try:
+        #         self.retry(countdown=3 ** self.request.retries, throw=False)
+        #     except MaxRetriesExceededError as e:
+        #         print('MAX RETRIES ', e)
+        # self.retry(
+        #     countdown=(self.request.retries + 1) * SUBMISSION_RETRY_DELAY,
+        #     throw=False
+        # )
+        # except MaxRetriesExceededError as e:
+        #     print('MAX RETRIES ', e)
+        #     return TaskProgressReport.CANCELLED
 
-            # approach 1, a bit further
-            # if self.request.retries == SUBMISSION_MAX_RETRIES:
-            #     return TaskProgressReport.CANCELLED
-            # raise SubmissionTransferHandler.TransferClientError(
-            #     f'gfbio_helpdesk_comment_on_ticket returned unexpected '
-            #     f'response code: {response.status_code}')
+        # approach 1, a bit further
+        # if self.request.retries == SUBMISSION_MAX_RETRIES:
+        #     return TaskProgressReport.CANCELLED
+        # raise SubmissionTransferHandler.TransferClientError(
+        #     f'gfbio_helpdesk_comment_on_ticket returned unexpected '
+        #     f'response code: {response.status_code}')
+        ###########################################
 
-            apply_default_task_retry_policy(response,
-                                            add_pangaealink_to_helpdesk_ticket_task,
-                                            submission)
-            return True
+        # apply_default_task_retry_policy(response,
+        #                                 add_pangaealink_to_submission_issue_task,
+        #                                 submission)
+        return True
+
     else:
         return TaskProgressReport.CANCELLED

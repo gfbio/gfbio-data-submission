@@ -358,18 +358,32 @@ class Submission(models.Model):
                      self.brokerobject_set.filter(type='run')]
         }
 
+
+    # TODO: check if filter for primary makes sense. will deliver only on per submission
     def get_primary_pangaea_references(self):
         return self.additionalreference_set.filter(
             Q(type=AdditionalReference.PANGAEA_JIRA_TICKET) & Q(primary=True))
 
-    def get_primary_helpdesk_references(self):
+    def get_primary_reference(self, reference_type):
         issues = self.additionalreference_set.filter(
-            Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True)
-        )
+            Q(type=reference_type) & Q(primary=True))
         if len(issues):
             return issues.first()
         else:
             return None
+
+    def get_primary_helpdesk_reference(self):
+        return self.get_primary_reference(AdditionalReference.GFBIO_HELPDESK_TICKET)
+        # issues = self.additionalreference_set.filter(
+        #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True)
+        # )
+        # if len(issues):
+        #     return issues.first()
+        # else:
+        #     return None
+
+    def get_primary_pangaea_reference(self):
+        return self.get_primary_reference(AdditionalReference.PANGAEA_JIRA_TICKET)
 
     def __str__(self):
         return '{}_{}'.format(self.pk, self.broker_submission_id)
