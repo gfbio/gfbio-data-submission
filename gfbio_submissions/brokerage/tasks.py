@@ -1208,7 +1208,7 @@ def delete_submission_issue_attachment_task(kwargs=None, submission_id=None,
             '| attachment_id={1}'.format(submission_id, attachment_id)
     )
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-        submission_id=submission_id, task=attach_to_submission_issue_task,
+        submission_id=submission_id, task=delete_submission_issue_attachment_task,
         get_closed_submission=True)
     if submission is not None and site_configuration is not None and attachment_id is not None:
         # TODO: temporary solution until workflow is fix,
@@ -1250,7 +1250,7 @@ def add_pangaea_doi_task(prev_task_result=None,
                          pangaea_doi=None, submission_id=None):
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id,
-        task=add_accession_to_submission_issue_task,
+        task=add_pangaea_doi_task,
         get_closed_submission=True)
     if submission is not None and site_configuration is not None:
 
