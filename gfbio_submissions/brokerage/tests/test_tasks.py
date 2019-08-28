@@ -917,6 +917,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
     def test_delete_attachment_task(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
+
         url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
         responses.add(responses.POST, url, json={}, status=200)
@@ -925,11 +926,18 @@ class TestGFBioHelpDeskTasks(TestTasks):
             '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
             status=200,
         )
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/FAKE_KEY'.format(
+                site_config.helpdesk_server.url),
+            json=_get_jira_issue_response()
+            # json={}
+        )
         responses.add(responses.POST,
                       '{0}{1}/{2}/{3}'.format(
                           site_config.helpdesk_server.url,
                           HELPDESK_API_SUB_URL,
-                          'FAKE_KEY',
+                          'SAND-1661',
                           HELPDESK_ATTACHMENT_SUB_URL,
                       ),
                       json=_get_jira_attach_response(),
