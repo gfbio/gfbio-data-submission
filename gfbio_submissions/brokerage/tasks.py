@@ -1123,11 +1123,12 @@ def attach_to_submission_issue_task(kwargs=None, submission_id=None,
                 # # print(mem_file.getvalue())
                 #
                 #
-                jira_client.add_attachment(
+                attachment = jira_client.add_attachment(
                     key=reference.reference_key,
                     file=submission_upload.file,
-                    file_name='submission_upload'
+                    # file_name='submission_upload'
                 )
+                print('ATTAVCHJ ', attachment.id)
                 # mem_file.close()
 
                 # response = gfbio_helpdesk_attach_file_to_ticket(
@@ -1149,6 +1150,9 @@ def attach_to_submission_issue_task(kwargs=None, submission_id=None,
                         attach_to_submission_issue_task,
                         submission
                     )
+                else:
+                    submission_upload.attachment_id = attachment.id
+                    submission_upload.save(ignore_attach_to_ticket=True)
 
                 # TODO: there may be a more elegant solution for checking
                 # TODO: extract to method

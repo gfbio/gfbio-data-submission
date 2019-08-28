@@ -34,6 +34,7 @@ class JiraClient(object):
         self.comment = None
         self.error = None
 
+
     def _get_connection(self, max_retries=0, get_server_info=False, options={}):
         options.update({
             'server': self.resource.url
@@ -118,12 +119,12 @@ class JiraClient(object):
         #     print("add_attachment Unexpected error:", sys.exc_info()[0], " -- >  ", t)
         try:
             if file_name:
-                self.jira.add_attachment(issue=self.issue.key, attachment=file,
+                return self.jira.add_attachment(issue=self.issue.key, attachment=file,
                                          filename=file_name)
             else:
                 print('Try attach .... ')
                 print(file)
-                self.jira.add_attachment(issue=self.issue, attachment=file)
+                return self.jira.add_attachment(issue=self.issue.key, attachment=file)
         except JIRAError as e:
             logger.warning(
                 'JiraClient | add_attachment | JIRAError {0} | {1}'.format(e,
