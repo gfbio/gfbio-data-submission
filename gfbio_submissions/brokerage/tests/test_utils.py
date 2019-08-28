@@ -10,6 +10,7 @@ from unittest import skip
 from unittest.mock import patch
 from uuid import uuid4
 
+import jira
 import requests
 import responses
 from django.contrib.auth.models import Permission
@@ -23,8 +24,7 @@ from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
     PANGAEA_ISSUE_BASE_URL, HELPDESK_API_SUB_URL, HELPDESK_COMMENT_SUB_URL, \
-    HELPDESK_ATTACHMENT_SUB_URL, DEFAULT_ENA_CENTER_NAME, \
-    HELPDESK_API_ATTACHMENT_URL
+    HELPDESK_ATTACHMENT_SUB_URL, DEFAULT_ENA_CENTER_NAME
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
     ResourceCredential, SiteConfiguration, RequestLog, AdditionalReference, \
     TaskProgressReport, SubmissionUpload
@@ -34,15 +34,12 @@ from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_pangaea_soap_body, _get_pangaea_soap_response, \
     _get_pangaea_attach_response, _get_test_data_dir_path, \
     _get_pangaea_comment_response, \
-    _get_pangaea_ticket_response
+    _get_pangaea_ticket_response, _get_jira_issue_response
 from gfbio_submissions.brokerage.utils import csv
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
     send_submission_to_ena, download_submitted_run_files_to_stringIO
 from gfbio_submissions.brokerage.utils.gfbio import \
-    gfbio_get_user_by_id, \
-    gfbio_helpdesk_create_ticket, gfbio_helpdesk_comment_on_ticket, \
-    gfbio_prepare_create_helpdesk_payload, \
-    gfbio_update_helpdesk_ticket, gfbio_helpdesk_delete_attachment
+    gfbio_get_user_by_id, gfbio_prepare_create_helpdesk_payload
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.brokerage.utils.pangaea import \
     request_pangaea_login_token, parse_pangaea_login_token_response, \
@@ -1037,6 +1034,202 @@ class TestGFBioJira(TestCase):
 
 class TestJiraClient(TestCase):
 
+    @classmethod
+    def setUpTestData(cls):
+        user = User.objects.create_user(
+            username='horst', email='horst@horst.de', password='password')
+        permissions = Permission.objects.filter(
+            content_type__app_label='brokerage',
+            codename__endswith='upload')
+        user.user_permissions.add(*permissions)
+        token = Token.objects.create(user=user)
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        cls.api_client = client
+        resource_cred = ResourceCredential.objects.create(
+            title='Resource Title',
+            url='https://www.example.com',
+            authentication_string='letMeIn'
+        )
+        token_resource_cred = ResourceCredential.objects.create(
+            title='Token Resource',
+            url='https://www.google.com',
+            authentication_string='letMeInPlease'
+        )
+        cls.site_config = SiteConfiguration.objects.create(
+            title='default',
+            site=None,
+            ena_server=resource_cred,
+            pangaea_token_server=token_resource_cred,
+            pangaea_jira_server=resource_cred,
+            gfbio_server=resource_cred,
+            helpdesk_server=resource_cred,
+            comment='Default configuration',
+            contact='kevin@horstmeier.de'
+        )
+        submission = SubmissionTest._create_submission_via_serializer()
+        submission.additionalreference_set.create(
+            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+            reference_key='SAND-1661',
+            primary=True
+        )
+        cls.issue_json = _get_jira_issue_response()
+        cls.pangaea_issue_json = _get_pangaea_ticket_response()
+        cls.minimal_issue_fields = {'project': {
+            'key': cls.site_config.jira_project_key
+        },
+            'summary': 'sum41',
+            'description': 'desc',
+            'issuetype': {
+                'name': 'Data Submission'
+            }
+        }
+
+    def _add_jira_field_response(self, status_code=200, body=''):
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(self.site_config.helpdesk_server.url),
+            status=status_code,
+            body=body
+        )
+
+    def _add_jira_issue_response(self, status_code=200, json_content={}):
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/SAND-1661'.format(
+                self.site_config.helpdesk_server.url),
+            status=status_code,
+            json=json_content,
+        )
+
+    def _add_create_ticket_responses(self, status_code=200, json_content={}):
+        self._add_jira_field_response()
+        responses.add(
+            responses.POST,
+            '{0}{1}'.format(
+                self.site_config.helpdesk_server.url,
+                HELPDESK_API_SUB_URL
+            ),
+            status=status_code,
+            json=json_content,
+        )
+        self._add_jira_issue_response(json_content=self.issue_json)
+
+    def _add_get_ticket_responses(self, status_code=200, json_content={}):
+        self._add_jira_field_response()
+        responses.add(
+            responses.POST,
+            '{0}{1}'.format(
+                self.site_config.helpdesk_server.url,
+                HELPDESK_API_SUB_URL
+            ),
+            status=200,
+            json=self.issue_json,
+        )
+        self._add_jira_issue_response(status_code=status_code, json_content=json_content)
+
+    def _add_default_pangaea_responses(self):
+        responses.add(
+            responses.POST,
+            self.site_config.pangaea_token_server.url,
+            body=_get_pangaea_soap_response(),
+            status=200)
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(
+                self.site_config.pangaea_jira_server.url),
+            status=200,
+        )
+
+    # @classmethod
+    # def _create_test_data(cls, path, delete=True):
+    #     if delete:
+    #         cls._delete_test_data()
+    #     f = open(path, 'w')
+    #     f.write('test123\n')
+    #     f.close()
+    #     f = open(path, 'rb')
+    #     return {
+    #         'file': f,
+    #     }
+    #
+    # @staticmethod
+    # def _delete_test_data():
+    #     SubmissionUpload.objects.all().delete()
+
+    @responses.activate
+    def test_instance(self):
+        self._add_jira_field_response()
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        self.assertIsInstance(jira_client.jira, jira.client.JIRA)
+
+    @responses.activate
+    def test_pangaea_instance(self):
+        self._add_default_pangaea_responses()
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server,
+                                 token_resource=self.site_config.pangaea_token_server)
+        self.assertIsInstance(jira_client.jira, jira.client.JIRA)
+
+    @responses.activate
+    def test_client_connection_error(self):
+        self._add_jira_field_response(status_code=400, body='client_error')
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        self.assertIsNone(jira_client.jira)
+
+    @responses.activate
+    def test_server_connection_error(self):
+        self._add_jira_field_response(status_code=500, body='server_error')
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        self.assertIsNone(jira_client.jira)
+
+    @responses.activate
+    def test_create_issue(self):
+        self._add_create_ticket_responses(json_content=self.issue_json)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        jira_client.create_issue(fields=self.minimal_issue_fields)
+        self.assertIsNone(jira_client.error)
+        self.assertIsNotNone(jira_client.issue)
+
+    @responses.activate
+    def test_create_issue_client_error(self):
+        self._add_create_ticket_responses(status_code=400,
+                                          json_content={'error': 'client'})
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        jira_client.create_issue(fields=self.minimal_issue_fields)
+        self.assertIsNotNone(jira_client.error)
+        self.assertIsNone(jira_client.issue)
+
+    @responses.activate
+    def test_create_issue_client_error(self):
+        self._add_create_ticket_responses(status_code=500,
+                                          json_content={'error': 'server'})
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        jira_client.create_issue(fields=self.minimal_issue_fields)
+        self.assertIsNotNone(jira_client.error)
+        self.assertIsNone(jira_client.issue)
+
+    @responses.activate
+    def test_get_issue(self):
+        self._add_get_ticket_responses(json_content=self.issue_json)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        jira_client.create_issue(fields=self.minimal_issue_fields)
+        jira_client.get_issue('SAND-1661')
+        self.assertIsNone(jira_client.error)
+        self.assertIsNotNone(jira_client.issue)
+
+    @responses.activate
+    def test_get_issue_not_found(self):
+        self._add_get_ticket_responses(json_content=self.issue_json)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        jira_client.create_issue(fields=self.minimal_issue_fields)
+        jira_client.get_issue('SAND-xxx') # TODO: send requiest to server to get mock body
+        self.assertIsNone(jira_client.error)
+        self.assertIsNotNone(jira_client.issue)
+
+
+
+    # --------------------------------------------------------------------------
+
     @skip('Test against real server')
     def test_jira_client_with_pangaea(self):
         token_resource = ResourceCredential.objects.create(
@@ -1275,7 +1468,8 @@ class TestSubmissionTransferHandler(TestCase):
             'FAKE_KEY',
             HELPDESK_COMMENT_SUB_URL,
         )
-        responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
+        responses.add(responses.POST, url, json={'bla': 'blubb'},
+                      status=200)
         sth = SubmissionTransferHandler(submission_id=submission.pk,
                                         target_archive='ENA')
         tprs = TaskProgressReport.objects.exclude(
@@ -1303,7 +1497,8 @@ class TestSubmissionTransferHandler(TestCase):
             'FAKE_KEY',
             HELPDESK_COMMENT_SUB_URL,
         )
-        responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
+        responses.add(responses.POST, url, json={'bla': 'blubb'},
+                      status=200)
 
         responses.add(
             responses.POST,
@@ -1507,126 +1702,126 @@ class TestHelpDeskTicketMethods(TestCase):
         self.assertEqual('other',
                          payload['customfield_10229'][0]['value'])
 
-    @responses.activate
-    def test_create_helpdesk_ticket(self):
-        submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-        responses.add(
-            responses.POST,
-            '{0}{1}'.format(site_config.helpdesk_server.url,
-                            HELPDESK_API_SUB_URL),
-            json={'bla': 'blubb'},
-            status=200)
-        self.assertEqual(0, len(RequestLog.objects.all()))
-        data = gfbio_prepare_create_helpdesk_payload(
-            site_config=site_config,
-            submission=submission)
-        response = gfbio_helpdesk_create_ticket(
-            site_config=site_config,
-            submission=submission,
-            data=data,
-        )
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(1, len(RequestLog.objects.all()))
+    # @responses.activate
+    # def test_create_helpdesk_ticket(self):
+    #     submission = Submission.objects.first()
+    #     site_config = SiteConfiguration.objects.first()
+    #     responses.add(
+    #         responses.POST,
+    #         '{0}{1}'.format(site_config.helpdesk_server.url,
+    #                         HELPDESK_API_SUB_URL),
+    #         json={'bla': 'blubb'},
+    #         status=200)
+    #     self.assertEqual(0, len(RequestLog.objects.all()))
+    #     data = gfbio_prepare_create_helpdesk_payload(
+    #         site_config=site_config,
+    #         submission=submission)
+    #     response = gfbio_helpdesk_create_ticket(
+    #         site_config=site_config,
+    #         submission=submission,
+    #         data=data,
+    #     )
+    #     self.assertEqual(200, response.status_code)
+    #     self.assertEqual(1, len(RequestLog.objects.all()))
 
     # TODO: rename/refactor once generic ticket is implemented
     #   or refactoring of this method is finished
-    @responses.activate
-    def test_create_helpdesk_ticket_generic_target(self):
-        data = {}
-        with open(os.path.join(
-                _get_test_data_dir_path(),
-                'generic_data.json'), 'r') as data_file:
-            data = json.load(data_file)
-        serializer = SubmissionSerializer(data={
-            'target': 'GENERIC',
-            'release': True,
-            'data': data
-        })
-        valid = serializer.is_valid()
-        submission = serializer.save(site=User.objects.first())
-        site_config = SiteConfiguration.objects.first()
-        responses.add(
-            responses.POST,
-            '{0}{1}'.format(site_config.helpdesk_server.url,
-                            HELPDESK_API_SUB_URL),
-            json={'bla': 'blubb'},
-            status=200)
-        # datacenter jira user mappings
-        # https://gfbio.biowikifarm.net/internal/Data_Centers_Contact_Persons
-        data = gfbio_prepare_create_helpdesk_payload(
-            site_config=site_config,
-            submission=submission)
-        response = gfbio_helpdesk_create_ticket(
-            site_config=site_config,
-            submission=submission,
-            data=data,
-        )
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(1, len(RequestLog.objects.all()))
+    # @responses.activate
+    # def test_create_helpdesk_ticket_generic_target(self):
+    #     data = {}
+    #     with open(os.path.join(
+    #             _get_test_data_dir_path(),
+    #             'generic_data.json'), 'r') as data_file:
+    #         data = json.load(data_file)
+    #     serializer = SubmissionSerializer(data={
+    #         'target': 'GENERIC',
+    #         'release': True,
+    #         'data': data
+    #     })
+    #     valid = serializer.is_valid()
+    #     submission = serializer.save(site=User.objects.first())
+    #     site_config = SiteConfiguration.objects.first()
+    #     responses.add(
+    #         responses.POST,
+    #         '{0}{1}'.format(site_config.helpdesk_server.url,
+    #                         HELPDESK_API_SUB_URL),
+    #         json={'bla': 'blubb'},
+    #         status=200)
+    #     # datacenter jira user mappings
+    #     # https://gfbio.biowikifarm.net/internal/Data_Centers_Contact_Persons
+    #     data = gfbio_prepare_create_helpdesk_payload(
+    #         site_config=site_config,
+    #         submission=submission)
+    #     response = gfbio_helpdesk_create_ticket(
+    #         site_config=site_config,
+    #         submission=submission,
+    #         data=data,
+    #     )
+    #     self.assertEqual(200, response.status_code)
+    #     self.assertEqual(1, len(RequestLog.objects.all()))
 
-    @responses.activate
-    def test_create_helpdesk_ticket_unicode_text(self):
-        submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-        responses.add(
-            responses.POST,
-            '{0}{1}'.format(site_config.helpdesk_server.url,
-                            HELPDESK_API_SUB_URL),
-            json={'bla': 'blubb'},
-            status=200)
+    # @responses.activate
+    # def test_create_helpdesk_ticket_unicode_text(self):
+    #     submission = Submission.objects.first()
+    #     site_config = SiteConfiguration.objects.first()
+    #     responses.add(
+    #         responses.POST,
+    #         '{0}{1}'.format(site_config.helpdesk_server.url,
+    #                         HELPDESK_API_SUB_URL),
+    #         json={'bla': 'blubb'},
+    #         status=200)
+    #
+    #     self.assertEqual(0, len(RequestLog.objects.all()))
+    #     data = gfbio_prepare_create_helpdesk_payload(
+    #         site_config=site_config,
+    #         submission=submission)
+    #     response = gfbio_helpdesk_create_ticket(
+    #         site_config=site_config,
+    #         submission=submission,
+    #         data=data,
+    #     )
+    #     self.assertEqual(200, response.status_code)
+    #     self.assertEqual(1, len(RequestLog.objects.all()))
 
-        self.assertEqual(0, len(RequestLog.objects.all()))
-        data = gfbio_prepare_create_helpdesk_payload(
-            site_config=site_config,
-            submission=submission)
-        response = gfbio_helpdesk_create_ticket(
-            site_config=site_config,
-            submission=submission,
-            data=data,
-        )
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(1, len(RequestLog.objects.all()))
+    # @responses.activate
+    # def test_update_helpdesk_ticket(self):
+    #     submission = Submission.objects.first()
+    #     site_config = SiteConfiguration.objects.first()
+    #     url = '{0}{1}/{2}'.format(
+    #         site_config.helpdesk_server.url,
+    #         HELPDESK_API_SUB_URL,
+    #         'FAKE_KEY'
+    #     )
+    #     responses.add(responses.PUT, url, body='', status=204)
+    #     response = gfbio_update_helpdesk_ticket(
+    #         site_configuration=site_config,
+    #         submission=submission,
+    #         ticket_key='FAKE_KEY',
+    #         data={}
+    #     )
+    #     self.assertEqual(204, response.status_code)
+    #     self.assertEqual(1, len(RequestLog.objects.all()))
 
-    @responses.activate
-    def test_update_helpdesk_ticket(self):
-        submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-        url = '{0}{1}/{2}'.format(
-            site_config.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
-            'FAKE_KEY'
-        )
-        responses.add(responses.PUT, url, body='', status=204)
-        response = gfbio_update_helpdesk_ticket(
-            site_configuration=site_config,
-            submission=submission,
-            ticket_key='FAKE_KEY',
-            data={}
-        )
-        self.assertEqual(204, response.status_code)
-        self.assertEqual(1, len(RequestLog.objects.all()))
-
-    @responses.activate
-    def test_comment_on_helpdesk_ticket(self):
-        submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-        url = '{0}{1}/{2}/{3}'.format(
-            site_config.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
-            'FAKE_KEY',
-            HELPDESK_COMMENT_SUB_URL,
-        )
-        responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
-        self.assertEqual(0, len(RequestLog.objects.all()))
-        response = gfbio_helpdesk_comment_on_ticket(
-            site_config=site_config,
-            ticket_key='FAKE_KEY',
-            comment_body='body',
-            submission=submission
-        )
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(1, len(RequestLog.objects.all()))
+    # @responses.activate
+    # def test_comment_on_helpdesk_ticket(self):
+    #     submission = Submission.objects.first()
+    #     site_config = SiteConfiguration.objects.first()
+    #     url = '{0}{1}/{2}/{3}'.format(
+    #         site_config.helpdesk_server.url,
+    #         HELPDESK_API_SUB_URL,
+    #         'FAKE_KEY',
+    #         HELPDESK_COMMENT_SUB_URL,
+    #     )
+    #     responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
+    #     self.assertEqual(0, len(RequestLog.objects.all()))
+    #     response = gfbio_helpdesk_comment_on_ticket(
+    #         site_config=site_config,
+    #         ticket_key='FAKE_KEY',
+    #         comment_body='body',
+    #         submission=submission
+    #     )
+    #     self.assertEqual(200, response.status_code)
+    #     self.assertEqual(1, len(RequestLog.objects.all()))
 
     # @responses.activate
     # def test_attach_template_to_helpdesk_ticket(self):
@@ -1654,23 +1849,23 @@ class TestHelpDeskTicketMethods(TestCase):
     #     request_logs = RequestLog.objects.all()
     #     self.assertEqual(2, len(request_logs))
 
-    @responses.activate
-    def test_delete_attachment(self):
-        submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-        url = '{0}{1}/{2}'.format(
-            site_config.helpdesk_server.url,
-            HELPDESK_API_ATTACHMENT_URL,
-            4711)
-        responses.add(responses.DELETE, url, body=b'', status=204)
-        response = gfbio_helpdesk_delete_attachment(
-            site_config, 4711, submission
-        )
-        self.assertEqual(204, response.status_code)
-        self.assertEqual(b'', response.content)
-        rq = RequestLog.objects.first()
-        self.assertEqual(url, rq.url)
-        self.assertEqual(response.status_code, rq.response_status)
+    # @responses.activate
+    # def test_delete_attachment(self):
+    #     submission = Submission.objects.first()
+    #     site_config = SiteConfiguration.objects.first()
+    #     url = '{0}{1}/{2}'.format(
+    #         site_config.helpdesk_server.url,
+    #         HELPDESK_API_ATTACHMENT_URL,
+    #         4711)
+    #     responses.add(responses.DELETE, url, body=b'', status=204)
+    #     response = gfbio_helpdesk_delete_attachment(
+    #         site_config, 4711, submission
+    #     )
+    #     self.assertEqual(204, response.status_code)
+    #     self.assertEqual(b'', response.content)
+    #     rq = RequestLog.objects.first()
+    #     self.assertEqual(url, rq.url)
+    #     self.assertEqual(response.status_code, rq.response_status)
 
     # @responses.activate
     # def test_attach_multiple_files_to_helpdesk_ticket(self):

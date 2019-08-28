@@ -4,7 +4,6 @@ import logging
 from io import StringIO
 from json import JSONDecodeError
 
-import sys
 from jira import JIRA, JIRAError
 from requests import ConnectionError
 
@@ -34,7 +33,6 @@ class JiraClient(object):
         self.comment = None
         self.error = None
 
-
     def _get_connection(self, max_retries=0, get_server_info=False, options={}):
         options.update({
             'server': self.resource.url
@@ -47,9 +45,12 @@ class JiraClient(object):
                 get_server_info=get_server_info,
             )
         except ConnectionError as ce:
-            logger.error('JiraClient | _get_connection | ConnectionError ', ce)
+            logger.error(
+                'JiraClient | _get_connection | ConnectionError | {0}'.format(
+                    ce))
         except JIRAError as je:
-            logger.error('JiraClient | _get_connection | JIRAError ', je)
+            logger.error(
+                'JiraClient | _get_connection | JIRAError | {0}'.format(je))
         return None
 
     def _get_pangaea_token(self):
@@ -72,21 +73,15 @@ class JiraClient(object):
             self.error = e
 
     def get_issue(self, key=''):
-        print('GET_ISSUE ', key)
         try:
-            print('try')
             self.issue = self.jira.issue(key)
             self.error = None
-            print('end of try')
         except JIRAError as e:
             logger.warning(
                 'JiraClient | get_issue | JIRAError {0} | {1}'.format(e,
                                                                       e.text))
             self.issue = None
             self.error = e
-        except:
-            print("Unexpected error:", sys.exc_info()[0])
-        print('leave get')
 
     def update_issue(self, key='', fields={}):
         self.get_issue(key)
@@ -112,19 +107,14 @@ class JiraClient(object):
     # file-like, string-path, stringIO (requires filename)
     def add_attachment(self, key, file, file_name=None):
         self.get_issue(key)
-        # print('KEY ', key)
-        # try:
-        #     print('ISSUE ', self.issue)
-        # except TypeError as t:
-        #     print("add_attachment Unexpected error:", sys.exc_info()[0], " -- >  ", t)
         try:
             if file_name:
-                return self.jira.add_attachment(issue=self.issue.key, attachment=file,
-                                         filename=file_name)
+                return self.jira.add_attachment(issue=self.issue.key,
+                                                attachment=file,
+                                                filename=file_name)
             else:
-                print('Try attach .... ')
-                print(file)
-                return self.jira.add_attachment(issue=self.issue.key, attachment=file)
+                return self.jira.add_attachment(issue=self.issue.key,
+                                                attachment=file)
         except JIRAError as e:
             logger.warning(
                 'JiraClient | add_attachment | JIRAError {0} | {1}'.format(e,
@@ -138,9 +128,8 @@ class JiraClient(object):
         except JIRAError as e:
             logger.warning(
                 'JiraClient | delete_attachment | JIRAError {0} | {1}'.format(e,
-                                                                           e.text))
+                                                                              e.text))
             self.error = e
-
 
     # specialized methods ------------------------------------------------------
     # TODO: ADD RequestLogs or aquivalent ...

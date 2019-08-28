@@ -14,8 +14,6 @@ from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA
 from gfbio_submissions.brokerage.models import SubmissionUpload
 from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content
-from gfbio_submissions.brokerage.utils.gfbio import \
-    gfbio_helpdesk_attach_file_to_ticket
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.users.models import User
 from .configuration.settings import BASE_HOST_NAME, \
@@ -1077,8 +1075,6 @@ def attach_to_submission_issue_task(kwargs=None, submission_id=None,
 
         reference = submission.get_primary_helpdesk_reference()
 
-        print('REFERENCE ', reference)
-
         # existing_tickets = submission.additionalreference_set.filter(
         #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
         # logger.info(
@@ -1128,7 +1124,6 @@ def attach_to_submission_issue_task(kwargs=None, submission_id=None,
                     file=submission_upload.file,
                     # file_name='submission_upload'
                 )
-                print('ATTAVCHJ ', attachment.id)
                 # mem_file.close()
 
                 # response = gfbio_helpdesk_attach_file_to_ticket(

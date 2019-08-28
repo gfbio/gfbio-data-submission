@@ -20,59 +20,60 @@ logger = logging.getLogger(__name__)
 
 
 # TODO: this is used nowhere, is implemenation still correct
-def gfbio_create_submission_registry_entries(submission, site_configuration):
-    try:
-        submitting_user = int(submission.submitting_user)
-    except ValueError as e:
-        logger.error(
-            msg='gfbio_create_submission_registry_entries ValueError: {}'.format(
-                e.message))
-        submitting_user = -1
-    data = json.dumps([
-        {
-            'userid': submitting_user,
-            'researchobjectid': bo.site_object_id,
-            'researchobjectversion': 1,
-            'archive': 'PANGAEA',
-            'brokersubmissionid': '{}'.format(
-                submission.broker_submission_id)
-        }
-        for bo in submission.brokerobject_set.all()]).replace(
-        '\\"', '\'')
-    # http://gfbio-pub2.inf-bb.uni-jena.de:8080
-    url = '{0}/' \
-          'api/jsonws/GFBioProject-portlet.submission/create-submision/' \
-          'request-json/{1}'.format(site_configuration.gfbio_server.url, data)
+# def gfbio_create_submission_registry_entries(submission, site_configuration):
+#     try:
+#         submitting_user = int(submission.submitting_user)
+#     except ValueError as e:
+#         logger.error(
+#             msg='gfbio_create_submission_registry_entries ValueError: {}'.format(
+#                 e.message))
+#         submitting_user = -1
+#     data = json.dumps([
+#         {
+#             'userid': submitting_user,
+#             'researchobjectid': bo.site_object_id,
+#             'researchobjectversion': 1,
+#             'archive': 'PANGAEA',
+#             'brokersubmissionid': '{}'.format(
+#                 submission.broker_submission_id)
+#         }
+#         for bo in submission.brokerobject_set.all()]).replace(
+#         '\\"', '\'')
+#     # http://gfbio-pub2.inf-bb.uni-jena.de:8080
+#     url = '{0}/' \
+#           'api/jsonws/GFBioProject-portlet.submission/create-submision/' \
+#           'request-json/{1}'.format(site_configuration.gfbio_server.url, data)
+#
+#     headers = {
+#         'Accept': 'application/json'
+#     }
+#     # requestlog: ok
+#     response = requests.post(
+#         url=url,
+#         auth=(site_configuration.gfbio_server.username,
+#               site_configuration.gfbio_server.password),
+#         headers=headers,
+#     )
+#     with transaction.atomic():
+#         # prevent cyclic dependencies
+#         from gfbio_submissions.brokerage.models import RequestLog
+#         request_log = RequestLog.objects.create(
+#             type=RequestLog.OUTGOING,
+#             url=url,
+#             site_user=submission.submitting_user if submission.submitting_user is not None else '',
+#             submission_id=submission.broker_submission_id,
+#             response_status=response.status_code,
+#             response_content=response.content,
+#             triggered_by=None,
+#             request_details={
+#                 'request_headers': str(headers),
+#             }
+#         )
+#
+#     return response
 
-    headers = {
-        'Accept': 'application/json'
-    }
-    # requestlog: ok
-    response = requests.post(
-        url=url,
-        auth=(site_configuration.gfbio_server.username,
-              site_configuration.gfbio_server.password),
-        headers=headers,
-    )
-    with transaction.atomic():
-        # prevent cyclic dependencies
-        from gfbio_submissions.brokerage.models import RequestLog
-        request_log = RequestLog.objects.create(
-            type=RequestLog.OUTGOING,
-            url=url,
-            site_user=submission.submitting_user if submission.submitting_user is not None else '',
-            submission_id=submission.broker_submission_id,
-            response_status=response.status_code,
-            response_content=response.content,
-            triggered_by=None,
-            request_details={
-                'request_headers': str(headers),
-            }
-        )
 
-    return response
-
-
+# TODO: remove !
 def gfbio_get_user_by_id(user_id, site_configuration, submission):
     try:
         id = int(user_id)
@@ -214,166 +215,166 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
     return mutual_data
 
 
-def gfbio_helpdesk_create_ticket(site_config, submission, data={}):
-    url = '{0}{1}'.format(
-        site_config.helpdesk_server.url,
-        HELPDESK_API_SUB_URL
-    )
-    response = requests.post(
-        url=url,
-        auth=(site_config.helpdesk_server.username,
-              site_config.helpdesk_server.password),
-        headers={'Content-Type': 'application/json'},
-        data=json.dumps(data)
-    )
-    with transaction.atomic():
-        details = response.headers or ''
-        RequestLog.objects.create(
-            type=RequestLog.OUTGOING,
-            url=url,
-            data=data,
-            submission_id=submission.broker_submission_id,
-            response_status=response.status_code,
-            response_content=response.content,
-            request_details={
-                'response_headers': str(details)
-            }
-        )
-    return response
+# def gfbio_helpdesk_create_ticket(site_config, submission, data={}):
+#     url = '{0}{1}'.format(
+#         site_config.helpdesk_server.url,
+#         HELPDESK_API_SUB_URL
+#     )
+#     response = requests.post(
+#         url=url,
+#         auth=(site_config.helpdesk_server.username,
+#               site_config.helpdesk_server.password),
+#         headers={'Content-Type': 'application/json'},
+#         data=json.dumps(data)
+#     )
+#     with transaction.atomic():
+#         details = response.headers or ''
+#         RequestLog.objects.create(
+#             type=RequestLog.OUTGOING,
+#             url=url,
+#             data=data,
+#             submission_id=submission.broker_submission_id,
+#             response_status=response.status_code,
+#             response_content=response.content,
+#             request_details={
+#                 'response_headers': str(details)
+#             }
+#         )
+#     return response
 
 
-def gfbio_update_helpdesk_ticket(site_configuration, submission, ticket_key,
-                                 data={}):
-    url = '{0}{1}/{2}'.format(
-        site_configuration.helpdesk_server.url,
-        HELPDESK_API_SUB_URL,
-        ticket_key
-    )
-    response = requests.put(
-        url=url,
-        auth=(site_configuration.helpdesk_server.username,
-              site_configuration.helpdesk_server.password),
-        headers={'Content-Type': 'application/json'},
-        data=json.dumps(data)
-    )
-    with transaction.atomic():
-        details = response.headers or ''
-        RequestLog.objects.create(
-            type=RequestLog.OUTGOING,
-            url=url,
-            data=data,
-            submission_id=submission.broker_submission_id,
-            response_status=response.status_code,
-            response_content=response.content,
-            request_details={
-                'response_headers': str(details)
-            }
-        )
-    return response
+# def gfbio_update_helpdesk_ticket(site_configuration, submission, ticket_key,
+#                                  data={}):
+#     url = '{0}{1}/{2}'.format(
+#         site_configuration.helpdesk_server.url,
+#         HELPDESK_API_SUB_URL,
+#         ticket_key
+#     )
+#     response = requests.put(
+#         url=url,
+#         auth=(site_configuration.helpdesk_server.username,
+#               site_configuration.helpdesk_server.password),
+#         headers={'Content-Type': 'application/json'},
+#         data=json.dumps(data)
+#     )
+#     with transaction.atomic():
+#         details = response.headers or ''
+#         RequestLog.objects.create(
+#             type=RequestLog.OUTGOING,
+#             url=url,
+#             data=data,
+#             submission_id=submission.broker_submission_id,
+#             response_status=response.status_code,
+#             response_content=response.content,
+#             request_details={
+#                 'response_headers': str(details)
+#             }
+#         )
+#     return response
 
 
-def gfbio_helpdesk_comment_on_ticket(site_config, ticket_key, comment_body,
-                                     submission):
-    url = '{0}{1}/{2}/{3}'.format(
-        site_config.helpdesk_server.url,
-        HELPDESK_API_SUB_URL,
-        ticket_key,
-        HELPDESK_COMMENT_SUB_URL,
-    )
-    data = json.dumps({
-        'body': '{}'.format(comment_body)
-    })
-    # requestlog: ok
-    response = requests.post(
-        url=url,
-        auth=(site_config.helpdesk_server.username,
-              site_config.helpdesk_server.password),
-        headers={
-            'Content-Type': 'application/json'
-        },
-        data=data
-    )
-    with transaction.atomic():
-        details = response.headers or ''
-        request_log = RequestLog.objects.create(
-            type=RequestLog.OUTGOING,
-            url=url,
-            data=data,
-            site_user=submission.submitting_user if submission.submitting_user is not None else '',
-            submission_id=submission.broker_submission_id,
-            response_status=response.status_code,
-            response_content=response.content,
-            request_details={
-                'response_headers': str(details)
-            }
-        )
-    return response
+# def gfbio_helpdesk_comment_on_ticket(site_config, ticket_key, comment_body,
+#                                      submission):
+#     url = '{0}{1}/{2}/{3}'.format(
+#         site_config.helpdesk_server.url,
+#         HELPDESK_API_SUB_URL,
+#         ticket_key,
+#         HELPDESK_COMMENT_SUB_URL,
+#     )
+#     data = json.dumps({
+#         'body': '{}'.format(comment_body)
+#     })
+#     # requestlog: ok
+#     response = requests.post(
+#         url=url,
+#         auth=(site_config.helpdesk_server.username,
+#               site_config.helpdesk_server.password),
+#         headers={
+#             'Content-Type': 'application/json'
+#         },
+#         data=data
+#     )
+#     with transaction.atomic():
+#         details = response.headers or ''
+#         request_log = RequestLog.objects.create(
+#             type=RequestLog.OUTGOING,
+#             url=url,
+#             data=data,
+#             site_user=submission.submitting_user if submission.submitting_user is not None else '',
+#             submission_id=submission.broker_submission_id,
+#             response_status=response.status_code,
+#             response_content=response.content,
+#             request_details={
+#                 'response_headers': str(details)
+#             }
+#         )
+#     return response
 
 
 # TODO: oboslete ?
-def gfbio_helpdesk_attach_file_to_ticket(site_config, ticket_key, file,
-                                         submission):
-    url = '{0}{1}/{2}/{3}'.format(
-        site_config.helpdesk_server.url,
-        HELPDESK_API_SUB_URL,
-        ticket_key,
-        HELPDESK_ATTACHMENT_SUB_URL,
-    )
-    headers = CaseInsensitiveDict({'content-type': None,
-                                   'X-Atlassian-Token': 'nocheck'})
-    files = {'file': file}
-    print('TYPE FILE ', type(file))
-    # files = {'file': open(file, 'rb')}
-    response = requests.post(
-        url=url,
-        auth=(site_config.helpdesk_server.username,
-              site_config.helpdesk_server.password),
-        headers=headers,
-        files=files,
-    )
+# def gfbio_helpdesk_attach_file_to_ticket(site_config, ticket_key, file,
+#                                          submission):
+#     url = '{0}{1}/{2}/{3}'.format(
+#         site_config.helpdesk_server.url,
+#         HELPDESK_API_SUB_URL,
+#         ticket_key,
+#         HELPDESK_ATTACHMENT_SUB_URL,
+#     )
+#     headers = CaseInsensitiveDict({'content-type': None,
+#                                    'X-Atlassian-Token': 'nocheck'})
+#     files = {'file': file}
+#     print('TYPE FILE ', type(file))
+#     # files = {'file': open(file, 'rb')}
+#     response = requests.post(
+#         url=url,
+#         auth=(site_config.helpdesk_server.username,
+#               site_config.helpdesk_server.password),
+#         headers=headers,
+#         files=files,
+#     )
+#
+#     with transaction.atomic():
+#         details = response.headers or ''
+#         request_log = RequestLog.objects.create(
+#             type=RequestLog.OUTGOING,
+#             url=url,
+#             data=files,
+#             site_user=submission.submitting_user if submission.submitting_user is not None else '',
+#             submission_id=submission.broker_submission_id,
+#             response_status=response.status_code,
+#             response_content=response.content,
+#             request_details={
+#                 'response_headers': str(details)
+#             }
+#         )
+#     return response
 
-    with transaction.atomic():
-        details = response.headers or ''
-        request_log = RequestLog.objects.create(
-            type=RequestLog.OUTGOING,
-            url=url,
-            data=files,
-            site_user=submission.submitting_user if submission.submitting_user is not None else '',
-            submission_id=submission.broker_submission_id,
-            response_status=response.status_code,
-            response_content=response.content,
-            request_details={
-                'response_headers': str(details)
-            }
-        )
-    return response
 
-
-def gfbio_helpdesk_delete_attachment(site_config, attachment_id, submission):
-    url = '{0}{1}/{2}'.format(
-        site_config.helpdesk_server.url,
-        HELPDESK_API_ATTACHMENT_URL,
-        attachment_id, )
-    response = requests.delete(
-        url=url,
-        auth=(site_config.helpdesk_server.username,
-              site_config.helpdesk_server.password),
-        headers={
-            'Content-Type': 'application/json'
-        },
-    )
-    with transaction.atomic():
-        details = response.headers or ''
-        request_log = RequestLog.objects.create(
-            type=RequestLog.OUTGOING,
-            url=url,
-            # data=files,
-            site_user=submission.submitting_user if submission.submitting_user is not None else '',
-            submission_id=submission.broker_submission_id,
-            response_status=response.status_code,
-            response_content=response.content,
-            request_details={
-                'response_headers': str(details)
-            }
-        )
-    return response
+# def gfbio_helpdesk_delete_attachment(site_config, attachment_id, submission):
+#     url = '{0}{1}/{2}'.format(
+#         site_config.helpdesk_server.url,
+#         HELPDESK_API_ATTACHMENT_URL,
+#         attachment_id, )
+#     response = requests.delete(
+#         url=url,
+#         auth=(site_config.helpdesk_server.username,
+#               site_config.helpdesk_server.password),
+#         headers={
+#             'Content-Type': 'application/json'
+#         },
+#     )
+#     with transaction.atomic():
+#         details = response.headers or ''
+#         request_log = RequestLog.objects.create(
+#             type=RequestLog.OUTGOING,
+#             url=url,
+#             # data=files,
+#             site_user=submission.submitting_user if submission.submitting_user is not None else '',
+#             submission_id=submission.broker_submission_id,
+#             response_status=response.status_code,
+#             response_content=response.content,
+#             request_details={
+#                 'response_headers': str(details)
+#             }
+#         )
+#     return response
