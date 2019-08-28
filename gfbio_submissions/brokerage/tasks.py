@@ -1100,9 +1100,9 @@ def attach_to_submission_issue_task(kwargs=None, submission_id=None,
                 #         submission_upload))
 
                 # TODO: access media nginx https://stackoverflow.com/questions/8370658/how-to-serve-django-media-files-via-nginx
-                # jira_client = JiraClient(
-                #     resource=site_configuration.helpdesk_server,
-                # )
+                jira_client = JiraClient(
+                    resource=site_configuration.helpdesk_server,
+                )
                 #
                 # print('\n\nJIRA client ', jira_client)
                 # print('ref', reference.reference_key)
@@ -1123,32 +1123,32 @@ def attach_to_submission_issue_task(kwargs=None, submission_id=None,
                 # # print(mem_file.getvalue())
                 #
                 #
-                # jira_client.add_attachment(
-                #     key=reference.reference_key,
-                #     file=mem_file,
-                #     file_name='memfile'
-                # )
+                jira_client.add_attachment(
+                    key=reference.reference_key,
+                    file=submission_upload.file,
+                    file_name='submission_upload'
+                )
                 # mem_file.close()
 
-                response = gfbio_helpdesk_attach_file_to_ticket(
-                    site_config=site_configuration,
-                    ticket_key=reference.reference_key,
-                    file=submission_upload.file,
-                    submission=submission
-                )
-                logger.info(
-                    msg='attach_to_submission_issue_task repsonse status={0} content={1}'.format(
-                        response.status_code, response.content))
-                apply_default_task_retry_policy(response,
-                                                attach_to_submission_issue_task,
-                                                submission)
+                # response = gfbio_helpdesk_attach_file_to_ticket(
+                #     site_config=site_configuration,
+                #     ticket_key=reference.reference_key,
+                #     file=submission_upload.file,
+                #     submission=submission
+                # )
+                # logger.info(
+                #     msg='attach_to_submission_issue_task repsonse status={0} content={1}'.format(
+                #         response.status_code, response.content))
+                # apply_default_task_retry_policy(response,
+                #                                 attach_to_submission_issue_task,
+                #                                 submission)
 
-                # if jira_client.error:
-                #     apply_default_task_retry_policy(
-                #         jira_client.error.response,
-                #         attach_to_submission_issue_task,
-                #         submission
-                #     )
+                if jira_client.error:
+                    apply_default_task_retry_policy(
+                        jira_client.error.response,
+                        attach_to_submission_issue_task,
+                        submission
+                    )
 
                 # TODO: there may be a more elegant solution for checking
                 # TODO: extract to method
@@ -1162,13 +1162,13 @@ def attach_to_submission_issue_task(kwargs=None, submission_id=None,
                 #                 i['key'], a['filename'], a['id']))
                 #         jira.delete_attachment(a['id'])
                 #####################################
-                content = response.json()
-                if isinstance(content, list) \
-                        and len(content) == 1 \
-                        and isinstance(content[0], dict):
-                    submission_upload.attachment_id = int(
-                        content[0].get('id', '-1'))
-                    submission_upload.save(ignore_attach_to_ticket=True)
+                # content = response.json()
+                # if isinstance(content, list) \
+                #         and len(content) == 1 \
+                #         and isinstance(content[0], dict):
+                #     submission_upload.attachment_id = int(
+                #         content[0].get('id', '-1'))
+                #     submission_upload.save(ignore_attach_to_ticket=True)
 
                 return True
             else:

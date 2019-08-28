@@ -118,7 +118,7 @@ class JiraClient(object):
         #     print("add_attachment Unexpected error:", sys.exc_info()[0], " -- >  ", t)
         try:
             if file_name:
-                self.jira.add_attachment(issue=self.issue, attachment=file,
+                self.jira.add_attachment(issue=self.issue.key, attachment=file,
                                          filename=file_name)
             else:
                 print('Try attach .... ')
