@@ -940,10 +940,13 @@ class TestGFBioHelpDeskTasks(TestTasks):
         self.assertTrue(result.successful())
         self.assertTrue(result.get())
 
+    # TODO: take this mock concept for testing retry, and add more tests for
+    #  other tasks with retry policy(s)
     @patch(
         'gfbio_submissions.brokerage.tasks.apply_timebased_task_retry_policy')
     def test_attach_primarydatafile_without_ticket(self, mock):
         submission = Submission.objects.last()
+        # omiting submission_upload_id, defaults this parameter to None
         attach_to_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
@@ -1543,7 +1546,8 @@ class TestPangaeaTasks(TestTasks):
             status=200,
         )
         responses.add(responses.PUT,
-                      '{0}/rest/api/2/issue/FAKE_KEY'.format(site_config.helpdesk_server.url),
+                      '{0}/rest/api/2/issue/FAKE_KEY'.format(
+                          site_config.helpdesk_server.url),
                       body='', status=200)
         site_config = SiteConfiguration.objects.first()
         persistent_identifiers = PersistentIdentifier.objects.all()
