@@ -5,6 +5,7 @@ import io
 import json
 import os
 import pprint
+from io import StringIO
 from pprint import pprint
 from unittest import skip
 from unittest.mock import patch
@@ -17,6 +18,7 @@ from django.contrib.auth.models import Permission
 from django.test import TestCase
 from django.utils.encoding import smart_text
 from jira import JIRA, JIRAError
+from jira.resources import Attachment
 from requests import ConnectionError
 from requests.structures import CaseInsensitiveDict
 from rest_framework.authtoken.models import Token
@@ -24,7 +26,8 @@ from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
     PANGAEA_ISSUE_BASE_URL, HELPDESK_API_SUB_URL, HELPDESK_COMMENT_SUB_URL, \
-    HELPDESK_ATTACHMENT_SUB_URL, DEFAULT_ENA_CENTER_NAME
+    HELPDESK_ATTACHMENT_SUB_URL, DEFAULT_ENA_CENTER_NAME, \
+    HELPDESK_API_ATTACHMENT_URL
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
     ResourceCredential, SiteConfiguration, RequestLog, AdditionalReference, \
     TaskProgressReport, SubmissionUpload
@@ -34,7 +37,8 @@ from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_pangaea_soap_body, _get_pangaea_soap_response, \
     _get_pangaea_attach_response, _get_test_data_dir_path, \
     _get_pangaea_comment_response, \
-    _get_pangaea_ticket_response, _get_jira_issue_response
+    _get_pangaea_ticket_response, _get_jira_issue_response, \
+    _get_jira_attach_response
 from gfbio_submissions.brokerage.utils import csv
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
     send_submission_to_ena, download_submitted_run_files_to_stringIO
@@ -629,34 +633,36 @@ class TestGFBioJira(TestCase):
     @skip('Test against helpdesk server')
     def test_get_and_update_existing_ticket(self):
         # was generic submission, done via gfbio-portal
-        ticket_key = 'SAND-1460'
+        ticket_key = 'SAND-9999'
         url = '{0}{1}/{2}'.format(self.base_url, HELPDESK_API_SUB_URL,
                                   ticket_key, )
-        # response = requests.get(
-        #     url=url,
-        #     auth=('brokeragent', ''),
-        # )
-        response = requests.put(
+        response = requests.get(
             url=url,
             auth=('brokeragent', ''),
-            headers={
-                'Content-Type': 'application/json'
-            },
-            data=json.dumps({
-                'fields': {
-                    # single value/string
-                    'customfield_10205': 'New Name Marc Weber, Alfred E. Neumann',
-                    # array of values/strings
-                    'customfield_10216': [
-                        {'value': 'Uncertain'},
-                        {'value': 'Nagoya Protocol'},
-                        {'value': 'Sensitive Personal Information'},
-                    ]
-                }
-            })
         )
-        self.assertEqual(204, response.status_code)
-        self.assertEqual(0, len(response.content))
+        print(response.status_code)
+        print(response.content)
+        # response = requests.put(
+        #     url=url,
+        #     auth=('brokeragent', ''),
+        #     headers={
+        #         'Content-Type': 'application/json'
+        #     },
+        #     data=json.dumps({
+        #         'fields': {
+        #             # single value/string
+        #             'customfield_10205': 'New Name Marc Weber, Alfred E. Neumann',
+        #             # array of values/strings
+        #             'customfield_10216': [
+        #                 {'value': 'Uncertain'},
+        #                 {'value': 'Nagoya Protocol'},
+        #                 {'value': 'Sensitive Personal Information'},
+        #             ]
+        #         }
+        #     })
+        # )
+        # self.assertEqual(204, response.status_code)
+        # self.assertEqual(0, len(response.content))
 
     @skip('Test against helpdesk server')
     def test_add_attachment(self):
@@ -1126,7 +1132,8 @@ class TestJiraClient(TestCase):
             status=200,
             json=self.issue_json,
         )
-        self._add_jira_issue_response(status_code=status_code, json_content=json_content)
+        self._add_jira_issue_response(status_code=status_code,
+                                      json_content=json_content)
 
     def _add_default_pangaea_responses(self):
         responses.add(
@@ -1219,14 +1226,187 @@ class TestJiraClient(TestCase):
 
     @responses.activate
     def test_get_issue_not_found(self):
-        self._add_get_ticket_responses(json_content=self.issue_json)
+        self._add_jira_field_response()
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/SAND-xxx'.format(
+                self.site_config.helpdesk_server.url),
+            status=404,
+            json={'errorMessages': ['Issue Does Not Exist'], 'errors': {}},
+        )
+        jira_client.get_issue('SAND-xxx')
+        self.assertIsNotNone(jira_client.error)
+        self.assertIsNone(jira_client.issue)
+
+    @responses.activate
+    def test_get_issue_server_error(self):
+        self._add_jira_field_response()
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/SAND-xxx'.format(
+                self.site_config.helpdesk_server.url),
+            status=500,
+        )
+        jira_client.get_issue('SAND-xxx')
+        self.assertIsNotNone(jira_client.error)
+        self.assertIsNone(jira_client.issue)
+
+    @responses.activate
+    def test_update_issue(self):
+        # self._add_jira_field_response()
+        self._add_create_ticket_responses(json_content=self.issue_json)
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         jira_client.create_issue(fields=self.minimal_issue_fields)
-        jira_client.get_issue('SAND-xxx') # TODO: send requiest to server to get mock body
+
+        jira_client.update_issue(key='SAND-1661', fields=None)
+        print(jira_client.error)
+
+    @responses.activate
+    def test_add_comment(self):
+        self._add_create_ticket_responses(json_content=self.issue_json)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        responses.add(
+            responses.POST,
+            '{0}/rest/api/2/issue/SAND-1661/comment'.format(
+                self.site_config.helpdesk_server.url),
+            json=_get_pangaea_comment_response(),
+            status=200)
+        jira_client.add_comment('SAND-1661', 'Bla')
         self.assertIsNone(jira_client.error)
-        self.assertIsNotNone(jira_client.issue)
+        self.assertIsNotNone(jira_client.comment)
 
+    @responses.activate
+    def test_add_comment_client_error(self):
+        self._add_create_ticket_responses(json_content=self.issue_json)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        responses.add(
+            responses.POST,
+            '{0}/rest/api/2/issue/SAND-1661/comment'.format(
+                self.site_config.helpdesk_server.url),
+            json={'errorMessages': ['Issue Does Not Exist'], 'errors': {}},
+            status=400)
+        jira_client.add_comment('SAND-1661', 'Bla')
+        self.assertIsNotNone(jira_client.error)
+        self.assertIsNone(jira_client.comment)
 
+    @responses.activate
+    def test_add_comment_server_error(self):
+        self._add_create_ticket_responses(json_content=self.issue_json)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        responses.add(
+            responses.POST,
+            '{0}/rest/api/2/issue/SAND-1661/comment'.format(
+                self.site_config.helpdesk_server.url),
+            status=503)
+        jira_client.add_comment('SAND-1661', 'Bla')
+        self.assertIsNotNone(jira_client.error)
+        self.assertIsNone(jira_client.comment)
+
+    @responses.activate
+    def test_add_attachment(self):
+        # self._add_create_ticket_responses(json_content=self.issue_json)
+        self._add_jira_field_response()
+        self._add_jira_issue_response(json_content=self.issue_json)
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          self.site_config.helpdesk_server.url,
+                          HELPDESK_API_SUB_URL,
+                          'SAND-1661',
+                          HELPDESK_ATTACHMENT_SUB_URL,
+                      ),
+                      json=_get_jira_attach_response(),
+                      status=200)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+
+        attachment = StringIO()
+        attachment.write(':-)')
+        res = jira_client.add_attachment('SAND-1661', attachment, 'attachment')
+        attachment.close()
+        self.assertIsInstance(res, jira.resources.Attachment)
+        self.assertIsNone(jira_client.error)
+
+    @responses.activate
+    def test_add_attachment_client_error(self):
+        self._add_jira_field_response()
+        self._add_jira_issue_response(json_content=self.issue_json)
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          self.site_config.helpdesk_server.url,
+                          HELPDESK_API_SUB_URL,
+                          'SAND-1661',
+                          HELPDESK_ATTACHMENT_SUB_URL,
+                      ),
+                      json={'client_error': True},
+                      status=401)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+
+        attachment = StringIO()
+        attachment.write(':-)')
+        res = jira_client.add_attachment('SAND-1661', attachment, 'attachment')
+        attachment.close()
+        self.assertIsNone(res)
+        self.assertIsNotNone(jira_client.error)
+
+    @responses.activate
+    def test_add_attachment_server_error(self):
+        self._add_jira_field_response()
+        self._add_jira_issue_response(json_content=self.issue_json)
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          self.site_config.helpdesk_server.url,
+                          HELPDESK_API_SUB_URL,
+                          'SAND-1661',
+                          HELPDESK_ATTACHMENT_SUB_URL,
+                      ),
+                      status=502)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        attachment = StringIO()
+        attachment.write(':-)')
+        res = jira_client.add_attachment('SAND-1661', attachment, 'attachment')
+        attachment.close()
+        self.assertIsNone(res)
+        self.assertIsNotNone(jira_client.error)
+
+    @responses.activate
+    def test_delete_attachment(self):
+        self._add_jira_field_response()
+        self._add_jira_issue_response(json_content=self.issue_json)
+        url = '{0}{1}/{2}'.format(
+            self.site_config.helpdesk_server.url,
+            HELPDESK_API_ATTACHMENT_URL,
+            '1')
+        responses.add(responses.DELETE, url, body=b'', status=204)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        jira_client.delete_attachment('1')
+        self.assertIsNone(jira_client.error)
+
+    @responses.activate
+    def test_delete_attachment_client_error(self):
+        self._add_jira_field_response()
+        self._add_jira_issue_response(json_content=self.issue_json)
+        url = '{0}{1}/{2}'.format(
+            self.site_config.helpdesk_server.url,
+            HELPDESK_API_ATTACHMENT_URL,
+            '1')
+        responses.add(responses.DELETE, url, body=b'', status=403)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        jira_client.delete_attachment('1')
+        self.assertIsNotNone(jira_client.error)
+
+    @responses.activate
+    def test_delete_attachment_server_error(self):
+        self._add_jira_field_response()
+        self._add_jira_issue_response(json_content=self.issue_json)
+        url = '{0}{1}/{2}'.format(
+            self.site_config.helpdesk_server.url,
+            HELPDESK_API_ATTACHMENT_URL,
+            '1')
+        responses.add(responses.DELETE, url, body=b'', status=504)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        jira_client.delete_attachment('1')
+        self.assertIsNotNone(jira_client.error)
 
     # --------------------------------------------------------------------------
 

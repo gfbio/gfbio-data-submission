@@ -83,10 +83,11 @@ class JiraClient(object):
             self.issue = None
             self.error = e
 
-    def update_issue(self, key='', fields={}):
+    def update_issue(self, key, fields):
         self.get_issue(key)
+        print('ISSUE {0}'.format(self.issue.key))
         try:
-            self.issue.update(fields=fields)
+            self.issue.update(notify=False, fields=fields)
             self.error = None
         except JIRAError as e:
             self.error = e
