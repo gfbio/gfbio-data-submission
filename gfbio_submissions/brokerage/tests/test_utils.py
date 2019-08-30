@@ -1207,7 +1207,7 @@ class TestJiraClient(TestCase):
         self.assertIsNone(jira_client.issue)
 
     @responses.activate
-    def test_create_issue_client_error(self):
+    def test_create_issue_server_error(self):
         self._add_create_ticket_responses(status_code=500,
                                           json_content={'error': 'server'})
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
@@ -1407,6 +1407,86 @@ class TestJiraClient(TestCase):
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         jira_client.delete_attachment('1')
         self.assertIsNotNone(jira_client.error)
+
+    @responses.activate
+    def test_create_submission_issue(self):
+        self._add_create_ticket_responses(json_content=self.issue_json)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        jira_client.create_submission_issue(
+            reporter={'user_full_name': 'Horst',
+                      'user_email': 'horst@kevin.de'},
+            submission=Submission.objects.first(),
+            site_config=self.site_config
+        )
+
+    @responses.activate
+    def test_force_submission_issue(self):
+        self._add_create_ticket_responses(
+            status_code=400,
+            json_content={
+                'errorMessages': ['Issue Does Not Exist'], 'errors': {
+                    'reporter': 'The reporter specified is not a user',
+                }
+            }
+        )
+        self._add_create_ticket_responses(json_content=self.issue_json)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        jira_client.create_submission_issue(
+            reporter={'user_full_name': 'Horst',
+                      'user_email': 'horst@kevin.de'},
+            submission=Submission.objects.first(),
+            site_config=self.site_config
+        )
+        self.assertEqual(1, jira_client.retry_count)
+        self.assertIsNone(jira_client.error)
+
+    @responses.activate
+    def test_force_submission_issue_retry_max(self):
+        self._add_create_ticket_responses(
+            status_code=400,
+            json_content={
+                'errorMessages': ['Issue Does Not Exist'], 'errors': {
+                    'reporter': 'The reporter specified is not a user',
+                }
+            }
+        )
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        jira_client.create_submission_issue(
+            reporter={'user_full_name': 'Horst',
+                      'user_email': 'horst@kevin.de'},
+            submission=Submission.objects.first(),
+            site_config=self.site_config
+        )
+        self.assertEqual(3, jira_client.retry_count)
+        self.assertIsNotNone(jira_client.error)
+
+    @responses.activate
+    def test_create_pangaea_issue(self):
+        self._add_default_pangaea_responses()
+        responses.add(
+            responses.POST,
+            '{0}{1}'.format(
+                self.site_config.helpdesk_server.url,
+                HELPDESK_API_SUB_URL
+            ),
+            status=200,
+            json=self.pangaea_issue_json,
+        )
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/PDI-12428 '.format(
+                self.site_config.pangaea_jira_server.url),
+            status=200,
+            json=self.pangaea_issue_json,
+        )
+
+
+        # self._add_create_ticket_responses(json_content=self.pangaea_issue_json)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server,
+                                 token_resource=self.site_config.pangaea_token_server)
+
+        jira_client.create_pangaea_issue(site_config=self.site_config,
+                                         submission=Submission.objects.first())
 
     # --------------------------------------------------------------------------
 

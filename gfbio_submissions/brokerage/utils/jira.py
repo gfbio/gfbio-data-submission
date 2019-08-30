@@ -32,6 +32,8 @@ class JiraClient(object):
         self.issue = None
         self.comment = None
         self.error = None
+        self.retry_count = 0
+        self.max_retry_count = 3
 
     def _get_connection(self, max_retries=0, get_server_info=False, options={}):
         options.update({
@@ -146,6 +148,11 @@ class JiraClient(object):
         self.force_submission_issue(submission, site_config)
 
     def force_submission_issue(self, submission, site_config):
+        if self.retry_count >= self.max_retry_count:
+            logger.warning(
+                'JiraClient | force_submission_issue | submission {0} | '
+                'retry_count too high'.format(submission.broker_submission_id))
+            return None
         if self.error and self.error.status_code >= 400:
             try:
                 error_messages = json.loads(self.error.response.text)
@@ -164,6 +171,7 @@ class JiraClient(object):
                         'first_name': '',
                         'last_name': '',
                     }
+                    self.retry_count += 1
                     return self.create_submission_issue(
                         reporter=default,
                         submission=submission,
