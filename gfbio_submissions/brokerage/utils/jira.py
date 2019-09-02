@@ -7,6 +7,8 @@ from json import JSONDecodeError
 from jira import JIRA, JIRAError
 from requests import ConnectionError
 
+from gfbio_submissions.brokerage.configuration.settings import \
+    PANGAEA_ISSUE_DOI_FIELD_NAME
 from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_prepare_create_helpdesk_payload
 from gfbio_submissions.brokerage.utils.pangaea import \
@@ -193,3 +195,11 @@ class JiraClient(object):
         self.add_attachment(key=key, file=attachment,
                             file_name='contextual_data.csv')
         attachment.close()
+
+    def get_doi_from_pangaea_issue(self, key):
+        self.get_issue(key=key)
+        if PANGAEA_ISSUE_DOI_FIELD_NAME in self.issue.raw['fields'].keys():
+            field_value = self.issue.raw['fields'][PANGAEA_ISSUE_DOI_FIELD_NAME]
+            if 'doi' in field_value:
+                return field_value
+        return None

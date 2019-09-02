@@ -47,7 +47,7 @@ from gfbio_submissions.brokerage.utils.gfbio import \
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.brokerage.utils.pangaea import \
     request_pangaea_login_token, parse_pangaea_login_token_response, \
-    get_pangaea_login_token, create_pangaea_jira_ticket
+    get_pangaea_login_token
 from gfbio_submissions.brokerage.utils.submission_transfer import \
     SubmissionTransferHandler
 from gfbio_submissions.users.models import User
@@ -460,12 +460,12 @@ class PangaeaTicketTest(TestCase):
             '<loginReturn xsi:type="xsd:string">', response.content
         )
 
-    @skip('request to PANGAEA server')
-    def test_create_pangaea_ticket(self):
-        site_config = SiteConfiguration.objects.first()
-        login_token = get_pangaea_login_token(site_config.pangaea_token_server)
-        response = create_pangaea_jira_ticket(login_token,
-                                              site_configuration=site_config)
+    # @skip('request to PANGAEA server')
+    # def test_create_pangaea_ticket(self):
+    #     site_config = SiteConfiguration.objects.first()
+    #     login_token = get_pangaea_login_token(site_config.pangaea_token_server)
+    #     response = create_pangaea_jira_ticket(login_token,
+    #                                           site_configuration=site_config)
 
     @skip('request to PANGAEA server')
     def test_doi_parsing(self):
@@ -1533,6 +1533,34 @@ class TestJiraClient(TestCase):
         jira_client.attach_to_pangaea_issue('PDI-12428',
                                             submission=Submission.objects.first())
         attachment.close()
+
+    @responses.activate
+    def test_get_doi_from_pangaea_issue(self):
+        self._add_default_pangaea_responses()
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server,
+                                 token_resource=self.site_config.pangaea_token_server)
+        responses.add(
+            responses.GET,
+            'https://www.example.com/rest/api/2/issue/PDI-12428',
+            status=200,
+            json=self.pangaea_issue_json
+        )
+        doi = jira_client.get_doi_from_pangaea_issue('PDI-12428')
+        self.assertEqual('doi:10.1594/PANGAEA.786576', doi)
+
+    @responses.activate
+    def test_no_doi_in_pangaea_issue(self):
+        self._add_default_pangaea_responses()
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server,
+                                 token_resource=self.site_config.pangaea_token_server)
+        responses.add(
+            responses.GET,
+            'https://www.example.com/rest/api/2/issue/PDI-12428',
+            status=200,
+            json=self.issue_json
+        )
+        doi = jira_client.get_doi_from_pangaea_issue('PDI-12428')
+        self.assertIsNone(doi)
 
     # --------------------------------------------------------------------------
 
