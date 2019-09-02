@@ -25,9 +25,9 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    PANGAEA_ISSUE_BASE_URL, HELPDESK_API_SUB_URL, HELPDESK_COMMENT_SUB_URL, \
-    HELPDESK_ATTACHMENT_SUB_URL, DEFAULT_ENA_CENTER_NAME, \
-    HELPDESK_API_ATTACHMENT_URL
+    JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, \
+    JIRA_ATTACHMENT_SUB_URL, DEFAULT_ENA_CENTER_NAME, \
+    JIRA_ATTACHMENT_URL
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
     ResourceCredential, SiteConfiguration, RequestLog, AdditionalReference, \
     TaskProgressReport, SubmissionUpload
@@ -588,7 +588,7 @@ class TestGFBioJira(TestCase):
 
     @skip('Test against helpdesk server')
     def test_create_request(self):
-        url = 'http://helpdesk.gfbio.org{0}'.format(HELPDESK_API_SUB_URL)
+        url = 'http://helpdesk.gfbio.org{0}'.format(JIRA_ISSUE_URL)
         response = requests.post(
             url=url,
             auth=('brokeragent', ''),
@@ -617,7 +617,7 @@ class TestGFBioJira(TestCase):
     def test_comment_existing_ticket(self):
         ticket_key = 'SAND-38'
         ticket_action = 'comment'
-        url = '{0}{1}/{2}/{3}'.format(self.base_url, HELPDESK_API_SUB_URL,
+        url = '{0}{1}/{2}/{3}'.format(self.base_url, JIRA_ISSUE_URL,
                                       ticket_key, ticket_action)
         response = requests.post(
             url=url,
@@ -634,7 +634,7 @@ class TestGFBioJira(TestCase):
     def test_get_and_update_existing_ticket(self):
         # was generic submission, done via gfbio-portal
         ticket_key = 'SAND-1535'
-        url = '{0}{1}/{2}'.format(self.base_url, HELPDESK_API_SUB_URL,
+        url = '{0}{1}/{2}'.format(self.base_url, JIRA_ISSUE_URL,
                                   ticket_key, )
         response = requests.get(
             url=url,
@@ -669,9 +669,9 @@ class TestGFBioJira(TestCase):
         ticket_key = 'SAND-1535'
         url = '{0}{1}/{2}/{3}'.format(
             self.base_url,
-            HELPDESK_API_SUB_URL,
+            JIRA_ISSUE_URL,
             ticket_key,
-            HELPDESK_ATTACHMENT_SUB_URL,
+            JIRA_ATTACHMENT_SUB_URL,
         )
         headers = CaseInsensitiveDict({'content-type': None,
                                        'X-Atlassian-Token': 'nocheck'})
@@ -768,7 +768,7 @@ class TestGFBioJira(TestCase):
 
         # WORKS:
         ticket_key = 'SAND-1539'
-        url = '{0}{1}/{2}'.format(self.base_url, HELPDESK_API_SUB_URL,
+        url = '{0}{1}/{2}'.format(self.base_url, JIRA_ISSUE_URL,
                                   ticket_key, )
         response = requests.put(
             url=url,
@@ -1114,7 +1114,7 @@ class TestJiraClient(TestCase):
             responses.POST,
             '{0}{1}'.format(
                 self.site_config.helpdesk_server.url,
-                HELPDESK_API_SUB_URL
+                JIRA_ISSUE_URL
             ),
             status=status_code,
             json=json_content,
@@ -1127,7 +1127,7 @@ class TestJiraClient(TestCase):
             responses.POST,
             '{0}{1}'.format(
                 self.site_config.helpdesk_server.url,
-                HELPDESK_API_SUB_URL
+                JIRA_ISSUE_URL
             ),
             status=200,
             json=self.issue_json,
@@ -1323,9 +1323,9 @@ class TestJiraClient(TestCase):
         responses.add(responses.POST,
                       '{0}{1}/{2}/{3}'.format(
                           self.site_config.helpdesk_server.url,
-                          HELPDESK_API_SUB_URL,
+                          JIRA_ISSUE_URL,
                           'SAND-1661',
-                          HELPDESK_ATTACHMENT_SUB_URL,
+                          JIRA_ATTACHMENT_SUB_URL,
                       ),
                       json=_get_jira_attach_response(),
                       status=200)
@@ -1345,9 +1345,9 @@ class TestJiraClient(TestCase):
         responses.add(responses.POST,
                       '{0}{1}/{2}/{3}'.format(
                           self.site_config.helpdesk_server.url,
-                          HELPDESK_API_SUB_URL,
+                          JIRA_ISSUE_URL,
                           'SAND-1661',
-                          HELPDESK_ATTACHMENT_SUB_URL,
+                          JIRA_ATTACHMENT_SUB_URL,
                       ),
                       json={'client_error': True},
                       status=401)
@@ -1367,9 +1367,9 @@ class TestJiraClient(TestCase):
         responses.add(responses.POST,
                       '{0}{1}/{2}/{3}'.format(
                           self.site_config.helpdesk_server.url,
-                          HELPDESK_API_SUB_URL,
+                          JIRA_ISSUE_URL,
                           'SAND-1661',
-                          HELPDESK_ATTACHMENT_SUB_URL,
+                          JIRA_ATTACHMENT_SUB_URL,
                       ),
                       status=502)
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
@@ -1386,7 +1386,7 @@ class TestJiraClient(TestCase):
         self._add_jira_issue_response(json_content=self.issue_json)
         url = '{0}{1}/{2}'.format(
             self.site_config.helpdesk_server.url,
-            HELPDESK_API_ATTACHMENT_URL,
+            JIRA_ATTACHMENT_URL,
             '1')
         responses.add(responses.DELETE, url, body=b'', status=204)
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
@@ -1399,7 +1399,7 @@ class TestJiraClient(TestCase):
         self._add_jira_issue_response(json_content=self.issue_json)
         url = '{0}{1}/{2}'.format(
             self.site_config.helpdesk_server.url,
-            HELPDESK_API_ATTACHMENT_URL,
+            JIRA_ATTACHMENT_URL,
             '1')
         responses.add(responses.DELETE, url, body=b'', status=403)
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
@@ -1412,7 +1412,7 @@ class TestJiraClient(TestCase):
         self._add_jira_issue_response(json_content=self.issue_json)
         url = '{0}{1}/{2}'.format(
             self.site_config.helpdesk_server.url,
-            HELPDESK_API_ATTACHMENT_URL,
+            JIRA_ATTACHMENT_URL,
             '1')
         responses.add(responses.DELETE, url, body=b'', status=504)
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
@@ -1478,7 +1478,7 @@ class TestJiraClient(TestCase):
             responses.POST,
             '{0}{1}'.format(
                 self.site_config.helpdesk_server.url,
-                HELPDESK_API_SUB_URL
+                JIRA_ISSUE_URL
             ),
             status=200,
             json=self.pangaea_issue_json,
@@ -1520,9 +1520,9 @@ class TestJiraClient(TestCase):
         responses.add(responses.POST,
                       '{0}{1}/{2}/{3}'.format(
                           self.site_config.pangaea_jira_server.url,
-                          HELPDESK_API_SUB_URL,
+                          JIRA_ISSUE_URL,
                           'PDI-12428',
-                          HELPDESK_ATTACHMENT_SUB_URL,
+                          JIRA_ATTACHMENT_SUB_URL,
                       ),
                       json=_get_pangaea_attach_response(),
                       status=200)
@@ -1798,9 +1798,9 @@ class TestSubmissionTransferHandler(TestCase):
         )
         url = '{0}{1}/{2}/{3}'.format(
             conf.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
+            JIRA_ISSUE_URL,
             'FAKE_KEY',
-            HELPDESK_COMMENT_SUB_URL,
+            JIRA_COMMENT_SUB_URL,
         )
         responses.add(responses.POST, url, json={'bla': 'blubb'},
                       status=200)
@@ -1827,9 +1827,9 @@ class TestSubmissionTransferHandler(TestCase):
         )
         url = '{0}{1}/{2}/{3}'.format(
             site_config.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
+            JIRA_ISSUE_URL,
             'FAKE_KEY',
-            HELPDESK_COMMENT_SUB_URL,
+            JIRA_COMMENT_SUB_URL,
         )
         responses.add(responses.POST, url, json={'bla': 'blubb'},
                       status=200)
@@ -1848,7 +1848,7 @@ class TestSubmissionTransferHandler(TestCase):
         responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.pangaea_jira_server.url,
-                            HELPDESK_API_SUB_URL),
+                            JIRA_ISSUE_URL),
             json=_get_pangaea_ticket_response(),
             status=200)
         responses.add(
@@ -1861,15 +1861,15 @@ class TestSubmissionTransferHandler(TestCase):
         responses.add(responses.POST,
                       '{0}{1}/{2}/{3}'.format(
                           site_config.pangaea_jira_server.url,
-                          HELPDESK_API_SUB_URL,
+                          JIRA_ISSUE_URL,
                           'PDI-12428',
-                          HELPDESK_ATTACHMENT_SUB_URL,
+                          JIRA_ATTACHMENT_SUB_URL,
                       ),
                       json=_get_pangaea_attach_response(),
                       status=200)
         responses.add(
             responses.POST,
-            '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
+            '{0}/{1}/comment'.format(site_config.pangaea_jira_server.url,
                                     'PANGAEA_FAKE_KEY'),
             json=_get_pangaea_comment_response(),
             status=200)
@@ -2144,7 +2144,7 @@ class TestHelpDeskTicketMethods(TestCase):
     #         site_config.helpdesk_server.url,
     #         HELPDESK_API_SUB_URL,
     #         'FAKE_KEY',
-    #         HELPDESK_COMMENT_SUB_URL,
+    #         JIRA_COMMENT_SUB_URL,
     #     )
     #     responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
     #     self.assertEqual(0, len(RequestLog.objects.all()))
@@ -2169,7 +2169,7 @@ class TestHelpDeskTicketMethods(TestCase):
     #                       site_config.helpdesk_server.url,
     #                       HELPDESK_API_SUB_URL,
     #                       'FAKE_KEY',
-    #                       HELPDESK_ATTACHMENT_SUB_URL,
+    #                       JIRA_ATTACHMENT_SUB_URL,
     #                   ),
     #                   json=_get_jira_attach_response(),
     #                   status=200)
@@ -2189,7 +2189,7 @@ class TestHelpDeskTicketMethods(TestCase):
     #     site_config = SiteConfiguration.objects.first()
     #     url = '{0}{1}/{2}'.format(
     #         site_config.helpdesk_server.url,
-    #         HELPDESK_API_ATTACHMENT_URL,
+    #         JIRA_ATTACHMENT_URL,
     #         4711)
     #     responses.add(responses.DELETE, url, body=b'', status=204)
     #     response = gfbio_helpdesk_delete_attachment(
@@ -2214,7 +2214,7 @@ class TestHelpDeskTicketMethods(TestCase):
     #                       site_config.helpdesk_server.url,
     #                       HELPDESK_API_SUB_URL,
     #                       'FAKE_KEY',
-    #                       HELPDESK_ATTACHMENT_SUB_URL,
+    #                       JIRA_ATTACHMENT_SUB_URL,
     #                   ),
     #                   json=response_json,
     #                   status=200)
@@ -2258,7 +2258,7 @@ class TestHelpDeskTicketMethods(TestCase):
     #                       site_config.helpdesk_server.url,
     #                       HELPDESK_API_SUB_URL,
     #                       'FAKE_KEY',
-    #                       HELPDESK_ATTACHMENT_SUB_URL,
+    #                       JIRA_ATTACHMENT_SUB_URL,
     #                   ),
     #                   json=_get_jira_attach_response(),
     #                   status=200)

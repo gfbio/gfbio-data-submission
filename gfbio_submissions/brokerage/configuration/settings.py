@@ -110,33 +110,33 @@ GENERIC = getattr(
     'GENERIC'
 )
 
-HELPDESK_API_SUB_URL = getattr(
+JIRA_ISSUE_URL = getattr(
     settings,
-    'HELPDESK_API_SUB_URL',
+    'JIRA_ISSUE_URL',
     '/rest/api/2/issue'
 )
 
-HELPDESK_COMMENT_SUB_URL = getattr(
+JIRA_COMMENT_SUB_URL = getattr(
     settings,
-    'HELPDESK_COMMENT_SUB_URL',
+    'JIRA_COMMENT_SUB_URL',
     'comment'
 )
 
-HELPDESK_API_ATTACHMENT_URL = getattr(
+JIRA_ATTACHMENT_URL = getattr(
     settings,
-    'HELPDESK_API_ATTACHMENT_URL',
+    'JIRA_ATTACHMENT_URL',
     '/rest/api/2/attachment'
 )
 
-HELPDESK_ATTACHMENT_SUB_URL = getattr(
+JIRA_ATTACHMENT_SUB_URL = getattr(
     settings,
-    'HELPDESK_ATTACHMENT_SUB_URL',
+    'JIRA_ATTACHMENT_SUB_URL',
     'attachments'
 )
 
-HELPDESK_LICENSE_MAPPINGS = getattr(
+GFBIO_LICENSE_MAPPINGS = getattr(
     settings,
-    'HELPDESK_LICENSE_MAPPINGS',
+    'GFBIO_LICENSE_MAPPINGS',
     {
         'CC0 1.0': {
             'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10197',
@@ -181,9 +181,9 @@ HELPDESK_LICENSE_MAPPINGS = getattr(
     }
 )
 
-HELPDESK_METASCHEMA_MAPPINGS = getattr(
+GFBIO_METASCHEMA_MAPPINGS = getattr(
     settings,
-    'HELPDESK_METASCHEMA_MAPPINGS',
+    'GFBIO_METASCHEMA_MAPPINGS',
     {
         'ABCD 2.06': {
             'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10204',
@@ -241,9 +241,9 @@ HELPDESK_METASCHEMA_MAPPINGS = getattr(
 # datacenter jira user mappings
 # https://gfbio.biowikifarm.net/internal/Data_Centers_Contact_Persons
 # TODO: always sync with list of valid datacenter values in json-schema file
-HELPDESK_DATACENTER_USER_MAPPINGS = getattr(
+GFBIO_DATACENTER_USER_MAPPINGS = getattr(
     settings,
-    'HELPDESK_DATACENTER_USER_MAPPINGS',
+    'GFBIO_DATACENTER_USER_MAPPINGS',
     {
         # default/no user: 'GFBio Data Centers - our curators will suggest the appropriate one(s)': '',
         'ENA – European Nucleotide Archive': 'ikostadi',
@@ -258,9 +258,9 @@ HELPDESK_DATACENTER_USER_MAPPINGS = getattr(
     }
 )
 
-HELPDESK_REQUEST_TYPE_MAPPINGS = getattr(
+GFBIO_REQUEST_TYPE_MAPPINGS = getattr(
     settings,
-    'HELPDESK_REQUEST_TYPE_MAPPINGS',
+    'GFBIO_REQUEST_TYPE_MAPPINGS',
     {
         'ENA – European Nucleotide Archive': 'molecular',
         'default': 'generic'
@@ -271,13 +271,6 @@ PANGAEA = getattr(
     settings,
     'PANGAEA',
     'PANGAEA'
-)
-
-# TODO: remove, this has to be handled by ArchiveAcess model
-PANGAEA_ISSUE_BASE_URL = getattr(
-    settings,
-    'PANGAEA_ISSUE_BASE_URL',
-    'https://issues.pangaea.de/rest/api/2/issue/'
 )
 
 PANGAEA_ISSUE_VIEW_URL = getattr(

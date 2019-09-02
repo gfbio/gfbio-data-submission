@@ -14,7 +14,7 @@ from rest_framework.test import APIClient
 
 from config.settings.base import MEDIA_URL
 from gfbio_submissions.brokerage.configuration.settings import \
-    HELPDESK_API_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL, GENERIC
+    JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL, GENERIC
 from gfbio_submissions.brokerage.models import Submission, \
     SiteConfiguration, ResourceCredential, AdditionalReference, \
     TaskProgressReport, SubmissionUpload
@@ -177,7 +177,7 @@ from gfbio_submissions.users.models import User
 #                           site_config.helpdesk_server.url,
 #                           HELPDESK_API_SUB_URL,
 #                           'FAKE_KEY',
-#                           HELPDESK_ATTACHMENT_SUB_URL,
+#                           JIRA_ATTACHMENT_SUB_URL,
 #                       ),
 #                       json=_get_jira_attach_response(),
 #                       status=200)
@@ -220,7 +220,7 @@ from gfbio_submissions.users.models import User
 #                           site_config.helpdesk_server.url,
 #                           HELPDESK_API_SUB_URL,
 #                           'FAKE_KEY',
-#                           HELPDESK_ATTACHMENT_SUB_URL,
+#                           JIRA_ATTACHMENT_SUB_URL,
 #                       ),
 #                       json=_get_jira_attach_response(),
 #                       status=200)
@@ -266,7 +266,7 @@ from gfbio_submissions.users.models import User
 #                           site_config.helpdesk_server.url,
 #                           HELPDESK_API_SUB_URL,
 #                           'FAKE_KEY',
-#                           HELPDESK_ATTACHMENT_SUB_URL,
+#                           JIRA_ATTACHMENT_SUB_URL,
 #                       ),
 #                       json=_get_jira_attach_response(),
 #                       status=200)
@@ -308,7 +308,7 @@ from gfbio_submissions.users.models import User
 #                           site_config.helpdesk_server.url,
 #                           HELPDESK_API_SUB_URL,
 #                           'FAKE_KEY',
-#                           HELPDESK_ATTACHMENT_SUB_URL,
+#                           JIRA_ATTACHMENT_SUB_URL,
 #                       ),
 #                       json=_get_jira_attach_response(),
 #                       status=200)
@@ -529,9 +529,9 @@ class TestSubmissionUploadView(TestCase):
         responses.add(responses.POST,
                       '{0}{1}/{2}/{3}'.format(
                           site_config.helpdesk_server.url,
-                          HELPDESK_API_SUB_URL,
+                          JIRA_ISSUE_URL,
                           'SAND-1661',
-                          HELPDESK_ATTACHMENT_SUB_URL,
+                          JIRA_ATTACHMENT_SUB_URL,
                       ),
                       json=_get_jira_attach_response(),
                       status=200)
@@ -579,9 +579,9 @@ class TestSubmissionUploadView(TestCase):
         responses.add(responses.POST,
                       '{0}{1}/{2}/{3}'.format(
                           site_config.helpdesk_server.url,
-                          HELPDESK_API_SUB_URL,
+                          JIRA_ISSUE_URL,
                           'FAKE_KEY',
-                          HELPDESK_ATTACHMENT_SUB_URL,
+                          JIRA_ATTACHMENT_SUB_URL,
                       ),
                       json=_get_jira_attach_response(),
                       status=200)
@@ -728,9 +728,9 @@ class TestSubmissionUploadView(TestCase):
         responses.add(responses.POST,
                       '{0}{1}/{2}/{3}'.format(
                           site_config.helpdesk_server.url,
-                          HELPDESK_API_SUB_URL,
+                          JIRA_ISSUE_URL,
                           'FAKE_KEY',
-                          HELPDESK_ATTACHMENT_SUB_URL,
+                          JIRA_ATTACHMENT_SUB_URL,
                       ),
                       json=_get_jira_attach_response(),
                       status=200)
@@ -770,9 +770,9 @@ class TestSubmissionUploadView(TestCase):
         responses.add(responses.POST,
                       '{0}{1}/{2}/{3}'.format(
                           site_config.helpdesk_server.url,
-                          HELPDESK_API_SUB_URL,
+                          JIRA_ISSUE_URL,
                           'FAKE_KEY',
-                          HELPDESK_ATTACHMENT_SUB_URL,
+                          JIRA_ATTACHMENT_SUB_URL,
                       ),
                       json=_get_jira_attach_response(),
                       status=200)
@@ -834,9 +834,9 @@ class TestSubmissionUploadView(TestCase):
         responses.add(responses.POST,
                       '{0}{1}/{2}/{3}'.format(
                           site_config.helpdesk_server.url,
-                          HELPDESK_API_SUB_URL,
+                          JIRA_ISSUE_URL,
                           'SAND-1661',
-                          HELPDESK_ATTACHMENT_SUB_URL,
+                          JIRA_ATTACHMENT_SUB_URL,
                       ),
                       json=_get_jira_attach_response(),
                       status=200)
@@ -903,9 +903,9 @@ class TestSubmissionUploadView(TestCase):
         responses.add(responses.POST,
                       '{0}{1}/{2}/{3}'.format(
                           site_config.helpdesk_server.url,
-                          HELPDESK_API_SUB_URL,
+                          JIRA_ISSUE_URL,
                           'FAKE_KEY',
-                          HELPDESK_ATTACHMENT_SUB_URL,
+                          JIRA_ATTACHMENT_SUB_URL,
                       ),
                       json=_get_jira_attach_response(),
                       status=200)

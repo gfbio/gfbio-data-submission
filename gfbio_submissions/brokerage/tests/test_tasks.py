@@ -15,8 +15,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIRequestFactory, APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    HELPDESK_API_SUB_URL, HELPDESK_COMMENT_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL, \
-    PANGAEA_ISSUE_BASE_URL, HELPDESK_API_ATTACHMENT_URL
+    JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, JIRA_ATTACHMENT_SUB_URL, \
+    JIRA_ATTACHMENT_URL
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, Submission, AuditableTextData, PersistentIdentifier, \
     BrokerObject, TaskProgressReport, AdditionalReference, PrimaryDataFile, \
@@ -88,7 +88,7 @@ class TestInitialChainTasks(TestCase):
             responses.POST,
             '{0}{1}'.format(
                 self.site_config.helpdesk_server.url,
-                HELPDESK_API_SUB_URL
+                JIRA_ISSUE_URL
             ),
             status=200,
             body=json.dumps({'mocked_response': True})
@@ -698,7 +698,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.helpdesk_server.url,
-                            HELPDESK_API_SUB_URL),
+                            JIRA_ISSUE_URL),
             json=self.issue_json,
             status=200)
         responses.add(
@@ -730,13 +730,13 @@ class TestGFBioHelpDeskTasks(TestTasks):
         responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.helpdesk_server.url,
-                            HELPDESK_API_SUB_URL),
+                            JIRA_ISSUE_URL),
             body='{"errorMessages":[],"errors":{"reporter":"The reporter specified is not a user."}}',
             status=400)
         responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.helpdesk_server.url,
-                            HELPDESK_API_SUB_URL),
+                            JIRA_ISSUE_URL),
             json=self.issue_json,
             status=200)
         responses.add(
@@ -770,7 +770,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.helpdesk_server.url,
-                            HELPDESK_API_SUB_URL
+                            JIRA_ISSUE_URL
                             ),
             json=self.issue_json,
             status=200)
@@ -819,9 +819,9 @@ class TestGFBioHelpDeskTasks(TestTasks):
         site_config = SiteConfiguration.objects.first()
         url = '{0}{1}/{2}/{3}'.format(
             site_config.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
+            JIRA_ISSUE_URL,
             'FAKE_KEY',
-            HELPDESK_COMMENT_SUB_URL,
+            JIRA_COMMENT_SUB_URL,
         )
         responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
         submission = Submission.objects.first()
@@ -840,9 +840,9 @@ class TestGFBioHelpDeskTasks(TestTasks):
         site_config = SiteConfiguration.objects.first()
         url = '{0}{1}/{2}/{3}'.format(
             site_config.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
+            JIRA_ISSUE_URL,
             'FAKE_KEY',
-            HELPDESK_ATTACHMENT_SUB_URL,
+            JIRA_ATTACHMENT_SUB_URL,
         )
         responses.add(responses.POST,
                       url,
@@ -885,9 +885,9 @@ class TestGFBioHelpDeskTasks(TestTasks):
         responses.add(responses.POST,
                       '{0}{1}/{2}/{3}'.format(
                           site_config.helpdesk_server.url,
-                          HELPDESK_API_SUB_URL,
+                          JIRA_ISSUE_URL,
                           'SAND-1661',
-                          HELPDESK_ATTACHMENT_SUB_URL,
+                          JIRA_ATTACHMENT_SUB_URL,
                       ),
                       json=_get_jira_attach_response(),
                       status=200)
@@ -936,9 +936,9 @@ class TestGFBioHelpDeskTasks(TestTasks):
         responses.add(responses.POST,
                       '{0}{1}/{2}/{3}'.format(
                           site_config.helpdesk_server.url,
-                          HELPDESK_API_SUB_URL,
+                          JIRA_ISSUE_URL,
                           'SAND-1661',
-                          HELPDESK_ATTACHMENT_SUB_URL,
+                          JIRA_ATTACHMENT_SUB_URL,
                       ),
                       json=_get_jira_attach_response(),
                       status=200)
@@ -955,7 +955,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         submission_upload = SubmissionUpload.objects.first()
         url = '{0}{1}/{2}'.format(
             site_config.helpdesk_server.url,
-            HELPDESK_API_ATTACHMENT_URL,
+            JIRA_ATTACHMENT_URL,
             submission_upload.attachment_id)
         responses.add(responses.DELETE, url, body=b'', status=204)
         result = delete_submission_issue_attachment_task.apply_async(
@@ -993,9 +993,9 @@ class TestGFBioHelpDeskTasks(TestTasks):
         )
         url = '{0}{1}/{2}/{3}'.format(
             site_config.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
+            JIRA_ISSUE_URL,
             'FAKE_KEY',
-            HELPDESK_COMMENT_SUB_URL,
+            JIRA_COMMENT_SUB_URL,
         )
         responses.add(responses.POST, url,
                       json={'bla': 'blubb'},
@@ -1005,7 +1005,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         #     site_config.helpdesk_server.url,
         #     HELPDESK_API_SUB_URL,
         #     'FAKE_KEY',
-        #     HELPDESK_COMMENT_SUB_URL,
+        #     JIRA_COMMENT_SUB_URL,
         # )
         # responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
 
@@ -1027,9 +1027,9 @@ class TestGFBioHelpDeskTasks(TestTasks):
         )
         url = '{0}{1}/{2}/{3}'.format(
             site_config.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
+            JIRA_ISSUE_URL,
             'FAKE_KEY',
-            HELPDESK_COMMENT_SUB_URL,
+            JIRA_COMMENT_SUB_URL,
         )
         responses.add(responses.POST, url, status=400, json={'bla': 'blubb'})
         result = add_pangaealink_to_submission_issue_task.apply_async(
@@ -1051,9 +1051,9 @@ class TestGFBioHelpDeskTasks(TestTasks):
         )
         url = '{0}{1}/{2}/{3}'.format(
             site_config.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
+            JIRA_ISSUE_URL,
             'FAKE_KEY',
-            HELPDESK_COMMENT_SUB_URL,
+            JIRA_COMMENT_SUB_URL,
         )
         responses.add(responses.POST, url, status=500, json={'bla': 'blubb'})
         result = add_pangaealink_to_submission_issue_task.apply_async(
@@ -1078,7 +1078,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.helpdesk_server.url,
-                            HELPDESK_API_SUB_URL),
+                            JIRA_ISSUE_URL),
             json={},
             status=400)
         result = create_submission_issue_task.apply_async(
@@ -1100,7 +1100,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.helpdesk_server.url,
-                            HELPDESK_API_SUB_URL),
+                            JIRA_ISSUE_URL),
             json={},
             status=500)
         result = create_submission_issue_task.apply_async(
@@ -1219,7 +1219,7 @@ class TestPangaeaTasks(TestTasks):
         responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.pangaea_jira_server.url,
-                            HELPDESK_API_SUB_URL),
+                            JIRA_ISSUE_URL),
             json=self.pangaea_issue_json,
             status=200)
         responses.add(
@@ -1268,7 +1268,7 @@ class TestPangaeaTasks(TestTasks):
         responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.pangaea_jira_server.url,
-                            HELPDESK_API_SUB_URL),
+                            JIRA_ISSUE_URL),
             json={},
             status=400)
         result = create_pangaea_issue_task.apply_async(
@@ -1297,7 +1297,7 @@ class TestPangaeaTasks(TestTasks):
         responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.pangaea_jira_server.url,
-                            HELPDESK_API_SUB_URL),
+                            JIRA_ISSUE_URL),
             json={},
             status=500)
 
@@ -1337,9 +1337,9 @@ class TestPangaeaTasks(TestTasks):
         responses.add(responses.POST,
                       '{0}{1}/{2}/{3}'.format(
                           site_config.pangaea_jira_server.url,
-                          HELPDESK_API_SUB_URL,
+                          JIRA_ISSUE_URL,
                           'PDI-12428',
-                          HELPDESK_ATTACHMENT_SUB_URL,
+                          JIRA_ATTACHMENT_SUB_URL,
                       ),
                       json=_get_pangaea_attach_response(),
                       status=200)
@@ -1458,6 +1458,7 @@ class TestPangaeaTasks(TestTasks):
     @responses.activate
     def test_comment_on_pangaea_ticket_task_success(self):
         submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
         submission.brokerobject_set.filter(
             type='study').first().persistentidentifier_set.create(
             archive='ENA',
@@ -1469,7 +1470,7 @@ class TestPangaeaTasks(TestTasks):
         self.assertEqual(0, len(request_logs))
         responses.add(
             responses.POST,
-            '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
+            '{0}/{1}/comment'.format(site_config.pangaea_jira_server,
                                     'PANGAEA_FAKE_KEY'),
             json=_get_pangaea_comment_response(),
             status=200)
@@ -1494,6 +1495,7 @@ class TestPangaeaTasks(TestTasks):
     @responses.activate
     def test_comment_on_pangaea_ticket_task_client_error(self):
         submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
         submission.brokerobject_set.filter(
             type='study').first().persistentidentifier_set.create(
             archive='ENA',
@@ -1505,7 +1507,7 @@ class TestPangaeaTasks(TestTasks):
         self.assertEqual(0, len(request_logs))
         responses.add(
             responses.POST,
-            '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
+            '{0}/{1}/comment'.format(site_config.pangaea_jira_server.url,
                                     'PANGAEA_FAKE_KEY'),
             status=400)
         result = add_accession_to_pangaea_issue_task.apply_async(
@@ -1531,6 +1533,7 @@ class TestPangaeaTasks(TestTasks):
     @responses.activate
     def test_comment_on_pangaea_ticket_task_server_error(self):
         submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
         submission.brokerobject_set.filter(
             type='study').first().persistentidentifier_set.create(
             archive='ENA',
@@ -1542,7 +1545,7 @@ class TestPangaeaTasks(TestTasks):
         self.assertEqual(0, len(request_logs))
         responses.add(
             responses.POST,
-            '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
+            '{0}/{1}/comment'.format(site_config.pangaea_jira_server.url,
                                     'PANGAEA_FAKE_KEY'),
             status=500)
         result = add_accession_to_pangaea_issue_task.apply_async(
@@ -1589,9 +1592,9 @@ class TestPangaeaTasks(TestTasks):
             responses.POST,
             '{0}{1}/{2}/{3}'.format(
                 site_config.helpdesk_server.url,
-                HELPDESK_API_SUB_URL,
+                JIRA_ISSUE_URL,
                 'FAKE_KEY',
-                HELPDESK_COMMENT_SUB_URL),
+                JIRA_COMMENT_SUB_URL),
             json={'bla': 'blubb'},
             status=200)
 
@@ -1619,7 +1622,7 @@ class TestTaskChains(TestTasks):
         responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.pangaea_jira_server.url,
-                            HELPDESK_API_SUB_URL),
+                            JIRA_ISSUE_URL),
             json=self.pangaea_issue_json,
             status=200)
         responses.add(
@@ -1632,9 +1635,9 @@ class TestTaskChains(TestTasks):
         responses.add(responses.POST,
                       '{0}{1}/{2}/{3}'.format(
                           site_config.pangaea_jira_server.url,
-                          HELPDESK_API_SUB_URL,
+                          JIRA_ISSUE_URL,
                           'PDI-12428',
-                          HELPDESK_ATTACHMENT_SUB_URL,
+                          JIRA_ATTACHMENT_SUB_URL,
                       ),
                       json=_get_pangaea_attach_response(),
                       status=200)
@@ -1680,7 +1683,7 @@ class TestTaskChains(TestTasks):
         )
         responses.add(responses.POST,
                       '{0}{1}'.format(site_config.helpdesk_server.url,
-                                      HELPDESK_API_SUB_URL
+                                      JIRA_ISSUE_URL
                                       ),
                       json={'bla': 'blubb'},
                       status=200)
@@ -1689,9 +1692,9 @@ class TestTaskChains(TestTasks):
             responses.POST,
             '{0}{1}/{2}/{3}'.format(
                 site_config.helpdesk_server.url,
-                HELPDESK_API_SUB_URL,
+                JIRA_ISSUE_URL,
                 'FAKE_KEY',
-                HELPDESK_COMMENT_SUB_URL,
+                JIRA_COMMENT_SUB_URL,
             ),
             json={'bla': 'blubb'},
             status=200)
@@ -1715,6 +1718,7 @@ class TestTaskProgressReportInTasks(TestTasks):
     @responses.activate
     def test_create_with_retry_task(self):
         submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
         submission.brokerobject_set.filter(
             type='study').first().persistentidentifier_set.create(
             archive='ENA',
@@ -1724,7 +1728,7 @@ class TestTaskProgressReportInTasks(TestTasks):
         )
         responses.add(
             responses.POST,
-            '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
+            '{0}/{1}/comment'.format(site_config.pangaea_jira_server.url,
                                     'PANGAEA_FAKE_KEY'),
             status=500)
         tprs = TaskProgressReport.objects.exclude(

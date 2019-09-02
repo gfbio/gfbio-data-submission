@@ -7,9 +7,9 @@ import requests
 from django.db import transaction
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    HELPDESK_LICENSE_MAPPINGS, \
-    HELPDESK_METASCHEMA_MAPPINGS, \
-    HELPDESK_DATACENTER_USER_MAPPINGS, HELPDESK_REQUEST_TYPE_MAPPINGS
+    GFBIO_LICENSE_MAPPINGS, \
+    GFBIO_METASCHEMA_MAPPINGS, \
+    GFBIO_DATACENTER_USER_MAPPINGS, GFBIO_REQUEST_TYPE_MAPPINGS
 from gfbio_submissions.brokerage.models import SiteConfiguration, RequestLog
 from gfbio_submissions.users.models import User
 
@@ -70,9 +70,9 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
     user_email = reporter.get('user_email', '')
 
     # molecular or generic
-    jira_request_target = HELPDESK_REQUEST_TYPE_MAPPINGS.get(
+    jira_request_target = GFBIO_REQUEST_TYPE_MAPPINGS.get(
         requirements.get('data_center', ''),
-        HELPDESK_REQUEST_TYPE_MAPPINGS.get('default', '')
+        GFBIO_REQUEST_TYPE_MAPPINGS.get('default', '')
     )
     # TODO: generic is failing to send emails -> corect value is: dsub/general-data-submission
     # jira_request_type = 'dsub/{0}'.format(jira_request_target) \
@@ -127,11 +127,11 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
                               requirements.get('legal_requirements',
                                                [])],
         'customfield_10314': requirements.get('project_id', ''),
-        'customfield_10202': HELPDESK_LICENSE_MAPPINGS.get(
+        'customfield_10202': GFBIO_LICENSE_MAPPINGS.get(
             requirements.get('license', 'Other License')),
         'customfield_10600': requirements.get('download_url', ''),
     }
-    assignee = HELPDESK_DATACENTER_USER_MAPPINGS.get(
+    assignee = GFBIO_DATACENTER_USER_MAPPINGS.get(
         requirements.get('data_center', ''), '')
     if len(assignee) > 0:
         mutual_data['assignee'] = {'name': assignee}
@@ -142,7 +142,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
         metadata_schema = 'MIxS 4.0'
     metadata_schema_value = [
         {
-            'value': HELPDESK_METASCHEMA_MAPPINGS.get(metadata_schema, {}).get(
+            'value': GFBIO_METASCHEMA_MAPPINGS.get(metadata_schema, {}).get(
                 'value', 'other')
         }
     ]

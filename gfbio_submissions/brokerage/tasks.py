@@ -10,14 +10,15 @@ from django.db.utils import IntegrityError
 from django.utils.encoding import smart_text
 from requests import ConnectionError, Response
 
-from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA
+from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, \
+    PANGAEA_ISSUE_VIEW_URL
 from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.users.models import User
 from .configuration.settings import BASE_HOST_NAME, \
     PRIMARY_DATA_FILE_MAX_RETRIES, PRIMARY_DATA_FILE_DELAY, \
-    SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY, PANGAEA_ISSUE_VIEW_URL
+    SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
 from .models import BrokerObject, \
     AuditableTextData, RequestLog, AdditionalReference, TaskProgressReport, \
     Submission, SubmissionUpload, SiteConfiguration

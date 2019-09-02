@@ -10,11 +10,9 @@ import xml.etree.ElementTree as ET
 
 import requests
 from django.db import transaction
-from django.utils.encoding import smart_text
 
 from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY, \
-    CSV_WRITER_QUOTING, SEPARATOR, PANGAEA_ISSUE_BASE_URL, \
-    PANGAEA_ISSUE_DOI_FIELD_NAME
+    CSV_WRITER_QUOTING, SEPARATOR
 from gfbio_submissions.brokerage.forms import Gcdj2CsvForm
 from gfbio_submissions.brokerage.models import TicketLabel, Submission
 from gfbio_submissions.brokerage.utils.gcdj_utils import flatten_dictionary

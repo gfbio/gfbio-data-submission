@@ -177,7 +177,7 @@ def check_for_molecular_content(submission):
             msg='check_for_molecular_content | '
                 'ena is default target return=True')
         return True, []
-    # TODO: consider HELPDESK_REQUEST_TYPE_MAPPINGS for data_center mappings
+    # TODO: consider GFBIO_REQUEST_TYPE_MAPPINGS for data_center mappings
     elif submission.release and submission.target == GENERIC \
             and submission.data.get('requirements', {}) \
             .get('data_center', '').count('ENA'):

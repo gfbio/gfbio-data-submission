@@ -17,7 +17,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIRequestFactory, APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    HELPDESK_API_SUB_URL, GENERIC, ENA_PANGAEA
+    JIRA_ISSUE_URL, GENERIC, ENA_PANGAEA
 from gfbio_submissions.brokerage.models import Submission, RequestLog, \
     SiteConfiguration, ResourceCredential, TaskProgressReport, SubmissionUpload
 from gfbio_submissions.brokerage.tests.utils import \
@@ -97,7 +97,7 @@ class TestSubmissionView(TestCase):
             responses.POST,
             '{0}{1}'.format(
                 self.site_config.helpdesk_server.url,
-                HELPDESK_API_SUB_URL
+                JIRA_ISSUE_URL
             ),
             status=200,
             body=json.dumps({'mocked_response': True})
@@ -113,7 +113,7 @@ class TestSubmissionView(TestCase):
     def _add_update_ticket_response(self):
         url = '{0}{1}/{2}'.format(
             self.site_config.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
+            JIRA_ISSUE_URL,
             'no_key_available'
         )
         responses.add(responses.PUT, url, body='', status=204)
@@ -1190,7 +1190,7 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
         site_config = SiteConfiguration.objects.first()
         url = '{0}{1}/{2}'.format(
             site_config.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
+            JIRA_ISSUE_URL,
             ticket_key
         )
         responses.add(responses.PUT, url, body='', status=204)
