@@ -1568,28 +1568,23 @@ class TestPangaeaTasks(TestTasks):
     def test_check_for_pangaea_doi_task_success(self):
         site_config = SiteConfiguration.objects.first()
         responses.add(
-            responses.GET,
-            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
-            status=200,
-        )
-        responses.add(responses.PUT,
-                      '{0}/rest/api/2/issue/FAKE_KEY'.format(
-                          site_config.helpdesk_server.url),
-                      body='', status=200)
-        site_config = SiteConfiguration.objects.first()
-        persistent_identifiers = PersistentIdentifier.objects.all()
-        self.assertEqual(0, len(persistent_identifiers))
-        responses.add(
             responses.POST,
             site_config.pangaea_token_server.url,
             body=_get_pangaea_soap_response(),
-            status=200)
+            status=200
+        )
         responses.add(
             responses.GET,
-            '{0}{1}'.format(PANGAEA_ISSUE_BASE_URL, 'PANGAEA_FAKE_KEY'),
+            '{0}/rest/api/2/field'.format(site_config.pangaea_jira_server.url),
+            status=200,
+        )
+        responses.add(
+            responses.GET,
+            'https://www.example.com/rest/api/2/issue/{0}'.format(
+                'PANGAEA_FAKE_KEY'),
             json=_get_pangaea_ticket_response(),
-            status=200)
-
+            status=200
+        )
         responses.add(
             responses.POST,
             '{0}{1}/{2}/{3}'.format(
@@ -1599,6 +1594,7 @@ class TestPangaeaTasks(TestTasks):
                 HELPDESK_COMMENT_SUB_URL),
             json={'bla': 'blubb'},
             status=200)
+
         result = check_for_pangaea_doi_task.apply_async(
             kwargs={
                 'resource_credential_id': site_config.pangaea_token_server.pk

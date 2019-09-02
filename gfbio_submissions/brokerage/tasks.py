@@ -11,7 +11,6 @@ from django.utils.encoding import smart_text
 from requests import ConnectionError, Response
 
 from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA
-from gfbio_submissions.brokerage.models import SubmissionUpload
 from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content
 from gfbio_submissions.brokerage.utils.jira import JiraClient
@@ -20,15 +19,14 @@ from .configuration.settings import BASE_HOST_NAME, \
     PRIMARY_DATA_FILE_MAX_RETRIES, PRIMARY_DATA_FILE_DELAY, \
     SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY, PANGAEA_ISSUE_VIEW_URL
 from .models import BrokerObject, \
-    AuditableTextData, RequestLog, AdditionalReference, ResourceCredential, \
-    TaskProgressReport, Submission
+    AuditableTextData, RequestLog, AdditionalReference, TaskProgressReport, \
+    Submission, SubmissionUpload, SiteConfiguration
 from .utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data, send_submission_to_ena, \
     parse_ena_submission_response
 from .utils.gfbio import \
     gfbio_get_user_by_id
-from .utils.pangaea import request_pangaea_login_token, \
-    parse_pangaea_login_token_response, pull_pangaea_dois
+from .utils.pangaea import pull_pangaea_dois
 from .utils.submission_transfer import SubmissionTransferHandler
 
 logger = logging.getLogger(__name__)
@@ -764,33 +762,40 @@ def check_for_pangaea_doi_task(resource_credential_id=None):
         submission=None,
         task=check_for_pangaea_doi_task)
     # FIXME: there must be a better way to get a specific login to pangagea than querying db with an id !
-    try:
-        resource_cred = ResourceCredential.objects.get(
-            pk=resource_credential_id)
-    except ResourceCredential.DoesNotExist as e:
-        logger.error(
-            msg='check_for_pangaea_doi_task. Error getting object for '
-                'resource_credential_id={}. {}'.format(resource_credential_id,
-                                                       e))
-        return None
-    response = request_pangaea_login_token(resource_credential=resource_cred)
-    try:
-        SubmissionTransferHandler.raise_response_exceptions(response)
-    except SubmissionTransferHandler.TransferError as e:
-        logger.error(
-            msg='check_for_pangaea_doi_task. Request login_token. '
-                'General Transfer error: {}'.format(e))
-        return None
-    login_token = parse_pangaea_login_token_response(response)
+    # try:
+    #     resource_cred = ResourceCredential.objects.get(
+    #         pk=resource_credential_id)
+    # except ResourceCredential.DoesNotExist as e:
+    #     logger.error(
+    #         msg='check_for_pangaea_doi_task. Error getting object for '
+    #             'resource_credential_id={}. {}'.format(resource_credential_id,
+    #                                                    e))
+    #     return None
+    # response = request_pangaea_login_token(resource_credential=resource_cred)
+    # try:
+    #     SubmissionTransferHandler.raise_response_exceptions(response)
+    # except SubmissionTransferHandler.TransferError as e:
+    #     logger.error(
+    #         msg='check_for_pangaea_doi_task. Request login_token. '
+    #             'General Transfer error: {}'.format(e))
+    #     return None
+    # login_token = parse_pangaea_login_token_response(response)
 
     # TODO: move this to top and check there are submissiont to fetch doi for, if not no request for login token is needed
-    submissions = Submission.objects.get_submitted_submissions_containing_reference(
-        reference_type=AdditionalReference.PANGAEA_JIRA_TICKET)
+    submissions = \
+        Submission.objects.get_submitted_submissions_containing_reference(
+            reference_type=AdditionalReference.PANGAEA_JIRA_TICKET
+        )
     logger.info(
         msg='check_for_pangaea_doi_task. pulling pangaea dois for {} '
             'submissions'.format(len(submissions)))
     for sub in submissions:
-        pull_pangaea_dois(sub, login_token)
+        site_config = SiteConfiguration.objects.get_site_configuration_for_task(
+            site=sub.site
+        )
+        jira_client = JiraClient(resource=site_config.helpdesk_server,
+                                 token_resource=site_config.pangaea_token_server)
+        pull_pangaea_dois(sub, jira_client)
 
 
 # HELP-DESK TASKS --------------------------------------------------------------
