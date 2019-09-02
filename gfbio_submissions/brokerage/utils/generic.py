@@ -1,26 +1,24 @@
 # -*- coding: utf-8 -*-
-import base64
-import logging
 
-logger = logging.getLogger(__name__)
-SOID_KEY = 'site_object_id'
-
-
-def encode_object_id(object_name, encode_value):
-    return '{}_{}'.format(object_name, base64.urlsafe_b64encode(encode_value))
-
-
-def append_site_object_id(data, id):
-    data['site_object_id'] = id
+# logger = logging.getLogger(__name__)
+# SOID_KEY = 'site_object_id'
+#
+#
+# def encode_object_id(object_name, encode_value):
+#     return '{}_{}'.format(object_name, base64.urlsafe_b64encode(encode_value))
+#
+#
+# def append_site_object_id(data, id):
+#     data['site_object_id'] = id
 
 
 # def create_dummy_gfbio_project_id():
 #     return encode_object_id('gfbio_project', str(time.time()))
 
 
-def generic_site_object_id_service():
-    # This here implies site_object_ids are available in data, so do nothing
-    pass
+# def generic_site_object_id_service():
+#     # This here implies site_object_ids are available in data, so do nothing
+#     pass
 
 # # TODO: this could be placed in Brokermodel manager
 # def dummy_site_object_id_service(broker_object_set):
