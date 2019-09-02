@@ -151,123 +151,123 @@ def prepare_pangaea_issue_content(site_configuration, submission):
 
 # TODO: refactor to be independent from Pangaea url, since JIRA API works for all installations of JIRA
 # TODO: move to jira-python once login is possible with this
-def create_pangaea_jira_ticket(login_token, site_configuration, submission):
-    # TODO: url from site_config, refactor site_Config for this
-    url = PANGAEA_ISSUE_BASE_URL
-    cookies = dict(PanLoginID=login_token)
-    headers = {
-        'Content-Type': 'application/json'
-    }
-    # TODO: configure hardcoded content ???
-    data = prepare_pangaea_issue_content(site_configuration, submission)
-    # requestlog: ok
-    response = requests.post(
-        url=url,
-        headers=headers,
-        cookies=cookies,
-        data=data,
-        verify=True
-    )
-
-    with transaction.atomic():
-        # prevent cyclic dependencies
-        from gfbio_submissions.brokerage.models import RequestLog
-        req_log = RequestLog(
-            request_id=uuid.uuid4(),
-            type=RequestLog.OUTGOING,
-            url=url,
-            data=data,
-            site_user=submission.submitting_user if submission.submitting_user is not None else '',
-            submission_id=submission.broker_submission_id,
-            response_status=response.status_code,
-            response_content=response.content,
-            triggered_by=None,
-            request_details={
-                'request_headers': str(headers),
-                'request_cookies': str(cookies)
-            }
-        )
-        req_log.save()
-
-    return response
-
-
-def attach_file_to_pangaea_ticket(login_token, ticket_key, file_name,
-                                  content_string, submission):
-    url = '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL, ticket_key)
-    cookies = dict(PanLoginID=login_token)
-    headers = CaseInsensitiveDict({'content-type': None,
-                                   'X-Atlassian-Token': 'nocheck'})
-    files = {'file': (file_name, content_string)}
-    # requestlog: ok
-    response = requests.post(
-        url=url,
-        headers=headers,
-        cookies=cookies,
-        files=files
-    )
-    with transaction.atomic():
-        # prevent cyclic dependencies
-        from gfbio_submissions.brokerage.models import RequestLog
-        req_log = RequestLog(
-            request_id=uuid.uuid4(),
-            type=RequestLog.OUTGOING,
-            url=url,
-            data=files,
-            site_user=submission.submitting_user if submission.submitting_user is not None else '',
-            submission_id=submission.broker_submission_id,
-            response_status=response.status_code,
-            response_content=response.content,
-            triggered_by=None,
-            request_details={
-                'request_headers': str(headers),
-                'request_cookies': str(cookies)
-            }
-        )
-        req_log.save()
-
-    return response
+# def create_pangaea_jira_ticket(login_token, site_configuration, submission):
+#     # TODO: url from site_config, refactor site_Config for this
+#     url = PANGAEA_ISSUE_BASE_URL
+#     cookies = dict(PanLoginID=login_token)
+#     headers = {
+#         'Content-Type': 'application/json'
+#     }
+#     # TODO: configure hardcoded content ???
+#     data = prepare_pangaea_issue_content(site_configuration, submission)
+#     # requestlog: ok
+#     response = requests.post(
+#         url=url,
+#         headers=headers,
+#         cookies=cookies,
+#         data=data,
+#         verify=True
+#     )
+#
+#     with transaction.atomic():
+#         # prevent cyclic dependencies
+#         from gfbio_submissions.brokerage.models import RequestLog
+#         req_log = RequestLog(
+#             request_id=uuid.uuid4(),
+#             type=RequestLog.OUTGOING,
+#             url=url,
+#             data=data,
+#             site_user=submission.submitting_user if submission.submitting_user is not None else '',
+#             submission_id=submission.broker_submission_id,
+#             response_status=response.status_code,
+#             response_content=response.content,
+#             triggered_by=None,
+#             request_details={
+#                 'request_headers': str(headers),
+#                 'request_cookies': str(cookies)
+#             }
+#         )
+#         req_log.save()
+#
+#     return response
 
 
-def comment_on_pangaea_ticket(login_token, ticket_key, comment_body='',
-                              submission=None):
-    url = '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL, ticket_key)
-    cookies = dict(PanLoginID=login_token)
-    headers = {
-        'Content-Type': 'application/json'
-    }
-    data = json.dumps({
-        'body': '{}'.format(comment_body)
-    })
-    # requestlog: ok
-    response = requests.post(
-        url=url,
-        headers=headers,
-        cookies=cookies,
-        data=data
-    )
+# def attach_file_to_pangaea_ticket(login_token, ticket_key, file_name,
+#                                   content_string, submission):
+#     url = '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL, ticket_key)
+#     cookies = dict(PanLoginID=login_token)
+#     headers = CaseInsensitiveDict({'content-type': None,
+#                                    'X-Atlassian-Token': 'nocheck'})
+#     files = {'file': (file_name, content_string)}
+#     # requestlog: ok
+#     response = requests.post(
+#         url=url,
+#         headers=headers,
+#         cookies=cookies,
+#         files=files
+#     )
+#     with transaction.atomic():
+#         # prevent cyclic dependencies
+#         from gfbio_submissions.brokerage.models import RequestLog
+#         req_log = RequestLog(
+#             request_id=uuid.uuid4(),
+#             type=RequestLog.OUTGOING,
+#             url=url,
+#             data=files,
+#             site_user=submission.submitting_user if submission.submitting_user is not None else '',
+#             submission_id=submission.broker_submission_id,
+#             response_status=response.status_code,
+#             response_content=response.content,
+#             triggered_by=None,
+#             request_details={
+#                 'request_headers': str(headers),
+#                 'request_cookies': str(cookies)
+#             }
+#         )
+#         req_log.save()
+#
+#     return response
 
-    with transaction.atomic():
-        # prevent cyclic dependencies
-        from gfbio_submissions.brokerage.models import RequestLog
-        req_log = RequestLog(
-            request_id=uuid.uuid4(),
-            type=RequestLog.OUTGOING,
-            url=url,
-            data=data,
-            site_user=submission.submitting_user if submission.submitting_user is not None else '',
-            submission_id=submission.broker_submission_id,
-            response_status=response.status_code,
-            response_content=response.content,
-            triggered_by=None,
-            request_details={
-                'request_headers': str(headers),
-                'request_cookies': str(cookies)
-            }
-        )
-        req_log.save()
 
-    return response
+# def comment_on_pangaea_ticket(login_token, ticket_key, comment_body='',
+#                               submission=None):
+#     url = '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL, ticket_key)
+#     cookies = dict(PanLoginID=login_token)
+#     headers = {
+#         'Content-Type': 'application/json'
+#     }
+#     data = json.dumps({
+#         'body': '{}'.format(comment_body)
+#     })
+#     # requestlog: ok
+#     response = requests.post(
+#         url=url,
+#         headers=headers,
+#         cookies=cookies,
+#         data=data
+#     )
+#
+#     with transaction.atomic():
+#         # prevent cyclic dependencies
+#         from gfbio_submissions.brokerage.models import RequestLog
+#         req_log = RequestLog(
+#             request_id=uuid.uuid4(),
+#             type=RequestLog.OUTGOING,
+#             url=url,
+#             data=data,
+#             site_user=submission.submitting_user if submission.submitting_user is not None else '',
+#             submission_id=submission.broker_submission_id,
+#             response_status=response.status_code,
+#             response_content=response.content,
+#             triggered_by=None,
+#             request_details={
+#                 'request_headers': str(headers),
+#                 'request_cookies': str(cookies)
+#             }
+#         )
+#         req_log.save()
+#
+#     return response
 
 
 def check_for_pangaea_doi(ticket_key, login_token, submission):
@@ -341,7 +341,6 @@ def pull_pangaea_dois(submission, login_token):
                     'to helpdeskticket. submission_id={}'.format(submission.pk))
             from gfbio_submissions.brokerage.tasks import \
                 add_pangaea_doi_task
-
 
             add_pangaea_doi_task.apply_async(
                 kwargs={

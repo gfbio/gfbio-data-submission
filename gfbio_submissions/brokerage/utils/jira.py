@@ -76,7 +76,9 @@ class JiraClient(object):
 
     def get_issue(self, key=''):
         try:
+            # print('TRy get')
             self.issue = self.jira.issue(key)
+            # print(self.issue)
             self.error = None
         except JIRAError as e:
             logger.warning(
@@ -86,6 +88,7 @@ class JiraClient(object):
             self.error = e
 
     def update_issue(self, key, fields):
+        print('KEY ', key, ' fields: ', fields)
         self.get_issue(key)
         print('ISSUE {0}'.format(self.issue.key))
         try:
