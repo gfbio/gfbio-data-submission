@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+from pprint import pprint
 
 import celery
 from celery import Task
@@ -38,11 +39,14 @@ logger = logging.getLogger(__name__)
 class SubmissionTask(Task):
     abstract = True
 
+    # also existing
+    #   - on_bound
+
     # TODO: consider a report for every def here OR refactor taskreport to
     #  keep track in one report. Keep in mind to resume chains from a certain
     #  point, add a DB clean up task to remove from database
     def on_retry(self, exc, task_id, args, kwargs, einfo):
-        # print('+++++++++ on_retry')
+        print('\n\n+++++++++ on_retry')
         # TODO: capture this idea of reporting to sentry
         # sentrycli.captureException(exc)
         TaskProgressReport.objects.update_report_on_exception(
@@ -50,20 +54,22 @@ class SubmissionTask(Task):
         super(SubmissionTask, self).on_retry(exc, task_id, args, kwargs, einfo)
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
-        # print('+++++++++ on_failure')
+        print('\n\n+++++++++ on_failure')
         TaskProgressReport.objects.update_report_on_exception(
             'FAILURE', exc, task_id, args, kwargs, einfo)
         super(SubmissionTask, self).on_failure(exc, task_id, args, kwargs,
                                                einfo)
 
     def on_success(self, retval, task_id, args, kwargs):
-        # print('+++++++++ on_success')
+        print('\n\n+++++++++ on_success')
+        pprint(self.trail)
         TaskProgressReport.objects.update_report_on_success(
             retval, task_id, args, kwargs)
         super(SubmissionTask, self).on_success(retval, task_id, args, kwargs)
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        # print('+++++++++ after return')
+        print('\n\n+++++++++ after return')
+        pprint(self.trail)
         TaskProgressReport.objects.update_report_after_return(status, task_id)
         super(SubmissionTask, self).after_return(
             status, retval, task_id, args, kwargs, einfo)
@@ -385,7 +391,6 @@ def prepare_ena_submission_data_task(prev_task_result=None, submission_id=None):
         return TaskProgressReport.CANCELLED
 
 
-# TODO: add task for preparation of ena-data (this is currently included in send-to-ena)
 # TODO: result of this task is input for next task
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
              name='tasks.transfer_data_to_ena_task', base=SubmissionTask)
@@ -597,6 +602,8 @@ def check_for_pangaea_doi_task(resource_credential_id=None):
     logger.info(
         msg='check_for_pangaea_doi_task. pulling pangaea dois for {} '
             'submissions'.format(len(submissions)))
+    # TODO: in general suboptimal to fetch sc for every submission in set, but neeeded, reconsider to refactor
+    #   schedule in database etc.
     for sub in submissions:
         site_config = SiteConfiguration.objects.get_site_configuration_for_task(
             site=sub.site
@@ -852,9 +859,6 @@ def attach_to_submission_issue_task(kwargs=None, submission_id=None,
             return False
     else:
         return TaskProgressReport.CANCELLED
-
-
-# TODO: continue with proper implemenation of task and add test
 
 
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,

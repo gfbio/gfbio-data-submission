@@ -2,6 +2,7 @@
 import base64
 import json
 import uuid
+from pprint import pprint
 from unittest import skip
 from unittest.mock import patch
 from uuid import uuid4
@@ -682,13 +683,126 @@ class TestPortalServiceTasks(TestTasks):
 
 class TestGFBioHelpDeskTasks(TestTasks):
 
-    # @classmethod
-    # def setUpTestData(cls):
-    #     cls.issue_json = _get_jira_issue_response()
+    @classmethod
+    def _add_success_responses(cls):
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(
+                cls.default_site_config.helpdesk_server.url),
+            status=200,
+        )
+        responses.add(
+            responses.POST,
+            '{0}{1}'.format(cls.default_site_config.helpdesk_server.url,
+                            JIRA_ISSUE_URL),
+            json=cls.issue_json,
+            status=200)
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/SAND-1661'.format(
+                cls.default_site_config.helpdesk_server.url),
+            json=cls.issue_json
+        )
+
+    @classmethod
+    def _add_client_fail_responses(cls):
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(
+                cls.default_site_config.helpdesk_server.url),
+            status=200,
+        )
+        responses.add(
+            responses.POST,
+            '{0}{1}'.format(cls.default_site_config.helpdesk_server.url,
+                            JIRA_ISSUE_URL),
+            json={},
+            status=400)
+
+    @classmethod
+    def _add_server_fail_responses(cls):
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(
+                cls.default_site_config.helpdesk_server.url),
+            status=200,
+        )
+        responses.add(
+            responses.POST,
+            '{0}{1}'.format(cls.default_site_config.helpdesk_server.url,
+                            JIRA_ISSUE_URL),
+            json={},
+            status=500)
+
+    # TODO: may these have to be moved to other test class (Taskprogressreport ...)
+    #   or removed ... Now for testing behaviour on GFBIO-2589
+    @responses.activate
+    def test_tpr_task_success(self):
+        self._add_success_responses()
+        submission = Submission.objects.last()
+        self.assertEqual(0, len(TaskProgressReport.objects.all()))
+        result = create_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        self.assertTrue(result.successful())
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        t = TaskProgressReport.objects.first()
+        pprint(t.__dict__)
+
+    @responses.activate
+    def test_tpr_task_client_fail(self):
+        self._add_client_fail_responses()
+        submission = Submission.objects.last()
+        self.assertEqual(0, len(TaskProgressReport.objects.all()))
+        result = create_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        self.assertTrue(result.successful())
+        t = TaskProgressReport.objects.first()
+        pprint(t.__dict__)
+
+    @responses.activate
+    def test_tpr_task_server_fail(self):
+        self._add_server_fail_responses()
+        submission = Submission.objects.last()
+        self.assertEqual(0, len(TaskProgressReport.objects.all()))
+        result = create_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        self.assertTrue(result.successful())
+        t = TaskProgressReport.objects.first()
+        pprint(t.__dict__)
+
+    @responses.activate
+    def test_tpr_task_success_failing_kwargs(self):
+        self._add_success_responses()
+        submission = Submission.objects.last()
+        self.assertEqual(0, len(TaskProgressReport.objects.all()))
+
+        result = create_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        self.assertTrue(result.successful())
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        t = TaskProgressReport.objects.first()
+        pprint(t.__dict__)
+
+    # TODO: compare todo above ------------------------------------------------
 
     @responses.activate
     def test_create_helpdesk_ticket_task_success(self):
         submission = Submission.objects.last()
+        # TODO: replace bay self.default_site_config
         site_config = SiteConfiguration.objects.first()
         responses.add(
             responses.GET,
@@ -755,7 +869,6 @@ class TestGFBioHelpDeskTasks(TestTasks):
             task_name='tasks.update_helpdesk_ticket_task')
         self.assertEqual(1, len(tprs))
         self.assertEqual(1, len(submission.additionalreference_set.all()))
-        print('ADDREF: ', submission.additionalreference_set.first())
 
     @responses.activate
     def test_create_helpdesk_ticket_task_unicode_text(self):
@@ -1471,7 +1584,7 @@ class TestPangaeaTasks(TestTasks):
         responses.add(
             responses.POST,
             '{0}/{1}/comment'.format(site_config.pangaea_jira_server,
-                                    'PANGAEA_FAKE_KEY'),
+                                     'PANGAEA_FAKE_KEY'),
             json=_get_pangaea_comment_response(),
             status=200)
         result = add_accession_to_pangaea_issue_task.apply_async(
@@ -1508,7 +1621,7 @@ class TestPangaeaTasks(TestTasks):
         responses.add(
             responses.POST,
             '{0}/{1}/comment'.format(site_config.pangaea_jira_server.url,
-                                    'PANGAEA_FAKE_KEY'),
+                                     'PANGAEA_FAKE_KEY'),
             status=400)
         result = add_accession_to_pangaea_issue_task.apply_async(
             kwargs={
@@ -1546,7 +1659,7 @@ class TestPangaeaTasks(TestTasks):
         responses.add(
             responses.POST,
             '{0}/{1}/comment'.format(site_config.pangaea_jira_server.url,
-                                    'PANGAEA_FAKE_KEY'),
+                                     'PANGAEA_FAKE_KEY'),
             status=500)
         result = add_accession_to_pangaea_issue_task.apply_async(
             kwargs={
@@ -1729,7 +1842,7 @@ class TestTaskProgressReportInTasks(TestTasks):
         responses.add(
             responses.POST,
             '{0}/{1}/comment'.format(site_config.pangaea_jira_server.url,
-                                    'PANGAEA_FAKE_KEY'),
+                                     'PANGAEA_FAKE_KEY'),
             status=500)
         tprs = TaskProgressReport.objects.exclude(
             task_name='tasks.update_helpdesk_ticket_task')
