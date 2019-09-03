@@ -2,11 +2,6 @@
 import os
 
 
-# TODO: remove this ..., but is part of initial migration
-# def submission_rest_upload_path(instance, filename):
-#     return '{0}/{1}'.format(instance.broker_submission_id, filename)
-
-
 def submission_upload_path(instance, filename):
     return '{0}{1}{2}'.format(instance.submission.broker_submission_id,
                               os.path.sep, filename)

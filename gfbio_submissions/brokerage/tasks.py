@@ -226,48 +226,8 @@ def apply_timebased_task_retry_policy(task, submission, no_of_tickets):
             )
 
 
-# TODO: refactor/move to submission_transfer_handler and combine with
-#  apply_default_task_retry_policy
-# def force_ticket_creation(response, submission, site_configuration):
-#     if response.status_code >= 400:
-#         try:
-#             error_messages = response.json()
-#         except JSONDecodeError as e:
-#             return response
-#         # deal with jira unknown reporter
-#         if 'reporter' in error_messages.get('errors', {}).keys():
-#             reporter_errors = error_messages.get('errors', {})
-#             if 'The reporter specified is not a user' in reporter_errors.get(
-#                     'reporter', ''):
-#                 default = {
-#                     'user_email': 'maweber@mpi-bremen.de',
-#                     # brokeragent@gfbio.org
-#                     'user_full_name': '',
-#                     'first_name': '',
-#                     'last_name': '',
-#                 }
-#                 # create_submission_issue_task.s(prev_task_result=default,
-#                 #                               submission_id=submission_id).set(
-#                 #     countdown=SUBMISSION_RETRY_DELAY)()
-#                 data = gfbio_prepare_create_helpdesk_payload(
-#                     reporter=default,
-#                     site_config=site_configuration,
-#                     submission=submission)
-#                 return gfbio_helpdesk_create_ticket(
-#                     site_config=site_configuration,
-#                     submission=submission,
-#                     data=data,
-#                 )
-#         else:
-#             return response
-#     return response
-
-
 # TODO: refactor/move to submission_transfer_handler
 def apply_default_task_retry_policy(response, task, submission):
-    # print('\n\napply_default_task_retry_policy\n', response, '\n ', task, '\n ',
-    #       submission.broker_submission_id, '\n\n')
-    # print(response.content)
     try:
         SubmissionTransferHandler.raise_response_exceptions(response)
     except SubmissionTransferHandler.TransferServerError as e:
@@ -279,15 +239,11 @@ def apply_default_task_retry_policy(response, task, submission):
             msg='{} SubmissionTransfer.TransferServerError number_of_retries={}'
                 ''.format(task.name, task.request.retries)
         )
-        # print('\n\n', task.request.retries)
         if task.request.retries == SUBMISSION_MAX_RETRIES:
-            # print('retries reached ', task.request.retries, ' ',
-            #       SUBMISSION_MAX_RETRIES, '\n\n')
             logger.warning(
                 msg='{} SubmissionTransfer.TransferServerError (mail_admins) max_retries={}'
                     ''.format(task.name, SUBMISSION_MAX_RETRIES)
             )
-            # print('\nMAIL ADMINS\n')
             mail_admins(
                 subject='Failed "{}" for submission {}'.format(
                     task.name, submission.broker_submission_id),
@@ -296,29 +252,15 @@ def apply_default_task_retry_policy(response, task, submission):
                     submission.broker_submission_id, e),
             )
         else:
-            # print('increase retry ',
-            #       (task.request.retries + 1) * SUBMISSION_RETRY_DELAY)
             logger.info(
                 msg='{} SubmissionTransfer.TransferServerError retry after delay'
                     ''.format(task.name)
             )
-            # try:
-            # print('\n---------- raise retry (as before )-------------\n')
-            # raise task.retry(
-            #     exc=e,
-            #     throw=False,
-            #     countdown=(task.request.retries + 1) * SUBMISSION_RETRY_DELAY,
-            # )
             task.retry(
                 exc=e,
                 throw=False,
                 countdown=(task.request.retries + 1) * SUBMISSION_RETRY_DELAY,
             )
-            # except celery.exceptions.Retry as e:
-            #     print('\n--------- exceptr retry --------------\n')
-            #     print(e.exc)
-            #     print(e.message)
-            #     print(e.humanize())
 
     except SubmissionTransferHandler.TransferClientError as e:
         logger.warning(
@@ -416,7 +358,6 @@ def prepare_ena_submission_data_task(prev_task_result=None, submission_id=None):
             prev_task_result,
             submission_id)
     )
-    # prev_task_result != TaskProgressReport.CANCELLED and
     if submission is not None and len(
             submission.brokerobject_set.all()) > 0:
         with transaction.atomic():
@@ -426,9 +367,6 @@ def prepare_ena_submission_data_task(prev_task_result=None, submission_id=None):
             msg='prepare_ena_submission_data_task. finished prepare_ena_data '
                 'submission_id={}'.format(submission_id)
         )
-        # logger.info('\n\nENA SUBMISSION DATA')
-        # logger.info('\n{}'.format(ena_submission_data))
-        # logger.info('\n\nENA SUBMISSION DATA\n\n')
         store_ena_data_as_auditable_text_data(submission=submission,
                                               data=ena_submission_data)
         # TODO: this will become obsolete once, data is taken from AuditableTextData ....
@@ -463,8 +401,6 @@ def transfer_data_to_ena_task(prepare_result=None, submission_id=None):
     if submission is not None and site_configuration is not None:
         ena_submission_data = AuditableTextData.objects.assemble_ena_submission_data(
             submission=submission)
-        # logger.info('\nena_submission_data')
-        # logger.info('{}'.format(ena_submission_data))
         if ena_submission_data == {}:
             return TaskProgressReport.CANCELLED
         try:
@@ -472,14 +408,11 @@ def transfer_data_to_ena_task(prepare_result=None, submission_id=None):
                                                           site_configuration.ena_server,
                                                           ena_submission_data,
                                                           )
-            # logger.info('\nresponse request id {}'.format(request_id))
-            # logger.info('\nresponse \n{}\n'.format(response))
             apply_default_task_retry_policy(
                 response,
                 transfer_data_to_ena_task,
                 submission,
             )
-            # logger.info('\nafter retry policy')
         except ConnectionError as e:
             logger.error(
                 msg='connection_error {}.url={} title={}'.format(
@@ -488,11 +421,6 @@ def transfer_data_to_ena_task(prepare_result=None, submission_id=None):
                     site_configuration.ena_server.title)
             )
             response = Response()
-        # logger.info(
-        #     '\nreturn from task {}\n{}\n{}\n'.format(str(request_id),
-        #                                              response.status_code,
-        #                                              response.content)
-        # )
         return str(request_id), response.status_code, smart_text(
             response.content)
     else:
@@ -554,27 +482,6 @@ def process_ena_response_task(transfer_result=None, submission_id=None,
 
 # Pangea submission transfer tasks ---------------------------------------------
 
-# TODO: result of this task is input for next task
-# @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
-#              name='tasks.request_pangaea_login_token_task', base=SubmissionTask)
-# def request_pangaea_login_token_task(previous_task_result=None,
-#                                      submission_id=None):
-#     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-#         submission_id=submission_id, task=request_pangaea_login_token_task
-#     )
-#     if submission is not None and site_configuration is not None:
-#         response = request_pangaea_login_token(
-#             resource_credential=site_configuration.pangaea_server)
-#         apply_default_task_retry_policy(response,
-#                                         request_pangaea_login_token_task,
-#                                         submission)
-#         login_token = parse_pangaea_login_token_response(response)
-#         return login_token
-#     else:
-#         return 'CANCELLED'
-
-
-# TODO: this one relies on prevoius task: request_pangaea_login_token_task
 @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
              name='tasks.create_pangaea_issue_task', base=SubmissionTask)
 def create_pangaea_issue_task(login_token=None, submission_id=None):
@@ -587,12 +494,6 @@ def create_pangaea_issue_task(login_token=None, submission_id=None):
             token_resource=site_configuration.pangaea_token_server)
         jira_client.create_pangaea_issue(site_config=site_configuration,
                                          submission=submission)
-        # response = create_pangaea_jira_ticket(login_token=login_token,
-        #                                       site_configuration=site_configuration,
-        #                                       submission=submission)
-        # apply_default_task_retry_policy(response,
-        #                                 create_pangaea_issue_task,
-        #                                 submission)
         if jira_client.error:
             apply_default_task_retry_policy(
                 jira_client.error.response,
@@ -608,25 +509,6 @@ def create_pangaea_issue_task(login_token=None, submission_id=None):
             return {
                 'issue_key': jira_client.issue.key,
             }
-        # try:
-        #     # content = json.loads(response.content)
-        #     content = response.json()
-        #     ticket_key = content.get('key', 'no_key_available')
-        #     with transaction.atomic():
-        #         submission.additionalreference_set.create(
-        #             type=AdditionalReference.PANGAEA_JIRA_TICKET,
-        #             reference_key=ticket_key,
-        #             primary=True
-        #         )
-        #     return {
-        #         'login_token': login_token,
-        #         'ticket_key': ticket_key
-        #     }
-        # except ValueError as e:
-        #     logger.error(
-        #         'ValueError. create_pangaea_issue_task. Error: {}'.format(
-        #             e))
-        #     return None
     else:
         return TaskProgressReport.CANCELLED
 
@@ -644,8 +526,6 @@ def add_accession_to_pangaea_issue_task(kwargs=None, submission_id=None):
             and 'issue_key' in kwargs.keys():
 
         # TODO: manager method to get panagea issue without needing pre-chain result
-        print('\nkwargs ', kwargs)
-
         ticket_key = kwargs.get('issue_key', 'None')
         study_pid = submission.brokerobject_set.filter(
             type='study').first().persistentidentifier_set.filter(
@@ -666,37 +546,6 @@ def add_accession_to_pangaea_issue_task(kwargs=None, submission_id=None):
                     add_accession_to_pangaea_issue_task,
                     submission
                 )
-
-                # login_token = None
-        # ticket_key = None
-        # if isinstance(kwargs, dict):
-        #     login_token = kwargs.get('login_token', None)
-        #     ticket_key = kwargs.get('ticket_key', None)
-        # if login_token and ticket_key:
-        #     study_pid = submission.brokerobject_set.filter(
-        #         type='study').first().persistentidentifier_set.filter(
-        #         pid_type='PRJ').first()
-        #     if study_pid:
-        #         comment_body = 'ENA Accession No. of study {}. broker_submission_id: ' \
-        #                        '{}. {}'.format(study_pid.pid,
-        #                                        submission.broker_submission_id,
-        #                                        comment_body)
-        #         response = comment_on_pangaea_ticket(
-        #             login_token=login_token,
-        #             ticket_key=ticket_key,
-        #             comment_body=comment_body,
-        #             submission=submission,
-        #         )
-        #         apply_default_task_retry_policy(response,
-        #                                         add_accession_to_pangaea_issue_task,
-        #                                         submission)
-        #         return True
-        #     else:
-        #         logger.error(
-        #             msg='add_accession_to_pangaea_issue_task. Cannot access PersistendIdentifier for study')
-        #         return None
-        # else:
-        #     return None
     else:
         return TaskProgressReport.CANCELLED
 
@@ -712,10 +561,6 @@ def attach_to_pangaea_issue_task(kwargs={}, submission_id=None):
     )
     if submission is not None and site_configuration is not None \
             and 'issue_key' in kwargs.keys():
-        # login_token = None
-        # ticket_key = None
-        # if isinstance(kwargs, dict):
-        # login_token = kwargs.get('login_token', None)
 
         ticket_key = kwargs.get('issue_key', 'None')
         jira_client = JiraClient(
@@ -732,24 +577,6 @@ def attach_to_pangaea_issue_task(kwargs={}, submission_id=None):
             )
         return {'issue_key': ticket_key}
 
-        # if login_token and ticket_key:
-        #     csv_from_samples = get_csv_from_samples(submission)
-        #     response = attach_file_to_pangaea_ticket(
-        #         login_token=login_token,
-        #         ticket_key=ticket_key,
-        #         file_name='contextual_data.csv',
-        #         content_string=csv_from_samples,
-        #         submission=submission,
-        #     )
-        #     apply_default_task_retry_policy(response,
-        #                                     attach_to_pangaea_issue_task,
-        #                                     submission)
-        #     return {
-        #         'login_token': login_token,
-        #         'ticket_key': ticket_key
-        #     }
-        # else:
-        #     return None
     else:
         return TaskProgressReport.CANCELLED
 
@@ -762,26 +589,6 @@ def check_for_pangaea_doi_task(resource_credential_id=None):
     task_report, created = TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=check_for_pangaea_doi_task)
-    # FIXME: there must be a better way to get a specific login to pangagea than querying db with an id !
-    # try:
-    #     resource_cred = ResourceCredential.objects.get(
-    #         pk=resource_credential_id)
-    # except ResourceCredential.DoesNotExist as e:
-    #     logger.error(
-    #         msg='check_for_pangaea_doi_task. Error getting object for '
-    #             'resource_credential_id={}. {}'.format(resource_credential_id,
-    #                                                    e))
-    #     return None
-    # response = request_pangaea_login_token(resource_credential=resource_cred)
-    # try:
-    #     SubmissionTransferHandler.raise_response_exceptions(response)
-    # except SubmissionTransferHandler.TransferError as e:
-    #     logger.error(
-    #         msg='check_for_pangaea_doi_task. Request login_token. '
-    #             'General Transfer error: {}'.format(e))
-    #     return None
-    # login_token = parse_pangaea_login_token_response(response)
-
     # TODO: move this to top and check there are submissiont to fetch doi for, if not no request for login token is needed
     submissions = \
         Submission.objects.get_submitted_submissions_containing_reference(
@@ -827,15 +634,12 @@ def get_user_email_task(submission_id=None):
             response = gfbio_get_user_by_id(submission.submitting_user,
                                             site_configuration, submission)
             try:
-                # content = json.loads(response.content)
                 response_json = response.json()
                 content = response_json if isinstance(response_json,
                                                       dict) else {}
                 res['user_email'] = content.get('emailaddress',
                                                 site_configuration.contact)
                 res['user_full_name'] = content.get('fullname', '')
-                # res['first_name'] = content.get('firstname', '')
-                # res['last_name'] = content.get('lastname', '')
             except ValueError as e:
                 logger.error(
                     msg='get_user_email_task. load json response. '
@@ -908,7 +712,6 @@ def create_submission_issue_task(prev_task_result=None, submission_id=None):
         jira_client.create_submission_issue(reporter=prev_task_result,
                                             site_config=site_configuration,
                                             submission=submission)
-
         if jira_client.error:
             apply_default_task_retry_policy(jira_client.error.response,
                                             create_submission_issue_task,
@@ -921,59 +724,6 @@ def create_submission_issue_task(prev_task_result=None, submission_id=None):
             )
     else:
         return TaskProgressReport.CANCELLED
-
-
-# TODO: currently not use any where. If needed refactor and use jira client
-# @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
-#              name='tasks.update_helpdesk_ticket_task', base=SubmissionTask)
-# def update_helpdesk_ticket_task(prev_task_result=None, submission_id=None,
-#                                 data=None):
-#     logger.info(
-#         msg='update_helpdesk_ticket_task submission_id={0} | '
-#             'prev_task_result={1} | '
-#             'data={2}'.format(
-#             submission_id, prev_task_result, data)
-#     )
-#     submission = SubmissionTransferHandler.get_submission_for_task(
-#         submission_id=submission_id,
-#         task=update_helpdesk_ticket_task,
-#         get_closed_submission=True
-#     )
-#
-#     if submission is not None:
-#         tickets = submission.additionalreference_set.filter(
-#             Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
-#         if len(tickets) != 1:
-#             return TaskProgressReport.CANCELLED
-#         submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-#             submission_id=submission_id,
-#             task=update_helpdesk_ticket_task,
-#             get_closed_submission=True
-#         )
-#         if site_configuration is None:
-#             return TaskProgressReport.CANCELLED
-#
-#         ticket = tickets[0]
-#
-#         # TODO: explicit task for this use case
-#         if data is None:
-#             data = gfbio_prepare_create_helpdesk_payload(
-#                 site_config=site_configuration,
-#                 submission=submission,
-#                 prepare_for_update=True,
-#             )
-#
-#         response = gfbio_update_helpdesk_ticket(
-#             site_configuration=site_configuration,
-#             submission=submission,
-#             ticket_key=ticket.reference_key,
-#             data=data
-#         )
-#         apply_default_task_retry_policy(response,
-#                                         update_helpdesk_ticket_task,
-#                                         submission)
-#     else:
-#         return TaskProgressReport.CANCELLED
 
 
 # TODO: examine all tasks for redundant code and possible generalization e.g.:
@@ -1019,10 +769,6 @@ def add_accession_to_submission_issue_task(prev_task_result=None,
                     pid_type='PRJ'
                 ).first()
 
-                # comment_body = 'Submission to ENA has been successful. Study is accessible via ENA ' \
-                #                'Accession No. {}. broker_submission_id: {}.'.format(
-                #     study_pid.pid, submission.broker_submission_id)
-
                 jira_client = JiraClient(
                     resource=site_configuration.helpdesk_server)
                 jira_client.add_comment(
@@ -1037,29 +783,6 @@ def add_accession_to_submission_issue_task(prev_task_result=None,
                         add_accession_to_submission_issue_task,
                         submission
                     )
-            # elif target_archive == Submission.PANGAEA:
-            #     pass
-            # else:
-            #     pass
-
-        # TODO: this makes no sense to report, customer will see this. only as internal
-        #   or visibilty to admins would make sense
-        # else:
-        #     comment_body = 'Submission to {} returned error(s). ' \
-        #                    'broker_submission_id: {}.'.format(target_archive,
-        #                                                       submission.broker_submission_id)
-        #
-        # if len(existing_tickets):
-        #     response = gfbio_helpdesk_comment_on_ticket(
-        #         site_config=site_configuration,
-        #         ticket_key=existing_tickets.first().reference_key,
-        #         comment_body=comment_body,
-        #         submission=submission,
-        #     )
-        #     apply_default_task_retry_policy(response,
-        #                                     add_accession_to_submission_issue_task,
-        #                                     submission)
-
     else:
         return TaskProgressReport.CANCELLED
 
@@ -1081,69 +804,22 @@ def attach_to_submission_issue_task(kwargs=None, submission_id=None,
 
         reference = submission.get_primary_helpdesk_reference()
 
-        # existing_tickets = submission.additionalreference_set.filter(
-        #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
-        # logger.info(
-        #     msg='attach_to_submission_issue_task tickets found={0}'.format(
-        #         existing_tickets))
-
         # TODO: if no ticket available, the reason may that this task is started independened of
-        # submission transfer chain that creates the ticket, so a proper retry has to be
-        # implemented
+        #  submission transfer chain that creates the ticket, so a proper retry has to be
+        #  implemented
         if reference:
-            # if len(existing_tickets):
             submission_upload = submission.submissionupload_set.filter(
                 attach_to_ticket=True).filter(pk=submission_upload_id).first()
-
             if submission_upload:
-
-                # logger.info(
-                #     msg='attach_to_submission_issue_task SubmissionUpload found {0} '.format(
-                #         submission_upload))
 
                 # TODO: access media nginx https://stackoverflow.com/questions/8370658/how-to-serve-django-media-files-via-nginx
                 jira_client = JiraClient(
                     resource=site_configuration.helpdesk_server,
                 )
-                #
-                # print('\n\nJIRA client ', jira_client)
-                # print('ref', reference.reference_key)
-                # print(submission_upload)
-                # print(type(submission_upload.file))
-                #
-                # print('\n-------------\n', os.listdir('/app/gfbio_submissions/'))
-                #
-                # storage = DefaultStorage()
-                # f = storage.open(submission_upload.file.name, mode='rb')
-                # # with open(submission_upload.file, 'rb') as f:
-                # # print(f.read())
-                #
-                # mem_file = StringIO()
-                #
-                # mem_file.write('xxxxxx')
-                # # print(mem_file)
-                # # print(mem_file.getvalue())
-                #
-                #
                 attachment = jira_client.add_attachment(
                     key=reference.reference_key,
                     file=submission_upload.file,
-                    # file_name='submission_upload'
                 )
-                # mem_file.close()
-
-                # response = gfbio_helpdesk_attach_file_to_ticket(
-                #     site_config=site_configuration,
-                #     ticket_key=reference.reference_key,
-                #     file=submission_upload.file,
-                #     submission=submission
-                # )
-                # logger.info(
-                #     msg='attach_to_submission_issue_task repsonse status={0} content={1}'.format(
-                #         response.status_code, response.content))
-                # apply_default_task_retry_policy(response,
-                #                                 attach_to_submission_issue_task,
-                #                                 submission)
 
                 if jira_client.error:
                     apply_default_task_retry_policy(
@@ -1154,26 +830,6 @@ def attach_to_submission_issue_task(kwargs=None, submission_id=None,
                 else:
                     submission_upload.attachment_id = attachment.id
                     submission_upload.save(ignore_attach_to_ticket=True)
-
-                # TODO: there may be a more elegant solution for checking
-                # TODO: extract to method
-
-                # TODO/FIXME: storing ID may not be need due to usage of jira-python
-                # for attachment in issue.fields.attachment: (...)
-                # for i in query['issues']:
-                #     for a in i['fields']['attachment']:
-                #         print(
-                #             "For issue {0}, found attach: '{1}' [{2}].".format(
-                #                 i['key'], a['filename'], a['id']))
-                #         jira.delete_attachment(a['id'])
-                #####################################
-                # content = response.json()
-                # if isinstance(content, list) \
-                #         and len(content) == 1 \
-                #         and isinstance(content[0], dict):
-                #     submission_upload.attachment_id = int(
-                #         content[0].get('id', '-1'))
-                #     submission_upload.save(ignore_attach_to_ticket=True)
 
                 return True
             else:
@@ -1190,7 +846,6 @@ def attach_to_submission_issue_task(kwargs=None, submission_id=None,
             apply_timebased_task_retry_policy(
                 task=attach_to_submission_issue_task,
                 submission=submission,
-                # no_of_tickets=len(existing_tickets),
                 no_of_tickets=1 if reference else 0
                 # always 1 if available due to filter rules
             )
@@ -1226,18 +881,10 @@ def delete_submission_issue_attachment_task(kwargs=None, submission_id=None,
         jira_client = JiraClient(
             resource=site_configuration.helpdesk_server,
         )
-
         jira_client.delete_attachment(attachment_id)
-
-        # response = gfbio_helpdesk_delete_attachment(
-        #     site_config=site_configuration,
-        #     attachment_id=attachment_id,
-        #     submission=submission,
-        # )
         if jira_client.error:
             # TODO: maybe no retry needed, if it fails, attachment my be still there ..
             apply_default_task_retry_policy(
-                # response,
                 jira_client.error.response,
                 delete_submission_issue_attachment_task,
                 submission)
@@ -1260,14 +907,6 @@ def add_pangaea_doi_task(prev_task_result=None,
     if submission is not None and site_configuration is not None:
 
         reference = submission.get_primary_helpdesk_reference()
-
-        # existing_tickets = submission.additionalreference_set.filter(
-        #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
-
-        # comment_body += ' broker_submisson_id: {}'.format(
-        #     submission.broker_submission_id)
-        # 'Pangaea DOI: {}'.format(
-        #     persistent_identifier.pid)
         if reference:
             jira_client = JiraClient(
                 resource=site_configuration.helpdesk_server,
@@ -1283,17 +922,6 @@ def add_pangaea_doi_task(prev_task_result=None,
                     add_pangaea_doi_task,
                     submission)
 
-        # if len(existing_tickets):
-        #     response = gfbio_helpdesk_comment_on_ticket(
-        #         site_config=site_configuration,
-        #         ticket_key=existing_tickets.first().reference_key,
-        #         comment_body=comment_body,
-        #         submission=submission,
-        #     )
-        #
-        #     apply_default_task_retry_policy(response,
-        #                                     add_pangaea_doi_task,
-        #                                     submission)
     else:
         return TaskProgressReport.CANCELLED
 
@@ -1318,7 +946,6 @@ def add_pangaea_doi_task(prev_task_result=None,
 #             task.retry(countdown=3 ** task.request.retries, throw=False)
 #         except MaxRetriesExceededError as e:
 #             print('new_retry MAX RETRIES ', task.request.retries, ' ', e)
-
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -1348,7 +975,6 @@ def add_pangaealink_to_submission_issue_task(
         self,  # approach 1, 2
         prev_task_result=None,
         submission_id=None):
-    print('\n\nprev res: ', prev_task_result, ' subm. id.: ', submission_id)
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id,
         task=add_pangaealink_to_submission_issue_task,
@@ -1376,33 +1002,9 @@ def add_pangaealink_to_submission_issue_task(
                     submission
                 )
 
-        # existing_tickets = submission.additionalreference_set.filter(
-        #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
-        #
-        # pangaea_tickets = submission.additionalreference_set.filter(
-        #     Q(type=AdditionalReference.PANGAEA_JIRA_TICKET) & Q(primary=True))
-        #
-        # latest_ticket = pangaea_tickets.last()
-        #
-        # comment_body = '[Pangaea Ticket {1}|{0}{1}]'.format(
-        #     PANGAEA_ISSUE_VIEW_URL,
-        #     latest_ticket.reference_key)
-        #
-        # if len(existing_tickets):
-        #     response = gfbio_helpdesk_comment_on_ticket(
-        #         site_config=site_configuration,
-        #         ticket_key=existing_tickets.first().reference_key,
-        #         comment_body=comment_body,
-        #         submission=submission,
-        #     )
-        #
         #############################################################
         # refactored approach 2, similar to actual retry policy
         # new_retry(response, self)
-
-        # print('\n\nRESPONSE ', response, ' ', response.content, ' retries ',
-        #       self.request.retries
-        #       )
 
         # if not response.ok:
         #     # approach 3
