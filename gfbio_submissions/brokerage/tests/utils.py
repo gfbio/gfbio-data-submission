@@ -81,6 +81,13 @@ def _get_jira_response():
         return json.load(data_file)
 
 
+def _get_jira_issue_response():
+    with open(os.path.join(
+            _get_test_data_dir_path(), 'jira_issue_response.json'),
+            'r') as data_file:
+        return json.load(data_file)
+
+
 def _get_jira_attach_response():
     with open(os.path.join(
             _get_test_data_dir_path(), 'jira_attach_response.json'),

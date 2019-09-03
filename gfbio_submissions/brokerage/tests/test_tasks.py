@@ -2,6 +2,8 @@
 import base64
 import json
 import uuid
+from unittest import skip
+from unittest.mock import patch
 from uuid import uuid4
 
 import responses
@@ -9,14 +11,12 @@ from celery import chain
 from django.contrib.auth.models import Permission
 from django.test import TestCase
 from django.urls import reverse
-from unittest import skip
-from unittest.mock import patch
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIRequestFactory, APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    HELPDESK_API_SUB_URL, HELPDESK_COMMENT_SUB_URL, HELPDESK_ATTACHMENT_SUB_URL, \
-    PANGAEA_ISSUE_BASE_URL, HELPDESK_API_ATTACHMENT_URL
+    JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, JIRA_ATTACHMENT_SUB_URL, \
+    JIRA_ATTACHMENT_URL
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, Submission, AuditableTextData, PersistentIdentifier, \
     BrokerObject, TaskProgressReport, AdditionalReference, PrimaryDataFile, \
@@ -24,19 +24,20 @@ from gfbio_submissions.brokerage.models import ResourceCredential, \
 from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, \
     transfer_data_to_ena_task, process_ena_response_task, \
     create_broker_objects_from_submission_data_task, check_on_hold_status_task, \
-    get_user_email_task, create_helpdesk_ticket_task, \
-    comment_helpdesk_ticket_task, attach_file_to_helpdesk_ticket_task, \
-    add_pangaealink_to_helpdesk_ticket_task, request_pangaea_login_token_task, \
-    create_pangaea_jira_ticket_task, attach_file_to_pangaea_ticket_task, \
-    comment_on_pangaea_ticket_task, check_for_pangaea_doi_task, \
-    trigger_submission_transfer, update_helpdesk_ticket_task, \
-    delete_attachment_task
+    get_user_email_task, create_submission_issue_task, \
+    add_accession_to_submission_issue_task, attach_to_submission_issue_task, \
+    add_pangaealink_to_submission_issue_task, \
+    create_pangaea_issue_task, attach_to_pangaea_issue_task, \
+    add_accession_to_pangaea_issue_task, check_for_pangaea_doi_task, \
+    trigger_submission_transfer, \
+    delete_submission_issue_attachment_task
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_ena_xml_response, \
     _get_ena_error_xml_response, _get_jira_attach_response, \
     _get_pangaea_soap_response, _get_pangaea_attach_response, \
-    _get_pangaea_comment_response, _get_pangaea_ticket_response
+    _get_pangaea_comment_response, _get_pangaea_ticket_response, \
+    _get_jira_issue_response
 from gfbio_submissions.users.models import User
 
 
@@ -61,7 +62,8 @@ class TestInitialChainTasks(TestCase):
             release_submissions=False,
             use_gfbio_services=False,
             ena_server=resource_cred,
-            pangaea_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
             gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
@@ -73,12 +75,20 @@ class TestInitialChainTasks(TestCase):
         )
         cls.api_client = client
 
+    def _add_jira_client_responses(self):
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(self.site_config.helpdesk_server.url),
+            status=200,
+        )
+
     def _add_create_ticket_response(self):
+        self._add_jira_client_responses()
         responses.add(
             responses.POST,
             '{0}{1}'.format(
                 self.site_config.helpdesk_server.url,
-                HELPDESK_API_SUB_URL
+                JIRA_ISSUE_URL
             ),
             status=200,
             body=json.dumps({'mocked_response': True})
@@ -104,7 +114,7 @@ class TestInitialChainTasks(TestCase):
         self.assertEqual(201, min_response.status_code)
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_user_email_task',
-                              'tasks.create_helpdesk_ticket_task',
+                              'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer', ]
         self.assertEqual(4, len(task_reports))
@@ -132,7 +142,7 @@ class TestInitialChainTasks(TestCase):
         self.assertEqual(201, min_response.status_code)
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_user_email_task',
-                              'tasks.create_helpdesk_ticket_task',
+                              'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer', ]
         self.assertEqual(4, len(task_reports))
@@ -155,7 +165,7 @@ class TestInitialChainTasks(TestCase):
         self.assertEqual(201, max_response.status_code)
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_user_email_task',
-                              'tasks.create_helpdesk_ticket_task',
+                              'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer',
                               'tasks.create_broker_objects_from_submission_data_task',
@@ -184,7 +194,7 @@ class TestInitialChainTasks(TestCase):
         self.assertEqual(201, max_response.status_code)
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_user_email_task',
-                              'tasks.create_helpdesk_ticket_task',
+                              'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer', ]
         self.assertEqual(4, len(task_reports))
@@ -218,7 +228,7 @@ class TestInitialChainTasks(TestCase):
         # # trigger_submission_transfer from initial post
         # # trigger_submission_transfer_for_updates
         # expected_tasknames = ['tasks.get_user_email_task',
-        #                       'tasks.create_helpdesk_ticket_task',
+        #                       'tasks.create_submission_issue_task',
         #                       'tasks.trigger_submission_transfer',
         #                       'tasks.check_for_molecular_content_in_submission_task',
         #                       'tasks.trigger_submission_transfer_for_updates',
@@ -260,25 +270,29 @@ class TestTasks(TestCase):
             url='https://www.example.com',
             authentication_string='letMeIn'
         )
-        SiteConfiguration.objects.create(
+        cls.default_site_config = SiteConfiguration.objects.create(
             title='default',
             site=None,
             ena_server=resource_cred,
-            pangaea_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
             gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
             contact='kevin@horstmeier.de'
         )
-        SiteConfiguration.objects.create(
+        cls.second_site_config = SiteConfiguration.objects.create(
             title='default-2',
             site=None,
             ena_server=resource_cred,
-            pangaea_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
             gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration 2',
         )
+        cls.issue_json = _get_jira_issue_response()
+        cls.pangaea_issue_json = _get_pangaea_ticket_response()
 
     @classmethod
     def _create_test_data(cls, path, delete=True):
@@ -295,6 +309,19 @@ class TestTasks(TestCase):
     @staticmethod
     def _delete_test_data():
         PrimaryDataFile.objects.all().delete()
+
+    def _add_default_pangaea_responses(self):
+        responses.add(
+            responses.POST,
+            self.default_site_config.pangaea_token_server.url,
+            body=_get_pangaea_soap_response(),
+            status=200)
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(
+                self.default_site_config.pangaea_jira_server.url),
+            status=200,
+        )
 
 
 @skip('center-name feature was removed in GFBIO-2556')
@@ -655,42 +682,70 @@ class TestPortalServiceTasks(TestTasks):
 
 class TestGFBioHelpDeskTasks(TestTasks):
 
+    # @classmethod
+    # def setUpTestData(cls):
+    #     cls.issue_json = _get_jira_issue_response()
+
     @responses.activate
     def test_create_helpdesk_ticket_task_success(self):
         submission = Submission.objects.last()
         site_config = SiteConfiguration.objects.first()
         responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
+        responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.helpdesk_server.url,
-                            HELPDESK_API_SUB_URL),
-            json={'bla': 'blubb'},
+                            JIRA_ISSUE_URL),
+            json=self.issue_json,
             status=200)
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/SAND-1661'.format(
+                site_config.helpdesk_server.url),
+            json=self.issue_json
+        )
+
         self.assertEqual(0, len(submission.additionalreference_set.all()))
-        result = create_helpdesk_ticket_task.apply_async(
+        result = create_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.id,
             }
         )
         self.assertTrue(result.successful())
         self.assertEqual(1, len(submission.additionalreference_set.all()))
+        print('ADDREF: ', submission.additionalreference_set.first())
 
     @responses.activate
     def test_create_helpdesk_ticket_task_for_unknown_reporter(self):
         submission = Submission.objects.last()
         site_config = SiteConfiguration.objects.first()
         responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
+        responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.helpdesk_server.url,
-                            HELPDESK_API_SUB_URL),
+                            JIRA_ISSUE_URL),
             body='{"errorMessages":[],"errors":{"reporter":"The reporter specified is not a user."}}',
             status=400)
         responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.helpdesk_server.url,
-                            HELPDESK_API_SUB_URL),
-            body='',
+                            JIRA_ISSUE_URL),
+            json=self.issue_json,
             status=200)
-        result = create_helpdesk_ticket_task.apply_async(
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/SAND-1661'.format(
+                site_config.helpdesk_server.url),
+            json=self.issue_json
+        )
+        result = create_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.id,
             }
@@ -699,6 +754,8 @@ class TestGFBioHelpDeskTasks(TestTasks):
         tprs = TaskProgressReport.objects.exclude(
             task_name='tasks.update_helpdesk_ticket_task')
         self.assertEqual(1, len(tprs))
+        self.assertEqual(1, len(submission.additionalreference_set.all()))
+        print('ADDREF: ', submission.additionalreference_set.first())
 
     @responses.activate
     def test_create_helpdesk_ticket_task_unicode_text(self):
@@ -706,13 +763,24 @@ class TestGFBioHelpDeskTasks(TestTasks):
         site_config = SiteConfiguration.objects.first()
         self.assertEqual(0, len(submission.additionalreference_set.all()))
         responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
+        responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.helpdesk_server.url,
-                            HELPDESK_API_SUB_URL
+                            JIRA_ISSUE_URL
                             ),
-            json={'bla': 'blubb'},
+            json=self.issue_json,
             status=200)
-        result = create_helpdesk_ticket_task.apply_async(
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/SAND-1661'.format(
+                site_config.helpdesk_server.url),
+            json=self.issue_json
+        )
+        result = create_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.id,
             }
@@ -720,47 +788,47 @@ class TestGFBioHelpDeskTasks(TestTasks):
         self.assertTrue(result.successful())
         self.assertEqual(1, len(submission.additionalreference_set.all()))
 
-    @responses.activate
-    def test_update_helpdesk_ticket_task_success(self):
-        submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-        url = '{0}{1}/{2}'.format(
-            site_config.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
-            'FAKE_KEY'
-        )
-        responses.add(responses.PUT, url, body='', status=204)
-        data = {
-            'fields': {
-                'customfield_10205': 'New Name Marc Weber, Alfred E. Neumann',
-            }
-        }
-        result = update_helpdesk_ticket_task.apply_async(
-            kwargs={
-                'submission_id': submission.id,
-                'data': data
-            }
-        )
-        self.assertTrue(result.successful())
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(1, len(request_logs))
-        self.assertTrue(request_logs[0].url.endswith('FAKE_KEY'))
+    # @responses.activate
+    # def test_update_helpdesk_ticket_task_success(self):
+    #     submission = Submission.objects.first()
+    #     site_config = SiteConfiguration.objects.first()
+    #     url = '{0}{1}/{2}'.format(
+    #         site_config.helpdesk_server.url,
+    #         HELPDESK_API_SUB_URL,
+    #         'FAKE_KEY'
+    #     )
+    #     responses.add(responses.PUT, url, body='', status=204)
+    #     data = {
+    #         'fields': {
+    #             'customfield_10205': 'New Name Marc Weber, Alfred E. Neumann',
+    #         }
+    #     }
+    #     result = update_helpdesk_ticket_task.apply_async(
+    #         kwargs={
+    #             'submission_id': submission.id,
+    #             'data': data
+    #         }
+    #     )
+    #     self.assertTrue(result.successful())
+    #     request_logs = RequestLog.objects.all()
+    #     self.assertEqual(1, len(request_logs))
+    #     self.assertTrue(request_logs[0].url.endswith('FAKE_KEY'))
 
     @responses.activate
     def test_comment_helpdesk_ticket_task_success(self):
         site_config = SiteConfiguration.objects.first()
         url = '{0}{1}/{2}/{3}'.format(
             site_config.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
+            JIRA_ISSUE_URL,
             'FAKE_KEY',
-            HELPDESK_COMMENT_SUB_URL,
+            JIRA_COMMENT_SUB_URL,
         )
         responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
         submission = Submission.objects.first()
-        result = comment_helpdesk_ticket_task.apply_async(
+        result = add_accession_to_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.id,
-                'comment_body': 'test-comment'
+                # 'comment_body': 'test-comment'
             }
         )
         self.assertTrue(result.successful())
@@ -772,15 +840,15 @@ class TestGFBioHelpDeskTasks(TestTasks):
         site_config = SiteConfiguration.objects.first()
         url = '{0}{1}/{2}/{3}'.format(
             site_config.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
+            JIRA_ISSUE_URL,
             'FAKE_KEY',
-            HELPDESK_ATTACHMENT_SUB_URL,
+            JIRA_ATTACHMENT_SUB_URL,
         )
         responses.add(responses.POST,
                       url,
                       json=_get_jira_attach_response(),
                       status=200)
-        result = attach_file_to_helpdesk_ticket_task.apply_async(
+        result = attach_to_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
             }
@@ -792,15 +860,34 @@ class TestGFBioHelpDeskTasks(TestTasks):
     def test_attach_to_helpdesk_ticket_task_with_primarydatafile(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
+
+        # self._add_default_pangaea_responses()
+
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
+
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/FAKE_KEY'.format(
+                site_config.helpdesk_server.url),
+            json=self.issue_json,
+        )
+
+        #  https://www.example.com/rest/api/2/issue/SAND-1661/attachments
+
         url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
         responses.add(responses.POST, url, json={}, status=200)
+
         responses.add(responses.POST,
                       '{0}{1}/{2}/{3}'.format(
                           site_config.helpdesk_server.url,
-                          HELPDESK_API_SUB_URL,
-                          'FAKE_KEY',
-                          HELPDESK_ATTACHMENT_SUB_URL,
+                          JIRA_ISSUE_URL,
+                          'SAND-1661',
+                          JIRA_ATTACHMENT_SUB_URL,
                       ),
                       json=_get_jira_attach_response(),
                       status=200)
@@ -809,13 +896,13 @@ class TestGFBioHelpDeskTasks(TestTasks):
         token = Token.objects.create(user=submission.site)
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        # POST will already trigger attach_file_to_helpdesk_ticket_task
+        # POST will already trigger attach_to_submission_issue_task
         # via PrimaryDataFile save method
         client.post(url, data, format='multipart')
 
-        # attach_file_to_helpdesk_ticket_task was already triggered by POST above
+        # attach_to_submission_issue_task was already triggered by POST above
         # via PrimaryDataFile save method
-        result = attach_file_to_helpdesk_ticket_task.apply_async(
+        result = attach_to_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
                 'submission_upload_id': SubmissionUpload.objects.first().pk,
@@ -830,15 +917,28 @@ class TestGFBioHelpDeskTasks(TestTasks):
     def test_delete_attachment_task(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
+
         url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
         responses.add(responses.POST, url, json={}, status=200)
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/FAKE_KEY'.format(
+                site_config.helpdesk_server.url),
+            json=_get_jira_issue_response()
+            # json={}
+        )
         responses.add(responses.POST,
                       '{0}{1}/{2}/{3}'.format(
                           site_config.helpdesk_server.url,
-                          HELPDESK_API_SUB_URL,
-                          'FAKE_KEY',
-                          HELPDESK_ATTACHMENT_SUB_URL,
+                          JIRA_ISSUE_URL,
+                          'SAND-1661',
+                          JIRA_ATTACHMENT_SUB_URL,
                       ),
                       json=_get_jira_attach_response(),
                       status=200)
@@ -847,7 +947,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         token = Token.objects.create(user=submission.site)
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        # POST will already trigger attach_file_to_helpdesk_ticket_task
+        # POST will already trigger attach_to_submission_issue_task
         # via PrimaryDataFile save method
         client.post(url, data, format='multipart')
         # TODO: everything above is only preparation to setup SubmissionUpload
@@ -855,10 +955,10 @@ class TestGFBioHelpDeskTasks(TestTasks):
         submission_upload = SubmissionUpload.objects.first()
         url = '{0}{1}/{2}'.format(
             site_config.helpdesk_server.url,
-            HELPDESK_API_ATTACHMENT_URL,
+            JIRA_ATTACHMENT_URL,
             submission_upload.attachment_id)
         responses.add(responses.DELETE, url, body=b'', status=204)
-        result = delete_attachment_task.apply_async(
+        result = delete_submission_issue_attachment_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
                 'attachment_id': SubmissionUpload.objects.first().attachment_id,
@@ -867,11 +967,14 @@ class TestGFBioHelpDeskTasks(TestTasks):
         self.assertTrue(result.successful())
         self.assertTrue(result.get())
 
+    # TODO: take this mock concept for testing retry, and add more tests for
+    #  other tasks with retry policy(s)
     @patch(
         'gfbio_submissions.brokerage.tasks.apply_timebased_task_retry_policy')
     def test_attach_primarydatafile_without_ticket(self, mock):
         submission = Submission.objects.last()
-        attach_file_to_helpdesk_ticket_task.apply_async(
+        # omiting submission_upload_id, defaults this parameter to None
+        attach_to_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
             }
@@ -882,16 +985,31 @@ class TestGFBioHelpDeskTasks(TestTasks):
     def test_add_pangaealink_to_helpdesk_ticket_task_success(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
+
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
         url = '{0}{1}/{2}/{3}'.format(
             site_config.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
+            JIRA_ISSUE_URL,
             'FAKE_KEY',
-            HELPDESK_COMMENT_SUB_URL,
+            JIRA_COMMENT_SUB_URL,
         )
         responses.add(responses.POST, url,
                       json={'bla': 'blubb'},
                       status=200)
-        result = add_pangaealink_to_helpdesk_ticket_task.apply_async(
+
+        # url = '{0}{1}/{2}/{3}'.format(
+        #     site_config.helpdesk_server.url,
+        #     HELPDESK_API_SUB_URL,
+        #     'FAKE_KEY',
+        #     JIRA_COMMENT_SUB_URL,
+        # )
+        # responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
+
+        result = add_pangaealink_to_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.id,
             }
@@ -902,14 +1020,19 @@ class TestGFBioHelpDeskTasks(TestTasks):
     def test_add_pangaealink_to_helpdesk_ticket_task_client_error(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
         url = '{0}{1}/{2}/{3}'.format(
             site_config.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
+            JIRA_ISSUE_URL,
             'FAKE_KEY',
-            HELPDESK_COMMENT_SUB_URL,
+            JIRA_COMMENT_SUB_URL,
         )
         responses.add(responses.POST, url, status=400, json={'bla': 'blubb'})
-        result = add_pangaealink_to_helpdesk_ticket_task.apply_async(
+        result = add_pangaealink_to_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
             }
@@ -921,14 +1044,19 @@ class TestGFBioHelpDeskTasks(TestTasks):
     def test_add_pangaealink_to_helpdesk_ticket_task_server_error(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
         url = '{0}{1}/{2}/{3}'.format(
             site_config.helpdesk_server.url,
-            HELPDESK_API_SUB_URL,
+            JIRA_ISSUE_URL,
             'FAKE_KEY',
-            HELPDESK_COMMENT_SUB_URL,
+            JIRA_COMMENT_SUB_URL,
         )
         responses.add(responses.POST, url, status=500, json={'bla': 'blubb'})
-        result = add_pangaealink_to_helpdesk_ticket_task.apply_async(
+        result = add_pangaealink_to_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
             }
@@ -943,12 +1071,17 @@ class TestGFBioHelpDeskTasks(TestTasks):
         submission = Submission.objects.last()
         site_config = SiteConfiguration.objects.first()
         responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
+        responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.helpdesk_server.url,
-                            HELPDESK_API_SUB_URL),
+                            JIRA_ISSUE_URL),
             json={},
             status=400)
-        result = create_helpdesk_ticket_task.apply_async(
+        result = create_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
             }
@@ -960,17 +1093,19 @@ class TestGFBioHelpDeskTasks(TestTasks):
         submission = Submission.objects.last()
         site_config = SiteConfiguration.objects.first()
         responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
+        responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.helpdesk_server.url,
-                            HELPDESK_API_SUB_URL),
+                            JIRA_ISSUE_URL),
             json={},
             status=500)
-        result = create_helpdesk_ticket_task.apply_async(
+        result = create_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
-                'summary': 'Test',
-                'description': 'Test'
-
             }
         )
         self.assertTrue(result.successful())
@@ -978,269 +1113,352 @@ class TestGFBioHelpDeskTasks(TestTasks):
 
 class TestPangaeaTasks(TestTasks):
 
-    @responses.activate
-    def test_request_pangaea_login_token_task_success(self):
-        submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-        responses.add(
-            responses.POST,
-            site_config.pangaea_server.url,
-            body=_get_pangaea_soap_response(),
-            status=200)
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(0, len(request_logs))
+    # @responses.activate
+    # def test_request_pangaea_login_token_task_success(self):
+    #     submission = Submission.objects.first()
+    #     site_config = SiteConfiguration.objects.first()
+    #     responses.add(
+    #         responses.POST,
+    #         site_config.pangaea_server.url,
+    #         body=_get_pangaea_soap_response(),
+    #         status=200)
+    #     request_logs = RequestLog.objects.all()
+    #     self.assertEqual(0, len(request_logs))
+    #
+    #     result = request_pangaea_login_token_task.apply_async(
+    #         kwargs={
+    #             'submission_id': submission.pk,
+    #         }
+    #     )
+    #     self.assertTrue(result.successful())
+    #     self.assertEqual('f3d7aca208aaec8954d45bebc2f59ba1522264db',
+    #                      result.get())
+    #
+    #     request_logs = RequestLog.objects.all()
+    #     self.assertEqual(1, len(request_logs))
+    #     self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+    #     self.assertEqual('https://www.example.com',
+    #                      request_logs.first().url)
 
-        result = request_pangaea_login_token_task.apply_async(
-            kwargs={
-                'submission_id': submission.pk,
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertEqual('f3d7aca208aaec8954d45bebc2f59ba1522264db',
-                         result.get())
+    # @responses.activate
+    # def test_request_pangaea_login_token_task_client_error(self):
+    #     submission = Submission.objects.first()
+    #     site_config = SiteConfiguration.objects.first()
+    #     responses.add(
+    #         responses.POST,
+    #         site_config.pangaea_server.url,
+    #         body='',
+    #         status=400)
+    #     request_logs = RequestLog.objects.all()
+    #     self.assertEqual(0, len(request_logs))
+    #     result = request_pangaea_login_token_task.apply_async(
+    #         kwargs={
+    #             'submission_id': submission.pk,
+    #         }
+    #     )
+    #     self.assertTrue(result.successful())
+    #     self.assertEqual('', result.get())
+    #     request_logs = RequestLog.objects.all()
+    #     self.assertEqual(1, len(request_logs))
+    #     self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+    #     self.assertEqual('https://www.example.com',
+    #                      request_logs.first().url)
 
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(1, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual('https://www.example.com',
-                         request_logs.first().url)
-
-    @responses.activate
-    def test_request_pangaea_login_token_task_client_error(self):
-        submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-        responses.add(
-            responses.POST,
-            site_config.pangaea_server.url,
-            body='',
-            status=400)
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(0, len(request_logs))
-        result = request_pangaea_login_token_task.apply_async(
-            kwargs={
-                'submission_id': submission.pk,
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertEqual('', result.get())
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(1, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual('https://www.example.com',
-                         request_logs.first().url)
-
-    @responses.activate
-    def test_request_pangaea_login_token_task_server_error(self):
-        submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(0, len(request_logs))
-        responses.add(
-            responses.POST,
-            site_config.pangaea_server.url,
-            status=500,
-            body='')
-        result = request_pangaea_login_token_task.apply_async(
-            kwargs={
-                'submission_id': submission.pk,
-            }
-        )
-        self.assertTrue(result.successful())
-
-        request_logs = RequestLog.objects.all()
-        # 3 logentries for 3 retries
-        self.assertEqual(3, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual('https://www.example.com',
-                         request_logs.first().url)
+    # @responses.activate
+    # def test_request_pangaea_login_token_task_server_error(self):
+    #     submission = Submission.objects.first()
+    #     site_config = SiteConfiguration.objects.first()
+    #
+    #     request_logs = RequestLog.objects.all()
+    #     self.assertEqual(0, len(request_logs))
+    #     responses.add(
+    #         responses.POST,
+    #         site_config.pangaea_server.url,
+    #         status=500,
+    #         body='')
+    #     result = request_pangaea_login_token_task.apply_async(
+    #         kwargs={
+    #             'submission_id': submission.pk,
+    #         }
+    #     )
+    #     self.assertTrue(result.successful())
+    #
+    #     request_logs = RequestLog.objects.all()
+    #     # 3 logentries for 3 retries
+    #     self.assertEqual(3, len(request_logs))
+    #     self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+    #     self.assertEqual('https://www.example.com',
+    #                      request_logs.first().url)
 
     @responses.activate
     def test_create_pangaea_jira_ticket_task_success(self):
         submission = Submission.objects.first()
-        login_token = 'f3d7aca208aaec8954d45bebc2f59ba1522264db'
+        site_config = SiteConfiguration.objects.first()
+        # login_token = 'f3d7aca208aaec8954d45bebc2f59ba1522264db'
         request_logs = RequestLog.objects.all()
         self.assertEqual(0, len(request_logs))
+        # self._add_default_pangaea_responses()
+        # responses.add(
+        #     responses.POST,
+        #     '{0}/rest/api/2/issue/'.format(site_config.pangaea_jira_server.url),
+        #     json={'id': '31444', 'key': 'PDI-11735',
+        #           'self': '{0}/rest/api/2/issue/31444'.format(
+        #               site_config.pangaea_jira_server.url)},
+        #     status=201)
+        # responses.add(
+        #     responses.POST,
+        #     self.default_site_config.pangaea_token_server.url,
+        #     body=_get_pangaea_soap_response(),
+        #     status=200)
+        # responses.add(
+        #     responses.GET,
+        #     '{0}/rest/api/2/field'.format(site_config.pangaea_jira_server.url),
+        #     status=200,
+        # )
+        self._add_default_pangaea_responses()
         responses.add(
             responses.POST,
-            PANGAEA_ISSUE_BASE_URL,
-            json={'id': '31444', 'key': 'PDI-11735',
-                  'self': 'http://issues.pangaea.de/rest/api/2/issue/31444'},
-            status=201)
-        result = create_pangaea_jira_ticket_task.apply_async(
+            '{0}{1}'.format(site_config.pangaea_jira_server.url,
+                            JIRA_ISSUE_URL),
+            json=self.pangaea_issue_json,
+            status=200)
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/PDI-12428'.format(
+                site_config.helpdesk_server.url),
+            json=self.pangaea_issue_json
+        )
+
+        result = create_pangaea_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
-                'login_token': login_token
+                # 'login_token': login_token
             }
         )
         res = result.get()
         self.assertTrue(result.successful())
-        self.assertDictEqual(
-            {'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
-             'ticket_key': 'PDI-11735'}, res)
+        # self.assertDictEqual(
+        #     {'ticket_key': 'PDI-11735'}, res)
         additional_references = submission.additionalreference_set.all()
         self.assertEqual(3, len(additional_references))
         ref = additional_references.last()
-        self.assertEqual('PDI-11735', ref.reference_key)
+        self.assertEqual('PDI-12428', ref.reference_key)
 
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(1, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual('https://issues.pangaea.de/rest/api/2/issue/',
-                         request_logs.first().url)
+        # request_logs = RequestLog.objects.all()
+        # self.assertEqual(1, len(request_logs))
+        # print(request_logs.first().__dict__)
+        # self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+        # self.assertEqual(
+        #     '{0}/rest/api/2/issue/'.format(site_config.pangaea_jira_server.url),
+        #     request_logs.first().url)
 
     @responses.activate
     def test_create_pangaea_jira_ticket_task_client_error(self):
         submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
         len_before = len(submission.additionalreference_set.all())
         request_logs = RequestLog.objects.all()
         self.assertEqual(0, len(request_logs))
+        self._add_default_pangaea_responses()
+        # responses.add(
+        #     responses.POST,
+        #     PANGAEA_ISSUE_BASE_URL,
+        #     status=400)
+
         responses.add(
             responses.POST,
-            PANGAEA_ISSUE_BASE_URL,
+            '{0}{1}'.format(site_config.pangaea_jira_server.url,
+                            JIRA_ISSUE_URL),
+            json={},
             status=400)
-        result = create_pangaea_jira_ticket_task.apply_async(
+        result = create_pangaea_issue_task.apply_async(
             kwargs={
-                'submission_id': submission.pk,
-                'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db'
-
+                'submission_id': submission.pk
             }
         )
         self.assertTrue(result.successful())
         self.assertIsNone(result.get())
         additional_references = submission.additionalreference_set.all()
         self.assertEqual(len_before, len(additional_references))
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(1, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual('https://issues.pangaea.de/rest/api/2/issue/',
-                         request_logs.first().url)
+        # request_logs = RequestLog.objects.all()
+        # self.assertEqual(1, len(request_logs))
+        # self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+        # self.assertEqual('https://issues.pangaea.de/rest/api/2/issue/',
+        #                  request_logs.first().url)
 
     @responses.activate
     def test_create_pangaea_jira_ticket_task_server_error(self):
         submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
         len_before = len(submission.additionalreference_set.all())
         request_logs = RequestLog.objects.all()
         self.assertEqual(0, len(request_logs))
+        self._add_default_pangaea_responses()
         responses.add(
             responses.POST,
-            PANGAEA_ISSUE_BASE_URL,
+            '{0}{1}'.format(site_config.pangaea_jira_server.url,
+                            JIRA_ISSUE_URL),
+            json={},
             status=500)
-        result = create_pangaea_jira_ticket_task.apply_async(
+
+        # responses.add(
+        #     responses.POST,
+        #     PANGAEA_ISSUE_BASE_URL,
+        #     status=500)
+        result = create_pangaea_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
-                'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db'
-
             }
         )
         self.assertTrue(result.successful())
         additional_references = submission.additionalreference_set.all()
         self.assertEqual(len_before, len(additional_references))
 
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(3, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual('https://issues.pangaea.de/rest/api/2/issue/',
-                         request_logs.first().url)
+        # TODO: add test/assertion for retries ...
+        # request_logs = RequestLog.objects.all()
+        # self.assertEqual(3, len(request_logs))
+        # self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+        # self.assertEqual('https://issues.pangaea.de/rest/api/2/issue/',
+        #                  request_logs.first().url)
 
     @responses.activate
     def test_attach_file_to_pangaea_ticket_task_success(self):
         submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
         request_logs = RequestLog.objects.all()
         self.assertEqual(0, len(request_logs))
+        self._add_default_pangaea_responses()
         responses.add(
-            responses.POST,
-            '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
-                                        'PANGAEA_FAKE_KEY'),
-            json=_get_pangaea_attach_response(),
-            status=200)
-        result = attach_file_to_pangaea_ticket_task.apply_async(
+            responses.GET,
+            '{0}/rest/api/2/issue/PDI-12428'.format(
+                site_config.helpdesk_server.url),
+            json=self.pangaea_issue_json
+        )
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          site_config.pangaea_jira_server.url,
+                          JIRA_ISSUE_URL,
+                          'PDI-12428',
+                          JIRA_ATTACHMENT_SUB_URL,
+                      ),
+                      json=_get_pangaea_attach_response(),
+                      status=200)
+        # responses.add(
+        #     responses.POST,
+        #     '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
+        #                                 'PANGAEA_FAKE_KEY'),
+        #     json=_get_pangaea_attach_response(),
+        #     status=200)
+        result = attach_to_pangaea_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
                 'kwargs': {
-                    'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
-                    'ticket_key': 'PANGAEA_FAKE_KEY'
+                    'issue_key': 'PDI-12428'
                 }
             }
         )
         res = result.get()
         self.assertTrue(result.successful())
         self.assertDictEqual(
-            {'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
-             'ticket_key': 'PANGAEA_FAKE_KEY'}, res)
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(1, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual(
-            '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
-                                        'PANGAEA_FAKE_KEY'),
-            request_logs.first().url)
+            {'issue_key': 'PDI-12428'}, res)
+        # request_logs = RequestLog.objects.all()
+        # self.assertEqual(1, len(request_logs))
+        # self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+        # self.assertEqual(
+        #     '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
+        #                                 'PANGAEA_FAKE_KEY'),
+        #     request_logs.first().url)
 
     @responses.activate
     def test_attach_file_to_pangaea_ticket_task_client_error(self):
         submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
         request_logs = RequestLog.objects.all()
         self.assertEqual(0, len(request_logs))
+        self._add_default_pangaea_responses()
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/PDI-12428'.format(
+                site_config.helpdesk_server.url),
+            json=self.pangaea_issue_json
+        )
         responses.add(
             responses.POST,
-            '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
-                                        'PANGAEA_FAKE_KEY'),
-            json={},
+            '{0}/rest/api/2/issue/PDI-12428/attachments'.format(
+                site_config.helpdesk_server.url),
+            json={'mocked_400': True},
             status=400)
-        result = attach_file_to_pangaea_ticket_task.apply_async(
+        result = attach_to_pangaea_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
                 'kwargs': {
-                    'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
-                    'ticket_key': 'PANGAEA_FAKE_KEY'
+                    'issue_key': 'PDI-12428'
                 }
             }
         )
-        res = result.get()
         self.assertTrue(result.successful())
+        res = result.get()
         self.assertDictEqual(
-            {'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
-             'ticket_key': 'PANGAEA_FAKE_KEY'}, res)
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(1, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual(
-            '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
-                                        'PANGAEA_FAKE_KEY'),
-            request_logs.first().url)
+            {
+                'issue_key': 'PDI-12428'}, res)
+        # request_logs = RequestLog.objects.all()
+        # self.assertEqual(1, len(request_logs))
+        # self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+        # self.assertEqual(
+        #     '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
+        #                                 'PANGAEA_FAKE_KEY'),
+        #     request_logs.first().url)
 
     @responses.activate
     def test_attach_file_to_pangaea_ticket_task_server_error(self):
         submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
         request_logs = RequestLog.objects.all()
         self.assertEqual(0, len(request_logs))
+        self._add_default_pangaea_responses()
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/PDI-12428'.format(
+                site_config.helpdesk_server.url),
+            json=self.pangaea_issue_json
+        )
         responses.add(
             responses.POST,
-            '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
-                                        'PANGAEA_FAKE_KEY'),
-            json={},
+            '{0}/rest/api/2/issue/PDI-12428/attachments'.format(
+                site_config.helpdesk_server.url),
+            json={'mocked_500': True},
             status=500)
-        result = attach_file_to_pangaea_ticket_task.apply_async(
+        # responses.add(
+        #     responses.POST,
+        #     '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
+        #                                 'PANGAEA_FAKE_KEY'),
+        #     json={},
+        #     status=500)
+        result = attach_to_pangaea_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
                 'kwargs': {
-                    'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
-                    'ticket_key': 'PANGAEA_FAKE_KEY'
+                    'issue_key': 'PDI-12428'
                 }
             }
         )
         self.assertTrue(result.successful())
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(3, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual(
-            '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
-                                        'PANGAEA_FAKE_KEY'),
-            request_logs.first().url)
+        res = result.get()
+        self.assertDictEqual(
+            {
+                'issue_key': 'PDI-12428'}, res)
+        # request_logs = RequestLog.objects.all()
+        # self.assertEqual(3, len(request_logs))
+        # self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+        # self.assertEqual(
+        #     '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
+        #                                 'PANGAEA_FAKE_KEY'),
+        #     request_logs.first().url)
 
     @responses.activate
     def test_comment_on_pangaea_ticket_task_success(self):
         submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
         submission.brokerobject_set.filter(
             type='study').first().persistentidentifier_set.create(
             archive='ENA',
@@ -1252,31 +1470,32 @@ class TestPangaeaTasks(TestTasks):
         self.assertEqual(0, len(request_logs))
         responses.add(
             responses.POST,
-            '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
+            '{0}/{1}/comment'.format(site_config.pangaea_jira_server,
                                     'PANGAEA_FAKE_KEY'),
             json=_get_pangaea_comment_response(),
             status=200)
-        result = comment_on_pangaea_ticket_task.apply_async(
+        result = add_accession_to_pangaea_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
                 'kwargs': {
                     'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
                     'ticket_key': 'PANGAEA_FAKE_KEY'
                 },
-                'comment_body': 'ACC 12345'
+                # 'comment_body': 'ACC 12345'
             }
         )
         self.assertTrue(result.successful())
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(1, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual(
-            '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL, 'PANGAEA_FAKE_KEY'),
-            request_logs.first().url)
+        # request_logs = RequestLog.objects.all()
+        # self.assertEqual(1, len(request_logs))
+        # self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+        # self.assertEqual(
+        #     '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL, 'PANGAEA_FAKE_KEY'),
+        #     request_logs.first().url)
 
     @responses.activate
     def test_comment_on_pangaea_ticket_task_client_error(self):
         submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
         submission.brokerobject_set.filter(
             type='study').first().persistentidentifier_set.create(
             archive='ENA',
@@ -1288,32 +1507,33 @@ class TestPangaeaTasks(TestTasks):
         self.assertEqual(0, len(request_logs))
         responses.add(
             responses.POST,
-            '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
+            '{0}/{1}/comment'.format(site_config.pangaea_jira_server.url,
                                     'PANGAEA_FAKE_KEY'),
             status=400)
-        result = comment_on_pangaea_ticket_task.apply_async(
+        result = add_accession_to_pangaea_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
                 'kwargs': {
                     'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
                     'ticket_key': 'PANGAEA_FAKE_KEY'
                 },
-                'comment_body': 'ACC 12345'
+                # 'comment_body': 'ACC 12345'
             }
         )
         # expects results from previous chain element
         self.assertTrue(result.successful())
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(1, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual(
-            '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
-                                    'PANGAEA_FAKE_KEY'),
-            request_logs.first().url)
+        # request_logs = RequestLog.objects.all()
+        # self.assertEqual(1, len(request_logs))
+        # self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+        # self.assertEqual(
+        #     '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
+        #                             'PANGAEA_FAKE_KEY'),
+        #     request_logs.first().url)
 
     @responses.activate
     def test_comment_on_pangaea_ticket_task_server_error(self):
         submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
         submission.brokerobject_set.filter(
             type='study').first().persistentidentifier_set.create(
             archive='ENA',
@@ -1325,59 +1545,62 @@ class TestPangaeaTasks(TestTasks):
         self.assertEqual(0, len(request_logs))
         responses.add(
             responses.POST,
-            '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
+            '{0}/{1}/comment'.format(site_config.pangaea_jira_server.url,
                                     'PANGAEA_FAKE_KEY'),
             status=500)
-        result = comment_on_pangaea_ticket_task.apply_async(
+        result = add_accession_to_pangaea_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
                 'kwargs': {
                     'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
                     'ticket_key': 'PANGAEA_FAKE_KEY'
                 },
-                'comment_body': 'ACC 12345'
+                # 'comment_body': 'ACC 12345'
             }
         )
         self.assertTrue(result.successful())
-        request_logs = RequestLog.objects.all()
-        self.assertEqual(3, len(request_logs))
-        self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        self.assertEqual(
-            '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
-                                    'PANGAEA_FAKE_KEY'),
-            request_logs.first().url)
+        # request_logs = RequestLog.objects.all()
+        # self.assertEqual(3, len(request_logs))
+        # self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
+        # self.assertEqual(
+        #     '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
+        #                             'PANGAEA_FAKE_KEY'),
+        #     request_logs.first().url)
 
     @responses.activate
-    def test_check_for_pangaea_doi_task_success(self, ):
-        responses.add(responses.PUT,
-                      'https://www.example.com/rest/api/2/issue/FAKE_KEY',
-                      body='', status=200)
+    def test_check_for_pangaea_doi_task_success(self):
         site_config = SiteConfiguration.objects.first()
-        persistent_identifiers = PersistentIdentifier.objects.all()
-        self.assertEqual(0, len(persistent_identifiers))
         responses.add(
             responses.POST,
-            site_config.pangaea_server.url,
+            site_config.pangaea_token_server.url,
             body=_get_pangaea_soap_response(),
-            status=200)
+            status=200
+        )
         responses.add(
             responses.GET,
-            '{0}{1}'.format(PANGAEA_ISSUE_BASE_URL, 'PANGAEA_FAKE_KEY'),
+            '{0}/rest/api/2/field'.format(site_config.pangaea_jira_server.url),
+            status=200,
+        )
+        responses.add(
+            responses.GET,
+            'https://www.example.com/rest/api/2/issue/{0}'.format(
+                'PANGAEA_FAKE_KEY'),
             json=_get_pangaea_ticket_response(),
-            status=200)
-
+            status=200
+        )
         responses.add(
             responses.POST,
             '{0}{1}/{2}/{3}'.format(
                 site_config.helpdesk_server.url,
-                HELPDESK_API_SUB_URL,
+                JIRA_ISSUE_URL,
                 'FAKE_KEY',
-                HELPDESK_COMMENT_SUB_URL),
+                JIRA_COMMENT_SUB_URL),
             json={'bla': 'blubb'},
             status=200)
+
         result = check_for_pangaea_doi_task.apply_async(
             kwargs={
-                'resource_credential_id': site_config.pangaea_server.pk
+                'resource_credential_id': site_config.pangaea_token_server.pk
             }
         )
         self.assertTrue(result.successful())
@@ -1393,25 +1616,38 @@ class TestTaskChains(TestTasks):
     @responses.activate
     def test_pangaea_chain(self):
         submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+
+        self._add_default_pangaea_responses()
         responses.add(
             responses.POST,
-            PANGAEA_ISSUE_BASE_URL,
-            json={'id': '31444', 'key': 'PANGAEA_FAKE_KEY',
-                  'self': 'http://issues.pangaea.de/rest/api/2/issue/31444'},
-            status=201)
-        responses.add(
-            responses.POST,
-            '{0}{1}/attachments'.format(
-                PANGAEA_ISSUE_BASE_URL,
-                'PANGAEA_FAKE_KEY'),
-            json=_get_pangaea_attach_response(),
+            '{0}{1}'.format(site_config.pangaea_jira_server.url,
+                            JIRA_ISSUE_URL),
+            json=self.pangaea_issue_json,
             status=200)
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/PDI-12428'.format(
+                site_config.helpdesk_server.url),
+            json=self.pangaea_issue_json
+        )
+
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          site_config.pangaea_jira_server.url,
+                          JIRA_ISSUE_URL,
+                          'PDI-12428',
+                          JIRA_ATTACHMENT_SUB_URL,
+                      ),
+                      json=_get_pangaea_attach_response(),
+                      status=200)
+
         result = chain(
-            create_pangaea_jira_ticket_task.s(
+            create_pangaea_issue_task.s(
                 submission_id=submission.pk,
                 login_token='f3d7aca208aaec8954d45bebc2f59ba1522264db'
             ),
-            attach_file_to_pangaea_ticket_task.s(
+            attach_to_pangaea_issue_task.s(
                 submission_id=submission.pk,
             )
 
@@ -1440,9 +1676,14 @@ class TestTaskChains(TestTasks):
                             'screenname': 'maweber', 'userid': 16250,
                             'lastname': 'Weber'})
 
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
         responses.add(responses.POST,
                       '{0}{1}'.format(site_config.helpdesk_server.url,
-                                      HELPDESK_API_SUB_URL
+                                      JIRA_ISSUE_URL
                                       ),
                       json={'bla': 'blubb'},
                       status=200)
@@ -1451,9 +1692,9 @@ class TestTaskChains(TestTasks):
             responses.POST,
             '{0}{1}/{2}/{3}'.format(
                 site_config.helpdesk_server.url,
-                HELPDESK_API_SUB_URL,
+                JIRA_ISSUE_URL,
                 'FAKE_KEY',
-                HELPDESK_COMMENT_SUB_URL,
+                JIRA_COMMENT_SUB_URL,
             ),
             json={'bla': 'blubb'},
             status=200)
@@ -1477,6 +1718,7 @@ class TestTaskProgressReportInTasks(TestTasks):
     @responses.activate
     def test_create_with_retry_task(self):
         submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
         submission.brokerobject_set.filter(
             type='study').first().persistentidentifier_set.create(
             archive='ENA',
@@ -1486,20 +1728,20 @@ class TestTaskProgressReportInTasks(TestTasks):
         )
         responses.add(
             responses.POST,
-            '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
+            '{0}/{1}/comment'.format(site_config.pangaea_jira_server.url,
                                     'PANGAEA_FAKE_KEY'),
             status=500)
         tprs = TaskProgressReport.objects.exclude(
             task_name='tasks.update_helpdesk_ticket_task')
         self.assertEqual(0, len(tprs))
-        comment_on_pangaea_ticket_task.apply_async(
+        add_accession_to_pangaea_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
                 'kwargs': {
                     'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
                     'ticket_key': 'PANGAEA_FAKE_KEY'
                 },
-                'comment_body': 'ACC 12345'
+                # 'comment_body': 'ACC 12345'
             }
         )
 

@@ -97,7 +97,7 @@ class SubmissionTransferHandler(object):
         error = None
         if not response.ok:
             if 400 <= response.status_code < 500:
-                print(' ############ 4xx ',)
+                print(' ############ 4xx ', )
                 error = cls.TransferClientError(
                     response.status_code,
                     response.content
@@ -139,7 +139,7 @@ class SubmissionTransferHandler(object):
             'submission_id={0} target_archive={1}'.format(self.submission_id,
                                                           self.target_archive))
         from gfbio_submissions.brokerage.tasks import \
-            create_helpdesk_ticket_task, get_user_email_task, \
+            create_submission_issue_task, get_user_email_task, \
             check_on_hold_status_task
 
         logger.info(
@@ -172,7 +172,7 @@ class SubmissionTransferHandler(object):
             chain = get_user_email_task.s(
                 submission_id=self.submission_id).set(
                 countdown=SUBMISSION_DELAY) \
-                    | create_helpdesk_ticket_task.s(
+                    | create_submission_issue_task.s(
                 submission_id=self.submission_id).set(
                 countdown=SUBMISSION_DELAY)
             if release:
@@ -194,13 +194,13 @@ class SubmissionTransferHandler(object):
                 self.target_archive))
         from gfbio_submissions.brokerage.tasks import \
             transfer_data_to_ena_task, process_ena_response_task, \
-            comment_helpdesk_ticket_task
+            add_accession_to_submission_issue_task
 
         chain = transfer_data_to_ena_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
                 | process_ena_response_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
-                | comment_helpdesk_ticket_task.s(
+                | add_accession_to_submission_issue_task.s(
             submission_id=self.submission_id,
             target_archive=ENA).set(countdown=SUBMISSION_DELAY)
         chain()
@@ -211,29 +211,27 @@ class SubmissionTransferHandler(object):
                 self.target_archive))
         from gfbio_submissions.brokerage.tasks import \
             transfer_data_to_ena_task, process_ena_response_task, \
-            comment_helpdesk_ticket_task, request_pangaea_login_token_task, \
-            create_pangaea_jira_ticket_task, \
-            attach_file_to_pangaea_ticket_task, \
-            comment_on_pangaea_ticket_task, \
-            add_pangaealink_to_helpdesk_ticket_task
+            add_accession_to_submission_issue_task, \
+            create_pangaea_issue_task, \
+            attach_to_pangaea_issue_task, \
+            add_accession_to_pangaea_issue_task, \
+            add_pangaealink_to_submission_issue_task
 
         chain = transfer_data_to_ena_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
                 | process_ena_response_task.s(submission_id=self.submission_id,
                                               close_submission_on_success=False).set(
             countdown=SUBMISSION_DELAY) \
-                | comment_helpdesk_ticket_task.s(
+                | add_accession_to_submission_issue_task.s(
             submission_id=self.submission_id,
             target_archive=ENA).set(countdown=SUBMISSION_DELAY) \
-                | request_pangaea_login_token_task.s(
+                | create_pangaea_issue_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
-                | create_pangaea_jira_ticket_task.s(
+                | attach_to_pangaea_issue_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
-                | attach_file_to_pangaea_ticket_task.s(
+                | add_accession_to_pangaea_issue_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
-                | comment_on_pangaea_ticket_task.s(
-            submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
-                | add_pangaealink_to_helpdesk_ticket_task.s(
+                | add_pangaealink_to_submission_issue_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
         chain()
 

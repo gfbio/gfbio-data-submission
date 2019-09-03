@@ -103,14 +103,27 @@ class SiteConfiguration(models.Model):
                   'should use to connect to access ENA FTP-server.',
         on_delete=models.PROTECT
     )
-    pangaea_server = models.ForeignKey(
+    pangaea_token_server = models.ForeignKey(
         ResourceCredential,
-        related_name='SiteConfiguration.pangaea_server+',
+        null=True,
+        blank=True,
+        related_name='SiteConfiguration.pangaea_token_server+',
         help_text='Select which server and/or account this configuration '
-                  'should use to connect to Pangaea.',
+                  'should use to connect to Pangaea token server. Via this server, the'
+                  'token necessary to access Pangaea-Jira is obtained',
         on_delete=models.PROTECT
     )
-
+    pangaea_jira_server = models.ForeignKey(
+        ResourceCredential,
+        null=True,
+        blank=True,
+        related_name='SiteConfiguration.pangaea_jira_server+',
+        help_text='Select which server and/or account this configuration '
+                  'should use to connect to Pangaea-Jira. This Server'
+                  'represents the actual jira-instance of Pangaea',
+        on_delete=models.PROTECT
+    )
+    # TODO: remove
     gfbio_server = models.ForeignKey(
         ResourceCredential,
         null=True,
@@ -121,7 +134,7 @@ class SiteConfiguration(models.Model):
                   'accessing submission-registry, research_object, and so on.',
         on_delete=models.PROTECT
     )
-
+    # TODO: remove
     use_gfbio_services = models.BooleanField(
         default=False,
         help_text='If checked additional gfbio-related services will be used '
@@ -345,9 +358,32 @@ class Submission(models.Model):
                      self.brokerobject_set.filter(type='run')]
         }
 
-    def get_primary_additional_reference(self, reference_type):
+
+    # TODO: check if filter for primary makes sense. will deliver only on per submission
+    def get_primary_pangaea_references(self):
         return self.additionalreference_set.filter(
+            Q(type=AdditionalReference.PANGAEA_JIRA_TICKET) & Q(primary=True))
+
+    def get_primary_reference(self, reference_type):
+        issues = self.additionalreference_set.filter(
             Q(type=reference_type) & Q(primary=True))
+        if len(issues):
+            return issues.first()
+        else:
+            return None
+
+    def get_primary_helpdesk_reference(self):
+        return self.get_primary_reference(AdditionalReference.GFBIO_HELPDESK_TICKET)
+        # issues = self.additionalreference_set.filter(
+        #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True)
+        # )
+        # if len(issues):
+        #     return issues.first()
+        # else:
+        #     return None
+
+    def get_primary_pangaea_reference(self):
+        return self.get_primary_reference(AdditionalReference.PANGAEA_JIRA_TICKET)
 
     def __str__(self):
         return '{}_{}'.format(self.pk, self.broker_submission_id)
@@ -623,8 +659,8 @@ class PrimaryDataFile(models.Model):
         super(PrimaryDataFile, self).save(*args, **kwargs)
         if attach:
             from .tasks import \
-                attach_file_to_helpdesk_ticket_task
-            attach_file_to_helpdesk_ticket_task.apply_async(
+                attach_to_submission_issue_task
+            attach_to_submission_issue_task.apply_async(
                 kwargs={
                     'submission_id': '{0}'.format(self.submission.pk),
                 },
@@ -696,8 +732,8 @@ class SubmissionUpload(TimeStampedModel):
         super(SubmissionUpload, self).save(*args, **kwargs)
         if self.attach_to_ticket and not ignore_attach_to_ticket:
             from .tasks import \
-                attach_file_to_helpdesk_ticket_task
-            attach_file_to_helpdesk_ticket_task.apply_async(
+                attach_to_submission_issue_task
+            attach_to_submission_issue_task.apply_async(
                 kwargs={
                     'submission_id': '{0}'.format(self.submission.pk),
                     'submission_upload_id': '{0}'.format(self.pk)

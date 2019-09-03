@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import uuid
+from unittest.mock import patch
 
 import responses
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
-from unittest.mock import patch
 
 from gfbio_submissions.brokerage.admin import download_auditable_text_data
 from gfbio_submissions.brokerage.models import ResourceCredential, \
@@ -56,7 +56,8 @@ class SiteConfigurationTest(TestCase):
             title='Title',
             site=user,
             ena_server=resource_cred,
-            pangaea_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
             gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Comment',
@@ -65,7 +66,8 @@ class SiteConfigurationTest(TestCase):
             title='Default',
             site=None,
             ena_server=resource_cred,
-            pangaea_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
             gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
@@ -95,7 +97,8 @@ class SiteConfigurationTest(TestCase):
         self.assertIsInstance(site_config, SiteConfiguration)
         self.assertIsInstance(site_config.site, User)
         self.assertIsInstance(site_config.ena_server, ResourceCredential)
-        self.assertIsInstance(site_config.pangaea_server, ResourceCredential)
+        self.assertIsInstance(site_config.pangaea_token_server,
+                              ResourceCredential)
         self.assertIsInstance(site_config.gfbio_server, ResourceCredential)
         self.assertIsInstance(site_config.helpdesk_server, ResourceCredential)
         self.assertFalse(site_config.release_submissions)
@@ -153,7 +156,8 @@ class TicketLabelTest(TestCase):
             title='Title',
             site=user,
             ena_server=resource_cred,
-            pangaea_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
             gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Comment',
@@ -162,7 +166,8 @@ class TicketLabelTest(TestCase):
             title='Default',
             site=None,
             ena_server=resource_cred,
-            pangaea_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
             gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
@@ -465,7 +470,8 @@ class RequestLogTest(TestCase):
             title='Default',
             site=None,
             ena_server=resource_cred,
-            pangaea_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
             gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
@@ -712,4 +718,4 @@ class TestSubmissionUpload(TestCase):
         )
         self.assertIn('.txt / {0}'.format(
             Submission.objects.first().broker_submission_id),
-                         submission_upload.__str__())
+            submission_upload.__str__())
