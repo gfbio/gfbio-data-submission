@@ -4,14 +4,13 @@ import json
 import uuid
 from pprint import pprint
 from unittest import skip
-from unittest import mock
 from unittest.mock import patch
 from uuid import uuid4
 
 import responses
 from celery import chain
 from django.contrib.auth.models import Permission
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIRequestFactory, APIClient
@@ -682,7 +681,88 @@ class TestPortalServiceTasks(TestTasks):
                           'user_full_name': ''}, result.get())
 
 
+# TODO: may these have to be moved to other test class (Taskprogressreport ...)
+#   or removed ... Now for testing behaviour on GFBIO-2589
+# class TestCeleryWithoutEager(TransactionTestCase):  # TransactionTestCase
+#
+#
+#     @classmethod
+#     def setUpClass(cls):
+#         super().setUpClass()
+#         print('after super')
+#         app.control.purge()
+#         print('after purge')
+#         cls._worker = app.Worker(app=app, pool='solo', concurrency=1)
+#         connections.close_all()
+#         cls._thread = threading.Thread(target=cls._worker.start)
+#         cls._thread.daemon = True
+#         print('start thresd')
+#         cls._thread.start()
+#
+#     @classmethod
+#     def tearDownClass(cls):
+#         cls._worker.stop()
+#         super().tearDownClass()
+#
+#     @responses.activate
+#     def test_tpr_add_pangaea_link_server_error(self):
+#         submission = Submission.objects.first()
+#         responses.add(
+#             responses.GET,
+#             '{0}/rest/api/2/field'.format(
+#                 self.default_site_config.helpdesk_server.url),
+#             status=200,
+#         )
+#         url = '{0}{1}/{2}/{3}'.format(
+#             self.default_site_config.helpdesk_server.url,
+#             JIRA_ISSUE_URL,
+#             'FAKE_KEY',
+#             JIRA_COMMENT_SUB_URL,
+#         )
+#         responses.add(responses.POST, url, status=500,
+#                       json={'bla': 'blubb'})
+#         # TODO: for testing auto-retry
+#         # result = None
+#         # try:
+#         result = add_pangaealink_to_submission_issue_task.apply_async(
+#             kwargs={
+#                 'submission_id': submission.pk,
+#             }
+#         )
+#         # TODO: for testing auto-retry
+#         # except RuntimeError as re:
+#         #     print('\nRUNTIME ERROR: runtime error ', re)
+#         self.assertEqual(1, len(TaskProgressReport.objects.all()))
+#         self.assertTrue(result.successful())
+#         t = TaskProgressReport.objects.first()
+#         pprint(t.__dict__)
+
+# import fakeredis
+
+
+# class TestViews(TestCase):
+#     def setUp(self):
+#         redis_patcher = patch('gfbio_submissions.brokerage.redis', fakeredis.FakeRedis)
+#         self.redis = redis_patcher.start()
+#
+#         self.redis.set('UPDATE', 'Spring')
+#         # print(redis_client.get('UPDATE'))
+#
+#     def tearDown(self):
+#         self.redis_patcher.stop
+
+
 class TestGFBioHelpDeskTasks(TestTasks):
+
+    # def setUp(self):
+    #     redis_patcher = patch('gfbio_submissions.brokerage.redis', fakeredis.FakeRedis)
+    #     self.redis = redis_patcher.start()
+    #
+    #     self.redis.set('UPDATE', 'Spring')
+    #    # print(redis_client.get('UPDATE'))
+
+    # def tearDown(self):
+    #     self.redis_patcher.stop
 
     @classmethod
     def _add_success_responses(cls):
@@ -787,6 +867,8 @@ class TestGFBioHelpDeskTasks(TestTasks):
         pprint(t.__dict__)
 
     @responses.activate
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+                       CELERY_TASK_EAGER_PROPAGATES=False)
     def test_tpr_add_pangaea_link_server_error(self):
         # self._add_server_fail_responses()
         submission = Submission.objects.first()
@@ -804,11 +886,25 @@ class TestGFBioHelpDeskTasks(TestTasks):
         )
         responses.add(responses.POST, url, status=500,
                       json={'bla': 'blubb'})
-        result = add_pangaealink_to_submission_issue_task.apply_async(
+        # TODO: for testing auto-retry
+        # result = None
+        # try:
+        # apply: Execute this task locally, by blocking until the task returns.
+        # apply_async: Apply tasks asynchronously by sending a message.
+        result = add_pangaealink_to_submission_issue_task.apply(
             kwargs={
                 'submission_id': submission.pk,
             }
         )
+        print('RESULT ', result.__dict__)
+        print('\nTPR: ', TaskProgressReport.objects.first().__dict__)
+        # TODO: for testing auto-retry
+        # except RuntimeError as re:
+        #     print('\nRUNTIME ERROR: runtime error ', re)
+        # self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        # self.assertTrue(result.successful())
+        # t = TaskProgressReport.objects.first()
+        # pprint(t.__dict__)
 
     @responses.activate
     def test_tpr_add_pangaea_link_client_error(self):

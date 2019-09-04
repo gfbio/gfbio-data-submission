@@ -45,3 +45,5 @@ mozilla-django-oidc==1.2.2  # https://github.com/mozilla/mozilla-django-oidc
 jira==2.0.0 # https://github.com/pycontribs/jira
 
 shortid==0.1.2 # https://github.com/corpix/shortid
+
+# fakeredis==1.0.4
