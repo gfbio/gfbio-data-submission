@@ -4,6 +4,7 @@ import json
 import uuid
 from pprint import pprint
 from unittest import skip
+from unittest import mock
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -766,6 +767,10 @@ class TestGFBioHelpDeskTasks(TestTasks):
         t = TaskProgressReport.objects.first()
         pprint(t.__dict__)
 
+    # with mock.patch(
+    #         'celery.app.task.denied_join_result'
+    # ) as mocked_task_join_will_block:
+    #     mocked_task_join_will_block.__enter__.return_value = None
     @responses.activate
     def test_tpr_task_server_fail(self):
         self._add_server_fail_responses()
@@ -780,6 +785,53 @@ class TestGFBioHelpDeskTasks(TestTasks):
         self.assertTrue(result.successful())
         t = TaskProgressReport.objects.first()
         pprint(t.__dict__)
+
+    @responses.activate
+    def test_tpr_add_pangaea_link_server_error(self):
+        # self._add_server_fail_responses()
+        submission = Submission.objects.first()
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(
+                self.default_site_config.helpdesk_server.url),
+            status=200,
+        )
+        url = '{0}{1}/{2}/{3}'.format(
+            self.default_site_config.helpdesk_server.url,
+            JIRA_ISSUE_URL,
+            'FAKE_KEY',
+            JIRA_COMMENT_SUB_URL,
+        )
+        responses.add(responses.POST, url, status=500,
+                      json={'bla': 'blubb'})
+        result = add_pangaealink_to_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+
+    @responses.activate
+    def test_tpr_add_pangaea_link_client_error(self):
+        submission = Submission.objects.first()
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(
+                self.default_site_config.helpdesk_server.url),
+            status=200,
+        )
+        url = '{0}{1}/{2}/{3}'.format(
+            self.default_site_config.helpdesk_server.url,
+            JIRA_ISSUE_URL,
+            'FAKE_KEY',
+            JIRA_COMMENT_SUB_URL,
+        )
+        responses.add(responses.POST, url, status=400, json={'bla': 'blubb'})
+        result = add_pangaealink_to_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertTrue(result.successful())
 
     @responses.activate
     def test_tpr_task_success_failing_kwargs(self):

@@ -5,6 +5,7 @@ from pprint import pprint
 
 import celery
 from celery import Task
+from celery.exceptions import MaxRetriesExceededError
 from django.core.mail import mail_admins
 from django.db import transaction
 from django.db.utils import IntegrityError
@@ -262,11 +263,19 @@ def apply_default_task_retry_policy(response, task, submission):
                 msg='{} SubmissionTransfer.TransferServerError retry after delay'
                     ''.format(task.name)
             )
-            task.retry(
-                exc=e,
-                throw=False,
-                countdown=(task.request.retries + 1) * SUBMISSION_RETRY_DELAY,
-            )
+            # TODO: for testing 4.3
+            try:
+                task.retry(
+                    exc=e,
+                    throw=False,
+                    countdown=(
+                                      task.request.retries + 1) * SUBMISSION_RETRY_DELAY,
+                )
+            # TODO: for testing 4.3
+            except RuntimeError as re:
+                print('\n\n RUNTIME ERROR RETRY ')
+                pprint(re)
+
 
     except SubmissionTransferHandler.TransferClientError as e:
         logger.warning(
@@ -949,26 +958,29 @@ def add_pangaea_doi_task(prev_task_result=None,
 #         try:
 #             task.retry(countdown=3 ** task.request.retries, throw=False)
 #         except MaxRetriesExceededError as e:
-#             print('new_retry MAX RETRIES ', task.request.retries, ' ', e)
 @celery.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.add_pangaealink_to_submission_issue_task',
 
     #     # approach 2: https://coderbook.com/@marcus/how-to-automatically-retry-failed-tasks-with-celery/
-    max_retries=SUBMISSION_MAX_RETRIES,
+    # max_retries=SUBMISSION_MAX_RETRIES,
 
-    #     # approach 1 https://www.distributedpython.com/2018/09/04/error-handling-retry/ https://medium.com/@dwernychukjosh/retrying-asynchronous-tasks-with-celery-221acd385d34
+    #     # approach 1 https://www.distributedpython.com/2018/09/04/error-handling-retry/
+    #     https://medium.com/@dwernychukjosh/retrying-asynchronous-tasks-with-celery-221acd385d34
     #     # known expeptions: http://docs.celeryq.org/en/latest/userguide/tasks.html#automatic-retry-for-known-exceptions
     #
-    # throws=(SubmissionTransferHandler.TransferServerError,
-    #         SubmissionTransferHandler.TransferClientError,),
-    # throws=(SubmissionTransferHandler.TransferClientError, ),
-    # autoretry_for=(SubmissionTransferHandler.TransferServerError,),
-    # exponential_backoff=2,
-    # retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES+2},
-    # retry_backoff=10,
-    # retry_jitter=True  # 4.2
+    # throws=(SubmissionTransferHandler.TransferServerError,),
+    # throws=(SubmissionTransferHandler.TransferClientError, SubmissionTransferHandler.TransferServerError,),
+
+
+    autoretry_for=(SubmissionTransferHandler.TransferServerError,),
+    retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
+    # retry_backoff=True, # https://docs.celeryproject.org/en/latest/userguide/tasks.html#Task.retry_backoff
+    retry_backoff=60,
+    # For example, if this option is set to 3, the first retry will delay 3 seconds, the second will delay 6 seconds, the third will delay 12 seconds, the fourth will delay 24 seconds, and so on
+    # exponential_backoff=20, # not shure if applied, not in docs for 4.3, compare retry_backoff and jitter in docs
+    retry_jitter=True  # 4.2
 )
 # current:
 # @celery.task(max_retries=SUBMISSION_MAX_RETRIES,
@@ -1000,11 +1012,40 @@ def add_pangaealink_to_submission_issue_task(
                     pangaea_reference.reference_key)
             )
             if jira_client.error:
-                apply_default_task_retry_policy(
-                    jira_client.error.response,
-                    add_pangaealink_to_submission_issue_task,
-                    submission
-                )
+                print(self.request.retries, ' error ',
+                      jira_client.error.response.status_code)
+                # TODO: - (A) 04.09.2019: with decorator containing
+                #  max_retries=SUBMISSION_MAX_RETRIES, autoretry_for=(SubmissionTransferHandler.TransferServerError,),
+                #   task retries 2x then in last retry 500er is thrown again (as expected) but no catched
+                #   no EAGAER based exectption
+                #   - (B) mit retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES+2}, 4x (expected)
+                #   - (C) all this can also be achieved vie try/except and .retry(exc=exc, max_retries=5)
+                #   - (D) IF max retries is is treated via if : EAGER-result.get() exception occurs
+                #   - (E) auto retry (decorator) vs. self.retry(countdown=3 ** self.request.retries, throw=False??)
+                #   - (F) manual self.retry with cathcing max retries error also produces eager error
+                if 500 <= jira_client.error.response.status_code < 600:
+                    # if self.request.retries >= SUBMISSION_MAX_RETRIES:
+                    #     print('\nmax retries exceded for exception',
+                    #           jira_client.error, ' do stuff ... return safely')
+                    #     return TaskProgressReport.CANCELLED
+                    # else:
+
+                    # auto-retry:
+                    # raise SubmissionTransferHandler.TransferServerError
+                    # end auto-retry -------------------------------------------
+
+                    # manual retry:
+                    try:
+                        self.retry(countdown=3 ** self.request.retries) # , throw=False)
+                    except MaxRetriesExceededError as e:
+                        print('MAX RETRIES ', e)
+                    # end manual retry -----------------------------------------
+
+                # apply_default_task_retry_policy(
+                #     jira_client.error.response,
+                #     add_pangaealink_to_submission_issue_task,
+                #     submission
+                # )
 
         #############################################################
         # refactored approach 2, similar to actual retry policy
@@ -1049,3 +1090,4 @@ def add_pangaealink_to_submission_issue_task(
 
     else:
         return TaskProgressReport.CANCELLED
+#             print('new_retry MAX RETRIES ', task.request.retries, ' ', e)
