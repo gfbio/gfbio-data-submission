@@ -52,15 +52,6 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 # Celery
 # ------------------------------------------------------------------------------
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-eager-propagates
-# BROKER_BACKEND = 'memory'
-# CELERY_RESULT_BACKEND = 'rpc://'
-# CELERY_BROKER_TRANSPORT = 'filesystem://'
-# CELERY_RESULT_BACKEND = 'file://app/results'
-# CELERY_BROKER_TRANSPORT_OPTIONS = {
-#     'data_folder_in': '/app',
-#     'data_folder_out': '/app',
-#     'data_folder_processed': '/app'
-# }
 CELERY_TASK_EAGER_PROPAGATES = True
 CELERY_TASK_ALWAYS_EAGER = True
 

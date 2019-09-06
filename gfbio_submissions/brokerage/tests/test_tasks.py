@@ -847,10 +847,6 @@ class TestGFBioHelpDeskTasks(TestTasks):
         t = TaskProgressReport.objects.first()
         pprint(t.__dict__)
 
-    # with mock.patch(
-    #         'celery.app.task.denied_join_result'
-    # ) as mocked_task_join_will_block:
-    #     mocked_task_join_will_block.__enter__.return_value = None
     @responses.activate
     def test_tpr_task_server_fail(self):
         self._add_server_fail_responses()
@@ -870,7 +866,6 @@ class TestGFBioHelpDeskTasks(TestTasks):
     @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
                        CELERY_TASK_EAGER_PROPAGATES=False)
     def test_tpr_add_pangaea_link_server_error(self):
-        # self._add_server_fail_responses()
         submission = Submission.objects.first()
         responses.add(
             responses.GET,
@@ -886,25 +881,18 @@ class TestGFBioHelpDeskTasks(TestTasks):
         )
         responses.add(responses.POST, url, status=500,
                       json={'bla': 'blubb'})
-        # TODO: for testing auto-retry
-        # result = None
-        # try:
-        # apply: Execute this task locally, by blocking until the task returns.
-        # apply_async: Apply tasks asynchronously by sending a message.
         result = add_pangaealink_to_submission_issue_task.apply(
             kwargs={
                 'submission_id': submission.pk,
             }
         )
-        print('RESULT ', result.__dict__)
-        print('\nTPR: ', TaskProgressReport.objects.first().__dict__)
-        # TODO: for testing auto-retry
-        # except RuntimeError as re:
-        #     print('\nRUNTIME ERROR: runtime error ', re)
-        # self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        # self.assertTrue(result.successful())
-        # t = TaskProgressReport.objects.first()
-        # pprint(t.__dict__)
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        tpr = TaskProgressReport.objects.first()
+        pprint(tpr.__dict__)
+        self.assertEqual('RETRY', tpr.status)
+        self.assertEqual('tasks.add_pangaealink_to_submission_issue_task',
+                         tpr.task_name)
+        self.assertEqual(TaskProgressReport.CANCELLED, tpr.task_return_value)
 
     @responses.activate
     def test_tpr_add_pangaea_link_client_error(self):
@@ -927,6 +915,11 @@ class TestGFBioHelpDeskTasks(TestTasks):
                 'submission_id': submission.pk,
             }
         )
+        tpr = TaskProgressReport.objects.first()
+        print(tpr.__dict__)
+        self.assertEqual('tasks.add_pangaealink_to_submission_issue_task',
+                         tpr.task_name)
+        self.assertEqual(TaskProgressReport.CANCELLED, tpr.task_return_value)
         self.assertTrue(result.successful())
 
     @responses.activate
