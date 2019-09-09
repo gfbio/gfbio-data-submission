@@ -3,10 +3,9 @@ from django.core.mail import mail_admins
 
 from gfbio_submissions.brokerage.configuration.settings import \
     TASK_FAIL_SUBJECT_TEMPLATE, TASK_FAIL_TEXT_TEMPLATE, SUBMISSION_MAX_RETRIES
+from gfbio_submissions.brokerage.exceptions import TransferInternalError
 from gfbio_submissions.brokerage.models import TaskProgressReport, Submission, \
     SiteConfiguration
-from .submission_transfer import \
-    SubmissionTransferHandler
 
 
 def _safe_get_submission(submission_id, include_closed):
@@ -17,7 +16,8 @@ def _safe_get_submission(submission_id, include_closed):
             submission_id)
     except Submission.DoesNotExist as e:
         print('NO submission ', e)
-        # raise SubmissionTransferHandler.TransferInternalError(
+        # TODO: logging this error
+        # raise TransferInternalError(
         #     'SubmissionTransferHandler | get_submission_and_site_configuration | '
         #     'no Submission available for submission pk={0}. include_closed={1}'.format(
         #         submission_id,
@@ -36,7 +36,8 @@ def _safe_get_site_config(submission):
                 submission.site)
         except SiteConfiguration.DoesNotExist as e:
             print('No SiteConfig ', e)
-            # raise SubmissionTransferHandler.TransferInternalError(
+            # TODO: logging this error
+            # raise TransferInternalError(
             #     'SubmissionTransferHandler | get_submission_and_site_configuration | '
             #     'no SiteConfiguration available for site={0}.'.format(
             #         submission.site,
@@ -59,7 +60,8 @@ def _get_submission_and_site_configuration(submission_id, task,
             #          ''.format(submission_id, include_closed, )
             # )
             # raise Ignore()
-            raise SubmissionTransferHandler.TransferInternalError(
+            # TODO: logging this error
+            raise TransferInternalError(
                 'SubmissionTransferHandler | get_submission_and_site_configuration | '
                 'no Submission available for submission pk={0}. include_closed={1}'.format(
                     submission_id,
@@ -68,7 +70,8 @@ def _get_submission_and_site_configuration(submission_id, task,
             )
         site_config = _safe_get_site_config(submission)
         if site_config is None:
-            raise SubmissionTransferHandler.TransferInternalError(
+            # TODO: logging this error
+            raise TransferInternalError(
                 'SubmissionTransferHandler | get_submission_and_site_configuration | '
                 'no SiteConfiguration available for site={0}.'.format(
                     submission.site,
@@ -79,7 +82,8 @@ def _get_submission_and_site_configuration(submission_id, task,
                 submission=submission,
                 task=task)
         return submission, site_config
-    except SubmissionTransferHandler.TransferInternalError as e:
+    except TransferInternalError as e:
+        # TODO: logging this error, with ref to task/self
         return TaskProgressReport.CANCELLED, None
 
 
@@ -103,7 +107,7 @@ def get_submission_and_site_configuration(submission_id, task,
     try:
         return _get_submission_and_site_configuration(submission_id, task,
                                                       include_closed)
-    except SubmissionTransferHandler.TransferInternalError as ce:
+    except TransferInternalError as ce:
         return send_task_fail_mail('*', task), None
 
 
@@ -113,8 +117,8 @@ def raise_transfer_server_exceptions(response, task, broker_submission_id,
         return send_task_fail_mail(broker_submission_id, task)
     else:
         try:
-            SubmissionTransferHandler.raise_response_exceptions(response)
-        except SubmissionTransferHandler.TransferClientError as ce:
+            raise_response_exceptions(response)
+        except TransferClientError as ce:
             return send_task_fail_mail(broker_submission_id, task)
 
 

@@ -13,6 +13,8 @@ from requests import ConnectionError, Response
 
 from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, \
     PANGAEA_ISSUE_VIEW_URL
+from gfbio_submissions.brokerage.exceptions import TransferServerError, \
+    TransferClientError
 from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content
 from gfbio_submissions.brokerage.utils.jira import JiraClient
@@ -284,18 +286,18 @@ def apply_timebased_task_retry_policy(task, submission, no_of_tickets):
 def apply_default_task_retry_policy(response, task, submission):
     try:
         SubmissionTransferHandler.raise_response_exceptions(response)
-    except SubmissionTransferHandler.TransferServerError as e:
+    except TransferServerError as e:
         logger.warning(
-            msg='{} SubmissionTransfer.TransferServerError {}'.format(
+            msg='{} TransferServerError {}'.format(
                 task.name, e)
         )
         logger.info(
-            msg='{} SubmissionTransfer.TransferServerError number_of_retries={}'
+            msg='{} TransferServerError number_of_retries={}'
                 ''.format(task.name, task.request.retries)
         )
         if task.request.retries == SUBMISSION_MAX_RETRIES:
             logger.warning(
-                msg='{} SubmissionTransfer.TransferServerError (mail_admins) max_retries={}'
+                msg='{} TransferServerError (mail_admins) max_retries={}'
                     ''.format(task.name, SUBMISSION_MAX_RETRIES)
             )
             mail_admins(
@@ -307,7 +309,7 @@ def apply_default_task_retry_policy(response, task, submission):
             )
         else:
             logger.info(
-                msg='{} SubmissionTransfer.TransferServerError retry after delay'
+                msg='{} TransferServerError retry after delay'
                     ''.format(task.name)
             )
             # TODO: for testing 4.3
@@ -323,9 +325,9 @@ def apply_default_task_retry_policy(response, task, submission):
                 print('\n\n RUNTIME ERROR RETRY ')
                 pprint(re)
 
-    except SubmissionTransferHandler.TransferClientError as e:
+    except TransferClientError as e:
         logger.warning(
-            msg='{} SubmissionTransfer.TransferClientError {}'.format(
+            msg='{} TransferClientError {}'.format(
                 task.name, e)
         )
         mail_admins(
@@ -989,8 +991,8 @@ def add_pangaea_doi_task(prev_task_result=None,
     base=SubmissionTask,
     bind=True,
     name='tasks.add_pangaealink_to_submission_issue_task',
-    autoretry_for=(SubmissionTransferHandler.TransferServerError,
-                   SubmissionTransferHandler.TransferClientError
+    autoretry_for=(TransferServerError,
+                   TransferClientError
                    ),
     retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
     # https://docs.celeryproject.org/en/latest/userguide/tasks.html#Task.retry_backoff
@@ -1006,6 +1008,7 @@ def add_pangaealink_to_submission_issue_task(
     #     get_closed_submission=True
     # )
 
+    # TODO: use this for all calls, also wher only submission without conf was requested
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
