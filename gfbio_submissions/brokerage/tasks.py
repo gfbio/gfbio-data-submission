@@ -12,10 +12,12 @@ from django.utils.encoding import smart_text
 from requests import ConnectionError, Response
 
 from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, \
-    PANGAEA_ISSUE_VIEW_URL, TASK_FAIL_SUBJECT_TEMPLATE, TASK_FAIL_TEXT_TEMPLATE
+    PANGAEA_ISSUE_VIEW_URL
 from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content
 from gfbio_submissions.brokerage.utils.jira import JiraClient
+from gfbio_submissions.brokerage.utils.task_utils import jira_error_auto_retry, \
+    get_submission_and_site_configuration
 from gfbio_submissions.users.models import User
 from .configuration.settings import BASE_HOST_NAME, \
     PRIMARY_DATA_FILE_MAX_RETRIES, PRIMARY_DATA_FILE_DELAY, \
@@ -138,7 +140,7 @@ def trigger_submission_transfer_for_updates(previous_task_result=None,
         msg='trigger_submission_transfer_for_updates. get submission_id with broker_submission_id={}.'.format(
             broker_submission_id)
     )
-    submission_id = Submission.objects.get_submission_id_for_bsi(
+    submission_id = Submission.objects.get_open_submission_id_for_bsi(
         broker_submission_id=broker_submission_id)
     submission = SubmissionTransferHandler.get_submission_for_task(
         submission_id=submission_id,
@@ -203,43 +205,42 @@ def check_on_hold_status_task(previous_task_result=None, submission_id=None):
 
 # TODO: move elsewhere ? -------------------------------------------------------
 
-def send_task_fail_mail(broker_submission_id, task):
-    mail_admins(
-        subject=TASK_FAIL_SUBJECT_TEMPLATE.format(
-            task.name,
-            broker_submission_id
-        ),
-        message=TASK_FAIL_TEXT_TEMPLATE.format(
-            task.name,
-            task.request.retries,
-            broker_submission_id,
-        ),
-    )
-    return TaskProgressReport.CANCELLED
-
-
-def raise_transfer_server_exceptions(response, task, broker_submission_id,
-                                     max_retries):
-    if task.request.retries >= max_retries:
-        return send_task_fail_mail(broker_submission_id, task)
-    else:
-        try:
-            SubmissionTransferHandler.raise_response_exceptions(response)
-        except SubmissionTransferHandler.TransferClientError as ce:
-            return send_task_fail_mail(broker_submission_id, task)
-
-
-def jira_error_auto_retry(jira_client, task, broker_submission_id,
-                          max_retries=SUBMISSION_MAX_RETRIES):
-    if jira_client and jira_client.error:
-        return raise_transfer_server_exceptions(
-            response=jira_client.error.response,
-            task=task,
-            broker_submission_id=broker_submission_id,
-            max_retries=max_retries,
-        )
-    return True
-
+# def send_task_fail_mail(broker_submission_id, task):
+#     mail_admins(
+#         subject=TASK_FAIL_SUBJECT_TEMPLATE.format(
+#             task.name,
+#             broker_submission_id
+#         ),
+#         message=TASK_FAIL_TEXT_TEMPLATE.format(
+#             task.name,
+#             task.request.retries,
+#             broker_submission_id,
+#         ),
+#     )
+#     return TaskProgressReport.CANCELLED
+#
+#
+# def raise_transfer_server_exceptions(response, task, broker_submission_id,
+#                                      max_retries):
+#     if task.request.retries >= max_retries:
+#         return send_task_fail_mail(broker_submission_id, task)
+#     else:
+#         try:
+#             SubmissionTransferHandler.raise_response_exceptions(response)
+#         except SubmissionTransferHandler.TransferClientError as ce:
+#             return send_task_fail_mail(broker_submission_id, task)
+#
+#
+# def jira_error_auto_retry(jira_client, task, broker_submission_id,
+#                           max_retries=SUBMISSION_MAX_RETRIES):
+#     if jira_client and jira_client.error:
+#         return raise_transfer_server_exceptions(
+#             response=jira_client.error.response,
+#             task=task,
+#             broker_submission_id=broker_submission_id,
+#             max_retries=max_retries,
+#         )
+#     return True
 
 
 # TODO: s.o. -------------------------------------------------------------------
@@ -659,7 +660,7 @@ def check_for_pangaea_doi_task(resource_credential_id=None):
     # TODO: in general suboptimal to fetch sc for every submission in set, but neeeded, reconsider to refactor
     #   schedule in database etc.
     for sub in submissions:
-        site_config = SiteConfiguration.objects.get_site_configuration_for_task(
+        site_config = SiteConfiguration.objects.get_site_configuration(
             site=sub.site
         )
         jira_client = JiraClient(resource=site_config.helpdesk_server,
@@ -999,13 +1000,19 @@ def add_pangaea_doi_task(prev_task_result=None,
 def add_pangaealink_to_submission_issue_task(
         self,
         submission_id=None):
+    # submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
+    #     submission_id=submission_id,
+    #     task=add_pangaealink_to_submission_issue_task,
+    #     get_closed_submission=True
+    # )
 
-    submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
+    submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
-        task=add_pangaealink_to_submission_issue_task,
-        get_closed_submission=True
+        task=self,
+        include_closed=True
     )
-
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
     # if submission is not None and site_configuration is not None:
 
     helpdesk_reference = submission.get_primary_helpdesk_reference()
@@ -1022,7 +1029,7 @@ def add_pangaealink_to_submission_issue_task(
                 pangaea_reference.reference_key)
         )
         return jira_error_auto_retry(jira_client=jira_client, task=self,
-                              broker_submission_id=submission.broker_submission_id)
+                                     broker_submission_id=submission.broker_submission_id)
         # print(self.request.retries, ' error ',
         #       jira_client.error.response.status_code)
         # # TODO: - (A) 04.09.2019: with decorator containing

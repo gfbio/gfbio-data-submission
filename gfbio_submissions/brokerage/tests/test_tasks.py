@@ -923,6 +923,8 @@ class TestGFBioHelpDeskTasks(TestTasks):
         self.assertTrue(result.successful())
 
     @responses.activate
+    # @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+    #                    CELERY_TASK_EAGER_PROPAGATES=False)
     def test_tpr_task_success_failing_kwargs(self):
         self._add_success_responses()
         submission = Submission.objects.last()
@@ -946,7 +948,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
                 'submission_id': submission.pk+22,
             }
         )
-        self.assertTrue(result.successful())
+        # self.assertTrue(result.successful())
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
         t = TaskProgressReport.objects.first()
         pprint(t.__dict__)

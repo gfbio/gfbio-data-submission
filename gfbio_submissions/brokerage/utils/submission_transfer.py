@@ -3,8 +3,6 @@ import logging
 
 from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY, \
     ENA, ENA_PANGAEA
-from gfbio_submissions.brokerage.models import Submission, SiteConfiguration, \
-    TaskProgressReport
 
 logger = logging.getLogger(__name__)
 
@@ -32,75 +30,112 @@ class SubmissionTransferHandler(object):
         self.target_archive = target_archive
         self.submission_id = submission_id
 
-    @classmethod
-    def _get_submission(cls, submission_id, get_closed_submission=False):
-        submission = None
-        try:
-            if get_closed_submission:
-                submission = Submission.objects.get_submission_including_closed_for_task(
-                    id=submission_id)
-            else:
-                submission = Submission.objects.get_submission_for_task(
-                    id=submission_id)
-        except Submission.DoesNotExist as e:
-            logger.error(
-                msg='SubmissionTransferHandler _get_submission. Submission does not exist'
-                    ' submission pk={}. Error={}'
-                    ''.format(submission_id, e)
-            )
-            raise cls.TransferInternalError(
-                '_get_submission No Submission found for pk={}. Original message: {}'.format(
-                    submission_id, e))
-        finally:
-            return submission
+    # @classmethod
+    # def get_submission_and_site_configuration(cls, submission_id, task,
+    #                                           include_closed):
+    #     submission = None
+    #     site_config = None
+    #     try:
+    #         submission = Submission.objects.get_non_error_submission(
+    #             submission_id) if include_closed else Submission.objects.get_open_submission(
+    #             submission_id)
+    #     except Submission.DoesNotExist as e:
+    #         print('NO submission ', e)
+    #         raise cls.TransferInternalError(
+    #             'SubmissionTransferHandler | get_submission_and_site_configuration | '
+    #             'no Submission available for submission pk={0}. include_closed={1}'.format(
+    #                 submission_id,
+    #                 include_closed,
+    #             )
+    #         )
+    #     try:
+    #         site_config = SiteConfiguration.objects.get_site_configuration(
+    #             submission.site)
+    #     except SiteConfiguration.DoesNotExist as e:
+    #         print('No SiteConfig ', e)
+    #         raise cls.TransferInternalError(
+    #             'SubmissionTransferHandler | get_submission_and_site_configuration | '
+    #             'no SiteConfiguration available for site={0}.'.format(
+    #                 submission.site,
+    #             )
+    #         )
+    #     if task:
+    #         TaskProgressReport.objects.create_initial_report(
+    #             submission=submission,
+    #             task=task)
+    #     return submission, site_config
 
-    @classmethod
-    def get_submission_for_task(cls, submission_id=None, task=None,
-                                get_closed_submission=False):
-        submission = cls._get_submission(submission_id, get_closed_submission)
-        if task:
-            task_report, created = TaskProgressReport.objects.create_initial_report(
-                submission=submission,
-                task=task)
-        if submission is None:
-            raise cls.TransferInternalError(
-                'SubmissionTransferHandler | get_submission_for_task | no Submission available for submission pk={0}'.format(
-                    submission_id))
-        return submission
+        # return Submission.objects.get_submission_for_task(submission_id, task, include_closed)
 
-    @classmethod
-    def get_submission_and_siteconfig_for_task(cls, submission_id=None,
-                                               task=None,
-                                               get_closed_submission=False):
-        # TODO: Catch DoesNotExist here, so tasks will have to deal with only on type of exception
-        submission = cls._get_submission(submission_id, get_closed_submission)
-        if submission is None:
-            raise cls.TransferInternalError(
-                'SubmissionTransferHandler | get_submission_and_siteconfig_for_task | no Submission available for submission pk={0}. get_closed_submission={1}'.format(
-                    submission_id,
-                    get_closed_submission,
-                )
-            )
-        if submission:
-            try:
-                site_configuration = SiteConfiguration.objects.get_site_configuration_for_task(
-                    site=submission.site)
-            except SiteConfiguration.DoesNotExist as e:
-                logger.error(
-                    msg='SubmissionTransferHandler. SiteConfiguration does not exist'
-                        ' submission pk={}. Error={}'
-                        ''.format(submission_id, e)
-                )
-                raise cls.TransferInternalError(
-                    'No SiteConfiguration found for site={}. Original message: '
-                    '{}'.format(submission.site, e))
-        else:
-            site_configuration = None
-        if task:
-            task_report, created = TaskProgressReport.objects.create_initial_report(
-                submission=submission,
-                task=task)
-        return submission, site_configuration
+    # @classmethod
+    # def _get_submission(cls, submission_id, get_closed_submission=False):
+    #     submission = None
+    #     try:
+    #         if get_closed_submission:
+    #             submission = Submission.objects.get_non_error_submission(
+    #                 id=submission_id)
+    #         else:
+    #             submission = Submission.objects.get_open_submission(
+    #                 id=submission_id)
+    #     except Submission.DoesNotExist as e:
+    #         logger.error(
+    #             msg='SubmissionTransferHandler _get_submission. Submission does not exist'
+    #                 ' submission pk={}. Error={}'
+    #                 ''.format(submission_id, e)
+    #         )
+    #         raise cls.TransferInternalError(
+    #             '_get_submission No Submission found for pk={}. Original message: {}'.format(
+    #                 submission_id, e))
+    #     finally:
+    #         return submission
+
+    # @classmethod
+    # def get_open_submission(cls, submission_id=None, task=None,
+    #                             get_closed_submission=False):
+    #     submission = cls._get_submission(submission_id, get_closed_submission)
+    #     if task:
+    #         task_report, created = TaskProgressReport.objects.create_initial_report(
+    #             submission=submission,
+    #             task=task)
+    #     if submission is None:
+    #         raise cls.TransferInternalError(
+    #             'SubmissionTransferHandler | get_open_submission | no Submission available for submission pk={0}'.format(
+    #                 submission_id))
+    #     return submission
+
+    # @classmethod
+    # def get_submission_and_siteconfig_for_task(cls, submission_id=None,
+    #                                            task=None,
+    #                                            get_closed_submission=False):
+    #     # TODO: Catch DoesNotExist here, so tasks will have to deal with only on type of exception
+    #     submission = cls._get_submission(submission_id, get_closed_submission)
+    #     # if submission is None:
+    #     #     raise cls.TransferInternalError(
+    #     #         'SubmissionTransferHandler | get_submission_and_siteconfig_for_task | no Submission available for submission pk={0}. get_closed_submission={1}'.format(
+    #     #             submission_id,
+    #     #             get_closed_submission,
+    #     #         )
+    #     #     )
+    #     if submission:
+    #         try:
+    #             site_configuration = SiteConfiguration.objects.get_site_configuration(
+    #                 site=submission.site)
+    #         except SiteConfiguration.DoesNotExist as e:
+    #             logger.error(
+    #                 msg='SubmissionTransferHandler. SiteConfiguration does not exist'
+    #                     ' submission pk={}. Error={}'
+    #                     ''.format(submission_id, e)
+    #             )
+    #             raise cls.TransferInternalError(
+    #                 'No SiteConfiguration found for site={}. Original message: '
+    #                 '{}'.format(submission.site, e))
+    #     else:
+    #         site_configuration = None
+    #     if task:
+    #         task_report, created = TaskProgressReport.objects.create_initial_report(
+    #             submission=submission,
+    #             task=task)
+    #     return submission, site_configuration
 
     @classmethod
     def raise_response_exceptions(cls, response):
