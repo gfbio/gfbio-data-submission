@@ -928,9 +928,22 @@ class TestGFBioHelpDeskTasks(TestTasks):
         submission = Submission.objects.last()
         self.assertEqual(0, len(TaskProgressReport.objects.all()))
 
-        result = create_submission_issue_task.apply_async(
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(
+                self.default_site_config.helpdesk_server.url),
+            status=200,
+        )
+        url = '{0}{1}/{2}/{3}'.format(
+            self.default_site_config.helpdesk_server.url,
+            JIRA_ISSUE_URL,
+            'FAKE_KEY',
+            JIRA_COMMENT_SUB_URL,
+        )
+        responses.add(responses.POST, url, status=400, json={'bla': 'blubb'})
+        result = add_pangaealink_to_submission_issue_task.apply_async(
             kwargs={
-                'submission_id': submission.id,
+                'submission_id': submission.pk+22,
             }
         )
         self.assertTrue(result.successful())

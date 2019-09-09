@@ -999,63 +999,64 @@ def add_pangaea_doi_task(prev_task_result=None,
 def add_pangaealink_to_submission_issue_task(
         self,
         submission_id=None):
+
     submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
         submission_id=submission_id,
         task=add_pangaealink_to_submission_issue_task,
         get_closed_submission=True
     )
 
-    if submission is not None and site_configuration is not None:
+    # if submission is not None and site_configuration is not None:
 
-        helpdesk_reference = submission.get_primary_helpdesk_reference()
-        pangaea_reference = submission.get_primary_pangaea_reference()
+    helpdesk_reference = submission.get_primary_helpdesk_reference()
+    pangaea_reference = submission.get_primary_pangaea_reference()
 
-        if helpdesk_reference and pangaea_reference:
-            jira_client = JiraClient(
-                resource=site_configuration.helpdesk_server)
+    if helpdesk_reference and pangaea_reference:
+        jira_client = JiraClient(
+            resource=site_configuration.helpdesk_server)
 
-            jira_client.add_comment(
-                key_or_issue=helpdesk_reference.reference_key,
-                text='[Pangaea Ticket {1}|{0}{1}]'.format(
-                    PANGAEA_ISSUE_VIEW_URL,
-                    pangaea_reference.reference_key)
-            )
-            return jira_error_auto_retry(jira_client=jira_client, task=self,
-                                  broker_submission_id=submission.broker_submission_id)
-            # print(self.request.retries, ' error ',
-            #       jira_client.error.response.status_code)
-            # # TODO: - (A) 04.09.2019: with decorator containing
-            # #  max_retries=SUBMISSION_MAX_RETRIES, autoretry_for=(SubmissionTransferHandler.TransferServerError,),
-            # #   task retries 2x then in last retry 500er is thrown again (as expected) but no catched
-            # #   no EAGAER based exectption
-            # #   - (B) mit retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES+2}, 4x (expected)
-            # #   - (C) all this can also be achieved vie try/except and .retry(exc=exc, max_retries=5)
-            # #   - (D) IF max retries is is treated via if : EAGER-result.get() exception occurs
-            # #   - (E) auto retry (decorator) vs. self.retry(countdown=3 ** self.request.retries, throw=False??)
-            # #   - (F) manual self.retry with cathcing max retries error also produces eager error
-            # #   - (G) Runtime error (res.get) occurs on every task execution/retry
-            # #   - (H) When using auto-retry EAGER runtime error has to be catched where task is called
-            # #   - ---------------------------------
-            # #   - (I) using apply instead of apply_async in test makes it independent of EAGER...
-            # #           (leave TRUE for tests with indirect async all like in .save() --> test settings constants .. )
-            # #           (EAGAER False for tests that use apply and retry --> mock for single tests)
-            # #           -> strategy 3 in : https://www.distributedpython.com/2018/05/01/unit-testing-celery-tasks/
-            # #       since "apply: Execute this task locally, by blocking until the task returns."
-            # #       -> for 500 error TPR outputs all overrides, resulting in stste RETRY after this (expected)
-            # #       -> opens for autoretry implementation
-            # #       -> consider logging in SubmissionTask methods (perhaps overide some more to add logging)
-            # #       -> find a good place to capsule 500er retries and mail after 400er errors
-            # #       -> merge with retry polices or remove them
-            # if 500 <= jira_client.error.response.status_code < 600:
-            #     # auto-retry:
-            #     if self.request.retries >= SUBMISSION_MAX_RETRIES:
-            #         print('\nmax retries exceded for exception',
-            #               jira_client.error,
-            #               ' do stuff ... return safely\n++++++++++++++++++++++++++++++\n')
-            #         return TaskProgressReport.CANCELLED
-            #     else:
-            #         raise SubmissionTransferHandler.TransferServerError
-        # return True
+        jira_client.add_comment(
+            key_or_issue=helpdesk_reference.reference_key,
+            text='[Pangaea Ticket {1}|{0}{1}]'.format(
+                PANGAEA_ISSUE_VIEW_URL,
+                pangaea_reference.reference_key)
+        )
+        return jira_error_auto_retry(jira_client=jira_client, task=self,
+                              broker_submission_id=submission.broker_submission_id)
+        # print(self.request.retries, ' error ',
+        #       jira_client.error.response.status_code)
+        # # TODO: - (A) 04.09.2019: with decorator containing
+        # #  max_retries=SUBMISSION_MAX_RETRIES, autoretry_for=(SubmissionTransferHandler.TransferServerError,),
+        # #   task retries 2x then in last retry 500er is thrown again (as expected) but no catched
+        # #   no EAGAER based exectption
+        # #   - (B) mit retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES+2}, 4x (expected)
+        # #   - (C) all this can also be achieved vie try/except and .retry(exc=exc, max_retries=5)
+        # #   - (D) IF max retries is is treated via if : EAGER-result.get() exception occurs
+        # #   - (E) auto retry (decorator) vs. self.retry(countdown=3 ** self.request.retries, throw=False??)
+        # #   - (F) manual self.retry with cathcing max retries error also produces eager error
+        # #   - (G) Runtime error (res.get) occurs on every task execution/retry
+        # #   - (H) When using auto-retry EAGER runtime error has to be catched where task is called
+        # #   - ---------------------------------
+        # #   - (I) using apply instead of apply_async in test makes it independent of EAGER...
+        # #           (leave TRUE for tests with indirect async all like in .save() --> test settings constants .. )
+        # #           (EAGAER False for tests that use apply and retry --> mock for single tests)
+        # #           -> strategy 3 in : https://www.distributedpython.com/2018/05/01/unit-testing-celery-tasks/
+        # #       since "apply: Execute this task locally, by blocking until the task returns."
+        # #       -> for 500 error TPR outputs all overrides, resulting in stste RETRY after this (expected)
+        # #       -> opens for autoretry implementation
+        # #       -> consider logging in SubmissionTask methods (perhaps overide some more to add logging)
+        # #       -> find a good place to capsule 500er retries and mail after 400er errors
+        # #       -> merge with retry polices or remove them
+        # if 500 <= jira_client.error.response.status_code < 600:
+        #     # auto-retry:
+        #     if self.request.retries >= SUBMISSION_MAX_RETRIES:
+        #         print('\nmax retries exceded for exception',
+        #               jira_client.error,
+        #               ' do stuff ... return safely\n++++++++++++++++++++++++++++++\n')
+        #         return TaskProgressReport.CANCELLED
+        #     else:
+        #         raise SubmissionTransferHandler.TransferServerError
+    # return True
 
-    else:
-        return TaskProgressReport.CANCELLED
+    # else:
+#     return TaskProgressReport.CANCELLED

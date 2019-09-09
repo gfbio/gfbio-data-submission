@@ -62,6 +62,10 @@ class SubmissionTransferHandler(object):
             task_report, created = TaskProgressReport.objects.create_initial_report(
                 submission=submission,
                 task=task)
+        if submission is None:
+            raise cls.TransferInternalError(
+                'SubmissionTransferHandler | get_submission_for_task | no Submission available for submission pk={0}'.format(
+                    submission_id))
         return submission
 
     @classmethod
@@ -70,6 +74,13 @@ class SubmissionTransferHandler(object):
                                                get_closed_submission=False):
         # TODO: Catch DoesNotExist here, so tasks will have to deal with only on type of exception
         submission = cls._get_submission(submission_id, get_closed_submission)
+        if submission is None:
+            raise cls.TransferInternalError(
+                'SubmissionTransferHandler | get_submission_and_siteconfig_for_task | no Submission available for submission pk={0}. get_closed_submission={1}'.format(
+                    submission_id,
+                    get_closed_submission,
+                )
+            )
         if submission:
             try:
                 site_configuration = SiteConfiguration.objects.get_site_configuration_for_task(
