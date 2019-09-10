@@ -19,7 +19,8 @@ from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.brokerage.utils.task_utils import jira_error_auto_retry, \
-    get_submission_and_site_configuration, raise_transfer_server_exceptions
+    get_submission_and_site_configuration, raise_transfer_server_exceptions, \
+    request_error_auto_retry
 from gfbio_submissions.users.models import User
 from .configuration.settings import BASE_HOST_NAME, \
     PRIMARY_DATA_FILE_MAX_RETRIES, PRIMARY_DATA_FILE_DELAY, \
@@ -474,9 +475,14 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None):
                                                       site_configuration.ena_server,
                                                       ena_submission_data,
                                                       )
-        raise_transfer_server_exceptions(response=response, task=self,
-                                         broker_submission_id=submission.broker_submission_id,
-                                         max_retries=SUBMISSION_MAX_RETRIES)
+        res = raise_transfer_server_exceptions(
+            response=response,
+            task=self,
+            broker_submission_id=submission.broker_submission_id,
+            max_retries=SUBMISSION_MAX_RETRIES)
+        print('RETURNED FROM RETRY ', res)
+        # if res == TaskProgressReport.CANCELLED:
+        #     return TaskProgressReport.CANCELLED
     except ConnectionError as e:
         logger.error(
             msg='connection_error {}.url={} title={}'.format(
@@ -557,7 +563,7 @@ def process_ena_response_task(self, transfer_result=None, submission_id=None,
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True
 )
-def create_pangaea_issue_task(self, submission_id=None):
+def create_pangaea_issue_task(self, prev=None, submission_id=None):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -651,17 +657,16 @@ def attach_to_pangaea_issue_task(self, kwargs={}, submission_id=None):
         return TaskProgressReport.CANCELLED
     if 'issue_key' in kwargs.keys():
 
-        ticket_key = kwargs.get('issue_key', 'None')
+        issue_key = kwargs.get('issue_key', 'None')
         jira_client = JiraClient(
             resource=site_configuration.pangaea_jira_server,
             token_resource=site_configuration.pangaea_token_server
         )
-        jira_client.attach_to_pangaea_issue(key=ticket_key,
+        jira_client.attach_to_pangaea_issue(key=issue_key,
                                             submission=submission)
         jira_error_auto_retry(jira_client=jira_client, task=self,
                               broker_submission_id=submission.broker_submission_id)
-
-        return {'issue_key': ticket_key}
+        return {'issue_key': issue_key}
 
     else:
         return TaskProgressReport.CANCELLED
@@ -1056,6 +1061,7 @@ def add_pangaea_doi_task(self, prev_task_result=None,
 )
 def add_pangaealink_to_submission_issue_task(
         self,
+        prev=None,
         submission_id=None):
     # submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
     #     submission_id=submission_id,

@@ -114,12 +114,18 @@ def get_submission_and_site_configuration(submission_id, task,
 
 def raise_transfer_server_exceptions(response, task, broker_submission_id,
                                      max_retries):
+    print('RAISE_TRANSFER_SERVER_EXCEPTION ', response.status_code, ' ',
+          response.content, ' ', task, ' ', broker_submission_id,
+          task.request.retries)
+    print('BREAK AND SEND ', task.request.retries >= max_retries)
     if task.request.retries >= max_retries:
+        print('SEND, THEN RETURN')
         return send_task_fail_mail(broker_submission_id, task)
     else:
         try:
             raise_response_exceptions(response)
         except TransferClientError as ce:
+            print('SEND, THEN RETURN ', ce)
             return send_task_fail_mail(broker_submission_id, task)
 
 
@@ -131,5 +137,14 @@ def jira_error_auto_retry(jira_client, task, broker_submission_id,
             task=task,
             broker_submission_id=broker_submission_id,
             max_retries=max_retries,
+        )
+    return True
+
+
+def request_error_auto_retry(response, task, broker_submission_id,
+                             max_retries=SUBMISSION_MAX_RETRIES):
+    if response.status_code and response.status_code >= 400:
+        return raise_transfer_server_exceptions(
+            response, task, broker_submission_id, max_retries
         )
     return True
