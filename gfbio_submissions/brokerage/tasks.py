@@ -54,8 +54,8 @@ class SubmissionTask(Task):
     # logger.info('SubmissionTask | instanced ')
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
-        # logger.info('SubmissionTask | {0} | on_retry | ')
-        print('\n\n+++++++++ on_retry\n\n')
+        logger.info('tasks.py | SubmissionTask | on_retry | task_id={0} | '
+                    'name={1}'.format(task_id, self.name))
         # TODO: capture this idea of reporting to sentry
         # sentrycli.captureException(exc)
         TaskProgressReport.objects.update_report_on_exception(
@@ -63,22 +63,23 @@ class SubmissionTask(Task):
         super(SubmissionTask, self).on_retry(exc, task_id, args, kwargs, einfo)
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
-        print('\n\n+++++++++ on_failure\n\n')
+        logger.info('tasks.py | SubmissionTask | on_failure | task_id={0} | '
+                    'name={1}'.format(task_id, self.name))
         TaskProgressReport.objects.update_report_on_exception(
             'FAILURE', exc, task_id, args, kwargs, einfo)
         super(SubmissionTask, self).on_failure(exc, task_id, args, kwargs,
                                                einfo)
 
     def on_success(self, retval, task_id, args, kwargs):
-        print('\n\n+++++++++ on_success\n\n')
-        pprint(self.trail)
+        logger.info('tasks.py | SubmissionTask | on_success | task_id={0} | '
+                    'name={1} | retval={2}'.format(task_id, self.name, retval))
         TaskProgressReport.objects.update_report_on_success(
             retval, task_id, args, kwargs)
         super(SubmissionTask, self).on_success(retval, task_id, args, kwargs)
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        print('\n\n+++++++++ after return\n\n')
-        pprint(self.trail)
+        logger.info('tasks.py | SubmissionTask | after_return | task_id={0} | '
+                    'name={1} | retval={2}'.format(task_id, self.name, retval))
         TaskProgressReport.objects.update_report_after_return(status, task_id)
         super(SubmissionTask, self).after_return(
             status, retval, task_id, args, kwargs, einfo)

@@ -47,7 +47,7 @@ def _get_submission_and_site_configuration(submission_id, task,
                 ' include_closed={1} | task={2}'.format(
                     submission_id,
                     include_closed,
-                    task
+                    task.name
                 )
             )
             raise TransferInternalError(
@@ -65,7 +65,7 @@ def _get_submission_and_site_configuration(submission_id, task,
                 'with pk={0} | include_closed={1} | task={2}'.format(
                     submission_id,
                     include_closed,
-                    task
+                    task.name
                 )
             )
             raise TransferInternalError(
@@ -84,7 +84,7 @@ def _get_submission_and_site_configuration(submission_id, task,
             'task_utils.py | _get_submission_and_site_configuration | task={0} '
             '| submission pk={0} | include_closed={1} | return={2} | '
             'TransferInternalError={3}'.format(
-                task,
+                task.name,
                 submission_id,
                 include_closed,
                 (TaskProgressReport.CANCELLED, None),
@@ -97,7 +97,7 @@ def _get_submission_and_site_configuration(submission_id, task,
 def send_task_fail_mail(broker_submission_id, task):
     logger.info('task_utils.py | send_task_fail_mail | '
                 'broker_submission_id={0} | '
-                'task={1}'.format(broker_submission_id, task))
+                'task={1}'.format(broker_submission_id, task.name))
     mail_admins(
         subject=TASK_FAIL_SUBJECT_TEMPLATE.format(
             task.name,
@@ -116,7 +116,7 @@ def get_submission_and_site_configuration(submission_id, task,
                                           include_closed):
     logger.info('task_utils.py | get_submission_and_site_configuration | '
                 ' submission_id={0} | task={1} | include_closed={2}'
-                ''.format(submission_id, task, include_closed))
+                ''.format(submission_id, task.name, include_closed))
     try:
         return _get_submission_and_site_configuration(submission_id, task,
                                                       include_closed)
@@ -125,7 +125,7 @@ def get_submission_and_site_configuration(submission_id, task,
             'task_utils.py | get_submission_and_site_configuration | task={0} '
             '| submission pk={1} | include_closed={2} | will '
             'send_task_fail_mail TransferInternalError={3}'.format(
-                task,
+                task.name,
                 submission_id,
                 include_closed,
                 ce
@@ -156,7 +156,7 @@ def raise_transfer_server_exceptions(response, task, broker_submission_id,
         try:
             logger.info('task_utils.py | raise_transfer_server_exceptions | '
                         'raise_response_exceptions | task={0} | response={1} | '
-                        ''.format(task, response))
+                        ''.format(task.name, response))
             raise_response_exceptions(response)
         except TransferClientError as ce:
             # print('SEND, THEN RETURN ', ce)
@@ -170,7 +170,7 @@ def jira_error_auto_retry(jira_client, task, broker_submission_id,
                           max_retries=SUBMISSION_MAX_RETRIES):
     logger.info('task_utils.py | jira_error_auto_retry | '
                 'broker_submission_id={0} | task={1} | max_retries={2}'
-                ''.format(broker_submission_id, task, max_retries))
+                ''.format(broker_submission_id, task.name, max_retries))
     if jira_client and jira_client.error:
         return raise_transfer_server_exceptions(
             response=jira_client.error.response,
@@ -185,7 +185,7 @@ def request_error_auto_retry(response, task, broker_submission_id,
                              max_retries=SUBMISSION_MAX_RETRIES):
     logger.info('task_utils.py | request_error_auto_retry | '
                 'broker_submission_id={0} | task={1} | max_retries={2}'
-                ''.format(broker_submission_id, task, max_retries))
+                ''.format(broker_submission_id, task.name, max_retries))
     if response.status_code and response.status_code >= 400:
         return raise_transfer_server_exceptions(
             response, task, broker_submission_id, max_retries
