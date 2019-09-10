@@ -14,7 +14,7 @@ from requests import ConnectionError, Response
 from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, \
     PANGAEA_ISSUE_VIEW_URL
 from gfbio_submissions.brokerage.exceptions import TransferServerError, \
-    TransferClientError, raise_response_exceptions
+    TransferClientError
 from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content
 from gfbio_submissions.brokerage.utils.jira import JiraClient
@@ -86,16 +86,22 @@ class SubmissionTask(Task):
 # common tasks -----------------------------------------------------------------
 
 # TODO: re-consider if needed when workflow is clear
-@celery.task(name='tasks.check_for_molecular_content_in_submission_task',
-             base=SubmissionTask)
-def check_for_molecular_content_in_submission_task(submission_id=None):
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.check_for_molecular_content_in_submission_task',
+)
+def check_for_molecular_content_in_submission_task(self, submission_id=None):
     logger.info(
         msg='check_for_molecular_content_in_submission_task. get submission'
             ' with pk={}.'.format(submission_id))
-    submission = SubmissionTransferHandler.get_submission_for_task(
+    submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
-        task=check_for_molecular_content_in_submission_task
+        task=self,
+        include_closed=True
     )
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
     logger.info(
         msg='check_for_molecular_content_in_submission_task. '
             'process submission={}.'.format(submission.broker_submission_id))
@@ -115,15 +121,21 @@ def check_for_molecular_content_in_submission_task(submission_id=None):
     }
 
 
-@celery.task(name='tasks.trigger_submission_transfer', base=SubmissionTask)
-def trigger_submission_transfer(previous_task_result=None, submission_id=None):
+@celery.task(base=SubmissionTask, bind=True,
+             name='tasks.trigger_submission_transfer', )
+def trigger_submission_transfer(self, previous_task_result=None,
+                                submission_id=None):
     logger.info(
         msg='trigger_submission_transfer. get submission with pk={}.'.format(
             submission_id)
     )
-    submission = SubmissionTransferHandler.get_submission_for_task(
-        submission_id=submission_id, task=trigger_submission_transfer
+    submission, site_configuration = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
     )
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
 
     transfer_handler = SubmissionTransferHandler(
         submission_id=submission.pk,
@@ -134,9 +146,9 @@ def trigger_submission_transfer(previous_task_result=None, submission_id=None):
     )
 
 
-@celery.task(name='tasks.trigger_submission_transfer_for_updates',
-             base=SubmissionTask)
-def trigger_submission_transfer_for_updates(previous_task_result=None,
+@celery.task(base=SubmissionTask, bind=True,
+             name='tasks.trigger_submission_transfer_for_updates', )
+def trigger_submission_transfer_for_updates(self, previous_task_result=None,
                                             broker_submission_id=None):
     logger.info(
         msg='trigger_submission_transfer_for_updates. get submission_id with broker_submission_id={}.'.format(
@@ -144,10 +156,13 @@ def trigger_submission_transfer_for_updates(previous_task_result=None,
     )
     submission_id = Submission.objects.get_open_submission_id_for_bsi(
         broker_submission_id=broker_submission_id)
-    submission = SubmissionTransferHandler.get_submission_for_task(
+    submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
-        task=trigger_submission_transfer_for_updates
+        task=self,
+        include_closed=True
     )
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
 
     transfer_handler = SubmissionTransferHandler(
         submission_id=submission.pk,
@@ -908,9 +923,9 @@ def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
 
     reference = submission.get_primary_helpdesk_reference()
 
-        # TODO: if no ticket available, the reason may that this task is started independened of
-        #  submission transfer chain that creates the ticket, so a proper retry has to be
-        #  implemented
+    # TODO: if no ticket available, the reason may that this task is started independened of
+    #  submission transfer chain that creates the ticket, so a proper retry has to be
+    #  implemented
     if reference:
         submission_upload = submission.submissionupload_set.filter(
             attach_to_ticket=True).filter(pk=submission_upload_id).first()
@@ -926,7 +941,7 @@ def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
             )
 
             jira_error_auto_retry(jira_client=jira_client, task=self,
-                                 broker_submission_id=submission.broker_submission_id)
+                                  broker_submission_id=submission.broker_submission_id)
 
             submission_upload.attachment_id = attachment.id
             submission_upload.save(ignore_attach_to_ticket=True)
@@ -965,7 +980,8 @@ def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True
 )
-def delete_submission_issue_attachment_task(self, kwargs=None, submission_id=None,
+def delete_submission_issue_attachment_task(self, kwargs=None,
+                                            submission_id=None,
                                             attachment_id=None):
     logger.info(
         msg='delete_submission_issue_attachment_task submission_id={0} '
