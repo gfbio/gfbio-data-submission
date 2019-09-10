@@ -3,7 +3,8 @@ from django.core.mail import mail_admins
 
 from gfbio_submissions.brokerage.configuration.settings import \
     TASK_FAIL_SUBJECT_TEMPLATE, TASK_FAIL_TEXT_TEMPLATE, SUBMISSION_MAX_RETRIES
-from gfbio_submissions.brokerage.exceptions import TransferInternalError
+from gfbio_submissions.brokerage.exceptions import TransferInternalError, \
+    raise_response_exceptions, TransferClientError
 from gfbio_submissions.brokerage.models import TaskProgressReport, Submission, \
     SiteConfiguration
 

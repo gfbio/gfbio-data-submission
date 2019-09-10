@@ -328,8 +328,8 @@ SUBMISSION_SAVE_TRIGGER_DELAY = getattr(
 SUBMISSION_RETRY_DELAY = getattr(
     settings,
     'SUBMISSION_RETRY_DELAY',
-    # seconds
-    60 * 60
+    # seconds, 60*60=3600=1hr
+    3600
 )
 
 STATIC_SAMPLE_SCHEMA_LOCATION = getattr(
