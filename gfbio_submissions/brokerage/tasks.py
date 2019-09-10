@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from pprint import pprint
 
 import celery
 from celery import Task
@@ -19,8 +18,7 @@ from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.brokerage.utils.task_utils import jira_error_auto_retry, \
-    get_submission_and_site_configuration, raise_transfer_server_exceptions, \
-    request_error_auto_retry
+    get_submission_and_site_configuration, raise_transfer_server_exceptions
 from gfbio_submissions.users.models import User
 from .configuration.settings import BASE_HOST_NAME, \
     PRIMARY_DATA_FILE_MAX_RETRIES, PRIMARY_DATA_FILE_DELAY, \
@@ -64,7 +62,8 @@ class SubmissionTask(Task):
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         logger.info('tasks.py | SubmissionTask | on_failure | task_id={0} | '
-                    'name={1}'.format(task_id, self.name))
+                    'name={1}| args={2} | kwargs={3} | einfo={4} | '
+                    ''.format(task_id, self.name, args, kwargs, einfo))
         TaskProgressReport.objects.update_report_on_exception(
             'FAILURE', exc, task_id, args, kwargs, einfo)
         super(SubmissionTask, self).on_failure(exc, task_id, args, kwargs,
@@ -79,7 +78,9 @@ class SubmissionTask(Task):
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         logger.info('tasks.py | SubmissionTask | after_return | task_id={0} | '
-                    'name={1} | retval={2}'.format(task_id, self.name, retval))
+                    'name={1} | args={2} | kwargs={3} | einfo={4} | '
+                    'retval={5}'.format(task_id, self.name, args, kwargs, einfo,
+                                        retval))
         TaskProgressReport.objects.update_report_after_return(status, task_id)
         super(SubmissionTask, self).after_return(
             status, retval, task_id, args, kwargs, einfo)
@@ -185,10 +186,6 @@ def trigger_submission_transfer_for_updates(self, previous_task_result=None,
 )
 def check_on_hold_status_task(self, previous_task_result=None,
                               submission_id=None):
-    logger.info(
-        msg='check_on_hold_status_task. get submission with pk={}.'.format(
-            submission_id)
-    )
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -217,6 +214,7 @@ def check_on_hold_status_task(self, previous_task_result=None,
                 '={2}. send mail to admins.'
                 ''.format(submission_id, site_configuration.pk,
                           site_configuration.release_submissions))
+        # TODO: refactor to method in task_utils, and use templates/constants
         mail_admins(
             subject='Submission needs approval. Site "{0}". Submission {1}'
                     ''.format(site_configuration.title,
@@ -229,6 +227,7 @@ def check_on_hold_status_task(self, previous_task_result=None,
         )
 
 
+# TODO: refactor, them remove
 def apply_timebased_task_retry_policy(task, submission, no_of_tickets):
     try:
         SubmissionUpload.raise_ticket_exeptions(no_of_tickets)
@@ -265,59 +264,59 @@ def apply_timebased_task_retry_policy(task, submission, no_of_tickets):
 
 
 # TODO: refactor/move to submission_transfer_handler
-def apply_default_task_retry_policy(response, task, submission):
-    try:
-        SubmissionTransferHandler.raise_response_exceptions(response)
-    except TransferServerError as e:
-        logger.warning(
-            msg='{} TransferServerError {}'.format(
-                task.name, e)
-        )
-        logger.info(
-            msg='{} TransferServerError number_of_retries={}'
-                ''.format(task.name, task.request.retries)
-        )
-        if task.request.retries == SUBMISSION_MAX_RETRIES:
-            logger.warning(
-                msg='{} TransferServerError (mail_admins) max_retries={}'
-                    ''.format(task.name, SUBMISSION_MAX_RETRIES)
-            )
-            mail_admins(
-                subject='Failed "{}" for submission {}'.format(
-                    task.name, submission.broker_submission_id),
-                message='TransferServerError. refer to submission with broker_submission_id '
-                        '{} \nError:\n{}'.format(
-                    submission.broker_submission_id, e),
-            )
-        else:
-            logger.info(
-                msg='{} TransferServerError retry after delay'
-                    ''.format(task.name)
-            )
-            # TODO: for testing 4.3
-            try:
-                task.retry(
-                    exc=e,
-                    throw=False,
-                    countdown=(
-                                      task.request.retries + 1) * SUBMISSION_RETRY_DELAY,
-                )
-            # TODO: for testing 4.3
-            except RuntimeError as re:
-                print('\n\n RUNTIME ERROR RETRY ')
-                pprint(re)
-
-    except TransferClientError as e:
-        logger.warning(
-            msg='{} TransferClientError {}'.format(
-                task.name, e)
-        )
-        mail_admins(
-            subject='Failed "{}" for submission {}'.format(task.name,
-                                                           submission.broker_submission_id),
-            message='TransferClientError. refer to submission with broker_submission_id '
-                    '{} \nError:\n{}'.format(
-                submission.broker_submission_id, e), )
+# def apply_default_task_retry_policy(response, task, submission):
+#     try:
+#         SubmissionTransferHandler.raise_response_exceptions(response)
+#     except TransferServerError as e:
+#         logger.warning(
+#             msg='{} TransferServerError {}'.format(
+#                 task.name, e)
+#         )
+#         logger.info(
+#             msg='{} TransferServerError number_of_retries={}'
+#                 ''.format(task.name, task.request.retries)
+#         )
+#         if task.request.retries == SUBMISSION_MAX_RETRIES:
+#             logger.warning(
+#                 msg='{} TransferServerError (mail_admins) max_retries={}'
+#                     ''.format(task.name, SUBMISSION_MAX_RETRIES)
+#             )
+#             mail_admins(
+#                 subject='Failed "{}" for submission {}'.format(
+#                     task.name, submission.broker_submission_id),
+#                 message='TransferServerError. refer to submission with broker_submission_id '
+#                         '{} \nError:\n{}'.format(
+#                     submission.broker_submission_id, e),
+#             )
+#         else:
+#             logger.info(
+#                 msg='{} TransferServerError retry after delay'
+#                     ''.format(task.name)
+#             )
+#             # TODO: for testing 4.3
+#             try:
+#                 task.retry(
+#                     exc=e,
+#                     throw=False,
+#                     countdown=(
+#                                       task.request.retries + 1) * SUBMISSION_RETRY_DELAY,
+#                 )
+#             # TODO: for testing 4.3
+#             except RuntimeError as re:
+#                 print('\n\n RUNTIME ERROR RETRY ')
+#                 pprint(re)
+#
+#     except TransferClientError as e:
+#         logger.warning(
+#             msg='{} TransferClientError {}'.format(
+#                 task.name, e)
+#         )
+#         mail_admins(
+#             subject='Failed "{}" for submission {}'.format(task.name,
+#                                                            submission.broker_submission_id),
+#             message='TransferClientError. refer to submission with broker_submission_id '
+#                     '{} \nError:\n{}'.format(
+#                 submission.broker_submission_id, e), )
 
 
 # NEW PREP WORKFLOW BO CREATION AND SOID CREATION ------------------------------
@@ -331,13 +330,6 @@ def create_broker_objects_from_submission_data_task(
         self,
         previous_task_result=None,
         submission_id=None):
-    logger.info(
-        msg='create_broker_objects_from_submission_data_task '
-            'previous_task_result={} | submission_id={}'.format(
-            previous_task_result,
-            submission_id)
-    )
-
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -354,9 +346,6 @@ def create_broker_objects_from_submission_data_task(
         logger.error(
             'create_broker_objects_from_submission_data_task IntegrityError in "create_broker_objects_from'
             '_submission_data_task": {}'.format(e))
-    logger.info(
-        msg='create_broker_objects_from_submission_data_task finished '
-            'submission_id={}'.format(submission.pk))
 
 
 # ENA submission transfer tasks ------------------------------------------------
@@ -375,22 +364,8 @@ def delete_related_auditable_textdata_task(self, prev_task_result=None,
     )
     if submission == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
-    logger.info(
-        msg='delete_related_auditable_textdata_task. '
-            'previous_task_result={} | submission_id={}'.format(
-            prev_task_result,
-            submission_id)
-    )
-    logger.info(
-        msg='delete_related_auditable_textdata_task. start deleting. '
-            'submission_id={}'.format(submission_id)
-    )
     with transaction.atomic():
         submission.auditabletextdata_set.all().delete()
-    logger.info(
-        msg='delete_related_auditable_textdata_task. done deleting. '
-            'submission_id={}'.format(submission_id)
-    )
 
 
 @celery.task(
@@ -408,35 +383,20 @@ def prepare_ena_submission_data_task(self, prev_task_result=None,
     if submission == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
 
-    logger.info(
-        msg='prepare_ena_submission_data_task. start prepare_ena_data '
-            'previous_task_result={} | submission_id={}'.format(
-            prev_task_result,
-            submission_id)
-    )
-    if submission is not None and len(
-            submission.brokerobject_set.all()) > 0:
+    if len(submission.brokerobject_set.all()) > 0:
         with transaction.atomic():
             submission.auditabletextdata_set.all().delete()
         ena_submission_data = prepare_ena_data(submission=submission)
-        logger.info(
-            msg='prepare_ena_submission_data_task. finished prepare_ena_data '
-                'submission_id={}'.format(submission_id)
-        )
         store_ena_data_as_auditable_text_data(submission=submission,
                                               data=ena_submission_data)
         # TODO: this will become obsolete once, data is taken from AuditableTextData ....
-        logger.info(
-            msg='prepare_ena_submission_data_task. finished '
-                'store_ena_data_as_auditable_text_data '
-                'submission_id={}'.format(submission_id)
-        )
         return ena_submission_data
     else:
         logger.info(
-            msg='prepare_ena_submission_data_task. no submission or '
-                'no brokerobjects. return CANCELLED '
-                'submission_id={}'.format(submission_id)
+            msg='prepare_ena_submission_data_task. no brokerobjects. '
+                'return={0} '
+                'submission_id={1}'.format(TaskProgressReport.CANCELLED,
+                                           submission_id)
         )
         return TaskProgressReport.CANCELLED
 
@@ -461,12 +421,6 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None):
     )
     if submission == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
-    logger.info(
-        msg='transfer_data_to_ena_task. start assemble_ena_submission_data '
-            'previous_task_result={} | submission_id={}'.format(
-            prepare_result,
-            submission_id)
-    )
     ena_submission_data = AuditableTextData.objects.assemble_ena_submission_data(
         submission=submission)
     if ena_submission_data == {}:
@@ -481,7 +435,7 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None):
             task=self,
             broker_submission_id=submission.broker_submission_id,
             max_retries=SUBMISSION_MAX_RETRIES)
-        print('RETURNED FROM RETRY ', res)
+        # print('RETURNED FROM RETRY ', res)
         # if res == TaskProgressReport.CANCELLED:
         #     return TaskProgressReport.CANCELLED
     except ConnectionError as e:
@@ -504,18 +458,11 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None):
 )
 def process_ena_response_task(self, transfer_result=None, submission_id=None,
                               close_submission_on_success=True):
-    logger.info(
-        msg='process_ena_response_task. '
-            'previous_task_result={} | submission_id={}'.format(
-            transfer_result,
-            submission_id)
-    )
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
         include_closed=True
     )
-
     if transfer_result == TaskProgressReport.CANCELLED or submission == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
 
@@ -524,14 +471,7 @@ def process_ena_response_task(self, transfer_result=None, submission_id=None,
     parsed = parse_ena_submission_response(response_content)
     success = True if parsed.get('success', False) == 'true' else False
     if success:
-        logger.info(
-            msg='submission_transfer of submission "{}" to ENA was '
-                'successful'.format(submission.broker_submission_id)
-        )
-        logger.info(msg='append persisten-identifiers')
         BrokerObject.objects.append_pids_from_ena_response(parsed)
-        logger.info(msg='set submission "{}" to status {}'.format(
-            submission.broker_submission_id, Submission.CLOSED))
         if close_submission_on_success:
             submission.status = Submission.CLOSED
         submission.save()
@@ -679,10 +619,7 @@ def attach_to_pangaea_issue_task(self, kwargs={}, submission_id=None):
     name='tasks.check_for_pangaea_doi_task',
 )
 def check_for_pangaea_doi_task(self, resource_credential_id=None):
-    logger.info(
-        msg='check_for_pangaea_doi_task resource_credential_id={}'.format(
-            resource_credential_id))
-    task_report, created = TaskProgressReport.objects.create_initial_report(
+    TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=check_for_pangaea_doi_task)
     # TODO: move this to top and check there are submissiont to fetch doi for, if not no request for login token is needed
@@ -728,9 +665,6 @@ def get_user_email_task(self, submission_id=None):
     )
     if submission == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
-    logger.info(
-        msg='get_user_email_task submission_id={0}'.format(submission_id)
-    )
     res = {
         'user_email': site_configuration.contact,
         'user_full_name': '',
@@ -738,10 +672,6 @@ def get_user_email_task(self, submission_id=None):
         'last_name': '',
     }
     if site_configuration.use_gfbio_services:
-        logger.info(
-            msg='get_user_email_task submission_id={0} | use_gfbio_services={1}'.format(
-                submission_id, site_configuration.use_gfbio_services)
-        )
         response = gfbio_get_user_by_id(submission.submitting_user,
                                         site_configuration, submission)
         try:
@@ -776,11 +706,6 @@ def get_user_email_task(self, submission_id=None):
                     'user does not exist. error: {1}'.format(submission_id,
                                                              e))
 
-    logger.info(
-        msg='get_user_email_task submission_id={0} | use_gfbio_services={1} | return={2}'.format(
-            submission_id, site_configuration.use_gfbio_services,
-            res)
-    )
     submission.submitting_user_common_information = '{0};{1}'.format(
         res['user_full_name'], res['user_email'])
     submission.save()
@@ -816,12 +741,6 @@ def create_submission_issue_task(self, prev_task_result=None,
     # existing_tickets = submission.additionalreference_set.filter(
     #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
 
-    # TODO: abstract/capsule logging. keep extensive logging while calls to log
-    #  are abstracted for cleaber code in task
-    logger.info(
-        msg='create_submission_issue_task submission_id={}'.format(
-            submission_id, ))
-
     jira_client = JiraClient(resource=site_configuration.helpdesk_server)
     jira_client.create_submission_issue(reporter=prev_task_result,
                                         site_config=site_configuration,
@@ -853,13 +772,6 @@ def create_submission_issue_task(self, prev_task_result=None,
 def add_accession_to_submission_issue_task(self, prev_task_result=None,
                                            submission_id=None,
                                            target_archive=None):
-    logger.info(
-        msg='add_accession_to_submission_issue_task submission_id={0} | '
-            'prev_task_result={1} | '
-            'target_archive={2}'.format(submission_id, prev_task_result,
-                                        target_archive)
-    )
-
     # No submission will be returned if submission.status is error
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
@@ -915,10 +827,6 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
 )
 def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
                                     submission_upload_id=None):
-    logger.info(
-        msg='attach_to_submission_issue_task submission_id={0} | '
-            'submission_upload_id={1}'.format(submission_id,
-                                              submission_upload_id))
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -989,10 +897,6 @@ def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
 def delete_submission_issue_attachment_task(self, kwargs=None,
                                             submission_id=None,
                                             attachment_id=None):
-    logger.info(
-        msg='delete_submission_issue_attachment_task submission_id={0} '
-            '| attachment_id={1}'.format(submission_id, attachment_id)
-    )
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -1064,13 +968,6 @@ def add_pangaealink_to_submission_issue_task(
         self,
         prev=None,
         submission_id=None):
-    # submission, site_configuration = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-    #     submission_id=submission_id,
-    #     task=add_pangaealink_to_submission_issue_task,
-    #     get_closed_submission=True
-    # )
-
-    # TODO: use this for all calls, also wher only submission without conf was requested
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -1078,7 +975,6 @@ def add_pangaealink_to_submission_issue_task(
     )
     if submission == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
-    # if submission is not None and site_configuration is not None:
 
     helpdesk_reference = submission.get_primary_helpdesk_reference()
     pangaea_reference = submission.get_primary_pangaea_reference()
@@ -1119,16 +1015,3 @@ def add_pangaealink_to_submission_issue_task(
         # #       -> consider logging in SubmissionTask methods (perhaps overide some more to add logging)
         # #       -> find a good place to capsule 500er retries and mail after 400er errors
         # #       -> merge with retry polices or remove them
-        # if 500 <= jira_client.error.response.status_code < 600:
-        #     # auto-retry:
-        #     if self.request.retries >= SUBMISSION_MAX_RETRIES:
-        #         print('\nmax retries exceded for exception',
-        #               jira_client.error,
-        #               ' do stuff ... return safely\n++++++++++++++++++++++++++++++\n')
-        #         return TaskProgressReport.CANCELLED
-        #     else:
-        #         raise SubmissionTransferHandler.TransferServerError
-    # return True
-
-    # else:
-#     return TaskProgressReport.CANCELLED
