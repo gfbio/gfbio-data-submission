@@ -155,7 +155,7 @@ def pull_pangaea_dois(submission, jira_client):
         #     login_token=login_token,
         #     submission=submission,
         # )
-        # site_config = SiteConfiguration.objects.get_site_configuration_for_task(
+        # site_config = SiteConfiguration.objects.get_site_configuration(
         #     site=submission.site
         # )
         # jira_client = JiraClient(resource=site_config.helpdesk_server,

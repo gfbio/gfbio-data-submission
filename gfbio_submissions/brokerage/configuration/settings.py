@@ -285,19 +285,17 @@ PANGAEA_ISSUE_DOI_FIELD_NAME = getattr(
     'customfield_10520'
 )
 
-# TODO: rename
-PRIMARY_DATA_FILE_DELAY = getattr(
+SUBMISSION_UPLOAD_RETRY_DELAY = getattr(
     settings,
-    'PRIMARY_DATA_FILE_DELAY',
+    'SUBMISSION_UPLOAD_RETRY_DELAY',
     # seconds
     120
 )
 
-# TODO: rename
-PRIMARY_DATA_FILE_MAX_RETRIES = getattr(
+SUBMISSION_UPLOAD_MAX_RETRIES = getattr(
     settings,
-    'PRIMARY_DATA_FILE_MAX_RETRIES',
-    4
+    'SUBMISSION_UPLOAD_MAX_RETRIES',
+    2
 )
 SEPARATOR = getattr(
     settings,
@@ -328,8 +326,8 @@ SUBMISSION_SAVE_TRIGGER_DELAY = getattr(
 SUBMISSION_RETRY_DELAY = getattr(
     settings,
     'SUBMISSION_RETRY_DELAY',
-    # seconds
-    60 * 60
+    # seconds, 60*60=3600=1hr
+    3600
 )
 
 STATIC_SAMPLE_SCHEMA_LOCATION = getattr(
@@ -372,4 +370,17 @@ STATIC_GENERIC_REQUIREMENTS_LOCATION = getattr(
     settings,
     'STATIC_GENERIC_REQUIREMENTS_LOCATION',
     'schemas/gfbio_generic_requirements.json'
+)
+
+TASK_FAIL_SUBJECT_TEMPLATE = getattr(
+    settings,
+    'TASK_FAIL_SUBJECT_TEMPLATE',
+    'Task "{0}" failed for submission "{1}"'
+)
+
+TASK_FAIL_TEXT_TEMPLATE = getattr(
+    settings,
+    'TASK_FAIL_TEXT_TEMPLATE',
+    'Task "{0}" failed after {1} retries. Please refer to submission '
+    'with broker_submission_id "{2}".'
 )

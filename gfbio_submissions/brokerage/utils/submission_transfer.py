@@ -3,119 +3,15 @@ import logging
 
 from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY, \
     ENA, ENA_PANGAEA
-from gfbio_submissions.brokerage.models import Submission, SiteConfiguration, \
-    TaskProgressReport
 
 logger = logging.getLogger(__name__)
 
 
 class SubmissionTransferHandler(object):
-    class TransferError(Exception):
-        pass
-
-    class TransferClientError(TransferError):
-        pass
-
-    class TransferServerError(TransferError):
-        pass
-
-    class TransferUnknownError(TransferError):
-        pass
-
-    class TransferInvalidSubmission(TransferError):
-        pass
-
-    class TransferInternalError(TransferError):
-        pass
 
     def __init__(self, submission_id, target_archive):
         self.target_archive = target_archive
         self.submission_id = submission_id
-
-    @classmethod
-    def _get_submission(cls, submission_id, get_closed_submission=False):
-        submission = None
-        try:
-            if get_closed_submission:
-                submission = Submission.objects.get_submission_including_closed_for_task(
-                    id=submission_id)
-            else:
-                submission = Submission.objects.get_submission_for_task(
-                    id=submission_id)
-        except Submission.DoesNotExist as e:
-            logger.error(
-                msg='SubmissionTransferHandler _get_submission. Submission does not exist'
-                    ' submission pk={}. Error={}'
-                    ''.format(submission_id, e)
-            )
-            raise cls.TransferInternalError(
-                '_get_submission No Submission found for pk={}. Original message: {}'.format(
-                    submission_id, e))
-        finally:
-            return submission
-
-    @classmethod
-    def get_submission_for_task(cls, submission_id=None, task=None,
-                                get_closed_submission=False):
-        submission = cls._get_submission(submission_id, get_closed_submission)
-        if task:
-            task_report, created = TaskProgressReport.objects.create_initial_report(
-                submission=submission,
-                task=task)
-        return submission
-
-    @classmethod
-    def get_submission_and_siteconfig_for_task(cls, submission_id=None,
-                                               task=None,
-                                               get_closed_submission=False):
-        # TODO: Catch DoesNotExist here, so tasks will have to deal with only on type of exception
-        submission = cls._get_submission(submission_id, get_closed_submission)
-        if submission:
-            try:
-                site_configuration = SiteConfiguration.objects.get_site_configuration_for_task(
-                    site=submission.site)
-            except SiteConfiguration.DoesNotExist as e:
-                logger.error(
-                    msg='SubmissionTransferHandler. SiteConfiguration does not exist'
-                        ' submission pk={}. Error={}'
-                        ''.format(submission_id, e)
-                )
-                raise cls.TransferInternalError(
-                    'No SiteConfiguration found for site={}. Original message: '
-                    '{}'.format(submission.site, e))
-        else:
-            site_configuration = None
-        if task:
-            task_report, created = TaskProgressReport.objects.create_initial_report(
-                submission=submission,
-                task=task)
-        return submission, site_configuration
-
-    @classmethod
-    def raise_response_exceptions(cls, response):
-        print(' ############ raise reponse exceptions ', response)
-        error = None
-        if not response.ok:
-            if 400 <= response.status_code < 500:
-                print(' ############ 4xx ', )
-                error = cls.TransferClientError(
-                    response.status_code,
-                    response.content
-                )
-            elif 500 <= response.status_code < 600:
-                print(' ############ 5xx ', response)
-                error = cls.TransferServerError(response.status_code)
-            else:
-                print(' ############ unknown ', response)
-                error = cls.TransferUnknownError(response.status_code)
-            if error:
-                print(' ############ error ', error)
-                logger.error(
-                    msg='SubmissionTransferError: '
-                        'Aborted with status_code {0} '
-                        'due to error {1}'.format(response.status_code,
-                                                  error))
-                raise error
 
     def pre_process_molecular_data_chain(self):
         from gfbio_submissions.brokerage.tasks import \

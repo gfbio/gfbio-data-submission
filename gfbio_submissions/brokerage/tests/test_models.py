@@ -108,14 +108,14 @@ class SiteConfigurationTest(TestCase):
         self.assertEqual('Title', site_config.__str__())
 
     def test_get_site_configuration_for_task(self):
-        site_config = SiteConfiguration.objects.get_site_configuration_for_task(
+        site_config = SiteConfiguration.objects.get_site_configuration(
             site=User.objects.all().first()
         )
         self.assertEqual('Title', site_config.title)
         self.assertFalse(site_config.release_submissions)
 
     def test_get_site_configuration_without_site(self):
-        site_config = SiteConfiguration.objects.get_site_configuration_for_task(
+        site_config = SiteConfiguration.objects.get_site_configuration(
             site=None
         )
         self.assertEqual('Default', site_config.title)
@@ -126,7 +126,7 @@ class SiteConfigurationTest(TestCase):
         site_config = SiteConfiguration.objects.filter(title='Default').first()
         site_config.delete()
         with self.assertRaises(SiteConfiguration.DoesNotExist) as exc:
-            site_config = SiteConfiguration.objects.get_site_configuration_for_task(
+            site_config = SiteConfiguration.objects.get_site_configuration(
                 site=None
             )
 

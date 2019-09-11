@@ -28,6 +28,8 @@ from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, \
     JIRA_ATTACHMENT_SUB_URL, DEFAULT_ENA_CENTER_NAME, \
     JIRA_ATTACHMENT_URL
+from gfbio_submissions.brokerage.exceptions import TransferInternalError, \
+    TransferClientError, raise_response_exceptions, TransferServerError
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
     ResourceCredential, SiteConfiguration, RequestLog, AdditionalReference, \
     TaskProgressReport, SubmissionUpload
@@ -50,6 +52,8 @@ from gfbio_submissions.brokerage.utils.pangaea import \
     get_pangaea_login_token
 from gfbio_submissions.brokerage.utils.submission_transfer import \
     SubmissionTransferHandler
+from gfbio_submissions.brokerage.utils.task_utils import \
+    get_submission_and_site_configuration
 from gfbio_submissions.users.models import User
 
 
@@ -472,7 +476,7 @@ class PangaeaTicketTest(TestCase):
         site_config = SiteConfiguration.objects.first()
         login_token = get_pangaea_login_token(site_config.pangaea_token_server)
         ticket_key = 'PDI-12428'
-        url = '{0}{1}'.format(PANGAEA_ISSUE_BASE_URL, ticket_key)
+        url = '{0}{1}'.format(PANGAEA_ISSUE_BASE_URLd, ticket_key)
         cookies = dict(PanLoginID=login_token)
         headers = {
             'Content-Type': 'application/json'
@@ -1734,12 +1738,15 @@ class TestSubmissionTransferHandler(TestCase):
 
     def test_get_submisssion_and_siteconfig_for_task(self):
         submission = Submission.objects.first()
+        from gfbio_submissions.brokerage.tasks import \
+            create_submission_issue_task
         sub, conf = \
-            SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-                submission_id=submission.pk)
-        tprs = TaskProgressReport.objects.exclude(
-            task_name='tasks.update_helpdesk_ticket_task')
-        self.assertEqual(0, len(tprs))
+            get_submission_and_site_configuration(
+                submission_id=submission.pk, task=create_submission_issue_task,
+                include_closed=False)
+        # tprs = TaskProgressReport.objects.all()
+        # print(tprs.first().__dict__)
+        # self.assertEqual(0, len(tprs))
         self.assertIsInstance(sub, Submission)
         self.assertIsInstance(conf, SiteConfiguration)
 
@@ -1748,43 +1755,55 @@ class TestSubmissionTransferHandler(TestCase):
     def test_invalid_submission_id(self):
         with self.assertRaises(
                 SubmissionTransferHandler.TransferInternalError) as exc:
-            sub, conf = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
+            sub, conf = get_submission_and_site_configuration(
                 submission_id=99)
 
     def test_no_site_config(self):
+        from gfbio_submissions.brokerage.tasks import \
+            create_submission_issue_task
         sub, conf = \
-            SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-                submission_id=Submission.objects.last().pk)
+            get_submission_and_site_configuration(
+                submission_id=Submission.objects.last().pk,
+                task=create_submission_issue_task,
+                include_closed=False)
         tprs = TaskProgressReport.objects.exclude(
             task_name='tasks.update_helpdesk_ticket_task')
-        self.assertEqual(0, len(tprs))
+        # self.assertEqual(0, len(tprs))
         self.assertIsInstance(conf, SiteConfiguration)
         self.assertEqual('default', conf.title)
 
     def test_no_site_config_without_default(self):
+        from gfbio_submissions.brokerage.tasks import \
+            create_submission_issue_task
         site_config = SiteConfiguration.objects.last()
         site_config.delete()
         submission = Submission.objects.last()
-        with self.assertRaises(
-                SubmissionTransferHandler.TransferInternalError) as exc:
-            sub, conf = SubmissionTransferHandler.get_submission_and_siteconfig_for_task(
-                submission_id=submission.pk)
+        # - older version where exception was raised
+        # with self.assertRaises(
+        #         TransferInternalError) as exc:
+        sub, conf = get_submission_and_site_configuration(
+            submission_id=submission.pk,
+            task=create_submission_issue_task,
+            include_closed=False
+        )
+        # - now exception is catched and TaskProgressReprort.CANCELLED is returned for sub
+        self.assertEqual(TaskProgressReport.CANCELLED, sub)
 
     def test_raise_400_exception(self):
         response = requests.models.Response()
         response.status_code = 401
         response._content = '{}'
         with self.assertRaises(
-                SubmissionTransferHandler.TransferClientError) as exc:
-            SubmissionTransferHandler.raise_response_exceptions(response)
+                TransferClientError) as exc:
+            raise_response_exceptions(response)
 
     def test_raise_500_exception(self):
         response = requests.models.Response()
         response.status_code = 500
         response._content = '{}'
         with self.assertRaises(
-                SubmissionTransferHandler.TransferServerError) as exc:
-            SubmissionTransferHandler.raise_response_exceptions(response)
+                TransferServerError) as exc:
+            raise_response_exceptions(response)
 
     @responses.activate
     def test_execute_ena_only(self):
@@ -1870,7 +1889,7 @@ class TestSubmissionTransferHandler(TestCase):
         responses.add(
             responses.POST,
             '{0}/{1}/comment'.format(site_config.pangaea_jira_server.url,
-                                    'PANGAEA_FAKE_KEY'),
+                                     'PANGAEA_FAKE_KEY'),
             json=_get_pangaea_comment_response(),
             status=200)
         # responses.add(

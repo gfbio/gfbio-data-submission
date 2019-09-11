@@ -9,7 +9,7 @@ from uuid import uuid4
 import responses
 from celery import chain
 from django.contrib.auth.models import Permission
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIRequestFactory, APIClient
@@ -224,20 +224,16 @@ class TestInitialChainTasks(TestCase):
                 'requirements': {'title': 'A Title 0815',
                                  'description': 'A Description 2'}}},
             format='json', )
-        # task_reports = TaskProgressReport.objects.all()
-        # # trigger_submission_transfer from initial post
-        # # trigger_submission_transfer_for_updates
-        # expected_tasknames = ['tasks.get_user_email_task',
-        #                       'tasks.create_submission_issue_task',
-        #                       'tasks.trigger_submission_transfer',
-        #                       'tasks.check_for_molecular_content_in_submission_task',
-        #                       'tasks.trigger_submission_transfer_for_updates',
-        #                       'tasks.update_helpdesk_ticket_task', ]
-        # tprs = TaskProgressReport.objects.exclude(
-        #     task_name='tasks.update_helpdesk_ticket_task')
-        # self.assertEqual(6, len(tprs))
-        # for t in task_reports:
-        #     self.assertIn(t.task_name, expected_tasknames)
+        task_reports = TaskProgressReport.objects.all()
+        expected_tasknames = ['tasks.get_user_email_task',
+                              'tasks.create_submission_issue_task',
+                              'tasks.trigger_submission_transfer',
+                              'tasks.check_for_molecular_content_in_submission_task',
+                              'tasks.trigger_submission_transfer_for_updates',
+                              'tasks.update_helpdesk_ticket_task', ]
+        self.assertEqual(6, len(task_reports))
+        for t in task_reports:
+            self.assertIn(t.task_name, expected_tasknames)
 
 
 class TestTasks(TestCase):
@@ -437,6 +433,8 @@ class TestSubmissionTransferTasks(TestTasks):
         ret_val = result.get()
         self.assertTrue(isinstance(ret_val, tuple))
 
+    # @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+    #                    CELERY_TASK_EAGER_PROPAGATES=False)
     @responses.activate
     def test_transfer_to_ena_task_server_error(self):
         submission = Submission.objects.first()
@@ -547,6 +545,7 @@ class TestSubmissionPreparationTasks(TestTasks):
         self.assertTrue('tasks.check_on_hold_status_task' in task_names)
 
 
+# TODO: remove
 class TestPortalServiceTasks(TestTasks):
 
     # TODO: check all test, even if passing, for json exceptions that need repsonse mock
@@ -682,13 +681,194 @@ class TestPortalServiceTasks(TestTasks):
 
 class TestGFBioHelpDeskTasks(TestTasks):
 
-    # @classmethod
-    # def setUpTestData(cls):
-    #     cls.issue_json = _get_jira_issue_response()
+    @classmethod
+    def _add_success_responses(cls):
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(
+                cls.default_site_config.helpdesk_server.url),
+            status=200,
+        )
+        responses.add(
+            responses.POST,
+            '{0}{1}'.format(cls.default_site_config.helpdesk_server.url,
+                            JIRA_ISSUE_URL),
+            json=cls.issue_json,
+            status=200)
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/SAND-1661'.format(
+                cls.default_site_config.helpdesk_server.url),
+            json=cls.issue_json
+        )
+
+    @classmethod
+    def _add_client_fail_responses(cls):
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(
+                cls.default_site_config.helpdesk_server.url),
+            status=200,
+        )
+        responses.add(
+            responses.POST,
+            '{0}{1}'.format(cls.default_site_config.helpdesk_server.url,
+                            JIRA_ISSUE_URL),
+            json={},
+            status=400)
+
+    @classmethod
+    def _add_server_fail_responses(cls):
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(
+                cls.default_site_config.helpdesk_server.url),
+            status=200,
+        )
+        responses.add(
+            responses.POST,
+            '{0}{1}'.format(cls.default_site_config.helpdesk_server.url,
+                            JIRA_ISSUE_URL),
+            json={},
+            status=500)
+
+    # TODO: may these have to be moved to other test class (Taskprogressreport ...)
+    #   or removed ... Now for testing behaviour on GFBIO-2589
+    @responses.activate
+    def test_tpr_task_success(self):
+        self._add_success_responses()
+        submission = Submission.objects.last()
+        self.assertEqual(0, len(TaskProgressReport.objects.all()))
+        result = create_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        self.assertTrue(result.successful())
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
 
     @responses.activate
-    def test_create_helpdesk_ticket_task_success(self):
+    def test_tpr_task_client_fail(self):
+        self._add_client_fail_responses()
         submission = Submission.objects.last()
+        self.assertEqual(0, len(TaskProgressReport.objects.all()))
+        result = create_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        self.assertTrue(result.successful())
+
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+                       CELERY_TASK_EAGER_PROPAGATES=False)
+    @responses.activate
+    def test_tpr_task_server_fail(self):
+        self._add_server_fail_responses()
+        submission = Submission.objects.last()
+        self.assertEqual(0, len(TaskProgressReport.objects.all()))
+        result = create_submission_issue_task.apply(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        self.assertFalse(result.successful())
+
+    @responses.activate
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+                       CELERY_TASK_EAGER_PROPAGATES=False)
+    def test_tpr_add_pangaea_link_server_error(self):
+        submission = Submission.objects.first()
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(
+                self.default_site_config.helpdesk_server.url),
+            status=200,
+        )
+        url = '{0}{1}/{2}/{3}'.format(
+            self.default_site_config.helpdesk_server.url,
+            JIRA_ISSUE_URL,
+            'FAKE_KEY',
+            JIRA_COMMENT_SUB_URL,
+        )
+        responses.add(responses.POST, url, status=500,
+                      json={'bla': 'blubb'})
+        result = add_pangaealink_to_submission_issue_task.apply(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        tpr = TaskProgressReport.objects.first()
+        self.assertEqual('RETRY', tpr.status)
+        self.assertEqual('tasks.add_pangaealink_to_submission_issue_task',
+                         tpr.task_name)
+        self.assertEqual(TaskProgressReport.CANCELLED, tpr.task_return_value)
+
+    @responses.activate
+    def test_tpr_add_pangaea_link_client_error(self):
+        submission = Submission.objects.first()
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(
+                self.default_site_config.helpdesk_server.url),
+            status=200,
+        )
+        url = '{0}{1}/{2}/{3}'.format(
+            self.default_site_config.helpdesk_server.url,
+            JIRA_ISSUE_URL,
+            'FAKE_KEY',
+            JIRA_COMMENT_SUB_URL,
+        )
+        responses.add(responses.POST, url, status=400, json={'bla': 'blubb'})
+        result = add_pangaealink_to_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        tpr = TaskProgressReport.objects.first()
+        print(tpr.__dict__)
+        self.assertEqual('tasks.add_pangaealink_to_submission_issue_task',
+                         tpr.task_name)
+        self.assertEqual(TaskProgressReport.CANCELLED, tpr.task_return_value)
+        self.assertTrue(result.successful())
+
+    @responses.activate
+    # @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+    #                    CELERY_TASK_EAGER_PROPAGATES=False)
+    def test_tpr_task_success_failing_kwargs(self):
+        self._add_success_responses()
+        submission = Submission.objects.last()
+        self.assertEqual(0, len(TaskProgressReport.objects.all()))
+
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(
+                self.default_site_config.helpdesk_server.url),
+            status=200,
+        )
+        url = '{0}{1}/{2}/{3}'.format(
+            self.default_site_config.helpdesk_server.url,
+            JIRA_ISSUE_URL,
+            'FAKE_KEY',
+            JIRA_COMMENT_SUB_URL,
+        )
+        responses.add(responses.POST, url, status=400, json={'bla': 'blubb'})
+        result = add_pangaealink_to_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk + 22,
+            }
+        )
+        # self.assertTrue(result.successful())
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+
+    # TODO: compare todo above ------------------------------------------------
+
+    @responses.activate
+    def test_create_submission_issue_task_success(self):
+        submission = Submission.objects.last()
+        # TODO: replace bay self.default_site_config
         site_config = SiteConfiguration.objects.first()
         responses.add(
             responses.GET,
@@ -716,10 +896,9 @@ class TestGFBioHelpDeskTasks(TestTasks):
         )
         self.assertTrue(result.successful())
         self.assertEqual(1, len(submission.additionalreference_set.all()))
-        print('ADDREF: ', submission.additionalreference_set.first())
 
     @responses.activate
-    def test_create_helpdesk_ticket_task_for_unknown_reporter(self):
+    def test_create_submission_issue_task_for_unknown_reporter(self):
         submission = Submission.objects.last()
         site_config = SiteConfiguration.objects.first()
         responses.add(
@@ -755,10 +934,9 @@ class TestGFBioHelpDeskTasks(TestTasks):
             task_name='tasks.update_helpdesk_ticket_task')
         self.assertEqual(1, len(tprs))
         self.assertEqual(1, len(submission.additionalreference_set.all()))
-        print('ADDREF: ', submission.additionalreference_set.first())
 
     @responses.activate
-    def test_create_helpdesk_ticket_task_unicode_text(self):
+    def test_create_submission_issue_task_unicode_text(self):
         submission = Submission.objects.last()
         site_config = SiteConfiguration.objects.first()
         self.assertEqual(0, len(submission.additionalreference_set.all()))
@@ -788,34 +966,8 @@ class TestGFBioHelpDeskTasks(TestTasks):
         self.assertTrue(result.successful())
         self.assertEqual(1, len(submission.additionalreference_set.all()))
 
-    # @responses.activate
-    # def test_update_helpdesk_ticket_task_success(self):
-    #     submission = Submission.objects.first()
-    #     site_config = SiteConfiguration.objects.first()
-    #     url = '{0}{1}/{2}'.format(
-    #         site_config.helpdesk_server.url,
-    #         HELPDESK_API_SUB_URL,
-    #         'FAKE_KEY'
-    #     )
-    #     responses.add(responses.PUT, url, body='', status=204)
-    #     data = {
-    #         'fields': {
-    #             'customfield_10205': 'New Name Marc Weber, Alfred E. Neumann',
-    #         }
-    #     }
-    #     result = update_helpdesk_ticket_task.apply_async(
-    #         kwargs={
-    #             'submission_id': submission.id,
-    #             'data': data
-    #         }
-    #     )
-    #     self.assertTrue(result.successful())
-    #     request_logs = RequestLog.objects.all()
-    #     self.assertEqual(1, len(request_logs))
-    #     self.assertTrue(request_logs[0].url.endswith('FAKE_KEY'))
-
     @responses.activate
-    def test_comment_helpdesk_ticket_task_success(self):
+    def test_add_accession_to_submission_issue_task_success(self):
         site_config = SiteConfiguration.objects.first()
         url = '{0}{1}/{2}/{3}'.format(
             site_config.helpdesk_server.url,
@@ -828,7 +980,6 @@ class TestGFBioHelpDeskTasks(TestTasks):
         result = add_accession_to_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.id,
-                # 'comment_body': 'test-comment'
             }
         )
         self.assertTrue(result.successful())
@@ -969,12 +1120,14 @@ class TestGFBioHelpDeskTasks(TestTasks):
 
     # TODO: take this mock concept for testing retry, and add more tests for
     #  other tasks with retry policy(s)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+                       CELERY_TASK_EAGER_PROPAGATES=False)
     @patch(
-        'gfbio_submissions.brokerage.tasks.apply_timebased_task_retry_policy')
+        'gfbio_submissions.brokerage.utils.task_utils.send_task_fail_mail')
     def test_attach_primarydatafile_without_ticket(self, mock):
         submission = Submission.objects.last()
         # omiting submission_upload_id, defaults this parameter to None
-        attach_to_submission_issue_task.apply_async(
+        attach_to_submission_issue_task.apply(
             kwargs={
                 'submission_id': submission.pk,
             }
@@ -982,7 +1135,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         self.assertTrue(mock.called)
 
     @responses.activate
-    def test_add_pangaealink_to_helpdesk_ticket_task_success(self):
+    def test_add_pangaealink_to_submission_issue_task_success(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
 
@@ -1000,14 +1153,6 @@ class TestGFBioHelpDeskTasks(TestTasks):
         responses.add(responses.POST, url,
                       json={'bla': 'blubb'},
                       status=200)
-
-        # url = '{0}{1}/{2}/{3}'.format(
-        #     site_config.helpdesk_server.url,
-        #     HELPDESK_API_SUB_URL,
-        #     'FAKE_KEY',
-        #     JIRA_COMMENT_SUB_URL,
-        # )
-        # responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
 
         result = add_pangaealink_to_submission_issue_task.apply_async(
             kwargs={
@@ -1041,6 +1186,8 @@ class TestGFBioHelpDeskTasks(TestTasks):
 
     # FIXME: what about retries ? are they executed ?
     @responses.activate
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+                       CELERY_TASK_EAGER_PROPAGATES=False)
     def test_add_pangaealink_to_helpdesk_ticket_task_server_error(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
@@ -1056,18 +1203,15 @@ class TestGFBioHelpDeskTasks(TestTasks):
             JIRA_COMMENT_SUB_URL,
         )
         responses.add(responses.POST, url, status=500, json={'bla': 'blubb'})
-        result = add_pangaealink_to_submission_issue_task.apply_async(
+        result = add_pangaealink_to_submission_issue_task.apply(
             kwargs={
                 'submission_id': submission.pk,
             }
         )
-        # self.assertTrue(result.successful())
-        # tps = TaskProgressReport.objects.all()
-        # for t in tps:
-        #     print(t, ' ', t.status)
+        self.assertFalse(result.successful())
 
     @responses.activate
-    def test_create_helpdesk_ticket_task_client_error(self):
+    def test_create_submission_issue_task_client_error(self):
         submission = Submission.objects.last()
         site_config = SiteConfiguration.objects.first()
         responses.add(
@@ -1088,8 +1232,10 @@ class TestGFBioHelpDeskTasks(TestTasks):
         )
         self.assertTrue(result.successful())
 
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+                       CELERY_TASK_EAGER_PROPAGATES=False)
     @responses.activate
-    def test_create_helpdesk_ticket_task_server_error(self):
+    def test_create_submission_issue_task_server_error(self):
         submission = Submission.objects.last()
         site_config = SiteConfiguration.objects.first()
         responses.add(
@@ -1103,118 +1249,22 @@ class TestGFBioHelpDeskTasks(TestTasks):
                             JIRA_ISSUE_URL),
             json={},
             status=500)
-        result = create_submission_issue_task.apply_async(
+        result = create_submission_issue_task.apply(
             kwargs={
                 'submission_id': submission.pk,
             }
         )
-        self.assertTrue(result.successful())
+        self.assertFalse(result.successful())
 
 
 class TestPangaeaTasks(TestTasks):
 
-    # @responses.activate
-    # def test_request_pangaea_login_token_task_success(self):
-    #     submission = Submission.objects.first()
-    #     site_config = SiteConfiguration.objects.first()
-    #     responses.add(
-    #         responses.POST,
-    #         site_config.pangaea_server.url,
-    #         body=_get_pangaea_soap_response(),
-    #         status=200)
-    #     request_logs = RequestLog.objects.all()
-    #     self.assertEqual(0, len(request_logs))
-    #
-    #     result = request_pangaea_login_token_task.apply_async(
-    #         kwargs={
-    #             'submission_id': submission.pk,
-    #         }
-    #     )
-    #     self.assertTrue(result.successful())
-    #     self.assertEqual('f3d7aca208aaec8954d45bebc2f59ba1522264db',
-    #                      result.get())
-    #
-    #     request_logs = RequestLog.objects.all()
-    #     self.assertEqual(1, len(request_logs))
-    #     self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-    #     self.assertEqual('https://www.example.com',
-    #                      request_logs.first().url)
-
-    # @responses.activate
-    # def test_request_pangaea_login_token_task_client_error(self):
-    #     submission = Submission.objects.first()
-    #     site_config = SiteConfiguration.objects.first()
-    #     responses.add(
-    #         responses.POST,
-    #         site_config.pangaea_server.url,
-    #         body='',
-    #         status=400)
-    #     request_logs = RequestLog.objects.all()
-    #     self.assertEqual(0, len(request_logs))
-    #     result = request_pangaea_login_token_task.apply_async(
-    #         kwargs={
-    #             'submission_id': submission.pk,
-    #         }
-    #     )
-    #     self.assertTrue(result.successful())
-    #     self.assertEqual('', result.get())
-    #     request_logs = RequestLog.objects.all()
-    #     self.assertEqual(1, len(request_logs))
-    #     self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-    #     self.assertEqual('https://www.example.com',
-    #                      request_logs.first().url)
-
-    # @responses.activate
-    # def test_request_pangaea_login_token_task_server_error(self):
-    #     submission = Submission.objects.first()
-    #     site_config = SiteConfiguration.objects.first()
-    #
-    #     request_logs = RequestLog.objects.all()
-    #     self.assertEqual(0, len(request_logs))
-    #     responses.add(
-    #         responses.POST,
-    #         site_config.pangaea_server.url,
-    #         status=500,
-    #         body='')
-    #     result = request_pangaea_login_token_task.apply_async(
-    #         kwargs={
-    #             'submission_id': submission.pk,
-    #         }
-    #     )
-    #     self.assertTrue(result.successful())
-    #
-    #     request_logs = RequestLog.objects.all()
-    #     # 3 logentries for 3 retries
-    #     self.assertEqual(3, len(request_logs))
-    #     self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-    #     self.assertEqual('https://www.example.com',
-    #                      request_logs.first().url)
-
     @responses.activate
-    def test_create_pangaea_jira_ticket_task_success(self):
+    def test_create_pangaea_issue_task_success(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
-        # login_token = 'f3d7aca208aaec8954d45bebc2f59ba1522264db'
         request_logs = RequestLog.objects.all()
         self.assertEqual(0, len(request_logs))
-        # self._add_default_pangaea_responses()
-        # responses.add(
-        #     responses.POST,
-        #     '{0}/rest/api/2/issue/'.format(site_config.pangaea_jira_server.url),
-        #     json={'id': '31444', 'key': 'PDI-11735',
-        #           'self': '{0}/rest/api/2/issue/31444'.format(
-        #               site_config.pangaea_jira_server.url)},
-        #     status=201)
-        # responses.add(
-        #     responses.POST,
-        #     self.default_site_config.pangaea_token_server.url,
-        #     body=_get_pangaea_soap_response(),
-        #     status=200)
-        # responses.add(
-        #     responses.GET,
-        #     '{0}/rest/api/2/field'.format(site_config.pangaea_jira_server.url),
-        #     status=200,
-        # )
         self._add_default_pangaea_responses()
         responses.add(
             responses.POST,
@@ -1232,13 +1282,10 @@ class TestPangaeaTasks(TestTasks):
         result = create_pangaea_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
-                # 'login_token': login_token
             }
         )
         res = result.get()
         self.assertTrue(result.successful())
-        # self.assertDictEqual(
-        #     {'ticket_key': 'PDI-11735'}, res)
         additional_references = submission.additionalreference_set.all()
         self.assertEqual(3, len(additional_references))
         ref = additional_references.last()
@@ -1253,18 +1300,13 @@ class TestPangaeaTasks(TestTasks):
         #     request_logs.first().url)
 
     @responses.activate
-    def test_create_pangaea_jira_ticket_task_client_error(self):
+    def test_create_pangaea_issue_task_client_error(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
         len_before = len(submission.additionalreference_set.all())
         request_logs = RequestLog.objects.all()
         self.assertEqual(0, len(request_logs))
         self._add_default_pangaea_responses()
-        # responses.add(
-        #     responses.POST,
-        #     PANGAEA_ISSUE_BASE_URL,
-        #     status=400)
-
         responses.add(
             responses.POST,
             '{0}{1}'.format(site_config.pangaea_jira_server.url,
@@ -1286,8 +1328,10 @@ class TestPangaeaTasks(TestTasks):
         # self.assertEqual('https://issues.pangaea.de/rest/api/2/issue/',
         #                  request_logs.first().url)
 
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+                       CELERY_TASK_EAGER_PROPAGATES=False)
     @responses.activate
-    def test_create_pangaea_jira_ticket_task_server_error(self):
+    def test_create_pangaea_issue_task_server_error(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
         len_before = len(submission.additionalreference_set.all())
@@ -1301,16 +1345,12 @@ class TestPangaeaTasks(TestTasks):
             json={},
             status=500)
 
-        # responses.add(
-        #     responses.POST,
-        #     PANGAEA_ISSUE_BASE_URL,
-        #     status=500)
-        result = create_pangaea_issue_task.apply_async(
+        result = create_pangaea_issue_task.apply(
             kwargs={
                 'submission_id': submission.pk,
             }
         )
-        self.assertTrue(result.successful())
+        self.assertFalse(result.successful())
         additional_references = submission.additionalreference_set.all()
         self.assertEqual(len_before, len(additional_references))
 
@@ -1322,7 +1362,7 @@ class TestPangaeaTasks(TestTasks):
         #                  request_logs.first().url)
 
     @responses.activate
-    def test_attach_file_to_pangaea_ticket_task_success(self):
+    def test_attach_to_pangaea_issue_task_success(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
         request_logs = RequestLog.objects.all()
@@ -1343,11 +1383,6 @@ class TestPangaeaTasks(TestTasks):
                       ),
                       json=_get_pangaea_attach_response(),
                       status=200)
-        # responses.add(
-        #     responses.POST,
-        #     '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
-        #                                 'PANGAEA_FAKE_KEY'),
-        #     json=_get_pangaea_attach_response(),
         #     status=200)
         result = attach_to_pangaea_issue_task.apply_async(
             kwargs={
@@ -1370,7 +1405,7 @@ class TestPangaeaTasks(TestTasks):
         #     request_logs.first().url)
 
     @responses.activate
-    def test_attach_file_to_pangaea_ticket_task_client_error(self):
+    def test_attach_to_pangaea_issue_task_client_error(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
         request_logs = RequestLog.objects.all()
@@ -1409,8 +1444,10 @@ class TestPangaeaTasks(TestTasks):
         #                                 'PANGAEA_FAKE_KEY'),
         #     request_logs.first().url)
 
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+                       CELERY_TASK_EAGER_PROPAGATES=False)
     @responses.activate
-    def test_attach_file_to_pangaea_ticket_task_server_error(self):
+    def test_attach_to_pangaea_issue_task_server_error(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
         request_logs = RequestLog.objects.all()
@@ -1434,7 +1471,7 @@ class TestPangaeaTasks(TestTasks):
         #                                 'PANGAEA_FAKE_KEY'),
         #     json={},
         #     status=500)
-        result = attach_to_pangaea_issue_task.apply_async(
+        result = attach_to_pangaea_issue_task.apply(
             kwargs={
                 'submission_id': submission.pk,
                 'kwargs': {
@@ -1442,21 +1479,15 @@ class TestPangaeaTasks(TestTasks):
                 }
             }
         )
-        self.assertTrue(result.successful())
+        self.assertFalse(result.successful())
         res = result.get()
-        self.assertDictEqual(
-            {
-                'issue_key': 'PDI-12428'}, res)
-        # request_logs = RequestLog.objects.all()
-        # self.assertEqual(3, len(request_logs))
-        # self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        # self.assertEqual(
-        #     '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
-        #                                 'PANGAEA_FAKE_KEY'),
-        #     request_logs.first().url)
+        self.assertIsNone(res)
+        # self.assertDictEqual(
+        #     {
+        #         'issue_key': 'PDI-12428'}, res)
 
     @responses.activate
-    def test_comment_on_pangaea_ticket_task_success(self):
+    def test_add_accession_to_pangaea_issue_task_success(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
         submission.brokerobject_set.filter(
@@ -1471,7 +1502,7 @@ class TestPangaeaTasks(TestTasks):
         responses.add(
             responses.POST,
             '{0}/{1}/comment'.format(site_config.pangaea_jira_server,
-                                    'PANGAEA_FAKE_KEY'),
+                                     'PANGAEA_FAKE_KEY'),
             json=_get_pangaea_comment_response(),
             status=200)
         result = add_accession_to_pangaea_issue_task.apply_async(
@@ -1481,7 +1512,6 @@ class TestPangaeaTasks(TestTasks):
                     'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
                     'ticket_key': 'PANGAEA_FAKE_KEY'
                 },
-                # 'comment_body': 'ACC 12345'
             }
         )
         self.assertTrue(result.successful())
@@ -1493,7 +1523,7 @@ class TestPangaeaTasks(TestTasks):
         #     request_logs.first().url)
 
     @responses.activate
-    def test_comment_on_pangaea_ticket_task_client_error(self):
+    def test_add_accession_to_pangaea_issue_task_client_error(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
         submission.brokerobject_set.filter(
@@ -1508,7 +1538,7 @@ class TestPangaeaTasks(TestTasks):
         responses.add(
             responses.POST,
             '{0}/{1}/comment'.format(site_config.pangaea_jira_server.url,
-                                    'PANGAEA_FAKE_KEY'),
+                                     'PANGAEA_FAKE_KEY'),
             status=400)
         result = add_accession_to_pangaea_issue_task.apply_async(
             kwargs={
@@ -1517,7 +1547,6 @@ class TestPangaeaTasks(TestTasks):
                     'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
                     'ticket_key': 'PANGAEA_FAKE_KEY'
                 },
-                # 'comment_body': 'ACC 12345'
             }
         )
         # expects results from previous chain element
@@ -1531,7 +1560,7 @@ class TestPangaeaTasks(TestTasks):
         #     request_logs.first().url)
 
     @responses.activate
-    def test_comment_on_pangaea_ticket_task_server_error(self):
+    def test_add_accession_to_pangaea_issue_task_server_error(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
         submission.brokerobject_set.filter(
@@ -1546,7 +1575,7 @@ class TestPangaeaTasks(TestTasks):
         responses.add(
             responses.POST,
             '{0}/{1}/comment'.format(site_config.pangaea_jira_server.url,
-                                    'PANGAEA_FAKE_KEY'),
+                                     'PANGAEA_FAKE_KEY'),
             status=500)
         result = add_accession_to_pangaea_issue_task.apply_async(
             kwargs={
@@ -1555,7 +1584,6 @@ class TestPangaeaTasks(TestTasks):
                     'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
                     'ticket_key': 'PANGAEA_FAKE_KEY'
                 },
-                # 'comment_body': 'ACC 12345'
             }
         )
         self.assertTrue(result.successful())
@@ -1613,6 +1641,7 @@ class TestPangaeaTasks(TestTasks):
 
 
 class TestTaskChains(TestTasks):
+
     @responses.activate
     def test_pangaea_chain(self):
         submission = Submission.objects.first()
@@ -1645,7 +1674,6 @@ class TestTaskChains(TestTasks):
         result = chain(
             create_pangaea_issue_task.s(
                 submission_id=submission.pk,
-                login_token='f3d7aca208aaec8954d45bebc2f59ba1522264db'
             ),
             attach_to_pangaea_issue_task.s(
                 submission_id=submission.pk,
@@ -1729,7 +1757,7 @@ class TestTaskProgressReportInTasks(TestTasks):
         responses.add(
             responses.POST,
             '{0}/{1}/comment'.format(site_config.pangaea_jira_server.url,
-                                    'PANGAEA_FAKE_KEY'),
+                                     'PANGAEA_FAKE_KEY'),
             status=500)
         tprs = TaskProgressReport.objects.exclude(
             task_name='tasks.update_helpdesk_ticket_task')

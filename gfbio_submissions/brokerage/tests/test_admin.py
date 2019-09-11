@@ -4,7 +4,7 @@ from django.test import TestCase
 
 from gfbio_submissions.brokerage.admin import re_create_ena_xml
 from gfbio_submissions.brokerage.models import Submission, AuditableTextData, \
-    TaskProgressReport
+    TaskProgressReport, ResourceCredential, SiteConfiguration
 from gfbio_submissions.users.models import User
 
 
@@ -22,6 +22,22 @@ class TestSubmissionAdmin(TestCase):
             target='ENA',
             release=False,
             data={}
+        )
+        resource_cred = ResourceCredential.objects.create(
+            title='Resource Title',
+            url='https://www.example.com',
+            authentication_string='letMeIn'
+        )
+
+        SiteConfiguration.objects.create(
+            title='Default',
+            site=user,
+            ena_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
+            gfbio_server=resource_cred,
+            helpdesk_server=resource_cred,
+            comment='Default configuration',
         )
 
     def test_re_create_ena_xml(self):

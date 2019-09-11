@@ -39,25 +39,25 @@ class SubmissionManagerTest(TestCase):
         database_id = submission.pk
 
         self.assertEqual(Submission.OPEN, submission.status)
-        submission = Submission.objects.get_submission_for_task(id=database_id)
+        submission = Submission.objects.get_open_submission(database_id)
         self.assertEqual(Submission.OPEN, submission.status)
         submission.status = Submission.CLOSED
         submission.save()
 
         with self.assertRaises(Submission.DoesNotExist) as exc:
-            Submission.objects.get_submission_for_task(id=database_id)
+            Submission.objects.get_open_submission(database_id)
 
         submission = Submission.objects.get(pk=database_id)
         submission.status = Submission.ERROR
         submission.save()
         with self.assertRaises(Submission.DoesNotExist) as exc:
-            Submission.objects.get_submission_for_task(id=database_id)
+            Submission.objects.get_open_submission(database_id)
 
         submission = Submission.objects.get(pk=database_id)
         submission.status = Submission.OPEN
         submission.save()
         with self.assertRaises(Submission.DoesNotExist) as exc:
-            Submission.objects.get_submission_for_task(id=database_id + 12)
+            Submission.objects.get_open_submission(database_id + 12)
 
 
 class TestSubmissionManagerSubmittingUser(TestCase):

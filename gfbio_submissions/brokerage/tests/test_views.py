@@ -14,7 +14,7 @@ from rest_framework.test import APIClient
 
 from config.settings.base import MEDIA_URL
 from gfbio_submissions.brokerage.configuration.settings import \
-    JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL, GENERIC
+    JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL, GENERIC, JIRA_ATTACHMENT_URL
 from gfbio_submissions.brokerage.models import Submission, \
     SiteConfiguration, ResourceCredential, AdditionalReference, \
     TaskProgressReport, SubmissionUpload
@@ -519,7 +519,7 @@ class TestSubmissionUploadView(TestCase):
             responses.GET,
             '{0}/rest/api/2/issue/FAKE_KEY'.format(
                 site_config.helpdesk_server.url),
-            json= _get_jira_issue_response(),
+            json=_get_jira_issue_response(),
         )
 
         url = reverse('brokerage:submissions_upload', kwargs={
@@ -698,12 +698,25 @@ class TestSubmissionUploadView(TestCase):
     @responses.activate
     def test_delete(self):
         submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        responses.add(responses.GET,
+                      '{0}/rest/api/2/field'.format(
+                          site_config.helpdesk_server.url),
+                      status=200)
         url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
         responses.add(responses.POST, url, json={}, status=200)
         data = self._create_test_data('/tmp/test_primary_data_file')
         self.api_client.post(url, data, format='multipart')
         self.assertEqual(1, len(submission.submissionupload_set.filter()))
+        submission_upload = submission.submissionupload_set.first()
+        submission_upload.attachment_id = 1
+        submission_upload.save()
+        url = '{0}{1}/{2}'.format(
+            site_config.helpdesk_server.url,
+            JIRA_ATTACHMENT_URL,
+            submission_upload.attachment_id)
+        responses.add(responses.DELETE, url, body=b'', status=204)
 
         url = reverse(
             'brokerage:submissions_upload_detail',
