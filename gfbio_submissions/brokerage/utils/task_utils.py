@@ -138,9 +138,9 @@ def get_submission_and_site_configuration(submission_id, task,
 
 def raise_transfer_server_exceptions(response, task, broker_submission_id,
                                      max_retries):
-    # print('RAISE_TRANSFER_SERVER_EXCEPTION ', response.status_code, ' ',
-    #       response.content, ' ', task, ' ', broker_submission_id,
-    #       task.request.retries)
+    print('RAISE_TRANSFER_SERVER_EXCEPTION ', response.status_code, ' ',
+          response.content, ' ', task, ' ', broker_submission_id,
+          task.request.retries)
     # print('BREAK AND SEND ', task.request.retries >= max_retries)
     logger.info('task_utils.py | raise_transfer_server_exceptions | '
                 'resonse.status_code={0} | broker_submission_id={1} | '
@@ -148,7 +148,7 @@ def raise_transfer_server_exceptions(response, task, broker_submission_id,
                                                 broker_submission_id, task,
                                                 task.request.retries))
     if task.request.retries >= max_retries:
-        # print('SEND, THEN RETURN')
+        print('SEND, THEN RETURN')
         logger.info('task_utils.py | raise_transfer_server_exceptions | '
                     'task.request.retries={0} >= max_retries={1} | '
                     'send_task_fail_mail'.format(task.request.retries,

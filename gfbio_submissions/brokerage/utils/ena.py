@@ -166,7 +166,6 @@ class Enalizer(object):
         )
 
     def create_study_xml(self):
-        logger.info(msg='Enalizer create_study_xml')
         study_dict = OrderedDict([('study', OrderedDict())])
         study_attributes = self.study.pop('study_attributes', [])
 
@@ -281,7 +280,6 @@ class Enalizer(object):
             ordered_dict[key] = data_dict.pop(key, None)
 
     def create_sample_xml(self, sample_descriptor_platform_mappings):
-        logger.info(msg='Enalizer create_sample_xml')
         for s in self.sample:
             gcdjson = s.pop('gcdjson', {})
             flattened_gcdj = self.flatten_dict(gcdjson)
@@ -610,10 +608,6 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data):
         entities=ena_submission_data.keys(),
     )
 
-    logger.info('\nEnalizer instanced.\nenasubmission data\n{}\n'.format(
-        ena_submission_data))
-    logger.info('\nbefore posting')
-
     # requestlog: ok !
     response = requests.post(
         archive_access.url,
@@ -622,10 +616,6 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data):
         verify=False
     )
 
-    logger.info('\nresponse {0}\n\n {1} \n\n{2}\n\n'.format(response,
-                                                            response.status_code,
-                                                            response.content))
-    logger.info('\nWrite request log')
     # TODO: tesdatat this !
     with transaction.atomic():
         details = response.headers or ''
@@ -655,15 +645,10 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data):
             }
         )
         req_log.save()
-    logger.info(
-        '\nWrite request log DONE, return {0} \nand\n{1}'.format(response,
-                                                                 req_log.request_id))
     return response, req_log.request_id
 
 
 def parse_ena_submission_response(response_content=''):
-    logger.info(
-        '\nparse_ena_submission_response. \ncontent\n'.format(response_content))
     res = {}
 
     root = ET.fromstring(response_content)
