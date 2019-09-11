@@ -15,8 +15,9 @@ from model_utils.models import TimeStampedModel
 from config.settings.base import ADMINS, AUTH_USER_MODEL, LOCAL_REPOSITORY
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
     DEFAULT_ENA_CENTER_NAME
+from gfbio_submissions.brokerage.exceptions import NoTicketAvailableError
 from .configuration.settings import ENA, ENA_PANGAEA
-from .configuration.settings import PRIMARY_DATA_FILE_DELAY
+from .configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY
 from .fields import JsonDictField
 from .managers import AuditableTextDataManager
 from .managers import SiteConfigurationManager, \
@@ -358,7 +359,6 @@ class Submission(models.Model):
                      self.brokerobject_set.filter(type='run')]
         }
 
-
     # TODO: check if filter for primary makes sense. will deliver only on per submission
     def get_primary_pangaea_references(self):
         return self.additionalreference_set.filter(
@@ -373,7 +373,8 @@ class Submission(models.Model):
             return None
 
     def get_primary_helpdesk_reference(self):
-        return self.get_primary_reference(AdditionalReference.GFBIO_HELPDESK_TICKET)
+        return self.get_primary_reference(
+            AdditionalReference.GFBIO_HELPDESK_TICKET)
         # issues = self.additionalreference_set.filter(
         #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True)
         # )
@@ -383,7 +384,8 @@ class Submission(models.Model):
         #     return None
 
     def get_primary_pangaea_reference(self):
-        return self.get_primary_reference(AdditionalReference.PANGAEA_JIRA_TICKET)
+        return self.get_primary_reference(
+            AdditionalReference.PANGAEA_JIRA_TICKET)
 
     def __str__(self):
         return '{}_{}'.format(self.pk, self.broker_submission_id)
@@ -646,14 +648,11 @@ class PrimaryDataFile(models.Model):
     # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
     created = models.DateTimeField(auto_now_add=True)
     changed = models.DateTimeField(auto_now=True)
-
-    class NoTicketAvailableError(Exception):
-        pass
-
-    @classmethod
-    def raise_ticket_exeptions(self, no_of_helpdesk_tickets):
-        if no_of_helpdesk_tickets == 0:
-            raise self.NoTicketAvailableError
+    #
+    # @classmethod
+    # def raise_ticket_exeptions(self, no_of_helpdesk_tickets):
+    #     if no_of_helpdesk_tickets == 0:
+    #         raise NoTicketAvailableError
 
     def save(self, attach=True, *args, **kwargs):
         super(PrimaryDataFile, self).save(*args, **kwargs)
@@ -664,7 +663,7 @@ class PrimaryDataFile(models.Model):
                 kwargs={
                     'submission_id': '{0}'.format(self.submission.pk),
                 },
-                countdown=PRIMARY_DATA_FILE_DELAY
+                countdown=SUBMISSION_UPLOAD_RETRY_DELAY
             )
 
 
@@ -717,16 +716,6 @@ class SubmissionUpload(TimeStampedModel):
         help_text='The actual file uploaded.',
     )
 
-    # TODO: from PrimaryDataFile ...
-    class NoTicketAvailableError(Exception):
-        pass
-
-    # TODO: from PrimaryDataFile ...
-    @classmethod
-    def raise_ticket_exception(cls, no_of_helpdesk_tickets):
-        if no_of_helpdesk_tickets == 0:
-            raise cls.NoTicketAvailableError
-
     # TODO: from PrimaryDataFile. new default for attach is -> false
     def save(self, ignore_attach_to_ticket=False, *args, **kwargs):
         super(SubmissionUpload, self).save(*args, **kwargs)
@@ -739,7 +728,7 @@ class SubmissionUpload(TimeStampedModel):
                     'submission_upload_id': '{0}'.format(self.pk)
                 },
                 # TODO: rename
-                countdown=PRIMARY_DATA_FILE_DELAY
+                countdown=SUBMISSION_UPLOAD_RETRY_DELAY
             )
 
     def __str__(self):

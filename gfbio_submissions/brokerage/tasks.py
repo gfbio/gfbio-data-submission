@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-import os
 
 import celery
 from celery import Task
@@ -18,14 +17,14 @@ from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.brokerage.utils.task_utils import jira_error_auto_retry, \
-    get_submission_and_site_configuration, raise_transfer_server_exceptions
+    get_submission_and_site_configuration, raise_transfer_server_exceptions, \
+    retry_no_ticket_available_exception
 from gfbio_submissions.users.models import User
 from .configuration.settings import BASE_HOST_NAME, \
-    PRIMARY_DATA_FILE_MAX_RETRIES, PRIMARY_DATA_FILE_DELAY, \
     SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
 from .models import BrokerObject, \
     AuditableTextData, RequestLog, AdditionalReference, TaskProgressReport, \
-    Submission, SubmissionUpload, SiteConfiguration
+    Submission, SiteConfiguration
 from .utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data, send_submission_to_ena, \
     parse_ena_submission_response
@@ -109,9 +108,6 @@ def check_for_molecular_content_in_submission_task(self, submission_id=None):
         msg='check_for_molecular_content_in_submission_task. '
             'process submission={}.'.format(submission.broker_submission_id))
 
-    path = os.path.join(
-        os.getcwd(),
-        'gfbio_submissions/brokerage/schemas/ena_requirements.json')
     molecular_data_available, errors = check_for_molecular_content(submission)
     logger.info(
         msg='check_for_molecular_content_in_submission_task. '
@@ -228,39 +224,40 @@ def check_on_hold_status_task(self, previous_task_result=None,
 
 
 # TODO: refactor, them remove
-def apply_timebased_task_retry_policy(task, submission, no_of_tickets):
-    try:
-        SubmissionUpload.raise_ticket_exeptions(no_of_tickets)
-    except SubmissionUpload.NoTicketAvailableError as e:
-        logger.warning(
-            msg='{} SubmissionUpload.NoTicketAvailableError {}'.format(
-                task.name, e)
-        )
-        logger.info(
-            msg='{} SubmissionUpload.NoTicketAvailableError number_of_retries={}'
-                ''.format(task.name, task.request.retries)
-        )
-        if task.request.retries == PRIMARY_DATA_FILE_MAX_RETRIES:
-            logger.info(
-                msg='{} apply_timebased_task_retry_policy mail_admins max_retries={}'
-                    ''.format(task.name, PRIMARY_DATA_FILE_MAX_RETRIES)
-            )
-            mail_admins(
-                subject='Failed "{}" for submission {}'.format(
-                    task.name, submission.broker_submission_id),
-                message='Task {0} failed after {1} retries. refer to submission '
-                        'with broker_submission_id {2}. Error {3}'.format(
-                    task.name,
-                    task.request.retries,
-                    submission.broker_submission_id,
-                    e
-                ),
-            )
-        else:
-            raise task.retry(
-                exc=e,
-                countdown=(task.request.retries + 1) * PRIMARY_DATA_FILE_DELAY,
-            )
+# def apply_timebased_task_retry_policy(task, submission, no_of_tickets):
+#     try:
+#         raise_no_ticket_exception(no_of_tickets)
+#     except SubmissionUpload.NoTicketAvailableError as e:
+#         logger.warning(
+#             msg='{} SubmissionUpload.NoTicketAvailableError {}'.format(
+#                 task.name, e)
+#         )
+#         logger.info(
+#             msg='{} SubmissionUpload.NoTicketAvailableError number_of_retries={}'
+#                 ''.format(task.name, task.request.retries)
+#         )
+#         if task.request.retries == SUBMISSION_UPLOAD_MAX_RETRIES:
+#             logger.info(
+#                 msg='{} apply_timebased_task_retry_policy mail_admins max_retries={}'
+#                     ''.format(task.name, SUBMISSION_UPLOAD_MAX_RETRIES)
+#             )
+#             mail_admins(
+#                 subject='Failed "{}" for submission {}'.format(
+#                     task.name, submission.broker_submission_id),
+#                 message='Task {0} failed after {1} retries. refer to submission '
+#                         'with broker_submission_id {2}. Error {3}'.format(
+#                     task.name,
+#                     task.request.retries,
+#                     submission.broker_submission_id,
+#                     e
+#                 ),
+#             )
+#         else:
+#             raise task.retry(
+#                 exc=e,
+#                 countdown=(
+#                                       task.request.retries + 1) * SUBMISSION_UPLOAD_RETRY_DELAY,
+#             )
 
 
 # TODO: refactor/move to submission_transfer_handler
@@ -873,14 +870,19 @@ def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
                 'submission_id={0} | submission_upload_id={1}'
                 ''.format(submission_id, submission_upload_id))
 
-        apply_timebased_task_retry_policy(
-            task=attach_to_submission_issue_task,
-            submission=submission,
-            no_of_tickets=1 if reference else 0
-            # always 1 if available due to filter rules
+        # apply_timebased_task_retry_policy(
+        #     task=attach_to_submission_issue_task,
+        #     submission=submission,
+        #     no_of_tickets=1 if reference else 0
+        #     # always 1 if available due to filter rules
+        # )
+        return retry_no_ticket_available_exception(
+            task=self,
+            broker_submission_id=submission.broker_submission_id,
+            number_of_tickets=1 if reference else 0
         )
 
-        return False
+        # return False
 
 
 @celery.task(

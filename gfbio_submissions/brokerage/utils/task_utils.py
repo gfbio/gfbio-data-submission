@@ -3,9 +3,11 @@ import logging
 from django.core.mail import mail_admins
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    TASK_FAIL_SUBJECT_TEMPLATE, TASK_FAIL_TEXT_TEMPLATE, SUBMISSION_MAX_RETRIES
+    TASK_FAIL_SUBJECT_TEMPLATE, TASK_FAIL_TEXT_TEMPLATE, SUBMISSION_MAX_RETRIES, \
+    SUBMISSION_UPLOAD_MAX_RETRIES, SUBMISSION_UPLOAD_RETRY_DELAY
 from gfbio_submissions.brokerage.exceptions import TransferInternalError, \
-    raise_response_exceptions, TransferClientError
+    raise_response_exceptions, TransferClientError, raise_no_ticket_exception, \
+    NoTicketAvailableError
 from gfbio_submissions.brokerage.models import TaskProgressReport, Submission, \
     SiteConfiguration
 
@@ -164,6 +166,33 @@ def raise_transfer_server_exceptions(response, task, broker_submission_id,
                         'send_task_fail_mail | task={0} | response={1} | '
                         'error={2}'.format(task, response, ce))
             return send_task_fail_mail(broker_submission_id, task)
+
+
+def retry_no_ticket_available_exception(task, broker_submission_id,
+                                        number_of_tickets):
+    try:
+        raise_no_ticket_exception(number_of_tickets)
+        # return True
+    except NoTicketAvailableError as e:
+        print('EXCEPTION ', e)
+        print('\n\nSEND ', task.request.retries, ' ', SUBMISSION_UPLOAD_MAX_RETRIES, ' ' , task.request.retries >= SUBMISSION_UPLOAD_MAX_RETRIES)
+        print('\n\n')
+        if task.request.retries >= SUBMISSION_UPLOAD_MAX_RETRIES:
+            print('SEND MAIL .. ', task.request.retries >= SUBMISSION_UPLOAD_MAX_RETRIES)
+            logger.info('task_utils.py | retry_no_ticket_available_exception | '
+                        'task.request.retries={0} >= max_retries={1} | '
+                        'send_task_fail_mail'.format(task.request.retries,
+                                                     SUBMISSION_UPLOAD_MAX_RETRIES))
+            send_task_fail_mail(broker_submission_id, task)
+
+        else:
+            logger.info('task_utils.py | retry_no_ticket_available_exception | '
+                        'task={0} | error={1} | '
+                        'retries={2}'.format(task.name, e, task.request.retries))
+            task.retry(
+                exc=e,
+                countdown=(task.request.retries + 1) * SUBMISSION_UPLOAD_RETRY_DELAY,
+            )
 
 
 def jira_error_auto_retry(jira_client, task, broker_submission_id,

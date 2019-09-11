@@ -4,6 +4,15 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class NoTicketAvailableError(Exception):
+    pass
+
+
+def raise_no_ticket_exception(no_of_helpdesk_tickets):
+    if no_of_helpdesk_tickets == 0:
+        raise NoTicketAvailableError
+
+
 class TransferError(Exception):
     pass
 
@@ -29,7 +38,6 @@ class TransferInternalError(TransferError):
 
 
 def raise_response_exceptions(response):
-
     error = None
     if not response.ok:
         if 400 <= response.status_code < 500:

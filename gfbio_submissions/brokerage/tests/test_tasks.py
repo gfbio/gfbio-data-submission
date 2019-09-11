@@ -1242,12 +1242,14 @@ class TestGFBioHelpDeskTasks(TestTasks):
 
     # TODO: take this mock concept for testing retry, and add more tests for
     #  other tasks with retry policy(s)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+                       CELERY_TASK_EAGER_PROPAGATES=False)
     @patch(
-        'gfbio_submissions.brokerage.tasks.apply_timebased_task_retry_policy')
+        'gfbio_submissions.brokerage.utils.task_utils.send_task_fail_mail')
     def test_attach_primarydatafile_without_ticket(self, mock):
         submission = Submission.objects.last()
         # omiting submission_upload_id, defaults this parameter to None
-        attach_to_submission_issue_task.apply_async(
+        attach_to_submission_issue_task.apply(
             kwargs={
                 'submission_id': submission.pk,
             }
