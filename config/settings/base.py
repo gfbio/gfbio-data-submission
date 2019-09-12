@@ -334,6 +334,9 @@ LOGIN_REDIRECT_URL = "/ui/submission/list"
 LOGOUT_REDIRECT_URL = "/"
 
 # OIDC_USERNAME_ALGO = "gfbio_submissions.authentication.user_name.generate_username"
+
+# TODO: string ? not list ?
+OIDC_RP_SCOPES = "openid email profile address phone id"
 # OIDC_RP_SCOPES = [
 #     "openid",
 #     "profile",
@@ -342,3 +345,4 @@ LOGOUT_REDIRECT_URL = "/"
 #     "phone",
 #     "id"
 # ]
+
