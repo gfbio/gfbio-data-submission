@@ -3,7 +3,7 @@
 import unicodedata
 
 
-# TODO: works, but username is in capital letters
+# TODO: works, but username is in capital letters ? maybe css ?
 def generate_username(email):
     # Using Python 3 and Django 1.11, usernames can contain alphanumeric
     # (ascii and unicode), _, @, +, . and - characters. So we normalize
