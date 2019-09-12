@@ -101,7 +101,8 @@ MIGRATION_MODULES = {"sites": "gfbio_submissions.contrib.sites.migrations"}
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
-    "mozilla_django_oidc.auth.OIDCAuthenticationBackend",
+    # "mozilla_django_oidc.auth.OIDCAuthenticationBackend",
+    "gfbio_submissions.authentication.auth_backends.GFBioAuthenticationBackend"
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-user-model
 AUTH_USER_MODEL = "users.User"
@@ -316,20 +317,28 @@ REMOTE_REPOSITORY = env("REMOTE_REPOSITORY")
 # OpenIDConnect SETTINGS
 # ------------------------------------------------------------------------------
 
-OIDC_RP_CLIENT_ID = env('OIDC_RP_CLIENT_ID', default='no_oidc_cl_id')
-OIDC_RP_CLIENT_SECRET = env('OIDC_RP_CLIENT_SECRET',
-                            default='no_oidc_cl_secret')
+OIDC_RP_CLIENT_ID = env("OIDC_RP_CLIENT_ID", default="no_oidc_cl_id")
+OIDC_RP_CLIENT_SECRET = env("OIDC_RP_CLIENT_SECRET",
+                            default="no_oidc_cl_secret")
 
-OIDC_RP_SIGN_ALGO = env('OIDC_RP_SIGN_ALGO', default='HS256')
-OIDC_OP_JWKS_ENDPOINT = env('OIDC_OP_JWKS_ENDPOINT', default='no_jwks_url')
+OIDC_RP_SIGN_ALGO = env("OIDC_RP_SIGN_ALGO", default="HS256")
+OIDC_OP_JWKS_ENDPOINT = env("OIDC_OP_JWKS_ENDPOINT", default="no_jwks_url")
 
-OIDC_OP_AUTHORIZATION_ENDPOINT = 'https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php'
-OIDC_OP_TOKEN_ENDPOINT = 'https://sso.gfbio.org/simplesaml/module.php/oidc/access_token.php'
-OIDC_OP_USER_ENDPOINT = ' https://sso.gfbio.org/simplesaml/module.php/oidc/userinfo.php'
+OIDC_OP_AUTHORIZATION_ENDPOINT = "https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php"
+OIDC_OP_TOKEN_ENDPOINT = "https://sso.gfbio.org/simplesaml/module.php/oidc/access_token.php"
+OIDC_OP_USER_ENDPOINT = " https://sso.gfbio.org/simplesaml/module.php/oidc/userinfo.php"
 
 OIDC_USE_NONCE = False  # Default:	True
 
-LOGIN_REDIRECT_URL = '/ui/submission/list'
-LOGOUT_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = "/ui/submission/list"
+LOGOUT_REDIRECT_URL = "/"
 
-OIDC_USERNAME_ALGO = 'gfbio_submissions.authentication.user_name.generate_username'
+# OIDC_USERNAME_ALGO = "gfbio_submissions.authentication.user_name.generate_username"
+OIDC_RP_SCOPES = [
+    "openid",
+    "profile",
+    "email",
+    "address",
+    "phone",
+    "id"
+]
