@@ -332,4 +332,4 @@ OIDC_USE_NONCE = False  # Default:	True
 LOGIN_REDIRECT_URL = '/ui/submission/list'
 LOGOUT_REDIRECT_URL = '/'
 
-
+OIDC_USERNAME_ALGO = 'gfbio_submissions.authentication.user_name.generate_username'
