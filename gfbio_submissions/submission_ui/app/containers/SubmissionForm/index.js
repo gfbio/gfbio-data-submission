@@ -32,8 +32,6 @@ import Collapse from 'react-bootstrap/Collapse';
 export class SubmissionForm extends React.Component {
 
   componentDidMount() {
-    // console.log('SFORM did mount props');
-    // console.log(this.props);
     const { brokerSubmissionId } = this.props.match.params;
     if (brokerSubmissionId !== undefined) {
       this.props.fetchSubmission(brokerSubmissionId);
@@ -117,12 +115,7 @@ export class SubmissionForm extends React.Component {
 
   render() {
 
-    // console.log('--------------render SubmissionForm');
-    // console.log(this.props);
-    // console.log('###############################');
-
     if (this.props.brokerSubmissionId !== '' && this.props.match.path === '/form') {
-      // console.log('should RESET');
       this.props.resetForm();
     }
 

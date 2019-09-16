@@ -300,7 +300,7 @@ class FormWrapper extends React.PureComponent {
                 {/*<div className="form-group col-md-4">*/}
 
                 {/*</div>*/}
-                <div className="form-group col-md-6">
+                <div className="form-group col-md-12">
                   <button
                     type="submit"
                     className="btn btn-secondary btn-block green"
