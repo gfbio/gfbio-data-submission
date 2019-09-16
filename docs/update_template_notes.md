@@ -479,6 +479,8 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 
 ## Standard deployment/release procedure for developement server (work in progress ...)
 
+- git flow release start 1.76.0
+- bump VERSION in base.py
 
 --------------------------------------------------------------------------------
 
