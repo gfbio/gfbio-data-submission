@@ -235,6 +235,10 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 - docker-compose -f production.yml run --rm django python manage.py collectstatic
 - docker-compose -f production.yml up OR supervisorctl start devgfbiosubmissions
 
+
+--------------------------------------------------------------------------------
+
+
 ## Protocol of first deploy on production server
 
 - ssh -l cloud 141.5.106.43
@@ -469,6 +473,15 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
         drwxr-xr-x  123 django   root       12.0K Aug  1 09:22 media
         drwxr-xr-x    1 django   root        4.0K Aug 12 15:38 static
         (...)
+        
+
+--------------------------------------------------------------------------------
+
+## Standard deployment/release procedure for developement server (work in progress ...)
+
+
+--------------------------------------------------------------------------------
+
 
 ## 14.08. disk full sentry error (1.75.1)
 
