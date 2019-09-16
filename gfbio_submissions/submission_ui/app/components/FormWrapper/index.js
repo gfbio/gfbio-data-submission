@@ -198,10 +198,6 @@ class FormWrapper extends React.PureComponent {
     }
     let errors = this.prepareErrorNotification();
 
-    // console.log('--------------render FormWrapper');
-    // console.log(this.props);
-    // console.log('###############################');
-
     return (
       <form
         name="wrapping-form"
@@ -283,21 +279,24 @@ class FormWrapper extends React.PureComponent {
               </div>
 
               <div className="form-row mt-5">
-                <div className="form-group col-md-6">
-                  <button
-                    type="submit"
-                    className="btn btn-secondary btn-block btn-light-blue"
-                    onClick={this.props.handleSubmit(values =>
-                      this.props.onSubmit({
-                        ...values,
-                        workflow: 'save',
-                      }),
-                    )}
-                  >
-                    <i className={`fa ${saveIconClass}`} />
-                    {saveButtonText}
-                  </button>
-                </div>
+
+                {/* TODO: commented to hide save button as defined in GFBIO-2584 */}
+                {/*<div className="form-group col-md-6">*/}
+                {/*  <button*/}
+                {/*    type="submit"*/}
+                {/*    className="btn btn-secondary btn-block btn-light-blue"*/}
+                {/*    onClick={this.props.handleSubmit(values =>*/}
+                {/*      this.props.onSubmit({*/}
+                {/*        ...values,*/}
+                {/*        workflow: 'save',*/}
+                {/*      }),*/}
+                {/*    )}*/}
+                {/*  >*/}
+                {/*    <i className={`fa ${saveIconClass}`} />*/}
+                {/*    {saveButtonText}*/}
+                {/*  </button>*/}
+                {/*</div>*/}
+
                 {/*<div className="form-group col-md-4">*/}
 
                 {/*</div>*/}
