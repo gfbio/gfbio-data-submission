@@ -124,8 +124,8 @@ export const initialState = fromJS({
   userId: backendParameters.userId || -1,
 
   // TODO: replace. during development token defaults to test-server user
-  token: backendParameters['token'] || '7e7518077ba9fad288985ef22e822abdf34354f0',
-  // token: backendParameters['token'] || 'NO_TOKEN',
+  // token: backendParameters['token'] || '7e7518077ba9fad288985ef22e822abdf34354f0',
+  token: backendParameters['token'] || 'NO_TOKEN',
   userName: backendParameters.userName || '',
 
   // TODO: decide what from actual response is needed, then put in reducer
