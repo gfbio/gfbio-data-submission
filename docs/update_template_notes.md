@@ -216,6 +216,29 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 
 --------------------------------------------------------------------------------
 
+## Standard deployment/release procedure for developement server (work in progress ...)
+
+- ssh -l root 141.5.103.171
+- cd /var/www/gfbio_submissions/
+- supervisorctl stop devgfbiosubmissions
+- git fetch
+- (git checkout <BRANCH>)
+- git pull origin develop (or feature branch)
+
+- RENAME compose/production/devserver-taefik.toml to taefik.toml (because of different domain)
+
+        mv compose/production/traefik/traefik.toml compose/production/traefik/prod-traefik.toml && mv compose/production/traefik/devserver-traefik.toml compose/production/traefik/traefik.toml
+
+
+- docker-compose -f production.yml build
+- docker-compose -f production.yml run --rm django python manage.py migrate
+- docker-compose -f production.yml run --rm django python manage.py collectstatic
+- docker-compose -f production.yml up OR supervisorctl start devgfbiosubmissions
+
+
+--------------------------------------------------------------------------------
+
+
 ## Protocol of first deploy on production server
 
 - ssh -l cloud 141.5.106.43
@@ -450,7 +473,56 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
         drwxr-xr-x  123 django   root       12.0K Aug  1 09:22 media
         drwxr-xr-x    1 django   root        4.0K Aug 12 15:38 static
         (...)
+        
 
+--------------------------------------------------------------------------------
+
+## Standard deployment/release procedure for developement server (work in progress ...)
+
+### Local 
+
+- git flow release start 1.76.0
+- bump VERSION in base.py
+- git commit -a
+- comment sth. like 'release/1.76.0'
+
+--------------------------------------------------------------------------------
+
+
+## 14.08. disk full sentry error (1.75.1)
+
+- docker volume prune ~4 Gb
+- docker image prune ~ 112 Gb
+- df -h
+
+        Filesystem      Size  Used Avail Use% Mounted on
+        udev            7,9G     0  7,9G   0% /dev
+        tmpfs           1,6G  8,9M  1,6G   1% /run
+        /dev/vda1       158G   40G  112G  26% /
+        tmpfs           7,9G     0  7,9G   0% /dev/shm
+        tmpfs           5,0M     0  5,0M   0% /run/lock
+        tmpfs           7,9G     0  7,9G   0% /sys/fs/cgroup
+        tmpfs           1,6G     0  1,6G   0% /run/user/1000
+
+
+- time sudo docker-compose -f production.yml build
+
+        real	70m47,452s
+        user	2m36,691s
+        sys	5m15,362s
+- sudo supervisorctl stop gfbio_submissions
+ -df -h
+ 
+        Filesystem      Size  Used Avail Use% Mounted on
+        udev            7,9G     0  7,9G   0% /dev
+        tmpfs           1,6G  8,3M  1,6G   1% /run
+        /dev/vda1       158G   71G   81G  47% /
+        tmpfs           7,9G     0  7,9G   0% /dev/shm
+        tmpfs           5,0M     0  5,0M   0% /run/lock
+        tmpfs           7,9G     0  7,9G   0% /sys/fs/cgroup
+        tmpfs           1,6G     0  1,6G   0% /run/user/1000
+
+- sudo supervisorctl start gfbio_submissions
 
 ## Libraries to inspect
 

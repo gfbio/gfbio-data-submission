@@ -14,9 +14,10 @@ from model_utils.models import TimeStampedModel
 
 from config.settings.base import ADMINS, AUTH_USER_MODEL, LOCAL_REPOSITORY
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
-    DEFAULT_ENA_CENTER_NAME, SUBMISSION_SAVE_TRIGGER_DELAY
+    DEFAULT_ENA_CENTER_NAME
+from gfbio_submissions.brokerage.exceptions import NoTicketAvailableError
 from .configuration.settings import ENA, ENA_PANGAEA
-from .configuration.settings import PRIMARY_DATA_FILE_DELAY
+from .configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY
 from .fields import JsonDictField
 from .managers import AuditableTextDataManager
 from .managers import SiteConfigurationManager, \
@@ -103,14 +104,27 @@ class SiteConfiguration(models.Model):
                   'should use to connect to access ENA FTP-server.',
         on_delete=models.PROTECT
     )
-    pangaea_server = models.ForeignKey(
+    pangaea_token_server = models.ForeignKey(
         ResourceCredential,
-        related_name='SiteConfiguration.pangaea_server+',
+        null=True,
+        blank=True,
+        related_name='SiteConfiguration.pangaea_token_server+',
         help_text='Select which server and/or account this configuration '
-                  'should use to connect to Pangaea.',
+                  'should use to connect to Pangaea token server. Via this server, the'
+                  'token necessary to access Pangaea-Jira is obtained',
         on_delete=models.PROTECT
     )
-
+    pangaea_jira_server = models.ForeignKey(
+        ResourceCredential,
+        null=True,
+        blank=True,
+        related_name='SiteConfiguration.pangaea_jira_server+',
+        help_text='Select which server and/or account this configuration '
+                  'should use to connect to Pangaea-Jira. This Server'
+                  'represents the actual jira-instance of Pangaea',
+        on_delete=models.PROTECT
+    )
+    # TODO: remove
     gfbio_server = models.ForeignKey(
         ResourceCredential,
         null=True,
@@ -121,7 +135,7 @@ class SiteConfiguration(models.Model):
                   'accessing submission-registry, research_object, and so on.',
         on_delete=models.PROTECT
     )
-
+    # TODO: remove
     use_gfbio_services = models.BooleanField(
         default=False,
         help_text='If checked additional gfbio-related services will be used '
@@ -254,36 +268,6 @@ class Submission(models.Model):
 
     objects = SubmissionManager()
 
-    # FIXME: remove ALL custom action from save method ! too much code here !
-    def save(self, allow_update=True, *args, **kwargs):
-        previous_state = None
-        update = False
-        # update, no creation
-        if self.pk:
-            update = True
-            previous_state = Submission.objects.filter(pk=self.pk).first()
-        super(Submission, self).save(*args, **kwargs)
-        if update and allow_update:
-            from .tasks import update_helpdesk_ticket_task
-            update_helpdesk_ticket_task.apply_async(
-                kwargs={
-                    'submission_id': '{0}'.format(self.pk),
-                },
-                countdown=SUBMISSION_SAVE_TRIGGER_DELAY
-            )
-        # TODO: refactor -> extract
-        if previous_state and previous_state.center_name != self.center_name:
-            # instance difference, delete and create new
-            from .tasks import delete_related_auditable_textdata_task, \
-                prepare_ena_submission_data_task
-            chain = delete_related_auditable_textdata_task.s(
-                submission_id=self.pk).set(
-                countdown=SUBMISSION_SAVE_TRIGGER_DELAY) \
-                    | prepare_ena_submission_data_task.s(
-                submission_id=self.pk).set(
-                countdown=SUBMISSION_SAVE_TRIGGER_DELAY)
-            chain()
-
     # TODO: refactor/move: too specific (molecular submission)
     def get_json_with_aliases(self, alias_postfix):
         new_study_alias, study = self.set_study_alias(alias_postfix)
@@ -375,9 +359,33 @@ class Submission(models.Model):
                      self.brokerobject_set.filter(type='run')]
         }
 
-    def get_primary_additional_reference(self, reference_type):
+    # TODO: check if filter for primary makes sense. will deliver only on per submission
+    def get_primary_pangaea_references(self):
         return self.additionalreference_set.filter(
+            Q(type=AdditionalReference.PANGAEA_JIRA_TICKET) & Q(primary=True))
+
+    def get_primary_reference(self, reference_type):
+        issues = self.additionalreference_set.filter(
             Q(type=reference_type) & Q(primary=True))
+        if len(issues):
+            return issues.first()
+        else:
+            return None
+
+    def get_primary_helpdesk_reference(self):
+        return self.get_primary_reference(
+            AdditionalReference.GFBIO_HELPDESK_TICKET)
+        # issues = self.additionalreference_set.filter(
+        #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True)
+        # )
+        # if len(issues):
+        #     return issues.first()
+        # else:
+        #     return None
+
+    def get_primary_pangaea_reference(self):
+        return self.get_primary_reference(
+            AdditionalReference.PANGAEA_JIRA_TICKET)
 
     def __str__(self):
         return '{}_{}'.format(self.pk, self.broker_submission_id)
@@ -640,25 +648,22 @@ class PrimaryDataFile(models.Model):
     # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
     created = models.DateTimeField(auto_now_add=True)
     changed = models.DateTimeField(auto_now=True)
-
-    class NoTicketAvailableError(Exception):
-        pass
-
-    @classmethod
-    def raise_ticket_exeptions(self, no_of_helpdesk_tickets):
-        if no_of_helpdesk_tickets == 0:
-            raise self.NoTicketAvailableError
+    #
+    # @classmethod
+    # def raise_ticket_exeptions(self, no_of_helpdesk_tickets):
+    #     if no_of_helpdesk_tickets == 0:
+    #         raise NoTicketAvailableError
 
     def save(self, attach=True, *args, **kwargs):
         super(PrimaryDataFile, self).save(*args, **kwargs)
         if attach:
             from .tasks import \
-                attach_file_to_helpdesk_ticket_task
-            attach_file_to_helpdesk_ticket_task.apply_async(
+                attach_to_submission_issue_task
+            attach_to_submission_issue_task.apply_async(
                 kwargs={
                     'submission_id': '{0}'.format(self.submission.pk),
                 },
-                countdown=PRIMARY_DATA_FILE_DELAY
+                countdown=SUBMISSION_UPLOAD_RETRY_DELAY
             )
 
 
@@ -711,29 +716,19 @@ class SubmissionUpload(TimeStampedModel):
         help_text='The actual file uploaded.',
     )
 
-    # TODO: from PrimaryDataFile ...
-    class NoTicketAvailableError(Exception):
-        pass
-
-    # TODO: from PrimaryDataFile ...
-    @classmethod
-    def raise_ticket_exception(cls, no_of_helpdesk_tickets):
-        if no_of_helpdesk_tickets == 0:
-            raise cls.NoTicketAvailableError
-
     # TODO: from PrimaryDataFile. new default for attach is -> false
     def save(self, ignore_attach_to_ticket=False, *args, **kwargs):
         super(SubmissionUpload, self).save(*args, **kwargs)
         if self.attach_to_ticket and not ignore_attach_to_ticket:
             from .tasks import \
-                attach_file_to_helpdesk_ticket_task
-            attach_file_to_helpdesk_ticket_task.apply_async(
+                attach_to_submission_issue_task
+            attach_to_submission_issue_task.apply_async(
                 kwargs={
                     'submission_id': '{0}'.format(self.submission.pk),
                     'submission_upload_id': '{0}'.format(self.pk)
                 },
                 # TODO: rename
-                countdown=PRIMARY_DATA_FILE_DELAY
+                countdown=SUBMISSION_UPLOAD_RETRY_DELAY
             )
 
     def __str__(self):

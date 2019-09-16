@@ -3,119 +3,15 @@ import logging
 
 from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY, \
     ENA, ENA_PANGAEA
-from gfbio_submissions.brokerage.models import Submission, SiteConfiguration, \
-    TaskProgressReport
 
 logger = logging.getLogger(__name__)
 
 
 class SubmissionTransferHandler(object):
-    class TransferError(Exception):
-        pass
-
-    class TransferClientError(TransferError):
-        pass
-
-    class TransferServerError(TransferError):
-        pass
-
-    class TransferUnknownError(TransferError):
-        pass
-
-    class TransferInvalidSubmission(TransferError):
-        pass
-
-    class TransferInternalError(TransferError):
-        pass
 
     def __init__(self, submission_id, target_archive):
         self.target_archive = target_archive
         self.submission_id = submission_id
-
-    @classmethod
-    def _get_submission(cls, submission_id, get_closed_submission=False):
-        submission = None
-        try:
-            if get_closed_submission:
-                submission = Submission.objects.get_submission_including_closed_for_task(
-                    id=submission_id)
-            else:
-                submission = Submission.objects.get_submission_for_task(
-                    id=submission_id)
-        except Submission.DoesNotExist as e:
-            logger.error(
-                msg='SubmissionTransferHandler _get_submission. Submission does not exist'
-                    ' submission pk={}. Error={}'
-                    ''.format(submission_id, e)
-            )
-            raise cls.TransferInternalError(
-                '_get_submission No Submission found for pk={}. Original message: {}'.format(
-                    submission_id, e))
-        finally:
-            return submission
-
-    @classmethod
-    def get_submission_for_task(cls, submission_id=None, task=None,
-                                get_closed_submission=False):
-        submission = cls._get_submission(submission_id, get_closed_submission)
-        if task:
-            task_report, created = TaskProgressReport.objects.create_initial_report(
-                submission=submission,
-                task=task)
-        return submission
-
-    @classmethod
-    def get_submission_and_siteconfig_for_task(cls, submission_id=None,
-                                               task=None,
-                                               get_closed_submission=False):
-        # TODO: Catch DoesNotExist here, so tasks will have to deal with only on type of exception
-        submission = cls._get_submission(submission_id, get_closed_submission)
-        if submission:
-            try:
-                site_configuration = SiteConfiguration.objects.get_site_configuration_for_task(
-                    site=submission.site)
-            except SiteConfiguration.DoesNotExist as e:
-                logger.error(
-                    msg='SubmissionTransferHandler. SiteConfiguration does not exist'
-                        ' submission pk={}. Error={}'
-                        ''.format(submission_id, e)
-                )
-                raise cls.TransferInternalError(
-                    'No SiteConfiguration found for site={}. Original message: '
-                    '{}'.format(submission.site, e))
-        else:
-            site_configuration = None
-        if task:
-            task_report, created = TaskProgressReport.objects.create_initial_report(
-                submission=submission,
-                task=task)
-        return submission, site_configuration
-
-    @classmethod
-    def raise_response_exceptions(cls, response):
-        print(' ############ raise reponse exceptions ', response)
-        error = None
-        if not response.ok:
-            if 400 <= response.status_code < 500:
-                print(' ############ 4xx ',)
-                error = cls.TransferClientError(
-                    response.status_code,
-                    response.content
-                )
-            elif 500 <= response.status_code < 600:
-                print(' ############ 5xx ', response)
-                error = cls.TransferServerError(response.status_code)
-            else:
-                print(' ############ unknown ', response)
-                error = cls.TransferUnknownError(response.status_code)
-            if error:
-                print(' ############ error ', error)
-                logger.error(
-                    msg='SubmissionTransferError: '
-                        'Aborted with status_code {0} '
-                        'due to error {1}'.format(response.status_code,
-                                                  error))
-                raise error
 
     def pre_process_molecular_data_chain(self):
         from gfbio_submissions.brokerage.tasks import \
@@ -139,7 +35,7 @@ class SubmissionTransferHandler(object):
             'submission_id={0} target_archive={1}'.format(self.submission_id,
                                                           self.target_archive))
         from gfbio_submissions.brokerage.tasks import \
-            create_helpdesk_ticket_task, get_user_email_task, \
+            create_submission_issue_task, get_user_email_task, \
             check_on_hold_status_task
 
         logger.info(
@@ -172,7 +68,7 @@ class SubmissionTransferHandler(object):
             chain = get_user_email_task.s(
                 submission_id=self.submission_id).set(
                 countdown=SUBMISSION_DELAY) \
-                    | create_helpdesk_ticket_task.s(
+                    | create_submission_issue_task.s(
                 submission_id=self.submission_id).set(
                 countdown=SUBMISSION_DELAY)
             if release:
@@ -194,13 +90,13 @@ class SubmissionTransferHandler(object):
                 self.target_archive))
         from gfbio_submissions.brokerage.tasks import \
             transfer_data_to_ena_task, process_ena_response_task, \
-            comment_helpdesk_ticket_task
+            add_accession_to_submission_issue_task
 
         chain = transfer_data_to_ena_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
                 | process_ena_response_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
-                | comment_helpdesk_ticket_task.s(
+                | add_accession_to_submission_issue_task.s(
             submission_id=self.submission_id,
             target_archive=ENA).set(countdown=SUBMISSION_DELAY)
         chain()
@@ -211,29 +107,27 @@ class SubmissionTransferHandler(object):
                 self.target_archive))
         from gfbio_submissions.brokerage.tasks import \
             transfer_data_to_ena_task, process_ena_response_task, \
-            comment_helpdesk_ticket_task, request_pangaea_login_token_task, \
-            create_pangaea_jira_ticket_task, \
-            attach_file_to_pangaea_ticket_task, \
-            comment_on_pangaea_ticket_task, \
-            add_pangaealink_to_helpdesk_ticket_task
+            add_accession_to_submission_issue_task, \
+            create_pangaea_issue_task, \
+            attach_to_pangaea_issue_task, \
+            add_accession_to_pangaea_issue_task, \
+            add_pangaealink_to_submission_issue_task
 
         chain = transfer_data_to_ena_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
                 | process_ena_response_task.s(submission_id=self.submission_id,
                                               close_submission_on_success=False).set(
             countdown=SUBMISSION_DELAY) \
-                | comment_helpdesk_ticket_task.s(
+                | add_accession_to_submission_issue_task.s(
             submission_id=self.submission_id,
             target_archive=ENA).set(countdown=SUBMISSION_DELAY) \
-                | request_pangaea_login_token_task.s(
+                | create_pangaea_issue_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
-                | create_pangaea_jira_ticket_task.s(
+                | attach_to_pangaea_issue_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
-                | attach_file_to_pangaea_ticket_task.s(
+                | add_accession_to_pangaea_issue_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
-                | comment_on_pangaea_ticket_task.s(
-            submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
-                | add_pangaealink_to_helpdesk_ticket_task.s(
+                | add_pangaealink_to_submission_issue_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
         chain()
 

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class SiteConfigurationManager(models.Manager):
     # TODO: this will not fail on purpose, to allow get for default config but if get for 'default' fails exception will be raised
     # TODO: implement better fallback to a default config than rely on existence of entry with this title
-    def get_site_configuration_for_task(self, site=None):
+    def get_site_configuration(self, site=None):
         try:
             return self.get(site=site)
         except self.model.DoesNotExist:
@@ -40,14 +40,22 @@ class SubmissionManager(models.Manager):
             Q(additionalreference__primary=True)
         )
 
-    def get_submission_for_task(self, id=None):
+    def get_open_submission(self, obj_id=None):
+        # includes OPEN, SUBMITTED
         return self.get(
-            Q(pk=id),
+            Q(pk=obj_id),
             (~Q(status=self.model.CLOSED) & ~Q(status=self.model.ERROR)
              & ~Q(status=self.model.CANCELLED))
         )
 
-    def get_submission_id_for_bsi(self, broker_submission_id=None):
+    def get_non_error_submission(self, obj_id=None):
+        # includes OPEN, SUBMITTED, CLOSED
+        return self.get(
+            Q(pk=obj_id), ~Q(status=self.model.ERROR),
+            ~Q(status=self.model.CANCELLED)
+        )
+
+    def get_open_submission_id_for_bsi(self, broker_submission_id=None):
         try:
             submission = self.get(
                 Q(broker_submission_id=broker_submission_id),
@@ -58,17 +66,42 @@ class SubmissionManager(models.Manager):
         except self.model.DoesNotExist:
             return -1
 
-    def get_submission_including_closed_for_task(self, id=None):
-        return self.get(
-            Q(pk=id), ~Q(status=self.model.ERROR),
-            ~Q(status=self.model.CANCELLED)
-        )
-
-    def get_submissions_of_submitting_user(self, submitting_user_identifier=None):
+    def get_submissions_of_submitting_user(self,
+                                           submitting_user_identifier=None):
         return self.filter(
             Q(submitting_user=submitting_user_identifier),
             ~Q(submitting_user='')
         )
+
+    # def get_submission_for_task(self, obj_id, task=None, include_closed=False):
+    #     try:
+    #         submission = self.get_non_error_submission(
+    #             obj_id) if include_closed else self.get_open_submission(obj_id)
+    #     except self.model.DoesNotExist as e:
+    #         print('NO submission ', e)
+    #     try:
+    #         site_config = SiteConfigurationManager.get_site_configuration(
+    #             submission.site)
+    #     except SiteConfigurationManager.model.DoesNotExist as e:
+    #         print('No SiteConfig ', e)
+    #     if task:
+    #         TaskProgressReportManager.create_initial_report(
+    #             submission=submission,
+    #             task=task)
+    #     return submission, site_config
+
+    # def get_open_submission(cls, submission_id=None, task=None,
+    #                             get_closed_submission=False):
+    #     submission = cls._get_submission(submission_id, get_closed_submission)
+    #     if task:
+    #         task_report, created = TaskProgressReport.objects.create_initial_report(
+    #             submission=submission,
+    #             task=task)
+    #     if submission is None:
+    #         raise cls.TransferInternalError(
+    #             'SubmissionTransferHandler | get_open_submission | no Submission available for submission pk={0}'.format(
+    #                 submission_id))
+    #     return submission
 
 
 class BrokerObjectManager(models.Manager):
@@ -251,7 +284,7 @@ class BrokerObjectManager(models.Manager):
                     'site_object_id'] = obj.site_object_id
 
         submission.data = data
-        submission.save(allow_update=False)
+        submission.save()
 
     # TODO: rename, since this here is mostly ena specific
     # TODO: refactor for generic solution

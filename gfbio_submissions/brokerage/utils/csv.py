@@ -177,7 +177,7 @@ def check_for_molecular_content(submission):
             msg='check_for_molecular_content | '
                 'ena is default target return=True')
         return True, []
-    # TODO: consider HELPDESK_REQUEST_TYPE_MAPPINGS for data_center mappings
+    # TODO: consider GFBIO_REQUEST_TYPE_MAPPINGS for data_center mappings
     elif submission.release and submission.target == GENERIC \
             and submission.data.get('requirements', {}) \
             .get('data_center', '').count('ENA'):
@@ -209,7 +209,7 @@ def check_for_molecular_content(submission):
 
         if valid:
             submission.target = ENA_PANGAEA
-            submission.save(allow_update=False)
+            submission.save()
             logger.info(
                 msg='check_for_molecular_content | valid data from csv |'
                     ' return=True')
@@ -218,7 +218,7 @@ def check_for_molecular_content(submission):
             error_messages = [e.message for e in full_errors]
             submission.data.update(
                 {'validation': error_messages})
-            submission.save(allow_update=False)
+            submission.save()
             logger.info(
                 msg='check_for_molecular_content  | invalid data from csv |'
                     ' return=False')
