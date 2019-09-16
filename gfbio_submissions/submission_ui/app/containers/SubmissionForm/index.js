@@ -164,6 +164,7 @@ export class SubmissionForm extends React.Component {
           promptOnLeave={this.props.promptOnLeave}
           generalError={this.props.generalError}
           saveSuccessMessage={saveMessage}
+          brokerSubmissionId={this.props.brokerSubmissionId}
         />
       </div>
     );

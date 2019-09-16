@@ -188,6 +188,7 @@ class FormWrapper extends React.PureComponent {
     let submitButtonText = 'Start Submission';
     let saveIconClass = 'fa-clipboard';
     let saveButtonText = 'Save Draft';
+
     if (this.props.submitInProgress) {
       submitIconClass = 'fa-cog fa-spin fa-fw';
       submitButtonText = 'submitting ...';
@@ -196,7 +197,15 @@ class FormWrapper extends React.PureComponent {
       saveIconClass = 'fa-cog fa-spin fa-fw';
       saveButtonText = 'saving ...';
     }
+    if(this.props.brokerSubmissionId !== ''){
+      console.info('UPDATE ...');
+      submitButtonText = 'Update Submission';
+      submitIconClass = 'fa fa-forward';
+    }
     let errors = this.prepareErrorNotification();
+
+    console.info('FormWrapper index.js render -> props');
+    console.info(this.props);
 
     return (
       <form
@@ -334,6 +343,7 @@ FormWrapper.propTypes = {
   promptOnLeave: PropTypes.bool,
   generalError: PropTypes.bool,
   saveSuccessMessage: PropTypes.object,
+  brokerSubmissionId: PropTypes.string,
 };
 
 // this is already connected to redux-form reducer ?
