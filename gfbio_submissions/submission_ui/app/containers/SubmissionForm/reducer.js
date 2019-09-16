@@ -118,13 +118,16 @@ export const initialState = fromJS({
   showSaveSuccess: false,
 
   embargoDate: new Date().setFullYear(new Date().getFullYear() + 1),
+
   // TODO: replace. development default of 2
   // userId: backendParameters.userId || 2,
   userId: backendParameters.userId || -1,
+
   // TODO: replace. during development token defaults to test-server user
-  // token: backendParameters['token'] || '5639b56bd077fb3e12d7e4a0ada244aaa970c2fd',
+  // token: backendParameters['token'] || '7e7518077ba9fad288985ef22e822abdf34354f0',
   token: backendParameters['token'] || 'NO_TOKEN',
   userName: backendParameters.userName || '',
+
   // TODO: decide what from actual response is needed, then put in reducer
   submitResponse: {},
   // TODO: same for save
@@ -182,8 +185,8 @@ function submissionFormReducer(state = initialState, action) {
     case SAVE_FORM:
       return state
       // TODO: need showSaveSuccess later
-        // .set('showSaveSuccess', false)
-        // .set('promptOnLeave', false)
+      // .set('showSaveSuccess', false)
+      // .set('promptOnLeave', false)
         .set('saveInProgress', true);
     case SAVE_FORM_SUCCESS:
       // console.info('SAVE_FORM_SUCCESS');
@@ -193,11 +196,11 @@ function submissionFormReducer(state = initialState, action) {
         // .set('metaDataFileName', action.response.data.data.requirements.metadata_file_name)
         .set('brokerSubmissionId', action.response.data.broker_submission_id)
         .set('saveResponse', action.response)
-        .set('saveInProgress', false)
-        // .set('showSaveSuccess', true);
+        .set('saveInProgress', false);
+    // .set('showSaveSuccess', true);
     case CLOSE_SAVE_SUCCESS:
-      return state
-        // .set('showSaveSuccess', false);
+      return state;
+    // .set('showSaveSuccess', false);
     case CLOSE_SUBMIT_SUCCESS:
       return state
         .set('showSubmitSuccess', false);
@@ -421,9 +424,9 @@ function submissionFormReducer(state = initialState, action) {
       newMetaDataIndex_ = markMetaDataInUploadsFromServer(state, action.metaDataIndex);
       // state.set('metaDataIndex', newMetaDataIndex_);
       return state
-    // TODO: useless ?
-    //   .set('metaDataFileName', '')
-      .set('metaDataIndex', newMetaDataIndex_);
+      // TODO: useless ?
+      //   .set('metaDataFileName', '')
+        .set('metaDataIndex', newMetaDataIndex_);
     // case SET_METADATA_ON_SERVER_SUCCESS:
     //   let mIndex = '';
     //   mIndex = markMetaDataInUploadsFromServer(state, action.metaDataIndex);
