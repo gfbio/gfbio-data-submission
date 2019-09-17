@@ -17,7 +17,7 @@ from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
 from gfbio_submissions.users.models import User
 
 
-class EnalizerTest(TestCase):
+class TestEnalizer(TestCase):
 
     @classmethod
     def setUpTestData(cls):
