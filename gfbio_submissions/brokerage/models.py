@@ -220,8 +220,6 @@ class Submission(models.Model):
 
     broker_submission_id = models.UUIDField(primary_key=False,
                                             default=uuid.uuid4)
-    # TODO: still name this 'site' ?
-    # TODO: I see possible conflict with regular users here. Add dedicated user-subclass for 'site'
     site = models.ForeignKey(AUTH_USER_MODEL,
                              null=True,
                              related_name='submission',
@@ -229,6 +227,7 @@ class Submission(models.Model):
     # TODO: still needed ?
     site_project_id = models.CharField(max_length=128, blank=True, default='')
     target = models.CharField(max_length=16, choices=TARGETS)
+    # TODO: remove in Submission ownership refactoring
     submitting_user = models.CharField(max_length=72, default='', blank=True,
                                        null=True,
                                        help_text=
@@ -236,6 +235,7 @@ class Submission(models.Model):
                                        'vary for different sites, e.g. user-id'
                                        ' from database, uniquq login-name, '
                                        'etc..')
+    # TODO: remove in Submission ownership refactoring
     submitting_user_common_information = models.TextField(
         default='',
         blank=True,
