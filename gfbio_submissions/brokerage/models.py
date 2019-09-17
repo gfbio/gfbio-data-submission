@@ -220,10 +220,17 @@ class Submission(models.Model):
 
     broker_submission_id = models.UUIDField(primary_key=False,
                                             default=uuid.uuid4)
-    site = models.ForeignKey(AUTH_USER_MODEL,
-                             null=True,
-                             related_name='submission',
-                             on_delete=models.SET_NULL)
+    site = models.ForeignKey(
+        AUTH_USER_MODEL,
+        null=True,
+        related_name='submission_of_site',
+        on_delete=models.SET_NULL)
+    user = models.ForeignKey(
+        AUTH_USER_MODEL,
+        null=True,
+        related_name='submission_of_user',
+        on_delete=models.SET_NULL
+    )
     # TODO: still needed ?
     site_project_id = models.CharField(max_length=128, blank=True, default='')
     target = models.CharField(max_length=16, choices=TARGETS)
@@ -648,6 +655,7 @@ class PrimaryDataFile(models.Model):
     # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
     created = models.DateTimeField(auto_now_add=True)
     changed = models.DateTimeField(auto_now=True)
+
     #
     # @classmethod
     # def raise_ticket_exeptions(self, no_of_helpdesk_tickets):
