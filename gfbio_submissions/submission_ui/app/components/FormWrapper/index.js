@@ -198,7 +198,6 @@ class FormWrapper extends React.PureComponent {
       saveButtonText = 'saving ...';
     }
     if(this.props.brokerSubmissionId !== ''){
-      console.info('UPDATE ...');
       submitButtonText = 'Update Submission';
       submitIconClass = 'fa fa-forward';
     }

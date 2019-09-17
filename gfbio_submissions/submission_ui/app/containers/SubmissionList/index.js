@@ -24,7 +24,10 @@ import {
   fetchSubmissions,
   showDeleteSubmissionDialog,
 } from './actions';
-import { makeSelectShowSubmitSuccess } from '../SubmissionForm/selectors';
+import {
+  makeSelectShowSubmitSuccess,
+  makeSelectShowUpdateSuccess,
+} from '../SubmissionForm/selectors';
 import { closeSubmitSuccess } from '../SubmissionForm/actions';
 import Collapse from 'react-bootstrap/Collapse';
 import Button from 'react-bootstrap/Button';
@@ -43,9 +46,22 @@ export class SubmissionList extends React.Component {
   }
 
   render() {
-    // console.log('--------------render SubmissionList');
-    // console.log(this.props);
-    // console.log('###############################');
+    console.log('--------------render SubmissionList');
+    console.log(this.props);
+    console.log('###############################');
+    let successHeader = '';
+    let successText = '';
+
+    if (this.props.showSubmitSuccess) {
+      successHeader = 'Your data was submitted !';
+      successText = 'Congratulations, you have started a data submission. ' +
+        'You will receive a confirmation email from the GFBio Helpdesk Team. ' +
+        'Please reply to this email if you have questions.';
+    } else if (this.props.showUpdateSuccess) {
+      successHeader = 'Your submission was updated !';
+      successText = 'The Update of your data was successful.';
+    }
+
 
     let submissionItems = this.props.submissions.map((submission, index) => {
       if (submission.status != STATUS_CANCELLED) {
@@ -136,13 +152,13 @@ export class SubmissionList extends React.Component {
     }
 
     // TODO: now that everything is set up, continue with get subs in saga
-    // set loading indicator, fetch subs, on error show message, on success
-    // show list
+    //   set loading indicator, fetch subs, on error show message, on success
+    //   show list
 
     return (
       <div className="submission-list-wrapper">
         <Collapse
-          in={this.props.showSubmitSuccess}
+          in={this.props.showSubmitSuccess || this.props.showUpdateSuccess}
         >
           <div className="col-8 mx-auto success-message">
             <div className="row">
@@ -151,12 +167,9 @@ export class SubmissionList extends React.Component {
                   className="icon ion-md-checkmark-circle-outline align-bottom" />
               </div>
               <div className="col-8">
-                <h4>Your data was submitted !</h4>
+                <h4>{successHeader}</h4>
                 <p>
-                  Congratulations, you have started a data submission.
-                  You will receive a confirmation email from the GFBio
-                  Helpdesk Team. Please reply to this email if you have
-                  questions.
+                  {successText}
                 </p>
               </div>
               <div className="col-2">
@@ -233,6 +246,7 @@ SubmissionList.propTypes = {
   fetchSubmissions: PropTypes.func,
   submissions: PropTypes.array,
   showSubmitSuccess: PropTypes.bool,
+  showUpdateSuccess: PropTypes.bool,
   closeSaveSuccess: PropTypes.func,
   deleteSubmission: PropTypes.func,
   showDeleteSubmissionDialog: PropTypes.func,
@@ -244,6 +258,7 @@ const mapStateToProps = createStructuredSelector({
   // submissionList: makeSelectSubmissionList(),
   submissions: makeSelectSubmissions(),
   showSubmitSuccess: makeSelectShowSubmitSuccess(),
+  showUpdateSuccess: makeSelectShowUpdateSuccess(),
   deleteSubmissionDialog: makeSelectDeleteSubmissionDialog(),
 });
 
