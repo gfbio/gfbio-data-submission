@@ -1,0 +1,44 @@
+{
+    "startAt": 0,
+    "maxResults": 1048576,
+    "total": 1,
+    "comments": [
+        {
+            "self": "https://helpdesk.gfbio.org/rest/api/2/issue/16029/comment/21606",
+            "id": "21606",
+            "author": {
+                "self": "https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent",
+                "name": "brokeragent",
+                "key": "brokeragent@gfbio.org",
+                "emailAddress": "brokeragent@gfbio.org",
+                "avatarUrls": {
+                    "48x48": "https://helpdesk.gfbio.org/secure/useravatar?ownerId=brokeragent%40gfbio.org&avatarId=11100",
+                    "24x24": "https://helpdesk.gfbio.org/secure/useravatar?size=small&ownerId=brokeragent%40gfbio.org&avatarId=11100",
+                    "16x16": "https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&ownerId=brokeragent%40gfbio.org&avatarId=11100",
+                    "32x32": "https://helpdesk.gfbio.org/secure/useravatar?size=medium&ownerId=brokeragent%40gfbio.org&avatarId=11100"
+                },
+                "displayName": "Broker Agent",
+                "active": true,
+                "timeZone": "Europe/Berlin"
+            },
+            "body": "programmatic update of ticket SAND-1535",
+            "updateAuthor": {
+                "self": "https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent",
+                "name": "brokeragent",
+                "key": "brokeragent@gfbio.org",
+                "emailAddress": "brokeragent@gfbio.org",
+                "avatarUrls": {
+                    "48x48": "https://helpdesk.gfbio.org/secure/useravatar?ownerId=brokeragent%40gfbio.org&avatarId=11100",
+                    "24x24": "https://helpdesk.gfbio.org/secure/useravatar?size=small&ownerId=brokeragent%40gfbio.org&avatarId=11100",
+                    "16x16": "https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&ownerId=brokeragent%40gfbio.org&avatarId=11100",
+                    "32x32": "https://helpdesk.gfbio.org/secure/useravatar?size=medium&ownerId=brokeragent%40gfbio.org&avatarId=11100"
+                },
+                "displayName": "Broker Agent",
+                "active": true,
+                "timeZone": "Europe/Berlin"
+            },
+            "created": "2019-09-17T13:46:17.002+0000",
+            "updated": "2019-09-17T13:46:17.002+0000"
+        }
+    ]
+}

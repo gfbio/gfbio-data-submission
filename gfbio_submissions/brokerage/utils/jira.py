@@ -107,6 +107,26 @@ class JiraClient(object):
             self.comment = None
             self.error = e
 
+    def get_comments(self, key):
+        self.get_issue(key)
+        try:
+            return self.jira.comments(self.issue)
+        except JIRAError as e:
+            logger.warning(
+                'JiraClient | get_comments | key={0} | JIRAError {1} | '
+                '{2}'.format(key, e, e.text))
+            self.error = e
+            return None
+
+    # def get_comments(self, issue):
+    #     try:
+    #         return self.jira.comments(issue)
+    #     except JIRAError as e:
+    #         logger.warning(
+    #             'JiraClient | get_comments | issue={0} | JIRAError {1} | '
+    #             '{2}'.format(issue, e, e.text))
+    #         self.error = e
+
     # https://jira.readthedocs.io/en/master/examples.html#attachments
     # file-like, string-path, stringIO (requires filename)
     def add_attachment(self, key, file, file_name=None):
