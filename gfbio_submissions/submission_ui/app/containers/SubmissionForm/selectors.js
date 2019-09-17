@@ -139,6 +139,11 @@ const makeSelectShowSubmitSuccess = () =>
     substate.get('showSubmitSuccess'),
   );
 
+const makeSelectShowUpdateSuccess = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('showUpdateSuccess'),
+  );
+
 const makeSelectShowSaveSuccess = () =>
   createSelector(selectSubmissionFormDomain, substate =>
     substate.get('showSaveSuccess'),
@@ -154,12 +159,6 @@ const makeSelectMetaDataIndex = () =>
   createSelector(selectSubmissionFormDomain, substate =>
     substate.get('metaDataIndex'),
   );
-
-// const makeSelectMetaFileName = () =>
-//   createSelector(selectSubmissionFormDomain, substate =>
-//     substate.get('metaDataFileName'),
-//   );
-
 
 const makeSelectPromptOnLeave = () =>
   createSelector(selectSubmissionFormDomain, substate =>
@@ -182,11 +181,6 @@ const makeSelectGeneralError = () =>
   );
 
 
-// const makeSelectDeleteBrokerSubmissionId = () =>
-//   createSelector(selectSubmissionFormDomain, substate =>
-//     substate.get('deleteBrokerSubmissionId'),
-//   );
-
 export default makeSelectSubmissionForm;
 
 export {
@@ -197,6 +191,7 @@ export {
   makeSelectReduxFormForm,
   makeSelectSubmitInProgress,
   makeSelectShowSaveSuccess,
+  makeSelectShowUpdateSuccess,
   makeSelectSaveInProgress,
   makeSelectEmbargoDate,
   makeSelectContactForm,
@@ -215,8 +210,6 @@ export {
   makeSelectShowSubmitSuccess,
   makeSelectUpdateWithRelease,
   makeSelectMetaDataIndex,
-  makeSelectMetaFileName,
-  // makeSelectDeleteBrokerSubmissionId,
   makeSelectPromptOnLeave,
   makeSelectShowUploadLimitMessage,
   makeSelectShowEmbargoDialog,
