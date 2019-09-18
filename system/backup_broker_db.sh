@@ -7,14 +7,14 @@ set -u
 #Get the first error in chained commands
 set -o pipefail
 
-COMPOSE_FILE="/var/www/gds_docker/genomicsdataservices/docker-compose.yml"
-LOCAL_BACKUP_DIR="/var/www/gds_docker/backups"
+COMPOSE_FILE="/var/www/gfbio_submissions/production.yml"
+LOCAL_BACKUP_DIR="/var/www/gfbio_submissions/backups"
 REMOTE_BACKUP_URL="https://owncloud.mpi-bremen.de/remote.php/webdav/broker_db_backup/" #NB: trailing slash is MANDATORY!!!
 CURL_CONF="/root/mpi-owncloud.conf"
 PASSPHRASE_FILE="/root/db_backup_passphrase.txt"
 
-docker-compose -f "$COMPOSE_FILE" run postgres backup
-# docker-compose -f "$COMPOSE_FILE" run postgres list-backups
+docker-compose -f "$COMPOSE_FILE" exec postgres backup
+# docker-compose -f "$COMPOSE_FILE" exec postgres backups
 POSTGRES_CONTAINER_ID=$(docker-compose -f "$COMPOSE_FILE" ps -q postgres)
 docker cp "$POSTGRES_CONTAINER_ID":/backups "${LOCAL_BACKUP_DIR%/backups}" #copies the whole directory, i.e. overwrites previous files...
 

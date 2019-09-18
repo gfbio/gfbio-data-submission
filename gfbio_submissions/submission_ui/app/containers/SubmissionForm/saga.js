@@ -29,11 +29,9 @@ import {
   makeSelectDatasetLabels,
   makeSelectEmbargoDate,
   makeSelectFileUploads,
-  makeSelectFileUploadsFromServer,
   makeSelectFormWrapper,
   makeSelectGeneralError,
   makeSelectLicense,
-  makeSelectMetaDataIndex,
   makeSelectMetaDataSchema,
   makeSelectReduxFormForm,
   makeSelectRelatedPublications,
@@ -79,46 +77,6 @@ import dateFormat from 'dateformat';
 
 import { push } from 'connected-react-router/immutable';
 
-// function* getMetaDataFileName(metaDataIndex, fileUploads, fileUploadsFromServer) {
-//   console.log('getMetaDataFileName');
-//   console.log(metaDataIndex.indexOf('uploaded_'));
-//   console.log('metaDATAindex: ', metaDataIndex);
-//
-//
-//   // let metaDataFile = '';
-//   let metaDataFileName = '';
-//   if (metaDataIndex.indexOf('uploaded_') > -1) {
-//     console.log('UPLOADED INDEX');
-//     const strippedIndex = metaDataIndex.replace('uploaded_', '');
-//     console.log('stripped ', strippedIndex);
-//     const metaIndex = parseInt(strippedIndex);
-//     const metaDataFile = fileUploadsFromServer[metaIndex];
-//     console.log('metaindex: ', metaIndex);
-//     if (metaDataFile !== undefined) {
-//       metaDataFileName = metaDataFile.file_name;
-//     }
-//
-//   } else {
-//     console.log('no UPLOADED');
-//     const metaIndex = parseInt(metaDataIndex);
-//     console.log('metaindex: ', metaIndex);
-//     const metaDataFile = fileUploads.get(metaIndex);
-//     if (metaDataFile !== undefined) {
-//       metaDataFileName = metaDataFile.file.name;
-//     }
-//   }
-//
-//
-//   // let metaDataFileName = '';
-//   // if (metaDataFile !== undefined && metaDataFileName !== '') {
-//   //   metaDataFileName = metaDataFile.file.name;
-//   // }
-//   // console.log('metaDataFile ', metaDataFile);
-//   console.log('metaDataFileName ', metaDataFileName);
-//   console.log('##########################');
-//   return metaDataFileName;
-// }
-
 // TODO: move logic to utils.js. here only workflow
 function* prepareRequestData(userId, submit = true) {
   const form = yield select(makeSelectFormWrapper());
@@ -149,11 +107,6 @@ function* prepareRequestData(userId, submit = true) {
   const embargoDate = yield select(makeSelectEmbargoDate());
   const embargo = dateFormat(embargoDate, 'yyyy-mm-dd');
 
-  const metaDataIndex = yield select(makeSelectMetaDataIndex());
-  const fileUploads = yield select(makeSelectFileUploads());
-  const fileUploadsFromServer = yield select(makeSelectFileUploadsFromServer());
-  // const metaDataFileName = yield getMetaDataFileName(metaDataIndex, fileUploads, fileUploadsFromServer);
-
   const requirements = Object.assign({
     license,
     metadata_schema,
@@ -162,8 +115,6 @@ function* prepareRequestData(userId, submit = true) {
     dataset_labels,
     categories,
     contributors,
-    // metaDataIndex,
-    // metadata_file_name: metaDataFileName,
   }, formValues);
 
   let res = {
@@ -176,19 +127,11 @@ function* prepareRequestData(userId, submit = true) {
     // TODO: good chance to show errors responded from server validation
     download_url: formValues.download_url,
     // FIXME: this sends ISO with timezone, but server does not like it
-    // embargo: embargoDate https://www.npmjs.com/package/dateformat,
     embargo,
     data: {
       requirements: requirements,
     },
   };
-  console.log('-----------   prepareRequestData  -----------------');
-
-  console.log(res);
-
-  console.log('');
-  console.log('');
-
   return res;
 }
 
@@ -210,8 +153,6 @@ function* uploadProgressWatcher(channel, index) {
 
 function* uploadFile(token, brokerSubmissionId, file, index) {
   // TODO: move to performUploadSaga. before loop.
-  // const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
-  // const token = yield select(makeSelectToken());
   try {
     // true refers to 'attach_to_ticket' parameter of backend endpoint
     //  stating that every uploaded file will be attached to the
@@ -226,7 +167,6 @@ function* uploadFile(token, brokerSubmissionId, file, index) {
 
 function* performUploadSaga(brokerSubmissionId) {
   const fileUploads = yield select(makeSelectFileUploads());
-  // const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
   const token = yield select(makeSelectToken());
   let index = 0;
   for (let f of fileUploads) {
@@ -257,43 +197,22 @@ export function* performSubmitFormSaga() {
 }
 
 export function* performSaveFormSaga() {
-  // console.log('\nperform SAve SAGA');
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
   let bsi = 'no_brokersubmission_id';
-  // console.log('bsi:  ', bsi);
-  // console.log('brokerSubmissionId: ', brokerSubmissionId);
   // TODO: if bsi put update action ....
   if (brokerSubmissionId !== '') {
-    // console.log('brokerSubmission id NOT empty, do update (without release)');
     yield put(updateSubmission(false));
   } else {
-    // console.log('brokerSID emty NEW SAVE ', brokerSubmissionId);
     const token = yield select(makeSelectToken());
     const userId = yield select(makeSelectUserId());
     const payload = yield prepareRequestData(userId, false);
     try {
-      // console.log('do post subm.');
       let response = yield call(postSubmission, token, payload);
       bsi = response.data.broker_submission_id;
-      // console.log('upload with bsi: ', bsi);
       yield call(performUploadSaga, bsi);
-      // console.log('put with response');
       yield put(saveFormSuccess(response));
-      // TODO: better worklflow design needed, comare ena_redux yield[ put(ACTION), put ...]
-      // try {
-      // console.log('get submission uploads with bsi: ', bsi);
-      // response = yield call(getSubmissionUploads, token, bsi);
-      // console.log('put uploads success with response');
-      // yield put(fetchFileUploadsSuccess(response));
-      // } catch (error) {
-      //   yield put(fetchFileUploadsError(error));
-      // }
-      // console.log('forward to new subm.');
-      // yield put(setBrokerSubmissionId(bsi));
       yield put(push('/list'));
     } catch (error) {
-      // console.log('ERROR IN SAVE');
-      // console.log(error);
       yield put(saveFormError(error));
     }
   }
@@ -312,18 +231,12 @@ export function* performUpdateSubmissionSaga() {
     // yield call(performUploadSaga);
     yield call(performUploadSaga, brokerSubmissionId);
     if (updateWithRelease) {
+      // TODO: currently this is the only update worklow active (hidden save button)
       yield put(updateSubmissionSuccessSubmit(response));
       yield put(push('/list'));
     } else {
       yield put(updateSubmissionSuccess(response));
-      // TODO: better worklflow design needed, comare ena_redux yield[ put(ACTION), put ...]
-      // try {
-      // response = yield call(getSubmissionUploads, token, brokerSubmissionId);
-      // yield put(fetchFileUploadsSuccess(response));
       yield put(push('/list'));
-      // } catch (error) {
-      //   yield put(fetchFileUploadsError(error));
-      // }
     }
   } catch (error) {
     yield put(updateSubmissionError(error));
@@ -377,18 +290,12 @@ export function* performDeleteUploadedFileSaga(action) {
 }
 
 export function* performUpdateUploadedFileSaga(action) {
-  // console.log(' #### performUpdateUploadedFileSaga #### ');
-  // console.log(action);
   const token = yield select(makeSelectToken());
-  const bsi = yield select(makeSelectRequestBrokerSubmissionId());
-  // console.log('bsi ', bsi);
-  const bsi2 = yield select(makeSelectBrokerSubmissionId());
-  // console.log('bsi2 ', bsi2);
+  // const bsi = yield select(makeSelectRequestBrokerSubmissionId());
+  const bsi = yield select(makeSelectBrokerSubmissionId());
   try {
-    let response = yield call(setMetaDataFlag, bsi2, action.file.pk, action.file.meta_data, token);
-    // yield put(setMetaDataOnServerSuccess(action.metaDataIndex));
+    let response = yield call(setMetaDataFlag, bsi, action.file.pk, action.file.meta_data, token);
   } catch (error) {
-    // console.log(error);
     yield put(setMetaDataOnServerError(error));
   }
 

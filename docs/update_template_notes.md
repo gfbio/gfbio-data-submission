@@ -477,7 +477,9 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 
 --------------------------------------------------------------------------------
 
-## Standard deployment/release procedure for developement server (work in progress ...)
+## Standard deployment/release procedure for production server (work in progress ...)
+
+- https://cookiecutter-django.readthedocs.io/en/latest/deployment-with-docker.html
 
 ### Local 
 
@@ -485,6 +487,81 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 - bump VERSION in base.py
 - git commit -a
 - comment sth. like 'release/1.76.0'
+- git flow release finish 1.76.0
+- enter tag liek '1.76.0'
+- git push origin master develop --tags
+
+#### copy env (needs improvement ...)
+
+- scp -r .envs/ cloud@141.5.106.43:/home/cloud/
+ 
+
+### Remote
+
+- ssh -l cloud 141.5.106.43
+- pwd
+
+        /home/cloud
+
+- sudo cp -r .envs/ /var/www/gfbio_submissions/
+- cd /var/www/gfbio_submissions/
+
+#### (optional) get some infos
+
+- sudo supervisorctl status
+
+        gfbio_submissions                RUNNING   pid 29557, uptime 2 days, 17:47:34
+
+- docker ps
+
+        CONTAINER ID        IMAGE                                       COMMAND                  CREATED             STATUS              PORTS                                      NAMES
+        f28cc8aad1ac        gfbio_submissions_production_traefik        "/entrypoint.sh trae…"   2 days ago          Up 2 days           0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp   gfbio_submissions_traefik_1_fc25be00f85e
+        8f5b12ca8320        gfbio_submissions_production_flower         "/entrypoint /start-…"   2 days ago          Up 2 days           0.0.0.0:5555->5555/tcp                     gfbio_submissions_flower_1_afd554d50373
+        b13a413198ab        gfbio_submissions_production_celerybeat     "/entrypoint /start-…"   2 days ago          Up 2 days                                                      gfbio_submissions_celerybeat_1_ed9a1bba5512
+        7e718fe123b8        gfbio_submissions_production_celeryworker   "/entrypoint /start-…"   2 days ago          Up 2 days                                                      gfbio_submissions_celeryworker_1_3899ee795de3
+        68786aa83be6        gfbio_submissions_production_django         "/entrypoint /start"     2 days ago          Up 2 days                                                      gfbio_submissions_django_1_93243df2bea4
+        b36313187b81        redis:5.0                                   "docker-entrypoint.s…"   2 days ago          Up 2 days           6379/tcp                                   gfbio_submissions_redis_1_347eb4ded6ea
+        ce8ad07273ab        gfbio_submissions_production_postgres       "docker-entrypoint.s…"   2 days ago          Up 2 days           5432/tcp                                   gfbio_submissions_postgres_1_3d850a07f0d9
+
+- docker-compose -f production.yml run --rm postgres backup
+
+        Backing up the 'gfbio_submissions' database...
+        SUCCESS: 'gfbio_submissions' database backup 'backup_2019_09_16T07_32_41.sql.gz' has been created and placed in '/backups'.
+        
+- sudo git fetch
+- sudo git checkout 1.76.0
+- time sudo docker-compose -f production.yml build
+
+        real	91m51,295s
+        user	2m49,542s
+        sys	6m44,515s
+
+- docker volume prune
+ 
+        WARNING! This will remove all local volumes not used by at least one container.
+        Are you sure you want to continue? [y/N] y
+        Deleted Volumes:
+        7932976e2d2ce7b97a7b50492b8b9c6c4084823426be420ecb8f227e18a7ddd7
+        
+        Total reclaimed space: 819.4kB
+
+- docker image prune
+  
+        WARNING! This will remove all dangling images.
+        Are you sure you want to continue? [y/N] y
+        Deleted Images:
+        deleted: sha256:3a55222d1d049cbd64fb7da2e3feb396b44bfbbbf8cff2695c0b34e1b26bb7fc
+        deleted: sha256:af73a9e34f7fa8247abade0c9e1a1273fb7c87d454de6f565d6a8c9be863b19d
+        deleted: sha256:8efe55acda7153930f39d85213d8b239d9476da36fc443fb0d03d617834cbffc
+        deleted: sha256:4c1e18a7fd025de102d2673b4c2201fe89cebeed56ba16af371ff9adb0c9ec27
+        deleted: sha256:cba299328f1f0998b894dec75f5b257dfaeabda4089f274f3f7e54ca8efeef1f
+        deleted: sha256:dc858777ed034c72e7551cd09a3ae8738b89e9427f945bc55f01df0fefa8776d
+        deleted: sha256:9cc9e3cbf851410c7e69eb1cd8a2b88741af285a68ee9967b00dd610f8375740
+        
+        Total reclaimed space: 8.279GB
+
+- docker-compose -f production.yml run --rm django python manage.py migrate 
+- docker-compose -f production.yml run --rm django python manage.py collectstatic
 
 --------------------------------------------------------------------------------
 

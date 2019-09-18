@@ -188,6 +188,7 @@ class FormWrapper extends React.PureComponent {
     let submitButtonText = 'Start Submission';
     let saveIconClass = 'fa-clipboard';
     let saveButtonText = 'Save Draft';
+
     if (this.props.submitInProgress) {
       submitIconClass = 'fa-cog fa-spin fa-fw';
       submitButtonText = 'submitting ...';
@@ -196,11 +197,14 @@ class FormWrapper extends React.PureComponent {
       saveIconClass = 'fa-cog fa-spin fa-fw';
       saveButtonText = 'saving ...';
     }
+    if(this.props.brokerSubmissionId !== ''){
+      submitButtonText = 'Update Submission';
+      submitIconClass = 'fa fa-forward';
+    }
     let errors = this.prepareErrorNotification();
 
-    // console.log('--------------render FormWrapper');
-    // console.log(this.props);
-    // console.log('###############################');
+    console.info('FormWrapper index.js render -> props');
+    console.info(this.props);
 
     return (
       <form
@@ -283,25 +287,28 @@ class FormWrapper extends React.PureComponent {
               </div>
 
               <div className="form-row mt-5">
-                <div className="form-group col-md-6">
-                  <button
-                    type="submit"
-                    className="btn btn-secondary btn-block btn-light-blue"
-                    onClick={this.props.handleSubmit(values =>
-                      this.props.onSubmit({
-                        ...values,
-                        workflow: 'save',
-                      }),
-                    )}
-                  >
-                    <i className={`fa ${saveIconClass}`} />
-                    {saveButtonText}
-                  </button>
-                </div>
+
+                {/* TODO: commented to hide save button as defined in GFBIO-2584 */}
+                {/*<div className="form-group col-md-6">*/}
+                {/*  <button*/}
+                {/*    type="submit"*/}
+                {/*    className="btn btn-secondary btn-block btn-light-blue"*/}
+                {/*    onClick={this.props.handleSubmit(values =>*/}
+                {/*      this.props.onSubmit({*/}
+                {/*        ...values,*/}
+                {/*        workflow: 'save',*/}
+                {/*      }),*/}
+                {/*    )}*/}
+                {/*  >*/}
+                {/*    <i className={`fa ${saveIconClass}`} />*/}
+                {/*    {saveButtonText}*/}
+                {/*  </button>*/}
+                {/*</div>*/}
+
                 {/*<div className="form-group col-md-4">*/}
 
                 {/*</div>*/}
-                <div className="form-group col-md-6">
+                <div className="form-group col-md-12">
                   <button
                     type="submit"
                     className="btn btn-secondary btn-block green"
@@ -335,6 +342,7 @@ FormWrapper.propTypes = {
   promptOnLeave: PropTypes.bool,
   generalError: PropTypes.bool,
   saveSuccessMessage: PropTypes.object,
+  brokerSubmissionId: PropTypes.string,
 };
 
 // this is already connected to redux-form reducer ?

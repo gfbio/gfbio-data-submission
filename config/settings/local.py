@@ -66,3 +66,8 @@ CELERY_TASK_ALWAYS_EAGER = True
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+# CORS Settings
+# ------------------------------------------------------------------------------
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
