@@ -20,7 +20,7 @@ from gfbio_submissions.brokerage.models import Submission, \
     TaskProgressReport, SubmissionUpload
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_jira_attach_response, \
-    _get_jira_issue_response
+    _get_jira_issue_response, _get_pangaea_comment_response
 from gfbio_submissions.brokerage.utils.csv import check_for_molecular_content
 from gfbio_submissions.users.models import User
 
@@ -981,7 +981,7 @@ class TestSubmissionCommentView(TestCase):
         submission = SubmissionTest._create_submission_via_serializer()
         submission.additionalreference_set.create(
             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='FAKE_KEY',
+            reference_key='SAND-1661',
             primary=True
         )
         SubmissionTest._create_submission_via_serializer()
@@ -995,14 +995,36 @@ class TestSubmissionCommentView(TestCase):
             submission.broker_submission_id))
         print(response.status_code)
 
+    @responses.activate
     def test_valid_post(self):
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(self.site_config.helpdesk_server.url),
+            status=200,
+        )
+        responses.add(
+            responses.POST,
+            '{0}/rest/api/2/issue/SAND-1661/comment'.format(
+                self.site_config.helpdesk_server.url),
+            json=_get_pangaea_comment_response(),
+            status=200)
+        submission = Submission.objects.first()
+        response = self.api_client.post(
+            '/api/submissions/{0}/comment/'.format(
+                submission.broker_submission_id), {'comment': 'a comment'})
+        self.assertEqual(201, response.status_code)
+        self.assertDictEqual({'comment': 'a comment'}, json.loads(response.content))
+
+    def test_empty_post(self):
         submission = Submission.objects.first()
         response = self.api_client.post(
             '/api/submissions/{0}/comment/'.format(
                 submission.broker_submission_id), {})
-        print(response.content)
+        self.assertEqual(400, response.status_code)
+        self.assertIn('comment', json.loads(response.content).keys())
 
     def test_post_unknown_broker_submission_id(self):
         response = self.api_client.post(
             '/api/submissions/{0}/comment/'.format(uuid4()), {})
         print(response.content)
+

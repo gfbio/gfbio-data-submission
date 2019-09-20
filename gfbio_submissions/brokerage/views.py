@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 from pprint import pprint
 from uuid import uuid4, UUID
 
@@ -121,11 +122,11 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
             chain = check_for_molecular_content_in_submission_task.s(
                 submission_id=instance.pk
             ).set(countdown=SUBMISSION_DELAY) | \
-                trigger_submission_transfer_for_updates.s(
-                    broker_submission_id='{0}'.format(
-                        instance.broker_submission_id
-                    )
-                ).set(countdown=SUBMISSION_DELAY)
+                    trigger_submission_transfer_for_updates.s(
+                        broker_submission_id='{0}'.format(
+                            instance.broker_submission_id
+                        )
+                    ).set(countdown=SUBMISSION_DELAY)
             chain()
             # trigger_submission_transfer_for_updates.apply_async(
             #     kwargs={
@@ -451,16 +452,17 @@ class SubmissionCommentView(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         print('SubmissionCommentView POST request', kwargs)
-        # TODO: really need complete submission ?
-        #   submission id is all that task needs
-        # TODO: simple check if submission exists, if yes task ? : ->
 
         form = SubmissionCommentForm(request.POST)
         if form.is_valid():
             broker_submission_id = kwargs.get('broker_submission_id', uuid4())
             try:
-                submission_pk = Submission.objects.values_list('pk', flat=True).get(broker_submission_id=broker_submission_id)
-                from gfbio_submissions.brokerage.tasks import add_posted_comment_to_issue_task
+                submission_pk = Submission.objects.values_list('pk',
+                                                               flat=True).get(
+                    broker_submission_id=broker_submission_id)
+                # TODO: add task when tests are prepared
+                from gfbio_submissions.brokerage.tasks import \
+                    add_posted_comment_to_issue_task
                 add_posted_comment_to_issue_task.apply_async(
                     kwargs={
                         'submission_id': '{0}'.format(submission_pk),
@@ -468,17 +470,21 @@ class SubmissionCommentView(generics.GenericAPIView):
                     },
                     countdown=SUBMISSION_UPLOAD_RETRY_DELAY
                 )
+                return Response(
+                    {'comment': form.cleaned_data['comment']},
+                    status=status.HTTP_201_CREATED
+                )
             except Submission.DoesNotExist as e:
                 return Response({'submission': 'No submission for this '
                                                'broker_submission_id:'
-                                               ' {0}'.format(broker_submission_id)},
+                                               ' {0}'.format(
+                    broker_submission_id)},
                                 status=status.HTTP_404_NOT_FOUND)
         else:
             return Response(
-                form.errors.as_json(),
+                json.loads(form.errors.as_json()),
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
 
         # instance = self.get_object()
 
