@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
-
+from pprint import pprint
 from uuid import uuid4, UUID
 
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
+from django.http import HttpResponse
+from django.views import View
 from rest_framework import generics, mixins, permissions, parsers
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication, \
     BasicAuthentication
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from gfbio_submissions.brokerage.serializers import \
     SubmissionUploadListSerializer
@@ -419,3 +423,30 @@ class SubmissionUploadPatchView(mixins.UpdateModelMixin,
                                            '{0}'.format(broker_submission_id)},
                             status=status.HTTP_404_NOT_FOUND)
         return self.partial_update(request, *args, **kwargs)
+
+
+class SubmissionCommentView(generics.GenericAPIView):
+    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated,
+                          # permissions.DjangoModelPermissions,
+                          IsOwnerOrReadOnly)
+    lookup_field = 'broker_submission_id'
+    queryset = Submission.objects.all()
+    serializer_class = SubmissionDetailSerializer
+
+    def get(self, request, *args, **kwargs):
+        print('SubmissionCommentView GET request ', kwargs)
+        instance = self.get_object()
+        print('instance ', instance)
+        # ret = self.retrieve(request, *args, **kwargs)
+        # pprint(ret)
+        # print('-------------------')
+        # pprint(request.__dict__)
+        return HttpResponse('comment get result')
+
+    def post(self, request, *args, **kwargs):
+        print('SubmissionCommentView POST request', kwargs)
+        instance = self.get_object()
+        print('instance ', instance)
+        # pprint(request)
+        return HttpResponse('comment post result')

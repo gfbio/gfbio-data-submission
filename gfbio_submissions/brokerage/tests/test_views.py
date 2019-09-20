@@ -936,3 +936,68 @@ class TestSubmissionUploadView(TestCase):
         response = self.api_client.patch(url, {'meta_data': True})
         self.assertEqual(200, response.status_code)
         self.assertTrue(SubmissionUpload.objects.first().meta_data)
+
+
+class TestSubmissionCommentView(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        user = User.objects.create_user(
+            username='horst', email='horst@horst.de', password='password')
+        permissions = Permission.objects.filter(
+            content_type__app_label='brokerage',
+            codename__endswith='submission'
+        )
+        user.user_permissions.add(*permissions)
+        token = Token.objects.create(user=user)
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        cls.api_client = client
+
+        # user = User.objects.create_user(
+        #     username='kevin', email='kevin@kevin.de', password='secret',
+        #     is_staff=True)
+        # token = Token.objects.create(user=user)
+        # client = APIClient()
+        # client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        # cls.other_api_client = client
+        resource_cred = ResourceCredential.objects.create(
+            title='Resource Title',
+            url='https://www.example.com',
+            authentication_string='letMeIn'
+        )
+
+        cls.site_config = SiteConfiguration.objects.create(
+            title='default',
+            release_submissions=False,
+            use_gfbio_services=False,
+            ena_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
+            gfbio_server=resource_cred,
+            helpdesk_server=resource_cred,
+            comment='Default configuration',
+        )
+        submission = SubmissionTest._create_submission_via_serializer()
+        submission.additionalreference_set.create(
+            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+            reference_key='FAKE_KEY',
+            primary=True
+        )
+        SubmissionTest._create_submission_via_serializer()
+
+    def test_valid_get(self):
+        # response = self.api_client.get(
+        #     '/api/submissions/{0}/comment/'.format(uuid4()))
+        # print('NOT FUOUND ?', response.status_code)
+        submission = Submission.objects.first()
+        response = self.api_client.get('/api/submissions/{0}/comment/'.format(
+            submission.broker_submission_id))
+        print(response.status_code)
+
+    def test_valid_post(self):
+        submission = Submission.objects.first()
+        response = self.api_client.post(
+            '/api/submissions/{0}/comment/'.format(
+                submission.broker_submission_id), {})
+        print(response.content)
