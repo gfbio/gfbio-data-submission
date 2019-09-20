@@ -13,6 +13,9 @@ from rest_framework.authentication import TokenAuthentication, \
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from gfbio_submissions.brokerage.configuration.settings import \
+    SUBMISSION_UPLOAD_RETRY_DELAY
+from gfbio_submissions.brokerage.forms import SubmissionCommentForm
 from gfbio_submissions.brokerage.serializers import \
     SubmissionUploadListSerializer
 from .configuration.settings import SUBMISSION_DELAY
@@ -452,19 +455,30 @@ class SubmissionCommentView(generics.GenericAPIView):
         #   submission id is all that task needs
         # TODO: simple check if submission exists, if yes task ? : ->
 
-        broker_submission_id = kwargs.get('broker_submission_id', uuid4())
-        try:
-            # TODO: add fields to get only pk etc..
-            # submission = Submission.objects.get(
-            #     broker_submission_id=broker_submission_id
-            # )
-            submission_pk = Submission.objects.values_list('pk', flat=True).get(broker_submission_id=broker_submission_id)
-            print('subm. pk ', submission_pk)
-        except Submission.DoesNotExist as e:
-            return Response({'submission': 'No submission for this '
-                                           'broker_submission_id:'
-                                           ' {0}'.format(broker_submission_id)},
-                            status=status.HTTP_404_NOT_FOUND)
+        form = SubmissionCommentForm(request.POST)
+        if form.is_valid():
+            broker_submission_id = kwargs.get('broker_submission_id', uuid4())
+            try:
+                submission_pk = Submission.objects.values_list('pk', flat=True).get(broker_submission_id=broker_submission_id)
+                from gfbio_submissions.brokerage.tasks import add_posted_comment_to_submission_issue_task
+                add_posted_comment_to_submission_issue_task.apply_async(
+                    kwargs={
+                        'submission_id': '{0}'.format(submission_pk),
+                        'comment': form.cleaned_data['comment']
+                    },
+                    countdown=SUBMISSION_UPLOAD_RETRY_DELAY
+                )
+            except Submission.DoesNotExist as e:
+                return Response({'submission': 'No submission for this '
+                                               'broker_submission_id:'
+                                               ' {0}'.format(broker_submission_id)},
+                                status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(
+                form.errors.as_json(),
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
 
         # instance = self.get_object()
 

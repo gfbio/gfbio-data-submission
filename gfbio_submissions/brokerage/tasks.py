@@ -717,6 +717,49 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
                                          broker_submission_id=submission.broker_submission_id)
 
 
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.add_posted_comment_to_submission_issue_task',
+    autoretry_for=(TransferServerError,
+                   TransferClientError
+                   ),
+    retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
+    retry_backoff=SUBMISSION_RETRY_DELAY,
+    retry_jitter=True
+)
+def add_posted_comment_to_submission_issue_task(self, prev_task_result=None,
+                                                submission_id=None, ):
+    submission, site_configuration = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
+
+    reference = submission.get_primary_helpdesk_reference()
+
+    if reference:
+        jira_client = JiraClient(resource=site_configuration.helpdesk_server)
+        jira_client.add_comment(
+            key_or_issue=reference.reference_key,
+            text='POSTED COMMENT PLACEHOLDER')
+        return jira_error_auto_retry(jira_client=jira_client, task=self,
+                                     broker_submission_id=submission.broker_submission_id)
+    else:
+        logger.info(
+            msg='add_posted_comment_to_submission_issue_task no tickets found. '
+                'submission_id={0} '.format(submission_id)
+        )
+
+        return retry_no_ticket_available_exception(
+            task=self,
+            broker_submission_id=submission.broker_submission_id,
+            number_of_tickets=1 if reference else 0
+        )
+
+
 # FIXME: here problems while using new jirclient to attach, especiall while put submissionupload
 @celery.task(
     base=SubmissionTask,
