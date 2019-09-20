@@ -1001,3 +1001,8 @@ class TestSubmissionCommentView(TestCase):
             '/api/submissions/{0}/comment/'.format(
                 submission.broker_submission_id), {})
         print(response.content)
+
+    def test_post_unknown_broker_submission_id(self):
+        response = self.api_client.post(
+            '/api/submissions/{0}/comment/'.format(uuid4()), {})
+        print(response.content)

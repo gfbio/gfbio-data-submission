@@ -434,6 +434,8 @@ class SubmissionCommentView(generics.GenericAPIView):
     queryset = Submission.objects.all()
     serializer_class = SubmissionDetailSerializer
 
+    # def get_submission(self, broker_submission_id):
+
     def get(self, request, *args, **kwargs):
         print('SubmissionCommentView GET request ', kwargs)
         instance = self.get_object()
@@ -446,7 +448,26 @@ class SubmissionCommentView(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         print('SubmissionCommentView POST request', kwargs)
-        instance = self.get_object()
-        print('instance ', instance)
+        # TODO: really need complete submission ?
+        #   submission id is all that task needs
+        # TODO: simple check if submission exists, if yes task ? : ->
+
+        broker_submission_id = kwargs.get('broker_submission_id', uuid4())
+        try:
+            # TODO: add fields to get only pk etc..
+            # submission = Submission.objects.get(
+            #     broker_submission_id=broker_submission_id
+            # )
+            submission_pk = Submission.objects.values_list('pk', flat=True).get(broker_submission_id=broker_submission_id)
+            print('subm. pk ', submission_pk)
+        except Submission.DoesNotExist as e:
+            return Response({'submission': 'No submission for this '
+                                           'broker_submission_id:'
+                                           ' {0}'.format(broker_submission_id)},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        # instance = self.get_object()
+
+        # print('instance ', instance.__dict__)
         # pprint(request)
         return HttpResponse('comment post result')
