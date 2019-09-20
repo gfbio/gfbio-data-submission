@@ -30,7 +30,7 @@ from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, 
     create_pangaea_issue_task, attach_to_pangaea_issue_task, \
     add_accession_to_pangaea_issue_task, check_for_pangaea_doi_task, \
     trigger_submission_transfer, \
-    delete_submission_issue_attachment_task
+    delete_submission_issue_attachment_task, add_posted_comment_to_issue_task
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_ena_xml_response, \
@@ -732,6 +732,21 @@ class TestGFBioHelpDeskTasks(TestTasks):
             json={},
             status=500)
 
+    @classmethod
+    def _add_comment_reponses(cls):
+        site_config = SiteConfiguration.objects.first()
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
+        return '{0}{1}/{2}/{3}'.format(
+            site_config.helpdesk_server.url,
+            JIRA_ISSUE_URL,
+            'FAKE_KEY',
+            JIRA_COMMENT_SUB_URL,
+        )
+
     # TODO: may these have to be moved to other test class (Taskprogressreport ...)
     #   or removed ... Now for testing behaviour on GFBIO-2589
     @responses.activate
@@ -1137,19 +1152,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
     @responses.activate
     def test_add_pangaealink_to_submission_issue_task_success(self):
         submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-
-        responses.add(
-            responses.GET,
-            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
-            status=200,
-        )
-        url = '{0}{1}/{2}/{3}'.format(
-            site_config.helpdesk_server.url,
-            JIRA_ISSUE_URL,
-            'FAKE_KEY',
-            JIRA_COMMENT_SUB_URL,
-        )
+        url = self._add_comment_reponses()
         responses.add(responses.POST, url,
                       json={'bla': 'blubb'},
                       status=200)
@@ -1164,18 +1167,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
     @responses.activate
     def test_add_pangaealink_to_helpdesk_ticket_task_client_error(self):
         submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-        responses.add(
-            responses.GET,
-            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
-            status=200,
-        )
-        url = '{0}{1}/{2}/{3}'.format(
-            site_config.helpdesk_server.url,
-            JIRA_ISSUE_URL,
-            'FAKE_KEY',
-            JIRA_COMMENT_SUB_URL,
-        )
+        url = self._add_comment_reponses()
         responses.add(responses.POST, url, status=400, json={'bla': 'blubb'})
         result = add_pangaealink_to_submission_issue_task.apply_async(
             kwargs={
@@ -1190,18 +1182,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
                        CELERY_TASK_EAGER_PROPAGATES=False)
     def test_add_pangaealink_to_helpdesk_ticket_task_server_error(self):
         submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-        responses.add(
-            responses.GET,
-            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
-            status=200,
-        )
-        url = '{0}{1}/{2}/{3}'.format(
-            site_config.helpdesk_server.url,
-            JIRA_ISSUE_URL,
-            'FAKE_KEY',
-            JIRA_COMMENT_SUB_URL,
-        )
+        url = self._add_comment_reponses()
         responses.add(responses.POST, url, status=500, json={'bla': 'blubb'})
         result = add_pangaealink_to_submission_issue_task.apply(
             kwargs={
@@ -1209,6 +1190,53 @@ class TestGFBioHelpDeskTasks(TestTasks):
             }
         )
         self.assertFalse(result.successful())
+
+    @responses.activate
+    def test_add_posted_comment_to_issue_task_success(self):
+        submission = Submission.objects.first()
+        url = self._add_comment_reponses()
+        responses.add(responses.POST, url,
+                      json={'bla': 'blubb'},
+                      status=200)
+        result = add_posted_comment_to_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+                'comment': 'a comment'
+            }
+        )
+        self.assertTrue(result.successful())
+        self.assertTrue(result.get())
+
+    @responses.activate
+    def test_add_posted_comment_to_issue_task_client_error(self):
+        submission = Submission.objects.first()
+        url = self._add_comment_reponses()
+        responses.add(responses.POST, url, status=400, json={'bla': 'blubb'})
+        result = add_posted_comment_to_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+                'comment': 'a comment'
+            }
+        )
+        self.assertTrue(result.successful())
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+
+    # FIXME: what about retries ? are they executed ?
+    @responses.activate
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+                       CELERY_TASK_EAGER_PROPAGATES=False)
+    def add_posted_comment_to_issue_task_server_error(self):
+        submission = Submission.objects.first()
+        url = self._add_comment_reponses()
+        responses.add(responses.POST, url, status=500, json={'bla': 'blubb'})
+        result = add_posted_comment_to_issue_task.apply(
+            kwargs={
+                'submission_id': submission.pk,
+                'comment': 'a comment'
+            }
+        )
+        self.assertFalse(result.successful())
+        # self.assertEqual(TaskProgressReport.CANCELLED, result.get())
 
     @responses.activate
     def test_create_submission_issue_task_client_error(self):

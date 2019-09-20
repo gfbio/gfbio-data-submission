@@ -720,7 +720,7 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
 @celery.task(
     base=SubmissionTask,
     bind=True,
-    name='tasks.add_posted_comment_to_submission_issue_task',
+    name='tasks.add_posted_comment_to_issue_task',
     autoretry_for=(TransferServerError,
                    TransferClientError
                    ),
@@ -728,8 +728,8 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True
 )
-def add_posted_comment_to_submission_issue_task(self, prev_task_result=None,
-                                                submission_id=None, ):
+def add_posted_comment_to_issue_task(self, prev_task_result=None,
+                                     submission_id=None, comment=''):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -744,12 +744,12 @@ def add_posted_comment_to_submission_issue_task(self, prev_task_result=None,
         jira_client = JiraClient(resource=site_configuration.helpdesk_server)
         jira_client.add_comment(
             key_or_issue=reference.reference_key,
-            text='POSTED COMMENT PLACEHOLDER')
+            text=comment)
         return jira_error_auto_retry(jira_client=jira_client, task=self,
                                      broker_submission_id=submission.broker_submission_id)
     else:
         logger.info(
-            msg='add_posted_comment_to_submission_issue_task no tickets found. '
+            msg='add_posted_comment_to_issue_task no tickets found. '
                 'submission_id={0} '.format(submission_id)
         )
 

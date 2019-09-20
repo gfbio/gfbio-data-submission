@@ -460,8 +460,8 @@ class SubmissionCommentView(generics.GenericAPIView):
             broker_submission_id = kwargs.get('broker_submission_id', uuid4())
             try:
                 submission_pk = Submission.objects.values_list('pk', flat=True).get(broker_submission_id=broker_submission_id)
-                from gfbio_submissions.brokerage.tasks import add_posted_comment_to_submission_issue_task
-                add_posted_comment_to_submission_issue_task.apply_async(
+                from gfbio_submissions.brokerage.tasks import add_posted_comment_to_issue_task
+                add_posted_comment_to_issue_task.apply_async(
                     kwargs={
                         'submission_id': '{0}'.format(submission_pk),
                         'comment': form.cleaned_data['comment']
