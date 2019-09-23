@@ -1,5 +1,6 @@
 import logging
 import os
+from pprint import pprint
 
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -68,4 +69,7 @@ class SubmissionFrontendView(LoginRequiredMixin, TemplateView):
             'userId': user.id,
             'token': str(token),
         }
+        print('\n---------------- CONTEXT -------------------\n')
+        pprint(context)
+        print('\n------------------')
         return context
