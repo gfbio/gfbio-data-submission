@@ -178,6 +178,7 @@ function* performUploadSaga(brokerSubmissionId) {
 
 
 export function* performSubmitFormSaga() {
+  console.info('performSubmitFormSaga');
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
   if (brokerSubmissionId !== '') {
     yield put(updateSubmission(true));
@@ -197,6 +198,7 @@ export function* performSubmitFormSaga() {
 }
 
 export function* performSaveFormSaga() {
+  console.info('performSaveFormSaga');
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
   let bsi = 'no_brokersubmission_id';
   // TODO: if bsi put update action ....
@@ -219,6 +221,7 @@ export function* performSaveFormSaga() {
 }
 
 export function* performUpdateSubmissionSaga() {
+  console.info('performUpdateSubmissionSaga');
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
