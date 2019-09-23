@@ -89,6 +89,7 @@ function* prepareRequestData(userId, submit = true) {
   console.info('FORMVALUES');
   console.info(formValues);
   let comment = formValues.comment || '';
+  delete formValues['comment'];
   console.info('COMMENT');
   console.info(comment);
 
@@ -189,15 +190,17 @@ function* performUploadSaga(brokerSubmissionId) {
 function* performPostCommentSaga(brokerSubmissionId, commentText) {
   const token = yield select(makeSelectToken());
   console.info('performPostCommentSaga ' + token + ' | ' + commentText);
-  try {
-    const response = yield call(postComment, token, brokerSubmissionId, commentText);
-    console.info('Success. resonse ');
-    console.info(response);
-    yield put(postCommentSuccess(response));
-  } catch (error) {
-    console.info('Error. error ');
-    console.info(error);
-    yield put(postCommentError(error));
+  if (commentText !== '') {
+    try {
+      const response = yield call(postComment, token, brokerSubmissionId, commentText);
+      console.info('Success. resonse ');
+      console.info(response);
+      yield put(postCommentSuccess(response));
+    } catch (error) {
+      console.info('Error. error ');
+      console.info(error);
+      yield put(postCommentError(error));
+    }
   }
 }
 
