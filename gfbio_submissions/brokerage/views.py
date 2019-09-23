@@ -432,37 +432,27 @@ class SubmissionUploadPatchView(mixins.UpdateModelMixin,
 class SubmissionCommentView(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
     lookup_field = 'broker_submission_id'
     queryset = Submission.objects.all()
     serializer_class = SubmissionDetailSerializer
 
-    # def get_submission(self, broker_submission_id):
-
-    def get(self, request, *args, **kwargs):
-        print('SubmissionCommentView GET request ', kwargs)
-        instance = self.get_object()
-        print('instance ', instance)
-        # ret = self.retrieve(request, *args, **kwargs)
-        # pprint(ret)
-        # print('-------------------')
-        # pprint(request.__dict__)
-        return HttpResponse('comment get result')
+    # def get(self, request, *args, **kwargs):
+    #     return HttpResponse('comment get result')
 
     def post(self, request, *args, **kwargs):
-        print('SubmissionCommentView POST request', kwargs)
-
         form = SubmissionCommentForm(request.POST)
         if form.is_valid():
             broker_submission_id = kwargs.get('broker_submission_id', uuid4())
             try:
-                submission_pk = Submission.objects.values_list('pk',
-                                                               flat=True).get(
-                    broker_submission_id=broker_submission_id)
-                # TODO: add task when tests are prepared
+                submission_pk = Submission.objects.values_list(
+                    'pk',
+                    flat=True
+                ).get(broker_submission_id=broker_submission_id)
+
                 from gfbio_submissions.brokerage.tasks import \
                     add_posted_comment_to_issue_task
+
                 add_posted_comment_to_issue_task.apply_async(
                     kwargs={
                         'submission_id': '{0}'.format(submission_pk),
@@ -479,15 +469,9 @@ class SubmissionCommentView(generics.GenericAPIView):
                                                'broker_submission_id:'
                                                ' {0}'.format(
                     broker_submission_id)},
-                                status=status.HTTP_404_NOT_FOUND)
+                    status=status.HTTP_404_NOT_FOUND)
         else:
             return Response(
                 json.loads(form.errors.as_json()),
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        # instance = self.get_object()
-
-        # print('instance ', instance.__dict__)
-        # pprint(request)
-        return HttpResponse('comment post result')

@@ -954,13 +954,6 @@ class TestSubmissionCommentView(TestCase):
         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
         cls.api_client = client
 
-        # user = User.objects.create_user(
-        #     username='kevin', email='kevin@kevin.de', password='secret',
-        #     is_staff=True)
-        # token = Token.objects.create(user=user)
-        # client = APIClient()
-        # client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        # cls.other_api_client = client
         resource_cred = ResourceCredential.objects.create(
             title='Resource Title',
             url='https://www.example.com',
@@ -986,14 +979,11 @@ class TestSubmissionCommentView(TestCase):
         )
         SubmissionTest._create_submission_via_serializer()
 
-    def test_valid_get(self):
-        # response = self.api_client.get(
-        #     '/api/submissions/{0}/comment/'.format(uuid4()))
-        # print('NOT FUOUND ?', response.status_code)
+    def test_get(self):
         submission = Submission.objects.first()
         response = self.api_client.get('/api/submissions/{0}/comment/'.format(
             submission.broker_submission_id))
-        print(response.status_code)
+        self.assertEqual(405, response.status_code)
 
     @responses.activate
     def test_valid_post(self):
@@ -1013,7 +1003,8 @@ class TestSubmissionCommentView(TestCase):
             '/api/submissions/{0}/comment/'.format(
                 submission.broker_submission_id), {'comment': 'a comment'})
         self.assertEqual(201, response.status_code)
-        self.assertDictEqual({'comment': 'a comment'}, json.loads(response.content))
+        self.assertDictEqual({'comment': 'a comment'},
+                             json.loads(response.content))
 
     def test_empty_post(self):
         submission = Submission.objects.first()
@@ -1025,6 +1016,7 @@ class TestSubmissionCommentView(TestCase):
 
     def test_post_unknown_broker_submission_id(self):
         response = self.api_client.post(
-            '/api/submissions/{0}/comment/'.format(uuid4()), {})
-        print(response.content)
-
+            '/api/submissions/{0}/comment/'.format(uuid4()),
+            {'comment': 'a comment'})
+        self.assertEqual(404, response.status_code)
+        self.assertIn('submission', json.loads(response.content).keys())
