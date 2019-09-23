@@ -203,8 +203,8 @@ class FormWrapper extends React.PureComponent {
     }
     let errors = this.prepareErrorNotification();
 
-    console.info('FormWrapper index.js render -> props');
-    console.info(this.props);
+    // console.info('FormWrapper index.js render -> props');
+    // console.info(this.props);
 
     return (
       <form

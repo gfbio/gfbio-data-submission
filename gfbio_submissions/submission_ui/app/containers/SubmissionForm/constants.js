@@ -69,12 +69,14 @@ export const SET_METADATA_ON_SERVER = 'app/SubmissionForm/SET_METADATA_ON_SERVER
 export const SET_METADATA_ON_SERVER_SUCCESS = 'app/SubmissionForm/SET_METADATA_ON_SERVER_SUCCESS';
 export const SET_METADATA_ON_SERVER_ERROR = 'app/SubmissionForm/SET_METADATA_ON_SERVER_ERROR';
 
-
 export const SHOW_UPLOAD_LIMIT = 'app/SubmissionForm/SHOW_UPLOAD_LIMIT';
 export const DISMISS_SHOW_UPLOAD_LIMIT = 'app/SubmissionForm/DISMISS_SHOW_UPLOAD_LIMIT';
 
 export const FETCH_FILE_UPLOADS_SUCCESS = 'app/SubmissionForm/FETCH_FILE_UPLOADS_SUCCESS';
 export const FETCH_FILE_UPLOADS_ERROR = 'app/SubmissionForm/FETCH_FILE_UPLOADS_ERROR';
+
+export const POST_COMMENT_SUCCUESS = 'app/SubmissionForm/POST_COMMENT_SUCCUESS';
+export const POST_COMMENT_ERROR = 'app/SubmissionForm/POST_COMMENT_ERROR';
 
 // export const SET_BROKER_SUBMISSION_ID = 'app/SubmissionForm/SET_BROKER_SUBMISSION_ID';
 
