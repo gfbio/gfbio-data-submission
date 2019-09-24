@@ -64,6 +64,13 @@ urlpatterns = [
         view=views.SubmissionUploadPatchView.as_view(),
         name='submissions_upload_patch'
     ),
+
+    url(
+      regex=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/comment/$',
+      view=views.SubmissionCommentView.as_view(),
+      name='submission_comment'
+    ),
+
     # http://0.0.0.0:8000/api/docs/?format=openapi
     # url(r'^docs/$', schema_view, name='rest_api_documentation'),
 ]

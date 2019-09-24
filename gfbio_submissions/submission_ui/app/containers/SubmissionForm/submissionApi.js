@@ -1,12 +1,13 @@
 import axios from 'axios';
 import { END, eventChannel } from 'redux-saga';
 import {
-  API_ROOT,
+  API_ROOT, COMMENT,
   SUBMISSIONS,
   UPLOAD,
   UPLOAD_PATCH,
   UPLOADS,
 } from '../../globalConstants';
+
 
 export const postSubmission = (token, dataBody) => {
 
@@ -56,6 +57,19 @@ export const getSubmission = (token, brokerSubmissionId) => {
   );
 };
 
+export const postComment = (token, brokerSubmissionId, commentText) => {
+  const instance = axios.create({
+    // TODO: remove API_ROOT compate above TODOs
+    baseURL: API_ROOT + SUBMISSIONS + brokerSubmissionId + COMMENT,
+    headers: {
+      'Authorization': 'Token ' + token,
+      'Content-Type': 'application/json',
+    },
+  });
+  let formData = new FormData();
+  formData.append('comment', commentText);
+  return instance.post('', formData);
+};
 
 export const getSubmissionUploads = (token, brokerSubmissionId) => {
   const config = {

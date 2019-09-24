@@ -48,6 +48,8 @@ import {
   fetchFileUploadsSuccess,
   fetchSubmissionError,
   fetchSubmissionSuccess,
+  postCommentError,
+  postCommentSuccess,
   saveForm,
   saveFormError,
   saveFormSuccess,
@@ -69,6 +71,7 @@ import {
   deleteSubmissionUpload,
   getSubmission,
   getSubmissionUploads,
+  postComment,
   postSubmission,
   putSubmission,
   setMetaDataFlag,
@@ -82,6 +85,10 @@ function* prepareRequestData(userId, submit = true) {
   const form = yield select(makeSelectFormWrapper());
   const formWrapper = form.formWrapper || {};
   let formValues = formWrapper.values || {};
+
+  let comment = formValues.comment || '';
+  delete formValues['comment'];
+
   let legal_requirements = [];
   let categories = [];
   for (let f in formValues) {
@@ -132,7 +139,7 @@ function* prepareRequestData(userId, submit = true) {
       requirements: requirements,
     },
   };
-  return res;
+  return { payload: res, comment: comment };
 }
 
 function* uploadProgressWatcher(channel, index) {
@@ -176,6 +183,17 @@ function* performUploadSaga(brokerSubmissionId) {
   yield put(uploadFilesSuccess({}));
 }
 
+function* performPostCommentSaga(brokerSubmissionId, commentText) {
+  const token = yield select(makeSelectToken());
+  if (commentText !== '') {
+    try {
+      const response = yield call(postComment, token, brokerSubmissionId, commentText);
+      yield put(postCommentSuccess(response));
+    } catch (error) {
+      yield put(postCommentError(error));
+    }
+  }
+}
 
 export function* performSubmitFormSaga() {
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
@@ -184,10 +202,11 @@ export function* performSubmitFormSaga() {
   } else {
     const token = yield select(makeSelectToken());
     const userId = yield select(makeSelectUserId());
-    const payload = yield prepareRequestData(userId, true);
+    const requestData = yield prepareRequestData(userId, true);
     try {
-      const response = yield call(postSubmission, token, payload);
+      const response = yield call(postSubmission, token, requestData.payload);
       yield call(performUploadSaga, response.data.broker_submission_id);
+      yield call(performPostCommentSaga, response.data.broker_submission_id, requestData.comment);
       yield put(submitFormSuccess(response));
       yield put(push('/list'));
     } catch (error) {
@@ -205,11 +224,12 @@ export function* performSaveFormSaga() {
   } else {
     const token = yield select(makeSelectToken());
     const userId = yield select(makeSelectUserId());
-    const payload = yield prepareRequestData(userId, false);
+    const requestData = yield prepareRequestData(userId, false);
     try {
-      let response = yield call(postSubmission, token, payload);
+      let response = yield call(postSubmission, token, requestData.payload);
       bsi = response.data.broker_submission_id;
       yield call(performUploadSaga, bsi);
+      yield call(performPostCommentSaga, bsi, requestData.comment);
       yield put(saveFormSuccess(response));
       yield put(push('/list'));
     } catch (error) {
@@ -223,13 +243,14 @@ export function* performUpdateSubmissionSaga() {
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
   const updateWithRelease = yield select(makeSelectUpdateWithRelease());
-  const payload = yield prepareRequestData(userId, updateWithRelease);
+  const requestData = yield prepareRequestData(userId, updateWithRelease);
   try {
-    let response = yield call(putSubmission, token, brokerSubmissionId, payload);
+    let response = yield call(putSubmission, token, brokerSubmissionId, requestData.payload);
     // TODO: updates of file are handled in extra story
     // NOOPE: yield put(uploadFiles());
     // yield call(performUploadSaga);
     yield call(performUploadSaga, brokerSubmissionId);
+    yield call(performPostCommentSaga, brokerSubmissionId, requestData.comment);
     if (updateWithRelease) {
       // TODO: currently this is the only update worklow active (hidden save button)
       yield put(updateSubmissionSuccessSubmit(response));

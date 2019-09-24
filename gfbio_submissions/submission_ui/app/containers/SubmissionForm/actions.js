@@ -25,6 +25,8 @@ import {
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
   FETCH_SUBMISSION_SUCCESS,
+  POST_COMMENT_ERROR,
+  POST_COMMENT_SUCCUESS,
   REMOVE_CONTRIBUTOR,
   REMOVE_DATASET_LABEL,
   REMOVE_FILE_UPLOAD,
@@ -426,11 +428,18 @@ export function deleteFileError(error) {
   };
 }
 
-// export function setBrokerSubmissionId(bsi) {
-//   return {
-//     type: SET_BROKER_SUBMISSION_ID,
-//     bsi,
-//   };
-// }
+export function postCommentSuccess(response) {
+  return {
+    type: POST_COMMENT_SUCCUESS,
+    response,
+  };
+}
+
+export function postCommentError(error) {
+  return {
+    type: POST_COMMENT_ERROR,
+    error,
+  };
+}
 
 
