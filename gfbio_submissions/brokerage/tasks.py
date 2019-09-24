@@ -10,7 +10,7 @@ from django.utils.encoding import smart_text
 from requests import ConnectionError, Response
 
 from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, \
-    PANGAEA_ISSUE_VIEW_URL
+    PANGAEA_ISSUE_VIEW_URL, SUBMISSION_COMMENT_TEMPLATE
 from gfbio_submissions.brokerage.exceptions import TransferServerError, \
     TransferClientError
 from gfbio_submissions.brokerage.utils.csv import \
@@ -729,7 +729,8 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
     retry_jitter=True
 )
 def add_posted_comment_to_issue_task(self, prev_task_result=None,
-                                     submission_id=None, comment=''):
+                                     submission_id=None, comment='',
+                                     user_values={}):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -741,10 +742,16 @@ def add_posted_comment_to_issue_task(self, prev_task_result=None,
     reference = submission.get_primary_helpdesk_reference()
 
     if reference:
+        comment_text = comment
+        if 'username' in user_values.keys() and 'email' in user_values.keys():
+            comment_text = SUBMISSION_COMMENT_TEMPLATE.format(
+                user_values.get('username', ''),
+                user_values.get('email', ''),
+                comment)
         jira_client = JiraClient(resource=site_configuration.helpdesk_server)
         jira_client.add_comment(
             key_or_issue=reference.reference_key,
-            text=comment)
+            text=comment_text)
         return jira_error_auto_retry(jira_client=jira_client, task=self,
                                      broker_submission_id=submission.broker_submission_id)
     else:

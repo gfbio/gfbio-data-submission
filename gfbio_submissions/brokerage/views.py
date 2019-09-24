@@ -3,22 +3,19 @@ import json
 from pprint import pprint
 from uuid import uuid4, UUID
 
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
-from django.http import HttpResponse
-from django.views import View
 from rest_framework import generics, mixins, permissions, parsers
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication, \
     BasicAuthentication
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from gfbio_submissions.brokerage.configuration.settings import \
     SUBMISSION_UPLOAD_RETRY_DELAY
 from gfbio_submissions.brokerage.forms import SubmissionCommentForm
 from gfbio_submissions.brokerage.serializers import \
     SubmissionUploadListSerializer
+from gfbio_submissions.users.models import User
 from .configuration.settings import SUBMISSION_DELAY
 from .models import SubmissionFileUpload, \
     Submission, PrimaryDataFile, RequestLog, SubmissionUpload
@@ -442,24 +439,30 @@ class SubmissionCommentView(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         form = SubmissionCommentForm(request.POST)
-        print('POST')
-        print('request')
-        print(request.POST)
         if form.is_valid():
             broker_submission_id = kwargs.get('broker_submission_id', uuid4())
             try:
-                submission_pk = Submission.objects.values_list(
+                submission_values = Submission.objects.values(
                     'pk',
-                    flat=True
+                    # string identifier, here only id of django user possible
+                    'submitting_user',
                 ).get(broker_submission_id=broker_submission_id)
+
+                user_values = {}
+                user_set = User.objects.filter(
+                    pk=submission_values['submitting_user']
+                ).values('email', 'username')
+                if len(user_set) == 1:
+                    user_values = user_set[0]
 
                 from gfbio_submissions.brokerage.tasks import \
                     add_posted_comment_to_issue_task
 
                 add_posted_comment_to_issue_task.apply_async(
                     kwargs={
-                        'submission_id': '{0}'.format(submission_pk),
-                        'comment': form.cleaned_data['comment']
+                        'submission_id': '{0}'.format(submission_values['pk']),
+                        'comment': form.cleaned_data['comment'],
+                        'user_values': user_values,
                     },
                     countdown=SUBMISSION_UPLOAD_RETRY_DELAY
                 )

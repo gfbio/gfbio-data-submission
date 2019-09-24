@@ -86,12 +86,8 @@ function* prepareRequestData(userId, submit = true) {
   const formWrapper = form.formWrapper || {};
   let formValues = formWrapper.values || {};
 
-  console.info('FORMVALUES');
-  console.info(formValues);
   let comment = formValues.comment || '';
   delete formValues['comment'];
-  console.info('COMMENT');
-  console.info(comment);
 
   let legal_requirements = [];
   let categories = [];
@@ -189,23 +185,17 @@ function* performUploadSaga(brokerSubmissionId) {
 
 function* performPostCommentSaga(brokerSubmissionId, commentText) {
   const token = yield select(makeSelectToken());
-  console.info('performPostCommentSaga ' + token + ' | ' + commentText);
   if (commentText !== '') {
     try {
       const response = yield call(postComment, token, brokerSubmissionId, commentText);
-      console.info('Success. resonse ');
-      console.info(response);
       yield put(postCommentSuccess(response));
     } catch (error) {
-      console.info('Error. error ');
-      console.info(error);
       yield put(postCommentError(error));
     }
   }
 }
 
 export function* performSubmitFormSaga() {
-  console.info('performSubmitFormSaga');
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
   if (brokerSubmissionId !== '') {
     yield put(updateSubmission(true));
@@ -226,7 +216,6 @@ export function* performSubmitFormSaga() {
 }
 
 export function* performSaveFormSaga() {
-  console.info('performSaveFormSaga');
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
   let bsi = 'no_brokersubmission_id';
   // TODO: if bsi put update action ....
@@ -250,16 +239,11 @@ export function* performSaveFormSaga() {
 }
 
 export function* performUpdateSubmissionSaga() {
-  console.info('performUpdateSubmissionSaga');
   const brokerSubmissionId = yield select(makeSelectBrokerSubmissionId());
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
   const updateWithRelease = yield select(makeSelectUpdateWithRelease());
   const requestData = yield prepareRequestData(userId, updateWithRelease);
-  console.info('PAYLOAD');
-  console.info(requestData.payload);
-  console.info('COMMENT');
-  console.info(requestData.comment);
   try {
     let response = yield call(putSubmission, token, brokerSubmissionId, requestData.payload);
     // TODO: updates of file are handled in extra story

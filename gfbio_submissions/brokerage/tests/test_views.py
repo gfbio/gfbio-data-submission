@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import base64
 import json
 from urllib.parse import urlparse
 from uuid import uuid4
@@ -1005,6 +1006,18 @@ class TestSubmissionCommentView(TestCase):
         self.assertEqual(201, response.status_code)
         self.assertDictEqual({'comment': 'a comment'},
                              json.loads(response.content))
+
+    def test_invalid_credentials_post(self):
+        client = APIClient()
+        client.credentials(
+            HTTP_AUTHORIZATION='Basic ' + base64.b64encode(
+                b'horst:wrong').decode('utf-8')
+        )
+        submission = Submission.objects.first()
+        response = client.post(
+            '/api/submissions/{0}/comment/'.format(
+                submission.broker_submission_id), {'comment': 'a comment'})
+        self.assertEqual(401, response.status_code)
 
     def test_empty_post(self):
         submission = Submission.objects.first()
