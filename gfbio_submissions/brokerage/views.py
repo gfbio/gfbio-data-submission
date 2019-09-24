@@ -442,8 +442,9 @@ class SubmissionCommentView(generics.GenericAPIView):
             submission_values = Submission.objects.get_submission_values(
                 broker_submission_id=broker_submission_id
             )
-            user_values = User.objects.get_user_values_safe(
-                id=submission_values['submitting_user'])
+            user_values = User.get_user_values_safe(
+                submitting_user_id=submission_values['submitting_user']
+            )
             from gfbio_submissions.brokerage.tasks import \
                 add_posted_comment_to_issue_task
             add_posted_comment_to_issue_task.apply_async(

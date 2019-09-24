@@ -4,8 +4,6 @@ from django.db.models import CharField
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
-from .managers import UserManager
-
 
 class User(AbstractUser):
     is_site = models.BooleanField(default=False)
@@ -15,7 +13,15 @@ class User(AbstractUser):
     # around the globe.
     name = CharField(_("Name of User"), blank=True, max_length=255)
 
-    objects = UserManager()
-
     def get_absolute_url(self):
         return reverse("users:detail", kwargs={"username": self.username})
+
+    @classmethod
+    def get_user_values_safe(cls, submitting_user_id):
+        user_values = {}
+        if submitting_user_id != '':
+            user_set = cls.objects.filter(
+                pk=int(submitting_user_id)).values('email', 'username')
+            if len(user_set) == 1:
+                user_values = user_set[0]
+        return user_values
