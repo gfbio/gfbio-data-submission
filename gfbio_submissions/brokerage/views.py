@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import json
-from pprint import pprint
 from uuid import uuid4, UUID
 
 from django.db import transaction
@@ -437,45 +436,41 @@ class SubmissionCommentView(generics.GenericAPIView):
     # def get(self, request, *args, **kwargs):
     #     return HttpResponse('comment get result')
 
+    @staticmethod
+    def _process_post_comment(broker_submission_id, comment):
+        try:
+            submission_values = Submission.objects.get_submission_values(
+                broker_submission_id=broker_submission_id
+            )
+            user_values = User.objects.get_user_values_safe(
+                id=submission_values['submitting_user'])
+            from gfbio_submissions.brokerage.tasks import \
+                add_posted_comment_to_issue_task
+            add_posted_comment_to_issue_task.apply_async(
+                kwargs={
+                    'submission_id': '{0}'.format(submission_values['pk']),
+                    'comment': comment,
+                    'user_values': user_values,
+                },
+                countdown=SUBMISSION_UPLOAD_RETRY_DELAY
+            )
+            return Response(
+                {'comment': comment},
+                status=status.HTTP_201_CREATED
+            )
+        except Submission.DoesNotExist as e:
+            return Response(
+                {'submission': 'No submission for this '
+                               'broker_submission_id: {0}'.format(
+                    broker_submission_id)},
+                status=status.HTTP_404_NOT_FOUND)
+
     def post(self, request, *args, **kwargs):
         form = SubmissionCommentForm(request.POST)
         if form.is_valid():
             broker_submission_id = kwargs.get('broker_submission_id', uuid4())
-            try:
-                submission_values = Submission.objects.values(
-                    'pk',
-                    # string identifier, here only id of django user possible
-                    'submitting_user',
-                ).get(broker_submission_id=broker_submission_id)
-
-                user_values = {}
-                user_set = User.objects.filter(
-                    pk=submission_values['submitting_user']
-                ).values('email', 'username')
-                if len(user_set) == 1:
-                    user_values = user_set[0]
-
-                from gfbio_submissions.brokerage.tasks import \
-                    add_posted_comment_to_issue_task
-
-                add_posted_comment_to_issue_task.apply_async(
-                    kwargs={
-                        'submission_id': '{0}'.format(submission_values['pk']),
-                        'comment': form.cleaned_data['comment'],
-                        'user_values': user_values,
-                    },
-                    countdown=SUBMISSION_UPLOAD_RETRY_DELAY
-                )
-                return Response(
-                    {'comment': form.cleaned_data['comment']},
-                    status=status.HTTP_201_CREATED
-                )
-            except Submission.DoesNotExist as e:
-                return Response({'submission': 'No submission for this '
-                                               'broker_submission_id:'
-                                               ' {0}'.format(
-                    broker_submission_id)},
-                    status=status.HTTP_404_NOT_FOUND)
+            return self._process_post_comment(broker_submission_id,
+                                              form.cleaned_data['comment'])
         else:
             return Response(
                 json.loads(form.errors.as_json()),
