@@ -6,7 +6,6 @@ import {
   makeSelectFileUploads,
   makeSelectFileUploadsFromServer,
   makeSelectMetaDataIndex,
-  makeSelectMetaFileName,
 } from '../../containers/SubmissionForm/selectors';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
@@ -36,7 +35,6 @@ class FileIndicator extends React.Component {
   }
 
   createUploadedListElements() {
-    // console.log('createUploadedListElements');
     const uploaded = this.props.fileUploadsFromServer.map((uploaded, index) => {
       let metaDataCheckButton = (
         <small className="file-name">
@@ -47,8 +45,6 @@ class FileIndicator extends React.Component {
             // onChange={this.handleMetadataSelect}
             onChange={(e) => {
               // e.preventDefault();
-              // console.log(e);
-              // console.log(uploaded.pk);
               this.handleMetadataSelect(e, uploaded);
             }}
             checked={uploaded.meta_data}
@@ -71,9 +67,9 @@ class FileIndicator extends React.Component {
             <small className="mr-5 file-size">
               {filesize(uploaded.file_size)}
             </small>
-            <a className="btn btn-download mr-3" href={uploaded.file}>
-              <i className="icon ion-md-download"></i>
-            </a>
+            {/*<a className="btn btn-download mr-3" href={uploaded.file}>*/}
+            {/*  <i className="icon ion-md-download"></i>*/}
+            {/*</a>*/}
             <button className="btn btn-remove" onClick={(e) => {
               e.preventDefault();
               this.props.deleteFile(uploaded.pk);
@@ -89,7 +85,6 @@ class FileIndicator extends React.Component {
 
 
   createScheduledUploadListElements() {
-    // console.log('createSCHEDULEDListElements');
     const fileListElements = this.props.fileUploads.map((upload, index) => {
       let progressStyle = {
         width: `${upload.progress}%`,
@@ -142,10 +137,6 @@ class FileIndicator extends React.Component {
   }
 
   render() {
-    // console.log('FileIndicator render props');
-    // console.log(this.props);
-    // console.log('--------------------------------');
-
     const uploadedFileListElement = this.createUploadedListElements();
     const fileListElements = this.createScheduledUploadListElements();
 
