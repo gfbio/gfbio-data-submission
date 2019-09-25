@@ -72,15 +72,15 @@
     >
         <div class="container-fluid">
             {# TODO: keep optional js-scroll-trigger in mind, for now it is not used  #}
-            <a class="navbar-brand" href="{% url 'home' %}">
-                GFBio
-                <small>Submissions</small>
-            </a>
-            {#            <a href="/accounts/login/">#}
-            {#                <img height="18" class=""#}
-            {#                     src="{% static 'images/dfg_logo_blue_w600.png' %}"#}
-            {#                     alt="Deutsche Forschungsgemeinschaft">#}
+            {#            <a class="navbar-brand" href="{% url 'home' %}">#}
+            {#                GFBio#}
+            {#                <small>Submissions</small>#}
             {#            </a>#}
+            <a href="https://www.dfg.de/">
+                <img height="30" class=""
+                     src="{% static 'images/dfg_logo_black_w600.png' %}"
+                     alt="Deutsche Forschungsgemeinschaft">
+            </a>
             <button class="navbar-toggler navbar-toggler-right" type="button"
                     data-toggle="collapse" data-target="#navbarResponsive"
                     aria-controls="navbarResponsive" aria-expanded="false"
@@ -90,14 +90,14 @@
             <div class="collapse navbar-collapse" id="navbarResponsive">
                 <ul class="navbar-nav ml-auto">
 
-                    <li class="nav-item"
-                        style="padding-top: 0.5rem; margin-right: 1rem;">
-                        <a href="https://www.dfg.de/">
-                            <img height="24" class=""
-                                 src="{% static 'images/dfg_logo_black_w600.png' %}"
-                                 alt="Deutsche Forschungsgemeinschaft">
-                        </a>
-                    </li>
+                    {#                    <li class="nav-item"#}
+                    {#                        style="padding-top: 0.5rem; margin-right: 1rem;">#}
+                    {#                        <a href="https://www.dfg.de/">#}
+                    {#                            <img height="24" class=""#}
+                    {#                                 src="{% static 'images/dfg_logo_black_w600.png' %}"#}
+                    {#                                 alt="Deutsche Forschungsgemeinschaft">#}
+                    {#                        </a>#}
+                    {#                    </li>#}
 
                     {#                    <li class="nav-item">#}
                     {#                        <a class="nav-link "#}
