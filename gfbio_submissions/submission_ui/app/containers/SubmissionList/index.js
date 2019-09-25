@@ -164,7 +164,8 @@ export class SubmissionList extends React.Component {
             <div className="row">
               <div className="col-1 mx-auto">
                 <i
-                  className="icon ion-md-checkmark-circle-outline align-bottom" />
+                  className="icon ion-md-checkmark-circle-outline" />
+              {/*    align-bottom */}
               </div>
               <div className="col-8">
                 <h4>{successHeader}</h4>

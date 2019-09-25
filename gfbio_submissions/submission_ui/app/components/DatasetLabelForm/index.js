@@ -63,7 +63,7 @@ class DatasetLabelForm extends React.PureComponent {
             <input className="form-control" type="text"
                    id="relatedPublication"
                    value={this.props.currentLabel}
-                   placeholder="Add Lables to your Dataset"
+                   placeholder="Add Labels to your Dataset"
                    onChange={this.handleChange}
             />
           </div>

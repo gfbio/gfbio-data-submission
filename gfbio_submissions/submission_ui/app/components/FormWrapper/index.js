@@ -72,11 +72,12 @@ class FormWrapper extends React.PureComponent {
     let errors = mutualMessages[1];
 
     let errorList = [...mutual].map((errorKey, index) => {
+      let errorName =  errorKey.charAt(0).toUpperCase() + errorKey.slice(1);
       return (
         <li key={index} className="list-group-item">
             <span className="validation-error-item">
               <i className="ti-layout-line-solid icon " />
-              {errorKey}
+              {errorName}
               <i className="ti-arrow-right icon pl-1" />
               {errors[errorKey]}
             </span>
@@ -89,13 +90,14 @@ class FormWrapper extends React.PureComponent {
     }
     return (
       <Alert variant="light">
-        <Alert.Heading><i className="fa  fa-bolt" /> There are some validation
-          errors you need to take care of</Alert.Heading>
+        <Alert.Heading>
+          <i className="fa  fa-bolt" /> There are some validation errors
+        </Alert.Heading>
         <ul className="list-group list-group-flush">
           {errorList}
           <li className="list-group-item">
               <span className="validation-error-item">
-                Once all errors are resolved, try to 'save' or 'start' again.
+                Once all errors are resolved, try to submit again.
               </span>
           </li>
         </ul>
@@ -197,7 +199,7 @@ class FormWrapper extends React.PureComponent {
       saveIconClass = 'fa-cog fa-spin fa-fw';
       saveButtonText = 'saving ...';
     }
-    if(this.props.brokerSubmissionId !== ''){
+    if (this.props.brokerSubmissionId !== '') {
       submitButtonText = 'Update Submission';
       submitIconClass = 'fa fa-forward';
     }
