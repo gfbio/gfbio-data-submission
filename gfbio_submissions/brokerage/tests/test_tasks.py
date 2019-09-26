@@ -228,11 +228,12 @@ class TestInitialChainTasks(TestCase):
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_user_email_task',
                               'tasks.create_submission_issue_task',
+                              'tasks.update_submission_issue_task',
                               'tasks.trigger_submission_transfer',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer_for_updates',
                               'tasks.update_helpdesk_ticket_task', ]
-        self.assertEqual(6, len(task_reports))
+        self.assertEqual(7, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
