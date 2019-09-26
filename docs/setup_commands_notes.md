@@ -450,6 +450,11 @@ TODO: needs improvements :
 
 ## Social Account(s) setup
 
+### GENERAL REMARKS:
+
+- SITE_ID is set to 1 in base.py settings, thus all social acocounts have to be connected
+    with a site.pk=1 to work (change domain-name to hosting domains name if needed)
+
 ### GitHub
 
 - login as user  m.weber@jacobs-university.de
@@ -545,7 +550,7 @@ TODO: needs improvements :
     
 #### Google
 
-- https://console.developers.google.com/ -> marc.weber01@gmail.com
+    - https://console.developers.google.com/ -> marc.weber01@gmail.com
 
 - first time clicking login via google link on signin page:
     - redirect to accounts.google -> email or phone number. -> marc.weber01@gmail.com
