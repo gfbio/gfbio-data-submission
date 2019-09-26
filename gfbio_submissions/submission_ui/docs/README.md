@@ -37,7 +37,7 @@ necessary, to then perform a collect static action for django:
       
 then access app via django development server. 
 
-### Develop/Design standaline in layout_playground
+### Develop/Design standalone in layout_playground
 
 Based on free bootstrap 4 template. Gulp used for
 development and build commands.
