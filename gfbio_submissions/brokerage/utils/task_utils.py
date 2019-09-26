@@ -180,7 +180,7 @@ def retry_no_ticket_available_exception(task, broker_submission_id,
                         'send_task_fail_mail'.format(task.request.retries,
                                                      SUBMISSION_UPLOAD_MAX_RETRIES))
             send_task_fail_mail(broker_submission_id, task)
-
+            return TaskProgressReport.CANCELLED
         else:
             logger.info('task_utils.py | retry_no_ticket_available_exception | '
                         'task={0} | error={1} | '

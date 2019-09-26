@@ -114,7 +114,14 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
 
             from gfbio_submissions.brokerage.tasks import \
                 check_for_molecular_content_in_submission_task, \
-                trigger_submission_transfer_for_updates
+                trigger_submission_transfer_for_updates, \
+                update_submission_issue_task
+            update_submission_issue_task.apply_async(
+                kwargs={
+                    'submission_id': instance.pk
+                },
+                countdown=SUBMISSION_DELAY
+            )
             chain = check_for_molecular_content_in_submission_task.s(
                 submission_id=instance.pk
             ).set(countdown=SUBMISSION_DELAY) | \

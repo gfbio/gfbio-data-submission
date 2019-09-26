@@ -87,10 +87,11 @@ class JiraClient(object):
             self.issue = None
             self.error = e
 
-    def update_issue(self, key, fields):
+    def update_issue(self, key, fields, notify=False):
+        print(self.resource.url)
         self.get_issue(key)
         try:
-            self.issue.update(notify=False, fields=fields)
+            self.issue.update(notify=notify, fields=fields)
             self.error = None
         except JIRAError as e:
             self.error = e
@@ -167,6 +168,17 @@ class JiraClient(object):
             )
         )
         self.force_submission_issue(submission, site_config)
+
+    def update_submission_issue(self, key, site_config, submission):
+        self.update_issue(
+            key=key,
+            fields=gfbio_prepare_create_helpdesk_payload(
+                site_config=site_config,
+                submission=submission,
+                prepare_for_update=True,
+            ),
+            notify=True,
+        )
 
     def force_submission_issue(self, submission, site_config):
         if self.retry_count >= self.max_retry_count:
