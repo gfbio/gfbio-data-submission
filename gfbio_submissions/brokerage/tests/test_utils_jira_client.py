@@ -97,6 +97,15 @@ class TestJiraClient(TestCase):
             json=json_content,
         )
 
+    def _add_jira_id_response(self, status_code=200, json_content={}):
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/16814'.format(
+                self.site_config.helpdesk_server.url),
+            status=status_code,
+            json=json_content,
+        )
+
     def _add_create_ticket_responses(self, status_code=200, json_content={}):
         self._add_jira_field_response()
         responses.add(
@@ -242,26 +251,18 @@ class TestJiraClient(TestCase):
         self.assertIsNotNone(jira_client.error)
         self.assertIsNone(jira_client.issue)
 
-    @skip(
-        'Cannot mock update correctly'
-    )
     @responses.activate
     def test_update_issue(self):
         self._add_jira_field_response()
         self._add_jira_issue_response(json_content=self.issue_json)
-        responses.add(responses.PUT,
-                      '{0}/rest/api/2/issue/SAND-1661'.format(
-                          self.site_config.helpdesk_server.url),
-                      body='', status=204)
-        # self._add_create_ticket_responses(json_content=self.issue_json)
-
+        url = '{0}/rest/api/2/issue/16814?notifyUsers=false'.format(
+                          self.site_config.helpdesk_server.url)
+        responses.add(responses.PUT, url, body='', status=204)
+        self._add_jira_id_response(json_content=self.issue_json)
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
-        # jira_client.create_issue(fields=self.minimal_issue_fields)
-
-        jira_client.update_issue(key='SAND-1661',
-                                 fields=None
-                                 )
-        print(jira_client.error)
+        jira_client.update_issue(key='SAND-1661', fields=None)
+        self.assertIsNone(jira_client.error)
+        self.assertEqual('SAND-1661', jira_client.issue.key)
 
     @responses.activate
     def test_add_comment(self):
@@ -482,6 +483,23 @@ class TestJiraClient(TestCase):
             submission=Submission.objects.first(),
             site_config=self.site_config
         )
+
+    @responses.activate
+    def test_update_submission_issue(self):
+        self._add_jira_field_response()
+        self._add_jira_issue_response(json_content=self.issue_json)
+        url = '{0}/rest/api/2/issue/16814'.format(
+            self.site_config.helpdesk_server.url)
+        responses.add(responses.PUT, url, body='', status=204)
+        self._add_jira_id_response(json_content=self.issue_json)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        jira_client.update_submission_issue(
+            key='SAND-1661',
+            site_config=self.site_config,
+            submission=Submission.objects.first(),
+        )
+        self.assertIsNone(jira_client.error)
+        self.assertEqual('SAND-1661', jira_client.issue.key)
 
     @responses.activate
     def test_force_submission_issue(self):
