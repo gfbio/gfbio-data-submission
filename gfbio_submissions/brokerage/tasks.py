@@ -692,6 +692,11 @@ def update_submission_issue_task(self, submission_id=None):
                                      broker_submission_id=submission.broker_submission_id)
     else:
         return TaskProgressReport.CANCELLED
+        # return retry_no_ticket_available_exception(
+        #     task=self,
+        #     broker_submission_id=submission.broker_submission_id,
+        #     number_of_tickets=1 if reference else 0
+        # )
 
 
 # TODO: examine all tasks for redundant code and possible generalization e.g.:
