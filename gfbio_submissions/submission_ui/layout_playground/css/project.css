@@ -1767,6 +1767,15 @@ header.masthead .gfbio-logo {
   padding: 147px 299px 0 0 !important;
 }
 
+header.masthead .dfg_logo_container {
+  padding-bottom: 2rem;
+  text-align: left;
+}
+
+header.masthead .dfg_logo_container img {
+  height: 30px;
+}
+
 header.masthead h2.landing-icon {
   font-size: 10rem;
   color: #ced4da;
@@ -2029,6 +2038,14 @@ header.masthead .scroll-link-sleep {
 }
 
 @media (max-width: 992px) {
+  header.masthead .dfg_logo_container {
+    padding-top: 2rem;
+    padding-bottom: 0;
+    text-align: center;
+  }
+  header.masthead .dfg_logo_container img {
+    height: 20px;
+  }
   header.masthead #scroll-link {
     display: none;
   }
