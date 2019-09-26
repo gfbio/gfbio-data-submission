@@ -80,6 +80,15 @@ header.masthead {
     // margin: 0;
   }
 
+  .dfg_logo_container {
+    padding-bottom: 2rem;
+    text-align: left;
+
+    img {
+      height: 30px;
+    }
+  }
+
   h2.landing-icon {
     font-size: 10rem;
     color: $gray-400;
@@ -368,6 +377,17 @@ header.masthead {
   }
 
   @media (max-width: 992px) {
+
+    .dfg_logo_container {
+      padding-top: 2rem;
+      padding-bottom: 0;
+      text-align: center;
+
+      img {
+        height: 20px;
+      }
+    }
+
     #scroll-link {
       display: none;
     }

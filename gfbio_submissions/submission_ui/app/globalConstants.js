@@ -15,6 +15,7 @@ export const SUBMISSIONS = '/api/submissions/';
 export const UPLOAD = '/upload/';
 export const UPLOADS = '/uploads/';
 export const UPLOAD_PATCH = 'patch/';
+export const COMMENT = '/comment/';
 
 export const STATUS_CANCELLED = 'CANCELLED';
 

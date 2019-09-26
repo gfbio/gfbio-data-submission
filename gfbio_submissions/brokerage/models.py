@@ -15,7 +15,6 @@ from model_utils.models import TimeStampedModel
 from config.settings.base import ADMINS, AUTH_USER_MODEL, LOCAL_REPOSITORY
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
     DEFAULT_ENA_CENTER_NAME
-from gfbio_submissions.brokerage.exceptions import NoTicketAvailableError
 from .configuration.settings import ENA, ENA_PANGAEA
 from .configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY
 from .fields import JsonDictField
@@ -220,12 +219,17 @@ class Submission(models.Model):
 
     broker_submission_id = models.UUIDField(primary_key=False,
                                             default=uuid.uuid4)
-    # TODO: still name this 'site' ?
-    # TODO: I see possible conflict with regular users here. Add dedicated user-subclass for 'site'
-    site = models.ForeignKey(AUTH_USER_MODEL,
-                             null=True,
-                             related_name='submission',
-                             on_delete=models.SET_NULL)
+    site = models.ForeignKey(
+        AUTH_USER_MODEL,
+        null=True,
+        related_name='site_submissions',
+        on_delete=models.SET_NULL)
+    user = models.ForeignKey(
+        AUTH_USER_MODEL,
+        null=True,
+        related_name='user_submissions',
+        on_delete=models.SET_NULL
+    )
     # TODO: still needed ?
     site_project_id = models.CharField(max_length=128, blank=True, default='')
     target = models.CharField(max_length=16, choices=TARGETS)
@@ -236,6 +240,7 @@ class Submission(models.Model):
                                        'vary for different sites, e.g. user-id'
                                        ' from database, uniquq login-name, '
                                        'etc..')
+    # TODO: remove in Submission ownership refactoring
     submitting_user_common_information = models.TextField(
         default='',
         blank=True,
@@ -375,13 +380,6 @@ class Submission(models.Model):
     def get_primary_helpdesk_reference(self):
         return self.get_primary_reference(
             AdditionalReference.GFBIO_HELPDESK_TICKET)
-        # issues = self.additionalreference_set.filter(
-        #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True)
-        # )
-        # if len(issues):
-        #     return issues.first()
-        # else:
-        #     return None
 
     def get_primary_pangaea_reference(self):
         return self.get_primary_reference(
@@ -648,6 +646,7 @@ class PrimaryDataFile(models.Model):
     # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
     created = models.DateTimeField(auto_now_add=True)
     changed = models.DateTimeField(auto_now=True)
+
     #
     # @classmethod
     # def raise_ticket_exeptions(self, no_of_helpdesk_tickets):

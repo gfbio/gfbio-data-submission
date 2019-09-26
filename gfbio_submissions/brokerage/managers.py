@@ -73,6 +73,12 @@ class SubmissionManager(models.Manager):
             ~Q(submitting_user='')
         )
 
+    def get_submission_values(self, broker_submission_id=None):
+        return self.values(
+            'pk',
+            # string identifier, here only id of django user possible
+            'submitting_user', ).get(broker_submission_id=broker_submission_id)
+
     # def get_submission_for_task(self, obj_id, task=None, include_closed=False):
     #     try:
     #         submission = self.get_non_error_submission(

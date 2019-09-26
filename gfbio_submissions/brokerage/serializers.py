@@ -23,6 +23,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class SubmissionSerializer(serializers.ModelSerializer):
     site = serializers.ReadOnlyField(source='site.username')
+    # user = serializers.ReadOnlyField(source='user.username')
     broker_submission_id = serializers.UUIDField(required=False)
     download_url = serializers.URLField(required=False)
     data = serializers.JSONField()
@@ -53,9 +54,11 @@ class SubmissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Submission
         fields = (
-            'broker_submission_id', 'site', 'submitting_user',
-            'site_project_id',
-            'target', 'status', 'release', 'data', 'embargo', 'download_url'
+            'broker_submission_id',
+            'site',
+            # 'user',
+            'submitting_user', 'site_project_id', 'target', 'status',
+            'release', 'data', 'embargo', 'download_url',
         )
 
 

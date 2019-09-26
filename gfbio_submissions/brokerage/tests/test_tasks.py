@@ -30,7 +30,8 @@ from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, 
     create_pangaea_issue_task, attach_to_pangaea_issue_task, \
     add_accession_to_pangaea_issue_task, check_for_pangaea_doi_task, \
     trigger_submission_transfer, \
-    delete_submission_issue_attachment_task
+    delete_submission_issue_attachment_task, add_posted_comment_to_issue_task, \
+    update_submission_issue_task
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_ena_xml_response, \
@@ -227,11 +228,12 @@ class TestInitialChainTasks(TestCase):
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_user_email_task',
                               'tasks.create_submission_issue_task',
+                              'tasks.update_submission_issue_task',
                               'tasks.trigger_submission_transfer',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer_for_updates',
                               'tasks.update_helpdesk_ticket_task', ]
-        self.assertEqual(6, len(task_reports))
+        self.assertEqual(7, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -433,9 +435,9 @@ class TestSubmissionTransferTasks(TestTasks):
         ret_val = result.get()
         self.assertTrue(isinstance(ret_val, tuple))
 
-    # @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
-    #                    CELERY_TASK_EAGER_PROPAGATES=False)
     @responses.activate
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+                       CELERY_TASK_EAGER_PROPAGATES=False)
     def test_transfer_to_ena_task_server_error(self):
         submission = Submission.objects.first()
         conf = SiteConfiguration.objects.first()
@@ -452,14 +454,10 @@ class TestSubmissionTransferTasks(TestTasks):
             transfer_data_to_ena_task.s(
                 submission_id=submission.pk
             )
-        )()
-
-        ret_val = result.get()
-        self.assertTrue(result.successful())
-        # self.assertIsNone(ret_val)
-        self.assertIsNotNone(ret_val)
-        # self.assertEqual(('{0}'.format(RequestLog.objects.first().request_id), 500, '{}'),
-        #                  ret_val)
+        ).apply()
+        # ret_val = result.get()
+        self.assertEqual('RETRY', submission.taskprogressreport_set.filter(
+            task_name='tasks.transfer_data_to_ena_task').first().status)
 
     # TODO: add test where nonsense content is returned like '' or {}
     @responses.activate
@@ -731,6 +729,46 @@ class TestGFBioHelpDeskTasks(TestTasks):
                             JIRA_ISSUE_URL),
             json={},
             status=500)
+
+    @classmethod
+    def _add_comment_reponses(cls):
+        site_config = SiteConfiguration.objects.first()
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
+        return '{0}{1}/{2}/{3}'.format(
+            site_config.helpdesk_server.url,
+            JIRA_ISSUE_URL,
+            'FAKE_KEY',
+            JIRA_COMMENT_SUB_URL,
+        )
+
+    @classmethod
+    def _add_put_issue_responses(cls, put_status_code=204):
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(
+                cls.default_site_config.helpdesk_server.url),
+            status=200,
+        )
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/SAND-1661'.format(
+                cls.default_site_config.helpdesk_server.url),
+            json=cls.issue_json
+        )
+        url = '{0}/rest/api/2/issue/16814'.format(
+            cls.default_site_config.helpdesk_server.url)
+        responses.add(responses.PUT, url, body='', status=put_status_code)
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/16814'.format(
+                cls.default_site_config.helpdesk_server.url),
+            status=200,
+            json=cls.issue_json,
+        )
 
     # TODO: may these have to be moved to other test class (Taskprogressreport ...)
     #   or removed ... Now for testing behaviour on GFBIO-2589
@@ -1137,19 +1175,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
     @responses.activate
     def test_add_pangaealink_to_submission_issue_task_success(self):
         submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-
-        responses.add(
-            responses.GET,
-            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
-            status=200,
-        )
-        url = '{0}{1}/{2}/{3}'.format(
-            site_config.helpdesk_server.url,
-            JIRA_ISSUE_URL,
-            'FAKE_KEY',
-            JIRA_COMMENT_SUB_URL,
-        )
+        url = self._add_comment_reponses()
         responses.add(responses.POST, url,
                       json={'bla': 'blubb'},
                       status=200)
@@ -1164,18 +1190,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
     @responses.activate
     def test_add_pangaealink_to_helpdesk_ticket_task_client_error(self):
         submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-        responses.add(
-            responses.GET,
-            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
-            status=200,
-        )
-        url = '{0}{1}/{2}/{3}'.format(
-            site_config.helpdesk_server.url,
-            JIRA_ISSUE_URL,
-            'FAKE_KEY',
-            JIRA_COMMENT_SUB_URL,
-        )
+        url = self._add_comment_reponses()
         responses.add(responses.POST, url, status=400, json={'bla': 'blubb'})
         result = add_pangaealink_to_submission_issue_task.apply_async(
             kwargs={
@@ -1190,18 +1205,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
                        CELERY_TASK_EAGER_PROPAGATES=False)
     def test_add_pangaealink_to_helpdesk_ticket_task_server_error(self):
         submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-        responses.add(
-            responses.GET,
-            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
-            status=200,
-        )
-        url = '{0}{1}/{2}/{3}'.format(
-            site_config.helpdesk_server.url,
-            JIRA_ISSUE_URL,
-            'FAKE_KEY',
-            JIRA_COMMENT_SUB_URL,
-        )
+        url = self._add_comment_reponses()
         responses.add(responses.POST, url, status=500, json={'bla': 'blubb'})
         result = add_pangaealink_to_submission_issue_task.apply(
             kwargs={
@@ -1209,6 +1213,53 @@ class TestGFBioHelpDeskTasks(TestTasks):
             }
         )
         self.assertFalse(result.successful())
+
+    @responses.activate
+    def test_add_posted_comment_to_issue_task_success(self):
+        submission = Submission.objects.first()
+        url = self._add_comment_reponses()
+        responses.add(responses.POST, url,
+                      json={'bla': 'blubb'},
+                      status=200)
+        result = add_posted_comment_to_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+                'comment': 'a comment'
+            }
+        )
+        self.assertTrue(result.successful())
+        self.assertTrue(result.get())
+
+    @responses.activate
+    def test_add_posted_comment_to_issue_task_client_error(self):
+        submission = Submission.objects.first()
+        url = self._add_comment_reponses()
+        responses.add(responses.POST, url, status=400, json={'bla': 'blubb'})
+        result = add_posted_comment_to_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+                'comment': 'a comment'
+            }
+        )
+        self.assertTrue(result.successful())
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+
+    # FIXME: what about retries ? are they executed ?
+    @responses.activate
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+                       CELERY_TASK_EAGER_PROPAGATES=False)
+    def add_posted_comment_to_issue_task_server_error(self):
+        submission = Submission.objects.first()
+        url = self._add_comment_reponses()
+        responses.add(responses.POST, url, status=500, json={'bla': 'blubb'})
+        result = add_posted_comment_to_issue_task.apply(
+            kwargs={
+                'submission_id': submission.pk,
+                'comment': 'a comment'
+            }
+        )
+        self.assertFalse(result.successful())
+        # self.assertEqual(TaskProgressReport.CANCELLED, result.get())
 
     @responses.activate
     def test_create_submission_issue_task_client_error(self):
@@ -1255,6 +1306,90 @@ class TestGFBioHelpDeskTasks(TestTasks):
             }
         )
         self.assertFalse(result.successful())
+
+    # FIXME: what about retries ? are they executed ?
+    @responses.activate
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+                       CELERY_TASK_EAGER_PROPAGATES=False)
+    def add_posted_comment_to_issue_task_server_error(self):
+        submission = Submission.objects.first()
+        url = self._add_comment_reponses()
+        responses.add(responses.POST, url, status=500,
+                      json={'bla': 'blubb'})
+        result = add_posted_comment_to_issue_task.apply(
+            kwargs={
+                'submission_id': submission.pk,
+                'comment': 'a comment'
+            }
+        )
+        self.assertFalse(result.successful())
+
+    @responses.activate
+    def test_update_submission_issue_task_success(self):
+        submission = Submission.objects.last()
+        self._add_success_responses()
+        self._add_put_issue_responses()
+        create_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        result = update_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        self.assertTrue(result.get())
+        self.assertEqual(1, len(submission.taskprogressreport_set.filter(
+            task_name='tasks.update_submission_issue_task')))
+
+    @responses.activate
+    def test_update_submission_issue_task_client_error(self):
+        submission = Submission.objects.last()
+        self._add_success_responses()
+        self._add_put_issue_responses(put_status_code=405)
+        create_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        result = update_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        print(result.get())
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+        tpr = submission.taskprogressreport_set.filter(
+            task_name='tasks.update_submission_issue_task')
+        self.assertEqual(1, len(tpr))
+        self.assertEqual(TaskProgressReport.CANCELLED,
+                         tpr.first().task_return_value)
+
+    @responses.activate
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+                       CELERY_TASK_EAGER_PROPAGATES=False)
+    def test_update_submission_issue_task_server_error(self):
+        submission = Submission.objects.last()
+        self._add_success_responses()
+        self._add_put_issue_responses(put_status_code=502)
+        create_submission_issue_task.apply(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        result = update_submission_issue_task.apply(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        print(result.get())
+        tpr = submission.taskprogressreport_set.filter(
+            task_name='tasks.update_submission_issue_task')
+        self.assertEqual(1, len(tpr))
+        self.assertEqual(TaskProgressReport.CANCELLED,
+                         tpr.first().task_return_value)
+        self.assertEqual('502', tpr.first().task_exception)
 
 
 class TestPangaeaTasks(TestTasks):

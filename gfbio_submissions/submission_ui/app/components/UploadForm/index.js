@@ -43,15 +43,6 @@ class UploadForm extends React.PureComponent {
       serverFilesTotalSize += f.file_size;
     }
 
-    // console.log(tmpTotalSize);
-    // console.log(uploadedTotalSize);
-    // console.log(serverFilesTotalSize);
-    // console.log(acceptedFiles.length);
-    // console.log(this.props.fileUploads.size);
-    // console.log(this.props.fileUploadsFromServer.length);
-    // this.props.fileUploads.size +
-    // this.props.fileUploadsFromServer.length
-    // console.log(this.props.fileUploads.size);
     let fileUploadsFromServerLength = 0;
     if (this.props.fileUploadsFromServer.length !== undefined) {
       fileUploadsFromServerLength = this.props.fileUploadsFromServer.length;
@@ -63,7 +54,6 @@ class UploadForm extends React.PureComponent {
       return true;
     } else {
       this.props.showUploadLimit();
-      // console.log('show limit');
       return false;
     }
   };

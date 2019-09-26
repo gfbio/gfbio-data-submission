@@ -46,21 +46,29 @@ class TemplateLinkList extends React.PureComponent {
             Molecular Data
           </a>
           <a
-            href="https://gfbio.biowikifarm.net/wiki/Data_submission_forms_for_occurrence_data"
+            href="https://gfbio.biowikifarm.net/wiki/Data_submission_templates_for_biodiversity,_ecological_and_collection_data"
             className="list-group-item list-group-item-action"
             target="_blank"
           >
             <i className="icon ion-md-download" />
-            Occurrence Data
+            Biodiversity, Ecological and Collection Data
           </a>
-          <a
-            href="https://gfbio.biowikifarm.net/wiki/Data_submission_forms_for_the_deposit_of_biological_and_environmental_samples"
-            className="list-group-item list-group-item-action"
-            target="_blank"
-          >
-            <i className="icon ion-md-download" />
-            Environmental Sample Data
-          </a>
+          {/*<a*/}
+          {/*  href="https://gfbio.biowikifarm.net/wiki/Data_submission_forms_for_occurrence_data"*/}
+          {/*  className="list-group-item list-group-item-action"*/}
+          {/*  target="_blank"*/}
+          {/*>*/}
+          {/*  <i className="icon ion-md-download" />*/}
+          {/*  Occurrence Data*/}
+          {/*</a>*/}
+          {/*<a*/}
+          {/*  href="https://gfbio.biowikifarm.net/wiki/Data_submission_forms_for_the_deposit_of_biological_and_environmental_samples"*/}
+          {/*  className="list-group-item list-group-item-action"*/}
+          {/*  target="_blank"*/}
+          {/*>*/}
+          {/*  <i className="icon ion-md-download" />*/}
+          {/*  Environmental Sample Data*/}
+          {/*</a>*/}
         </div>
       </div>
     );

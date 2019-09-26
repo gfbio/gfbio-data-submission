@@ -384,3 +384,9 @@ TASK_FAIL_TEXT_TEMPLATE = getattr(
     'Task "{0}" failed after {1} retries. Please refer to submission '
     'with broker_submission_id "{2}".'
 )
+
+SUBMISSION_COMMENT_TEMPLATE = getattr(
+    settings,
+    'SUBMISSION_COMMENT_TEMPLATE',
+    '{0} ({1}) commented:\n{2}'
+)

@@ -1,5 +1,64 @@
 {% extends "base.html" %}
 {# TODO: check if there is a more elegant way to differ navi ids #}
-{% block navigation-id %}
-    id="mainNavBase"
-{% endblock navigation-id %}
+
+
+{% block navigation %}
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top"
+            {# TODO: check if there is a more elegant way to differ navi ids #}
+            {% block navigation-id %}
+         id="mainNavBase"
+            {% endblock navigation-id %}
+    >
+        <div class="container-fluid">
+            {# TODO: keep optional js-scroll-trigger in mind, for now it is not used  #}
+            <a class="navbar-brand " href="{% url 'home' %}">
+                GFBio
+                <small>Submissions</small>
+            </a>
+            <button class="navbar-toggler navbar-toggler-right" type="button"
+                    data-toggle="collapse" data-target="#navbarResponsive"
+                    aria-controls="navbarResponsive" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarResponsive">
+                <ul class="navbar-nav ml-auto">
+
+                    {% if request.user.is_authenticated %}
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link has-dropdown"
+                               data-toggle="dropdown"
+                               href="#" role="button" aria-haspopup="true"
+                               aria-expanded="false">{{ request.user.username }}</a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item user-signout"
+                                   href="{% url 'account_logout' %}">Sign
+                                    Out</a>
+                            </div>
+                        </li>
+
+                    {% else %}
+                        <li class="nav-item">
+                            {# URL provided by django-allauth/account/urls.py #}
+                            <a class="nav-link btn btn-secondary btn-sm sign-up"
+                               href="{% url 'account_signup' %}">
+                                Sign Up
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            {# URL provided by django-allauth/account/urls.py #}
+                            <a class="nav-link btn btn-secondary btn-sm sign-in"
+                               href="{% url 'account_login' %}">
+                                Sign In
+                            </a>
+                        </li>
+                    {% endif %}
+
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+{% endblock navigation %}
