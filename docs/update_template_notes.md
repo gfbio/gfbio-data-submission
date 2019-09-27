@@ -528,7 +528,7 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
         Backing up the 'gfbio_submissions' database...
         SUCCESS: 'gfbio_submissions' database backup 'backup_2019_09_16T07_32_41.sql.gz' has been created and placed in '/backups'.
 
-- docker cp 9059e90210e8:/backups/backup_2019_09_16T07_32_41.sql.gz /var/www/gfbio_submissions/
+- sudo docker cp <CONTAINER_ID>:/backups/<BACKUPFILE> /var/www/gfbio_submissions/
        
 - sudo git fetch
 - sudo git checkout 1.76.0
@@ -538,19 +538,18 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
         user	2m49,542s
         sys	6m44,515s
 
+- docker-compose -f production.yml run --rm django python manage.py migrate 
+- docker-compose -f production.yml run --rm django python manage.py collectstatic
+
 #### (be careful !) prune images and volumes
+
 
 - make sure docker stack is up and running, otherwise ALL volumes are deleted,
     including database and backups and media !
 
-- docker volume prune
- 
-        WARNING! This will remove all local volumes not used by at least one container.
-        Are you sure you want to continue? [y/N] y
-        Deleted Volumes:
-        7932976e2d2ce7b97a7b50492b8b9c6c4084823426be420ecb8f227e18a7ddd7
-        
-        Total reclaimed space: 819.4kB
+- after stopping supervisord, also apply docker down, then start supervisor and check log with tail -f
+
+- if docker stack is up (docker ps) consider prune. especially prune image should free some space
 
 - docker image prune
   
@@ -567,8 +566,15 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
         
         Total reclaimed space: 8.279GB
 
-- docker-compose -f production.yml run --rm django python manage.py migrate 
-- docker-compose -f production.yml run --rm django python manage.py collectstatic
+- docker volume prune
+ 
+        WARNING! This will remove all local volumes not used by at least one container.
+        Are you sure you want to continue? [y/N] y
+        Deleted Volumes:
+        7932976e2d2ce7b97a7b50492b8b9c6c4084823426be420ecb8f227e18a7ddd7
+        
+        Total reclaimed space: 819.4kB
+
 
 --------------------------------------------------------------------------------
 
