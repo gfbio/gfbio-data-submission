@@ -57,17 +57,38 @@ def gfbio_get_user_by_id(user_id, site_configuration, submission):
 
 def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
                                           prepare_for_update=False):
-    if reporter is None:
-        reporter = {}
-
     requirements = submission.data.get('requirements', {})
+    # -----------------------------------------------------------------------
+    # TODO: refactor once gfbio portal services are removed.
+    if reporter is None or reporter is {}:
+        reporter = {}
+        try:
+            local_user = User.objects.get(pk=submission.submitting_user)
+            reporter['user_full_name'] = local_user.name
+            reporter['user_email'] = local_user.email
+        except User.DoesNotExist as e:
+            pass
+        except ValueError:
+            pass
+    # FIXME: compatibilty with gfbio portal services
+    user_full_name = reporter.get('user_full_name', '')
+    user_email = reporter.get('user_email', '')
+
+    author = '{0} {1}'.format(user_full_name, user_email)
+
+    contributors = requirements.get('contributors', [])
+    authors_text = '{0}\n'.format(author) if len(author.strip()) else ''
+    for c in contributors:
+        contributor = '{0} {1} {2}\n'.format(c.get('firstName', ''),
+                                             c.get('lastName', ''),
+                                             c.get('emailAddress', ''))
+        authors_text += contributor if len(contributor.strip()) else ''
+
+    # -----------------------------------------------------------------------
 
     summary = requirements.get('title', '')
     if len(summary) >= 45:
         summary = '{0}{1}'.format(summary[:45], '...')
-
-    user_full_name = reporter.get('user_full_name', '')
-    user_email = reporter.get('user_email', '')
 
     # molecular or generic
     jira_request_target = GFBIO_REQUEST_TYPE_MAPPINGS.get(
@@ -83,16 +104,6 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
         jira_request_type = 'dsub/{0}'.format(jira_request_target) \
             if jira_request_type == 'molecular' \
             else 'dsub/general-data-submission'
-
-    author = '{0};{1}'.format(user_full_name, user_email)
-    if user_email == site_config.contact:
-        try:
-            local_user = User.objects.get(pk=submission.submitting_user)
-            author = '{0};{1}'.format(user_full_name, local_user.email)
-        except User.DoesNotExist:
-            pass
-        except ValueError:
-            pass
 
     mutual_data = {
         'project': {
@@ -120,7 +131,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
         'customfield_10308': requirements.get('dataset_labels', []),
         'customfield_10313': ', '.join(
             requirements.get('categories', [])),
-        'customfield_10205': author,
+        'customfield_10205': authors_text,
         'customfield_10307': '; '.join(
             requirements.get('related_publications', [])),
         'customfield_10216': [{'value': l} for l in
