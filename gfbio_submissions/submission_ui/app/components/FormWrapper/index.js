@@ -27,6 +27,7 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
+import SubmissionInfo from '../SubmissionInfo';
 
 /* eslint-disable react/prefer-stateless-function */
 class FormWrapper extends React.PureComponent {
@@ -255,6 +256,12 @@ class FormWrapper extends React.PureComponent {
             {/* end middle col */}
             <div className="col-md-3">
               {/* right col */}
+
+              <SubmissionInfo
+                brokerSubmissionId={this.props.brokerSubmissionId}
+                issue={''}
+
+              />
 
               <LicenseSelectionForm />
 
