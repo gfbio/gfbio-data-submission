@@ -35,7 +35,7 @@ import Modal from 'react-bootstrap/Modal';
 import Container from 'react-bootstrap/Container';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
-import { STATUS_CANCELLED } from '../../globalConstants';
+import { JIRA_ROOT, STATUS_CANCELLED } from '../../globalConstants';
 
 
 /* eslint-disable react/prefer-stateless-function */
@@ -68,22 +68,39 @@ export class SubmissionList extends React.Component {
         return <li key={index} className="list-group-item">
           <div className="row wrapping-row no-gutters">
             <div className="col-md-10">
-              {/*left*/}
+
               <Link className="row no-gutters"
                     to={'/form/' + submission.broker_submission_id}>
-                <div className="col-md-9 col-sm-12 align-self-center">
+                <div className="col-md-8 col-sm-12 align-self-center">
                   {/*icon ion-ios-redo*/}
                   <i className="icon ion-md-apps" />
                   <span>{submission.data.requirements.title}</span>
                 </div>
-                <div className="col-md-3 col-sm-12 align-self-center status">
-                <span className="">
-                  {submission.status}
-                </span>
+
+                <div className="col-md-2 col-sm-12 align-self-center status">
+                  <span className="">
+                    {submission.status}
+                  </span>
                 </div>
+
+                <div className="col-md-2 col-sm-12 align-self-center">
+                  <span className="issue"
+                    // href={JIRA_ROOT+submission.issue}
+                  >
+                    {submission.issue}
+                  </span>
+                  {/*<Link className="action h-100 d-inline-block pr-4"*/}
+                  {/*      to={'/form/' + submission.broker_submission_id}>*/}
+                  {/*  <i className="icon ion-md-create" /> Edit*/}
+                  {/*</Link>*/}
+                </div>
+
               </Link>
+
             </div>
+
             <div className="col-md-2 col-sm-12 align-self-center actions">
+
               <Link className="action h-100 d-inline-block pr-4"
                     to={'/form/' + submission.broker_submission_id}>
                 <i className="icon ion-md-create" /> Edit
@@ -136,12 +153,18 @@ export class SubmissionList extends React.Component {
         <div className="row no-gutters">
           <div className="col-md-10 pl-3">
             <div className="row no-gutters">
-              <div className="col-md-9 align-self-center">
+              <div className="col-md-8 align-self-center">
                 <h6>Title</h6>
               </div>
-              <div className="col-md-3 align-self-center">
+
+              <div className="col-md-2 align-self-center">
                 <h6>Status</h6>
               </div>
+
+              <div className="col-md-2 align-self-center">
+                <h6>Ticket</h6>
+              </div>
+
             </div>
           </div>
           <div className="col-md-2">

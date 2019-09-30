@@ -531,6 +531,13 @@ section.sub-navi {
           //padding-right: 1rem;
         }
 
+        .issue {
+          font-size: .75rem;
+          text-align: left;
+          color: $gray-600;
+          font-weight: 400;
+        }
+
         //.edit {
         //  //width: 10%;
         //}
@@ -602,6 +609,10 @@ section.sub-navi {
           i {
             color: $white;
           }
+        }
+
+        .issue {
+          color: $white;
         }
 
         a.action {
