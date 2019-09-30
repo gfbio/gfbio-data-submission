@@ -12,13 +12,15 @@ import PropTypes from 'prop-types';
 function SubmissionInfo(props) {
   if (props.brokerSubmissionId.length > 0) {
     return (
-      <div>
+      <div className="">
         <header className="header header-left form-header-top">
           <h2 className="section-title">Info</h2>
           <p className="section-subtitle" />
         </header>
-        <div className="">
+        <div className="submission-info">
           <a href={''}>{props.brokerSubmissionId}</a>
+          <br/>
+          <a href={''}>{props.issue}</a>
         </div>
       </div>
     );
@@ -28,6 +30,7 @@ function SubmissionInfo(props) {
 
 SubmissionInfo.propTypes = {
   brokerSubmissionId: PropTypes.string,
+  issue: PropTypes.string,
 };
 
 export default SubmissionInfo;

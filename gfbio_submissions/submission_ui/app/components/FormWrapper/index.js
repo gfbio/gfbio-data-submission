@@ -187,6 +187,10 @@ class FormWrapper extends React.PureComponent {
   };
 
   render() {
+
+    console.info('RENDER FORMWRAPER');
+    console.info(this.props);
+
     let submitIconClass = 'fa-play';
     let submitButtonText = 'Start Submission';
     let saveIconClass = 'fa-clipboard';
@@ -259,7 +263,7 @@ class FormWrapper extends React.PureComponent {
 
               <SubmissionInfo
                 brokerSubmissionId={this.props.brokerSubmissionId}
-                issue={''}
+                issue={this.props.issue}
 
               />
 
@@ -349,6 +353,7 @@ FormWrapper.propTypes = {
   generalError: PropTypes.bool,
   saveSuccessMessage: PropTypes.object,
   brokerSubmissionId: PropTypes.string,
+  issue: PropTypes.string,
 };
 
 // this is already connected to redux-form reducer ?

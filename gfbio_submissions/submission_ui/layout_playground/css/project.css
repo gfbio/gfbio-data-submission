@@ -1524,6 +1524,20 @@ form.pagewide-form .btn-link-light-blue i {
   font-size: 1.5rem;
 }
 
+form.pagewide-form .submission-info {
+  color: #495057;
+  background-color: #f8f8f8;
+  border: 1px solid #ced4da;
+  border-radius: .25rem;
+  padding: .75rem;
+  margin-bottom: 2rem;
+}
+
+form.pagewide-form .submission-info a {
+  text-decoration: none;
+  color: #495057;
+}
+
 /*
     Overwrite react-datepicker styles
    */

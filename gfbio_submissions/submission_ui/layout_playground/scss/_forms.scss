@@ -1378,6 +1378,21 @@ form.pagewide-form {
     }
   }
 
+  .submission-info {
+    color: $gray-dark-2;
+    background-color: $gray-100;
+    border: 1px solid $gray-400;
+    border-radius: .25rem;
+    padding: .75rem;
+    margin-bottom: 2rem;
+
+     a {
+       text-decoration: none;
+       color: $gray-dark-2;
+     }
+
+  }
+
 
 }
 
