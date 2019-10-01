@@ -334,4 +334,4 @@ LOGIN_REDIRECT_URL = "/ui/submission/list"
 LOGOUT_REDIRECT_URL = "/"
 
 OIDC_RP_SCOPES = "openid email profile address phone id"
-OIDC_USERNAME_ALGO = "gfbio_submissions.authentication.user_name.generate_username"
+# OIDC_USERNAME_ALGO = "gfbio_submissions.authentication.user_name.generate_username"
