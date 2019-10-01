@@ -78,12 +78,12 @@ class GFBioAuthenticationBackend(OIDCAuthenticationBackend):
     def update_user(self, user, claims):
         print('UDPATE_USER claims')
         print(claims)
-        print('user ', user, ' ', user.pk, ' ', user.goesternid)
+        print('user ', user, ' ', user.pk, ' goe', user.goesternid)
         user.first_name = claims.get('given_name', '')
         user.last_name = claims.get('family_name', '')
         user.email = claims.get('email', '')
-        if user.goesternid is None or user.goesternid == '':
-            user.goesternid = claims.get('goe_id', '')
+        # if user.goesternid is None or user.goesternid == '':
+        user.goesternid = claims.get('goe_id', '')
         user.save()
         logger.info('GFBioAuthenticationBackend | update_user | email={0}  | '
                     ''.format(claims.get('email', 'NO_EMAIL_IN_CLAIM')))
