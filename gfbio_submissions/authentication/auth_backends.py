@@ -25,9 +25,12 @@ class GFBioAuthenticationBackend(OIDCAuthenticationBackend):
 
 
     # TODO:
-    #   - check if gfbio sso, else default oidc for max. compatibility
+    #   - check if gfbio sso, else default oidc for max. compatibility (curently only gfbio-sso via setings)
     #   - overide get_username ?
     #   - add additional generate_username algo for gfbio-sso, all others use generate_username with email
+    #   OIDC_OP_AUTHORIZATION_ENDPOINT = "https://sso.gfbio.org/simplesaml/module.php/oidc/authorize.php"
+    #   OIDC_OP_TOKEN_ENDPOINT = "https://sso.gfbio.org/simplesaml/module.php/oidc/access_token.php"
+    #   OIDC_OP_USER_ENDPOINT = " https://sso.gfbio.org/simplesaml/module.php/oidc/userinfo.php"
 
 
     # TODO: called on very first login via SSO
