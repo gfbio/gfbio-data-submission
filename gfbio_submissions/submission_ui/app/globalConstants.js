@@ -1,13 +1,15 @@
 // TODO: no api root needed if app is on same host with django
-export const API_ROOT = '';
+// export const API_ROOT = '';
 // TODO: elsewhere:
 // export const API_ROOT = 'https://submission.gfbio.org';
 // TODO: for rapid js standalone development, full servername is needed though.
-// export const API_ROOT = 'http://0.0.0.0:8000';
+export const API_ROOT = 'http://0.0.0.0:8000';
 
 // TODO FOR RELEASE: check/remove fallback values of userid, token, etc. in reducers
 //  -> SubmissionForm/reducer
 //  -> SubmissionList/reducer
+
+export const JIRA_ROOT = 'https://helpdesk.gfbio.org/browse/';
 
 export const USER_URL = 'user/';
 // TODO: merge redundant code of api-access-code like in this file

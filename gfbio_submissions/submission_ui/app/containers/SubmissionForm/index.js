@@ -115,6 +115,9 @@ export class SubmissionForm extends React.Component {
 
   render() {
 
+    console.info('RENDER SUBMISSIONFORM');
+    console.info(this.props);
+
     if (this.props.brokerSubmissionId !== '' && this.props.match.path === '/form') {
       this.props.resetForm();
     }
@@ -151,6 +154,11 @@ export class SubmissionForm extends React.Component {
     *        - list of uploaded files and edit this list is new story -> next ?
     *  */
 
+    // FIXME: refactor to remove redundant use etc of values. e.g. bsi is included in submission(.bsi)
+    let issue = '';
+    if (this.props.submission && this.props.submission.issue) {
+      issue = this.props.submission.issue;
+    }
     return (
       <div className="submission-form-wrapper">
         <FormWrapper
@@ -165,6 +173,7 @@ export class SubmissionForm extends React.Component {
           generalError={this.props.generalError}
           saveSuccessMessage={saveMessage}
           brokerSubmissionId={this.props.brokerSubmissionId}
+          issue={issue}
         />
       </div>
     );

@@ -162,6 +162,8 @@ class UserSubmissionDetailView(generics.ListAPIView):
                           permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
+    # TODO: test for real django user here
+    # TODO: test for ownership additional to site permissions
     def get_queryset(self):
         submitting_user = self.kwargs['submitting_user']
         return Submission.objects.filter(submitting_user=submitting_user)

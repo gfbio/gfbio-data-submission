@@ -1,5 +1,6 @@
 {
     "broker_submission_id": "replace_this_with_uuid4_when_testing",
+    "issue": "",
     "data": {
         "requirements": {
             "description": "123456",
