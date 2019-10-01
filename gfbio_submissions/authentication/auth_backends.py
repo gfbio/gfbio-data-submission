@@ -76,6 +76,9 @@ class GFBioAuthenticationBackend(OIDCAuthenticationBackend):
 
     # TODO: called on login as returning user
     def update_user(self, user, claims):
+        print('UDPATE_USER claims')
+        print(claims)
+        print('user ', user, ' ', user.pk, ' ', user.goesternid)
         user.first_name = claims.get('given_name', '')
         user.last_name = claims.get('family_name', '')
         user.email = claims.get('email', '')
