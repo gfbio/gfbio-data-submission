@@ -22,12 +22,12 @@ export const initialState = fromJS({
   submissions: [],
 
   // TODO: replace. development default of 2
-  // userId: backendParameters.userId || -1,
-  userId: backendParameters.userId || 2,
+  userId: backendParameters.userId || -1,
+  // userId: backendParameters.userId || 2,
 
   // TODO: replace. during development token defaults to test-server user
-  // token: backendParameters['token'] || 'NO_TOKEN',
-  token: backendParameters['token'] || '7e7518077ba9fad288985ef22e822abdf34354f0',
+  token: backendParameters['token'] || 'NO_TOKEN',
+  // token: backendParameters['token'] || '7e7518077ba9fad288985ef22e822abdf34354f0',
 
   userName: backendParameters.userName || '',
   deleteBrokerSubmissionId: '',
@@ -54,7 +54,7 @@ function submissionListReducer(state = initialState, action) {
         .set('deleteBrokerSubmissionId', '');
     case DELETE_SUBMISSION:
       return state;
-        // .set('deleteBrokerSubmissionId', action.brokerSubmissionId);
+    // .set('deleteBrokerSubmissionId', action.brokerSubmissionId);
     case DELETE_SUBMISSION_SUCCESS:
       return state
         .set('deleteSubmissionDialog', false)
