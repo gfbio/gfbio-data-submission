@@ -6,6 +6,7 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
+import { JIRA_ROOT } from '../../globalConstants';
 
 // import styled from 'styled-components';
 
@@ -18,9 +19,23 @@ function SubmissionInfo(props) {
           <p className="section-subtitle" />
         </header>
         <div className="submission-info">
-          <a href={''}>{props.brokerSubmissionId}</a>
-          <br/>
-          <a href={''}>{props.issue}</a>
+          <ul className="list-group list-group-flush">
+            <li className="list-group-item">
+              <a href={''}>
+                <i className="fa fa-bookmark-o" aria-hidden="true"></i>Broker Submission Id: <br />
+                <div className="bsi">{props.brokerSubmissionId}</div>
+              </a>
+            </li>
+            <li className="list-group-item">
+              <a href={JIRA_ROOT + props.issue}>
+                <i className="fa fa-tags" aria-hidden="true"></i>Helpdesk
+                Key:<br />
+                <div className="bsi">{props.issue}</div>
+              </a>
+            </li>
+          </ul>
+
+
         </div>
       </div>
     );
