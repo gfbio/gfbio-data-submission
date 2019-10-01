@@ -26,18 +26,10 @@ class GFBioAuthenticationBackend(OIDCAuthenticationBackend):
 
     # VERIFY_CLAIMS claims
     # django_1_b8ce6cc38c7a | {'sub': 'ivaylo.kostadinov@gwdg.de', 'email': 'ikostadi@gfbio.org', 'family_name': 'Kostadinov', 'given_name': 'Ivaylo', 'preferred_username': 'ivaylo.kostadinov', 'goe_id': '0404130'}
-    # django_1_b8ce6cc38c7a |
     # django_1_b8ce6cc38c7a | INFO 2019-10-01 09:56:29,042 auth_backends 23 139730797817160 GFBioAuthenticationBackend | verify_claims | email=ikostadi@gfbio.org  | verified=True
     # django_1_b8ce6cc38c7a | UDPATE_USER claims
     # django_1_b8ce6cc38c7a | {'sub': 'ivaylo.kostadinov@gwdg.de', 'email': 'ikostadi@gfbio.org', 'family_name': 'Kostadinov', 'given_name': 'Ivaylo', 'preferred_username': 'ivaylo.kostadinov', 'goe_id': '0404130'}
-    # django_1_b8ce6cc38c7a |
     # django_1_b8ce6cc38c7a | INFO 2019-10-01 09:56:29,052 auth_backends 23 139730797817160 GFBioAuthenticationBackend | update_user | email=ikostadi@gfbio.org  |
-    #
-    #
-    # celerybeat_1_cfec7b901420 | [2019-10-01 09:59:23,476: INFO/MainProcess] Writing entries...
-    # celerybeat_1_cfec7b901420 | [2019-10-01 10:02:23,838: INFO/MainProcess] Writing entries...
-    # celerybeat_1_cfec7b901420 | [2019-10-01 10:05:24,187: INFO/MainProcess] Writing entries...
-    #
     #
     # django_1_b8ce6cc38c7a | INFO 2019-10-01 10:06:08,962 auth_backends 23 139730797817160 GFBioAuthenticationBackend | verify_claims | email=maweber@mpi-bremen.de  | verified=True
     # django_1_b8ce6cc38c7a | VERIFY_CLAIMS claims
@@ -54,8 +46,10 @@ class GFBioAuthenticationBackend(OIDCAuthenticationBackend):
     # TODO:
     #   - add geosternid att. to user (can be empty/Null)
     #   - check here in create user, if existing map or error
-    #   - now username is unique, email too ? email is mapped if existing
+    #   - now username is unique, email too ? email is mapped if existing ?
     #   - if geostern id is used, than unique username should not be mandatory ?
+    #   --> only one email for sso created users - replace existing one
+    #   --> unique username for sso users too
 
     # signup -> "Es ist bereits jemand mit dieser E-Mail-Adresse registriert."
     #   1. wird eine bestehende email geändert sollte das keine Problem mehr darstellen. CHECK !
@@ -87,9 +81,11 @@ class GFBioAuthenticationBackend(OIDCAuthenticationBackend):
                     ''.format(claims.get('email', 'NO_EMAIL_IN_CLAIM')))
         print('UDPATE_USER claims')
         print(claims)
+        print('user ', user, ' ', user.pk)
         print('EMAILs')
 
-        emails = User.objects.filter(is_active=True).values_list('email',
+        # here only one per user I guess primary
+        emails = User.objects.filter(is_active=True).filter().values_list('email',
                                                                  flat=True)
         print(emails)
         print()
