@@ -449,7 +449,6 @@ class TestSubmissionUploadView(TestCase):
         self.assertEqual(len(TaskProgressReport.objects.all()), reports_len)
         self.assertGreater(len(SubmissionUpload.objects.all()), uploads_len)
 
-    # TODO: move to dedicatet test class
     @responses.activate
     def test_meta_data_parsing(self):
         submission = Submission.objects.all().first()

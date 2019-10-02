@@ -170,19 +170,26 @@ def parse_molecular_csv(csv_file):
 def check_for_molecular_content(submission):
     logger.info(
         msg='check_for_molecular_content | '
-            'process submission={0} | target={1} '
-            ''.format(submission.broker_submission_id, submission.target))
+            'process submission={0} | target={1} | release={2}'
+            ''.format(submission.broker_submission_id, submission.target, submission.release))
+
+    # TODO: but csv has to be parsed anyway ? or not ?
+    # TODO: compare with usecase api submissions
     if submission.target == ENA or submission.target == ENA_PANGAEA:
         logger.info(
             msg='check_for_molecular_content | '
                 'ena is default target return=True')
         return True, []
+
     # TODO: consider GFBIO_REQUEST_TYPE_MAPPINGS for data_center mappings
     elif submission.release and submission.target == GENERIC \
             and submission.data.get('requirements', {}) \
             .get('data_center', '').count('ENA'):
         meta_data_files = submission.submissionupload_set.filter(meta_data=True)
         no_of_meta_data_files = len(meta_data_files)
+
+        print('\n - ---------------   no of meta files ', no_of_meta_data_files)
+
         if no_of_meta_data_files != 1:
             logger.info(
                 msg='check_for_molecular_content | '

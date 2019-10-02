@@ -4,12 +4,14 @@ import datetime
 import io
 import json
 import os
+from pprint import pprint
 from unittest import skip
 from unittest.mock import patch
 
 import requests
 import responses
 from django.contrib.auth.models import Permission
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from jira import JIRA, JIRAError
 from requests import ConnectionError
@@ -19,7 +21,7 @@ from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, \
-    JIRA_ATTACHMENT_SUB_URL
+    JIRA_ATTACHMENT_SUB_URL, GENERIC
 from gfbio_submissions.brokerage.exceptions import TransferClientError, \
     raise_response_exceptions, TransferServerError
 from gfbio_submissions.brokerage.models import Submission, ResourceCredential, \
@@ -33,6 +35,8 @@ from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_pangaea_comment_response, \
     _get_pangaea_ticket_response
 from gfbio_submissions.brokerage.utils import csv
+from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
+    check_for_molecular_content
 from gfbio_submissions.brokerage.utils.ena import \
     download_submitted_run_files_to_stringIO
 from gfbio_submissions.brokerage.utils.gfbio import \
@@ -1129,3 +1133,71 @@ class TestDownloadEnaReport(TestCase):
         row = reader.next()
         self.assertTrue('STUDY_ID' in row.keys())
         decompressed_file.close()
+
+
+class TestCSVParsing(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        user = User.objects.create_user(
+            username='horst', email='horst@horst.de', password='password')
+        permissions = Permission.objects.filter(
+            content_type__app_label='brokerage',
+            codename__endswith='upload')
+        user.user_permissions.add(*permissions)
+        serializer = SubmissionSerializer(data={
+            'target': 'GENERIC',
+            'release': True,
+            'data': {
+                'requirements': {
+                    'title': 'Mol content test',
+                    'description': 'Reduced data for testing',
+                    'data_center': 'ENA – European Nucleotide Archive',
+                }
+            }
+        })
+        serializer.is_valid()
+        submission = serializer.save(site=user)
+        submission.additionalreference_set.create(
+            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+            reference_key='FAKE_KEY',
+            primary=True
+        )
+        with open(os.path.join(_get_test_data_dir_path(),
+                               'molecular_metadata.csv'),
+                  'rb') as data_file:
+            submission_upload = SubmissionUpload.objects.create(
+                submission=submission,
+                site=user,
+                user=user,
+                meta_data=True,
+                file=SimpleUploadedFile('upload_molecular_metadata.csv',
+                                        data_file.read()),
+            )
+
+    def test_setUp_result(self):
+        sub = Submission.objects.first()
+        print(sub.broker_submission_id)
+        print(sub.submissionupload_set.all())
+
+    def test_parse_molecular_csv(self):
+        file_name = 'molecular_metadata.csv'
+        with open(os.path.join(_get_test_data_dir_path(), file_name),
+                  'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+            print(requirements)
+
+    def test_check_for_molecular_content(self):
+        submission = Submission.objects.first()
+        self.assertEqual(GENERIC, submission.target)
+        self.assertIn('data_center', submission.data['requirements'].keys())
+        self.assertNotIn('samples', submission.data['requirements'].keys())
+        self.assertNotIn('experiments', submission.data['requirements'].keys())
+
+        is_mol_content, errors = check_for_molecular_content(submission)
+
+        self.assertTrue(is_mol_content)
+        self.assertListEqual([], errors)
+        submission = Submission.objects.first()
+        self.assertIn('samples', submission.data['requirements'].keys())
+        self.assertIn('experiments', submission.data['requirements'].keys())

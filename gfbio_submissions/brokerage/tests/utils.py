@@ -108,11 +108,13 @@ def _get_pangaea_comment_response():
             'r') as data_file:
         return json.load(data_file)
 
+
 def _get_request_comment_response():
     with open(os.path.join(
             _get_test_data_dir_path(), 'get_comment_response.json'),
             'r') as data_file:
         return json.load(data_file)
+
 
 def _get_pangaea_ticket_response():
     with open(os.path.join(
