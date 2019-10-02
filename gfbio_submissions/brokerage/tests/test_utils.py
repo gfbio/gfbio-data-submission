@@ -1164,14 +1164,14 @@ class TestCSVParsing(TestCase):
             primary=True
         )
         with open(os.path.join(_get_test_data_dir_path(),
-                               'molecular_metadata.csv'),
+                               'csv_files/molecular_metadata.csv'),
                   'rb') as data_file:
             submission_upload = SubmissionUpload.objects.create(
                 submission=submission,
                 site=user,
                 user=user,
                 meta_data=True,
-                file=SimpleUploadedFile('upload_molecular_metadata.csv',
+                file=SimpleUploadedFile('csv_files/upload_molecular_metadata.csv',
                                         data_file.read()),
             )
 
@@ -1181,7 +1181,7 @@ class TestCSVParsing(TestCase):
         print(sub.submissionupload_set.all())
 
     def test_parse_molecular_csv(self):
-        file_name = 'molecular_metadata.csv'
+        file_name = 'csv_files/molecular_metadata.csv'
         with open(os.path.join(_get_test_data_dir_path(), file_name),
                   'r') as data_file:
             requirements = parse_molecular_csv(data_file)

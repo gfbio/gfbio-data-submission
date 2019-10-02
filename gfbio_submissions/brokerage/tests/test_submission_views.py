@@ -148,9 +148,9 @@ class TestSubmissionView(TestCase):
 
     @classmethod
     def _create_test_meta_data(cls, delete=True, invalid=False, update=False):
-        file_name = 'invalid_molecular_metadata.csv' if invalid else 'molecular_metadata.csv'
+        file_name = 'csv_files/invalid_molecular_metadata.csv' if invalid else 'csv_files/molecular_metadata.csv'
         if update:
-            file_name = 'molecular_metadata_for_update.csv'
+            file_name = 'csv_files/molecular_metadata_for_update.csv'
 
         if delete:
             cls._delete_test_data()
@@ -823,7 +823,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         submission = Submission.objects.first()
         self.assertEqual(GENERIC, submission.target)
         with open(os.path.join(_get_test_data_dir_path(),
-                               'molecular_metadata.csv'), 'rb') as csv_file:
+                               'csv_files/molecular_metadata.csv'), 'rb') as csv_file:
             uploaded_file = SimpleUploadedFile(
                 name='molecular.csv',
                 content_type='text/csv',
