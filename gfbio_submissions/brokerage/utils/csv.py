@@ -132,8 +132,16 @@ def extract_experiment(experiment_id, row, sample_id):
 
 # TODO: maybe csv is in a file like implemented or comes as text/string
 def parse_molecular_csv(csv_file):
+    header = csv_file.readline()
+    print('HEADER ', header)
+    #  delimiters=";,\t"
+    dialect = csv.Sniffer().sniff(header)
+    csv_file.seek(0)
+    print('DIALECT ', dialect.delimiter)
+    print('AVAILABLE DIALECTS ', csv.list_dialects())
     csv_reader = csv.DictReader(
         csv_file,
+        # dialect=csv.excel_tab,
         quoting=csv.QUOTE_ALL,
         delimiter=',',
         quotechar='"',
@@ -153,6 +161,7 @@ def parse_molecular_csv(csv_file):
     short_id = ShortId()
     for row in csv_reader:
         # every row is one sample (except header)
+        print('csv reader ROW: ', row)
         sample_id = short_id.generate()
         experiment_id = short_id.generate()
         sample = extract_sample(row, field_names, sample_id)

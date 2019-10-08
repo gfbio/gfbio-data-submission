@@ -1155,6 +1155,8 @@ class TestCSVParsing(TestCase):
 
     @classmethod
     def _strip_aliases(cls, d):
+        # if d is None:
+        #     print(d)
         aliases = ['sample_alias', 'experiment_alias', 'sample_descriptor']
         for k, v in d.items():
             if isinstance(v, list):
@@ -1165,6 +1167,7 @@ class TestCSVParsing(TestCase):
             else:
                 if k in aliases:
                     d[k] = ''
+        return d
 
     @classmethod
     def setUpTestData(cls):
@@ -1668,21 +1671,109 @@ class TestCSVParsing(TestCase):
                       'r') as data_file:
                 requirements = parse_molecular_csv(data_file)
                 print('\n\n###################################\n\n')
-                pprint(requirements)
+                print(requirements)
             requirements_keys = requirements.keys()
             self.assertIn('experiments', requirements_keys)
             self.assertIn('samples', requirements_keys)
 
     def test_parse_comma_with_some_quotes(self):
-        self.maxDiff = None
         with open(os.path.join(
                 _get_test_data_dir_path(),
                 'csv_files/mol_5_items_comma_some_double_quotes.csv'),
                 'r') as data_file:
             requirements = parse_molecular_csv(data_file)
+            print(json.dumps(requirements))
         requirements_keys = requirements.keys()
         self.assertIn('experiments', requirements_keys)
         self.assertIn('samples', requirements_keys)
+        self.assertDictEqual(self.expected_parse_result,
+                             self._strip_aliases(requirements))
+
+    def test_parse_comma_no_quotes_in_header(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/mol_5_items_comma_no_quoting_in_header.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+            print(json.dumps(requirements))
+        requirements_keys = requirements.keys()
+        self.assertIn('experiments', requirements_keys)
+        self.assertIn('samples', requirements_keys)
+        self.assertDictEqual(self.expected_parse_result,
+                             self._strip_aliases(requirements))
+
+    def test_parse_semi_no_quoting(self):
+        self.maxDiff = None
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/_mol_5_items_semi_no_quoting.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+            print(json.dumps(requirements))
+        requirements_keys = requirements.keys()
+        self.assertIn('experiments', requirements_keys)
+        self.assertIn('samples', requirements_keys)
+        pprint(requirements)
+        self.assertDictEqual(self.expected_parse_result,
+                             self._strip_aliases(requirements))
+
+    def test_parse_semi_double_quoting(self):
+        self.maxDiff = None
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/_mol_5_items_semi_double_quoting.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+            print(json.dumps(requirements))
+        requirements_keys = requirements.keys()
+        self.assertIn('experiments', requirements_keys)
+        self.assertIn('samples', requirements_keys)
+        pprint(requirements)
+        self.assertDictEqual(self.expected_parse_result,
+                             self._strip_aliases(requirements))
+
+    def test_parse_tab_no_quoting(self):
+        self.maxDiff = None
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/_mol_5_items_tab_no_quoting.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+            print(json.dumps(requirements))
+        requirements_keys = requirements.keys()
+        self.assertIn('experiments', requirements_keys)
+        self.assertIn('samples', requirements_keys)
+        pprint(requirements)
+        self.assertDictEqual(self.expected_parse_result,
+                             self._strip_aliases(requirements))
+
+    def test_parse_tab_exported(self):
+        self.maxDiff = None
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/mol_5_items_tab_exported.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+            print(json.dumps(requirements))
+        requirements_keys = requirements.keys()
+        self.assertIn('experiments', requirements_keys)
+        self.assertIn('samples', requirements_keys)
+        pprint(requirements)
+        self.assertDictEqual(self.expected_parse_result,
+                             self._strip_aliases(requirements))
+
+    def test_parse_tab_double_quotes_exported(self):
+        self.maxDiff = None
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/mol_5_items_tab_double_quotes_exported.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+            print(json.dumps(requirements))
+        requirements_keys = requirements.keys()
+        self.assertIn('experiments', requirements_keys)
+        self.assertIn('samples', requirements_keys)
+        pprint(requirements)
         self.assertDictEqual(self.expected_parse_result,
                              self._strip_aliases(requirements))
 
