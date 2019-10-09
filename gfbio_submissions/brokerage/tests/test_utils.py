@@ -1154,24 +1154,17 @@ class TestCSVParsing(TestCase):
             )
 
     @classmethod
-    def _strip(cls, d, strip_temperatue=False):
-        # if d is None:
-        #     print(d)
+    def _strip(cls, d):
         aliases = ['sample_alias', 'experiment_alias', 'sample_descriptor']
         for k, v in d.items():
             if isinstance(v, list):
                 for e in v:
                     cls._strip(e)
             elif isinstance(v, dict):
-                if 'temperature' in v.values():
-                    v['unit'] = ''
                 cls._strip(v)
-
             else:
                 if k in aliases:
                     d[k] = ''
-                if strip_temperatue:
-                    v = 'temperature'
         return d
 
     @classmethod
@@ -1669,8 +1662,7 @@ class TestCSVParsing(TestCase):
             'csv_files/mol_5_items_comma_some_double_quotes.csv',
             'csv_files/mol_5_items_comma_no_quoting_in_header.csv',
             'csv_files/mol_5_items_semi_no_quoting.csv',
-            # 'csv_files/mol_5_items_tab_no_quoting.csv',
-            'csv_files/mol_5_items_comma_with_empty_rows_cols.csv',
+            'csv_files/mol_comma_with_empty_rows_cols.csv',
         ]
         for fn in file_names:
             with open(os.path.join(_get_test_data_dir_path(), fn),
@@ -1691,7 +1683,6 @@ class TestCSVParsing(TestCase):
         self.assertIn('samples', requirements_keys)
         self.assertDictEqual(self.expected_parse_result,
                              self._strip(requirements))
-        print(len(requirements.get('samples', [])))
 
     def test_parse_comma_no_quotes_in_header(self):
         with open(os.path.join(
@@ -1711,7 +1702,6 @@ class TestCSVParsing(TestCase):
                 'csv_files/mol_comma_with_empty_rows_cols.csv'),
                 'r') as data_file:
             requirements = parse_molecular_csv(data_file)
-            print(json.dumps(requirements))
         requirements_keys = requirements.keys()
         self.assertIn('experiments', requirements_keys)
         self.assertIn('samples', requirements_keys)
@@ -1721,32 +1711,26 @@ class TestCSVParsing(TestCase):
         self.assertEqual(7, len(requirements.get('experiments', [])))
 
     def test_parse_semi_no_quoting(self):
-        self.maxDiff = None
         with open(os.path.join(
                 _get_test_data_dir_path(),
-                'csv_files/_mol_5_items_semi_no_quoting.csv'),
+                'csv_files/mol_5_items_semi_no_quoting.csv'),
                 'r') as data_file:
             requirements = parse_molecular_csv(data_file)
-            print(json.dumps(requirements))
         requirements_keys = requirements.keys()
         self.assertIn('experiments', requirements_keys)
         self.assertIn('samples', requirements_keys)
-        pprint(requirements)
         self.assertDictEqual(self.expected_parse_result,
                              self._strip(requirements))
 
     def test_parse_semi_double_quoting(self):
-        self.maxDiff = None
         with open(os.path.join(
                 _get_test_data_dir_path(),
-                'csv_files/_mol_5_items_semi_double_quoting.csv'),
+                'csv_files/mol_5_items_semi_double_quoting.csv'),
                 'r') as data_file:
             requirements = parse_molecular_csv(data_file)
-            print(json.dumps(requirements))
         requirements_keys = requirements.keys()
         self.assertIn('experiments', requirements_keys)
         self.assertIn('samples', requirements_keys)
-        pprint(requirements)
         self.assertDictEqual(self.expected_parse_result,
                              self._strip(requirements))
 
@@ -1754,7 +1738,7 @@ class TestCSVParsing(TestCase):
         self.maxDiff = None
         with open(os.path.join(
                 _get_test_data_dir_path(),
-                'csv_files/_mol_5_items_tab_no_quoting.csv'),
+                'csv_files/mol_5_items_tab_no_quoting.csv'),
                 'r') as data_file:
             requirements = parse_molecular_csv(data_file)
             print(json.dumps(requirements))
