@@ -79,9 +79,15 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
     contributors = requirements.get('contributors', [])
     authors_text = '{0}\n'.format(author) if len(author.strip()) else ''
     for c in contributors:
-        contributor = '{0} {1} {2}\n'.format(c.get('firstName', ''),
-                                             c.get('lastName', ''),
-                                             c.get('emailAddress', ''))
+        fname = c.get('firstName', '')
+        lname = c.get('lastName', '')
+        fname = '{0},'.format(fname) if len(fname) else ''
+        lname = '{0},'.format(lname) if len(lname) else ''
+        contributor = '{0}{1}{2}\n'.format(
+            fname,
+            lname,
+            c.get('emailAddress', '')
+        )
         authors_text += contributor if len(contributor.strip()) else ''
 
     # -----------------------------------------------------------------------
