@@ -135,7 +135,7 @@ def parse_molecular_csv(csv_file):
     header = csv_file.readline()
     dialect = csv.Sniffer().sniff(header)
     csv_file.seek(0)
-    delimiter = dialect.delimiter if dialect.delimiter in [',', ';'] else ','
+    delimiter = dialect.delimiter if dialect.delimiter in [',', ';', '\t'] else ','
     csv_reader = csv.DictReader(
         csv_file,
         quoting=csv.QUOTE_ALL,
