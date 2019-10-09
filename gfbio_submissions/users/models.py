@@ -13,6 +13,20 @@ class User(AbstractUser):
     # around the globe.
     name = CharField(_("Name of User"), blank=True, max_length=255)
 
+    # https://docs.djangoproject.com/en/2.2/ref/models/fields/#null
+    goesternid = CharField(
+        _('goesternid'),
+        max_length=32,
+        unique=True,
+        blank=True,
+        null=True,
+        help_text=_(
+            'Not Required. 32 characters or fewer. digits only'),
+        error_messages={
+            'unique': _("A user with that goesternid already exists."),
+        },
+    )
+
     def get_absolute_url(self):
         return reverse("users:detail", kwargs={"username": self.username})
 

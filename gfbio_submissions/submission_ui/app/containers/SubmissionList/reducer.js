@@ -54,7 +54,7 @@ function submissionListReducer(state = initialState, action) {
         .set('deleteBrokerSubmissionId', '');
     case DELETE_SUBMISSION:
       return state;
-        // .set('deleteBrokerSubmissionId', action.brokerSubmissionId);
+    // .set('deleteBrokerSubmissionId', action.brokerSubmissionId);
     case DELETE_SUBMISSION_SUCCESS:
       return state
         .set('deleteSubmissionDialog', false)

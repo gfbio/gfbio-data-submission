@@ -29,10 +29,11 @@ class SubmissionSerializer(serializers.ModelSerializer):
     data = serializers.JSONField()
     status = serializers.CharField(read_only=True)
 
-    # def create(self, validated_data):
-    #     obj = Submission(**validated_data)
-    #     obj.save()
-    #     return obj
+    issue = serializers.SerializerMethodField()
+
+    def get_issue(self, obj):
+        ref = obj.get_primary_helpdesk_reference()
+        return ref.reference_key if ref else ''
 
     def validate(self, data):
         if data.get('release', False):
@@ -55,6 +56,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
         model = Submission
         fields = (
             'broker_submission_id',
+            'issue',
             'site',
             # 'user',
             'submitting_user', 'site_project_id', 'target', 'status',

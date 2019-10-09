@@ -6,7 +6,7 @@ import environ
 
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
-VERSION = '1.78.0'
+VERSION = '1.79.0'
 
 ROOT_DIR = (
         environ.Path(__file__) - 3
@@ -334,4 +334,4 @@ LOGIN_REDIRECT_URL = "/ui/submission/list"
 LOGOUT_REDIRECT_URL = "/"
 
 OIDC_RP_SCOPES = "openid email profile address phone id"
-OIDC_USERNAME_ALGO = "gfbio_submissions.authentication.user_name.generate_username"
+# OIDC_USERNAME_ALGO = "gfbio_submissions.authentication.user_name.generate_username"

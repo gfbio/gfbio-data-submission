@@ -19,7 +19,8 @@ from rest_framework.test import APIRequestFactory, APIClient
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, GENERIC, ENA_PANGAEA
 from gfbio_submissions.brokerage.models import Submission, RequestLog, \
-    SiteConfiguration, ResourceCredential, TaskProgressReport, SubmissionUpload
+    SiteConfiguration, ResourceCredential, TaskProgressReport, SubmissionUpload, \
+    AdditionalReference
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_submission_post_response, \
     _get_test_data_dir_path
@@ -267,6 +268,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
         content = json.loads(response.content.decode('utf-8'))
         expected = {
             'broker_submission_id': content['broker_submission_id'],
+            'issue': '',
             'data': {'optional_validation': [
                 "requirements : 'study_type' is a required property",
                 "requirements : 'samples' is a required property",
@@ -315,6 +317,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
         content = json.loads(response.content.decode('utf-8'))
         expected = {
             'broker_submission_id': content['broker_submission_id'],
+            'issue': '',
             'data': {'optional_validation': [
                 u"requirements : 'study_type' is a required property",
                 u"requirements : 'samples' is a required property",
@@ -1025,6 +1028,26 @@ class TestSubmissionViewGetRequest(TestSubmissionView):
         self.assertEqual('horst', content['site'])
 
     @responses.activate
+    def test_get_submission_with_helpdesk_issue(self):
+        self._add_create_ticket_response()
+        self._post_submission()
+        submission = Submission.objects.first()
+
+        AdditionalReference.objects.create(
+            submission=submission,
+            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+            primary=True,
+            reference_key='SAND-0815',
+        )
+
+        response = self.api_client.get(
+            '/api/submissions/{0}/'.format(submission.broker_submission_id))
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(200, response.status_code)
+        self.assertIn('issue', content)
+        self.assertEqual('SAND-0815', content.get('issue', 'NO_ISSUE'))
+
+    @responses.activate
     def test_no_submission_for_id(self):
         self._add_create_ticket_response()
         self._post_submission()
@@ -1659,6 +1682,7 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
             'status': 'OPEN',
             'release': False,
             'broker_submission_id': content['broker_submission_id'],
+            'issue': '',
             'site_project_id': '',
             'target': 'GENERIC',
             'site': 'horst',

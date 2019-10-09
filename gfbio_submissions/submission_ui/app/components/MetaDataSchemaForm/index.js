@@ -43,12 +43,6 @@ class MetaDataSchemaForm extends React.PureComponent {
         onClick={() => this.props.onClickMetaDataSchema(schema)}
       >
         {schema}
-        {/*<a*/}
-        {/*  className="license-link align-bottom"*/}
-        {/*  href={`link_to_details_of_${schema}`}*/}
-        {/*>*/}
-        {/*  details*/}
-        {/*</a>*/}
       </button>
     </li>
   ));
@@ -111,4 +105,3 @@ export default compose(
   withReducer,
   withConnect,
 )(MetaDataSchemaForm);
-// export default MetaDataSchemaForm;
