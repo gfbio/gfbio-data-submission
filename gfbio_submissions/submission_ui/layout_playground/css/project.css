@@ -1539,20 +1539,36 @@ form.pagewide-form .submission-info ul li {
   padding: .375rem 0 .375rem 0;
 }
 
-form.pagewide-form .submission-info ul li a {
+form.pagewide-form .submission-info ul li a, form.pagewide-form .submission-info ul li p {
   text-decoration: none;
   color: #495057;
 }
 
-form.pagewide-form .submission-info ul li a .bsi {
+form.pagewide-form .submission-info ul li a .bsi, form.pagewide-form .submission-info ul li p .bsi {
   margin: .5rem 0 0 .5rem;
   padding-left: .5rem;
   border-left: 2px solid #ced4da;
   font-size: 0.7rem;
 }
 
-form.pagewide-form .submission-info ul li a i {
+form.pagewide-form .submission-info ul li a i, form.pagewide-form .submission-info ul li p i {
   padding-right: .5rem;
+}
+
+form.pagewide-form .submission-info ul li a.external {
+  color: #3CACE4;
+}
+
+form.pagewide-form .submission-info ul li a.external .bsi {
+  border-color: rgba(60, 172, 228, 0.6);
+}
+
+form.pagewide-form .submission-info ul li a.external:hover {
+  color: #FF8362;
+}
+
+form.pagewide-form .submission-info ul li a.external:hover .bsi {
+  border-color: #FF8362;
 }
 
 /*
