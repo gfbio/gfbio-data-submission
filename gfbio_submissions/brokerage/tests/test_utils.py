@@ -1733,44 +1733,14 @@ class TestCSVParsing(TestCase):
         self.assertDictEqual(self.expected_parse_result,
                              self._strip(requirements))
 
-    # def test_tab_delim_file_creation(self):
-    #     with open(os.path.join(
-    #             _get_test_data_dir_path(),
-    #             'csv_files/mol_5_items_semi_no_quoting.csv'),
-    #             'r') as data_file:
-    #         csv_reader = DictReader(
-    #             data_file,
-    #             quoting=QUOTE_ALL,
-    #             delimiter=';',
-    #             quotechar='"',
-    #             skipinitialspace=True,
-    #             restkey='extra_columns_found',
-    #             restval='extra_value_found',
-    #         )
-    #         with open('tabs.csv', 'w', newline='') as csv_file:
-    #             fieldnames = ['sample_title', 'taxon_id', 'sample_description',
-    #                           'sequencing_platform', 'library_strategy',
-    #                           'library_source', 'library_selection',
-    #                           'library_layout', 'nominal_length',
-    #                           'forward_read_file_name',
-    #                           'forward_read_file_checksum',
-    #                           'reverse_read_file_name',
-    #                           'reverse_read_file_checksum', 'checksum_method',
-    #                           'investigation type', 'environmental package',
-    #                           'collection date',
-    #                           'geographic location (latitude)',
-    #                           'geographic location (longitude)',
-    #                           'geographic location (depth)',
-    #                           'geographic location (elevation)',
-    #                           'geographic location (country and/or sea)',
-    #                           'environment (biome)', 'environment (material)',
-    #                           'environment (feature)']
-    #             writer = DictWriter(csv_file, dialect='excel-tab',
-    #                                 extrasaction='ignore',
-    #                                 fieldnames=fieldnames)
-    #             writer.writeheader()
-    #             for row in csv_reader:
-    #                 writer.writerow(row)
+    def test_parse_real_world_example(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/PS99_sediment_gfbio_submission_form.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+        self.assertEqual(7, len(requirements['samples']))
+        self.assertEqual(7, len(requirements['experiments']))
 
     def test_parse_tab(self):
         self.maxDiff = None
