@@ -231,7 +231,7 @@ def check_for_molecular_content(submission):
         status = False
         messages = []
         if valid:
-            submission.target = ENA_PANGAEA
+            # submission.target = ENA_PANGAEA
             # submission.save()
             logger.info(
                 msg='check_for_molecular_content | valid data from csv |'
