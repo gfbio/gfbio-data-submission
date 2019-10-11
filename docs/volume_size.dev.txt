@@ -1,0 +1,167 @@
+
+date
+Fr 11. Okt 15:32:56 CEST 2019
+
+root@monstermagnet:/var/www/gfbio_submissions# docker volume prune
+WARNING! This will remove all local volumes not used by at least one container.
+Are you sure you want to continue? [y/N] y
+Deleted Volumes:
+8b59634f6072b99708677408657c6c902404dd8cba473b8ee8bae8f60ba1ffdb
+
+Total reclaimed space: 631B
+root@monstermagnet:/var/www/gfbio_submissions# docker image prune
+WARNING! This will remove all dangling images.
+Are you sure you want to continue? [y/N] y
+Deleted Images:
+deleted: sha256:7c1a6499e3e54a7acb1e193980287ad4db56423371ba8159787aa135b94257bf
+deleted: sha256:02c936334e5bc5f0a838241f2711b9dbef72617b87128e1bb7881ea5f56d79da
+deleted: sha256:7f94214f2d384ae4a7300480cc211ceecad841ee90f7b20ba750d5acdb8bc8c2
+deleted: sha256:c901cc37d2e7d8ec6b756ca19c58d4f72146ff0b5890f32ba841baf205a2561a
+deleted: sha256:f21dede91387c4d700abb607aeb50d04224a96250fda787933f13eb2ad86c6c8
+deleted: sha256:e6c1b4e7d5582ff75cac79daba7836f32f3a0aed6a323fbc11406b1eafb2b95e
+deleted: sha256:56b16656c33ecd3453efbef17590c54c90a7f6b3c1e82d68dc3584fe524a0715
+deleted: sha256:806fce20d254bb7a07b01f657230f35af154596e9c90fcf835a956db1ca60329
+deleted: sha256:bb404d75cef33bc02877017c70a7d4d329e73adca5b67c5162e3a3f839dde939
+deleted: sha256:724d8e8b0648a939b071216cbf84b15701dec6dad06f0b1d9d7ef1ea233026d3
+deleted: sha256:886e370782f580914a19b99e837e85ff72e8a969516210fae1163ece7774eeb3
+deleted: sha256:e4490c21346fda6251a35376be6cf38b3414b70db4299fd32949882295331462
+deleted: sha256:e2aa62ea9309e170c3791286a08aa14541be948ad7311697ca6f839059d97568
+deleted: sha256:b3bc9d592a5a53cd20cf813e12bfda2b5d82ccf888604bf41641178fb348587e
+deleted: sha256:0476cac6a100c42f5ed6a5a9a7d13ad4db9fb286bef88186e8e39faf1462799f
+deleted: sha256:741703d2ba4eb83af9ad430b00a78fab456821b3ac2baba71f43ded7fe247ac3
+deleted: sha256:1604984f346b163186ea4c015caaded48fd2e3dfb518cf813e24a54d4f168e9e
+deleted: sha256:f5e5758684f768f7295272f0be346d86247ca1898a2f09c85f71d2c7b2430d97
+deleted: sha256:6afe655a7af0902eff2a9fdfdf4b736fa3adf8a292de506cb9a2ddb193672cdb
+deleted: sha256:8e27aeb1b3d8db98b8a172decc1d31736a1f34799dfcdadce0c377fdb708586c
+deleted: sha256:f73c98ebc4cc68843447fc77de47f3fb8e9f1869a8518a8adf4c4002899f4d2d
+deleted: sha256:ca49be063e9e2e703ac6a1e313fd09b1fe24beade78a6f53ce00c302e6420379
+deleted: sha256:27269ba7e63f298eee5f957d54140745078935b70c0480e4000d087dbd5ea476
+deleted: sha256:401a80eeb8aa1b8c4d8d26c08f01f68ae3aaa355f1a65d5ceaac52e687c195f8
+deleted: sha256:d9c2b7e72a3122e886a509e7a80484418371e644e2f3efb93336ce42154c292b
+deleted: sha256:f951e0adbb05f0c9a1d0a7f997b3cee79653ffe2a543ab33b11debee848f77ec
+deleted: sha256:9709a6ec991d7496a04806ea3f8f9127faa13c671378f759c894832675ba256e
+deleted: sha256:4d333d81ffef2a11e4c51585db434f2084ae790665df18ff2c1e7c21ba661f04
+deleted: sha256:b5fce7bb7efcac5386afd50fd51bbd135ec7de01d9e530dc9975263e9f590946
+deleted: sha256:ee28d1314e11f8431af3cade7fe86149df5710030531598b336939b38d5e7ffa
+deleted: sha256:1d661874c13d6eec8119c4e966446471261de4505a28da5723bef8bfaaab1a4a
+deleted: sha256:3cfb8999ccc626068c39c8f9f7f0eca3ded8e15c796e7f8b02939b00d3d9c7a3
+deleted: sha256:4f6dc155f340ece262e8d8a3d347ad181c0c33b0904b236edf29b1a0637bfdcd
+deleted: sha256:c9eae81b55bca737f5e8e6532380eea237c65725445c77e6d7ae939e2f5ed1e1
+deleted: sha256:14a37989805c5d78843f06e4a61c17d42f95a531b29314dec259f80bd37d8618
+
+Total reclaimed space: 4.804GB
+root@monstermagnet:/var/www/gfbio_submissions# dockerps
+^C
+root@monstermagnet:/var/www/gfbio_submissions# docker ps
+CONTAINER ID        IMAGE                                       COMMAND                  CREATED             STATUS              PORTS                                      NAMES
+6ce3be85ecc7        gfbio_submissions_production_traefik        "/entrypoint.sh trae…"   22 minutes ago      Up 21 minutes       0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp   gfbio_submissions_traefik_1_64308ad63f65
+7a5acf961b64        gfbio_submissions_production_celerybeat     "/entrypoint /start-…"   22 minutes ago      Up 22 minutes                                                  gfbio_submissions_celerybeat_1_e2187cee889e
+1d94bd80abf8        gfbio_submissions_production_flower         "/entrypoint /start-…"   22 minutes ago      Up 22 minutes       0.0.0.0:5555->5555/tcp                     gfbio_submissions_flower_1_f2ce2ef5e07d
+b86527261234        gfbio_submissions_production_celeryworker   "/entrypoint /start-…"   22 minutes ago      Up 22 minutes                                                  gfbio_submissions_celeryworker_1_88767699f975
+6430f4997593        gfbio_submissions_production_django         "/entrypoint /start"     22 minutes ago      Up 22 minutes                                                  gfbio_submissions_django_1_31f722c4dabe
+d0ad055bf9e7        gfbio_submissions_production_postgres       "docker-entrypoint.s…"   22 minutes ago      Up 22 minutes       5432/tcp                                   gfbio_submissions_postgres_1_fc0dc6e2762e
+18fe88ff5782        redis:5.0                                   "docker-entrypoint.s…"   22 minutes ago      Up 22 minutes       6379/tcp                                   gfbio_submissions_redis_1_24cd60ce64c6
+root@monstermagnet:/var/www/gfbio_submissions# time docker-compose -f production.yml build > build.out
+redis uses an image, skipping
+Building postgres
+Building django
+Building traefik
+Building celeryworker
+Building celerybeat
+Building flower
+
+
+Building awscli
+
+real	8m8.589s
+user	1m52.568s
+sys	0m43.000s
+root@monstermagnet:/var/www/gfbio_submissions#
+root@monstermagnet:/var/www/gfbio_submissions#
+root@monstermagnet:/var/www/gfbio_submissions# supervisorctl stop devgfbiosubmissions
+devgfbiosubmissions: stopped
+root@monstermagnet:/var/www/gfbio_submissions# docker-compose -f production.yml down
+Stopping gfbio_submissions_postgres_1_fc0dc6e2762e ... done
+Stopping gfbio_submissions_redis_1_24cd60ce64c6    ... done
+Removing gfbio_submissions_traefik_1_64308ad63f65      ... done
+Removing gfbio_submissions_celerybeat_1_e2187cee889e   ... done
+Removing gfbio_submissions_flower_1_f2ce2ef5e07d       ... done
+Removing gfbio_submissions_celeryworker_1_88767699f975 ... done
+Removing gfbio_submissions_django_1_31f722c4dabe       ... done
+Removing gfbio_submissions_postgres_1_fc0dc6e2762e     ... done
+Removing gfbio_submissions_redis_1_24cd60ce64c6        ... done
+Removing gfbio_submissions_awscli_1_e0ec7c8eed14       ... done
+Removing network gfbio_submissions_default
+root@monstermagnet:/var/www/gfbio_submissions# supervisorctl start devgfbiosubmissions
+devgfbiosubmissions: started
+root@monstermagnet:/var/www/gfbio_submissions#
+
+
+
+
+
+docker image prune
+WARNING! This will remove all dangling images.
+Are you sure you want to continue? [y/N] y
+Deleted Images:
+deleted: sha256:e949df335bd0ac9e8d4d594462163775550cdc1d7937c78e902ab22b892d28dc
+deleted: sha256:3ce95079695532cf1c5f9152d9f41c0af799ffd18b00e439ac7671707419387a
+deleted: sha256:3ccdae05a5bbf1488fb507ab4fd50ced76d2209c46ebe4e675cc0c74e6689b40
+deleted: sha256:e36368c2536e8d926e810a6075cfa74ab4e0f56c0a549d8a4391bf81dff8a851
+deleted: sha256:784002d252f1f0b83452296e6b1dcb8a2d34699df3559461eebcca458e394fcc
+deleted: sha256:b45563648cefddeba19ed912ced08f47e6d9137c787c7bf9a67700751b255fc5
+deleted: sha256:4a660e479845374ef66da5f5a417ee374a5a67eb9389eb8bcae5bd8524394146
+deleted: sha256:c91a92f38f7b23bcf999898d7baed80af9389b53799baf00abd151ddb3f3f137
+deleted: sha256:99966068017c88466ec1b5e81caf956342214bf849cd89f340ba1357ff2a6a43
+deleted: sha256:512bdd35042d713252d04b8a155279c01781624cb679e7d5a9e7e435a7e144ed
+deleted: sha256:1dfb0ca63246f6c6db885c0352104ad8c72a78023f78381a3a45e046cd868ff5
+deleted: sha256:be0cb852300d497ff743a5340ec414edb9739bd43f822bcd9711e01ce183de26
+deleted: sha256:a50f4beda19955599ee1eea58ba6fadc6f0cfe3dc973721df374fec9a85a02f3
+deleted: sha256:a3b08ae69f11bf6611d25a5c8562177a646ba729734754e0a87961d0323249fd
+deleted: sha256:1361d89ba9b498e65f887786736279673f566d558de460333530b19144b89272
+deleted: sha256:be6d85c80c77d56517e5a748bda2ca54e26d312b963f4c313369e5bbdbf91197
+deleted: sha256:a5b54c12b29681b077278ea118a2300938332f69e2119acd732431f2cbb82379
+deleted: sha256:a6399559da58d7e325289cd90fcb0c449ef29d0c0ffc33810d5063f1d0aa480d
+deleted: sha256:ac508491f04f9b1288d90c84f55fe4122d15f5d305aa580009d3456c9165ccbb
+deleted: sha256:b6ca94b29c1cb7aeef2ae419017d15aa0528cf70bc39908ca887b2b30f26f49e
+deleted: sha256:5629eb4b5d62894d4f3219311341fa588d977c2e080f8a725f5028f908cc58c1
+deleted: sha256:3db72a85a3edf6a3b6e22d3e9e7f5d134e5b7b0521a9a15f8b92366906acf01d
+deleted: sha256:ffe89a222f69427c51bf5a032a13289d0c1b6deae43b837f07402e3ec9c95d2d
+deleted: sha256:7608122f18a10a95e895b37a4d281e36d7bc942587f7c53243e3d10c3b5dfe00
+deleted: sha256:7a9d17f9da75843cf4aca38fb134dd109e3aecf0b270f8c35adabfb5c3bf24a8
+deleted: sha256:9398397a25cf8912e49d081afaaf7f1506bd70272e520de30db7e21bd02c8ff6
+deleted: sha256:e4fdcce3500a29dc5e06e88650ecaf5a3792d19606b5a87611a321272e3cd0b8
+deleted: sha256:df52cebbaa027e779660d454064929d8e6a33c8fea5b367846eaec05b96fb357
+
+Total reclaimed space: 3.846GB
+root@monstermagnet:/var/www/gfbio_submissions# docker volume prune
+WARNING! This will remove all local volumes not used by at least one container.
+Are you sure you want to continue? [y/N] y
+Deleted Volumes:
+68c17205845ecc60e2433713687706748c8bb42cfb8fc45a4a38400d383be95d
+
+Total reclaimed space: 4.934kB
+
+ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+udev            7,9G     0  7,9G   0% /dev
+tmpfs           1,6G  169M  1,5G  11% /run
+/dev/vda1       158G   21G  131G  14% /
+tmpfs           7,9G  2,1M  7,9G   1% /dev/shm
+tmpfs           5,0M     0  5,0M   0% /run/lock
+tmpfs           7,9G     0  7,9G   0% /sys/fs/cgroup
+tmpfs           1,6G     0  1,6G   0% /run/user/0
+none            158G   21G  131G  14% /var/lib/docker/aufs/mnt/2218b3c5ff28dd4a07a4131eef724b8e2b7033991beb922de97e11fd4cd18398
+none            158G   21G  131G  14% /var/lib/docker/aufs/mnt/d8b3cb1432e118cc92a6fd2788be11f49a617cfd8a73182fcf6a1ea5d8f97f7e
+shm              64M  8,0K   64M   1% /var/lib/docker/containers/e94573fc1be9de33ee6efea2e2e5373e7b67e6e8c43a93745b9369a9abd87dd3/mounts/shm
+shm              64M     0   64M   0% /var/lib/docker/containers/ffce7d4ca80259f4e681500a3d04993e6e8db2abc864e792dcfddc87af1357b6/mounts/shm
+none            158G   21G  131G  14% /var/lib/docker/aufs/mnt/7af50446e1b8d99c0a20f3e28bd4b0e705f854f36fa6b54abf141ca8362a4a8b
+none            158G   21G  131G  14% /var/lib/docker/aufs/mnt/813ca2c5679e6f5e196bf799031706bb903c4ec4257ffbd0ec7b9cfbd0a65c87
+none            158G   21G  131G  14% /var/lib/docker/aufs/mnt/4d0a9e128401fdd53726b301ef2915b890f419dfde0027750775c3e804a2bb02
+none            158G   21G  131G  14% /var/lib/docker/aufs/mnt/e3cc75f88fd881b34ee90939973658398f8b56aa6da2ca49116c9a4dbff284b1
+shm              64M     0   64M   0% /var/lib/docker/containers/6570a29bd5e2fcfb84a63fb46e53e81b9f9ef06bcc2379d6c7df429c3c2f16a1/mounts/shm
+shm              64M   32K   64M   1% /var/lib/docker/containers/2de623d49444b5bb3e6855ba292e3fa6fbaee4704534872782f7339f07bdf987/mounts/shm
+shm              64M     0   64M   0% /var/lib/docker/containers/e52a490cd2652e29dff2077afd538f10fa33ca9f089d56685d65da7a8a501690/mounts/shm
+shm              64M     0   64M   0% /var/lib/docker/containers/fdf57582b8d77c8e936fa4cc98c8ae21196a244a2f3f4110eccfd68434a2b9e3/mounts/shm
+none            158G   21G  131G  14% /var/lib/docker/aufs/mnt/1041a9e13dc2c1264967e72960723a7e8359561694f7b82da30e17f2bfe8ed2c
+shm              64M     0   64M   0% /var/lib/docker/containers/e7b8b880856ac2427f2dc2e83a42c0b0605a875e651c06ffdb6e2c1543e4ee00/mounts/shm

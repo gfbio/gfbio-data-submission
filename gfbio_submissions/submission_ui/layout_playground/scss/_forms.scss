@@ -1393,7 +1393,7 @@ form.pagewide-form {
         border: none;
         padding: .375rem 0 .375rem 0;
 
-        a {
+        a, p {
           text-decoration: none;
           //color: $gfbio-light-blue;
           color: $gray-dark-2;
@@ -1415,6 +1415,21 @@ form.pagewide-form {
             padding-right: .5rem;
           }
         }
+
+        a.external {
+          color: $gfbio-light-blue;
+          .bsi {
+            border-color: $gfbio-light-blue-0-6;
+          }
+
+          &:hover {
+            color: $contrast-1;
+            .bsi {
+              border-color: $contrast-1;
+            }
+          }
+        }
+
       }
     }
 

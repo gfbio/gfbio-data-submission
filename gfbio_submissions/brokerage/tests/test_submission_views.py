@@ -148,9 +148,9 @@ class TestSubmissionView(TestCase):
 
     @classmethod
     def _create_test_meta_data(cls, delete=True, invalid=False, update=False):
-        file_name = 'invalid_molecular_metadata.csv' if invalid else 'molecular_metadata.csv'
+        file_name = 'csv_files/invalid_molecular_metadata.csv' if invalid else 'csv_files/molecular_metadata.csv'
         if update:
-            file_name = 'molecular_metadata_for_update.csv'
+            file_name = 'csv_files/molecular_metadata_for_update.csv'
 
         if delete:
             cls._delete_test_data()
@@ -648,7 +648,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             format='json'
         )
         submission = Submission.objects.first()
-        self.assertEqual(GENERIC, submission.target)
+        self.assertEqual(ENA_PANGAEA, submission.target)
 
     # TODO: move to dedicatet test class
     @responses.activate
@@ -700,7 +700,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         )
         self.assertEqual(200, response.status_code)
         submission = Submission.objects.first()
-        self.assertEqual(GENERIC, submission.target)
+        self.assertEqual(ENA_PANGAEA, submission.target)
         self.assertIn('validation', submission.data.keys())
         self.assertEqual(2, len(submission.data.get('validation', [])))
 
@@ -712,15 +712,18 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             'tasks.update_submission_issue_task',
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer_for_updates',
-            'tasks.check_on_hold_status_task']
+            'tasks.check_on_hold_status_task',
+            'tasks.create_broker_objects_from_submission_data_task',
+            'tasks.prepare_ena_submission_data_task',
+        ]
         all_task_reports = list(
             TaskProgressReport.objects.values_list(
                 'task_name', flat=True).order_by('created')
         )
         self.assertListEqual(expected_task_names, all_task_reports)
 
-        self.assertEqual(0, len(submission.brokerobject_set.all()))
-        self.assertEqual(0, len(submission.auditabletextdata_set.all()))
+        self.assertEqual(7, len(submission.brokerobject_set.all()))
+        self.assertEqual(3, len(submission.auditabletextdata_set.all()))
 
         check_tasks = TaskProgressReport.objects.filter(
             task_name='tasks.check_for_molecular_content_in_submission_task')
@@ -823,7 +826,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         submission = Submission.objects.first()
         self.assertEqual(GENERIC, submission.target)
         with open(os.path.join(_get_test_data_dir_path(),
-                               'molecular_metadata.csv'), 'rb') as csv_file:
+                               'csv_files/molecular_metadata.csv'), 'rb') as csv_file:
             uploaded_file = SimpleUploadedFile(
                 name='molecular.csv',
                 content_type='text/csv',
@@ -913,10 +916,12 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         )
         self.assertEqual(200, response.status_code)
         submission = Submission.objects.first()
-        self.assertEqual(GENERIC, submission.target)
+        self.assertEqual(ENA_PANGAEA, submission.target)
         expected_tasks = [
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer',
+            'tasks.create_broker_objects_from_submission_data_task',
+            'tasks.prepare_ena_submission_data_task',
             'tasks.get_user_email_task',
             'tasks.create_submission_issue_task',
             'tasks.update_submission_issue_task',
@@ -967,9 +972,11 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         )
         self.assertEqual(200, response.status_code)
         submission = Submission.objects.first()
-        self.assertEqual(GENERIC, submission.target)
+        self.assertEqual(ENA_PANGAEA, submission.target)
         expected_tasks = [
             'tasks.check_for_molecular_content_in_submission_task',
+            'tasks.create_broker_objects_from_submission_data_task',
+            'tasks.prepare_ena_submission_data_task',
             'tasks.trigger_submission_transfer',
             'tasks.get_user_email_task',
             'tasks.create_submission_issue_task',

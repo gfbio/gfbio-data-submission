@@ -21,13 +21,13 @@ function SubmissionInfo(props) {
         <div className="submission-info">
           <ul className="list-group list-group-flush">
             <li className="list-group-item">
-              <a href={''}>
-                <i className="fa fa-bookmark-o" aria-hidden="true"></i>Broker Submission Id: <br />
+              <a>
+                <i className="fa fa-bookmark-o" aria-hidden="true"></i>Submission Id: <br />
                 <div className="bsi">{props.brokerSubmissionId}</div>
               </a>
             </li>
             <li className="list-group-item">
-              <a href={JIRA_ROOT + props.issue}>
+              <a target="_blank" rel="noopener noreferrer" className="external" href={JIRA_ROOT + props.issue}>
                 <i className="fa fa-tags" aria-hidden="true"></i>Helpdesk
                 Key:<br />
                 <div className="bsi">{props.issue}</div>
