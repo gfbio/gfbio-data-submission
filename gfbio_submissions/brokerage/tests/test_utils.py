@@ -4,12 +4,14 @@ import datetime
 import io
 import json
 import os
+from collections import OrderedDict
 from unittest import skip
 from unittest.mock import patch
 
 import requests
 import responses
 from django.contrib.auth.models import Permission
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from jira import JIRA, JIRAError
 from requests import ConnectionError
@@ -19,7 +21,7 @@ from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, \
-    JIRA_ATTACHMENT_SUB_URL
+    JIRA_ATTACHMENT_SUB_URL, GENERIC, ENA_PANGAEA
 from gfbio_submissions.brokerage.exceptions import TransferClientError, \
     raise_response_exceptions, TransferServerError
 from gfbio_submissions.brokerage.models import Submission, ResourceCredential, \
@@ -33,6 +35,8 @@ from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_pangaea_comment_response, \
     _get_pangaea_ticket_response
 from gfbio_submissions.brokerage.utils import csv
+from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
+    check_for_molecular_content
 from gfbio_submissions.brokerage.utils.ena import \
     download_submitted_run_files_to_stringIO
 from gfbio_submissions.brokerage.utils.gfbio import \
@@ -1129,3 +1133,643 @@ class TestDownloadEnaReport(TestCase):
         row = reader.next()
         self.assertTrue('STUDY_ID' in row.keys())
         decompressed_file.close()
+
+
+class TestCSVParsing(TestCase):
+
+    @classmethod
+    def create_csv_submission_upload(cls, submission, user,
+                                     file_sub_path='csv_files/molecular_metadata.csv'):
+        with open(os.path.join(_get_test_data_dir_path(), file_sub_path),
+                  'rb') as data_file:
+            submission_upload = SubmissionUpload.objects.create(
+                submission=submission,
+                site=user,
+                user=user,
+                meta_data=True,
+                file=SimpleUploadedFile(
+                    'csv_files/upload_molecular_metadata.csv',
+                    data_file.read()),
+            )
+
+    @classmethod
+    def _strip(cls, d):
+        aliases = ['sample_alias', 'experiment_alias', 'sample_descriptor']
+        for k, v in d.items():
+            if isinstance(v, list):
+                for e in v:
+                    cls._strip(e)
+            elif isinstance(v, dict):
+                cls._strip(v)
+            else:
+                if k in aliases:
+                    d[k] = ''
+        return d
+
+    @classmethod
+    def setUpTestData(cls):
+        user = User.objects.create_user(
+            username='horst', email='horst@horst.de', password='password')
+        permissions = Permission.objects.filter(
+            content_type__app_label='brokerage',
+            codename__endswith='upload')
+        user.user_permissions.add(*permissions)
+        serializer = SubmissionSerializer(data={
+            'target': 'GENERIC',
+            'release': True,
+            'data': {
+                'requirements': {
+                    'title': 'Mol content test',
+                    'description': 'Reduced data for testing',
+                    'data_center': 'ENA – European Nucleotide Archive',
+                }
+            }
+        })
+        serializer.is_valid()
+        submission = serializer.save(site=user)
+        submission.additionalreference_set.create(
+            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+            reference_key='FAKE_KEY',
+            primary=True
+        )
+        cls.create_csv_submission_upload(submission, user)
+        cls.expected_parse_result = {'experiments': [{'design': {'files': {
+            'forward_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+            'forward_read_file_name': 'File1.forward.fastq.gz',
+            'reverse_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+            'reverse_read_file_name': 'File1.reverse.fastq.gz'},
+            'library_descriptor': {
+                'library_layout': {
+                    'layout_type': 'paired',
+                    'nominal_length': 420},
+                'library_selection': 'PCR',
+                'library_source': 'METAGENOMIC',
+                'library_strategy': 'AMPLICON'},
+            'sample_descriptor': 'oa2Xu'},
+            'experiment_alias': '4aNiEu',
+            'platform': 'Illumina HiSeq 1000'},
+            {'design': {'files': {
+                'forward_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                'forward_read_file_name': 'File2.forward.fastq.gz',
+                'reverse_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                'reverse_read_file_name': 'File2.reverse.fastq.gz'},
+                'library_descriptor': {
+                    'library_layout': {
+                        'layout_type': 'paired',
+                        'nominal_length': 420},
+                    'library_selection': 'PCR',
+                    'library_source': 'METAGENOMIC',
+                    'library_strategy': 'AMPLICON'},
+                'sample_descriptor': 'oaI2E-'},
+                'experiment_alias': 'ncs2E-',
+                'platform': 'Illumina HiSeq 1000'},
+            {'design': {'files': {
+                'forward_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                'forward_read_file_name': 'File3.forward.fastq.gz',
+                'reverse_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                'reverse_read_file_name': 'File3.reverse.fastq.gz'},
+                'library_descriptor': {
+                    'library_layout': {
+                        'layout_type': 'paired',
+                        'nominal_length': 420},
+                    'library_selection': 'PCR',
+                    'library_source': 'METAGENOMIC',
+                    'library_strategy': 'AMPLICON'},
+                'sample_descriptor': 'ncnWEu'},
+                'experiment_alias': 'nNCgEu',
+                'platform': 'Illumina HiSeq 1000'},
+            {'design': {'files': {
+                'forward_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                'forward_read_file_name': 'File4.forward.fastq.gz',
+                'reverse_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                'reverse_read_file_name': 'File4.reverse.fastq.gz'},
+                'library_descriptor': {
+                    'library_layout': {
+                        'layout_type': 'paired',
+                        'nominal_length': 420},
+                    'library_selection': 'PCR',
+                    'library_source': 'METAGENOMIC',
+                    'library_strategy': 'AMPLICON'},
+                'sample_descriptor': 'naXgPe'},
+                'experiment_alias': '4NRiE-',
+                'platform': 'Illumina HiSeq 1000'},
+            {'design': {'files': {
+                'forward_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                'forward_read_file_name': 'File5.forward.fastq.gz',
+                'reverse_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                'reverse_read_file_name': 'File5.reverse.fastq.gz'},
+                'library_descriptor': {
+                    'library_layout': {
+                        'layout_type': 'paired',
+                        'nominal_length': 420},
+                    'library_selection': 'PCR',
+                    'library_source': 'METAGENOMIC',
+                    'library_strategy': 'AMPLICON'},
+                'sample_descriptor': 'od_iEs'},
+                'experiment_alias': 'xdi2bs',
+                'platform': 'Illumina HiSeq 1000'}],
+            'samples': [{'sample_alias': 'oa2Xu',
+                         'sample_attributes': [
+                             OrderedDict([('tag',
+                                           'sample_description'),
+                                          ('value',
+                                           'A description, with '
+                                           'commmas, ...')]),
+                             OrderedDict([('tag',
+                                           'investigation type'),
+                                          ('value',
+                                           'mimarks-survey')]),
+                             OrderedDict([('tag',
+                                           'environmental package'),
+                                          ('value',
+                                           'sediment')]),
+                             OrderedDict([('tag',
+                                           'collection date'),
+                                          ('value',
+                                           '2015-07-26')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(latitude)'),
+                                          ('value',
+                                           '79.065100'),
+                                          ('unit',
+                                           'DD')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(longitude)'),
+                                          ('value',
+                                           '4.1810000-0.5'),
+                                          ('unit',
+                                           'DD')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(depth)'),
+                                          ('value',
+                                           '0-0.5'),
+                                          ('unit',
+                                           'm')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(elevation)'),
+                                          ('value',
+                                           '-2465.5'),
+                                          ('unit',
+                                           'm')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(country and/or sea)'),
+                                          ('value',
+                                           'Atlantic Ocean')]),
+                             OrderedDict([('tag',
+                                           'environment (biome)'),
+                                          ('value',
+                                           'marine benthic biome '
+                                           '(ENVO:01000024)')]),
+                             OrderedDict([('tag',
+                                           'environment (material)'),
+                                          ('value',
+                                           'marine sediment '
+                                           '(ENVO:00002113)')]),
+                             OrderedDict([('tag',
+                                           'environment (feature)'),
+                                          ('value',
+                                           'marine benthic feature '
+                                           '(ENVO:01000105)')]),
+                             OrderedDict([('tag',
+                                           'temperature'),
+                                          ('value',
+                                           '33'),
+                                          ('unit',
+                                           '&#176;C')])],
+                         'sample_description': 'A description, with commmas, ...',
+                         'sample_title': 'Sample No. 1',
+                         'taxon_id': 1234},
+                        {'sample_alias': 'oaI2E-',
+                         'sample_attributes': [
+                             OrderedDict([('tag',
+                                           'sample_description'),
+                                          ('value',
+                                           '')]),
+                             OrderedDict([('tag',
+                                           'investigation type'),
+                                          ('value',
+                                           'mimarks-survey')]),
+                             OrderedDict([('tag',
+                                           'environmental package'),
+                                          ('value',
+                                           'sediment')]),
+                             OrderedDict([('tag',
+                                           'collection date'),
+                                          ('value',
+                                           '2015-07-26')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(latitude)'),
+                                          ('value',
+                                           '79.065100'),
+                                          ('unit',
+                                           'DD')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(longitude)'),
+                                          ('value',
+                                           '4.1810000-0.5'),
+                                          ('unit',
+                                           'DD')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(depth)'),
+                                          ('value',
+                                           '0-0.5'),
+                                          ('unit',
+                                           'm')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(elevation)'),
+                                          ('value',
+                                           '-2465.5'),
+                                          ('unit',
+                                           'm')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(country and/or sea)'),
+                                          ('value',
+                                           'Atlantic Ocean')]),
+                             OrderedDict([('tag',
+                                           'environment (biome)'),
+                                          ('value',
+                                           'marine benthic biome '
+                                           '(ENVO:01000024)')]),
+                             OrderedDict([('tag',
+                                           'environment (material)'),
+                                          ('value',
+                                           'marine sediment '
+                                           '(ENVO:00002113)')]),
+                             OrderedDict([('tag',
+                                           'environment (feature)'),
+                                          ('value',
+                                           'marine benthic feature '
+                                           '(ENVO:01000105)')]),
+                             OrderedDict([('tag',
+                                           'temperature'),
+                                          ('value',
+                                           '2'),
+                                          ('unit',
+                                           '&#176;C')])],
+                         'sample_description': '',
+                         'sample_title': 'Sample No. 2',
+                         'taxon_id': 1234},
+                        {'sample_alias': 'ncnWEu',
+                         'sample_attributes': [
+                             OrderedDict([('tag',
+                                           'sample_description'),
+                                          ('value',
+                                           'A description, with '
+                                           'commmas, ...')]),
+                             OrderedDict([('tag',
+                                           'investigation type'),
+                                          ('value',
+                                           'mimarks-survey')]),
+                             OrderedDict([('tag',
+                                           'environmental package'),
+                                          ('value',
+                                           'sediment')]),
+                             OrderedDict([('tag',
+                                           'collection date'),
+                                          ('value',
+                                           '2015-07-26')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(latitude)'),
+                                          ('value',
+                                           '79.065100'),
+                                          ('unit',
+                                           'DD')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(longitude)'),
+                                          ('value',
+                                           '4.1810000-0.5'),
+                                          ('unit',
+                                           'DD')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(depth)'),
+                                          ('value',
+                                           '0-0.5'),
+                                          ('unit',
+                                           'm')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(elevation)'),
+                                          ('value',
+                                           '-2465.5'),
+                                          ('unit',
+                                           'm')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(country and/or sea)'),
+                                          ('value',
+                                           'Atlantic Ocean')]),
+                             OrderedDict([('tag',
+                                           'environment (biome)'),
+                                          ('value',
+                                           'marine benthic biome '
+                                           '(ENVO:01000024)')]),
+                             OrderedDict([('tag',
+                                           'environment (material)'),
+                                          ('value',
+                                           'marine sediment '
+                                           '(ENVO:00002113)')]),
+                             OrderedDict([('tag',
+                                           'environment (feature)'),
+                                          ('value',
+                                           'marine benthic feature '
+                                           '(ENVO:01000105)')]),
+                             OrderedDict([('tag',
+                                           'temperature'),
+                                          ('value',
+                                           '33'),
+                                          ('unit',
+                                           '&#176;C')])],
+                         'sample_description': 'A description, with commmas, ...',
+                         'sample_title': 'Sample No. 3',
+                         'taxon_id': 1234},
+                        {'sample_alias': 'naXgPe',
+                         'sample_attributes': [
+                             OrderedDict([('tag',
+                                           'sample_description'),
+                                          ('value',
+                                           'A description, with '
+                                           'commmas, ...')]),
+                             OrderedDict([('tag',
+                                           'investigation type'),
+                                          ('value',
+                                           'mimarks-survey')]),
+                             OrderedDict([('tag',
+                                           'environmental package'),
+                                          ('value',
+                                           'sediment')]),
+                             OrderedDict([('tag',
+                                           'collection date'),
+                                          ('value',
+                                           '2015-07-26')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(latitude)'),
+                                          ('value',
+                                           '79.065100'),
+                                          ('unit',
+                                           'DD')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(longitude)'),
+                                          ('value',
+                                           '4.1810000-0.5'),
+                                          ('unit',
+                                           'DD')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(depth)'),
+                                          ('value',
+                                           '0-0.5'),
+                                          ('unit',
+                                           'm')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(elevation)'),
+                                          ('value',
+                                           '-2465.5'),
+                                          ('unit',
+                                           'm')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(country and/or sea)'),
+                                          ('value',
+                                           'Atlantic Ocean')]),
+                             OrderedDict([('tag',
+                                           'environment (biome)'),
+                                          ('value',
+                                           'marine benthic biome '
+                                           '(ENVO:01000024)')]),
+                             OrderedDict([('tag',
+                                           'environment (material)'),
+                                          ('value',
+                                           'marine sediment '
+                                           '(ENVO:00002113)')]),
+                             OrderedDict([('tag',
+                                           'environment (feature)'),
+                                          ('value',
+                                           'marine benthic feature '
+                                           '(ENVO:01000105)')]),
+                             OrderedDict([('tag',
+                                           'temperature'),
+                                          ('value',
+                                           '78'),
+                                          ('unit',
+                                           '&#176;C')])],
+                         'sample_description': 'A description, with commmas, ...',
+                         'sample_title': 'Sample No. 4',
+                         'taxon_id': 1234},
+                        {'sample_alias': 'od_iEs',
+                         'sample_attributes': [
+                             OrderedDict([('tag',
+                                           'sample_description'),
+                                          ('value',
+                                           'A description, with '
+                                           'commmas, ...')]),
+                             OrderedDict([('tag',
+                                           'investigation type'),
+                                          ('value',
+                                           'mimarks-survey')]),
+                             OrderedDict([('tag',
+                                           'environmental package'),
+                                          ('value',
+                                           'sediment')]),
+                             OrderedDict([('tag',
+                                           'collection date'),
+                                          ('value',
+                                           '2015-07-26')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(latitude)'),
+                                          ('value',
+                                           '79.065100'),
+                                          ('unit',
+                                           'DD')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(longitude)'),
+                                          ('value',
+                                           '4.1810000-0.5'),
+                                          ('unit',
+                                           'DD')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(depth)'),
+                                          ('value',
+                                           '0-0.5'),
+                                          ('unit',
+                                           'm')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(elevation)'),
+                                          ('value',
+                                           '-2465.5'),
+                                          ('unit',
+                                           'm')]),
+                             OrderedDict([('tag',
+                                           'geographic location '
+                                           '(country and/or sea)'),
+                                          ('value',
+                                           'Atlantic Ocean')]),
+                             OrderedDict([('tag',
+                                           'environment (biome)'),
+                                          ('value',
+                                           'marine benthic biome '
+                                           '(ENVO:01000024)')]),
+                             OrderedDict([('tag',
+                                           'environment (material)'),
+                                          ('value',
+                                           'marine sediment '
+                                           '(ENVO:00002113)')]),
+                             OrderedDict([('tag',
+                                           'environment (feature)'),
+                                          ('value',
+                                           'marine benthic feature '
+                                           '(ENVO:01000105)')]),
+                             OrderedDict([('tag',
+                                           'temperature'),
+                                          ('value',
+                                           '1'),
+                                          ('unit',
+                                           '&#176;C')])],
+                         'sample_description': 'A description, with commmas, ...',
+                         'sample_title': 'Sample No. 5',
+                         'taxon_id': 1234}],
+            'study_type': 'Other'}
+        cls._strip(cls.expected_parse_result)
+
+    def test_setUp_result(self):
+        sub = Submission.objects.first()
+        print(sub.broker_submission_id)
+        print(sub.submissionupload_set.all())
+
+    def test_parse_molecular_csv(self):
+        file_names = [
+            'csv_files/molecular_metadata.csv',
+            'csv_files/mol_5_items_comma_some_double_quotes.csv',
+            'csv_files/mol_5_items_comma_no_quoting_in_header.csv',
+            'csv_files/mol_5_items_semi_no_quoting.csv',
+            'csv_files/mol_comma_with_empty_rows_cols.csv',
+        ]
+        for fn in file_names:
+            with open(os.path.join(_get_test_data_dir_path(), fn),
+                      'r') as data_file:
+                requirements = parse_molecular_csv(data_file)
+        requirements_keys = requirements.keys()
+        self.assertIn('experiments', requirements_keys)
+        self.assertIn('samples', requirements_keys)
+
+    def test_parse_comma_with_some_quotes(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/mol_5_items_comma_some_double_quotes.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+        requirements_keys = requirements.keys()
+        self.assertIn('experiments', requirements_keys)
+        self.assertIn('samples', requirements_keys)
+        self.assertDictEqual(self.expected_parse_result,
+                             self._strip(requirements))
+
+    def test_parse_comma_no_quotes_in_header(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/mol_5_items_comma_no_quoting_in_header.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+        requirements_keys = requirements.keys()
+        self.assertIn('experiments', requirements_keys)
+        self.assertIn('samples', requirements_keys)
+        self.assertDictEqual(self.expected_parse_result,
+                             self._strip(requirements))
+
+    def test_parse_comma_with_empty_rows(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/mol_comma_with_empty_rows_cols.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+        requirements_keys = requirements.keys()
+        self.assertIn('experiments', requirements_keys)
+        self.assertIn('samples', requirements_keys)
+        # 8 rows: 1 empty, 1 only commas, rest is complete or partly empty
+        # results in 7 items
+        self.assertEqual(7, len(requirements.get('samples', [])))
+        self.assertEqual(7, len(requirements.get('experiments', [])))
+
+    def test_parse_semi_no_quoting(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/mol_5_items_semi_no_quoting.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+        requirements_keys = requirements.keys()
+        self.assertIn('experiments', requirements_keys)
+        self.assertIn('samples', requirements_keys)
+        self.assertDictEqual(self.expected_parse_result,
+                             self._strip(requirements))
+
+    def test_parse_semi_double_quoting(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/mol_5_items_semi_double_quoting.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+        requirements_keys = requirements.keys()
+        self.assertIn('experiments', requirements_keys)
+        self.assertIn('samples', requirements_keys)
+        self.assertDictEqual(self.expected_parse_result,
+                             self._strip(requirements))
+
+    def test_parse_real_world_example(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/PS99_sediment_gfbio_submission_form.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+        self.assertEqual(7, len(requirements['samples']))
+        self.assertEqual(7, len(requirements['experiments']))
+
+    def test_parse_tab(self):
+        self.maxDiff = None
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/mol_5_items_tab.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+        requirements_keys = requirements.keys()
+        self.assertIn('experiments', requirements_keys)
+        self.assertIn('samples', requirements_keys)
+        self.assertDictEqual(self.expected_parse_result,
+                             self._strip(requirements))
+
+    def test_check_for_molecular_content(self):
+        submission = Submission.objects.first()
+        self.assertEqual(GENERIC, submission.target)
+        self.assertIn('data_center', submission.data['requirements'].keys())
+        print(submission.data['requirements']['data_center'])
+        self.assertEqual('ENA – European Nucleotide Archive',
+                         submission.data['requirements']['data_center'])
+        self.assertNotIn('samples', submission.data['requirements'].keys())
+        self.assertNotIn('experiments', submission.data['requirements'].keys())
+
+        is_mol_content, errors = check_for_molecular_content(submission)
+
+        self.assertTrue(is_mol_content)
+        self.assertListEqual([], errors)
+        submission = Submission.objects.first()
+        self.assertIn('samples', submission.data['requirements'].keys())
+        self.assertIn('experiments', submission.data['requirements'].keys())
+        self.assertEqual(ENA_PANGAEA, submission.target)

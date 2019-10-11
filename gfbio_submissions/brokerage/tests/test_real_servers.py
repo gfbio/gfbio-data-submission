@@ -64,7 +64,7 @@ class TestSubmissionServers(TestCase):
             'file': open(
                 os.path.join(
                     _get_test_data_dir_path(),
-                    'molecular_metadata.csv'),
+                    'csv_files/molecular_metadata.csv'),
                 'rb'
             )
         }
