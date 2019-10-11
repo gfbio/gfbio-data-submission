@@ -21,7 +21,7 @@ from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, \
-    JIRA_ATTACHMENT_SUB_URL, GENERIC
+    JIRA_ATTACHMENT_SUB_URL, GENERIC, ENA_PANGAEA
 from gfbio_submissions.brokerage.exceptions import TransferClientError, \
     raise_response_exceptions, TransferServerError
 from gfbio_submissions.brokerage.models import Submission, ResourceCredential, \
@@ -1759,6 +1759,9 @@ class TestCSVParsing(TestCase):
         submission = Submission.objects.first()
         self.assertEqual(GENERIC, submission.target)
         self.assertIn('data_center', submission.data['requirements'].keys())
+        print(submission.data['requirements']['data_center'])
+        self.assertEqual('ENA – European Nucleotide Archive',
+                         submission.data['requirements']['data_center'])
         self.assertNotIn('samples', submission.data['requirements'].keys())
         self.assertNotIn('experiments', submission.data['requirements'].keys())
 
@@ -1769,3 +1772,4 @@ class TestCSVParsing(TestCase):
         submission = Submission.objects.first()
         self.assertIn('samples', submission.data['requirements'].keys())
         self.assertIn('experiments', submission.data['requirements'].keys())
+        self.assertEqual(ENA_PANGAEA, submission.target)

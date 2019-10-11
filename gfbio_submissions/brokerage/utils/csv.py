@@ -135,7 +135,8 @@ def parse_molecular_csv(csv_file):
     header = csv_file.readline()
     dialect = csv.Sniffer().sniff(header)
     csv_file.seek(0)
-    delimiter = dialect.delimiter if dialect.delimiter in [',', ';', '\t'] else ','
+    delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
+                                                           '\t'] else ','
     csv_reader = csv.DictReader(
         csv_file,
         quoting=csv.QUOTE_ALL,
@@ -175,20 +176,30 @@ def check_for_molecular_content(submission):
     logger.info(
         msg='check_for_molecular_content | '
             'process submission={0} | target={1} | release={2}'
-            ''.format(submission.broker_submission_id, submission.target, submission.release))
+            ''.format(submission.broker_submission_id, submission.target,
+                      submission.release))
 
+    # GFBIO-2658: old state, pass with target ena and check for GENERIC in addition to datacenter
     # TODO: but csv has to be parsed anyway ? or not ?
     # TODO: compare with usecase api submissions
-    if submission.target == ENA or submission.target == ENA_PANGAEA:
-        logger.info(
-            msg='check_for_molecular_content | '
-                'ena is default target return=True')
-        return True, []
+    # if submission.target == ENA or submission.target == ENA_PANGAEA:
+    #     logger.info(
+    #         msg='check_for_molecular_content | '
+    #             'ena is default target return=True')
+    #     return True, []
 
     # TODO: consider GFBIO_REQUEST_TYPE_MAPPINGS for data_center mappings
-    elif submission.release and submission.target == GENERIC \
-            and submission.data.get('requirements', {}) \
-            .get('data_center', '').count('ENA'):
+    # elif submission.release and submission.target == GENERIC \
+    #         and submission.data.get('requirements', {}) \
+    #         .get('data_center', '').count('ENA'):
+    # ######################################################################
+
+    # GFBIO-2658: independent of target, check for data_center ENA
+    if submission.release and submission.data.get('requirements', {}).get(
+            'data_center', '').count('ENA'):
+
+        submission.target = ENA_PANGAEA
+
         meta_data_files = submission.submissionupload_set.filter(meta_data=True)
         no_of_meta_data_files = len(meta_data_files)
 
@@ -217,23 +228,29 @@ def check_for_molecular_content(submission):
             target=ENA_PANGAEA,
             schema_location=path,
         )
-
+        status = False
+        messages = []
         if valid:
             submission.target = ENA_PANGAEA
-            submission.save()
+            # submission.save()
             logger.info(
                 msg='check_for_molecular_content | valid data from csv |'
                     ' return=True')
-            return True, []
+            # return True, []
+            status = True
         else:
-            error_messages = [e.message for e in full_errors]
+            status = False
+            messages = [e.message for e in full_errors]
             submission.data.update(
-                {'validation': error_messages})
-            submission.save()
+                {'validation': messages})
+            # submission.save()
             logger.info(
                 msg='check_for_molecular_content  | invalid data from csv |'
                     ' return=False')
-            return False, error_messages
+            # return False, error_messages
+
+        submission.save()
+        return status, messages
     else:
         logger.info(
             msg='check_for_molecular_content | no criteria matched | '
