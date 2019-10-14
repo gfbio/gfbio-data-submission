@@ -73,7 +73,7 @@ class FormWrapper extends React.PureComponent {
     let errors = mutualMessages[1];
 
     let errorList = [...mutual].map((errorKey, index) => {
-      let errorName =  errorKey.charAt(0).toUpperCase() + errorKey.slice(1);
+      let errorName = errorKey.charAt(0).toUpperCase() + errorKey.slice(1);
       return (
         <li key={index} className="list-group-item">
             <span className="validation-error-item">
@@ -220,7 +220,7 @@ class FormWrapper extends React.PureComponent {
       >
         <div className="container">
           <div className="row">
-            {/*<div className="col-md-2">*/}
+            {/*<div className="col-md-1">*/}
             {/* left col */}
             {/* TODO: https://getbootstrap.com/docs/4.0/examples/dashboard/ */}
 
