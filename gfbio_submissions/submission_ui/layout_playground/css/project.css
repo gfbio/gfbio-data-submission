@@ -1526,7 +1526,7 @@ form.pagewide-form .btn-link-light-blue i {
 
 form.pagewide-form .submission-info {
   color: #495057;
-  background-color: #f8f8f8;
+  background-color: #fff;
   border: 1px solid #ced4da;
   border-radius: .25rem;
   padding: .75rem;
@@ -2171,6 +2171,10 @@ header.masthead .scroll-link-sleep {
 
 #mainNav .navbar-nav, #mainNavBase .navbar-nav {
   font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+#mainNav .navbar-nav > li.nav-item .help-link, #mainNavBase .navbar-nav > li.nav-item .help-link {
+  font-weight: 700 !important;
 }
 
 #mainNav .navbar-nav > li.nav-item .has-dropdown:after, #mainNavBase .navbar-nav > li.nav-item .has-dropdown:after {

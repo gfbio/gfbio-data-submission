@@ -1,221 +1,252 @@
 // Styling for the navbar
 #mainNav {
 
-    border-bottom: 1px solid $gray-medium;
-    background-color: $white;
+  border-bottom: 1px solid $gray-medium;
+  background-color: $white;
 
-    /* from main navBase. remove or adaept to backgroundb */
+  /* from main navBase. remove or adaept to backgroundb */
 
-    @include sans-serif-font;
-    @include transition-all;
+  @include sans-serif-font;
+  @include transition-all;
+
+  .navbar-brand {
+
+    .blue {
+      color: $gfbio-blue;
+    }
+
+    .light-blue {
+      color: $gfbio-light-blue;
+    }
+
+    .green {
+      color: $gfbio-green;
+    }
+
+    font-weight: 700;
+    text-transform: uppercase;
+    color: $primary;
+    @include raleway;
+
+    &:focus,
+    &:hover {
+      color: darken($primary, .1);
+    }
+  }
+
+  .no-text-transform {
+    text-transform: none;
+  }
+
+  .navbar-nav {
+    @include raleway;
+
+    > li.nav-item {
+
+      //.help-link:before {
+      //  @include themifyBefore;
+      //  content: "\e718";
+      //  font-size: .7rem;
+      //}
+
+      .help-link {
+        font-weight: 700 !important;
+      }
+
+      .has-dropdown:after {
+        @include themifyAfter;
+        content: "\e64b";
+      }
+
+      .dropdown-menu {
+        border: 1px solid $gray-medium;
+      }
+
+      .dropdown-item {
+
+        //&:hover {
+        //    background-color: $gray-100;
+        //}
+        &:active {
+          background-color: $gfbio-green;
+        }
+      }
+
+      .user-profile:before {
+        @include themifyBefore;
+        content: "\e602";
+      }
+
+      .user-settings:before {
+        @include themifyBefore;
+        content: "\e60f";
+      }
+
+      .user-support:before {
+        @include themifyBefore;
+        content: "\e6d4";
+      }
+
+      .user-signout:before {
+        @include themifyBefore;
+        content: "\e679";
+      }
+
+
+      .btn {
+        margin: 0 1rem 0 1rem;
+        background-color: transparent;
+        border: 1px solid $gray-medium;
+      }
+
+      > a.nav-link,
+      > a.nav-link:focus {
+        font-size: .8rem;
+        font-weight: 500;
+        letter-spacing: .05rem;
+        text-transform: uppercase;
+        color: $gray-900;
+
+        &:hover {
+          color: $primary;
+        }
+
+        &.active {
+          color: $primary !important;
+          background-color: transparent;
+
+          &:hover {
+            background-color: transparent;
+          }
+        }
+      }
+
+      .sign-in {
+        border-color: darken($gfbio-blue, .1);
+        background-color: $gfbio-blue;
+        color: $white !important;
+
+        &:focus {
+          box-shadow: none;
+        }
+
+        &:hover {
+          background-color: $white;
+          color: $gfbio-blue !important;
+        }
+      }
+
+      .sign-up {
+        border-color: darken($gfbio-green, .2);
+        background-color: $gfbio-green;
+        color: $white !important;
+
+        &:focus {
+          box-shadow: none;
+        }
+
+        &:hover {
+          background-color: $white;
+          color: $gfbio-green !important;
+        }
+      }
+
+      .sign-out {
+        border-color: $gray-medium;
+        color: $gray-900 !important;
+
+        &:focus {
+          box-shadow: none;
+        }
+
+        &:hover {
+          border-color: $gfbio-green;
+          color: $gfbio-green !important;
+        }
+      }
+
+    }
+  }
+
+  @media (min-width: 992px) {
+
+    border-color: transparent;
+    background-color: transparent;
 
     .navbar-brand {
+      // color: fade-out($white, .3);
+      color: $black;
 
-        .blue {
-            color: $gfbio-blue;
-        }
-        .light-blue {
-            color: $gfbio-light-blue;
-        }
-        .green {
-            color: $gfbio-green;
-        }
+      &:focus,
+      &:hover {
+        // color: $white;
+        color: $gfbio-green;
+      }
+    }
+    .navbar-nav > li.nav-item > a.nav-link {
+      padding: 0.5rem 1rem;
+    }
+    .navbar-nav > li.nav-item > a.nav-link,
+    .navbar-nav > li.nav-item > a.nav-link:focus {
+      //color: fade-out($white, .3);
+      //&:hover {
+      //    color: $white;
+      //}
+      color: $gray-700;
 
-        font-weight: 700;
-        text-transform: uppercase;
-        color: $primary;
-        @include raleway;
+      &:hover {
+        color: $gfbio-green;
+      }
+    }
+    &.navbar-shrink {
+      border-bottom: 1px solid $gray-medium;
+      background-color: $white;
+
+      .navbar-brand {
+        color: $black;
+
         &:focus,
         &:hover {
-            color: darken($primary, .1);
+          // color: darken($primary, .1);
+          color: $gfbio-green;
         }
+      }
+
+      .navbar-nav > li.nav-item > a.nav-link,
+      .navbar-nav > li.nav-item > a.nav-link:focus {
+        color: $gray-700;
+
+        &:hover {
+          color: $gfbio-green;
+        }
+      }
     }
-
-    .no-text-transform {
-        text-transform: none;
-    }
-
-    .navbar-nav {
-        @include raleway;
-        > li.nav-item {
-
-            .has-dropdown:after {
-                @include themifyAfter;
-                content: "\e64b";
-            }
-
-            .dropdown-menu {
-                border: 1px solid $gray-medium;
-            }
-
-            .dropdown-item {
-
-                //&:hover {
-                //    background-color: $gray-100;
-                //}
-                &:active {
-                    background-color: $gfbio-green;
-                }
-            }
-
-            .user-profile:before {
-                @include themifyBefore;
-                content: "\e602";
-            }
-
-            .user-settings:before {
-                @include themifyBefore;
-                content: "\e60f";
-            }
-
-            .user-support:before {
-                @include themifyBefore;
-                content: "\e6d4";
-            }
-
-            .user-signout:before {
-                @include themifyBefore;
-                content: "\e679";
-            }
-
-            .btn {
-                margin: 0 1rem 0 1rem;
-                background-color: transparent;
-                border: 1px solid $gray-medium;
-            }
-
-            > a.nav-link,
-            > a.nav-link:focus {
-                font-size: .8rem;
-                font-weight: 500;
-                letter-spacing: .05rem;
-                text-transform: uppercase;
-                color: $gray-900;
-
-                &:hover {
-                    color: $primary;
-                }
-                &.active {
-                    color: $primary !important;
-                    background-color: transparent;
-                    &:hover {
-                        background-color: transparent;
-                    }
-                }
-            }
-
-            .sign-in {
-                border-color: darken($gfbio-blue, .1);
-                background-color: $gfbio-blue;
-                color: $white !important;
-                &:focus {
-                    box-shadow: none;
-                }
-                &:hover {
-                    background-color: $white;
-                    color: $gfbio-blue !important;
-                }
-            }
-
-            .sign-up {
-                border-color: darken($gfbio-green, .2);
-                background-color: $gfbio-green;
-                color: $white !important;
-                &:focus {
-                    box-shadow: none;
-                }
-                &:hover {
-                    background-color: $white;
-                    color: $gfbio-green !important;
-                }
-            }
-
-            .sign-out {
-                border-color: $gray-medium;
-                color: $gray-900 !important;
-                &:focus {
-                    box-shadow: none;
-                }
-                &:hover {
-                    border-color: $gfbio-green;
-                    color: $gfbio-green !important;
-                }
-            }
-
-        }
-    }
-
-    @media (min-width: 992px) {
-
-        border-color: transparent;
-        background-color: transparent;
-
-        .navbar-brand {
-            // color: fade-out($white, .3);
-            color: $black;
-            &:focus,
-            &:hover {
-                // color: $white;
-                color: $gfbio-green;
-            }
-        }
-        .navbar-nav > li.nav-item > a.nav-link {
-            padding: 0.5rem 1rem;
-        }
-        .navbar-nav > li.nav-item > a.nav-link,
-        .navbar-nav > li.nav-item > a.nav-link:focus {
-            //color: fade-out($white, .3);
-            //&:hover {
-            //    color: $white;
-            //}
-            color: $gray-700;
-            &:hover {
-                color: $gfbio-green;
-            }
-        }
-        &.navbar-shrink {
-            border-bottom: 1px solid $gray-medium;
-            background-color: $white;
-            .navbar-brand {
-                color: $black;
-                &:focus,
-                &:hover {
-                    // color: darken($primary, .1);
-                    color: $gfbio-green;
-                }
-            }
-            .navbar-nav > li.nav-item > a.nav-link,
-            .navbar-nav > li.nav-item > a.nav-link:focus {
-                color: $gray-700;
-                &:hover {
-                    color: $gfbio-green;
-                }
-            }
-        }
-    }
+  }
 }
 
 #mainNavBase {
-    @extend #mainNav;
+  @extend #mainNav;
 
-    border-bottom: 1px solid $gray-medium;
-    background-color: $white;
+  border-bottom: 1px solid $gray-medium;
+  background-color: $white;
 
-    @media (min-width: 992px) {
-        .navbar-brand {
-            color: $black;
-            &:focus,
-            &:hover {
-                //color: darken($primary, .1);
-                color: $gfbio-green;
-            }
-        }
-        .navbar-nav > li.nav-item > a.nav-link,
-        .navbar-nav > li.nav-item > a.nav-link:focus {
-            color: $gray-700;
-            &:hover {
-                color: $gfbio-green;
-            }
-        }
+  @media (min-width: 992px) {
+    .navbar-brand {
+      color: $black;
+
+      &:focus,
+      &:hover {
+        //color: darken($primary, .1);
+        color: $gfbio-green;
+      }
     }
+    .navbar-nav > li.nav-item > a.nav-link,
+    .navbar-nav > li.nav-item > a.nav-link:focus {
+      color: $gray-700;
+
+      &:hover {
+        color: $gfbio-green;
+      }
+    }
+  }
 }

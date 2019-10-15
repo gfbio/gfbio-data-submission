@@ -28,6 +28,10 @@ class SubmissionSubNavigation extends React.PureComponent {
                   <i className="icon ion-ios-add-circle-outline" />
                   Create Submission
                 </Link>
+                {/*<a href="" className="nav-link">*/}
+                {/*  <i className="icon ion-ios-help-circle-outline" />*/}
+                {/*  Help*/}
+                {/*</a>*/}
                 {/*<Link className="nav-link" to="/help">*/}
                 {/*  <i className="icon ion-ios-help-circle-outline" />*/}
                 {/*  Help*/}
