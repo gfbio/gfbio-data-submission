@@ -4,11 +4,11 @@
         "properties": {
             "title": {
                 "type": "string",
-                "minLength": 1
+                "minLength": 6
             },
             "description": {
                 "type": "string",
-                "minLength": 1
+                "minLength": 10
             }
         },
         "required": [
