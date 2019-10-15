@@ -95,8 +95,9 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
     # -----------------------------------------------------------------------
 
     summary = requirements.get('title', '')
-    if len(summary) >= 45:
-        summary = '{0}{1}'.format(summary[:45], '...')
+    # as requested in: GFBIO-2679 & DEVOPS-3
+    # if len(summary) >= 45:
+    #     summary = '{0}{1}'.format(summary[:45], '...')
 
     # molecular or generic
     jira_request_target = GFBIO_REQUEST_TYPE_MAPPINGS.get(
