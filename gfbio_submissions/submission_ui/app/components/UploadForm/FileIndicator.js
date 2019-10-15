@@ -156,7 +156,7 @@ class FileIndicator extends React.Component {
               <span className="upload-header">
                 Metadata
                 <i
-                  className="icon ion-ios-help-circle-outline help align-bottom"
+                    className="icon ion-ios-help-circle-outline help align-bottom"
                   aria-hidden="true"></i>
               </span>
         </OverlayTrigger>
