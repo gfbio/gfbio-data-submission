@@ -81,20 +81,23 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
     for c in contributors:
         fname = c.get('firstName', '')
         lname = c.get('lastName', '')
-        fname = '{0},'.format(fname) if len(fname) else ''
-        lname = '{0},'.format(lname) if len(lname) else ''
+        email = c.get('emailAddress', '')
+        lname = '{0},'.format(lname) if len(lname) else ','
+        fname = '{0},'.format(fname) if len(fname) else ','
+        email = '{0},'.format(email) if len(email) else ','
         contributor = '{0}{1}{2}\n'.format(
-            fname,
             lname,
-            c.get('emailAddress', '')
+            fname,
+
         )
         authors_text += contributor if len(contributor.strip()) else ''
 
     # -----------------------------------------------------------------------
 
     summary = requirements.get('title', '')
-    if len(summary) >= 45:
-        summary = '{0}{1}'.format(summary[:45], '...')
+    # as requested in: GFBIO-2679 & DEVOPS-3
+    # if len(summary) >= 45:
+    #     summary = '{0}{1}'.format(summary[:45], '...')
 
     # molecular or generic
     jira_request_target = GFBIO_REQUEST_TYPE_MAPPINGS.get(

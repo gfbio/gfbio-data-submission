@@ -532,7 +532,7 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
        
 - sudo git fetch
 - sudo git checkout 1.76.0
-- time sudo docker-compose -f production.yml build
+- time (sudo ?) docker-compose -f production.yml build
 
         real	91m51,295s
         user	2m49,542s
@@ -540,6 +540,12 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 
 - docker-compose -f production.yml run --rm django python manage.py migrate 
 - docker-compose -f production.yml run --rm django python manage.py collectstatic
+
+- avoid multiple container instances by stopping explictly ...
+- sudo supervisorctl stop gfbio_submissions
+- docker-compose -f production.yml down
+- sudo supervisorctl start gfbio_submissions
+- (tail -f logs/docker-compose_supervisord.log)
 
 #### (be careful !) prune images and volumes
 
