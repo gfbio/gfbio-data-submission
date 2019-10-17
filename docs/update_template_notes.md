@@ -528,6 +528,7 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
         Backing up the 'gfbio_submissions' database...
         SUCCESS: 'gfbio_submissions' database backup 'backup_2019_09_16T07_32_41.sql.gz' has been created and placed in '/backups'.
 
+- list backups: docker-compose -f production.yml exec postgres backups
 - sudo docker cp <CONTAINER_ID>:/backups/<BACKUPFILE> /var/www/gfbio_submissions/
        
 - sudo git fetch
