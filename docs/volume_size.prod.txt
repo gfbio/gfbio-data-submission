@@ -103,10 +103,6 @@
 
 -https://vsupalov.com/cleaning-up-after-docker/
 
-TODO: icons fonts via cdn then remove from vendors
-TODO: check what is needed from vendors anyway
-TODO: same for all other static files like images etc.
-
 ===============================================================
 ==================    END 16.10.2019   ========================
 ===============================================================
