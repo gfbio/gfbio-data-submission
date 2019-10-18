@@ -189,15 +189,10 @@ class BrokerObjectManager(models.Manager):
 
     def add_file_entities(self, experiment_broker_object, submission):
         if experiment_broker_object.type == 'experiment':
-            print('\nBO MANAGER experiment')
-            print(experiment_broker_object.data)
-            print(experiment_broker_object.data.keys())
             if 'files' in experiment_broker_object.data:
-                print('\tBO MANAGER files in experiment')
                 data = self.process_experiment_file_block(
                     experiment_broker_object.data
                 )
-                print(data)
                 obj, created = self.update_or_create(
                     type='run',
                     site=experiment_broker_object.site,

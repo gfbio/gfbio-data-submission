@@ -8,8 +8,7 @@ from collections import OrderedDict
 import dpath
 from shortid import ShortId
 
-from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
-    ENA_PANGAEA, ENA
+from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA
 from gfbio_submissions.brokerage.utils.schema_validation import \
     validate_data_full
 
@@ -87,8 +86,6 @@ def extract_sample(row, field_names, sample_id):
 
 
 def extract_experiment(experiment_id, row, sample_id):
-    # print('\nextract experiment: row :')
-    # print(row)
     try:
         design_description = int(row.get('design_description', '-1'))
     except ValueError as e:
@@ -131,7 +128,6 @@ def extract_experiment(experiment_id, row, sample_id):
             'design/library_descriptor/library_layout/nominal_length',
             nominal_length
         )
-    # print('return: ', experiment)
     return experiment
 
 
@@ -142,7 +138,6 @@ def parse_molecular_csv(csv_file):
     csv_file.seek(0)
     delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
                                                            '\t'] else ';'
-    print('DELIMITER: ', delimiter)
     csv_reader = csv.DictReader(
         csv_file,
         quoting=csv.QUOTE_ALL,
@@ -208,8 +203,6 @@ def check_for_molecular_content(submission):
 
         meta_data_files = submission.submissionupload_set.filter(meta_data=True)
         no_of_meta_data_files = len(meta_data_files)
-
-        print('\n - ---------------   no of meta files ', no_of_meta_data_files)
 
         if no_of_meta_data_files != 1:
             logger.info(

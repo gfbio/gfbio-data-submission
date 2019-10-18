@@ -533,7 +533,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         )
         experiment = submission.brokerobject_set.filter(
             type='experiment').first()
-        self.assertIn('files', experiment.data.get('design', {}).keys())
+        self.assertIn('files', experiment.data.keys())
 
         submission_text_data = list(
             submission.auditabletextdata_set.values_list(
@@ -543,6 +543,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             'study.xml',
             'sample.xml',
             'experiment.xml',
+            'run.xml'
         ]
         for s in submission_text_data:
             self.assertIn(s, expected_text_data_names)
@@ -608,8 +609,8 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertFalse(original_upload.meta_data)
         self.assertTrue(update_upload.meta_data)
 
-        self.assertEqual(7, len(submission.brokerobject_set.all()))
-        self.assertEqual(3, len(submission.auditabletextdata_set.all()))
+        self.assertEqual(10, len(submission.brokerobject_set.all()))
+        self.assertEqual(4, len(submission.auditabletextdata_set.all()))
 
         response = self.api_client.put(
             '/api/submissions/{0}/'.format(submission.broker_submission_id),
@@ -630,8 +631,8 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual('Update-Sample No. 1',
                          sample.data.get('sample_title', ''))
 
-        self.assertEqual(7, len(submission.brokerobject_set.all()))
-        self.assertEqual(3, len(submission.auditabletextdata_set.all()))
+        self.assertEqual(10, len(submission.brokerobject_set.all()))
+        self.assertEqual(4, len(submission.auditabletextdata_set.all()))
 
         data = self._create_test_meta_data(delete=True, invalid=True)
         response = self.api_client.post(url, data, format='multipart')
@@ -724,8 +725,8 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         )
         self.assertListEqual(expected_task_names, all_task_reports)
 
-        self.assertEqual(7, len(submission.brokerobject_set.all()))
-        self.assertEqual(3, len(submission.auditabletextdata_set.all()))
+        self.assertEqual(10, len(submission.brokerobject_set.all()))
+        self.assertEqual(4, len(submission.auditabletextdata_set.all()))
 
         check_tasks = TaskProgressReport.objects.filter(
             task_name='tasks.check_for_molecular_content_in_submission_task')

@@ -5,7 +5,6 @@ import io
 import json
 import os
 from collections import OrderedDict
-from pprint import pprint
 from unittest import skip
 from unittest.mock import patch
 
@@ -1194,11 +1193,7 @@ class TestCSVParsing(TestCase):
             primary=True
         )
         cls.create_csv_submission_upload(submission, user)
-        cls.expected_parse_result = {'experiments': [{'design': {'files': {
-            'forward_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
-            'forward_read_file_name': 'File1.forward.fastq.gz',
-            'reverse_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
-            'reverse_read_file_name': 'File1.reverse.fastq.gz'},
+        cls.expected_parse_result = {'experiments': [{'design': {
             'library_descriptor': {
                 'library_layout': {
                     'layout_type': 'paired',
@@ -1207,13 +1202,14 @@ class TestCSVParsing(TestCase):
                 'library_source': 'METAGENOMIC',
                 'library_strategy': 'AMPLICON'},
             'sample_descriptor': 'oa2Xu'},
+            'files': {
+                'forward_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                'forward_read_file_name': 'File1.forward.fastq.gz',
+                'reverse_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                'reverse_read_file_name': 'File1.reverse.fastq.gz'},
             'experiment_alias': '4aNiEu',
             'platform': 'Illumina HiSeq 1000'},
-            {'design': {'files': {
-                'forward_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
-                'forward_read_file_name': 'File2.forward.fastq.gz',
-                'reverse_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
-                'reverse_read_file_name': 'File2.reverse.fastq.gz'},
+            {'design': {
                 'library_descriptor': {
                     'library_layout': {
                         'layout_type': 'paired',
@@ -1222,13 +1218,14 @@ class TestCSVParsing(TestCase):
                     'library_source': 'METAGENOMIC',
                     'library_strategy': 'AMPLICON'},
                 'sample_descriptor': 'oaI2E-'},
+                'files': {
+                    'forward_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                    'forward_read_file_name': 'File2.forward.fastq.gz',
+                    'reverse_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                    'reverse_read_file_name': 'File2.reverse.fastq.gz'},
                 'experiment_alias': 'ncs2E-',
                 'platform': 'Illumina HiSeq 1000'},
-            {'design': {'files': {
-                'forward_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
-                'forward_read_file_name': 'File3.forward.fastq.gz',
-                'reverse_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
-                'reverse_read_file_name': 'File3.reverse.fastq.gz'},
+            {'design': {
                 'library_descriptor': {
                     'library_layout': {
                         'layout_type': 'paired',
@@ -1237,13 +1234,14 @@ class TestCSVParsing(TestCase):
                     'library_source': 'METAGENOMIC',
                     'library_strategy': 'AMPLICON'},
                 'sample_descriptor': 'ncnWEu'},
+                'files': {
+                    'forward_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                    'forward_read_file_name': 'File3.forward.fastq.gz',
+                    'reverse_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                    'reverse_read_file_name': 'File3.reverse.fastq.gz'},
                 'experiment_alias': 'nNCgEu',
                 'platform': 'Illumina HiSeq 1000'},
-            {'design': {'files': {
-                'forward_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
-                'forward_read_file_name': 'File4.forward.fastq.gz',
-                'reverse_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
-                'reverse_read_file_name': 'File4.reverse.fastq.gz'},
+            {'design': {
                 'library_descriptor': {
                     'library_layout': {
                         'layout_type': 'paired',
@@ -1252,13 +1250,14 @@ class TestCSVParsing(TestCase):
                     'library_source': 'METAGENOMIC',
                     'library_strategy': 'AMPLICON'},
                 'sample_descriptor': 'naXgPe'},
+                'files': {
+                    'forward_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                    'forward_read_file_name': 'File4.forward.fastq.gz',
+                    'reverse_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                    'reverse_read_file_name': 'File4.reverse.fastq.gz'},
                 'experiment_alias': '4NRiE-',
                 'platform': 'Illumina HiSeq 1000'},
-            {'design': {'files': {
-                'forward_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
-                'forward_read_file_name': 'File5.forward.fastq.gz',
-                'reverse_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
-                'reverse_read_file_name': 'File5.reverse.fastq.gz'},
+            {'design': {
                 'library_descriptor': {
                     'library_layout': {
                         'layout_type': 'paired',
@@ -1267,6 +1266,11 @@ class TestCSVParsing(TestCase):
                     'library_source': 'METAGENOMIC',
                     'library_strategy': 'AMPLICON'},
                 'sample_descriptor': 'od_iEs'},
+                'files': {
+                    'forward_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                    'forward_read_file_name': 'File5.forward.fastq.gz',
+                    'reverse_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                    'reverse_read_file_name': 'File5.reverse.fastq.gz'},
                 'experiment_alias': 'xdi2bs',
                 'platform': 'Illumina HiSeq 1000'}],
             'samples': [{'sample_alias': 'oa2Xu',
@@ -1742,13 +1746,13 @@ class TestCSVParsing(TestCase):
         self.assertEqual(7, len(requirements['experiments']))
 
     # @skip('check if delimiter is sniffed correcty')
-    def test_parse_real_worl_comma_sep_example(self):
-        with open(os.path.join(
-                _get_test_data_dir_path(),
-                'csv_files/dsub-269_template.csv'),
-                'r') as data_file:
-            requirements = parse_molecular_csv(data_file)
-            pprint(requirements)
+    # def test_parse_real_worl_comma_sep_example(self):
+    #     with open(os.path.join(
+    #             _get_test_data_dir_path(),
+    #             'csv_files/dsub-269_template.csv'),
+    #             'r') as data_file:
+    #         requirements = parse_molecular_csv(data_file)
+    #         pprint(requirements)
 
     def test_check_for_molecular_content_comma_sep(self):
         submission = Submission.objects.first()
@@ -1756,32 +1760,14 @@ class TestCSVParsing(TestCase):
         submission.save()
         self.create_csv_submission_upload(submission, User.objects.first(),
                                           'csv_files/dsub-269_template.csv')
-        # with open(os.path.join(
-        #         _get_test_data_dir_path(),
-        #         'csv_files/dsub-269_template.csv'),
-        #         'r') as data_file:
-        #     requirements = parse_molecular_csv(data_file)
-        #     submission.data.get('requirements', {}).update(requirements)
-        #     submission.save()
-        # self.assertEqual('ENA – European Nucleotide Archive',
-        #                  submission.data['requirements']['data_center'])
 
         is_mol_content, errors = check_for_molecular_content(submission)
         self.assertTrue(is_mol_content)
         BrokerObject.objects.add_submission_data(submission)
-        print(len(BrokerObject.objects.filter(type='experiment')))
-        print(len(BrokerObject.objects.filter(type='run')))
         self.assertEqual(25,
                          len(BrokerObject.objects.filter(type='experiment')))
         self.assertEqual(len(BrokerObject.objects.filter(type='experiment')),
                          len(BrokerObject.objects.filter(type='run')))
-
-        # self.assertTrue(is_mol_content)
-        # self.assertListEqual([], errors)
-        # submission = Submission.objects.first()
-        # self.assertIn('samples', submission.data['requirements'].keys())
-        # self.assertIn('experiments', submission.data['requirements'].keys())
-        # self.assertEqual(ENA_PANGAEA, submission.target)
 
     def test_parse_tab(self):
         self.maxDiff = None
