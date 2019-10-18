@@ -4,6 +4,7 @@ import datetime
 import json
 import os
 import urllib
+from pprint import pprint
 from unittest import skip
 from urllib.parse import urlencode
 from uuid import UUID, uuid4
@@ -394,8 +395,9 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
              'data': _get_submission_request_data()},
             format='json'
         )
-        self.assertEqual(201, response.status_code)
         content = json.loads(response.content.decode('utf-8'))
+        pprint(content)
+        self.assertEqual(201, response.status_code)
         expected = _get_submission_post_response()
         # expected['embargo'] = '{0}'.format(
         #     datetime.date.today() + datetime.timedelta(days=365))
