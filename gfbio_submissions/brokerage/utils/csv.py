@@ -87,6 +87,8 @@ def extract_sample(row, field_names, sample_id):
 
 
 def extract_experiment(experiment_id, row, sample_id):
+    # print('\nextract experiment: row :')
+    # print(row)
     try:
         design_description = int(row.get('design_description', '-1'))
     except ValueError as e:
@@ -110,14 +112,16 @@ def extract_experiment(experiment_id, row, sample_id):
     dpath.util.new(experiment,
                    'design/library_descriptor/library_layout/layout_type',
                    row.get('library_layout', ''))
-    dpath.util.new(experiment, 'design/files/forward_read_file_name',
+
+    dpath.util.new(experiment, 'files/forward_read_file_name',
                    row.get('forward_read_file_name', ''))
-    dpath.util.new(experiment, 'design/files/forward_read_file_checksum',
+    dpath.util.new(experiment, 'files/forward_read_file_checksum',
                    row.get('forward_read_file_checksum', ''))
-    dpath.util.new(experiment, 'design/files/reverse_read_file_name',
+    dpath.util.new(experiment, 'files/reverse_read_file_name',
                    row.get('reverse_read_file_name', ''))
-    dpath.util.new(experiment, 'design/files/reverse_read_file_checksum',
+    dpath.util.new(experiment, 'files/reverse_read_file_checksum',
                    row.get('reverse_read_file_checksum', ''))
+
     if len(row.get('design_description', '').strip()):
         dpath.util.new(experiment, 'design/design_description',
                        design_description)
@@ -127,6 +131,7 @@ def extract_experiment(experiment_id, row, sample_id):
             'design/library_descriptor/library_layout/nominal_length',
             nominal_length
         )
+    # print('return: ', experiment)
     return experiment
 
 
@@ -136,7 +141,8 @@ def parse_molecular_csv(csv_file):
     dialect = csv.Sniffer().sniff(header)
     csv_file.seek(0)
     delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
-                                                           '\t'] else ','
+                                                           '\t'] else ';'
+    print('DELIMITER: ', delimiter)
     csv_reader = csv.DictReader(
         csv_file,
         quoting=csv.QUOTE_ALL,
