@@ -32,20 +32,20 @@
    guidetolerance="10"
    inkscape:pageopacity="0"
    inkscape:pageshadow="2"
-   inkscape:window-width="1834"
-   inkscape:window-height="1163"
+   inkscape:window-width="3840"
+   inkscape:window-height="2107"
    id="namedview249"
    showgrid="false"
    inkscape:zoom="2"
-   inkscape:cx="133.04485"
-   inkscape:cy="92.515248"
-   inkscape:window-x="4232"
-   inkscape:window-y="602"
-   inkscape:window-maximized="0"
+   inkscape:cx="132.51403"
+   inkscape:cy="92.515249"
+   inkscape:window-x="0"
+   inkscape:window-y="0"
+   inkscape:window-maximized="1"
    inkscape:current-layer="svg247" />
 <g
    id="g240"
-   transform="matrix(0.64039898,0,0,0.64040781,-6.8170442,-3.3692079)">
+   transform="matrix(0.64039898,0,0,0.64040781,-8.1658043,-3.3692079)">
 	<path
    d="m 25.337,116.329 c -3.685,3.618 -5.551,8.035 -5.599,13.251 -0.049,5.425 1.76,10.058 5.429,13.897 3.669,3.843 8.164,5.787 13.483,5.835 5.268,0.049 9.81,-1.8 13.626,-5.548 3.815,-3.747 5.748,-8.253 5.797,-13.522 0.048,-5.268 -1.803,-9.784 -5.551,-13.548 -3.748,-3.762 -8.308,-5.67 -13.679,-5.719 -5.318,-0.049 -9.822,1.738 -13.506,5.354 z"
    id="path185"

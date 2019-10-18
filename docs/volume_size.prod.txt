@@ -1,3 +1,113 @@
+===============================================================
+======================  16.10.2019   ==========================
+===============================================================
+
+1.) delete all backups except 3 most recent ones from host
+2.) delete all backups from django container backups dir
+
+- docker-compose -f production.yml exec postgres backups
+
+3.) delete all backups from postgres container backup dir except most recent ones
+
+- docker ps
+- if running
+4.) docker image prune and docker volume prune (0 freed)
+
+- sudo git fetch
+- sudo git checkout 1.81.0
+- git branch
+     * (HEAD detached at 1.81.0)
+
+- df -h
+        Filesystem      Size  Used Avail Use% Mounted on
+        udev            7,9G     0  7,9G   0% /dev
+        tmpfs           1,6G   12M  1,6G   1% /run
+        /dev/vda1       158G   44G  108G  29% /
+        tmpfs           7,9G     0  7,9G   0% /dev/shm
+        tmpfs           5,0M     0  5,0M   0% /run/lock
+        tmpfs           7,9G     0  7,9G   0% /sys/fs/cgroup
+        tmpfs           1,6G     0  1,6G   0% /run/user/1000
+
+- in django container -> /app/gfbio_submissions/media # du -h .
+        3.0G
+
+
+- time build ....
+        real	7m33,612s
+        user	0m30,004s
+        sys	0m34,226s
+
+- docker ps -> all running
+
+- df -h
+        Filesystem      Size  Used Avail Use% Mounted on
+        udev            7,9G     0  7,9G   0% /dev
+        tmpfs           1,6G   13M  1,6G   1% /run
+        /dev/vda1       158G   46G  106G  31% /
+        tmpfs           7,9G     0  7,9G   0% /dev/shm
+        tmpfs           5,0M     0  5,0M   0% /run/lock
+        tmpfs           7,9G     0  7,9G   0% /sys/fs/cgroup
+        tmpfs           1,6G     0  1,6G   0% /run/user/1000
+
+
+- sudo supervisorctl stop gfbio_submissions
+        gfbio_submissions: stopped
+- docker-compose -f production.yml down
+        Stopping gfbio_submissions_postgres_1_397c837805e9 ... done
+        Stopping gfbio_submissions_redis_1_17380b779786    ... done
+        Removing gfbio_submissions_postgres_run_5_1fe30e5d868f ... done
+        Removing gfbio_submissions_postgres_run_4_187d12127003 ... done
+        Removing gfbio_submissions_postgres_run_3_3e6be0588178 ... done
+        Removing gfbio_submissions_postgres_run_2_2e0a55765673 ... done
+        Removing gfbio_submissions_postgres_run_1_c052ed2908a9 ... done
+        Removing gfbio_submissions_traefik_1_a8e9bf4f92da      ... done
+        Removing gfbio_submissions_celeryworker_1_a013a3721492 ... done
+        Removing gfbio_submissions_celerybeat_1_47de41d177bc   ... done
+        Removing gfbio_submissions_django_1_2fac7fcb7574       ... done
+        Removing gfbio_submissions_flower_1_f0c7aaa23d51       ... done
+        Removing gfbio_submissions_postgres_1_397c837805e9     ... done
+        Removing gfbio_submissions_redis_1_17380b779786        ... done
+        Removing gfbio_submissions_awscli_1_836cc126ac1a       ... done
+        Removing network gfbio_submissions_default
+- sudo supervisorctl start gfbio_submissions
+        gfbio_submissions: started
+
+
+
+- docker ps -> all running
+
+- docker image prune
+    WARNING! This will remove all dangling images.
+    Are you sure you want to continue? [y/N] y
+
+    Total reclaimed space: 15.59GB
+
+- docker volume prune
+        WARNING! This will remove all local volumes not used by at least one container.
+        Are you sure you want to continue? [y/N] y
+        Deleted Volumes:
+        32eda5b4056cc51a3de3d054534fd12f2e798bc7d17226d8de705666f45e3996
+
+        Total reclaimed space: 631B
+
+- df -h
+        Filesystem      Size  Used Avail Use% Mounted on
+        udev            7,9G     0  7,9G   0% /dev
+        tmpfs           1,6G   13M  1,6G   1% /run
+        /dev/vda1       158G   31G  121G  21% /
+        tmpfs           7,9G     0  7,9G   0% /dev/shm
+        tmpfs           5,0M     0  5,0M   0% /run/lock
+        tmpfs           7,9G     0  7,9G   0% /sys/fs/cgroup
+        tmpfs           1,6G     0  1,6G   0% /run/user/1000
+
+
+-https://vsupalov.com/cleaning-up-after-docker/
+
+===============================================================
+==================    END 16.10.2019   ========================
+===============================================================
+
+
 cloud@mastodon:/var/www/gfbio_submissions$ df -h
 Filesystem      Size  Used Avail Use% Mounted on
 udev            7,9G     0  7,9G   0% /dev
