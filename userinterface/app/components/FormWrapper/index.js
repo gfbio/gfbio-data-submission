@@ -196,6 +196,11 @@ class FormWrapper extends React.PureComponent {
     let saveIconClass = 'fa-clipboard';
     let saveButtonText = 'Save Draft';
 
+
+    if (this.props.brokerSubmissionId !== '') {
+      submitButtonText = 'Update Submission';
+      submitIconClass = 'fa fa-forward';
+    }
     if (this.props.submitInProgress) {
       submitIconClass = 'fa-cog fa-spin fa-fw';
       submitButtonText = 'submitting ...';
@@ -204,10 +209,7 @@ class FormWrapper extends React.PureComponent {
       saveIconClass = 'fa-cog fa-spin fa-fw';
       saveButtonText = 'saving ...';
     }
-    if (this.props.brokerSubmissionId !== '') {
-      submitButtonText = 'Update Submission';
-      submitIconClass = 'fa fa-forward';
-    }
+
     let errors = this.prepareErrorNotification();
 
     return (
