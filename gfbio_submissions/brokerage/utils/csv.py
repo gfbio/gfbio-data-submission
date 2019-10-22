@@ -8,8 +8,7 @@ from collections import OrderedDict
 import dpath
 from shortid import ShortId
 
-from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
-    ENA_PANGAEA, ENA
+from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA
 from gfbio_submissions.brokerage.utils.schema_validation import \
     validate_data_full
 
@@ -110,14 +109,16 @@ def extract_experiment(experiment_id, row, sample_id):
     dpath.util.new(experiment,
                    'design/library_descriptor/library_layout/layout_type',
                    row.get('library_layout', ''))
-    dpath.util.new(experiment, 'design/files/forward_read_file_name',
+
+    dpath.util.new(experiment, 'files/forward_read_file_name',
                    row.get('forward_read_file_name', ''))
-    dpath.util.new(experiment, 'design/files/forward_read_file_checksum',
+    dpath.util.new(experiment, 'files/forward_read_file_checksum',
                    row.get('forward_read_file_checksum', ''))
-    dpath.util.new(experiment, 'design/files/reverse_read_file_name',
+    dpath.util.new(experiment, 'files/reverse_read_file_name',
                    row.get('reverse_read_file_name', ''))
-    dpath.util.new(experiment, 'design/files/reverse_read_file_checksum',
+    dpath.util.new(experiment, 'files/reverse_read_file_checksum',
                    row.get('reverse_read_file_checksum', ''))
+
     if len(row.get('design_description', '').strip()):
         dpath.util.new(experiment, 'design/design_description',
                        design_description)
@@ -136,7 +137,7 @@ def parse_molecular_csv(csv_file):
     dialect = csv.Sniffer().sniff(header)
     csv_file.seek(0)
     delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
-                                                           '\t'] else ','
+                                                           '\t'] else ';'
     csv_reader = csv.DictReader(
         csv_file,
         quoting=csv.QUOTE_ALL,
@@ -202,8 +203,6 @@ def check_for_molecular_content(submission):
 
         meta_data_files = submission.submissionupload_set.filter(meta_data=True)
         no_of_meta_data_files = len(meta_data_files)
-
-        print('\n - ---------------   no of meta files ', no_of_meta_data_files)
 
         if no_of_meta_data_files != 1:
             logger.info(
