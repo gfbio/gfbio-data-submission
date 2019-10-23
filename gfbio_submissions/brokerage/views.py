@@ -166,7 +166,7 @@ class UserSubmissionDetailView(generics.ListAPIView):
     # TODO: test for ownership additional to site permissions
     def get_queryset(self):
         submitting_user = self.kwargs['submitting_user']
-        return Submission.objects.filter(submitting_user=submitting_user)
+        return Submission.objects.filter(submitting_user=submitting_user).order_by('-modified')
 
 
 # TODO: remove
