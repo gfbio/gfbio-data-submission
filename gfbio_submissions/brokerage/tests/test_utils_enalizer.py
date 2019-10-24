@@ -11,7 +11,7 @@ from django.utils.encoding import smart_text
 from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_CENTER_NAME
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
-    ResourceCredential, SiteConfiguration, RequestLog
+    ResourceCredential, SiteConfiguration, RequestLog, BrokerObject
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
@@ -325,7 +325,14 @@ class TestEnalizer(TestCase):
             }
         ]
         submission.save()
+        submission.brokerobject_set.all().delete()
+        print(len(submission.brokerobject_set.all()))
+        BrokerObject.objects.add_submission_data(submission)
+        print(len(submission.brokerobject_set.all()))
         pprint(submission.data)
+        print('\n+++++++++++++++++++++++++++++++++++\n')
+        for b in submission.brokerobject_set.all():
+            print('\n', b.data)
         enalizer = Enalizer(submission, 'test-enalizer-experiment')
         xml_data = enalizer.prepare_submission_data()
         print('\n+++++++++++++++++++++++++++++++++++\n')
