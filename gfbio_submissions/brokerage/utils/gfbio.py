@@ -63,7 +63,6 @@ def get_gfbio_helpdesk_username(user_name, email, fullname=''):
     if len(fullname):
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(user_name, email,
                                                          quote(fullname))
-    print(url)
     return requests.get(
         url=url,
         auth=(
