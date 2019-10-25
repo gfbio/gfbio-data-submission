@@ -18,7 +18,7 @@ from rest_framework.test import APIRequestFactory, APIClient
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, JIRA_ATTACHMENT_SUB_URL, \
     JIRA_ATTACHMENT_URL, JIRA_USERNAME_URL_TEMPLATE, \
-    JIRA_USERNAME_URL_FULLNAME_TEMPLATE
+    JIRA_USERNAME_URL_FULLNAME_TEMPLATE, JIRA_FALLBACK_USERNAME
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, Submission, AuditableTextData, PersistentIdentifier, \
     BrokerObject, TaskProgressReport, AdditionalReference, PrimaryDataFile, \
@@ -250,6 +250,10 @@ class TestTasks(TestCase):
         user = User.objects.create(
             username='user1'
         )
+        user.goesternid = '0815'
+        user.name = 'Kevin Horstmeier'
+        user.email = 'khors@me.de'
+        user.save()
         user.user_permissions.add(*permissions)
         submission = SubmissionTest._create_submission_via_serializer()
         submission.additionalreference_set.create(
@@ -1392,6 +1396,8 @@ class TestGFBioHelpDeskTasks(TestTasks):
                          tpr.first().task_return_value)
         self.assertEqual('502', tpr.first().task_exception)
 
+    # TODO: test for no goestern id and no fullname
+
     @responses.activate
     def test_get_gfbio_helpdesk_username_task_success(self):
         # url = JIRA_USERNAME_URL_TEMPLATE.format('khors',
@@ -1400,18 +1406,12 @@ class TestGFBioHelpDeskTasks(TestTasks):
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
             '0815', 'khors@me.de', quote('Kevin Horstmeier')
         )
-        # print('TEST URL ', url)
-        responses.add(responses.GET, url, body=b'khors', status=200)
-        # print(Submission.objects.all())
-        # print('1', Submission.objects.first().submitting_user)
-        # print('2', Submission.objects.last().submitting_user)
-        # for u in User.objects.all():
-        #     print('-- ', u)
+        responses.add(responses.GET, url, body=b'0815', status=200)
         user = User.objects.first()
-        user.goesternid = '0815'
-        user.name = 'Kevin Horstmeier'
-        user.email = 'khors@me.de'
-        user.save()
+        # user.goesternid = '0815'
+        # user.name = 'Kevin Horstmeier'
+        # user.email = 'khors@me.de'
+        # user.save()
         submission = Submission.objects.first()
         submission.submitting_user = '{}'.format(user.pk)
         submission.save()
@@ -1420,10 +1420,11 @@ class TestGFBioHelpDeskTasks(TestTasks):
                 'submission_id': submission.id,
             }
         )
-        for t in TaskProgressReport.objects.all():
-            print(t.task_name, ' ', t.task_return_value, ' ', t.task_kwargs,
-                  ' ', t.task_args)
-        print(result.get())
+        res = result.get()
+        self.assertEqual('0815', res)
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        self.assertEqual('0815',
+                         TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
     def test_get_gfbio_helpdesk_username_task_client_error(self):
@@ -1433,18 +1434,12 @@ class TestGFBioHelpDeskTasks(TestTasks):
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
             '0815', 'khors@me.de', quote('Kevin Horstmeier')
         )
-        # print('TEST URL ', url)
         responses.add(responses.GET, url, status=403)
-        # print(Submission.objects.all())
-        # print('1', Submission.objects.first().submitting_user)
-        # print('2', Submission.objects.last().submitting_user)
-        # for u in User.objects.all():
-        #     print('-- ', u)
         user = User.objects.first()
-        user.goesternid = '0815'
-        user.name = 'Kevin Horstmeier'
-        user.email = 'khors@me.de'
-        user.save()
+        # user.goesternid = '0815'
+        # user.name = 'Kevin Horstmeier'
+        # user.email = 'khors@me.de'
+        # user.save()
         submission = Submission.objects.first()
         submission.submitting_user = '{}'.format(user.pk)
         submission.save()
@@ -1453,7 +1448,11 @@ class TestGFBioHelpDeskTasks(TestTasks):
                 'submission_id': submission.id,
             }
         )
-        print(result.get())
+        res = result.get()
+        self.assertEqual(JIRA_FALLBACK_USERNAME, res)
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        self.assertEqual(JIRA_FALLBACK_USERNAME,
+                         TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
     @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
@@ -1473,10 +1472,10 @@ class TestGFBioHelpDeskTasks(TestTasks):
         # for u in User.objects.all():
         #     print('-- ', u)
         user = User.objects.first()
-        user.goesternid = '0815'
-        user.name = 'Kevin Horstmeier'
-        user.email = 'khors@me.de'
-        user.save()
+        # user.goesternid = '0815'
+        # user.name = 'Kevin Horstmeier'
+        # user.email = 'khors@me.de'
+        # user.save()
         submission = Submission.objects.first()
         submission.submitting_user = '{}'.format(user.pk)
         submission.save()
@@ -1485,7 +1484,14 @@ class TestGFBioHelpDeskTasks(TestTasks):
                 'submission_id': submission.id,
             }
         )
+        for t in TaskProgressReport.objects.all():
+            print(t.task_name, ' ', t.status, ' ', t.task_return_value, ' ',
+                  t.task_kwargs,
+                  ' ', t.task_args)
         # print(result.get())
+        tpr = TaskProgressReport.objects.first()
+        self.assertEqual('RETRY', tpr.status)
+        self.assertEqual(JIRA_FALLBACK_USERNAME, tpr.task_return_value)
 
 
 class TestPangaeaTasks(TestTasks):

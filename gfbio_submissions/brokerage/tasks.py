@@ -638,11 +638,6 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
     if submission == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
     user = User.objects.get(pk=int(submission.submitting_user))
-
-    # print(user.username)
-    # print(user.goesternid)
-    # print(user.name)
-    # print(user.get_full_name())
     user_name = user.goesternid if user.goesternid else user.username
 
     response = get_gfbio_helpdesk_username(user_name=user_name,
@@ -656,32 +651,9 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
     )
 
     if response.status_code == 200:
-        return response.content
+        return smart_text(response.content)
     else:
         return JIRA_FALLBACK_USERNAME
-    # try:
-    #     response, request_id = send_submission_to_ena(submission,
-    #                                                   site_configuration.ena_server,
-    #                                                   ena_submission_data,
-    #                                                   )
-    #     res = raise_transfer_server_exceptions(
-    #         response=response,
-    #         task=self,
-    #         broker_submission_id=submission.broker_submission_id,
-    #         max_retries=SUBMISSION_MAX_RETRIES)
-    #     # print('RETURNED FROM RETRY ', res)
-    #     # if res == TaskProgressReport.CANCELLED:
-    #     #     return TaskProgressReport.CANCELLED
-    # except ConnectionError as e:
-    #     logger.error(
-    #         msg='connection_error {}.url={} title={}'.format(
-    #             e,
-    #             site_configuration.ena_server.url,
-    #             site_configuration.ena_server.title)
-    #     )
-    #     response = Response()
-    # return str(request_id), response.status_code, smart_text(
-    #     response.content)
 
 
 @celery.task(
