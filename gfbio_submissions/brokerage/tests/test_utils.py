@@ -1767,6 +1767,23 @@ class TestCSVParsing(TestCase):
         self.assertEqual(7, len(requirements['samples']))
         self.assertEqual(7, len(requirements['experiments']))
 
+    def test_parse_to_xml_real_world_example(self):
+        # with open(os.path.join(
+        #         _get_test_data_dir_path(),
+        #         'csv_files/SO245_submission_gfbio_new.csv'),
+        #         'rb') as data_file:
+        #     print(data_file.readline())
+
+        submission = Submission.objects.first()
+        submission.submissionupload_set.all().delete()
+        submission.save()
+        self.create_csv_submission_upload(submission, User.objects.first(),
+                                          'csv_files/SO245_submission_gfbio_new.csv')
+
+        is_mol_content, errors = check_for_molecular_content(submission)
+        self.assertTrue(is_mol_content)
+        BrokerObject.objects.add_submission_data(submission)
+
     # @skip('check if delimiter is sniffed correcty')
     # def test_parse_real_worl_comma_sep_example(self):
     #     with open(os.path.join(
