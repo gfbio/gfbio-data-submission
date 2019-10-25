@@ -316,7 +316,6 @@ REMOTE_REPOSITORY = env("REMOTE_REPOSITORY")
 
 # OpenIDConnect SETTINGS
 # ------------------------------------------------------------------------------
-
 OIDC_RP_CLIENT_ID = env("OIDC_RP_CLIENT_ID", default="no_oidc_cl_id")
 OIDC_RP_CLIENT_SECRET = env("OIDC_RP_CLIENT_SECRET",
                             default="no_oidc_cl_secret")
@@ -335,3 +334,8 @@ LOGOUT_REDIRECT_URL = "/"
 
 OIDC_RP_SCOPES = "openid email profile address phone id"
 # OIDC_USERNAME_ALGO = "gfbio_submissions.authentication.user_name.generate_username"
+
+# GFBio Helpdesk Shadow-Account Service
+# ------------------------------------------------------------------------------
+JIRA_ACCOUNT_SERVICE_USER = env("JIRA_ACCOUNT_SERVICE_USER", default="no_account_service_user")
+JIRA_ACCOUNT_SERVICE_PASSWORD = env("JIRA_ACCOUNT_SERVICE_PASSWORD", default="no_account_service_password")
