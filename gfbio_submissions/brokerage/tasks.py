@@ -617,6 +617,7 @@ def get_user_email_task(self, submission_id=None):
     return res
 
 
+# TODO: may need refactoring if portal deps are removed (see initial chains ...)
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -637,6 +638,11 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
     )
     if submission == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
+
+    result = {}
+    if prev_task_result is not None and isinstance(prev_task_result, dict):
+        result = prev_task_result
+
     user = User.objects.get(pk=int(submission.submitting_user))
     user_name = user.goesternid if user.goesternid else user.username
 
@@ -651,9 +657,10 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
     )
 
     if response.status_code == 200:
-        return smart_text(response.content)
+        result['name'] = smart_text(response.content)
     else:
-        return JIRA_FALLBACK_USERNAME
+        result['name'] = JIRA_FALLBACK_USERNAME
+    return result
 
 
 @celery.task(

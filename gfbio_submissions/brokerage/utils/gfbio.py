@@ -87,6 +87,8 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
             pass
         except ValueError:
             pass
+
+    print('GFBIO_PREPARE_CREATE_HELPDESK_PAYLOAD ', reporter)
     # FIXME: compatibilty with gfbio portal services
     user_full_name = reporter.get('user_full_name', '')
     user_email = reporter.get('user_email', '')
@@ -108,7 +110,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
             email,
         )
         authors_text += contributor if len(contributor.strip()) else ''
-
+    print(authors_text)
     # -----------------------------------------------------------------------
 
     summary = requirements.get('title', '')
@@ -141,7 +143,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
             'name': 'Data Submission'
         },
         'reporter': {
-            'name': reporter.get('user_email', site_config.contact)
+            'name': reporter.get('name', site_config.contact)
         },
         'customfield_10200': '{0}'.format(submission.embargo.isoformat())
         if submission.embargo is not None
