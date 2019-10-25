@@ -8,7 +8,7 @@ from jira import JIRA, JIRAError
 from requests import ConnectionError
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    PANGAEA_ISSUE_DOI_FIELD_NAME
+    PANGAEA_ISSUE_DOI_FIELD_NAME, JIRA_FALLBACK_EMAIL, JIRA_FALLBACK_USERNAME
 from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_prepare_create_helpdesk_payload
 from gfbio_submissions.brokerage.utils.pangaea import \
@@ -198,7 +198,9 @@ class JiraClient(object):
                         'reporter', ''):
                     default = {
                         # FIXME: parameter, not hardcoded. user has to exist
-                        'user_email': 'maweber@mpi-bremen.de',
+                        # 'user_email': JIRA_FALLBACK_EMAIL,
+                        'name': JIRA_FALLBACK_USERNAME,
+                        # 'user_email': 'maweber@mpi-bremen.de',
                         # brokeragent@gfbio.org
                         'user_full_name': '',
                         'first_name': '',

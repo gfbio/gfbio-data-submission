@@ -11,6 +11,7 @@ from gfbio_submissions.brokerage.exceptions import TransferInternalError, \
     NoTicketAvailableError
 from gfbio_submissions.brokerage.models import TaskProgressReport, Submission, \
     SiteConfiguration
+from gfbio_submissions.users.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,17 @@ def _safe_get_site_config(submission):
             logger.warning(
                 'task_utils.py | _safe_get_site_config | error {0}'.format(e))
     return site_config
+
+
+#
+# def _get_helpdesk_user_payload(user_id):
+#     payload = None
+#     try:
+#         user = User.objects.get(pk=user_id)
+#     except User.DoesNotExist as e:
+#         logger.warning(
+#             'task_utils.py | _get_helpdesk_user_payload | error {0}'.format(e))
+#     return payload
 
 
 def _get_submission_and_site_configuration(submission_id, task,
@@ -139,17 +151,12 @@ def get_submission_and_site_configuration(submission_id, task,
 
 def raise_transfer_server_exceptions(response, task, broker_submission_id,
                                      max_retries):
-    print('RAISE_TRANSFER_SERVER_EXCEPTION ', response.status_code, ' ',
-          response.content, ' ', task, ' ', broker_submission_id,
-          task.request.retries)
-    # print('BREAK AND SEND ', task.request.retries >= max_retries)
     logger.info('task_utils.py | raise_transfer_server_exceptions | '
                 'resonse.status_code={0} | broker_submission_id={1} | '
                 'task={2} | retries={3}'.format(response.status_code,
                                                 broker_submission_id, task,
                                                 task.request.retries))
     if task.request.retries >= max_retries:
-        print('SEND, THEN RETURN')
         logger.info('task_utils.py | raise_transfer_server_exceptions | '
                     'task.request.retries={0} >= max_retries={1} | '
                     'send_task_fail_mail'.format(task.request.retries,
@@ -162,7 +169,6 @@ def raise_transfer_server_exceptions(response, task, broker_submission_id,
                         ''.format(task.name, response))
             raise_response_exceptions(response)
         except TransferClientError as ce:
-            # print('SEND, THEN RETURN ', ce)
             logger.info('task_utils.py | TransferClientError, '
                         'send_task_fail_mail | task={0} | response={1} | '
                         'error={2}'.format(task, response, ce))
@@ -189,7 +195,7 @@ def retry_no_ticket_available_exception(task, broker_submission_id,
             task.retry(
                 exc=e,
                 countdown=(task.request.retries + 1
-                          ) * SUBMISSION_UPLOAD_RETRY_DELAY)
+                           ) * SUBMISSION_UPLOAD_RETRY_DELAY)
 
 
 def jira_error_auto_retry(jira_client, task, broker_submission_id,

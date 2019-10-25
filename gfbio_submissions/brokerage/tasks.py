@@ -10,11 +10,12 @@ from django.utils.encoding import smart_text
 from requests import ConnectionError, Response
 
 from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, \
-    PANGAEA_ISSUE_VIEW_URL, SUBMISSION_COMMENT_TEMPLATE
+    PANGAEA_ISSUE_VIEW_URL, SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME
 from gfbio_submissions.brokerage.exceptions import TransferServerError, \
     TransferClientError
 from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content
+from gfbio_submissions.brokerage.utils.gfbio import get_gfbio_helpdesk_username
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.brokerage.utils.task_utils import jira_error_auto_retry, \
     get_submission_and_site_configuration, raise_transfer_server_exceptions, \
@@ -614,6 +615,73 @@ def get_user_email_task(self, submission_id=None):
         res['user_full_name'], res['user_email'])
     submission.save()
     return res
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.get_gfbio_helpdesk_username_task',
+    autoretry_for=(TransferServerError,
+                   TransferClientError
+                   ),
+    retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
+    retry_backoff=SUBMISSION_RETRY_DELAY,
+    retry_jitter=True
+)
+def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
+                                     submission_id=None):
+    submission, site_configuration = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
+    user = User.objects.get(pk=int(submission.submitting_user))
+
+    # print(user.username)
+    # print(user.goesternid)
+    # print(user.name)
+    # print(user.get_full_name())
+    user_name = user.goesternid if user.goesternid else user.username
+
+    response = get_gfbio_helpdesk_username(user_name=user_name,
+                                           email=user.email,
+                                           fullname=user.name)
+    raise_transfer_server_exceptions(
+        response=response,
+        task=self,
+        broker_submission_id=submission.broker_submission_id,
+        max_retries=SUBMISSION_MAX_RETRIES
+    )
+
+    if response.status_code == 200:
+        return response.content
+    else:
+        return JIRA_FALLBACK_USERNAME
+    # try:
+    #     response, request_id = send_submission_to_ena(submission,
+    #                                                   site_configuration.ena_server,
+    #                                                   ena_submission_data,
+    #                                                   )
+    #     res = raise_transfer_server_exceptions(
+    #         response=response,
+    #         task=self,
+    #         broker_submission_id=submission.broker_submission_id,
+    #         max_retries=SUBMISSION_MAX_RETRIES)
+    #     # print('RETURNED FROM RETRY ', res)
+    #     # if res == TaskProgressReport.CANCELLED:
+    #     #     return TaskProgressReport.CANCELLED
+    # except ConnectionError as e:
+    #     logger.error(
+    #         msg='connection_error {}.url={} title={}'.format(
+    #             e,
+    #             site_configuration.ena_server.url,
+    #             site_configuration.ena_server.title)
+    #     )
+    #     response = Response()
+    # return str(request_id), response.status_code, smart_text(
+    #     response.content)
 
 
 @celery.task(

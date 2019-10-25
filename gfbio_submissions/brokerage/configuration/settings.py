@@ -110,6 +110,21 @@ GENERIC = getattr(
     'GENERIC'
 )
 
+# https://helpdesk.gfbio.org/secure/ViewProfile.jspa?name=brokeragent
+JIRA_FALLBACK_USERNAME = getattr(
+    settings,
+    'JIRA_FALLBACK_USERNAME',
+    'brokeragent'
+)
+
+
+# https://helpdesk.gfbio.org/secure/ViewProfile.jspa?name=brokeragent
+JIRA_FALLBACK_EMAIL = getattr(
+    settings,
+    'JIRA_FALLBACK_EMAIL',
+    'brokeragent@gfbio.org'
+)
+
 JIRA_ISSUE_URL = getattr(
     settings,
     'JIRA_ISSUE_URL',
