@@ -1396,22 +1396,13 @@ class TestGFBioHelpDeskTasks(TestTasks):
                          tpr.first().task_return_value)
         self.assertEqual('502', tpr.first().task_exception)
 
-    # TODO: test for no goestern id and no fullname
-
     @responses.activate
     def test_get_gfbio_helpdesk_username_task_success(self):
-        # url = JIRA_USERNAME_URL_TEMPLATE.format('khors',
-        #                                         'khors@me.de', )
-        # responses.add(responses.GET, url, body=b'khors', status=200)
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
             '0815', 'khors@me.de', quote('Kevin Horstmeier')
         )
         responses.add(responses.GET, url, body=b'0815', status=200)
         user = User.objects.first()
-        # user.goesternid = '0815'
-        # user.name = 'Kevin Horstmeier'
-        # user.email = 'khors@me.de'
-        # user.save()
         submission = Submission.objects.first()
         submission.submitting_user = '{}'.format(user.pk)
         submission.save()
@@ -1427,19 +1418,62 @@ class TestGFBioHelpDeskTasks(TestTasks):
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
+    def test_get_gfbio_helpdesk_username_task_success_no_fullname(self):
+        url = JIRA_USERNAME_URL_TEMPLATE.format(
+            '0815', 'khors@me.de'
+        )
+        responses.add(responses.GET, url, body=b'0815', status=200)
+        user = User.objects.first()
+        user.goesternid = '0815'
+        user.name = ''
+        user.save()
+        submission = Submission.objects.first()
+        submission.submitting_user = '{}'.format(user.pk)
+        submission.save()
+        result = get_gfbio_helpdesk_username_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        res = result.get()
+        self.assertEqual('0815', res)
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        self.assertEqual('0815',
+                         TaskProgressReport.objects.first().task_return_value)
+
+    @responses.activate
+    def test_get_gfbio_helpdesk_username_task_success_no_goesternid(self):
+        user = User.objects.first()
+        url = JIRA_USERNAME_URL_TEMPLATE.format(
+            user.username, 'khors@me.de'
+        )
+        responses.add(responses.GET, url, body='{0}'.format(user.username),
+                      status=200)
+
+        user.goesternid = None
+        user.name = ''
+        user.save()
+        submission = Submission.objects.first()
+        submission.submitting_user = '{}'.format(user.pk)
+        submission.save()
+        result = get_gfbio_helpdesk_username_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        res = result.get()
+        self.assertEqual(user.username, res)
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        self.assertEqual(user.username,
+                         TaskProgressReport.objects.first().task_return_value)
+
+    @responses.activate
     def test_get_gfbio_helpdesk_username_task_client_error(self):
-        # url = JIRA_USERNAME_URL_TEMPLATE.format('khors',
-        #                                         'khors@me.de', )
-        # responses.add(responses.GET, url, body=b'khors', status=200)
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
             '0815', 'khors@me.de', quote('Kevin Horstmeier')
         )
         responses.add(responses.GET, url, status=403)
         user = User.objects.first()
-        # user.goesternid = '0815'
-        # user.name = 'Kevin Horstmeier'
-        # user.email = 'khors@me.de'
-        # user.save()
         submission = Submission.objects.first()
         submission.submitting_user = '{}'.format(user.pk)
         submission.save()
