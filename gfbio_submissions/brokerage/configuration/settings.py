@@ -134,6 +134,18 @@ JIRA_ATTACHMENT_SUB_URL = getattr(
     'attachments'
 )
 
+JIRA_USERNAME_URL_TEMPLATE = getattr(
+    settings,
+    'JIRA_USERNAME_URL_TEMPLATE',
+    'https://helpdesk.gfbio.org/internal/getorcreateuser.php?username={0}&email={1}'
+)
+
+JIRA_USERNAME_URL_FULLNAME_TEMPLATE = getattr(
+    settings,
+    'JIRA_USERNAME_URL_TEMPLATE',
+    'https://helpdesk.gfbio.org/internal/getorcreateuser.php?username={0}&email={1}&fullname={2}'
+)
+
 GFBIO_LICENSE_MAPPINGS = getattr(
     settings,
     'GFBIO_LICENSE_MAPPINGS',

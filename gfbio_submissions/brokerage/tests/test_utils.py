@@ -40,7 +40,8 @@ from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
 from gfbio_submissions.brokerage.utils.ena import \
     download_submitted_run_files_to_stringIO
 from gfbio_submissions.brokerage.utils.gfbio import \
-    gfbio_get_user_by_id, gfbio_prepare_create_helpdesk_payload
+    gfbio_get_user_by_id, gfbio_prepare_create_helpdesk_payload, \
+    get_gfbio_helpdesk_username
 from gfbio_submissions.brokerage.utils.pangaea import \
     request_pangaea_login_token, parse_pangaea_login_token_response, \
     get_pangaea_login_token
@@ -1083,6 +1084,19 @@ class TestHelpDeskTicketMethods(TestCase):
             submission=submission)
         self.assertEqual('other',
                          payload['customfield_10229'][0]['value'])
+
+    def test_get_gfbio_helpdesk_username(self):
+        # test with known user: : https://helpdesk.gfbio.org/internal/getorcreateuser.php?username=0526829&email=uschindler@uni-bremen.de&fullname=Uwe%20Schindler
+        # response = get_gfbio_helpdesk_username('052682', 'uschindler@uni-bremen.de', 'Uwe Schindler')
+        # 200
+        # b'0526829'
+
+        # test with unknown user:
+        # response = get_gfbio_helpdesk_username('deleteMe', 'delete@me.de', 'Delete me if you want')
+        # 200
+        # b'deleteMe'
+
+        pass
 
 
 class TestDownloadEnaReport(TestCase):
