@@ -118,10 +118,11 @@ class TestInitialChainTasks(TestCase):
         self.assertEqual(201, min_response.status_code)
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_user_email_task',
+                              'tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer', ]
-        self.assertEqual(4, len(task_reports))
+        self.assertEqual(5, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -146,10 +147,11 @@ class TestInitialChainTasks(TestCase):
         self.assertEqual(201, min_response.status_code)
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_user_email_task',
+                              'tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer', ]
-        self.assertEqual(4, len(task_reports))
+        self.assertEqual(5, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -169,6 +171,7 @@ class TestInitialChainTasks(TestCase):
         self.assertEqual(201, max_response.status_code)
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_user_email_task',
+                              'tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer',
@@ -178,7 +181,7 @@ class TestInitialChainTasks(TestCase):
                               'tasks.update_helpdesk_ticket_task', ]
         tprs = TaskProgressReport.objects.exclude(
             task_name='tasks.update_helpdesk_ticket_task')
-        self.assertEqual(7, len(tprs))
+        self.assertEqual(8, len(tprs))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -198,10 +201,11 @@ class TestInitialChainTasks(TestCase):
         self.assertEqual(201, max_response.status_code)
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_user_email_task',
+                              'tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer', ]
-        self.assertEqual(4, len(task_reports))
+        self.assertEqual(5, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -230,13 +234,14 @@ class TestInitialChainTasks(TestCase):
             format='json', )
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_user_email_task',
+                              'tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
                               'tasks.update_submission_issue_task',
                               'tasks.trigger_submission_transfer',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer_for_updates',
                               'tasks.update_helpdesk_ticket_task', ]
-        self.assertEqual(7, len(task_reports))
+        self.assertEqual(8, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -2083,7 +2088,10 @@ class TestTaskChains(TestTasks):
                             'fullname': 'Marc Weber',
                             'screenname': 'maweber', 'userid': 16250,
                             'lastname': 'Weber'})
-
+        url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format('0815',
+                                                         'khors@me.de',
+                                                         'Kevin Horstmeier')
+        responses.add(responses.GET, url, body=b'deleteMe', status=200)
         responses.add(
             responses.GET,
             '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),

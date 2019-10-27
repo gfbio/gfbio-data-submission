@@ -10,7 +10,8 @@ from django.utils.encoding import smart_text
 from requests import ConnectionError, Response
 
 from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, \
-    PANGAEA_ISSUE_VIEW_URL, SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME
+    PANGAEA_ISSUE_VIEW_URL, SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME, \
+    JIRA_FALLBACK_EMAIL
 from gfbio_submissions.brokerage.exceptions import TransferServerError, \
     TransferClientError
 from gfbio_submissions.brokerage.utils.csv import \
@@ -642,7 +643,9 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
     result = {}
     if prev_task_result is not None and isinstance(prev_task_result, dict):
         result = prev_task_result
-    result['name'] = JIRA_FALLBACK_USERNAME
+
+    user_name = JIRA_FALLBACK_USERNAME
+    result['name'] = user_name
 
     if len(submission.submitting_user) == 0:
         return result
@@ -650,6 +653,13 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
     try:
         user = User.objects.get(pk=int(submission.submitting_user))
         user_name = user.goesternid if user.goesternid else user.username
+    except ValueError as ve:
+        logger.warning(
+            'tasks.py | get_gfbio_helpdesk_username_task | '
+            'submission_id={0} | ValueError with '
+            'submission.submiting_user={1} | '
+            '{2}'.format(submission_id, submission.submitting_user, ve))
+        return result
     except User.DoesNotExist as e:
         logger.warning(
             'tasks.py | get_gfbio_helpdesk_username_task | '

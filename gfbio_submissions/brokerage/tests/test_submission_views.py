@@ -18,7 +18,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIRequestFactory, APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    JIRA_ISSUE_URL, GENERIC, ENA_PANGAEA
+    JIRA_ISSUE_URL, GENERIC, ENA_PANGAEA, JIRA_USERNAME_URL_TEMPLATE
 from gfbio_submissions.brokerage.models import Submission, RequestLog, \
     SiteConfiguration, ResourceCredential, TaskProgressReport, SubmissionUpload, \
     AdditionalReference
@@ -93,7 +93,14 @@ class TestSubmissionView(TestCase):
         )
         cls.other_api_client = other_client
 
+    def _add_gfbio_helpdesk_user_service_response(self,
+                                                  user_name='regular_user',
+                                                  email='re@gu.la'):
+        url = JIRA_USERNAME_URL_TEMPLATE.format(user_name, email, )
+        responses.add(responses.GET, url, body=b'deleteMe', status=200)
+
     def _add_create_ticket_response(self):
+        self._add_gfbio_helpdesk_user_service_response()
         self._add_jira_client_responses()
         responses.add(
             responses.POST,
@@ -499,6 +506,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer',
             'tasks.get_user_email_task',
+            'tasks.get_gfbio_helpdesk_username_task',
             'tasks.create_submission_issue_task',
             'tasks.update_submission_issue_task',
             'tasks.check_for_molecular_content_in_submission_task',
@@ -711,6 +719,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer',
             'tasks.get_user_email_task',
+            'tasks.get_gfbio_helpdesk_username_task',
             'tasks.create_submission_issue_task',
             'tasks.update_submission_issue_task',
             'tasks.check_for_molecular_content_in_submission_task',
@@ -805,6 +814,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer',
             'tasks.get_user_email_task',
+            'tasks.get_gfbio_helpdesk_username_task',
             'tasks.create_submission_issue_task',
             'tasks.check_on_hold_status_task']
         for t in TaskProgressReport.objects.filter(
@@ -829,7 +839,8 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         submission = Submission.objects.first()
         self.assertEqual(GENERIC, submission.target)
         with open(os.path.join(_get_test_data_dir_path(),
-                               'csv_files/molecular_metadata.csv'), 'rb') as csv_file:
+                               'csv_files/molecular_metadata.csv'),
+                  'rb') as csv_file:
             uploaded_file = SimpleUploadedFile(
                 name='molecular.csv',
                 content_type='text/csv',
@@ -863,6 +874,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             'tasks.trigger_submission_transfer',
             'tasks.check_on_hold_status_task',
             'tasks.get_user_email_task',
+            'tasks.get_gfbio_helpdesk_username_task',
             'tasks.create_submission_issue_task',
             'tasks.update_submission_issue_task',
             'tasks.update_helpdesk_ticket_task',  # x2
@@ -926,6 +938,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             'tasks.create_broker_objects_from_submission_data_task',
             'tasks.prepare_ena_submission_data_task',
             'tasks.get_user_email_task',
+            'tasks.get_gfbio_helpdesk_username_task',
             'tasks.create_submission_issue_task',
             'tasks.update_submission_issue_task',
             'tasks.update_helpdesk_ticket_task',
@@ -982,6 +995,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             'tasks.prepare_ena_submission_data_task',
             'tasks.trigger_submission_transfer',
             'tasks.get_user_email_task',
+            'tasks.get_gfbio_helpdesk_username_task',
             'tasks.create_submission_issue_task',
             'tasks.update_submission_issue_task',
             'tasks.update_helpdesk_ticket_task',
@@ -1071,6 +1085,8 @@ class TestUserSubmissionViewGetRequests(TestSubmissionView):
 
     @responses.activate
     def _prepare_submissions_for_various_users(self):
+        self._add_gfbio_helpdesk_user_service_response(
+            user_name='regular_user_2', email='re2@gu.la')
         self._add_create_ticket_response()
         regular_user = User.objects.get(username='regular_user')
         self._post_submission_with_submitting_user(regular_user.id)
@@ -1120,7 +1136,9 @@ class TestUserSubmissionViewGetRequests(TestSubmissionView):
         submissions = json.loads(response.content.decode('utf-8'))
         self.assertEqual(0, len(submissions))
 
+    # @responses.activate
     def test_get_submissions_various_user_ids(self):
+        # self._add_gfbio_helpdesk_user_service_response('regular_user_2', 're2@gu.la')
         self._prepare_submissions_for_various_users()
         self.assertEqual(4, len(Submission.objects.all()))
 
