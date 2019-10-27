@@ -2,14 +2,17 @@
 import datetime
 import json
 import logging
+from urllib.parse import quote
 
 import requests
+from django.conf import settings
 from django.db import transaction
 
 from gfbio_submissions.brokerage.configuration.settings import \
     GFBIO_LICENSE_MAPPINGS, \
     GFBIO_METASCHEMA_MAPPINGS, \
-    GFBIO_DATACENTER_USER_MAPPINGS, GFBIO_REQUEST_TYPE_MAPPINGS
+    GFBIO_DATACENTER_USER_MAPPINGS, GFBIO_REQUEST_TYPE_MAPPINGS, \
+    JIRA_USERNAME_URL_FULLNAME_TEMPLATE, JIRA_USERNAME_URL_TEMPLATE
 from gfbio_submissions.brokerage.models import SiteConfiguration, RequestLog
 from gfbio_submissions.users.models import User
 
@@ -55,6 +58,20 @@ def gfbio_get_user_by_id(user_id, site_configuration, submission):
     return response
 
 
+def get_gfbio_helpdesk_username(user_name, email, fullname=''):
+    url = JIRA_USERNAME_URL_TEMPLATE.format(user_name, email)
+    if len(fullname):
+        url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(user_name, email,
+                                                         quote(fullname))
+    return requests.get(
+        url=url,
+        auth=(
+            settings.JIRA_ACCOUNT_SERVICE_USER,
+            settings.JIRA_ACCOUNT_SERVICE_PASSWORD
+        )
+    )
+
+
 def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
                                           prepare_for_update=False):
     requirements = submission.data.get('requirements', {})
@@ -70,6 +87,8 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
             pass
         except ValueError:
             pass
+
+    print('GFBIO_PREPARE_CREATE_HELPDESK_PAYLOAD ', reporter)
     # FIXME: compatibilty with gfbio portal services
     user_full_name = reporter.get('user_full_name', '')
     user_email = reporter.get('user_email', '')
@@ -91,7 +110,6 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
             email,
         )
         authors_text += contributor if len(contributor.strip()) else ''
-
     # -----------------------------------------------------------------------
 
     summary = requirements.get('title', '')
@@ -124,7 +142,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
             'name': 'Data Submission'
         },
         'reporter': {
-            'name': reporter.get('user_email', site_config.contact)
+            'name': reporter.get('name', site_config.contact)
         },
         'customfield_10200': '{0}'.format(submission.embargo.isoformat())
         if submission.embargo is not None

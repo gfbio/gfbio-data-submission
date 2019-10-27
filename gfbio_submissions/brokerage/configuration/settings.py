@@ -110,6 +110,21 @@ GENERIC = getattr(
     'GENERIC'
 )
 
+# https://helpdesk.gfbio.org/secure/ViewProfile.jspa?name=brokeragent
+JIRA_FALLBACK_USERNAME = getattr(
+    settings,
+    'JIRA_FALLBACK_USERNAME',
+    'brokeragent'
+)
+
+
+# https://helpdesk.gfbio.org/secure/ViewProfile.jspa?name=brokeragent
+JIRA_FALLBACK_EMAIL = getattr(
+    settings,
+    'JIRA_FALLBACK_EMAIL',
+    'brokeragent@gfbio.org'
+)
+
 JIRA_ISSUE_URL = getattr(
     settings,
     'JIRA_ISSUE_URL',
@@ -132,6 +147,18 @@ JIRA_ATTACHMENT_SUB_URL = getattr(
     settings,
     'JIRA_ATTACHMENT_SUB_URL',
     'attachments'
+)
+
+JIRA_USERNAME_URL_TEMPLATE = getattr(
+    settings,
+    'JIRA_USERNAME_URL_TEMPLATE',
+    'https://helpdesk.gfbio.org/internal/getorcreateuser.php?username={0}&email={1}'
+)
+
+JIRA_USERNAME_URL_FULLNAME_TEMPLATE = getattr(
+    settings,
+    'JIRA_USERNAME_URL_TEMPLATE',
+    'https://helpdesk.gfbio.org/internal/getorcreateuser.php?username={0}&email={1}&fullname={2}'
 )
 
 GFBIO_LICENSE_MAPPINGS = getattr(

@@ -227,6 +227,7 @@ class Submission(TimeStampedModel):
     user = models.ForeignKey(
         AUTH_USER_MODEL,
         null=True,
+        blank=True,
         related_name='user_submissions',
         on_delete=models.SET_NULL
     )

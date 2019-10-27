@@ -21,7 +21,8 @@ from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, \
-    JIRA_ATTACHMENT_SUB_URL, GENERIC, ENA_PANGAEA
+    JIRA_ATTACHMENT_SUB_URL, GENERIC, ENA_PANGAEA, JIRA_USERNAME_URL_TEMPLATE, \
+    JIRA_USERNAME_URL_FULLNAME_TEMPLATE
 from gfbio_submissions.brokerage.exceptions import TransferClientError, \
     raise_response_exceptions, TransferServerError
 from gfbio_submissions.brokerage.models import Submission, ResourceCredential, \
@@ -40,7 +41,8 @@ from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
 from gfbio_submissions.brokerage.utils.ena import \
     download_submitted_run_files_to_stringIO
 from gfbio_submissions.brokerage.utils.gfbio import \
-    gfbio_get_user_by_id, gfbio_prepare_create_helpdesk_payload
+    gfbio_get_user_by_id, gfbio_prepare_create_helpdesk_payload, \
+    get_gfbio_helpdesk_username
 from gfbio_submissions.brokerage.utils.pangaea import \
     request_pangaea_login_token, parse_pangaea_login_token_response, \
     get_pangaea_login_token
@@ -1083,6 +1085,26 @@ class TestHelpDeskTicketMethods(TestCase):
             submission=submission)
         self.assertEqual('other',
                          payload['customfield_10229'][0]['value'])
+
+    @responses.activate
+    def test_get_gfbio_helpdesk_username(self):
+        url = JIRA_USERNAME_URL_TEMPLATE.format('deleteMe',
+                                                'delete@me.de', )
+        responses.add(responses.GET, url, body=b'deleteMe', status=200)
+        response = get_gfbio_helpdesk_username('deleteMe', 'delete@me.de', )
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(b'deleteMe', response.content)
+
+    @responses.activate
+    def test_get_gfbio_helpdesk_username_with_fullname(self):
+        url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format('deleteMe',
+                                                         'delete@me.de',
+                                                         'Delete me if you want')
+        responses.add(responses.GET, url, body=b'deleteMe', status=200)
+        response = get_gfbio_helpdesk_username('deleteMe', 'delete@me.de',
+                                               'Delete me if you want')
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(b'deleteMe', response.content)
 
 
 class TestDownloadEnaReport(TestCase):
