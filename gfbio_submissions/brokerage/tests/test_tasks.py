@@ -1419,6 +1419,48 @@ class TestGFBioHelpDeskTasks(TestTasks):
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
+    def test_get_gfbio_helpdesk_username_task_empty_submitting_user(self):
+        url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
+            '0815', 'khors@me.de', quote('Kevin Horstmeier')
+        )
+        responses.add(responses.GET, url, body=b'0815', status=200)
+        # user = User.objects.first()
+        submission = Submission.objects.first()
+        # submission.submitting_user = '{}'.format(user.pk)
+        # submission.save()
+        self.assertEqual('', submission.submitting_user)
+        result = get_gfbio_helpdesk_username_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        res = result.get()
+        self.assertEqual({'name': JIRA_FALLBACK_USERNAME}, res)
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        self.assertEqual("{'name': '" + JIRA_FALLBACK_USERNAME + "'}",
+                         TaskProgressReport.objects.first().task_return_value)
+
+    @responses.activate
+    def test_get_gfbio_helpdesk_username_task_invalid_submitting_user(self):
+        url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
+            '0815', 'khors@me.de', quote('Kevin Horstmeier')
+        )
+        responses.add(responses.GET, url, body=b'0815', status=200)
+        submission = Submission.objects.first()
+        submission.submitting_user = '666'
+        submission.save()
+        result = get_gfbio_helpdesk_username_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        res = result.get()
+        self.assertEqual({'name': JIRA_FALLBACK_USERNAME}, res)
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        self.assertEqual("{'name': '" + JIRA_FALLBACK_USERNAME + "'}",
+                         TaskProgressReport.objects.first().task_return_value)
+
+    @responses.activate
     def test_get_gfbio_helpdesk_username_task_success_no_fullname(self):
         url = JIRA_USERNAME_URL_TEMPLATE.format(
             '0815', 'khors@me.de'
@@ -1902,7 +1944,7 @@ class TestPangaeaTasks(TestTasks):
 class TestTaskChains(TestTasks):
 
     @responses.activate
-    def test_reporter_for_issue_chaine(self):
+    def test_reporter_for_issue_chain(self):
         user = User.objects.first()
         submission = Submission.objects.first()
         submission.submitting_user = '{}'.format(user.pk)
@@ -1976,7 +2018,6 @@ class TestTaskChains(TestTasks):
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasks)
             self.assertEqual('SUCCESS', t.status)
-
 
     @responses.activate
     def test_pangaea_chain(self):

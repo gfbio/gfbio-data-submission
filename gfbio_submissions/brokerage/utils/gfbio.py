@@ -110,7 +110,6 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
             email,
         )
         authors_text += contributor if len(contributor.strip()) else ''
-    print(authors_text)
     # -----------------------------------------------------------------------
 
     summary = requirements.get('title', '')

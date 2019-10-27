@@ -642,9 +642,21 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
     result = {}
     if prev_task_result is not None and isinstance(prev_task_result, dict):
         result = prev_task_result
+    result['name'] = JIRA_FALLBACK_USERNAME
 
-    user = User.objects.get(pk=int(submission.submitting_user))
-    user_name = user.goesternid if user.goesternid else user.username
+    if len(submission.submitting_user) == 0:
+        return result
+
+    try:
+        user = User.objects.get(pk=int(submission.submitting_user))
+        user_name = user.goesternid if user.goesternid else user.username
+    except User.DoesNotExist as e:
+        logger.warning(
+            'tasks.py | get_gfbio_helpdesk_username_task | '
+            'submission_id={0} | No user with '
+            'submission.submiting_user={1} | '
+            '{2}'.format(submission_id, submission.submitting_user, e))
+        return result
 
     response = get_gfbio_helpdesk_username(user_name=user_name,
                                            email=user.email,
@@ -658,8 +670,7 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
 
     if response.status_code == 200:
         result['name'] = smart_text(response.content)
-    else:
-        result['name'] = JIRA_FALLBACK_USERNAME
+
     return result
 
 
