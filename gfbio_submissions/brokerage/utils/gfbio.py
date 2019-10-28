@@ -88,7 +88,6 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
         except ValueError:
             pass
 
-    print('GFBIO_PREPARE_CREATE_HELPDESK_PAYLOAD ', reporter)
     # FIXME: compatibilty with gfbio portal services
     user_full_name = reporter.get('user_full_name', '')
     user_email = reporter.get('user_email', '')
