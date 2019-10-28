@@ -10,8 +10,7 @@ from django.utils.encoding import smart_text
 from requests import ConnectionError, Response
 
 from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, \
-    PANGAEA_ISSUE_VIEW_URL, SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME, \
-    JIRA_FALLBACK_EMAIL
+    PANGAEA_ISSUE_VIEW_URL, SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME
 from gfbio_submissions.brokerage.exceptions import TransferServerError, \
     TransferClientError
 from gfbio_submissions.brokerage.utils.csv import \
@@ -638,6 +637,8 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
         include_closed=True
     )
     if submission == TaskProgressReport.CANCELLED:
+        logger.info(
+            'tasks.py | get_gfbio_helpdesk_username_task | return TaskProgressReport.CANCELLED')
         return TaskProgressReport.CANCELLED
 
     result = {}
@@ -648,11 +649,17 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
     result['name'] = user_name
 
     if len(submission.submitting_user) == 0:
+        logger.info(
+            'tasks.py | get_gfbio_helpdesk_username_task | len(submission.submitting_user) == 0 | return {0}'.format(
+                result))
         return result
 
     try:
         user = User.objects.get(pk=int(submission.submitting_user))
         user_name = user.goesternid if user.goesternid else user.username
+        logger.info(
+            'tasks.py | get_gfbio_helpdesk_username_task | try get user | username={0} | goe_id={1}'.format(
+                user_name, user.goesternid))
     except ValueError as ve:
         logger.warning(
             'tasks.py | get_gfbio_helpdesk_username_task | '
@@ -671,6 +678,10 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
     response = get_gfbio_helpdesk_username(user_name=user_name,
                                            email=user.email,
                                            fullname=user.name)
+    logger.info(
+        'tasks.py | get_gfbio_helpdesk_username_task | response status={0} | content={1}'.format(
+            response.status_code, response.content))
+
     raise_transfer_server_exceptions(
         response=response,
         task=self,
@@ -680,6 +691,10 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
 
     if response.status_code == 200:
         result['name'] = smart_text(response.content)
+
+    logger.info(
+        'tasks.py | get_gfbio_helpdesk_username_task |return={0}'.format(
+            result))
 
     return result
 
