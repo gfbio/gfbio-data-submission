@@ -196,7 +196,7 @@ class CenterName(models.Model):
             return DEFAULT_ENA_CENTER_NAME
 
 
-class Submission(models.Model):
+class Submission(TimeStampedModel):
     OPEN = 'OPEN'
     SUBMITTED = 'SUBMITTED'
     CANCELLED = 'CANCELLED'
@@ -227,6 +227,7 @@ class Submission(models.Model):
     user = models.ForeignKey(
         AUTH_USER_MODEL,
         null=True,
+        blank=True,
         related_name='user_submissions',
         on_delete=models.SET_NULL
     )
@@ -266,10 +267,6 @@ class Submission(models.Model):
         # default=datetime.date.today() + datetime.timedelta(days=365),
         null=True,
         blank=True)
-
-    # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
-    created = models.DateTimeField(auto_now_add=True)
-    changed = models.DateTimeField(auto_now=True)
 
     objects = SubmissionManager()
 
