@@ -588,6 +588,7 @@ class TestPortalServiceTasks(TestTasks):
         self.assertTrue(result.successful())
         self.assertDictEqual({'user_full_name': 'Marc Weber',
                               'user_email': 'maweber@mpi-bremen.de',
+                              'portal_user': True,
                               'last_name': '', 'first_name': ''}, result.get())
 
     @responses.activate
@@ -611,6 +612,7 @@ class TestPortalServiceTasks(TestTasks):
         self.assertTrue(result.successful())
         self.assertEqual({'first_name': '', 'last_name': '',
                           'user_email': 'kevin@horstmeier.de',
+                          'portal_user': False,
                           'user_full_name': ''}, result.get())
 
     @responses.activate
@@ -633,6 +635,7 @@ class TestPortalServiceTasks(TestTasks):
         self.assertTrue(result.successful())
         self.assertEqual({'first_name': '', 'last_name': '',
                           'user_email': 'kevin@horstmeier.de',
+                          'portal_user': False,
                           'user_full_name': ''}, result.get())
 
     @responses.activate
@@ -660,6 +663,7 @@ class TestPortalServiceTasks(TestTasks):
         self.assertTrue(result.successful())
         self.assertEqual({'first_name': '', 'last_name': '',
                           'user_email': 'kevin@horstmeier.de',
+                          'portal_user': False,
                           'user_full_name': ''}, result.get())
 
     @responses.activate
@@ -686,6 +690,7 @@ class TestPortalServiceTasks(TestTasks):
         self.assertTrue(result.successful())
         self.assertEqual({'first_name': '', 'last_name': '',
                           'user_email': 'kevin@horstmeier.de',
+                          'portal_user': True,
                           'user_full_name': ''}, result.get())
 
 
