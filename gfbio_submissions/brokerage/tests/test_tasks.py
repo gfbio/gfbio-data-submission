@@ -612,7 +612,6 @@ class TestPortalServiceTasks(TestTasks):
         self.assertTrue(result.successful())
         self.assertEqual({'first_name': '', 'last_name': '',
                           'user_email': 'kevin@horstmeier.de',
-                          'portal_user': False,
                           'user_full_name': ''}, result.get())
 
     @responses.activate
@@ -635,7 +634,6 @@ class TestPortalServiceTasks(TestTasks):
         self.assertTrue(result.successful())
         self.assertEqual({'first_name': '', 'last_name': '',
                           'user_email': 'kevin@horstmeier.de',
-                          'portal_user': False,
                           'user_full_name': ''}, result.get())
 
     @responses.activate
@@ -663,7 +661,6 @@ class TestPortalServiceTasks(TestTasks):
         self.assertTrue(result.successful())
         self.assertEqual({'first_name': '', 'last_name': '',
                           'user_email': 'kevin@horstmeier.de',
-                          'portal_user': False,
                           'user_full_name': ''}, result.get())
 
     @responses.activate
@@ -1452,10 +1449,11 @@ class TestGFBioHelpDeskTasks(TestTasks):
 
     @responses.activate
     def test_get_gfbio_helpdesk_username_task_invalid_submitting_user(self):
-        url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
-            '0815', 'khors@me.de', quote('Kevin Horstmeier')
+        url = JIRA_USERNAME_URL_TEMPLATE.format(
+            'brokeragent', 'brokeragent@gfbio.org',
         )
-        responses.add(responses.GET, url, body=b'0815', status=200)
+        responses.add(responses.GET, url, body=b'brokeragent', status=200)
+
         submission = Submission.objects.first()
         submission.submitting_user = '666'
         submission.save()
