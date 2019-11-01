@@ -640,6 +640,7 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
     result['name'] = user_name
     if prev_task_result is not None and isinstance(prev_task_result, dict):
         result = prev_task_result
+        result['name'] = prev_task_result.get('user_email', JIRA_FALLBACK_USERNAME)
 
     if not site_configuration.use_gfbio_services:
         if len(submission.submitting_user) == 0:
