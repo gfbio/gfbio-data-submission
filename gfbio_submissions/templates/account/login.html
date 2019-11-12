@@ -83,7 +83,11 @@
             <p class="text-center mb-4">{% blocktrans %}If you have not
                 created an account yet, then
                 please
-                <a href="{{ signup_url }}">sign up</a> first.{% endblocktrans %}
+                <a
+                        {#                        href="{{ signup_url }}"#}
+                        href="https://sso.gfbio.org/simplesaml/module.php/accountui/register.php"
+                >
+                    sign up</a> first.{% endblocktrans %}
             </p>
         {% endif %}
 

@@ -64,7 +64,9 @@
                         <li class="nav-item">
                             {# URL provided by django-allauth/account/urls.py #}
                             <a class="nav-link btn btn-secondary btn-sm sign-up"
-                               href="{% url 'account_signup' %}">
+                                    {#                               href="{% url 'account_signup' %}"#}
+                               href="https://sso.gfbio.org/simplesaml/module.php/accountui/register.php"
+                            >
                                 Sign Up
                             </a>
                         </li>
