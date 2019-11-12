@@ -6,7 +6,7 @@ import environ
 
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
-VERSION = '1.82.4'
+VERSION = '1.82.5'
 
 ROOT_DIR = (
         environ.Path(__file__) - 3
