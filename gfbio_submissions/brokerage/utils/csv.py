@@ -135,14 +135,14 @@ def extract_experiment(experiment_id, row, sample_id):
 # TODO: maybe csv is in a file like implemented or comes as text/string
 def parse_molecular_csv(csv_file):
     header = csv_file.readline()
-    print('header')
-    print(smart_text(header))
+    # print('header')
+    # print(smart_text(header))
     dialect = csv.Sniffer().sniff(smart_text(header))
     csv_file.seek(0)
     delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
                                                            '\t'] else ';'
-    print(dialect)
-    print(delimiter)
+    # print(dialect)
+    # print(delimiter)
     csv_reader = csv.DictReader(
         csv_file,
         quoting=csv.QUOTE_ALL,
@@ -160,11 +160,11 @@ def parse_molecular_csv(csv_file):
     try:
         field_names = csv_reader.fieldnames
     except _csv.Error as e:
-        print('CSV ERROR ', e)
+        # print('CSV ERROR ', e)
         return molecular_requirements
     short_id = ShortId()
     for row in csv_reader:
-        print(row)
+        # print(row)
         # every row is one sample (except header)
         sample_id = short_id.generate()
         experiment_id = short_id.generate()
@@ -221,7 +221,7 @@ def check_for_molecular_content(submission):
                     no_of_meta_data_files)
             ]
         meta_data_file = meta_data_files.first()
-        with open(meta_data_file.file.path, 'r') as file:
+        with open(meta_data_file.file.path, 'rb') as file:
             molecular_requirements = parse_molecular_csv(
                 file,
             )

@@ -1777,8 +1777,20 @@ class TestCSVParsing(TestCase):
         submission = Submission.objects.first()
         submission.submissionupload_set.all().delete()
         submission.save()
+
+        # with open(os.path.join(_get_test_data_dir_path(),
+        #                        'csv_files/SO245_submission_gfbio_new.csv'),
+        #           'rb') as data_file:
+        #     print(data_file)
+        #     print(data_file.readline())
+
         self.create_csv_submission_upload(submission, User.objects.first(),
                                           'csv_files/SO245_submission_gfbio_new.csv')
+
+        # meta_data_files = submission.submissionupload_set.filter(meta_data=True)
+        # with open(meta_data_files.first().file.path, 'rb') as file:
+        #     print(file)
+        #     print(file.readline())
 
         is_mol_content, errors = check_for_molecular_content(submission)
         self.assertTrue(is_mol_content)
