@@ -101,7 +101,6 @@ def extract_experiment(experiment_id, row, sample_id):
     }
 
     library_layout = row.get('library_layout', '')
-    print('\n#########\n layout ', library_layout)
 
     dpath.util.new(experiment, 'design/sample_descriptor', sample_id)
     dpath.util.new(experiment, 'design/library_descriptor/library_strategy',
@@ -120,6 +119,8 @@ def extract_experiment(experiment_id, row, sample_id):
     dpath.util.new(experiment, 'files/forward_read_file_checksum',
                    row.get('forward_read_file_checksum', ''))
 
+    # TODO: with single layout, only forward_read_file attribute are considered
+    #   is it ok to use such a file name for a single ?
     if library_layout != 'single':
         dpath.util.new(experiment, 'files/reverse_read_file_name',
                        row.get('reverse_read_file_name', ''))
@@ -141,14 +142,10 @@ def extract_experiment(experiment_id, row, sample_id):
 # TODO: maybe csv is in a file like implemented or comes as text/string
 def parse_molecular_csv(csv_file):
     header = csv_file.readline()
-    # print('header')
-    # print(smart_text(header))
     dialect = csv.Sniffer().sniff(smart_text(header))
     csv_file.seek(0)
     delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
                                                            '\t'] else ';'
-    # print(dialect)
-    # print(delimiter)
     csv_reader = csv.DictReader(
         csv_file,
         quoting=csv.QUOTE_ALL,
@@ -166,11 +163,9 @@ def parse_molecular_csv(csv_file):
     try:
         field_names = csv_reader.fieldnames
     except _csv.Error as e:
-        # print('CSV ERROR ', e)
         return molecular_requirements
     short_id = ShortId()
     for row in csv_reader:
-        # print(row)
         # every row is one sample (except header)
         sample_id = short_id.generate()
         experiment_id = short_id.generate()

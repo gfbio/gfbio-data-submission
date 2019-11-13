@@ -11,7 +11,6 @@ import uuid
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
 from ftplib import FTP
-from pprint import pprint
 from xml.etree.ElementTree import Element, SubElement
 
 import dicttoxml
@@ -478,8 +477,6 @@ class Enalizer(object):
 
     def create_run_data_block(self, file_attributes, run, run_root,
                               broker_submission_id=None):
-        print('CREATE_RUN_DATA_BLOCK')
-        pprint(run)
         if 'data_block' in run.keys():
             data_block = SubElement(run_root, 'DATA_BLOCK')
 
@@ -493,10 +490,8 @@ class Enalizer(object):
                                                         file[attrib])
                     file_element.set(attrib,
                                      file.get(attrib, 'no_attribute_found'))
-            print('RETURN ', data_block)
             return data_block
         else:
-            print('RETURN NONE FROM DATABLOCK')
             return None
 
     def get_files_from_experiment(self):
@@ -510,8 +505,6 @@ class Enalizer(object):
         #                    'checksum']
 
         # without checksum attributes
-        print('\nSELF run\n')
-        pprint(self.run)
         file_attributes = ['filename', 'filetype', ]
         for r in self.run:
             # center=wenn gfbio center vom user | broker_name="Wir als GFBio" siehe brokeraccount   | (optional) run_center=wer hat sequenziert, registriert bei ena ?

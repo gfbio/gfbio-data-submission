@@ -2,7 +2,6 @@
 import csv
 import json
 import logging
-from pprint import pprint
 
 from django.db import models, transaction
 from django.db.models import Q
@@ -157,7 +156,6 @@ class BrokerObjectManager(models.Manager):
 
     @staticmethod
     def process_experiment_file_block(experiment_data):
-        print('process_experiment_file_block\n', experiment_data)
         files = [
             {'filename': experiment_data['files'].get('forward_read_file_name',
                                                       'no_forward_file'),
@@ -190,13 +188,11 @@ class BrokerObjectManager(models.Manager):
         return data
 
     def add_file_entities(self, experiment_broker_object, submission):
-        print('\n add file entities (from experiments)')
         if experiment_broker_object.type == 'experiment':
             if 'files' in experiment_broker_object.data:
                 data = self.process_experiment_file_block(
                     experiment_broker_object.data
                 )
-                pprint(data)
                 obj, created = self.update_or_create(
                     type='run',
                     site=experiment_broker_object.site,
@@ -281,7 +277,6 @@ class BrokerObjectManager(models.Manager):
 
         # for run in data['requirements'].get('runs', []):
         if 'runs' in data['requirements'].keys():
-            print('\nRUNS in submission data ....\n')
             for i in range(0, len(data['requirements']['runs'])):
                 run = data['requirements']['runs'][i]
                 obj = self.add_entity(submission=submission,
