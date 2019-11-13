@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-
+import pprint
+from pprint import pprint
 from uuid import uuid4
 
+import dpath
 import responses
 from django.test import TestCase
 from django.utils.encoding import smart_text
@@ -9,7 +11,7 @@ from django.utils.encoding import smart_text
 from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_CENTER_NAME
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
-    ResourceCredential, SiteConfiguration, RequestLog
+    ResourceCredential, SiteConfiguration, RequestLog, BrokerObject
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
@@ -285,6 +287,63 @@ class TestEnalizer(TestCase):
         self.assertFalse(enalizer.experiments_contain_files)
         enalizer.prepare_submission_data()
         self.assertTrue(enalizer.experiments_contain_files)
+
+    def test_number_of_run_files_paired_layout(self):
+        submission = Submission.objects.first()
+        enalizer = Enalizer(submission, 'test-enalizer-experiment')
+        xml_data = enalizer.prepare_submission_data()
+        self.assertEqual('paired',
+                         submission.data.get('requirements', {}).get(
+                             'experiments', [{}])[0].get('design', {}).get(
+                             'library_descriptor', {}).get(
+                             'library_layout', {}).get('layout_type', 'xxx'))
+        file_name, xml = xml_data.get('RUN')
+        self.assertEqual(2, xml.count('<FILE filename'))
+
+    def test_number_of_run_files_single_layout(self):
+        submission = Submission.objects.first()
+        submission.data.get('requirements', {})['experiments'] = [
+            {
+                'design': {
+                    'design_description': '',
+                    'library_descriptor': {
+                        'library_layout': {
+                            'layout_type': 'single',
+                        }, 'library_selection': 'PCR',
+                        'library_source': 'METAGENOMIC',
+                        'library_strategy': 'AMPLICON'
+                    },
+                    'sample_descriptor': 'sample2'
+                },
+                'experiment_alias': 'experiment1',
+                'files': {
+                    'forward_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                    'forward_read_file_name': 'File3.forward.fastq.gz',
+                },
+                'platform': 'AB 3730xL Genetic Analyzer',
+                'site_object_id': 'user1_4'
+            }
+        ]
+        submission.save()
+        submission.brokerobject_set.all().delete()
+        print(len(submission.brokerobject_set.all()))
+        BrokerObject.objects.add_submission_data(submission)
+        print(len(submission.brokerobject_set.all()))
+        pprint(submission.data)
+        print('\n+++++++++++++++++++++++++++++++++++\n')
+        for b in submission.brokerobject_set.all():
+            print('\n', b.data)
+        enalizer = Enalizer(submission, 'test-enalizer-experiment')
+        xml_data = enalizer.prepare_submission_data()
+        print('\n+++++++++++++++++++++++++++++++++++\n')
+        pprint(xml_data)
+        self.assertEqual('single',
+                         submission.data.get('requirements', {}).get(
+                             'experiments', [{}])[0].get('design', {}).get(
+                             'library_descriptor', {}).get(
+                             'library_layout', {}).get('layout_type', 'xxx'))
+        file_name, xml = xml_data.get('RUN')
+        self.assertEqual(1, xml.count('<FILE filename'))
 
     def test_submission_data_content(self):
         submission = Submission.objects.first()

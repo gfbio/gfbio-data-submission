@@ -39,7 +39,7 @@ from gfbio_submissions.brokerage.utils import csv
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
     check_for_molecular_content
 from gfbio_submissions.brokerage.utils.ena import \
-    download_submitted_run_files_to_stringIO
+    download_submitted_run_files_to_stringIO, prepare_ena_data
 from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_get_user_by_id, gfbio_prepare_create_helpdesk_payload, \
     get_gfbio_helpdesk_username
@@ -1767,14 +1767,29 @@ class TestCSVParsing(TestCase):
         self.assertEqual(7, len(requirements['samples']))
         self.assertEqual(7, len(requirements['experiments']))
 
-    # @skip('check if delimiter is sniffed correcty')
-    # def test_parse_real_worl_comma_sep_example(self):
-    #     with open(os.path.join(
-    #             _get_test_data_dir_path(),
-    #             'csv_files/dsub-269_template.csv'),
-    #             'r') as data_file:
-    #         requirements = parse_molecular_csv(data_file)
-    #         pprint(requirements)
+    def test_parse_to_xml_real_world_single_layout(self):
+        submission = Submission.objects.first()
+        submission.submissionupload_set.all().delete()
+        submission.save()
+
+        self.create_csv_submission_upload(submission, User.objects.first(),
+                                          'csv_files/SO45_mod.csv'
+                                          )
+
+        is_mol_content, errors = check_for_molecular_content(submission)
+        self.assertTrue(is_mol_content)
+
+        BrokerObject.objects.add_submission_data(submission)
+        ena_submission_data = prepare_ena_data(submission=submission)
+
+        file_name, file_content = ena_submission_data['RUN']
+        self.assertEqual(4, file_content.count(
+            'filename="{0}'.format(submission.broker_submission_id)))
+
+        file_name, file_content = ena_submission_data['EXPERIMENT']
+        self.assertEqual(4, file_content.count(
+            '<LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>'))
+        self.assertNotIn('<LIBRARY_LAYOUT><PAIRED', file_content)
 
     def test_check_for_molecular_content_comma_sep(self):
         submission = Submission.objects.first()
