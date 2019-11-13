@@ -99,6 +99,10 @@ def extract_experiment(experiment_id, row, sample_id):
         'experiment_alias': experiment_id,
         'platform': row.get('sequencing_platform', '')
     }
+
+    library_layout = row.get('library_layout', '')
+    print('\n#########\n layout ', library_layout)
+
     dpath.util.new(experiment, 'design/sample_descriptor', sample_id)
     dpath.util.new(experiment, 'design/library_descriptor/library_strategy',
                    row.get('library_strategy', ''))
@@ -109,16 +113,18 @@ def extract_experiment(experiment_id, row, sample_id):
                    row.get('library_selection', ''))
     dpath.util.new(experiment,
                    'design/library_descriptor/library_layout/layout_type',
-                   row.get('library_layout', ''))
+                   library_layout)
 
     dpath.util.new(experiment, 'files/forward_read_file_name',
                    row.get('forward_read_file_name', ''))
     dpath.util.new(experiment, 'files/forward_read_file_checksum',
                    row.get('forward_read_file_checksum', ''))
-    dpath.util.new(experiment, 'files/reverse_read_file_name',
-                   row.get('reverse_read_file_name', ''))
-    dpath.util.new(experiment, 'files/reverse_read_file_checksum',
-                   row.get('reverse_read_file_checksum', ''))
+
+    if library_layout != 'single':
+        dpath.util.new(experiment, 'files/reverse_read_file_name',
+                       row.get('reverse_read_file_name', ''))
+        dpath.util.new(experiment, 'files/reverse_read_file_checksum',
+                       row.get('reverse_read_file_checksum', ''))
 
     if len(row.get('design_description', '').strip()):
         dpath.util.new(experiment, 'design/design_description',
@@ -221,7 +227,7 @@ def check_for_molecular_content(submission):
                     no_of_meta_data_files)
             ]
         meta_data_file = meta_data_files.first()
-        with open(meta_data_file.file.path, 'rb') as file:
+        with open(meta_data_file.file.path, 'r') as file:
             molecular_requirements = parse_molecular_csv(
                 file,
             )
