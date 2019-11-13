@@ -43,6 +43,9 @@ class GFBioAuthenticationBackend(OIDCAuthenticationBackend):
         return user
 
     def update_user(self, user, claims):
+        logger.info(
+            'GFBioAuthenticationBackend | update_user | claims={0}  | user={1}'
+            ''.format(claims, user))
         user.first_name = claims.get('given_name', '')
         user.last_name = claims.get('family_name', '')
         user.email = claims.get('email', '')
