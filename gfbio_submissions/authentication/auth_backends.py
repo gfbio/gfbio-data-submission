@@ -21,11 +21,19 @@ class GFBioAuthenticationBackend(OIDCAuthenticationBackend):
             'preferred_username',
             claims.get('email')
         )
+        logger.info(
+            'GFBioAuthenticationBackend | get_username | username={0}  | '
+            ''.format(username))
         return unicodedata.normalize('NFKC', username)[:150]
 
     def create_user(self, claims):
+        logger.info('GFBioAuthenticationBackend | create_user | claims={0}  | '
+                    ''.format(claims))
         user = super(GFBioAuthenticationBackend, self).create_user(claims)
         user.goesternid = claims.get('goe_id', '')
+        logger.info(
+            'GFBioAuthenticationBackend | create_user | user={0} | goesternid={1} |'
+            ''.format(user, user.goesternid))
         user.save()
         logger.info('GFBioAuthenticationBackend | create_user | email={0}  | '
                     'goesternid={1}'.format(
