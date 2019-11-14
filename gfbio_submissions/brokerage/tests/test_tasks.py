@@ -305,9 +305,7 @@ class TestTasks(TestCase):
         cls.pangaea_issue_json = _get_pangaea_ticket_response()
 
     @classmethod
-    def _create_test_data(cls, path, delete=True):
-        if delete:
-            cls._delete_test_data()
+    def _create_test_data(cls, path):
         f = open(path, 'w')
         f.write('test123\n')
         f.close()
@@ -315,10 +313,6 @@ class TestTasks(TestCase):
         return {
             'file': f,
         }
-
-    # @staticmethod
-    # def _delete_test_data():
-    #     PrimaryDataFile.objects.all().delete()
 
     def _add_default_pangaea_responses(self):
         responses.add(
@@ -1060,7 +1054,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         self.assertFalse(result.get())
 
     @responses.activate
-    def test_attach_to_helpdesk_ticket_task_with_primarydatafile(self):
+    def test_attach_to_helpdesk_ticket_task_with_submission_upload(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
 
@@ -1104,7 +1098,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
         client.post(url, data, format='multipart')
 
         # attach_to_submission_issue_task was already triggered by POST above
-        # via PrimaryDataFile save method
+        # via SubmissionUpload save method
         result = attach_to_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
