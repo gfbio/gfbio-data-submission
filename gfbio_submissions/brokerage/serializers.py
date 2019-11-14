@@ -97,26 +97,6 @@ class SubmissionDetailSerializer(SubmissionSerializer):
         return data
 
 
-# TODO: remove
-# class SubmissionFileUploadSerializer(serializers.ModelSerializer):
-#     site = serializers.ReadOnlyField(source='site.username')
-#     submission = serializers.PrimaryKeyRelatedField(read_only=True)
-#
-#     class Meta:
-#         model = SubmissionFileUpload
-#         fields = ('site', 'file', 'submission')
-
-
-# TODO: remove
-# class PrimaryDataFileSerializer(serializers.ModelSerializer):
-#     site = serializers.ReadOnlyField(source='site.username')
-#     submission = serializers.PrimaryKeyRelatedField(read_only=True)
-#
-#     class Meta:
-#         model = PrimaryDataFile
-#         fields = ('site', 'data_file', 'submission')
-
-
 class SubmissionUploadSerializer(serializers.ModelSerializer):
     # TODO: user field ?
     site = serializers.ReadOnlyField(source='site.username')

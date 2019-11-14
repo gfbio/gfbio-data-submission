@@ -143,17 +143,6 @@ def download_auditable_text_data(modeladmin, request, queryset):
 download_auditable_text_data.short_description = 'Download zipped data'
 
 
-# class SubmissionFileUploadInlineAdmin(admin.TabularInline):
-#     model = SubmissionFileUpload
-
-
-# class PrimaryDataFileInlineAdmin(admin.StackedInline):
-#     model = PrimaryDataFile
-#
-#     def get_extra(self, request, obj=None, **kwargs):
-#         return 1
-
-
 class AuditableTextDataInlineAdmin(admin.StackedInline):
     model = AuditableTextData
 
@@ -223,8 +212,6 @@ admin.site.register(RequestLog, RequestLogAdmin)
 admin.site.register(AdditionalReference)
 admin.site.register(TaskProgressReport, TaskProgressReportAdmin)
 
-# admin.site.register(SubmissionFileUpload, SubmissionFileUploadAdmin)
-# admin.site.register(PrimaryDataFile, PrimaryDataFileAdmin)
 admin.site.register(SubmissionUpload, SubmissionUploadAdmin)
 
 admin.site.register(AuditableTextData)
