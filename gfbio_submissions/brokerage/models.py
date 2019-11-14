@@ -22,7 +22,7 @@ from .managers import AuditableTextDataManager
 from .managers import SiteConfigurationManager, \
     SubmissionManager, BrokerObjectManager, TaskProgressReportManager
 from .utils.submission_tools import \
-    submission_upload_path, submission_primary_data_file_upload_path
+    submission_upload_path
 
 logger = logging.getLogger(__name__)
 
@@ -587,80 +587,6 @@ class TaskProgressReport(models.Model):
             return '{0}'.format(self.task_name)
         else:
             return 'unnamed_task'
-
-
-# TODO: refactor/review: almost the same as PrimaryData
-#   only that intended usecase was sequence data
-#   that is not supposed to be attached to ticket
-#   and may be deleted/moved after a while
-class SubmissionFileUpload(models.Model):
-    submission = models.ForeignKey(
-        Submission, null=True,
-        blank=True,
-        help_text='Submission this File belongs to.',
-        on_delete=models.CASCADE
-    )
-    site = models.ForeignKey(AUTH_USER_MODEL, related_name='submissionupload',
-                             on_delete=models.PROTECT)
-    file = models.FileField(upload_to=submission_upload_path)
-    migrated = models.BooleanField(default=False)
-
-    # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
-    created = models.DateTimeField(auto_now_add=True)
-    changed = models.DateTimeField(auto_now=True)
-
-
-# TODO: refactor/review: compare TODO for SubmissionFileUpload
-#   intended usecase is csv template file with trigger
-#   to attach to existing ticket. but with .save(attach=False) almost the same
-# TODO: consider how to use for csv update view, where
-#   template is input for submissiondata and an update here
-#   updates submission.data. also consider TODOs regarding redundant file models
-class PrimaryDataFile(models.Model):
-    submission = models.ForeignKey(
-        Submission,
-        null=False,
-        blank=False,
-        help_text='Associated Submission for this File',
-        on_delete=models.CASCADE
-    )
-    site = models.ForeignKey(AUTH_USER_MODEL, related_name='primarydatafile',
-                             on_delete=models.PROTECT)
-    data_file = models.FileField(
-        upload_to=submission_primary_data_file_upload_path,
-        help_text='A file containing primary submission data, '
-                  'like a filled csv-template, contextual data, etc .. .'
-                  ' Or any other file which contains general submission data, '
-                  'but should not be treated as payload '
-                  '(e.g. sequence files, audio, images, ...)'
-    )
-    comment = models.TextField(
-        default='',
-        blank=True,
-        help_text='Any comments or useful information regarding this file')
-    migrated = models.BooleanField(default=False)
-
-    # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
-    created = models.DateTimeField(auto_now_add=True)
-    changed = models.DateTimeField(auto_now=True)
-
-    #
-    # @classmethod
-    # def raise_ticket_exeptions(self, no_of_helpdesk_tickets):
-    #     if no_of_helpdesk_tickets == 0:
-    #         raise NoTicketAvailableError
-
-    def save(self, attach=True, *args, **kwargs):
-        super(PrimaryDataFile, self).save(*args, **kwargs)
-        if attach:
-            from .tasks import \
-                attach_to_submission_issue_task
-            attach_to_submission_issue_task.apply_async(
-                kwargs={
-                    'submission_id': '{0}'.format(self.submission.pk),
-                },
-                countdown=SUBMISSION_UPLOAD_RETRY_DELAY
-            )
 
 
 class SubmissionUpload(TimeStampedModel):
