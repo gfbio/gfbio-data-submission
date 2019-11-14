@@ -550,139 +550,139 @@ class TestSubmissionPreparationTasks(TestTasks):
 
 
 # TODO: remove
-class TestPortalServiceTasks(TestTasks):
-
-    # TODO: check all test, even if passing, for json exceptions that need repsonse mock
-    @responses.activate
-    def test_get_user_email_task_success(self):
-        submission = Submission.objects.last()
-        config = SiteConfiguration.objects.first()
-        config.use_gfbio_services = True
-        config.save()
-        responses.add(
-            responses.GET,
-            'https://www.example.com/api/jsonws/'
-            'GFBioProject-portlet.userextension/'
-            'get-user-by-id/request-json/%7B%22userid%22:%2016250%7D',
-            status=200,
-            headers={
-                'Accept': 'application/json'
-            },
-            json={'firstname': 'Marc', 'middlename': '',
-                  'emailaddress': 'maweber@mpi-bremen.de',
-                  'fullname': 'Marc Weber',
-                  'screenname': 'maweber', 'userid': 16250,
-                  'lastname': 'Weber'})
-
-        result = get_user_email_task.apply_async(
-            kwargs={
-                'submission_id': submission.id
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertDictEqual({'user_full_name': 'Marc Weber',
-                              'user_email': 'maweber@mpi-bremen.de',
-                              'portal_user': True,
-                              'last_name': '', 'first_name': ''}, result.get())
-
-    @responses.activate
-    def test_get_user_email_task_no_gfbio_services(self):
-        submission = Submission.objects.last()
-        config = SiteConfiguration.objects.first()
-        config.use_gfbio_services = False
-        config.save()
-        data = json.dumps({
-            'userid': 16250
-        })
-        url = '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'.format(
-            config.gfbio_server.url, data)
-        responses.add(responses.GET, url, status=200,
-                      json={})
-        result = get_user_email_task.apply_async(
-            kwargs={
-                'submission_id': submission.id
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertEqual({'first_name': '', 'last_name': '',
-                          'user_email': 'kevin@horstmeier.de',
-                          'user_full_name': ''}, result.get())
-
-    @responses.activate
-    def test_get_user_email_task_error_response(self):
-        submission = Submission.objects.last()
-        config = SiteConfiguration.objects.first()
-        config.use_gfbio_services = False
-        config.save()
-        data = json.dumps({
-            'userid': 16250
-        })
-        url = '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'.format(
-            config.gfbio_server.url, data)
-        responses.add(responses.GET, url, status=200, json={})
-        result = get_user_email_task.apply_async(
-            kwargs={
-                'submission_id': submission.id
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertEqual({'first_name': '', 'last_name': '',
-                          'user_email': 'kevin@horstmeier.de',
-                          'user_full_name': ''}, result.get())
-
-    @responses.activate
-    def test_get_user_email_task_corrupt_response(self):
-        submission = Submission.objects.last()
-        config = SiteConfiguration.objects.first()
-        config.use_gfbio_services = True
-        config.save()
-        responses.add(
-            responses.GET,
-            'https://www.example.com/api/jsonws/'
-            'GFBioProject-portlet.userextension/'
-            'get-user-by-id/request-json/%7B%22userid%22:%2016250%7D',
-            status=200,
-            headers={
-                'Accept': 'application/json'
-            },
-            body='xyz')
-
-        result = get_user_email_task.apply_async(
-            kwargs={
-                'submission_id': submission.id
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertEqual({'first_name': '', 'last_name': '',
-                          'user_email': 'kevin@horstmeier.de',
-                          'user_full_name': ''}, result.get())
-
-    @responses.activate
-    def test_get_user_email_task_400_response(self):
-        submission = Submission.objects.last()
-        config = SiteConfiguration.objects.first()
-        config.use_gfbio_services = True
-        config.save()
-        responses.add(
-            responses.GET,
-            'https://www.example.com/api/jsonws/'
-            'GFBioProject-portlet.userextension/'
-            'get-user-by-id/request-json/%7B%22userid%22:%2016250%7D',
-            status=400,
-            headers={
-                'Accept': 'application/json'
-            },
-            json='')
-        result = get_user_email_task.apply_async(
-            kwargs={
-                'submission_id': submission.id
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertEqual({'first_name': '', 'last_name': '',
-                          'user_email': 'kevin@horstmeier.de',
-                          'portal_user': True,
-                          'user_full_name': ''}, result.get())
+# class TestPortalServiceTasks(TestTasks):
+#
+#     # TODO: check all test, even if passing, for json exceptions that need repsonse mock
+#     @responses.activate
+#     def test_get_user_email_task_success(self):
+#         submission = Submission.objects.last()
+#         config = SiteConfiguration.objects.first()
+#         config.use_gfbio_services = True
+#         config.save()
+#         responses.add(
+#             responses.GET,
+#             'https://www.example.com/api/jsonws/'
+#             'GFBioProject-portlet.userextension/'
+#             'get-user-by-id/request-json/%7B%22userid%22:%2016250%7D',
+#             status=200,
+#             headers={
+#                 'Accept': 'application/json'
+#             },
+#             json={'firstname': 'Marc', 'middlename': '',
+#                   'emailaddress': 'maweber@mpi-bremen.de',
+#                   'fullname': 'Marc Weber',
+#                   'screenname': 'maweber', 'userid': 16250,
+#                   'lastname': 'Weber'})
+#
+#         result = get_user_email_task.apply_async(
+#             kwargs={
+#                 'submission_id': submission.id
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#         self.assertDictEqual({'user_full_name': 'Marc Weber',
+#                               'user_email': 'maweber@mpi-bremen.de',
+#                               'portal_user': True,
+#                               'last_name': '', 'first_name': ''}, result.get())
+#
+#     @responses.activate
+#     def test_get_user_email_task_no_gfbio_services(self):
+#         submission = Submission.objects.last()
+#         config = SiteConfiguration.objects.first()
+#         config.use_gfbio_services = False
+#         config.save()
+#         data = json.dumps({
+#             'userid': 16250
+#         })
+#         url = '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'.format(
+#             config.gfbio_server.url, data)
+#         responses.add(responses.GET, url, status=200,
+#                       json={})
+#         result = get_user_email_task.apply_async(
+#             kwargs={
+#                 'submission_id': submission.id
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#         self.assertEqual({'first_name': '', 'last_name': '',
+#                           'user_email': 'kevin@horstmeier.de',
+#                           'user_full_name': ''}, result.get())
+#
+#     @responses.activate
+#     def test_get_user_email_task_error_response(self):
+#         submission = Submission.objects.last()
+#         config = SiteConfiguration.objects.first()
+#         config.use_gfbio_services = False
+#         config.save()
+#         data = json.dumps({
+#             'userid': 16250
+#         })
+#         url = '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'.format(
+#             config.gfbio_server.url, data)
+#         responses.add(responses.GET, url, status=200, json={})
+#         result = get_user_email_task.apply_async(
+#             kwargs={
+#                 'submission_id': submission.id
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#         self.assertEqual({'first_name': '', 'last_name': '',
+#                           'user_email': 'kevin@horstmeier.de',
+#                           'user_full_name': ''}, result.get())
+#
+#     @responses.activate
+#     def test_get_user_email_task_corrupt_response(self):
+#         submission = Submission.objects.last()
+#         config = SiteConfiguration.objects.first()
+#         config.use_gfbio_services = True
+#         config.save()
+#         responses.add(
+#             responses.GET,
+#             'https://www.example.com/api/jsonws/'
+#             'GFBioProject-portlet.userextension/'
+#             'get-user-by-id/request-json/%7B%22userid%22:%2016250%7D',
+#             status=200,
+#             headers={
+#                 'Accept': 'application/json'
+#             },
+#             body='xyz')
+#
+#         result = get_user_email_task.apply_async(
+#             kwargs={
+#                 'submission_id': submission.id
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#         self.assertEqual({'first_name': '', 'last_name': '',
+#                           'user_email': 'kevin@horstmeier.de',
+#                           'user_full_name': ''}, result.get())
+#
+#     @responses.activate
+#     def test_get_user_email_task_400_response(self):
+#         submission = Submission.objects.last()
+#         config = SiteConfiguration.objects.first()
+#         config.use_gfbio_services = True
+#         config.save()
+#         responses.add(
+#             responses.GET,
+#             'https://www.example.com/api/jsonws/'
+#             'GFBioProject-portlet.userextension/'
+#             'get-user-by-id/request-json/%7B%22userid%22:%2016250%7D',
+#             status=400,
+#             headers={
+#                 'Accept': 'application/json'
+#             },
+#             json='')
+#         result = get_user_email_task.apply_async(
+#             kwargs={
+#                 'submission_id': submission.id
+#             }
+#         )
+#         self.assertTrue(result.successful())
+#         self.assertEqual({'first_name': '', 'last_name': '',
+#                           'user_email': 'kevin@horstmeier.de',
+#                           'portal_user': True,
+#                           'user_full_name': ''}, result.get())
 
 
 class TestGFBioHelpDeskTasks(TestTasks):
@@ -1957,16 +1957,16 @@ class TestTaskChains(TestTasks):
         data = json.dumps({
             'userid': 23
         })
-        url = '{0}/api/jsonws/' \
-              'GFBioProject-portlet.userextension/get-user-by-id/' \
-              'request-json/{1}'.format(site_config.gfbio_server.url,
-                                        data)
-        responses.add(responses.POST, url, status=200,
-                      json={'firstname': 'Marc', 'middlename': '',
-                            'emailaddress': 'maweber@mpi-bremen.de',
-                            'fullname': 'Marc Weber',
-                            'screenname': 'maweber', 'userid': 16250,
-                            'lastname': 'Weber'})
+        # url = '{0}/api/jsonws/' \
+        #       'GFBioProject-portlet.userextension/get-user-by-id/' \
+        #       'request-json/{1}'.format(site_config.gfbio_server.url,
+        #                                 data)
+        # responses.add(responses.POST, url, status=200,
+        #               json={'firstname': 'Marc', 'middlename': '',
+        #                     'emailaddress': 'maweber@mpi-bremen.de',
+        #                     'fullname': 'Marc Weber',
+        #                     'screenname': 'maweber', 'userid': 16250,
+        #                     'lastname': 'Weber'})
 
         # get_gfbio_helpdesk_username_task responses ---------------------------
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
@@ -2074,17 +2074,17 @@ class TestTaskChains(TestTasks):
         data = json.dumps({
             'userid': 23
         })
-        url = '{0}/api/jsonws/' \
-              'GFBioProject-portlet.userextension/get-user-by-id/' \
-              'request-json/{1}'.format(site_config.gfbio_server.url,
-                                        data)
-
-        responses.add(responses.POST, url, status=200,
-                      json={'firstname': 'Marc', 'middlename': '',
-                            'emailaddress': 'maweber@mpi-bremen.de',
-                            'fullname': 'Marc Weber',
-                            'screenname': 'maweber', 'userid': 16250,
-                            'lastname': 'Weber'})
+        # url = '{0}/api/jsonws/' \
+        #       'GFBioProject-portlet.userextension/get-user-by-id/' \
+        #       'request-json/{1}'.format(site_config.gfbio_server.url,
+        #                                 data)
+        #
+        # responses.add(responses.POST, url, status=200,
+        #               json={'firstname': 'Marc', 'middlename': '',
+        #                     'emailaddress': 'maweber@mpi-bremen.de',
+        #                     'fullname': 'Marc Weber',
+        #                     'screenname': 'maweber', 'userid': 16250,
+        #                     'lastname': 'Weber'})
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format('0815',
                                                          'khors@me.de',
                                                          'Kevin Horstmeier')

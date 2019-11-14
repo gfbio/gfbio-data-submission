@@ -124,24 +124,24 @@ class SiteConfiguration(models.Model):
         on_delete=models.PROTECT
     )
     # TODO: remove
-    gfbio_server = models.ForeignKey(
-        ResourceCredential,
-        null=True,
-        blank=True,
-        related_name='SiteConfiguration.gfbio_server+',
-        help_text='Select which server and/or account this configuration '
-                  'should use to connect to the GFBio portal database for '
-                  'accessing submission-registry, research_object, and so on.',
-        on_delete=models.PROTECT
-    )
+    # gfbio_server = models.ForeignKey(
+    #     ResourceCredential,
+    #     null=True,
+    #     blank=True,
+    #     related_name='SiteConfiguration.gfbio_server+',
+    #     help_text='Select which server and/or account this configuration '
+    #               'should use to connect to the GFBio portal database for '
+    #               'accessing submission-registry, research_object, and so on.',
+    #     on_delete=models.PROTECT
+    # )
     # TODO: remove
-    use_gfbio_services = models.BooleanField(
-        default=False,
-        help_text='If checked additional gfbio-related services will be used '
-                  'during a submission. E.g. trying to get a User from the '
-                  'gfbio.org database and set its email as reporter-email '
-                  'in GFBio helpdesk.'
-    )
+    # use_gfbio_services = models.BooleanField(
+    #     default=False,
+    #     help_text='If checked additional gfbio-related services will be used '
+    #               'during a submission. E.g. trying to get a User from the '
+    #               'gfbio.org database and set its email as reporter-email '
+    #               'in GFBio helpdesk.'
+    # )
 
     helpdesk_server = models.ForeignKey(
         ResourceCredential,

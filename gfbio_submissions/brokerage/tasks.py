@@ -30,8 +30,6 @@ from .models import BrokerObject, \
 from .utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data, send_submission_to_ena, \
     parse_ena_submission_response
-from .utils.gfbio import \
-    gfbio_get_user_by_id
 from .utils.pangaea import pull_pangaea_dois
 from .utils.submission_transfer import SubmissionTransferHandler
 
@@ -552,61 +550,61 @@ def check_for_pangaea_doi_task(self, resource_credential_id=None):
 # FIXME/TODO: once only local users are used, even with social logins,
 #  gfbio stuff is obsolete and getting userinformation need no extra task.
 #  Thus remove this
-@celery.task(
-    base=SubmissionTask,
-    bind=True,
-    name='tasks.get_user_email_task',
-    autoretry_for=(TransferServerError,
-                   TransferClientError
-                   ),
-    retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
-    retry_backoff=SUBMISSION_RETRY_DELAY,
-    retry_jitter=True
-)
-def get_user_email_task(self, submission_id=None):
-    submission, site_configuration = get_submission_and_site_configuration(
-        submission_id=submission_id,
-        task=self,
-        include_closed=True
-    )
-    if submission == TaskProgressReport.CANCELLED:
-        return TaskProgressReport.CANCELLED
-    res = {
-        'user_email': site_configuration.contact,
-        'user_full_name': '',
-        'first_name': '',
-        'last_name': '',
-    }
-    if site_configuration.use_gfbio_services:
-        response = gfbio_get_user_by_id(submission.submitting_user,
-                                        site_configuration, submission)
-        try:
-            response_json = response.json()
-            content = response_json if isinstance(response_json,
-                                                  dict) else {}
-            res['user_email'] = content.get('emailaddress',
-                                            site_configuration.contact)
-            res['user_full_name'] = content.get('fullname', '')
-
-            res['portal_user'] = True
-
-        except ValueError as e:
-            logger.error(
-                msg='get_user_email_task. load json response. '
-                    'Value error: {}'.format(e))
-    else:
-        logger.info(
-            msg='get_user_email_task submission_id={0} | '
-                'use_gfbio_services={1} | return={2}'.format(
-                submission_id,
-                site_configuration.use_gfbio_services,
-                res)
-        )
-    submission.submitting_user_common_information = '{0};{1}'.format(
-        res['user_full_name'], res['user_email'])
-    submission.save()
-
-    return res
+# @celery.task(
+#     base=SubmissionTask,
+#     bind=True,
+#     name='tasks.get_user_email_task',
+#     autoretry_for=(TransferServerError,
+#                    TransferClientError
+#                    ),
+#     retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
+#     retry_backoff=SUBMISSION_RETRY_DELAY,
+#     retry_jitter=True
+# )
+# def get_user_email_task(self, submission_id=None):
+#     submission, site_configuration = get_submission_and_site_configuration(
+#         submission_id=submission_id,
+#         task=self,
+#         include_closed=True
+#     )
+#     if submission == TaskProgressReport.CANCELLED:
+#         return TaskProgressReport.CANCELLED
+#     res = {
+#         'user_email': site_configuration.contact,
+#         'user_full_name': '',
+#         'first_name': '',
+#         'last_name': '',
+#     }
+#     if site_configuration.use_gfbio_services:
+#         response = gfbio_get_user_by_id(submission.submitting_user,
+#                                         site_configuration, submission)
+#         try:
+#             response_json = response.json()
+#             content = response_json if isinstance(response_json,
+#                                                   dict) else {}
+#             res['user_email'] = content.get('emailaddress',
+#                                             site_configuration.contact)
+#             res['user_full_name'] = content.get('fullname', '')
+#
+#             res['portal_user'] = True
+#
+#         except ValueError as e:
+#             logger.error(
+#                 msg='get_user_email_task. load json response. '
+#                     'Value error: {}'.format(e))
+#     else:
+#         logger.info(
+#             msg='get_user_email_task submission_id={0} | '
+#                 'use_gfbio_services={1} | return={2}'.format(
+#                 submission_id,
+#                 site_configuration.use_gfbio_services,
+#                 res)
+#         )
+#     submission.submitting_user_common_information = '{0};{1}'.format(
+#         res['user_full_name'], res['user_email'])
+#     submission.save()
+#
+#     return res
 
 
 # TODO: may need refactoring if portal deps are removed (see initial chains ...)
@@ -643,6 +641,7 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
         result['name'] = prev_task_result.get('user_email',
                                               JIRA_FALLBACK_USERNAME)
 
+    # FIXME: remove check and refactor to simpler workflow, when no portal_task is running before this
     if not site_configuration.use_gfbio_services:
         if len(submission.submitting_user) == 0:
             logger.info(

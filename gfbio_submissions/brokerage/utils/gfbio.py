@@ -20,42 +20,42 @@ logger = logging.getLogger(__name__)
 
 
 # TODO: remove !
-def gfbio_get_user_by_id(user_id, site_configuration, submission):
-    try:
-        id = int(user_id)
-    except ValueError as e:
-        id = -1
-    data = json.dumps({
-        'userid': id
-    })
-    url = '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'.format(
-        site_configuration.gfbio_server.url, data)
-    # requestlog: ok, leaves out bsi stuff ?
-    response = requests.get(
-        url=url,
-        auth=(site_configuration.gfbio_server.username,
-              site_configuration.gfbio_server.password),
-        headers={
-            'Accept': 'application/json'
-        },
-    )
-    details = response.headers or ''
-
-    with transaction.atomic():
-        request_log = RequestLog.objects.create(
-            type=RequestLog.OUTGOING,
-            url=url,
-            data=data,
-            site_user=user_id,
-            submission_id=submission.broker_submission_id,
-            response_status=response.status_code,
-            response_content=response.content,
-            request_details={
-                'response_headers': str(details)
-            }
-        )
-
-    return response
+# def gfbio_get_user_by_id(user_id, site_configuration, submission):
+#     try:
+#         id = int(user_id)
+#     except ValueError as e:
+#         id = -1
+#     data = json.dumps({
+#         'userid': id
+#     })
+#     url = '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'.format(
+#         site_configuration.gfbio_server.url, data)
+#     # requestlog: ok, leaves out bsi stuff ?
+#     response = requests.get(
+#         url=url,
+#         auth=(site_configuration.gfbio_server.username,
+#               site_configuration.gfbio_server.password),
+#         headers={
+#             'Accept': 'application/json'
+#         },
+#     )
+#     details = response.headers or ''
+#
+#     with transaction.atomic():
+#         request_log = RequestLog.objects.create(
+#             type=RequestLog.OUTGOING,
+#             url=url,
+#             data=data,
+#             site_user=user_id,
+#             submission_id=submission.broker_submission_id,
+#             response_status=response.status_code,
+#             response_content=response.content,
+#             request_details={
+#                 'response_headers': str(details)
+#             }
+#         )
+#
+#     return response
 
 
 def get_gfbio_helpdesk_username(user_name, email, fullname=''):
