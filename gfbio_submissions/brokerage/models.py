@@ -593,21 +593,21 @@ class TaskProgressReport(models.Model):
 #   only that intended usecase was sequence data
 #   that is not supposed to be attached to ticket
 #   and may be deleted/moved after a while
-class SubmissionFileUpload(models.Model):
-    submission = models.ForeignKey(
-        Submission, null=True,
-        blank=True,
-        help_text='Submission this File belongs to.',
-        on_delete=models.CASCADE
-    )
-    site = models.ForeignKey(AUTH_USER_MODEL, related_name='submissionupload',
-                             on_delete=models.PROTECT)
-    file = models.FileField(upload_to=submission_upload_path)
-    migrated = models.BooleanField(default=False)
-
-    # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
-    created = models.DateTimeField(auto_now_add=True)
-    changed = models.DateTimeField(auto_now=True)
+# class SubmissionFileUpload(models.Model):
+#     submission = models.ForeignKey(
+#         Submission, null=True,
+#         blank=True,
+#         help_text='Submission this File belongs to.',
+#         on_delete=models.CASCADE
+#     )
+#     site = models.ForeignKey(AUTH_USER_MODEL, related_name='submissionupload',
+#                              on_delete=models.PROTECT)
+#     file = models.FileField(upload_to=submission_upload_path)
+#     migrated = models.BooleanField(default=False)
+#
+#     # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
+#     created = models.DateTimeField(auto_now_add=True)
+#     changed = models.DateTimeField(auto_now=True)
 
 
 # TODO: refactor/review: compare TODO for SubmissionFileUpload

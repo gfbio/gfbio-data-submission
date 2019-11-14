@@ -12,7 +12,7 @@ from .configuration.settings import SUBMISSION_DELAY
 from .models import PersistentIdentifier, \
     Submission, ResourceCredential, BrokerObject, RequestLog, \
     AdditionalReference, SiteConfiguration, PrimaryDataFile, \
-    TaskProgressReport, TicketLabel, SubmissionFileUpload, SubmissionUpload, \
+    TaskProgressReport, TicketLabel, SubmissionUpload, \
     AuditableTextData, \
     CenterName
 from .utils.submission_transfer import \
@@ -143,8 +143,8 @@ def download_auditable_text_data(modeladmin, request, queryset):
 download_auditable_text_data.short_description = 'Download zipped data'
 
 
-class SubmissionFileUploadInlineAdmin(admin.TabularInline):
-    model = SubmissionFileUpload
+# class SubmissionFileUploadInlineAdmin(admin.TabularInline):
+#     model = SubmissionFileUpload
 
 
 class PrimaryDataFileInlineAdmin(admin.StackedInline):
@@ -223,7 +223,7 @@ admin.site.register(RequestLog, RequestLogAdmin)
 admin.site.register(AdditionalReference)
 admin.site.register(TaskProgressReport, TaskProgressReportAdmin)
 
-admin.site.register(SubmissionFileUpload, SubmissionFileUploadAdmin)
+# admin.site.register(SubmissionFileUpload, SubmissionFileUploadAdmin)
 admin.site.register(PrimaryDataFile, PrimaryDataFileAdmin)
 admin.site.register(SubmissionUpload, SubmissionUploadAdmin)
 
