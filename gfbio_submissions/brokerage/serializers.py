@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from gfbio_submissions.users.models import User
 from .models import Submission, \
-    PrimaryDataFile, SubmissionUpload
+    SubmissionUpload
 from .utils.schema_validation import \
     validate_data_full, validate_data_min
 
@@ -108,13 +108,13 @@ class SubmissionDetailSerializer(SubmissionSerializer):
 
 
 # TODO: remove
-class PrimaryDataFileSerializer(serializers.ModelSerializer):
-    site = serializers.ReadOnlyField(source='site.username')
-    submission = serializers.PrimaryKeyRelatedField(read_only=True)
-
-    class Meta:
-        model = PrimaryDataFile
-        fields = ('site', 'data_file', 'submission')
+# class PrimaryDataFileSerializer(serializers.ModelSerializer):
+#     site = serializers.ReadOnlyField(source='site.username')
+#     submission = serializers.PrimaryKeyRelatedField(read_only=True)
+#
+#     class Meta:
+#         model = PrimaryDataFile
+#         fields = ('site', 'data_file', 'submission')
 
 
 class SubmissionUploadSerializer(serializers.ModelSerializer):

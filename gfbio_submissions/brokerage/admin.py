@@ -11,8 +11,8 @@ from django.utils.encoding import smart_bytes
 from .configuration.settings import SUBMISSION_DELAY
 from .models import PersistentIdentifier, \
     Submission, ResourceCredential, BrokerObject, RequestLog, \
-    AdditionalReference, SiteConfiguration, PrimaryDataFile, \
-    TaskProgressReport, TicketLabel, SubmissionUpload, \
+    AdditionalReference, SiteConfiguration, TaskProgressReport, TicketLabel, \
+    SubmissionUpload, \
     AuditableTextData, \
     CenterName
 from .utils.submission_transfer import \
@@ -147,11 +147,11 @@ download_auditable_text_data.short_description = 'Download zipped data'
 #     model = SubmissionFileUpload
 
 
-class PrimaryDataFileInlineAdmin(admin.StackedInline):
-    model = PrimaryDataFile
-
-    def get_extra(self, request, obj=None, **kwargs):
-        return 1
+# class PrimaryDataFileInlineAdmin(admin.StackedInline):
+#     model = PrimaryDataFile
+#
+#     def get_extra(self, request, obj=None, **kwargs):
+#         return 1
 
 
 class AuditableTextDataInlineAdmin(admin.StackedInline):
@@ -171,7 +171,7 @@ class SubmissionAdmin(admin.ModelAdmin):
                      'submitting_user_common_information',
                      'additionalreference__reference_key'
                      ]
-    inlines = (PrimaryDataFileInlineAdmin, AuditableTextDataInlineAdmin,
+    inlines = (AuditableTextDataInlineAdmin,
                AdditionalReferenceInline,)
     actions = [download_auditable_text_data,
                continue_release_submissions,
@@ -224,7 +224,7 @@ admin.site.register(AdditionalReference)
 admin.site.register(TaskProgressReport, TaskProgressReportAdmin)
 
 # admin.site.register(SubmissionFileUpload, SubmissionFileUploadAdmin)
-admin.site.register(PrimaryDataFile, PrimaryDataFileAdmin)
+# admin.site.register(PrimaryDataFile, PrimaryDataFileAdmin)
 admin.site.register(SubmissionUpload, SubmissionUploadAdmin)
 
 admin.site.register(AuditableTextData)

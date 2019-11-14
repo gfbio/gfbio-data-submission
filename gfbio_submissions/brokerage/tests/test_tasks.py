@@ -22,8 +22,8 @@ from gfbio_submissions.brokerage.configuration.settings import \
     SUBMISSION_DELAY
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, Submission, AuditableTextData, PersistentIdentifier, \
-    BrokerObject, TaskProgressReport, AdditionalReference, PrimaryDataFile, \
-    RequestLog, CenterName, SubmissionUpload
+    BrokerObject, TaskProgressReport, AdditionalReference, RequestLog, \
+    CenterName, SubmissionUpload
 from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, \
     transfer_data_to_ena_task, process_ena_response_task, \
     create_broker_objects_from_submission_data_task, check_on_hold_status_task, \
@@ -316,9 +316,9 @@ class TestTasks(TestCase):
             'file': f,
         }
 
-    @staticmethod
-    def _delete_test_data():
-        PrimaryDataFile.objects.all().delete()
+    # @staticmethod
+    # def _delete_test_data():
+    #     PrimaryDataFile.objects.all().delete()
 
     def _add_default_pangaea_responses(self):
         responses.add(
