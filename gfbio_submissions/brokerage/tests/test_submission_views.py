@@ -25,6 +25,7 @@ from gfbio_submissions.brokerage.models import Submission, RequestLog, \
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_submission_post_response, \
     _get_test_data_dir_path
+from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
 from gfbio_submissions.users.models import User
 
 
@@ -98,7 +99,8 @@ class TestSubmissionView(TestCase):
         responses.add(responses.GET, url, body=b'deleteMe', status=200)
 
     def _add_create_ticket_response(self):
-        self._add_gfbio_helpdesk_user_service_response()
+        self._add_gfbio_helpdesk_user_service_response(user_name='horst',
+                                                       email='brokeragent@gfbio.org')
         self._add_jira_client_responses()
         responses.add(
             responses.POST,

@@ -64,7 +64,6 @@ class SubmissionTransferHandler(object):
                 # if molecular_data_available:
                 chain = chain | self.pre_process_molecular_data_chain()
         elif not update:
-            # TODO: use IDM derived email. not old portal email
             chain = get_gfbio_helpdesk_username_task.s(
                 submission_id=self.submission_id).set(
                 countdown=SUBMISSION_DELAY) \

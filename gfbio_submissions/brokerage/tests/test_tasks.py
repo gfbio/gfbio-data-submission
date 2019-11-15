@@ -42,6 +42,7 @@ from gfbio_submissions.brokerage.tests.utils import \
     _get_pangaea_soap_response, _get_pangaea_attach_response, \
     _get_pangaea_comment_response, _get_pangaea_ticket_response, \
     _get_jira_issue_response
+from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
 from gfbio_submissions.users.models import User
 
 
@@ -254,6 +255,27 @@ class TestTasks(TestCase):
         user.email = 'khors@me.de'
         user.save()
         user.user_permissions.add(*permissions)
+
+        site = User.objects.create(
+            username=HOSTING_SITE
+        )
+        site.name = 'hosting site'
+        site.email = 'hosting@site.de'
+        site.is_site = True
+        site.is_user = False
+        site.save()
+        site.user_permissions.add(*permissions)
+
+        external_site = User.objects.create(
+            username='external_site'
+        )
+        external_site.name = 'external site'
+        external_site.email = 'external@site.de'
+        external_site.is_site = True
+        external_site.is_user = False
+        external_site.save()
+        external_site.user_permissions.add(*permissions)
+
         submission = SubmissionTest._create_submission_via_serializer()
         submission.additionalreference_set.create(
             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
@@ -265,17 +287,31 @@ class TestTasks(TestCase):
             reference_key='PANGAEA_FAKE_KEY',
             primary=True
         )
+        submission.site = site
+        submission.save()
+
         submission = SubmissionTest._create_submission_via_serializer()
         submission.submitting_user = '16250'
+        submission.site = external_site
         submission.save()
         resource_cred = ResourceCredential.objects.create(
             title='Resource Title',
             url='https://www.example.com',
             authentication_string='letMeIn'
         )
+        # cls.default_site_config = SiteConfiguration.objects.create(
+        #     title='default',
+        #     site=None,
+        #     ena_server=resource_cred,
+        #     pangaea_token_server=resource_cred,
+        #     pangaea_jira_server=resource_cred,
+        #     helpdesk_server=resource_cred,
+        #     comment='Default configuration',
+        #     contact='kevin@horstmeier.de'
+        # )
         cls.default_site_config = SiteConfiguration.objects.create(
             title='default',
-            site=None,
+            site=site,
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
@@ -285,7 +321,7 @@ class TestTasks(TestCase):
         )
         cls.second_site_config = SiteConfiguration.objects.create(
             title='default-2',
-            site=None,
+            site=external_site,
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
@@ -1389,8 +1425,11 @@ class TestGFBioHelpDeskTasks(TestTasks):
                          tpr.first().task_return_value)
         self.assertEqual('502', tpr.first().task_exception)
 
+
+class TestGetHelpDeskUserTask(TestTasks):
+
     @responses.activate
-    def test_get_gfbio_helpdesk_username_task_success(self):
+    def test_hosting_site_get_gfbio_helpdesk_username_task_success(self):
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
             '0815', 'khors@me.de', quote('Kevin Horstmeier')
         )
@@ -1411,15 +1450,32 @@ class TestGFBioHelpDeskTasks(TestTasks):
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
+    def test_external_site_get_gfbio_helpdesk_username_task_success(self):
+        url = JIRA_USERNAME_URL_TEMPLATE.format(
+            'external_site', 'brokeragent@gfbio.org'
+        )
+        responses.add(responses.GET, url, body=b'external_site', status=200)
+        submission = Submission.objects.last()
+        submission.submitting_user = 'user_id_from_external_site'
+        submission.save()
+        result = get_gfbio_helpdesk_username_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        res = result.get()
+        self.assertEqual({'name': 'external_site'}, res)
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        self.assertEqual("{'name': 'external_site'}",
+                         TaskProgressReport.objects.first().task_return_value)
+
+    @responses.activate
     def test_get_gfbio_helpdesk_username_task_empty_submitting_user(self):
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
             '0815', 'khors@me.de', quote('Kevin Horstmeier')
         )
         responses.add(responses.GET, url, body=b'0815', status=200)
-        # user = User.objects.first()
         submission = Submission.objects.first()
-        # submission.submitting_user = '{}'.format(user.pk)
-        # submission.save()
         self.assertEqual('', submission.submitting_user)
         result = get_gfbio_helpdesk_username_task.apply_async(
             kwargs={
@@ -1433,7 +1489,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
-    def test_get_gfbio_helpdesk_username_task_invalid_submitting_user(self):
+    def test_hosting_site_get_gfbio_helpdesk_username_task_invalid_submitting_user(self):
         url = JIRA_USERNAME_URL_TEMPLATE.format(
             'brokeragent', 'brokeragent@gfbio.org',
         )
@@ -1454,7 +1510,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
-    def test_get_gfbio_helpdesk_username_task_success_no_fullname(self):
+    def test_hosting_site_get_gfbio_helpdesk_username_task_success_no_fullname(self):
         url = JIRA_USERNAME_URL_TEMPLATE.format(
             '0815', 'khors@me.de'
         )
@@ -1478,7 +1534,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
-    def test_get_gfbio_helpdesk_username_task_success_no_goesternid(self):
+    def test_hosting_site_get_gfbio_helpdesk_username_task_success_no_goesternid(self):
         user = User.objects.first()
         url = JIRA_USERNAME_URL_TEMPLATE.format(
             user.username, 'khors@me.de'
@@ -1504,7 +1560,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
-    def test_get_gfbio_helpdesk_username_task_client_error(self):
+    def test_hosting_site_get_gfbio_helpdesk_username_task_client_error(self):
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
             '0815', 'khors@me.de', quote('Kevin Horstmeier')
         )
@@ -1525,9 +1581,29 @@ class TestGFBioHelpDeskTasks(TestTasks):
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
+    def test_external_site_get_gfbio_helpdesk_username_task_client_error(self):
+        url = JIRA_USERNAME_URL_TEMPLATE.format(
+            'external_site', 'brokeragent@gfbio.org'
+        )
+        responses.add(responses.GET, url, status=403)
+        submission = Submission.objects.last()
+        submission.submitting_user = 'user_id_from_external_site'
+        submission.save()
+        result = get_gfbio_helpdesk_username_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        res = result.get()
+        self.assertEqual({'name': JIRA_FALLBACK_USERNAME}, res)
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        self.assertEqual("{'name': '" + JIRA_FALLBACK_USERNAME + "'}",
+                         TaskProgressReport.objects.first().task_return_value)
+
+    @responses.activate
     @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
                        CELERY_TASK_EAGER_PROPAGATES=False)
-    def test_get_gfbio_helpdesk_username_task_server_error(self):
+    def test_hosting_site_get_gfbio_helpdesk_username_task_server_error(self):
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
             '0815', 'khors@me.de', quote('Kevin Horstmeier')
         )
@@ -1535,6 +1611,31 @@ class TestGFBioHelpDeskTasks(TestTasks):
         user = User.objects.first()
         submission = Submission.objects.first()
         submission.submitting_user = '{}'.format(user.pk)
+        submission.save()
+        get_gfbio_helpdesk_username_task.apply(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        for t in TaskProgressReport.objects.all():
+            print(t.task_name, ' ', t.status, ' ', t.task_return_value, ' ',
+                  t.task_kwargs,
+                  ' ', t.task_args)
+        tpr = TaskProgressReport.objects.first()
+        self.assertEqual('RETRY', tpr.status)
+        self.assertEqual("{'name': '" + JIRA_FALLBACK_USERNAME + "'}",
+                         tpr.task_return_value)
+
+    @responses.activate
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+                       CELERY_TASK_EAGER_PROPAGATES=False)
+    def test_external_site_get_gfbio_helpdesk_username_task_server_error(self):
+        url = JIRA_USERNAME_URL_TEMPLATE.format(
+            'external_site', 'brokeragent@gfbio.org'
+        )
+        responses.add(responses.GET, url, body=b'', status=500)
+        submission = Submission.objects.last()
+        submission.submitting_user = 'user_id_from_external_site'
         submission.save()
         get_gfbio_helpdesk_username_task.apply(
             kwargs={

@@ -88,7 +88,6 @@ class JiraClient(object):
             self.error = e
 
     def update_issue(self, key, fields, notify=False):
-        print(self.resource.url)
         self.get_issue(key)
         try:
             self.issue.update(notify=notify, fields=fields)

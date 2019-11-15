@@ -21,6 +21,7 @@ from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.brokerage.utils.task_utils import jira_error_auto_retry, \
     get_submission_and_site_configuration, raise_transfer_server_exceptions, \
     retry_no_ticket_available_exception
+from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
 from gfbio_submissions.users.models import User
 from .configuration.settings import BASE_HOST_NAME, \
     SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
@@ -636,45 +637,58 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
     user_email = JIRA_FALLBACK_EMAIL
     user_full_name = ''
     result['name'] = user_name
-    if prev_task_result is not None and isinstance(prev_task_result, dict):
-        result = prev_task_result
-        result['name'] = prev_task_result.get('user_email',
-                                              JIRA_FALLBACK_USERNAME)
+    # if prev_task_result is not None and isinstance(prev_task_result, dict):
+    #     result = prev_task_result
+    #     result['name'] = prev_task_result.get('user_email',
+    #                                           JIRA_FALLBACK_USERNAME)
 
     # FIXME: remove check and refactor to simpler workflow, when no portal_task is running before this
-    # if not site_configuration.use_gfbio_services:
+    # submitting user is site specific. e.g. local django user id = 1 is different from silva user id = 1
     if len(submission.submitting_user) == 0:
         logger.info(
             'tasks.py | get_gfbio_helpdesk_username_task | len(submission.submitting_user) == 0 | return {0}'.format(
                 result))
         return result
-
-    try:
-        # FIXME: tricky if submitting user is a numerical id from another system, worst case would be an accidental match with a local user
-        user = User.objects.get(pk=int(submission.submitting_user))
-        user_name = user.goesternid if user.goesternid else user.username
-        user_email = user.email
-        user_full_name = user.name
-        logger.info(
-            'tasks.py | get_gfbio_helpdesk_username_task | try get user | username={0} | goe_id={1}'.format(
-                user_name, user.goesternid))
-    except ValueError as ve:
-        logger.warning(
-            'tasks.py | get_gfbio_helpdesk_username_task | '
-            'submission_id={0} | ValueError with '
-            'submission.submiting_user={1} | '
-            '{2}'.format(submission_id, submission.submitting_user, ve))
-        return result
-    except User.DoesNotExist as e:
-        logger.warning(
-            'tasks.py | get_gfbio_helpdesk_username_task | '
-            'submission_id={0} | No user with '
-            'submission.submiting_user={1} | '
-            '{2}'.format(submission_id, submission.submitting_user, e))
-        logger.warning(
-            'tasks.py | get_gfbio_helpdesk_username_task | '
-            'submission_id={0} | Try getting user_email from previous task | user_name='
-            '{1}'.format(submission_id, user_name))
+    # 'local_site' includes sso, local users, social accounts (which have local shadow accounts)
+    print('task  | submission.site.username ', submission.site.username)
+    if submission.site.username == HOSTING_SITE:
+        print('task  | HOSTING SITE')
+        try:
+            logger.info(
+                'tasks.py | get_gfbio_helpdesk_username_task | try getting a local user | submission={1} | submitting_user={1}'.format(
+                    submission.broker_submission_id, submission.submitting_user)
+            )
+            # FIXME: tricky if submitting user is a numerical id from another system, worst case would be an accidental match with a local user
+            # works only based on the assumtion that this is actuall a local user
+            user = User.objects.get(pk=int(submission.submitting_user))
+            user_name = user.goesternid if user.goesternid else user.username
+            user_email = user.email
+            user_full_name = user.name
+            logger.info(
+                'tasks.py | get_gfbio_helpdesk_username_task | try get user | username={0} | goe_id={1}'.format(
+                    user_name, user.goesternid))
+        except ValueError as ve:
+            logger.warning(
+                'tasks.py | get_gfbio_helpdesk_username_task | '
+                'submission_id={0} | ValueError with '
+                'submission.submiting_user={1} | '
+                '{2}'.format(submission_id, submission.submitting_user, ve))
+            # return result
+        except User.DoesNotExist as e:
+            logger.warning(
+                'tasks.py | get_gfbio_helpdesk_username_task | '
+                'submission_id={0} | No user with '
+                'submission.submiting_user={1} | '
+                '{2}'.format(submission_id, submission.submitting_user, e))
+            logger.warning(
+                'tasks.py | get_gfbio_helpdesk_username_task | '
+                'submission_id={0} | Try getting user_email from previous task | user_name='
+                '{1}'.format(submission_id, user_name))
+    else:
+        print('task  | NOT HOSTING SITE')
+        # TODO: add 'get_user_email method' specific to a site as a parameter to this task, otherwise no email resolution is possible
+        user_name = submission.site.username
+        # TODO: in this form the email address provided is the default FALLBACK, brokeragent@gfbio.org
 
     response = get_gfbio_helpdesk_username(user_name=user_name,
                                            email=user_email,

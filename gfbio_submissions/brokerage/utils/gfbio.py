@@ -1,61 +1,20 @@
 # -*- coding: utf-8 -*-
 import datetime
-import json
 import logging
 from urllib.parse import quote
 
 import requests
 from django.conf import settings
-from django.db import transaction
 
 from gfbio_submissions.brokerage.configuration.settings import \
     GFBIO_LICENSE_MAPPINGS, \
     GFBIO_METASCHEMA_MAPPINGS, \
     GFBIO_DATACENTER_USER_MAPPINGS, GFBIO_REQUEST_TYPE_MAPPINGS, \
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE, JIRA_USERNAME_URL_TEMPLATE
-from gfbio_submissions.brokerage.models import SiteConfiguration, RequestLog
+from gfbio_submissions.brokerage.models import SiteConfiguration
 from gfbio_submissions.users.models import User
 
 logger = logging.getLogger(__name__)
-
-
-# TODO: remove !
-# def gfbio_get_user_by_id(user_id, site_configuration, submission):
-#     try:
-#         id = int(user_id)
-#     except ValueError as e:
-#         id = -1
-#     data = json.dumps({
-#         'userid': id
-#     })
-#     url = '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'.format(
-#         site_configuration.gfbio_server.url, data)
-#     # requestlog: ok, leaves out bsi stuff ?
-#     response = requests.get(
-#         url=url,
-#         auth=(site_configuration.gfbio_server.username,
-#               site_configuration.gfbio_server.password),
-#         headers={
-#             'Accept': 'application/json'
-#         },
-#     )
-#     details = response.headers or ''
-#
-#     with transaction.atomic():
-#         request_log = RequestLog.objects.create(
-#             type=RequestLog.OUTGOING,
-#             url=url,
-#             data=data,
-#             site_user=user_id,
-#             submission_id=submission.broker_submission_id,
-#             response_status=response.status_code,
-#             response_content=response.content,
-#             request_details={
-#                 'response_headers': str(details)
-#             }
-#         )
-#
-#     return response
 
 
 def get_gfbio_helpdesk_username(user_name, email, fullname=''):
@@ -63,6 +22,7 @@ def get_gfbio_helpdesk_username(user_name, email, fullname=''):
     if len(fullname):
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(user_name, email,
                                                          quote(fullname))
+    print('URL ', url)
     return requests.get(
         url=url,
         auth=(
