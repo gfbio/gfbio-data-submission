@@ -19,7 +19,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, JIRA_ATTACHMENT_SUB_URL, \
     JIRA_ATTACHMENT_URL, JIRA_USERNAME_URL_TEMPLATE, \
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE, JIRA_FALLBACK_USERNAME, \
-    SUBMISSION_DELAY
+    SUBMISSION_DELAY, JIRA_FALLBACK_EMAIL
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, Submission, AuditableTextData, PersistentIdentifier, \
     BrokerObject, TaskProgressReport, AdditionalReference, RequestLog, \
@@ -310,7 +310,7 @@ class TestTasks(TestCase):
         #     contact='kevin@horstmeier.de'
         # )
         cls.default_site_config = SiteConfiguration.objects.create(
-            title='default',
+            title=HOSTING_SITE,
             site=site,
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
@@ -574,142 +574,6 @@ class TestSubmissionPreparationTasks(TestTasks):
         reports = TaskProgressReport.objects.all()
         task_names = [r.task_name for r in reports]
         self.assertTrue('tasks.check_on_hold_status_task' in task_names)
-
-
-# TODO: remove
-# class TestPortalServiceTasks(TestTasks):
-#
-#     # TODO: check all test, even if passing, for json exceptions that need repsonse mock
-#     @responses.activate
-#     def test_get_user_email_task_success(self):
-#         submission = Submission.objects.last()
-#         config = SiteConfiguration.objects.first()
-#         config.use_gfbio_services = True
-#         config.save()
-#         responses.add(
-#             responses.GET,
-#             'https://www.example.com/api/jsonws/'
-#             'GFBioProject-portlet.userextension/'
-#             'get-user-by-id/request-json/%7B%22userid%22:%2016250%7D',
-#             status=200,
-#             headers={
-#                 'Accept': 'application/json'
-#             },
-#             json={'firstname': 'Marc', 'middlename': '',
-#                   'emailaddress': 'maweber@mpi-bremen.de',
-#                   'fullname': 'Marc Weber',
-#                   'screenname': 'maweber', 'userid': 16250,
-#                   'lastname': 'Weber'})
-#
-#         result = get_user_email_task.apply_async(
-#             kwargs={
-#                 'submission_id': submission.id
-#             }
-#         )
-#         self.assertTrue(result.successful())
-#         self.assertDictEqual({'user_full_name': 'Marc Weber',
-#                               'user_email': 'maweber@mpi-bremen.de',
-#                               'portal_user': True,
-#                               'last_name': '', 'first_name': ''}, result.get())
-#
-#     @responses.activate
-#     def test_get_user_email_task_no_gfbio_services(self):
-#         submission = Submission.objects.last()
-#         config = SiteConfiguration.objects.first()
-#         config.use_gfbio_services = False
-#         config.save()
-#         data = json.dumps({
-#             'userid': 16250
-#         })
-#         url = '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'.format(
-#             config.gfbio_server.url, data)
-#         responses.add(responses.GET, url, status=200,
-#                       json={})
-#         result = get_user_email_task.apply_async(
-#             kwargs={
-#                 'submission_id': submission.id
-#             }
-#         )
-#         self.assertTrue(result.successful())
-#         self.assertEqual({'first_name': '', 'last_name': '',
-#                           'user_email': 'kevin@horstmeier.de',
-#                           'user_full_name': ''}, result.get())
-#
-#     @responses.activate
-#     def test_get_user_email_task_error_response(self):
-#         submission = Submission.objects.last()
-#         config = SiteConfiguration.objects.first()
-#         config.use_gfbio_services = False
-#         config.save()
-#         data = json.dumps({
-#             'userid': 16250
-#         })
-#         url = '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'.format(
-#             config.gfbio_server.url, data)
-#         responses.add(responses.GET, url, status=200, json={})
-#         result = get_user_email_task.apply_async(
-#             kwargs={
-#                 'submission_id': submission.id
-#             }
-#         )
-#         self.assertTrue(result.successful())
-#         self.assertEqual({'first_name': '', 'last_name': '',
-#                           'user_email': 'kevin@horstmeier.de',
-#                           'user_full_name': ''}, result.get())
-#
-#     @responses.activate
-#     def test_get_user_email_task_corrupt_response(self):
-#         submission = Submission.objects.last()
-#         config = SiteConfiguration.objects.first()
-#         config.use_gfbio_services = True
-#         config.save()
-#         responses.add(
-#             responses.GET,
-#             'https://www.example.com/api/jsonws/'
-#             'GFBioProject-portlet.userextension/'
-#             'get-user-by-id/request-json/%7B%22userid%22:%2016250%7D',
-#             status=200,
-#             headers={
-#                 'Accept': 'application/json'
-#             },
-#             body='xyz')
-#
-#         result = get_user_email_task.apply_async(
-#             kwargs={
-#                 'submission_id': submission.id
-#             }
-#         )
-#         self.assertTrue(result.successful())
-#         self.assertEqual({'first_name': '', 'last_name': '',
-#                           'user_email': 'kevin@horstmeier.de',
-#                           'user_full_name': ''}, result.get())
-#
-#     @responses.activate
-#     def test_get_user_email_task_400_response(self):
-#         submission = Submission.objects.last()
-#         config = SiteConfiguration.objects.first()
-#         config.use_gfbio_services = True
-#         config.save()
-#         responses.add(
-#             responses.GET,
-#             'https://www.example.com/api/jsonws/'
-#             'GFBioProject-portlet.userextension/'
-#             'get-user-by-id/request-json/%7B%22userid%22:%2016250%7D',
-#             status=400,
-#             headers={
-#                 'Accept': 'application/json'
-#             },
-#             json='')
-#         result = get_user_email_task.apply_async(
-#             kwargs={
-#                 'submission_id': submission.id
-#             }
-#         )
-#         self.assertTrue(result.successful())
-#         self.assertEqual({'first_name': '', 'last_name': '',
-#                           'user_email': 'kevin@horstmeier.de',
-#                           'portal_user': True,
-#                           'user_full_name': ''}, result.get())
 
 
 class TestGFBioHelpDeskTasks(TestTasks):
@@ -1444,9 +1308,17 @@ class TestGetHelpDeskUserTask(TestTasks):
             }
         )
         res = result.get()
-        self.assertEqual({'name': '0815'}, res)
+        expected_result = {
+            'jira_user_name': '0815',
+            'email': 'khors@me.de',
+            'full_name': 'Kevin Horstmeier'
+        }
+        self.assertEqual(expected_result, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertEqual("{'name': '0815'}",
+        expected_value = "{'jira_user_name': '0815', " \
+                         "'email': 'khors@me.de', " \
+                         "'full_name': 'Kevin Horstmeier'}"
+        self.assertEqual(expected_value,
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
@@ -1464,9 +1336,17 @@ class TestGetHelpDeskUserTask(TestTasks):
             }
         )
         res = result.get()
-        self.assertEqual({'name': 'external_site'}, res)
+        expected_result = {
+            'jira_user_name': submission.site.username,
+            'email': JIRA_FALLBACK_EMAIL,
+            'full_name': ''
+        }
+        self.assertEqual(expected_result, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertEqual("{'name': 'external_site'}",
+        expected_value = "{'jira_user_name': '" + submission.site.username + \
+                         "', 'email': '" + JIRA_FALLBACK_EMAIL + \
+                         "', 'full_name': ''}"
+        self.assertEqual(expected_value,
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
@@ -1483,13 +1363,14 @@ class TestGetHelpDeskUserTask(TestTasks):
             }
         )
         res = result.get()
-        self.assertEqual({'name': JIRA_FALLBACK_USERNAME}, res)
+        self.assertEqual({'jira_user_name': JIRA_FALLBACK_USERNAME}, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertEqual("{'name': '" + JIRA_FALLBACK_USERNAME + "'}",
+        self.assertEqual("{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + "'}",
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
-    def test_hosting_site_get_gfbio_helpdesk_username_task_invalid_submitting_user(self):
+    def test_hosting_site_get_gfbio_helpdesk_username_task_invalid_submitting_user(
+            self):
         url = JIRA_USERNAME_URL_TEMPLATE.format(
             'brokeragent', 'brokeragent@gfbio.org',
         )
@@ -1504,13 +1385,14 @@ class TestGetHelpDeskUserTask(TestTasks):
             }
         )
         res = result.get()
-        self.assertEqual({'name': JIRA_FALLBACK_USERNAME}, res)
+        self.assertEqual({'jira_user_name': JIRA_FALLBACK_USERNAME}, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertEqual("{'name': '" + JIRA_FALLBACK_USERNAME + "'}",
+        self.assertEqual("{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + "'}",
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
-    def test_hosting_site_get_gfbio_helpdesk_username_task_success_no_fullname(self):
+    def test_hosting_site_get_gfbio_helpdesk_username_task_success_no_fullname(
+            self):
         url = JIRA_USERNAME_URL_TEMPLATE.format(
             '0815', 'khors@me.de'
         )
@@ -1528,13 +1410,14 @@ class TestGetHelpDeskUserTask(TestTasks):
             }
         )
         res = result.get()
-        self.assertEqual({'name': '0815'}, res)
+        self.assertEqual({'jira_user_name': '0815'}, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertEqual("{'name': '0815'}",
+        self.assertEqual("{'jira_user_name': '0815'}",
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
-    def test_hosting_site_get_gfbio_helpdesk_username_task_success_no_goesternid(self):
+    def test_hosting_site_get_gfbio_helpdesk_username_task_success_no_goesternid(
+            self):
         user = User.objects.first()
         url = JIRA_USERNAME_URL_TEMPLATE.format(
             user.username, 'khors@me.de'
@@ -1554,9 +1437,9 @@ class TestGetHelpDeskUserTask(TestTasks):
             }
         )
         res = result.get()
-        self.assertEqual({'name': user.username}, res)
+        self.assertEqual({'jira_user_name': user.username}, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertEqual("{'name': '" + user.username + "'}",
+        self.assertEqual("{'jira_user_name': '" + user.username + "'}",
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
@@ -1575,9 +1458,9 @@ class TestGetHelpDeskUserTask(TestTasks):
             }
         )
         res = result.get()
-        self.assertEqual({'name': JIRA_FALLBACK_USERNAME}, res)
+        self.assertEqual({'jira_user_name': JIRA_FALLBACK_USERNAME}, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertEqual("{'name': '" + JIRA_FALLBACK_USERNAME + "'}",
+        self.assertEqual("{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + "'}",
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
@@ -1595,9 +1478,18 @@ class TestGetHelpDeskUserTask(TestTasks):
             }
         )
         res = result.get()
-        self.assertEqual({'name': JIRA_FALLBACK_USERNAME}, res)
+        print('res', res)
+        expected_result = {
+            'jira_user_name': JIRA_FALLBACK_USERNAME,
+            'email': JIRA_FALLBACK_EMAIL,
+            'full_name': ''
+        }
+        self.assertEqual(expected_result, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertEqual("{'name': '" + JIRA_FALLBACK_USERNAME + "'}",
+        expected_value = "{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + \
+                         "', 'email': '" + JIRA_FALLBACK_EMAIL + \
+                         "', 'full_name': ''}"
+        self.assertEqual(expected_value,
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
