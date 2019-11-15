@@ -27,7 +27,7 @@ from gfbio_submissions.brokerage.models import ResourceCredential, \
 from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, \
     transfer_data_to_ena_task, process_ena_response_task, \
     create_broker_objects_from_submission_data_task, check_on_hold_status_task, \
-    get_user_email_task, create_submission_issue_task, \
+    create_submission_issue_task, \
     add_accession_to_submission_issue_task, attach_to_submission_issue_task, \
     add_pangaealink_to_submission_issue_task, \
     create_pangaea_issue_task, attach_to_pangaea_issue_task, \
@@ -64,11 +64,9 @@ class TestInitialChainTasks(TestCase):
         cls.site_config = SiteConfiguration.objects.create(
             title='default',
             release_submissions=False,
-            use_gfbio_services=False,
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
         )
@@ -117,12 +115,11 @@ class TestInitialChainTasks(TestCase):
             }))
         self.assertEqual(201, min_response.status_code)
         task_reports = TaskProgressReport.objects.all()
-        expected_tasknames = ['tasks.get_user_email_task',
-                              'tasks.get_gfbio_helpdesk_username_task',
+        expected_tasknames = ['tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer', ]
-        self.assertEqual(5, len(task_reports))
+        self.assertEqual(4, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -146,12 +143,11 @@ class TestInitialChainTasks(TestCase):
             }))
         self.assertEqual(201, min_response.status_code)
         task_reports = TaskProgressReport.objects.all()
-        expected_tasknames = ['tasks.get_user_email_task',
-                              'tasks.get_gfbio_helpdesk_username_task',
+        expected_tasknames = ['tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer', ]
-        self.assertEqual(5, len(task_reports))
+        self.assertEqual(4, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -170,8 +166,7 @@ class TestInitialChainTasks(TestCase):
             }))
         self.assertEqual(201, max_response.status_code)
         task_reports = TaskProgressReport.objects.all()
-        expected_tasknames = ['tasks.get_user_email_task',
-                              'tasks.get_gfbio_helpdesk_username_task',
+        expected_tasknames = ['tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer',
@@ -181,7 +176,7 @@ class TestInitialChainTasks(TestCase):
                               'tasks.update_helpdesk_ticket_task', ]
         tprs = TaskProgressReport.objects.exclude(
             task_name='tasks.update_helpdesk_ticket_task')
-        self.assertEqual(8, len(tprs))
+        self.assertEqual(7, len(tprs))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -200,12 +195,11 @@ class TestInitialChainTasks(TestCase):
             }))
         self.assertEqual(201, max_response.status_code)
         task_reports = TaskProgressReport.objects.all()
-        expected_tasknames = ['tasks.get_user_email_task',
-                              'tasks.get_gfbio_helpdesk_username_task',
+        expected_tasknames = ['tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer', ]
-        self.assertEqual(5, len(task_reports))
+        self.assertEqual(4, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -233,15 +227,14 @@ class TestInitialChainTasks(TestCase):
                                  'description': 'A Description 2'}}},
             format='json', )
         task_reports = TaskProgressReport.objects.all()
-        expected_tasknames = ['tasks.get_user_email_task',
-                              'tasks.get_gfbio_helpdesk_username_task',
+        expected_tasknames = ['tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
                               'tasks.update_submission_issue_task',
                               'tasks.trigger_submission_transfer',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer_for_updates',
                               'tasks.update_helpdesk_ticket_task', ]
-        self.assertEqual(8, len(task_reports))
+        self.assertEqual(7, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -286,7 +279,6 @@ class TestTasks(TestCase):
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
             contact='kevin@horstmeier.de'
@@ -297,7 +289,6 @@ class TestTasks(TestCase):
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration 2',
         )
@@ -2000,10 +1991,7 @@ class TestTaskChains(TestTasks):
         )
         # ----------------------------------------------------------------------
 
-        chain = get_user_email_task.s(
-            submission_id=submission.id).set(
-            countdown=SUBMISSION_DELAY) \
-                | get_gfbio_helpdesk_username_task.s(
+        chain = get_gfbio_helpdesk_username_task.s(
             submission_id=submission.id).set(
             countdown=SUBMISSION_DELAY) \
                 | create_submission_issue_task.s(
@@ -2013,10 +2001,9 @@ class TestTaskChains(TestTasks):
         expected_tasks = [
             'tasks.create_submission_issue_task',
             'tasks.get_gfbio_helpdesk_username_task',
-            'tasks.get_user_email_task'
         ]
         task_reports = submission.taskprogressreport_set.all()
-        self.assertEqual(3, len(task_reports))
+        self.assertEqual(2, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasks)
             self.assertEqual('SUCCESS', t.status)

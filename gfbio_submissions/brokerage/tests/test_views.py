@@ -388,11 +388,9 @@ class TestSubmissionUploadView(TestCase):
         cls.site_config = SiteConfiguration.objects.create(
             title='default',
             release_submissions=False,
-            use_gfbio_services=False,
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
         )
@@ -963,11 +961,9 @@ class TestSubmissionCommentView(TestCase):
         cls.site_config = SiteConfiguration.objects.create(
             title='default',
             release_submissions=False,
-            use_gfbio_services=False,
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
         )

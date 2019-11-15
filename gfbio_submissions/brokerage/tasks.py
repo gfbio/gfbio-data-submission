@@ -642,60 +642,60 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
                                               JIRA_FALLBACK_USERNAME)
 
     # FIXME: remove check and refactor to simpler workflow, when no portal_task is running before this
-    if not site_configuration.use_gfbio_services:
-        if len(submission.submitting_user) == 0:
-            logger.info(
-                'tasks.py | get_gfbio_helpdesk_username_task | len(submission.submitting_user) == 0 | return {0}'.format(
-                    result))
-            return result
-
-        try:
-            # FIXME: tricky if submitting user is a numerical id from another system, worst case would be an accidental match with a local user
-            user = User.objects.get(pk=int(submission.submitting_user))
-            user_name = user.goesternid if user.goesternid else user.username
-            user_email = user.email
-            user_full_name = user.name
-            logger.info(
-                'tasks.py | get_gfbio_helpdesk_username_task | try get user | username={0} | goe_id={1}'.format(
-                    user_name, user.goesternid))
-        except ValueError as ve:
-            logger.warning(
-                'tasks.py | get_gfbio_helpdesk_username_task | '
-                'submission_id={0} | ValueError with '
-                'submission.submiting_user={1} | '
-                '{2}'.format(submission_id, submission.submitting_user, ve))
-            return result
-        except User.DoesNotExist as e:
-            logger.warning(
-                'tasks.py | get_gfbio_helpdesk_username_task | '
-                'submission_id={0} | No user with '
-                'submission.submiting_user={1} | '
-                '{2}'.format(submission_id, submission.submitting_user, e))
-            logger.warning(
-                'tasks.py | get_gfbio_helpdesk_username_task | '
-                'submission_id={0} | Try getting user_email from previous task | user_name='
-                '{1}'.format(submission_id, user_name))
-
-        response = get_gfbio_helpdesk_username(user_name=user_name,
-                                               email=user_email,
-                                               fullname=user_full_name)
+    # if not site_configuration.use_gfbio_services:
+    if len(submission.submitting_user) == 0:
         logger.info(
-            'tasks.py | get_gfbio_helpdesk_username_task | response status={0} | content={1}'.format(
-                response.status_code, response.content))
-
-        raise_transfer_server_exceptions(
-            response=response,
-            task=self,
-            broker_submission_id=submission.broker_submission_id,
-            max_retries=SUBMISSION_MAX_RETRIES
-        )
-
-        if response.status_code == 200:
-            result['name'] = smart_text(response.content)
-
-        logger.info(
-            'tasks.py | get_gfbio_helpdesk_username_task |return={0}'.format(
+            'tasks.py | get_gfbio_helpdesk_username_task | len(submission.submitting_user) == 0 | return {0}'.format(
                 result))
+        return result
+
+    try:
+        # FIXME: tricky if submitting user is a numerical id from another system, worst case would be an accidental match with a local user
+        user = User.objects.get(pk=int(submission.submitting_user))
+        user_name = user.goesternid if user.goesternid else user.username
+        user_email = user.email
+        user_full_name = user.name
+        logger.info(
+            'tasks.py | get_gfbio_helpdesk_username_task | try get user | username={0} | goe_id={1}'.format(
+                user_name, user.goesternid))
+    except ValueError as ve:
+        logger.warning(
+            'tasks.py | get_gfbio_helpdesk_username_task | '
+            'submission_id={0} | ValueError with '
+            'submission.submiting_user={1} | '
+            '{2}'.format(submission_id, submission.submitting_user, ve))
+        return result
+    except User.DoesNotExist as e:
+        logger.warning(
+            'tasks.py | get_gfbio_helpdesk_username_task | '
+            'submission_id={0} | No user with '
+            'submission.submiting_user={1} | '
+            '{2}'.format(submission_id, submission.submitting_user, e))
+        logger.warning(
+            'tasks.py | get_gfbio_helpdesk_username_task | '
+            'submission_id={0} | Try getting user_email from previous task | user_name='
+            '{1}'.format(submission_id, user_name))
+
+    response = get_gfbio_helpdesk_username(user_name=user_name,
+                                           email=user_email,
+                                           fullname=user_full_name)
+    logger.info(
+        'tasks.py | get_gfbio_helpdesk_username_task | response status={0} | content={1}'.format(
+            response.status_code, response.content))
+
+    raise_transfer_server_exceptions(
+        response=response,
+        task=self,
+        broker_submission_id=submission.broker_submission_id,
+        max_retries=SUBMISSION_MAX_RETRIES
+    )
+
+    if response.status_code == 200:
+        result['name'] = smart_text(response.content)
+
+    logger.info(
+        'tasks.py | get_gfbio_helpdesk_username_task |return={0}'.format(
+            result))
 
     return result
 

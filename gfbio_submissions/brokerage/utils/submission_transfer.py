@@ -35,7 +35,7 @@ class SubmissionTransferHandler(object):
             'submission_id={0} target_archive={1}'.format(self.submission_id,
                                                           self.target_archive))
         from gfbio_submissions.brokerage.tasks import \
-            create_submission_issue_task, get_user_email_task, \
+            create_submission_issue_task, \
             check_on_hold_status_task, get_gfbio_helpdesk_username_task
 
         logger.info(
@@ -65,10 +65,7 @@ class SubmissionTransferHandler(object):
                 chain = chain | self.pre_process_molecular_data_chain()
         elif not update:
             # TODO: use IDM derived email. not old portal email
-            chain = get_user_email_task.s(
-                submission_id=self.submission_id).set(
-                countdown=SUBMISSION_DELAY) \
-                    | get_gfbio_helpdesk_username_task.s(
+            chain = get_gfbio_helpdesk_username_task.s(
                 submission_id=self.submission_id).set(
                 countdown=SUBMISSION_DELAY) \
                     | create_submission_issue_task.s(
