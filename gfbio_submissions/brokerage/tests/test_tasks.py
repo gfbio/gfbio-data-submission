@@ -1324,7 +1324,7 @@ class TestGetHelpDeskUserTask(TestTasks):
     @responses.activate
     def test_external_site_get_gfbio_helpdesk_username_task_success(self):
         url = JIRA_USERNAME_URL_TEMPLATE.format(
-            'external_site', 'brokeragent@gfbio.org'
+            'external_site', 'external@site.de'
         )
         responses.add(responses.GET, url, body=b'external_site', status=200)
         submission = Submission.objects.last()
@@ -1338,13 +1338,13 @@ class TestGetHelpDeskUserTask(TestTasks):
         res = result.get()
         expected_result = {
             'jira_user_name': submission.site.username,
-            'email': JIRA_FALLBACK_EMAIL,
+            'email': submission.site.email,
             'full_name': ''
         }
         self.assertEqual(expected_result, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
         expected_value = "{'jira_user_name': '" + submission.site.username + \
-                         "', 'email': '" + JIRA_FALLBACK_EMAIL + \
+                         "', 'email': '" + submission.site.email + \
                          "', 'full_name': ''}"
         self.assertEqual(expected_value,
                          TaskProgressReport.objects.first().task_return_value)
@@ -1505,7 +1505,7 @@ class TestGetHelpDeskUserTask(TestTasks):
     @responses.activate
     def test_external_site_get_gfbio_helpdesk_username_task_client_error(self):
         url = JIRA_USERNAME_URL_TEMPLATE.format(
-            'external_site', 'brokeragent@gfbio.org'
+            'external_site', 'external@site.de'
         )
         responses.add(responses.GET, url, status=403)
         submission = Submission.objects.last()
@@ -1520,14 +1520,13 @@ class TestGetHelpDeskUserTask(TestTasks):
         print('res', res)
         expected_result = {
             'jira_user_name': JIRA_FALLBACK_USERNAME,
-            'email': JIRA_FALLBACK_EMAIL,
+            'email': 'external@site.de',
             'full_name': ''
         }
         self.assertEqual(expected_result, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
         expected_value = "{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + \
-                         "', 'email': '" + JIRA_FALLBACK_EMAIL + \
-                         "', 'full_name': ''}"
+                         "', 'email': 'external@site.de', 'full_name': ''}"
         self.assertEqual(expected_value,
                          TaskProgressReport.objects.first().task_return_value)
 
@@ -1565,7 +1564,7 @@ class TestGetHelpDeskUserTask(TestTasks):
                        CELERY_TASK_EAGER_PROPAGATES=False)
     def test_external_site_get_gfbio_helpdesk_username_task_server_error(self):
         url = JIRA_USERNAME_URL_TEMPLATE.format(
-            'external_site', 'brokeragent@gfbio.org'
+            'external_site', 'external@site.de'
         )
         responses.add(responses.GET, url, body=b'', status=500)
         submission = Submission.objects.last()
@@ -1582,8 +1581,7 @@ class TestGetHelpDeskUserTask(TestTasks):
                   ' ', t.task_args)
         tpr = TaskProgressReport.objects.first()
         expected_value = "{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + \
-                         "', 'email': '" + JIRA_FALLBACK_EMAIL + \
-                         "', 'full_name': ''}"
+                         "', 'email': 'external@site.de', 'full_name': ''}"
         self.assertEqual('RETRY', tpr.status)
         self.assertEqual(expected_value,
                          tpr.task_return_value)

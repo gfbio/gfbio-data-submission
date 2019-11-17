@@ -627,8 +627,9 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
     else:
         # TODO: add 'get_user_email method' specific to a site as a parameter to this task, otherwise no email resolution is possible
         user_name = submission.site.username
-        # user_email = site_configuration.contact
-        # result['email'] = user_email
+        user_email = submission.site.email if len(
+            submission.site.email) else site_configuration.contact
+        result['email'] = user_email if len(user_email) else JIRA_FALLBACK_EMAIL
 
     response = get_gfbio_helpdesk_username(user_name=user_name,
                                            email=user_email,

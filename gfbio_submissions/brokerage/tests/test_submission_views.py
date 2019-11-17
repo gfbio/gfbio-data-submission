@@ -100,7 +100,7 @@ class TestSubmissionView(TestCase):
 
     def _add_create_ticket_response(self):
         self._add_gfbio_helpdesk_user_service_response(user_name='horst',
-                                                       email='brokeragent@gfbio.org')
+                                                       email='horst@horst.de')
         self._add_jira_client_responses()
         responses.add(
             responses.POST,
