@@ -590,7 +590,6 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
     # 'local_site' includes sso, local users, social accounts
     # (which have local shadow accounts)
     if submission.site.username == HOSTING_SITE:
-        print('HOSTING SITE')
         try:
             logger.info(
                 'tasks.py | get_gfbio_helpdesk_username_task | try getting a local user | submission={1} | submitting_user={1}'.format(
@@ -626,7 +625,6 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
                 'submission_id={0} | Try getting user_email from previous task | user_name='
                 '{1}'.format(submission_id, user_name))
     else:
-        print('NO HOSTING SITE')
         # TODO: add 'get_user_email method' specific to a site as a parameter to this task, otherwise no email resolution is possible
         user_name = submission.site.username
         # user_email = site_configuration.contact
@@ -635,7 +633,6 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
     response = get_gfbio_helpdesk_username(user_name=user_name,
                                            email=user_email,
                                            fullname=user_full_name)
-    print('RESPONSE ', response.status_code, ' : ', response.content)
     logger.info(
         'tasks.py | get_gfbio_helpdesk_username_task | response status={0} | content={1}'.format(
             response.status_code, response.content))
@@ -647,13 +644,14 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
         max_retries=SUBMISSION_MAX_RETRIES
     )
 
+    # in case of hosting site users, client or server errors 4xx/5xx will return
+    # JIRA_FALLBACK_USERNAME but with user email & fullname
     if response.status_code == 200:
         result['jira_user_name'] = smart_text(response.content)
 
     logger.info(
         'tasks.py | get_gfbio_helpdesk_username_task |return={0}'.format(
             result))
-    print('RETURN ', result)
     return result
 
 

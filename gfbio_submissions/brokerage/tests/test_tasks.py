@@ -1363,9 +1363,17 @@ class TestGetHelpDeskUserTask(TestTasks):
             }
         )
         res = result.get()
-        self.assertEqual({'jira_user_name': JIRA_FALLBACK_USERNAME}, res)
+        expected_result = {
+            'jira_user_name': JIRA_FALLBACK_USERNAME,
+            'email': JIRA_FALLBACK_EMAIL,
+            'full_name': ''
+        }
+        self.assertEqual(expected_result, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertEqual("{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + "'}",
+        expected_value = "{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + \
+                         "', 'email': '" + JIRA_FALLBACK_EMAIL + \
+                         "', 'full_name': ''}"
+        self.assertEqual(expected_value,
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
@@ -1385,9 +1393,17 @@ class TestGetHelpDeskUserTask(TestTasks):
             }
         )
         res = result.get()
-        self.assertEqual({'jira_user_name': JIRA_FALLBACK_USERNAME}, res)
+        expected_result = {
+            'jira_user_name': JIRA_FALLBACK_USERNAME,
+            'email': JIRA_FALLBACK_EMAIL,
+            'full_name': ''
+        }
+        self.assertEqual(expected_result, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertEqual("{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + "'}",
+        expected_value = "{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + \
+                         "', 'email': '" + JIRA_FALLBACK_EMAIL + \
+                         "', 'full_name': ''}"
+        self.assertEqual(expected_value,
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
@@ -1410,9 +1426,16 @@ class TestGetHelpDeskUserTask(TestTasks):
             }
         )
         res = result.get()
-        self.assertEqual({'jira_user_name': '0815'}, res)
+        expected_result = {
+            'jira_user_name': '0815',
+            'email': 'khors@me.de',
+            'full_name': ''
+        }
+        self.assertEqual(expected_result, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertEqual("{'jira_user_name': '0815'}",
+        expected_value = "{'jira_user_name': '0815', " \
+                         "'email': 'khors@me.de', 'full_name': ''}"
+        self.assertEqual(expected_value,
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
@@ -1420,7 +1443,7 @@ class TestGetHelpDeskUserTask(TestTasks):
             self):
         user = User.objects.first()
         url = JIRA_USERNAME_URL_TEMPLATE.format(
-            user.username, 'khors@me.de'
+            user.username, user.email
         )
         responses.add(responses.GET, url, body='{0}'.format(user.username),
                       status=200)
@@ -1437,9 +1460,16 @@ class TestGetHelpDeskUserTask(TestTasks):
             }
         )
         res = result.get()
-        self.assertEqual({'jira_user_name': user.username}, res)
+        expected_result = {
+            'jira_user_name': user.username,
+            'email': user.email,
+            'full_name': ''
+        }
+        self.assertEqual(expected_result, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertEqual("{'jira_user_name': '" + user.username + "'}",
+        expected_value = "{'jira_user_name': '" + user.username + \
+                         "', 'email': '" + user.email + "', 'full_name': ''}"
+        self.assertEqual(expected_value,
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
@@ -1458,9 +1488,18 @@ class TestGetHelpDeskUserTask(TestTasks):
             }
         )
         res = result.get()
-        self.assertEqual({'jira_user_name': JIRA_FALLBACK_USERNAME}, res)
+
+        expected_result = {
+            'jira_user_name': JIRA_FALLBACK_USERNAME,
+            'email': 'khors@me.de',
+            'full_name': 'Kevin Horstmeier'
+        }
+        self.assertEqual(expected_result, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertEqual("{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + "'}",
+        expected_value = "{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + \
+                         "', 'email': 'khors@me.de', " \
+                         "'full_name': 'Kevin Horstmeier'}"
+        self.assertEqual(expected_value,
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
@@ -1515,7 +1554,10 @@ class TestGetHelpDeskUserTask(TestTasks):
                   ' ', t.task_args)
         tpr = TaskProgressReport.objects.first()
         self.assertEqual('RETRY', tpr.status)
-        self.assertEqual("{'name': '" + JIRA_FALLBACK_USERNAME + "'}",
+        expected_value = "{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + \
+                         "', 'email': 'khors@me.de', " \
+                         "'full_name': 'Kevin Horstmeier'}"
+        self.assertEqual(expected_value,
                          tpr.task_return_value)
 
     @responses.activate
@@ -1539,8 +1581,11 @@ class TestGetHelpDeskUserTask(TestTasks):
                   t.task_kwargs,
                   ' ', t.task_args)
         tpr = TaskProgressReport.objects.first()
+        expected_value = "{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + \
+                         "', 'email': '" + JIRA_FALLBACK_EMAIL + \
+                         "', 'full_name': ''}"
         self.assertEqual('RETRY', tpr.status)
-        self.assertEqual("{'name': '" + JIRA_FALLBACK_USERNAME + "'}",
+        self.assertEqual(expected_value,
                          tpr.task_return_value)
 
 

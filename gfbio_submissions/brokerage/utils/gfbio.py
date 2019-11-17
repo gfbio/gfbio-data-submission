@@ -22,7 +22,6 @@ def get_gfbio_helpdesk_username(user_name, email, fullname=''):
     if len(fullname):
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(user_name, email,
                                                          quote(fullname))
-    print('\nURL: ', url)
     return requests.get(
         url=url,
         auth=(
@@ -42,7 +41,6 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
             'email': JIRA_FALLBACK_EMAIL,
             'full_name': ''
         }
-    print(reporter)
     author = '{0} {1}'.format(
         reporter.get('full_name', ''),
         reporter.get('email', '')
