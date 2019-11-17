@@ -6,7 +6,6 @@ import json
 import os
 from collections import OrderedDict
 from unittest import skip
-from unittest.mock import patch
 
 import requests
 import responses
@@ -41,7 +40,7 @@ from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
 from gfbio_submissions.brokerage.utils.ena import \
     download_submitted_run_files_to_stringIO, prepare_ena_data
 from gfbio_submissions.brokerage.utils.gfbio import \
-    gfbio_get_user_by_id, gfbio_prepare_create_helpdesk_payload, \
+    gfbio_prepare_create_helpdesk_payload, \
     get_gfbio_helpdesk_username
 from gfbio_submissions.brokerage.utils.pangaea import \
     request_pangaea_login_token, parse_pangaea_login_token_response, \
@@ -72,7 +71,6 @@ class PangaeaTicketTest(TestCase):
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Comment',
         )
@@ -202,33 +200,10 @@ class TestServiceMethods(TestCase):
             ena_server=resource_credential,
             pangaea_token_server=resource_credential,
             pangaea_jira_server=resource_credential,
-            gfbio_server=resource_credential,
             helpdesk_server=resource_credential,
             comment='',
         )
         SubmissionTest._create_submission_via_serializer()
-
-    @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
-    def test_gfbio_get_user_by_id(self, mock_requests):
-        mock_requests.get.return_value.status_code = 200
-        mock_requests.get.return_value.ok = True
-        response_data = {"firstname": "Marc", "middlename": "",
-                         "emailaddress": "maweber@mpi-bremen.de",
-                         "fullname": "Marc Weber",
-                         "screenname": "maweber", "userid": 16250,
-                         "lastname": "Weber"}
-        mock_requests.get.return_value.content = json.dumps(response_data)
-        conf = SiteConfiguration.objects.first()
-        submission = Submission.objects.first()
-        response = gfbio_get_user_by_id(16250, conf, submission=submission)
-        self.assertEqual(200, response.status_code)
-        content = json.loads(response.content)
-        self.assertDictEqual(response_data, content)
-
-        response = gfbio_get_user_by_id('16250', conf, submission=submission)
-        self.assertEqual(200, response.status_code)
-        content = json.loads(response.content)
-        self.assertDictEqual(response_data, content)
 
 
 class TestGFBioJiraApi(TestCase):
@@ -735,7 +710,6 @@ class TestSubmissionTransferHandler(TestCase):
             ena_server=resource_cred_2,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Comment',
         )
@@ -745,7 +719,6 @@ class TestSubmissionTransferHandler(TestCase):
             ena_server=resource_cred_2,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Comment',
         )
@@ -980,7 +953,6 @@ class TestHelpDeskTicketMethods(TestCase):
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
             contact='kevin@horstmeier.de'
@@ -1122,7 +1094,6 @@ class TestDownloadEnaReport(TestCase):
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
             contact='kevin@horstmeier.de'

@@ -13,6 +13,7 @@ class User(AbstractUser):
     # around the globe.
     name = CharField(_("Name of User"), blank=True, max_length=255)
 
+    # TODO: use generic name not goestern..
     # https://docs.djangoproject.com/en/2.2/ref/models/fields/#null
     goesternid = CharField(
         _('goesternid'),

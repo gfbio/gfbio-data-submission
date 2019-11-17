@@ -11,7 +11,6 @@ from gfbio_submissions.brokerage.exceptions import TransferInternalError, \
     NoTicketAvailableError
 from gfbio_submissions.brokerage.models import TaskProgressReport, Submission, \
     SiteConfiguration
-from gfbio_submissions.users.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -38,17 +37,6 @@ def _safe_get_site_config(submission):
             logger.warning(
                 'task_utils.py | _safe_get_site_config | error {0}'.format(e))
     return site_config
-
-
-#
-# def _get_helpdesk_user_payload(user_id):
-#     payload = None
-#     try:
-#         user = User.objects.get(pk=user_id)
-#     except User.DoesNotExist as e:
-#         logger.warning(
-#             'task_utils.py | _get_helpdesk_user_payload | error {0}'.format(e))
-#     return payload
 
 
 def _get_submission_and_site_configuration(submission_id, task,

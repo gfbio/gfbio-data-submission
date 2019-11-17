@@ -19,7 +19,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, JIRA_ATTACHMENT_SUB_URL, \
     JIRA_ATTACHMENT_URL, JIRA_USERNAME_URL_TEMPLATE, \
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE, JIRA_FALLBACK_USERNAME, \
-    SUBMISSION_DELAY
+    SUBMISSION_DELAY, JIRA_FALLBACK_EMAIL
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, Submission, AuditableTextData, PersistentIdentifier, \
     BrokerObject, TaskProgressReport, AdditionalReference, RequestLog, \
@@ -27,7 +27,7 @@ from gfbio_submissions.brokerage.models import ResourceCredential, \
 from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, \
     transfer_data_to_ena_task, process_ena_response_task, \
     create_broker_objects_from_submission_data_task, check_on_hold_status_task, \
-    get_user_email_task, create_submission_issue_task, \
+    create_submission_issue_task, \
     add_accession_to_submission_issue_task, attach_to_submission_issue_task, \
     add_pangaealink_to_submission_issue_task, \
     create_pangaea_issue_task, attach_to_pangaea_issue_task, \
@@ -42,6 +42,7 @@ from gfbio_submissions.brokerage.tests.utils import \
     _get_pangaea_soap_response, _get_pangaea_attach_response, \
     _get_pangaea_comment_response, _get_pangaea_ticket_response, \
     _get_jira_issue_response
+from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
 from gfbio_submissions.users.models import User
 
 
@@ -64,11 +65,9 @@ class TestInitialChainTasks(TestCase):
         cls.site_config = SiteConfiguration.objects.create(
             title='default',
             release_submissions=False,
-            use_gfbio_services=False,
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
         )
@@ -117,12 +116,11 @@ class TestInitialChainTasks(TestCase):
             }))
         self.assertEqual(201, min_response.status_code)
         task_reports = TaskProgressReport.objects.all()
-        expected_tasknames = ['tasks.get_user_email_task',
-                              'tasks.get_gfbio_helpdesk_username_task',
+        expected_tasknames = ['tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer', ]
-        self.assertEqual(5, len(task_reports))
+        self.assertEqual(4, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -146,12 +144,11 @@ class TestInitialChainTasks(TestCase):
             }))
         self.assertEqual(201, min_response.status_code)
         task_reports = TaskProgressReport.objects.all()
-        expected_tasknames = ['tasks.get_user_email_task',
-                              'tasks.get_gfbio_helpdesk_username_task',
+        expected_tasknames = ['tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer', ]
-        self.assertEqual(5, len(task_reports))
+        self.assertEqual(4, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -170,8 +167,7 @@ class TestInitialChainTasks(TestCase):
             }))
         self.assertEqual(201, max_response.status_code)
         task_reports = TaskProgressReport.objects.all()
-        expected_tasknames = ['tasks.get_user_email_task',
-                              'tasks.get_gfbio_helpdesk_username_task',
+        expected_tasknames = ['tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer',
@@ -181,7 +177,7 @@ class TestInitialChainTasks(TestCase):
                               'tasks.update_helpdesk_ticket_task', ]
         tprs = TaskProgressReport.objects.exclude(
             task_name='tasks.update_helpdesk_ticket_task')
-        self.assertEqual(8, len(tprs))
+        self.assertEqual(7, len(tprs))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -200,12 +196,11 @@ class TestInitialChainTasks(TestCase):
             }))
         self.assertEqual(201, max_response.status_code)
         task_reports = TaskProgressReport.objects.all()
-        expected_tasknames = ['tasks.get_user_email_task',
-                              'tasks.get_gfbio_helpdesk_username_task',
+        expected_tasknames = ['tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer', ]
-        self.assertEqual(5, len(task_reports))
+        self.assertEqual(4, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -233,15 +228,14 @@ class TestInitialChainTasks(TestCase):
                                  'description': 'A Description 2'}}},
             format='json', )
         task_reports = TaskProgressReport.objects.all()
-        expected_tasknames = ['tasks.get_user_email_task',
-                              'tasks.get_gfbio_helpdesk_username_task',
+        expected_tasknames = ['tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
                               'tasks.update_submission_issue_task',
                               'tasks.trigger_submission_transfer',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer_for_updates',
                               'tasks.update_helpdesk_ticket_task', ]
-        self.assertEqual(8, len(task_reports))
+        self.assertEqual(7, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -261,6 +255,27 @@ class TestTasks(TestCase):
         user.email = 'khors@me.de'
         user.save()
         user.user_permissions.add(*permissions)
+
+        site = User.objects.create(
+            username=HOSTING_SITE
+        )
+        site.name = 'hosting site'
+        site.email = 'hosting@site.de'
+        site.is_site = True
+        site.is_user = False
+        site.save()
+        site.user_permissions.add(*permissions)
+
+        external_site = User.objects.create(
+            username='external_site'
+        )
+        external_site.name = 'external site'
+        external_site.email = 'external@site.de'
+        external_site.is_site = True
+        external_site.is_user = False
+        external_site.save()
+        external_site.user_permissions.add(*permissions)
+
         submission = SubmissionTest._create_submission_via_serializer()
         submission.additionalreference_set.create(
             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
@@ -272,32 +287,44 @@ class TestTasks(TestCase):
             reference_key='PANGAEA_FAKE_KEY',
             primary=True
         )
+        submission.site = site
+        submission.save()
+
         submission = SubmissionTest._create_submission_via_serializer()
         submission.submitting_user = '16250'
+        submission.site = external_site
         submission.save()
         resource_cred = ResourceCredential.objects.create(
             title='Resource Title',
             url='https://www.example.com',
             authentication_string='letMeIn'
         )
+        # cls.default_site_config = SiteConfiguration.objects.create(
+        #     title='default',
+        #     site=None,
+        #     ena_server=resource_cred,
+        #     pangaea_token_server=resource_cred,
+        #     pangaea_jira_server=resource_cred,
+        #     helpdesk_server=resource_cred,
+        #     comment='Default configuration',
+        #     contact='kevin@horstmeier.de'
+        # )
         cls.default_site_config = SiteConfiguration.objects.create(
-            title='default',
-            site=None,
+            title=HOSTING_SITE,
+            site=site,
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
             contact='kevin@horstmeier.de'
         )
         cls.second_site_config = SiteConfiguration.objects.create(
             title='default-2',
-            site=None,
+            site=external_site,
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration 2',
         )
@@ -547,142 +574,6 @@ class TestSubmissionPreparationTasks(TestTasks):
         reports = TaskProgressReport.objects.all()
         task_names = [r.task_name for r in reports]
         self.assertTrue('tasks.check_on_hold_status_task' in task_names)
-
-
-# TODO: remove
-class TestPortalServiceTasks(TestTasks):
-
-    # TODO: check all test, even if passing, for json exceptions that need repsonse mock
-    @responses.activate
-    def test_get_user_email_task_success(self):
-        submission = Submission.objects.last()
-        config = SiteConfiguration.objects.first()
-        config.use_gfbio_services = True
-        config.save()
-        responses.add(
-            responses.GET,
-            'https://www.example.com/api/jsonws/'
-            'GFBioProject-portlet.userextension/'
-            'get-user-by-id/request-json/%7B%22userid%22:%2016250%7D',
-            status=200,
-            headers={
-                'Accept': 'application/json'
-            },
-            json={'firstname': 'Marc', 'middlename': '',
-                  'emailaddress': 'maweber@mpi-bremen.de',
-                  'fullname': 'Marc Weber',
-                  'screenname': 'maweber', 'userid': 16250,
-                  'lastname': 'Weber'})
-
-        result = get_user_email_task.apply_async(
-            kwargs={
-                'submission_id': submission.id
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertDictEqual({'user_full_name': 'Marc Weber',
-                              'user_email': 'maweber@mpi-bremen.de',
-                              'portal_user': True,
-                              'last_name': '', 'first_name': ''}, result.get())
-
-    @responses.activate
-    def test_get_user_email_task_no_gfbio_services(self):
-        submission = Submission.objects.last()
-        config = SiteConfiguration.objects.first()
-        config.use_gfbio_services = False
-        config.save()
-        data = json.dumps({
-            'userid': 16250
-        })
-        url = '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'.format(
-            config.gfbio_server.url, data)
-        responses.add(responses.GET, url, status=200,
-                      json={})
-        result = get_user_email_task.apply_async(
-            kwargs={
-                'submission_id': submission.id
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertEqual({'first_name': '', 'last_name': '',
-                          'user_email': 'kevin@horstmeier.de',
-                          'user_full_name': ''}, result.get())
-
-    @responses.activate
-    def test_get_user_email_task_error_response(self):
-        submission = Submission.objects.last()
-        config = SiteConfiguration.objects.first()
-        config.use_gfbio_services = False
-        config.save()
-        data = json.dumps({
-            'userid': 16250
-        })
-        url = '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'.format(
-            config.gfbio_server.url, data)
-        responses.add(responses.GET, url, status=200, json={})
-        result = get_user_email_task.apply_async(
-            kwargs={
-                'submission_id': submission.id
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertEqual({'first_name': '', 'last_name': '',
-                          'user_email': 'kevin@horstmeier.de',
-                          'user_full_name': ''}, result.get())
-
-    @responses.activate
-    def test_get_user_email_task_corrupt_response(self):
-        submission = Submission.objects.last()
-        config = SiteConfiguration.objects.first()
-        config.use_gfbio_services = True
-        config.save()
-        responses.add(
-            responses.GET,
-            'https://www.example.com/api/jsonws/'
-            'GFBioProject-portlet.userextension/'
-            'get-user-by-id/request-json/%7B%22userid%22:%2016250%7D',
-            status=200,
-            headers={
-                'Accept': 'application/json'
-            },
-            body='xyz')
-
-        result = get_user_email_task.apply_async(
-            kwargs={
-                'submission_id': submission.id
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertEqual({'first_name': '', 'last_name': '',
-                          'user_email': 'kevin@horstmeier.de',
-                          'user_full_name': ''}, result.get())
-
-    @responses.activate
-    def test_get_user_email_task_400_response(self):
-        submission = Submission.objects.last()
-        config = SiteConfiguration.objects.first()
-        config.use_gfbio_services = True
-        config.save()
-        responses.add(
-            responses.GET,
-            'https://www.example.com/api/jsonws/'
-            'GFBioProject-portlet.userextension/'
-            'get-user-by-id/request-json/%7B%22userid%22:%2016250%7D',
-            status=400,
-            headers={
-                'Accept': 'application/json'
-            },
-            json='')
-        result = get_user_email_task.apply_async(
-            kwargs={
-                'submission_id': submission.id
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertEqual({'first_name': '', 'last_name': '',
-                          'user_email': 'kevin@horstmeier.de',
-                          'portal_user': True,
-                          'user_full_name': ''}, result.get())
 
 
 class TestGFBioHelpDeskTasks(TestTasks):
@@ -1398,8 +1289,11 @@ class TestGFBioHelpDeskTasks(TestTasks):
                          tpr.first().task_return_value)
         self.assertEqual('502', tpr.first().task_exception)
 
+
+class TestGetHelpDeskUserTask(TestTasks):
+
     @responses.activate
-    def test_get_gfbio_helpdesk_username_task_success(self):
+    def test_hosting_site_get_gfbio_helpdesk_username_task_success(self):
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
             '0815', 'khors@me.de', quote('Kevin Horstmeier')
         )
@@ -1414,9 +1308,45 @@ class TestGFBioHelpDeskTasks(TestTasks):
             }
         )
         res = result.get()
-        self.assertEqual({'name': '0815'}, res)
+        expected_result = {
+            'jira_user_name': '0815',
+            'email': 'khors@me.de',
+            'full_name': 'Kevin Horstmeier'
+        }
+        self.assertEqual(expected_result, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertEqual("{'name': '0815'}",
+        expected_value = "{'jira_user_name': '0815', " \
+                         "'email': 'khors@me.de', " \
+                         "'full_name': 'Kevin Horstmeier'}"
+        self.assertEqual(expected_value,
+                         TaskProgressReport.objects.first().task_return_value)
+
+    @responses.activate
+    def test_external_site_get_gfbio_helpdesk_username_task_success(self):
+        url = JIRA_USERNAME_URL_TEMPLATE.format(
+            'external_site', 'external@site.de'
+        )
+        responses.add(responses.GET, url, body=b'external_site', status=200)
+        submission = Submission.objects.last()
+        submission.submitting_user = 'user_id_from_external_site'
+        submission.save()
+        result = get_gfbio_helpdesk_username_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        res = result.get()
+        expected_result = {
+            'jira_user_name': submission.site.username,
+            'email': submission.site.email,
+            'full_name': ''
+        }
+        self.assertEqual(expected_result, res)
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        expected_value = "{'jira_user_name': '" + submission.site.username + \
+                         "', 'email': '" + submission.site.email + \
+                         "', 'full_name': ''}"
+        self.assertEqual(expected_value,
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
@@ -1425,10 +1355,7 @@ class TestGFBioHelpDeskTasks(TestTasks):
             '0815', 'khors@me.de', quote('Kevin Horstmeier')
         )
         responses.add(responses.GET, url, body=b'0815', status=200)
-        # user = User.objects.first()
         submission = Submission.objects.first()
-        # submission.submitting_user = '{}'.format(user.pk)
-        # submission.save()
         self.assertEqual('', submission.submitting_user)
         result = get_gfbio_helpdesk_username_task.apply_async(
             kwargs={
@@ -1436,13 +1363,22 @@ class TestGFBioHelpDeskTasks(TestTasks):
             }
         )
         res = result.get()
-        self.assertEqual({'name': JIRA_FALLBACK_USERNAME}, res)
+        expected_result = {
+            'jira_user_name': JIRA_FALLBACK_USERNAME,
+            'email': JIRA_FALLBACK_EMAIL,
+            'full_name': ''
+        }
+        self.assertEqual(expected_result, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertEqual("{'name': '" + JIRA_FALLBACK_USERNAME + "'}",
+        expected_value = "{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + \
+                         "', 'email': '" + JIRA_FALLBACK_EMAIL + \
+                         "', 'full_name': ''}"
+        self.assertEqual(expected_value,
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
-    def test_get_gfbio_helpdesk_username_task_invalid_submitting_user(self):
+    def test_hosting_site_get_gfbio_helpdesk_username_task_invalid_submitting_user(
+            self):
         url = JIRA_USERNAME_URL_TEMPLATE.format(
             'brokeragent', 'brokeragent@gfbio.org',
         )
@@ -1457,13 +1393,22 @@ class TestGFBioHelpDeskTasks(TestTasks):
             }
         )
         res = result.get()
-        self.assertEqual({'name': JIRA_FALLBACK_USERNAME}, res)
+        expected_result = {
+            'jira_user_name': JIRA_FALLBACK_USERNAME,
+            'email': JIRA_FALLBACK_EMAIL,
+            'full_name': ''
+        }
+        self.assertEqual(expected_result, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertEqual("{'name': '" + JIRA_FALLBACK_USERNAME + "'}",
+        expected_value = "{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + \
+                         "', 'email': '" + JIRA_FALLBACK_EMAIL + \
+                         "', 'full_name': ''}"
+        self.assertEqual(expected_value,
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
-    def test_get_gfbio_helpdesk_username_task_success_no_fullname(self):
+    def test_hosting_site_get_gfbio_helpdesk_username_task_success_no_fullname(
+            self):
         url = JIRA_USERNAME_URL_TEMPLATE.format(
             '0815', 'khors@me.de'
         )
@@ -1481,16 +1426,24 @@ class TestGFBioHelpDeskTasks(TestTasks):
             }
         )
         res = result.get()
-        self.assertEqual({'name': '0815'}, res)
+        expected_result = {
+            'jira_user_name': '0815',
+            'email': 'khors@me.de',
+            'full_name': ''
+        }
+        self.assertEqual(expected_result, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertEqual("{'name': '0815'}",
+        expected_value = "{'jira_user_name': '0815', " \
+                         "'email': 'khors@me.de', 'full_name': ''}"
+        self.assertEqual(expected_value,
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
-    def test_get_gfbio_helpdesk_username_task_success_no_goesternid(self):
+    def test_hosting_site_get_gfbio_helpdesk_username_task_success_no_goesternid(
+            self):
         user = User.objects.first()
         url = JIRA_USERNAME_URL_TEMPLATE.format(
-            user.username, 'khors@me.de'
+            user.username, user.email
         )
         responses.add(responses.GET, url, body='{0}'.format(user.username),
                       status=200)
@@ -1507,13 +1460,20 @@ class TestGFBioHelpDeskTasks(TestTasks):
             }
         )
         res = result.get()
-        self.assertEqual({'name': user.username}, res)
+        expected_result = {
+            'jira_user_name': user.username,
+            'email': user.email,
+            'full_name': ''
+        }
+        self.assertEqual(expected_result, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertEqual("{'name': '" + user.username + "'}",
+        expected_value = "{'jira_user_name': '" + user.username + \
+                         "', 'email': '" + user.email + "', 'full_name': ''}"
+        self.assertEqual(expected_value,
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
-    def test_get_gfbio_helpdesk_username_task_client_error(self):
+    def test_hosting_site_get_gfbio_helpdesk_username_task_client_error(self):
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
             '0815', 'khors@me.de', quote('Kevin Horstmeier')
         )
@@ -1528,15 +1488,52 @@ class TestGFBioHelpDeskTasks(TestTasks):
             }
         )
         res = result.get()
-        self.assertEqual({'name': JIRA_FALLBACK_USERNAME}, res)
+
+        expected_result = {
+            'jira_user_name': JIRA_FALLBACK_USERNAME,
+            'email': 'khors@me.de',
+            'full_name': 'Kevin Horstmeier'
+        }
+        self.assertEqual(expected_result, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertEqual("{'name': '" + JIRA_FALLBACK_USERNAME + "'}",
+        expected_value = "{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + \
+                         "', 'email': 'khors@me.de', " \
+                         "'full_name': 'Kevin Horstmeier'}"
+        self.assertEqual(expected_value,
+                         TaskProgressReport.objects.first().task_return_value)
+
+    @responses.activate
+    def test_external_site_get_gfbio_helpdesk_username_task_client_error(self):
+        url = JIRA_USERNAME_URL_TEMPLATE.format(
+            'external_site', 'external@site.de'
+        )
+        responses.add(responses.GET, url, status=403)
+        submission = Submission.objects.last()
+        submission.submitting_user = 'user_id_from_external_site'
+        submission.save()
+        result = get_gfbio_helpdesk_username_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        res = result.get()
+        print('res', res)
+        expected_result = {
+            'jira_user_name': JIRA_FALLBACK_USERNAME,
+            'email': 'external@site.de',
+            'full_name': ''
+        }
+        self.assertEqual(expected_result, res)
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        expected_value = "{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + \
+                         "', 'email': 'external@site.de', 'full_name': ''}"
+        self.assertEqual(expected_value,
                          TaskProgressReport.objects.first().task_return_value)
 
     @responses.activate
     @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
                        CELERY_TASK_EAGER_PROPAGATES=False)
-    def test_get_gfbio_helpdesk_username_task_server_error(self):
+    def test_hosting_site_get_gfbio_helpdesk_username_task_server_error(self):
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
             '0815', 'khors@me.de', quote('Kevin Horstmeier')
         )
@@ -1556,7 +1553,37 @@ class TestGFBioHelpDeskTasks(TestTasks):
                   ' ', t.task_args)
         tpr = TaskProgressReport.objects.first()
         self.assertEqual('RETRY', tpr.status)
-        self.assertEqual("{'name': '" + JIRA_FALLBACK_USERNAME + "'}",
+        expected_value = "{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + \
+                         "', 'email': 'khors@me.de', " \
+                         "'full_name': 'Kevin Horstmeier'}"
+        self.assertEqual(expected_value,
+                         tpr.task_return_value)
+
+    @responses.activate
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+                       CELERY_TASK_EAGER_PROPAGATES=False)
+    def test_external_site_get_gfbio_helpdesk_username_task_server_error(self):
+        url = JIRA_USERNAME_URL_TEMPLATE.format(
+            'external_site', 'external@site.de'
+        )
+        responses.add(responses.GET, url, body=b'', status=500)
+        submission = Submission.objects.last()
+        submission.submitting_user = 'user_id_from_external_site'
+        submission.save()
+        get_gfbio_helpdesk_username_task.apply(
+            kwargs={
+                'submission_id': submission.id,
+            }
+        )
+        for t in TaskProgressReport.objects.all():
+            print(t.task_name, ' ', t.status, ' ', t.task_return_value, ' ',
+                  t.task_kwargs,
+                  ' ', t.task_args)
+        tpr = TaskProgressReport.objects.first()
+        expected_value = "{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + \
+                         "', 'email': 'external@site.de', 'full_name': ''}"
+        self.assertEqual('RETRY', tpr.status)
+        self.assertEqual(expected_value,
                          tpr.task_return_value)
 
 
@@ -1957,16 +1984,16 @@ class TestTaskChains(TestTasks):
         data = json.dumps({
             'userid': 23
         })
-        url = '{0}/api/jsonws/' \
-              'GFBioProject-portlet.userextension/get-user-by-id/' \
-              'request-json/{1}'.format(site_config.gfbio_server.url,
-                                        data)
-        responses.add(responses.POST, url, status=200,
-                      json={'firstname': 'Marc', 'middlename': '',
-                            'emailaddress': 'maweber@mpi-bremen.de',
-                            'fullname': 'Marc Weber',
-                            'screenname': 'maweber', 'userid': 16250,
-                            'lastname': 'Weber'})
+        # url = '{0}/api/jsonws/' \
+        #       'GFBioProject-portlet.userextension/get-user-by-id/' \
+        #       'request-json/{1}'.format(site_config.gfbio_server.url,
+        #                                 data)
+        # responses.add(responses.POST, url, status=200,
+        #               json={'firstname': 'Marc', 'middlename': '',
+        #                     'emailaddress': 'maweber@mpi-bremen.de',
+        #                     'fullname': 'Marc Weber',
+        #                     'screenname': 'maweber', 'userid': 16250,
+        #                     'lastname': 'Weber'})
 
         # get_gfbio_helpdesk_username_task responses ---------------------------
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
@@ -2000,10 +2027,7 @@ class TestTaskChains(TestTasks):
         )
         # ----------------------------------------------------------------------
 
-        chain = get_user_email_task.s(
-            submission_id=submission.id).set(
-            countdown=SUBMISSION_DELAY) \
-                | get_gfbio_helpdesk_username_task.s(
+        chain = get_gfbio_helpdesk_username_task.s(
             submission_id=submission.id).set(
             countdown=SUBMISSION_DELAY) \
                 | create_submission_issue_task.s(
@@ -2013,10 +2037,9 @@ class TestTaskChains(TestTasks):
         expected_tasks = [
             'tasks.create_submission_issue_task',
             'tasks.get_gfbio_helpdesk_username_task',
-            'tasks.get_user_email_task'
         ]
         task_reports = submission.taskprogressreport_set.all()
-        self.assertEqual(3, len(task_reports))
+        self.assertEqual(2, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasks)
             self.assertEqual('SUCCESS', t.status)
@@ -2074,17 +2097,17 @@ class TestTaskChains(TestTasks):
         data = json.dumps({
             'userid': 23
         })
-        url = '{0}/api/jsonws/' \
-              'GFBioProject-portlet.userextension/get-user-by-id/' \
-              'request-json/{1}'.format(site_config.gfbio_server.url,
-                                        data)
-
-        responses.add(responses.POST, url, status=200,
-                      json={'firstname': 'Marc', 'middlename': '',
-                            'emailaddress': 'maweber@mpi-bremen.de',
-                            'fullname': 'Marc Weber',
-                            'screenname': 'maweber', 'userid': 16250,
-                            'lastname': 'Weber'})
+        # url = '{0}/api/jsonws/' \
+        #       'GFBioProject-portlet.userextension/get-user-by-id/' \
+        #       'request-json/{1}'.format(site_config.gfbio_server.url,
+        #                                 data)
+        #
+        # responses.add(responses.POST, url, status=200,
+        #               json={'firstname': 'Marc', 'middlename': '',
+        #                     'emailaddress': 'maweber@mpi-bremen.de',
+        #                     'fullname': 'Marc Weber',
+        #                     'screenname': 'maweber', 'userid': 16250,
+        #                     'lastname': 'Weber'})
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format('0815',
                                                          'khors@me.de',
                                                          'Kevin Horstmeier')

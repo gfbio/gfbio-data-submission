@@ -1,61 +1,20 @@
 # -*- coding: utf-8 -*-
 import datetime
-import json
 import logging
 from urllib.parse import quote
 
 import requests
 from django.conf import settings
-from django.db import transaction
 
 from gfbio_submissions.brokerage.configuration.settings import \
     GFBIO_LICENSE_MAPPINGS, \
     GFBIO_METASCHEMA_MAPPINGS, \
     GFBIO_DATACENTER_USER_MAPPINGS, GFBIO_REQUEST_TYPE_MAPPINGS, \
-    JIRA_USERNAME_URL_FULLNAME_TEMPLATE, JIRA_USERNAME_URL_TEMPLATE
-from gfbio_submissions.brokerage.models import SiteConfiguration, RequestLog
-from gfbio_submissions.users.models import User
+    JIRA_USERNAME_URL_FULLNAME_TEMPLATE, JIRA_USERNAME_URL_TEMPLATE, \
+    JIRA_FALLBACK_USERNAME, JIRA_FALLBACK_EMAIL
+from gfbio_submissions.brokerage.models import SiteConfiguration
 
 logger = logging.getLogger(__name__)
-
-
-# TODO: remove !
-def gfbio_get_user_by_id(user_id, site_configuration, submission):
-    try:
-        id = int(user_id)
-    except ValueError as e:
-        id = -1
-    data = json.dumps({
-        'userid': id
-    })
-    url = '{0}/api/jsonws/GFBioProject-portlet.userextension/get-user-by-id/request-json/{1}'.format(
-        site_configuration.gfbio_server.url, data)
-    # requestlog: ok, leaves out bsi stuff ?
-    response = requests.get(
-        url=url,
-        auth=(site_configuration.gfbio_server.username,
-              site_configuration.gfbio_server.password),
-        headers={
-            'Accept': 'application/json'
-        },
-    )
-    details = response.headers or ''
-
-    with transaction.atomic():
-        request_log = RequestLog.objects.create(
-            type=RequestLog.OUTGOING,
-            url=url,
-            data=data,
-            site_user=user_id,
-            submission_id=submission.broker_submission_id,
-            response_status=response.status_code,
-            response_content=response.content,
-            request_details={
-                'response_headers': str(details)
-            }
-        )
-
-    return response
 
 
 def get_gfbio_helpdesk_username(user_name, email, fullname=''):
@@ -76,23 +35,16 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
                                           prepare_for_update=False):
     requirements = submission.data.get('requirements', {})
     # -----------------------------------------------------------------------
-    # TODO: refactor once gfbio portal services are removed.
-    if reporter is None or reporter is {}:
-        reporter = {}
-        try:
-            local_user = User.objects.get(pk=submission.submitting_user)
-            reporter['user_full_name'] = local_user.name
-            reporter['user_email'] = local_user.email
-        except User.DoesNotExist as e:
-            pass
-        except ValueError:
-            pass
-
-    # FIXME: compatibilty with gfbio portal services
-    user_full_name = reporter.get('user_full_name', '')
-    user_email = reporter.get('user_email', '')
-
-    author = '{0} {1}'.format(user_full_name, user_email)
+    if reporter is None:
+        reporter = {
+            'jira_user_name': JIRA_FALLBACK_USERNAME,
+            'email': JIRA_FALLBACK_EMAIL,
+            'full_name': ''
+        }
+    author = '{0} {1}'.format(
+        reporter.get('full_name', ''),
+        reporter.get('email', '')
+    )
 
     contributors = requirements.get('contributors', [])
     authors_text = '{0}\n'.format(author) if len(author.strip()) else ''
@@ -121,10 +73,6 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
         requirements.get('data_center', ''),
         GFBIO_REQUEST_TYPE_MAPPINGS.get('default', '')
     )
-    # TODO: generic is failing to send emails -> corect value is: dsub/general-data-submission
-    # jira_request_type = 'dsub/{0}'.format(jira_request_target) \
-    #     if site_config.jira_project_key == SiteConfiguration.DSUB \
-    #     else 'sand/{0}-data'.format(jira_request_target)
     jira_request_type = 'sand/{0}-data'.format(jira_request_target)
     if site_config.jira_project_key == SiteConfiguration.DSUB:
         jira_request_type = 'dsub/{0}'.format(jira_request_target) \
@@ -141,7 +89,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
             'name': 'Data Submission'
         },
         'reporter': {
-            'name': reporter.get('name', site_config.contact)
+            'name': reporter.get('jira_user_name', site_config.contact)
         },
         'customfield_10200': '{0}'.format(submission.embargo.isoformat())
         if submission.embargo is not None

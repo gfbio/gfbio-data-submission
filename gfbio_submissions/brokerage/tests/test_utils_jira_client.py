@@ -57,7 +57,6 @@ class TestJiraClient(TestCase):
             ena_server=resource_cred,
             pangaea_token_server=token_resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
             contact='kevin@horstmeier.de'

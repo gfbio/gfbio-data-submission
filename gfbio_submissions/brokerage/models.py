@@ -12,7 +12,7 @@ from django.utils.encoding import smart_text
 from git import Repo
 from model_utils.models import TimeStampedModel
 
-from config.settings.base import ADMINS, AUTH_USER_MODEL, LOCAL_REPOSITORY
+from config.settings.base import AUTH_USER_MODEL, LOCAL_REPOSITORY
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
     DEFAULT_ENA_CENTER_NAME
 from .configuration.settings import ENA, ENA_PANGAEA
@@ -76,7 +76,7 @@ class SiteConfiguration(models.Model):
                              on_delete=models.SET_NULL)
 
     contact = models.EmailField(
-        default=ADMINS[0][1],
+        blank=False,
         help_text='Main contact to address in case of something. '
                   'This will, in any case, serve as a fallback '
                   'when no other person can be determined.')
@@ -122,25 +122,6 @@ class SiteConfiguration(models.Model):
                   'should use to connect to Pangaea-Jira. This Server'
                   'represents the actual jira-instance of Pangaea',
         on_delete=models.PROTECT
-    )
-    # TODO: remove
-    gfbio_server = models.ForeignKey(
-        ResourceCredential,
-        null=True,
-        blank=True,
-        related_name='SiteConfiguration.gfbio_server+',
-        help_text='Select which server and/or account this configuration '
-                  'should use to connect to the GFBio portal database for '
-                  'accessing submission-registry, research_object, and so on.',
-        on_delete=models.PROTECT
-    )
-    # TODO: remove
-    use_gfbio_services = models.BooleanField(
-        default=False,
-        help_text='If checked additional gfbio-related services will be used '
-                  'during a submission. E.g. trying to get a User from the '
-                  'gfbio.org database and set its email as reporter-email '
-                  'in GFBio helpdesk.'
     )
 
     helpdesk_server = models.ForeignKey(
@@ -234,6 +215,7 @@ class Submission(TimeStampedModel):
     # TODO: still needed ?
     site_project_id = models.CharField(max_length=128, blank=True, default='')
     target = models.CharField(max_length=16, choices=TARGETS)
+
     submitting_user = models.CharField(max_length=72, default='', blank=True,
                                        null=True,
                                        help_text=

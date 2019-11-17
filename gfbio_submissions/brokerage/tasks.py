@@ -21,6 +21,7 @@ from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.brokerage.utils.task_utils import jira_error_auto_retry, \
     get_submission_and_site_configuration, raise_transfer_server_exceptions, \
     retry_no_ticket_available_exception
+from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
 from gfbio_submissions.users.models import User
 from .configuration.settings import BASE_HOST_NAME, \
     SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
@@ -30,8 +31,6 @@ from .models import BrokerObject, \
 from .utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data, send_submission_to_ena, \
     parse_ena_submission_response
-from .utils.gfbio import \
-    gfbio_get_user_by_id
 from .utils.pangaea import pull_pangaea_dois
 from .utils.submission_transfer import SubmissionTransferHandler
 
@@ -341,9 +340,6 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None):
             task=self,
             broker_submission_id=submission.broker_submission_id,
             max_retries=SUBMISSION_MAX_RETRIES)
-        # print('RETURNED FROM RETRY ', res)
-        # if res == TaskProgressReport.CANCELLED:
-        #     return TaskProgressReport.CANCELLED
     except ConnectionError as e:
         logger.error(
             msg='connection_error {}.url={} title={}'.format(
@@ -547,69 +543,9 @@ def check_for_pangaea_doi_task(self, resource_credential_id=None):
         pull_pangaea_dois(sub, jira_client)
 
 
-# HELP-DESK TASKS --------------------------------------------------------------
-
-# FIXME/TODO: once only local users are used, even with social logins,
-#  gfbio stuff is obsolete and getting userinformation need no extra task.
-#  Thus remove this
-@celery.task(
-    base=SubmissionTask,
-    bind=True,
-    name='tasks.get_user_email_task',
-    autoretry_for=(TransferServerError,
-                   TransferClientError
-                   ),
-    retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
-    retry_backoff=SUBMISSION_RETRY_DELAY,
-    retry_jitter=True
-)
-def get_user_email_task(self, submission_id=None):
-    submission, site_configuration = get_submission_and_site_configuration(
-        submission_id=submission_id,
-        task=self,
-        include_closed=True
-    )
-    if submission == TaskProgressReport.CANCELLED:
-        return TaskProgressReport.CANCELLED
-    res = {
-        'user_email': site_configuration.contact,
-        'user_full_name': '',
-        'first_name': '',
-        'last_name': '',
-    }
-    if site_configuration.use_gfbio_services:
-        response = gfbio_get_user_by_id(submission.submitting_user,
-                                        site_configuration, submission)
-        try:
-            response_json = response.json()
-            content = response_json if isinstance(response_json,
-                                                  dict) else {}
-            res['user_email'] = content.get('emailaddress',
-                                            site_configuration.contact)
-            res['user_full_name'] = content.get('fullname', '')
-
-            res['portal_user'] = True
-
-        except ValueError as e:
-            logger.error(
-                msg='get_user_email_task. load json response. '
-                    'Value error: {}'.format(e))
-    else:
-        logger.info(
-            msg='get_user_email_task submission_id={0} | '
-                'use_gfbio_services={1} | return={2}'.format(
-                submission_id,
-                site_configuration.use_gfbio_services,
-                res)
-        )
-    submission.submitting_user_common_information = '{0};{1}'.format(
-        res['user_full_name'], res['user_email'])
-    submission.save()
-
-    return res
+# HELPDESK TASKS --------------------------------------------------------------
 
 
-# TODO: may need refactoring if portal deps are removed (see initial chains ...)
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -633,39 +569,51 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
             'tasks.py | get_gfbio_helpdesk_username_task | return TaskProgressReport.CANCELLED')
         return TaskProgressReport.CANCELLED
 
-    result = {}
+    # result = {}
     user_name = JIRA_FALLBACK_USERNAME
     user_email = JIRA_FALLBACK_EMAIL
     user_full_name = ''
-    result['name'] = user_name
-    if prev_task_result is not None and isinstance(prev_task_result, dict):
-        result = prev_task_result
-        result['name'] = prev_task_result.get('user_email',
-                                              JIRA_FALLBACK_USERNAME)
+    # result['name'] = user_name
+    result = {
+        'jira_user_name': user_name,
+        'email': user_email,
+        'full_name': user_full_name
+    }
+    # submitting user is site specific. e.g. local django user id = 1 is
+    # different from silva user id = 1
+    if len(submission.submitting_user) == 0:
+        logger.info(
+            'tasks.py | get_gfbio_helpdesk_username_task | '
+            'len(submission.submitting_user) == 0 | return {0}'.format(result))
+        return result
 
-    if not site_configuration.use_gfbio_services:
-        if len(submission.submitting_user) == 0:
-            logger.info(
-                'tasks.py | get_gfbio_helpdesk_username_task | len(submission.submitting_user) == 0 | return {0}'.format(
-                    result))
-            return result
-
+    # 'local_site' includes sso, local users, social accounts
+    # (which have local shadow accounts)
+    if submission.site.username == HOSTING_SITE:
         try:
-            # FIXME: tricky if submitting user is a numerical id from another system, worst case would be an accidental match with a local user
+            logger.info(
+                'tasks.py | get_gfbio_helpdesk_username_task | try getting a local user | submission={1} | submitting_user={1}'.format(
+                    submission.broker_submission_id, submission.submitting_user)
+            )
+            # FIXME: tricky if submitting user is a numerical id from another
+            #  system, worst case would be an accidental match with a local user
+            # works only based on the assumption that this is actually a
+            # local user
             user = User.objects.get(pk=int(submission.submitting_user))
             user_name = user.goesternid if user.goesternid else user.username
             user_email = user.email
+            result['email'] = user_email
             user_full_name = user.name
+            result['full_name'] = user_full_name
             logger.info(
                 'tasks.py | get_gfbio_helpdesk_username_task | try get user | username={0} | goe_id={1}'.format(
-                    user_name, user.goesternid))
+                    user.username, user.goesternid))
         except ValueError as ve:
             logger.warning(
                 'tasks.py | get_gfbio_helpdesk_username_task | '
                 'submission_id={0} | ValueError with '
                 'submission.submiting_user={1} | '
                 '{2}'.format(submission_id, submission.submitting_user, ve))
-            return result
         except User.DoesNotExist as e:
             logger.warning(
                 'tasks.py | get_gfbio_helpdesk_username_task | '
@@ -676,28 +624,35 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
                 'tasks.py | get_gfbio_helpdesk_username_task | '
                 'submission_id={0} | Try getting user_email from previous task | user_name='
                 '{1}'.format(submission_id, user_name))
+    else:
+        # TODO: add 'get_user_email method' specific to a site as a parameter to this task, otherwise no email resolution is possible
+        user_name = submission.site.username
+        user_email = submission.site.email if len(
+            submission.site.email) else site_configuration.contact
+        result['email'] = user_email if len(user_email) else JIRA_FALLBACK_EMAIL
 
-        response = get_gfbio_helpdesk_username(user_name=user_name,
-                                               email=user_email,
-                                               fullname=user_full_name)
-        logger.info(
-            'tasks.py | get_gfbio_helpdesk_username_task | response status={0} | content={1}'.format(
-                response.status_code, response.content))
+    response = get_gfbio_helpdesk_username(user_name=user_name,
+                                           email=user_email,
+                                           fullname=user_full_name)
+    logger.info(
+        'tasks.py | get_gfbio_helpdesk_username_task | response status={0} | content={1}'.format(
+            response.status_code, response.content))
 
-        raise_transfer_server_exceptions(
-            response=response,
-            task=self,
-            broker_submission_id=submission.broker_submission_id,
-            max_retries=SUBMISSION_MAX_RETRIES
-        )
+    raise_transfer_server_exceptions(
+        response=response,
+        task=self,
+        broker_submission_id=submission.broker_submission_id,
+        max_retries=SUBMISSION_MAX_RETRIES
+    )
 
-        if response.status_code == 200:
-            result['name'] = smart_text(response.content)
+    # in case of hosting site users, client or server errors 4xx/5xx will return
+    # JIRA_FALLBACK_USERNAME but with user email & fullname
+    if response.status_code == 200:
+        result['jira_user_name'] = smart_text(response.content)
 
-        logger.info(
-            'tasks.py | get_gfbio_helpdesk_username_task |return={0}'.format(
-                result))
-
+    logger.info(
+        'tasks.py | get_gfbio_helpdesk_username_task |return={0}'.format(
+            result))
     return result
 
 
@@ -1074,27 +1029,3 @@ def add_pangaealink_to_submission_issue_task(
         )
         return jira_error_auto_retry(jira_client=jira_client, task=self,
                                      broker_submission_id=submission.broker_submission_id)
-        # print(self.request.retries, ' error ',
-        #       jira_client.error.response.status_code)
-        # # TODO: - (A) 04.09.2019: with decorator containing
-        # #  max_retries=SUBMISSION_MAX_RETRIES, autoretry_for=(SubmissionTransferHandler.TransferServerError,),
-        # #   task retries 2x then in last retry 500er is thrown again (as expected) but no catched
-        # #   no EAGAER based exectption
-        # #   - (B) mit retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES+2}, 4x (expected)
-        # #   - (C) all this can also be achieved vie try/except and .retry(exc=exc, max_retries=5)
-        # #   - (D) IF max retries is is treated via if : EAGER-result.get() exception occurs
-        # #   - (E) auto retry (decorator) vs. self.retry(countdown=3 ** self.request.retries, throw=False??)
-        # #   - (F) manual self.retry with cathcing max retries error also produces eager error
-        # #   - (G) Runtime error (res.get) occurs on every task execution/retry
-        # #   - (H) When using auto-retry EAGER runtime error has to be catched where task is called
-        # #   - ---------------------------------
-        # #   - (I) using apply instead of apply_async in test makes it independent of EAGER...
-        # #           (leave TRUE for tests with indirect async all like in .save() --> test settings constants .. )
-        # #           (EAGAER False for tests that use apply and retry --> mock for single tests)
-        # #           -> strategy 3 in : https://www.distributedpython.com/2018/05/01/unit-testing-celery-tasks/
-        # #       since "apply: Execute this task locally, by blocking until the task returns."
-        # #       -> for 500 error TPR outputs all overrides, resulting in stste RETRY after this (expected)
-        # #       -> opens for autoretry implementation
-        # #       -> consider logging in SubmissionTask methods (perhaps overide some more to add logging)
-        # #       -> find a good place to capsule 500er retries and mail after 400er errors
-        # #       -> merge with retry polices or remove them
