@@ -23,7 +23,7 @@ class TestEnalizer(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        User.objects.create(
+        user = User.objects.create(
             username="user1"
         )
         SubmissionTest._create_submission_via_serializer()
@@ -36,7 +36,7 @@ class TestEnalizer(TestCase):
 
         SiteConfiguration.objects.create(
             title='Default',
-            site=None,
+            site=user,
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
@@ -431,6 +431,9 @@ class TestEnalizer(TestCase):
     def test_release_study_on_ena(self):
         submission = Submission.objects.first()
         conf = SiteConfiguration.objects.first()
+
+        print('submission site ', submission.site)
+        print(SiteConfiguration.objects.filter(site=submission.site).first())
         responses.add(
             responses.POST,
             conf.ena_server.url,
@@ -446,7 +449,7 @@ class TestEnalizer(TestCase):
         )
         self.assertEqual(0, len(RequestLog.objects.all()))
 
-        release_study_on_ena(submission, conf)
+        release_study_on_ena(submission)
 
         self.assertEqual(1, len(RequestLog.objects.all()))
         request_log = RequestLog.objects.first()
@@ -456,7 +459,7 @@ class TestEnalizer(TestCase):
 
     def test_release_study_on_ena_no_accession_no(self):
         submission = Submission.objects.first()
-        conf = SiteConfiguration.objects.first()
+        # conf = SiteConfiguration.objects.first()
         self.assertEqual(0, len(RequestLog.objects.all()))
-        release_study_on_ena(submission, conf)
+        release_study_on_ena(submission)
         self.assertEqual(0, len(RequestLog.objects.all()))

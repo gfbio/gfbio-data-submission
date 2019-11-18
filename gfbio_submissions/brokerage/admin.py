@@ -15,6 +15,7 @@ from .models import PersistentIdentifier, \
     SubmissionUpload, \
     AuditableTextData, \
     CenterName
+from .utils.ena import release_study_on_ena
 from .utils.submission_transfer import \
     SubmissionTransferHandler
 
@@ -75,6 +76,15 @@ def continue_release_submissions(modeladmin, request, queryset):
 
 
 continue_release_submissions.short_description = 'Continue submission of selected Items'
+
+
+def release_submission_study_on_ena(modeladmin, request, queryset):
+    for obj in queryset:
+        submission = Submission.objects.get(pk=obj.pk)
+        release_study_on_ena(submission=submission)
+
+
+release_submission_study_on_ena.short_description = 'Release Study on ENA'
 
 
 def create_broker_objects_and_ena_xml(modeladmin, request, queryset):
@@ -162,12 +172,14 @@ class SubmissionAdmin(admin.ModelAdmin):
                      ]
     inlines = (AuditableTextDataInlineAdmin,
                AdditionalReferenceInline,)
-    actions = [download_auditable_text_data,
-               continue_release_submissions,
-               re_create_ena_xml,
-               create_broker_objects_and_ena_xml,
-               delete_broker_objects_and_ena_xml,
-               ]
+    actions = [
+        release_submission_study_on_ena,
+        download_auditable_text_data,
+        continue_release_submissions,
+        re_create_ena_xml,
+        create_broker_objects_and_ena_xml,
+        delete_broker_objects_and_ena_xml,
+    ]
 
 
 class RequestLogAdmin(admin.ModelAdmin):

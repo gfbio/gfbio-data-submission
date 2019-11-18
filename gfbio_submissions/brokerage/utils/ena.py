@@ -27,7 +27,8 @@ from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_CENTER_NAME, \
     DEFAULT_ENA_BROKER_NAME, CHECKLIST_ACCESSION_MAPPING, \
     STATIC_SAMPLE_SCHEMA_LOCATION
-from gfbio_submissions.brokerage.models import AuditableTextData
+from gfbio_submissions.brokerage.models import AuditableTextData, \
+    SiteConfiguration
 
 logger = logging.getLogger(__name__)
 dicttoxml.LOG.setLevel(logging.ERROR)
@@ -650,11 +651,17 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data):
     return response, req_log.request_id
 
 
-def release_study_on_ena(submission, site_config):
+def release_study_on_ena(submission):
     study_primary_accession = submission.brokerobject_set.filter(
         type='study').first().persistentidentifier_set.filter(
         pid_type='PRJ').first()
-
+    site_config = SiteConfiguration.objects.filter(site=submission.site).first()
+    if site_config is None:
+        logger.warning(
+            'ena.py | release_study_on_ena | no site_configuration found | submission_id={0}'.format(
+                submission.broker_submission_id)
+        )
+        return None
     if study_primary_accession:
 
         logger.info(
@@ -721,7 +728,7 @@ def release_study_on_ena(submission, site_config):
             site_user = submission.submitting_user if \
                 submission.submitting_user is not None else ''
 
-            RequestLog.objects.create(
+            req_log = RequestLog.objects.create(
                 request_id=outgoing_request_id,
                 type=RequestLog.OUTGOING,
                 url=site_config.ena_server.url,
@@ -735,12 +742,14 @@ def release_study_on_ena(submission, site_config):
                     'response_headers': str(details)
                 }
             )
+        return response, req_log.request_id
     else:
         logger.warning(
             'ena.py | release_study_on_ena | no primary accession no '
             'found for study | submission_id={0}'.format(
                 submission.broker_submission_id)
         )
+        return None
 
 
 def parse_ena_submission_response(response_content=''):
