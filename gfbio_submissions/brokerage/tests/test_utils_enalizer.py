@@ -437,7 +437,6 @@ class TestEnalizer(TestCase):
             status=200,
             body=_get_ena_release_xml_response()
         )
-        print('ena url from conf ', conf.ena_server.url)
         study = submission.brokerobject_set.filter(type='study').first()
         study.persistentidentifier_set.create(
             archive='ENA',
@@ -445,6 +444,12 @@ class TestEnalizer(TestCase):
             pid='PRJEB0815',
             outgoing_request_id=uuid4()
         )
-        # print(study.persistentidentifier_set.all())
-        #
+        self.assertEqual(0, len(RequestLog.objects.all()))
+
         release_study_on_ena(submission, conf)
+
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        request_log = RequestLog.objects.first()
+        self.assertEqual(200, request_log.response_status)
+        self.assertTrue(
+            'accession "PRJEB0815" is set to public' in request_log.response_content)

@@ -610,9 +610,6 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data):
         entities=ena_submission_data.keys(),
     )
 
-    print('send_submission_to_ena ena data')
-    pprint(ena_submission_data)
-
     # requestlog: ok !
     response = requests.post(
         archive_access.url,
@@ -677,9 +674,6 @@ def release_study_on_ena(submission, site_config):
             accession_no=study_primary_accession,
         )
     )
-    # print(submission_xml)
-    # print('iso ', current_datetime)
-    # print(study_primary_accession)
 
     auth_params = {
         'auth': site_config.ena_server.authentication_string,
@@ -716,7 +710,8 @@ def release_study_on_ena(submission, site_config):
 
         site_user = submission.submitting_user if \
             submission.submitting_user is not None else ''
-        req_log = RequestLog(
+
+        RequestLog.objects.create(
             request_id=outgoing_request_id,
             type=RequestLog.OUTGOING,
             url=site_config.ena_server.url,
@@ -730,7 +725,6 @@ def release_study_on_ena(submission, site_config):
                 'response_headers': str(details)
             }
         )
-        req_log.save()
 
 
 def parse_ena_submission_response(response_content=''):
