@@ -20,6 +20,7 @@ from django.db import transaction
 # TODO: read jsonschem 2.6.0 changelog
 from django.utils.encoding import smart_text
 from jsonschema import Draft3Validator
+from pytz import timezone
 
 from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_CENTER_NAME, \
@@ -648,6 +649,35 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data):
     return response, req_log.request_id
 
 
+def release_study_on_ena(submission):
+    current_datetime = datetime.datetime.now(timezone('UTC')).isoformat()
+    study_primary_accession = submission.brokerobject_set.filter(
+        type='study').first().persistentidentifier_set.filter(
+        pid_type='PRJ').first()
+    submission_xml = textwrap.dedent(
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<SUBMISSION_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+        ' xsi:noNamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.submission.xsd">'
+        '<SUBMISSION'
+        ' alias="gfbio:release:{broker_submission_id}:{time_stamp}"'
+        ' center_name="GFBIO" broker_name="GFBIO">'
+        '<ACTIONS>'
+        '<ACTION>'
+        '<RELEASE target="{accession_no}"/>'
+        '</ACTION>'
+        '</ACTIONS>'
+        '</SUBMISSION>'
+        '</SUBMISSION_SET>'.format(
+            broker_submission_id=submission.broker_submission_id,
+            time_stamp=current_datetime,
+            accession_no=study_primary_accession,
+        )
+    )
+    print(submission_xml)
+    print('iso ', current_datetime)
+    print(study_primary_accession)
+
+
 def parse_ena_submission_response(response_content=''):
     res = {}
 
@@ -709,7 +739,7 @@ def validate_sample_data(json_data):
         return True, []
 
 
-def download_submitted_run_files_to_stringIO(site_config, decompressed_io):
+def download_submitted_run_files_to_string_io(site_config, decompressed_io):
     ftp_rc = site_config.ena_ftp
     transmission_report = []
     ftp = FTP(ftp_rc.url)

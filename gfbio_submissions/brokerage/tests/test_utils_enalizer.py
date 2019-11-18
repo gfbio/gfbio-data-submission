@@ -15,7 +15,7 @@ from gfbio_submissions.brokerage.models import Submission, CenterName, \
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
-    send_submission_to_ena
+    send_submission_to_ena, release_study_on_ena
 from gfbio_submissions.users.models import User
 
 
@@ -426,3 +426,17 @@ class TestEnalizer(TestCase):
                             alias_postfix=submission.broker_submission_id)
         file_name, xml = enalizer.prepare_submission_xml_for_sending()
         self.assertIn('<VALIDATE', xml)
+
+    def test_release_study_on_ena(self):
+        submission = Submission.objects.first()
+        study = submission.brokerobject_set.filter(type='study').first()
+        study.persistentidentifier_set.create(
+            archive='ENA',
+            pid_type='PRJ',
+            pid='PRJEB0815',
+            outgoing_request_id=uuid4()
+        )
+        print(study.persistentidentifier_set.all())
+
+        # BrokerObject.objects.add_submission_data(submission)
+        release_study_on_ena(submission)
