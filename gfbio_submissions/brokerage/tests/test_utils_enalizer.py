@@ -453,3 +453,10 @@ class TestEnalizer(TestCase):
         self.assertEqual(200, request_log.response_status)
         self.assertTrue(
             'accession "PRJEB0815" is set to public' in request_log.response_content)
+
+    def test_release_study_on_ena_no_accession_no(self):
+        submission = Submission.objects.first()
+        conf = SiteConfiguration.objects.first()
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        release_study_on_ena(submission, conf)
+        self.assertEqual(0, len(RequestLog.objects.all()))
