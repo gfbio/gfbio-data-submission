@@ -3,7 +3,6 @@ import pprint
 from pprint import pprint
 from uuid import uuid4
 
-import dpath
 import responses
 from django.test import TestCase
 from django.utils.encoding import smart_text
@@ -13,7 +12,8 @@ from gfbio_submissions.brokerage.configuration.settings import \
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
     ResourceCredential, SiteConfiguration, RequestLog, BrokerObject
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
-from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response
+from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
+    _get_ena_release_xml_response
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
     send_submission_to_ena, release_study_on_ena
 from gfbio_submissions.users.models import User
@@ -427,8 +427,17 @@ class TestEnalizer(TestCase):
         file_name, xml = enalizer.prepare_submission_xml_for_sending()
         self.assertIn('<VALIDATE', xml)
 
+    @responses.activate
     def test_release_study_on_ena(self):
         submission = Submission.objects.first()
+        conf = SiteConfiguration.objects.first()
+        responses.add(
+            responses.POST,
+            conf.ena_server.url,
+            status=200,
+            body=_get_ena_release_xml_response()
+        )
+        print('ena url from conf ', conf.ena_server.url)
         study = submission.brokerobject_set.filter(type='study').first()
         study.persistentidentifier_set.create(
             archive='ENA',
@@ -436,7 +445,6 @@ class TestEnalizer(TestCase):
             pid='PRJEB0815',
             outgoing_request_id=uuid4()
         )
-        print(study.persistentidentifier_set.all())
-
-        # BrokerObject.objects.add_submission_data(submission)
-        release_study_on_ena(submission)
+        # print(study.persistentidentifier_set.all())
+        #
+        release_study_on_ena(submission, conf)
