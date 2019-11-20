@@ -1374,6 +1374,31 @@ class TestParseMetaDataForUpdateTask(TestTasks):
 
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())
 
+    def test_chain_version(self):
+        self._add_submission_upload()
+        submission_upload = SubmissionUpload.objects.first()
+        ena_submission_data = prepare_ena_data(
+            submission=submission_upload.submission)
+        store_ena_data_as_auditable_text_data(
+            submission=submission_upload.submission,
+            data=ena_submission_data)
+
+        # TODO: rerfator to chain !
+        # 1. clean data
+        # 2. parse csv and update related submission
+        # 3. create_broker_objects_from_submission_data_task (does delete before create)
+        # 4. create ena-data from submission data and update or create auditable text data
+
+        # chain = get_gfbio_helpdesk_username_task.s(
+        #     submission_id=submission.id).set(
+        #     countdown=SUBMISSION_DELAY) \
+        #         | create_submission_issue_task.s(
+        #     submission_id=submission.id).set(
+        #     countdown=SUBMISSION_DELAY)
+        # chain =
+
+        # chain()
+
 
 
 class TestGetHelpDeskUserTask(TestTasks):

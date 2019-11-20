@@ -190,11 +190,18 @@ class PrimaryDataFileAdmin(admin.ModelAdmin):
 
 
 def reparse_csv_metadata(modeladmin, request, queryset):
+    from gfbio_submissions.brokerage.tasks import \
+        parse_meta_data_for_update_task
     for obj in queryset:
-        submission_upload = SubmissionUpload.objects.get(pk=obj.pk)
+        parse_meta_data_for_update_task.apply_async(
+            kwargs={
+                'submission_upload_id': obj.pk,
+            },
+            countdown=SUBMISSION_DELAY,
+        )
 
 
-reparse_csv_metadata.short_description = 'Re-parse csv Metadata for updated XML data'
+reparse_csv_metadata.short_description = 'Re-parse csv metadata to get updated XMLs'
 
 
 class SubmissionUploadAdmin(admin.ModelAdmin):
@@ -206,6 +213,11 @@ class SubmissionUploadAdmin(admin.ModelAdmin):
     actions = [
         reparse_csv_metadata,
     ]
+
+    def save_model(self, request, obj, form, change):
+        # obj.added_by = request.user
+        print('ADMIN save model ', obj.pk)
+        super().save_model(request, obj, form, change)
 
 
 class TaskProgressReportAdmin(admin.ModelAdmin):
