@@ -2,7 +2,6 @@
 import base64
 import json
 import uuid
-from pprint import pprint
 from unittest import skip
 from unittest.mock import patch
 from urllib.parse import quote
@@ -11,7 +10,6 @@ from uuid import uuid4
 import responses
 from celery import chain
 from django.contrib.auth.models import Permission
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
@@ -1309,13 +1307,18 @@ class TestParseMetaDataForUpdateTask(TestTasks):
     def test_parse_meta_data_for_update_task(self):
         self._add_submission_upload()
         submission_upload = SubmissionUpload.objects.first()
-        # print(submission_upload)
-        # print(submission_upload.submission)
         ena_submission_data = prepare_ena_data(
             submission=submission_upload.submission)
         store_ena_data_as_auditable_text_data(
             submission=submission_upload.submission,
             data=ena_submission_data)
+
+        samples = submission_upload.submission.auditabletextdata_set.filter(
+            name='sample.xml')
+        self.assertIn(
+            '<SAMPLE alias="2:{0}'.format(
+                submission_upload.submission.broker_submission_id),
+            samples.first().text_data)
 
         result = parse_meta_data_for_update_task.apply_async(
             kwargs={
@@ -1323,22 +1326,54 @@ class TestParseMetaDataForUpdateTask(TestTasks):
             }
         )
 
-        # TODO: add unit test for this case
-        # result = parse_meta_data_for_update_task.apply_async(
-        #     kwargs={
-        #         'submission_upload_id': 9999
-        #     }
-        # )
+        self.assertTrue(result.get())
 
-        # TODO: add unit test for this case
-        # submission_upload.submission = None
-        # submission_upload.save(ignore_attach_to_ticket=True)
-        #
-        # result = parse_meta_data_for_update_task.apply_async(
-        #     kwargs={
-        #         'submission_upload_id': 1
-        #     }
-        # )
+        samples = submission_upload.submission.auditabletextdata_set.filter(
+            name='sample.xml')
+        self.assertNotIn(
+            '<SAMPLE alias="2:{0}'.format(
+                submission_upload.submission.broker_submission_id),
+            samples.first().text_data)
+        self.assertIn(
+            '<SAMPLE alias="12:{0}"'.format(
+                submission_upload.submission.broker_submission_id),
+            samples.first().text_data)
+
+    def test_invalid_submission_upload_id(self):
+        result = parse_meta_data_for_update_task.apply_async(
+            kwargs={
+                'submission_upload_id': 9999
+            }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+
+    def test_no_submission(self):
+        self._add_submission_upload()
+        submission_upload = SubmissionUpload.objects.first()
+        submission_upload.submission = None
+        submission_upload.save(ignore_attach_to_ticket=True)
+
+        result = parse_meta_data_for_update_task.apply_async(
+            kwargs={
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+
+    def test_empty_data_in_submission(self):
+        self._add_submission_upload()
+        submission_upload = SubmissionUpload.objects.first()
+        submission_upload.submission.data = {}
+        submission_upload.submission.save()
+
+        result = parse_meta_data_for_update_task.apply_async(
+            kwargs={
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+
 
 
 class TestGetHelpDeskUserTask(TestTasks):

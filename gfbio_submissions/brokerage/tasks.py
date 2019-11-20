@@ -311,27 +311,8 @@ def prepare_ena_submission_data_task(self, prev_task_result=None,
     base=SubmissionTask,
     bind=True,
     name='tasks.parse_meta_data_for_update_task',
-    # autoretry_for=(TransferServerError,
-    #                TransferClientError
-    #                ),
-    # retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
-    # retry_backoff=SUBMISSION_RETRY_DELAY,
-    # retry_jitter=True
 )
 def parse_meta_data_for_update_task(self, submission_upload_id=None):
-    # TODO: remove/empty 'validation' field of submission.data
-    # TODO: remove molecular_requirements before checking for a second time ?
-    #  dict.update ? https://docs.python.org/3/library/stdtypes.html#dict.update
-    #   Update the dictionary with the key/value pairs from other,
-    #   overwriting existing keys. Return None.
-    #   ---> NO SINCE: submission.data.get('requirements', {}).update(molecular_requirements) in csv.py
-    #   ---> BUT IF: second run with updated file results in errors, then the old valued would be present
-    #   ---> CLEAN: remove as defined in TODOs
-
-    # TODO: delete all BrokerObjects for this submission
-
-    # TODO: re-create xml and update_or_create AuditableTextData with new XML
-
     try:
         submission_upload = SubmissionUpload.objects.get(
             pk=submission_upload_id)
@@ -340,27 +321,40 @@ def parse_meta_data_for_update_task(self, submission_upload_id=None):
             'tasks.py | parse_meta_data_for_update_task | '
             'no SubmissionUpload found | '
             'submission_upload_id={0}'.format(submission_upload_id))
-        # logger.info('tasks.py | SubmissionTask | on_retry | task_id={0} | '
-        #             'name={1}'.format(task_id, self.name))
         return TaskProgressReport.CANCELLED
     if submission_upload.submission is None:
+        logger.error(
+            'tasks.py | parse_meta_data_for_update_task | '
+            'no Submission for SubmissionUpload available | '
+            'submission_upload_id={0}'.format(submission_upload_id))
         return TaskProgressReport.CANCELLED
 
+    data = submission_upload.submission.data
+    if 'requirements' not in data.keys():
+        logger.error(
+            'tasks.py | parse_meta_data_for_update_task | '
+            'key "requirements" not found in submission.data | '
+            'submission_upload_id={0}'.format(submission_upload_id))
+        return TaskProgressReport.CANCELLED
+
+    molecular_requirements_keys = ['study_type', 'samples', 'experiments']
+    if 'validation' in data.keys():
+        data.pop('validation')
+    for k in molecular_requirements_keys:
+        if k in data.get('requirements', {}).keys():
+            data.get('requirements', {}).pop(k)
+
     with transaction.atomic():
-        data = submission_upload.submission.data
-
-        molecular_requirements_keys = ['study_type', 'samples', 'experiments']
-        if 'validation' in data.keys():
-            data.pop('validation')
-        for k in molecular_requirements_keys:
-            if k in data.get('requirements', {}).keys():
-                data.get('requirements', {}).pop(k)
-
-        # print('\n#############################')
-        # pprint(data)
-        # print(submission_upload.submission.brokerobject_set.all())
+        logger.info(
+            'tasks.py | parse_meta_data_for_update_task | '
+            'delete brokerobjects related to submission={0} '
+            ''.format(submission_upload.submission.broker_submission_id))
         submission_upload.submission.brokerobject_set.all().delete()
 
+        logger.info(
+            'tasks.py | parse_meta_data_for_update_task | '
+            'parse metadata and save to submission={0} '
+            ''.format(submission_upload.submission.broker_submission_id))
         with open(submission_upload.file.path, 'r') as file:
             molecular_requirements = parse_molecular_csv(
                 file,
@@ -369,38 +363,26 @@ def parse_meta_data_for_update_task(self, submission_upload_id=None):
         submission_upload.submission.data = data
         submission_upload.submission.save()
 
-        # print('\n#############################')
-        # pprint(submission_upload.submission.data['requirements'])
-        # print(submission_upload.submission.brokerobject_set.all())
-
+        logger.info(
+            'tasks.py | parse_meta_data_for_update_task | '
+            'add brokerobjects to submission={0} '
+            ''.format(submission_upload.submission.broker_submission_id))
         BrokerObject.objects.add_submission_data(submission_upload.submission)
 
         ena_submission_data = prepare_ena_data(
             submission=submission_upload.submission)
-    
-        print('\n#############################')
-        print(submission_upload.submission.auditabletextdata_set.all())
 
+        logger.info(
+            'tasks.py | parse_meta_data_for_update_task | '
+            'update AuditableTextData related to submission={0} '
+            ''.format(submission_upload.submission.broker_submission_id))
         for d in ena_submission_data:
             filename, filecontent = ena_submission_data[d]
-            # with transaction.atomic():
-            # obj, created = AuditableTextData.objects.update_or_create(
-            #     name=filename,
-            #     # submission=submission_upload.submission,
-            #     # text_data=filecontent
-            #     defaults={'submission': submission_upload.submission,
-            #               'text_data': filecontent}
-            # )
             obj, created = submission_upload.submission.auditabletextdata_set.update_or_create(
                 name=filename,
                 defaults={'text_data': filecontent}
             )
-            print('created ', created, ' obj ', obj)
-
-        print('\n#############################')
-        # print(submission_upload.submission.auditabletextdata_set.all())
-        for a in submission_upload.submission.auditabletextdata_set.all():
-            print('\n', a.name, ' ', a.submission)
+        return True
 
 
 # TODO: result of this task is input for next task
