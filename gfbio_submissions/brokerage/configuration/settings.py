@@ -293,15 +293,15 @@ GFBIO_REQUEST_TYPE_MAPPINGS = getattr(
     }
 )
 
-MOLECULAR_REQUIREMENTS = getattr(
-    settings,
-    'MOLECULAR_REQUIREMENTS',
-    {
-        'study_type': 'Other',
-        'samples': [],
-        'experiments': [],
-    }
-)
+# MOLECULAR_REQUIREMENTS = getattr(
+#     settings,
+#     'MOLECULAR_REQUIREMENTS',
+#     {
+#         'study_type': 'Other',
+#         'samples': [],
+#         'experiments': [],
+#     }
+# )
 
 PANGAEA = getattr(
     settings,

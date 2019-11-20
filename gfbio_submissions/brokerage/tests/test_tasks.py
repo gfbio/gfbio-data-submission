@@ -46,6 +46,8 @@ from gfbio_submissions.brokerage.tests.utils import \
     _get_pangaea_soap_response, _get_pangaea_attach_response, \
     _get_pangaea_comment_response, _get_pangaea_ticket_response, \
     _get_jira_issue_response
+from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
+    store_ena_data_as_auditable_text_data
 from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
 from gfbio_submissions.users.models import User
 
@@ -1307,12 +1309,17 @@ class TestParseMetaDataForUpdateTask(TestTasks):
     def test_parse_meta_data_for_update_task(self):
         self._add_submission_upload()
         submission_upload = SubmissionUpload.objects.first()
-        print(submission_upload)
-        print(submission_upload.submission)
+        # print(submission_upload)
+        # print(submission_upload.submission)
+        ena_submission_data = prepare_ena_data(
+            submission=submission_upload.submission)
+        store_ena_data_as_auditable_text_data(
+            submission=submission_upload.submission,
+            data=ena_submission_data)
 
         result = parse_meta_data_for_update_task.apply_async(
             kwargs={
-                'submission_upload_id': 1
+                'submission_upload_id': submission_upload.pk
             }
         )
 

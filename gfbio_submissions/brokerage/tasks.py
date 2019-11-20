@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-from pprint import pprint
 
 import celery
 from celery import Task
@@ -17,7 +16,7 @@ from gfbio_submissions.brokerage.exceptions import TransferServerError, \
     TransferClientError
 from gfbio_submissions.brokerage.models import SubmissionUpload
 from gfbio_submissions.brokerage.utils.csv import \
-    check_for_molecular_content
+    check_for_molecular_content, parse_molecular_csv
 from gfbio_submissions.brokerage.utils.gfbio import get_gfbio_helpdesk_username
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.brokerage.utils.task_utils import jira_error_auto_retry, \
@@ -334,7 +333,8 @@ def parse_meta_data_for_update_task(self, submission_upload_id=None):
     # TODO: re-create xml and update_or_create AuditableTextData with new XML
 
     try:
-        submission_upload = SubmissionUpload.objects.get(pk=submission_upload_id)
+        submission_upload = SubmissionUpload.objects.get(
+            pk=submission_upload_id)
     except SubmissionUpload.DoesNotExist as e:
         logger.error(
             'tasks.py | parse_meta_data_for_update_task | '
@@ -343,9 +343,64 @@ def parse_meta_data_for_update_task(self, submission_upload_id=None):
         # logger.info('tasks.py | SubmissionTask | on_retry | task_id={0} | '
         #             'name={1}'.format(task_id, self.name))
         return TaskProgressReport.CANCELLED
-    data = submission_upload.submission.data if submission_upload.submission else {}
-    pprint(data)
+    if submission_upload.submission is None:
+        return TaskProgressReport.CANCELLED
 
+    with transaction.atomic():
+        data = submission_upload.submission.data
+
+        molecular_requirements_keys = ['study_type', 'samples', 'experiments']
+        if 'validation' in data.keys():
+            data.pop('validation')
+        for k in molecular_requirements_keys:
+            if k in data.get('requirements', {}).keys():
+                data.get('requirements', {}).pop(k)
+
+        # print('\n#############################')
+        # pprint(data)
+        # print(submission_upload.submission.brokerobject_set.all())
+        submission_upload.submission.brokerobject_set.all().delete()
+
+        with open(submission_upload.file.path, 'r') as file:
+            molecular_requirements = parse_molecular_csv(
+                file,
+            )
+        data['requirements'].update(molecular_requirements)
+        submission_upload.submission.data = data
+        submission_upload.submission.save()
+
+        # print('\n#############################')
+        # pprint(submission_upload.submission.data['requirements'])
+        # print(submission_upload.submission.brokerobject_set.all())
+
+        BrokerObject.objects.add_submission_data(submission_upload.submission)
+
+        ena_submission_data = prepare_ena_data(
+            submission=submission_upload.submission)
+    
+        print('\n#############################')
+        print(submission_upload.submission.auditabletextdata_set.all())
+
+        for d in ena_submission_data:
+            filename, filecontent = ena_submission_data[d]
+            # with transaction.atomic():
+            # obj, created = AuditableTextData.objects.update_or_create(
+            #     name=filename,
+            #     # submission=submission_upload.submission,
+            #     # text_data=filecontent
+            #     defaults={'submission': submission_upload.submission,
+            #               'text_data': filecontent}
+            # )
+            obj, created = submission_upload.submission.auditabletextdata_set.update_or_create(
+                name=filename,
+                defaults={'text_data': filecontent}
+            )
+            print('created ', created, ' obj ', obj)
+
+        print('\n#############################')
+        # print(submission_upload.submission.auditabletextdata_set.all())
+        for a in submission_upload.submission.auditabletextdata_set.all():
+            print('\n', a.name, ' ', a.submission)
 
 
 # TODO: result of this task is input for next task
