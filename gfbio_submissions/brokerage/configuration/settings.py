@@ -117,7 +117,6 @@ JIRA_FALLBACK_USERNAME = getattr(
     'brokeragent'
 )
 
-
 # https://helpdesk.gfbio.org/secure/ViewProfile.jspa?name=brokeragent
 JIRA_FALLBACK_EMAIL = getattr(
     settings,
@@ -291,6 +290,16 @@ GFBIO_REQUEST_TYPE_MAPPINGS = getattr(
     {
         'ENA – European Nucleotide Archive': 'molecular',
         'default': 'generic'
+    }
+)
+
+MOLECULAR_REQUIREMENTS = getattr(
+    settings,
+    'MOLECULAR_REQUIREMENTS',
+    {
+        'study_type': 'Other',
+        'samples': [],
+        'experiments': [],
     }
 )
 

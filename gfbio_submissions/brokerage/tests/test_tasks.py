@@ -2,6 +2,7 @@
 import base64
 import json
 import uuid
+from pprint import pprint
 from unittest import skip
 from unittest.mock import patch
 from urllib.parse import quote
@@ -10,6 +11,7 @@ from uuid import uuid4
 import responses
 from celery import chain
 from django.contrib.auth.models import Permission
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
@@ -34,8 +36,10 @@ from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, 
     add_accession_to_pangaea_issue_task, check_for_pangaea_doi_task, \
     trigger_submission_transfer, \
     delete_submission_issue_attachment_task, add_posted_comment_to_issue_task, \
-    update_submission_issue_task, get_gfbio_helpdesk_username_task
+    update_submission_issue_task, get_gfbio_helpdesk_username_task, \
+    parse_meta_data_for_update_task
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
+from gfbio_submissions.brokerage.tests.test_utils import TestCSVParsing
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_ena_xml_response, \
     _get_ena_error_xml_response, _get_jira_attach_response, \
@@ -1288,6 +1292,46 @@ class TestGFBioHelpDeskTasks(TestTasks):
         self.assertEqual(TaskProgressReport.CANCELLED,
                          tpr.first().task_return_value)
         self.assertEqual('502', tpr.first().task_exception)
+
+
+class TestParseMetaDataForUpdateTask(TestTasks):
+
+    @classmethod
+    def _add_submission_upload(cls):
+        TestCSVParsing.create_csv_submission_upload(
+            Submission.objects.first(),
+            User.objects.first(),
+            'csv_files/SO45_mod.csv'
+        )
+
+    def test_parse_meta_data_for_update_task(self):
+        self._add_submission_upload()
+        submission_upload = SubmissionUpload.objects.first()
+        print(submission_upload)
+        print(submission_upload.submission)
+
+        result = parse_meta_data_for_update_task.apply_async(
+            kwargs={
+                'submission_upload_id': 1
+            }
+        )
+
+        # TODO: add unit test for this case
+        # result = parse_meta_data_for_update_task.apply_async(
+        #     kwargs={
+        #         'submission_upload_id': 9999
+        #     }
+        # )
+
+        # TODO: add unit test for this case
+        # submission_upload.submission = None
+        # submission_upload.save(ignore_attach_to_ticket=True)
+        #
+        # result = parse_meta_data_for_update_task.apply_async(
+        #     kwargs={
+        #         'submission_upload_id': 1
+        #     }
+        # )
 
 
 class TestGetHelpDeskUserTask(TestTasks):

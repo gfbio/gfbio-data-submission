@@ -189,12 +189,23 @@ class PrimaryDataFileAdmin(admin.ModelAdmin):
     pass
 
 
+def reparse_csv_metadata(modeladmin, request, queryset):
+    for obj in queryset:
+        submission_upload = SubmissionUpload.objects.get(pk=obj.pk)
+
+
+reparse_csv_metadata.short_description = 'Re-parse csv Metadata for updated XML data'
+
+
 class SubmissionUploadAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'meta_data', 'site', 'user', 'attachment_id',
                     'attach_to_ticket')
     date_hierarchy = 'created'
     list_filter = ('site', 'meta_data', 'attach_to_ticket')
     search_fields = ['submission__broker_submission_id']
+    actions = [
+        reparse_csv_metadata,
+    ]
 
 
 class TaskProgressReportAdmin(admin.ModelAdmin):

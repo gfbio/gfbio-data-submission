@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+from pprint import pprint
 
 import celery
 from celery import Task
@@ -14,6 +15,7 @@ from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA,
     JIRA_FALLBACK_EMAIL
 from gfbio_submissions.brokerage.exceptions import TransferServerError, \
     TransferClientError
+from gfbio_submissions.brokerage.models import SubmissionUpload
 from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content
 from gfbio_submissions.brokerage.utils.gfbio import get_gfbio_helpdesk_username
@@ -304,6 +306,46 @@ def prepare_ena_submission_data_task(self, prev_task_result=None,
                                            submission_id)
         )
         return TaskProgressReport.CANCELLED
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.parse_meta_data_for_update_task',
+    # autoretry_for=(TransferServerError,
+    #                TransferClientError
+    #                ),
+    # retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
+    # retry_backoff=SUBMISSION_RETRY_DELAY,
+    # retry_jitter=True
+)
+def parse_meta_data_for_update_task(self, submission_upload_id=None):
+    # TODO: remove/empty 'validation' field of submission.data
+    # TODO: remove molecular_requirements before checking for a second time ?
+    #  dict.update ? https://docs.python.org/3/library/stdtypes.html#dict.update
+    #   Update the dictionary with the key/value pairs from other,
+    #   overwriting existing keys. Return None.
+    #   ---> NO SINCE: submission.data.get('requirements', {}).update(molecular_requirements) in csv.py
+    #   ---> BUT IF: second run with updated file results in errors, then the old valued would be present
+    #   ---> CLEAN: remove as defined in TODOs
+
+    # TODO: delete all BrokerObjects for this submission
+
+    # TODO: re-create xml and update_or_create AuditableTextData with new XML
+
+    try:
+        submission_upload = SubmissionUpload.objects.get(pk=submission_upload_id)
+    except SubmissionUpload.DoesNotExist as e:
+        logger.error(
+            'tasks.py | parse_meta_data_for_update_task | '
+            'no SubmissionUpload found | '
+            'submission_upload_id={0}'.format(submission_upload_id))
+        # logger.info('tasks.py | SubmissionTask | on_retry | task_id={0} | '
+        #             'name={1}'.format(task_id, self.name))
+        return TaskProgressReport.CANCELLED
+    data = submission_upload.submission.data if submission_upload.submission else {}
+    pprint(data)
+
 
 
 # TODO: result of this task is input for next task

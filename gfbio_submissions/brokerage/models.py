@@ -617,6 +617,7 @@ class SubmissionUpload(TimeStampedModel):
     )
     file = models.FileField(
         upload_to=submission_upload_path,
+        # storage=OverwriteStorage(),
         help_text='The actual file uploaded.',
     )
 

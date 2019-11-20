@@ -9,7 +9,8 @@ import dpath
 from django.utils.encoding import smart_text
 from shortid import ShortId
 
-from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA
+from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA, \
+    MOLECULAR_REQUIREMENTS
 from gfbio_submissions.brokerage.utils.schema_validation import \
     validate_data_full
 
@@ -155,15 +156,11 @@ def parse_molecular_csv(csv_file):
         restkey='extra_columns_found',
         restval='extra_value_found',
     )
-    molecular_requirements = {
-        'study_type': 'Other',
-        'samples': [],
-        'experiments': [],
-    }
+
     try:
         field_names = csv_reader.fieldnames
     except _csv.Error as e:
-        return molecular_requirements
+        return MOLECULAR_REQUIREMENTS
     short_id = ShortId()
     for row in csv_reader:
         # every row is one sample (except header)
@@ -171,13 +168,13 @@ def parse_molecular_csv(csv_file):
         experiment_id = short_id.generate()
         sample = extract_sample(row, field_names, sample_id)
         experiment = extract_experiment(experiment_id, row, sample_id)
-        molecular_requirements['samples'].append(
+        MOLECULAR_REQUIREMENTS['samples'].append(
             sample
         )
-        molecular_requirements['experiments'].append(
+        MOLECULAR_REQUIREMENTS['experiments'].append(
             experiment
         )
-    return molecular_requirements
+    return MOLECULAR_REQUIREMENTS
 
 
 # TODO: may move to other location, perhaps model, serializer or manager method
@@ -223,10 +220,10 @@ def check_for_molecular_content(submission):
             ]
         meta_data_file = meta_data_files.first()
         with open(meta_data_file.file.path, 'r') as file:
-            molecular_requirements = parse_molecular_csv(
+            MOLECULAR_REQUIREMENTS = parse_molecular_csv(
                 file,
             )
-        submission.data.get('requirements', {}).update(molecular_requirements)
+        submission.data.get('requirements', {}).update(MOLECULAR_REQUIREMENTS)
         path = os.path.join(
             os.getcwd(),
             'gfbio_submissions/brokerage/schemas/ena_requirements.json')
