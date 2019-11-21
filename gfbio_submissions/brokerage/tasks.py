@@ -352,6 +352,8 @@ def parse_meta_data_for_update_task(self, submission_upload_id=None):
             ''.format(submission_upload.submission.broker_submission_id))
         submission_upload.submission.brokerobject_set.all().delete()
 
+        # ------------------------------------------------------
+
         logger.info(
             'tasks.py | parse_meta_data_for_update_task | '
             'parse metadata and save to submission={0} '
@@ -393,26 +395,21 @@ def parse_meta_data_for_update_task(self, submission_upload_id=None):
 )
 def clean_submission_for_update_task(self, previous_task_result=None,
                                      submission_upload_id=None):
+    submission_upload = SubmissionUpload.objects.get_linked_submission_upload(
+        submission_upload_id)
+
     if previous_task_result == TaskProgressReport.CANCELLED:
-        logger.warining(
+        logger.warning(
             'tasks.py | clean_submission_for_update_task | '
             'previous task reported={0} | '
             'submission_upload_id={1}'.format(TaskProgressReport.CANCELLED,
                                               submission_upload_id))
         return TaskProgressReport.CANCELLED
-    try:
-        submission_upload = SubmissionUpload.objects.get(
-            pk=submission_upload_id)
-    except SubmissionUpload.DoesNotExist as e:
+
+    if submission_upload is None:
         logger.error(
             'tasks.py | clean_submission_for_update_task | '
-            'no SubmissionUpload found | '
-            'submission_upload_id={0}'.format(submission_upload_id))
-        return TaskProgressReport.CANCELLED
-    if submission_upload.submission is None:
-        logger.error(
-            'tasks.py | clean_submission_for_update_task | '
-            'no Submission for SubmissionUpload available | '
+            'no valid SubmissionUpload available | '
             'submission_upload_id={0}'.format(submission_upload_id))
         return TaskProgressReport.CANCELLED
 
@@ -437,6 +434,42 @@ def clean_submission_for_update_task(self, previous_task_result=None,
             'delete brokerobjects related to submission={0} '
             ''.format(submission_upload.submission.broker_submission_id))
         submission_upload.submission.brokerobject_set.all().delete()
+        return True
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.parse_csv_to_update_clean_submission_task',
+)
+def parse_csv_to_update_clean_submission_task(self, previous_task_result=None,
+                                              submission_upload_id=None):
+    submission_upload = SubmissionUpload.objects.get_linked_submission_upload(
+        submission_upload_id)
+
+    if previous_task_result == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | parse_csv_to_update_clean_submission_task | '
+            'previous task reported={0} | '
+            'submission_upload_id={1}'.format(TaskProgressReport.CANCELLED,
+                                              submission_upload_id))
+        return TaskProgressReport.CANCELLED
+
+    if submission_upload is None:
+        logger.error(
+            'tasks.py | parse_csv_to_update_clean_submission_task | '
+            'no valid SubmissionUpload available | '
+            'submission_upload_id={0}'.format(submission_upload_id))
+        return TaskProgressReport.CANCELLED
+
+    with open(submission_upload.file.path, 'r') as file:
+        molecular_requirements = parse_molecular_csv(
+            file,
+        )
+    submission_upload.submission.data['requirements'].update(
+        molecular_requirements)
+    submission_upload.submission.save()
+    return True
 
 
 # TODO: result of this task is input for next task

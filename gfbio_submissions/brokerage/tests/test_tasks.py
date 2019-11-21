@@ -1384,8 +1384,8 @@ class TestParseMetaDataForUpdateTask(TestTasks):
             data=ena_submission_data)
 
         # TODO: rerfator to chain !
-        # 1. clean data
-        # 2. parse csv and update related submission
+        # 1. clean data DONE
+        # 2. parse csv and update related submission DONE
         # 3. create_broker_objects_from_submission_data_task (does delete before create)
         # 4. create ena-data from submission data and update or create auditable text data
 
@@ -1396,10 +1396,20 @@ class TestParseMetaDataForUpdateTask(TestTasks):
         #     submission_id=submission.id).set(
         #     countdown=SUBMISSION_DELAY)
         from gfbio_submissions.brokerage.tasks import \
-            clean_submission_for_update_task
-        reparse_chain = clean_submission_for_update_task.s(
-            submission_upload_id=submission_upload.id,
-        ).set(countdown=SUBMISSION_DELAY)
+            clean_submission_for_update_task, \
+            parse_csv_to_update_clean_submission_task, \
+            create_broker_objects_from_submission_data_task
+        reparse_chain = \
+            clean_submission_for_update_task.s(
+                submission_upload_id=submission_upload.id,
+            ).set(countdown=SUBMISSION_DELAY) | \
+            parse_csv_to_update_clean_submission_task.s(
+                submission_upload_id=submission_upload.id,
+            ).set(countdown=SUBMISSION_DELAY) | \
+            create_broker_objects_from_submission_data_task.s(
+                submission_id=SubmissionUpload.objects.get_related_submission_id(
+                    submission_upload.id)
+            ).set(countdown=SUBMISSION_DELAY)
 
         reparse_chain()
 
