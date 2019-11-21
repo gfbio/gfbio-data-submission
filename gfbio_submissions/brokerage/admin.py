@@ -190,15 +190,37 @@ class PrimaryDataFileAdmin(admin.ModelAdmin):
 
 
 def reparse_csv_metadata(modeladmin, request, queryset):
+    # from gfbio_submissions.brokerage.tasks import \
+    #     parse_meta_data_for_update_task
+    # for obj in queryset:
+    #     parse_meta_data_for_update_task.apply_async(
+    #         kwargs={
+    #             'submission_upload_id': obj.pk,
+    #         },
+    #         countdown=SUBMISSION_DELAY,
+    #     )
     from gfbio_submissions.brokerage.tasks import \
-        parse_meta_data_for_update_task
+        clean_submission_for_update_task, \
+        parse_csv_to_update_clean_submission_task, \
+        create_broker_objects_from_submission_data_task, \
+        update_ena_submission_data_task
     for obj in queryset:
-        parse_meta_data_for_update_task.apply_async(
-            kwargs={
-                'submission_upload_id': obj.pk,
-            },
-            countdown=SUBMISSION_DELAY,
-        )
+        submission_upload_id = obj.id
+        rebuild_from_csv_metadata_chain = \
+            clean_submission_for_update_task.s(
+                submission_upload_id=submission_upload_id,
+            ).set(countdown=SUBMISSION_DELAY) | \
+            parse_csv_to_update_clean_submission_task.s(
+                submission_upload_id=submission_upload_id,
+            ).set(countdown=SUBMISSION_DELAY) | \
+            create_broker_objects_from_submission_data_task.s(
+                submission_id=SubmissionUpload.objects.get_related_submission_id(
+                    submission_upload_id)
+            ).set(countdown=SUBMISSION_DELAY) | \
+            update_ena_submission_data_task.s(
+                submission_upload_id=submission_upload_id,
+            ).set(countdown=SUBMISSION_DELAY)
+        rebuild_from_csv_metadata_chain()
 
 
 reparse_csv_metadata.short_description = 'Re-parse csv metadata to get updated XMLs'

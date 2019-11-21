@@ -34,8 +34,7 @@ from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, 
     add_accession_to_pangaea_issue_task, check_for_pangaea_doi_task, \
     trigger_submission_transfer, \
     delete_submission_issue_attachment_task, add_posted_comment_to_issue_task, \
-    update_submission_issue_task, get_gfbio_helpdesk_username_task, \
-    parse_meta_data_for_update_task
+    update_submission_issue_task, get_gfbio_helpdesk_username_task
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.test_utils import TestCSVParsing
 from gfbio_submissions.brokerage.tests.utils import \
@@ -1304,75 +1303,75 @@ class TestParseMetaDataForUpdateTask(TestTasks):
             'csv_files/SO45_mod.csv'
         )
 
-    def test_parse_meta_data_for_update_task(self):
-        self._add_submission_upload()
-        submission_upload = SubmissionUpload.objects.first()
-        ena_submission_data = prepare_ena_data(
-            submission=submission_upload.submission)
-        store_ena_data_as_auditable_text_data(
-            submission=submission_upload.submission,
-            data=ena_submission_data)
-
-        samples = submission_upload.submission.auditabletextdata_set.filter(
-            name='sample.xml')
-        self.assertIn(
-            '<SAMPLE alias="2:{0}'.format(
-                submission_upload.submission.broker_submission_id),
-            samples.first().text_data)
-
-        result = parse_meta_data_for_update_task.apply_async(
-            kwargs={
-                'submission_upload_id': submission_upload.pk
-            }
-        )
-
-        self.assertTrue(result.get())
-
-        samples = submission_upload.submission.auditabletextdata_set.filter(
-            name='sample.xml')
-        self.assertNotIn(
-            '<SAMPLE alias="2:{0}'.format(
-                submission_upload.submission.broker_submission_id),
-            samples.first().text_data)
-        self.assertIn(
-            '<SAMPLE alias="12:{0}"'.format(
-                submission_upload.submission.broker_submission_id),
-            samples.first().text_data)
-
-    def test_invalid_submission_upload_id(self):
-        result = parse_meta_data_for_update_task.apply_async(
-            kwargs={
-                'submission_upload_id': 9999
-            }
-        )
-        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
-
-    def test_no_submission(self):
-        self._add_submission_upload()
-        submission_upload = SubmissionUpload.objects.first()
-        submission_upload.submission = None
-        submission_upload.save(ignore_attach_to_ticket=True)
-
-        result = parse_meta_data_for_update_task.apply_async(
-            kwargs={
-                'submission_upload_id': submission_upload.pk
-            }
-        )
-        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
-
-    def test_empty_data_in_submission(self):
-        self._add_submission_upload()
-        submission_upload = SubmissionUpload.objects.first()
-        submission_upload.submission.data = {}
-        submission_upload.submission.save()
-
-        result = parse_meta_data_for_update_task.apply_async(
-            kwargs={
-                'submission_upload_id': submission_upload.pk
-            }
-        )
-
-        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+    # def test_parse_meta_data_for_update_task(self):
+    #     self._add_submission_upload()
+    #     submission_upload = SubmissionUpload.objects.first()
+    #     ena_submission_data = prepare_ena_data(
+    #         submission=submission_upload.submission)
+    #     store_ena_data_as_auditable_text_data(
+    #         submission=submission_upload.submission,
+    #         data=ena_submission_data)
+    #
+    #     samples = submission_upload.submission.auditabletextdata_set.filter(
+    #         name='sample.xml')
+    #     self.assertIn(
+    #         '<SAMPLE alias="2:{0}'.format(
+    #             submission_upload.submission.broker_submission_id),
+    #         samples.first().text_data)
+    #
+    #     result = parse_meta_data_for_update_task.apply_async(
+    #         kwargs={
+    #             'submission_upload_id': submission_upload.pk
+    #         }
+    #     )
+    #
+    #     self.assertTrue(result.get())
+    #
+    #     samples = submission_upload.submission.auditabletextdata_set.filter(
+    #         name='sample.xml')
+    #     self.assertNotIn(
+    #         '<SAMPLE alias="2:{0}'.format(
+    #             submission_upload.submission.broker_submission_id),
+    #         samples.first().text_data)
+    #     self.assertIn(
+    #         '<SAMPLE alias="12:{0}"'.format(
+    #             submission_upload.submission.broker_submission_id),
+    #         samples.first().text_data)
+    #
+    # def test_invalid_submission_upload_id(self):
+    #     result = parse_meta_data_for_update_task.apply_async(
+    #         kwargs={
+    #             'submission_upload_id': 9999
+    #         }
+    #     )
+    #     self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+    #
+    # def test_no_submission(self):
+    #     self._add_submission_upload()
+    #     submission_upload = SubmissionUpload.objects.first()
+    #     submission_upload.submission = None
+    #     submission_upload.save(ignore_attach_to_ticket=True)
+    #
+    #     result = parse_meta_data_for_update_task.apply_async(
+    #         kwargs={
+    #             'submission_upload_id': submission_upload.pk
+    #         }
+    #     )
+    #     self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+    #
+    # def test_empty_data_in_submission(self):
+    #     self._add_submission_upload()
+    #     submission_upload = SubmissionUpload.objects.first()
+    #     submission_upload.submission.data = {}
+    #     submission_upload.submission.save()
+    #
+    #     result = parse_meta_data_for_update_task.apply_async(
+    #         kwargs={
+    #             'submission_upload_id': submission_upload.pk
+    #         }
+    #     )
+    #
+    #     self.assertEqual(TaskProgressReport.CANCELLED, result.get())
 
     def test_chain_version(self):
         self._add_submission_upload()

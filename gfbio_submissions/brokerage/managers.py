@@ -7,6 +7,8 @@ from django.db import models, transaction
 from django.db.models import Q
 from django.utils.encoding import smart_text
 
+from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA
+
 logger = logging.getLogger(__name__)
 
 
@@ -413,9 +415,11 @@ class SubmissionUploadManager(models.Manager):
             return None
         return submission_upload
 
-    def get_linked_submission_upload(self, submission_upload_id):
+    def get_linked_molecular_submission_upload(self, submission_upload_id):
         submission_upload = self.get_upload_with_related_submission(submission_upload_id)
         if submission_upload is None:
+            return None
+        if submission_upload.submission.target != ENA and submission_upload.submission.target != ENA_PANGAEA:
             return None
         if 'requirements' not in submission_upload.submission.data.keys():
             return None
