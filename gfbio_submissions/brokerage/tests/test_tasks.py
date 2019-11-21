@@ -1383,6 +1383,13 @@ class TestParseMetaDataForUpdateTask(TestTasks):
             submission=submission_upload.submission,
             data=ena_submission_data)
 
+        samples = submission_upload.submission.auditabletextdata_set.filter(
+            name='sample.xml')
+        self.assertIn(
+            '<SAMPLE alias="2:{0}'.format(
+                submission_upload.submission.broker_submission_id),
+            samples.first().text_data)
+
         # TODO: rerfator to chain !
         # 1. clean data DONE
         # 2. parse csv and update related submission DONE
@@ -1398,7 +1405,8 @@ class TestParseMetaDataForUpdateTask(TestTasks):
         from gfbio_submissions.brokerage.tasks import \
             clean_submission_for_update_task, \
             parse_csv_to_update_clean_submission_task, \
-            create_broker_objects_from_submission_data_task
+            create_broker_objects_from_submission_data_task, \
+            update_ena_submission_data_task
         reparse_chain = \
             clean_submission_for_update_task.s(
                 submission_upload_id=submission_upload.id,
@@ -1409,9 +1417,23 @@ class TestParseMetaDataForUpdateTask(TestTasks):
             create_broker_objects_from_submission_data_task.s(
                 submission_id=SubmissionUpload.objects.get_related_submission_id(
                     submission_upload.id)
+            ).set(countdown=SUBMISSION_DELAY) | \
+            update_ena_submission_data_task.s(
+                submission_upload_id=submission_upload.id,
             ).set(countdown=SUBMISSION_DELAY)
 
         reparse_chain()
+
+        samples = submission_upload.submission.auditabletextdata_set.filter(
+            name='sample.xml')
+        self.assertNotIn(
+            '<SAMPLE alias="2:{0}'.format(
+                submission_upload.submission.broker_submission_id),
+            samples.first().text_data)
+        self.assertIn(
+            '<SAMPLE alias="12:{0}"'.format(
+                submission_upload.submission.broker_submission_id),
+            samples.first().text_data)
 
 
 class TestGetHelpDeskUserTask(TestTasks):

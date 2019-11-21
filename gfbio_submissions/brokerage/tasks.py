@@ -307,6 +307,47 @@ def prepare_ena_submission_data_task(self, prev_task_result=None,
         return TaskProgressReport.CANCELLED
 
 
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.update_ena_submission_data_task',
+)
+def update_ena_submission_data_task(self, previous_task_result=None,
+                                    submission_upload_id=None):
+    submission_upload = SubmissionUpload.objects.get_linked_submission_upload(
+        submission_upload_id)
+
+    if previous_task_result == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | update_ena_submission_data_task | '
+            'previous task reported={0} | '
+            'submission_upload_id={1}'.format(TaskProgressReport.CANCELLED,
+                                              submission_upload_id))
+        return TaskProgressReport.CANCELLED
+
+    if submission_upload is None:
+        logger.error(
+            'tasks.py | update_ena_submission_data_task | '
+            'no valid SubmissionUpload available | '
+            'submission_upload_id={0}'.format(submission_upload_id))
+        return TaskProgressReport.CANCELLED
+    ena_submission_data = prepare_ena_data(
+        submission=submission_upload.submission)
+
+    logger.info(
+        'tasks.py | update_ena_submission_data_task | '
+        'update AuditableTextData related to submission={0} '
+        ''.format(submission_upload.submission.broker_submission_id))
+    with transaction.atomic():
+        for d in ena_submission_data:
+            filename, filecontent = ena_submission_data[d]
+            obj, created = submission_upload.submission.auditabletextdata_set.update_or_create(
+                name=filename,
+                defaults={'text_data': filecontent}
+            )
+        return True
+
+
 # TODO: replace with chain of tasks
 @celery.task(
     base=SubmissionTask,
@@ -434,7 +475,7 @@ def clean_submission_for_update_task(self, previous_task_result=None,
             'delete brokerobjects related to submission={0} '
             ''.format(submission_upload.submission.broker_submission_id))
         submission_upload.submission.brokerobject_set.all().delete()
-        return True
+    return True
 
 
 @celery.task(
@@ -466,9 +507,10 @@ def parse_csv_to_update_clean_submission_task(self, previous_task_result=None,
         molecular_requirements = parse_molecular_csv(
             file,
         )
-    submission_upload.submission.data['requirements'].update(
-        molecular_requirements)
-    submission_upload.submission.save()
+    with transaction.atomic():
+        submission_upload.submission.data['requirements'].update(
+            molecular_requirements)
+        submission_upload.submission.save()
     return True
 
 
