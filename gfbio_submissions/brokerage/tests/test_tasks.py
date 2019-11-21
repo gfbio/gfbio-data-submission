@@ -2,6 +2,7 @@
 import base64
 import json
 import uuid
+from pprint import pprint
 from unittest import skip
 from unittest.mock import patch
 from urllib.parse import quote
@@ -1429,9 +1430,12 @@ class TestParseMetaDataForUpdateTask(TestTasks):
                 submission_upload.submission.broker_submission_id),
             samples.first().text_data)
 
-    # TODO: add tests for negative outcome: no submission, no reqs etc
+    # TODO: add tests for negative outcome: no submission, no reqs, prev_res = CANCELLED etc
     def test_clean_submission_for_update_task(self):
         submission_upload = self._prepare_submission_upload_task_test_data()
+        requirements = submission_upload.submission.data.get('requirements', {})
+        self.assertIn('experiments', requirements.keys())
+        self.assertIn('samples', requirements.keys())
         result = clean_submission_for_update_task.apply_async(
             kwargs={
                 'submission_upload_id': submission_upload.pk
@@ -1448,7 +1452,28 @@ class TestParseMetaDataForUpdateTask(TestTasks):
         submission_upload = SubmissionUpload.objects.first()
         self.assertDictEqual(expected_data, submission_upload.submission.data)
 
-    # def test
+    # TODO: add tests, compare TODO above. test for valid / invalid csv
+    def test_parse_csv_to_update_clean_submission_task(self):
+        submission_upload = self._prepare_submission_upload_task_test_data()
+        clean_submission_for_update_task.apply_async(
+            kwargs={
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+        result = parse_csv_to_update_clean_submission_task.apply_async(
+            kwargs={
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+        self.assertTrue(result.get())
+
+        submission_upload = SubmissionUpload.objects.first()
+        requirements = submission_upload.submission.data.get('requirements', {})
+
+        self.assertIn('experiments', requirements.keys())
+        self.assertGreater(len(requirements.get('experiments', [])), 0)
+        self.assertIn('samples', requirements.keys())
+        self.assertGreater(len(requirements.get('samples', [])), 0)
 
 
 class TestGetHelpDeskUserTask(TestTasks):
