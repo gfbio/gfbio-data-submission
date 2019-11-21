@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from pprint import pprint
 
 import celery
 from celery import Task
@@ -259,8 +258,6 @@ def create_broker_objects_from_submission_data_task(
     try:
         with transaction.atomic():
             submission.brokerobject_set.all().delete()
-            print('CREATE_BROKER_OBJECTS_FROM_SUBMISSION_DATA_TASK')
-            pprint(submission.data)
             BrokerObject.objects.add_submission_data(submission)
             return True
     except IntegrityError as e:
@@ -347,12 +344,12 @@ def update_ena_submission_data_task(self, previous_task_result=None,
             'submission_upload_id={0}'.format(submission_upload_id))
         return TaskProgressReport.CANCELLED
 
-    print('\n-----------------------------------\n')
-    bos = submission_upload.submission.brokerobject_set.all()
-    print(bos)
-    for b in bos:
-        print('\n', b.type, ' ', b.submissions)
-        pprint(b.data)
+    # print('\n-----------------------------------\n')
+    # bos = submission_upload.submission.brokerobject_set.all()
+    # print(bos)
+    # for b in bos:
+    #     print('\n', b.type, ' ', b.submissions)
+    #     pprint(b.data)
 
     ena_submission_data = prepare_ena_data(
         submission=submission_upload.submission)
@@ -369,87 +366,6 @@ def update_ena_submission_data_task(self, previous_task_result=None,
                 defaults={'text_data': filecontent}
             )
         return True
-
-
-# TODO: replace with chain of tasks
-# @celery.task(
-#     base=SubmissionTask,
-#     bind=True,
-#     name='tasks.parse_meta_data_for_update_task',
-# )
-# def parse_meta_data_for_update_task(self, submission_upload_id=None):
-#     try:
-#         submission_upload = SubmissionUpload.objects.get(
-#             pk=submission_upload_id)
-#     except SubmissionUpload.DoesNotExist as e:
-#         logger.error(
-#             'tasks.py | parse_meta_data_for_update_task | '
-#             'no SubmissionUpload found | '
-#             'submission_upload_id={0}'.format(submission_upload_id))
-#         return TaskProgressReport.CANCELLED
-#     if submission_upload.submission is None:
-#         logger.error(
-#             'tasks.py | parse_meta_data_for_update_task | '
-#             'no Submission for SubmissionUpload available | '
-#             'submission_upload_id={0}'.format(submission_upload_id))
-#         return TaskProgressReport.CANCELLED
-#
-#     data = submission_upload.submission.data
-#     if 'requirements' not in data.keys():
-#         logger.error(
-#             'tasks.py | parse_meta_data_for_update_task | '
-#             'key "requirements" not found in submission.data | '
-#             'submission_upload_id={0}'.format(submission_upload_id))
-#         return TaskProgressReport.CANCELLED
-#
-#     molecular_requirements_keys = ['study_type', 'samples', 'experiments']
-#     if 'validation' in data.keys():
-#         data.pop('validation')
-#     for k in molecular_requirements_keys:
-#         if k in data.get('requirements', {}).keys():
-#             data.get('requirements', {}).pop(k)
-#
-#     with transaction.atomic():
-#         logger.info(
-#             'tasks.py | parse_meta_data_for_update_task | '
-#             'delete brokerobjects related to submission={0} '
-#             ''.format(submission_upload.submission.broker_submission_id))
-#         submission_upload.submission.brokerobject_set.all().delete()
-#
-#         # ------------------------------------------------------
-#
-#         logger.info(
-#             'tasks.py | parse_meta_data_for_update_task | '
-#             'parse metadata and save to submission={0} '
-#             ''.format(submission_upload.submission.broker_submission_id))
-#         with open(submission_upload.file.path, 'r') as file:
-#             molecular_requirements = parse_molecular_csv(
-#                 file,
-#             )
-#         data['requirements'].update(molecular_requirements)
-#         submission_upload.submission.data = data
-#         submission_upload.submission.save()
-#
-#         logger.info(
-#             'tasks.py | parse_meta_data_for_update_task | '
-#             'add brokerobjects to submission={0} '
-#             ''.format(submission_upload.submission.broker_submission_id))
-#         BrokerObject.objects.add_submission_data(submission_upload.submission)
-#
-#         ena_submission_data = prepare_ena_data(
-#             submission=submission_upload.submission)
-#
-#         logger.info(
-#             'tasks.py | parse_meta_data_for_update_task | '
-#             'update AuditableTextData related to submission={0} '
-#             ''.format(submission_upload.submission.broker_submission_id))
-#         for d in ena_submission_data:
-#             filename, filecontent = ena_submission_data[d]
-#             obj, created = submission_upload.submission.auditabletextdata_set.update_or_create(
-#                 name=filename,
-#                 defaults={'text_data': filecontent}
-#             )
-#         return True
 
 
 @celery.task(

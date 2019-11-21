@@ -2,7 +2,6 @@
 import base64
 import json
 import uuid
-from pprint import pprint
 from unittest import skip
 from unittest.mock import patch
 from urllib.parse import quote
@@ -1317,76 +1316,6 @@ class TestParseMetaDataForUpdateTask(TestTasks):
             data=ena_submission_data)
         return submission_upload
 
-    # def test_parse_meta_data_for_update_task(self):
-    #     self._add_submission_upload()
-    #     submission_upload = SubmissionUpload.objects.first()
-    #     ena_submission_data = prepare_ena_data(
-    #         submission=submission_upload.submission)
-    #     store_ena_data_as_auditable_text_data(
-    #         submission=submission_upload.submission,
-    #         data=ena_submission_data)
-    #
-    #     samples = submission_upload.submission.auditabletextdata_set.filter(
-    #         name='sample.xml')
-    #     self.assertIn(
-    #         '<SAMPLE alias="2:{0}'.format(
-    #             submission_upload.submission.broker_submission_id),
-    #         samples.first().text_data)
-    #
-    #     result = parse_meta_data_for_update_task.apply_async(
-    #         kwargs={
-    #             'submission_upload_id': submission_upload.pk
-    #         }
-    #     )
-    #
-    #     self.assertTrue(result.get())
-    #
-    #     samples = submission_upload.submission.auditabletextdata_set.filter(
-    #         name='sample.xml')
-    #     self.assertNotIn(
-    #         '<SAMPLE alias="2:{0}'.format(
-    #             submission_upload.submission.broker_submission_id),
-    #         samples.first().text_data)
-    #     self.assertIn(
-    #         '<SAMPLE alias="12:{0}"'.format(
-    #             submission_upload.submission.broker_submission_id),
-    #         samples.first().text_data)
-    #
-    # def test_invalid_submission_upload_id(self):
-    #     result = parse_meta_data_for_update_task.apply_async(
-    #         kwargs={
-    #             'submission_upload_id': 9999
-    #         }
-    #     )
-    #     self.assertEqual(TaskProgressReport.CANCELLED, result.get())
-    #
-    # def test_no_submission(self):
-    #     self._add_submission_upload()
-    #     submission_upload = SubmissionUpload.objects.first()
-    #     submission_upload.submission = None
-    #     submission_upload.save(ignore_attach_to_ticket=True)
-    #
-    #     result = parse_meta_data_for_update_task.apply_async(
-    #         kwargs={
-    #             'submission_upload_id': submission_upload.pk
-    #         }
-    #     )
-    #     self.assertEqual(TaskProgressReport.CANCELLED, result.get())
-    #
-    # def test_empty_data_in_submission(self):
-    #     self._add_submission_upload()
-    #     submission_upload = SubmissionUpload.objects.first()
-    #     submission_upload.submission.data = {}
-    #     submission_upload.submission.save()
-    #
-    #     result = parse_meta_data_for_update_task.apply_async(
-    #         kwargs={
-    #             'submission_upload_id': submission_upload.pk
-    #         }
-    #     )
-    #
-    #     self.assertEqual(TaskProgressReport.CANCELLED, result.get())
-
     def test_complete_reparse_chain(self):
         submission_upload = self._prepare_submission_upload_task_test_data()
 
@@ -1397,11 +1326,6 @@ class TestParseMetaDataForUpdateTask(TestTasks):
                 submission_upload.submission.broker_submission_id),
             samples.first().text_data)
 
-        # from gfbio_submissions.brokerage.tasks import \
-        #     clean_submission_for_update_task, \
-        #     parse_csv_to_update_clean_submission_task, \
-        #     create_broker_objects_from_submission_data_task, \
-        #     update_ena_submission_data_task
         reparse_chain = \
             clean_submission_for_update_task.s(
                 submission_upload_id=submission_upload.id,
@@ -1474,6 +1398,66 @@ class TestParseMetaDataForUpdateTask(TestTasks):
         self.assertGreater(len(requirements.get('experiments', [])), 0)
         self.assertIn('samples', requirements.keys())
         self.assertGreater(len(requirements.get('samples', [])), 0)
+
+    def test_update_ena_submission_data_task(self):
+        submission_upload = self._prepare_submission_upload_task_test_data()
+        clean_submission_for_update_task.apply_async(
+            kwargs={
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+        parse_csv_to_update_clean_submission_task.apply_async(
+            kwargs={
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+        create_broker_objects_from_submission_data_task.apply_async(
+            kwargs={
+                'submission_id': SubmissionUpload.objects.get_related_submission_id(
+                    submission_upload.id)
+            }
+        )
+
+        sample = submission_upload.submission.auditabletextdata_set.filter(
+            name='sample.xml')
+        self.assertEqual(1, len(sample))
+        sample = sample.first()
+        self.assertIn('<TITLE>sample title</TITLE>', sample.text_data)
+
+        experiment = submission_upload.submission.auditabletextdata_set.filter(
+            name='experiment.xml')
+        self.assertEqual(1, len(experiment))
+        experiment = experiment.first()
+        self.assertIn(
+            '<PLATFORM><AB><INSTRUMENT_MODEL>AB 3730xL Genetic Analyzer</INSTRUMENT_MODEL></AB></PLATFORM>',
+            experiment.text_data)
+
+        result = update_ena_submission_data_task.apply_async(
+            kwargs={
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+        self.assertTrue(result.get())
+
+        submission_upload = SubmissionUpload.objects.first()
+
+        sample = submission_upload.submission.auditabletextdata_set.filter(
+            name='sample.xml')
+        self.assertEqual(1, len(sample))
+        sample = sample.first()
+        self.assertNotIn('<TITLE>sample title</TITLE>', sample.text_data)
+        self.assertIn('<TITLE>SO245-01-01</TITLE>', sample.text_data)
+
+        experiment = submission_upload.submission.auditabletextdata_set.filter(
+            name='experiment.xml')
+        self.assertEqual(1, len(experiment))
+        experiment = experiment.first()
+        self.assertNotIn(
+            '<PLATFORM><AB><INSTRUMENT_MODEL>AB 3730xL Genetic Analyzer</INSTRUMENT_MODEL></AB></PLATFORM>',
+            experiment.text_data)
+        self.assertIn(
+            '<PLATFORM><ION><INSTRUMENT_MODEL>Ion Torrent PGM</INSTRUMENT_MODEL></ION></PLATFORM>',
+            experiment.text_data)
 
 
 class TestGetHelpDeskUserTask(TestTasks):
