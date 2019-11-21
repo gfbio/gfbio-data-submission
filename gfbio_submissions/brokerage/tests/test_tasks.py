@@ -1395,10 +1395,13 @@ class TestParseMetaDataForUpdateTask(TestTasks):
         #         | create_submission_issue_task.s(
         #     submission_id=submission.id).set(
         #     countdown=SUBMISSION_DELAY)
-        # chain =
+        from gfbio_submissions.brokerage.tasks import \
+            clean_submission_for_update_task
+        reparse_chain = clean_submission_for_update_task.s(
+            submission_upload_id=submission_upload.id,
+        ).set(countdown=SUBMISSION_DELAY)
 
-        # chain()
-
+        reparse_chain()
 
 
 class TestGetHelpDeskUserTask(TestTasks):

@@ -307,6 +307,7 @@ def prepare_ena_submission_data_task(self, prev_task_result=None,
         return TaskProgressReport.CANCELLED
 
 
+# TODO: replace with chain of tasks
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -383,6 +384,59 @@ def parse_meta_data_for_update_task(self, submission_upload_id=None):
                 defaults={'text_data': filecontent}
             )
         return True
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.clean_submission_for_update_task',
+)
+def clean_submission_for_update_task(self, previous_task_result=None,
+                                     submission_upload_id=None):
+    if previous_task_result == TaskProgressReport.CANCELLED:
+        logger.warining(
+            'tasks.py | clean_submission_for_update_task | '
+            'previous task reported={0} | '
+            'submission_upload_id={1}'.format(TaskProgressReport.CANCELLED,
+                                              submission_upload_id))
+        return TaskProgressReport.CANCELLED
+    try:
+        submission_upload = SubmissionUpload.objects.get(
+            pk=submission_upload_id)
+    except SubmissionUpload.DoesNotExist as e:
+        logger.error(
+            'tasks.py | clean_submission_for_update_task | '
+            'no SubmissionUpload found | '
+            'submission_upload_id={0}'.format(submission_upload_id))
+        return TaskProgressReport.CANCELLED
+    if submission_upload.submission is None:
+        logger.error(
+            'tasks.py | clean_submission_for_update_task | '
+            'no Submission for SubmissionUpload available | '
+            'submission_upload_id={0}'.format(submission_upload_id))
+        return TaskProgressReport.CANCELLED
+
+    data = submission_upload.submission.data
+    if 'requirements' not in data.keys():
+        logger.error(
+            'tasks.py | clean_submission_for_update_task | '
+            'key "requirements" not found in submission.data | '
+            'submission_upload_id={0}'.format(submission_upload_id))
+        return TaskProgressReport.CANCELLED
+
+    molecular_requirements_keys = ['study_type', 'samples', 'experiments']
+    if 'validation' in data.keys():
+        data.pop('validation')
+    for k in molecular_requirements_keys:
+        if k in data.get('requirements', {}).keys():
+            data.get('requirements', {}).pop(k)
+
+    with transaction.atomic():
+        logger.info(
+            'tasks.py | clean_submission_for_update_task | '
+            'delete brokerobjects related to submission={0} '
+            ''.format(submission_upload.submission.broker_submission_id))
+        submission_upload.submission.brokerobject_set.all().delete()
 
 
 # TODO: result of this task is input for next task
