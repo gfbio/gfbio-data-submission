@@ -403,6 +403,7 @@ class AuditableTextDataManager(models.Manager):
         return res
 
 
+# TODO: add tests
 class SubmissionUploadManager(models.Manager):
 
     def get_upload_with_related_submission(self, submission_upload_id):

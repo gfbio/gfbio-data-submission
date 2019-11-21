@@ -236,11 +236,11 @@ class SubmissionUploadAdmin(admin.ModelAdmin):
         reparse_csv_metadata,
     ]
 
-    def save_model(self, request, obj, form, change):
-        # obj.added_by = request.user
-        print('ADMIN save model ', obj.pk)
-        # or obj.save with params like ignore-attach
-        super().save_model(request, obj, form, change)
+    # def save_model(self, request, obj, form, change):
+    #     # obj.added_by = request.user
+    #     print('ADMIN save model ', obj.pk)
+    #     # or obj.save with params like ignore-attach
+    #     super().save_model(request, obj, form, change)
 
 
 class TaskProgressReportAdmin(admin.ModelAdmin):

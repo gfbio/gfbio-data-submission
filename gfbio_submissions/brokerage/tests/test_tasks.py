@@ -34,7 +34,9 @@ from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, 
     add_accession_to_pangaea_issue_task, check_for_pangaea_doi_task, \
     trigger_submission_transfer, \
     delete_submission_issue_attachment_task, add_posted_comment_to_issue_task, \
-    update_submission_issue_task, get_gfbio_helpdesk_username_task
+    update_submission_issue_task, get_gfbio_helpdesk_username_task, \
+    clean_submission_for_update_task, parse_csv_to_update_clean_submission_task, \
+    update_ena_submission_data_task
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.test_utils import TestCSVParsing
 from gfbio_submissions.brokerage.tests.utils import \
@@ -1303,6 +1305,17 @@ class TestParseMetaDataForUpdateTask(TestTasks):
             'csv_files/SO45_mod.csv'
         )
 
+    @classmethod
+    def _prepare_submission_upload_task_test_data(cls):
+        cls._add_submission_upload()
+        submission_upload = SubmissionUpload.objects.first()
+        ena_submission_data = prepare_ena_data(
+            submission=submission_upload.submission)
+        store_ena_data_as_auditable_text_data(
+            submission=submission_upload.submission,
+            data=ena_submission_data)
+        return submission_upload
+
     # def test_parse_meta_data_for_update_task(self):
     #     self._add_submission_upload()
     #     submission_upload = SubmissionUpload.objects.first()
@@ -1373,14 +1386,8 @@ class TestParseMetaDataForUpdateTask(TestTasks):
     #
     #     self.assertEqual(TaskProgressReport.CANCELLED, result.get())
 
-    def test_chain_version(self):
-        self._add_submission_upload()
-        submission_upload = SubmissionUpload.objects.first()
-        ena_submission_data = prepare_ena_data(
-            submission=submission_upload.submission)
-        store_ena_data_as_auditable_text_data(
-            submission=submission_upload.submission,
-            data=ena_submission_data)
+    def test_complete_reparse_chain(self):
+        submission_upload = self._prepare_submission_upload_task_test_data()
 
         samples = submission_upload.submission.auditabletextdata_set.filter(
             name='sample.xml')
@@ -1389,23 +1396,11 @@ class TestParseMetaDataForUpdateTask(TestTasks):
                 submission_upload.submission.broker_submission_id),
             samples.first().text_data)
 
-        # TODO: rerfator to chain !
-        # 1. clean data DONE
-        # 2. parse csv and update related submission DONE
-        # 3. create_broker_objects_from_submission_data_task (does delete before create)
-        # 4. create ena-data from submission data and update or create auditable text data
-
-        # chain = get_gfbio_helpdesk_username_task.s(
-        #     submission_id=submission.id).set(
-        #     countdown=SUBMISSION_DELAY) \
-        #         | create_submission_issue_task.s(
-        #     submission_id=submission.id).set(
-        #     countdown=SUBMISSION_DELAY)
-        from gfbio_submissions.brokerage.tasks import \
-            clean_submission_for_update_task, \
-            parse_csv_to_update_clean_submission_task, \
-            create_broker_objects_from_submission_data_task, \
-            update_ena_submission_data_task
+        # from gfbio_submissions.brokerage.tasks import \
+        #     clean_submission_for_update_task, \
+        #     parse_csv_to_update_clean_submission_task, \
+        #     create_broker_objects_from_submission_data_task, \
+        #     update_ena_submission_data_task
         reparse_chain = \
             clean_submission_for_update_task.s(
                 submission_upload_id=submission_upload.id,
@@ -1433,6 +1428,27 @@ class TestParseMetaDataForUpdateTask(TestTasks):
             '<SAMPLE alias="12:{0}"'.format(
                 submission_upload.submission.broker_submission_id),
             samples.first().text_data)
+
+    # TODO: add tests for negative outcome: no submission, no reqs etc
+    def test_clean_submission_for_update_task(self):
+        submission_upload = self._prepare_submission_upload_task_test_data()
+        result = clean_submission_for_update_task.apply_async(
+            kwargs={
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+        self.assertTrue(result.get())
+        expected_data = {
+            'requirements': {
+                'description': 'Reduced Data for testing',
+                'site_object_id': 'user1_1',
+                'title': 'Simple ENA Data without run block'
+            }
+        }
+        submission_upload = SubmissionUpload.objects.first()
+        self.assertDictEqual(expected_data, submission_upload.submission.data)
+
+    # def test
 
 
 class TestGetHelpDeskUserTask(TestTasks):

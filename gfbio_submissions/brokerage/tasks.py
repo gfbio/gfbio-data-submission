@@ -478,14 +478,8 @@ def clean_submission_for_update_task(self, previous_task_result=None,
         return TaskProgressReport.CANCELLED
 
     data = submission_upload.submission.data
-    if 'requirements' not in data.keys():
-        logger.error(
-            'tasks.py | clean_submission_for_update_task | '
-            'key "requirements" not found in submission.data | '
-            'submission_upload_id={0}'.format(submission_upload_id))
-        return TaskProgressReport.CANCELLED
-
     molecular_requirements_keys = ['study_type', 'samples', 'experiments']
+
     if 'validation' in data.keys():
         data.pop('validation')
     for k in molecular_requirements_keys:
@@ -493,11 +487,8 @@ def clean_submission_for_update_task(self, previous_task_result=None,
             data.get('requirements', {}).pop(k)
 
     with transaction.atomic():
-        logger.info(
-            'tasks.py | clean_submission_for_update_task | '
-            'delete brokerobjects related to submission={0} '
-            ''.format(submission_upload.submission.broker_submission_id))
-        submission_upload.submission.brokerobject_set.all().delete()
+        # submission_upload.submission.data = data  # --> shallow copy, assignment no needed
+        submission_upload.submission.save()
     return True
 
 
