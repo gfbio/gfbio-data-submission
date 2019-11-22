@@ -707,9 +707,6 @@ def release_study_on_ena(submission):
             verify=False
         )
 
-        print('REPSONSE ', response.status_code)
-        print(response.content)
-
         outgoing_request_id = uuid.uuid4()
         with transaction.atomic():
             details = response.headers or ''
