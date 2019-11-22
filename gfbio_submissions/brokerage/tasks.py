@@ -344,13 +344,6 @@ def update_ena_submission_data_task(self, previous_task_result=None,
             'submission_upload_id={0}'.format(submission_upload_id))
         return TaskProgressReport.CANCELLED
 
-    # print('\n-----------------------------------\n')
-    # bos = submission_upload.submission.brokerobject_set.all()
-    # print(bos)
-    # for b in bos:
-    #     print('\n', b.type, ' ', b.submissions)
-    #     pprint(b.data)
-
     ena_submission_data = prepare_ena_data(
         submission=submission_upload.submission)
 
@@ -452,12 +445,16 @@ def parse_csv_to_update_clean_submission_task(self, previous_task_result=None,
             schema_location=path,
         )
 
-        print('VALID ----------- ', valid)
-        print('ERRORs ----------- ', full_errors)
+        if not valid:
+            messages = [e.message for e in full_errors]
+            submission_upload.submission.data.update(
+                {'validation': messages})
 
         submission_upload.submission.save()
-
-    return True
+        if not valid:
+            return TaskProgressReport.CANCELLED
+        else:
+            return True
 
 
 # TODO: result of this task is input for next task

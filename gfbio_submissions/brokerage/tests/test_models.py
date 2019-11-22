@@ -735,5 +735,5 @@ class TestSubmissionUpload(TestCase):
         #     print(s.file.name)
         print(SubmissionUpload.objects.first())
         print(SubmissionUpload.objects.last())
-        self.assertEqual(SubmissionUpload.objects.first().file.name,
+        self.assertNotEqual(SubmissionUpload.objects.first().file.name,
                             SubmissionUpload.objects.last().file.name)
