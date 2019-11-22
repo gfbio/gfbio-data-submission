@@ -11,6 +11,7 @@ import uuid
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
 from ftplib import FTP
+from pprint import pprint
 from xml.etree.ElementTree import Element, SubElement
 
 import dicttoxml
@@ -20,12 +21,14 @@ from django.db import transaction
 # TODO: read jsonschem 2.6.0 changelog
 from django.utils.encoding import smart_text
 from jsonschema import Draft3Validator
+from pytz import timezone
 
 from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_CENTER_NAME, \
     DEFAULT_ENA_BROKER_NAME, CHECKLIST_ACCESSION_MAPPING, \
     STATIC_SAMPLE_SCHEMA_LOCATION
-from gfbio_submissions.brokerage.models import AuditableTextData
+from gfbio_submissions.brokerage.models import AuditableTextData, \
+    SiteConfiguration
 
 logger = logging.getLogger(__name__)
 dicttoxml.LOG.setLevel(logging.ERROR)
@@ -648,6 +651,104 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data):
     return response, req_log.request_id
 
 
+def release_study_on_ena(submission):
+    study_primary_accession = submission.brokerobject_set.filter(
+        type='study').first().persistentidentifier_set.filter(
+        pid_type='PRJ').first()
+    site_config = SiteConfiguration.objects.filter(site=submission.site).first()
+    if site_config is None:
+        logger.warning(
+            'ena.py | release_study_on_ena | no site_configuration found | submission_id={0}'.format(
+                submission.broker_submission_id)
+        )
+        return None
+    if study_primary_accession:
+
+        logger.info(
+            'ena.py | release_study_on_ena | primary accession no '
+            'found for study | accession_no={0} | submission_id={1}'.format(
+                study_primary_accession,
+                submission.broker_submission_id)
+        )
+
+        current_datetime = datetime.datetime.now(timezone('UTC')).isoformat()
+
+        submission_xml = textwrap.dedent(
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<SUBMISSION_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+            ' xsi:noNamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.submission.xsd">'
+            '<SUBMISSION'
+            ' alias="gfbio:release:{broker_submission_id}:{time_stamp}"'
+            ' center_name="GFBIO" broker_name="GFBIO">'
+            '<ACTIONS>'
+            '<ACTION>'
+            '<RELEASE target="{accession_no}"/>'
+            '</ACTION>'
+            '</ACTIONS>'
+            '</SUBMISSION>'
+            '</SUBMISSION_SET>'.format(
+                broker_submission_id=submission.broker_submission_id,
+                time_stamp=current_datetime,
+                accession_no=study_primary_accession,
+            )
+        )
+
+        auth_params = {
+            'auth': site_config.ena_server.authentication_string,
+        }
+        data = {'SUBMISSION': ('submission.xml', submission_xml)}
+
+        pprint(data)
+
+        response = requests.post(
+            site_config.ena_server.url,
+            params=auth_params,
+            files=data,
+            verify=False
+        )
+
+        outgoing_request_id = uuid.uuid4()
+        with transaction.atomic():
+            details = response.headers or ''
+            # prevent cyclic dependencies
+            from gfbio_submissions.brokerage.models import RequestLog
+            incoming = None
+            try:
+                incoming = RequestLog.objects.filter(
+                    submission_id=submission.broker_submission_id).filter(
+                    type=RequestLog.INCOMING).latest('created')
+            except RequestLog.DoesNotExist:
+                logger.warning(
+                    'ena.py | release_study_on_ena | No incoming request for '
+                    'submission_id={0}'.format(submission.broker_submission_id))
+
+            site_user = submission.submitting_user if \
+                submission.submitting_user is not None else ''
+
+            req_log = RequestLog.objects.create(
+                request_id=outgoing_request_id,
+                type=RequestLog.OUTGOING,
+                url=site_config.ena_server.url,
+                data=data,
+                site_user=site_user,
+                submission_id=submission.broker_submission_id,
+                response_status=response.status_code,
+                response_content=response.content,
+                triggered_by=incoming,
+                request_details={
+                    'response_headers': str(details)
+                }
+            )
+        return response, req_log.request_id
+    else:
+        logger.warning(
+            'ena.py | release_study_on_ena | no primary accession no '
+            'found for study | submission_id={0}'.format(
+                submission.broker_submission_id)
+        )
+        return None
+
+
 def parse_ena_submission_response(response_content=''):
     res = {}
 
@@ -709,7 +810,7 @@ def validate_sample_data(json_data):
         return True, []
 
 
-def download_submitted_run_files_to_stringIO(site_config, decompressed_io):
+def download_submitted_run_files_to_string_io(site_config, decompressed_io):
     ftp_rc = site_config.ena_ftp
     transmission_report = []
     ftp = FTP(ftp_rc.url)

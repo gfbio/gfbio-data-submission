@@ -6,6 +6,7 @@ import os
 from collections import OrderedDict
 
 import dpath
+from django.utils.encoding import smart_text
 from shortid import ShortId
 
 from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA
@@ -98,6 +99,9 @@ def extract_experiment(experiment_id, row, sample_id):
         'experiment_alias': experiment_id,
         'platform': row.get('sequencing_platform', '')
     }
+
+    library_layout = row.get('library_layout', '')
+
     dpath.util.new(experiment, 'design/sample_descriptor', sample_id)
     dpath.util.new(experiment, 'design/library_descriptor/library_strategy',
                    row.get('library_strategy', ''))
@@ -108,16 +112,20 @@ def extract_experiment(experiment_id, row, sample_id):
                    row.get('library_selection', ''))
     dpath.util.new(experiment,
                    'design/library_descriptor/library_layout/layout_type',
-                   row.get('library_layout', ''))
+                   library_layout)
 
     dpath.util.new(experiment, 'files/forward_read_file_name',
                    row.get('forward_read_file_name', ''))
     dpath.util.new(experiment, 'files/forward_read_file_checksum',
                    row.get('forward_read_file_checksum', ''))
-    dpath.util.new(experiment, 'files/reverse_read_file_name',
-                   row.get('reverse_read_file_name', ''))
-    dpath.util.new(experiment, 'files/reverse_read_file_checksum',
-                   row.get('reverse_read_file_checksum', ''))
+
+    # TODO: with single layout, only forward_read_file attribute are considered
+    #   is it ok to use such a file name for a single ?
+    if library_layout != 'single':
+        dpath.util.new(experiment, 'files/reverse_read_file_name',
+                       row.get('reverse_read_file_name', ''))
+        dpath.util.new(experiment, 'files/reverse_read_file_checksum',
+                       row.get('reverse_read_file_checksum', ''))
 
     if len(row.get('design_description', '').strip()):
         dpath.util.new(experiment, 'design/design_description',
@@ -134,7 +142,7 @@ def extract_experiment(experiment_id, row, sample_id):
 # TODO: maybe csv is in a file like implemented or comes as text/string
 def parse_molecular_csv(csv_file):
     header = csv_file.readline()
-    dialect = csv.Sniffer().sniff(header)
+    dialect = csv.Sniffer().sniff(smart_text(header))
     csv_file.seek(0)
     delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
                                                            '\t'] else ';'

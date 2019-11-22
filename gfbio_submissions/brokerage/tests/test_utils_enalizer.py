@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-
+import pprint
+from pprint import pprint
 from uuid import uuid4
 
 import responses
@@ -9,11 +10,12 @@ from django.utils.encoding import smart_text
 from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_CENTER_NAME
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
-    ResourceCredential, SiteConfiguration, RequestLog
+    ResourceCredential, SiteConfiguration, RequestLog, BrokerObject
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
-from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response
+from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
+    _get_ena_release_xml_response
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
-    send_submission_to_ena
+    send_submission_to_ena, release_study_on_ena
 from gfbio_submissions.users.models import User
 
 
@@ -21,7 +23,7 @@ class TestEnalizer(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        User.objects.create(
+        user = User.objects.create(
             username="user1"
         )
         SubmissionTest._create_submission_via_serializer()
@@ -34,11 +36,10 @@ class TestEnalizer(TestCase):
 
         SiteConfiguration.objects.create(
             title='Default',
-            site=None,
+            site=user,
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
         )
@@ -286,6 +287,63 @@ class TestEnalizer(TestCase):
         enalizer.prepare_submission_data()
         self.assertTrue(enalizer.experiments_contain_files)
 
+    def test_number_of_run_files_paired_layout(self):
+        submission = Submission.objects.first()
+        enalizer = Enalizer(submission, 'test-enalizer-experiment')
+        xml_data = enalizer.prepare_submission_data()
+        self.assertEqual('paired',
+                         submission.data.get('requirements', {}).get(
+                             'experiments', [{}])[0].get('design', {}).get(
+                             'library_descriptor', {}).get(
+                             'library_layout', {}).get('layout_type', 'xxx'))
+        file_name, xml = xml_data.get('RUN')
+        self.assertEqual(2, xml.count('<FILE filename'))
+
+    def test_number_of_run_files_single_layout(self):
+        submission = Submission.objects.first()
+        submission.data.get('requirements', {})['experiments'] = [
+            {
+                'design': {
+                    'design_description': '',
+                    'library_descriptor': {
+                        'library_layout': {
+                            'layout_type': 'single',
+                        }, 'library_selection': 'PCR',
+                        'library_source': 'METAGENOMIC',
+                        'library_strategy': 'AMPLICON'
+                    },
+                    'sample_descriptor': 'sample2'
+                },
+                'experiment_alias': 'experiment1',
+                'files': {
+                    'forward_read_file_checksum': '197bb2c9becec16f66dc5cf9e1fa75d1',
+                    'forward_read_file_name': 'File3.forward.fastq.gz',
+                },
+                'platform': 'AB 3730xL Genetic Analyzer',
+                'site_object_id': 'user1_4'
+            }
+        ]
+        submission.save()
+        submission.brokerobject_set.all().delete()
+        print(len(submission.brokerobject_set.all()))
+        BrokerObject.objects.add_submission_data(submission)
+        print(len(submission.brokerobject_set.all()))
+        pprint(submission.data)
+        print('\n+++++++++++++++++++++++++++++++++++\n')
+        for b in submission.brokerobject_set.all():
+            print('\n', b.data)
+        enalizer = Enalizer(submission, 'test-enalizer-experiment')
+        xml_data = enalizer.prepare_submission_data()
+        print('\n+++++++++++++++++++++++++++++++++++\n')
+        pprint(xml_data)
+        self.assertEqual('single',
+                         submission.data.get('requirements', {}).get(
+                             'experiments', [{}])[0].get('design', {}).get(
+                             'library_descriptor', {}).get(
+                             'library_layout', {}).get('layout_type', 'xxx'))
+        file_name, xml = xml_data.get('RUN')
+        self.assertEqual(1, xml.count('<FILE filename'))
+
     def test_submission_data_content(self):
         submission = Submission.objects.first()
         enalizer = Enalizer(submission, 'test-enalizer-experiment')
@@ -368,3 +426,40 @@ class TestEnalizer(TestCase):
                             alias_postfix=submission.broker_submission_id)
         file_name, xml = enalizer.prepare_submission_xml_for_sending()
         self.assertIn('<VALIDATE', xml)
+
+    @responses.activate
+    def test_release_study_on_ena(self):
+        submission = Submission.objects.first()
+        conf = SiteConfiguration.objects.first()
+
+        print('submission site ', submission.site)
+        print(SiteConfiguration.objects.filter(site=submission.site).first())
+        responses.add(
+            responses.POST,
+            conf.ena_server.url,
+            status=200,
+            body=_get_ena_release_xml_response()
+        )
+        study = submission.brokerobject_set.filter(type='study').first()
+        study.persistentidentifier_set.create(
+            archive='ENA',
+            pid_type='PRJ',
+            pid='PRJEB0815',
+            outgoing_request_id=uuid4()
+        )
+        self.assertEqual(0, len(RequestLog.objects.all()))
+
+        release_study_on_ena(submission)
+
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        request_log = RequestLog.objects.first()
+        self.assertEqual(200, request_log.response_status)
+        self.assertTrue(
+            'accession "PRJEB0815" is set to public' in request_log.response_content)
+
+    def test_release_study_on_ena_no_accession_no(self):
+        submission = Submission.objects.first()
+        # conf = SiteConfiguration.objects.first()
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        release_study_on_ena(submission)
+        self.assertEqual(0, len(RequestLog.objects.all()))

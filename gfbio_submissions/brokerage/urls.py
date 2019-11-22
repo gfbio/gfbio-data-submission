@@ -22,25 +22,6 @@ urlpatterns = [
         name='submissions_user_detail'
     ),
 
-    # TODO: rename/remove
-    # url(
-    #     regex=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/$',
-    #     view=views.SubmissionFileUploadView.as_view(),
-    #     name='submissions_upload'
-    # ),
-    # TODO: rename/remove
-    # url(
-    #     regex=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/primarydata/$',
-    #     view=views.PrimaryDataFileView.as_view(),
-    #     name='submissions_primary_data'
-    # ),
-    # TODO: rename/remove
-    # url(
-    #     regex=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/primarydata/(?P<pk>[0-9]+)/$',
-    #     view=views.PrimaryDataFileDetailView.as_view(),
-    #     name='submissions_primary_data_detail'
-    # ),
-    # TODO: keep only as long as views above exist, then add proper url and rename
     url(
         regex=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/$',
         view=views.SubmissionUploadView.as_view(),
@@ -53,7 +34,6 @@ urlpatterns = [
         # name='submissions_new_upload'
         name='submissions_uploads'
     ),
-    # TODO: keep only as long as views above exist, then add proper url and rename
     url(
         regex=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/(?P<pk>[0-9]+)/$',
         view=views.SubmissionUploadDetailView.as_view(),
@@ -66,9 +46,9 @@ urlpatterns = [
     ),
 
     url(
-      regex=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/comment/$',
-      view=views.SubmissionCommentView.as_view(),
-      name='submission_comment'
+        regex=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/comment/$',
+        view=views.SubmissionCommentView.as_view(),
+        name='submission_comment'
     ),
 
     # http://0.0.0.0:8000/api/docs/?format=openapi

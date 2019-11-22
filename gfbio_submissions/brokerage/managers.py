@@ -7,6 +7,8 @@ from django.db import models, transaction
 from django.db.models import Q
 from django.utils.encoding import smart_text
 
+from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA
+
 logger = logging.getLogger(__name__)
 
 
@@ -78,36 +80,6 @@ class SubmissionManager(models.Manager):
             'pk',
             # string identifier, here only id of django user possible
             'submitting_user', ).get(broker_submission_id=broker_submission_id)
-
-    # def get_submission_for_task(self, obj_id, task=None, include_closed=False):
-    #     try:
-    #         submission = self.get_non_error_submission(
-    #             obj_id) if include_closed else self.get_open_submission(obj_id)
-    #     except self.model.DoesNotExist as e:
-    #         print('NO submission ', e)
-    #     try:
-    #         site_config = SiteConfigurationManager.get_site_configuration(
-    #             submission.site)
-    #     except SiteConfigurationManager.model.DoesNotExist as e:
-    #         print('No SiteConfig ', e)
-    #     if task:
-    #         TaskProgressReportManager.create_initial_report(
-    #             submission=submission,
-    #             task=task)
-    #     return submission, site_config
-
-    # def get_open_submission(cls, submission_id=None, task=None,
-    #                             get_closed_submission=False):
-    #     submission = cls._get_submission(submission_id, get_closed_submission)
-    #     if task:
-    #         task_report, created = TaskProgressReport.objects.create_initial_report(
-    #             submission=submission,
-    #             task=task)
-    #     if submission is None:
-    #         raise cls.TransferInternalError(
-    #             'SubmissionTransferHandler | get_open_submission | no Submission available for submission pk={0}'.format(
-    #                 submission_id))
-    #     return submission
 
 
 class BrokerObjectManager(models.Manager):
@@ -429,3 +401,34 @@ class AuditableTextDataManager(models.Manager):
                     '{0}'.format(smart_text(obj.name)),
                     '{0}'.format(smart_text(obj.text_data)))
         return res
+
+
+# TODO: add tests
+class SubmissionUploadManager(models.Manager):
+
+    def get_upload_with_related_submission(self, submission_upload_id):
+        try:
+            submission_upload = self.get(
+                pk=submission_upload_id)
+        except self.model.DoesNotExist as e:
+            return None
+        if submission_upload.submission is None:
+            return None
+        return submission_upload
+
+    def get_linked_molecular_submission_upload(self, submission_upload_id):
+        submission_upload = self.get_upload_with_related_submission(submission_upload_id)
+        if submission_upload is None:
+            return None
+        if submission_upload.submission.target != ENA and submission_upload.submission.target != ENA_PANGAEA:
+            return None
+        if 'requirements' not in submission_upload.submission.data.keys():
+            return None
+        return submission_upload
+
+    def get_related_submission_id(self, submission_upload_id):
+        submission_upload = self.get_upload_with_related_submission(
+            submission_upload_id)
+        if submission_upload is None:
+            return None
+        return submission_upload.submission.id

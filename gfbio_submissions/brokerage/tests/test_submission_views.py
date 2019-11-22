@@ -25,6 +25,7 @@ from gfbio_submissions.brokerage.models import Submission, RequestLog, \
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_submission_post_response, \
     _get_test_data_dir_path
+from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
 from gfbio_submissions.users.models import User
 
 
@@ -72,11 +73,9 @@ class TestSubmissionView(TestCase):
         cls.site_config = SiteConfiguration.objects.create(
             title='default',
             release_submissions=False,
-            use_gfbio_services=False,
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
         )
@@ -100,7 +99,8 @@ class TestSubmissionView(TestCase):
         responses.add(responses.GET, url, body=b'deleteMe', status=200)
 
     def _add_create_ticket_response(self):
-        self._add_gfbio_helpdesk_user_service_response()
+        self._add_gfbio_helpdesk_user_service_response(user_name='horst',
+                                                       email='horst@horst.de')
         self._add_jira_client_responses()
         responses.add(
             responses.POST,
@@ -308,11 +308,11 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
         self.assertEqual(0, len(submission.site_project_id))
         self.assertEqual(Submission.OPEN, submission.status)
         self.assertEqual(0, len(submission.submitting_user))
-        # self.assertEqual(0,
-        #                  len(submission.submitting_user_common_information))
-        site_config = SiteConfiguration.objects.first()
-        self.assertIn(site_config.contact,
-                      submission.submitting_user_common_information)
+        self.assertEqual(0,
+                         len(submission.submitting_user_common_information))
+        # site_config = SiteConfiguration.objects.first()
+        # self.assertIn(site_config.contact,
+        #               submission.submitting_user_common_information)
         self.assertEqual('ENA', submission.target)
         request_logs = RequestLog.objects.filter(type=RequestLog.INCOMING)
         self.assertEqual(1, len(request_logs))
@@ -505,7 +505,6 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         expected_task_names = [
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer',
-            'tasks.get_user_email_task',
             'tasks.get_gfbio_helpdesk_username_task',
             'tasks.create_submission_issue_task',
             'tasks.update_submission_issue_task',
@@ -718,7 +717,6 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         expected_task_names = [
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer',
-            'tasks.get_user_email_task',
             'tasks.get_gfbio_helpdesk_username_task',
             'tasks.create_submission_issue_task',
             'tasks.update_submission_issue_task',
@@ -813,7 +811,6 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         expected_tasks = [
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer',
-            'tasks.get_user_email_task',
             'tasks.get_gfbio_helpdesk_username_task',
             'tasks.create_submission_issue_task',
             'tasks.check_on_hold_status_task']
@@ -873,7 +870,6 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer',
             'tasks.check_on_hold_status_task',
-            'tasks.get_user_email_task',
             'tasks.get_gfbio_helpdesk_username_task',
             'tasks.create_submission_issue_task',
             'tasks.update_submission_issue_task',
@@ -937,7 +933,6 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             'tasks.trigger_submission_transfer',
             'tasks.create_broker_objects_from_submission_data_task',
             'tasks.prepare_ena_submission_data_task',
-            'tasks.get_user_email_task',
             'tasks.get_gfbio_helpdesk_username_task',
             'tasks.create_submission_issue_task',
             'tasks.update_submission_issue_task',
@@ -994,7 +989,6 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             'tasks.create_broker_objects_from_submission_data_task',
             'tasks.prepare_ena_submission_data_task',
             'tasks.trigger_submission_transfer',
-            'tasks.get_user_email_task',
             'tasks.get_gfbio_helpdesk_username_task',
             'tasks.create_submission_issue_task',
             'tasks.update_submission_issue_task',
@@ -1734,9 +1728,9 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
         self.assertEqual(0, len(submission.site_project_id))
         self.assertEqual(Submission.OPEN, submission.status)
         self.assertEqual(0, len(submission.submitting_user))
-        site_config = SiteConfiguration.objects.first()
-        self.assertIn(site_config.contact,
-                      submission.submitting_user_common_information)
+        # site_config = SiteConfiguration.objects.first()
+        # self.assertIn(site_config.contact,
+        #               submission.submitting_user_common_information)
         self.assertEqual('GENERIC', submission.target)
         request_logs = RequestLog.objects.filter(type=RequestLog.INCOMING)
         self.assertEqual(1, len(request_logs))

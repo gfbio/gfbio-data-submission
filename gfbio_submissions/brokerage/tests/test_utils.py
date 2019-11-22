@@ -5,8 +5,8 @@ import io
 import json
 import os
 from collections import OrderedDict
+from pprint import pprint
 from unittest import skip
-from unittest.mock import patch
 
 import requests
 import responses
@@ -39,9 +39,9 @@ from gfbio_submissions.brokerage.utils import csv
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
     check_for_molecular_content
 from gfbio_submissions.brokerage.utils.ena import \
-    download_submitted_run_files_to_stringIO
+    download_submitted_run_files_to_string_io, prepare_ena_data
 from gfbio_submissions.brokerage.utils.gfbio import \
-    gfbio_get_user_by_id, gfbio_prepare_create_helpdesk_payload, \
+    gfbio_prepare_create_helpdesk_payload, \
     get_gfbio_helpdesk_username
 from gfbio_submissions.brokerage.utils.pangaea import \
     request_pangaea_login_token, parse_pangaea_login_token_response, \
@@ -72,7 +72,6 @@ class PangaeaTicketTest(TestCase):
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Comment',
         )
@@ -202,33 +201,10 @@ class TestServiceMethods(TestCase):
             ena_server=resource_credential,
             pangaea_token_server=resource_credential,
             pangaea_jira_server=resource_credential,
-            gfbio_server=resource_credential,
             helpdesk_server=resource_credential,
             comment='',
         )
         SubmissionTest._create_submission_via_serializer()
-
-    @patch('gfbio_submissions.brokerage.utils.gfbio.requests')
-    def test_gfbio_get_user_by_id(self, mock_requests):
-        mock_requests.get.return_value.status_code = 200
-        mock_requests.get.return_value.ok = True
-        response_data = {"firstname": "Marc", "middlename": "",
-                         "emailaddress": "maweber@mpi-bremen.de",
-                         "fullname": "Marc Weber",
-                         "screenname": "maweber", "userid": 16250,
-                         "lastname": "Weber"}
-        mock_requests.get.return_value.content = json.dumps(response_data)
-        conf = SiteConfiguration.objects.first()
-        submission = Submission.objects.first()
-        response = gfbio_get_user_by_id(16250, conf, submission=submission)
-        self.assertEqual(200, response.status_code)
-        content = json.loads(response.content)
-        self.assertDictEqual(response_data, content)
-
-        response = gfbio_get_user_by_id('16250', conf, submission=submission)
-        self.assertEqual(200, response.status_code)
-        content = json.loads(response.content)
-        self.assertDictEqual(response_data, content)
 
 
 class TestGFBioJiraApi(TestCase):
@@ -735,7 +711,6 @@ class TestSubmissionTransferHandler(TestCase):
             ena_server=resource_cred_2,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Comment',
         )
@@ -745,7 +720,6 @@ class TestSubmissionTransferHandler(TestCase):
             ena_server=resource_cred_2,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Comment',
         )
@@ -980,7 +954,6 @@ class TestHelpDeskTicketMethods(TestCase):
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
             contact='kevin@horstmeier.de'
@@ -1122,7 +1095,6 @@ class TestDownloadEnaReport(TestCase):
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
             contact='kevin@horstmeier.de'
@@ -1145,7 +1117,7 @@ class TestDownloadEnaReport(TestCase):
         site_conf.save()
 
         decompressed_file = io.StringIO()
-        report = download_submitted_run_files_to_stringIO(
+        report = download_submitted_run_files_to_string_io(
             site_config=site_conf,
             decompressed_io=decompressed_file,
         )
@@ -1767,14 +1739,29 @@ class TestCSVParsing(TestCase):
         self.assertEqual(7, len(requirements['samples']))
         self.assertEqual(7, len(requirements['experiments']))
 
-    # @skip('check if delimiter is sniffed correcty')
-    # def test_parse_real_worl_comma_sep_example(self):
-    #     with open(os.path.join(
-    #             _get_test_data_dir_path(),
-    #             'csv_files/dsub-269_template.csv'),
-    #             'r') as data_file:
-    #         requirements = parse_molecular_csv(data_file)
-    #         pprint(requirements)
+    def test_parse_to_xml_real_world_single_layout(self):
+        submission = Submission.objects.first()
+        submission.submissionupload_set.all().delete()
+        submission.save()
+
+        self.create_csv_submission_upload(submission, User.objects.first(),
+                                          'csv_files/SO45_mod.csv'
+                                          )
+
+        is_mol_content, errors = check_for_molecular_content(submission)
+        self.assertTrue(is_mol_content)
+
+        BrokerObject.objects.add_submission_data(submission)
+        ena_submission_data = prepare_ena_data(submission=submission)
+
+        file_name, file_content = ena_submission_data['RUN']
+        self.assertEqual(4, file_content.count(
+            'filename="{0}'.format(submission.broker_submission_id)))
+
+        file_name, file_content = ena_submission_data['EXPERIMENT']
+        self.assertEqual(4, file_content.count(
+            '<LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>'))
+        self.assertNotIn('<LIBRARY_LAYOUT><PAIRED', file_content)
 
     def test_check_for_molecular_content_comma_sep(self):
         submission = Submission.objects.first()
@@ -1808,7 +1795,6 @@ class TestCSVParsing(TestCase):
         submission = Submission.objects.first()
         self.assertEqual(GENERIC, submission.target)
         self.assertIn('data_center', submission.data['requirements'].keys())
-        print(submission.data['requirements']['data_center'])
         self.assertEqual('ENA – European Nucleotide Archive',
                          submission.data['requirements']['data_center'])
         self.assertNotIn('samples', submission.data['requirements'].keys())
@@ -1822,3 +1808,26 @@ class TestCSVParsing(TestCase):
         self.assertIn('samples', submission.data['requirements'].keys())
         self.assertIn('experiments', submission.data['requirements'].keys())
         self.assertEqual(ENA_PANGAEA, submission.target)
+
+        pprint(submission.data)
+
+    def test_check_content_on_submission_with_molecular_data(self):
+        submission = Submission.objects.first()
+        is_mol_content, errors = check_for_molecular_content(submission)
+        submission = Submission.objects.first()
+        self.assertIn('samples', submission.data['requirements'].keys())
+        self.assertIn('experiments', submission.data['requirements'].keys())
+
+        # pprint(submission.data)
+        previous_length = len(
+            submission.data.get('requirements', {}).get('experiments', []))
+        print(previous_length)
+        print(submission.data.get('requirements', {}).keys())
+        is_mol_content, errors = check_for_molecular_content(submission)
+        submission = Submission.objects.first()
+        # pprint(submission.data)
+        current_length = len(
+            submission.data.get('requirements', {}).get('experiments', []))
+        print(current_length)
+
+        self.assertEqual(previous_length, current_length)

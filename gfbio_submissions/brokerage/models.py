@@ -12,9 +12,10 @@ from django.utils.encoding import smart_text
 from git import Repo
 from model_utils.models import TimeStampedModel
 
-from config.settings.base import ADMINS, AUTH_USER_MODEL, LOCAL_REPOSITORY
+from config.settings.base import AUTH_USER_MODEL, LOCAL_REPOSITORY
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
     DEFAULT_ENA_CENTER_NAME
+from gfbio_submissions.brokerage.managers import SubmissionUploadManager
 from .configuration.settings import ENA, ENA_PANGAEA
 from .configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY
 from .fields import JsonDictField
@@ -22,7 +23,7 @@ from .managers import AuditableTextDataManager
 from .managers import SiteConfigurationManager, \
     SubmissionManager, BrokerObjectManager, TaskProgressReportManager
 from .utils.submission_tools import \
-    submission_upload_path, submission_primary_data_file_upload_path
+    submission_upload_path
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +77,7 @@ class SiteConfiguration(models.Model):
                              on_delete=models.SET_NULL)
 
     contact = models.EmailField(
-        default=ADMINS[0][1],
+        blank=False,
         help_text='Main contact to address in case of something. '
                   'This will, in any case, serve as a fallback '
                   'when no other person can be determined.')
@@ -122,25 +123,6 @@ class SiteConfiguration(models.Model):
                   'should use to connect to Pangaea-Jira. This Server'
                   'represents the actual jira-instance of Pangaea',
         on_delete=models.PROTECT
-    )
-    # TODO: remove
-    gfbio_server = models.ForeignKey(
-        ResourceCredential,
-        null=True,
-        blank=True,
-        related_name='SiteConfiguration.gfbio_server+',
-        help_text='Select which server and/or account this configuration '
-                  'should use to connect to the GFBio portal database for '
-                  'accessing submission-registry, research_object, and so on.',
-        on_delete=models.PROTECT
-    )
-    # TODO: remove
-    use_gfbio_services = models.BooleanField(
-        default=False,
-        help_text='If checked additional gfbio-related services will be used '
-                  'during a submission. E.g. trying to get a User from the '
-                  'gfbio.org database and set its email as reporter-email '
-                  'in GFBio helpdesk.'
     )
 
     helpdesk_server = models.ForeignKey(
@@ -234,6 +216,9 @@ class Submission(TimeStampedModel):
     # TODO: still needed ?
     site_project_id = models.CharField(max_length=128, blank=True, default='')
     target = models.CharField(max_length=16, choices=TARGETS)
+
+    # TODO: investigate where this field is used
+    # TODO: adapt to new situation of local users (sso, social, django user) and external (site only)
     submitting_user = models.CharField(max_length=72, default='', blank=True,
                                        null=True,
                                        help_text=
@@ -589,80 +574,6 @@ class TaskProgressReport(models.Model):
             return 'unnamed_task'
 
 
-# TODO: refactor/review: almost the same as PrimaryData
-#   only that intended usecase was sequence data
-#   that is not supposed to be attached to ticket
-#   and may be deleted/moved after a while
-class SubmissionFileUpload(models.Model):
-    submission = models.ForeignKey(
-        Submission, null=True,
-        blank=True,
-        help_text='Submission this File belongs to.',
-        on_delete=models.CASCADE
-    )
-    site = models.ForeignKey(AUTH_USER_MODEL, related_name='submissionupload',
-                             on_delete=models.PROTECT)
-    file = models.FileField(upload_to=submission_upload_path)
-    migrated = models.BooleanField(default=False)
-
-    # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
-    created = models.DateTimeField(auto_now_add=True)
-    changed = models.DateTimeField(auto_now=True)
-
-
-# TODO: refactor/review: compare TODO for SubmissionFileUpload
-#   intended usecase is csv template file with trigger
-#   to attach to existing ticket. but with .save(attach=False) almost the same
-# TODO: consider how to use for csv update view, where
-#   template is input for submissiondata and an update here
-#   updates submission.data. also consider TODOs regarding redundant file models
-class PrimaryDataFile(models.Model):
-    submission = models.ForeignKey(
-        Submission,
-        null=False,
-        blank=False,
-        help_text='Associated Submission for this File',
-        on_delete=models.CASCADE
-    )
-    site = models.ForeignKey(AUTH_USER_MODEL, related_name='primarydatafile',
-                             on_delete=models.PROTECT)
-    data_file = models.FileField(
-        upload_to=submission_primary_data_file_upload_path,
-        help_text='A file containing primary submission data, '
-                  'like a filled csv-template, contextual data, etc .. .'
-                  ' Or any other file which contains general submission data, '
-                  'but should not be treated as payload '
-                  '(e.g. sequence files, audio, images, ...)'
-    )
-    comment = models.TextField(
-        default='',
-        blank=True,
-        help_text='Any comments or useful information regarding this file')
-    migrated = models.BooleanField(default=False)
-
-    # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
-    created = models.DateTimeField(auto_now_add=True)
-    changed = models.DateTimeField(auto_now=True)
-
-    #
-    # @classmethod
-    # def raise_ticket_exeptions(self, no_of_helpdesk_tickets):
-    #     if no_of_helpdesk_tickets == 0:
-    #         raise NoTicketAvailableError
-
-    def save(self, attach=True, *args, **kwargs):
-        super(PrimaryDataFile, self).save(*args, **kwargs)
-        if attach:
-            from .tasks import \
-                attach_to_submission_issue_task
-            attach_to_submission_issue_task.apply_async(
-                kwargs={
-                    'submission_id': '{0}'.format(self.submission.pk),
-                },
-                countdown=SUBMISSION_UPLOAD_RETRY_DELAY
-            )
-
-
 class SubmissionUpload(TimeStampedModel):
     submission = models.ForeignKey(
         Submission,
@@ -709,8 +620,11 @@ class SubmissionUpload(TimeStampedModel):
     )
     file = models.FileField(
         upload_to=submission_upload_path,
+        # storage=OverwriteStorage(),
         help_text='The actual file uploaded.',
     )
+
+    objects = SubmissionUploadManager()
 
     # TODO: from PrimaryDataFile. new default for attach is -> false
     def save(self, ignore_attach_to_ticket=False, *args, **kwargs):

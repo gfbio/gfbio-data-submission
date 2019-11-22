@@ -11,10 +11,11 @@ from django.utils.encoding import smart_bytes
 from .configuration.settings import SUBMISSION_DELAY
 from .models import PersistentIdentifier, \
     Submission, ResourceCredential, BrokerObject, RequestLog, \
-    AdditionalReference, SiteConfiguration, PrimaryDataFile, \
-    TaskProgressReport, TicketLabel, SubmissionFileUpload, SubmissionUpload, \
+    AdditionalReference, SiteConfiguration, TaskProgressReport, TicketLabel, \
+    SubmissionUpload, \
     AuditableTextData, \
     CenterName
+from .utils.ena import release_study_on_ena
 from .utils.submission_transfer import \
     SubmissionTransferHandler
 
@@ -75,6 +76,15 @@ def continue_release_submissions(modeladmin, request, queryset):
 
 
 continue_release_submissions.short_description = 'Continue submission of selected Items'
+
+
+def release_submission_study_on_ena(modeladmin, request, queryset):
+    for obj in queryset:
+        submission = Submission.objects.get(pk=obj.pk)
+        release_study_on_ena(submission=submission)
+
+
+release_submission_study_on_ena.short_description = 'Release Study on ENA'
 
 
 def create_broker_objects_and_ena_xml(modeladmin, request, queryset):
@@ -143,17 +153,6 @@ def download_auditable_text_data(modeladmin, request, queryset):
 download_auditable_text_data.short_description = 'Download zipped data'
 
 
-class SubmissionFileUploadInlineAdmin(admin.TabularInline):
-    model = SubmissionFileUpload
-
-
-class PrimaryDataFileInlineAdmin(admin.StackedInline):
-    model = PrimaryDataFile
-
-    def get_extra(self, request, obj=None, **kwargs):
-        return 1
-
-
 class AuditableTextDataInlineAdmin(admin.StackedInline):
     model = AuditableTextData
 
@@ -171,14 +170,16 @@ class SubmissionAdmin(admin.ModelAdmin):
                      'submitting_user_common_information',
                      'additionalreference__reference_key'
                      ]
-    inlines = (PrimaryDataFileInlineAdmin, AuditableTextDataInlineAdmin,
+    inlines = (AuditableTextDataInlineAdmin,
                AdditionalReferenceInline,)
-    actions = [download_auditable_text_data,
-               continue_release_submissions,
-               re_create_ena_xml,
-               create_broker_objects_and_ena_xml,
-               delete_broker_objects_and_ena_xml,
-               ]
+    actions = [
+        release_submission_study_on_ena,
+        download_auditable_text_data,
+        continue_release_submissions,
+        re_create_ena_xml,
+        create_broker_objects_and_ena_xml,
+        delete_broker_objects_and_ena_xml,
+    ]
 
 
 class RequestLogAdmin(admin.ModelAdmin):
@@ -200,12 +201,58 @@ class PrimaryDataFileAdmin(admin.ModelAdmin):
     pass
 
 
+def reparse_csv_metadata(modeladmin, request, queryset):
+    # from gfbio_submissions.brokerage.tasks import \
+    #     parse_meta_data_for_update_task
+    # for obj in queryset:
+    #     parse_meta_data_for_update_task.apply_async(
+    #         kwargs={
+    #             'submission_upload_id': obj.pk,
+    #         },
+    #         countdown=SUBMISSION_DELAY,
+    #     )
+    from gfbio_submissions.brokerage.tasks import \
+        clean_submission_for_update_task, \
+        parse_csv_to_update_clean_submission_task, \
+        create_broker_objects_from_submission_data_task, \
+        update_ena_submission_data_task
+    for obj in queryset:
+        submission_upload_id = obj.id
+        rebuild_from_csv_metadata_chain = \
+            clean_submission_for_update_task.s(
+                submission_upload_id=submission_upload_id,
+            ).set(countdown=SUBMISSION_DELAY) | \
+            parse_csv_to_update_clean_submission_task.s(
+                submission_upload_id=submission_upload_id,
+            ).set(countdown=SUBMISSION_DELAY) | \
+            create_broker_objects_from_submission_data_task.s(
+                submission_id=SubmissionUpload.objects.get_related_submission_id(
+                    submission_upload_id)
+            ).set(countdown=SUBMISSION_DELAY) | \
+            update_ena_submission_data_task.s(
+                submission_upload_id=submission_upload_id,
+            ).set(countdown=SUBMISSION_DELAY)
+        rebuild_from_csv_metadata_chain()
+
+
+reparse_csv_metadata.short_description = 'Re-parse csv metadata to get updated XMLs'
+
+
 class SubmissionUploadAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'meta_data', 'site', 'user', 'attachment_id',
                     'attach_to_ticket')
     date_hierarchy = 'created'
     list_filter = ('site', 'meta_data', 'attach_to_ticket')
     search_fields = ['submission__broker_submission_id']
+    actions = [
+        reparse_csv_metadata,
+    ]
+
+    # def save_model(self, request, obj, form, change):
+    #     # obj.added_by = request.user
+    #     print('ADMIN save model ', obj.pk)
+    #     # or obj.save with params like ignore-attach
+    #     super().save_model(request, obj, form, change)
 
 
 class TaskProgressReportAdmin(admin.ModelAdmin):
@@ -223,8 +270,6 @@ admin.site.register(RequestLog, RequestLogAdmin)
 admin.site.register(AdditionalReference)
 admin.site.register(TaskProgressReport, TaskProgressReportAdmin)
 
-admin.site.register(SubmissionFileUpload, SubmissionFileUploadAdmin)
-admin.site.register(PrimaryDataFile, PrimaryDataFileAdmin)
 admin.site.register(SubmissionUpload, SubmissionUploadAdmin)
 
 admin.site.register(AuditableTextData)

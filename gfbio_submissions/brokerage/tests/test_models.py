@@ -58,7 +58,6 @@ class SiteConfigurationTest(TestCase):
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Comment',
         )
@@ -68,7 +67,6 @@ class SiteConfigurationTest(TestCase):
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
         )
@@ -99,7 +97,6 @@ class SiteConfigurationTest(TestCase):
         self.assertIsInstance(site_config.ena_server, ResourceCredential)
         self.assertIsInstance(site_config.pangaea_token_server,
                               ResourceCredential)
-        self.assertIsInstance(site_config.gfbio_server, ResourceCredential)
         self.assertIsInstance(site_config.helpdesk_server, ResourceCredential)
         self.assertFalse(site_config.release_submissions)
 
@@ -158,7 +155,6 @@ class TicketLabelTest(TestCase):
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Comment',
         )
@@ -168,7 +164,6 @@ class TicketLabelTest(TestCase):
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
         )
@@ -472,7 +467,6 @@ class RequestLogTest(TestCase):
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
-            gfbio_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
         )
@@ -719,3 +713,27 @@ class TestSubmissionUpload(TestCase):
         self.assertIn('.txt / {0}'.format(
             Submission.objects.first().broker_submission_id),
             submission_upload.__str__())
+
+    def test_same_file_name(self):
+        self.assertEqual(0, len(SubmissionUpload.objects.all()))
+        submission_upload = SubmissionUpload.objects.create(
+            submission=Submission.objects.first(),
+            site=User.objects.first(),
+            user=User.objects.first(),
+            file=SimpleUploadedFile('test_submission_upload.txt',
+                                    b'these are the file contents!'),
+        )
+        submission_upload = SubmissionUpload.objects.create(
+            submission=Submission.objects.first(),
+            site=User.objects.first(),
+            user=User.objects.first(),
+            file=SimpleUploadedFile('test_submission_upload.txt',
+                                    b'these are the file contents!'),
+        )
+        self.assertEqual(2, len(SubmissionUpload.objects.all()))
+        # for s in SubmissionUpload.objects.all():
+        #     print(s.file.name)
+        print(SubmissionUpload.objects.first())
+        print(SubmissionUpload.objects.last())
+        self.assertNotEqual(SubmissionUpload.objects.first().file.name,
+                            SubmissionUpload.objects.last().file.name)
