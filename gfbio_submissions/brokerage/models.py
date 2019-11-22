@@ -15,6 +15,7 @@ from model_utils.models import TimeStampedModel
 from config.settings.base import AUTH_USER_MODEL, LOCAL_REPOSITORY
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
     DEFAULT_ENA_CENTER_NAME
+from gfbio_submissions.brokerage.managers import SubmissionUploadManager
 from .configuration.settings import ENA, ENA_PANGAEA
 from .configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY
 from .fields import JsonDictField
@@ -617,8 +618,11 @@ class SubmissionUpload(TimeStampedModel):
     )
     file = models.FileField(
         upload_to=submission_upload_path,
+        # storage=OverwriteStorage(),
         help_text='The actual file uploaded.',
     )
+
+    objects = SubmissionUploadManager()
 
     # TODO: from PrimaryDataFile. new default for attach is -> false
     def save(self, ignore_attach_to_ticket=False, *args, **kwargs):

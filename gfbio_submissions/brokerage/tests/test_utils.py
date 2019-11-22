@@ -5,6 +5,7 @@ import io
 import json
 import os
 from collections import OrderedDict
+from pprint import pprint
 from unittest import skip
 
 import requests
@@ -1794,7 +1795,6 @@ class TestCSVParsing(TestCase):
         submission = Submission.objects.first()
         self.assertEqual(GENERIC, submission.target)
         self.assertIn('data_center', submission.data['requirements'].keys())
-        print(submission.data['requirements']['data_center'])
         self.assertEqual('ENA – European Nucleotide Archive',
                          submission.data['requirements']['data_center'])
         self.assertNotIn('samples', submission.data['requirements'].keys())
@@ -1808,3 +1808,26 @@ class TestCSVParsing(TestCase):
         self.assertIn('samples', submission.data['requirements'].keys())
         self.assertIn('experiments', submission.data['requirements'].keys())
         self.assertEqual(ENA_PANGAEA, submission.target)
+
+        pprint(submission.data)
+
+    def test_check_content_on_submission_with_molecular_data(self):
+        submission = Submission.objects.first()
+        is_mol_content, errors = check_for_molecular_content(submission)
+        submission = Submission.objects.first()
+        self.assertIn('samples', submission.data['requirements'].keys())
+        self.assertIn('experiments', submission.data['requirements'].keys())
+
+        # pprint(submission.data)
+        previous_length = len(
+            submission.data.get('requirements', {}).get('experiments', []))
+        print(previous_length)
+        print(submission.data.get('requirements', {}).keys())
+        is_mol_content, errors = check_for_molecular_content(submission)
+        submission = Submission.objects.first()
+        # pprint(submission.data)
+        current_length = len(
+            submission.data.get('requirements', {}).get('experiments', []))
+        print(current_length)
+
+        self.assertEqual(previous_length, current_length)

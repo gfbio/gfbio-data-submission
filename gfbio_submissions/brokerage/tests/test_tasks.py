@@ -34,14 +34,19 @@ from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, 
     add_accession_to_pangaea_issue_task, check_for_pangaea_doi_task, \
     trigger_submission_transfer, \
     delete_submission_issue_attachment_task, add_posted_comment_to_issue_task, \
-    update_submission_issue_task, get_gfbio_helpdesk_username_task
+    update_submission_issue_task, get_gfbio_helpdesk_username_task, \
+    clean_submission_for_update_task, parse_csv_to_update_clean_submission_task, \
+    update_ena_submission_data_task
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
+from gfbio_submissions.brokerage.tests.test_utils import TestCSVParsing
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_ena_xml_response, \
     _get_ena_error_xml_response, _get_jira_attach_response, \
     _get_pangaea_soap_response, _get_pangaea_attach_response, \
     _get_pangaea_comment_response, _get_pangaea_ticket_response, \
     _get_jira_issue_response
+from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
+    store_ena_data_as_auditable_text_data
 from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
 from gfbio_submissions.users.models import User
 
@@ -1288,6 +1293,280 @@ class TestGFBioHelpDeskTasks(TestTasks):
         self.assertEqual(TaskProgressReport.CANCELLED,
                          tpr.first().task_return_value)
         self.assertEqual('502', tpr.first().task_exception)
+
+
+class TestParseMetaDataForUpdateTask(TestTasks):
+
+    @classmethod
+    def _add_submission_upload(cls):
+        TestCSVParsing.create_csv_submission_upload(
+            Submission.objects.first(),
+            User.objects.first(),
+            'csv_files/SO45_mod.csv'
+        )
+
+    @classmethod
+    def _prepare_submission_upload_task_test_data(cls):
+        cls._add_submission_upload()
+        submission_upload = SubmissionUpload.objects.first()
+        ena_submission_data = prepare_ena_data(
+            submission=submission_upload.submission)
+        store_ena_data_as_auditable_text_data(
+            submission=submission_upload.submission,
+            data=ena_submission_data)
+        return submission_upload
+
+    def test_complete_reparse_chain(self):
+        submission_upload = self._prepare_submission_upload_task_test_data()
+
+        sample = submission_upload.submission.auditabletextdata_set.filter(
+            name='sample.xml')
+        self.assertEqual(1, len(sample))
+        sample = sample.first()
+        self.assertIn('<TITLE>sample title</TITLE>', sample.text_data)
+
+        experiment = submission_upload.submission.auditabletextdata_set.filter(
+            name='experiment.xml')
+        self.assertEqual(1, len(experiment))
+        experiment = experiment.first()
+        self.assertIn(
+            '<PLATFORM><AB><INSTRUMENT_MODEL>AB 3730xL Genetic Analyzer</INSTRUMENT_MODEL></AB></PLATFORM>',
+            experiment.text_data)
+
+        reparse_chain = \
+            clean_submission_for_update_task.s(
+                submission_upload_id=submission_upload.id,
+            ).set(countdown=SUBMISSION_DELAY) | \
+            parse_csv_to_update_clean_submission_task.s(
+                submission_upload_id=submission_upload.id,
+            ).set(countdown=SUBMISSION_DELAY) | \
+            create_broker_objects_from_submission_data_task.s(
+                submission_id=SubmissionUpload.objects.get_related_submission_id(
+                    submission_upload.id)
+            ).set(countdown=SUBMISSION_DELAY) | \
+            update_ena_submission_data_task.s(
+                submission_upload_id=submission_upload.id,
+            ).set(countdown=SUBMISSION_DELAY)
+
+        reparse_chain()
+
+        submission_upload = SubmissionUpload.objects.first()
+
+        sample = submission_upload.submission.auditabletextdata_set.filter(
+            name='sample.xml')
+        self.assertEqual(1, len(sample))
+        sample = sample.first()
+        self.assertNotIn('<TITLE>sample title</TITLE>', sample.text_data)
+        self.assertIn('<TITLE>SO245-01-01</TITLE>', sample.text_data)
+
+        experiment = submission_upload.submission.auditabletextdata_set.filter(
+            name='experiment.xml')
+        self.assertEqual(1, len(experiment))
+        experiment = experiment.first()
+        self.assertNotIn(
+            '<PLATFORM><AB><INSTRUMENT_MODEL>AB 3730xL Genetic Analyzer</INSTRUMENT_MODEL></AB></PLATFORM>',
+            experiment.text_data)
+        self.assertIn(
+            '<PLATFORM><ION><INSTRUMENT_MODEL>Ion Torrent PGM</INSTRUMENT_MODEL></ION></PLATFORM>',
+            experiment.text_data)
+
+    # TODO: add tests for negative outcome: no submission, no reqs, prev_res = CANCELLED etc
+    def test_clean_submission_for_update_task(self):
+        submission_upload = self._prepare_submission_upload_task_test_data()
+        requirements = submission_upload.submission.data.get('requirements', {})
+        self.assertIn('experiments', requirements.keys())
+        self.assertIn('samples', requirements.keys())
+        result = clean_submission_for_update_task.apply_async(
+            kwargs={
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+        self.assertTrue(result.get())
+        expected_data = {
+            'requirements': {
+                'description': 'Reduced Data for testing',
+                'site_object_id': 'user1_1',
+                'title': 'Simple ENA Data without run block'
+            }
+        }
+        submission_upload = SubmissionUpload.objects.first()
+        self.assertEqual(expected_data['requirements'].keys(),
+                             submission_upload.submission.data['requirements'].keys())
+
+    def test_clean_submission_for_update_task_invalid_id(self):
+        result = clean_submission_for_update_task.apply_async(
+            kwargs={
+                'submission_upload_id': 9999
+            }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+
+    def test_clean_submission_for_update_task_prev_cancelled(self):
+        self._add_submission_upload()
+        submission_upload = SubmissionUpload.objects.first()
+        result = clean_submission_for_update_task.apply_async(
+            kwargs={
+                'previous_task_result': TaskProgressReport.CANCELLED,
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+
+    def test_clean_submission_for_update_task_no_submission(self):
+        self._add_submission_upload()
+        submission_upload = SubmissionUpload.objects.first()
+        submission_upload.submission = None
+        submission_upload.save()
+        result = clean_submission_for_update_task.apply_async(
+            kwargs={
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+
+    # TODO: add tests, compare TODO above. test for valid / invalid csv
+    def test_parse_csv_to_update_clean_submission_task(self):
+        submission_upload = self._prepare_submission_upload_task_test_data()
+        clean_submission_for_update_task.apply_async(
+            kwargs={
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+        result = parse_csv_to_update_clean_submission_task.apply_async(
+            kwargs={
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+        self.assertTrue(result.get())
+
+        submission_upload = SubmissionUpload.objects.first()
+        requirements = submission_upload.submission.data.get('requirements', {})
+
+        self.assertIn('experiments', requirements.keys())
+        self.assertGreater(len(requirements.get('experiments', [])), 0)
+        self.assertIn('samples', requirements.keys())
+        self.assertGreater(len(requirements.get('samples', [])), 0)
+
+    def test_parse_csv_to_update_clean_submission_task_only(self):
+        submission_upload = self._prepare_submission_upload_task_test_data()
+        result = parse_csv_to_update_clean_submission_task.apply_async(
+            kwargs={
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+        self.assertTrue(result.get())
+
+    def test_parse_csv_to_update_clean_submission_task_invalid_id(self):
+        result = parse_csv_to_update_clean_submission_task.apply_async(
+            kwargs={
+                'submission_upload_id': 9999
+            }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+
+    def test_parse_csv_to_update_clean_submission_task_invalid_data(self):
+        TestCSVParsing.create_csv_submission_upload(
+            Submission.objects.first(),
+            User.objects.first(),
+            'csv_files/invalid_molecular_metadata.csv'
+        )
+        submission_upload = SubmissionUpload.objects.first()
+        result = parse_csv_to_update_clean_submission_task.apply_async(
+            kwargs={
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+        submission_upload = SubmissionUpload.objects.first()
+        self.assertIn('validation', submission_upload.submission.data.keys())
+
+    def test_update_ena_submission_data_task(self):
+        submission_upload = self._prepare_submission_upload_task_test_data()
+        clean_submission_for_update_task.apply_async(
+            kwargs={
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+        parse_csv_to_update_clean_submission_task.apply_async(
+            kwargs={
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+        create_broker_objects_from_submission_data_task.apply_async(
+            kwargs={
+                'submission_id': SubmissionUpload.objects.get_related_submission_id(
+                    submission_upload.id)
+            }
+        )
+
+        sample = submission_upload.submission.auditabletextdata_set.filter(
+            name='sample.xml')
+        self.assertEqual(1, len(sample))
+        sample = sample.first()
+        self.assertIn('<TITLE>sample title</TITLE>', sample.text_data)
+
+        experiment = submission_upload.submission.auditabletextdata_set.filter(
+            name='experiment.xml')
+        self.assertEqual(1, len(experiment))
+        experiment = experiment.first()
+        self.assertIn(
+            '<PLATFORM><AB><INSTRUMENT_MODEL>AB 3730xL Genetic Analyzer</INSTRUMENT_MODEL></AB></PLATFORM>',
+            experiment.text_data)
+
+        result = update_ena_submission_data_task.apply_async(
+            kwargs={
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+        self.assertTrue(result.get())
+
+        submission_upload = SubmissionUpload.objects.first()
+
+        sample = submission_upload.submission.auditabletextdata_set.filter(
+            name='sample.xml')
+        self.assertEqual(1, len(sample))
+        sample = sample.first()
+        self.assertNotIn('<TITLE>sample title</TITLE>', sample.text_data)
+        self.assertIn('<TITLE>SO245-01-01</TITLE>', sample.text_data)
+
+        experiment = submission_upload.submission.auditabletextdata_set.filter(
+            name='experiment.xml')
+        self.assertEqual(1, len(experiment))
+        experiment = experiment.first()
+        self.assertNotIn(
+            '<PLATFORM><AB><INSTRUMENT_MODEL>AB 3730xL Genetic Analyzer</INSTRUMENT_MODEL></AB></PLATFORM>',
+            experiment.text_data)
+        self.assertIn(
+            '<PLATFORM><ION><INSTRUMENT_MODEL>Ion Torrent PGM</INSTRUMENT_MODEL></ION></PLATFORM>',
+            experiment.text_data)
+
+    def test_update_ena_submission_data_task_only(self):
+        submission_upload = self._prepare_submission_upload_task_test_data()
+        result = update_ena_submission_data_task.apply_async(
+            kwargs={
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+        self.assertTrue(result.get())
+
+    def test_update_ena_submission_data_task_invalid_id(self):
+        result = update_ena_submission_data_task.apply_async(
+            kwargs={
+                'submission_upload_id': 9999
+            }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+
+    def test_update_ena_submission_data_task_prev_cancelled(self):
+        self._add_submission_upload()
+        submission_upload = SubmissionUpload.objects.first()
+        result = update_ena_submission_data_task.apply_async(
+            kwargs={
+                'previous_task_result': TaskProgressReport.CANCELLED,
+                'submission_upload_id': submission_upload.pk
+            }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
 
 
 class TestGetHelpDeskUserTask(TestTasks):

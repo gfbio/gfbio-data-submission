@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+import os
 
 import celery
 from celery import Task
@@ -14,10 +15,13 @@ from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA,
     JIRA_FALLBACK_EMAIL
 from gfbio_submissions.brokerage.exceptions import TransferServerError, \
     TransferClientError
+from gfbio_submissions.brokerage.models import SubmissionUpload
 from gfbio_submissions.brokerage.utils.csv import \
-    check_for_molecular_content
+    check_for_molecular_content, parse_molecular_csv
 from gfbio_submissions.brokerage.utils.gfbio import get_gfbio_helpdesk_username
 from gfbio_submissions.brokerage.utils.jira import JiraClient
+from gfbio_submissions.brokerage.utils.schema_validation import \
+    validate_data_full
 from gfbio_submissions.brokerage.utils.task_utils import jira_error_auto_retry, \
     get_submission_and_site_configuration, raise_transfer_server_exceptions, \
     retry_no_ticket_available_exception
@@ -235,6 +239,14 @@ def create_broker_objects_from_submission_data_task(
         self,
         previous_task_result=None,
         submission_id=None):
+    if previous_task_result == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | create_broker_objects_from_submission_data_task | '
+            'previous task reported={0} | '
+            'submission_id={1}'.format(TaskProgressReport.CANCELLED,
+                                       submission_id))
+        return TaskProgressReport.CANCELLED
+
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -247,6 +259,7 @@ def create_broker_objects_from_submission_data_task(
         with transaction.atomic():
             submission.brokerobject_set.all().delete()
             BrokerObject.objects.add_submission_data(submission)
+            return True
     except IntegrityError as e:
         logger.error(
             'create_broker_objects_from_submission_data_task IntegrityError in "create_broker_objects_from'
@@ -304,6 +317,144 @@ def prepare_ena_submission_data_task(self, prev_task_result=None,
                                            submission_id)
         )
         return TaskProgressReport.CANCELLED
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.update_ena_submission_data_task',
+)
+def update_ena_submission_data_task(self, previous_task_result=None,
+                                    submission_upload_id=None):
+    submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(
+        submission_upload_id)
+
+    if previous_task_result == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | update_ena_submission_data_task | '
+            'previous task reported={0} | '
+            'submission_upload_id={1}'.format(TaskProgressReport.CANCELLED,
+                                              submission_upload_id))
+        return TaskProgressReport.CANCELLED
+
+    if submission_upload is None:
+        logger.error(
+            'tasks.py | update_ena_submission_data_task | '
+            'no valid SubmissionUpload available | '
+            'submission_upload_id={0}'.format(submission_upload_id))
+        return TaskProgressReport.CANCELLED
+
+    ena_submission_data = prepare_ena_data(
+        submission=submission_upload.submission)
+
+    logger.info(
+        'tasks.py | update_ena_submission_data_task | '
+        'update AuditableTextData related to submission={0} '
+        ''.format(submission_upload.submission.broker_submission_id))
+    with transaction.atomic():
+        for d in ena_submission_data:
+            filename, filecontent = ena_submission_data[d]
+            obj, created = submission_upload.submission.auditabletextdata_set.update_or_create(
+                name=filename,
+                defaults={'text_data': filecontent}
+            )
+        return True
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.clean_submission_for_update_task',
+)
+def clean_submission_for_update_task(self, previous_task_result=None,
+                                     submission_upload_id=None):
+    submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(
+        submission_upload_id)
+
+    if previous_task_result == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | clean_submission_for_update_task | '
+            'previous task reported={0} | '
+            'submission_upload_id={1}'.format(TaskProgressReport.CANCELLED,
+                                              submission_upload_id))
+        return TaskProgressReport.CANCELLED
+
+    if submission_upload is None:
+        logger.error(
+            'tasks.py | clean_submission_for_update_task | '
+            'no valid SubmissionUpload available | '
+            'submission_upload_id={0}'.format(submission_upload_id))
+        return TaskProgressReport.CANCELLED
+
+    data = submission_upload.submission.data
+    molecular_requirements_keys = ['study_type', 'samples', 'experiments']
+
+    if 'validation' in data.keys():
+        data.pop('validation')
+    for k in molecular_requirements_keys:
+        if k in data.get('requirements', {}).keys():
+            data.get('requirements', {}).pop(k)
+
+    with transaction.atomic():
+        # submission_upload.submission.data = data  # --> shallow copy, assignment no needed
+        submission_upload.submission.save()
+    return True
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.parse_csv_to_update_clean_submission_task',
+)
+def parse_csv_to_update_clean_submission_task(self, previous_task_result=None,
+                                              submission_upload_id=None):
+    submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(
+        submission_upload_id)
+
+    if previous_task_result == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | parse_csv_to_update_clean_submission_task | '
+            'previous task reported={0} | '
+            'submission_upload_id={1}'.format(TaskProgressReport.CANCELLED,
+                                              submission_upload_id))
+        return TaskProgressReport.CANCELLED
+
+    if submission_upload is None:
+        logger.error(
+            'tasks.py | parse_csv_to_update_clean_submission_task | '
+            'no valid SubmissionUpload available | '
+            'submission_upload_id={0}'.format(submission_upload_id))
+        return TaskProgressReport.CANCELLED
+
+    with open(submission_upload.file.path, 'r') as file:
+        molecular_requirements = parse_molecular_csv(
+            file,
+        )
+
+    path = os.path.join(
+        os.getcwd(),
+        'gfbio_submissions/brokerage/schemas/ena_requirements.json')
+
+    with transaction.atomic():
+        submission_upload.submission.data['requirements'].update(
+            molecular_requirements)
+
+        valid, full_errors = validate_data_full(
+            data=submission_upload.submission.data,
+            target=ENA_PANGAEA,
+            schema_location=path,
+        )
+
+        if not valid:
+            messages = [e.message for e in full_errors]
+            submission_upload.submission.data.update(
+                {'validation': messages})
+
+        submission_upload.submission.save()
+        if not valid:
+            return TaskProgressReport.CANCELLED
+        else:
+            return True
 
 
 # TODO: result of this task is input for next task

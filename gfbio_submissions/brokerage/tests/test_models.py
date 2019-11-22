@@ -713,3 +713,27 @@ class TestSubmissionUpload(TestCase):
         self.assertIn('.txt / {0}'.format(
             Submission.objects.first().broker_submission_id),
             submission_upload.__str__())
+
+    def test_same_file_name(self):
+        self.assertEqual(0, len(SubmissionUpload.objects.all()))
+        submission_upload = SubmissionUpload.objects.create(
+            submission=Submission.objects.first(),
+            site=User.objects.first(),
+            user=User.objects.first(),
+            file=SimpleUploadedFile('test_submission_upload.txt',
+                                    b'these are the file contents!'),
+        )
+        submission_upload = SubmissionUpload.objects.create(
+            submission=Submission.objects.first(),
+            site=User.objects.first(),
+            user=User.objects.first(),
+            file=SimpleUploadedFile('test_submission_upload.txt',
+                                    b'these are the file contents!'),
+        )
+        self.assertEqual(2, len(SubmissionUpload.objects.all()))
+        # for s in SubmissionUpload.objects.all():
+        #     print(s.file.name)
+        print(SubmissionUpload.objects.first())
+        print(SubmissionUpload.objects.last())
+        self.assertNotEqual(SubmissionUpload.objects.first().file.name,
+                            SubmissionUpload.objects.last().file.name)

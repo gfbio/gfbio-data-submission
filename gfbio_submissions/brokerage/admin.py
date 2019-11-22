@@ -189,12 +189,58 @@ class PrimaryDataFileAdmin(admin.ModelAdmin):
     pass
 
 
+def reparse_csv_metadata(modeladmin, request, queryset):
+    # from gfbio_submissions.brokerage.tasks import \
+    #     parse_meta_data_for_update_task
+    # for obj in queryset:
+    #     parse_meta_data_for_update_task.apply_async(
+    #         kwargs={
+    #             'submission_upload_id': obj.pk,
+    #         },
+    #         countdown=SUBMISSION_DELAY,
+    #     )
+    from gfbio_submissions.brokerage.tasks import \
+        clean_submission_for_update_task, \
+        parse_csv_to_update_clean_submission_task, \
+        create_broker_objects_from_submission_data_task, \
+        update_ena_submission_data_task
+    for obj in queryset:
+        submission_upload_id = obj.id
+        rebuild_from_csv_metadata_chain = \
+            clean_submission_for_update_task.s(
+                submission_upload_id=submission_upload_id,
+            ).set(countdown=SUBMISSION_DELAY) | \
+            parse_csv_to_update_clean_submission_task.s(
+                submission_upload_id=submission_upload_id,
+            ).set(countdown=SUBMISSION_DELAY) | \
+            create_broker_objects_from_submission_data_task.s(
+                submission_id=SubmissionUpload.objects.get_related_submission_id(
+                    submission_upload_id)
+            ).set(countdown=SUBMISSION_DELAY) | \
+            update_ena_submission_data_task.s(
+                submission_upload_id=submission_upload_id,
+            ).set(countdown=SUBMISSION_DELAY)
+        rebuild_from_csv_metadata_chain()
+
+
+reparse_csv_metadata.short_description = 'Re-parse csv metadata to get updated XMLs'
+
+
 class SubmissionUploadAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'meta_data', 'site', 'user', 'attachment_id',
                     'attach_to_ticket')
     date_hierarchy = 'created'
     list_filter = ('site', 'meta_data', 'attach_to_ticket')
     search_fields = ['submission__broker_submission_id']
+    actions = [
+        reparse_csv_metadata,
+    ]
+
+    # def save_model(self, request, obj, form, change):
+    #     # obj.added_by = request.user
+    #     print('ADMIN save model ', obj.pk)
+    #     # or obj.save with params like ignore-attach
+    #     super().save_model(request, obj, form, change)
 
 
 class TaskProgressReportAdmin(admin.ModelAdmin):
