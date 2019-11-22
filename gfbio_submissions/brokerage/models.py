@@ -217,6 +217,8 @@ class Submission(TimeStampedModel):
     site_project_id = models.CharField(max_length=128, blank=True, default='')
     target = models.CharField(max_length=16, choices=TARGETS)
 
+    # TODO: investigate where this field is used
+    # TODO: adapt to new situation of local users (sso, social, django user) and external (site only)
     submitting_user = models.CharField(max_length=72, default='', blank=True,
                                        null=True,
                                        help_text=

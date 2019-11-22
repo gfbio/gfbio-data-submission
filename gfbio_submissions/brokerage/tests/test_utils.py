@@ -39,7 +39,7 @@ from gfbio_submissions.brokerage.utils import csv
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
     check_for_molecular_content
 from gfbio_submissions.brokerage.utils.ena import \
-    download_submitted_run_files_to_stringIO, prepare_ena_data
+    download_submitted_run_files_to_string_io, prepare_ena_data
 from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_prepare_create_helpdesk_payload, \
     get_gfbio_helpdesk_username
@@ -1117,7 +1117,7 @@ class TestDownloadEnaReport(TestCase):
         site_conf.save()
 
         decompressed_file = io.StringIO()
-        report = download_submitted_run_files_to_stringIO(
+        report = download_submitted_run_files_to_string_io(
             site_config=site_conf,
             decompressed_io=decompressed_file,
         )

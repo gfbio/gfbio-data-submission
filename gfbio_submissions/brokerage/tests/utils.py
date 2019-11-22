@@ -40,6 +40,13 @@ def _get_ena_xml_response():
         return textwrap.dedent(data_file.read())
 
 
+def _get_ena_release_xml_response():
+    with open(os.path.join(
+            _get_test_data_dir_path(), 'ena_release_response.xml'),
+            'r') as data_file:
+        return textwrap.dedent(data_file.read())
+
+
 def _get_ena_error_xml_response():
     with open(os.path.join(
             _get_test_data_dir_path(), 'ena_error_response.xml'),

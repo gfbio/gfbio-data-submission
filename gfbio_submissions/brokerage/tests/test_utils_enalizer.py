@@ -3,7 +3,6 @@ import pprint
 from pprint import pprint
 from uuid import uuid4
 
-import dpath
 import responses
 from django.test import TestCase
 from django.utils.encoding import smart_text
@@ -13,9 +12,10 @@ from gfbio_submissions.brokerage.configuration.settings import \
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
     ResourceCredential, SiteConfiguration, RequestLog, BrokerObject
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
-from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response
+from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
+    _get_ena_release_xml_response
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
-    send_submission_to_ena
+    send_submission_to_ena, release_study_on_ena
 from gfbio_submissions.users.models import User
 
 
@@ -23,7 +23,7 @@ class TestEnalizer(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        User.objects.create(
+        user = User.objects.create(
             username="user1"
         )
         SubmissionTest._create_submission_via_serializer()
@@ -36,7 +36,7 @@ class TestEnalizer(TestCase):
 
         SiteConfiguration.objects.create(
             title='Default',
-            site=None,
+            site=user,
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
@@ -426,3 +426,40 @@ class TestEnalizer(TestCase):
                             alias_postfix=submission.broker_submission_id)
         file_name, xml = enalizer.prepare_submission_xml_for_sending()
         self.assertIn('<VALIDATE', xml)
+
+    @responses.activate
+    def test_release_study_on_ena(self):
+        submission = Submission.objects.first()
+        conf = SiteConfiguration.objects.first()
+
+        print('submission site ', submission.site)
+        print(SiteConfiguration.objects.filter(site=submission.site).first())
+        responses.add(
+            responses.POST,
+            conf.ena_server.url,
+            status=200,
+            body=_get_ena_release_xml_response()
+        )
+        study = submission.brokerobject_set.filter(type='study').first()
+        study.persistentidentifier_set.create(
+            archive='ENA',
+            pid_type='PRJ',
+            pid='PRJEB0815',
+            outgoing_request_id=uuid4()
+        )
+        self.assertEqual(0, len(RequestLog.objects.all()))
+
+        release_study_on_ena(submission)
+
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        request_log = RequestLog.objects.first()
+        self.assertEqual(200, request_log.response_status)
+        self.assertTrue(
+            'accession "PRJEB0815" is set to public' in request_log.response_content)
+
+    def test_release_study_on_ena_no_accession_no(self):
+        submission = Submission.objects.first()
+        # conf = SiteConfiguration.objects.first()
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        release_study_on_ena(submission)
+        self.assertEqual(0, len(RequestLog.objects.all()))
