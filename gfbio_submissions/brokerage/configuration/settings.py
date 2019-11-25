@@ -173,6 +173,22 @@ JIRA_USERNAME_URL_FULLNAME_TEMPLATE = getattr(
     'https://helpdesk.gfbio.org/internal/getorcreateuser.php?username={0}&email={1}&fullname={2}'
 )
 
+JIRA_ACCESSION_COMMENT_TEMPLATE = getattr(
+    settings,
+    'JIRA_ACCESSION_COMMENT_TEMPLATE',
+    """Dear {submitter_name},
+your dataset was successfully deposited in ENA! The INSDC accession number for your data is: {primary_accession}
+Please cite this number to refer to your dataset.
+Be aware that the whole dataset is currently under embargo for one year, 
+which also means you cannot find it on the ENA website (in case reviewers ask). 
+You can contact us at any point and we can set a new release date or release the data immediately.
+ 
+Best Regards,
+the GFBio Data Submission Team""",
+
+
+)
+
 GFBIO_LICENSE_MAPPINGS = getattr(
     settings,
     'GFBIO_LICENSE_MAPPINGS',

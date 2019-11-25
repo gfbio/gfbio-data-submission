@@ -14,7 +14,7 @@ from config.settings.base import HOST_URL_ROOT, ADMIN_URL
 from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, \
     PANGAEA_ISSUE_VIEW_URL, SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME, \
     JIRA_FALLBACK_EMAIL, APPROVAL_EMAIL_SUBJECT_TEMPLATE, \
-    APPROVAL_EMAIL_MESSAGE_TEMPLATE
+    APPROVAL_EMAIL_MESSAGE_TEMPLATE, JIRA_ACCESSION_COMMENT_TEMPLATE
 from gfbio_submissions.brokerage.exceptions import TransferServerError, \
     TransferClientError
 from gfbio_submissions.brokerage.models import SubmissionUpload
@@ -929,6 +929,24 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
     #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
     reference = submission.get_primary_helpdesk_reference()
 
+    submitter_name = 'Submitter'
+    try:
+        user = User.objects.get(pk=int(submission.submitting_user))
+        if len(user.name):
+            submitter_name = user.name
+    except User.DoesNotExist as e:
+        logger.warning(
+            'tasks.py | add_accession_to_submission_issue_task | '
+            'submission_id={0} | No user with '
+            'submission.submiting_user={1} | '
+            '{2}'.format(submission_id, submission.submitting_user, e))
+    except ValueError as ve:
+        logger.warning(
+            'tasks.py | add_accession_to_submission_issue_task | '
+            'submission_id={0} | ValueError with '
+            'submission.submiting_user={1} | '
+            '{2}'.format(submission_id, submission.submitting_user, ve))
+
     # TODO: previous task is process_ena_response_task, if ena responded successfully
     #  and delievered accesstions, theses are appended as persistentidentifiers
     #  if all worked Pids shoul be in DB and process returns true
@@ -945,10 +963,15 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
                 resource=site_configuration.helpdesk_server)
             jira_client.add_comment(
                 key_or_issue=reference.reference_key,
-                text='Submission to ENA has been successful. '
-                     'Study is accessible via ENA Accession No. {0}. '
-                     'broker_submission_id: {1}.'.format(study_pid.pid,
-                                                         submission.broker_submission_id))
+                text=JIRA_ACCESSION_COMMENT_TEMPLATE.format(
+                    submitter_name=submitter_name,
+                    primary_accession=study_pid.pid
+                )
+            )
+            # text='Submission to ENA has been successful. '
+            #      'Study is accessible via ENA Accession No. {0}. '
+            #      'broker_submission_id: {1}.'.format(study_pid.pid,
+            #                                          submission.broker_submission_id))
             return jira_error_auto_retry(jira_client=jira_client, task=self,
                                          broker_submission_id=submission.broker_submission_id)
 
