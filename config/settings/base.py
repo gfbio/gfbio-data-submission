@@ -242,7 +242,9 @@ HOST_URL_ROOT = env(
 # ADMIN
 # ------------------------------------------------------------------------------
 # Django Admin URL.
-ADMIN_URL = "admin/"
+# ADMIN_URL = "admin/"
+ADMIN_URL = env("DJANGO_ADMIN_URL", default="admin/")
+
 # https://docs.djangoproject.com/en/dev/ref/settings/#admins
 ADMINS = [
     ("""Marc Weber""", "maweber@mpi-bremen.de"),
