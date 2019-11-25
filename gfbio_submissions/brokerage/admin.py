@@ -150,7 +150,7 @@ def download_auditable_text_data(modeladmin, request, queryset):
         return response
 
 
-download_auditable_text_data.short_description = 'Download zipped data'
+download_auditable_text_data.short_description = 'Download XMLs'
 
 
 class AuditableTextDataInlineAdmin(admin.StackedInline):
