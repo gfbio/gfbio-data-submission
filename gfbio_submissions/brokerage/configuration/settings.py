@@ -1,7 +1,20 @@
 # -*- coding: utf-8 -*-
 from _csv import QUOTE_NONNUMERIC, QUOTE_NONE
+from builtins import getattr
 
 settings = {}
+
+APPROVAL_EMAIL_SUBJECT_TEMPLATE = getattr(
+    settings,
+    'APPROVAL_EMAIL_SUBJECT_TEMPLATE',
+    'A submission to {0} from site {1} needs approval. submission: {2}'
+)
+
+APPROVAL_EMAIL_MESSAGE_TEMPLATE = getattr(
+    settings,
+    'APPROVAL_EMAIL_MESSAGE_TEMPLATE',
+    'Please review submission {0}.\n{1}'
+)
 
 BASE_HOST_NAME = getattr(
     settings,

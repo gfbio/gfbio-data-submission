@@ -10,9 +10,11 @@ from django.db.utils import IntegrityError
 from django.utils.encoding import smart_text
 from requests import ConnectionError, Response
 
+from config.settings.base import HOST_URL_ROOT, ADMIN_URL
 from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, \
     PANGAEA_ISSUE_VIEW_URL, SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME, \
-    JIRA_FALLBACK_EMAIL
+    JIRA_FALLBACK_EMAIL, APPROVAL_EMAIL_SUBJECT_TEMPLATE, \
+    APPROVAL_EMAIL_MESSAGE_TEMPLATE
 from gfbio_submissions.brokerage.exceptions import TransferServerError, \
     TransferClientError
 from gfbio_submissions.brokerage.models import SubmissionUpload
@@ -27,8 +29,8 @@ from gfbio_submissions.brokerage.utils.task_utils import jira_error_auto_retry, 
     retry_no_ticket_available_exception
 from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
 from gfbio_submissions.users.models import User
-from .configuration.settings import BASE_HOST_NAME, \
-    SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
+from .configuration.settings import SUBMISSION_MAX_RETRIES, \
+    SUBMISSION_RETRY_DELAY
 from .models import BrokerObject, \
     AuditableTextData, RequestLog, AdditionalReference, TaskProgressReport, \
     Submission, SiteConfiguration
@@ -217,14 +219,18 @@ def check_on_hold_status_task(self, previous_task_result=None,
                           site_configuration.release_submissions))
         # TODO: refactor to method in task_utils, and use templates/constants
         mail_admins(
-            subject='Submission needs approval. Site "{0}". Submission {1}'
-                    ''.format(site_configuration.title,
-                              submission.broker_submission_id),
-            message='Submission {0}.\nFollow this Link: {1}'.format(
+            subject=APPROVAL_EMAIL_SUBJECT_TEMPLATE.format(
+                HOST_URL_ROOT,
+                site_configuration.site.username if site_configuration.site else site_configuration.title,
+                submission.broker_submission_id
+            ),
+            message=APPROVAL_EMAIL_MESSAGE_TEMPLATE.format(
                 submission.broker_submission_id,
-                '{0}/api/submissions/{1}/'.format(
-                    BASE_HOST_NAME,
-                    submission.broker_submission_id))
+                '{0}{1}brokerage/submission/{2}/change/'.format(
+                    HOST_URL_ROOT,
+                    ADMIN_URL,
+                    submission.pk)
+            )
         )
 
 
