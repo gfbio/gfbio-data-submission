@@ -126,11 +126,18 @@
 
                     {% if request.user.is_authenticated %}
 
+
                         <li class="nav-item dropdown">
                             <a class="nav-link has-dropdown"
                                data-toggle="dropdown"
                                href="#" role="button" aria-haspopup="true"
-                               aria-expanded="false">{{ request.user.username }}</a>
+                               aria-expanded="false">
+                                {% if request.user.name != '' %}
+                                    {{ request.user.name }}
+                                {% else %}
+                                    {{ request.user.username }}
+                                {% endif %}
+                            </a>
                             <div class="dropdown-menu">
                                 {#                                URL provided by django-allauth/account/urls.py#}
                                 {#                                <a class="dropdown-item"#}

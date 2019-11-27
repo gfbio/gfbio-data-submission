@@ -17,10 +17,13 @@ class GFBioAuthenticationBackend(OIDCAuthenticationBackend):
         return verified
 
     def get_username(self, claims):
-        username = claims.get(
-            'preferred_username',
-            claims.get('email')
-        )
+        # TODO: gdwg sso only provides cryptic user names
+        # username = claims.get(
+        #     'preferred_username',
+        #     claims.get('email')
+        # )
+        username = claims.get('email')
+
         logger.info(
             'GFBioAuthenticationBackend | get_username | username={0}  | '
             ''.format(username))
@@ -30,6 +33,13 @@ class GFBioAuthenticationBackend(OIDCAuthenticationBackend):
         logger.info('GFBioAuthenticationBackend | create_user | claims={0}  | '
                     ''.format(claims))
         user = super(GFBioAuthenticationBackend, self).create_user(claims)
+
+        user.first_name = claims.get('given_name', '')
+        user.last_name = claims.get('family_name', '')
+        user.name = '{0} {1}'.format(claims.get('given_name', ''),
+                                     claims.get('family_name', '')).strip()
+        user.email = claims.get('email', '')
+
         user.goesternid = claims.get('goe_id', '')
         logger.info(
             'GFBioAuthenticationBackend | create_user | user={0} | goesternid={1} |'
@@ -48,6 +58,8 @@ class GFBioAuthenticationBackend(OIDCAuthenticationBackend):
             ''.format(claims, user))
         user.first_name = claims.get('given_name', '')
         user.last_name = claims.get('family_name', '')
+        user.name = '{0} {1}'.format(claims.get('given_name', ''),
+                                     claims.get('family_name', '')).strip()
         user.email = claims.get('email', '')
         user.goesternid = claims.get('goe_id', '')
         user.save()
