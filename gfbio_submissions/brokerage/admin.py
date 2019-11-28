@@ -47,7 +47,9 @@ class BrokerObjectAdmin(admin.ModelAdmin):
 
 class PersistentIdentifierAdmin(admin.ModelAdmin):
     list_filter = ('pid_type', 'archive',)
-
+    search_fields = ['pid',
+                     'broker_object__submissions__broker_submission_id'
+                     ]
     date_hierarchy = 'created'
 
     list_display = ('archive', 'pid_type', 'broker_object',)
