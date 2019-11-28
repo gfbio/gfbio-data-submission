@@ -421,7 +421,7 @@ class BrokerObject(models.Model):
     #     unique_together = (('type', 'site', 'site_project_id', 'site_object_id'),)
 
 
-class PersistentIdentifier(models.Model):
+class PersistentIdentifier(TimeStampedModel):
     ARCHIVES = (
         ('ENA', 'ENA'),
         ('PAN', 'Pangea'),

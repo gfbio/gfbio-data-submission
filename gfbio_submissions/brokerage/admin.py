@@ -46,7 +46,11 @@ class BrokerObjectAdmin(admin.ModelAdmin):
 
 
 class PersistentIdentifierAdmin(admin.ModelAdmin):
-    pass
+    list_filter = ('pid_type', 'archive',)
+
+    date_hierarchy = 'created'
+
+    list_display = ('archive', 'pid_type', 'broker_object',)
 
 
 class AdditionalReferenceInline(admin.TabularInline):
@@ -164,7 +168,6 @@ class SubmissionAdmin(admin.ModelAdmin):
     # form = SubmissionAdminForm
     list_display = ('broker_submission_id',
                     'submitting_user', 'site', 'status',)
-    date_hierarchy = 'created'
     list_filter = ('site', 'status', 'target',)
     search_fields = ['broker_submission_id', 'submitting_user',
                      'submitting_user_common_information',
