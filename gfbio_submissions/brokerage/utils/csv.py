@@ -4,6 +4,7 @@ import csv
 import logging
 import os
 from collections import OrderedDict
+from pprint import pprint
 
 import dpath
 from django.utils.encoding import smart_text
@@ -61,6 +62,12 @@ unit_mapping_keys = unit_mapping.keys()
 
 
 def extract_sample(row, field_names, sample_id):
+
+    for k in row.keys():
+        # print('--- row[{}]: {}'.format(k, row[k]))
+        row[k] = row[k].strip()
+        # print('-------------- row[{}]: {}'.format(k, row[k]))
+
     sample_attributes = [
         OrderedDict(
             [('tag', o), ('value', row[o]),
@@ -87,6 +94,8 @@ def extract_sample(row, field_names, sample_id):
 
 
 def extract_experiment(experiment_id, row, sample_id):
+    print('\nextract_experiment')
+    pprint(row)
     try:
         design_description = int(row.get('design_description', '-1'))
     except ValueError as e:
@@ -162,11 +171,19 @@ def parse_molecular_csv(csv_file):
     }
     try:
         field_names = csv_reader.fieldnames
+
+        # print(field_names)
+        # TODO: solves whitespaces for ALL keys, even if field_names is not used directyl, compare experiment row
+        for i in range(0, len(field_names)):
+            print('->{}<-'.format(field_names[i]), ' | ', '->{}<-'.format(field_names[i].strip()))
+            field_names[i] = field_names[i].strip()
+
     except _csv.Error as e:
         return molecular_requirements
     short_id = ShortId()
     for row in csv_reader:
         # every row is one sample (except header)
+
         sample_id = short_id.generate()
         experiment_id = short_id.generate()
         sample = extract_sample(row, field_names, sample_id)

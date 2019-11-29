@@ -1680,10 +1680,12 @@ class TestCSVParsing(TestCase):
         pprint(requirements)
 
         # some quotes -----------------------
-        # whitespace in col-title: no value read
+        # whitespace in col-title: no value read FIXED
         # whitespace in quoted value: whitespaces are included
         # whitespace after comma before actual (unquoted) value: value correctly read AND
         # whitespace in unquoted col value: ignored for int conversion, leading are ignored, trailing are added
+
+        # whitepace before double quote char of quoted key:
 
         # double quotes -----------------------
         # whitespace in col-title: no value read
@@ -1697,6 +1699,68 @@ class TestCSVParsing(TestCase):
         # TODO: strip whitespaces from values, header/col-names are errors with lead./trail. spaces
         # TODO: omit sample_title, sample_description (OR DO NOT OMIT ?)
 
+    def test_whitespaces_with_occasional_quotes(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/molecular_metadata_white_spaces.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+        requirements_keys = requirements.keys()
+        print('REQ. KEYS : ')
+        pprint(requirements_keys)
+        # pprint(requirements['experiments'][0].keys())
+        print('------------------------------------------')
+        print('REQs. : ')
+        pprint(requirements)
+        print('------------------------------------------')
+        self.assertEqual('Sample No. 1',
+                         requirements.get('samples', [{}])[0].get(
+                             'sample_title', 'no value'))
+        taxon_id = requirements.get('samples', [{}])[0].get('taxon_id',
+                                                            'no value')
+        self.assertEqual(1234, taxon_id)
+        self.assertTrue(type(taxon_id) == int)
+        self.assertEqual('A description, with commmas, ...',
+                         requirements.get('samples', [{}])[0].get(
+                             'sample_description', 'no value'))
+        self.assertEqual(
+            'Illumina HiSeq 1000',
+            requirements.get('experiments', [{}])[0].get('platform')
+        )
+
+        sample_attribute_tags = []
+        geo_location = ''
+        for s in requirements.get('samples', [{}])[0].get('sample_attributes', []):
+            print(s.keys())
+            tag = s.get('tag')
+            sample_attribute_tags.append(tag)
+            if 'geographic location (country and/or sea)' in tag:
+                geo_location = s.get('value', 'no location')
+
+
+        self.assertIn('geographic location (country and/or sea)', sample_attribute_tags)
+        self.assertEqual('Atlantic Ocean', geo_location)
+
+            #     self
+
+
+    def test_whitespaces_all_double_quoted(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/molecular_metadata_double_quoting_white_spaces.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+        requirements_keys = requirements.keys()
+        pprint(requirements)
+
+    def test_whitespaces_unquoted(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/molecular_metadata_no_quoting_white_spaces.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+        requirements_keys = requirements.keys()
+        pprint(requirements)
 
     def test_parse_comma_with_some_quotes(self):
         with open(os.path.join(
