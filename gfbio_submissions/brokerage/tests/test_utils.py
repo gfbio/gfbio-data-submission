@@ -1868,7 +1868,7 @@ class TestCSVParsing(TestCase):
     def test_parse_comma_with_empty_rows(self):
         with open(os.path.join(
                 _get_test_data_dir_path(),
-                'csv_files/molecular_metadata.csv'),
+                'csv_files/mol_comma_with_empty_rows_cols.csv'),
                 'r') as data_file:
             requirements = parse_molecular_csv(data_file)
         requirements_keys = requirements.keys()
