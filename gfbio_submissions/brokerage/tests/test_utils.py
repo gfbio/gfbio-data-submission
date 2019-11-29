@@ -1670,38 +1670,6 @@ class TestCSVParsing(TestCase):
         self.assertIn('experiments', requirements_keys)
         self.assertIn('samples', requirements_keys)
 
-    # def test_parse_whitespace_in_keys_and_values(self):
-    #     with open(os.path.join(
-    #             _get_test_data_dir_path(),
-    #             'csv_files/molecular_metadata_white_spaces.csv'),
-    #             # 'csv_files/molecular_metadata_double_quoting_white_spaces.csv'),
-    #             # 'csv_files/molecular_metadata_no_quoting_white_spaces.csv'),
-    #             'r') as data_file:
-    #         requirements = parse_molecular_csv(data_file)
-    #     requirements_keys = requirements.keys()
-    #     pprint(requirements)
-    #
-    #     # some quotes -----------------------
-    #     # whitespace in col-title: no value read FIXED
-    #     # whitespace in quoted value: whitespaces are included FIXED
-    #     # whitespace after comma before actual (unquoted) value: value correctly read AND FIXED
-    #     # whitespace in unquoted col value: ignored for int conversion, leading are ignored, trailing are added FIXED
-    #
-    #     # whitepace before double quote char of quoted key: FIXED
-    #     # whitepace after closing double quote char of quoted key: may cause delimiter confusion
-    #
-    #     # double quotes -----------------------
-    #     # whitespace in col-title: no value read
-    #     # whitespace in quoted value: whitespaces are included
-    #     # whitespace after semi-colon before actual value: value correctly read
-    #
-    #     # no quoting (in header, most values) -----------------------
-    #     # whitespace in col-title: values are read, but only if no whitespaces before comma
-    #     # whitespace in unquoted col value: ignored for int conversion, leading are ignored, trailing are added
-    #
-    #     # TODO: strip whitespaces from values, header/col-names are errors with lead./trail. spaces
-    #     # TODO: omit sample_title, sample_description (OR DO NOT OMIT ?)
-
     def test_whitespaces_with_occasional_quotes(self):
         with open(os.path.join(
                 _get_test_data_dir_path(),
