@@ -46,6 +46,8 @@ from gfbio_submissions.brokerage.utils.gfbio import \
 from gfbio_submissions.brokerage.utils.pangaea import \
     request_pangaea_login_token, parse_pangaea_login_token_response, \
     get_pangaea_login_token
+from gfbio_submissions.brokerage.utils.schema_validation import \
+    validate_data_full
 from gfbio_submissions.brokerage.utils.submission_transfer import \
     SubmissionTransferHandler
 from gfbio_submissions.brokerage.utils.task_utils import \
@@ -1668,36 +1670,37 @@ class TestCSVParsing(TestCase):
         self.assertIn('experiments', requirements_keys)
         self.assertIn('samples', requirements_keys)
 
-    def test_parse_whitespace_in_keys_and_values(self):
-        with open(os.path.join(
-                _get_test_data_dir_path(),
-                'csv_files/molecular_metadata_white_spaces.csv'),
-                # 'csv_files/molecular_metadata_double_quoting_white_spaces.csv'),
-                # 'csv_files/molecular_metadata_no_quoting_white_spaces.csv'),
-                'r') as data_file:
-            requirements = parse_molecular_csv(data_file)
-        requirements_keys = requirements.keys()
-        pprint(requirements)
-
-        # some quotes -----------------------
-        # whitespace in col-title: no value read FIXED
-        # whitespace in quoted value: whitespaces are included
-        # whitespace after comma before actual (unquoted) value: value correctly read AND
-        # whitespace in unquoted col value: ignored for int conversion, leading are ignored, trailing are added
-
-        # whitepace before double quote char of quoted key:
-
-        # double quotes -----------------------
-        # whitespace in col-title: no value read
-        # whitespace in quoted value: whitespaces are included
-        # whitespace after semi-colon before actual value: value correctly read
-
-        # no quoting (in header, most values) -----------------------
-        # whitespace in col-title: values are read, but only if no whitespaces before comma
-        # whitespace in unquoted col value: ignored for int conversion, leading are ignored, trailing are added
-
-        # TODO: strip whitespaces from values, header/col-names are errors with lead./trail. spaces
-        # TODO: omit sample_title, sample_description (OR DO NOT OMIT ?)
+    # def test_parse_whitespace_in_keys_and_values(self):
+    #     with open(os.path.join(
+    #             _get_test_data_dir_path(),
+    #             'csv_files/molecular_metadata_white_spaces.csv'),
+    #             # 'csv_files/molecular_metadata_double_quoting_white_spaces.csv'),
+    #             # 'csv_files/molecular_metadata_no_quoting_white_spaces.csv'),
+    #             'r') as data_file:
+    #         requirements = parse_molecular_csv(data_file)
+    #     requirements_keys = requirements.keys()
+    #     pprint(requirements)
+    #
+    #     # some quotes -----------------------
+    #     # whitespace in col-title: no value read FIXED
+    #     # whitespace in quoted value: whitespaces are included FIXED
+    #     # whitespace after comma before actual (unquoted) value: value correctly read AND FIXED
+    #     # whitespace in unquoted col value: ignored for int conversion, leading are ignored, trailing are added FIXED
+    #
+    #     # whitepace before double quote char of quoted key: FIXED
+    #     # whitepace after closing double quote char of quoted key: may cause delimiter confusion
+    #
+    #     # double quotes -----------------------
+    #     # whitespace in col-title: no value read
+    #     # whitespace in quoted value: whitespaces are included
+    #     # whitespace after semi-colon before actual value: value correctly read
+    #
+    #     # no quoting (in header, most values) -----------------------
+    #     # whitespace in col-title: values are read, but only if no whitespaces before comma
+    #     # whitespace in unquoted col value: ignored for int conversion, leading are ignored, trailing are added
+    #
+    #     # TODO: strip whitespaces from values, header/col-names are errors with lead./trail. spaces
+    #     # TODO: omit sample_title, sample_description (OR DO NOT OMIT ?)
 
     def test_whitespaces_with_occasional_quotes(self):
         with open(os.path.join(
@@ -1706,13 +1709,6 @@ class TestCSVParsing(TestCase):
                 'r') as data_file:
             requirements = parse_molecular_csv(data_file)
         requirements_keys = requirements.keys()
-        print('REQ. KEYS : ')
-        pprint(requirements_keys)
-        # pprint(requirements['experiments'][0].keys())
-        print('------------------------------------------')
-        print('REQs. : ')
-        pprint(requirements)
-        print('------------------------------------------')
         self.assertEqual('Sample No. 1',
                          requirements.get('samples', [{}])[0].get(
                              'sample_title', 'no value'))
@@ -1730,19 +1726,28 @@ class TestCSVParsing(TestCase):
 
         sample_attribute_tags = []
         geo_location = ''
-        for s in requirements.get('samples', [{}])[0].get('sample_attributes', []):
-            print(s.keys())
+        for s in requirements.get(
+                'samples', [{}])[0].get('sample_attributes', []):
             tag = s.get('tag')
             sample_attribute_tags.append(tag)
             if 'geographic location (country and/or sea)' in tag:
                 geo_location = s.get('value', 'no location')
 
-
-        self.assertIn('geographic location (country and/or sea)', sample_attribute_tags)
+        self.assertIn('geographic location (country and/or sea)',
+                      sample_attribute_tags)
         self.assertEqual('Atlantic Ocean', geo_location)
 
-            #     self
-
+        submission = Submission.objects.first()
+        submission.data.get('requirements', {}).update(requirements)
+        path = os.path.join(
+            os.getcwd(),
+            'gfbio_submissions/brokerage/schemas/ena_requirements.json')
+        valid, full_errors = validate_data_full(
+            data=submission.data,
+            target=ENA_PANGAEA,
+            schema_location=path,
+        )
+        self.assertTrue(valid)
 
     def test_whitespaces_all_double_quoted(self):
         with open(os.path.join(
@@ -1750,8 +1755,45 @@ class TestCSVParsing(TestCase):
                 'csv_files/molecular_metadata_double_quoting_white_spaces.csv'),
                 'r') as data_file:
             requirements = parse_molecular_csv(data_file)
-        requirements_keys = requirements.keys()
-        pprint(requirements)
+        self.assertEqual('Sample No. 1',
+                         requirements.get('samples', [{}])[0].get(
+                             'sample_title', 'no value'))
+        taxon_id = requirements.get('samples', [{}])[0].get('taxon_id',
+                                                            'no value')
+        self.assertEqual(1234, taxon_id)
+        self.assertTrue(type(taxon_id) == int)
+        self.assertEqual('A description, with commmas, ...',
+                         requirements.get('samples', [{}])[0].get(
+                             'sample_description', 'no value'))
+        self.assertEqual(
+            'Illumina HiSeq 1000',
+            requirements.get('experiments', [{}])[0].get('platform')
+        )
+
+        sample_attribute_tags = []
+        geo_location = ''
+        for s in requirements.get(
+                'samples', [{}])[0].get('sample_attributes', []):
+            tag = s.get('tag')
+            sample_attribute_tags.append(tag)
+            if 'geographic location (country and/or sea)' in tag:
+                geo_location = s.get('value', 'no location')
+
+        self.assertIn('geographic location (country and/or sea)',
+                      sample_attribute_tags)
+        self.assertEqual('Atlantic Ocean', geo_location)
+
+        submission = Submission.objects.first()
+        submission.data.get('requirements', {}).update(requirements)
+        path = os.path.join(
+            os.getcwd(),
+            'gfbio_submissions/brokerage/schemas/ena_requirements.json')
+        valid, full_errors = validate_data_full(
+            data=submission.data,
+            target=ENA_PANGAEA,
+            schema_location=path,
+        )
+        self.assertTrue(valid)
 
     def test_whitespaces_unquoted(self):
         with open(os.path.join(
@@ -1759,8 +1801,45 @@ class TestCSVParsing(TestCase):
                 'csv_files/molecular_metadata_no_quoting_white_spaces.csv'),
                 'r') as data_file:
             requirements = parse_molecular_csv(data_file)
-        requirements_keys = requirements.keys()
-        pprint(requirements)
+        self.assertEqual('Sample No. 1',
+                         requirements.get('samples', [{}])[0].get(
+                             'sample_title', 'no value'))
+        taxon_id = requirements.get('samples', [{}])[0].get('taxon_id',
+                                                            'no value')
+        self.assertEqual(1234, taxon_id)
+        self.assertTrue(type(taxon_id) == int)
+        self.assertEqual('A description, with commmas, ...',
+                         requirements.get('samples', [{}])[0].get(
+                             'sample_description', 'no value'))
+        self.assertEqual(
+            'Illumina HiSeq 1000',
+            requirements.get('experiments', [{}])[0].get('platform')
+        )
+
+        sample_attribute_tags = []
+        geo_location = ''
+        for s in requirements.get(
+                'samples', [{}])[0].get('sample_attributes', []):
+            tag = s.get('tag')
+            sample_attribute_tags.append(tag)
+            if 'geographic location (country and/or sea)' in tag:
+                geo_location = s.get('value', 'no location')
+
+        self.assertIn('geographic location (country and/or sea)',
+                      sample_attribute_tags)
+        self.assertEqual('Atlantic Ocean', geo_location)
+
+        submission = Submission.objects.first()
+        submission.data.get('requirements', {}).update(requirements)
+        path = os.path.join(
+            os.getcwd(),
+            'gfbio_submissions/brokerage/schemas/ena_requirements.json')
+        valid, full_errors = validate_data_full(
+            data=submission.data,
+            target=ENA_PANGAEA,
+            schema_location=path,
+        )
+        self.assertTrue(valid)
 
     def test_parse_comma_with_some_quotes(self):
         with open(os.path.join(
