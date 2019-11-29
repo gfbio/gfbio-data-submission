@@ -46,6 +46,8 @@ from gfbio_submissions.brokerage.utils.gfbio import \
 from gfbio_submissions.brokerage.utils.pangaea import \
     request_pangaea_login_token, parse_pangaea_login_token_response, \
     get_pangaea_login_token
+from gfbio_submissions.brokerage.utils.schema_validation import \
+    validate_data_full
 from gfbio_submissions.brokerage.utils.submission_transfer import \
     SubmissionTransferHandler
 from gfbio_submissions.brokerage.utils.task_utils import \
@@ -1667,6 +1669,145 @@ class TestCSVParsing(TestCase):
         requirements_keys = requirements.keys()
         self.assertIn('experiments', requirements_keys)
         self.assertIn('samples', requirements_keys)
+
+    def test_whitespaces_with_occasional_quotes(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/molecular_metadata_white_spaces.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+        requirements_keys = requirements.keys()
+        self.assertEqual('Sample No. 1',
+                         requirements.get('samples', [{}])[0].get(
+                             'sample_title', 'no value'))
+        taxon_id = requirements.get('samples', [{}])[0].get('taxon_id',
+                                                            'no value')
+        self.assertEqual(1234, taxon_id)
+        self.assertTrue(type(taxon_id) == int)
+        self.assertEqual('A description, with commmas, ...',
+                         requirements.get('samples', [{}])[0].get(
+                             'sample_description', 'no value'))
+        self.assertEqual(
+            'Illumina HiSeq 1000',
+            requirements.get('experiments', [{}])[0].get('platform')
+        )
+
+        sample_attribute_tags = []
+        geo_location = ''
+        for s in requirements.get(
+                'samples', [{}])[0].get('sample_attributes', []):
+            tag = s.get('tag')
+            sample_attribute_tags.append(tag)
+            if 'geographic location (country and/or sea)' in tag:
+                geo_location = s.get('value', 'no location')
+
+        self.assertIn('geographic location (country and/or sea)',
+                      sample_attribute_tags)
+        self.assertEqual('Atlantic Ocean', geo_location)
+
+        submission = Submission.objects.first()
+        submission.data.get('requirements', {}).update(requirements)
+        path = os.path.join(
+            os.getcwd(),
+            'gfbio_submissions/brokerage/schemas/ena_requirements.json')
+        valid, full_errors = validate_data_full(
+            data=submission.data,
+            target=ENA_PANGAEA,
+            schema_location=path,
+        )
+        self.assertTrue(valid)
+
+    def test_whitespaces_all_double_quoted(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/molecular_metadata_double_quoting_white_spaces.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+        self.assertEqual('Sample No. 1',
+                         requirements.get('samples', [{}])[0].get(
+                             'sample_title', 'no value'))
+        taxon_id = requirements.get('samples', [{}])[0].get('taxon_id',
+                                                            'no value')
+        self.assertEqual(1234, taxon_id)
+        self.assertTrue(type(taxon_id) == int)
+        self.assertEqual('A description, with commmas, ...',
+                         requirements.get('samples', [{}])[0].get(
+                             'sample_description', 'no value'))
+        self.assertEqual(
+            'Illumina HiSeq 1000',
+            requirements.get('experiments', [{}])[0].get('platform')
+        )
+
+        sample_attribute_tags = []
+        geo_location = ''
+        for s in requirements.get(
+                'samples', [{}])[0].get('sample_attributes', []):
+            tag = s.get('tag')
+            sample_attribute_tags.append(tag)
+            if 'geographic location (country and/or sea)' in tag:
+                geo_location = s.get('value', 'no location')
+
+        self.assertIn('geographic location (country and/or sea)',
+                      sample_attribute_tags)
+        self.assertEqual('Atlantic Ocean', geo_location)
+
+        submission = Submission.objects.first()
+        submission.data.get('requirements', {}).update(requirements)
+        path = os.path.join(
+            os.getcwd(),
+            'gfbio_submissions/brokerage/schemas/ena_requirements.json')
+        valid, full_errors = validate_data_full(
+            data=submission.data,
+            target=ENA_PANGAEA,
+            schema_location=path,
+        )
+        self.assertTrue(valid)
+
+    def test_whitespaces_unquoted(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/molecular_metadata_no_quoting_white_spaces.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+        self.assertEqual('Sample No. 1',
+                         requirements.get('samples', [{}])[0].get(
+                             'sample_title', 'no value'))
+        taxon_id = requirements.get('samples', [{}])[0].get('taxon_id',
+                                                            'no value')
+        self.assertEqual(1234, taxon_id)
+        self.assertTrue(type(taxon_id) == int)
+        self.assertEqual('A description, with commmas, ...',
+                         requirements.get('samples', [{}])[0].get(
+                             'sample_description', 'no value'))
+        self.assertEqual(
+            'Illumina HiSeq 1000',
+            requirements.get('experiments', [{}])[0].get('platform')
+        )
+
+        sample_attribute_tags = []
+        geo_location = ''
+        for s in requirements.get(
+                'samples', [{}])[0].get('sample_attributes', []):
+            tag = s.get('tag')
+            sample_attribute_tags.append(tag)
+            if 'geographic location (country and/or sea)' in tag:
+                geo_location = s.get('value', 'no location')
+
+        self.assertIn('geographic location (country and/or sea)',
+                      sample_attribute_tags)
+        self.assertEqual('Atlantic Ocean', geo_location)
+
+        submission = Submission.objects.first()
+        submission.data.get('requirements', {}).update(requirements)
+        path = os.path.join(
+            os.getcwd(),
+            'gfbio_submissions/brokerage/schemas/ena_requirements.json')
+        valid, full_errors = validate_data_full(
+            data=submission.data,
+            target=ENA_PANGAEA,
+            schema_location=path,
+        )
+        self.assertTrue(valid)
 
     def test_parse_comma_with_some_quotes(self):
         with open(os.path.join(

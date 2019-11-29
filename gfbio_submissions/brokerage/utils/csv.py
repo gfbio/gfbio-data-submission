@@ -61,6 +61,9 @@ unit_mapping_keys = unit_mapping.keys()
 
 
 def extract_sample(row, field_names, sample_id):
+    for k in row.keys():
+        row[k] = row[k].strip()
+
     sample_attributes = [
         OrderedDict(
             [('tag', o), ('value', row[o]),
@@ -162,11 +165,15 @@ def parse_molecular_csv(csv_file):
     }
     try:
         field_names = csv_reader.fieldnames
+        for i in range(0, len(field_names)):
+            field_names[i] = field_names[i].strip()
+
     except _csv.Error as e:
         return molecular_requirements
     short_id = ShortId()
     for row in csv_reader:
         # every row is one sample (except header)
+
         sample_id = short_id.generate()
         experiment_id = short_id.generate()
         sample = extract_sample(row, field_names, sample_id)
