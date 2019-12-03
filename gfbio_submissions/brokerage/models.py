@@ -624,9 +624,14 @@ class SubmissionUpload(TimeStampedModel):
         help_text='The actual file uploaded.',
     )
 
+    md5_checksum = models.CharField(
+        max_length=32,
+        default='',
+        help_text='MD5 checksum of "file"'
+    )
+
     objects = SubmissionUploadManager()
 
-    # TODO: from PrimaryDataFile. new default for attach is -> false
     def save(self, ignore_attach_to_ticket=False, *args, **kwargs):
         super(SubmissionUpload, self).save(*args, **kwargs)
         if self.attach_to_ticket and not ignore_attach_to_ticket:
@@ -637,7 +642,6 @@ class SubmissionUpload(TimeStampedModel):
                     'submission_id': '{0}'.format(self.submission.pk),
                     'submission_upload_id': '{0}'.format(self.pk)
                 },
-                # TODO: rename
                 countdown=SUBMISSION_UPLOAD_RETRY_DELAY
             )
 
