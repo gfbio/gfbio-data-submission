@@ -22,6 +22,7 @@ from .fields import JsonDictField
 from .managers import AuditableTextDataManager
 from .managers import SiteConfigurationManager, \
     SubmissionManager, BrokerObjectManager, TaskProgressReportManager
+from .storage import OverwriteStorage
 from .utils.submission_tools import \
     submission_upload_path, hash_file
 
@@ -620,7 +621,7 @@ class SubmissionUpload(TimeStampedModel):
     )
     file = models.FileField(
         upload_to=submission_upload_path,
-        # storage=OverwriteStorage(),
+        storage=OverwriteStorage(),
         help_text='The actual file uploaded.',
     )
 

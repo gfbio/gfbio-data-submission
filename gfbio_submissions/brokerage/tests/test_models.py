@@ -772,3 +772,6 @@ class TestSubmissionUpload(TestCase):
         # with default storage filenames will not be the same
         self.assertNotEqual(SubmissionUpload.objects.first().file.name,
                             SubmissionUpload.objects.last().file.name)
+        # TODO: test how many SubmissionUpload instances are there for the same file
+        #   consider a clean up or mechanism to update if file name is the same (ignoring
+        #   possible different content / md5)
