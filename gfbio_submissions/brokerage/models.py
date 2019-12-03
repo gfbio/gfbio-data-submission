@@ -23,7 +23,7 @@ from .managers import AuditableTextDataManager
 from .managers import SiteConfigurationManager, \
     SubmissionManager, BrokerObjectManager, TaskProgressReportManager
 from .utils.submission_tools import \
-    submission_upload_path
+    submission_upload_path, hash_file
 
 logger = logging.getLogger(__name__)
 
@@ -633,6 +633,12 @@ class SubmissionUpload(TimeStampedModel):
     objects = SubmissionUploadManager()
 
     def save(self, ignore_attach_to_ticket=False, *args, **kwargs):
+        # TODO: consider task/chain for this. every new/save resets md5 to '' then task is
+        #   put to queue
+        # start = default_timer()
+        self.md5_checksum = hash_file(self.file)
+        # stop = default_timer()
+        # print('MD5 took ', (stop - start), ' seconds')
         super(SubmissionUpload, self).save(*args, **kwargs)
         if self.attach_to_ticket and not ignore_attach_to_ticket:
             from .tasks import \
