@@ -11,8 +11,6 @@ import responses
 from celery import chain
 from django.contrib.auth.models import Permission
 from django.test import TestCase, override_settings
-from django.urls import reverse
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APIRequestFactory, APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
@@ -581,8 +579,7 @@ class TestSubmissionPreparationTasks(TestTasks):
         self.assertTrue('tasks.check_on_hold_status_task' in task_names)
 
 
-class TestGFBioHelpDeskTasks(TestTasks):
-
+class TestHelpDeskTasksBase(TestTasks):
     @classmethod
     def _add_success_responses(cls):
         responses.add(
@@ -673,6 +670,9 @@ class TestGFBioHelpDeskTasks(TestTasks):
             status=200,
             json=cls.issue_json,
         )
+
+
+class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
 
     # TODO: may these have to be moved to other test class (Taskprogressreport ...)
     #   or removed ... Now for testing behaviour on GFBIO-2589
@@ -928,155 +928,6 @@ class TestGFBioHelpDeskTasks(TestTasks):
         self.assertFalse(result.get())
 
     @responses.activate
-    def test_attach_to_helpdesk_ticket_task_no_primarydatafile(self):
-        submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-        url = '{0}{1}/{2}/{3}'.format(
-            site_config.helpdesk_server.url,
-            JIRA_ISSUE_URL,
-            'FAKE_KEY',
-            JIRA_ATTACHMENT_SUB_URL,
-        )
-        responses.add(responses.POST,
-                      url,
-                      json=_get_jira_attach_response(),
-                      status=200)
-        result = attach_to_submission_issue_task.apply_async(
-            kwargs={
-                'submission_id': submission.pk,
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertFalse(result.get())
-
-    @responses.activate
-    def test_attach_to_helpdesk_ticket_task_with_submission_upload(self):
-        submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-
-        # self._add_default_pangaea_responses()
-
-        responses.add(
-            responses.GET,
-            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
-            status=200,
-        )
-
-        responses.add(
-            responses.GET,
-            '{0}/rest/api/2/issue/FAKE_KEY'.format(
-                site_config.helpdesk_server.url),
-            json=self.issue_json,
-        )
-
-        #  https://www.example.com/rest/api/2/issue/SAND-1661/attachments
-
-        url = reverse('brokerage:submissions_upload', kwargs={
-            'broker_submission_id': submission.broker_submission_id})
-        responses.add(responses.POST, url, json={}, status=200)
-
-        responses.add(responses.POST,
-                      '{0}{1}/{2}/{3}'.format(
-                          site_config.helpdesk_server.url,
-                          JIRA_ISSUE_URL,
-                          'SAND-1661',
-                          JIRA_ATTACHMENT_SUB_URL,
-                      ),
-                      json=_get_jira_attach_response(),
-                      status=200)
-        data = self._create_test_data('/tmp/test_primary_data_file')
-        data['attach_to_ticket'] = True
-        token = Token.objects.create(user=submission.site)
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        # POST will already trigger attach_to_submission_issue_task
-        # via PrimaryDataFile save method
-        client.post(url, data, format='multipart')
-
-        # attach_to_submission_issue_task was already triggered by POST above
-        # via SubmissionUpload save method
-        result = attach_to_submission_issue_task.apply_async(
-            kwargs={
-                'submission_id': submission.pk,
-                'submission_upload_id': SubmissionUpload.objects.first().pk,
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertTrue(result.get())
-        submission_upload = SubmissionUpload.objects.first()
-        self.assertEqual(10814, submission_upload.attachment_id)
-
-    @responses.activate
-    def test_delete_attachment_task(self):
-        submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-
-        url = reverse('brokerage:submissions_upload', kwargs={
-            'broker_submission_id': submission.broker_submission_id})
-        responses.add(responses.POST, url, json={}, status=200)
-        responses.add(
-            responses.GET,
-            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
-            status=200,
-        )
-        responses.add(
-            responses.GET,
-            '{0}/rest/api/2/issue/FAKE_KEY'.format(
-                site_config.helpdesk_server.url),
-            json=_get_jira_issue_response()
-            # json={}
-        )
-        responses.add(responses.POST,
-                      '{0}{1}/{2}/{3}'.format(
-                          site_config.helpdesk_server.url,
-                          JIRA_ISSUE_URL,
-                          'SAND-1661',
-                          JIRA_ATTACHMENT_SUB_URL,
-                      ),
-                      json=_get_jira_attach_response(),
-                      status=200)
-        data = self._create_test_data('/tmp/test_primary_data_file')
-        data['attach_to_ticket'] = True
-        token = Token.objects.create(user=submission.site)
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        # POST will already trigger attach_to_submission_issue_task
-        # via PrimaryDataFile save method
-        client.post(url, data, format='multipart')
-        # TODO: everything above is only preparation to setup SubmissionUpload
-        #   properly
-        submission_upload = SubmissionUpload.objects.first()
-        url = '{0}{1}/{2}'.format(
-            site_config.helpdesk_server.url,
-            JIRA_ATTACHMENT_URL,
-            submission_upload.attachment_id)
-        responses.add(responses.DELETE, url, body=b'', status=204)
-        result = delete_submission_issue_attachment_task.apply_async(
-            kwargs={
-                'submission_id': submission.pk,
-                'attachment_id': SubmissionUpload.objects.first().attachment_id,
-            }
-        )
-        self.assertTrue(result.successful())
-        self.assertTrue(result.get())
-
-    # TODO: take this mock concept for testing retry, and add more tests for
-    #  other tasks with retry policy(s)
-    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
-                       CELERY_TASK_EAGER_PROPAGATES=False)
-    @patch(
-        'gfbio_submissions.brokerage.utils.task_utils.send_task_fail_mail')
-    def test_attach_primarydatafile_without_ticket(self, mock):
-        submission = Submission.objects.last()
-        # omiting submission_upload_id, defaults this parameter to None
-        attach_to_submission_issue_task.apply(
-            kwargs={
-                'submission_id': submission.pk,
-            }
-        )
-        self.assertTrue(mock.called)
-
-    @responses.activate
     def test_add_pangaealink_to_submission_issue_task_success(self):
         submission = Submission.objects.first()
         url = self._add_comment_reponses()
@@ -1295,6 +1146,123 @@ class TestGFBioHelpDeskTasks(TestTasks):
         self.assertEqual('502', tpr.first().task_exception)
 
 
+class TestAttachToIssueTasks(TestHelpDeskTasksBase):
+
+    @classmethod
+    def _add_submission_upload(cls):
+        upload = TestCSVParsing.create_csv_submission_upload(
+            Submission.objects.first(),
+            User.objects.first(),
+            'csv_files/SO45_mod.csv'
+        )
+        upload.attach_to_ticket = True
+        upload.save(ignore_attach_to_ticket=True)
+
+    @classmethod
+    def _prepare_responses(cls):
+        cls._add_submission_upload()
+        site_config = SiteConfiguration.objects.first()
+
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+            status=200,
+        )
+
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/FAKE_KEY'.format(
+                site_config.helpdesk_server.url),
+            json=cls.issue_json,
+        )
+
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          site_config.helpdesk_server.url,
+                          JIRA_ISSUE_URL,
+                          'SAND-1661',
+                          JIRA_ATTACHMENT_SUB_URL,
+                      ),
+                      json=_get_jira_attach_response(),
+                      status=200)
+
+    @responses.activate
+    def test_attach_to_helpdesk_ticket_task_no_submission_upload(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        url = '{0}{1}/{2}/{3}'.format(
+            site_config.helpdesk_server.url,
+            JIRA_ISSUE_URL,
+            'FAKE_KEY',
+            JIRA_ATTACHMENT_SUB_URL,
+        )
+        responses.add(responses.POST,
+                      url,
+                      json=_get_jira_attach_response(),
+                      status=200)
+        result = attach_to_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertTrue(result.successful())
+        self.assertFalse(result.get())
+
+    @responses.activate
+    def test_attach_to_helpdesk_ticket_task(self):
+        self._prepare_responses()
+        submission = Submission.objects.first()
+
+        result = attach_to_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+                'submission_upload_id': SubmissionUpload.objects.first().pk,
+            }
+        )
+
+        self.assertTrue(result.successful())
+        self.assertTrue(result.get())
+        submission_upload = SubmissionUpload.objects.first()
+        self.assertEqual(10814, submission_upload.attachment_id)
+
+    @responses.activate
+    def test_delete_attachment_task(self):
+        self._prepare_responses()
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+
+        submission_upload = SubmissionUpload.objects.first()
+        url = '{0}{1}/{2}'.format(
+            site_config.helpdesk_server.url,
+            JIRA_ATTACHMENT_URL,
+            submission_upload.attachment_id)
+        responses.add(responses.DELETE, url, body=b'', status=204)
+        result = delete_submission_issue_attachment_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+                'attachment_id': SubmissionUpload.objects.first().attachment_id,
+            }
+        )
+        self.assertTrue(result.successful())
+        self.assertTrue(result.get())
+
+    # TODO: take this mock concept for testing retry, and add more tests for
+    #  other tasks with retry policy(s)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+                       CELERY_TASK_EAGER_PROPAGATES=False)
+    @patch(
+        'gfbio_submissions.brokerage.utils.task_utils.send_task_fail_mail')
+    def test_attach_submission_upload_without_ticket(self, mock):
+        submission = Submission.objects.last()
+        # omiting submission_upload_id, defaults this parameter to None
+        attach_to_submission_issue_task.apply(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertTrue(mock.called)
+
+
 class TestParseMetaDataForUpdateTask(TestTasks):
 
     @classmethod
@@ -1391,7 +1359,8 @@ class TestParseMetaDataForUpdateTask(TestTasks):
         }
         submission_upload = SubmissionUpload.objects.first()
         self.assertEqual(expected_data['requirements'].keys(),
-                             submission_upload.submission.data['requirements'].keys())
+                         submission_upload.submission.data[
+                             'requirements'].keys())
 
     def test_clean_submission_for_update_task_invalid_id(self):
         result = clean_submission_for_update_task.apply_async(

@@ -750,28 +750,39 @@ class TestSubmissionUpload(TestCase):
 
     def test_same_file_name(self):
         self.assertEqual(0, len(SubmissionUpload.objects.all()))
-        submission_upload = SubmissionUpload.objects.create(
+        SubmissionUpload.objects.create(
             submission=Submission.objects.first(),
             site=User.objects.first(),
             user=User.objects.first(),
             file=SimpleUploadedFile('test_submission_upload.txt',
                                     b'these are the file contents!'),
         )
-        submission_upload = SubmissionUpload.objects.create(
+        SubmissionUpload.objects.create(
             submission=Submission.objects.first(),
             site=User.objects.first(),
             user=User.objects.first(),
             file=SimpleUploadedFile('test_submission_upload.txt',
-                                    b'these are the file contents!'),
+                                    b'these are the file contents! but different'),
         )
         self.assertEqual(2, len(SubmissionUpload.objects.all()))
-        # for s in SubmissionUpload.objects.all():
-        #     print(s.file.name)
         print(SubmissionUpload.objects.first())
         print(SubmissionUpload.objects.last())
+
         # with default storage filenames will not be the same
-        self.assertNotEqual(SubmissionUpload.objects.first().file.name,
-                            SubmissionUpload.objects.last().file.name)
+        # self.assertNotEqual(SubmissionUpload.objects.first().file.name,
+        #                     SubmissionUpload.objects.last().file.name)
+
+        # with override custom storage filenames will BE the same
+        self.assertEqual(SubmissionUpload.objects.first().file.name,
+                         SubmissionUpload.objects.last().file.name)
+
         # TODO: test how many SubmissionUpload instances are there for the same file
         #   consider a clean up or mechanism to update if file name is the same (ignoring
         #   possible different content / md5)
+
+        # when testing with local dev server:
+        # - added 3x same file to upload dialog (was accepted)
+        # - one is marked as metadata
+        # - under media only on file available
+        # - 3 SubmissionUploads (same md5)
+        # - 3 attachement ids from jira (== 3 attachements)

@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import uuid
+from timeit import default_timer
 
 from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
@@ -636,10 +637,10 @@ class SubmissionUpload(TimeStampedModel):
     def save(self, ignore_attach_to_ticket=False, *args, **kwargs):
         # TODO: consider task/chain for this. every new/save resets md5 to '' then task is
         #   put to queue
-        # start = default_timer()
+        start = default_timer()
         self.md5_checksum = hash_file(self.file)
-        # stop = default_timer()
-        # print('MD5 took ', (stop - start), ' seconds')
+        stop = default_timer()
+        print('\n ------ MD5 took ', (stop - start), ' seconds ', self.file.name, ' ignore attach ', ignore_attach_to_ticket)
         super(SubmissionUpload, self).save(*args, **kwargs)
         if self.attach_to_ticket and not ignore_attach_to_ticket:
             from .tasks import \
