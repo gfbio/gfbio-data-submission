@@ -2,6 +2,7 @@
 import base64
 import json
 import uuid
+from pprint import pprint
 from unittest import skip
 from unittest.mock import patch
 from urllib.parse import quote
@@ -1187,7 +1188,7 @@ class TestAttachToIssueTasks(TestHelpDeskTasksBase):
                       status=200)
 
     @responses.activate
-    def test_attach_to_helpdesk_ticket_task_no_submission_upload(self):
+    def test_attach_to_issue_task_no_submission_upload(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
         url = '{0}{1}/{2}/{3}'.format(
@@ -1209,7 +1210,7 @@ class TestAttachToIssueTasks(TestHelpDeskTasksBase):
         self.assertFalse(result.get())
 
     @responses.activate
-    def test_attach_to_helpdesk_ticket_task(self):
+    def test_attach_to_issue_task(self):
         self._prepare_responses()
         submission = Submission.objects.first()
 
@@ -1224,6 +1225,40 @@ class TestAttachToIssueTasks(TestHelpDeskTasksBase):
         self.assertTrue(result.get())
         submission_upload = SubmissionUpload.objects.first()
         self.assertEqual(10814, submission_upload.attachment_id)
+
+    @responses.activate
+    def test_attach_multiple_files_with_same_name(self):
+        # self._prepare_responses()
+        self._add_submission_upload()
+        self._add_submission_upload()
+        self._add_submission_upload()
+        # print(SubmissionUpload.objects.all())
+        submission = Submission.objects.first()
+        # print(submission.submissionupload_set.all())
+        all_uploads = SubmissionUpload.objects.all()
+        self.assertEqual(3, len(all_uploads))
+
+        for i in range(0, len(all_uploads)):
+            # all_uploads[i].attachment_id = i+1
+            # all_uploads[i].save(ignore_attach_to_ticket=True)
+            self.assertEqual('3bc38ceb0c2dd4571737fb5e6ed22a62', all_uploads[i].md5_checksum)
+            print('\n')
+            pprint(all_uploads[i].__dict__)
+
+        # TODO: 1. if attachmentid is None (blank/null) it can be assumed that this s.upload is not attached to ticket
+        #       2. thus None means first attach ever, int val means is has been attached in the past
+        #       3. check and store change in md5 in model ? modified tick ? modified_since_last_attachment
+
+        # result = attach_to_submission_issue_task.apply_async(
+        #     kwargs={
+        #         'submission_id': submission.pk,
+        #         'submission_upload_id': SubmissionUpload.objects.first().pk,
+        #     }
+        # )
+        #
+        # for s in SubmissionUpload.objects.all():
+        #     print('\n')
+        #     pprint(s.__dict__)
 
     @responses.activate
     def test_delete_attachment_task(self):
