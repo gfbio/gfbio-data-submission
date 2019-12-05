@@ -1229,12 +1229,18 @@ class TestAttachToIssueTasks(TestHelpDeskTasksBase):
     @responses.activate
     def test_attach_multiple_files_with_same_name(self):
         # self._prepare_responses()
+
+        # this method does a create, then a mod plus save -> 1 new 1 update
         self._add_submission_upload()
         self._add_submission_upload()
         self._add_submission_upload()
+
         # print(SubmissionUpload.objects.all())
+
         submission = Submission.objects.first()
+
         # print(submission.submissionupload_set.all())
+
         all_uploads = SubmissionUpload.objects.all()
         self.assertEqual(3, len(all_uploads))
 

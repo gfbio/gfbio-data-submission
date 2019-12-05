@@ -1039,7 +1039,7 @@ def add_posted_comment_to_issue_task(self, prev_task_result=None,
     retry_jitter=True
 )
 def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
-                                    submission_upload_id=None):
+                                    submission_upload_id=None, ):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -1058,6 +1058,15 @@ def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
             attach_to_ticket=True).filter(pk=submission_upload_id).first()
         if submission_upload:
 
+            do_attach = False
+            if submission_upload.attachment_id is None:
+                do_attach = True
+            if submission_upload.modified_recently:
+                do_attach = True
+
+            if not do_attach:
+                return TaskProgressReport.CANCELLED
+
             # TODO: access media nginx https://stackoverflow.com/questions/8370658/how-to-serve-django-media-files-via-nginx
             jira_client = JiraClient(
                 resource=site_configuration.helpdesk_server,
@@ -1071,6 +1080,7 @@ def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
                                   broker_submission_id=submission.broker_submission_id)
 
             submission_upload.attachment_id = attachment.id
+            submission_upload.modified_recently = False
             submission_upload.save(ignore_attach_to_ticket=True)
 
             return True

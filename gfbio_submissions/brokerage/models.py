@@ -604,10 +604,17 @@ class SubmissionUpload(TimeStampedModel):
     )
     attach_to_ticket = models.BooleanField(
         default=False,
-        help_text='When checked, thus having True as value, every uploaded '
+        help_text='If checked, thus having True as value, every uploaded '
                   'file will be attached to the main helpdesk ticket'
                   'associated with "submission".',
     )
+
+    modified_recently = models.BooleanField(
+        default=False,
+        help_text='Checked automatically if "file" has been updated and '
+                  'its content/md5_checksum has changed'
+    )
+
     attachment_id = models.IntegerField(
         null=True,
         blank=True,
@@ -637,10 +644,13 @@ class SubmissionUpload(TimeStampedModel):
     def save(self, ignore_attach_to_ticket=False, *args, **kwargs):
         # TODO: consider task/chain for this. every new/save resets md5 to '' then task is
         #   put to queue
-        start = default_timer()
-        self.md5_checksum = hash_file(self.file)
-        stop = default_timer()
-        print('\n ------ MD5 took ', (stop - start), ' seconds ', self.file.name, ' ignore attach ', ignore_attach_to_ticket)
+        if self.pk is None:
+            self.md5_checksum = hash_file(self.file)
+        else:
+            md5 = hash_file(self.file)
+            if md5 != self.md5_checksum:
+                self.modified_recently = True
+                self.md5_checksum = md5
         super(SubmissionUpload, self).save(*args, **kwargs)
         if self.attach_to_ticket and not ignore_attach_to_ticket:
             from .tasks import \

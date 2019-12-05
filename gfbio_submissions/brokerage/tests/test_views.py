@@ -14,14 +14,13 @@ from rest_framework.test import APIClient
 
 from config.settings.base import MEDIA_URL
 from gfbio_submissions.brokerage.configuration.settings import \
-    JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL, GENERIC, JIRA_ATTACHMENT_URL
+    JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL, JIRA_ATTACHMENT_URL
 from gfbio_submissions.brokerage.models import Submission, \
     SiteConfiguration, ResourceCredential, AdditionalReference, \
     TaskProgressReport, SubmissionUpload
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_jira_attach_response, \
     _get_jira_issue_response, _get_pangaea_comment_response
-from gfbio_submissions.brokerage.utils.csv import check_for_molecular_content
 from gfbio_submissions.users.models import User
 
 
@@ -72,20 +71,61 @@ class TestSubmissionUploadView(TestCase):
         SubmissionTest._create_submission_via_serializer()
 
     @classmethod
-    def _create_test_data(cls, path, delete=True):
+    def _create_test_data(cls, path, content='test123\n', delete=True,
+                          attach=False):
         if delete:
             cls._delete_test_data()
         f = open(path, 'w')
-        f.write('test123\n')
+        f.write(content)
         f.close()
         f = open(path, 'rb')
         return {
             'file': f,
+            'attach_to_ticket': attach,
         }
 
     @staticmethod
     def _delete_test_data():
         SubmissionUpload.objects.all().delete()
+
+    @classmethod
+    def _do_post_with_mocked_responses(cls,
+                                       file_name='test_primary_data_file_1111',
+                                       attach=False):
+        site_config = SiteConfiguration.objects.first()
+        submission = Submission.objects.first()
+        responses.add(responses.GET,
+                      '{0}/rest/api/2/field'.format(
+                          site_config.helpdesk_server.url),
+                      status=200)
+        issue_json = _get_jira_issue_response()
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/FAKE_KEY'.format(
+                site_config.helpdesk_server.url),
+            json=issue_json
+        )
+        url = reverse(
+            'brokerage:submissions_upload',
+            kwargs={
+                'broker_submission_id': submission.broker_submission_id
+            })
+        responses.add(responses.POST, url, json={}, status=200)
+
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          site_config.helpdesk_server.url,
+                          JIRA_ISSUE_URL,
+                          'SAND-1661',
+                          JIRA_ATTACHMENT_SUB_URL,
+                      ),
+                      json=_get_jira_attach_response(),
+                      status=200)
+
+        data = cls._create_test_data('/tmp/{0}'.format(file_name),
+                                     attach=attach)
+
+        return cls.api_client.post(url, data, format='multipart')
 
     def test_empty_relation(self):
         submission = Submission.objects.first()
@@ -115,57 +155,6 @@ class TestSubmissionUploadView(TestCase):
         # TODO: no task is triggered yet
         self.assertEqual(len(TaskProgressReport.objects.all()), reports_len)
         self.assertGreater(len(SubmissionUpload.objects.all()), uploads_len)
-
-    # TODO: remove, test was intended to check tasks triggered by save() on upload
-    # @responses.activate
-    # def test_meta_data_parsing(self):
-    #     submission = Submission.objects.all().first()
-    #     submission.target = GENERIC
-    #     submission.data = {
-    #         'requirements': {
-    #             'title': 'A Title',
-    #             'description': 'A Description',
-    #             'data_center': 'ENA – European Nucleotide Archive'}
-    #     }
-    #     submission.save()
-    #
-    #     url = reverse('brokerage:submissions_upload', kwargs={
-    #         'broker_submission_id': submission.broker_submission_id})
-    #     responses.add(responses.POST, url, json={}, status=200)
-    #     data = self._create_test_data('/tmp/test_primary_data_file')
-    #     data['meta_data'] = True
-    #     response = self.api_client.post(url, data, format='multipart')
-    #
-    #     # expected state of submission with on (meta_data) file
-    #     self.assertEqual(GENERIC, submission.target)
-    #     self.assertTrue(submission.release)
-    #     self.assertIn('data_center',
-    #                   submission.data.get('requirements', {}).keys())
-    #     self.assertIn('ENA',
-    #                   submission.data.get('requirements', {}).get('data_center',
-    #                                                               ''))
-    #     self.assertEqual(1, len(submission.submissionupload_set.all()))
-    #     upload = submission.submissionupload_set.first()
-    #     self.assertTrue(upload.meta_data)
-    #
-    #     # res = check_for_molecular_content(submission)
-    #     #
-    #     # print(res)
-    #
-    #     # content = json.loads(response.content.decode('utf-8'))
-    #     # pprint(content)
-    #
-    #     # self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    #     # self.assertIn(b'broker_submission_id', response.content)
-    #     # self.assertIn(b'"id"', response.content)
-    #     # self.assertIn(b'site', response.content)
-    #     # self.assertEqual(User.objects.first().username, response.data['site'])
-    #     # self.assertIn(b'file', response.content)
-    #     # self.assertTrue(
-    #     #     urlparse(response.data['file']).path.startswith(MEDIA_URL))
-    #     # # TODO: no task is triggered yet
-    #     # self.assertEqual(len(TaskProgressReport.objects.all()), reports_len)
-    #     # self.assertGreater(len(SubmissionUpload.objects.all()), uploads_len)
 
     def test_upload_of_multiple_files(self):
         submission = Submission.objects.all().first()
@@ -436,35 +425,19 @@ class TestSubmissionUploadView(TestCase):
                 'broker_submission_id': submission.broker_submission_id,
                 'pk': content.get('id')
             })
-        data = self._create_test_data('/tmp/test_primary_data_file_2222', False)
+        data = self._create_test_data('/tmp/test_primary_data_file_2222',
+                                      delete=False)
         response = self.api_client.put(url, data, format='multipart')
         self.assertEqual(400, response.status_code)
 
     @responses.activate
     def test_valid_file_put_no_task(self):
         submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-        url = reverse(
-            'brokerage:submissions_upload',
-            kwargs={
-                'broker_submission_id': submission.broker_submission_id
-            })
-        responses.add(responses.POST, url, json={}, status=200)
-        responses.add(responses.POST,
-                      '{0}{1}/{2}/{3}'.format(
-                          site_config.helpdesk_server.url,
-                          JIRA_ISSUE_URL,
-                          'FAKE_KEY',
-                          JIRA_ATTACHMENT_SUB_URL,
-                      ),
-                      json=_get_jira_attach_response(),
-                      status=200)
-        data = self._create_test_data('/tmp/test_primary_data_file_1111')
         reports_len = len(TaskProgressReport.objects.all())
-        response = self.api_client.post(url, data, format='multipart')
+        response = self._do_post_with_mocked_responses(
+            file_name='test_primary_data_file_1111')
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(SubmissionUpload.objects.all()))
-
         fname = SubmissionUpload.objects.all().first().file.name
         self.assertIn('test_primary_data_file_1111', fname)
         content = json.loads(response.content.decode('utf-8'))
@@ -474,7 +447,8 @@ class TestSubmissionUploadView(TestCase):
                 'broker_submission_id': submission.broker_submission_id,
                 'pk': content.get('id')
             })
-        data = self._create_test_data('/tmp/test_primary_data_file_2222', False)
+        data = self._create_test_data(path='/tmp/test_primary_data_file_2222',
+                                      delete=False)
         response = self.api_client.put(url, data, format='multipart')
         self.assertEqual(200, response.status_code)
         self.assertEqual(1, len(SubmissionUpload.objects.all()))
@@ -485,71 +459,101 @@ class TestSubmissionUploadView(TestCase):
     @responses.activate
     def test_valid_file_put_with_task(self):
         submission = Submission.objects.first()
-        site_config = SiteConfiguration.objects.first()
-
-        responses.add(responses.GET,
-                      '{0}/rest/api/2/field'.format(
-                          site_config.helpdesk_server.url),
-                      status=200)
-        #
-        issue_json = _get_jira_issue_response()
-        responses.add(
-            responses.GET,
-            '{0}/rest/api/2/issue/FAKE_KEY'.format(
-                site_config.helpdesk_server.url),
-            json=issue_json
-            # json={}
-        )
-        # responses.add(
-        #     responses.GET,
-        #     '{0}/rest/api/2/issue/SAND-1661'.format(
-        #         site_config.helpdesk_server.url),
-        #     json=issue_json
-        # )
-        #
-        url = reverse(
-            'brokerage:submissions_upload',
-            kwargs={
-                'broker_submission_id': submission.broker_submission_id
-            })
-        responses.add(responses.POST, url, json={}, status=200)
-
-        responses.add(responses.POST,
-                      '{0}{1}/{2}/{3}'.format(
-                          site_config.helpdesk_server.url,
-                          JIRA_ISSUE_URL,
-                          'SAND-1661',
-                          JIRA_ATTACHMENT_SUB_URL,
-                      ),
-                      json=_get_jira_attach_response(),
-                      status=200)
-
-        data = self._create_test_data('/tmp/test_primary_data_file_1111')
         reports_len = len(TaskProgressReport.objects.all())
-        response = self.api_client.post(url, data, format='multipart')
+
+        response = self._do_post_with_mocked_responses(
+            file_name='test_primary_data_file_1111')
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(SubmissionUpload.objects.all()))
         fname = SubmissionUpload.objects.all().first().file.name
         self.assertIn('test_primary_data_file_1111', fname)
-        content = json.loads(response.content.decode('utf-8'))
         self.assertEqual(len(TaskProgressReport.objects.all()), reports_len)
 
+        content = json.loads(response.content.decode('utf-8'))
         url = reverse(
             'brokerage:submissions_upload_detail',
             kwargs={
                 'broker_submission_id': submission.broker_submission_id,
                 'pk': content.get('id')
             })
-        data = self._create_test_data('/tmp/test_primary_data_file_2222', False)
+        data = self._create_test_data('/tmp/test_primary_data_file_2222',
+                                      delete=False)
         data['attach_to_ticket'] = True
+        response = self.api_client.put(url, data, format='multipart')
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, len(SubmissionUpload.objects.all()))
+        fname = SubmissionUpload.objects.all().first().file.name
+        self.assertIn('test_primary_data_file_2222', fname)
+        self.assertGreater(len(TaskProgressReport.objects.all()), reports_len)
+
+    @responses.activate
+    def test_file_put_same_content_with_task(self):
+        submission = Submission.objects.first()
+        response = self._do_post_with_mocked_responses(
+            file_name='test_primary_data_file_1111', attach=True)
+
+        self.assertEqual(1, len(submission.submissionupload_set.all()))
+        submission_upload = submission.submissionupload_set.first()
+        checksum = submission_upload.md5_checksum
+
+        content = json.loads(response.content.decode('utf-8'))
+        url = reverse(
+            'brokerage:submissions_upload_detail',
+            kwargs={
+                'broker_submission_id': submission.broker_submission_id,
+                'pk': content.get('id')
+            })
+        data = self._create_test_data('/tmp/test_primary_data_file_1111',
+                                      delete=False, attach=True)
 
         response = self.api_client.put(url, data, format='multipart')
 
-        # self.assertEqual(200, response.status_code)
-        # self.assertEqual(1, len(SubmissionUpload.objects.all()))
-        # fname = SubmissionUpload.objects.all().first().file.name
-        # self.assertIn('test_primary_data_file_2222', fname)
-        # self.assertGreater(len(TaskProgressReport.objects.all()), reports_len)
+        self.assertEqual(1, len(submission.submissionupload_set.all()))
+        submission_upload = submission.submissionupload_set.first()
+        self.assertEqual(checksum, submission_upload.md5_checksum)
+        self.assertFalse(submission_upload.modified_recently)
+
+        task_reports = TaskProgressReport.objects.all().order_by('created')
+        self.assertEqual(2, len(task_reports))
+        self.assertTrue(task_reports.first().task_return_value)
+        self.assertEqual(TaskProgressReport.CANCELLED,
+                         task_reports.last().task_return_value)
+
+    @responses.activate
+    def test_file_put_modified_content_with_task(self):
+        submission = Submission.objects.first()
+        response = self._do_post_with_mocked_responses(
+            file_name='test_primary_data_file_1111', attach=True)
+
+        self.assertEqual(1, len(submission.submissionupload_set.all()))
+        submission_upload = submission.submissionupload_set.first()
+        checksum = submission_upload.md5_checksum
+
+        content = json.loads(response.content.decode('utf-8'))
+        url = reverse(
+            'brokerage:submissions_upload_detail',
+            kwargs={
+                'broker_submission_id': submission.broker_submission_id,
+                'pk': content.get('id')
+            })
+        data = self._create_test_data('/tmp/test_primary_data_file_1111',
+                                      delete=False, attach=True,
+                                      content='different\n')
+
+        response = self.api_client.put(url, data, format='multipart')
+
+        self.assertEqual(1, len(submission.submissionupload_set.all()))
+        submission_upload = submission.submissionupload_set.first()
+        self.assertNotEqual(checksum, submission_upload.md5_checksum)
+        self.assertFalse(submission_upload.modified_recently)
+
+        task_reports = TaskProgressReport.objects.all().order_by('created')
+        self.assertEqual(2, len(task_reports))
+        self.assertTrue(task_reports.first().task_return_value)
+        self.assertTrue(task_reports.last().task_return_value)
+        # self.assertEqual(TaskProgressReport.CANCELLED,
+        #                  task_reports.last().task_return_value)
 
     def test_no_submission_upload(self):
         url = reverse(
