@@ -100,19 +100,19 @@ def extract_experiment(experiment_id, row, sample_id):
         nominal_length = -1
     experiment = {
         'experiment_alias': experiment_id,
-        'platform': row.get('sequencing_platform', '')
+        'platform': row.get('sequencing_platform', '').lower()
     }
 
-    library_layout = row.get('library_layout', '')
+    library_layout = row.get('library_layout', '').lower()
 
     dpath.util.new(experiment, 'design/sample_descriptor', sample_id)
     dpath.util.new(experiment, 'design/library_descriptor/library_strategy',
-                   row.get('library_strategy', ''))
+                   row.get('library_strategy', '').lower())
     dpath.util.new(experiment, 'design/library_descriptor/library_source',
-                   row.get('library_source', ''))
+                   row.get('library_source', '').lower())
     dpath.util.new(experiment,
                    'design/library_descriptor/library_selection',
-                   row.get('library_selection', ''))
+                   row.get('library_selection', '').lower())
     dpath.util.new(experiment,
                    'design/library_descriptor/library_layout/layout_type',
                    library_layout)
