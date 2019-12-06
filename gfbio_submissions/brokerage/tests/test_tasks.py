@@ -2,7 +2,6 @@
 import base64
 import json
 import uuid
-from pprint import pprint
 from unittest import skip
 from unittest.mock import patch
 from urllib.parse import quote
@@ -1228,43 +1227,33 @@ class TestAttachToIssueTasks(TestHelpDeskTasksBase):
 
     @responses.activate
     def test_attach_multiple_files_with_same_name(self):
-        # self._prepare_responses()
-
         # this method does a create, then a mod plus save -> 1 new 1 update
+        self._prepare_responses()
         self._add_submission_upload()
         self._add_submission_upload()
-        self._add_submission_upload()
-
-        # print(SubmissionUpload.objects.all())
 
         submission = Submission.objects.first()
-
-        # print(submission.submissionupload_set.all())
 
         all_uploads = SubmissionUpload.objects.all()
         self.assertEqual(3, len(all_uploads))
 
         for i in range(0, len(all_uploads)):
-            # all_uploads[i].attachment_id = i+1
-            # all_uploads[i].save(ignore_attach_to_ticket=True)
-            self.assertEqual('3bc38ceb0c2dd4571737fb5e6ed22a62', all_uploads[i].md5_checksum)
-            print('\n')
-            pprint(all_uploads[i].__dict__)
+            self.assertEqual('3bc38ceb0c2dd4571737fb5e6ed22a62',
+                             all_uploads[i].md5_checksum)
+            result = attach_to_submission_issue_task.apply_async(
+                kwargs={
+                    'submission_id': submission.pk,
+                    'submission_upload_id': all_uploads[i].pk,
+                }
+            )
+            self.assertTrue(result.get())
 
-        # TODO: 1. if attachmentid is None (blank/null) it can be assumed that this s.upload is not attached to ticket
-        #       2. thus None means first attach ever, int val means is has been attached in the past
-        #       3. check and store change in md5 in model ? modified tick ? modified_since_last_attachment
-
-        # result = attach_to_submission_issue_task.apply_async(
-        #     kwargs={
-        #         'submission_id': submission.pk,
-        #         'submission_upload_id': SubmissionUpload.objects.first().pk,
-        #     }
-        # )
-        #
-        # for s in SubmissionUpload.objects.all():
-        #     print('\n')
-        #     pprint(s.__dict__)
+        # Expected outcome is that despite having the same name 3 uploads are
+        # created and each is attached to ticket
+        task_reports = TaskProgressReport.objects.all()
+        self.assertEqual(3, len(task_reports))
+        for s in task_reports:
+            self.assertTrue(s.task_return_value)
 
     @responses.activate
     def test_delete_attachment_task(self):
@@ -1806,7 +1795,6 @@ class TestGetHelpDeskUserTask(TestTasks):
             }
         )
         res = result.get()
-        print('res', res)
         expected_result = {
             'jira_user_name': JIRA_FALLBACK_USERNAME,
             'email': 'external@site.de',
@@ -1836,10 +1824,6 @@ class TestGetHelpDeskUserTask(TestTasks):
                 'submission_id': submission.id,
             }
         )
-        for t in TaskProgressReport.objects.all():
-            print(t.task_name, ' ', t.status, ' ', t.task_return_value, ' ',
-                  t.task_kwargs,
-                  ' ', t.task_args)
         tpr = TaskProgressReport.objects.first()
         self.assertEqual('RETRY', tpr.status)
         expected_value = "{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + \
@@ -1864,10 +1848,6 @@ class TestGetHelpDeskUserTask(TestTasks):
                 'submission_id': submission.id,
             }
         )
-        for t in TaskProgressReport.objects.all():
-            print(t.task_name, ' ', t.status, ' ', t.task_return_value, ' ',
-                  t.task_kwargs,
-                  ' ', t.task_args)
         tpr = TaskProgressReport.objects.first()
         expected_value = "{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + \
                          "', 'email': 'external@site.de', 'full_name': ''}"
@@ -1909,14 +1889,6 @@ class TestPangaeaTasks(TestTasks):
         self.assertEqual(3, len(additional_references))
         ref = additional_references.last()
         self.assertEqual('PDI-12428', ref.reference_key)
-
-        # request_logs = RequestLog.objects.all()
-        # self.assertEqual(1, len(request_logs))
-        # print(request_logs.first().__dict__)
-        # self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        # self.assertEqual(
-        #     '{0}/rest/api/2/issue/'.format(site_config.pangaea_jira_server.url),
-        #     request_logs.first().url)
 
     @responses.activate
     def test_create_pangaea_issue_task_client_error(self):
@@ -2478,11 +2450,6 @@ class TestTaskProgressReportInTasks(TestTasks):
         report = reports.last()
 
         reps = TaskProgressReport.objects.all()
-        for r in reps:
-            print(r.task_name, ' ', r.status, ' ', r.task_return_value, ' ',
-                  r.task_exception, ' ', r.task_exception_info)
-        # self.assertEqual('RETRY', report.status)
-        # self.assertEqual('500', report.task_exception)
         self.assertEqual('SUCCESS', report.status)
 
     def test_task_report_creation(self):

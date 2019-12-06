@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import uuid
-from timeit import default_timer
 
 from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
