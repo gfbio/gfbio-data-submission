@@ -59,7 +59,7 @@ export const setStateFormValues = (state, action) => {
     .set('contributors', fromJS(action.response.data.data.requirements.contributors))
     .set('embargoDate', new Date(action.response.data.embargo))
     .set('license', action.response.data.data.requirements.license)
-    .set('metaDataSchema', action.response.data.data.requirements.metadata_schema)
+    // .set('metaDataSchema', action.response.data.data.requirements.metadata_schema)
     // .set('metaDataFileName', action.response.data.data.requirements.metadata_file_name)
     // TODO: need whole submission ?
     .set('submission', action.response.data);
@@ -77,7 +77,7 @@ export const resetStateFormValues = (state, initialContributors = []) => {
     .set('contributors', initialContributors)
     .set('embargoDate', new Date().setFullYear(new Date().getFullYear() + 1))
     .set('license', 'CC BY 4.0')
-    .set('metaDataSchema', 'None')
+    // .set('metaDataSchema', 'None')
     .set('fileUploads', fromJS([]))
     .set('fileUploadsFromServer', fromJS({}))
     // TODO: need whole submission ?

@@ -1002,8 +1002,8 @@ class TestHelpDeskTicketMethods(TestCase):
         self.assertEqual({'name': 'ikostadi'}, payload['assignee'])
         self.assertEqual('sand/molecular-data',
                          payload['customfield_10010'])
-        self.assertEqual('MIxS',
-                         payload['customfield_10229'][0]['value'])
+        # self.assertEqual('MIxS',
+        #                  payload['customfield_10229'][0]['value'])
 
         data['requirements'].pop('data_center')
         serializer = SubmissionSerializer(data={
@@ -1021,8 +1021,8 @@ class TestHelpDeskTicketMethods(TestCase):
         self.assertEqual('sand/generic-data',
                          payload['customfield_10010'])
 
-        self.assertEqual('other',
-                         payload['customfield_10229'][0]['value'])
+        # self.assertEqual('other',
+        #                  payload['customfield_10229'][0]['value'])
 
         data['requirements'][
             'data_center'] = 'GFBio Data Centers - our curators will suggest the appropriate one(s)'
@@ -1039,6 +1039,7 @@ class TestHelpDeskTicketMethods(TestCase):
             submission=submission)
         self.assertNotIn('assignee', payload.keys())
 
+    @skip('metadata_schema is no longer used. compare GFBIO-2742')
     def test_prepare_helpdesk_payload_metadataschema_is_none(self):
         with open(os.path.join(
                 _get_test_data_dir_path(),
