@@ -95,7 +95,7 @@ const initialContributors = getInitialContributors(backendParameters);
 
 export const initialState = fromJS({
   license: 'CC BY 4.0',
-  metaDataSchema: 'None',
+  // metaDataSchema: 'None',
   reduxFormForm: {},
   initialValues: {},
   submission: {},
@@ -152,8 +152,8 @@ function submissionFormReducer(state = initialState, action) {
   switch (action.type) {
     case CHANGE_LICENSE:
       return state.set('license', action.license);
-    case CHANGE_META_DATA_SCHEMA:
-      return state.set('metaDataSchema', action.metaDataSchema);
+    // case CHANGE_META_DATA_SCHEMA:
+    //   return state.set('metaDataSchema', action.metaDataSchema);
     case SAVE_FORM:
       return state
       // TODO: need showSaveSuccess later
