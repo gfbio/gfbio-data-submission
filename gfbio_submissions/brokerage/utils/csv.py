@@ -83,7 +83,8 @@ library_selection_mappings = {
     "mda": "MDA",
     "padlock probes capture method": "padlock probes capture method",
     "other": "other",
-    "unspecified": "unspecified"
+    "unspecified": "unspecified",
+    # '': ''
 }
 
 library_strategy_mappings = {
@@ -115,7 +116,8 @@ library_strategy_mappings = {
     "selex": "SELEX",
     "rip-seq": "RIP-Seq",
     "chia-pet": "ChIA-PET",
-    "other": "OTHER"
+    "other": "OTHER",
+    # '': ''
 }
 
 platform_mappings = {
@@ -153,7 +155,8 @@ platform_mappings = {
     "ab 3500 genetic analyzer": "AB 3500 Genetic Analyzer",
     "ab 3130xl genetic analyzer": "AB 3130xL Genetic Analyzer",
     "ab 3130 genetic analyzer": "AB 3130 Genetic Analyzer",
-    "ab 310 genetic analyzer": "AB 310 Genetic Analyzer"
+    "ab 310 genetic analyzer": "AB 310 Genetic Analyzer",
+    # '': ''
 }
 
 
@@ -197,8 +200,9 @@ def extract_experiment(experiment_id, row, sample_id):
         nominal_length = -1
     experiment = {
         'experiment_alias': experiment_id,
-        'platform': platform_mappings[
-            row.get('sequencing_platform', '').lower()]
+        'platform': platform_mappings.get(
+            row.get('sequencing_platform', '').lower(), ''
+        )
     }
 
     library_layout = row.get('library_layout', '').lower()
@@ -206,9 +210,9 @@ def extract_experiment(experiment_id, row, sample_id):
     dpath.util.new(experiment, 'design/sample_descriptor', sample_id)
     dpath.util.new(
         experiment, 'design/library_descriptor/library_strategy',
-        library_strategy_mappings[
-            row.get('library_strategy', '').lower()
-        ]
+        library_strategy_mappings.get(
+            row.get('library_strategy', '').lower(), ''
+        )
     )
     # For sake of simplicity library_source is converted to upper case since
     # all values in schema are uppercase
@@ -218,9 +222,9 @@ def extract_experiment(experiment_id, row, sample_id):
     dpath.util.new(
         experiment,
         'design/library_descriptor/library_selection',
-        library_selection_mappings[
-            row.get('library_selection', '').lower()
-        ]
+        library_selection_mappings.get(
+            row.get('library_selection', '').lower(), ''
+        )
     )
     dpath.util.new(experiment,
                    'design/library_descriptor/library_layout/layout_type',
