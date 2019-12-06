@@ -121,17 +121,17 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
     if len(assignee) > 0:
         mutual_data['assignee'] = {'name': assignee}
 
-    metadata_schema = requirements.get('metadata_schema',
-                                       'Other metadata or documentation')
-    if metadata_schema == 'Other metadata or documentation' and jira_request_target == 'molecular':
-        metadata_schema = 'MIxS 4.0'
-    metadata_schema_value = [
-        {
-            'value': GFBIO_METASCHEMA_MAPPINGS.get(metadata_schema, {}).get(
-                'value', 'other')
-        }
-    ]
-    mutual_data['customfield_10229'] = metadata_schema_value
+    # metadata_schema = requirements.get('metadata_schema',
+    #                                    'Other metadata or documentation')
+    # if metadata_schema == 'Other metadata or documentation' and jira_request_target == 'molecular':
+    #     metadata_schema = 'MIxS 4.0'
+    # metadata_schema_value = [
+    #     {
+    #         'value': GFBIO_METASCHEMA_MAPPINGS.get(metadata_schema, {}).get(
+    #             'value', 'other')
+    #     }
+    # ]
+    # mutual_data['customfield_10229'] = metadata_schema_value
 
     if not prepare_for_update:
         mutual_data['customfield_10010'] = jira_request_type
