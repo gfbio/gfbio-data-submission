@@ -1904,6 +1904,19 @@ class TestCSVParsing(TestCase):
             '<LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>'))
         self.assertNotIn('<LIBRARY_LAYOUT><PAIRED', file_content)
 
+    def test_parse_to_xml_case_sensitivity(self):
+        submission = Submission.objects.first()
+        submission.submissionupload_set.all().delete()
+        submission.save()
+
+        self.create_csv_submission_upload(submission, User.objects.first(),
+                                          'csv_files/SO45_mixed_cases.csv')
+        is_mol_content, errors = check_for_molecular_content(submission)
+        print(is_mol_content)
+        print(errors)
+
+
+
     def test_check_for_molecular_content_comma_sep(self):
         submission = Submission.objects.first()
         submission.submissionupload_set.all().delete()

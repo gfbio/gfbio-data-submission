@@ -166,7 +166,7 @@ def parse_molecular_csv(csv_file):
     try:
         field_names = csv_reader.fieldnames
         for i in range(0, len(field_names)):
-            field_names[i] = field_names[i].strip()
+            field_names[i] = field_names[i].strip().lower()
 
     except _csv.Error as e:
         return molecular_requirements
