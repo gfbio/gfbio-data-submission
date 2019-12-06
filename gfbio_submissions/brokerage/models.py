@@ -22,8 +22,9 @@ from .fields import JsonDictField
 from .managers import AuditableTextDataManager
 from .managers import SiteConfigurationManager, \
     SubmissionManager, BrokerObjectManager, TaskProgressReportManager
+from .storage import OverwriteStorage
 from .utils.submission_tools import \
-    submission_upload_path
+    submission_upload_path, hash_file
 
 logger = logging.getLogger(__name__)
 
@@ -602,10 +603,17 @@ class SubmissionUpload(TimeStampedModel):
     )
     attach_to_ticket = models.BooleanField(
         default=False,
-        help_text='When checked, thus having True as value, every uploaded '
+        help_text='If checked, thus having True as value, every uploaded '
                   'file will be attached to the main helpdesk ticket'
                   'associated with "submission".',
     )
+
+    modified_recently = models.BooleanField(
+        default=False,
+        help_text='Checked automatically if "file" has been updated and '
+                  'its content/md5_checksum has changed'
+    )
+
     attachment_id = models.IntegerField(
         null=True,
         blank=True,
@@ -620,14 +628,28 @@ class SubmissionUpload(TimeStampedModel):
     )
     file = models.FileField(
         upload_to=submission_upload_path,
-        # storage=OverwriteStorage(),
+        storage=OverwriteStorage(),
         help_text='The actual file uploaded.',
+    )
+
+    md5_checksum = models.CharField(
+        max_length=32,
+        default='',
+        help_text='MD5 checksum of "file"'
     )
 
     objects = SubmissionUploadManager()
 
-    # TODO: from PrimaryDataFile. new default for attach is -> false
     def save(self, ignore_attach_to_ticket=False, *args, **kwargs):
+        # TODO: consider task/chain for this. every new/save resets md5 to '' then task is
+        #   put to queue
+        if self.pk is None:
+            self.md5_checksum = hash_file(self.file)
+        else:
+            md5 = hash_file(self.file)
+            if md5 != self.md5_checksum:
+                self.modified_recently = True
+                self.md5_checksum = md5
         super(SubmissionUpload, self).save(*args, **kwargs)
         if self.attach_to_ticket and not ignore_attach_to_ticket:
             from .tasks import \
@@ -637,7 +659,6 @@ class SubmissionUpload(TimeStampedModel):
                     'submission_id': '{0}'.format(self.submission.pk),
                     'submission_upload_id': '{0}'.format(self.pk)
                 },
-                # TODO: rename
                 countdown=SUBMISSION_UPLOAD_RETRY_DELAY
             )
 

@@ -1138,7 +1138,7 @@ class TestCSVParsing(TestCase):
                                      file_sub_path='csv_files/molecular_metadata.csv'):
         with open(os.path.join(_get_test_data_dir_path(), file_sub_path),
                   'rb') as data_file:
-            submission_upload = SubmissionUpload.objects.create(
+            return SubmissionUpload.objects.create(
                 submission=submission,
                 site=user,
                 user=user,
