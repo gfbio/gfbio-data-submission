@@ -868,7 +868,8 @@ def create_submission_issue_task(self, prev_task_result=None,
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True
 )
-def update_submission_issue_task(self, submission_id=None):
+def update_submission_issue_task(self, prev_task_result=None,
+                                 submission_id=None):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -880,6 +881,7 @@ def update_submission_issue_task(self, submission_id=None):
     if reference:
         jira_client = JiraClient(resource=site_configuration.helpdesk_server)
         jira_client.update_submission_issue(
+            reporter=prev_task_result,
             key=reference.reference_key,
             site_config=site_configuration,
             submission=submission,
