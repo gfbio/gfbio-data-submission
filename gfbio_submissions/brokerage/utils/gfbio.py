@@ -55,7 +55,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
         email = c.get('emailAddress', '')
         lname = '{0},'.format(lname) if len(lname) else ','
         fname = '{0},'.format(fname) if len(fname) else ','
-        email = '{0},'.format(email) if len(email) else ','
+        email = '{0},'.format(email) if len(email) else ''
         contributor = '{0}{1}{2}\n'.format(
             lname,
             fname,
