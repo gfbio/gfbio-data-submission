@@ -167,7 +167,7 @@ def extract_sample(row, field_names, sample_id):
     sample_attributes = [
         OrderedDict(
             [('tag', o), ('value', row[o]),
-             ('unit', unit_mapping[o])])
+             ('units', unit_mapping[o])])
         if o in unit_mapping_keys
         else OrderedDict([('tag', o), ('value', row[o])])
         for o in field_names if o not in core_fields
