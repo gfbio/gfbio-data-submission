@@ -523,6 +523,10 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
         b36313187b81        redis:5.0                                   "docker-entrypoint.s…"   2 days ago          Up 2 days           6379/tcp                                   gfbio_submissions_redis_1_347eb4ded6ea
         ce8ad07273ab        gfbio_submissions_production_postgres       "docker-entrypoint.s…"   2 days ago          Up 2 days           5432/tcp                                   gfbio_submissions_postgres_1_3d850a07f0d9
 
+- remove dangling images before build etc ...: docker image prune
+
+#### backups and related 
+
 - docker-compose -f production.yml run --rm postgres backup
 
         Backing up the 'gfbio_submissions' database...
@@ -530,20 +534,40 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 
 - list backups: docker-compose -f production.yml exec postgres backups
 - sudo docker cp <CONTAINER_ID>:/backups/<BACKUPFILE> /var/www/gfbio_submissions/backups/
+
+##### move backups unitl location has been fixed
+
+- pwd: /var/www/gfbio_submissions/backups
+- sudo mv *.gz ../../backups/
+- login and check backups folder on container: docker exec -u 0 -it gfbio_submissions_django_1_cd5d3cd87f17 sh
+
+
+#### continue actual release
        
 - sudo git fetch
 - sudo git checkout 1.76.0
 - time (sudo ?) docker-compose -f production.yml build
-
+        
+        
+        OLD:
+        ----
         real	91m51,295s
         user	2m49,542s
         sys	6m44,515s
 
+        NOW:
+        ---
+        real	0m34,405s
+        user	0m4,651s
+        sys	0m1,358s
+        
 - docker-compose -f production.yml run --rm django python manage.py migrate 
 - docker-compose -f production.yml run --rm django python manage.py collectstatic
 
-- avoid multiple container instances by stopping explictly ...
+### avoid multiple container instances by stopping explictly ...
+
 - sudo supervisorctl stop gfbio_submissions
+
 - docker-compose -f production.yml down
 - sudo supervisorctl start gfbio_submissions
 - (tail -f logs/docker-compose_supervisord.log)
