@@ -238,7 +238,7 @@ class TestInitialChainTasks(TestCase):
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer_for_updates',
                               'tasks.update_helpdesk_ticket_task', ]
-        self.assertEqual(7, len(task_reports))
+        self.assertEqual(8, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
