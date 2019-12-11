@@ -1349,10 +1349,11 @@ class TestCSVParsing(TestCase):
                          'taxon_id': 1234},
                         {'sample_alias': 'oaI2E-',
                          'sample_attributes': [
-                             OrderedDict([('tag',
-                                           'sample_description'),
-                                          ('value',
-                                           '')]),
+                             # TODO: this is no longer valid, since empty values are not added to attributes. GFBIO-2757
+                             # OrderedDict([('tag',
+                             #               'sample_description'),
+                             #              ('value',
+                             #               '')]),
                              OrderedDict([('tag',
                                            'investigation type'),
                                           ('value',
