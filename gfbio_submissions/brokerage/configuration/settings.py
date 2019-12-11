@@ -1,7 +1,20 @@
 # -*- coding: utf-8 -*-
 from _csv import QUOTE_NONNUMERIC, QUOTE_NONE
+from builtins import getattr
 
 settings = {}
+
+APPROVAL_EMAIL_SUBJECT_TEMPLATE = getattr(
+    settings,
+    'APPROVAL_EMAIL_SUBJECT_TEMPLATE',
+    'A submission to {0} from site {1} needs approval. submission: {2}'
+)
+
+APPROVAL_EMAIL_MESSAGE_TEMPLATE = getattr(
+    settings,
+    'APPROVAL_EMAIL_MESSAGE_TEMPLATE',
+    'Please review submission {0}.\n{1}'
+)
 
 BASE_HOST_NAME = getattr(
     settings,
@@ -158,6 +171,22 @@ JIRA_USERNAME_URL_FULLNAME_TEMPLATE = getattr(
     settings,
     'JIRA_USERNAME_URL_TEMPLATE',
     'https://helpdesk.gfbio.org/internal/getorcreateuser.php?username={0}&email={1}&fullname={2}'
+)
+
+JIRA_ACCESSION_COMMENT_TEMPLATE = getattr(
+    settings,
+    'JIRA_ACCESSION_COMMENT_TEMPLATE',
+    """Dear {submitter_name},
+your dataset was successfully deposited in ENA! The INSDC accession number for your data is: {primary_accession}
+Please cite this number to refer to your dataset.
+Be aware that the whole dataset is currently under embargo for one year, 
+which also means you cannot find it on the ENA website (in case reviewers ask). 
+You can contact us at any point and we can set a new release date or release the data immediately.
+ 
+Best Regards,
+the GFBio Data Submission Team""",
+
+
 )
 
 GFBIO_LICENSE_MAPPINGS = getattr(

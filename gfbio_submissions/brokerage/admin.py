@@ -46,7 +46,13 @@ class BrokerObjectAdmin(admin.ModelAdmin):
 
 
 class PersistentIdentifierAdmin(admin.ModelAdmin):
-    pass
+    list_filter = ('pid_type', 'archive',)
+    search_fields = ['pid',
+                     'broker_object__submissions__broker_submission_id'
+                     ]
+    date_hierarchy = 'created'
+
+    list_display = ('archive', 'pid_type', 'broker_object',)
 
 
 class AdditionalReferenceInline(admin.TabularInline):
@@ -150,7 +156,7 @@ def download_auditable_text_data(modeladmin, request, queryset):
         return response
 
 
-download_auditable_text_data.short_description = 'Download zipped data'
+download_auditable_text_data.short_description = 'Download XMLs'
 
 
 class AuditableTextDataInlineAdmin(admin.StackedInline):
@@ -164,7 +170,6 @@ class SubmissionAdmin(admin.ModelAdmin):
     # form = SubmissionAdminForm
     list_display = ('broker_submission_id',
                     'submitting_user', 'site', 'status',)
-    date_hierarchy = 'created'
     list_filter = ('site', 'status', 'target',)
     search_fields = ['broker_submission_id', 'submitting_user',
                      'submitting_user_common_information',

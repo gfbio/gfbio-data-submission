@@ -168,10 +168,11 @@ class JiraClient(object):
         )
         self.force_submission_issue(submission, site_config)
 
-    def update_submission_issue(self, key, site_config, submission):
+    def update_submission_issue(self, key, site_config, submission, reporter=None):
         self.update_issue(
             key=key,
             fields=gfbio_prepare_create_helpdesk_payload(
+                reporter=reporter,
                 site_config=site_config,
                 submission=submission,
                 prepare_for_update=True,

@@ -48,13 +48,14 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
 
     contributors = requirements.get('contributors', [])
     authors_text = '{0}\n'.format(author) if len(author.strip()) else ''
+    # FIXME: include author ?
     for c in contributors:
         fname = c.get('firstName', '')
         lname = c.get('lastName', '')
         email = c.get('emailAddress', '')
         lname = '{0},'.format(lname) if len(lname) else ','
         fname = '{0},'.format(fname) if len(fname) else ','
-        email = '{0},'.format(email) if len(email) else ','
+        email = '{0}'.format(email) if len(email) else ''
         contributor = '{0}{1}{2}\n'.format(
             lname,
             fname,
@@ -121,17 +122,17 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
     if len(assignee) > 0:
         mutual_data['assignee'] = {'name': assignee}
 
-    metadata_schema = requirements.get('metadata_schema',
-                                       'Other metadata or documentation')
-    if metadata_schema == 'Other metadata or documentation' and jira_request_target == 'molecular':
-        metadata_schema = 'MIxS 4.0'
-    metadata_schema_value = [
-        {
-            'value': GFBIO_METASCHEMA_MAPPINGS.get(metadata_schema, {}).get(
-                'value', 'other')
-        }
-    ]
-    mutual_data['customfield_10229'] = metadata_schema_value
+    # metadata_schema = requirements.get('metadata_schema',
+    #                                    'Other metadata or documentation')
+    # if metadata_schema == 'Other metadata or documentation' and jira_request_target == 'molecular':
+    #     metadata_schema = 'MIxS 4.0'
+    # metadata_schema_value = [
+    #     {
+    #         'value': GFBIO_METASCHEMA_MAPPINGS.get(metadata_schema, {}).get(
+    #             'value', 'other')
+    #     }
+    # ]
+    # mutual_data['customfield_10229'] = metadata_schema_value
 
     if not prepare_for_update:
         mutual_data['customfield_10010'] = jira_request_type

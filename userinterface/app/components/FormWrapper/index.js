@@ -13,7 +13,6 @@ import DataCategoryForm from 'components/DataCategoryForm';
 import CommentForm from 'components/CommentForm';
 import LicenseSelectionForm from 'components/LicenseSelectionForm';
 import LegalRequirementsForm from 'components/LegalRequirementsForm';
-import MetaDataSchemaForm from 'components/MetaDataSchemaForm';
 import MinimalSubmissionForm from '../MinimalSubmissionForm';
 import RelatedPublicationsForm from '../RelatedPublicationsForm';
 import EmbargoDatePicker from '../EmbargoDatePicker';
@@ -275,7 +274,7 @@ class FormWrapper extends React.PureComponent {
 
               <TemplateLinkList />
 
-              <MetaDataSchemaForm />
+              {/*<MetaDataSchemaForm />*/}
 
               <EmbargoDatePicker />
             </div>

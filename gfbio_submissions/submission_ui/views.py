@@ -63,7 +63,7 @@ class SubmissionFrontendView(LoginRequiredMixin, TemplateView):
 
         context['parameters'] = {
             'userName': user_name,
-            'userRealName': user.name if user.name != '' else user_name,
+            'userRealName': user.name,  # if user.name != '' else user_name,
             'userEmail': user_email,
             'userId': user.id,
             'token': str(token),

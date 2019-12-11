@@ -113,13 +113,14 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
             from gfbio_submissions.brokerage.tasks import \
                 check_for_molecular_content_in_submission_task, \
                 trigger_submission_transfer_for_updates, \
-                update_submission_issue_task
-            update_submission_issue_task.apply_async(
-                kwargs={
-                    'submission_id': instance.pk
-                },
-                countdown=SUBMISSION_DELAY
-            )
+                update_submission_issue_task, get_gfbio_helpdesk_username_task
+
+            update_chain = get_gfbio_helpdesk_username_task.s(
+                submission_id=instance.pk).set(countdown=SUBMISSION_DELAY) \
+                           | update_submission_issue_task.s(
+                submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+            update_chain()
+
             chain = check_for_molecular_content_in_submission_task.s(
                 submission_id=instance.pk
             ).set(countdown=SUBMISSION_DELAY) | \
@@ -129,13 +130,7 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                         )
                     ).set(countdown=SUBMISSION_DELAY)
             chain()
-            # trigger_submission_transfer_for_updates.apply_async(
-            #     kwargs={
-            #         'broker_submission_id': '{0}'.format(
-            #             instance.broker_submission_id),
-            #     },
-            #     countdown=SUBMISSION_DELAY
-            # )
+            
             return response
         else:
             return Response(

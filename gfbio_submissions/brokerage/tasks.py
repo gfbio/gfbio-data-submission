@@ -10,9 +10,11 @@ from django.db.utils import IntegrityError
 from django.utils.encoding import smart_text
 from requests import ConnectionError, Response
 
+from config.settings.base import HOST_URL_ROOT, ADMIN_URL
 from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, \
     PANGAEA_ISSUE_VIEW_URL, SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME, \
-    JIRA_FALLBACK_EMAIL
+    JIRA_FALLBACK_EMAIL, APPROVAL_EMAIL_SUBJECT_TEMPLATE, \
+    APPROVAL_EMAIL_MESSAGE_TEMPLATE, JIRA_ACCESSION_COMMENT_TEMPLATE
 from gfbio_submissions.brokerage.exceptions import TransferServerError, \
     TransferClientError
 from gfbio_submissions.brokerage.models import SubmissionUpload
@@ -27,8 +29,8 @@ from gfbio_submissions.brokerage.utils.task_utils import jira_error_auto_retry, 
     retry_no_ticket_available_exception
 from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
 from gfbio_submissions.users.models import User
-from .configuration.settings import BASE_HOST_NAME, \
-    SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
+from .configuration.settings import SUBMISSION_MAX_RETRIES, \
+    SUBMISSION_RETRY_DELAY
 from .models import BrokerObject, \
     AuditableTextData, RequestLog, AdditionalReference, TaskProgressReport, \
     Submission, SiteConfiguration
@@ -217,14 +219,18 @@ def check_on_hold_status_task(self, previous_task_result=None,
                           site_configuration.release_submissions))
         # TODO: refactor to method in task_utils, and use templates/constants
         mail_admins(
-            subject='Submission needs approval. Site "{0}". Submission {1}'
-                    ''.format(site_configuration.title,
-                              submission.broker_submission_id),
-            message='Submission {0}.\nFollow this Link: {1}'.format(
+            subject=APPROVAL_EMAIL_SUBJECT_TEMPLATE.format(
+                HOST_URL_ROOT,
+                site_configuration.site.username if site_configuration.site else site_configuration.title,
+                submission.broker_submission_id
+            ),
+            message=APPROVAL_EMAIL_MESSAGE_TEMPLATE.format(
                 submission.broker_submission_id,
-                '{0}/api/submissions/{1}/'.format(
-                    BASE_HOST_NAME,
-                    submission.broker_submission_id))
+                '{0}{1}brokerage/submission/{2}/change/'.format(
+                    HOST_URL_ROOT,
+                    ADMIN_URL,
+                    submission.pk)
+            )
         )
 
 
@@ -862,7 +868,8 @@ def create_submission_issue_task(self, prev_task_result=None,
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True
 )
-def update_submission_issue_task(self, submission_id=None):
+def update_submission_issue_task(self, prev_task_result=None,
+                                 submission_id=None):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -874,6 +881,7 @@ def update_submission_issue_task(self, submission_id=None):
     if reference:
         jira_client = JiraClient(resource=site_configuration.helpdesk_server)
         jira_client.update_submission_issue(
+            reporter=prev_task_result,
             key=reference.reference_key,
             site_config=site_configuration,
             submission=submission,
@@ -923,6 +931,24 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
     #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
     reference = submission.get_primary_helpdesk_reference()
 
+    submitter_name = 'Submitter'
+    try:
+        user = User.objects.get(pk=int(submission.submitting_user))
+        if len(user.name):
+            submitter_name = user.name
+    except User.DoesNotExist as e:
+        logger.warning(
+            'tasks.py | add_accession_to_submission_issue_task | '
+            'submission_id={0} | No user with '
+            'submission.submiting_user={1} | '
+            '{2}'.format(submission_id, submission.submitting_user, e))
+    except ValueError as ve:
+        logger.warning(
+            'tasks.py | add_accession_to_submission_issue_task | '
+            'submission_id={0} | ValueError with '
+            'submission.submiting_user={1} | '
+            '{2}'.format(submission_id, submission.submitting_user, ve))
+
     # TODO: previous task is process_ena_response_task, if ena responded successfully
     #  and delievered accesstions, theses are appended as persistentidentifiers
     #  if all worked Pids shoul be in DB and process returns true
@@ -939,10 +965,15 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
                 resource=site_configuration.helpdesk_server)
             jira_client.add_comment(
                 key_or_issue=reference.reference_key,
-                text='Submission to ENA has been successful. '
-                     'Study is accessible via ENA Accession No. {0}. '
-                     'broker_submission_id: {1}.'.format(study_pid.pid,
-                                                         submission.broker_submission_id))
+                text=JIRA_ACCESSION_COMMENT_TEMPLATE.format(
+                    submitter_name=submitter_name,
+                    primary_accession=study_pid.pid
+                )
+            )
+            # text='Submission to ENA has been successful. '
+            #      'Study is accessible via ENA Accession No. {0}. '
+            #      'broker_submission_id: {1}.'.format(study_pid.pid,
+            #                                          submission.broker_submission_id))
             return jira_error_auto_retry(jira_client=jira_client, task=self,
                                          broker_submission_id=submission.broker_submission_id)
 
@@ -1010,7 +1041,7 @@ def add_posted_comment_to_issue_task(self, prev_task_result=None,
     retry_jitter=True
 )
 def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
-                                    submission_upload_id=None):
+                                    submission_upload_id=None, ):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -1029,6 +1060,15 @@ def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
             attach_to_ticket=True).filter(pk=submission_upload_id).first()
         if submission_upload:
 
+            do_attach = False
+            if submission_upload.attachment_id is None:
+                do_attach = True
+            if submission_upload.modified_recently:
+                do_attach = True
+
+            if not do_attach:
+                return TaskProgressReport.CANCELLED
+
             # TODO: access media nginx https://stackoverflow.com/questions/8370658/how-to-serve-django-media-files-via-nginx
             jira_client = JiraClient(
                 resource=site_configuration.helpdesk_server,
@@ -1042,6 +1082,7 @@ def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
                                   broker_submission_id=submission.broker_submission_id)
 
             submission_upload.attachment_id = attachment.id
+            submission_upload.modified_recently = False
             submission_upload.save(ignore_attach_to_ticket=True)
 
             return True

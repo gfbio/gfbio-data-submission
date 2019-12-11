@@ -6,7 +6,7 @@ import environ
 
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
-VERSION = '1.83.0'
+VERSION = '1.84.0'
 
 ROOT_DIR = (
         environ.Path(__file__) - 3
@@ -232,10 +232,19 @@ EMAIL_BACKEND = env(
 # https://docs.djangoproject.com/en/2.2/ref/settings/#email-timeout
 EMAIL_TIMEOUT = 5
 
+
+HOST_URL_ROOT = env(
+    "HOST_URL_ROOT",
+    default="https://submissions.gfbio.org/"
+)
+
+
 # ADMIN
 # ------------------------------------------------------------------------------
 # Django Admin URL.
-ADMIN_URL = "admin/"
+# ADMIN_URL = "admin/"
+ADMIN_URL = env("DJANGO_ADMIN_URL", default="admin/")
+
 # https://docs.djangoproject.com/en/dev/ref/settings/#admins
 ADMINS = [
     ("""Marc Weber""", "maweber@mpi-bremen.de"),

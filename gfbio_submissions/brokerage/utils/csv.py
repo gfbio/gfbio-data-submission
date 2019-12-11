@@ -59,8 +59,111 @@ unit_mapping = {
 
 unit_mapping_keys = unit_mapping.keys()
 
+library_selection_mappings = {
+    "random": "RANDOM",
+    "pcr": "PCR",
+    "random pcr": "RANDOM PCR",
+    "rt-pcr": "RT-PCR",
+    "hmpr": "HMPR",
+    "mf": "MF",
+    "repeat fractionation": "repeat fractionation",
+    "size fractionation": "size fractionation",
+    "msll": "MSLL",
+    "cdna": "cDNA",
+    "chip": "ChiP",
+    "mnase": "MNase",
+    "dnase": "DNase",
+    "hybrid selection": "Hybrid Selection",
+    "reduced representation": "Reduced Representation",
+    "restriction digest": "Restriction Digest",
+    "5-methylcytidine antibody": "5-methylcytidine antibody",
+    "mbd2 protein methyl-cpg binding domain": "MBD2 protein methyl-CpG binding domain",
+    "cage": "CAGE",
+    "race": "RACE",
+    "mda": "MDA",
+    "padlock probes capture method": "padlock probes capture method",
+    "other": "other",
+    "unspecified": "unspecified",
+    # '': ''
+}
+
+library_strategy_mappings = {
+    "wgs": "WGS",
+    "wga": "WGA",
+    "wxs": "WXS",
+    "rna-seq": "RNA-Seq",
+    "mirna-seq": "miRNA-Seq",
+    "ncrna-seq": "ncRNA-Seq",
+    "wcs": "WCS",
+    "clone": "CLONE",
+    "poolclone": "POOLCLONE",
+    "amplicon": "AMPLICON",
+    "cloneend": "CLONEEND",
+    "finishing": "FINISHING",
+    "chip-seq": "ChIP-Seq",
+    "mnase-seq": "MNase-Seq",
+    "dnase-hypersensitivity": "DNase-Hypersensitivity",
+    "bisulfite-seq": "Bisulfite-Seq",
+    "est": "EST",
+    "fl-cdna": "FL-cDNA",
+    "cts": "CTS",
+    "mre-seq": "MRE-Seq",
+    "medip-seq": "MeDIP-Seq",
+    "mbd-seq": "MBD-Seq",
+    "tn-seq": "Tn-Seq",
+    "validation": "VALIDATION",
+    "faire-seq": "FAIRE-seq",
+    "selex": "SELEX",
+    "rip-seq": "RIP-Seq",
+    "chia-pet": "ChIA-PET",
+    "other": "OTHER",
+    # '': ''
+}
+
+platform_mappings = {
+    "454 gs": "454 GS",
+    "454 gs 20": "454 GS 20",
+    "454 gs flx": "454 GS FLX",
+    "454 gs flx+": "454 GS FLX+",
+    "454 gs flx titanium": "454 GS FLX Titanium",
+    "454 gs junior": "454 GS Junior",
+    "illumina genome analyzer": "Illumina Genome Analyzer",
+    "illumina genome analyzer ii": "Illumina Genome Analyzer II",
+    "illumina genome analyzer iix": "Illumina Genome Analyzer IIx",
+    "illumina hiseq 2500": "Illumina HiSeq 2500",
+    "illumina hiseq 2000": "Illumina HiSeq 2000",
+    "illumina hiseq 1000": "Illumina HiSeq 1000",
+    "illumina miseq": "Illumina MiSeq",
+    "illumina hiscansq": "Illumina HiScanSQ",
+    "helicos heliscope": "Helicos HeliScope",
+    "ab solid system": "AB SOLiD System",
+    "ab solid system 2.0": "AB SOLiD System 2.0",
+    "ab solid system 3.0": "AB SOLiD System 3.0",
+    "ab solid 3 plus system": "AB SOLiD 3 Plus System",
+    "ab solid 4 system": "AB SOLiD 4 System",
+    "ab solid 4hq system": "AB SOLiD 4hq System",
+    "ab solid pi system": "AB SOLiD PI System",
+    "ab 5500 genetic analyzer": "AB 5500 Genetic Analyzer",
+    "ab 5500xl genetic analyzer": "AB 5500xl Genetic Analyzer",
+    "complete genomics": "Complete Genomics",
+    "pacbio rs": "PacBio RS",
+    "ion torrent pgm": "Ion Torrent PGM",
+    "ion torrent proton": "Ion Torrent Proton",
+    "ab 3730xl genetic analyzer": "AB 3730xL Genetic Analyzer",
+    "ab 3730 genetic analyzer": "AB 3730 Genetic Analyzer",
+    "ab 3500xl genetic analyzer": "AB 3500xL Genetic Analyzer",
+    "ab 3500 genetic analyzer": "AB 3500 Genetic Analyzer",
+    "ab 3130xl genetic analyzer": "AB 3130xL Genetic Analyzer",
+    "ab 3130 genetic analyzer": "AB 3130 Genetic Analyzer",
+    "ab 310 genetic analyzer": "AB 310 Genetic Analyzer",
+    # '': ''
+}
+
 
 def extract_sample(row, field_names, sample_id):
+    for k in row.keys():
+        row[k] = row[k].strip()
+
     sample_attributes = [
         OrderedDict(
             [('tag', o), ('value', row[o]),
@@ -97,19 +200,32 @@ def extract_experiment(experiment_id, row, sample_id):
         nominal_length = -1
     experiment = {
         'experiment_alias': experiment_id,
-        'platform': row.get('sequencing_platform', '')
+        'platform': platform_mappings.get(
+            row.get('sequencing_platform', '').lower(), ''
+        )
     }
 
-    library_layout = row.get('library_layout', '')
+    library_layout = row.get('library_layout', '').lower()
 
     dpath.util.new(experiment, 'design/sample_descriptor', sample_id)
-    dpath.util.new(experiment, 'design/library_descriptor/library_strategy',
-                   row.get('library_strategy', ''))
+    dpath.util.new(
+        experiment, 'design/library_descriptor/library_strategy',
+        library_strategy_mappings.get(
+            row.get('library_strategy', '').lower(), ''
+        )
+    )
+    # For sake of simplicity library_source is converted to upper case since
+    # all values in schema are uppercase
     dpath.util.new(experiment, 'design/library_descriptor/library_source',
-                   row.get('library_source', ''))
-    dpath.util.new(experiment,
-                   'design/library_descriptor/library_selection',
-                   row.get('library_selection', ''))
+                   row.get('library_source', '').upper()
+                   )
+    dpath.util.new(
+        experiment,
+        'design/library_descriptor/library_selection',
+        library_selection_mappings.get(
+            row.get('library_selection', '').lower(), ''
+        )
+    )
     dpath.util.new(experiment,
                    'design/library_descriptor/library_layout/layout_type',
                    library_layout)
@@ -162,11 +278,15 @@ def parse_molecular_csv(csv_file):
     }
     try:
         field_names = csv_reader.fieldnames
+        for i in range(0, len(field_names)):
+            field_names[i] = field_names[i].strip().lower()
+
     except _csv.Error as e:
         return molecular_requirements
     short_id = ShortId()
     for row in csv_reader:
         # every row is one sample (except header)
+
         sample_id = short_id.generate()
         experiment_id = short_id.generate()
         sample = extract_sample(row, field_names, sample_id)

@@ -106,7 +106,7 @@ function* prepareRequestData(userId, submit = true) {
     }
   }
   const license = yield select(makeSelectLicense());
-  const metadata_schema = yield select(makeSelectMetaDataSchema());
+  // const metadata_schema = yield select(makeSelectMetaDataSchema());
   const related_publications = yield select(makeSelectRelatedPublications());
   const dataset_labels = yield select(makeSelectDatasetLabels());
   const contributors = yield select(makeSelectContributors());
@@ -116,7 +116,7 @@ function* prepareRequestData(userId, submit = true) {
 
   const requirements = Object.assign({
     license,
-    metadata_schema,
+    // metadata_schema,
     legal_requirements,
     related_publications,
     dataset_labels,
