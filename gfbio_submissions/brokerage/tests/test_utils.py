@@ -4,6 +4,7 @@ import datetime
 import io
 import json
 import os
+import xml.dom.minidom
 from collections import OrderedDict
 from pprint import pprint
 from unittest import skip
@@ -1348,10 +1349,11 @@ class TestCSVParsing(TestCase):
                          'taxon_id': 1234},
                         {'sample_alias': 'oaI2E-',
                          'sample_attributes': [
-                             OrderedDict([('tag',
-                                           'sample_description'),
-                                          ('value',
-                                           '')]),
+                             # TODO: this is no longer valid, since empty values are not added to attributes. GFBIO-2757
+                             # OrderedDict([('tag',
+                             #               'sample_description'),
+                             #              ('value',
+                             #               '')]),
                              OrderedDict([('tag',
                                            'investigation type'),
                                           ('value',
@@ -1880,6 +1882,33 @@ class TestCSVParsing(TestCase):
             requirements = parse_molecular_csv(data_file)
         self.assertEqual(7, len(requirements['samples']))
         self.assertEqual(7, len(requirements['experiments']))
+
+    def test_parse_xml_with_empty_mixs_values(self):
+        submission = Submission.objects.first()
+        submission.submissionupload_set.all().delete()
+        submission.save()
+
+        self.create_csv_submission_upload(submission, User.objects.first(),
+                                          'csv_files/SO45_missing_mixs_values.csv'
+                                          )
+
+        is_mol_content, errors = check_for_molecular_content(submission)
+        self.assertTrue(is_mol_content)
+
+        BrokerObject.objects.add_submission_data(submission)
+        ena_submission_data = prepare_ena_data(submission=submission)
+        fname, sxml = ena_submission_data['SAMPLE']
+        # Mixs parameter with unit mapping
+        self.assertNotIn('geographic location (depth)', sxml)
+        # Mixs parameter without unitmapping
+        self.assertNotIn('geographic location (country and/or sea)', sxml)
+
+        fname, sxml = ena_submission_data['EXPERIMENT']
+        dom = xml.dom.minidom.parseString(sxml)
+        pretty = dom.toprettyxml()
+        print(pretty)
+
+
 
     def test_parse_to_xml_real_world_single_layout(self):
         submission = Submission.objects.first()

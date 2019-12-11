@@ -541,7 +541,7 @@ def process_ena_response_task(self, transfer_result=None, submission_id=None,
         outgoing_request.request_details['parsed_ena_response'] = parsed
         outgoing_request.save()
         submission.save()
-        logger.error(
+        logger.info(
             msg='process_ena_response_task. ena reported error(s) '
                 'for submisison={}. refer to RequestLog={}'.format(
                 submission.broker_submission_id,

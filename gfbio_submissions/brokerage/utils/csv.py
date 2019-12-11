@@ -164,14 +164,24 @@ def extract_sample(row, field_names, sample_id):
     for k in row.keys():
         row[k] = row[k].strip()
 
-    sample_attributes = [
-        OrderedDict(
-            [('tag', o), ('value', row[o]),
-             ('units', unit_mapping[o])])
-        if o in unit_mapping_keys
-        else OrderedDict([('tag', o), ('value', row[o])])
-        for o in field_names if o not in core_fields
-    ]
+    sample_attributes = []
+    for o in field_names:
+        if o not in core_fields and len(row[o]):
+            if o in unit_mapping_keys:
+                sample_attributes.append(
+                    OrderedDict([
+                        ('tag', o),
+                        ('value', row[o]),
+                        ('units', unit_mapping[o])
+                    ])
+                )
+            else:
+                sample_attributes.append(
+                    OrderedDict([
+                        ('tag', o), ('value', row[o])
+                    ])
+                )
+
     try:
         taxon_id = int(row.get('taxon_id', '-1'))
     except ValueError as e:
