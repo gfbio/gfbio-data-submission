@@ -235,15 +235,15 @@ class JiraClient(object):
             'JiraClient | get_doi_from_pangaea_issue | issue {0} '.format(
                 self.issue))
         if PANGAEA_ISSUE_DOI_FIELD_NAME in self.issue.raw['fields'].keys():
-            logger.info(
-                'JiraClient | get_doi_from_pangaea_issue | doi fieldname in fields {1} | '
-                'raw["fields"] keys {0} | type {2} |raw["fields"] \n\n{3}'.format(
-                    self.issue.raw['fields'].keys(),
-                    PANGAEA_ISSUE_DOI_FIELD_NAME in self.issue.raw[
-                        'fields'].keys(), type(self.issue.raw['fields']),
-                    self.issue.raw['fields']))
+            # logger.info(
+            #     'JiraClient | get_doi_from_pangaea_issue | doi fieldname in fields {1} | '
+            #     'raw["fields"] keys {0} | type {2} |raw["fields"] \n\n{3}'.format(
+            #         self.issue.raw['fields'].keys(),
+            #         PANGAEA_ISSUE_DOI_FIELD_NAME in self.issue.raw[
+            #             'fields'].keys(), type(self.issue.raw['fields']),
+            #         self.issue.raw['fields']))
             field_value = self.issue.raw['fields'][PANGAEA_ISSUE_DOI_FIELD_NAME]
             logger.info('JiraClient | get_doi_from_pangaea_issue | field_value={0}'.format(field_value))
-            if 'doi' in field_value:
+            if field_value is not None and 'doi' in field_value:
                 return field_value
         return None
