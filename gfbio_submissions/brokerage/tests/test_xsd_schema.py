@@ -9,35 +9,28 @@ from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 class TestSubmissionAdmin(TestCase):
 
     def test_parse_xsd(self):
-        # with open(),
-        #         'r') as data_file:
         tree = ET.parse(
             os.path.join(
                 _get_test_data_dir_path(),
                 'SRA.common.xsd'
             ))
         root = tree.getroot()
-        # print(root.tag)
 
         # all platform choices
         platforms = root.find(
             "*[@name='PlatformType']/{http://www.w3.org/2001/XMLSchema}choice")
+
         for r in platforms:
-            print('\nC TAG: ', r.tag, ' | C ATTRIB: ',
-                  r.attrib, ' | ', r.find('*'))
+            platform_name = r.attrib.get('name', '')
+            instrument_model = r.find(
+                "{http://www.w3.org/2001/XMLSchema}complexType"
+                "/*/*[@name='INSTRUMENT_MODEL']").attrib.get('type', '').strip(
+                'com:')
 
-        print('\n\n')
+            print('\n------\nplatform: ', platform_name)
+            print('instrument: ', instrument_model)
 
-        # for r in root.findall('*'):
-        #     print('C TAG: ', r.tag, ' | C ATTRIB: ',
-        #           r.attrib)
-
-        # platform_root = None
-        # for child in root:
-        #     if 'PlatformType' in child.attrib.values():
-        #         platform_root = child
-        #         break
-        #
-        # for child in platform_root:
-        #     print('C TAG: ', child.tag, ' | C ATTRIB: ',
-        #           child.attrib.values())
+            instrument_variations = root.findall(
+                "*[@name='{0}']/*/*".format(instrument_model))
+            for i in instrument_variations:
+                print(i.attrib.get('value', ''))
