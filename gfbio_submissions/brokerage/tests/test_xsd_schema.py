@@ -62,3 +62,13 @@ class TestSubmissionAdmin(TestCase):
         print(json.dumps(platform_instruments_json))
         print('\n-----------------------------------\n')
         pprint(platform_mappings)
+
+    def test_parse_xsd_for_strategy(self):
+        tree = ET.parse(
+            os.path.join(
+                _get_test_data_dir_path(),
+                'SRA.experiment.xsd'
+            ))
+        root = tree.getroot()
+
+        print(root.findall('*'))
