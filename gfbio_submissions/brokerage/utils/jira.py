@@ -168,7 +168,8 @@ class JiraClient(object):
         )
         self.force_submission_issue(submission, site_config)
 
-    def update_submission_issue(self, key, site_config, submission, reporter=None):
+    def update_submission_issue(self, key, site_config, submission,
+                                reporter=None):
         self.update_issue(
             key=key,
             fields=gfbio_prepare_create_helpdesk_payload(
@@ -227,8 +228,18 @@ class JiraClient(object):
         attachment.close()
 
     def get_doi_from_pangaea_issue(self, key):
+        logger.info(
+            'JiraClient | get_doi_from_pangaea_issue | key {0} '.format(key))
         self.get_issue(key=key)
+        logger.info(
+            'JiraClient | get_doi_from_pangaea_issue | issue {0} '.format(
+                self.issue))
         if PANGAEA_ISSUE_DOI_FIELD_NAME in self.issue.raw['fields'].keys():
+            logger.info(
+                'JiraClient | get_doi_from_pangaea_issue | doi fieldname in fields {1} |raw["fields"] keys {0} '.format(
+                    self.issue.raw['fields'].keys(),
+                    PANGAEA_ISSUE_DOI_FIELD_NAME in self.issue.raw[
+                        'fields'].keys()))
             field_value = self.issue.raw['fields'][PANGAEA_ISSUE_DOI_FIELD_NAME]
             if 'doi' in field_value:
                 return field_value
