@@ -89,3 +89,30 @@ class TestSubmissionAdmin(TestCase):
         print(json.dumps({'library_strategy': library_strategy_json}))
         print('\n-----------------------------------\n')
         pprint(library_strategy_mappings)
+
+    def test_parse_xsd_for_selection(self):
+
+        library_selection_json = OrderedDict([
+            ('type', 'string'),
+            ('enum', [])
+        ])
+
+        library_selection_mappings = {}
+
+        tree = ET.parse(
+            os.path.join(
+                _get_test_data_dir_path(),
+                'SRA.experiment.xsd'
+            ))
+        root = tree.getroot()
+
+        library_selection_enums = root.findall(
+            "*[@name='typeLibrarySelection']/{http://www.w3.org/2001/XMLSchema}restriction/*")
+        for l in library_selection_enums:
+            strategy = l.attrib.get('value', '')
+            library_selection_json['enum'].append(strategy)
+            library_selection_mappings[strategy.lower()] = strategy
+
+        print(json.dumps({'library_selection': library_selection_json}))
+        print('\n-----------------------------------\n')
+        pprint(library_selection_mappings)
