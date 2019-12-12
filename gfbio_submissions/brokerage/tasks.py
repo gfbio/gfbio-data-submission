@@ -695,7 +695,7 @@ def check_for_pangaea_doi_task(self, resource_credential_id=None):
         site_config = SiteConfiguration.objects.get_site_configuration(
             site=sub.site
         )
-        jira_client = JiraClient(resource=site_config.helpdesk_server,
+        jira_client = JiraClient(resource=site_config.pangaea_jira_server,
                                  token_resource=site_config.pangaea_token_server)
         pull_pangaea_dois(sub, jira_client)
 
