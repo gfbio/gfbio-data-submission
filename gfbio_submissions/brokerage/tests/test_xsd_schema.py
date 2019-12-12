@@ -2,6 +2,7 @@ import json
 import os
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
+from pprint import pprint
 
 from django.test import TestCase
 
@@ -10,12 +11,13 @@ from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 
 class TestSubmissionAdmin(TestCase):
 
-    def test_parse_xsd(self):
+    def test_parse_xsd_for_platform(self):
 
         platform_definition_json = OrderedDict([
             ('platform', OrderedDict([('oneOf', [])]))
         ])
         platform_instruments_json = OrderedDict()
+        platform_mappings = {}
 
         tree = ET.parse(
             os.path.join(
@@ -50,9 +52,13 @@ class TestSubmissionAdmin(TestCase):
                 "*[@name='{0}']/*/*".format(instrument_model))
 
             for i in instrument_variations:
+                instr = i.attrib.get('value', '')
+                platform_mappings[instr.lower()] = instr
                 platform_instruments_json['{0}'.format(platform_name)][
-                    'enum'].append(i.attrib.get('value', ''))
+                    'enum'].append(instr)
 
         print(json.dumps(platform_definition_json))
         print('\n-----------------------------------\n')
         print(json.dumps(platform_instruments_json))
+        print('\n-----------------------------------\n')
+        pprint(platform_mappings)
