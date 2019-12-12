@@ -64,6 +64,14 @@ class TestSubmissionAdmin(TestCase):
         pprint(platform_mappings)
 
     def test_parse_xsd_for_strategy(self):
+
+        library_strategy_json = OrderedDict([
+            ('type', 'string'),
+            ('enum', [])
+        ])
+
+        library_strategy_mappings = {}
+
         tree = ET.parse(
             os.path.join(
                 _get_test_data_dir_path(),
@@ -71,4 +79,13 @@ class TestSubmissionAdmin(TestCase):
             ))
         root = tree.getroot()
 
-        print(root.findall('*'))
+        library_strategy_enums = root.findall(
+            "*[@name='typeLibraryStrategy']/{http://www.w3.org/2001/XMLSchema}restriction/*")
+        for l in library_strategy_enums:
+            strategy = l.attrib.get('value', '')
+            library_strategy_json['enum'].append(strategy)
+            library_strategy_mappings[strategy.lower()] = strategy
+
+        print(json.dumps({'library_strategy': library_strategy_json}))
+        print('\n-----------------------------------\n')
+        pprint(library_strategy_mappings)
