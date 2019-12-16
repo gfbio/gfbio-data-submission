@@ -3,12 +3,14 @@ import os
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
 from pprint import pprint
+from unittest import skip
 
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 
 
+@skip('prototyping to parse xsd files')
 class TestSubmissionAdmin(TestCase):
 
     def test_parse_xsd_for_platform(self):
@@ -113,6 +115,7 @@ class TestSubmissionAdmin(TestCase):
             library_selection_json['enum'].append(strategy)
             library_selection_mappings[strategy.lower()] = strategy
 
+        # library_selection_json.get('enum', []).sort()
         print(json.dumps({'library_selection': library_selection_json}))
         print('\n-----------------------------------\n')
         pprint(library_selection_mappings)
