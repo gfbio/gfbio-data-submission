@@ -978,6 +978,49 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
                                          broker_submission_id=submission.broker_submission_id)
 
 
+# TODO: examine all tasks for redundant code and possible generalization e.g.:
+# TODO: more generic like update above
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.add_accession_link_submission_issue_task',
+    autoretry_for=(TransferServerError,
+                   TransferClientError
+                   ),
+    retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
+    retry_backoff=SUBMISSION_RETRY_DELAY,
+    retry_jitter=True
+)
+def add_accession_link_to_submission_issue_task(self, prev_task_result=None,
+                                                submission_id=None,
+                                                target_archive=None):
+    # No submission will be returned if submission.status is error
+    submission, site_configuration = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
+
+    reference = submission.get_primary_helpdesk_reference()
+
+    if reference and prev_task_result is True:
+        if target_archive == ENA or target_archive == ENA_PANGAEA:
+            study_pid = submission.brokerobject_set.filter(
+                type='study'
+            ).first().persistentidentifier_set.filter(
+                pid_type='PRJ'
+            ).first()
+
+            jira_client = JiraClient(
+                resource=site_configuration.helpdesk_server)
+            jira_client.add_ena_study_link_to_issue(reference.reference_key,
+                                                    study_pid.pid)
+            return jira_error_auto_retry(jira_client=jira_client, task=self,
+                                         broker_submission_id=submission.broker_submission_id)
+
+
 @celery.task(
     base=SubmissionTask,
     bind=True,

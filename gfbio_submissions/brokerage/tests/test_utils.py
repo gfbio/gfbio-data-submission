@@ -6,7 +6,6 @@ import json
 import os
 import xml.dom.minidom
 from collections import OrderedDict
-from pprint import pprint
 from unittest import skip
 
 import requests
@@ -900,36 +899,24 @@ class TestSubmissionTransferHandler(TestCase):
                                      'PANGAEA_FAKE_KEY'),
             json=_get_pangaea_comment_response(),
             status=200)
-        # responses.add(
-        #     responses.POST,
-        #     site_config.pangaea_token_server.url,
-        #     body=_get_pangaea_soap_response(),
-        #     status=200)
-        # responses.add(
-        #     responses.POST,
-        #     PANGAEA_ISSUE_BASE_URL,
-        #     json={'id': '31444', 'key': 'PANGAEA_FAKE_KEY',
-        #           'self': 'http://issues.pangaea.de/rest/api/2/issue/31444'},
-        #     status=201)
-        # responses.add(
-        #     responses.POST,
-        #     '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
-        #                                 'PANGAEA_FAKE_KEY'),
-        #     json=_get_pangaea_attach_response(),
-        #     status=200)
-        # responses.add(
-        #     responses.POST,
-        #     '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
-        #                             'PANGAEA_FAKE_KEY'),
-        #     json=_get_pangaea_comment_response(),
-        #     status=200)
         sth = SubmissionTransferHandler(submission_id=submission.pk,
                                         target_archive='ENA_PANGAEA')
-        tprs = TaskProgressReport.objects.exclude(
-            task_name='tasks.update_helpdesk_ticket_task')
-        self.assertEqual(0, len(tprs))
         sth.execute_submission_to_ena_and_pangaea()
-        self.assertLess(0, len(TaskProgressReport.objects.all()))
+        # self.assertLess(0, len(TaskProgressReport.objects.all()))
+        task_reports = TaskProgressReport.objects.all()
+        expected_task_names = [
+            'tasks.transfer_data_to_ena_task',
+            'tasks.process_ena_response_task',
+            'tasks.add_accession_to_submission_issue_task',
+            'tasks.add_accession_link_submission_issue_task',
+            'tasks.create_pangaea_issue_task',
+            'tasks.attach_to_pangaea_issue_task',
+            'tasks.add_accession_to_pangaea_issue_task',
+            'tasks.add_pangaealink_to_submission_issue_task',
+        ]
+        self.assertEqual(8, len(task_reports))
+        for t in task_reports:
+            self.assertIn(t.task_name, expected_task_names)
 
 
 class TestHelpDeskTicketMethods(TestCase):
@@ -1908,8 +1895,6 @@ class TestCSVParsing(TestCase):
         pretty = dom.toprettyxml()
         print(pretty)
 
-
-
     def test_parse_to_xml_real_world_single_layout(self):
         submission = Submission.objects.first()
         submission.submissionupload_set.all().delete()
@@ -1991,8 +1976,6 @@ class TestCSVParsing(TestCase):
         self.assertIn('experiments', submission.data['requirements'].keys())
         self.assertEqual(ENA_PANGAEA, submission.target)
 
-        pprint(submission.data)
-
     def test_check_content_on_submission_with_molecular_data(self):
         submission = Submission.objects.first()
         is_mol_content, errors = check_for_molecular_content(submission)
@@ -2000,16 +1983,11 @@ class TestCSVParsing(TestCase):
         self.assertIn('samples', submission.data['requirements'].keys())
         self.assertIn('experiments', submission.data['requirements'].keys())
 
-        # pprint(submission.data)
         previous_length = len(
             submission.data.get('requirements', {}).get('experiments', []))
-        print(previous_length)
-        print(submission.data.get('requirements', {}).keys())
         is_mol_content, errors = check_for_molecular_content(submission)
         submission = Submission.objects.first()
-        # pprint(submission.data)
         current_length = len(
             submission.data.get('requirements', {}).get('experiments', []))
-        print(current_length)
 
         self.assertEqual(previous_length, current_length)

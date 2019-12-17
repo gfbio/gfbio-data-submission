@@ -8,7 +8,8 @@ from jira import JIRA, JIRAError
 from requests import ConnectionError
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    PANGAEA_ISSUE_DOI_FIELD_NAME, JIRA_FALLBACK_EMAIL, JIRA_FALLBACK_USERNAME
+    PANGAEA_ISSUE_DOI_FIELD_NAME, JIRA_FALLBACK_USERNAME, \
+    ENA_STUDY_URL_PREFIX
 from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_prepare_create_helpdesk_payload
 from gfbio_submissions.brokerage.utils.pangaea import \
@@ -155,6 +156,19 @@ class JiraClient(object):
                                                                               e.text))
             self.error = e
 
+    def add_remote_link(self, key_or_issue, url='', title=''):
+        try:
+            remote_link = self.jira.add_remote_link(key_or_issue, {
+                'url': url,
+                'title': title
+            })
+            self.error = None
+        except JIRAError as e:
+            logger.warning(
+                'JiraClient | add_remote_link | JIRAError {0} | {1}'.format(e,
+                                                                            e.text))
+            self.error = e
+
     # specialized methods ------------------------------------------------------
     # TODO: ADD RequestLogs or aquivalent ...
 
@@ -227,6 +241,13 @@ class JiraClient(object):
                             file_name='contextual_data.csv')
         attachment.close()
 
+    def add_ena_study_link_to_issue(self, key_or_issue, accession_number):
+        self.add_remote_link(
+            key_or_issue,
+            url='{0}{1}'.format(ENA_STUDY_URL_PREFIX, accession_number),
+            title='{0}'.format(accession_number)
+        )
+
     def get_doi_from_pangaea_issue(self, key):
         logger.info(
             'JiraClient | get_doi_from_pangaea_issue | key {0} '.format(key))
@@ -243,7 +264,9 @@ class JiraClient(object):
             #             'fields'].keys(), type(self.issue.raw['fields']),
             #         self.issue.raw['fields']))
             field_value = self.issue.raw['fields'][PANGAEA_ISSUE_DOI_FIELD_NAME]
-            logger.info('JiraClient | get_doi_from_pangaea_issue | field_value={0}'.format(field_value))
+            logger.info(
+                'JiraClient | get_doi_from_pangaea_issue | field_value={0}'.format(
+                    field_value))
             if field_value is not None and 'doi' in field_value:
                 return field_value
         return None
