@@ -99,6 +99,12 @@ ENA = getattr(
     'ENA'
 )
 
+ENA_STUDY_URL_PREFIX = getattr(
+    settings,
+    'ENA_STUDY_URL_PREFIX',
+    'http://www.ebi.ac.uk/ena/data/view/'
+)
+
 DEFAULT_ENA_BROKER_NAME = getattr(
     settings,
     'DEFAULT_ENA_BROKER_NAME',

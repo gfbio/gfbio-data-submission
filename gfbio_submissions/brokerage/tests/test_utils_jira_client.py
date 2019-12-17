@@ -499,6 +499,31 @@ class TestJiraClient(TestCase):
         self.assertIsNone(jira_client.error)
 
     @responses.activate
+    def test_add_study_link(self):
+        self._add_create_ticket_responses(json_content=self.issue_json)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        responses.add(
+            responses.GET,
+            '{0}/rest/applinks/latest/listApplicationlinks'.format(
+                self.site_config.helpdesk_server.url),
+            status=200
+        )
+        responses.add(
+            responses.POST,
+            '{0}/rest/api/2/issue/SAND-1661/remotelink'.format(
+                self.site_config.helpdesk_server.url),
+            json={
+                'id': 10000,
+                'self': '{0}/rest/api/2/issue/SAND-1661/remotelink/10000'.format(
+                    self.site_config.helpdesk_server.url)
+            },
+            status=200,
+        )
+        jira_client.add_ena_study_link_to_issue('SAND-1661',
+                                                accession_number='PRJE0815')
+        self.assertIsNone(jira_client.error)
+
+    @responses.activate
     def test_add_comment_client_error(self):
         self._add_create_ticket_responses(json_content=self.issue_json)
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)

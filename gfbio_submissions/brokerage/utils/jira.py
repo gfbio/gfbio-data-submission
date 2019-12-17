@@ -8,7 +8,8 @@ from jira import JIRA, JIRAError
 from requests import ConnectionError
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    PANGAEA_ISSUE_DOI_FIELD_NAME, JIRA_FALLBACK_EMAIL, JIRA_FALLBACK_USERNAME
+    PANGAEA_ISSUE_DOI_FIELD_NAME, JIRA_FALLBACK_USERNAME, \
+    ENA_STUDY_URL_PREFIX
 from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_prepare_create_helpdesk_payload
 from gfbio_submissions.brokerage.utils.pangaea import \
@@ -239,6 +240,13 @@ class JiraClient(object):
         self.add_attachment(key=key, file=attachment,
                             file_name='contextual_data.csv')
         attachment.close()
+
+    def add_ena_study_link_to_issue(self, key_or_issue, accession_number):
+        self.add_remote_link(
+            key_or_issue,
+            url='{0}{1}'.format(ENA_STUDY_URL_PREFIX, accession_number),
+            title='{0}'.format(accession_number)
+        )
 
     def get_doi_from_pangaea_issue(self, key):
         logger.info(
