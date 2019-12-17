@@ -119,7 +119,7 @@ class SubmissionTransferHandler(object):
             countdown=SUBMISSION_DELAY) \
                 | add_accession_to_submission_issue_task.s(
             submission_id=self.submission_id,
-            target_archive=ENA).set(countdown=SUBMISSION_DELAY) \
+            target_archive=ENA_PANGAEA).set(countdown=SUBMISSION_DELAY) \
                 | create_pangaea_issue_task.s(
             submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY) \
                 | attach_to_pangaea_issue_task.s(

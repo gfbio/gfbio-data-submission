@@ -17,7 +17,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, JIRA_ATTACHMENT_SUB_URL, \
     JIRA_ATTACHMENT_URL, JIRA_USERNAME_URL_TEMPLATE, \
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE, JIRA_FALLBACK_USERNAME, \
-    SUBMISSION_DELAY, JIRA_FALLBACK_EMAIL
+    SUBMISSION_DELAY, JIRA_FALLBACK_EMAIL, ENA_PANGAEA
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, Submission, AuditableTextData, PersistentIdentifier, \
     BrokerObject, TaskProgressReport, AdditionalReference, RequestLog, \
@@ -34,7 +34,7 @@ from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, 
     delete_submission_issue_attachment_task, add_posted_comment_to_issue_task, \
     update_submission_issue_task, get_gfbio_helpdesk_username_task, \
     clean_submission_for_update_task, parse_csv_to_update_clean_submission_task, \
-    update_ena_submission_data_task
+    update_ena_submission_data_task, add_accession_link_to_submission_issue_task
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.test_utils import TestCSVParsing
 from gfbio_submissions.brokerage.tests.utils import \
@@ -926,6 +926,53 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         )
         self.assertTrue(result.successful())
         self.assertFalse(result.get())
+
+    @responses.activate
+    def test_add_accession_link_to_submission_issue_task_success(self):
+        site_config = SiteConfiguration.objects.first()
+        # TODO: do this & other stuff also in test above (comment task)
+        self._add_success_responses()
+        responses.add(
+            responses.GET,
+            '{0}/rest/applinks/latest/listApplicationlinks'.format(
+                site_config.helpdesk_server.url),
+            status=200
+        )
+        responses.add(
+            responses.POST,
+            '{0}/rest/api/2/issue/FAKE_KEY/remotelink'.format(
+                site_config.helpdesk_server.url),
+            json={
+                'id': 10000,
+                'self': '{0}/rest/api/2/issue/SAND-1661/remotelink/10000'.format(
+                    site_config.helpdesk_server.url)
+            },
+            status=200,
+        )
+        submission = Submission.objects.first()
+        print('site', submission.site)
+        submission.brokerobject_set.create(
+            type='study',
+            site=User.objects.first(),
+        )
+        submission.brokerobject_set.filter(
+            type='study'
+        ).first().persistentidentifier_set.create(
+            archive='ENA',
+            pid_type='PRJ',
+            pid='PRJE0815'
+        )
+        # submission.target = ENA_PANGAEA
+        # submission.save()
+        result = add_accession_link_to_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.id,
+                'prev_task_result': True,  # mimik successful previous task
+                'target_archive': ENA_PANGAEA
+            }
+        )
+        self.assertTrue(result.successful())
+        self.assertTrue(result.get())
 
     @responses.activate
     def test_add_pangaealink_to_submission_issue_task_success(self):
