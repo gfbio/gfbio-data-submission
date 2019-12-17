@@ -903,6 +903,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         result = create_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.id,
+
             }
         )
         self.assertTrue(result.successful())
@@ -911,6 +912,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
     @responses.activate
     def test_add_accession_to_submission_issue_task_success(self):
         site_config = SiteConfiguration.objects.first()
+        self._add_success_responses()
         url = '{0}{1}/{2}/{3}'.format(
             site_config.helpdesk_server.url,
             JIRA_ISSUE_URL,
@@ -919,13 +921,26 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         )
         responses.add(responses.POST, url, json={'bla': 'blubb'}, status=200)
         submission = Submission.objects.first()
+        submission.brokerobject_set.create(
+            type='study',
+            site=User.objects.first(),
+        )
+        submission.brokerobject_set.filter(
+            type='study'
+        ).first().persistentidentifier_set.create(
+            archive='ENA',
+            pid_type='PRJ',
+            pid='PRJE0815'
+        )
         result = add_accession_to_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.id,
+                'prev_task_result': True,  # mimik successful previous task
+                'target_archive': ENA_PANGAEA
             }
         )
         self.assertTrue(result.successful())
-        self.assertFalse(result.get())
+        self.assertTrue(result.get())
 
     @responses.activate
     def test_add_accession_link_to_submission_issue_task_success(self):
@@ -950,7 +965,6 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
             status=200,
         )
         submission = Submission.objects.first()
-        print('site', submission.site)
         submission.brokerobject_set.create(
             type='study',
             site=User.objects.first(),
@@ -962,8 +976,6 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
             pid_type='PRJ',
             pid='PRJE0815'
         )
-        # submission.target = ENA_PANGAEA
-        # submission.save()
         result = add_accession_link_to_submission_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.id,

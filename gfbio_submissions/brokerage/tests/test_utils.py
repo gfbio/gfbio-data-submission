@@ -900,36 +900,24 @@ class TestSubmissionTransferHandler(TestCase):
                                      'PANGAEA_FAKE_KEY'),
             json=_get_pangaea_comment_response(),
             status=200)
-        # responses.add(
-        #     responses.POST,
-        #     site_config.pangaea_token_server.url,
-        #     body=_get_pangaea_soap_response(),
-        #     status=200)
-        # responses.add(
-        #     responses.POST,
-        #     PANGAEA_ISSUE_BASE_URL,
-        #     json={'id': '31444', 'key': 'PANGAEA_FAKE_KEY',
-        #           'self': 'http://issues.pangaea.de/rest/api/2/issue/31444'},
-        #     status=201)
-        # responses.add(
-        #     responses.POST,
-        #     '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
-        #                                 'PANGAEA_FAKE_KEY'),
-        #     json=_get_pangaea_attach_response(),
-        #     status=200)
-        # responses.add(
-        #     responses.POST,
-        #     '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
-        #                             'PANGAEA_FAKE_KEY'),
-        #     json=_get_pangaea_comment_response(),
-        #     status=200)
         sth = SubmissionTransferHandler(submission_id=submission.pk,
                                         target_archive='ENA_PANGAEA')
-        tprs = TaskProgressReport.objects.exclude(
-            task_name='tasks.update_helpdesk_ticket_task')
-        self.assertEqual(0, len(tprs))
         sth.execute_submission_to_ena_and_pangaea()
-        self.assertLess(0, len(TaskProgressReport.objects.all()))
+        # self.assertLess(0, len(TaskProgressReport.objects.all()))
+        task_reports = TaskProgressReport.objects.all()
+        expected_task_names = [
+            'tasks.transfer_data_to_ena_task',
+            'tasks.process_ena_response_task',
+            'tasks.add_accession_to_submission_issue_task',
+            'tasks.add_accession_link_submission_issue_task',
+            'tasks.create_pangaea_issue_task',
+            'tasks.attach_to_pangaea_issue_task',
+            'tasks.add_accession_to_pangaea_issue_task',
+            'tasks.add_pangaealink_to_submission_issue_task',
+        ]
+        self.assertEqual(8, len(task_reports))
+        for t in task_reports:
+            self.assertIn(t.task_name, expected_task_names)
 
 
 class TestHelpDeskTicketMethods(TestCase):
@@ -1907,8 +1895,6 @@ class TestCSVParsing(TestCase):
         dom = xml.dom.minidom.parseString(sxml)
         pretty = dom.toprettyxml()
         print(pretty)
-
-
 
     def test_parse_to_xml_real_world_single_layout(self):
         submission = Submission.objects.first()
