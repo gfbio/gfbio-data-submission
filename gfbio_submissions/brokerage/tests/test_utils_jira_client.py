@@ -255,7 +255,7 @@ class TestJiraClient(TestCase):
         self._add_jira_field_response()
         self._add_jira_issue_response(json_content=self.issue_json)
         url = '{0}/rest/api/2/issue/16814?notifyUsers=false'.format(
-                          self.site_config.helpdesk_server.url)
+            self.site_config.helpdesk_server.url)
         responses.add(responses.PUT, url, body='', status=204)
         self._add_jira_id_response(json_content=self.issue_json)
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
@@ -744,3 +744,24 @@ class TestJiraClient(TestCase):
         pprint(issue.__dict__)
         # print('\n\nerror')
         # print(client.error)
+
+    @skip('Test against helpdesk server')
+    def test_jira_client_create_remote_link(self):
+        jira_resource = ResourceCredential.objects.create(
+            title='jira instance',
+            url='http://helpdesk.gfbio.org',
+            authentication_string='-',
+            username='brokeragent',
+            password='',
+            comment='-'
+        )
+        client = JiraClient(resource=jira_resource)
+        issue = client.jira.issue("SAND-1710")
+
+        # works
+        remote_link = client.jira.add_remote_link(issue, {
+            'url': 'https://submissions.gfbio.org',
+            'title': 'Follow this Link ;-)'
+        })
+
+        pprint(client.jira.remote_links(issue))
