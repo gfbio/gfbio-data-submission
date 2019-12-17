@@ -155,6 +155,19 @@ class JiraClient(object):
                                                                               e.text))
             self.error = e
 
+    def add_remote_link(self, key_or_issue, url='', title=''):
+        try:
+            remote_link = self.jira.add_remote_link(key_or_issue, {
+                'url': url,
+                'title': title
+            })
+            self.error = None
+        except JIRAError as e:
+            logger.warning(
+                'JiraClient | add_remote_link | JIRAError {0} | {1}'.format(e,
+                                                                            e.text))
+            self.error = e
+
     # specialized methods ------------------------------------------------------
     # TODO: ADD RequestLogs or aquivalent ...
 
@@ -243,7 +256,9 @@ class JiraClient(object):
             #             'fields'].keys(), type(self.issue.raw['fields']),
             #         self.issue.raw['fields']))
             field_value = self.issue.raw['fields'][PANGAEA_ISSUE_DOI_FIELD_NAME]
-            logger.info('JiraClient | get_doi_from_pangaea_issue | field_value={0}'.format(field_value))
+            logger.info(
+                'JiraClient | get_doi_from_pangaea_issue | field_value={0}'.format(
+                    field_value))
             if field_value is not None and 'doi' in field_value:
                 return field_value
         return None
