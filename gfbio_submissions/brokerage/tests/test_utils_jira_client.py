@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime
-import pprint
 from io import StringIO
-from pprint import pprint
 from unittest import skip
 
 import jira
@@ -813,11 +811,6 @@ class TestJiraClient(TestCase):
 
         }
         client.create_issue(issue_dict)
-        print('\n\nissue')
-        print(client.issue)
-        pprint(client.issue.__dict__)
-        print('\n\nerror')
-        print(client.error)
 
     @skip('Test against helpdesk server')
     def test_jira_client_get_issue(self):
@@ -831,12 +824,6 @@ class TestJiraClient(TestCase):
         )
         client = JiraClient(resource=jira_resource)
         issue = client.jira.issue("SAND-1661")
-
-        print('\n\nissue')
-        # print(issue)
-        pprint(issue.__dict__)
-        # print('\n\nerror')
-        # print(client.error)
 
     # @skip('Test against helpdesk server')
     def test_jira_client_create_remote_link(self):

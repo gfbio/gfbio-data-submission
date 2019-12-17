@@ -162,7 +162,6 @@ class JiraClient(object):
                 'url': url,
                 'title': title
             })
-            print('REMOTE LINK ', remote_link)
             self.error = None
         except JIRAError as e:
             logger.warning(

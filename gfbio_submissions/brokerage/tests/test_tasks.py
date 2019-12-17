@@ -770,7 +770,6 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
             }
         )
         tpr = TaskProgressReport.objects.first()
-        print(tpr.__dict__)
         self.assertEqual('tasks.add_pangaealink_to_submission_issue_task',
                          tpr.task_name)
         self.assertEqual(TaskProgressReport.CANCELLED, tpr.task_return_value)
@@ -1172,7 +1171,6 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
                 'submission_id': submission.id,
             }
         )
-        print(result.get())
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())
         tpr = submission.taskprogressreport_set.filter(
             task_name='tasks.update_submission_issue_task')

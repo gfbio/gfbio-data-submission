@@ -992,25 +992,21 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
     retry_jitter=True
 )
 def add_accession_link_to_submission_issue_task(self, prev_task_result=None,
-                                             submission_id=None,
-                                             target_archive=None):
+                                                submission_id=None,
+                                                target_archive=None):
     # No submission will be returned if submission.status is error
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
         include_closed=True
     )
-    print('submission ', submission)
     if submission == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
 
     reference = submission.get_primary_helpdesk_reference()
-    print('refernce ', reference)
 
     if reference and prev_task_result is True:
-        print('ref & True')
         if target_archive == ENA or target_archive == ENA_PANGAEA:
-            print('archive ?')
             study_pid = submission.brokerobject_set.filter(
                 type='study'
             ).first().persistentidentifier_set.filter(
