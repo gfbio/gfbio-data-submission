@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import datetime
-import pprint
 from io import StringIO
-from pprint import pprint
 from unittest import skip
 
 import jira
+import requests
 import responses
 from django.contrib.auth.models import Permission
 from django.test import TestCase
@@ -255,7 +254,7 @@ class TestJiraClient(TestCase):
         self._add_jira_field_response()
         self._add_jira_issue_response(json_content=self.issue_json)
         url = '{0}/rest/api/2/issue/16814?notifyUsers=false'.format(
-                          self.site_config.helpdesk_server.url)
+            self.site_config.helpdesk_server.url)
         responses.add(responses.PUT, url, body='', status=204)
         self._add_jira_id_response(json_content=self.issue_json)
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
@@ -470,6 +469,98 @@ class TestJiraClient(TestCase):
         responses.add(responses.DELETE, url, body=b'', status=504)
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         jira_client.delete_attachment('1')
+        self.assertIsNotNone(jira_client.error)
+
+    @responses.activate
+    def test_add_remote_link(self):
+        self._add_create_ticket_responses(json_content=self.issue_json)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        responses.add(
+            responses.GET,
+            '{0}/rest/applinks/latest/listApplicationlinks'.format(
+                self.site_config.helpdesk_server.url),
+            status=200
+        )
+        responses.add(
+            responses.POST,
+            '{0}/rest/api/2/issue/SAND-1661/remotelink'.format(
+                self.site_config.helpdesk_server.url),
+            json={
+                'id': 10000,
+                'self': '{0}/rest/api/2/issue/SAND-1661/remotelink/10000'.format(
+                    self.site_config.helpdesk_server.url)
+            },
+            status=200,
+        )
+        jira_client.add_remote_link('SAND-1661', url='http://www.google.de',
+                                    title='Google')
+        self.assertIsNone(jira_client.error)
+
+    @responses.activate
+    def test_add_study_link(self):
+        self._add_create_ticket_responses(json_content=self.issue_json)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        responses.add(
+            responses.GET,
+            '{0}/rest/applinks/latest/listApplicationlinks'.format(
+                self.site_config.helpdesk_server.url),
+            status=200
+        )
+        responses.add(
+            responses.POST,
+            '{0}/rest/api/2/issue/SAND-1661/remotelink'.format(
+                self.site_config.helpdesk_server.url),
+            json={
+                'id': 10000,
+                'self': '{0}/rest/api/2/issue/SAND-1661/remotelink/10000'.format(
+                    self.site_config.helpdesk_server.url)
+            },
+            status=200,
+        )
+        jira_client.add_ena_study_link_to_issue('SAND-1661',
+                                                accession_number='PRJE0815')
+        self.assertIsNone(jira_client.error)
+
+    @responses.activate
+    def test_add_comment_client_error(self):
+        self._add_create_ticket_responses(json_content=self.issue_json)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        responses.add(
+            responses.GET,
+            '{0}/rest/applinks/latest/listApplicationlinks'.format(
+                self.site_config.helpdesk_server.url),
+            status=200
+        )
+        responses.add(
+            responses.POST,
+            '{0}/rest/api/2/issue/SAND-1661/remotelink'.format(
+                self.site_config.helpdesk_server.url),
+            json={},
+            status=403,
+        )
+        jira_client.add_remote_link('SAND-1661', url='http://www.google.de',
+                                    title='Google')
+        self.assertIsNotNone(jira_client.error)
+
+    @responses.activate
+    def test_add_comment_server_error(self):
+        self._add_create_ticket_responses(json_content=self.issue_json)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+        responses.add(
+            responses.GET,
+            '{0}/rest/applinks/latest/listApplicationlinks'.format(
+                self.site_config.helpdesk_server.url),
+            status=200
+        )
+        responses.add(
+            responses.POST,
+            '{0}/rest/api/2/issue/SAND-1661/remotelink'.format(
+                self.site_config.helpdesk_server.url),
+            json={},
+            status=500,
+        )
+        jira_client.add_remote_link('SAND-1661', url='http://www.google.de',
+                                    title='Google')
         self.assertIsNotNone(jira_client.error)
 
     @responses.activate
@@ -720,11 +811,6 @@ class TestJiraClient(TestCase):
 
         }
         client.create_issue(issue_dict)
-        print('\n\nissue')
-        print(client.issue)
-        pprint(client.issue.__dict__)
-        print('\n\nerror')
-        print(client.error)
 
     @skip('Test against helpdesk server')
     def test_jira_client_get_issue(self):
@@ -739,8 +825,38 @@ class TestJiraClient(TestCase):
         client = JiraClient(resource=jira_resource)
         issue = client.jira.issue("SAND-1661")
 
-        print('\n\nissue')
-        # print(issue)
-        pprint(issue.__dict__)
-        # print('\n\nerror')
+    # @skip('Test against helpdesk server')
+    def test_jira_client_create_remote_link(self):
+        # jira_resource = ResourceCredential.objects.create(
+        #     title='jira instance',
+        #     url='http://helpdesk.gfbio.org',
+        #     authentication_string='-',
+        #     username='brokeragent',
+        #     password='',
+        #     comment='-'
+        # )
+        # client = JiraClient(resource=jira_resource)
+        # issue = client.jira.issue("SAND-1710")
+
+        # works
+        # remote_link = client.jira.add_remote_link(issue, {
+        #     'url': 'https://submissions.gfbio.org',
+        #     'title': 'Follow this Link ;-)'
+        # })
+        # pprint(client.jira.remote_links(issue))
+        # client.add_remote_link("SAND-1710", url='http://www.google.de', title='Google here abcd')
         # print(client.error)
+        # issue = client.jira.issue("SAND-1710")
+        # client.add_remote_link(issue, url='http://www.google.de',
+        #                        title='Google here 1234')
+        # print(client.error)
+
+        response = requests.get(
+            url='https://helpdesk.gfbio.org/rest/applinks/latest/listApplicationlinks',
+            auth=('brokeragent', ''),
+            headers={
+                'Content-Type': 'application/json'
+            }
+        )
+        print(response.status_code)
+        print(response.content)

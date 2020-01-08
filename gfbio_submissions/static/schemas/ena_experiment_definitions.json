@@ -7,26 +7,39 @@
             "454 GS FLX",
             "454 GS FLX+",
             "454 GS FLX Titanium",
-            "454 GS Junior"
+            "454 GS Junior",
+            "unspecified"
         ]
     },
     "illumina": {
         "type": "string",
         "enum": [
+            "HiSeq X Five",
+            "HiSeq X Ten",
             "Illumina Genome Analyzer",
             "Illumina Genome Analyzer II",
             "Illumina Genome Analyzer IIx",
-            "Illumina HiSeq 2500",
-            "Illumina HiSeq 2000",
+            "Illumina HiScanSQ",
             "Illumina HiSeq 1000",
+            "Illumina HiSeq 1500",
+            "Illumina HiSeq 2000",
+            "Illumina HiSeq 2500",
+            "Illumina HiSeq 3000",
+            "Illumina HiSeq 4000",
+            "Illumina iSeq 100",
             "Illumina MiSeq",
-            "Illumina HiScanSQ"
+            "Illumina MiniSeq",
+            "Illumina NovaSeq 6000",
+            "NextSeq 500",
+            "NextSeq 550",
+            "unspecified"
         ]
     },
     "helicos": {
         "type": "string",
         "enum": [
-            "Helicos HeliScope"
+            "Helicos HeliScope",
+            "unspecified"
         ]
     },
     "abi_solid": {
@@ -40,26 +53,51 @@
             "AB SOLiD 4hq System",
             "AB SOLiD PI System",
             "AB 5500 Genetic Analyzer",
-            "AB 5500xl Genetic Analyzer"
+            "AB 5500xl Genetic Analyzer",
+            "AB 5500xl-W Genetic Analysis System",
+            "unspecified"
         ]
     },
     "complete_genomics": {
         "type": "string",
         "enum": [
-            "Complete Genomics"
+            "Complete Genomics",
+            "unspecified"
+        ]
+    },
+    "bgiseq": {
+        "type": "string",
+        "enum": [
+            "BGISEQ-500"
+        ]
+    },
+    "oxford_nanopore": {
+        "type": "string",
+        "enum": [
+            "MinION",
+            "GridION",
+            "PromethION",
+            "unspecified"
         ]
     },
     "pacbio_smrt": {
         "type": "string",
         "enum": [
-            "PacBio RS"
+            "PacBio RS",
+            "PacBio RS II",
+            "Sequel",
+            "Sequel II",
+            "unspecified"
         ]
     },
     "ion_torrent": {
         "type": "string",
         "enum": [
             "Ion Torrent PGM",
-            "Ion Torrent Proton"
+            "Ion Torrent Proton",
+            "Ion Torrent S5",
+            "Ion Torrent S5 XL",
+            "unspecified"
         ]
     },
     "capillary": {
@@ -71,7 +109,8 @@
             "AB 3500 Genetic Analyzer",
             "AB 3130xL Genetic Analyzer",
             "AB 3130 Genetic Analyzer",
-            "AB 310 Genetic Analyzer"
+            "AB 310 Genetic Analyzer",
+            "unspecified"
         ]
     },
     "platform": {
@@ -90,6 +129,12 @@
             },
             {
                 "$ref": "#/complete_genomics"
+            },
+            {
+                "$ref": "#/bgiseq"
+            },
+            {
+                "$ref": "#/oxford_nanopore"
             },
             {
                 "$ref": "#/pacbio_smrt"
@@ -149,9 +194,15 @@
                     "WGA",
                     "WXS",
                     "RNA-Seq",
+                    "ssRNA-seq",
                     "miRNA-Seq",
                     "ncRNA-Seq",
+                    "FL-cDNA",
+                    "EST",
+                    "Hi-C",
+                    "ATAC-seq",
                     "WCS",
+                    "RAD-Seq",
                     "CLONE",
                     "POOLCLONE",
                     "AMPLICON",
@@ -161,8 +212,6 @@
                     "MNase-Seq",
                     "DNase-Hypersensitivity",
                     "Bisulfite-Seq",
-                    "EST",
-                    "FL-cDNA",
                     "CTS",
                     "MRE-Seq",
                     "MeDIP-Seq",
@@ -173,6 +222,10 @@
                     "SELEX",
                     "RIP-Seq",
                     "ChIA-PET",
+                    "Synthetic-Long-Read",
+                    "Targeted-Capture",
+                    "Tethered Chromatin Conformation Capture",
+                    "NOMe-Seq",
                     "OTHER"
                 ]
             },
@@ -201,7 +254,14 @@
                     "size fractionation",
                     "MSLL",
                     "cDNA",
-                    "ChiP",
+                    "cDNA_randomPriming",
+                    "cDNA_oligo_dT",
+                    "PolyA",
+                    "Oligo-dT",
+                    "Inverse rRNA",
+                    "Inverse rRNA selection",
+                    "ChIP",
+                    "ChIP-Seq",
                     "MNase",
                     "DNase",
                     "Hybrid Selection",
