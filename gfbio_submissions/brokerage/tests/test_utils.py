@@ -1833,9 +1833,9 @@ class TestCSVParsing(TestCase):
         self.assertIn('experiments', requirements_keys)
         self.assertIn('samples', requirements_keys)
         # 8 rows: 1 empty, 1 only commas, rest is complete or partly empty
-        # results in 7 items
-        self.assertEqual(7, len(requirements.get('samples', [])))
-        self.assertEqual(7, len(requirements.get('experiments', [])))
+        # results in 6 items (as long as sample title available)
+        self.assertEqual(6, len(requirements.get('samples', [])))
+        self.assertEqual(6, len(requirements.get('experiments', [])))
 
     def test_parse_semi_no_quoting(self):
         with open(os.path.join(
@@ -1991,3 +1991,25 @@ class TestCSVParsing(TestCase):
             submission.data.get('requirements', {}).get('experiments', []))
 
         self.assertEqual(previous_length, current_length)
+
+    def test_same_sample_title(self):
+        # if multiple rows contain the same sample_title, it is expected that
+        # no additional sample is added, just an experiment with reference
+        # to the already existing sample (one-sample to many-experiments)
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/mol_5_items_semi_double_quoting.csv'),
+                'r') as data_file:
+            submission = Submission.objects.first()
+        submission.submissionupload_set.all().delete()
+        submission.save()
+
+        self.create_csv_submission_upload(submission, User.objects.first(),
+                                          'csv_files/Data_submission_SAGs.csv')
+        is_mol_content, errors = check_for_molecular_content(submission)
+        self.assertTrue(is_mol_content)
+        samples = submission.data.get('requirements', {}).get('samples', [])
+        self.assertEqual(1, len(samples))
+        experiments = submission.data.get('requirements', {}).get('experiments',
+                                                                  [])
+        self.assertEqual(7, len(experiments))

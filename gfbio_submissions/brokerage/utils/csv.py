@@ -329,19 +329,30 @@ def parse_molecular_csv(csv_file):
     except _csv.Error as e:
         return molecular_requirements
     short_id = ShortId()
+    sample_titles = []
+    sample_ids = []
     for row in csv_reader:
         # every row is one sample (except header)
+        title = row.get('sample_title', None)
+        if title:
+            experiment_id = short_id.generate()
+            if title not in sample_titles:
+                sample_titles.append(title)
+                sample_id = short_id.generate()
+                sample_ids.append(sample_id)
+                sample = extract_sample(row, field_names, sample_id)
+                molecular_requirements['samples'].append(
+                    sample
+                )
 
-        sample_id = short_id.generate()
-        experiment_id = short_id.generate()
-        sample = extract_sample(row, field_names, sample_id)
-        experiment = extract_experiment(experiment_id, row, sample_id)
-        molecular_requirements['samples'].append(
-            sample
-        )
-        molecular_requirements['experiments'].append(
-            experiment
-        )
+                experiment = extract_experiment(experiment_id, row, sample_id)
+            else:
+                experiment = extract_experiment(experiment_id, row, sample_ids[
+                    sample_titles.index(title)])
+
+            molecular_requirements['experiments'].append(
+                experiment
+            )
     return molecular_requirements
 
 
