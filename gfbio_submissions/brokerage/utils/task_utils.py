@@ -27,6 +27,18 @@ def _safe_get_submission(submission_id, include_closed):
     return submission
 
 
+def _safe_get_submitted_submission(submission_id):
+    submission = None
+    try:
+        submission = Submission.objects.get_submitted_and_error_submissions(
+            submission_id)
+    except Submission.DoesNotExist as e:
+        logger.warning(
+            'task_utils.py | _safe_get_submitted_submission | error {0}'.format(
+                e))
+    return submission
+
+
 def _safe_get_site_config(submission):
     site_config = None
     if submission:
@@ -37,6 +49,64 @@ def _safe_get_site_config(submission):
             logger.warning(
                 'task_utils.py | _safe_get_site_config | error {0}'.format(e))
     return site_config
+
+
+def _get_submitted_submission_and_site_configuration(submission_id, task):
+    try:
+        submission = _safe_get_submitted_submission(submission_id)
+        if submission is None:
+            logger.warning(
+                'task_utils.py | '
+                '_get_submitted_submission_and_site_configuration | '
+                'raise TransferInternalError | no submission for pk={0} |'
+                ' task={1}'.format(
+                    submission_id,
+                    task.name
+                )
+            )
+            raise TransferInternalError(
+                'SubmissionTransferHandler | '
+                '_get_submitted_submission_and_site_configuration | '
+                'no Submission available for submission pk={0}.'.format(
+                    submission_id,
+                )
+            )
+        site_config = _safe_get_site_config(submission)
+        if site_config is None:
+            logger.warning(
+                'task_utils.py | '
+                '_get_submitted_submission_and_site_configuration | '
+                'raise TransferInternalError | no site_config for submission '
+                'with pk={0} | task={1}'.format(
+                    submission_id,
+                    task.name
+                )
+            )
+            raise TransferInternalError(
+                'SubmissionTransferHandler | '
+                '_get_submitted_submission_and_site_configuration | '
+                'no SiteConfiguration available for site={0}.'.format(
+                    submission.site,
+                )
+            )
+        if task:
+            TaskProgressReport.objects.create_initial_report(
+                submission=submission,
+                task=task)
+        return submission, site_config
+    except TransferInternalError as e:
+        logger.warning(
+            'task_utils.py | _get_submitted_submission_and_site_configuration '
+            '| task={0} '
+            '| submission pk={1} | return={2} | '
+            'TransferInternalError={3}'.format(
+                task.name,
+                submission_id,
+                (TaskProgressReport.CANCELLED, None),
+                e
+            )
+        )
+        return TaskProgressReport.CANCELLED, None
 
 
 def _get_submission_and_site_configuration(submission_id, task,
@@ -131,6 +201,28 @@ def get_submission_and_site_configuration(submission_id, task,
                 task.name,
                 submission_id,
                 include_closed,
+                ce
+            )
+        )
+        return send_task_fail_mail('*', task), None
+
+
+def get_submitted_submission_and_site_configuration(submission_id, task):
+    logger.info(
+        'task_utils.py | get_submitted_submission_and_site_configuration | '
+        ' submission_id={0} | task={1} |'
+        ''.format(submission_id, task.name))
+    try:
+        return _get_submitted_submission_and_site_configuration(submission_id,
+                                                                task)
+    except TransferInternalError as ce:
+        logger.warning(
+            'task_utils.py | get_submitted_submission_and_site_configuration '
+            '| task={0} '
+            '| submission pk={1} |  will '
+            'send_task_fail_mail TransferInternalError={2}'.format(
+                task.name,
+                submission_id,
                 ce
             )
         )

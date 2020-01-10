@@ -26,7 +26,8 @@ from gfbio_submissions.brokerage.utils.schema_validation import \
     validate_data_full
 from gfbio_submissions.brokerage.utils.task_utils import jira_error_auto_retry, \
     get_submission_and_site_configuration, raise_transfer_server_exceptions, \
-    retry_no_ticket_available_exception
+    retry_no_ticket_available_exception, \
+    get_submitted_submission_and_site_configuration
 from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
 from gfbio_submissions.users.models import User
 from .configuration.settings import SUBMISSION_MAX_RETRIES, \
@@ -244,7 +245,8 @@ def check_on_hold_status_task(self, previous_task_result=None,
 def create_broker_objects_from_submission_data_task(
         self,
         previous_task_result=None,
-        submission_id=None):
+        submission_id=None,
+        use_submitted_submissions=False):
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
             'tasks.py | create_broker_objects_from_submission_data_task | '
@@ -253,11 +255,14 @@ def create_broker_objects_from_submission_data_task(
                                        submission_id))
         return TaskProgressReport.CANCELLED
 
-    submission, site_configuration = get_submission_and_site_configuration(
-        submission_id=submission_id,
-        task=self,
-        include_closed=True
-    )
+    submission, site_configuration = \
+        get_submitted_submission_and_site_configuration(
+            submission_id=submission_id,
+            task=self) if use_submitted_submissions else get_submission_and_site_configuration(
+            submission_id=submission_id,
+            task=self,
+            include_closed=True
+        )
     if submission == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
 

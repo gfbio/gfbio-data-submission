@@ -59,6 +59,40 @@ class SubmissionManagerTest(TestCase):
         with self.assertRaises(Submission.DoesNotExist) as exc:
             Submission.objects.get_open_submission(database_id + 12)
 
+    def test_get_submitted_submissions(self):
+        submission = Submission()
+        submission.site = User.objects.first()
+        submission.status = Submission.SUBMITTED
+        submission.save()
+        database_id = submission.pk
+
+        self.assertEqual(Submission.SUBMITTED, submission.status)
+        obj = Submission.objects.get_submitted_and_error_submissions(
+            database_id)
+        self.assertEqual(submission.pk, obj.pk)
+        submission.status = Submission.CLOSED
+        submission.save()
+
+        with self.assertRaises(Submission.DoesNotExist) as exc:
+            Submission.objects.get_submitted_and_error_submissions(database_id)
+
+    def test_get_error_submissions(self):
+        submission = Submission()
+        submission.site = User.objects.first()
+        submission.status = Submission.ERROR
+        submission.save()
+        database_id = submission.pk
+
+        self.assertEqual(Submission.ERROR, submission.status)
+        obj = Submission.objects.get_submitted_and_error_submissions(
+            database_id)
+        self.assertEqual(submission.pk, obj.pk)
+        submission.status = Submission.CLOSED
+        submission.save()
+
+        with self.assertRaises(Submission.DoesNotExist) as exc:
+            Submission.objects.get_submitted_and_error_submissions(database_id)
+
 
 class TestSubmissionManagerSubmittingUser(TestCase):
     @classmethod

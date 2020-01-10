@@ -232,7 +232,7 @@ def reparse_csv_metadata(modeladmin, request, queryset):
             ).set(countdown=SUBMISSION_DELAY) | \
             create_broker_objects_from_submission_data_task.s(
                 submission_id=SubmissionUpload.objects.get_related_submission_id(
-                    submission_upload_id)
+                    submission_upload_id), use_submitted_submissions=True
             ).set(countdown=SUBMISSION_DELAY) | \
             update_ena_submission_data_task.s(
                 submission_upload_id=submission_upload_id,
