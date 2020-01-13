@@ -50,6 +50,14 @@ class SubmissionManager(models.Manager):
              & ~Q(status=self.model.CANCELLED))
         )
 
+    def get_submitted_and_error_submissions(self, obj_id=None):
+        # includes ERROR, SUBMITTED
+        return self.get(
+            Q(pk=obj_id),
+            (~Q(status=self.model.CLOSED) & ~Q(status=self.model.OPEN)
+             & ~Q(status=self.model.CANCELLED))
+        )
+
     def get_non_error_submission(self, obj_id=None):
         # includes OPEN, SUBMITTED, CLOSED
         return self.get(
