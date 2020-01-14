@@ -194,6 +194,10 @@ platform_mappings = {
     'unspecified': 'unspecified'
 }
 
+attribute_value_blacklist = [
+    'na', 'NA', 'n/a', 'N/A',
+]
+
 
 def extract_sample(row, field_names, sample_id):
     for k in row.keys():
@@ -202,20 +206,21 @@ def extract_sample(row, field_names, sample_id):
     sample_attributes = []
     for o in field_names:
         if o not in core_fields and len(row[o]):
-            if o in unit_mapping_keys:
-                sample_attributes.append(
-                    OrderedDict([
-                        ('tag', o),
-                        ('value', row[o]),
-                        ('units', unit_mapping[o])
-                    ])
-                )
-            else:
-                sample_attributes.append(
-                    OrderedDict([
-                        ('tag', o), ('value', row[o])
-                    ])
-                )
+            if row[o] not in attribute_value_blacklist:
+                if o in unit_mapping_keys:
+                    sample_attributes.append(
+                        OrderedDict([
+                            ('tag', o),
+                            ('value', row[o]),
+                            ('units', unit_mapping[o])
+                        ])
+                    )
+                else:
+                    sample_attributes.append(
+                        OrderedDict([
+                            ('tag', o), ('value', row[o])
+                        ])
+                    )
 
     try:
         taxon_id = int(row.get('taxon_id', '-1'))
