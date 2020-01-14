@@ -37,7 +37,7 @@ from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_pangaea_ticket_response
 from gfbio_submissions.brokerage.utils import csv
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
-    check_for_molecular_content
+    check_for_molecular_content, extract_sample
 from gfbio_submissions.brokerage.utils.ena import \
     download_submitted_run_files_to_string_io, prepare_ena_data
 from gfbio_submissions.brokerage.utils.gfbio import \
@@ -1643,6 +1643,153 @@ class TestCSVParsing(TestCase):
 
     def test_setUp_result(self):
         sub = Submission.objects.first()
+
+    def test_extract_sample(self):
+        row = OrderedDict(
+            [('sample_title', 'PS99/41-9_S3'), ('taxon_id', '408172'),
+             ('sample_description', 'Sediment community in station S3'),
+             ('sequencing_platform', 'Illumina MiSeq'),
+             ('library_strategy', 'AMPLICON'),
+             ('library_source', 'METAGENOMIC'),
+             ('library_selection', 'PCR'), ('library_layout', 'paired'),
+             ('nominal_length', '400'),
+             ('forward_read_file_name', '66_clip_R1.fastq'),
+             ('forward_read_file_checksum', ''),
+             ('reverse_read_file_name', '66_clip_R2.fastq'),
+             ('reverse_read_file_checksum', ''),
+             ('checksum_method', ''),
+             ('investigation type', 'mimarks-survey'),
+             ('environmental package', 'Sediment'),
+             ('collection date', '2016-06-25'),
+             ('geographic location (latitude)', '78.61N'),
+             ('geographic location (longitude)', '5.04E'),
+             ('geographic location (depth)', '0-1'),
+             ('total depth of water column', '2338'), (
+                 'geographic location (country and/or sea)',
+                 'Arctic Ocean: Greenland Sea'),
+             ('environment (biome)', 'ENVO:00000426'),
+             ('environment (material)', 'ENVO:00002113'),
+             ('environment (feature)', 'ENVO:01000007')])
+        field_names = [
+            'sample_title', 'taxon_id', 'sample_description',
+            'sequencing_platform', 'library_strategy', 'library_source',
+            'library_selection', 'library_layout', 'nominal_length',
+            'forward_read_file_name', 'forward_read_file_checksum',
+            'reverse_read_file_name', 'reverse_read_file_checksum',
+            'checksum_method', 'investigation type', 'environmental package',
+            'collection date', 'geographic location (latitude)',
+            'geographic location (longitude)', 'geographic location (depth)',
+            'total depth of water column',
+            'geographic location (country and/or sea)', 'environment (biome)',
+            'environment (material)', 'environment (feature)']
+        sample_id = 'CeB9oY'
+        expected_sample = {'sample_title': 'PS99/41-9_S3',
+                           'sample_alias': 'CeB9oY',
+                           'sample_description': 'Sediment community in station S3',
+                           'taxon_id': 408172, 'sample_attributes': [
+                OrderedDict([('tag', 'sample_description'),
+                             ('value', 'Sediment community in station S3')]),
+                OrderedDict([('tag', 'investigation type'),
+                             ('value', 'mimarks-survey')]), OrderedDict(
+                    [('tag', 'environmental package'), ('value', 'Sediment')]),
+                OrderedDict(
+                    [('tag', 'collection date'), ('value', '2016-06-25')]),
+                OrderedDict([('tag', 'geographic location (latitude)'),
+                             ('value', '78.61N'), ('units', 'DD')]),
+                OrderedDict([('tag', 'geographic location (longitude)'),
+                             ('value', '5.04E'), ('units', 'DD')]), OrderedDict(
+                    [('tag', 'geographic location (depth)'), ('value', '0-1'),
+                     ('units', 'm')]), OrderedDict(
+                    [('tag', 'total depth of water column'), ('value', '2338'),
+                     ('units', 'm')]), OrderedDict(
+                    [('tag', 'geographic location (country and/or sea)'),
+                     ('value', 'Arctic Ocean: Greenland Sea')]), OrderedDict(
+                    [('tag', 'environment (biome)'),
+                     ('value', 'ENVO:00000426')]), OrderedDict(
+                    [('tag', 'environment (material)'),
+                     ('value', 'ENVO:00002113')]), OrderedDict(
+                    [('tag', 'environment (feature)'),
+                     ('value', 'ENVO:01000007')])]}
+        sample = extract_sample(row=row, field_names=field_names,
+                                sample_id=sample_id)
+        self.assertEqual(expected_sample, sample)
+
+    def test_extract_sample_na_attributes(self):
+        row = OrderedDict(
+            [('sample_title', 'PS99/41-9_S3'), ('taxon_id', '408172'),
+             ('sample_description', 'Sediment community in station S3'),
+             ('sequencing_platform', 'Illumina MiSeq'),
+             ('library_strategy', 'AMPLICON'),
+             ('library_source', 'METAGENOMIC'),
+             ('library_selection', 'PCR'), ('library_layout', 'paired'),
+             ('nominal_length', '400'),
+             ('forward_read_file_name', '66_clip_R1.fastq'),
+             ('forward_read_file_checksum', ''),
+             ('reverse_read_file_name', '66_clip_R2.fastq'),
+             ('reverse_read_file_checksum', ''),
+             ('checksum_method', ''),
+             ('investigation type', 'na'),  # no
+             ('environmental package', 'Sediment'),
+             ('collection date', '2016-06-25'),
+             ('geographic location (latitude)', '78.61N'),
+             ('geographic location (longitude)', '5.04E'),
+             ('geographic location (depth)', 'NA'),  # no
+             ('total depth of water column', '2338'), (
+                 'geographic location (country and/or sea)',
+                 'Arctic Ocean: Greenland Sea'),
+             ('environment (biome)', 'n/a'),  # no
+             ('environment (material)', 'ENVO:00002113'),
+             ('environment (feature)', 'N/A')])  # no
+        field_names = [
+            'sample_title', 'taxon_id', 'sample_description',
+            'sequencing_platform', 'library_strategy', 'library_source',
+            'library_selection', 'library_layout', 'nominal_length',
+            'forward_read_file_name', 'forward_read_file_checksum',
+            'reverse_read_file_name', 'reverse_read_file_checksum',
+            'checksum_method', 'investigation type', 'environmental package',
+            'collection date', 'geographic location (latitude)',
+            'geographic location (longitude)', 'geographic location (depth)',
+            'total depth of water column',
+            'geographic location (country and/or sea)', 'environment (biome)',
+            'environment (material)', 'environment (feature)']
+        sample_id = 'CeB9oY'
+        expected_sample = {'sample_title': 'PS99/41-9_S3',
+                           'sample_alias': 'CeB9oY',
+                           'sample_description': 'Sediment community in station S3',
+                           'taxon_id': 408172, 'sample_attributes': [
+                OrderedDict([('tag', 'sample_description'),
+                             ('value', 'Sediment community in station S3')]),
+                # OrderedDict([('tag', 'investigation type'),
+                #              ('value', 'mimarks-survey')]),
+                OrderedDict(
+                    [('tag', 'environmental package'), ('value', 'Sediment')]),
+                OrderedDict(
+                    [('tag', 'collection date'), ('value', '2016-06-25')]),
+                OrderedDict([('tag', 'geographic location (latitude)'),
+                             ('value', '78.61N'), ('units', 'DD')]),
+                OrderedDict([('tag', 'geographic location (longitude)'),
+                             ('value', '5.04E'), ('units', 'DD')]),
+                # OrderedDict(
+                #     [('tag', 'geographic location (depth)'), ('value', '0-1'),
+                #      ('units', 'm')]),
+                OrderedDict(
+                    [('tag', 'total depth of water column'), ('value', '2338'),
+                     ('units', 'm')]), OrderedDict(
+                    [('tag', 'geographic location (country and/or sea)'),
+                     ('value', 'Arctic Ocean: Greenland Sea')]),
+                # OrderedDict(
+                #     [('tag', 'environment (biome)'),
+                #      ('value', 'ENVO:00000426')]),
+                OrderedDict(
+                    [('tag', 'environment (material)'),
+                     ('value', 'ENVO:00002113')]),
+                # OrderedDict(
+                #     [('tag', 'environment (feature)'),
+                #      ('value', 'ENVO:01000007')])
+            ]}
+        sample = extract_sample(row=row, field_names=field_names,
+                                sample_id=sample_id)
+        self.assertEqual(expected_sample, sample)
 
     def test_parse_molecular_csv(self):
         file_names = [
