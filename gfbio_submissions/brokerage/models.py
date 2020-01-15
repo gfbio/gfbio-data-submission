@@ -447,7 +447,7 @@ class PersistentIdentifier(TimeStampedModel):
         return '{}'.format(self.pid)
 
 
-class RequestLog(models.Model):
+class RequestLog(TimeStampedModel):
     INCOMING = '0'
     OUTGOING = '1'
     REQUEST_TYPES = (
@@ -503,8 +503,8 @@ class RequestLog(models.Model):
     )
 
     # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
-    created = models.DateTimeField(auto_now_add=True)
-    changed = models.DateTimeField(auto_now=True)
+    # created = models.DateTimeField(auto_now_add=True)
+    # changed = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return '{}'.format(self.request_id)
