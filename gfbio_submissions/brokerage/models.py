@@ -541,7 +541,7 @@ class AdditionalReference(models.Model):
         return '{}'.format(self.reference_key)
 
 
-class TaskProgressReport(models.Model):
+class TaskProgressReport(TimeStampedModel):
     RUNNING = 'RUNNING'
     CANCELLED = 'CANCELLED'
     submission = models.ForeignKey(Submission, null=True, blank=True,
@@ -563,8 +563,8 @@ class TaskProgressReport(models.Model):
     task_kwargs = models.TextField(default='')
 
     # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
-    created = models.DateTimeField(auto_now_add=True)
-    changed = models.DateTimeField(auto_now=True)
+    # created = models.DateTimeField(auto_now_add=True)
+    # changed = models.DateTimeField(auto_now=True)
 
     objects = TaskProgressReportManager()
 
