@@ -4,6 +4,7 @@ import logging
 import os
 import uuid
 
+from django.contrib.postgres.fields import JSONField
 from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
@@ -445,6 +446,27 @@ class PersistentIdentifier(TimeStampedModel):
 
     def __str__(self):
         return '{}'.format(self.pid)
+
+
+class EnaReport(TimeStampedModel):
+    STUDY = 'STU'
+    SAMPLE = 'SAM'
+    EXPERIMENT = 'EXP'
+    RUN = 'RUN'
+
+    REPORT_TYPES = [
+        (STUDY, 'studies'),
+        (SAMPLE, 'samples'),
+        (EXPERIMENT, 'experiments'),
+        (RUN, 'runs'),
+    ]
+
+    report_type = models.CharField(max_length=3, choices=REPORT_TYPES,
+                                   default=STUDY)
+    report_data = JSONField()
+
+    def __str__(self):
+        return '{}'.format(self.get_report_type_display())
 
 
 class RequestLog(TimeStampedModel):
