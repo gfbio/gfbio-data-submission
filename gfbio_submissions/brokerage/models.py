@@ -666,7 +666,7 @@ class SubmissionUpload(TimeStampedModel):
         return ' / '.join(reversed(self.file.name.split(os.sep)))
 
 
-class AuditableTextData(models.Model):
+class AuditableTextData(TimeStampedModel):
     data_id = models.UUIDField(primary_key=False, default=uuid.uuid4)
     name = models.CharField(max_length=128)
     submission = models.ForeignKey(
@@ -688,8 +688,8 @@ class AuditableTextData(models.Model):
     )
 
     # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
-    created = models.DateTimeField(auto_now_add=True)
-    changed = models.DateTimeField(auto_now=True)
+    # created = models.DateTimeField(auto_now_add=True)
+    # changed = models.DateTimeField(auto_now=True)
 
     objects = AuditableTextDataManager()
 
