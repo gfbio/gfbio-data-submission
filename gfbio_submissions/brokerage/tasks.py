@@ -39,7 +39,7 @@ from .models import BrokerObject, \
     Submission, SiteConfiguration
 from .utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data, send_submission_to_ena, \
-    parse_ena_submission_response
+    parse_ena_submission_response, fetch_ena_report
 from .utils.pangaea import pull_pangaea_dois
 from .utils.submission_transfer import SubmissionTransferHandler
 
@@ -1298,45 +1298,57 @@ def fetch_ena_reports_task(self):
         return TaskProgressReport.CANCELLED
 
     for report_type in EnaReport.REPORT_TYPES:
-        type_key, type = report_type
-        print('\nget report for report_type: ', report_type, ' | for url ', )
-        url = '{0}/{1}?format=json'.format(
-            site_configuration.ena_report_server.url, type)
-        print(url)
-        response = requests.get(
-            url=url,
-            auth=(
-                site_configuration.ena_report_server.username,
-                site_configuration.ena_report_server.password
-            )
+        type_key, type_name = report_type
+        print(
+            '\ntry ', type_name, ' retries ', self.request.retries
         )
-        print(response.status_code)
-        print(response.content)
-        obj, updated = EnaReport.objects.update_or_create(
-            report_type=type_key,
-            defaults={
-                'report_type': type_key,
-                'report_data': json.loads(response.content)
-            }
-        )
-        print('OBJ ', obj)
-        print('UPDATED ', updated)
+        try:
+            response, request_id = fetch_ena_report(site_configuration,
+                                                    type_name)
 
-    # if submission == TaskProgressReport.CANCELLED:
-    #     return TaskProgressReport.CANCELLED
-    #
-    # helpdesk_reference = submission.get_primary_helpdesk_reference()
-    # pangaea_reference = submission.get_primary_pangaea_reference()
-    #
-    # if helpdesk_reference and pangaea_reference:
-    #     jira_client = JiraClient(
-    #         resource=site_configuration.helpdesk_server)
-    #
-    #     jira_client.add_comment(
-    #         key_or_issue=helpdesk_reference.reference_key,
-    #         text='[Pangaea Ticket {1}|{0}{1}]'.format(
-    #             PANGAEA_ISSUE_VIEW_URL,
-    #             pangaea_reference.reference_key)
-    #     )
-    #     return jira_error_auto_retry(jira_client=jira_client, task=self,
-    #                                  broker_submission_id=submission.broker_submission_id)
+            # print(response.status_code)
+            # print(response.content)
+
+            if response.ok:
+                obj, updated = EnaReport.objects.update_or_create(
+                    report_type=type_key,
+                    defaults={
+                        'report_type': type_key,
+                        'report_data': json.loads(response.content)
+                    }
+                )
+
+                # print('OBJ ', obj)
+                # print('UPDATED ', updated)
+            else:
+                res = raise_transfer_server_exceptions(
+                    response=response,
+                    task=self,
+                    # broker_submission_id=submission.broker_submission_id,
+                    max_retries=SUBMISSION_MAX_RETRIES)
+                print('------- RES ', res)
+        # try:
+        #     response, request_id = send_submission_to_ena(submission,
+        #                                                   site_configuration.ena_server,
+        #                                                   ena_submission_data,
+        # logger.warning(
+        #     'tasks.py | clean_submission_for_update_task | '
+        #     'previous task reported={0} | '
+        #     'submission_upload_id={1}'.format(TaskProgressReport.CANCELLED,
+        #                                       submission_upload_id))
+        #                                                   )
+        #     res = raise_transfer_server_exceptions(
+        #         response=response,
+        #         task=self,
+        #         broker_submission_id=submission.broker_submission_id,
+        #         max_retries=SUBMISSION_MAX_RETRIES)
+        except ConnectionError as e:
+            logger.error(
+                msg='tasks.py | fetch_ena_reports_task | url={1} title={2} '
+                    '| connection_error {0}'.format(
+                    e,
+                    site_configuration.ena_report_server.url,
+                    site_configuration.ena_report_server.title)
+            )
+            return TaskProgressReport.CANCELLED
+    return True

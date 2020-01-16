@@ -229,8 +229,8 @@ def get_submitted_submission_and_site_configuration(submission_id, task):
         return send_task_fail_mail('*', task), None
 
 
-def raise_transfer_server_exceptions(response, task, broker_submission_id,
-                                     max_retries):
+def raise_transfer_server_exceptions(response, task, max_retries,
+                                     broker_submission_id='NO_BSI'):
     logger.info('task_utils.py | raise_transfer_server_exceptions | '
                 'resonse.status_code={0} | broker_submission_id={1} | '
                 'task={2} | retries={3}'.format(response.status_code,

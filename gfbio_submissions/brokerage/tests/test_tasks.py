@@ -2566,13 +2566,10 @@ class TestEnaReportTasks(TestTasks):
 
     @classmethod
     def _add_report_responses(cls):
-
         with open(os.path.join(_get_test_data_dir_path(),
                                'ena_reports_testdata.json'),
                   'r') as file:
             data = json.load(file)
-        # pprint(data)
-
         for report_type in EnaReport.REPORT_TYPES:
             key, val = report_type
             responses.add(
@@ -2583,6 +2580,28 @@ class TestEnaReportTasks(TestTasks):
                 json=data[val]
             )
 
+    @classmethod
+    def _add_client_error_responses(cls):
+        for report_type in EnaReport.REPORT_TYPES:
+            key, val = report_type
+            responses.add(
+                responses.GET,
+                '{0}/{1}?format=json'.format(
+                    cls.default_site_config.ena_report_server.url, val),
+                status=401,
+            )
+
+    @classmethod
+    def _add_server_error_responses(cls):
+        for report_type in EnaReport.REPORT_TYPES:
+            key, val = report_type
+            responses.add(
+                responses.GET,
+                '{0}/{1}?format=json'.format(
+                    cls.default_site_config.ena_report_server.url, val),
+                status=500,
+            )
+
     @responses.activate
     def test_get_ena_reports_task(self):
         self._add_report_responses()
@@ -2591,7 +2610,36 @@ class TestEnaReportTasks(TestTasks):
             kwargs={
             }
         )
+        self.assertEqual(len(EnaReport.REPORT_TYPES),
+                         len(EnaReport.objects.all()))
+        self.assertEqual(len(EnaReport.REPORT_TYPES),
+                         len(RequestLog.objects.all()))
+        # for er in EnaReport.objects.all():
+        #     print('\n type ', er.report_type)
+        #     pprint(er.report_data)
 
-        for er in EnaReport.objects.all():
-            print('\n type ', er.report_type)
-            pprint(er.report_data)
+    @responses.activate
+    def test_get_ena_reports_task_client_error(self):
+        self._add_client_error_responses()
+        self.assertEqual(0, len(EnaReport.objects.all()))
+        fetch_ena_reports_task.apply_async(
+            kwargs={
+            }
+        )
+        self.assertEqual(0, len(EnaReport.objects.all()))
+        self.assertEqual(len(EnaReport.REPORT_TYPES),
+                         len(RequestLog.objects.all()))
+
+    @responses.activate
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+                       CELERY_TASK_EAGER_PROPAGATES=False)
+    def test_get_ena_reports_task_server_error(self):
+        self._add_server_error_responses()
+        self.assertEqual(0, len(EnaReport.objects.all()))
+        fetch_ena_reports_task.apply(
+            kwargs={
+            }
+        )
+        self.assertEqual(0, len(EnaReport.objects.all()))
+        self.assertEqual(len(EnaReport.REPORT_TYPES),
+                         len(RequestLog.objects.all()))

@@ -505,6 +505,7 @@ class RequestLog(TimeStampedModel):
         blank=True,
         help_text='Any kind of payload that comes '
                   'with with this request (if available)')
+    # TODO: refactor too when changing ownership
     site_user = models.CharField(
         max_length=72,
         help_text='A user of a site registered in our System. E.g. user=joe '
