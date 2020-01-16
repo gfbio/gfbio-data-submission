@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import base64
 import json
+import os
 import uuid
+from pprint import pprint
 from unittest import skip
 from unittest.mock import patch
 from urllib.parse import quote
@@ -21,7 +23,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, Submission, AuditableTextData, PersistentIdentifier, \
     BrokerObject, TaskProgressReport, AdditionalReference, RequestLog, \
-    CenterName, SubmissionUpload
+    CenterName, SubmissionUpload, EnaReport
 from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, \
     transfer_data_to_ena_task, process_ena_response_task, \
     create_broker_objects_from_submission_data_task, check_on_hold_status_task, \
@@ -43,7 +45,7 @@ from gfbio_submissions.brokerage.tests.utils import \
     _get_ena_error_xml_response, _get_jira_attach_response, \
     _get_pangaea_soap_response, _get_pangaea_attach_response, \
     _get_pangaea_comment_response, _get_pangaea_ticket_response, \
-    _get_jira_issue_response
+    _get_jira_issue_response, _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data
 from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
@@ -317,6 +319,7 @@ class TestTasks(TestCase):
             title=HOSTING_SITE,
             site=site,
             ena_server=resource_cred,
+            ena_report_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
             helpdesk_server=resource_cred,
@@ -2555,9 +2558,40 @@ class TestTaskProgressReportInTasks(TestTasks):
 
 
 class TestEnaReportTasks(TestTasks):
+    # https://www.ebi.ac.uk/ena/submit/report/studies?format=json
+    # https://www.ebi.ac.uk/ena/submit/report/studies?format=json&max-results=100
+    # https://www.ebi.ac.uk/ena/submit/report/studies?format=json&max-results=25&status=private
+    # https://ena-docs.readthedocs.io/en/latest/submit/general-guide/reports-service.html
+    # https://www.ebi.ac.uk/ena/submit/report/swagger-ui.html
 
+    @classmethod
+    def _add_report_responses(cls):
+
+        with open(os.path.join(_get_test_data_dir_path(),
+                               'ena_reports_testdata.json'),
+                  'r') as file:
+            data = json.load(file)
+        # pprint(data)
+
+        for report_type in EnaReport.REPORT_TYPES:
+            key, val = report_type
+            responses.add(
+                responses.GET,
+                '{0}/{1}?format=json'.format(
+                    cls.default_site_config.ena_report_server.url, val),
+                status=200,
+                json=data[val]
+            )
+
+    @responses.activate
     def test_get_ena_reports_task(self):
+        self._add_report_responses()
+        self.assertEqual(0, len(EnaReport.objects.all()))
         fetch_ena_reports_task.apply_async(
             kwargs={
             }
         )
+
+        for er in EnaReport.objects.all():
+            print('\n type ', er.report_type)
+            pprint(er.report_data)

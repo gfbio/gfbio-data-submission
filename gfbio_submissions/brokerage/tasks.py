@@ -3,11 +3,13 @@ import logging
 import os
 
 import celery
+import requests
 from celery import Task
 from django.core.mail import mail_admins
 from django.db import transaction
 from django.db.utils import IntegrityError
 from django.utils.encoding import smart_text
+from kombu.utils import json
 from requests import ConnectionError, Response
 
 from config.settings.base import HOST_URL_ROOT, ADMIN_URL
@@ -17,7 +19,7 @@ from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA,
     APPROVAL_EMAIL_MESSAGE_TEMPLATE, JIRA_ACCESSION_COMMENT_TEMPLATE
 from gfbio_submissions.brokerage.exceptions import TransferServerError, \
     TransferClientError
-from gfbio_submissions.brokerage.models import SubmissionUpload
+from gfbio_submissions.brokerage.models import SubmissionUpload, EnaReport
 from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content, parse_molecular_csv
 from gfbio_submissions.brokerage.utils.gfbio import get_gfbio_helpdesk_username
@@ -1295,7 +1297,30 @@ def fetch_ena_reports_task(self):
     if site_configuration is None or site_configuration.ena_report_server is None:
         return TaskProgressReport.CANCELLED
 
-
+    for report_type in EnaReport.REPORT_TYPES:
+        type_key, type = report_type
+        print('\nget report for report_type: ', report_type, ' | for url ', )
+        url = '{0}/{1}?format=json'.format(
+            site_configuration.ena_report_server.url, type)
+        print(url)
+        response = requests.get(
+            url=url,
+            auth=(
+                site_configuration.ena_report_server.username,
+                site_configuration.ena_report_server.password
+            )
+        )
+        print(response.status_code)
+        print(response.content)
+        obj, updated = EnaReport.objects.update_or_create(
+            report_type=type_key,
+            defaults={
+                'report_type': type_key,
+                'report_data': json.loads(response.content)
+            }
+        )
+        print('OBJ ', obj)
+        print('UPDATED ', updated)
 
     # if submission == TaskProgressReport.CANCELLED:
     #     return TaskProgressReport.CANCELLED
