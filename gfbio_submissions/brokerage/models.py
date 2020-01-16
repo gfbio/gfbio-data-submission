@@ -90,6 +90,7 @@ class SiteConfiguration(models.Model):
                   'requests by this site have to be manually approved by '
                   'staff members. If checked all submissions will be '
                   'automatically send to the respective archives.')
+    # TODO: merge ena servers, since url-root is the same ...
     ena_server = models.ForeignKey(
         ResourceCredential,
         related_name='SiteConfiguration.ena_server+',
@@ -97,6 +98,17 @@ class SiteConfiguration(models.Model):
                   'should use to connect to ENA.',
         on_delete=models.PROTECT
     )
+    # TODO: merge ena servers, since url-root is the same ...
+    ena_report_server = models.ForeignKey(
+        ResourceCredential,
+        null=True,
+        blank=True,
+        related_name='SiteConfiguration.ena_report_server+',
+        help_text='Select which server and/or account this configuration '
+                  'should use to obtain reports via ENA services.',
+        on_delete=models.PROTECT
+    )
+
     ena_ftp = models.ForeignKey(
         ResourceCredential,
         null=True,

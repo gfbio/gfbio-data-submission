@@ -34,7 +34,8 @@ from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, 
     delete_submission_issue_attachment_task, add_posted_comment_to_issue_task, \
     update_submission_issue_task, get_gfbio_helpdesk_username_task, \
     clean_submission_for_update_task, parse_csv_to_update_clean_submission_task, \
-    update_ena_submission_data_task, add_accession_link_to_submission_issue_task
+    update_ena_submission_data_task, \
+    add_accession_link_to_submission_issue_task, fetch_ena_reports_task
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.test_utils import TestCSVParsing
 from gfbio_submissions.brokerage.tests.utils import \
@@ -2551,3 +2552,12 @@ class TestTaskProgressReportInTasks(TestTasks):
             task_name='tasks.update_helpdesk_ticket_task').first()
         self.assertEqual('SUCCESS', tpr.status)
         self.assertEqual('CANCELLED', tpr.task_return_value)
+
+
+class TestEnaReportTasks(TestTasks):
+
+    def test_get_ena_reports_task(self):
+        fetch_ena_reports_task.apply_async(
+            kwargs={
+            }
+        )

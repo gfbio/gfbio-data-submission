@@ -1269,3 +1269,49 @@ def add_pangaealink_to_submission_issue_task(
         )
         return jira_error_auto_retry(jira_client=jira_client, task=self,
                                      broker_submission_id=submission.broker_submission_id)
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.fetch_ena_reports_task',
+    autoretry_for=(TransferServerError,
+                   TransferClientError
+                   ),
+    retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
+    retry_backoff=SUBMISSION_RETRY_DELAY,
+    retry_jitter=True
+)
+def fetch_ena_reports_task(self):
+    print('FETCH ENA REPORTS_TASK')
+
+    user = User.objects.get(username=HOSTING_SITE, is_site=True)
+    print('User', user)
+    site_configuration = SiteConfiguration.objects.get_site_configuration(
+        site=user
+    )
+    print('conf', site_configuration)
+
+    if site_configuration is None or site_configuration.ena_report_server is None:
+        return TaskProgressReport.CANCELLED
+
+
+
+    # if submission == TaskProgressReport.CANCELLED:
+    #     return TaskProgressReport.CANCELLED
+    #
+    # helpdesk_reference = submission.get_primary_helpdesk_reference()
+    # pangaea_reference = submission.get_primary_pangaea_reference()
+    #
+    # if helpdesk_reference and pangaea_reference:
+    #     jira_client = JiraClient(
+    #         resource=site_configuration.helpdesk_server)
+    #
+    #     jira_client.add_comment(
+    #         key_or_issue=helpdesk_reference.reference_key,
+    #         text='[Pangaea Ticket {1}|{0}{1}]'.format(
+    #             PANGAEA_ISSUE_VIEW_URL,
+    #             pangaea_reference.reference_key)
+    #     )
+    #     return jira_error_auto_retry(jira_client=jira_client, task=self,
+    #                                  broker_submission_id=submission.broker_submission_id)
