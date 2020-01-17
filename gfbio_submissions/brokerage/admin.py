@@ -14,7 +14,7 @@ from .models import PersistentIdentifier, \
     AdditionalReference, SiteConfiguration, TaskProgressReport, TicketLabel, \
     SubmissionUpload, \
     AuditableTextData, \
-    CenterName
+    CenterName, EnaReport
 from .utils.ena import release_study_on_ena
 from .utils.submission_transfer import \
     SubmissionTransferHandler
@@ -266,6 +266,10 @@ class TaskProgressReportAdmin(admin.ModelAdmin):
     search_fields = ['submission__broker_submission_id', 'task_name']
 
 
+class EnaReportAdmin(admin.ModelAdmin):
+    date_hierarchy = 'created'
+
+
 admin.site.register(Submission, SubmissionAdmin)
 admin.site.register(BrokerObject, BrokerObjectAdmin)
 admin.site.register(PersistentIdentifier, PersistentIdentifierAdmin)
@@ -279,3 +283,5 @@ admin.site.register(SubmissionUpload, SubmissionUploadAdmin)
 
 admin.site.register(AuditableTextData)
 admin.site.register(CenterName)
+
+admin.site.register(EnaReport, EnaReportAdmin)

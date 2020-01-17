@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import base64
 import json
+import os
 import uuid
 from unittest import skip
 from unittest.mock import patch
@@ -21,7 +22,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, Submission, AuditableTextData, PersistentIdentifier, \
     BrokerObject, TaskProgressReport, AdditionalReference, RequestLog, \
-    CenterName, SubmissionUpload
+    CenterName, SubmissionUpload, EnaReport
 from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, \
     transfer_data_to_ena_task, process_ena_response_task, \
     create_broker_objects_from_submission_data_task, check_on_hold_status_task, \
@@ -34,7 +35,8 @@ from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, 
     delete_submission_issue_attachment_task, add_posted_comment_to_issue_task, \
     update_submission_issue_task, get_gfbio_helpdesk_username_task, \
     clean_submission_for_update_task, parse_csv_to_update_clean_submission_task, \
-    update_ena_submission_data_task, add_accession_link_to_submission_issue_task
+    update_ena_submission_data_task, \
+    add_accession_link_to_submission_issue_task, fetch_ena_reports_task
 from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.test_utils import TestCSVParsing
 from gfbio_submissions.brokerage.tests.utils import \
@@ -42,7 +44,7 @@ from gfbio_submissions.brokerage.tests.utils import \
     _get_ena_error_xml_response, _get_jira_attach_response, \
     _get_pangaea_soap_response, _get_pangaea_attach_response, \
     _get_pangaea_comment_response, _get_pangaea_ticket_response, \
-    _get_jira_issue_response
+    _get_jira_issue_response, _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data
 from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
@@ -316,6 +318,7 @@ class TestTasks(TestCase):
             title=HOSTING_SITE,
             site=site,
             ena_server=resource_cred,
+            ena_report_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
             helpdesk_server=resource_cred,
@@ -2551,3 +2554,117 @@ class TestTaskProgressReportInTasks(TestTasks):
             task_name='tasks.update_helpdesk_ticket_task').first()
         self.assertEqual('SUCCESS', tpr.status)
         self.assertEqual('CANCELLED', tpr.task_return_value)
+
+
+class TestEnaReportTasks(TestTasks):
+    # https://www.ebi.ac.uk/ena/submit/report/studies?format=json
+    # https://www.ebi.ac.uk/ena/submit/report/studies?format=json&max-results=100
+    # https://www.ebi.ac.uk/ena/submit/report/studies?format=json&max-results=25&status=private
+    # https://ena-docs.readthedocs.io/en/latest/submit/general-guide/reports-service.html
+    # https://www.ebi.ac.uk/ena/submit/report/swagger-ui.html
+
+    @classmethod
+    def _add_report_responses(cls):
+        with open(os.path.join(_get_test_data_dir_path(),
+                               'ena_reports_testdata.json'),
+                  'r') as file:
+            data = json.load(file)
+        for report_type in EnaReport.REPORT_TYPES:
+            key, val = report_type
+            responses.add(
+                responses.GET,
+                '{0}/{1}?format=json'.format(
+                    cls.default_site_config.ena_report_server.url, val),
+                status=200,
+                json=data[val]
+            )
+
+    @classmethod
+    def _add_client_error_responses(cls):
+        for report_type in EnaReport.REPORT_TYPES:
+            key, val = report_type
+            responses.add(
+                responses.GET,
+                '{0}/{1}?format=json'.format(
+                    cls.default_site_config.ena_report_server.url, val),
+                status=401,
+            )
+
+    @classmethod
+    def _add_server_error_responses(cls):
+        for report_type in EnaReport.REPORT_TYPES:
+            key, val = report_type
+            responses.add(
+                responses.GET,
+                '{0}/{1}?format=json'.format(
+                    cls.default_site_config.ena_report_server.url, val),
+                status=500,
+            )
+
+    @skip('Request to real server')
+    def test_real_life_get_ena_reports_task(self):
+        rc = ResourceCredential.objects.create(
+            title='ena report server',
+            url='https://www.ebi.ac.uk/ena/submit/report/',
+            username='',
+            password=''
+        )
+        self.default_site_config.ena_report_server = rc
+        self.default_site_config.save()
+
+        self.assertEqual(0, len(EnaReport.objects.all()))
+
+        fetch_ena_reports_task.apply_async(
+            kwargs={
+            }
+        )
+        self.assertEqual(len(EnaReport.REPORT_TYPES),
+                         len(EnaReport.objects.all()))
+        self.assertEqual(len(EnaReport.REPORT_TYPES),
+                         len(RequestLog.objects.all()))
+        # for er in EnaReport.objects.all():
+        #     print('\n type ', er.report_type)
+        #     pprint(er.report_data)
+
+    @responses.activate
+    def test_get_ena_reports_task(self):
+        self._add_report_responses()
+        self.assertEqual(0, len(EnaReport.objects.all()))
+        fetch_ena_reports_task.apply_async(
+            kwargs={
+            }
+        )
+        self.assertEqual(len(EnaReport.REPORT_TYPES),
+                         len(EnaReport.objects.all()))
+        self.assertEqual(len(EnaReport.REPORT_TYPES),
+                         len(RequestLog.objects.all()))
+
+    @responses.activate
+    def test_get_ena_reports_task_client_error(self):
+        self._add_client_error_responses()
+        self.assertEqual(0, len(EnaReport.objects.all()))
+        fetch_ena_reports_task.apply_async(
+            kwargs={
+            }
+        )
+        self.assertEqual(0, len(EnaReport.objects.all()))
+        self.assertEqual(len(EnaReport.REPORT_TYPES),
+                         len(RequestLog.objects.all()))
+
+    @responses.activate
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
+                       CELERY_TASK_EAGER_PROPAGATES=False)
+    def test_get_ena_reports_task_server_error(self):
+        self._add_server_error_responses()
+        self.assertEqual(0, len(EnaReport.objects.all()))
+        fetch_ena_reports_task.apply(
+            kwargs={
+            }
+        )
+        self.assertEqual(0, len(EnaReport.objects.all()))
+
+        # 1 execute plus 2 retries for first reporttype,
+        # then 1 execute for each of the remaining 3 reporttypes
+        # since max retries is exceeded
+        self.assertEqual(6,
+                         len(RequestLog.objects.all()))

@@ -11,7 +11,6 @@ import uuid
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
 from ftplib import FTP
-from pprint import pprint
 from xml.etree.ElementTree import Element, SubElement
 
 import dicttoxml
@@ -698,8 +697,6 @@ def release_study_on_ena(submission):
         }
         data = {'SUBMISSION': ('submission.xml', submission_xml)}
 
-        pprint(data)
-
         response = requests.post(
             site_config.ena_server.url,
             params=auth_params,
@@ -834,3 +831,33 @@ def download_submitted_run_files_to_string_io(site_config, decompressed_io):
     )
     compressed_file.close()
     return transmission_report
+
+
+def fetch_ena_report(site_configuration, report_type):
+    url = '{0}/{1}?format=json'.format(
+        site_configuration.ena_report_server.url, report_type)
+    response = requests.get(
+        url=url,
+        auth=(
+            site_configuration.ena_report_server.username,
+            site_configuration.ena_report_server.password
+        )
+    )
+    request_id = uuid.uuid4()
+    with transaction.atomic():
+        details = response.headers or ''
+        from gfbio_submissions.brokerage.models import RequestLog
+        req_log = RequestLog(
+            request_id=request_id,
+            type=RequestLog.OUTGOING,
+            url=url,
+            site_user=site_configuration.site.username,
+            response_status=response.status_code,
+            response_content=response.content,
+            request_details={
+                'response_headers': str(details)
+            }
+        )
+        req_log.save()
+
+    return response, request_id

@@ -8,6 +8,7 @@ from django.core.mail import mail_admins
 from django.db import transaction
 from django.db.utils import IntegrityError
 from django.utils.encoding import smart_text
+from kombu.utils import json
 from requests import ConnectionError, Response
 
 from config.settings.base import HOST_URL_ROOT, ADMIN_URL
@@ -17,7 +18,7 @@ from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA,
     APPROVAL_EMAIL_MESSAGE_TEMPLATE, JIRA_ACCESSION_COMMENT_TEMPLATE
 from gfbio_submissions.brokerage.exceptions import TransferServerError, \
     TransferClientError
-from gfbio_submissions.brokerage.models import SubmissionUpload
+from gfbio_submissions.brokerage.models import SubmissionUpload, EnaReport
 from gfbio_submissions.brokerage.utils.csv import \
     check_for_molecular_content, parse_molecular_csv
 from gfbio_submissions.brokerage.utils.gfbio import get_gfbio_helpdesk_username
@@ -37,7 +38,7 @@ from .models import BrokerObject, \
     Submission, SiteConfiguration
 from .utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data, send_submission_to_ena, \
-    parse_ena_submission_response
+    parse_ena_submission_response, fetch_ena_report
 from .utils.pangaea import pull_pangaea_dois
 from .utils.submission_transfer import SubmissionTransferHandler
 
@@ -1269,3 +1270,52 @@ def add_pangaealink_to_submission_issue_task(
         )
         return jira_error_auto_retry(jira_client=jira_client, task=self,
                                      broker_submission_id=submission.broker_submission_id)
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.fetch_ena_reports_task',
+    autoretry_for=(TransferServerError,
+                   TransferClientError
+                   ),
+    retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
+    retry_backoff=SUBMISSION_RETRY_DELAY,
+    retry_jitter=True
+)
+def fetch_ena_reports_task(self):
+    user = User.objects.get(username=HOSTING_SITE, is_site=True)
+    site_configuration = SiteConfiguration.objects.get_site_configuration(
+        site=user
+    )
+    if site_configuration is None or site_configuration.ena_report_server is None:
+        return TaskProgressReport.CANCELLED
+
+    for report_type in EnaReport.REPORT_TYPES:
+        type_key, type_name = report_type
+        try:
+            response, request_id = fetch_ena_report(site_configuration,
+                                                    type_name)
+            if response.ok:
+                obj, updated = EnaReport.objects.update_or_create(
+                    report_type=type_key,
+                    defaults={
+                        'report_type': type_key,
+                        'report_data': json.loads(response.content)
+                    }
+                )
+            else:
+                res = raise_transfer_server_exceptions(
+                    response=response,
+                    task=self,
+                    max_retries=SUBMISSION_MAX_RETRIES)
+        except ConnectionError as e:
+            logger.error(
+                msg='tasks.py | fetch_ena_reports_task | url={1} title={2} '
+                    '| connection_error {0}'.format(
+                    e,
+                    site_configuration.ena_report_server.url,
+                    site_configuration.ena_report_server.title)
+            )
+            return TaskProgressReport.CANCELLED
+    return True
