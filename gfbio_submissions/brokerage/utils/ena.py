@@ -847,25 +847,13 @@ def fetch_ena_report(site_configuration, report_type):
     with transaction.atomic():
         details = response.headers or ''
         from gfbio_submissions.brokerage.models import RequestLog
-        # incoming = None
-        # try:
-        #     incoming = RequestLog.objects.filter(
-        #         submission_id=submission.broker_submission_id).filter(
-        #         type=RequestLog.INCOMING).latest('created')
-        # except RequestLog.DoesNotExist:
-        #     logger.error('No incoming request for submission_id {}'.format(
-        #         submission.broker_submission_id))
-        # site_user = submission.submitting_user if submission.submitting_user is not None else ''
         req_log = RequestLog(
             request_id=request_id,
             type=RequestLog.OUTGOING,
-            url=site_configuration.ena_report_server.url,
-            # data=ena_submission_data,
+            url=url,
             site_user=site_configuration.site.username,
-            # submission_id=submission.broker_submission_id,
             response_status=response.status_code,
             response_content=response.content,
-            # triggered_by=incoming,
             request_details={
                 'response_headers': str(details)
             }

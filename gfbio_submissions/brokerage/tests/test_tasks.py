@@ -3,7 +3,6 @@ import base64
 import json
 import os
 import uuid
-from pprint import pprint
 from unittest import skip
 from unittest.mock import patch
 from urllib.parse import quote
@@ -2602,6 +2601,31 @@ class TestEnaReportTasks(TestTasks):
                 status=500,
             )
 
+    @skip('Request to real server')
+    def test_real_life_get_ena_reports_task(self):
+        rc = ResourceCredential.objects.create(
+            title='ena report server',
+            url='https://www.ebi.ac.uk/ena/submit/report/',
+            username='',
+            password=''
+        )
+        self.default_site_config.ena_report_server = rc
+        self.default_site_config.save()
+
+        self.assertEqual(0, len(EnaReport.objects.all()))
+
+        fetch_ena_reports_task.apply_async(
+            kwargs={
+            }
+        )
+        self.assertEqual(len(EnaReport.REPORT_TYPES),
+                         len(EnaReport.objects.all()))
+        self.assertEqual(len(EnaReport.REPORT_TYPES),
+                         len(RequestLog.objects.all()))
+        # for er in EnaReport.objects.all():
+        #     print('\n type ', er.report_type)
+        #     pprint(er.report_data)
+
     @responses.activate
     def test_get_ena_reports_task(self):
         self._add_report_responses()
@@ -2614,9 +2638,6 @@ class TestEnaReportTasks(TestTasks):
                          len(EnaReport.objects.all()))
         self.assertEqual(len(EnaReport.REPORT_TYPES),
                          len(RequestLog.objects.all()))
-        # for er in EnaReport.objects.all():
-        #     print('\n type ', er.report_type)
-        #     pprint(er.report_data)
 
     @responses.activate
     def test_get_ena_reports_task_client_error(self):
@@ -2641,5 +2662,9 @@ class TestEnaReportTasks(TestTasks):
             }
         )
         self.assertEqual(0, len(EnaReport.objects.all()))
-        self.assertEqual(len(EnaReport.REPORT_TYPES),
+
+        # 1 execute plus 2 retries for first reporttype,
+        # then 1 execute for each of the remaining 3 reporttypes
+        # since max retries is exceeded
+        self.assertEqual(6,
                          len(RequestLog.objects.all()))

@@ -3,7 +3,6 @@ import logging
 import os
 
 import celery
-import requests
 from celery import Task
 from django.core.mail import mail_admins
 from django.db import transaction
@@ -1285,30 +1284,18 @@ def add_pangaealink_to_submission_issue_task(
     retry_jitter=True
 )
 def fetch_ena_reports_task(self):
-    print('FETCH ENA REPORTS_TASK')
-
     user = User.objects.get(username=HOSTING_SITE, is_site=True)
-    print('User', user)
     site_configuration = SiteConfiguration.objects.get_site_configuration(
         site=user
     )
-    print('conf', site_configuration)
-
     if site_configuration is None or site_configuration.ena_report_server is None:
         return TaskProgressReport.CANCELLED
 
     for report_type in EnaReport.REPORT_TYPES:
         type_key, type_name = report_type
-        print(
-            '\ntry ', type_name, ' retries ', self.request.retries
-        )
         try:
             response, request_id = fetch_ena_report(site_configuration,
                                                     type_name)
-
-            # print(response.status_code)
-            # print(response.content)
-
             if response.ok:
                 obj, updated = EnaReport.objects.update_or_create(
                     report_type=type_key,
@@ -1317,31 +1304,11 @@ def fetch_ena_reports_task(self):
                         'report_data': json.loads(response.content)
                     }
                 )
-
-                # print('OBJ ', obj)
-                # print('UPDATED ', updated)
             else:
                 res = raise_transfer_server_exceptions(
                     response=response,
                     task=self,
-                    # broker_submission_id=submission.broker_submission_id,
                     max_retries=SUBMISSION_MAX_RETRIES)
-                print('------- RES ', res)
-        # try:
-        #     response, request_id = send_submission_to_ena(submission,
-        #                                                   site_configuration.ena_server,
-        #                                                   ena_submission_data,
-        # logger.warning(
-        #     'tasks.py | clean_submission_for_update_task | '
-        #     'previous task reported={0} | '
-        #     'submission_upload_id={1}'.format(TaskProgressReport.CANCELLED,
-        #                                       submission_upload_id))
-        #                                                   )
-        #     res = raise_transfer_server_exceptions(
-        #         response=response,
-        #         task=self,
-        #         broker_submission_id=submission.broker_submission_id,
-        #         max_retries=SUBMISSION_MAX_RETRIES)
         except ConnectionError as e:
             logger.error(
                 msg='tasks.py | fetch_ena_reports_task | url={1} title={2} '
