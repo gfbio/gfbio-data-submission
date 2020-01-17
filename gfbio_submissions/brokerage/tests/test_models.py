@@ -933,26 +933,30 @@ class TestEnaReport(TestCase):
             pid='PAN007',
             outgoing_request_id='7e76fdec-7cde-4f11-a7bd-35ef8fde5b85'
         )
-        self.assertEqual(3, len(PersistentIdentifier.objects.all()))
+        identifiers = PersistentIdentifier.objects.all()
+        self.assertEqual(3, len(identifiers))
+        for i in identifiers:
+            self.assertEqual('', i.status)
 
+        # TODO: this has to be refactored to a method wich is used in fetch_report task or in dedicated task
         for report_type in EnaReport.REPORT_TYPES:
             key, val = report_type
             reports = EnaReport.objects.filter(report_type=key)
             if len(reports) == 1:
-                print('\n ---> One report for ', val)
+                # print('\n ---> One report for ', val)
                 for report in reports.first().report_data:
                     #     print('\treport ', report['report'])
                     # print('\n')
                     report_dict = report.get('report', {})
                     id = report_dict.get('id')
                     sec_id = report_dict.get('secondaryId')
-                    status = report_dict.get('releaseStatus', '')
-                    print(id, ' ', status, ' ', sec_id)
+                    status = report_dict.get('releaseStatus')
+                    # print(id, ' ', status, ' ', sec_id)
 
-                    if id:
+                    if id and status:
                         PersistentIdentifier.objects.filter(pid=id).update(
                             status=status)
-                    if sec_id:
+                    if sec_id and status:
                         PersistentIdentifier.objects.filter(pid=sec_id).update(
                             status=status)
                     # if 'id' in report.get('report', {}).keys():
@@ -965,6 +969,12 @@ class TestEnaReport(TestCase):
                     #     print('secondaryId ', sec_id, ' pids ', pids)
             else:
                 print('zero or more than one  report for ', val)
+
+        identifiers = PersistentIdentifier.objects.all().exclude(pid_type='DOI')
+        self.assertEqual(2, len(identifiers))
+        for i in identifiers:
+            self.assertNotEqual('', i.status)
+            print(i, ' ', i.status, ' ', i.pid_type)
 
         # print(
         #     EnaReport.objects.filter(
