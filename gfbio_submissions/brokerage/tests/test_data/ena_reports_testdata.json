@@ -27,6 +27,19 @@
                 "holdDate": "2021-01-07T00:00:00"
             },
             "links": []
+        },
+        {
+            "report": {
+                "id": "ERP0815",
+                "alias": "20815:edfd9647-f889-4370-9287-4fb5cb688e4c",
+                "firstCreated": "2020-01-08T14:35:41",
+                "firstPublic": null,
+                "submissionAccountId": "Webin-40945",
+                "secondaryId": "PRJEB0815",
+                "title": "Something completely different",
+                "holdDate": "2021-01-07T00:00:00"
+            },
+            "links": []
         }
     ],
     "samples": [

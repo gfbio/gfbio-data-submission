@@ -939,18 +939,30 @@ class TestEnaReport(TestCase):
             key, val = report_type
             reports = EnaReport.objects.filter(report_type=key)
             if len(reports) == 1:
-                # print('One report for ', val)
+                print('\n ---> One report for ', val)
                 for report in reports.first().report_data:
                     #     print('\treport ', report['report'])
-                    print('\n')
-                    if 'id' in report.get('report', {}).keys():
-                        id = report.get('report', {}).get('id', 'NO_ID')
-                        pids = PersistentIdentifier.objects.filter(pid=id)
-                        print('id ', id, ' pids ', pids)
-                    if 'secondaryId' in report.get('report', {}).keys():
-                        sec_id = report.get('report', {}).get('secondaryId', 'NO_SECONDARY_ID')
-                        pids = PersistentIdentifier.objects.filter(pid=sec_id)
-                        print('secondaryId ', sec_id, ' pids ', pids)
+                    # print('\n')
+                    report_dict = report.get('report', {})
+                    id = report_dict.get('id')
+                    sec_id = report_dict.get('secondaryId')
+                    status = report_dict.get('releaseStatus', '')
+                    print(id, ' ', status, ' ', sec_id)
+
+                    if id:
+                        PersistentIdentifier.objects.filter(pid=id).update(
+                            status=status)
+                    if sec_id:
+                        PersistentIdentifier.objects.filter(pid=sec_id).update(
+                            status=status)
+                    # if 'id' in report.get('report', {}).keys():
+                    #     id = report.get('report', {}).get('id', 'NO_ID')
+                    #     pids = PersistentIdentifier.objects.filter(pid=id)
+                    #     print('id ', id, ' pids ', pids)
+                    # if 'secondaryId' in report.get('report', {}).keys():
+                    #     sec_id = report.get('report', {}).get('secondaryId', 'NO_SECONDARY_ID')
+                    #     pids = PersistentIdentifier.objects.filter(pid=sec_id)
+                    #     print('secondaryId ', sec_id, ' pids ', pids)
             else:
                 print('zero or more than one  report for ', val)
 
