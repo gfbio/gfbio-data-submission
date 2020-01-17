@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import json
 import os
 import uuid
+from pprint import pprint
 from unittest import skip
 from unittest.mock import patch
 
@@ -790,6 +792,23 @@ class TestSubmissionUpload(TestCase):
 
 class TestEnaReport(TestCase):
 
+    def setUp(self):
+        with open(os.path.join(_get_test_data_dir_path(),
+                               'ena_reports_testdata.json'),
+                  'r') as file:
+            data = json.load(file)
+        for report_type in EnaReport.REPORT_TYPES:
+            key, val = report_type
+            EnaReport.objects.create(
+                report_type=key,
+                report_data=data[val]
+            )
+
+    def test_db_content(self):
+        self.assertEqual(4, len(EnaReport.objects.all()))
+        self.assertEqual(2, len(EnaReport.objects.filter(
+            report_type=EnaReport.STUDY).first().report_data))
+
     def test_create_instance(self):
         data = [
             {
@@ -863,9 +882,107 @@ class TestEnaReport(TestCase):
 
         EnaReport.objects.create(report_type=EnaReport.SAMPLE,
                                  report_data=data)
-        self.assertEqual(1, len(
-            EnaReport.objects.filter(report_type=EnaReport.STUDY)))
 
         self.assertEqual(1, len(EnaReport.objects.filter(
             report_type=EnaReport.STUDY).filter(
             report_data__1__report__holdDate=None)))
+
+        # Works even when searching for part of desired json data
+        self.assertEqual(1, len(
+            EnaReport.objects.filter(
+                report_type=EnaReport.STUDY).filter(
+                report_data__contains=[{'report': {'id': 'ERP117556'}}])
+        ))
+
+    def test_parsing_for_ena_status(self):
+        user = User.objects.create(
+            username='user1'
+        )
+        broker_object = BrokerObject.objects.create(
+            type='study',
+            site=user,
+            site_project_id='prj001xxx',
+            site_object_id='obj001',
+            data={
+                'center_name': 'GFBIO',
+                'study_type': 'Metagenomics',
+                'study_abstract': 'abstract',
+                'study_title': 'title',
+                'study_alias': 'alias',
+                'site_object_id': 'from_data_01'
+            }
+        )
+        PersistentIdentifier.objects.create(
+            archive='ENA',
+            pid_type='ACC',
+            broker_object=broker_object,
+            pid='ERP0815',
+            outgoing_request_id='da76ebec-7cde-4f11-a7bd-35ef8ebe5b85'
+        )
+        PersistentIdentifier.objects.create(
+            archive='ENA',
+            pid_type='PRJ',
+            broker_object=broker_object,
+            pid='PRJEB0815',
+            outgoing_request_id='da76ebec-7cde-4f11-a7bd-35ef8ebe5b85'
+        )
+        PersistentIdentifier.objects.create(
+            archive='PAN',
+            pid_type='DOI',
+            broker_object=broker_object,
+            pid='PAN007',
+            outgoing_request_id='7e76fdec-7cde-4f11-a7bd-35ef8fde5b85'
+        )
+        self.assertEqual(3, len(PersistentIdentifier.objects.all()))
+
+        for report_type in EnaReport.REPORT_TYPES:
+            key, val = report_type
+            reports = EnaReport.objects.filter(report_type=key)
+            if len(reports) == 1:
+                # print('One report for ', val)
+                for report in reports.first().report_data:
+                    #     print('\treport ', report['report'])
+                    print('\n')
+                    if 'id' in report.get('report', {}).keys():
+                        id = report.get('report', {}).get('id', 'NO_ID')
+                        pids = PersistentIdentifier.objects.filter(pid=id)
+                        print('id ', id, ' pids ', pids)
+                    if 'secondaryId' in report.get('report', {}).keys():
+                        sec_id = report.get('report', {}).get('secondaryId', 'NO_SECONDARY_ID')
+                        pids = PersistentIdentifier.objects.filter(pid=sec_id)
+                        print('secondaryId ', sec_id, ' pids ', pids)
+            else:
+                print('zero or more than one  report for ', val)
+
+        # print(
+        #     EnaReport.objects.filter(
+        #         report_type=EnaReport.STUDY).filter(
+        #         report_data__contains=[
+        #             {'report': {'id': 'ERP117556'}}]).first().report_data
+        # )
+
+        # for report in EnaReport.objects.all():
+        #     print('\n', report)
+        #     print(type(report.report_data))
+        #     if type(report.report_data) is list:
+        #         for r in report.report_data:
+        #             print(r)
+
+        # for pid in PersistentIdentifier.objects.all():
+        #     print('\nresolve ', pid.pid)
+        #     # TODO: this gives me the WHOLE OBJECT which contains this data, not the single
+        #     #   report item from inside the json data
+        #     id_set = EnaReport.objects.filter(
+        #         report_data__contains=[
+        #             {'report': {'id': pid.pid}}])
+        #     print('id:', id_set)
+        #     if len(id_set):
+        #         for i in id_set:
+        #             # print(i.report_data.get('report', {}).get('releaseStatus', 'NOPE'))
+        #             print('\n')
+        #             pprint(i.report_data)
+        #
+        #     secondary_set = EnaReport.objects.filter(
+        #         report_data__contains=[
+        #             {'report': {'secondaryId': pid.pid}}])
+        #     print('secondaryId:', secondary_set)
