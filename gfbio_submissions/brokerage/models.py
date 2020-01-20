@@ -451,6 +451,14 @@ class PersistentIdentifier(TimeStampedModel):
     archive = models.CharField(choices=ARCHIVES, max_length=3, default='ENA')
     pid_type = models.CharField(choices=PID_TYPES, max_length=3, default='ACC')
     pid = models.CharField(max_length=256, default='')
+    status = models.CharField(
+        max_length=24,
+        default='',
+        blank=True,
+        help_text='This field is usually set when ENA Reports are parsed '
+                  'automatically. Thus contains the value of the ENA-Report '
+                  'field "releaseStatus"'
+    )
     resolver_url = models.URLField(max_length=256, default='', blank=True)
     broker_object = models.ForeignKey(BrokerObject, on_delete=models.CASCADE)
     outgoing_request_id = models.UUIDField(primary_key=False, null=True,
