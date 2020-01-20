@@ -27,7 +27,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_BROKER_NAME, CHECKLIST_ACCESSION_MAPPING, \
     STATIC_SAMPLE_SCHEMA_LOCATION
 from gfbio_submissions.brokerage.models import AuditableTextData, \
-    SiteConfiguration
+    SiteConfiguration, EnaReport, PersistentIdentifier
 
 logger = logging.getLogger(__name__)
 dicttoxml.LOG.setLevel(logging.ERROR)
@@ -861,3 +861,31 @@ def fetch_ena_report(site_configuration, report_type):
         req_log.save()
 
     return response, request_id
+
+
+def update_persistent_identifier_report_status():
+    for report_type in EnaReport.REPORT_TYPES:
+        report_key, report_name = report_type
+        reports = EnaReport.objects.filter(report_type=report_key)
+        if len(reports) == 1:
+            logger.info('ena.py | update_persistent_identifier_report_status '
+                        '| process report of type={0}'.format(report_name))
+            for report in reports.first().report_data:
+                report_dict = report.get('report', {})
+                id = report_dict.get('id')
+                sec_id = report_dict.get('secondaryId')
+                status = report_dict.get('releaseStatus')
+
+                if id and status:
+                    PersistentIdentifier.objects.filter(pid=id).update(
+                        status=status)
+                if sec_id and status:
+                    PersistentIdentifier.objects.filter(pid=sec_id).update(
+                        status=status)
+            return True
+        else:
+            logger.warning(
+                'ena.py | update_persistent_identifier_report_status '
+                '| found {0} occurences for report of type={1} found'.format(
+                    len(reports), report_name))
+            return False

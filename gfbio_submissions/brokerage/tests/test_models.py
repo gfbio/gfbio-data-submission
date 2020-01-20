@@ -2,7 +2,6 @@
 import json
 import os
 import uuid
-from pprint import pprint
 from unittest import skip
 from unittest.mock import patch
 
@@ -19,7 +18,8 @@ from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data_without_runs, \
     _get_ena_data, _get_ena_xml_response, _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
-    send_submission_to_ena, store_ena_data_as_auditable_text_data
+    send_submission_to_ena, store_ena_data_as_auditable_text_data, \
+    update_persistent_identifier_report_status
 from gfbio_submissions.users.models import User
 
 
@@ -806,7 +806,7 @@ class TestEnaReport(TestCase):
 
     def test_db_content(self):
         self.assertEqual(4, len(EnaReport.objects.all()))
-        self.assertEqual(2, len(EnaReport.objects.filter(
+        self.assertEqual(3, len(EnaReport.objects.filter(
             report_type=EnaReport.STUDY).first().report_data))
 
     def test_create_instance(self):
@@ -938,73 +938,10 @@ class TestEnaReport(TestCase):
         for i in identifiers:
             self.assertEqual('', i.status)
 
-        # TODO: this has to be refactored to a method wich is used in fetch_report task or in dedicated task
-        for report_type in EnaReport.REPORT_TYPES:
-            key, val = report_type
-            reports = EnaReport.objects.filter(report_type=key)
-            if len(reports) == 1:
-                # print('\n ---> One report for ', val)
-                for report in reports.first().report_data:
-                    #     print('\treport ', report['report'])
-                    # print('\n')
-                    report_dict = report.get('report', {})
-                    id = report_dict.get('id')
-                    sec_id = report_dict.get('secondaryId')
-                    status = report_dict.get('releaseStatus')
-                    # print(id, ' ', status, ' ', sec_id)
-
-                    if id and status:
-                        PersistentIdentifier.objects.filter(pid=id).update(
-                            status=status)
-                    if sec_id and status:
-                        PersistentIdentifier.objects.filter(pid=sec_id).update(
-                            status=status)
-                    # if 'id' in report.get('report', {}).keys():
-                    #     id = report.get('report', {}).get('id', 'NO_ID')
-                    #     pids = PersistentIdentifier.objects.filter(pid=id)
-                    #     print('id ', id, ' pids ', pids)
-                    # if 'secondaryId' in report.get('report', {}).keys():
-                    #     sec_id = report.get('report', {}).get('secondaryId', 'NO_SECONDARY_ID')
-                    #     pids = PersistentIdentifier.objects.filter(pid=sec_id)
-                    #     print('secondaryId ', sec_id, ' pids ', pids)
-            else:
-                print('zero or more than one  report for ', val)
+        success = update_persistent_identifier_report_status()
+        self.assertTrue(success)
 
         identifiers = PersistentIdentifier.objects.all().exclude(pid_type='DOI')
         self.assertEqual(2, len(identifiers))
         for i in identifiers:
             self.assertNotEqual('', i.status)
-            print(i, ' ', i.status, ' ', i.pid_type)
-
-        # print(
-        #     EnaReport.objects.filter(
-        #         report_type=EnaReport.STUDY).filter(
-        #         report_data__contains=[
-        #             {'report': {'id': 'ERP117556'}}]).first().report_data
-        # )
-
-        # for report in EnaReport.objects.all():
-        #     print('\n', report)
-        #     print(type(report.report_data))
-        #     if type(report.report_data) is list:
-        #         for r in report.report_data:
-        #             print(r)
-
-        # for pid in PersistentIdentifier.objects.all():
-        #     print('\nresolve ', pid.pid)
-        #     # TODO: this gives me the WHOLE OBJECT which contains this data, not the single
-        #     #   report item from inside the json data
-        #     id_set = EnaReport.objects.filter(
-        #         report_data__contains=[
-        #             {'report': {'id': pid.pid}}])
-        #     print('id:', id_set)
-        #     if len(id_set):
-        #         for i in id_set:
-        #             # print(i.report_data.get('report', {}).get('releaseStatus', 'NOPE'))
-        #             print('\n')
-        #             pprint(i.report_data)
-        #
-        #     secondary_set = EnaReport.objects.filter(
-        #         report_data__contains=[
-        #             {'report': {'secondaryId': pid.pid}}])
-        #     print('secondaryId:', secondary_set)

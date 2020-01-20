@@ -38,7 +38,8 @@ from .models import BrokerObject, \
     Submission, SiteConfiguration
 from .utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data, send_submission_to_ena, \
-    parse_ena_submission_response, fetch_ena_report
+    parse_ena_submission_response, fetch_ena_report, \
+    update_persistent_identifier_report_status
 from .utils.pangaea import pull_pangaea_dois
 from .utils.submission_transfer import SubmissionTransferHandler
 
@@ -1319,3 +1320,20 @@ def fetch_ena_reports_task(self):
             )
             return TaskProgressReport.CANCELLED
     return True
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.update_persistent_identifier_report_status_task',
+)
+def update_persistent_identifier_report_status_task(self):
+    logger.info(
+        msg='tasks.py | update_persistent_identifier_report_status_task '
+            '| start update')
+    success = update_persistent_identifier_report_status()
+    logger.info(
+        msg='tasks.py | update_persistent_identifier_report_status_task '
+            '| success={0}'.format(success))
+
+    return success if success else TaskProgressReport.CANCELLED
