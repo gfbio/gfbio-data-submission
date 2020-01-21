@@ -34,7 +34,7 @@
 
 - start by collect available  schemes for structuring data, metadata
 - protocols for transfering data
-- Broker transfers data between stations, ticket system dataclout
+- Broker transfers data between stations, ticket system datacloud
 - REST ... ( "message broker for queuing requests")
 - align with partners
 
@@ -42,8 +42,8 @@
 
 - sensor registry
 - metadata profiles for sensors and devices
--API
--collect status from stations
+- API
+- collect status from stations
 
 ### 7.1.3 (Glöckner & Koch)
 
@@ -62,13 +62,17 @@
 - network overview
 - embedded in ammod website
 
-#### 7.2.2
+#### 7.2.2  Monitoring and visualization dashboards
 
 - dashboard
-- continoius monitoring of incoming data
+- continuous monitoring of incoming data
 - ad-hoc Analysis --> d3 etc charts ?
 - near-real-time data
 - status, e.g. energy, of stations for maintanance purposes
+
+### WP 7.3: Organization  and operation of archiving workflows (Grobe & Diepenbroek)
+
+- 
 
 
  

@@ -167,6 +167,7 @@ class AuditableTextDataInlineAdmin(admin.StackedInline):
 
 
 class SubmissionAdmin(admin.ModelAdmin):
+    # TODO: data date_hierarchy = 'created' or 'updated'
     # form = SubmissionAdminForm
     list_display = ('broker_submission_id',
                     'submitting_user', 'site', 'status',)
@@ -261,6 +262,8 @@ class SubmissionUploadAdmin(admin.ModelAdmin):
 
 
 class TaskProgressReportAdmin(admin.ModelAdmin):
+    # TODO: order by updated
+    # TODO: show date in admin
     date_hierarchy = 'created'
     list_filter = ('status', 'task_name',)
     search_fields = ['submission__broker_submission_id', 'task_name']

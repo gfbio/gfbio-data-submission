@@ -2640,6 +2640,9 @@ class TestEnaReportTasks(TestTasks):
                          len(EnaReport.objects.all()))
         self.assertEqual(len(EnaReport.REPORT_TYPES),
                          len(RequestLog.objects.all()))
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual('SUCCESS', tprs.first().status)
 
     @responses.activate
     def test_get_ena_reports_task_client_error(self):
