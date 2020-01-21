@@ -167,7 +167,8 @@ class AuditableTextDataInlineAdmin(admin.StackedInline):
 
 
 class SubmissionAdmin(admin.ModelAdmin):
-    # TODO: data date_hierarchy = 'created' or 'updated'
+    date_hierarchy = 'created'  # date drill down
+    ordering = ('-modified',)  # ordering in list display
     # form = SubmissionAdminForm
     list_display = ('broker_submission_id',
                     'submitting_user', 'site', 'status',)
@@ -186,6 +187,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         create_broker_objects_and_ena_xml,
         delete_broker_objects_and_ena_xml,
     ]
+    readonly_fields = ('created', 'modified',)
 
 
 class RequestLogAdmin(admin.ModelAdmin):
@@ -262,9 +264,9 @@ class SubmissionUploadAdmin(admin.ModelAdmin):
 
 
 class TaskProgressReportAdmin(admin.ModelAdmin):
-    # TODO: order by updated
-    # TODO: show date in admin
-    date_hierarchy = 'created'
+    date_hierarchy = 'created'  # date drill down
+    ordering = ('-modified',)  # ordering in list display
+    readonly_fields = ('created', 'modified',)
     list_filter = ('status', 'task_name',)
     search_fields = ['submission__broker_submission_id', 'task_name']
 
