@@ -14,7 +14,7 @@ from .models import PersistentIdentifier, \
     AdditionalReference, SiteConfiguration, TaskProgressReport, TicketLabel, \
     SubmissionUpload, \
     AuditableTextData, \
-    CenterName
+    CenterName, EnaReport
 from .utils.ena import release_study_on_ena
 from .utils.submission_transfer import \
     SubmissionTransferHandler
@@ -167,6 +167,8 @@ class AuditableTextDataInlineAdmin(admin.StackedInline):
 
 
 class SubmissionAdmin(admin.ModelAdmin):
+    date_hierarchy = 'created'  # date drill down
+    ordering = ('-modified',)  # ordering in list display
     # form = SubmissionAdminForm
     list_display = ('broker_submission_id',
                     'submitting_user', 'site', 'status',)
@@ -185,6 +187,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         create_broker_objects_and_ena_xml,
         delete_broker_objects_and_ena_xml,
     ]
+    readonly_fields = ('created', 'modified',)
 
 
 class RequestLogAdmin(admin.ModelAdmin):
@@ -261,9 +264,15 @@ class SubmissionUploadAdmin(admin.ModelAdmin):
 
 
 class TaskProgressReportAdmin(admin.ModelAdmin):
-    date_hierarchy = 'created'
+    date_hierarchy = 'created'  # date drill down
+    ordering = ('-modified',)  # ordering in list display
+    readonly_fields = ('created', 'modified',)
     list_filter = ('status', 'task_name',)
     search_fields = ['submission__broker_submission_id', 'task_name']
+
+
+class EnaReportAdmin(admin.ModelAdmin):
+    date_hierarchy = 'created'
 
 
 admin.site.register(Submission, SubmissionAdmin)
@@ -279,3 +288,5 @@ admin.site.register(SubmissionUpload, SubmissionUploadAdmin)
 
 admin.site.register(AuditableTextData)
 admin.site.register(CenterName)
+
+admin.site.register(EnaReport, EnaReportAdmin)

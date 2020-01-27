@@ -1127,7 +1127,7 @@ class TestUserSubmissionViewGetRequests(TestSubmissionView):
         regular_user = User.objects.get(username='regular_user')
         self._post_submission_with_submitting_user(regular_user.id)
         self._post_submission_with_submitting_user(regular_user.id)
-        response = self.api_client.get('/api/submissions/user/69/')
+        response = self.api_client.get('/api/submissions/user/687879/')
         self.assertEqual(200, response.status_code)
         submissions = json.loads(response.content.decode('utf-8'))
         self.assertEqual(0, len(submissions))

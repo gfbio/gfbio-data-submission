@@ -194,6 +194,10 @@ platform_mappings = {
     'unspecified': 'unspecified'
 }
 
+attribute_value_blacklist = [
+    'na', 'NA', 'n/a', 'N/A',
+]
+
 
 def extract_sample(row, field_names, sample_id):
     for k in row.keys():
@@ -201,7 +205,8 @@ def extract_sample(row, field_names, sample_id):
 
     sample_attributes = []
     for o in field_names:
-        if o not in core_fields and len(row[o]):
+        if o not in core_fields and len(row[o]) and \
+                row[o] not in attribute_value_blacklist:
             if o in unit_mapping_keys:
                 sample_attributes.append(
                     OrderedDict([

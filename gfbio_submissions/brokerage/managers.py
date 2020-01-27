@@ -425,7 +425,8 @@ class SubmissionUploadManager(models.Manager):
         return submission_upload
 
     def get_linked_molecular_submission_upload(self, submission_upload_id):
-        submission_upload = self.get_upload_with_related_submission(submission_upload_id)
+        submission_upload = self.get_upload_with_related_submission(
+            submission_upload_id)
         if submission_upload is None:
             return None
         if submission_upload.submission.target != ENA and submission_upload.submission.target != ENA_PANGAEA:

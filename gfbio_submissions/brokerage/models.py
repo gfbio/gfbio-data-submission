@@ -4,6 +4,7 @@ import logging
 import os
 import uuid
 
+from django.contrib.postgres.fields import JSONField
 from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
@@ -89,6 +90,7 @@ class SiteConfiguration(models.Model):
                   'requests by this site have to be manually approved by '
                   'staff members. If checked all submissions will be '
                   'automatically send to the respective archives.')
+    # TODO: merge ena servers, since url-root is the same ...
     ena_server = models.ForeignKey(
         ResourceCredential,
         related_name='SiteConfiguration.ena_server+',
@@ -96,6 +98,17 @@ class SiteConfiguration(models.Model):
                   'should use to connect to ENA.',
         on_delete=models.PROTECT
     )
+    # TODO: merge ena servers, since url-root is the same ...
+    ena_report_server = models.ForeignKey(
+        ResourceCredential,
+        null=True,
+        blank=True,
+        related_name='SiteConfiguration.ena_report_server+',
+        help_text='Select which server and/or account this configuration '
+                  'should use to obtain reports via ENA services.',
+        on_delete=models.PROTECT
+    )
+
     ena_ftp = models.ForeignKey(
         ResourceCredential,
         null=True,
@@ -438,6 +451,14 @@ class PersistentIdentifier(TimeStampedModel):
     archive = models.CharField(choices=ARCHIVES, max_length=3, default='ENA')
     pid_type = models.CharField(choices=PID_TYPES, max_length=3, default='ACC')
     pid = models.CharField(max_length=256, default='')
+    status = models.CharField(
+        max_length=24,
+        default='',
+        blank=True,
+        help_text='This field is usually set when ENA Reports are parsed '
+                  'automatically. Thus contains the value of the ENA-Report '
+                  'field "releaseStatus"'
+    )
     resolver_url = models.URLField(max_length=256, default='', blank=True)
     broker_object = models.ForeignKey(BrokerObject, on_delete=models.CASCADE)
     outgoing_request_id = models.UUIDField(primary_key=False, null=True,
@@ -447,7 +468,28 @@ class PersistentIdentifier(TimeStampedModel):
         return '{}'.format(self.pid)
 
 
-class RequestLog(models.Model):
+class EnaReport(TimeStampedModel):
+    STUDY = 'STU'
+    SAMPLE = 'SAM'
+    EXPERIMENT = 'EXP'
+    RUN = 'RUN'
+
+    REPORT_TYPES = [
+        (STUDY, 'studies'),
+        (SAMPLE, 'samples'),
+        (EXPERIMENT, 'experiments'),
+        (RUN, 'runs'),
+    ]
+
+    report_type = models.CharField(max_length=3, choices=REPORT_TYPES,
+                                   default=STUDY)
+    report_data = JSONField()
+
+    def __str__(self):
+        return '{}'.format(self.get_report_type_display())
+
+
+class RequestLog(TimeStampedModel):
     INCOMING = '0'
     OUTGOING = '1'
     REQUEST_TYPES = (
@@ -471,6 +513,7 @@ class RequestLog(models.Model):
         blank=True,
         help_text='Any kind of payload that comes '
                   'with with this request (if available)')
+    # TODO: refactor too when changing ownership
     site_user = models.CharField(
         max_length=72,
         help_text='A user of a site registered in our System. E.g. user=joe '
@@ -503,8 +546,8 @@ class RequestLog(models.Model):
     )
 
     # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
-    created = models.DateTimeField(auto_now_add=True)
-    changed = models.DateTimeField(auto_now=True)
+    # created = models.DateTimeField(auto_now_add=True)
+    # changed = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return '{}'.format(self.request_id)
@@ -541,7 +584,7 @@ class AdditionalReference(models.Model):
         return '{}'.format(self.reference_key)
 
 
-class TaskProgressReport(models.Model):
+class TaskProgressReport(TimeStampedModel):
     RUNNING = 'RUNNING'
     CANCELLED = 'CANCELLED'
     submission = models.ForeignKey(Submission, null=True, blank=True,
@@ -563,8 +606,8 @@ class TaskProgressReport(models.Model):
     task_kwargs = models.TextField(default='')
 
     # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
-    created = models.DateTimeField(auto_now_add=True)
-    changed = models.DateTimeField(auto_now=True)
+    # created = models.DateTimeField(auto_now_add=True)
+    # changed = models.DateTimeField(auto_now=True)
 
     objects = TaskProgressReportManager()
 
@@ -666,7 +709,7 @@ class SubmissionUpload(TimeStampedModel):
         return ' / '.join(reversed(self.file.name.split(os.sep)))
 
 
-class AuditableTextData(models.Model):
+class AuditableTextData(TimeStampedModel):
     data_id = models.UUIDField(primary_key=False, default=uuid.uuid4)
     name = models.CharField(max_length=128)
     submission = models.ForeignKey(
@@ -688,8 +731,8 @@ class AuditableTextData(models.Model):
     )
 
     # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
-    created = models.DateTimeField(auto_now_add=True)
-    changed = models.DateTimeField(auto_now=True)
+    # created = models.DateTimeField(auto_now_add=True)
+    # changed = models.DateTimeField(auto_now=True)
 
     objects = AuditableTextDataManager()
 
