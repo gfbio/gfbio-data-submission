@@ -19,6 +19,7 @@ class SiteConfigurationManager(models.Manager):
         try:
             return self.get(site=site)
         except self.model.DoesNotExist:
+            # FIXME: what if there is no 'default' in database ?
             return self.get(title='default')
 
 

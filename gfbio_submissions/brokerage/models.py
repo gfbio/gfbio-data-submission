@@ -25,6 +25,7 @@ from .utils.submission_tools import \
 logger = logging.getLogger(__name__)
 
 
+# TODO: move to new BrokerageConfiguration app
 class ResourceCredential(models.Model):
     title = models.SlugField(max_length=128,
                              help_text=
@@ -56,7 +57,7 @@ class ResourceCredential(models.Model):
     def __str__(self):
         return '{}'.format(self.title)
 
-
+# TODO: move to new BrokerageConfiguration app
 class SiteConfiguration(models.Model):
     SAND = 'SAND'
     DSUB = 'DSUB'
@@ -69,9 +70,9 @@ class SiteConfiguration(models.Model):
                              unique=True,
                              help_text=
                              'Enter a descriptive title for this instance.')
-    site = models.ForeignKey(AUTH_USER_MODEL, null=True,
-                             blank=True, related_name='siteconfiguration',
-                             on_delete=models.SET_NULL)
+    # site = models.ForeignKey(AUTH_USER_MODEL, null=True,
+    #                          blank=True, related_name='siteconfiguration',
+    #                          on_delete=models.SET_NULL)
 
     contact = models.EmailField(
         blank=False,

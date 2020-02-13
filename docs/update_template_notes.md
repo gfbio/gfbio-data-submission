@@ -220,10 +220,12 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 
 - ssh -l root 141.5.103.171
 - cd /var/www/gfbio_submissions/
-- supervisorctl stop devgfbiosubmissions
+
 - git fetch
 - (git checkout <BRANCH>)
 - git pull origin develop (or feature branch)
+
+
 
 - RENAME compose/production/devserver-taefik.toml to taefik.toml (because of different domain)
 
@@ -233,6 +235,7 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 - docker-compose -f production.yml build
 - docker-compose -f production.yml run --rm django python manage.py migrate
 - docker-compose -f production.yml run --rm django python manage.py collectstatic
+- supervisorctl stop devgfbiosubmissions
 - docker-compose -f production.yml up OR supervisorctl start devgfbiosubmissions
 
 
