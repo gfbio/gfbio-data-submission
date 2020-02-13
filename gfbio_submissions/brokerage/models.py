@@ -57,6 +57,7 @@ class ResourceCredential(models.Model):
     def __str__(self):
         return '{}'.format(self.title)
 
+
 # TODO: move to new BrokerageConfiguration app
 class SiteConfiguration(models.Model):
     SAND = 'SAND'
@@ -89,6 +90,8 @@ class SiteConfiguration(models.Model):
     # TODO: merge ena servers, since url-root is the same ...
     ena_server = models.ForeignKey(
         ResourceCredential,
+        null=True,
+        blank=True,
         related_name='SiteConfiguration.ena_server+',
         help_text='Select which server and/or account this configuration '
                   'should use to connect to ENA.',
@@ -137,6 +140,8 @@ class SiteConfiguration(models.Model):
 
     helpdesk_server = models.ForeignKey(
         ResourceCredential,
+        null=True,
+        blank=True,
         related_name='SiteConfiguration.helpdesk_server+',
         help_text='Select which server and/or account this configuration '
                   'should use to connect to a JIRA based helpdesk system. In '
