@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterField(
             model_name='user',
-            name='external_user_id',
+            name='goesternid',
             field=models.CharField(blank=True, error_messages={'unique': 'A user with that external_user_id already exists.'}, help_text='Not Required. 32 characters or fewer. Has to be unique if not Null.', max_length=32, null=True, unique=True, verbose_name='external_user_id'),
         ),
     ]

@@ -147,6 +147,33 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 - docker-compose -f production.yml run --rm django python manage.py collectstatic
 - docker-compose -f production.yml up
 
+
+#### delete local database within postgres container
+
+- login to psql container: 
+
+            
+            docker exec -u 0 -it 85543248e8e1 bash
+
+- connect to database and drop test database:
+        
+        
+        psql -U <POSTGRES_USER from local envs> gfbio_submissions
+        gfbio_submissions=# DROP DATABASE test_gfbio_submissions;
+        DROP DATABASE
+
+
+##### Old version (may be still useful)
+
+    - docker exec -it gfbio_submissions_postgres_1_66ade2b6f75e psql -U gfbio_submissions
+        
+            psql (10.4 (Debian 10.4-2.pgdg90+1))
+            Type "help" for help.
+            
+            postgres=# DROP DATABASE test_gfbio_submissions;
+            DROP DATABASE
+            postgres=# \q
+
 --------------------------------------------------------------------------------
 
 #### no database content

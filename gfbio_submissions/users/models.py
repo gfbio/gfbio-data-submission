@@ -18,7 +18,7 @@ class User(AbstractUser):
 
     # https://docs.djangoproject.com/en/2.2/ref/models/fields/#null
     external_user_id = CharField(
-        _('external_user_id'),
+        _('external userid'),
         max_length=32,
         unique=True,
         blank=True,
