@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
 from gfbio_submissions.brokerage.models import SiteConfiguration
+from gfbio_submissions.users.managers import CustomUserManager
 
 
 class User(AbstractUser):
@@ -30,10 +31,14 @@ class User(AbstractUser):
         },
     )
 
-    site_configuration = models.ForeignKey(SiteConfiguration, null=True,
-                                           blank=True,
-                                           related_name='siteconfiguration',
-                                           on_delete=models.SET_NULL)
+    site_configuration = models.ForeignKey(
+        SiteConfiguration,
+        null=True,
+        blank=True,
+        related_name='siteconfiguration',
+        on_delete=models.SET_NULL)
+
+    objects = CustomUserManager()
 
     def get_absolute_url(self):
         return reverse("users:detail", kwargs={"username": self.username})

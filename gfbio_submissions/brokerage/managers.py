@@ -7,20 +7,41 @@ from django.db import models, transaction
 from django.db.models import Q
 from django.utils.encoding import smart_text
 
+from config.settings.base import ADMINS
 from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA
+# tO
+from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
 
 logger = logging.getLogger(__name__)
 
 
 class SiteConfigurationManager(models.Manager):
-    # TODO: this will not fail on purpose, to allow get for default config but if get for 'default' fails exception will be raised
-    # TODO: implement better fallback to a default config than rely on existence of entry with this title
+
+    # FIXME: obsolete, remove once ready to do so
     def get_site_configuration(self, site=None):
         try:
-            return self.get(site=site)
+            # return self.get(site=site)
+            return None
         except self.model.DoesNotExist:
             # FIXME: what if there is no 'default' in database ?
-            return self.get(title='default')
+            # return self.get(title='default')
+            return None
+
+    # TODO: add tests
+    def get_hosting_site_configuration(self):
+        admin, email = ADMINS[0] if len(ADMINS) else (
+            'admin', 'default@{0}.de'.format(HOSTING_SITE))
+        obj, created = self.get_or_create(
+            title=HOSTING_SITE,
+            defaults={
+                'title': HOSTING_SITE,
+                'contact': email,
+                'comment': 'created by using defaults in get_or_create call '
+                           'for SiteConfiguration with '
+                           'title={0}'.format(HOSTING_SITE)
+            }
+        )
+        return obj
 
 
 class SubmissionManager(models.Manager):

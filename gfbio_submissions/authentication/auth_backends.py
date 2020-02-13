@@ -4,6 +4,8 @@ import unicodedata
 
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 
+from gfbio_submissions.brokerage.models import SiteConfiguration
+
 logger = logging.getLogger(__name__)
 
 
@@ -41,6 +43,8 @@ class GFBioAuthenticationBackend(OIDCAuthenticationBackend):
         user.email = claims.get('email', '')
 
         user.external_user_id = claims.get('goe_id', '')
+        user.site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
+
         logger.info(
             'GFBioAuthenticationBackend | create_user | user={0} | '
             'external_user_id={1} (goesternid) |'
@@ -63,6 +67,7 @@ class GFBioAuthenticationBackend(OIDCAuthenticationBackend):
                                      claims.get('family_name', '')).strip()
         user.email = claims.get('email', '')
         user.external_user_id = claims.get('goe_id', '')
+        user.site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
         user.save()
         logger.info('GFBioAuthenticationBackend | update_user | email={0}  | '
                     ''.format(claims.get('email', 'NO_EMAIL_IN_CLAIM')))
