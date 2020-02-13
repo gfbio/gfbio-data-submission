@@ -256,7 +256,7 @@ class TestTasks(TestCase):
         user = User.objects.create(
             username='user1'
         )
-        user.goesternid = '0815'
+        user.external_user_id = '0815'
         user.name = 'Kevin Horstmeier'
         user.email = 'khors@me.de'
         user.save()
@@ -1737,7 +1737,7 @@ class TestGetHelpDeskUserTask(TestTasks):
         )
         responses.add(responses.GET, url, body=b'0815', status=200)
         user = User.objects.first()
-        user.goesternid = '0815'
+        user.external_user_id = '0815'
         user.name = ''
         user.save()
         submission = Submission.objects.first()
@@ -1771,7 +1771,7 @@ class TestGetHelpDeskUserTask(TestTasks):
         responses.add(responses.GET, url, body='{0}'.format(user.username),
                       status=200)
 
-        user.goesternid = None
+        user.external_user_id = None
         user.name = ''
         user.save()
         submission = Submission.objects.first()

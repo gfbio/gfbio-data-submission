@@ -784,14 +784,14 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
                     submission.broker_submission_id, submission.submitting_user)
             )
             user = User.objects.get(pk=int(submission.submitting_user))
-            user_name = user.goesternid if user.goesternid else user.username
+            user_name = user.external_user_id if user.external_user_id else user.username
             user_email = user.email
             result['email'] = user_email
             user_full_name = user.name
             result['full_name'] = user_full_name
             logger.info(
                 'tasks.py | get_gfbio_helpdesk_username_task | try get user | username={0} | goe_id={1}'.format(
-                    user.username, user.goesternid))
+                    user.username, user.external_user_id))
         except ValueError as ve:
             logger.warning(
                 'tasks.py | get_gfbio_helpdesk_username_task | '
