@@ -1,0 +1,120 @@
+---
+- hosts: 159.89.100.36
+
+  remote_user: root
+
+  vars:
+    compose_file: 'production.yml'
+    git:
+      workdir: '/root/gfbio_submissions/'
+      branch: 'develop'
+
+  gather_facts: no
+
+  tasks:
+
+    # Git fetch and stash
+    - name: Git fetch
+      shell: cd {{ git.workdir }} && git fetch
+      tags:
+        - git
+
+    # GIT Checkout to develop and pull changes
+    - name: Checkout to {{ git.branch }} branch in git
+      shell: cd {{ git.workdir }} && git checkout {{ git.branch }} && git pull
+      tags:
+        - git
+
+    # Check if compose yml exists
+    - name: Get path to {{ compose_file }}
+      stat: path={{ git.workdir }}{{ compose_file }}
+      register: compose_file_present
+      tags:
+        - compose-file
+
+    - name: Check if {{ compose_file }} is missing
+      assert:
+        that:
+          - compose_file_present.stat.exists == true
+        msg: "{{ compose_file }} is missing"
+      tags:
+        - compose-file
+    # End Check if compose yml exists
+
+    - name: Copy dev .envs
+      copy: src={{ item.src }} dest={{ item.dest }}
+      with_items:
+        - { src: '../.envs/.production/.django', dest: '{{ git.workdir }}.envs/.production/' }
+        - { src: '../.envs/.production/.postgres', dest: '{{ git.workdir }}.envs/.production/' }
+        - { src: '../compose/production/traefik/traefik.toml', dest: '{{ git.workdir }}compose/production/traefik/prod-traefik.toml' }
+        - { src: '../compose/production/traefik/devserver-traefik.toml', dest: '{{ git.workdir }}compose/production/traefik/traefik.toml' }
+
+    - name: Get infos on django container
+      docker_container_info:
+        name: "gfbio_submissions_django_1"
+      register: django_container
+
+    - assert:
+        that:
+          - django_container.exists
+        msg: "django container is not running"
+
+    # Prune not used images and volumes
+    - name: Prune docker not used images and volumes
+      shell: echo y | docker image prune && echo y | docker volume prune
+      tags:
+        - docker-prune
+
+    # Django migrate
+    - name: django migrate
+      shell: docker-compose -f {{ git.workdir }}{{ compose_file }} run --rm django python manage.py migrate
+      tags:
+        - django-migrate
+
+    # Django collectstatic
+    - name: django collectstatic
+      shell: docker-compose -f {{ git.workdir }}{{ compose_file }} run --rm django python manage.py collectstatic
+      tags:
+        - django-static
+
+    # Docker build
+    - name: docker build
+      shell: docker-compose -f {{ git.workdir }}{{ compose_file }} build
+      tags:
+        - docker-build
+
+    # Docker compose
+    - name: Stop all services
+      docker_compose:
+          project_src: "{{ git.workdir }}"
+          files:
+            - "{{ compose_file }}"
+          state: absent
+      tags:
+        - docker-stop
+      register: output
+
+    - debug:
+        msg: "{{ output }}"
+
+    - name: Start services
+      docker_compose:
+          project_src: "{{ git.workdir }}"
+          files:
+            - "{{ compose_file }}"
+          state: present
+      tags:
+        - docker-start
+      register: output
+
+    - debug:
+        msg: "{{ output }}"
+
+    - assert:
+        that:
+          - "gfbio_submissions_redis_1.state.running"
+          - "gfbio_submissions_flower_1.state.running"
+          - "gfbio_submissions_django_1.state.running"
+          - "gfbio_submissions_celeryworker_1.state.running"
+          - "gfbio_submissions_celerybeat_1.state.running"
+        msg: "docker-containers failed to start"
