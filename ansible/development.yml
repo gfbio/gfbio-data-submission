@@ -6,16 +6,16 @@
   vars:
     compose_file: 'production.yml'
     git:
-      workdir: '/var/www/gfbio_submissions'
+      workdir: '/var/www/gfbio_submissions/'
       branch: 'develop'
 
   gather_facts: no
 
   tasks:
 
-    # Git fetch and stash
+    # Git stash and fetch
     - name: Git fetch
-      shell: cd {{ git.workdir }} && git fetch
+      shell: cd {{ git.workdir }} && git stash && git fetch
       tags:
         - git
 
@@ -41,44 +41,49 @@
         - compose-file
     # End Check if compose yml exists
 
-    - name: Copy dev .envs
+    - name: Copy .envs and traefik config
       copy: src={{ item.src }} dest={{ item.dest }}
       with_items:
         - { src: '../.envs/.production/.django', dest: '{{ git.workdir }}.envs/.production/' }
         - { src: '../.envs/.production/.postgres', dest: '{{ git.workdir }}.envs/.production/' }
-        - { src: '../compose/production/traefik/traefik.toml', dest: '{{ git.workdir }}compose/production/traefik/prod-traefik.toml' }
         - { src: '../compose/production/traefik/devserver-traefik.toml', dest: '{{ git.workdir }}compose/production/traefik/traefik.toml' }
 
-    - name: Get infos on django container
-      docker_container_info:
-        name: "gfbio_submissions_django_1"
-      register: django_container
+    - name: Get names of all running containers
+      shell: "docker ps --format 'table \t{{ '{{' }} .Names {{ '}}' }}'"
+      register: docker_containers
 
-    - assert:
+    - name: Check if required containers are running
+      assert:
         that:
-          - django_container.exists
-        msg: "django container is not running"
+          - "'django' in docker_containers.stdout"
+          - "'postgres' in docker_containers.stdout"
+          - "'redis' in docker_containers.stdout"
+          - "'traefik' in docker_containers.stdout"
+          - "'celeryworker' in docker_containers.stdout"
+          - "'celerybeat' in docker_containers.stdout"
+          - "'flower' in docker_containers.stdout"
+        msg: "Required containers are not running"
 
     # Prune not used images and volumes
-    - name: Prune docker not used images and volumes
+    - name: Docker prune not used images and volumes
       shell: echo y | docker image prune && echo y | docker volume prune
       tags:
         - docker-prune
 
     # Django migrate
-    - name: django migrate
+    - name: Django migrate
       shell: docker-compose -f {{ git.workdir }}{{ compose_file }} run --rm django python manage.py migrate
       tags:
         - django-migrate
 
     # Django collectstatic
-    - name: django collectstatic
+    - name: Django collectstatic
       shell: docker-compose -f {{ git.workdir }}{{ compose_file }} run --rm django python manage.py collectstatic
       tags:
         - django-static
 
     # Docker build
-    - name: docker build
+    - name: Docker build
       shell: docker-compose -f {{ git.workdir }}{{ compose_file }} build
       tags:
         - docker-build
@@ -110,11 +115,18 @@
     - debug:
         msg: "{{ output }}"
 
-    - assert:
+    - name: Get names of all running containers
+      shell: "docker ps --format 'table \t{{ '{{' }} .Names {{ '}}' }}'"
+      register: docker_containers_new
+
+    - name: Check if containers are running
+      assert:
         that:
-          - "gfbio_submissions_redis_1.state.running"
-          - "gfbio_submissions_flower_1.state.running"
-          - "gfbio_submissions_django_1.state.running"
-          - "gfbio_submissions_celeryworker_1.state.running"
-          - "gfbio_submissions_celerybeat_1.state.running"
-        msg: "docker-containers failed to start"
+          - "'django' in docker_containers_new.stdout"
+          - "'postgres' in docker_containers_new.stdout"
+          - "'redis' in docker_containers_new.stdout"
+          - "'traefik' in docker_containers_new.stdout"
+          - "'celeryworker' in docker_containers_new.stdout"
+          - "'celerybeat' in docker_containers_new.stdout"
+          - "'flower' in docker_containers_new.stdout"
+        msg: "Containers did not start"
