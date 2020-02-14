@@ -1,12 +1,12 @@
 ---
-- hosts: 159.89.100.36
+- hosts: 141.5.103.171
 
   remote_user: root
 
   vars:
     compose_file: 'production.yml'
     git:
-      workdir: '/root/gfbio_submissions/'
+      workdir: '/var/www/gfbio_submissions'
       branch: 'develop'
 
   gather_facts: no
