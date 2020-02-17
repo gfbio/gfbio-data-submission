@@ -729,9 +729,10 @@ def check_for_pangaea_doi_task(self, resource_credential_id=None):
     # TODO: in general suboptimal to fetch sc for every submission in set, but neeeded, reconsider to refactor
     #   schedule in database etc.
     for sub in submissions:
-        site_config = SiteConfiguration.objects.get_site_configuration(
-            site=sub.site
-        )
+        # site_config = SiteConfiguration.objects.get_site_configuration(
+        #     site=sub.site
+        # )
+        site_config = SiteConfiguration.objects.get_hosting_site_configuration()
         jira_client = JiraClient(resource=site_config.pangaea_jira_server,
                                  token_resource=site_config.pangaea_token_server)
         pull_pangaea_dois(sub, jira_client)
@@ -1285,10 +1286,12 @@ def fetch_ena_reports_task(self):
     TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
-    user = User.objects.get(username=HOSTING_SITE, is_site=True)
-    site_configuration = SiteConfiguration.objects.get_site_configuration(
-        site=user
-    )
+    # user = User.objects.get(username=HOSTING_SITE, is_site=True)
+    # site_configuration = SiteConfiguration.objects.get_site_configuration(
+    #     site=user
+    # )
+    # site_configuration = user.site_configuration
+    site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
     if site_configuration is None or site_configuration.ena_report_server is None:
         return TaskProgressReport.CANCELLED
 

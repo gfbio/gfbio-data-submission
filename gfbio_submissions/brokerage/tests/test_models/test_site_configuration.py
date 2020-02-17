@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-from pprint import pprint
 
 from django.test import TestCase
 
+from config.settings.base import ADMINS
 from gfbio_submissions.brokerage.models import ResourceCredential, \
-    SiteConfiguration, TicketLabel, Submission
+    SiteConfiguration, TicketLabel
+from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
 from gfbio_submissions.users.models import User
 
 
@@ -19,8 +20,9 @@ class SiteConfigurationTest(TestCase):
         )
         site_conf = SiteConfiguration.objects.create(
             title='Title',
-            # site=user,
             ena_server=resource_cred,
+            ena_report_server=resource_cred,
+            ena_ftp=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
             helpdesk_server=resource_cred,
@@ -28,14 +30,15 @@ class SiteConfigurationTest(TestCase):
         )
         SiteConfiguration.objects.create(
             title='Default',
-            # site=None,
             ena_server=resource_cred,
+            ena_report_server=resource_cred,
+            ena_ftp=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
         )
-        user = User.objects.create(
+        User.objects.create(
             username='user1',
             site_configuration=site_conf
         )
@@ -61,50 +64,58 @@ class SiteConfigurationTest(TestCase):
 
     def test_instance(self):
         site_config = SiteConfiguration.objects.first()
-        user = User.objects.first()
-        pprint(user.__dict__)
-        print(user.site_configuration)
-        pprint(site_config.__dict__)
-        # print(site_config.user_site_configurations)
-        # sub = Submission.objects.create()
-        # print(sub)
-        # print(sub.submissionupload_set)
-
-        # self.assertIsInstance(site_config, SiteConfiguration)
-        # # self.assertIsInstance(site_config.site, User)
-        # print(SiteConfiguration.objects.first().user_set)
-        # self.assertIsInstance(site_config.ena_server, ResourceCredential)
-        # self.assertIsInstance(site_config.pangaea_token_server,
-        #                       ResourceCredential)
-        # self.assertIsInstance(site_config.helpdesk_server, ResourceCredential)
-        # self.assertFalse(site_config.release_submissions)
+        self.assertIsInstance(site_config, SiteConfiguration)
+        self.assertEqual(1, len(site_config.configuration_users.all()))
+        self.assertIsInstance(site_config.ena_server, ResourceCredential)
+        self.assertIsInstance(site_config.pangaea_token_server,
+                              ResourceCredential)
+        self.assertIsInstance(site_config.helpdesk_server, ResourceCredential)
+        self.assertFalse(site_config.release_submissions)
 
     def test_str(self):
         site_config = SiteConfiguration.objects.all().first()
         self.assertEqual('Title', site_config.__str__())
 
-    def test_get_site_configuration_for_task(self):
-        site_config = SiteConfiguration.objects.get_site_configuration(
-            site=User.objects.all().first()
-        )
-        self.assertEqual('Title', site_config.title)
-        self.assertFalse(site_config.release_submissions)
+    def test_get_hosting_site_configuration_fallback(self):
+        admin, email = ADMINS[0] if len(ADMINS) else (
+            'admin', 'default@{0}.de'.format(HOSTING_SITE))
+        site_configuration = \
+            SiteConfiguration.objects.get_hosting_site_configuration()
+        self.assertEqual(HOSTING_SITE, site_configuration.title)
+        self.assertEqual(email, site_configuration.contact)
 
-    def test_get_site_configuration_without_site(self):
-        site_config = SiteConfiguration.objects.get_site_configuration(
-            site=None
-        )
-        self.assertEqual('Default', site_config.title)
-        self.assertFalse(site_config.release_submissions)
-        self.assertIsNone(site_config.site)
+        self.assertFalse(site_configuration.release_submissions)
+        self.assertIsNone(site_configuration.ena_server)
+        self.assertIsNone(site_configuration.ena_report_server)
+        self.assertIsNone(site_configuration.ena_ftp)
+        self.assertIsNone(site_configuration.pangaea_token_server)
+        self.assertIsNone(site_configuration.pangaea_jira_server)
+        self.assertIsNone(site_configuration.helpdesk_server)
 
-    def test_get_site_configuration_without_site_or_default(self):
-        site_config = SiteConfiguration.objects.filter(title='Default').first()
-        site_config.delete()
-        with self.assertRaises(SiteConfiguration.DoesNotExist) as exc:
-            site_config = SiteConfiguration.objects.get_site_configuration(
-                site=None
-            )
+    def test_get_valid_hosting_site_configuration(self):
+        config = SiteConfiguration.objects.first()
+        SiteConfiguration.objects.create(
+            title=HOSTING_SITE,
+            contact=config.contact,
+            ena_server=config.ena_server,
+            ena_report_server=config.ena_report_server,
+            ena_ftp=config.ena_ftp,
+            pangaea_token_server=config.pangaea_token_server,
+            pangaea_jira_server=config.pangaea_jira_server,
+            helpdesk_server=config.helpdesk_server,
+        )
+        site_configuration = \
+            SiteConfiguration.objects.get_hosting_site_configuration()
+        self.assertEqual(HOSTING_SITE, site_configuration.title)
+        self.assertEqual(config.contact, site_configuration.contact)
+        self.assertFalse(site_configuration.release_submissions)
+
+        self.assertIsNotNone(site_configuration.ena_server)
+        self.assertIsNotNone(site_configuration.ena_report_server)
+        self.assertIsNotNone(site_configuration.ena_ftp)
+        self.assertIsNotNone(site_configuration.pangaea_token_server)
+        self.assertIsNotNone(site_configuration.pangaea_jira_server)
+        self.assertIsNotNone(site_configuration.helpdesk_server)
 
     def test_get_ticket_labels(self):
         site_config = SiteConfiguration.objects.all().first()

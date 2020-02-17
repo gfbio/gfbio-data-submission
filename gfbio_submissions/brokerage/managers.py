@@ -18,14 +18,14 @@ logger = logging.getLogger(__name__)
 class SiteConfigurationManager(models.Manager):
 
     # FIXME: obsolete, remove once ready to do so
-    def get_site_configuration(self, site=None):
-        try:
-            # return self.get(site=site)
-            return None
-        except self.model.DoesNotExist:
-            # FIXME: what if there is no 'default' in database ?
-            # return self.get(title='default')
-            return None
+    # def get_site_configuration(self, site=None):
+    #     try:
+    #         # return self.get(site=site)
+    #         return None
+    #     except self.model.DoesNotExist:
+    #         # FIXME: what if there is no 'default' in database ?
+    #         # return self.get(title='default')
+    #         return None
 
     # TODO: add tests
     def get_hosting_site_configuration(self):
