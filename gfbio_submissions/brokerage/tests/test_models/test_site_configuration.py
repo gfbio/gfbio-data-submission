@@ -65,7 +65,7 @@ class SiteConfigurationTest(TestCase):
         pprint(user.__dict__)
         print(user.site_configuration)
         pprint(site_config.__dict__)
-        # print(site_config.siteconfiguration)
+        # print(site_config.user_site_configurations)
         # sub = Submission.objects.create()
         # print(sub)
         # print(sub.submissionupload_set)

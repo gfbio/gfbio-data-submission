@@ -35,7 +35,7 @@ class User(AbstractUser):
         SiteConfiguration,
         null=True,
         blank=True,
-        related_name='user_site_configurations',
+        related_name='configuration_users',
         on_delete=models.SET_NULL)
 
     objects = CustomUserManager()
