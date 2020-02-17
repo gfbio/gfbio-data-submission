@@ -13,8 +13,8 @@ class AdditionalReferenceTest(TestCase):
         user = User.objects.create(
             username='user1'
         )
-        submission_1 = Submission.objects.create(site=user)
-        submission_2 = Submission.objects.create(site=user)
+        submission_1 = Submission.objects.create(user=user)
+        submission_2 = Submission.objects.create(user=user)
         AdditionalReference.objects.create(
             submission=submission_1,
             type=AdditionalReference.PANGAEA_JIRA_TICKET,
