@@ -16,7 +16,7 @@ from gfbio_submissions.brokerage.serializers import \
     SubmissionUploadListSerializer
 from gfbio_submissions.users.models import User
 from .configuration.settings import SUBMISSION_DELAY
-from .models import Submission, RequestLog, SubmissionUpload
+from .models import Submission, RequestLog, SubmissionUpload, PersistentIdentifier, BrokerObject
 from .permissions import IsOwnerOrReadOnly
 from .serializers import \
     SubmissionDetailSerializer, SubmissionUploadSerializer
@@ -99,7 +99,25 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         serializer.save(site=self.request.user)
 
     def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
+        submission = self.get_object()
+        broker_obj = BrokerObject.objects.filter(
+            type='study',
+            site=self.request.user,
+            submissions=submission
+        )
+        if len(broker_obj) == 0:
+            return self.retrieve(request, *args, **kwargs)
+
+        persistent_identifier = PersistentIdentifier.objects.filter(
+            pid_type='PRJ',
+            broker_object=broker_obj[0],
+        )
+        if len(persistent_identifier) == 0:
+            return self.retrieve(request, *args, **kwargs)
+
+        response = self.retrieve(request, *args, **kwargs)
+        response.data['accession_id'] = persistent_identifier[0].pid
+        return response
 
     def put(self, request, *args, **kwargs):
         instance = self.get_object()  #
@@ -130,7 +148,7 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                         )
                     ).set(countdown=SUBMISSION_DELAY)
             chain()
-            
+
             return response
         else:
             return Response(
