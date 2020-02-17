@@ -70,6 +70,12 @@
       tags:
         - docker-prune
 
+    # Docker build
+    - name: Docker build
+      shell: docker-compose -f {{ git.workdir }}{{ compose_file }} build
+      tags:
+        - docker-build
+
     # Django migrate
     - name: Django migrate
       shell: docker-compose -f {{ git.workdir }}{{ compose_file }} run --rm django python manage.py migrate
@@ -82,51 +88,8 @@
       tags:
         - django-static
 
-    # Docker build
-    - name: Docker build
-      shell: docker-compose -f {{ git.workdir }}{{ compose_file }} build
-      tags:
-        - docker-build
-
-    # Docker compose
-    - name: Stop all services
-      docker_compose:
-          project_src: "{{ git.workdir }}"
-          files:
-            - "{{ compose_file }}"
-          state: absent
-      tags:
-        - docker-stop
-      register: output
-
-    - debug:
-        msg: "{{ output }}"
-
-    - name: Start services
-      docker_compose:
-          project_src: "{{ git.workdir }}"
-          files:
-            - "{{ compose_file }}"
-          state: present
-      tags:
-        - docker-start
-      register: output
-
-    - debug:
-        msg: "{{ output }}"
-
-    - name: Get names of all running containers
-      shell: "docker ps --format 'table \t{{ '{{' }} .Names {{ '}}' }}'"
-      register: docker_containers_new
-
-    - name: Check if containers are running
-      assert:
-        that:
-          - "'django' in docker_containers_new.stdout"
-          - "'postgres' in docker_containers_new.stdout"
-          - "'redis' in docker_containers_new.stdout"
-          - "'traefik' in docker_containers_new.stdout"
-          - "'celeryworker' in docker_containers_new.stdout"
-          - "'celerybeat' in docker_containers_new.stdout"
-          - "'flower' in docker_containers_new.stdout"
-        msg: "Containers did not start"
+    # Restart docker containers
+    - supervisorctl:
+        name: devgfbiosubmissions
+        state: restarted
+        

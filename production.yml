@@ -15,7 +15,6 @@ services:
     depends_on:
       - postgres
       - redis
-    restart: always
     env_file:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
@@ -31,7 +30,6 @@ services:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
     image: gfbio_submissions_production_postgres
-    restart: always
     volumes:
       - production_postgres_data:/var/lib/postgresql/data
       - production_postgres_data_backups:/backups
@@ -43,7 +41,6 @@ services:
       context: .
       dockerfile: ./compose/production/traefik/Dockerfile
     image: gfbio_submissions_production_traefik
-    restart: always
     depends_on:
       - django
     volumes:
@@ -54,7 +51,6 @@ services:
 
   redis:
     image: redis:5.0
-    restart: always
 
   celeryworker:
     <<: *django
@@ -72,3 +68,12 @@ services:
     ports:
       - "5555:5555"
     command: /start-flower
+
+  awscli:
+    build:
+      context: .
+      dockerfile: ./compose/production/aws/Dockerfile
+    env_file:
+      - ./.envs/.production/.django
+    volumes:
+      - production_postgres_data_backups:/backups
