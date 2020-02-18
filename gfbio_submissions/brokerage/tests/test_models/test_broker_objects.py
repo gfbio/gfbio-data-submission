@@ -25,10 +25,14 @@ class BrokerObjectTest(TestCase):
             }
         )
 
+    def test_db_object(self):
+        self.assertEqual(1, len(BrokerObject.objects.all()))
+
     def test_instance(self):
         se = BrokerObject()
         self.assertTrue(isinstance(se, BrokerObject))
 
     def test_str(self):
         broker_object = BrokerObject.objects.first()
-        self.assertEqual('study_user1', broker_object.__str__())
+        self.assertEqual('study_{0}'.format(broker_object.object_id),
+                         broker_object.__str__())

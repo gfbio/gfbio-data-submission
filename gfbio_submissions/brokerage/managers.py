@@ -2,6 +2,7 @@
 import csv
 import json
 import logging
+from pprint import pprint
 
 from django.db import models, transaction
 from django.db.models import Q
@@ -198,6 +199,7 @@ class BrokerObjectManager(models.Manager):
                 obj, created = self.update_or_create(
                     type='run',
                     user=experiment_broker_object.user,
+                    object_id=experiment_broker_object.object_id,
                     # site_project_id=experiment_broker_object.site_project_id,
                     # site_object_id='files_block_of_{0}'.format(
                     #     experiment_broker_object.site_object_id),
@@ -206,21 +208,31 @@ class BrokerObjectManager(models.Manager):
                 # if obj.site_object_id == '':
                 #     obj.site_object_id = '{0}_{1}'.format(obj.user, obj.pk)
                 #     obj.save()
+                print('add_file_entities created ', created)
                 obj.submissions.add(submission)
 
-    def add_entity(self, submission, entity_type, user,
-                   json_data):
+    def add_entity(self, submission, entity_type, user, json_data, object_id=''):
         obj, created = self.update_or_create(
             type=entity_type,
             user=user,
+            object_id=object_id,
             # site_project_id=site_project_id,
             # site_object_id=site_object_id,
             defaults={'data': json_data}
         )
-        # if obj.site_object_id == '':
-        #     obj.site_object_id = '{0}_{1}'.format(obj.site, obj.pk)
+        # TODO: this was the fallback site_object_id to ensure the this
+        #  function is not updating constantly but actually adding objects
+        #   e.g. 5 x sample of uer1 == 1 x sample_user1
+        # NOTE: sample_alias is required per jsonschema
+        # NOTE:
+        #       - here a entity with site_object_id='' was created, always, since none with '' exists
+        #       - check below cause to add site_object_id, wich will be unique due to obj.pk
+        #       - next iteration, again create with '' and so on
+        # if obj.object_id == '':
+        #     obj.object_id = '{0}_{1}'.format(obj.user, obj.pk)
         #     obj.save()
         obj.submissions.add(submission)
+        print('add entity created ? ', created)
         return obj
 
     def add_submission_data(self, submission):
@@ -231,6 +243,7 @@ class BrokerObjectManager(models.Manager):
                 pass
 
     def add_ena_submission_data(self, submission):
+        print('\n\tadd_ena_submission_data')
         # TODO: check submission.data behaviour in this (new) python 3 environment
         if isinstance(submission.data, str):
             data = json.loads(submission.data)
@@ -248,23 +261,33 @@ class BrokerObjectManager(models.Manager):
                 # 'study_type': data['requirements']['study_type']
             }
         )
+
         # data['requirements']['site_object_id'] = obj.site_object_id
         for i in range(0, len(data['requirements']['samples'])):
+            # print('\niterate samples from requirements ', i)
+            # print('submisson user', submission.user)
             # for sample in data['requirements']['samples']:
             sample = data['requirements']['samples'][i]
+            # pprint(sample)
             obj = self.add_entity(submission=submission,
                                   entity_type='sample',
                                   user=submission.user,
                                   # site_project_id=submission.site_project_id,
                                   # site_object_id=sample.get('site_object_id',
-                                  #                           ''),
+
+                                  # object_id=sample.get('sample_alias', ''),
+
                                   json_data=sample)
+            print(obj)
             # data['requirements']['samples'][i][
             #     'site_object_id'] = obj.site_object_id
 
         for i in range(0, len(data['requirements']['experiments'])):
+            print('\niterate experiments from requirements ', i)
+            print('submisson user', submission.user)
             # for experiment in data['requirements']['experiments']:
             experiment = data['requirements']['experiments'][i]
+            pprint(experiment)
             obj = self.add_entity(submission=submission,
                                   entity_type='experiment',
                                   user=submission.user,

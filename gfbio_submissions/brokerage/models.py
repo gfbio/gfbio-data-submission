@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+import pprint
 import uuid
+from pprint import pprint
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
@@ -216,6 +218,11 @@ class Submission(TimeStampedModel):
 
     broker_submission_id = models.UUIDField(primary_key=False,
                                             default=uuid.uuid4)
+
+    # TODO: remove after refactoring user-site-relations are done
+    # TODO: be careful with existing submissions using this field.
+    #  maybe check if user field is used by submission, then first remove user
+    #  then rename site to user in 2 migration steps
     site = models.ForeignKey(
         AUTH_USER_MODEL,
         null=True,
@@ -233,7 +240,8 @@ class Submission(TimeStampedModel):
     target = models.CharField(max_length=16, choices=TARGETS)
 
     # TODO: investigate where this field is used
-    # TODO: adapt to new situation of local users (sso, social, django user) and external (site only)
+    # TODO: adapt to new situation of local users (sso, social, django user)
+    #  and external (site only)  BE CAREFUL ! LEGACY DATA !
     submitting_user = models.CharField(max_length=72, default='', blank=True,
                                        null=True,
                                        help_text=
@@ -241,7 +249,7 @@ class Submission(TimeStampedModel):
                                        'vary for different sites, e.g. user-id'
                                        ' from database, uniquq login-name, '
                                        'etc..')
-    # TODO: remove in Submission ownership refactoring
+    # TODO: remove in Submission ownership refactoring. BE CAREFUL ! LEGACY DATA !
     submitting_user_common_information = models.TextField(
         default='',
         blank=True,
@@ -310,6 +318,7 @@ class Submission(TimeStampedModel):
         return runs
 
     # TODO: refactor/move: too specific (molecular submission)
+    # FIXME: access to first() in many-to-many relation may cause semantic errors
     def set_study_alias(self, alias_postfix):
         study = self.brokerobject_set.filter(type='study').first()
         new_study_alias = '{0}:{1}'.format(study.id, alias_postfix)
@@ -338,7 +347,9 @@ class Submission(TimeStampedModel):
 
     # TODO: refactor/move: too specific (molecular submission)
     def set_sample_aliases(self, alias_postfix):
+        print('\n\tset_sample_aliases')
         samples = self.brokerobject_set.filter(type='sample')
+        pprint(samples)
         sample_aliases = {
             s.data.get('sample_alias', 'no_sample_alias'):
                 '{0}:{1}'.format(s.id, alias_postfix)
@@ -414,6 +425,14 @@ class BrokerObject(models.Model):
     user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.PROTECT)
     # site_project_id = models.CharField(max_length=128, blank=True, default='')
     # site_object_id = models.CharField(max_length=128, blank=True, default='')
+    object_id = models.CharField(max_length=36, default='')
+
+    def save(self, *args, **kwargs):
+        # print('SAVE Before SUPER ', self.pk, ' o id ', self.object_id)
+        if self.object_id == '':
+            self.object_id = '{0}'.format(uuid.uuid4())
+        super(BrokerObject, self).save(*args, **kwargs)
+        # print('SAVE after SUPER', self.pk, ' o id ', self.object_id)
 
     data = JsonDictField(default=dict)
     submissions = models.ManyToManyField(Submission)
@@ -444,7 +463,7 @@ class BrokerObject(models.Model):
     #     return self.type, self.site, self.site_project_id, self.site_object_id
 
     def __str__(self):
-        return '{}_{}'.format(self.type, self.user.username)
+        return '{}_{}'.format(self.type, self.object_id)
 
     # TODO: discuss future usage
     # class Meta:

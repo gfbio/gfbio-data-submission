@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import uuid
+from pprint import pprint
 from unittest.mock import patch
 
 from django.test import TestCase
@@ -22,7 +23,7 @@ class SubmissionTest(TestCase):
             'data': _get_ena_data() if runs else _get_ena_data_without_runs()
         })
         serializer.is_valid()
-        submission = serializer.save(site=User.objects.first())
+        submission = serializer.save(user=User.objects.first())
         BrokerObject.objects.add_submission_data(submission)
         return submission
 
@@ -32,7 +33,7 @@ class SubmissionTest(TestCase):
         user = User.objects.create(
             username='user1'
         )
-        Submission.objects.create(site=user)
+        Submission.objects.create(user=user)
 
     def test_str(self):
         submission = Submission.objects.first()
@@ -43,7 +44,7 @@ class SubmissionTest(TestCase):
 
     def test_create_empty_submission(self):
         submission = Submission()
-        submission.site = User.objects.first()
+        submission.user = User.objects.first()
         submission.save()
         submissions = Submission.objects.all()
         self.assertEqual(2, len(submissions))
@@ -150,6 +151,53 @@ class SubmissionTest(TestCase):
         request_id_fake = uuid.UUID('71d59109-695d-4172-a8be-df6fb3283857')
         study, samples, experiments, runs = submission.get_json_with_aliases(
             alias_postfix=request_id_fake)
+
+        # print('SAMPLES FOR SUBMISSION')
+        # for s in BrokerObject.objects.filter(submissions=submission).filter(
+        #         type='run'):
+        #     pprint(s.__dict__)
+
+        # TODO: expected db content regarding brokerobjects. for debugging.
+        # 1 study
+        self.assertEqual(
+            1,
+            len(BrokerObject.objects.filter(submissions=submission).filter(
+                type='study'))
+        )
+        # 5 samples -> compare json.samples
+        self.assertEqual(
+            5,
+            len(BrokerObject.objects.filter(submissions=submission).filter(
+                type='sample'))
+        )
+        # 5 experiments -> compare json.experiments
+        self.assertEqual(
+            5,
+            len(BrokerObject.objects.filter(submissions=submission).filter(
+                type='experiment'))
+        )
+        # 6 runs ->  2 runs in json run block (1 file each) plus 4 (of 5)
+        # experiments contain files block (2 files each)
+        self.assertEqual(
+            6,
+            len(BrokerObject.objects.filter(submissions=submission).filter(
+                type='run'))
+        )
+
+        print('---------------------------')
+        print('\nstudy')
+        pprint(study)
+
+        print('\nsamples')
+        pprint(samples)
+
+        print('\nexperiments')
+        pprint(experiments)
+
+        print('\nruns')
+        pprint(runs)
+        print('---------------------------')
+
         study_alias = study.get('study_alias', None)
         sample_aliases = [s.get('sample_alias', '') for s in samples]
         experiment_aliases = [
@@ -179,7 +227,7 @@ class SubmissionTest(TestCase):
         with patch('gfbio_submissions.brokerage.tasks.'
                    'trigger_submission_transfer.apply_async') as trigger_mock:
             sub = Submission()
-            sub.site = User.objects.first()
+            sub.user = User.objects.first()
             sub.status = Submission.CLOSED
             sub.save()
             self.assertEqual(Submission.CLOSED, sub.status)

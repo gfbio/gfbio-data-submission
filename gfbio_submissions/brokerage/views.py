@@ -52,8 +52,8 @@ class SubmissionsView(mixins.ListModelMixin,
         chain()
 
     def get_queryset(self):
-        site = self.request.user
-        return Submission.objects.filter(site=site)
+        user = self.request.user
+        return Submission.objects.filter(user=user)
 
     # http://www.django-rest-framework.org/api-guide/filtering/
     def get(self, request, *args, **kwargs):
@@ -77,7 +77,7 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
     lookup_field = 'broker_submission_id'
 
     def perform_create(self, serializer):
-        serializer.save(site=self.request.user)
+        serializer.save(user=self.request.user)
 
     def get(self, request, *args, **kwargs):
         response = self.retrieve(request, *args, **kwargs)
@@ -158,7 +158,7 @@ class SubmissionUploadView(mixins.CreateModelMixin,
                           IsOwnerOrReadOnly)
 
     def perform_create(self, serializer, submission):
-        return serializer.save(site=self.request.user, submission=submission)
+        return serializer.save(user=self.request.user, submission=submission)
 
     def create(self, request, *args, **kwargs):
         broker_submission_id = kwargs.get('broker_submission_id', uuid4())
