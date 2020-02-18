@@ -211,7 +211,8 @@ class BrokerObjectManager(models.Manager):
                 print('add_file_entities created ', created)
                 obj.submissions.add(submission)
 
-    def add_entity(self, submission, entity_type, user, json_data, object_id=''):
+    def add_entity(self, submission, entity_type, user, json_data,
+                   object_id=''):
         obj, created = self.update_or_create(
             type=entity_type,
             user=user,
@@ -232,7 +233,7 @@ class BrokerObjectManager(models.Manager):
         #     obj.object_id = '{0}_{1}'.format(obj.user, obj.pk)
         #     obj.save()
         obj.submissions.add(submission)
-        print('add entity created ? ', created)
+        print(entity_type, ' add entity created ? ', created)
         return obj
 
     def add_submission_data(self, submission):
@@ -278,16 +279,16 @@ class BrokerObjectManager(models.Manager):
                                   # object_id=sample.get('sample_alias', ''),
 
                                   json_data=sample)
-            print(obj)
+            # print(obj)
             # data['requirements']['samples'][i][
             #     'site_object_id'] = obj.site_object_id
 
         for i in range(0, len(data['requirements']['experiments'])):
-            print('\niterate experiments from requirements ', i)
-            print('submisson user', submission.user)
+            # print('\niterate experiments from requirements ', i)
+            # print('submisson user', submission.user)
             # for experiment in data['requirements']['experiments']:
             experiment = data['requirements']['experiments'][i]
-            pprint(experiment)
+            # pprint(experiment)
             obj = self.add_entity(submission=submission,
                                   entity_type='experiment',
                                   user=submission.user,
