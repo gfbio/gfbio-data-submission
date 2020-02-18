@@ -14,9 +14,7 @@ class BrokerObjectTest(TestCase):
         )
         BrokerObject.objects.create(
             type='study',
-            site=user,
-            # site_project_id='prj001xxx',
-            # site_object_id='obj001',
+            user=user,
             data={
                 'center_name': 'GFBIO',
                 'study_type': 'Metagenomics',
@@ -33,4 +31,4 @@ class BrokerObjectTest(TestCase):
 
     def test_str(self):
         broker_object = BrokerObject.objects.first()
-        self.assertEqual('obj001_study', broker_object.__str__())
+        self.assertEqual('study_user1', broker_object.__str__())
