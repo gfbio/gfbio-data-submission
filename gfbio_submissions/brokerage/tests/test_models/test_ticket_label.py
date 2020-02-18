@@ -20,7 +20,7 @@ class TicketLabelTest(TestCase):
         )
         SiteConfiguration.objects.create(
             title='Title',
-            site=user,
+            # site=user,
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
@@ -29,7 +29,7 @@ class TicketLabelTest(TestCase):
         )
         SiteConfiguration.objects.create(
             title='Default',
-            site=None,
+            # site=None,
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,

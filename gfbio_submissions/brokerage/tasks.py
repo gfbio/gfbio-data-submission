@@ -97,6 +97,8 @@ def check_for_molecular_content_in_submission_task(self, submission_id=None):
     logger.info(
         msg='check_for_molecular_content_in_submission_task. get submission'
             ' with pk={}.'.format(submission_id))
+
+    # TODO: needs only submission, not both.
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -140,6 +142,7 @@ def trigger_submission_transfer(self, previous_task_result=None,
         msg='trigger_submission_transfer. get submission with pk={}.'.format(
             submission_id)
     )
+    # TODO: needs only submission, not both.
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -177,6 +180,8 @@ def trigger_submission_transfer_for_updates(self, previous_task_result=None,
     )
     submission_id = Submission.objects.get_open_submission_id_for_bsi(
         broker_submission_id=broker_submission_id)
+
+    # TODO: needs only submission, not both.
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,

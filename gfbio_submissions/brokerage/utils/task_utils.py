@@ -38,16 +38,18 @@ def _safe_get_submitted_submission(submission_id):
                 e))
     return submission
 
-
+# TODO: refactor or merge if possible. only submision owners siteconf relevant
 def _safe_get_site_config(submission):
     site_config = None
-    if submission:
-        try:
-            site_config = SiteConfiguration.objects.get_site_configuration(
-                submission.site)
-        except SiteConfiguration.DoesNotExist as e:
-            logger.warning(
-                'task_utils.py | _safe_get_site_config | error {0}'.format(e))
+    if submission and submission.user:
+
+        site_config = submission.user.site_configuration
+        # try:
+        #     site_config = SiteConfiguration.objects.get_site_configuration(
+        #         submission.site)
+        # except SiteConfiguration.DoesNotExist as e:
+        #     logger.warning(
+        #         'task_utils.py | _safe_get_site_config | error {0}'.format(e))
     return site_config
 
 
@@ -130,6 +132,7 @@ def _get_submission_and_site_configuration(submission_id, task,
                     include_closed,
                 )
             )
+        # TODO: refactor for new site/user relation
         site_config = _safe_get_site_config(submission)
         if site_config is None:
             logger.warning(
