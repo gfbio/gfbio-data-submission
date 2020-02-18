@@ -36,7 +36,7 @@ class BrokerObjectInline(admin.TabularInline):
 
 class BrokerObjectAdmin(admin.ModelAdmin):
     inlines = (PersistentIdentifierInline,)
-    list_filter = ('type', 'site',)
+    list_filter = ('type', 'user',)
     search_fields = ['submissions__broker_submission_id',
                      'persistentidentifier__pid'
                      ]

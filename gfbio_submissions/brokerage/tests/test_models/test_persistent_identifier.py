@@ -15,8 +15,8 @@ class PersistentIdentifierTest(TestCase):
         broker_object = BrokerObject.objects.create(
             type='study',
             site=user,
-            site_project_id='prj001xxx',
-            site_object_id='obj001',
+            # site_project_id='prj001xxx',
+            # site_object_id='obj001',
             data={
                 'center_name': 'GFBIO',
                 'study_type': 'Metagenomics',

@@ -175,7 +175,7 @@ class Enalizer(object):
         # study_alias = self.study.pop('study_alias', '')
         # self.center_name = self.study.pop('center_name', ENA_CENTER_NAME)
 
-        site_object_id = self.study.pop('site_object_id', '')
+        # site_object_id = self.study.pop('site_object_id', '')
 
         study_dict['study']['descriptor'] = self.study
         if len(study_attributes):
@@ -256,7 +256,7 @@ class Enalizer(object):
                 ]))
         res = OrderedDict()
         res['title'] = s.pop('sample_title', '')
-        site_object_id = s.pop('site_object_id', '')
+        # site_object_id = s.pop('site_object_id', '')
         res['sample_alias'] = 'sample_alias_{0}'.format(sample_index)
 
         sname = OrderedDict()

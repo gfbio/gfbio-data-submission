@@ -229,7 +229,7 @@ class Submission(TimeStampedModel):
         on_delete=models.SET_NULL
     )
     # TODO: still needed ?
-    site_project_id = models.CharField(max_length=128, blank=True, default='')
+    # site_project_id = models.CharField(max_length=128, blank=True, default='')
     target = models.CharField(max_length=16, choices=TARGETS)
 
     # TODO: investigate where this field is used
@@ -411,9 +411,9 @@ class BrokerObject(models.Model):
         ('submission', 'submission'),
     )
     type = models.CharField(choices=ENTITY_TYPES, max_length=12)
-    site = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.PROTECT)
-    site_project_id = models.CharField(max_length=128, blank=True, default='')
-    site_object_id = models.CharField(max_length=128, blank=True, default='')
+    user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.PROTECT)
+    # site_project_id = models.CharField(max_length=128, blank=True, default='')
+    # site_object_id = models.CharField(max_length=128, blank=True, default='')
 
     data = JsonDictField(default=dict)
     submissions = models.ManyToManyField(Submission)
@@ -444,7 +444,7 @@ class BrokerObject(models.Model):
     #     return self.type, self.site, self.site_project_id, self.site_object_id
 
     def __str__(self):
-        return '{}_{}'.format(self.site_object_id, self.type)
+        return '{}_{}'.format(self.type, self.user.username)
 
     # TODO: discuss future usage
     # class Meta:
@@ -648,7 +648,7 @@ class SubmissionUpload(TimeStampedModel):
         blank=True,
         related_name='site_upload',
         help_text='Related "Site". E.g. gfbio-portal or silva.',
-        on_delete=models.PROTECT
+        on_delete=models.SET_NULL
     )
     # TODO: once IDM in place, it will be possible to directly assign real users
     user = models.ForeignKey(
@@ -658,7 +658,7 @@ class SubmissionUpload(TimeStampedModel):
         related_name='user_upload',
         help_text='Related "User". E.g. a real person that uses '
                   'the submission frontend',
-        on_delete=models.PROTECT
+        on_delete=models.SET_NULL
     )
     attach_to_ticket = models.BooleanField(
         default=False,

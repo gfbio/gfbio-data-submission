@@ -18,7 +18,7 @@ class TestSubmissionAdmin(TestCase):
             site=user,
             status='OPEN',
             submitting_user='John Doe',
-            site_project_id='prj001A',
+            # site_project_id='prj001A',
             target='ENA',
             release=False,
             data={}

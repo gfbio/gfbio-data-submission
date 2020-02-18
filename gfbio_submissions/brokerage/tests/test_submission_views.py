@@ -290,7 +290,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             'download_url': '',
             'release': False,
             'site': 'horst',
-            'site_project_id': '',
+            # 'site_project_id': '',
             'status': 'OPEN',
             'submitting_user': '',
             'target': 'ENA'
@@ -305,7 +305,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
         # self.assertIsNotNone(submission.embargo)
         self.assertIsNone(submission.embargo)
         self.assertFalse(submission.release)
-        self.assertEqual(0, len(submission.site_project_id))
+        # self.assertEqual(0, len(submission.site_project_id))
         self.assertEqual(Submission.OPEN, submission.status)
         self.assertEqual(0, len(submission.submitting_user))
         self.assertEqual(0,
@@ -339,7 +339,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             'download_url': '',
             'release': False,
             'site': 'horst',
-            'site_project_id': '',
+            # 'site_project_id': '',
             'status': 'OPEN',
             'submitting_user': '',
             'target': 'ENA'}
@@ -1654,8 +1654,10 @@ class TestSubmissionViewPermissions(TestSubmissionView):
         client.credentials(HTTP_AUTHORIZATION='Token {0}'.format(token.key))
 
         response = client.post('/api/submissions/', {
-            'site_project_id': 'p1', 'submitting_user': 'johnDoe',
-            'site_object_id': 'o1', 'study': '{}'})
+            # 'site_project_id': 'p1',
+            'submitting_user': 'johnDoe',
+            # 'site_object_id': 'o1',
+            'study': '{}'})
         self.assertNotEqual(401, response.status_code)
         self.assertEqual(400, response.status_code)
 
@@ -1666,8 +1668,10 @@ class TestSubmissionViewPermissions(TestSubmissionView):
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token {0}'.format(token.key))
         response = client.post('/api/submissions/', {
-            'site_project_id': 'p1', 'submitting_user': 'johnDoe',
-            'site_object_id': 'o1', 'study': '{}'})
+            # 'site_project_id': 'p1',
+            'submitting_user': 'johnDoe',
+            # 'site_object_id': 'o1',
+            'study': '{}'})
         self.assertNotEqual(401, response.status_code)
         self.assertEqual(400, response.status_code)
 
@@ -1728,7 +1732,7 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
             'release': False,
             'broker_submission_id': content['broker_submission_id'],
             'issue': '',
-            'site_project_id': '',
+            # 'site_project_id': '',
             'target': 'GENERIC',
             'site': 'horst',
             'submitting_user': '',
@@ -1748,7 +1752,7 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
         # self.assertIsNotNone(submission.embargo)
         self.assertIsNone(submission.embargo)
         self.assertFalse(submission.release)
-        self.assertEqual(0, len(submission.site_project_id))
+        # self.assertEqual(0, len(submission.site_project_id))
         self.assertEqual(Submission.OPEN, submission.status)
         self.assertEqual(0, len(submission.submitting_user))
         # site_config = SiteConfiguration.objects.first()

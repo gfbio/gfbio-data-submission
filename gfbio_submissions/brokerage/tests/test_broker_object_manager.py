@@ -24,7 +24,7 @@ class TestBrokerObjectManager(TestCase):
             site=user,
             status='OPEN',
             submitting_user='John Doe',
-            site_project_id='prj001A',
+            # site_project_id='prj001A',
             target='ENA',
             release=False,
             data={}
@@ -36,8 +36,8 @@ class TestBrokerObjectManager(TestCase):
             submission=Submission.objects.first(),
             entity_type='study',
             site=User.objects.first(),
-            site_project_id='prj001',
-            site_object_id='obj001',
+            # site_project_id='prj001',
+            # site_object_id='obj001',
             json_data={
                 "center_name": "GFBIO",
                 # "study_type": "Metagenomics",
@@ -75,8 +75,8 @@ class TestBrokerObjectManager(TestCase):
             submission=Submission.objects.first(),
             entity_type='study',
             site=User.objects.first(),
-            site_project_id='prj0002',
-            site_object_id='obj000999',
+            # site_project_id='prj0002',
+            # site_object_id='obj000999',
             json_data={
                 'center_name': 'GFBIO',
                 # 'study_type': 'Metagenomics',
@@ -106,26 +106,22 @@ class TestBrokerObjectManager(TestCase):
 
         self.assertEqual(17, len(broker_objects))
         self.assertEqual(17, len(
-            BrokerObject.objects.filter(site_project_id='')))
+            BrokerObject.objects.all()))
         self.assertEqual(
             1,
-            len(BrokerObject.objects.filter(
-                site_project_id='').filter(type='study'))
+            len(BrokerObject.objects.filter(type='study'))
         )
         self.assertEqual(
             5,
-            len(BrokerObject.objects.filter(
-                site_project_id='').filter(type='sample'))
+            len(BrokerObject.objects.filter(type='sample'))
         )
         self.assertEqual(
             5,
-            len(BrokerObject.objects.filter(
-                site_project_id='').filter(type='experiment'))
+            len(BrokerObject.objects.filter(type='experiment'))
         )
         self.assertEqual(
             6,
-            len(BrokerObject.objects.filter(
-                site_project_id='').filter(type='run'))
+            len(BrokerObject.objects.filter(type='run'))
         )
 
     def test_double_add_submission_std_serializer(self):
@@ -200,18 +196,18 @@ class TestBrokerObjectManager(TestCase):
         broker_objects = BrokerObject.objects.all()
         self.assertEqual(5, len(broker_objects))
         self.assertEqual(5,
-                         len(BrokerObject.objects.filter(site_project_id='')))
+                         len(BrokerObject.objects.all()))
         self.assertEqual(1, len(
-            BrokerObject.objects.filter(site_project_id='').filter(
+            BrokerObject.objects.filter(
                 type='study')))
         self.assertEqual(2, len(
-            BrokerObject.objects.filter(site_project_id='').filter(
+            BrokerObject.objects.filter(
                 type='sample')))
         self.assertEqual(1, len(
-            BrokerObject.objects.filter(site_project_id='').filter(
+            BrokerObject.objects.filter(
                 type='experiment')))
         self.assertEqual(1, len(
-            BrokerObject.objects.filter(site_project_id='').filter(type='run')))
+            BrokerObject.objects.filter(type='run')))
 
     def test_add_submission_detail_serializer_min_validation_full_data(self):
         data = _get_ena_data(simple=True)
@@ -259,9 +255,8 @@ class TestBrokerObjectManager(TestCase):
         BrokerObject.objects.add_submission_data(submission)
         broker_objects = BrokerObject.objects.all()
         self.assertEqual(5, len(broker_objects))
-        self.assertEqual(5, len(BrokerObject.objects.filter(
-            site_project_id='')))
-        broker_objects = BrokerObject.objects.filter(site_project_id='')
+        self.assertEqual(5, len(BrokerObject.objects.all()))
+        broker_objects = BrokerObject.objects.all()
         for b in broker_objects:
             self.assertEqual('{}_{}'.format(b.site, b.pk), b.site_object_id)
 
@@ -278,14 +273,12 @@ class TestBrokerObjectManager(TestCase):
         BrokerObject.objects.add_submission_data(submission)
         broker_objects = BrokerObject.objects.all()
         self.assertEqual(5, len(broker_objects))
-        self.assertEqual(5, len(BrokerObject.objects.filter(
-            site_project_id='')))
+        self.assertEqual(5, len(BrokerObject.objects.all()))
 
         BrokerObject.objects.add_submission_data(submission)
         broker_objects = BrokerObject.objects.all()
         self.assertEqual(5, len(broker_objects))
-        self.assertEqual(5, len(BrokerObject.objects.filter(
-            site_project_id='')))
+        self.assertEqual(5, len(BrokerObject.objects.all()))
 
     def test_manager_add_submission_invalid_aliases(self):
         data = _get_ena_data(simple=True)
@@ -326,7 +319,7 @@ class TestBrokerObjectManager(TestCase):
             'study',
             User.objects.first(),
             'prj0002',
-            obj.site_object_id,
+            # obj.site_object_id,
             {
                 "center_name": "nice_valid_center",
                 # "study_type": "Metagenomics",

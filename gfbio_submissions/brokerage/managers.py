@@ -197,29 +197,29 @@ class BrokerObjectManager(models.Manager):
                 )
                 obj, created = self.update_or_create(
                     type='run',
-                    site=experiment_broker_object.site,
-                    site_project_id=experiment_broker_object.site_project_id,
-                    site_object_id='files_block_of_{0}'.format(
-                        experiment_broker_object.site_object_id),
+                    user=experiment_broker_object.user,
+                    # site_project_id=experiment_broker_object.site_project_id,
+                    # site_object_id='files_block_of_{0}'.format(
+                    #     experiment_broker_object.site_object_id),
                     defaults={'data': data}
                 )
-                if obj.site_object_id == '':
-                    obj.site_object_id = '{0}_{1}'.format(obj.site, obj.pk)
-                    obj.save()
+                # if obj.site_object_id == '':
+                #     obj.site_object_id = '{0}_{1}'.format(obj.user, obj.pk)
+                #     obj.save()
                 obj.submissions.add(submission)
 
-    def add_entity(self, submission, entity_type, site, site_project_id,
-                   site_object_id, json_data):
+    def add_entity(self, submission, entity_type, user,
+                   json_data):
         obj, created = self.update_or_create(
             type=entity_type,
-            site=site,
-            site_project_id=site_project_id,
-            site_object_id=site_object_id,
+            user=user,
+            # site_project_id=site_project_id,
+            # site_object_id=site_object_id,
             defaults={'data': json_data}
         )
-        if obj.site_object_id == '':
-            obj.site_object_id = '{0}_{1}'.format(obj.site, obj.pk)
-            obj.save()
+        # if obj.site_object_id == '':
+        #     obj.site_object_id = '{0}_{1}'.format(obj.site, obj.pk)
+        #     obj.save()
         obj.submissions.add(submission)
         return obj
 
@@ -239,41 +239,41 @@ class BrokerObjectManager(models.Manager):
         obj = self.add_entity(
             submission=submission,
             entity_type='study',
-            site=submission.site,
-            site_project_id=submission.site_project_id,
-            site_object_id=data['requirements'].get('site_object_id', ''),
+            user=submission.user,
+            # site_project_id=submission.site_project_id,
+            # site_object_id=data['requirements'].get('site_object_id', ''),
             json_data={
                 'study_title': data['requirements']['title'],
                 'study_abstract': data['requirements']['description'],
                 # 'study_type': data['requirements']['study_type']
             }
         )
-        data['requirements']['site_object_id'] = obj.site_object_id
+        # data['requirements']['site_object_id'] = obj.site_object_id
         for i in range(0, len(data['requirements']['samples'])):
             # for sample in data['requirements']['samples']:
             sample = data['requirements']['samples'][i]
             obj = self.add_entity(submission=submission,
                                   entity_type='sample',
-                                  site=submission.site,
-                                  site_project_id=submission.site_project_id,
-                                  site_object_id=sample.get('site_object_id',
-                                                            ''),
+                                  user=submission.user,
+                                  # site_project_id=submission.site_project_id,
+                                  # site_object_id=sample.get('site_object_id',
+                                  #                           ''),
                                   json_data=sample)
-            data['requirements']['samples'][i][
-                'site_object_id'] = obj.site_object_id
+            # data['requirements']['samples'][i][
+            #     'site_object_id'] = obj.site_object_id
 
         for i in range(0, len(data['requirements']['experiments'])):
             # for experiment in data['requirements']['experiments']:
             experiment = data['requirements']['experiments'][i]
             obj = self.add_entity(submission=submission,
                                   entity_type='experiment',
-                                  site=submission.site,
-                                  site_project_id=submission.site_project_id,
-                                  site_object_id=experiment.get(
-                                      'site_object_id', ''),
+                                  user=submission.user,
+                                  # site_project_id=submission.site_project_id,
+                                  # site_object_id=experiment.get(
+                                  #     'site_object_id', ''),
                                   json_data=experiment)
-            data['requirements']['experiments'][i][
-                'site_object_id'] = obj.site_object_id
+            # data['requirements']['experiments'][i][
+            #     'site_object_id'] = obj.site_object_id
             self.add_file_entities(experiment_broker_object=obj,
                                    submission=submission)
 
@@ -283,13 +283,13 @@ class BrokerObjectManager(models.Manager):
                 run = data['requirements']['runs'][i]
                 obj = self.add_entity(submission=submission,
                                       entity_type='run',
-                                      site=submission.site,
-                                      site_project_id=submission.site_project_id,
-                                      site_object_id=run.get('site_object_id',
-                                                             ''),
+                                      user=submission.user,
+                                      # site_project_id=submission.site_project_id,
+                                      # site_object_id=run.get('site_object_id',
+                                      #                        ''),
                                       json_data=run)
-                data['requirements']['runs'][i][
-                    'site_object_id'] = obj.site_object_id
+                # data['requirements']['runs'][i][
+                #     'site_object_id'] = obj.site_object_id
 
         submission.data = data
         submission.save()
