@@ -11,32 +11,31 @@ from gfbio_submissions.users.models import User
 class TestSubmissionAdmin(TestCase):
     @classmethod
     def setUpTestData(cls):
-        user = User.objects.create(
-            username="user1"
-        )
-        Submission.objects.create(
-            site=user,
-            status='OPEN',
-            submitting_user='John Doe',
-            # site_project_id='prj001A',
-            target='ENA',
-            release=False,
-            data={}
-        )
         resource_cred = ResourceCredential.objects.create(
             title='Resource Title',
             url='https://www.example.com',
             authentication_string='letMeIn'
         )
 
-        SiteConfiguration.objects.create(
+        site_configuration = SiteConfiguration.objects.create(
             title='Default',
-            site=user,
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
             helpdesk_server=resource_cred,
             comment='Default configuration',
+        )
+        user = User.objects.create(
+            username='user1',
+            site_configuration=site_configuration,
+        )
+        Submission.objects.create(
+            user=user,
+            status='OPEN',
+            submitting_user='John Doe',
+            target='ENA',
+            release=False,
+            data={}
         )
 
     def test_re_create_ena_xml(self):
