@@ -4,7 +4,8 @@ import json
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.models import Submission
-from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
+from gfbio_submissions.brokerage.tests.test_models.test_submission import \
+    SubmissionTest
 from gfbio_submissions.users.models import User
 
 
