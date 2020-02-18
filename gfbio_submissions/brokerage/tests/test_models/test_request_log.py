@@ -3,23 +3,35 @@ import responses
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.models import ResourceCredential, \
-    SiteConfiguration, Submission, RequestLog
-from gfbio_submissions.brokerage.tests.test_models.test_submissions import \
-    SubmissionTest
-from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response
+    SiteConfiguration, Submission, RequestLog, BrokerObject
+from gfbio_submissions.brokerage.serializers import SubmissionSerializer
+from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
+    _get_ena_data, _get_ena_data_without_runs
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
     send_submission_to_ena
 from gfbio_submissions.users.models import User
 
 
 class RequestLogTest(TestCase):
+    # TODO: redundant in various test_classes move to test_utils
+    @classmethod
+    def _create_submission_via_serializer(cls, runs=False):
+        serializer = SubmissionSerializer(data={
+            'target': 'ENA',
+            'release': True,
+            'data': _get_ena_data() if runs else _get_ena_data_without_runs()
+        })
+        serializer.is_valid()
+        submission = serializer.save(user=User.objects.first())
+        BrokerObject.objects.add_submission_data(submission)
+        return submission
 
     @classmethod
     def setUpTestData(cls):
         User.objects.create(
             username='user1'
         )
-        SubmissionTest._create_submission_via_serializer()
+        cls._create_submission_via_serializer()
         resource_cred = ResourceCredential.objects.create(
             title='Resource Title',
             url='https://www.example.com',
@@ -28,7 +40,6 @@ class RequestLogTest(TestCase):
 
         SiteConfiguration.objects.create(
             title='Default',
-            site=None,
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
