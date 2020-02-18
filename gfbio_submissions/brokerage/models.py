@@ -661,24 +661,35 @@ class SubmissionUpload(TimeStampedModel):
         help_text='Submission associated with this Upload.',
         on_delete=models.CASCADE
     )
-    site = models.ForeignKey(
-        AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        related_name='site_upload',
-        help_text='Related "Site". E.g. gfbio-portal or silva.',
-        on_delete=models.SET_NULL
-    )
-    # TODO: once IDM in place, it will be possible to directly assign real users
+
     user = models.ForeignKey(
         AUTH_USER_MODEL,
         null=True,
         blank=True,
-        related_name='user_upload',
-        help_text='Related "User". E.g. a real person that uses '
-                  'the submission frontend',
+        related_name='user_uploads',
+        help_text='Owner of this SubmissionUpload. '
+                  'Same as related submission.user',
         on_delete=models.SET_NULL
     )
+    # TODO: previous version: site&user
+    # site = models.ForeignKey(
+    #     AUTH_USER_MODEL,
+    #     null=True,
+    #     blank=True,
+    #     related_name='site_upload',
+    #     help_text='Related "Site". E.g. gfbio-portal or silva.',
+    #     on_delete=models.SET_NULL
+    # )
+    # TODO: once IDM in place, it will be possible to directly assign real users
+    # user = models.ForeignKey(
+    #     AUTH_USER_MODEL,
+    #     null=True,
+    #     blank=True,
+    #     related_name='user_upload',
+    #     help_text='Related "User". E.g. a real person that uses '
+    #               'the submission frontend',
+    #     on_delete=models.SET_NULL
+    # )
     attach_to_ticket = models.BooleanField(
         default=False,
         help_text='If checked, thus having True as value, every uploaded '

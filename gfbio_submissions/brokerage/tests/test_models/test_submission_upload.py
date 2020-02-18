@@ -28,7 +28,7 @@ class TestSubmissionUpload(TestCase):
 
         return SubmissionUpload.objects.create(
             submission=Submission.objects.first(),
-            site=User.objects.first(),
+            # site=User.objects.first(),
             user=User.objects.first(),
             file=simple_file,
         )
@@ -67,7 +67,7 @@ class TestSubmissionUpload(TestCase):
                                              data_file.read())
             submission_upload = SubmissionUpload.objects.create(
                 submission=Submission.objects.first(),
-                site=User.objects.first(),
+                # site=User.objects.first(),
                 user=User.objects.first(),
                 file=simple_file,
             )
@@ -77,14 +77,14 @@ class TestSubmissionUpload(TestCase):
         self.assertEqual(0, len(SubmissionUpload.objects.all()))
         SubmissionUpload.objects.create(
             submission=Submission.objects.first(),
-            site=User.objects.first(),
+            # site=User.objects.first(),
             user=User.objects.first(),
             file=SimpleUploadedFile('test_submission_upload.txt',
                                     b'these are the file contents!'),
         )
         SubmissionUpload.objects.create(
             submission=Submission.objects.first(),
-            site=User.objects.first(),
+            # site=User.objects.first(),
             user=User.objects.first(),
             file=SimpleUploadedFile('test_submission_upload.txt',
                                     b'these are the file contents! but different'),
