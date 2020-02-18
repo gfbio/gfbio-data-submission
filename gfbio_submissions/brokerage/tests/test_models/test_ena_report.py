@@ -7,6 +7,8 @@ from django.test import TestCase
 from gfbio_submissions.brokerage.models import EnaReport, BrokerObject, \
     PersistentIdentifier
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
+from gfbio_submissions.brokerage.utils.ena import \
+    update_persistent_identifier_report_status
 from gfbio_submissions.users.models import User
 
 
@@ -120,16 +122,13 @@ class TestEnaReport(TestCase):
         )
         broker_object = BrokerObject.objects.create(
             type='study',
-            site=user,
-            # site_project_id='prj001xxx',
-            # site_object_id='obj001',
+            user=user,
             data={
                 'center_name': 'GFBIO',
                 'study_type': 'Metagenomics',
                 'study_abstract': 'abstract',
                 'study_title': 'title',
                 'study_alias': 'alias',
-                'site_object_id': 'from_data_01'
             }
         )
         PersistentIdentifier.objects.create(
