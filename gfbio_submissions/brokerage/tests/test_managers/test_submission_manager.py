@@ -1,22 +1,21 @@
 # -*- coding: utf-8 -*-
+
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models import Submission, AuditableTextData
-from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
-from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
-    store_ena_data_as_auditable_text_data
+from gfbio_submissions.brokerage.models import Submission
 from gfbio_submissions.users.models import User
 
 
 class SubmissionManagerTest(TestCase):
 
+    # TODO: redundant, move to utils or similar
     @classmethod
     def setUpTestData(cls):
         user = User.objects.create(
             username='user1'
         )
-        Submission.objects.create(site=user)
-        Submission.objects.create(site=user)
+        Submission.objects.create(user=user)
+        Submission.objects.create(user=user)
         cls.broker_submission_id = Submission.objects.first().broker_submission_id
 
     def test_get_submission_instance(self):
@@ -34,7 +33,7 @@ class SubmissionManagerTest(TestCase):
 
     def test_get_submission_for_task(self):
         submission = Submission()
-        submission.site = User.objects.first()
+        submission.user = User.objects.first()
         submission.save()
         database_id = submission.pk
 
@@ -61,7 +60,7 @@ class SubmissionManagerTest(TestCase):
 
     def test_get_submitted_submissions(self):
         submission = Submission()
-        submission.site = User.objects.first()
+        submission.user = User.objects.first()
         submission.status = Submission.SUBMITTED
         submission.save()
         database_id = submission.pk
@@ -78,7 +77,7 @@ class SubmissionManagerTest(TestCase):
 
     def test_get_error_submissions(self):
         submission = Submission()
-        submission.site = User.objects.first()
+        submission.user = User.objects.first()
         submission.status = Submission.ERROR
         submission.save()
         database_id = submission.pk
@@ -113,13 +112,13 @@ class TestSubmissionManagerSubmittingUser(TestCase):
             is_user=True,
             email='user3@user3.com'
         )
-        Submission.objects.create(site=user)
+        Submission.objects.create(user=user)
         Submission.objects.create(
-            site=user_2, submitting_user='{}'.format(user_2.id))
+            user=user_2, submitting_user='{}'.format(user_2.id))
         Submission.objects.create(
-            site=user_2, submitting_user='{}'.format(user_2.id))
+            user=user_2, submitting_user='{}'.format(user_2.id))
         Submission.objects.create(
-            site=user_3, submitting_user='{}'.format(user_3.email))
+            user=user_3, submitting_user='{}'.format(user_3.email))
 
     def test_db_content(self):
         self.assertEqual(4, len(Submission.objects.all()))
@@ -141,79 +140,8 @@ class TestSubmissionManagerSubmittingUser(TestCase):
 
     def test_get_submissions_of_empty_submitting_user(self):
         user = User.objects.get(username='user1')
-        submissions = Submission.objects.filter(site=user)
+        submissions = Submission.objects.filter(user=user)
         self.assertEqual(1, len(submissions))
         submissions = Submission.objects.get_submissions_of_submitting_user(
             submitting_user_identifier='{}'.format(user.id))
         self.assertEqual(0, len(submissions))
-
-
-class TestAuditableTextDataManager(TestCase):
-
-    @classmethod
-    def setUpTestData(cls):
-        user = User.objects.create_user(
-            username='horst', email='horst@horst.de', password='password')
-        submission = SubmissionTest._create_submission_via_serializer()
-        submission = SubmissionTest._create_submission_via_serializer()
-
-    def test_manager_assemble_ena_submission_data(self):
-        submission = Submission.objects.first()
-        data = prepare_ena_data(submission)
-        store_ena_data_as_auditable_text_data(submission, data)
-        res = AuditableTextData.objects.assemble_ena_submission_data(
-            submission=submission)
-        request_file_keys = ['SAMPLE', 'STUDY', 'EXPERIMENT', 'RUN']
-        self.assertEqual(sorted(request_file_keys), sorted(list(res.keys())))
-
-    def test_manager_submission_data_no_experiments_no_runs(self):
-        submission = Submission.objects.first()
-        data = prepare_ena_data(submission)
-        data.pop('EXPERIMENT')
-        data.pop('RUN')
-        self.assertEqual(0, len(AuditableTextData.objects.all()))
-        store_ena_data_as_auditable_text_data(submission, data)
-        self.assertEqual(2, len(AuditableTextData.objects.all()))
-        res = AuditableTextData.objects.assemble_ena_submission_data(
-            submission=submission)
-        request_file_keys = ['SAMPLE', 'STUDY', ]
-        self.assertEqual(sorted(request_file_keys), sorted(list(res.keys())))
-
-    def test_manager_submission_filter(self):
-        submission = Submission.objects.first()
-        data = prepare_ena_data(submission)
-        self.assertEqual(0, len(AuditableTextData.objects.all()))
-        store_ena_data_as_auditable_text_data(submission, data)
-        self.assertEqual(4, len(AuditableTextData.objects.all()))
-        self.assertEqual(
-            4,
-            len(AuditableTextData.objects.filter(submission=submission))
-        )
-
-        submission_2 = Submission.objects.last()
-        data = prepare_ena_data(submission_2)
-        store_ena_data_as_auditable_text_data(submission_2, data)
-        self.assertEqual(8, len(AuditableTextData.objects.all()))
-        self.assertEqual(
-            4,
-            len(AuditableTextData.objects.filter(submission=submission_2))
-        )
-
-    def test_manager_invalid_submission(self):
-        submission = Submission.objects.first()
-        data = prepare_ena_data(submission)
-        self.assertEqual(0, len(AuditableTextData.objects.all()))
-        store_ena_data_as_auditable_text_data(submission, data)
-        self.assertEqual(4, len(AuditableTextData.objects.all()))
-        self.assertEqual(
-            4,
-            len(AuditableTextData.objects.filter(submission=submission))
-        )
-        submission_2 = Submission.objects.last()
-        self.assertEqual(
-            0,
-            len(AuditableTextData.objects.filter(submission=submission_2))
-        )
-        res = AuditableTextData.objects.assemble_ena_submission_data(
-            submission=submission_2)
-        self.assertDictEqual({}, res)

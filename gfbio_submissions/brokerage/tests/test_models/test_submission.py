@@ -15,6 +15,7 @@ from gfbio_submissions.users.models import User
 
 class SubmissionTest(TestCase):
 
+    # TODO: move to utils or similar ...
     @classmethod
     def _create_submission_via_serializer(cls, runs=False):
         serializer = SubmissionSerializer(data={
