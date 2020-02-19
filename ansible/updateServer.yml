@@ -1,33 +1,38 @@
 ---
-- hosts: 141.5.103.171
+- hosts: "{{ host }}"
 
   remote_user: root
 
   vars:
     compose_file: 'production.yml'
-    git:
-      workdir: '/var/www/gfbio_submissions/'
-      branch: 'develop'
+    workdir: '/var/www/gfbio_submissions/'
+    branch: 'develop'
 
   gather_facts: no
 
   tasks:
 
+    # Backup
+    - name: Backup database
+      shell: docker-compose -f {{ workdir }}{{ compose_file }} run --rm postgres backup
+      tags:
+        - backup
+
     # Git stash and fetch
-    - name: Git fetch
-      shell: cd {{ git.workdir }} && git stash && git fetch
+    - name: Git stash and fetch
+      shell: cd {{ workdir }} && git stash && git fetch
       tags:
         - git
 
     # GIT Checkout to develop and pull changes
-    - name: Checkout to {{ git.branch }} branch in git
-      shell: cd {{ git.workdir }} && git checkout {{ git.branch }} && git pull
+    - name: Checkout to {{ branch }} branch in git
+      shell: cd {{ workdir }} && git checkout {{ branch }} && git pull
       tags:
         - git
 
     # Check if compose yml exists
     - name: Get path to {{ compose_file }}
-      stat: path={{ git.workdir }}{{ compose_file }}
+      stat: path={{ workdir }}{{ compose_file }}
       register: compose_file_present
       tags:
         - compose-file
@@ -44,9 +49,9 @@
     - name: Copy .envs and traefik config
       copy: src={{ item.src }} dest={{ item.dest }}
       with_items:
-        - { src: '../.envs/.production/.django', dest: '{{ git.workdir }}.envs/.production/' }
-        - { src: '../.envs/.production/.postgres', dest: '{{ git.workdir }}.envs/.production/' }
-        - { src: '../compose/production/traefik/devserver-traefik.toml', dest: '{{ git.workdir }}compose/production/traefik/traefik.toml' }
+        - { src: '../.envs/.production/.django', dest: '{{ workdir }}.envs/.production/' }
+        - { src: '../.envs/.production/.postgres', dest: '{{ workdir }}.envs/.production/' }
+        - { src: '../compose/production/traefik/devserver-traefik.toml', dest: '{{ workdir }}compose/production/traefik/traefik.toml' }
 
     - name: Get names of all running containers
       shell: "docker ps --format 'table \t{{ '{{' }} .Names {{ '}}' }}'"
@@ -72,19 +77,19 @@
 
     # Docker build
     - name: Docker build
-      shell: docker-compose -f {{ git.workdir }}{{ compose_file }} build
+      shell: docker-compose -f {{ workdir }}{{ compose_file }} build
       tags:
         - docker-build
 
     # Django migrate
     - name: Django migrate
-      shell: docker-compose -f {{ git.workdir }}{{ compose_file }} run --rm django python manage.py migrate
+      shell: docker-compose -f {{ workdir }}{{ compose_file }} run --rm django python manage.py migrate
       tags:
         - django-migrate
 
     # Django collectstatic
     - name: Django collectstatic
-      shell: docker-compose -f {{ git.workdir }}{{ compose_file }} run --rm django python manage.py collectstatic
+      shell: docker-compose -f {{ workdir }}{{ compose_file }} run --rm django python manage.py collectstatic
       tags:
         - django-static
 
