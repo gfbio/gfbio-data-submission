@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+from pprint import pprint
 from uuid import uuid4, UUID
 
 from django.db import transaction
@@ -60,6 +61,12 @@ class SubmissionsView(mixins.ListModelMixin,
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
+        print('POST -----------')
+        pprint(request.__dict__)
+        user = User.objects.get(username=request.user)
+        print(user.__dict__)
+        pprint(user.site_configuration.__dict__)
+        print('------------------------')
         return self.create(request, *args, **kwargs)
 
 

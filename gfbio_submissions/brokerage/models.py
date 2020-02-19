@@ -8,6 +8,7 @@ from pprint import pprint
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.db.models import Q
+from django.utils.encoding import smart_text
 from model_utils.models import TimeStampedModel
 
 from config.settings.base import AUTH_USER_MODEL

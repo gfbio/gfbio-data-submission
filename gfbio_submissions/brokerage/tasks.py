@@ -873,6 +873,10 @@ def create_submission_issue_task(self, prev_task_result=None,
     # existing_tickets = submission.additionalreference_set.filter(
     #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
 
+    print('\ncreate_submission_issue_task\n')
+    print(site_configuration)
+    print(site_configuration.helpdesk_server)
+
     jira_client = JiraClient(resource=site_configuration.helpdesk_server)
     jira_client.create_submission_issue(reporter=prev_task_result,
                                         site_config=site_configuration,

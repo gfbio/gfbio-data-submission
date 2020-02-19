@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import base64
 import json
+from pprint import pprint
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -18,7 +19,8 @@ from gfbio_submissions.brokerage.configuration.settings import \
 from gfbio_submissions.brokerage.models import Submission, \
     SiteConfiguration, ResourceCredential, AdditionalReference, \
     TaskProgressReport, SubmissionUpload
-from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
+from gfbio_submissions.brokerage.tests.test_models.test_submission import \
+    SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_jira_attach_response, \
     _get_jira_issue_response, _get_pangaea_comment_response
 from gfbio_submissions.users.models import User
@@ -144,6 +146,9 @@ class TestSubmissionUploadView(TestCase):
         reports_len = len(TaskProgressReport.objects.all())
         uploads_len = len(SubmissionUpload.objects.all())
         response = self.api_client.post(url, data, format='multipart')
+
+        pprint(response.content)
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn(b'broker_submission_id', response.content)
         self.assertIn(b'"id"', response.content)

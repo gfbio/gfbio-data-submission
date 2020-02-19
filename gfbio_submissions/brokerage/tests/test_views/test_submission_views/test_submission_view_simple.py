@@ -1,26 +1,29 @@
 # -*- coding: utf-8 -*-
-import base64
 import json
-from pprint import pprint
 
 import responses
-from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.models import Submission
-from gfbio_submissions.users.models import User
-from .test_submission_view_base import TestSubmissionView
+from gfbio_submissions.brokerage.tests.test_views.test_submission_views.test_submission_view_base import \
+    TestSubmissionView
 
 
 class TestSubmissionViewSimple(TestSubmissionView):
 
+    # FIXME: something broken in super class.setUpTestData ???
     # @classmethod
     # def setUpTestData(cls):
-    #     super(TestSubmissionView, cls).setUpTestData()
-    #     client = APIClient()
-    #     client.credentials(
-    #         HTTP_AUTHORIZATION='Basic ' + base64.b64encode(
-    #             b'horst:password').decode('utf-8')
+    #     # super(TestSubmissionView, cls).setUpTestData()
+    #     user = User.objects.create_user(
+    #         username='horst', email='horst@horst.de', password='password')
+    #     permissions = Permission.objects.filter(
+    #         content_type__app_label='brokerage',
+    #         codename__endswith='submission'
     #     )
+    #     user.user_permissions.add(*permissions)
+    #     token = Token.objects.create(user=user)
+    #     client = APIClient()
+    #     client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
     #     cls.api_client = client
 
     def test_submissions_get_request(self):
@@ -28,31 +31,9 @@ class TestSubmissionViewSimple(TestSubmissionView):
         self.assertEqual(401, response.status_code)
 
     def test_empty_min_post(self):
-        user = User.objects.first()
-        pprint(user.__dict__)
-        client = APIClient()
-        # client.login(username='horst', password='password')
-        client.credentials(
-            # HTTP_AUTHORIZATION='Basic ' + base64.b64encode(
-            #     b'horst:password').decode('utf-8')
-            HTTP_AUTHORIZATION='Basic ' + base64.b64encode(
-                b'' + bytes(user.username) + b':' + bytes(user.password)).decode('utf-8')
-        )
-        response = client.get('/api/submissions/')
-        print(response.status_code)
-        pprint(json.loads(response.content))
-
-        # response = self.api_client.post('/api/submissions/', {}, format='json')
-        # pprint(self.api_client.__dict__)
-        #
-        # pprint(Submission.objects.all())
-        # pprint(User.objects.all())
-        #
-        # print(response.status_code)
-        # pprint(json.loads(response.content))
-        #
-        # self.assertEqual(400, response.status_code)
-        # self.assertEqual(0, len(Submission.objects.all()))
+        response = self.api_client.post('/api/submissions/', {}, format='json')
+        self.assertEqual(400, response.status_code)
+        self.assertEqual(0, len(Submission.objects.all()))
 
     def test_empty_min_post_errors(self):
         response = self.api_client.post('/api/submissions/', {}, format='json')
@@ -64,6 +45,7 @@ class TestSubmissionViewSimple(TestSubmissionView):
     def test_post_on_submission_detail_view(self):
         self._add_create_ticket_response()
         self._post_submission()
+
         submission = Submission.objects.first()
         response = self.api_client.post(
             '/api/submissions/{}/'.format(submission.pk),

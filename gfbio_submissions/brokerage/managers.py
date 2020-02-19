@@ -2,7 +2,6 @@
 import csv
 import json
 import logging
-from pprint import pprint
 
 from django.db import models, transaction
 from django.db.models import Q
@@ -35,7 +34,7 @@ class SiteConfigurationManager(models.Manager):
         obj, created = self.get_or_create(
             title=HOSTING_SITE,
             defaults={
-                'title': HOSTING_SITE,
+                'title': HOSTING_SITE,  # == 'local-site'
                 'contact': email,
                 'comment': 'created by using defaults in get_or_create call '
                            'for SiteConfiguration with '
