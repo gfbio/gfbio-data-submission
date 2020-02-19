@@ -1,50 +1,41 @@
 # -*- coding: utf-8 -*-
+
+
 import base64
 import json
-from pprint import pprint
-from urllib.parse import urlparse
 from uuid import uuid4
 
 import responses
 from django.contrib.auth.models import Permission
 from django.test import TestCase
-from django.urls import reverse
-from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from config.settings.base import MEDIA_URL
-from gfbio_submissions.brokerage.configuration.settings import \
-    JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL, JIRA_ATTACHMENT_URL
-from gfbio_submissions.brokerage.models import Submission, \
-    SiteConfiguration, ResourceCredential, AdditionalReference, \
-    TaskProgressReport, SubmissionUpload
-from gfbio_submissions.brokerage.tests.test_models.test_submission import \
-    SubmissionTest
-from gfbio_submissions.brokerage.tests.utils import _get_jira_attach_response, \
-    _get_jira_issue_response, _get_pangaea_comment_response
+from gfbio_submissions.brokerage.models import ResourceCredential, \
+    SiteConfiguration, BrokerObject, AdditionalReference, Submission
+from gfbio_submissions.brokerage.serializers import SubmissionSerializer
+from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
+    _get_ena_data_without_runs, _get_pangaea_comment_response
 from gfbio_submissions.users.models import User
-
-
-
 
 
 class TestSubmissionCommentView(TestCase):
 
+    # TODO: move to utils or similar ...
+    @classmethod
+    def _create_submission_via_serializer(cls, runs=False):
+        serializer = SubmissionSerializer(data={
+            'target': 'ENA',
+            'release': True,
+            'data': _get_ena_data() if runs else _get_ena_data_without_runs()
+        })
+        serializer.is_valid()
+        submission = serializer.save(user=User.objects.first())
+        BrokerObject.objects.add_submission_data(submission)
+        return submission
+
     @classmethod
     def setUpTestData(cls):
-        user = User.objects.create_user(
-            username='horst', email='horst@horst.de', password='password')
-        permissions = Permission.objects.filter(
-            content_type__app_label='brokerage',
-            codename__endswith='submission'
-        )
-        user.user_permissions.add(*permissions)
-        token = Token.objects.create(user=user)
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        cls.api_client = client
-
         resource_cred = ResourceCredential.objects.create(
             title='Resource Title',
             url='https://www.example.com',
@@ -60,13 +51,27 @@ class TestSubmissionCommentView(TestCase):
             helpdesk_server=resource_cred,
             comment='Default configuration',
         )
-        submission = SubmissionTest._create_submission_via_serializer()
+        user = User.objects.create_user(
+            username='horst', email='horst@horst.de', password='password')
+        permissions = Permission.objects.filter(
+            content_type__app_label='brokerage',
+            codename__endswith='submission'
+        )
+        user.user_permissions.add(*permissions)
+        user.site_configuration = cls.site_config
+        user.save()
+        token = Token.objects.create(user=user)
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        cls.api_client = client
+
+        submission = cls._create_submission_via_serializer()
         submission.additionalreference_set.create(
             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
             reference_key='SAND-1661',
             primary=True
         )
-        SubmissionTest._create_submission_via_serializer()
+        cls._create_submission_via_serializer()
 
     def test_get(self):
         submission = Submission.objects.first()
