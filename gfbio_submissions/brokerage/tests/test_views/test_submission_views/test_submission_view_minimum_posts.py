@@ -1,0 +1,133 @@
+# -*- coding: utf-8 -*-
+
+import json
+from uuid import UUID
+
+import responses
+
+from gfbio_submissions.brokerage.models import Submission, RequestLog
+from .test_submission_view_base import TestSubmissionView
+
+
+class TestSubmissionViewMinimumPosts(TestSubmissionView):
+
+    def test_invalid_min_post(self):
+        self.assertEqual(0, len(Submission.objects.all()))
+        response = self.api_client.post('/api/submissions/',
+                                        {'target': 'ENA', 'data': {}},
+                                        format='json'
+                                        )
+        self.assertEqual(400, response.status_code)
+        keys = json.loads(response.content.decode('utf-8')).keys()
+        self.assertIn('optional_validation', keys)
+        self.assertIn('data', keys)
+        self.assertEqual(0, len(Submission.objects.all()))
+
+    def test_schema_error_min_post(self):
+        self.assertEqual(0, len(Submission.objects.all()))
+        response = self.api_client.post('/api/submissions/',
+                                        {'target': 'ENA',
+                                         'data': {'requirements': {}}},
+                                        format='json'
+                                        )
+        content = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(400, response.status_code)
+        self.assertIn('data', content.keys())
+        self.assertListEqual(
+            ["requirements : 'title' is a required property",
+             "requirements : 'description' is a required property"],
+            content['data'])
+        self.assertEqual(0, len(Submission.objects.all()))
+
+    @responses.activate
+    def test_valid_min_post(self):
+        self._add_create_ticket_response()
+        self.assertEqual(0, len(Submission.objects.all()))
+        request_logs = RequestLog.objects.all()
+        self.assertEqual(0, len(request_logs))
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'ENA', 'data': {'requirements': {
+                'title': 'A Title',
+                'description': 'A Description'}}},
+            format='json'
+        )
+        content = json.loads(response.content.decode('utf-8'))
+        expected = {
+            'broker_submission_id': content['broker_submission_id'],
+            'issue': '',
+            'data': {'optional_validation': [
+                "requirements : 'study_type' is a required property",
+                "requirements : 'samples' is a required property",
+                "requirements : 'experiments' is a required property"],
+                'requirements': {'description': 'A Description',
+                                 'title': 'A Title'}},
+            'embargo': None,
+            'download_url': '',
+            'release': False,
+            'user': 'horst',
+            'status': 'OPEN',
+            'submitting_user': '',
+            'target': 'ENA'
+        }
+        self.assertEqual(201, response.status_code)
+        self.assertDictEqual(expected, content)
+        self.assertEqual(1, len(Submission.objects.all()))
+        submission = Submission.objects.last()
+
+        self.assertEqual(UUID(content['broker_submission_id']),
+                         submission.broker_submission_id)
+        self.assertIsNone(submission.embargo)
+        self.assertFalse(submission.release)
+        self.assertEqual(Submission.OPEN, submission.status)
+        self.assertEqual(0, len(submission.submitting_user))
+        self.assertEqual(0,
+                         len(submission.submitting_user_common_information))
+        self.assertEqual('ENA', submission.target)
+        request_logs = RequestLog.objects.filter(type=RequestLog.INCOMING)
+        self.assertEqual(1, len(request_logs))
+
+    @responses.activate
+    def test_valid_explicit_min_post(self):
+        self._add_create_ticket_response()
+        self.assertEqual(0, len(Submission.objects.all()))
+        response = self._post_submission()
+        content = json.loads(response.content.decode('utf-8'))
+        expected = {
+            'broker_submission_id': content['broker_submission_id'],
+            'issue': '',
+            'data': {'optional_validation': [
+                u"requirements : 'study_type' is a required property",
+                u"requirements : 'samples' is a required property",
+                u"requirements : 'experiments' is a required property"],
+                'requirements': {'description': 'A Description',
+                                 'title': 'A Title'}},
+            'embargo': None,
+            'download_url': '',
+            'release': False,
+            'user': 'horst',
+            'status': 'OPEN',
+            'submitting_user': '',
+            'target': 'ENA'}
+        self.assertEqual(201, response.status_code)
+        self.assertDictEqual(expected, content)
+        self.assertEqual(1, len(Submission.objects.all()))
+        submission = Submission.objects.last()
+        self.assertEqual(UUID(expected['broker_submission_id']),
+                         submission.broker_submission_id)
+
+    @responses.activate
+    def test_min_post_without_target(self):
+        self._add_create_ticket_response()
+        self.assertEqual(0, len(Submission.objects.all()))
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'release': False, 'target': 'nonsense', 'data': {
+                'requirements': {
+                    'title': 'A Title',
+                    'description': 'A Description'}}},
+            format='json'
+        )
+        self.assertEqual(400, response.status_code)
+        self.assertIn(b'target', response.content)
+        self.assertEqual(0, len(Submission.objects.all()))
