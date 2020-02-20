@@ -2,6 +2,7 @@
 import base64
 import json
 import os
+from pprint import pprint
 
 import responses
 from django.contrib.auth.models import Permission
@@ -55,7 +56,7 @@ class TestSubmissionView(TestCase):
         # user.user_permissions.add(*upload_permissions)
 
         user = User.objects.create_user(
-            username='horst', email='horst@horst.de', password='password', )
+            username='horst', password='password', )
         # permissions = Permission.objects.filter(
         #     content_type__app_label='brokerage',
         #     codename__endswith='submission'
@@ -63,8 +64,13 @@ class TestSubmissionView(TestCase):
         user.user_permissions.add(*cls.permissions)
         user.user_permissions.add(*upload_permissions)
         user.site_configuration = cls.site_config
+        user.email = 'horst@horst.de'
         user.save()
         token = Token.objects.create(user=user)
+
+        print('user in base prepare')
+        pprint(user.__dict__)
+
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
         cls.api_client = client
@@ -77,9 +83,13 @@ class TestSubmissionView(TestCase):
         user.user_permissions.add(*cls.permissions)
 
         regular_user = User.objects.create_user(
-            username='regular_user', email='re@gu.la', password='secret',
+            username='regular_user',
+            # email='re@gu.la',
+            password='secret',
             is_staff=False, is_site=False, is_user=True)
+        regular_user.email = 're@gu.la'
         regular_user.user_permissions.add(*cls.permissions)
+        regular_user.save()
 
         regular_user = User.objects.create_user(
             username='regular_user_2', email='re2@gu.la', password='secret',
