@@ -269,6 +269,7 @@ class TaskProgressReportAdmin(admin.ModelAdmin):
     readonly_fields = ('created', 'modified',)
     list_filter = ('status', 'task_name',)
     search_fields = ['submission__broker_submission_id', 'task_name']
+    list_display = ('task_name', 'created', 'modified')
 
 
 class EnaReportAdmin(admin.ModelAdmin):
