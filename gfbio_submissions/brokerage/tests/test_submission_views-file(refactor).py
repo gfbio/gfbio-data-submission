@@ -2,26 +2,21 @@
 import base64
 import datetime
 import json
-import os
 import urllib
-from pprint import pprint
 from unittest import skip
 from urllib.parse import urlencode
 from uuid import UUID, uuid4
 
 import responses
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.urls import reverse
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    JIRA_ISSUE_URL, GENERIC, ENA_PANGAEA
+    JIRA_ISSUE_URL
 from gfbio_submissions.brokerage.models import Submission, RequestLog, \
     SiteConfiguration, TaskProgressReport, AdditionalReference
 from gfbio_submissions.brokerage.tests.utils import \
-    _get_submission_request_data, _get_submission_post_response, \
-    _get_test_data_dir_path
+    _get_submission_request_data
 from gfbio_submissions.users.models import User
 
 

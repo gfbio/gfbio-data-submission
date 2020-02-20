@@ -2,7 +2,6 @@
 import base64
 import json
 import os
-from pprint import pprint
 
 import responses
 from django.contrib.auth.models import Permission
