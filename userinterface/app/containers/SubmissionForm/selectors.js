@@ -119,6 +119,11 @@ const makeSelectBrokerSubmissionId = () =>
     substate.get('brokerSubmissionId'),
   );
 
+const makeSelectAccessionId = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('accessionId'),
+  );
+
 const makeSelectContributors = () =>
   createSelector(selectSubmissionFormDomain, substate =>
     substate.get('contributors'),
@@ -203,6 +208,7 @@ export {
   makeSelectDatasetLabels,
   makeSelectFileUploads,
   makeSelectBrokerSubmissionId,
+  makeSelectAccessionId,
   makeSelectContributors,
   makeSelectInitialValues,
   makeSelectSubmission,

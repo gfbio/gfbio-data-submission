@@ -13,8 +13,8 @@ import { JIRA_ROOT } from '../../globalConstants';
 function SubmissionInfo(props) {
 
   let listItems = [];
+  const mailToLink = `mailto:info@gfbio.org?subject=Help with Submission ${props.brokerSubmissionId}&body=Dear GFBio Team,`;
   if (props.brokerSubmissionId.length > 0) {
-    const mailToLink = `mailto:info@gfbio.org?subject=Help with Submission ${props.brokerSubmissionId}&body=Dear GFBio Team,`;
     listItems.push(
       [
         <li className="list-group-item">
@@ -24,27 +24,21 @@ function SubmissionInfo(props) {
             <div className="bsi">{props.brokerSubmissionId}</div>
           </a>
         </li>,
-        <li className="list-group-item">
-          <a
-            href={mailToLink}
-            className="external">
-            <i className="fa fa-comments" aria-hidden="true"></i>
-            Do you need Help ?
-          </a>
-        </li>,
       ],
     );
-  } else {
+  }
+
+  if (props.accessionId && props.accessionId.length > 0) {
     listItems.push(
       <li className="list-group-item">
-        <a
-          href="mailto:info@gfbio.org?subject=Help with Submission&body=Dear GFBio Team,"
-          className="external">
-          <i className="fa fa-comments" aria-hidden="true"></i>
-          Do you need Help ?
+        <a>
+          <i className="fa fa-archive" aria-hidden="true"></i>ENA Accession:<br />
+          <div className="bsi">{props.accessionId}</div>
         </a>
-      </li>);
+      </li>,
+    );
   }
+
   if (props.issue.length > 0) {
     listItems.push(
       <li className="list-group-item">
@@ -56,6 +50,19 @@ function SubmissionInfo(props) {
       </li>,
     );
   }
+
+  // Add Help link at the bottom of the box
+  listItems.push(
+    <li className="list-group-item">
+      <a
+        href={mailToLink}
+        className="external">
+        <i className="fa fa-comments" aria-hidden="true"></i>
+        Do you need Help ?
+      </a>
+    </li>,
+  );
+
   return (
     <div className="">
       <header className="header header-left form-header-top">
@@ -76,6 +83,7 @@ function SubmissionInfo(props) {
 
 SubmissionInfo.propTypes = {
   brokerSubmissionId: PropTypes.string,
+  accessionId: PropTypes.string,
   issue: PropTypes.string,
 };
 

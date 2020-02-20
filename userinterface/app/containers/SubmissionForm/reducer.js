@@ -109,11 +109,11 @@ export const initialState = fromJS({
   embargoDate: new Date().setFullYear(new Date().getFullYear() + 1),
 
   // TODO: replace. development default of 2
-  // userId: backendParameters.userId || 2,
+  // userId: backendParameters.userId || 1,
   userId: backendParameters.userId || -1,
 
   // TODO: replace. during development token defaults to test-server user
-  // token: backendParameters['token'] || '7e7518077ba9fad288985ef22e822abdf34354f0',
+  // token: backendParameters['token'] || '1e61fdad931e3cdcaceb07d0134f578f5ff053a6',
   token: backendParameters['token'] || 'NO_TOKEN',
   userName: backendParameters.userName || '',
 

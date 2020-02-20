@@ -99,7 +99,9 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         serializer.save(site=self.request.user)
 
     def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
+        response = self.retrieve(request, *args, **kwargs)
+        response.data['accession_id'] = self.get_object().get_accession_id()
+        return response
 
     def put(self, request, *args, **kwargs):
         instance = self.get_object()  #
@@ -130,7 +132,7 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                         )
                     ).set(countdown=SUBMISSION_DELAY)
             chain()
-            
+
             return response
         else:
             return Response(
