@@ -2,7 +2,6 @@
 import base64
 import json
 import os
-from pprint import pprint
 
 import responses
 from django.contrib.auth.models import Permission
@@ -38,8 +37,6 @@ class TestSubmissionView(TestCase):
             helpdesk_server=resource_cred,
             comment='Default configuration',
         )
-        # cls.site_config = site_config
-        # pprint(cls.site_config.__dict__)
 
         cls.permissions = Permission.objects.filter(
             content_type__app_label='brokerage',
@@ -56,7 +53,7 @@ class TestSubmissionView(TestCase):
         # user.user_permissions.add(*upload_permissions)
 
         user = User.objects.create_user(
-            username='horst', password='password', )
+            username='horst', email='horst@horst.de', password='password', )
         # permissions = Permission.objects.filter(
         #     content_type__app_label='brokerage',
         #     codename__endswith='submission'
@@ -64,15 +61,17 @@ class TestSubmissionView(TestCase):
         user.user_permissions.add(*cls.permissions)
         user.user_permissions.add(*upload_permissions)
         user.site_configuration = cls.site_config
-        user.email = 'horst@horst.de'
         user.save()
-        token = Token.objects.create(user=user)
-
-        print('user in base prepare')
-        pprint(user.__dict__)
 
         client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        # Token auth for horst
+        # token = Token.objects.create(user=user)
+        # client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        # Basic auth for horst
+        client.credentials(
+            HTTP_AUTHORIZATION='Basic ' + base64.b64encode(
+                b'horst:password').decode('utf-8')
+        )
         cls.api_client = client
         # print('\nUSER SC: ', user.site_configuration)
         # pprint(user.site_configuration.__dict__)
@@ -81,6 +80,10 @@ class TestSubmissionView(TestCase):
             username='kevin', email='kevin@kevin.de', password='secret',
             is_staff=True, is_site=True)
         user.user_permissions.add(*cls.permissions)
+        token = Token.objects.create(user=user)
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        cls.staff_client = client
 
         regular_user = User.objects.create_user(
             username='regular_user',

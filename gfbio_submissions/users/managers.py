@@ -9,8 +9,8 @@ class CustomUserManager(UserManager):
     def create_user(self, username, email=None, password=None, **extra_fields):
         user = super(CustomUserManager, self).create_user(
             username,
-            email=None,
-            password=None,
+            email=email,
+            password=password,
             **extra_fields
         )
         user.site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
