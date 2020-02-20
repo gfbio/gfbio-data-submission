@@ -49,19 +49,20 @@ class TestSubmissionView(TestCase):
         #     site_configuration=cls.site_config, is_user=True,
         #     is_site=True)
         # user.user_permissions.add(*cls.permissions)
-        # upload_permissions = Permission.objects.filter(
-        #     content_type__app_label='brokerage',
-        #     codename__endswith='submissionupload'
-        # )
+        upload_permissions = Permission.objects.filter(
+            content_type__app_label='brokerage',
+            codename__endswith='submissionupload'
+        )
         # user.user_permissions.add(*upload_permissions)
 
         user = User.objects.create_user(
             username='horst', email='horst@horst.de', password='password', )
-        permissions = Permission.objects.filter(
-            content_type__app_label='brokerage',
-            codename__endswith='submission'
-        )
-        user.user_permissions.add(*permissions)
+        # permissions = Permission.objects.filter(
+        #     content_type__app_label='brokerage',
+        #     codename__endswith='submission'
+        # )
+        user.user_permissions.add(*cls.permissions)
+        user.user_permissions.add(*upload_permissions)
         user.site_configuration = cls.site_config
         user.save()
         token = Token.objects.create(user=user)

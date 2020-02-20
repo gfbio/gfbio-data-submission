@@ -36,7 +36,7 @@ jsonschema==3.0.1 # https://github.com/Julian/jsonschema
 requests==2.22.0 # https://github.com/psf/requests
 responses==0.10.6 # https://github.com/getsentry/responses
 
-gitpython==2.1.13 # https://github.com/gitpython-developers/GitPython
+# TODO: remove .. used by AuditableTestData: gitpython==2.1.13 # https://github.com/gitpython-developers/GitPython
 
 bleach==3.1.0 # https://github.com/mozilla/bleach
 

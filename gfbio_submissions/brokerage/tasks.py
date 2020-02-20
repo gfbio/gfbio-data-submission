@@ -243,7 +243,8 @@ def check_on_hold_status_task(self, previous_task_result=None,
         mail_admins(
             subject=APPROVAL_EMAIL_SUBJECT_TEMPLATE.format(
                 HOST_URL_ROOT,
-                site_configuration.site.username if site_configuration.site else site_configuration.title,
+                # site_configuration.site.username if site_configuration.site else site_configuration.title,
+                submission.user.username if submission.user else site_configuration.title,
                 submission.broker_submission_id
             ),
             message=APPROVAL_EMAIL_MESSAGE_TEMPLATE.format(
