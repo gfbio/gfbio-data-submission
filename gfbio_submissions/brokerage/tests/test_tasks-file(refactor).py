@@ -18,7 +18,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, Submission, AuditableTextData, PersistentIdentifier, \
     BrokerObject, TaskProgressReport, RequestLog, \
-    SubmissionUpload, EnaReport
+    EnaReport
 from gfbio_submissions.brokerage.tasks import \
     create_broker_objects_from_submission_data_task, \
     create_submission_issue_task, \
@@ -26,17 +26,12 @@ from gfbio_submissions.brokerage.tasks import \
     add_accession_to_pangaea_issue_task, check_for_pangaea_doi_task, \
     trigger_submission_transfer, \
     get_gfbio_helpdesk_username_task, \
-    clean_submission_for_update_task, parse_csv_to_update_clean_submission_task, \
-    update_ena_submission_data_task, \
     fetch_ena_reports_task, \
     update_persistent_identifier_report_status_task
-from gfbio_submissions.brokerage.tests.test_utils import TestCSVParsing
 from gfbio_submissions.brokerage.tests.utils import \
     _get_pangaea_soap_response, _get_pangaea_attach_response, \
     _get_pangaea_comment_response, _get_pangaea_ticket_response, \
     _get_jira_issue_response, _get_test_data_dir_path
-from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
-    store_ena_data_as_auditable_text_data
 from gfbio_submissions.users.models import User
 
 
