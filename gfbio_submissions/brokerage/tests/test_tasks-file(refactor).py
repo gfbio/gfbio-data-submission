@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import base64
 import json
 import os
 import uuid
@@ -10,45 +9,37 @@ from uuid import uuid4
 
 import responses
 from celery import chain
-from django.contrib.auth.models import Permission
-from django.test import TestCase, override_settings
-from rest_framework.test import APIRequestFactory, APIClient
+from django.test import override_settings
 
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, JIRA_ATTACHMENT_SUB_URL, \
     JIRA_ATTACHMENT_URL, JIRA_USERNAME_URL_TEMPLATE, \
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE, JIRA_FALLBACK_USERNAME, \
-    SUBMISSION_DELAY, JIRA_FALLBACK_EMAIL, ENA_PANGAEA
+    SUBMISSION_DELAY, JIRA_FALLBACK_EMAIL
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, Submission, AuditableTextData, PersistentIdentifier, \
-    BrokerObject, TaskProgressReport, AdditionalReference, RequestLog, \
-    CenterName, SubmissionUpload, EnaReport
-from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, \
-    transfer_data_to_ena_task, process_ena_response_task, \
-    create_broker_objects_from_submission_data_task, check_on_hold_status_task, \
+    BrokerObject, TaskProgressReport, RequestLog, \
+    SubmissionUpload, EnaReport
+from gfbio_submissions.brokerage.tasks import \
+    create_broker_objects_from_submission_data_task, \
     create_submission_issue_task, \
-    add_accession_to_submission_issue_task, attach_to_submission_issue_task, \
-    add_pangaealink_to_submission_issue_task, \
+    attach_to_submission_issue_task, \
     create_pangaea_issue_task, attach_to_pangaea_issue_task, \
     add_accession_to_pangaea_issue_task, check_for_pangaea_doi_task, \
     trigger_submission_transfer, \
-    delete_submission_issue_attachment_task, add_posted_comment_to_issue_task, \
-    update_submission_issue_task, get_gfbio_helpdesk_username_task, \
+    delete_submission_issue_attachment_task, get_gfbio_helpdesk_username_task, \
     clean_submission_for_update_task, parse_csv_to_update_clean_submission_task, \
     update_ena_submission_data_task, \
-    add_accession_link_to_submission_issue_task, fetch_ena_reports_task, \
+    fetch_ena_reports_task, \
     update_persistent_identifier_report_status_task
-from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.test_utils import TestCSVParsing
 from gfbio_submissions.brokerage.tests.utils import \
-    _get_submission_request_data, _get_ena_xml_response, \
-    _get_ena_error_xml_response, _get_jira_attach_response, \
+    _get_jira_attach_response, \
     _get_pangaea_soap_response, _get_pangaea_attach_response, \
     _get_pangaea_comment_response, _get_pangaea_ticket_response, \
     _get_jira_issue_response, _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data
-from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
 from gfbio_submissions.users.models import User
 
 

@@ -29,7 +29,6 @@ from gfbio_submissions.brokerage.models import Submission, ResourceCredential, \
     SiteConfiguration, AdditionalReference, \
     TaskProgressReport, SubmissionUpload, BrokerObject
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
-from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_pangaea_soap_body, _get_pangaea_soap_response, \
     _get_pangaea_attach_response, _get_test_data_dir_path, \
@@ -181,32 +180,32 @@ class PangaeaTicketTest(TestCase):
             type=AdditionalReference.PANGAEA_JIRA_TICKET).first()
         self.assertEqual('PDI-0815', ref.reference_key)
 
-
-class TestServiceMethods(TestCase):
-
-    @classmethod
-    def setUpTestData(cls):
-        User.objects.create(
-            username="user1"
-        )
-        resource_credential = ResourceCredential.objects.create(
-            url='https://gfbio-pub2.inf-bb.uni-jena.de',
-            title='gfbio_portal',
-            authentication_string='-',
-            username='broker.agent@gfbio.org',
-            password='',
-            comment='comment',
-        )
-        SiteConfiguration.objects.create(
-            title='default',
-            site=None,
-            ena_server=resource_credential,
-            pangaea_token_server=resource_credential,
-            pangaea_jira_server=resource_credential,
-            helpdesk_server=resource_credential,
-            comment='',
-        )
-        SubmissionTest._create_submission_via_serializer()
+#
+# class TestServiceMethods(TestCase):
+#
+#     @classmethod
+#     def setUpTestData(cls):
+#         User.objects.create(
+#             username="user1"
+#         )
+#         resource_credential = ResourceCredential.objects.create(
+#             url='https://gfbio-pub2.inf-bb.uni-jena.de',
+#             title='gfbio_portal',
+#             authentication_string='-',
+#             username='broker.agent@gfbio.org',
+#             password='',
+#             comment='comment',
+#         )
+#         SiteConfiguration.objects.create(
+#             title='default',
+#             site=None,
+#             ena_server=resource_credential,
+#             pangaea_token_server=resource_credential,
+#             pangaea_jira_server=resource_credential,
+#             helpdesk_server=resource_credential,
+#             comment='',
+#         )
+#         SubmissionTest._create_submission_via_serializer()
 
 
 class TestGFBioJiraApi(TestCase):
