@@ -1071,18 +1071,14 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
         # No 'optional_validation' since all generic special fields
         # are non-mandatory
         expected = {
-            # 'embargo': '{0}'.format(
-            #     datetime.date.today() + datetime.timedelta(days=365)),
-            # TODO: better defaults in model
             'embargo': None,
             'download_url': '',
             'status': 'OPEN',
             'release': False,
             'broker_submission_id': content['broker_submission_id'],
             'issue': '',
-            # 'site_project_id': '',
             'target': 'GENERIC',
-            'site': 'horst',
+            'user': 'horst',
             'submitting_user': '',
             'data': {
                 'requirements': {
@@ -1097,15 +1093,11 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
         submission = Submission.objects.last()
         self.assertEqual(UUID(content['broker_submission_id']),
                          submission.broker_submission_id)
-        # self.assertIsNotNone(submission.embargo)
         self.assertIsNone(submission.embargo)
         self.assertFalse(submission.release)
         # self.assertEqual(0, len(submission.site_project_id))
         self.assertEqual(Submission.OPEN, submission.status)
         self.assertEqual(0, len(submission.submitting_user))
-        # site_config = SiteConfiguration.objects.first()
-        # self.assertIn(site_config.contact,
-        #               submission.submitting_user_common_information)
         self.assertEqual('GENERIC', submission.target)
         request_logs = RequestLog.objects.filter(type=RequestLog.INCOMING)
         self.assertEqual(1, len(request_logs))
