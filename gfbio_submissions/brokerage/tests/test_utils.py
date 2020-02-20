@@ -1128,7 +1128,7 @@ class TestCSVParsing(TestCase):
                   'rb') as data_file:
             return SubmissionUpload.objects.create(
                 submission=submission,
-                site=user,
+                # site=user,
                 user=user,
                 meta_data=True,
                 file=SimpleUploadedFile(

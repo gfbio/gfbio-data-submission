@@ -3,7 +3,6 @@ import json
 import os
 import uuid
 from unittest import skip
-from unittest.mock import patch
 from urllib.parse import quote
 from uuid import uuid4
 
@@ -13,7 +12,7 @@ from django.test import override_settings
 
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, JIRA_ATTACHMENT_SUB_URL, \
-    JIRA_ATTACHMENT_URL, JIRA_USERNAME_URL_TEMPLATE, \
+    JIRA_USERNAME_URL_TEMPLATE, \
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE, JIRA_FALLBACK_USERNAME, \
     SUBMISSION_DELAY, JIRA_FALLBACK_EMAIL
 from gfbio_submissions.brokerage.models import ResourceCredential, \
@@ -23,18 +22,16 @@ from gfbio_submissions.brokerage.models import ResourceCredential, \
 from gfbio_submissions.brokerage.tasks import \
     create_broker_objects_from_submission_data_task, \
     create_submission_issue_task, \
-    attach_to_submission_issue_task, \
     create_pangaea_issue_task, attach_to_pangaea_issue_task, \
     add_accession_to_pangaea_issue_task, check_for_pangaea_doi_task, \
     trigger_submission_transfer, \
-    delete_submission_issue_attachment_task, get_gfbio_helpdesk_username_task, \
+    get_gfbio_helpdesk_username_task, \
     clean_submission_for_update_task, parse_csv_to_update_clean_submission_task, \
     update_ena_submission_data_task, \
     fetch_ena_reports_task, \
     update_persistent_identifier_report_status_task
 from gfbio_submissions.brokerage.tests.test_utils import TestCSVParsing
 from gfbio_submissions.brokerage.tests.utils import \
-    _get_jira_attach_response, \
     _get_pangaea_soap_response, _get_pangaea_attach_response, \
     _get_pangaea_comment_response, _get_pangaea_ticket_response, \
     _get_jira_issue_response, _get_test_data_dir_path
