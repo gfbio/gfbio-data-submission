@@ -12,9 +12,7 @@ from django.test import override_settings
 
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, JIRA_ATTACHMENT_SUB_URL, \
-    JIRA_USERNAME_URL_TEMPLATE, \
-    JIRA_USERNAME_URL_FULLNAME_TEMPLATE, JIRA_FALLBACK_USERNAME, \
-    SUBMISSION_DELAY, JIRA_FALLBACK_EMAIL
+    JIRA_USERNAME_URL_FULLNAME_TEMPLATE, SUBMISSION_DELAY
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, Submission, AuditableTextData, PersistentIdentifier, \
     BrokerObject, TaskProgressReport, RequestLog, \

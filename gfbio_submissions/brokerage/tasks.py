@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+from pprint import pprint
 
 import celery
 from celery import Task
@@ -821,6 +822,13 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
         user_email = submission.site.email if len(
             submission.site.email) else site_configuration.contact
         result['email'] = user_email if len(user_email) else JIRA_FALLBACK_EMAIL
+    user_name = submission.user.external_user_id \
+        if submission.user.external_user_id \
+        else submission.user.username
+    user_email = submission.user.email
+    user_full_name = submission.user.name
+    result['email'] = user_email if len(user_email) else JIRA_FALLBACK_EMAIL
+    result['full_name'] = user_full_name
 
     response = get_gfbio_helpdesk_username(user_name=user_name,
                                            email=user_email,
