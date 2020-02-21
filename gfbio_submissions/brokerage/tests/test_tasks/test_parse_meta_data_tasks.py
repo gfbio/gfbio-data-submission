@@ -105,7 +105,7 @@ class TestParseMetaDataForUpdateTask(TestTasks):
         expected_data = {
             'requirements': {
                 'description': 'Reduced Data for testing',
-                'site_object_id': 'user1_1',
+                # 'site_object_id': 'user1_1',
                 'title': 'Simple ENA Data without run block'
             }
         }
