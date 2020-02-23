@@ -851,7 +851,7 @@ def fetch_ena_report(site_configuration, report_type):
             request_id=request_id,
             type=RequestLog.OUTGOING,
             url=url,
-            site_user=site_configuration.site.username,
+            # site_user=site_configuration.site.username,
             response_status=response.status_code,
             response_content=response.content,
             request_details={
