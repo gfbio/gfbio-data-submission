@@ -11,7 +11,8 @@ from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_CENTER_NAME
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
     ResourceCredential, SiteConfiguration, RequestLog, BrokerObject
-from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
+from gfbio_submissions.brokerage.tests.test_models.test_submission import \
+    SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_ena_release_xml_response
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
@@ -36,7 +37,6 @@ class TestEnalizer(TestCase):
 
         SiteConfiguration.objects.create(
             title='Default',
-            site=user,
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
@@ -325,7 +325,7 @@ class TestEnalizer(TestCase):
                     'forward_read_file_name': 'File3.forward.fastq.gz',
                 },
                 'platform': 'AB 3730xL Genetic Analyzer',
-                'site_object_id': 'user1_4'
+                # 'site_object_id': 'user1_4'
             }
         ]
         submission.save()
@@ -437,8 +437,8 @@ class TestEnalizer(TestCase):
         submission = Submission.objects.first()
         conf = SiteConfiguration.objects.first()
 
-        print('submission site ', submission.site)
-        print(SiteConfiguration.objects.filter(site=submission.site).first())
+        # print('submission site ', submission.site)
+        # print(SiteConfiguration.objects.filter(site=submission.site).first())
         responses.add(
             responses.POST,
             conf.ena_server.url,

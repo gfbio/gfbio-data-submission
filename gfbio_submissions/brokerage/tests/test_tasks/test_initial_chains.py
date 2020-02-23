@@ -2,6 +2,7 @@
 
 import base64
 import json
+from urllib.parse import quote
 
 import responses
 from django.contrib.auth.models import Permission
@@ -9,7 +10,8 @@ from django.test import TestCase
 from rest_framework.test import APIRequestFactory, APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    JIRA_ISSUE_URL
+    JIRA_ISSUE_URL, JIRA_USERNAME_URL_TEMPLATE, \
+    JIRA_USERNAME_URL_FULLNAME_TEMPLATE
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, Submission, TaskProgressReport
 from gfbio_submissions.brokerage.tests.utils import \
@@ -59,8 +61,23 @@ class TestInitialChainTasks(TestCase):
             status=200,
         )
 
+    def _add_create_helpdesk_user_response(self):
+        user = User.objects.first()
+        url = JIRA_USERNAME_URL_TEMPLATE.format(
+            user.username, user.email
+        )
+        responses.add(responses.GET, url, body='{0}'.format(user.username),
+                      status=200)
+        url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
+            user.external_user_id, user.email,
+            quote(user.name)
+        )
+        responses.add(responses.GET, url, body='{0}'.format(user.username),
+                      status=200)
+
     def _add_create_ticket_response(self):
         self._add_jira_client_responses()
+        self._add_create_helpdesk_user_response()
         responses.add(
             responses.POST,
             '{0}{1}'.format(

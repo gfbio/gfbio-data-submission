@@ -8,11 +8,11 @@ from gfbio_submissions.brokerage.tasks import \
     create_broker_objects_from_submission_data_task, \
     clean_submission_for_update_task, parse_csv_to_update_clean_submission_task, \
     update_ena_submission_data_task
-from gfbio_submissions.brokerage.tests.test_utils import TestCSVParsing
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data
 from gfbio_submissions.users.models import User
 from .test_tasks_base import TestTasks
+from ..test_utils.test_csv_parsing import TestCSVParsing
 
 
 class TestParseMetaDataForUpdateTask(TestTasks):

@@ -10,7 +10,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIRequestFactory, APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    JIRA_USERNAME_URL_TEMPLATE, JIRA_ISSUE_URL
+    JIRA_USERNAME_URL_TEMPLATE, JIRA_ISSUE_URL, \
+    JIRA_USERNAME_URL_FULLNAME_TEMPLATE
 from gfbio_submissions.brokerage.models import ResourceCredential, \
     SiteConfiguration, SubmissionUpload
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
@@ -126,10 +127,15 @@ class TestSubmissionView(TestCase):
                                                   email='re@gu.la'):
         url = JIRA_USERNAME_URL_TEMPLATE.format(user_name, email, )
         responses.add(responses.GET, url, body=b'deleteMe', status=200)
+        url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format('0815',
+                                                         user_name, email, )
+        responses.add(responses.GET, url, body=b'deleteMe', status=200)
 
     def _add_create_ticket_response(self):
         self._add_gfbio_helpdesk_user_service_response(user_name='horst',
                                                        email='horst@horst.de')
+        self._add_gfbio_helpdesk_user_service_response(user_name='kevin',
+                                                       email='kevin@kevin.de')
         self._add_jira_client_responses()
         responses.add(
             responses.POST,

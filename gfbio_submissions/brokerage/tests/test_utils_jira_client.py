@@ -17,7 +17,8 @@ from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL, JIRA_ATTACHMENT_URL
 from gfbio_submissions.brokerage.models import Submission, ResourceCredential, \
     SiteConfiguration, AdditionalReference
-from gfbio_submissions.brokerage.tests.test_models import SubmissionTest
+from gfbio_submissions.brokerage.tests.test_models.test_submission import \
+    SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_pangaea_soap_response, \
     _get_pangaea_attach_response, _get_pangaea_comment_response, \
     _get_pangaea_ticket_response, _get_jira_issue_response, \
