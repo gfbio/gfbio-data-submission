@@ -57,7 +57,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
         institution = c.get('institution', '')
         contribution = c.get('contribution', '')
 
-        contributor = 'Name: {0} {1}\nEmail: {2}\nInstitution: {3}\nContribution: {4}\n'.format(
+        contributor = '{0},{1},{2},{3},{4}\n'.format(
             lname,
             fname,
             email,
