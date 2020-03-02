@@ -18,6 +18,7 @@ import saga from './saga';
 import { fetchSubmission, resetForm, submitForm } from './actions';
 import {
   makeSelectBrokerSubmissionId,
+  makeSelectAccessionId,
   makeSelectFormWrapper, makeSelectGeneralError,
   makeSelectInitialValues,
   makeSelectPromptOnLeave,
@@ -173,6 +174,7 @@ export class SubmissionForm extends React.Component {
           generalError={this.props.generalError}
           saveSuccessMessage={saveMessage}
           brokerSubmissionId={this.props.brokerSubmissionId}
+          accessionId={this.props.accessionId}
           issue={issue}
         />
       </div>
@@ -202,6 +204,7 @@ const mapStateToProps = createStructuredSelector({
   initialValues: makeSelectInitialValues(),
   submission: makeSelectSubmission(),
   brokerSubmissionId: makeSelectBrokerSubmissionId(),
+  accessionId: makeSelectAccessionId(),
   promptOnLeave: makeSelectPromptOnLeave(),
   showSaveSuccess: makeSelectShowSaveSuccess(),
   generalError: makeSelectGeneralError(),

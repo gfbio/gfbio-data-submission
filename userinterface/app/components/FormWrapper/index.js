@@ -264,6 +264,7 @@ class FormWrapper extends React.PureComponent {
 
               <SubmissionInfo
                 brokerSubmissionId={this.props.brokerSubmissionId}
+                accessionId={this.props.accessionId}
                 issue={this.props.issue}
 
               />
@@ -354,6 +355,7 @@ FormWrapper.propTypes = {
   generalError: PropTypes.bool,
   saveSuccessMessage: PropTypes.object,
   brokerSubmissionId: PropTypes.string,
+  accessionId: PropTypes.string,
   issue: PropTypes.string,
 };
 

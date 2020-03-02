@@ -1040,9 +1040,21 @@ class TestSubmissionViewGetRequest(TestSubmissionView):
         self._add_create_ticket_response()
         self._post_submission()
         submission = Submission.objects.first()
+        submission.brokerobject_set.create(
+            type='study',
+            site=User.objects.first(),
+        )
+        submission.brokerobject_set.filter(
+            type='study'
+        ).first().persistentidentifier_set.create(
+            archive='ENA',
+            pid_type='PRJ',
+            pid='PRJE0815'
+        )
         response = self.api_client.get(
             '/api/submissions/{0}/'.format(submission.broker_submission_id))
         content = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(content['accession_id'], 'PRJE0815')
         self.assertEqual(200, response.status_code)
         self.assertTrue(isinstance(content, dict))
         self.assertEqual('horst', content['site'])

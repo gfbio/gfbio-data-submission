@@ -53,6 +53,7 @@ export const prepareInitialValues = (submissionData) => {
 export const setStateFormValues = (state, action) => {
   return state
     .set('brokerSubmissionId', action.response.data.broker_submission_id)
+    .set('accessionId', action.response.data.accession_id)
     .set('initialValues', prepareInitialValues(action.response.data))
     .set('relatedPublications', fromJS(action.response.data.data.requirements.related_publications))
     .set('dataset_labels', fromJS(action.response.data.data.requirements.dataset_labels))
@@ -71,6 +72,7 @@ export const resetStateFormValues = (state, initialContributors = []) => {
     .set('metaDataIndex', '')
     // .set('metaDataFileName', '')
     .set('brokerSubmissionId', '')
+    .set('accessionId', '')
     .set('initialValues', {})
     .set('relatedPublications', fromJS([]))
     .set('dataset_labels', fromJS([]))

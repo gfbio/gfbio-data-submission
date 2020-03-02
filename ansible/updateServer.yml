@@ -1,0 +1,100 @@
+---
+- hosts: "{{ host }}"
+
+  remote_user: root
+
+  vars:
+    compose_file: 'production.yml'
+    workdir: '/var/www/gfbio_submissions/'
+    branch: 'develop'
+
+  gather_facts: no
+
+  tasks:
+
+    # Backup
+    - name: Backup database
+      shell: docker-compose -f {{ workdir }}{{ compose_file }} run --rm postgres backup
+      tags:
+        - backup
+
+    # Git stash and fetch
+    - name: Git stash and fetch
+      shell: cd {{ workdir }} && git stash && git fetch
+      tags:
+        - git
+
+    # GIT Checkout to develop and pull changes
+    - name: Checkout to {{ branch }} branch in git
+      shell: cd {{ workdir }} && git checkout {{ branch }} && git pull
+      tags:
+        - git
+
+    # Check if compose yml exists
+    - name: Get path to {{ compose_file }}
+      stat: path={{ workdir }}{{ compose_file }}
+      register: compose_file_present
+      tags:
+        - compose-file
+
+    - name: Check if {{ compose_file }} is missing
+      assert:
+        that:
+          - compose_file_present.stat.exists == true
+        msg: "{{ compose_file }} is missing"
+      tags:
+        - compose-file
+    # End Check if compose yml exists
+
+    - name: Copy .envs and traefik config
+      copy: src={{ item.src }} dest={{ item.dest }}
+      with_items:
+        - { src: '../.envs/.production/.django', dest: '{{ workdir }}.envs/.production/' }
+        - { src: '../.envs/.production/.postgres', dest: '{{ workdir }}.envs/.production/' }
+        - { src: '../compose/production/traefik/devserver-traefik.toml', dest: '{{ workdir }}compose/production/traefik/traefik.toml' }
+
+    - name: Get names of all running containers
+      shell: "docker ps --format 'table \t{{ '{{' }} .Names {{ '}}' }}'"
+      register: docker_containers
+
+    - name: Check if required containers are running
+      assert:
+        that:
+          - "'django' in docker_containers.stdout"
+          - "'postgres' in docker_containers.stdout"
+          - "'redis' in docker_containers.stdout"
+          - "'traefik' in docker_containers.stdout"
+          - "'celeryworker' in docker_containers.stdout"
+          - "'celerybeat' in docker_containers.stdout"
+          - "'flower' in docker_containers.stdout"
+        msg: "Required containers are not running"
+
+    # Prune not used images and volumes
+    - name: Docker prune not used images and volumes
+      shell: echo y | docker image prune && echo y | docker volume prune
+      tags:
+        - docker-prune
+
+    # Docker build
+    - name: Docker build
+      shell: docker-compose -f {{ workdir }}{{ compose_file }} build
+      tags:
+        - docker-build
+
+    # Django migrate
+    - name: Django migrate
+      shell: docker-compose -f {{ workdir }}{{ compose_file }} run --rm django python manage.py migrate
+      tags:
+        - django-migrate
+
+    # Django collectstatic
+    - name: Django collectstatic
+      shell: docker-compose -f {{ workdir }}{{ compose_file }} run --rm django python manage.py collectstatic
+      tags:
+        - django-static
+
+    # Restart docker containers
+    - supervisorctl:
+        name: devgfbiosubmissions
+        state: restarted
+
