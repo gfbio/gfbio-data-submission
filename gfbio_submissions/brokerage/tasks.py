@@ -265,10 +265,21 @@ def create_broker_objects_from_submission_data_task(
             task=self,
             include_closed=True
         )
+    logger.info('tasks.py | create_broker_objects_from_submission_data_task | '
+                'submission={0} | site_configuration={1}'.format(submission,
+                                                                 site_configuration))
     if submission == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | create_broker_objects_from_submission_data_task | '
+            ' do nothing because submission={0}'.format(
+                TaskProgressReport.CANCELLED))
         return TaskProgressReport.CANCELLED
 
     try:
+        logger.info(
+            'tasks.py | create_broker_objects_from_submission_data_task '
+            '| try delete broker objects and create new ones '
+            'from submission data')
         with transaction.atomic():
             submission.brokerobject_set.all().delete()
             BrokerObject.objects.add_submission_data(submission)
