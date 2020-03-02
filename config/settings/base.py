@@ -320,8 +320,8 @@ SOCIALACCOUNT_ADAPTER = "gfbio_submissions.users.adapters.SocialAccountAdapter"
 
 # GIT access for AuditableTextData
 # ------------------------------------------------------------------------------
-LOCAL_REPOSITORY = env("LOCAL_REPOSITORY")
-REMOTE_REPOSITORY = env("REMOTE_REPOSITORY")
+# LOCAL_REPOSITORY = env("LOCAL_REPOSITORY")
+# REMOTE_REPOSITORY = env("REMOTE_REPOSITORY")
 
 # OpenIDConnect SETTINGS
 # ------------------------------------------------------------------------------
