@@ -83,7 +83,10 @@ class TestEnalizer(TestCase):
         self.assertIn('<STUDY_SET>', study_xml)
         self.assertIn('<STUDY', study_xml)
         self.assertIn('<DESCRIPTOR>', study_xml)
-        self.assertIn('<STUDY_TYPE', study_xml)
+
+        # 02.03.2020: study_type was removed in Oct/Nov 2019 !
+        self.assertNotIn('<STUDY_TYPE', study_xml)
+
         self.assertIn('<STUDY_TITLE>', study_xml)
         self.assertIn('<STUDY_ABSTRACT>', study_xml)
         study_xml_standalone = enalizer.create_study_xml()

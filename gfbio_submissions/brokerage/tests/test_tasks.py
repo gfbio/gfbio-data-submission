@@ -2700,7 +2700,7 @@ class TestUpdatePersistentIdentifierReportStatusTask(TestTasks):
             site_object_id='obj001',
             data={
                 'center_name': 'GFBIO',
-                'study_type': 'Metagenomics',
+                # 'study_type': 'Metagenomics',
                 'study_abstract': 'abstract',
                 'study_title': 'title',
                 'study_alias': 'alias',

@@ -1638,7 +1638,8 @@ class TestCSVParsing(TestCase):
                          'sample_description': 'A description, with commmas, ...',
                          'sample_title': 'Sample No. 5',
                          'taxon_id': 1234}],
-            'study_type': 'Other'}
+            # 'study_type': 'Other'
+        }
         cls._strip(cls.expected_parse_result)
 
     def test_setUp_result(self):
