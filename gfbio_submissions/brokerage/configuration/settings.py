@@ -192,7 +192,6 @@ You can contact us at any point and we can set a new release date or release the
 Best Regards,
 the GFBio Data Submission Team""",
 
-
 )
 
 GFBIO_LICENSE_MAPPINGS = getattr(
@@ -327,16 +326,6 @@ GFBIO_REQUEST_TYPE_MAPPINGS = getattr(
         'default': 'generic'
     }
 )
-
-# MOLECULAR_REQUIREMENTS = getattr(
-#     settings,
-#     'MOLECULAR_REQUIREMENTS',
-#     {
-#         'study_type': 'Other',
-#         'samples': [],
-#         'experiments': [],
-#     }
-# )
 
 PANGAEA = getattr(
     settings,

@@ -278,7 +278,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             'broker_submission_id': content['broker_submission_id'],
             'issue': '',
             'data': {'optional_validation': [
-                "requirements : 'study_type' is a required property",
+                # "requirements : 'study_type' is a required property",
                 "requirements : 'samples' is a required property",
                 "requirements : 'experiments' is a required property"],
                 'requirements': {'description': 'A Description',
@@ -327,7 +327,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             'broker_submission_id': content['broker_submission_id'],
             'issue': '',
             'data': {'optional_validation': [
-                u"requirements : 'study_type' is a required property",
+                # u"requirements : 'study_type' is a required property",
                 u"requirements : 'samples' is a required property",
                 u"requirements : 'experiments' is a required property"],
                 'requirements': {'description': 'A Description',
@@ -383,7 +383,10 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         )
         self.assertEqual(400, response.status_code)
         self.assertNotIn(b'study_alias', response.content)
-        self.assertIn(b'study_type', response.content)
+
+        # 02.03.2020: study_type was removed in Oct/Nov 2019 !
+        self.assertNotIn(b'study_type', response.content)
+
         self.assertIn(b'samples', response.content)
         self.assertIn(b'experiments', response.content)
         self.assertEqual(0, len(Submission.objects.all()))

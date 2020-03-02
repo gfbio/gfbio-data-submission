@@ -40,7 +40,7 @@ class TestBrokerObjectManager(TestCase):
             site_object_id='obj001',
             json_data={
                 "center_name": "GFBIO",
-                "study_type": "Metagenomics",
+                # "study_type": "Metagenomics",
                 "study_abstract": "Study abstract",
                 "study_title": "study title",
                 "study_alias": "study_alias_1",
@@ -79,7 +79,7 @@ class TestBrokerObjectManager(TestCase):
             site_object_id='obj000999',
             json_data={
                 'center_name': 'GFBIO',
-                'study_type': 'Metagenomics',
+                # 'study_type': 'Metagenomics',
                 'study_abstract': 'abs',
                 'study_title': 't',
                 'study_alias': 'a',
@@ -312,7 +312,7 @@ class TestBrokerObjectManager(TestCase):
             '',
             {
                 "center_name": "no_valid_center",
-                "study_type": "Metagenomics",
+                # "study_type": "Metagenomics",
                 "study_abstract": "abs",
                 "study_title": "t",
                 "study_alias": "a",
@@ -329,7 +329,7 @@ class TestBrokerObjectManager(TestCase):
             obj.site_object_id,
             {
                 "center_name": "nice_valid_center",
-                "study_type": "Metagenomics",
+                # "study_type": "Metagenomics",
                 "study_abstract": "abs",
                 "study_title": "t",
                 "study_alias": "a",
@@ -348,7 +348,7 @@ class TestBrokerObjectManager(TestCase):
             'obj00099999',
             {
                 "center_name": "no_valid_center",
-                "study_type": "Metagenomics",
+                # "study_type": "Metagenomics",
                 "study_abstract": "abs",
                 "study_title": "t",
                 "study_alias": "a",
@@ -365,7 +365,7 @@ class TestBrokerObjectManager(TestCase):
             'obj00099999',
             {
                 "center_name": "nice_valid_center",
-                "study_type": "Metagenomics",
+                # "study_type": "Metagenomics",
                 "study_abstract": "abs",
                 "study_title": "t",
                 "study_alias": "a",

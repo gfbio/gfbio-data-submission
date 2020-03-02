@@ -223,7 +223,7 @@ class BrokerObjectManager(models.Manager):
             json_data={
                 'study_title': data['requirements']['title'],
                 'study_abstract': data['requirements']['description'],
-                'study_type': data['requirements']['study_type']
+                # 'study_type': data['requirements']['study_type']
             }
         )
         data['requirements']['site_object_id'] = obj.site_object_id

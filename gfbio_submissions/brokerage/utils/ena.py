@@ -191,9 +191,9 @@ class Enalizer(object):
         for item in root.findall('./STUDY/STUDY_ATTRIBUTES/item'):
             item.tag = 'STUDY_ATTRIBUTE'
 
-        study_type = root.find('./STUDY/DESCRIPTOR/STUDY_TYPE')
-        study_type.set('existing_study_type', study_type.text)
-        study_type.text = ''
+        # study_type = root.find('./STUDY/DESCRIPTOR/STUDY_TYPE')
+        # study_type.set('existing_study_type', study_type.text)
+        # study_type.text = ''
 
         study = root.find('./STUDY')
         study.set('alias', self.study_alias)
