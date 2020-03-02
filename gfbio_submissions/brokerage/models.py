@@ -674,6 +674,7 @@ class SubmissionUpload(TimeStampedModel):
                   'meta-data.'
     )
     file = models.FileField(
+        max_length=220,
         upload_to=submission_upload_path,
         storage=OverwriteStorage(),
         help_text='The actual file uploaded.',
