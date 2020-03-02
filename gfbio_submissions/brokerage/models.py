@@ -251,8 +251,14 @@ class Submission(TimeStampedModel):
     # TODO: this might be to specific for a general submission model ?
     # TODO: discuss general submission model with subclasses like molecular or similar
     download_url = models.URLField(default='', blank=True)
-    center_name = models.ForeignKey(CenterName, null=True,
-                                    on_delete=models.SET_NULL)
+    center_name = models.ForeignKey(
+        CenterName, null=True,
+        on_delete=models.SET_NULL,
+        help_text='NOTE: When changing the center_name you will have to '
+                  'manually create new XML to get XML containing the '
+                  'updated center_name. Do so by trigger the '
+                  '"Re-Create XML (ENA)" admin action.'
+    )
 
     data = JsonDictField(default=dict)
     # default to today + 1 year
