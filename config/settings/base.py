@@ -6,7 +6,7 @@ import environ
 
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
-VERSION = '1.88.1'
+VERSION = '1.89.0'
 
 ROOT_DIR = (
         environ.Path(__file__) - 3
@@ -320,8 +320,8 @@ SOCIALACCOUNT_ADAPTER = "gfbio_submissions.users.adapters.SocialAccountAdapter"
 
 # GIT access for AuditableTextData
 # ------------------------------------------------------------------------------
-LOCAL_REPOSITORY = env("LOCAL_REPOSITORY")
-REMOTE_REPOSITORY = env("REMOTE_REPOSITORY")
+# LOCAL_REPOSITORY = env("LOCAL_REPOSITORY")
+# REMOTE_REPOSITORY = env("REMOTE_REPOSITORY")
 
 # OpenIDConnect SETTINGS
 # ------------------------------------------------------------------------------

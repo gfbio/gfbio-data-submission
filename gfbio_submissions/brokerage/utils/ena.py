@@ -191,9 +191,9 @@ class Enalizer(object):
         for item in root.findall('./STUDY/STUDY_ATTRIBUTES/item'):
             item.tag = 'STUDY_ATTRIBUTE'
 
-        study_type = root.find('./STUDY/DESCRIPTOR/STUDY_TYPE')
-        study_type.set('existing_study_type', study_type.text)
-        study_type.text = ''
+        # study_type = root.find('./STUDY/DESCRIPTOR/STUDY_TYPE')
+        # study_type.set('existing_study_type', study_type.text)
+        # study_type.text = ''
 
         study = root.find('./STUDY')
         study.set('alias', self.study_alias)
@@ -882,10 +882,10 @@ def update_persistent_identifier_report_status():
                 if sec_id and status:
                     PersistentIdentifier.objects.filter(pid=sec_id).update(
                         status=status)
-            # return True
+            return True
         else:
             logger.warning(
                 'ena.py | update_persistent_identifier_report_status '
                 '| found {0} occurences for report of type={1} found'.format(
                     len(reports), report_name))
-            # return False
+            return False

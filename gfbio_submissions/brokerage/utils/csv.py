@@ -322,7 +322,7 @@ def parse_molecular_csv(csv_file):
         restval='extra_value_found',
     )
     molecular_requirements = {
-        'study_type': 'Other',
+        # 'study_type': 'Other',
         'samples': [],
         'experiments': [],
     }

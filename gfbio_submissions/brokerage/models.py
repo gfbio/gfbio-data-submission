@@ -1,19 +1,14 @@
 # -*- coding: utf-8 -*-
-import json
 import logging
 import os
 import uuid
 
 from django.contrib.postgres.fields import JSONField
-from django.core import serializers
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db.models import Q
-from django.utils.encoding import smart_text
-from git import Repo
 from model_utils.models import TimeStampedModel
 
-from config.settings.base import AUTH_USER_MODEL, LOCAL_REPOSITORY
+from config.settings.base import AUTH_USER_MODEL
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
     DEFAULT_ENA_CENTER_NAME
 from gfbio_submissions.brokerage.managers import SubmissionUploadManager
@@ -256,8 +251,14 @@ class Submission(TimeStampedModel):
     # TODO: this might be to specific for a general submission model ?
     # TODO: discuss general submission model with subclasses like molecular or similar
     download_url = models.URLField(default='', blank=True)
-    center_name = models.ForeignKey(CenterName, null=True,
-                                    on_delete=models.SET_NULL)
+    center_name = models.ForeignKey(
+        CenterName, null=True,
+        on_delete=models.SET_NULL,
+        help_text='NOTE: When changing the center_name you will have to '
+                  'manually create new XML to get XML containing the '
+                  'updated center_name. Do so by trigger the '
+                  '"Re-Create XML (ENA)" admin action.'
+    )
 
     data = JsonDictField(default=dict)
     # default to today + 1 year
@@ -272,7 +273,8 @@ class Submission(TimeStampedModel):
     def get_accession_id(self):
         try:
             broker_obj = self.brokerobject_set.filter(type='study')
-            persistent_obj = broker_obj[0].persistentidentifier_set.filter(pid_type='PRJ')
+            persistent_obj = broker_obj[0].persistentidentifier_set.filter(
+                pid_type='PRJ')
             return persistent_obj[0].pid
         except IndexError:
             return ''
@@ -678,6 +680,7 @@ class SubmissionUpload(TimeStampedModel):
                   'meta-data.'
     )
     file = models.FileField(
+        max_length=220,
         upload_to=submission_upload_path,
         storage=OverwriteStorage(),
         help_text='The actual file uploaded.',
@@ -750,29 +753,29 @@ class AuditableTextData(TimeStampedModel):
             is_update = True
         super(AuditableTextData, self).save(*args, **kwargs)
 
-        serialized = serializers.serialize('json', [self, ],
-                                           cls=DjangoJSONEncoder)
-        serialized_file_name = '{0}.json'.format(self.__str__())
-
-        repo = Repo(LOCAL_REPOSITORY)
-        index = repo.index
-
-        serialized_file_path = os.path.join(repo.working_tree_dir,
-                                            serialized_file_name)
-        dumped = json.dumps(smart_text(serialized), indent=4,
-                            sort_keys=True)
-        with open(serialized_file_path, 'w') as serialization_file:
-            serialization_file.write(
-                dumped
-            )
-        index.add([serialized_file_path])
-        if not is_update:
-            msg = 'add new AuditableTextData serialization {0}'.format(
-                serialized_file_name)
-        else:
-            msg = 'update AuditableTextData serialization {0}'.format(
-                serialized_file_name)
-        index.commit(msg)
+        # serialized = serializers.serialize('json', [self, ],
+        #                                    cls=DjangoJSONEncoder)
+        # serialized_file_name = '{0}.json'.format(self.__str__())
+        #
+        # repo = Repo(LOCAL_REPOSITORY)
+        # index = repo.index
+        #
+        # serialized_file_path = os.path.join(repo.working_tree_dir,
+        #                                     serialized_file_name)
+        # dumped = json.dumps(smart_text(serialized), indent=4,
+        #                     sort_keys=True)
+        # with open(serialized_file_path, 'w') as serialization_file:
+        #     serialization_file.write(
+        #         dumped
+        #     )
+        # index.add([serialized_file_path])
+        # if not is_update:
+        #     msg = 'add new AuditableTextData serialization {0}'.format(
+        #         serialized_file_name)
+        # else:
+        #     msg = 'update AuditableTextData serialization {0}'.format(
+        #         serialized_file_name)
+        # index.commit(msg)
 
     def __str__(self):
         return 'AuditableTextData_{0}'.format(self.data_id)

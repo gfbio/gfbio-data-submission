@@ -2,7 +2,6 @@
     "requirements": {
         "title": "Simple ENA Data",
         "description": "Reduced Data for testing",
-        "study_type": "Metagenomics",
         "samples": [
             {
                 "sample_alias": "sample1",
