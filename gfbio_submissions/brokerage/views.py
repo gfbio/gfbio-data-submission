@@ -9,16 +9,13 @@ from rest_framework.authentication import TokenAuthentication, \
     BasicAuthentication
 from rest_framework.response import Response
 
-from gfbio_submissions.brokerage.configuration.settings import \
-    SUBMISSION_UPLOAD_RETRY_DELAY
-from gfbio_submissions.brokerage.forms import SubmissionCommentForm
-from gfbio_submissions.brokerage.serializers import \
-    SubmissionUploadListSerializer
 from gfbio_submissions.users.models import User
-from .configuration.settings import SUBMISSION_DELAY
+from .configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY, \
+    SUBMISSION_DELAY
+from .forms import SubmissionCommentForm
 from .models import Submission, RequestLog, SubmissionUpload
 from .permissions import IsOwnerOrReadOnly
-from .serializers import \
+from .serializers import SubmissionUploadListSerializer, \
     SubmissionDetailSerializer, SubmissionUploadSerializer
 
 
@@ -33,16 +30,6 @@ class SubmissionsView(mixins.ListModelMixin,
                           IsOwnerOrReadOnly)
 
     def perform_create(self, serializer):
-        # TODO:
-        #  - only if reqular submit -> release=True
-        #  - if target ENA ect proceed as usual ...
-        #  - if target ENA but data.requirements.data_center available and not contain ENA:
-        #       - change target to GENERIC (... change back/correct ...)
-        #  - if target GENERIC and data.requirements.data_center contains ENA:
-        #       - change target to ENA
-        #       - check for single pr.datafile, if multiple cancel ..
-        #       - try to parse as csv, cancle on error
-        #       - add json to submission (store validation errors ?)
         submission = serializer.save(site=self.request.user, )
         with transaction.atomic():
             RequestLog.objects.create(
@@ -63,12 +50,6 @@ class SubmissionsView(mixins.ListModelMixin,
             submission_id=submission.pk
         ).set(countdown=SUBMISSION_DELAY)
         chain()
-        # trigger_submission_transfer.apply_async(
-        #     kwargs={
-        #         'submission_id': submission.pk,
-        #     },
-        #     countdown=SUBMISSION_DELAY
-        # )
 
     def get_queryset(self):
         site = self.request.user
@@ -104,7 +85,8 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         return response
 
     def put(self, request, *args, **kwargs):
-        instance = self.get_object()  #
+        instance = self.get_object()
+
         # TODO: 06.06.2019 allow edit of submissions with status SUBMITTED ...
         if instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED:
             response = self.update(request, *args, **kwargs)
@@ -205,15 +187,6 @@ class SubmissionUploadView(mixins.CreateModelMixin,
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
-
-    # # TODO: per user filter ?
-    # def get_queryset(self):
-    #     broker_submission_id = self.kwargs.get('broker_submission_id', uuid4())
-    #     return SubmissionUpload.objects.filter(
-    #         submission__broker_submission_id=broker_submission_id)
-    #
-    # def get(self, request, *args, **kwargs):
-    #     return self.list(request, *args, **kwargs)
 
 
 class SubmissionUploadListView(generics.ListAPIView):
@@ -316,9 +289,6 @@ class SubmissionCommentView(generics.GenericAPIView):
     lookup_field = 'broker_submission_id'
     queryset = Submission.objects.all()
     serializer_class = SubmissionDetailSerializer
-
-    # def get(self, request, *args, **kwargs):
-    #     return HttpResponse('comment get result')
 
     @staticmethod
     def _process_post_comment(broker_submission_id, comment):
