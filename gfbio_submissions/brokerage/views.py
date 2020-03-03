@@ -100,7 +100,8 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                 update_submission_issue_task, get_gfbio_helpdesk_username_task
 
             update_chain = get_gfbio_helpdesk_username_task.s(
-                submission_id=instance.pk).set(countdown=SUBMISSION_DELAY) \
+                submission_id=instance.pk).set(
+                countdown=SUBMISSION_DELAY) \
                            | update_submission_issue_task.s(
                 submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
             update_chain()
@@ -110,8 +111,7 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
             ).set(countdown=SUBMISSION_DELAY) | \
                     trigger_submission_transfer_for_updates.s(
                         broker_submission_id='{0}'.format(
-                            instance.broker_submission_id
-                        )
+                            instance.broker_submission_id)
                     ).set(countdown=SUBMISSION_DELAY)
             chain()
 

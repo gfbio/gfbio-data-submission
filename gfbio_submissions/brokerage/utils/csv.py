@@ -454,6 +454,6 @@ def check_for_molecular_content(submission):
     #     return False, ['no criteria matched']
     logger.info(
         msg='check_for_molecular_content  | finished | return status={0} '
-            'messages={1} check_performed={2}'.format(status, messages,
+            'messages={1} molecular_data_check_performed={2}'.format(status, messages,
                                                       check_performed))
     return status, messages, check_performed

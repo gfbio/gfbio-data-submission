@@ -12,36 +12,31 @@ from kombu.utils import json
 from requests import ConnectionError, Response
 
 from config.settings.base import HOST_URL_ROOT, ADMIN_URL
-from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, \
-    PANGAEA_ISSUE_VIEW_URL, SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME, \
+from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
+from gfbio_submissions.users.models import User
+from .configuration.settings import ENA, ENA_PANGAEA, PANGAEA_ISSUE_VIEW_URL, \
+    SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME, \
     JIRA_FALLBACK_EMAIL, APPROVAL_EMAIL_SUBJECT_TEMPLATE, \
     APPROVAL_EMAIL_MESSAGE_TEMPLATE, JIRA_ACCESSION_COMMENT_TEMPLATE
-from gfbio_submissions.brokerage.exceptions import TransferServerError, \
-    TransferClientError
-from gfbio_submissions.brokerage.models import SubmissionUpload, EnaReport
-from gfbio_submissions.brokerage.utils.csv import \
-    check_for_molecular_content, parse_molecular_csv
-from gfbio_submissions.brokerage.utils.gfbio import get_gfbio_helpdesk_username
-from gfbio_submissions.brokerage.utils.jira import JiraClient
-from gfbio_submissions.brokerage.utils.schema_validation import \
-    validate_data_full
-from gfbio_submissions.brokerage.utils.task_utils import jira_error_auto_retry, \
+from .configuration.settings import SUBMISSION_MAX_RETRIES, \
+    SUBMISSION_RETRY_DELAY
+from .exceptions import TransferServerError, TransferClientError
+from .models import BrokerObject, AuditableTextData, RequestLog, \
+    AdditionalReference, TaskProgressReport, Submission, SiteConfiguration
+from .models import SubmissionUpload, EnaReport
+from .utils.csv import check_for_molecular_content, parse_molecular_csv
+from .utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data, \
+    send_submission_to_ena, parse_ena_submission_response, fetch_ena_report, \
+    update_persistent_identifier_report_status
+from .utils.gfbio import get_gfbio_helpdesk_username
+from .utils.jira import JiraClient
+from .utils.pangaea import pull_pangaea_dois
+from .utils.schema_validation import validate_data_full
+from .utils.submission_transfer import SubmissionTransferHandler
+from .utils.task_utils import jira_error_auto_retry, \
     get_submission_and_site_configuration, raise_transfer_server_exceptions, \
     retry_no_ticket_available_exception, \
     get_submitted_submission_and_site_configuration
-from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
-from gfbio_submissions.users.models import User
-from .configuration.settings import SUBMISSION_MAX_RETRIES, \
-    SUBMISSION_RETRY_DELAY
-from .models import BrokerObject, \
-    AuditableTextData, RequestLog, AdditionalReference, TaskProgressReport, \
-    Submission, SiteConfiguration
-from .utils.ena import prepare_ena_data, \
-    store_ena_data_as_auditable_text_data, send_submission_to_ena, \
-    parse_ena_submission_response, fetch_ena_report, \
-    update_persistent_identifier_report_status
-from .utils.pangaea import pull_pangaea_dois
-from .utils.submission_transfer import SubmissionTransferHandler
 
 logger = logging.getLogger(__name__)
 
@@ -51,14 +46,9 @@ logger = logging.getLogger(__name__)
 class SubmissionTask(Task):
     abstract = True
 
-    # also existing
-    #   - on_bound
-
     # TODO: consider a report for every def here OR refactor taskreport to
     #  keep track in one report. Keep in mind to resume chains from a certain
     #  point, add a DB clean up task to remove from database
-
-    # logger.info('SubmissionTask | instanced ')
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
         logger.info('tasks.py | SubmissionTask | on_retry | task_id={0} | '
@@ -126,11 +116,10 @@ def check_for_molecular_content_in_submission_task(self, submission_id=None):
             ''.format(molecular_data_available)
     )
 
-    # return molecular_data_available, errors, check_performed
     return {
         'molecular_data_available': molecular_data_available,
         'messages': messages,
-        'check_performed': check_performed,
+        'molecular_data_check_performed': check_performed,
     }
 
 
@@ -138,18 +127,14 @@ def check_for_molecular_content_in_submission_task(self, submission_id=None):
              name='tasks.trigger_submission_transfer', )
 def trigger_submission_transfer(self, previous_task_result=None,
                                 submission_id=None):
-    print('\n\n--------------------------------\n')
-
-    print('trigger_subm_transfer prev res ', previous_task_result, ' ',
-          type(previous_task_result))
     molecular_data_available = False
-    messages = []
     check_performed = False
+
     if isinstance(previous_task_result, dict):
         molecular_data_available = previous_task_result.get(
             'molecular_data_available', False)
-        messages = previous_task_result.get('messages', [])
-        check_performed = previous_task_result.get('check_performed', False)
+        check_performed = previous_task_result.get(
+            'molecular_data_check_performed', False)
 
     logger.info(
         msg='trigger_submission_transfer. get submission with pk={}.'.format(
@@ -166,8 +151,8 @@ def trigger_submission_transfer(self, previous_task_result=None,
     transfer_handler = SubmissionTransferHandler(
         submission_id=submission.pk,
         target_archive=submission.target,
-        molecular_data=molecular_data_available,
-        check_performed=check_performed
+        molecular_data_found=molecular_data_available,
+        molecular_data_check_performed=check_performed
     )
     transfer_handler.initiate_submission_process(
         release=submission.release,
@@ -178,19 +163,13 @@ def trigger_submission_transfer(self, previous_task_result=None,
              name='tasks.trigger_submission_transfer_for_updates', )
 def trigger_submission_transfer_for_updates(self, previous_task_result=None,
                                             broker_submission_id=None):
-    print('\n\n--------------------------------\n')
-
-    print('trigger_submission_transfer_for_updates prev res ',
-          previous_task_result, ' ',
-          type(previous_task_result))
     molecular_data_available = False
-    messages = []
     check_performed = False
     if isinstance(previous_task_result, dict):
         molecular_data_available = previous_task_result.get(
             'molecular_data_available', False)
-        messages = previous_task_result.get('messages', [])
-        check_performed = previous_task_result.get('check_performed', False)
+        check_performed = previous_task_result.get(
+            'molecular_data_check_performed', False)
 
     logger.info(
         msg='trigger_submission_transfer_for_updates. get submission_id with broker_submission_id={}.'.format(
@@ -209,8 +188,8 @@ def trigger_submission_transfer_for_updates(self, previous_task_result=None,
     transfer_handler = SubmissionTransferHandler(
         submission_id=submission.pk,
         target_archive=submission.target,
-        molecular_data=molecular_data_available,
-        check_performed=check_performed
+        molecular_data_found=molecular_data_available,
+        molecular_data_check_performed=check_performed
     )
     transfer_handler.initiate_submission_process(
         release=submission.release,
@@ -463,7 +442,6 @@ def clean_submission_for_update_task(self, previous_task_result=None,
             data.get('requirements', {}).pop(k)
 
     with transaction.atomic():
-        # submission_upload.submission.data = data  # --> shallow copy, assignment no needed
         submission_upload.submission.save()
     return True
 
@@ -528,7 +506,6 @@ def parse_csv_to_update_clean_submission_task(self, previous_task_result=None,
             return True
 
 
-# TODO: result of this task is input for next task
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -574,7 +551,6 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None):
         response.content)
 
 
-# TODO: this one relies on prevoius task: transfer_data_to_ena_task
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -655,8 +631,6 @@ def create_pangaea_issue_task(self, prev=None, submission_id=None):
         }
 
 
-# TODO: this one relies on prevoius task: create_pangaea_issue_task
-# TODO: this task relies on additional kwargs, as returned from task above
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -699,8 +673,6 @@ def add_accession_to_pangaea_issue_task(self, kwargs=None, submission_id=None):
         return TaskProgressReport.CANCELLED
 
 
-# TODO: this one relies on prevoius task: attach_to_pangaea_issue_task
-# TODO: this task relies on additional kwargs, as returned from task above
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -791,36 +763,26 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
             'tasks.py | get_gfbio_helpdesk_username_task | return TaskProgressReport.CANCELLED')
         return TaskProgressReport.CANCELLED
 
-    # result = {}
     user_name = JIRA_FALLBACK_USERNAME
     user_email = JIRA_FALLBACK_EMAIL
     user_full_name = ''
-    # result['name'] = user_name
     result = {
         'jira_user_name': user_name,
         'email': user_email,
         'full_name': user_full_name
     }
-    # submitting user is site specific. e.g. local django user id = 1 is
-    # different from silva user id = 1
     if len(submission.submitting_user) == 0:
         logger.info(
             'tasks.py | get_gfbio_helpdesk_username_task | '
             'len(submission.submitting_user) == 0 | return {0}'.format(result))
         return result
 
-    # 'local_site' includes sso, local users, social accounts
-    # (which have local shadow accounts)
     if submission.site.username == HOSTING_SITE:
         try:
             logger.info(
                 'tasks.py | get_gfbio_helpdesk_username_task | try getting a local user | submission={1} | submitting_user={1}'.format(
                     submission.broker_submission_id, submission.submitting_user)
             )
-            # FIXME: tricky if submitting user is a numerical id from another
-            #  system, worst case would be an accidental match with a local user
-            # works only based on the assumption that this is actually a
-            # local user
             user = User.objects.get(pk=int(submission.submitting_user))
             user_name = user.goesternid if user.goesternid else user.username
             user_email = user.email
@@ -867,8 +829,6 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
         max_retries=SUBMISSION_MAX_RETRIES
     )
 
-    # in case of hosting site users, client or server errors 4xx/5xx will return
-    # JIRA_FALLBACK_USERNAME but with user email & fullname
     if response.status_code == 200:
         result['jira_user_name'] = smart_text(response.content)
 
@@ -956,15 +916,8 @@ def update_submission_issue_task(self, prev_task_result=None,
                                      broker_submission_id=submission.broker_submission_id)
     else:
         return TaskProgressReport.CANCELLED
-        # return retry_no_ticket_available_exception(
-        #     task=self,
-        #     broker_submission_id=submission.broker_submission_id,
-        #     number_of_tickets=1 if reference else 0
-        # )
 
 
-# TODO: examine all tasks for redundant code and possible generalization e.g.:
-# TODO: more generic like update above
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -1035,16 +988,10 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
                     primary_accession=study_pid.pid
                 )
             )
-            # text='Submission to ENA has been successful. '
-            #      'Study is accessible via ENA Accession No. {0}. '
-            #      'broker_submission_id: {1}.'.format(study_pid.pid,
-            #                                          submission.broker_submission_id))
             return jira_error_auto_retry(jira_client=jira_client, task=self,
                                          broker_submission_id=submission.broker_submission_id)
 
 
-# TODO: examine all tasks for redundant code and possible generalization e.g.:
-# TODO: more generic like update above
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -1206,19 +1153,11 @@ def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
                 'submission_id={0} | submission_upload_id={1}'
                 ''.format(submission_id, submission_upload_id))
 
-        # apply_timebased_task_retry_policy(
-        #     task=attach_to_submission_issue_task,
-        #     submission=submission,
-        #     no_of_tickets=1 if reference else 0
-        #     # always 1 if available due to filter rules
-        # )
         return retry_no_ticket_available_exception(
             task=self,
             broker_submission_id=submission.broker_submission_id,
             number_of_tickets=1 if reference else 0
         )
-
-        # return False
 
 
 @celery.task(
@@ -1400,5 +1339,4 @@ def update_persistent_identifier_report_status_task(self):
         msg='tasks.py | update_persistent_identifier_report_status_task '
             '| success={0}'.format(success))
 
-    # return success if success else TaskProgressReport.CANCELLED
     return True
