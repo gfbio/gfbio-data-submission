@@ -118,7 +118,7 @@ def check_for_molecular_content_in_submission_task(self, submission_id=None):
         msg='check_for_molecular_content_in_submission_task. '
             'process submission={}.'.format(submission.broker_submission_id))
 
-    molecular_data_available, errors = check_for_molecular_content(submission)
+    molecular_data_available, errors, check_performed = check_for_molecular_content(submission)
     logger.info(
         msg='check_for_molecular_content_in_submission_task. '
             'valid molecular data available={0}'

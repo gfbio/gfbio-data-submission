@@ -188,6 +188,8 @@ class TestInitialChainTasks(TestCase):
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
+
+
     @responses.activate
     def test_max_post_without_release_initial_chain(self):
         self._add_create_ticket_response()
@@ -2462,6 +2464,49 @@ class TestTaskChains(TestTasks):
 
         self.assertLess(len_auditable_data,
                         len(AuditableTextData.objects.all()))
+
+    # @responses.activate
+    # def test_check_molecular_content_in_initial_chain(self):
+    #     user = User.objects.first()
+    #     submission = Submission.objects.first()
+    #     submission.submitting_user = '{0}'.format(user.pk)
+    #     submission.save()
+    #     site_config = SiteConfiguration.objects.first()
+    #
+    #     # len_auditable_data = len(AuditableTextData.objects.all())
+    #
+    #     url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
+    #         '0815', 'khors@me.de',
+    #         'Kevin Horstmeier'
+    #     )
+    #     responses.add(responses.GET, url, body=b'deleteMe', status=200)
+    #     responses.add(
+    #         responses.GET,
+    #         '{0}/rest/api/2/field'.format(site_config.helpdesk_server.url),
+    #         status=200,
+    #     )
+    #     responses.add(responses.POST,
+    #                   '{0}{1}'.format(site_config.helpdesk_server.url,
+    #                                   JIRA_ISSUE_URL
+    #                                   ),
+    #                   json={'bla': 'blubb'},
+    #                   status=200)
+    #
+    #     responses.add(
+    #         responses.POST,
+    #         '{0}{1}/{2}/{3}'.format(
+    #             site_config.helpdesk_server.url,
+    #             JIRA_ISSUE_URL,
+    #             'FAKE_KEY',
+    #             JIRA_COMMENT_SUB_URL,
+    #         ),
+    #         json={'bla': 'blubb'},
+    #         status=200)
+    #
+    #     trigger_submission_transfer(submission_id=submission.id)
+    #
+    #     # self.assertLess(len_auditable_data,
+    #     #                 len(AuditableTextData.objects.all()))
 
 
 class TestTaskProgressReportInTasks(TestTasks):
