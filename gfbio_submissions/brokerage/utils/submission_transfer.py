@@ -9,9 +9,13 @@ logger = logging.getLogger(__name__)
 
 class SubmissionTransferHandler(object):
 
-    def __init__(self, submission_id, target_archive):
+    # TODO: bette names for molecular_data and check_performed ?
+    def __init__(self, submission_id, target_archive, molecular_data=False,
+                 check_performed=False):
         self.target_archive = target_archive
         self.submission_id = submission_id
+        self.molecular_data = molecular_data
+        self.check_performed = check_performed
 
     def pre_process_molecular_data_chain(self):
         from gfbio_submissions.brokerage.tasks import \
@@ -62,7 +66,9 @@ class SubmissionTransferHandler(object):
                     ''.format(self.target_archive)
                 )
                 # if molecular_data_available:
-                chain = chain | self.pre_process_molecular_data_chain()
+                if not self.check_performed or (
+                        self.check_performed and self.molecular_data):
+                    chain = chain | self.pre_process_molecular_data_chain()
         elif not update:
             chain = get_gfbio_helpdesk_username_task.s(
                 submission_id=self.submission_id).set(
@@ -77,7 +83,9 @@ class SubmissionTransferHandler(object):
                 if self.target_archive == ENA \
                         or self.target_archive == ENA_PANGAEA:
                     # if molecular_data_available:
-                    chain = chain | self.pre_process_molecular_data_chain()
+                    if not self.check_performed or (
+                            self.check_performed and self.molecular_data):
+                        chain = chain | self.pre_process_molecular_data_chain()
         else:
             return None
         chain()

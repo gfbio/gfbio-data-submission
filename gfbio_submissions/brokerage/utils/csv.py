@@ -408,10 +408,10 @@ def check_for_molecular_content(submission):
                 msg='check_for_molecular_content | '
                     'invalid no. of meta_data_files, {0} | return=False'
                     ''.format(no_of_meta_data_files))
-            return False, [
-                'invalid no. of meta_data_files, {0}'.format(
-                    no_of_meta_data_files)
-            ]
+            messages = ['invalid no. of meta_data_files, '
+                        '{0}'.format(no_of_meta_data_files)]
+            return status, messages, check_performed
+
         meta_data_file = meta_data_files.first()
         with open(meta_data_file.file.path, 'r') as file:
             molecular_requirements = parse_molecular_csv(

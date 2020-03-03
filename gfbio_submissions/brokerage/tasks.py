@@ -118,15 +118,19 @@ def check_for_molecular_content_in_submission_task(self, submission_id=None):
         msg='check_for_molecular_content_in_submission_task. '
             'process submission={}.'.format(submission.broker_submission_id))
 
-    molecular_data_available, errors, check_performed = check_for_molecular_content(submission)
+    molecular_data_available, messages, check_performed = check_for_molecular_content(
+        submission)
     logger.info(
         msg='check_for_molecular_content_in_submission_task. '
             'valid molecular data available={0}'
             ''.format(molecular_data_available)
     )
+
+    # return molecular_data_available, errors, check_performed
     return {
         'molecular_data_available': molecular_data_available,
-        'errors': errors,
+        'messages': messages,
+        'check_performed': check_performed,
     }
 
 
@@ -134,6 +138,19 @@ def check_for_molecular_content_in_submission_task(self, submission_id=None):
              name='tasks.trigger_submission_transfer', )
 def trigger_submission_transfer(self, previous_task_result=None,
                                 submission_id=None):
+    print('\n\n--------------------------------\n')
+
+    print('trigger_subm_transfer prev res ', previous_task_result, ' ',
+          type(previous_task_result))
+    molecular_data_available = False
+    messages = []
+    check_performed = False
+    if isinstance(previous_task_result, dict):
+        molecular_data_available = previous_task_result.get(
+            'molecular_data_available', False)
+        messages = previous_task_result.get('messages', [])
+        check_performed = previous_task_result.get('check_performed', False)
+
     logger.info(
         msg='trigger_submission_transfer. get submission with pk={}.'.format(
             submission_id)
@@ -148,7 +165,9 @@ def trigger_submission_transfer(self, previous_task_result=None,
 
     transfer_handler = SubmissionTransferHandler(
         submission_id=submission.pk,
-        target_archive=submission.target
+        target_archive=submission.target,
+        molecular_data=molecular_data_available,
+        check_performed=check_performed
     )
     transfer_handler.initiate_submission_process(
         release=submission.release,
@@ -159,6 +178,20 @@ def trigger_submission_transfer(self, previous_task_result=None,
              name='tasks.trigger_submission_transfer_for_updates', )
 def trigger_submission_transfer_for_updates(self, previous_task_result=None,
                                             broker_submission_id=None):
+    print('\n\n--------------------------------\n')
+
+    print('trigger_submission_transfer_for_updates prev res ',
+          previous_task_result, ' ',
+          type(previous_task_result))
+    molecular_data_available = False
+    messages = []
+    check_performed = False
+    if isinstance(previous_task_result, dict):
+        molecular_data_available = previous_task_result.get(
+            'molecular_data_available', False)
+        messages = previous_task_result.get('messages', [])
+        check_performed = previous_task_result.get('check_performed', False)
+
     logger.info(
         msg='trigger_submission_transfer_for_updates. get submission_id with broker_submission_id={}.'.format(
             broker_submission_id)
@@ -175,7 +208,9 @@ def trigger_submission_transfer_for_updates(self, previous_task_result=None,
 
     transfer_handler = SubmissionTransferHandler(
         submission_id=submission.pk,
-        target_archive=submission.target
+        target_archive=submission.target,
+        molecular_data=molecular_data_available,
+        check_performed=check_performed
     )
     transfer_handler.initiate_submission_process(
         release=submission.release,

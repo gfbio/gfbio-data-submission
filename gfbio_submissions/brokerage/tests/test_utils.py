@@ -2027,7 +2027,7 @@ class TestCSVParsing(TestCase):
                                           'csv_files/SO45_missing_mixs_values.csv'
                                           )
 
-        is_mol_content, errors = check_for_molecular_content(submission)
+        is_mol_content, errors, check_performed = check_for_molecular_content(submission)
         self.assertTrue(is_mol_content)
 
         BrokerObject.objects.add_submission_data(submission)
@@ -2052,7 +2052,7 @@ class TestCSVParsing(TestCase):
                                           'csv_files/SO45_mod.csv'
                                           )
 
-        is_mol_content, errors = check_for_molecular_content(submission)
+        is_mol_content, errors, check_performed = check_for_molecular_content(submission)
         self.assertTrue(is_mol_content)
 
         BrokerObject.objects.add_submission_data(submission)
@@ -2074,7 +2074,7 @@ class TestCSVParsing(TestCase):
 
         self.create_csv_submission_upload(submission, User.objects.first(),
                                           'csv_files/SO45_mixed_cases.csv')
-        is_mol_content, errors = check_for_molecular_content(submission)
+        is_mol_content, errors, check_performed = check_for_molecular_content(submission)
         self.assertTrue(is_mol_content)
         self.assertListEqual([], errors)
 
@@ -2085,7 +2085,7 @@ class TestCSVParsing(TestCase):
         self.create_csv_submission_upload(submission, User.objects.first(),
                                           'csv_files/dsub-269_template.csv')
 
-        is_mol_content, errors = check_for_molecular_content(submission)
+        is_mol_content, errors, check_performed = check_for_molecular_content(submission)
         self.assertTrue(is_mol_content)
         BrokerObject.objects.add_submission_data(submission)
         self.assertEqual(25,
@@ -2115,7 +2115,7 @@ class TestCSVParsing(TestCase):
         self.assertNotIn('samples', submission.data['requirements'].keys())
         self.assertNotIn('experiments', submission.data['requirements'].keys())
 
-        is_mol_content, errors = check_for_molecular_content(submission)
+        is_mol_content, errors, check_performed = check_for_molecular_content(submission)
 
         self.assertTrue(is_mol_content)
         self.assertListEqual([], errors)
@@ -2126,14 +2126,18 @@ class TestCSVParsing(TestCase):
 
     def test_check_content_on_submission_with_molecular_data(self):
         submission = Submission.objects.first()
-        is_mol_content, errors = check_for_molecular_content(submission)
+        is_mol_content, errors, check_performed = check_for_molecular_content(submission)
         submission = Submission.objects.first()
+        self.assertTrue(is_mol_content)
+        self.assertTrue(check_performed)
         self.assertIn('samples', submission.data['requirements'].keys())
         self.assertIn('experiments', submission.data['requirements'].keys())
 
         previous_length = len(
             submission.data.get('requirements', {}).get('experiments', []))
-        is_mol_content, errors = check_for_molecular_content(submission)
+        is_mol_content, errors, check_performed = check_for_molecular_content(submission)
+        self.assertTrue(is_mol_content)
+        self.assertTrue(check_performed)
         submission = Submission.objects.first()
         current_length = len(
             submission.data.get('requirements', {}).get('experiments', []))
@@ -2154,7 +2158,7 @@ class TestCSVParsing(TestCase):
 
         self.create_csv_submission_upload(submission, User.objects.first(),
                                           'csv_files/Data_submission_SAGs.csv')
-        is_mol_content, errors = check_for_molecular_content(submission)
+        is_mol_content, errors, check_performed = check_for_molecular_content(submission)
         self.assertTrue(is_mol_content)
         samples = submission.data.get('requirements', {}).get('samples', [])
         self.assertEqual(1, len(samples))

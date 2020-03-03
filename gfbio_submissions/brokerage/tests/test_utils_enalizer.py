@@ -107,6 +107,8 @@ class TestEnalizer(TestCase):
         self.assertEqual(study_xml, smart_text(study_xml_standalone))
 
     def test_sample_xml(self):
+
+        self.maxDiff = None
         submission = Submission.objects.first()
         enalizer = Enalizer(submission, 'test-enalizer-sample')
         data = enalizer.prepare_submission_data()
