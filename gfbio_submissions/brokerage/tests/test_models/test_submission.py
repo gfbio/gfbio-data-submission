@@ -82,8 +82,8 @@ class SubmissionTest(TestCase):
                 'title'],
             'study_abstract': self.data.get('requirements')[
                 'description'],
-            'study_type': self.data.get('requirements')[
-                'study_type']
+            # 'study_type': self.data.get('requirements')[
+            #     'study_type']
         }
         self.assertDictEqual(ena_study, submission.get_study_json())
 
