@@ -3,7 +3,6 @@ import base64
 import json
 import os
 import uuid
-from pprint import pprint
 from unittest import skip
 from unittest.mock import patch
 from urllib.parse import quote
@@ -306,16 +305,6 @@ class TestTasks(TestCase):
             url='https://www.example.com',
             authentication_string='letMeIn'
         )
-        # cls.default_site_config = SiteConfiguration.objects.create(
-        #     title='default',
-        #     site=None,
-        #     ena_server=resource_cred,
-        #     pangaea_token_server=resource_cred,
-        #     pangaea_jira_server=resource_cred,
-        #     helpdesk_server=resource_cred,
-        #     comment='Default configuration',
-        #     contact='kevin@horstmeier.de'
-        # )
         cls.default_site_config = SiteConfiguration.objects.create(
             title=HOSTING_SITE,
             site=site,
@@ -496,7 +485,6 @@ class TestSubmissionTransferTasks(TestTasks):
                 submission_id=submission.pk
             )
         ).apply()
-        # ret_val = result.get()
         self.assertEqual('RETRY', submission.taskprogressreport_set.filter(
             task_name='tasks.transfer_data_to_ena_task').first().status)
 
@@ -781,8 +769,6 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         self.assertTrue(result.successful())
 
     @responses.activate
-    # @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
-    #                    CELERY_TASK_EAGER_PROPAGATES=False)
     def test_tpr_task_success_failing_kwargs(self):
         self._add_success_responses()
         submission = Submission.objects.last()
@@ -806,7 +792,6 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
                 'submission_id': submission.pk + 22,
             }
         )
-        # self.assertTrue(result.successful())
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
 
     # TODO: compare todo above ------------------------------------------------
@@ -1077,7 +1062,6 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
             }
         )
         self.assertFalse(result.successful())
-        # self.assertEqual(TaskProgressReport.CANCELLED, result.get())
 
     @responses.activate
     def test_create_submission_issue_task_client_error(self):
@@ -1289,7 +1273,6 @@ class TestAttachToIssueTasks(TestHelpDeskTasksBase):
 
     @responses.activate
     def test_attach_multiple_files_with_same_name(self):
-        # this method does a create, then a mod plus save -> 1 new 1 update
         self._prepare_responses()
         self._add_submission_upload()
         self._add_submission_upload()
@@ -1975,11 +1958,6 @@ class TestPangaeaTasks(TestTasks):
         self.assertIsNone(result.get())
         additional_references = submission.additionalreference_set.all()
         self.assertEqual(len_before, len(additional_references))
-        # request_logs = RequestLog.objects.all()
-        # self.assertEqual(1, len(request_logs))
-        # self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        # self.assertEqual('https://issues.pangaea.de/rest/api/2/issue/',
-        #                  request_logs.first().url)
 
     @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
                        CELERY_TASK_EAGER_PROPAGATES=False)
@@ -2007,12 +1985,6 @@ class TestPangaeaTasks(TestTasks):
         additional_references = submission.additionalreference_set.all()
         self.assertEqual(len_before, len(additional_references))
 
-        # TODO: add test/assertion for retries ...
-        # request_logs = RequestLog.objects.all()
-        # self.assertEqual(3, len(request_logs))
-        # self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        # self.assertEqual('https://issues.pangaea.de/rest/api/2/issue/',
-        #                  request_logs.first().url)
 
     @responses.activate
     def test_attach_to_pangaea_issue_task_success(self):
@@ -2036,7 +2008,6 @@ class TestPangaeaTasks(TestTasks):
                       ),
                       json=_get_pangaea_attach_response(),
                       status=200)
-        #     status=200)
         result = attach_to_pangaea_issue_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
@@ -2049,13 +2020,6 @@ class TestPangaeaTasks(TestTasks):
         self.assertTrue(result.successful())
         self.assertDictEqual(
             {'issue_key': 'PDI-12428'}, res)
-        # request_logs = RequestLog.objects.all()
-        # self.assertEqual(1, len(request_logs))
-        # self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        # self.assertEqual(
-        #     '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
-        #                                 'PANGAEA_FAKE_KEY'),
-        #     request_logs.first().url)
 
     @responses.activate
     def test_attach_to_pangaea_issue_task_client_error(self):
@@ -2089,13 +2053,6 @@ class TestPangaeaTasks(TestTasks):
         self.assertDictEqual(
             {
                 'issue_key': 'PDI-12428'}, res)
-        # request_logs = RequestLog.objects.all()
-        # self.assertEqual(1, len(request_logs))
-        # self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        # self.assertEqual(
-        #     '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
-        #                                 'PANGAEA_FAKE_KEY'),
-        #     request_logs.first().url)
 
     @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
                        CELERY_TASK_EAGER_PROPAGATES=False)
@@ -2118,12 +2075,6 @@ class TestPangaeaTasks(TestTasks):
                 site_config.helpdesk_server.url),
             json={'mocked_500': True},
             status=500)
-        # responses.add(
-        #     responses.POST,
-        #     '{0}{1}/attachments'.format(PANGAEA_ISSUE_BASE_URL,
-        #                                 'PANGAEA_FAKE_KEY'),
-        #     json={},
-        #     status=500)
         result = attach_to_pangaea_issue_task.apply(
             kwargs={
                 'submission_id': submission.pk,
@@ -2135,9 +2086,6 @@ class TestPangaeaTasks(TestTasks):
         self.assertFalse(result.successful())
         res = result.get()
         self.assertIsNone(res)
-        # self.assertDictEqual(
-        #     {
-        #         'issue_key': 'PDI-12428'}, res)
 
     @responses.activate
     def test_add_accession_to_pangaea_issue_task_success(self):
@@ -2168,12 +2116,6 @@ class TestPangaeaTasks(TestTasks):
             }
         )
         self.assertTrue(result.successful())
-        # request_logs = RequestLog.objects.all()
-        # self.assertEqual(1, len(request_logs))
-        # self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        # self.assertEqual(
-        #     '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL, 'PANGAEA_FAKE_KEY'),
-        #     request_logs.first().url)
 
     @responses.activate
     def test_add_accession_to_pangaea_issue_task_client_error(self):
@@ -2202,15 +2144,7 @@ class TestPangaeaTasks(TestTasks):
                 },
             }
         )
-        # expects results from previous chain element
         self.assertTrue(result.successful())
-        # request_logs = RequestLog.objects.all()
-        # self.assertEqual(1, len(request_logs))
-        # self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        # self.assertEqual(
-        #     '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
-        #                             'PANGAEA_FAKE_KEY'),
-        #     request_logs.first().url)
 
     @responses.activate
     def test_add_accession_to_pangaea_issue_task_server_error(self):
@@ -2240,13 +2174,6 @@ class TestPangaeaTasks(TestTasks):
             }
         )
         self.assertTrue(result.successful())
-        # request_logs = RequestLog.objects.all()
-        # self.assertEqual(3, len(request_logs))
-        # self.assertEqual(RequestLog.OUTGOING, request_logs.first().type)
-        # self.assertEqual(
-        #     '{0}{1}/comment'.format(PANGAEA_ISSUE_BASE_URL,
-        #                             'PANGAEA_FAKE_KEY'),
-        #     request_logs.first().url)
 
     @responses.activate
     def test_check_for_pangaea_doi_task_success(self):
@@ -2307,16 +2234,6 @@ class TestTaskChains(TestTasks):
         data = json.dumps({
             'userid': 23
         })
-        # url = '{0}/api/jsonws/' \
-        #       'GFBioProject-portlet.userextension/get-user-by-id/' \
-        #       'request-json/{1}'.format(site_config.gfbio_server.url,
-        #                                 data)
-        # responses.add(responses.POST, url, status=200,
-        #               json={'firstname': 'Marc', 'middlename': '',
-        #                     'emailaddress': 'maweber@mpi-bremen.de',
-        #                     'fullname': 'Marc Weber',
-        #                     'screenname': 'maweber', 'userid': 16250,
-        #                     'lastname': 'Weber'})
 
         # get_gfbio_helpdesk_username_task responses ---------------------------
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
@@ -2420,17 +2337,6 @@ class TestTaskChains(TestTasks):
         data = json.dumps({
             'userid': 23
         })
-        # url = '{0}/api/jsonws/' \
-        #       'GFBioProject-portlet.userextension/get-user-by-id/' \
-        #       'request-json/{1}'.format(site_config.gfbio_server.url,
-        #                                 data)
-        #
-        # responses.add(responses.POST, url, status=200,
-        #               json={'firstname': 'Marc', 'middlename': '',
-        #                     'emailaddress': 'maweber@mpi-bremen.de',
-        #                     'fullname': 'Marc Weber',
-        #                     'screenname': 'maweber', 'userid': 16250,
-        #                     'lastname': 'Weber'})
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format('0815',
                                                          'khors@me.de',
                                                          'Kevin Horstmeier')
@@ -2462,6 +2368,7 @@ class TestTaskChains(TestTasks):
 
         self.assertLess(len_auditable_data,
                         len(AuditableTextData.objects.all()))
+
 
 
 class TestTaskProgressReportInTasks(TestTasks):
@@ -2500,7 +2407,6 @@ class TestTaskProgressReportInTasks(TestTasks):
                     'login_token': 'f3d7aca208aaec8954d45bebc2f59ba1522264db',
                     'ticket_key': 'PANGAEA_FAKE_KEY'
                 },
-                # 'comment_body': 'ACC 12345'
             }
         )
 
@@ -2624,9 +2530,6 @@ class TestEnaReportTasks(TestTasks):
                          len(EnaReport.objects.all()))
         self.assertEqual(len(EnaReport.REPORT_TYPES),
                          len(RequestLog.objects.all()))
-        # for er in EnaReport.objects.all():
-        #     print('\n type ', er.report_type)
-        #     pprint(er.report_data)
 
     @responses.activate
     def test_get_ena_reports_task(self):
@@ -2700,7 +2603,6 @@ class TestUpdatePersistentIdentifierReportStatusTask(TestTasks):
             site_object_id='obj001',
             data={
                 'center_name': 'GFBIO',
-                # 'study_type': 'Metagenomics',
                 'study_abstract': 'abstract',
                 'study_title': 'title',
                 'study_alias': 'alias',

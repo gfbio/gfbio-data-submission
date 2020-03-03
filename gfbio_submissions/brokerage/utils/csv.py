@@ -384,11 +384,21 @@ def check_for_molecular_content(submission):
     #         .get('data_center', '').count('ENA'):
     # ######################################################################
 
+    # TODO: Note: this check makes only sense for submissions via react app, since
+    #   only there the datacenter selection can be made (of course this could also
+    #   be add explicitly in any POST request). Json-schema does not check for this ..
     # GFBIO-2658: independent of target, check for data_center ENA
+
+    status = False
+    messages = []
+    check_performed = False
+
     if submission.release and submission.data.get('requirements', {}).get(
             'data_center', '').count('ENA'):
 
+        check_performed = True
         submission.target = ENA_PANGAEA
+        submission.save()
 
         meta_data_files = submission.submissionupload_set.filter(meta_data=True)
         no_of_meta_data_files = len(meta_data_files)
@@ -398,10 +408,10 @@ def check_for_molecular_content(submission):
                 msg='check_for_molecular_content | '
                     'invalid no. of meta_data_files, {0} | return=False'
                     ''.format(no_of_meta_data_files))
-            return False, [
-                'invalid no. of meta_data_files, {0}'.format(
-                    no_of_meta_data_files)
-            ]
+            messages = ['invalid no. of meta_data_files, '
+                        '{0}'.format(no_of_meta_data_files)]
+            return status, messages, check_performed
+
         meta_data_file = meta_data_files.first()
         with open(meta_data_file.file.path, 'r') as file:
             molecular_requirements = parse_molecular_csv(
@@ -416,8 +426,6 @@ def check_for_molecular_content(submission):
             target=ENA_PANGAEA,
             schema_location=path,
         )
-        status = False
-        messages = []
         if valid:
             # submission.target = ENA_PANGAEA
             # submission.save()
@@ -427,7 +435,7 @@ def check_for_molecular_content(submission):
             # return True, []
             status = True
         else:
-            status = False
+            # status = False
             messages = [e.message for e in full_errors]
             submission.data.update(
                 {'validation': messages})
@@ -438,9 +446,14 @@ def check_for_molecular_content(submission):
             # return False, error_messages
 
         submission.save()
-        return status, messages
-    else:
-        logger.info(
-            msg='check_for_molecular_content | no criteria matched | '
-                'return=False')
-        return False, ['no criteria matched']
+    #     return status, messages
+    # else:
+    #     logger.info(
+    #         msg='check_for_molecular_content | no criteria matched | '
+    #             'return=False')
+    #     return False, ['no criteria matched']
+    logger.info(
+        msg='check_for_molecular_content  | finished | return status={0} '
+            'messages={1} molecular_data_check_performed={2}'.format(status, messages,
+                                                      check_performed))
+    return status, messages, check_performed
