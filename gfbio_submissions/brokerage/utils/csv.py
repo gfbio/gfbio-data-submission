@@ -389,6 +389,7 @@ def check_for_molecular_content(submission):
             'data_center', '').count('ENA'):
 
         submission.target = ENA_PANGAEA
+        submission.save()
 
         meta_data_files = submission.submissionupload_set.filter(meta_data=True)
         no_of_meta_data_files = len(meta_data_files)
