@@ -102,7 +102,7 @@ compare http://cookiecutter-django.readthedocs.io/en/latest/developing-locally-d
 #### delete local database within postgres container
 
 - docker exec -it gfbio_submissions_postgres_1_66ade2b6f75e psql -U gfbio_submissions
-
+    
         psql (10.4 (Debian 10.4-2.pgdg90+1))
         Type "help" for help.
         

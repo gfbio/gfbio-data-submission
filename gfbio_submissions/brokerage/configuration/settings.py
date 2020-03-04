@@ -7,7 +7,7 @@ settings = {}
 APPROVAL_EMAIL_SUBJECT_TEMPLATE = getattr(
     settings,
     'APPROVAL_EMAIL_SUBJECT_TEMPLATE',
-    'A submission to {0} from site {1} needs approval. submission: {2}'
+    'A submission to {0} from {1} needs approval. submission: {2}'
 )
 
 APPROVAL_EMAIL_MESSAGE_TEMPLATE = getattr(

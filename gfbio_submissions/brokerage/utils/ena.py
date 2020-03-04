@@ -22,6 +22,8 @@ from django.utils.encoding import smart_text
 from jsonschema import Draft3Validator
 from pytz import timezone
 
+from gfbio_submissions.brokerage.utils.csv import find_correct_platform_and_model
+
 from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_CENTER_NAME, \
     DEFAULT_ENA_BROKER_NAME, CHECKLIST_ACCESSION_MAPPING, \
@@ -175,7 +177,7 @@ class Enalizer(object):
         # study_alias = self.study.pop('study_alias', '')
         # self.center_name = self.study.pop('center_name', ENA_CENTER_NAME)
 
-        site_object_id = self.study.pop('site_object_id', '')
+        # site_object_id = self.study.pop('site_object_id', '')
 
         study_dict['study']['descriptor'] = self.study
         if len(study_attributes):
@@ -256,7 +258,7 @@ class Enalizer(object):
                 ]))
         res = OrderedDict()
         res['title'] = s.pop('sample_title', '')
-        site_object_id = s.pop('site_object_id', '')
+        # site_object_id = s.pop('site_object_id', '')
         res['sample_alias'] = 'sample_alias_{0}'.format(sample_index)
 
         sname = OrderedDict()
@@ -387,13 +389,13 @@ class Enalizer(object):
     def create_platform(root, platform_value):
         # TODO: check and discuss if this new platform is ok -> one string with Instrument + model
         # TODO: assuming platform <space> model <space> model-detail
-        platform = platform_value.split()
+        platform = find_correct_platform_and_model(platform_value).split()
         instrument = SubElement(
             root,
             platform[0].upper()
         )
         instrument_model = SubElement(instrument, 'INSTRUMENT_MODEL')
-        instrument_model.text = ' '.join(platform)
+        instrument_model.text = ' '.join(platform[1:])
 
     def create_attributes(self, root, data_dict, attribute_prefix=''):
         for attribute in data_dict:
@@ -654,7 +656,8 @@ def release_study_on_ena(submission):
     study_primary_accession = submission.brokerobject_set.filter(
         type='study').first().persistentidentifier_set.filter(
         pid_type='PRJ').first()
-    site_config = SiteConfiguration.objects.filter(site=submission.site).first()
+    # site_config = SiteConfiguration.objects.filter(site=submission.site).first()
+    site_config = submission.user.site_configuration
     if site_config is None:
         logger.warning(
             'ena.py | release_study_on_ena | no site_configuration found | submission_id={0}'.format(
@@ -851,7 +854,7 @@ def fetch_ena_report(site_configuration, report_type):
             request_id=request_id,
             type=RequestLog.OUTGOING,
             url=url,
-            site_user=site_configuration.site.username,
+            # site_user=site_configuration.site.username,
             response_status=response.status_code,
             response_content=response.content,
             request_details={

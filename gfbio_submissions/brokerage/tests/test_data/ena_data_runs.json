@@ -2,6 +2,7 @@
     "requirements": {
         "title": "Test Data Submission",
         "description": "Test data for unit and integration tests",
+        "study_type": "Metagenomics",
         "samples": [
             {
                 "taxon_id": 530564,

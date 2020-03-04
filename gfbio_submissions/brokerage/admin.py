@@ -36,7 +36,7 @@ class BrokerObjectInline(admin.TabularInline):
 
 class BrokerObjectAdmin(admin.ModelAdmin):
     inlines = (PersistentIdentifierInline,)
-    list_filter = ('type', 'site',)
+    list_filter = ('type', 'user',)
     search_fields = ['submissions__broker_submission_id',
                      'persistentidentifier__pid'
                      ]
@@ -247,10 +247,14 @@ reparse_csv_metadata.short_description = 'Re-parse csv metadata to get updated X
 
 
 class SubmissionUploadAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'meta_data', 'site', 'user', 'attachment_id',
+    list_display = ('__str__', 'meta_data',
+                    # 'site',
+                    'user',
+                    'attachment_id',
                     'attach_to_ticket')
     date_hierarchy = 'created'
-    list_filter = ('site', 'meta_data', 'attach_to_ticket')
+    list_filter = ('user',
+                   'meta_data', 'attach_to_ticket')
     search_fields = ['submission__broker_submission_id']
     actions = [
         reparse_csv_metadata,

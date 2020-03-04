@@ -9,16 +9,13 @@ from rest_framework.authentication import TokenAuthentication, \
     BasicAuthentication
 from rest_framework.response import Response
 
-from gfbio_submissions.brokerage.configuration.settings import \
-    SUBMISSION_UPLOAD_RETRY_DELAY
-from gfbio_submissions.brokerage.forms import SubmissionCommentForm
-from gfbio_submissions.brokerage.serializers import \
-    SubmissionUploadListSerializer
 from gfbio_submissions.users.models import User
-from .configuration.settings import SUBMISSION_DELAY
+from .configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY, \
+    SUBMISSION_DELAY
+from .forms import SubmissionCommentForm
 from .models import Submission, RequestLog, SubmissionUpload
 from .permissions import IsOwnerOrReadOnly
-from .serializers import \
+from .serializers import SubmissionUploadListSerializer, \
     SubmissionDetailSerializer, SubmissionUploadSerializer
 
 
@@ -29,21 +26,11 @@ class SubmissionsView(mixins.ListModelMixin,
     serializer_class = SubmissionDetailSerializer
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
+                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def perform_create(self, serializer):
-        # TODO:
-        #  - only if reqular submit -> release=True
-        #  - if target ENA ect proceed as usual ...
-        #  - if target ENA but data.requirements.data_center available and not contain ENA:
-        #       - change target to GENERIC (... change back/correct ...)
-        #  - if target GENERIC and data.requirements.data_center contains ENA:
-        #       - change target to ENA
-        #       - check for single pr.datafile, if multiple cancel ..
-        #       - try to parse as csv, cancle on error
-        #       - add json to submission (store validation errors ?)
-        submission = serializer.save(site=self.request.user, )
+        submission = serializer.save(user=self.request.user, )
         with transaction.atomic():
             RequestLog.objects.create(
                 type=RequestLog.INCOMING,
@@ -63,22 +50,18 @@ class SubmissionsView(mixins.ListModelMixin,
             submission_id=submission.pk
         ).set(countdown=SUBMISSION_DELAY)
         chain()
-        # trigger_submission_transfer.apply_async(
-        #     kwargs={
-        #         'submission_id': submission.pk,
-        #     },
-        #     countdown=SUBMISSION_DELAY
-        # )
 
     def get_queryset(self):
-        site = self.request.user
-        return Submission.objects.filter(site=site)
+        user = self.request.user
+        return Submission.objects.filter(user=user).order_by('-modified')
 
     # http://www.django-rest-framework.org/api-guide/filtering/
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
+        user = User.objects.get(username=request.user)
+        print('SubmissionView request user fronm db', user.__dict__)
         return self.create(request, *args, **kwargs)
 
 
@@ -90,13 +73,13 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
     serializer_class = SubmissionDetailSerializer
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
+                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     lookup_field = 'broker_submission_id'
 
     def perform_create(self, serializer):
-        serializer.save(site=self.request.user)
+        serializer.save(user=self.request.user)
 
     def get(self, request, *args, **kwargs):
         response = self.retrieve(request, *args, **kwargs)
@@ -104,7 +87,8 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         return response
 
     def put(self, request, *args, **kwargs):
-        instance = self.get_object()  #
+        instance = self.get_object()
+
         # TODO: 06.06.2019 allow edit of submissions with status SUBMITTED ...
         if instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED:
             response = self.update(request, *args, **kwargs)
@@ -118,7 +102,8 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                 update_submission_issue_task, get_gfbio_helpdesk_username_task
 
             update_chain = get_gfbio_helpdesk_username_task.s(
-                submission_id=instance.pk).set(countdown=SUBMISSION_DELAY) \
+                submission_id=instance.pk).set(
+                countdown=SUBMISSION_DELAY) \
                            | update_submission_issue_task.s(
                 submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
             update_chain()
@@ -128,8 +113,7 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
             ).set(countdown=SUBMISSION_DELAY) | \
                     trigger_submission_transfer_for_updates.s(
                         broker_submission_id='{0}'.format(
-                            instance.broker_submission_id
-                        )
+                            instance.broker_submission_id)
                     ).set(countdown=SUBMISSION_DELAY)
             chain()
 
@@ -150,19 +134,19 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class UserSubmissionDetailView(generics.ListAPIView):
-    serializer_class = SubmissionDetailSerializer
-    authentication_classes = (TokenAuthentication, BasicAuthentication)
-    permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
-                          IsOwnerOrReadOnly)
-
-    # TODO: test for real django user here
-    # TODO: test for ownership additional to site permissions
-    def get_queryset(self):
-        submitting_user = self.kwargs['submitting_user']
-        return Submission.objects.filter(
-            submitting_user=submitting_user).order_by('-modified')
+# class UserSubmissionDetailView(generics.ListAPIView):
+#     serializer_class = SubmissionDetailSerializer
+#     authentication_classes = (TokenAuthentication, BasicAuthentication)
+#     permission_classes = (permissions.IsAuthenticated,
+#                           permissions.DjangoModelPermissions,
+#                           IsOwnerOrReadOnly)
+#
+#     # TODO: test for real django user here
+#     # TODO: test for ownership additional to site permissions
+#     def get_queryset(self):
+#         submitting_user = self.kwargs['submitting_user']
+#         return Submission.objects.filter(
+#             submitting_user=submitting_user).order_by('-modified')
 
 
 class SubmissionUploadView(mixins.CreateModelMixin,
@@ -172,11 +156,11 @@ class SubmissionUploadView(mixins.CreateModelMixin,
     parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
+                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def perform_create(self, serializer, submission):
-        return serializer.save(site=self.request.user, submission=submission)
+        return serializer.save(user=self.request.user, submission=submission)
 
     def create(self, request, *args, **kwargs):
         broker_submission_id = kwargs.get('broker_submission_id', uuid4())
@@ -206,15 +190,6 @@ class SubmissionUploadView(mixins.CreateModelMixin,
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
-    # # TODO: per user filter ?
-    # def get_queryset(self):
-    #     broker_submission_id = self.kwargs.get('broker_submission_id', uuid4())
-    #     return SubmissionUpload.objects.filter(
-    #         submission__broker_submission_id=broker_submission_id)
-    #
-    # def get(self, request, *args, **kwargs):
-    #     return self.list(request, *args, **kwargs)
-
 
 class SubmissionUploadListView(generics.ListAPIView):
     queryset = SubmissionUpload.objects.all()
@@ -222,7 +197,7 @@ class SubmissionUploadListView(generics.ListAPIView):
     parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
+                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def get_queryset(self):
@@ -241,7 +216,7 @@ class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
     parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
+                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def put(self, request, *args, **kwargs):
@@ -285,7 +260,7 @@ class SubmissionUploadPatchView(mixins.UpdateModelMixin,
     parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
+                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def patch(self, request, *args, **kwargs):
@@ -316,9 +291,6 @@ class SubmissionCommentView(generics.GenericAPIView):
     lookup_field = 'broker_submission_id'
     queryset = Submission.objects.all()
     serializer_class = SubmissionDetailSerializer
-
-    # def get(self, request, *args, **kwargs):
-    #     return HttpResponse('comment get result')
 
     @staticmethod
     def _process_post_comment(broker_submission_id, comment):

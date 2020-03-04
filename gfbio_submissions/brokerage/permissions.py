@@ -13,4 +13,4 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         # TODO: mapping an IDM authenticated user to ob.property for
         #   single user ownership
         # Write permissions are only allowed to the owner.
-        return obj.site == request.user
+        return obj.user == request.user
