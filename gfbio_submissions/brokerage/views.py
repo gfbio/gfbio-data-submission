@@ -30,7 +30,7 @@ class SubmissionsView(mixins.ListModelMixin,
                           IsOwnerOrReadOnly)
 
     def perform_create(self, serializer):
-        submission = serializer.save(site=self.request.user, )
+        submission = serializer.save(user=self.request.user, )
         with transaction.atomic():
             RequestLog.objects.create(
                 type=RequestLog.INCOMING,
@@ -61,6 +61,7 @@ class SubmissionsView(mixins.ListModelMixin,
 
     def post(self, request, *args, **kwargs):
         user = User.objects.get(username=request.user)
+        print('SubmissionView request user fronm db', user.__dict__)
         return self.create(request, *args, **kwargs)
 
 

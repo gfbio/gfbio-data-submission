@@ -53,7 +53,6 @@ class TestJiraClient(TestCase):
         )
         cls.site_config = SiteConfiguration.objects.create(
             title='default',
-            site=None,
             ena_server=resource_cred,
             pangaea_token_server=token_resource_cred,
             pangaea_jira_server=resource_cred,

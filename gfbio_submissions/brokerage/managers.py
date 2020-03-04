@@ -207,7 +207,7 @@ class BrokerObjectManager(models.Manager):
                 # if obj.site_object_id == '':
                 #     obj.site_object_id = '{0}_{1}'.format(obj.user, obj.pk)
                 #     obj.save()
-                print('add_file_entities created ', created)
+                # print('add_file_entities created ', created)
                 obj.submissions.add(submission)
 
     def add_entity(self, submission, entity_type, user, json_data,
@@ -232,7 +232,7 @@ class BrokerObjectManager(models.Manager):
         #     obj.object_id = '{0}_{1}'.format(obj.user, obj.pk)
         #     obj.save()
         obj.submissions.add(submission)
-        print(entity_type, ' add entity created ? ', created)
+        # print(entity_type, ' add entity created ? ', created)
         return obj
 
     def add_submission_data(self, submission):
@@ -243,7 +243,7 @@ class BrokerObjectManager(models.Manager):
                 pass
 
     def add_ena_submission_data(self, submission):
-        print('\n\tadd_ena_submission_data')
+        # print('\n\tadd_ena_submission_data')
         # TODO: check submission.data behaviour in this (new) python 3 environment
         if isinstance(submission.data, str):
             data = json.loads(submission.data)

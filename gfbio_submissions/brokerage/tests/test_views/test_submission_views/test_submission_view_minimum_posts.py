@@ -57,7 +57,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             'broker_submission_id': content['broker_submission_id'],
             'issue': '',
             'data': {'optional_validation': [
-                "requirements : 'study_type' is a required property",
+                # "requirements : 'study_type' is a required property",
                 "requirements : 'samples' is a required property",
                 "requirements : 'experiments' is a required property"],
                 'requirements': {'description': 'A Description',
@@ -97,7 +97,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             'broker_submission_id': content['broker_submission_id'],
             'issue': '',
             'data': {'optional_validation': [
-                u"requirements : 'study_type' is a required property",
+                # u"requirements : 'study_type' is a required property",
                 u"requirements : 'samples' is a required property",
                 u"requirements : 'experiments' is a required property"],
                 'requirements': {'description': 'A Description',

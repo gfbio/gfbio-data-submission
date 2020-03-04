@@ -2,7 +2,9 @@
 
 import base64
 import json
+from pprint import pprint
 from urllib.parse import quote
+from uuid import uuid4
 
 import responses
 from django.contrib.auth.models import Permission
@@ -157,6 +159,10 @@ class TestInitialChainTasks(TestCase):
                 'data': _get_submission_request_data()
             }))
         self.assertEqual(201, max_response.status_code)
+        content = json.loads(max_response.content)
+        pprint(content)
+        sub = Submission.objects.get(broker_submission_id=content.get('broker_submission_id'))
+        pprint(sub.__dict__)
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
@@ -170,6 +176,7 @@ class TestInitialChainTasks(TestCase):
             task_name='tasks.update_helpdesk_ticket_task')
         self.assertEqual(7, len(tprs))
         for t in task_reports:
+            # print('\n', t.task_name, '\n', t.__dict__)
             self.assertIn(t.task_name, expected_tasknames)
 
     @responses.activate

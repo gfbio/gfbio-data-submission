@@ -654,7 +654,8 @@ def release_study_on_ena(submission):
     study_primary_accession = submission.brokerobject_set.filter(
         type='study').first().persistentidentifier_set.filter(
         pid_type='PRJ').first()
-    site_config = SiteConfiguration.objects.filter(site=submission.site).first()
+    # site_config = SiteConfiguration.objects.filter(site=submission.site).first()
+    site_config = submission.user.site_configuration
     if site_config is None:
         logger.warning(
             'ena.py | release_study_on_ena | no site_configuration found | submission_id={0}'.format(

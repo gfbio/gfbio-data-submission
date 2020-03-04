@@ -134,6 +134,7 @@ def _get_submission_and_site_configuration(submission_id, task,
             )
         # TODO: refactor for new site/user relation
         site_config = _safe_get_site_config(submission)
+        # site_config = submission.user.site_configuration
         if site_config is None:
             logger.warning(
                 'task_utils.py | _get_submission_and_site_configuration | '

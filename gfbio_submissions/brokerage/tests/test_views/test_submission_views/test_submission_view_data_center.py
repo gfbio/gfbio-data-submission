@@ -32,7 +32,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         )
         self.assertEqual(201, response.status_code)
         submission = Submission.objects.first()
-        self.assertEqual(GENERIC, submission.target)
+        self.assertEqual(ENA_PANGAEA, submission.target)
         expected_tasks = [
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer',

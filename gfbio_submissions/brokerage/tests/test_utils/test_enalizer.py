@@ -24,18 +24,13 @@ class TestEnalizer(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        user = User.objects.create(
-            username="user1"
-        )
-        SubmissionTest._create_submission_via_serializer()
-        SubmissionTest._create_submission_via_serializer(runs=True)
         resource_cred = ResourceCredential.objects.create(
             title='Resource Title',
             url='https://www.example.com',
             authentication_string='letMeIn'
         )
 
-        SiteConfiguration.objects.create(
+        site_config = SiteConfiguration.objects.create(
             title='Default',
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
@@ -43,6 +38,19 @@ class TestEnalizer(TestCase):
             helpdesk_server=resource_cred,
             comment='Default configuration',
         )
+        user = User.objects.create(
+            username="user1"
+        )
+        user.site_configuration = site_config
+        user.save()
+        SubmissionTest._create_submission_via_serializer()
+        SubmissionTest._create_submission_via_serializer(runs=True)
+
+        print('\n----------------------------\n')
+        for s in Submission.objects.all():
+            print('\n')
+            pprint(s.__dict__)
+
 
     def tearDown(self):
         Submission.objects.all().delete()

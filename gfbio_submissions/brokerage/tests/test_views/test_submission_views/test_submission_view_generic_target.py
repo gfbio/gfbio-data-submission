@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
-import base64
-import datetime
 import json
+import os
 import urllib
-from unittest import skip
 from urllib.parse import urlencode
 from uuid import UUID, uuid4
 
 import responses
-from rest_framework.authtoken.models import Token
-from rest_framework.test import APIClient
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.urls import reverse
 
-from gfbio_submissions.brokerage.configuration.settings import \
-    JIRA_ISSUE_URL
+from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA, \
+    GENERIC
 from gfbio_submissions.brokerage.models import Submission, RequestLog, \
-    SiteConfiguration, TaskProgressReport, AdditionalReference
+    TaskProgressReport, AdditionalReference
 from gfbio_submissions.brokerage.tests.utils import \
-    _get_submission_request_data
+    _get_submission_request_data, _get_test_data_dir_path, \
+    _get_submission_post_response
 from gfbio_submissions.users.models import User
-
+from .test_submission_view_base import \
+    TestSubmissionView
 
 
 class TestSubmissionViewMinimumPosts(TestSubmissionView):
@@ -80,7 +80,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             'embargo': None,
             'download_url': '',
             'release': False,
-            'site': 'horst',
+            'user': 'horst',
             # 'site_project_id': '',
             'status': 'OPEN',
             'submitting_user': '',
@@ -129,7 +129,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             'embargo': None,
             'download_url': '',
             'release': False,
-            'site': 'horst',
+            'user': 'horst',
             # 'site_project_id': '',
             'status': 'OPEN',
             'submitting_user': '',
@@ -197,7 +197,6 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             format='json'
         )
         content = json.loads(response.content.decode('utf-8'))
-        pprint(content)
         self.assertEqual(201, response.status_code)
         expected = _get_submission_post_response()
         # expected['embargo'] = '{0}'.format(
@@ -648,7 +647,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
 
         submission.submissionupload_set.create(
             submission=submission,
-            site=User.objects.first(),
+            # site=User.objects.first(),
             user=User.objects.first(),
             meta_data=True,
             file=uploaded_file,
@@ -710,7 +709,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
 
         submission.submissionupload_set.create(
             submission=submission,
-            site=User.objects.first(),
+            # site=User.objects.first(),
             user=User.objects.first(),
             meta_data=True,
             file=uploaded_file,
@@ -766,7 +765,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
 
         submission.submissionupload_set.create(
             submission=submission,
-            site=User.objects.first(),
+            # site=User.objects.first(),
             user=User.objects.first(),
             meta_data=True,
             file=SimpleUploadedFile('test.png', b'\x00\x01\x02\x03'),
@@ -842,7 +841,7 @@ class TestSubmissionViewGetRequest(TestSubmissionView):
         submission = Submission.objects.first()
         submission.brokerobject_set.create(
             type='study',
-            site=User.objects.first(),
+            user=User.objects.first(),
         )
         submission.brokerobject_set.filter(
             type='study'
@@ -857,7 +856,7 @@ class TestSubmissionViewGetRequest(TestSubmissionView):
         self.assertEqual(content['accession_id'], 'PRJE0815')
         self.assertEqual(200, response.status_code)
         self.assertTrue(isinstance(content, dict))
-        self.assertEqual('horst', content['site'])
+        self.assertEqual('horst', content['user'])
 
     @responses.activate
     def test_get_submission_with_helpdesk_issue(self):
@@ -886,8 +885,6 @@ class TestSubmissionViewGetRequest(TestSubmissionView):
         response = self.api_client.get(
             '/api/submissions/{0}/'.format(uuid4()))
         self.assertEqual(404, response.status_code)
-
-
 
     @responses.activate
     def _prepare_submissions_for_various_users(self):
@@ -1019,9 +1016,6 @@ class TestSubmissionViewGetRequest(TestSubmissionView):
         self.assertIsInstance(submissions, list)
         self.assertEqual(2, len(submissions))
         self.assertIsInstance(submissions[0], dict)
-
-
-
 
 
 class TestSubmissionViewGenericTarget(TestSubmissionView):
