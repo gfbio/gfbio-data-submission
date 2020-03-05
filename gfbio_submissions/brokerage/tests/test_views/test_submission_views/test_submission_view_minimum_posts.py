@@ -11,6 +11,17 @@ from .test_submission_view_base import TestSubmissionView
 
 class TestSubmissionViewMinimumPosts(TestSubmissionView):
 
+    def test_empty_min_post(self):
+        response = self.api_client.post('/api/submissions/', {}, format='json')
+        self.assertEqual(400, response.status_code)
+        self.assertEqual(0, len(Submission.objects.all()))
+
+    def test_empty_min_post_errors(self):
+        response = self.api_client.post('/api/submissions/', {}, format='json')
+        keys = json.loads(response.content.decode('utf-8')).keys()
+        self.assertIn('target', keys)
+        self.assertIn('data', keys)
+
     def test_invalid_min_post(self):
         self.assertEqual(0, len(Submission.objects.all()))
         response = self.api_client.post('/api/submissions/',
@@ -22,6 +33,20 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
         self.assertIn('optional_validation', keys)
         self.assertIn('data', keys)
         self.assertEqual(0, len(Submission.objects.all()))
+
+    @responses.activate
+    def test_post_on_submission_detail_view(self):
+        self._add_create_ticket_response()
+        self._post_submission()
+
+        submission = Submission.objects.first()
+        response = self.api_client.post(
+            '/api/submissions/{}/'.format(submission.pk),
+            {'target': 'ENA', 'data': {'requirements': {
+                'title': 'A Title 0815', 'description': 'A Description 2'}}},
+            format='json'
+        )
+        self.assertEqual(405, response.status_code)
 
     def test_schema_error_min_post(self):
         self.assertEqual(0, len(Submission.objects.all()))

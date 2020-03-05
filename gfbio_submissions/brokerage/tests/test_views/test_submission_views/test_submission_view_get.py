@@ -30,6 +30,10 @@ class TestSubmissionViewGetRequests(TestSubmissionView):
         # 1 - reg2 -reg2
         # total 4
 
+    def test_submissions_get_request(self):
+        response = self.client.get('/api/submissions/')
+        self.assertEqual(401, response.status_code)
+
     @responses.activate
     def test_get_submissions(self):
         self._add_create_ticket_response()
