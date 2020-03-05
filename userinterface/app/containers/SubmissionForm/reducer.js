@@ -69,6 +69,7 @@ if (window.props !== undefined) {
   backendParameters = window.props;
 }
 
+
 function getInitialContributors(backendParameters) {
   let realName = backendParameters.userRealName || '';
   let nameSplit = realName.split(' ');
@@ -156,9 +157,9 @@ function submissionFormReducer(state = initialState, action) {
     //   return state.set('metaDataSchema', action.metaDataSchema);
     case SAVE_FORM:
       return state
-      // TODO: need showSaveSuccess later
-      // .set('showSaveSuccess', false)
-      // .set('promptOnLeave', false)
+        // TODO: need showSaveSuccess later
+        // .set('showSaveSuccess', false)
+        // .set('promptOnLeave', false)
         .set('saveInProgress', true);
     case SAVE_FORM_SUCCESS:
       // TODO: set bsi etc after success, from then its updates
@@ -339,15 +340,15 @@ function submissionFormReducer(state = initialState, action) {
       let newMetaDataIndex = '';
       newMetaDataIndex = markMetaDataInScheduledUploads(state, action.metaDataIndex);
       return state
-      // TODO: useless ?
-      //   .set('metaDataFileName', '')
+        // TODO: useless ?
+        //   .set('metaDataFileName', '')
         .set('metaDataIndex', newMetaDataIndex);
     case SET_METADATA_ON_SERVER:
       let newMetaDataIndex_ = '';
       newMetaDataIndex_ = markMetaDataInUploadsFromServer(state, action.metaDataIndex);
       return state
-      // TODO: useless ?
-      //   .set('metaDataFileName', '')
+        // TODO: useless ?
+        //   .set('metaDataFileName', '')
         .set('metaDataIndex', newMetaDataIndex_);
     case SET_METADATA_ON_SERVER_ERROR:
       return state;
