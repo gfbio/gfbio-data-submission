@@ -53,7 +53,7 @@ class SubmissionsView(mixins.ListModelMixin,
 
     def get_queryset(self):
         user = self.request.user
-        return Submission.objects.filter(user=user)
+        return Submission.objects.filter(user=user).order_by('-modified')
 
     # http://www.django-rest-framework.org/api-guide/filtering/
     def get(self, request, *args, **kwargs):
@@ -134,19 +134,19 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class UserSubmissionDetailView(generics.ListAPIView):
-    serializer_class = SubmissionDetailSerializer
-    authentication_classes = (TokenAuthentication, BasicAuthentication)
-    permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
-                          IsOwnerOrReadOnly)
-
-    # TODO: test for real django user here
-    # TODO: test for ownership additional to site permissions
-    def get_queryset(self):
-        submitting_user = self.kwargs['submitting_user']
-        return Submission.objects.filter(
-            submitting_user=submitting_user).order_by('-modified')
+# class UserSubmissionDetailView(generics.ListAPIView):
+#     serializer_class = SubmissionDetailSerializer
+#     authentication_classes = (TokenAuthentication, BasicAuthentication)
+#     permission_classes = (permissions.IsAuthenticated,
+#                           permissions.DjangoModelPermissions,
+#                           IsOwnerOrReadOnly)
+#
+#     # TODO: test for real django user here
+#     # TODO: test for ownership additional to site permissions
+#     def get_queryset(self):
+#         submitting_user = self.kwargs['submitting_user']
+#         return Submission.objects.filter(
+#             submitting_user=submitting_user).order_by('-modified')
 
 
 class SubmissionUploadView(mixins.CreateModelMixin,

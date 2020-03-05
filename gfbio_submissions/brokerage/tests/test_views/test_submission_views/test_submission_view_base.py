@@ -22,8 +22,6 @@ class TestSubmissionView(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        print('\nTESTSUBMISSIONVIEW SETUP TEST DATA')
-
         resource_cred = ResourceCredential.objects.create(
             title='Resource Title',
             url='https://www.example.com',
@@ -82,6 +80,8 @@ class TestSubmissionView(TestCase):
             is_staff=True, is_site=True)
         user.user_permissions.add(*cls.permissions)
         token = Token.objects.create(user=user)
+        user.site_configuration = cls.site_config
+        user.save()
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
         cls.staff_client = client
@@ -93,12 +93,15 @@ class TestSubmissionView(TestCase):
             is_staff=False, is_site=False, is_user=True)
         regular_user.email = 're@gu.la'
         regular_user.user_permissions.add(*cls.permissions)
+        regular_user.site_configuration = cls.site_config
         regular_user.save()
 
         regular_user = User.objects.create_user(
             username='regular_user_2', email='re2@gu.la', password='secret',
             is_staff=False, is_site=False, is_user=True)
         regular_user.user_permissions.add(*cls.permissions)
+        regular_user.site_configuration = cls.site_config
+        regular_user.save()
 
         User.objects.create_superuser(
             username='admin', email='admin@admin.de', password='psst')

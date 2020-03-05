@@ -17,15 +17,18 @@ class SubmissionTest(TestCase):
 
     # TODO: move to utils or similar ...
     @classmethod
-    def _create_submission_via_serializer(cls, runs=False):
+    def _create_submission_via_serializer(cls, runs=False, user_id=None,
+                                          create_broker_objects=True):
         serializer = SubmissionSerializer(data={
             'target': 'ENA',
             'release': True,
             'data': _get_ena_data() if runs else _get_ena_data_without_runs()
         })
         serializer.is_valid()
-        submission = serializer.save(user=User.objects.first())
-        BrokerObject.objects.add_submission_data(submission)
+        user = User.objects.get(id=user_id) if user_id else User.objects.first()
+        submission = serializer.save(user=user)
+        if create_broker_objects:
+            BrokerObject.objects.add_submission_data(submission)
         return submission
 
     @classmethod
