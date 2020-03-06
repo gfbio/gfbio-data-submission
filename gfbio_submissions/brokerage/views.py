@@ -26,11 +26,11 @@ class SubmissionsView(mixins.ListModelMixin,
     serializer_class = SubmissionDetailSerializer
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
+                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def perform_create(self, serializer):
-        submission = serializer.save(site=self.request.user, )
+        submission = serializer.save(user=self.request.user, )
         with transaction.atomic():
             RequestLog.objects.create(
                 type=RequestLog.INCOMING,
@@ -52,14 +52,16 @@ class SubmissionsView(mixins.ListModelMixin,
         chain()
 
     def get_queryset(self):
-        site = self.request.user
-        return Submission.objects.filter(site=site)
+        user = self.request.user
+        return Submission.objects.filter(user=user).order_by('-modified')
 
     # http://www.django-rest-framework.org/api-guide/filtering/
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
+        user = User.objects.get(username=request.user)
+        print('SubmissionView request user fronm db', user.__dict__)
         return self.create(request, *args, **kwargs)
 
 
@@ -71,13 +73,13 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
     serializer_class = SubmissionDetailSerializer
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
+                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     lookup_field = 'broker_submission_id'
 
     def perform_create(self, serializer):
-        serializer.save(site=self.request.user)
+        serializer.save(user=self.request.user)
 
     def get(self, request, *args, **kwargs):
         response = self.retrieve(request, *args, **kwargs)
@@ -132,19 +134,19 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class UserSubmissionDetailView(generics.ListAPIView):
-    serializer_class = SubmissionDetailSerializer
-    authentication_classes = (TokenAuthentication, BasicAuthentication)
-    permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
-                          IsOwnerOrReadOnly)
-
-    # TODO: test for real django user here
-    # TODO: test for ownership additional to site permissions
-    def get_queryset(self):
-        submitting_user = self.kwargs['submitting_user']
-        return Submission.objects.filter(
-            submitting_user=submitting_user).order_by('-modified')
+# class UserSubmissionDetailView(generics.ListAPIView):
+#     serializer_class = SubmissionDetailSerializer
+#     authentication_classes = (TokenAuthentication, BasicAuthentication)
+#     permission_classes = (permissions.IsAuthenticated,
+#                           permissions.DjangoModelPermissions,
+#                           IsOwnerOrReadOnly)
+#
+#     # TODO: test for real django user here
+#     # TODO: test for ownership additional to site permissions
+#     def get_queryset(self):
+#         submitting_user = self.kwargs['submitting_user']
+#         return Submission.objects.filter(
+#             submitting_user=submitting_user).order_by('-modified')
 
 
 class SubmissionUploadView(mixins.CreateModelMixin,
@@ -154,11 +156,11 @@ class SubmissionUploadView(mixins.CreateModelMixin,
     parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
+                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def perform_create(self, serializer, submission):
-        return serializer.save(site=self.request.user, submission=submission)
+        return serializer.save(user=self.request.user, submission=submission)
 
     def create(self, request, *args, **kwargs):
         broker_submission_id = kwargs.get('broker_submission_id', uuid4())
@@ -195,7 +197,7 @@ class SubmissionUploadListView(generics.ListAPIView):
     parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
+                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def get_queryset(self):
@@ -214,7 +216,7 @@ class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
     parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
+                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def put(self, request, *args, **kwargs):
@@ -258,7 +260,7 @@ class SubmissionUploadPatchView(mixins.UpdateModelMixin,
     parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
+                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def patch(self, request, *args, **kwargs):

@@ -7,19 +7,41 @@ from django.db import models, transaction
 from django.db.models import Q
 from django.utils.encoding import smart_text
 
+from config.settings.base import ADMINS
 from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA
+# tO
+from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
 
 logger = logging.getLogger(__name__)
 
 
 class SiteConfigurationManager(models.Manager):
-    # TODO: this will not fail on purpose, to allow get for default config but if get for 'default' fails exception will be raised
-    # TODO: implement better fallback to a default config than rely on existence of entry with this title
-    def get_site_configuration(self, site=None):
-        try:
-            return self.get(site=site)
-        except self.model.DoesNotExist:
-            return self.get(title='default')
+
+    # FIXME: obsolete, remove once ready to do so
+    # def get_site_configuration(self, site=None):
+    #     try:
+    #         # return self.get(site=site)
+    #         return None
+    #     except self.model.DoesNotExist:
+    #         # FIXME: what if there is no 'default' in database ?
+    #         # return self.get(title='default')
+    #         return None
+
+    # TODO: add tests
+    def get_hosting_site_configuration(self):
+        admin, email = ADMINS[0] if len(ADMINS) else (
+            'admin', 'default@{0}.de'.format(HOSTING_SITE))
+        obj, created = self.get_or_create(
+            title=HOSTING_SITE,
+            defaults={
+                'title': HOSTING_SITE,  # == 'local-site'
+                'contact': email,
+                'comment': 'created by using defaults in get_or_create call '
+                           'for SiteConfiguration with '
+                           'title={0}'.format(HOSTING_SITE)
+            }
+        )
+        return obj
 
 
 class SubmissionManager(models.Manager):
@@ -175,30 +197,42 @@ class BrokerObjectManager(models.Manager):
                 )
                 obj, created = self.update_or_create(
                     type='run',
-                    site=experiment_broker_object.site,
-                    site_project_id=experiment_broker_object.site_project_id,
-                    site_object_id='files_block_of_{0}'.format(
-                        experiment_broker_object.site_object_id),
+                    user=experiment_broker_object.user,
+                    object_id=experiment_broker_object.object_id,
+                    # site_project_id=experiment_broker_object.site_project_id,
+                    # site_object_id='files_block_of_{0}'.format(
+                    #     experiment_broker_object.site_object_id),
                     defaults={'data': data}
                 )
-                if obj.site_object_id == '':
-                    obj.site_object_id = '{0}_{1}'.format(obj.site, obj.pk)
-                    obj.save()
+                # if obj.site_object_id == '':
+                #     obj.site_object_id = '{0}_{1}'.format(obj.user, obj.pk)
+                #     obj.save()
+                # print('add_file_entities created ', created)
                 obj.submissions.add(submission)
 
-    def add_entity(self, submission, entity_type, site, site_project_id,
-                   site_object_id, json_data):
+    def add_entity(self, submission, entity_type, user, json_data,
+                   object_id=''):
         obj, created = self.update_or_create(
             type=entity_type,
-            site=site,
-            site_project_id=site_project_id,
-            site_object_id=site_object_id,
+            user=user,
+            object_id=object_id,
+            # site_project_id=site_project_id,
+            # site_object_id=site_object_id,
             defaults={'data': json_data}
         )
-        if obj.site_object_id == '':
-            obj.site_object_id = '{0}_{1}'.format(obj.site, obj.pk)
-            obj.save()
+        # TODO: this was the fallback site_object_id to ensure the this
+        #  function is not updating constantly but actually adding objects
+        #   e.g. 5 x sample of uer1 == 1 x sample_user1
+        # NOTE: sample_alias is required per jsonschema
+        # NOTE:
+        #       - here a entity with site_object_id='' was created, always, since none with '' exists
+        #       - check below cause to add site_object_id, wich will be unique due to obj.pk
+        #       - next iteration, again create with '' and so on
+        # if obj.object_id == '':
+        #     obj.object_id = '{0}_{1}'.format(obj.user, obj.pk)
+        #     obj.save()
         obj.submissions.add(submission)
+        # print(entity_type, ' add entity created ? ', created)
         return obj
 
     def add_submission_data(self, submission):
@@ -209,6 +243,7 @@ class BrokerObjectManager(models.Manager):
                 pass
 
     def add_ena_submission_data(self, submission):
+        # print('\n\tadd_ena_submission_data')
         # TODO: check submission.data behaviour in this (new) python 3 environment
         if isinstance(submission.data, str):
             data = json.loads(submission.data)
@@ -217,41 +252,51 @@ class BrokerObjectManager(models.Manager):
         obj = self.add_entity(
             submission=submission,
             entity_type='study',
-            site=submission.site,
-            site_project_id=submission.site_project_id,
-            site_object_id=data['requirements'].get('site_object_id', ''),
+            user=submission.user,
+            # site_project_id=submission.site_project_id,
+            # site_object_id=data['requirements'].get('site_object_id', ''),
             json_data={
                 'study_title': data['requirements']['title'],
                 'study_abstract': data['requirements']['description'],
                 # 'study_type': data['requirements']['study_type']
             }
         )
-        data['requirements']['site_object_id'] = obj.site_object_id
+
+        # data['requirements']['site_object_id'] = obj.site_object_id
         for i in range(0, len(data['requirements']['samples'])):
+            # print('\niterate samples from requirements ', i)
+            # print('submisson user', submission.user)
             # for sample in data['requirements']['samples']:
             sample = data['requirements']['samples'][i]
+            # pprint(sample)
             obj = self.add_entity(submission=submission,
                                   entity_type='sample',
-                                  site=submission.site,
-                                  site_project_id=submission.site_project_id,
-                                  site_object_id=sample.get('site_object_id',
-                                                            ''),
+                                  user=submission.user,
+                                  # site_project_id=submission.site_project_id,
+                                  # site_object_id=sample.get('site_object_id',
+
+                                  # object_id=sample.get('sample_alias', ''),
+
                                   json_data=sample)
-            data['requirements']['samples'][i][
-                'site_object_id'] = obj.site_object_id
+            # print(obj)
+            # data['requirements']['samples'][i][
+            #     'site_object_id'] = obj.site_object_id
 
         for i in range(0, len(data['requirements']['experiments'])):
+            # print('\niterate experiments from requirements ', i)
+            # print('submisson user', submission.user)
             # for experiment in data['requirements']['experiments']:
             experiment = data['requirements']['experiments'][i]
+            # pprint(experiment)
             obj = self.add_entity(submission=submission,
                                   entity_type='experiment',
-                                  site=submission.site,
-                                  site_project_id=submission.site_project_id,
-                                  site_object_id=experiment.get(
-                                      'site_object_id', ''),
+                                  user=submission.user,
+                                  # site_project_id=submission.site_project_id,
+                                  # site_object_id=experiment.get(
+                                  #     'site_object_id', ''),
                                   json_data=experiment)
-            data['requirements']['experiments'][i][
-                'site_object_id'] = obj.site_object_id
+            # data['requirements']['experiments'][i][
+            #     'site_object_id'] = obj.site_object_id
             self.add_file_entities(experiment_broker_object=obj,
                                    submission=submission)
 
@@ -261,13 +306,13 @@ class BrokerObjectManager(models.Manager):
                 run = data['requirements']['runs'][i]
                 obj = self.add_entity(submission=submission,
                                       entity_type='run',
-                                      site=submission.site,
-                                      site_project_id=submission.site_project_id,
-                                      site_object_id=run.get('site_object_id',
-                                                             ''),
+                                      user=submission.user,
+                                      # site_project_id=submission.site_project_id,
+                                      # site_object_id=run.get('site_object_id',
+                                      #                        ''),
                                       json_data=run)
-                data['requirements']['runs'][i][
-                    'site_object_id'] = obj.site_object_id
+                # data['requirements']['runs'][i][
+                #     'site_object_id'] = obj.site_object_id
 
         submission.data = data
         submission.save()

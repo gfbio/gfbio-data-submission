@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+import pprint
 import uuid
+from pprint import pprint
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
@@ -25,6 +27,7 @@ from .utils.submission_tools import \
 logger = logging.getLogger(__name__)
 
 
+# TODO: move to new BrokerageConfiguration app
 class ResourceCredential(models.Model):
     title = models.SlugField(max_length=128,
                              help_text=
@@ -57,6 +60,7 @@ class ResourceCredential(models.Model):
         return '{}'.format(self.title)
 
 
+# TODO: move to new BrokerageConfiguration app
 class SiteConfiguration(models.Model):
     SAND = 'SAND'
     DSUB = 'DSUB'
@@ -69,9 +73,9 @@ class SiteConfiguration(models.Model):
                              unique=True,
                              help_text=
                              'Enter a descriptive title for this instance.')
-    site = models.ForeignKey(AUTH_USER_MODEL, null=True,
-                             blank=True, related_name='siteconfiguration',
-                             on_delete=models.SET_NULL)
+    # site = models.ForeignKey(AUTH_USER_MODEL, null=True,
+    #                          blank=True, related_name='siteconfiguration',
+    #                          on_delete=models.SET_NULL)
 
     contact = models.EmailField(
         blank=False,
@@ -88,6 +92,8 @@ class SiteConfiguration(models.Model):
     # TODO: merge ena servers, since url-root is the same ...
     ena_server = models.ForeignKey(
         ResourceCredential,
+        null=True,
+        blank=True,
         related_name='SiteConfiguration.ena_server+',
         help_text='Select which server and/or account this configuration '
                   'should use to connect to ENA.',
@@ -136,6 +142,8 @@ class SiteConfiguration(models.Model):
 
     helpdesk_server = models.ForeignKey(
         ResourceCredential,
+        null=True,
+        blank=True,
         related_name='SiteConfiguration.helpdesk_server+',
         help_text='Select which server and/or account this configuration '
                   'should use to connect to a JIRA based helpdesk system. In '
@@ -210,6 +218,11 @@ class Submission(TimeStampedModel):
 
     broker_submission_id = models.UUIDField(primary_key=False,
                                             default=uuid.uuid4)
+
+    # TODO: remove after refactoring user-site-relations are done
+    # TODO: be careful with existing submissions using this field.
+    #  maybe check if user field is used by submission, then first remove user
+    #  then rename site to user in 2 migration steps
     site = models.ForeignKey(
         AUTH_USER_MODEL,
         null=True,
@@ -223,11 +236,12 @@ class Submission(TimeStampedModel):
         on_delete=models.SET_NULL
     )
     # TODO: still needed ?
-    site_project_id = models.CharField(max_length=128, blank=True, default='')
+    # site_project_id = models.CharField(max_length=128, blank=True, default='')
     target = models.CharField(max_length=16, choices=TARGETS)
 
     # TODO: investigate where this field is used
-    # TODO: adapt to new situation of local users (sso, social, django user) and external (site only)
+    # TODO: adapt to new situation of local users (sso, social, django user)
+    #  and external (site only)  BE CAREFUL ! LEGACY DATA !
     submitting_user = models.CharField(max_length=72, default='', blank=True,
                                        null=True,
                                        help_text=
@@ -235,7 +249,7 @@ class Submission(TimeStampedModel):
                                        'vary for different sites, e.g. user-id'
                                        ' from database, uniquq login-name, '
                                        'etc..')
-    # TODO: remove in Submission ownership refactoring
+    # TODO: remove in Submission ownership refactoring. BE CAREFUL ! LEGACY DATA !
     submitting_user_common_information = models.TextField(
         default='',
         blank=True,
@@ -304,6 +318,7 @@ class Submission(TimeStampedModel):
         return runs
 
     # TODO: refactor/move: too specific (molecular submission)
+    # FIXME: access to first() in many-to-many relation may cause semantic errors
     def set_study_alias(self, alias_postfix):
         study = self.brokerobject_set.filter(type='study').first()
         new_study_alias = '{0}:{1}'.format(study.id, alias_postfix)
@@ -332,7 +347,9 @@ class Submission(TimeStampedModel):
 
     # TODO: refactor/move: too specific (molecular submission)
     def set_sample_aliases(self, alias_postfix):
+        print('\n\tset_sample_aliases')
         samples = self.brokerobject_set.filter(type='sample')
+        pprint(samples)
         sample_aliases = {
             s.data.get('sample_alias', 'no_sample_alias'):
                 '{0}:{1}'.format(s.id, alias_postfix)
@@ -405,9 +422,17 @@ class BrokerObject(models.Model):
         ('submission', 'submission'),
     )
     type = models.CharField(choices=ENTITY_TYPES, max_length=12)
-    site = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.PROTECT)
-    site_project_id = models.CharField(max_length=128, blank=True, default='')
-    site_object_id = models.CharField(max_length=128, blank=True, default='')
+    user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.PROTECT)
+    # site_project_id = models.CharField(max_length=128, blank=True, default='')
+    # site_object_id = models.CharField(max_length=128, blank=True, default='')
+    object_id = models.CharField(max_length=36, default='')
+
+    def save(self, *args, **kwargs):
+        # print('SAVE Before SUPER ', self.pk, ' o id ', self.object_id)
+        if self.object_id == '':
+            self.object_id = '{0}'.format(uuid.uuid4())
+        super(BrokerObject, self).save(*args, **kwargs)
+        # print('SAVE after SUPER', self.pk, ' o id ', self.object_id)
 
     data = JsonDictField(default=dict)
     submissions = models.ManyToManyField(Submission)
@@ -438,7 +463,7 @@ class BrokerObject(models.Model):
     #     return self.type, self.site, self.site_project_id, self.site_object_id
 
     def __str__(self):
-        return '{}_{}'.format(self.site_object_id, self.type)
+        return '{}_{}'.format(self.type, self.object_id)
 
     # TODO: discuss future usage
     # class Meta:
@@ -636,24 +661,35 @@ class SubmissionUpload(TimeStampedModel):
         help_text='Submission associated with this Upload.',
         on_delete=models.CASCADE
     )
-    site = models.ForeignKey(
-        AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        related_name='site_upload',
-        help_text='Related "Site". E.g. gfbio-portal or silva.',
-        on_delete=models.PROTECT
-    )
-    # TODO: once IDM in place, it will be possible to directly assign real users
+
     user = models.ForeignKey(
         AUTH_USER_MODEL,
         null=True,
         blank=True,
-        related_name='user_upload',
-        help_text='Related "User". E.g. a real person that uses '
-                  'the submission frontend',
-        on_delete=models.PROTECT
+        related_name='user_uploads',
+        help_text='Owner of this SubmissionUpload. '
+                  'Same as related submission.user',
+        on_delete=models.SET_NULL
     )
+    # TODO: previous version: site&user
+    # site = models.ForeignKey(
+    #     AUTH_USER_MODEL,
+    #     null=True,
+    #     blank=True,
+    #     related_name='site_upload',
+    #     help_text='Related "Site". E.g. gfbio-portal or silva.',
+    #     on_delete=models.SET_NULL
+    # )
+    # TODO: once IDM in place, it will be possible to directly assign real users
+    # user = models.ForeignKey(
+    #     AUTH_USER_MODEL,
+    #     null=True,
+    #     blank=True,
+    #     related_name='user_upload',
+    #     help_text='Related "User". E.g. a real person that uses '
+    #               'the submission frontend',
+    #     on_delete=models.SET_NULL
+    # )
     attach_to_ticket = models.BooleanField(
         default=False,
         help_text='If checked, thus having True as value, every uploaded '
@@ -748,9 +784,9 @@ class AuditableTextData(TimeStampedModel):
     objects = AuditableTextDataManager()
 
     def save(self, *args, **kwargs):
-        is_update = False
-        if self.pk:
-            is_update = True
+        # is_update = False
+        # if self.pk:
+        #     is_update = True
         super(AuditableTextData, self).save(*args, **kwargs)
 
         # serialized = serializers.serialize('json', [self, ],

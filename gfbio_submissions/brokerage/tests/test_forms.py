@@ -23,5 +23,3 @@ class TestSubmissionCommentForm(TestCase):
         self.assertFalse(form.is_valid())
         error_json = json.loads(form.errors.as_json())
         self.assertIn('comment', error_json.keys())
-
-

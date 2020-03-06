@@ -147,6 +147,33 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 - docker-compose -f production.yml run --rm django python manage.py collectstatic
 - docker-compose -f production.yml up
 
+
+#### delete local database within postgres container
+
+- login to psql container: 
+
+            
+            docker exec -u 0 -it 85543248e8e1 bash
+
+- connect to database and drop test database:
+        
+        
+        psql -U <POSTGRES_USER from local envs> gfbio_submissions
+        gfbio_submissions=# DROP DATABASE test_gfbio_submissions;
+        DROP DATABASE
+
+
+##### Old version (may be still useful)
+
+    - docker exec -it gfbio_submissions_postgres_1_66ade2b6f75e psql -U gfbio_submissions
+        
+            psql (10.4 (Debian 10.4-2.pgdg90+1))
+            Type "help" for help.
+            
+            postgres=# DROP DATABASE test_gfbio_submissions;
+            DROP DATABASE
+            postgres=# \q
+
 --------------------------------------------------------------------------------
 
 #### no database content
@@ -220,10 +247,12 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 
 - ssh -l root 141.5.103.171
 - cd /var/www/gfbio_submissions/
-- supervisorctl stop devgfbiosubmissions
+
 - git fetch
 - (git checkout <BRANCH>)
 - git pull origin develop (or feature branch)
+
+
 
 - RENAME compose/production/devserver-taefik.toml to taefik.toml (because of different domain)
 
@@ -233,6 +262,7 @@ following https://cookiecutter-django.readthedocs.io/en/latest/developing-locall
 - docker-compose -f production.yml build
 - docker-compose -f production.yml run --rm django python manage.py migrate
 - docker-compose -f production.yml run --rm django python manage.py collectstatic
+- supervisorctl stop devgfbiosubmissions
 - docker-compose -f production.yml up OR supervisorctl start devgfbiosubmissions
 
 

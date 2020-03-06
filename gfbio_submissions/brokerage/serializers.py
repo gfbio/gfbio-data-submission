@@ -22,8 +22,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class SubmissionSerializer(serializers.ModelSerializer):
-    site = serializers.ReadOnlyField(source='site.username')
-    # user = serializers.ReadOnlyField(source='user.username')
+    # site = serializers.ReadOnlyField(source='site.username')
+    user = serializers.ReadOnlyField(source='user.username')
     broker_submission_id = serializers.UUIDField(required=False)
     download_url = serializers.URLField(required=False)
     data = serializers.JSONField()
@@ -57,9 +57,10 @@ class SubmissionSerializer(serializers.ModelSerializer):
         fields = (
             'broker_submission_id',
             'issue',
-            'site',
-            # 'user',
-            'submitting_user', 'site_project_id', 'target', 'status',
+            # 'site',
+            'user',
+            'submitting_user',
+            'target', 'status',
             'release', 'data', 'embargo', 'download_url',
         )
 
@@ -99,14 +100,14 @@ class SubmissionDetailSerializer(SubmissionSerializer):
 
 class SubmissionUploadSerializer(serializers.ModelSerializer):
     # TODO: user field ?
-    site = serializers.ReadOnlyField(source='site.username')
+    user = serializers.ReadOnlyField(source='user.username')
     submission = serializers.PrimaryKeyRelatedField(read_only=True)
     attach_to_ticket = serializers.BooleanField(required=False)
     meta_data = serializers.BooleanField(required=False)
 
     class Meta:
         model = SubmissionUpload
-        fields = ('site', 'file', 'submission', 'attach_to_ticket', 'meta_data')
+        fields = ('user', 'file', 'submission', 'attach_to_ticket', 'meta_data')
 
 
 class SubmissionUploadListSerializer(serializers.ModelSerializer):
@@ -125,5 +126,5 @@ class SubmissionUploadListSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubmissionUpload
         fields = (
-            'site', 'file', 'submission', 'attach_to_ticket', 'file_name',
+            'user', 'file', 'submission', 'attach_to_ticket', 'file_name',
             'file_size', 'meta_data', 'pk')

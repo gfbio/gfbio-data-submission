@@ -4,6 +4,8 @@ import unicodedata
 
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 
+from gfbio_submissions.brokerage.models import SiteConfiguration
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,15 +42,18 @@ class GFBioAuthenticationBackend(OIDCAuthenticationBackend):
                                      claims.get('family_name', '')).strip()
         user.email = claims.get('email', '')
 
-        user.goesternid = claims.get('goe_id', '')
+        user.external_user_id = claims.get('goe_id', '')
+        user.site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
+
         logger.info(
-            'GFBioAuthenticationBackend | create_user | user={0} | goesternid={1} |'
-            ''.format(user, user.goesternid))
+            'GFBioAuthenticationBackend | create_user | user={0} | '
+            'external_user_id={1} (goesternid) |'
+            ''.format(user, user.external_user_id))
         user.save()
         logger.info('GFBioAuthenticationBackend | create_user | email={0}  | '
-                    'goesternid={1}'.format(
+                    'external_user_id={1} (goesternid)'.format(
             claims.get('email', 'NO_EMAIL_IN_CLAIM'),
-            claims.get('goesternid', 'NO_GOESTERNID_IN_CLAIM'))
+            claims.get('external_user_id', 'NO_GOESTERNID_IN_CLAIM'))
         )
         return user
 
@@ -61,7 +66,8 @@ class GFBioAuthenticationBackend(OIDCAuthenticationBackend):
         user.name = '{0} {1}'.format(claims.get('given_name', ''),
                                      claims.get('family_name', '')).strip()
         user.email = claims.get('email', '')
-        user.goesternid = claims.get('goe_id', '')
+        user.external_user_id = claims.get('goe_id', '')
+        user.site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
         user.save()
         logger.info('GFBioAuthenticationBackend | update_user | email={0}  | '
                     ''.format(claims.get('email', 'NO_EMAIL_IN_CLAIM')))

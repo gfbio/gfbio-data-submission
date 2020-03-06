@@ -23,10 +23,10 @@ urlpatterns = [
         name='create_submission'
     ),
     # FIXME: remove once submission.org is in production
-    url(
-        regex=r'molecular/full_template\.csv',
-        view=views.CsvTemplateDownloadView.as_view(),
-        name='molecular_csv_template'
-
-    ),
+    # url(
+    #     regex=r'molecular/full_template\.csv',
+    #     view=views.CsvTemplateDownloadView.as_view(),
+    #     name='molecular_csv_template'
+    #
+    # ),
 ]
