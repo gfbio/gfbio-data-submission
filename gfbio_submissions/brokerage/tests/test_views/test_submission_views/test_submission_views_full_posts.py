@@ -6,12 +6,15 @@ from uuid import UUID
 
 import responses
 from django.urls import reverse
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
     GENERIC, ENA_PANGAEA
 from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_submission_post_response
+from gfbio_submissions.users.models import User
 from .test_submission_view_base import TestSubmissionView
 
 
@@ -62,6 +65,48 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(Submission.SUBMITTED,
                          content.get('status', 'NOPE'))
         self.assertEqual('', submission.download_url)
+
+    @responses.activate
+    def test_valid_max_post_of_fresh_user(self):
+        self._add_create_ticket_response()
+        self._add_gfbio_helpdesk_user_service_response(user_name='new_user',
+                                                       email='new@user.de')
+        self.assertEqual(0, len(Submission.objects.all()))
+
+        user = User.objects.create_user(
+            username='new_user', email='new@user.de', password='pass1234', )
+        user.site_configuration = self.site_config
+        user.save()
+
+        token, created = Token.objects.get_or_create(user_id=user.id)
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+
+        response = client.post(
+            '/api/submissions/',
+            {'target': 'ENA', 'release': True,
+             'data': _get_submission_request_data()},
+            format='json'
+        )
+        print(response.status_code)
+        self.assertEqual(201, response.status_code)
+        content = json.loads(response.content.decode('utf-8'))
+        pprint(content)
+        self.assertEqual('new_user', content['user'])
+
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'ENA', 'release': True,
+             'data': _get_submission_request_data()},
+            format='json'
+        )
+
+        self.assertEqual(2, len(Submission.objects.all()))
+        response = client.get('/api/submissions/')
+        content = json.loads(response.content)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, len(content))
+
 
     @responses.activate
     def test_valid_max_post_target_generic(self):

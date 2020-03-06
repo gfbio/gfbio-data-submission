@@ -26,7 +26,7 @@ class SubmissionsView(mixins.ListModelMixin,
     serializer_class = SubmissionDetailSerializer
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
+                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def perform_create(self, serializer):
@@ -73,7 +73,7 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
     serializer_class = SubmissionDetailSerializer
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
+                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     lookup_field = 'broker_submission_id'
@@ -156,7 +156,7 @@ class SubmissionUploadView(mixins.CreateModelMixin,
     parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
+                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def perform_create(self, serializer, submission):
@@ -197,7 +197,7 @@ class SubmissionUploadListView(generics.ListAPIView):
     parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
+                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def get_queryset(self):
@@ -216,7 +216,7 @@ class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
     parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
+                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def put(self, request, *args, **kwargs):
@@ -260,7 +260,7 @@ class SubmissionUploadPatchView(mixins.UpdateModelMixin,
     parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          permissions.DjangoModelPermissions,
+                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def patch(self, request, *args, **kwargs):

@@ -135,3 +135,23 @@ class TestSubmissionViewGetRequests(TestSubmissionView):
 
         self.assertEqual(200, response.status_code)
         self.assertEqual(0, len(content))
+
+    def test_fresh_user_get(self):
+        user = User.objects.create_user(
+            username='new_user', email='new@user.de', password='pass1234', )
+        user.site_configuration = self.site_config
+        user.save()
+
+        self.assertFalse(user.has_perm('brokerage.add_submission'))
+
+        SubmissionTest._create_submission_via_serializer(
+            username='new_user', create_broker_objects=False)
+
+        token, created = Token.objects.get_or_create(user_id=user.id)
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+
+        response = client.get('/api/submissions/')
+        content = json.loads(response.content)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, len(content))
