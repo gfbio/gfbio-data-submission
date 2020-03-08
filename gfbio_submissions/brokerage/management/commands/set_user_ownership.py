@@ -30,4 +30,3 @@ class Command(BaseCommand):
                 submission.pk, submission.site, submission.user,
                 submission.submitting_user, submission.site.username)
             )
-            print()
