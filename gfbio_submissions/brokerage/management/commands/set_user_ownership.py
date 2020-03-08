@@ -24,7 +24,8 @@ class Command(BaseCommand):
         local_site_submissions = Submission.objects.filter(
             site__username=HOSTING_SITE)
         print('\n****************\tlocal_site_submissions\t**************')
+        print('\n\tpk:\tsite:\tuser:\tsubmitting_user:\tsite.username:')
         for submission in local_site_submissions:
-            print('pk: ', submission.pk, ' | site: ', submission.site,
-                  ' | user: ', submission.user, ' | ',
-                  submission.submitting_user)
+            print('\t', submission.pk, '\t', submission.site, '\t',
+                  submission.user, '\t', submission.submitting_user, '\t',
+                  submission.site.username)
