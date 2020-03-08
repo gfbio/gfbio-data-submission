@@ -26,10 +26,11 @@ class Command(BaseCommand):
             print('\t{0}\t{1}\t{2}\t{3}'.format(submission.pk, submission.site,
                                                 submission.user,
                                                 submission.submitting_user))
-            print(
-                '\t\t... set submission user to "{0}"'.format(old_gfbio_portal))
-            # submission.user = old_gfbio_portal
-            # submission.save()
+            if submission.user is None:
+                print(
+                    '\t\t... set submission user to "{0}"'.format(old_gfbio_portal))
+                submission.user = old_gfbio_portal
+                submission.save()
 
         local_site_submissions = Submission.objects.filter(
             site__username=HOSTING_SITE)
@@ -49,9 +50,9 @@ class Command(BaseCommand):
                 submission.pk, submission.site, submission.user,
                 submission.submitting_user, user_status)
             )
-            if user:
+            if user and submission.user is None:
                 print(
                     '\t\t... set submission user to "{0}"'.format(
                         user))
-                # submission.user = user
-                # submission.save()
+                submission.user = user
+                submission.save()
