@@ -16,10 +16,20 @@ class Command(BaseCommand):
         gfbio_related_submissions = Submission.objects.filter(
             site__username__contains='gfbio')
         print('\n****************\tgfbio_related_submissions\t**************')
+        old_gfbio_portal, created = User.objects.get_or_create(
+            username='old_gfbio_portal')
+        print('\tcreated user "old_gfbio_portal" ', created, ' pk: ',
+              old_gfbio_portal.pk)
+        print('\n\tpk:\tsite:\tuser:\tsubmission.submitting_user')
+
         for submission in gfbio_related_submissions:
-            print('pk: ', submission.pk, ' | site: ', submission.site,
-                  ' | user: ', submission.user, ' | ',
-                  submission.submitting_user)
+            print('\t{0}\t{1}\t{2}\t{3}'.format(submission.pk, submission.site,
+                                                submission.user,
+                                                submission.submitting_user))
+            print(
+                '\t\t... set submission user to "{0}"'.format(old_gfbio_portal))
+            # submission.user = old_gfbio_portal
+            # submission.save()
 
         local_site_submissions = Submission.objects.filter(
             site__username=HOSTING_SITE)
@@ -27,6 +37,7 @@ class Command(BaseCommand):
         print(
             '\n\tpk:\tsite:\tuser:\tsubmitting_user:\tuser_for_submitting_user:')
         for submission in local_site_submissions:
+            user = None
             try:
                 user = User.objects.get(pk=int(submission.submitting_user))
                 user_status = '{0}:{1}'.format(user.pk, user.username)
@@ -38,3 +49,9 @@ class Command(BaseCommand):
                 submission.pk, submission.site, submission.user,
                 submission.submitting_user, user_status)
             )
+            if user:
+                print(
+                    '\t\t... set submission user to "{0}"'.format(
+                        user))
+                # submission.user = user
+                # submission.save()

@@ -14,7 +14,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         all_submissions = len(Submission.objects.all())
         gfbio_related_submissions = len(
-            Submission.objects.filter(site__username__contains='gfbio'))
+            Submission.objects.filter(site__username__startswith='gfbio'))
         local_site_submissions = len(
             Submission.objects.filter(site__username=HOSTING_SITE))
 
