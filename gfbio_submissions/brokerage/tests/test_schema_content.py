@@ -23,7 +23,6 @@ class JSONSchemaContentTest(TestCase):
         self.assertListEqual(os.listdir(static_path), os.listdir(app_path))
 
     def test_file_content_matching(self):
-        self.maxDiff = None
         static_path = self._get_static_schema_dir_path()
         app_path = self._get_brokerage_schema_dir_path()
         for f in os.listdir(static_path):

@@ -50,15 +50,13 @@
                     "taxon_id": 1234
                 }
             ],
-            "study_type": "Metagenomics",
             "title": "123456"
         }
     },
     "download_url": "",
     "embargo": null,
     "release": true,
-    "site": "horst",
-    "site_project_id": "",
+    "user": "horst",
     "status": "SUBMITTED",
     "submitting_user": "",
     "target": "ENA"

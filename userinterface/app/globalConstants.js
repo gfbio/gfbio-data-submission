@@ -11,7 +11,6 @@ export const API_ROOT = '';
 
 export const JIRA_ROOT = 'https://helpdesk.gfbio.org/browse/';
 
-export const USER_URL = 'user/';
 // TODO: merge redundant code of api-access-code like in this file
 export const SUBMISSIONS = '/api/submissions/';
 export const UPLOAD = '/upload/';

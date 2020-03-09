@@ -175,7 +175,7 @@ class Enalizer(object):
         # study_alias = self.study.pop('study_alias', '')
         # self.center_name = self.study.pop('center_name', ENA_CENTER_NAME)
 
-        site_object_id = self.study.pop('site_object_id', '')
+        # site_object_id = self.study.pop('site_object_id', '')
 
         study_dict['study']['descriptor'] = self.study
         if len(study_attributes):
@@ -191,9 +191,9 @@ class Enalizer(object):
         for item in root.findall('./STUDY/STUDY_ATTRIBUTES/item'):
             item.tag = 'STUDY_ATTRIBUTE'
 
-        study_type = root.find('./STUDY/DESCRIPTOR/STUDY_TYPE')
-        study_type.set('existing_study_type', study_type.text)
-        study_type.text = ''
+        # study_type = root.find('./STUDY/DESCRIPTOR/STUDY_TYPE')
+        # study_type.set('existing_study_type', study_type.text)
+        # study_type.text = ''
 
         study = root.find('./STUDY')
         study.set('alias', self.study_alias)
@@ -256,7 +256,7 @@ class Enalizer(object):
                 ]))
         res = OrderedDict()
         res['title'] = s.pop('sample_title', '')
-        site_object_id = s.pop('site_object_id', '')
+        # site_object_id = s.pop('site_object_id', '')
         res['sample_alias'] = 'sample_alias_{0}'.format(sample_index)
 
         sname = OrderedDict()
@@ -654,7 +654,8 @@ def release_study_on_ena(submission):
     study_primary_accession = submission.brokerobject_set.filter(
         type='study').first().persistentidentifier_set.filter(
         pid_type='PRJ').first()
-    site_config = SiteConfiguration.objects.filter(site=submission.site).first()
+    # site_config = SiteConfiguration.objects.filter(site=submission.site).first()
+    site_config = submission.user.site_configuration
     if site_config is None:
         logger.warning(
             'ena.py | release_study_on_ena | no site_configuration found | submission_id={0}'.format(
@@ -851,7 +852,7 @@ def fetch_ena_report(site_configuration, report_type):
             request_id=request_id,
             type=RequestLog.OUTGOING,
             url=url,
-            site_user=site_configuration.site.username,
+            # site_user=site_configuration.site.username,
             response_status=response.status_code,
             response_content=response.content,
             request_details={

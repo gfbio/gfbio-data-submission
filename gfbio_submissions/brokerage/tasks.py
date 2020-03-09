@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+from pprint import pprint
 
 import celery
 from celery import Task
@@ -12,36 +13,31 @@ from kombu.utils import json
 from requests import ConnectionError, Response
 
 from config.settings.base import HOST_URL_ROOT, ADMIN_URL
-from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, \
-    PANGAEA_ISSUE_VIEW_URL, SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME, \
+from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
+from gfbio_submissions.users.models import User
+from .configuration.settings import ENA, ENA_PANGAEA, PANGAEA_ISSUE_VIEW_URL, \
+    SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME, \
     JIRA_FALLBACK_EMAIL, APPROVAL_EMAIL_SUBJECT_TEMPLATE, \
     APPROVAL_EMAIL_MESSAGE_TEMPLATE, JIRA_ACCESSION_COMMENT_TEMPLATE
-from gfbio_submissions.brokerage.exceptions import TransferServerError, \
-    TransferClientError
-from gfbio_submissions.brokerage.models import SubmissionUpload, EnaReport
-from gfbio_submissions.brokerage.utils.csv import \
-    check_for_molecular_content, parse_molecular_csv
-from gfbio_submissions.brokerage.utils.gfbio import get_gfbio_helpdesk_username
-from gfbio_submissions.brokerage.utils.jira import JiraClient
-from gfbio_submissions.brokerage.utils.schema_validation import \
-    validate_data_full
-from gfbio_submissions.brokerage.utils.task_utils import jira_error_auto_retry, \
+from .configuration.settings import SUBMISSION_MAX_RETRIES, \
+    SUBMISSION_RETRY_DELAY
+from .exceptions import TransferServerError, TransferClientError
+from .models import BrokerObject, AuditableTextData, RequestLog, \
+    AdditionalReference, TaskProgressReport, Submission, SiteConfiguration
+from .models import SubmissionUpload, EnaReport
+from .utils.csv import check_for_molecular_content, parse_molecular_csv
+from .utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data, \
+    send_submission_to_ena, parse_ena_submission_response, fetch_ena_report, \
+    update_persistent_identifier_report_status
+from .utils.gfbio import get_gfbio_helpdesk_username
+from .utils.jira import JiraClient
+from .utils.pangaea import pull_pangaea_dois
+from .utils.schema_validation import validate_data_full
+from .utils.submission_transfer import SubmissionTransferHandler
+from .utils.task_utils import jira_error_auto_retry, \
     get_submission_and_site_configuration, raise_transfer_server_exceptions, \
     retry_no_ticket_available_exception, \
     get_submitted_submission_and_site_configuration
-from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
-from gfbio_submissions.users.models import User
-from .configuration.settings import SUBMISSION_MAX_RETRIES, \
-    SUBMISSION_RETRY_DELAY
-from .models import BrokerObject, \
-    AuditableTextData, RequestLog, AdditionalReference, TaskProgressReport, \
-    Submission, SiteConfiguration
-from .utils.ena import prepare_ena_data, \
-    store_ena_data_as_auditable_text_data, send_submission_to_ena, \
-    parse_ena_submission_response, fetch_ena_report, \
-    update_persistent_identifier_report_status
-from .utils.pangaea import pull_pangaea_dois
-from .utils.submission_transfer import SubmissionTransferHandler
 
 logger = logging.getLogger(__name__)
 
@@ -51,14 +47,9 @@ logger = logging.getLogger(__name__)
 class SubmissionTask(Task):
     abstract = True
 
-    # also existing
-    #   - on_bound
-
     # TODO: consider a report for every def here OR refactor taskreport to
     #  keep track in one report. Keep in mind to resume chains from a certain
     #  point, add a DB clean up task to remove from database
-
-    # logger.info('SubmissionTask | instanced ')
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
         logger.info('tasks.py | SubmissionTask | on_retry | task_id={0} | '
@@ -107,6 +98,8 @@ def check_for_molecular_content_in_submission_task(self, submission_id=None):
     logger.info(
         msg='check_for_molecular_content_in_submission_task. get submission'
             ' with pk={}.'.format(submission_id))
+
+    # TODO: needs only submission, not both.
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -118,15 +111,18 @@ def check_for_molecular_content_in_submission_task(self, submission_id=None):
         msg='check_for_molecular_content_in_submission_task. '
             'process submission={}.'.format(submission.broker_submission_id))
 
-    molecular_data_available, errors = check_for_molecular_content(submission)
+    molecular_data_available, messages, check_performed = check_for_molecular_content(
+        submission)
     logger.info(
         msg='check_for_molecular_content_in_submission_task. '
             'valid molecular data available={0}'
             ''.format(molecular_data_available)
     )
+
     return {
         'molecular_data_available': molecular_data_available,
-        'errors': errors,
+        'messages': messages,
+        'molecular_data_check_performed': check_performed,
     }
 
 
@@ -134,10 +130,20 @@ def check_for_molecular_content_in_submission_task(self, submission_id=None):
              name='tasks.trigger_submission_transfer', )
 def trigger_submission_transfer(self, previous_task_result=None,
                                 submission_id=None):
+    molecular_data_available = False
+    check_performed = False
+
+    if isinstance(previous_task_result, dict):
+        molecular_data_available = previous_task_result.get(
+            'molecular_data_available', False)
+        check_performed = previous_task_result.get(
+            'molecular_data_check_performed', False)
+
     logger.info(
         msg='trigger_submission_transfer. get submission with pk={}.'.format(
             submission_id)
     )
+    # TODO: needs only submission, not both.
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -148,7 +154,9 @@ def trigger_submission_transfer(self, previous_task_result=None,
 
     transfer_handler = SubmissionTransferHandler(
         submission_id=submission.pk,
-        target_archive=submission.target
+        target_archive=submission.target,
+        molecular_data_found=molecular_data_available,
+        molecular_data_check_performed=check_performed
     )
     transfer_handler.initiate_submission_process(
         release=submission.release,
@@ -159,12 +167,22 @@ def trigger_submission_transfer(self, previous_task_result=None,
              name='tasks.trigger_submission_transfer_for_updates', )
 def trigger_submission_transfer_for_updates(self, previous_task_result=None,
                                             broker_submission_id=None):
+    molecular_data_available = False
+    check_performed = False
+    if isinstance(previous_task_result, dict):
+        molecular_data_available = previous_task_result.get(
+            'molecular_data_available', False)
+        check_performed = previous_task_result.get(
+            'molecular_data_check_performed', False)
+
     logger.info(
         msg='trigger_submission_transfer_for_updates. get submission_id with broker_submission_id={}.'.format(
             broker_submission_id)
     )
     submission_id = Submission.objects.get_open_submission_id_for_bsi(
         broker_submission_id=broker_submission_id)
+
+    # TODO: needs only submission, not both.
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -175,7 +193,9 @@ def trigger_submission_transfer_for_updates(self, previous_task_result=None,
 
     transfer_handler = SubmissionTransferHandler(
         submission_id=submission.pk,
-        target_archive=submission.target
+        target_archive=submission.target,
+        molecular_data_found=molecular_data_available,
+        molecular_data_check_performed=check_performed
     )
     transfer_handler.initiate_submission_process(
         release=submission.release,
@@ -224,7 +244,8 @@ def check_on_hold_status_task(self, previous_task_result=None,
         mail_admins(
             subject=APPROVAL_EMAIL_SUBJECT_TEMPLATE.format(
                 HOST_URL_ROOT,
-                site_configuration.site.username if site_configuration.site else site_configuration.title,
+                # site_configuration.site.username if site_configuration.site else site_configuration.title,
+                submission.user.username if submission.user else site_configuration.title,
                 submission.broker_submission_id
             ),
             message=APPROVAL_EMAIL_MESSAGE_TEMPLATE.format(
@@ -265,10 +286,21 @@ def create_broker_objects_from_submission_data_task(
             task=self,
             include_closed=True
         )
+    logger.info('tasks.py | create_broker_objects_from_submission_data_task | '
+                'submission={0} | site_configuration={1}'.format(submission,
+                                                                 site_configuration))
     if submission == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | create_broker_objects_from_submission_data_task | '
+            ' do nothing because submission={0}'.format(
+                TaskProgressReport.CANCELLED))
         return TaskProgressReport.CANCELLED
 
     try:
+        logger.info(
+            'tasks.py | create_broker_objects_from_submission_data_task '
+            '| try delete broker objects and create new ones '
+            'from submission data')
         with transaction.atomic():
             submission.brokerobject_set.all().delete()
             BrokerObject.objects.add_submission_data(submission)
@@ -408,7 +440,7 @@ def clean_submission_for_update_task(self, previous_task_result=None,
         return TaskProgressReport.CANCELLED
 
     data = submission_upload.submission.data
-    molecular_requirements_keys = ['study_type', 'samples', 'experiments']
+    molecular_requirements_keys = ['samples', 'experiments']  # 'study_type',
 
     if 'validation' in data.keys():
         data.pop('validation')
@@ -417,7 +449,6 @@ def clean_submission_for_update_task(self, previous_task_result=None,
             data.get('requirements', {}).pop(k)
 
     with transaction.atomic():
-        # submission_upload.submission.data = data  # --> shallow copy, assignment no needed
         submission_upload.submission.save()
     return True
 
@@ -482,7 +513,6 @@ def parse_csv_to_update_clean_submission_task(self, previous_task_result=None,
             return True
 
 
-# TODO: result of this task is input for next task
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -529,7 +559,6 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None):
         response.content)
 
 
-# TODO: this one relies on prevoius task: transfer_data_to_ena_task
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -610,8 +639,6 @@ def create_pangaea_issue_task(self, prev=None, submission_id=None):
         }
 
 
-# TODO: this one relies on prevoius task: create_pangaea_issue_task
-# TODO: this task relies on additional kwargs, as returned from task above
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -654,8 +681,6 @@ def add_accession_to_pangaea_issue_task(self, kwargs=None, submission_id=None):
         return TaskProgressReport.CANCELLED
 
 
-# TODO: this one relies on prevoius task: attach_to_pangaea_issue_task
-# TODO: this task relies on additional kwargs, as returned from task above
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -712,9 +737,10 @@ def check_for_pangaea_doi_task(self, resource_credential_id=None):
     # TODO: in general suboptimal to fetch sc for every submission in set, but neeeded, reconsider to refactor
     #   schedule in database etc.
     for sub in submissions:
-        site_config = SiteConfiguration.objects.get_site_configuration(
-            site=sub.site
-        )
+        # site_config = SiteConfiguration.objects.get_site_configuration(
+        #     site=sub.site
+        # )
+        site_config = SiteConfiguration.objects.get_hosting_site_configuration()
         jira_client = JiraClient(resource=site_config.pangaea_jira_server,
                                  token_resource=site_config.pangaea_token_server)
         pull_pangaea_dois(sub, jira_client)
@@ -746,67 +772,63 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
             'tasks.py | get_gfbio_helpdesk_username_task | return TaskProgressReport.CANCELLED')
         return TaskProgressReport.CANCELLED
 
-    # result = {}
     user_name = JIRA_FALLBACK_USERNAME
     user_email = JIRA_FALLBACK_EMAIL
     user_full_name = ''
-    # result['name'] = user_name
     result = {
         'jira_user_name': user_name,
         'email': user_email,
         'full_name': user_full_name
     }
-    # submitting user is site specific. e.g. local django user id = 1 is
-    # different from silva user id = 1
-    if len(submission.submitting_user) == 0:
-        logger.info(
-            'tasks.py | get_gfbio_helpdesk_username_task | '
-            'len(submission.submitting_user) == 0 | return {0}'.format(result))
-        return result
+    # if len(submission.submitting_user) == 0:
+    #     logger.info(
+    #         'tasks.py | get_gfbio_helpdesk_username_task | '
+    #         'len(submission.submitting_user) == 0 | return {0}'.format(result))
+    #     return result
 
-    # 'local_site' includes sso, local users, social accounts
-    # (which have local shadow accounts)
-    if submission.site.username == HOSTING_SITE:
-        try:
-            logger.info(
-                'tasks.py | get_gfbio_helpdesk_username_task | try getting a local user | submission={1} | submitting_user={1}'.format(
-                    submission.broker_submission_id, submission.submitting_user)
-            )
-            # FIXME: tricky if submitting user is a numerical id from another
-            #  system, worst case would be an accidental match with a local user
-            # works only based on the assumption that this is actually a
-            # local user
-            user = User.objects.get(pk=int(submission.submitting_user))
-            user_name = user.goesternid if user.goesternid else user.username
-            user_email = user.email
-            result['email'] = user_email
-            user_full_name = user.name
-            result['full_name'] = user_full_name
-            logger.info(
-                'tasks.py | get_gfbio_helpdesk_username_task | try get user | username={0} | goe_id={1}'.format(
-                    user.username, user.goesternid))
-        except ValueError as ve:
-            logger.warning(
-                'tasks.py | get_gfbio_helpdesk_username_task | '
-                'submission_id={0} | ValueError with '
-                'submission.submiting_user={1} | '
-                '{2}'.format(submission_id, submission.submitting_user, ve))
-        except User.DoesNotExist as e:
-            logger.warning(
-                'tasks.py | get_gfbio_helpdesk_username_task | '
-                'submission_id={0} | No user with '
-                'submission.submiting_user={1} | '
-                '{2}'.format(submission_id, submission.submitting_user, e))
-            logger.warning(
-                'tasks.py | get_gfbio_helpdesk_username_task | '
-                'submission_id={0} | Try getting user_email from previous task | user_name='
-                '{1}'.format(submission_id, user_name))
-    else:
-        # TODO: add 'get_user_email method' specific to a site as a parameter to this task, otherwise no email resolution is possible
-        user_name = submission.site.username
-        user_email = submission.site.email if len(
-            submission.site.email) else site_configuration.contact
-        result['email'] = user_email if len(user_email) else JIRA_FALLBACK_EMAIL
+    # if submission.site.username == HOSTING_SITE:
+    #     try:
+    #         logger.info(
+    #             'tasks.py | get_gfbio_helpdesk_username_task | try getting a local user | submission={1} | submitting_user={1}'.format(
+    #                 submission.broker_submission_id, submission.submitting_user)
+    #         )
+    #         user = User.objects.get(pk=int(submission.submitting_user))
+    #         user_name = user.external_user_id if user.external_user_id else user.username
+    #         user_email = user.email
+    #         result['email'] = user_email
+    #         user_full_name = user.name
+    #         result['full_name'] = user_full_name
+    #         logger.info(
+    #             'tasks.py | get_gfbio_helpdesk_username_task | try get user | username={0} | goe_id={1}'.format(
+    #                 user.username, user.external_user_id))
+    #     except ValueError as ve:
+    #         logger.warning(
+    #             'tasks.py | get_gfbio_helpdesk_username_task | '
+    #             'submission_id={0} | ValueError with '
+    #             'submission.submiting_user={1} | '
+    #             '{2}'.format(submission_id, submission.submitting_user, ve))
+    #     except User.DoesNotExist as e:
+    #         logger.warning(
+    #             'tasks.py | get_gfbio_helpdesk_username_task | '
+    #             'submission_id={0} | No user with '
+    #             'submission.submiting_user={1} | '
+    #             '{2}'.format(submission_id, submission.submitting_user, e))
+    #         logger.warning(
+    #             'tasks.py | get_gfbio_helpdesk_username_task | '
+    #             'submission_id={0} | Try getting user_email from previous task | user_name='
+    #             '{1}'.format(submission_id, user_name))
+    # else:
+    # TODO: add 'get_user_email method' specific to a site as a parameter to this task, otherwise no email resolution is possible
+    # user_name = submission.user.username
+    # user_email = submission.user.email if len(submission.user.email) else JIRA_FALLBACK_EMAIL
+    # result['email'] = user_email  # if len(user_email) else JIRA_FALLBACK_EMAIL
+    user_name = submission.user.external_user_id \
+        if submission.user.external_user_id \
+        else submission.user.username
+    user_email = submission.user.email
+    user_full_name = submission.user.name
+    result['email'] = user_email if len(user_email) else JIRA_FALLBACK_EMAIL
+    result['full_name'] = user_full_name
 
     response = get_gfbio_helpdesk_username(user_name=user_name,
                                            email=user_email,
@@ -822,8 +844,6 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
         max_retries=SUBMISSION_MAX_RETRIES
     )
 
-    # in case of hosting site users, client or server errors 4xx/5xx will return
-    # JIRA_FALLBACK_USERNAME but with user email & fullname
     if response.status_code == 200:
         result['jira_user_name'] = smart_text(response.content)
 
@@ -861,6 +881,11 @@ def create_submission_issue_task(self, prev_task_result=None,
     #   would be cleaner (no .first() on query set)
     # existing_tickets = submission.additionalreference_set.filter(
     #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
+
+    print('\ncreate_submission_issue_task\n')
+    print(site_configuration)
+    print(site_configuration.__dict__)
+    pprint(submission)
 
     jira_client = JiraClient(resource=site_configuration.helpdesk_server)
     jira_client.create_submission_issue(reporter=prev_task_result,
@@ -911,15 +936,8 @@ def update_submission_issue_task(self, prev_task_result=None,
                                      broker_submission_id=submission.broker_submission_id)
     else:
         return TaskProgressReport.CANCELLED
-        # return retry_no_ticket_available_exception(
-        #     task=self,
-        #     broker_submission_id=submission.broker_submission_id,
-        #     number_of_tickets=1 if reference else 0
-        # )
 
 
-# TODO: examine all tasks for redundant code and possible generalization e.g.:
-# TODO: more generic like update above
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -990,16 +1008,10 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
                     primary_accession=study_pid.pid
                 )
             )
-            # text='Submission to ENA has been successful. '
-            #      'Study is accessible via ENA Accession No. {0}. '
-            #      'broker_submission_id: {1}.'.format(study_pid.pid,
-            #                                          submission.broker_submission_id))
             return jira_error_auto_retry(jira_client=jira_client, task=self,
                                          broker_submission_id=submission.broker_submission_id)
 
 
-# TODO: examine all tasks for redundant code and possible generalization e.g.:
-# TODO: more generic like update above
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -1161,19 +1173,11 @@ def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
                 'submission_id={0} | submission_upload_id={1}'
                 ''.format(submission_id, submission_upload_id))
 
-        # apply_timebased_task_retry_policy(
-        #     task=attach_to_submission_issue_task,
-        #     submission=submission,
-        #     no_of_tickets=1 if reference else 0
-        #     # always 1 if available due to filter rules
-        # )
         return retry_no_ticket_available_exception(
             task=self,
             broker_submission_id=submission.broker_submission_id,
             number_of_tickets=1 if reference else 0
         )
-
-        # return False
 
 
 @celery.task(
@@ -1301,10 +1305,12 @@ def fetch_ena_reports_task(self):
     TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
-    user = User.objects.get(username=HOSTING_SITE, is_site=True)
-    site_configuration = SiteConfiguration.objects.get_site_configuration(
-        site=user
-    )
+    # user = User.objects.get(username=HOSTING_SITE, is_site=True)
+    # site_configuration = SiteConfiguration.objects.get_site_configuration(
+    #     site=user
+    # )
+    # site_configuration = user.site_configuration
+    site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
     if site_configuration is None or site_configuration.ena_report_server is None:
         return TaskProgressReport.CANCELLED
 
@@ -1355,5 +1361,4 @@ def update_persistent_identifier_report_status_task(self):
         msg='tasks.py | update_persistent_identifier_report_status_task '
             '| success={0}'.format(success))
 
-    # return success if success else TaskProgressReport.CANCELLED
     return True
