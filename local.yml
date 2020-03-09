@@ -14,11 +14,8 @@ services:
     depends_on:
       - postgres
     volumes:
-#      - /etc/localtime:/etc/localtime:ro
       - .:/app
       - django_media:/app/gfbio_submissions/media
-      # git has to be initialized, remote origin has to be set.
-#      - /home/maweber/devel/git-python-test:/gfbio-submission-auditing-tests
     env_file:
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres

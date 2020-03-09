@@ -580,10 +580,6 @@ class RequestLog(TimeStampedModel):
         help_text='This may contain meta-information regarding this request'
     )
 
-    # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
-    # created = models.DateTimeField(auto_now_add=True)
-    # changed = models.DateTimeField(auto_now=True)
-
     def __str__(self):
         return '{}'.format(self.request_id)
 
@@ -639,10 +635,6 @@ class TaskProgressReport(TimeStampedModel):
     task_exception_info = models.TextField(default='')
     task_args = models.TextField(default='')
     task_kwargs = models.TextField(default='')
-
-    # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
-    # created = models.DateTimeField(auto_now_add=True)
-    # changed = models.DateTimeField(auto_now=True)
 
     objects = TaskProgressReportManager()
 
@@ -776,10 +768,6 @@ class AuditableTextData(TimeStampedModel):
         blank=True,
         help_text='Free text. Any comments or useful information regarding this object'
     )
-
-    # FIXME: not needed due to usage of TimestampedModel, but old production data needs these fields
-    # created = models.DateTimeField(auto_now_add=True)
-    # changed = models.DateTimeField(auto_now=True)
 
     objects = AuditableTextDataManager()
 
