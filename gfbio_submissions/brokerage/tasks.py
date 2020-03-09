@@ -517,6 +517,7 @@ def parse_csv_to_update_clean_submission_task(self, previous_task_result=None,
     base=SubmissionTask,
     bind=True,
     name='tasks.transfer_data_to_ena_task',
+    time_limit=600,
     autoretry_for=(TransferServerError,
                    TransferClientError
                    ),
