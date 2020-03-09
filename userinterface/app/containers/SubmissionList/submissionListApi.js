@@ -12,7 +12,7 @@ export function getSubmissions(token, userId) {
   // TODO: remove API_ROOT compare above TODOs
   // console.log(`${API_ROOT + SUBMISSIONS + USER_URL + userId}/`);
   return axios.get(
-    `${API_ROOT + SUBMISSIONS}/`,
+    `${API_ROOT + SUBMISSIONS}`,
     config,
   );
 
