@@ -232,12 +232,10 @@ EMAIL_BACKEND = env(
 # https://docs.djangoproject.com/en/2.2/ref/settings/#email-timeout
 EMAIL_TIMEOUT = 5
 
-
 HOST_URL_ROOT = env(
     "HOST_URL_ROOT",
     default="https://submissions.gfbio.org/"
 )
-
 
 # ADMIN
 # ------------------------------------------------------------------------------
@@ -318,11 +316,6 @@ SOCIALACCOUNT_ADAPTER = "gfbio_submissions.users.adapters.SocialAccountAdapter"
 # Your stuff...
 # ------------------------------------------------------------------------------
 
-# GIT access for AuditableTextData
-# ------------------------------------------------------------------------------
-# LOCAL_REPOSITORY = env("LOCAL_REPOSITORY")
-# REMOTE_REPOSITORY = env("REMOTE_REPOSITORY")
-
 # OpenIDConnect SETTINGS
 # ------------------------------------------------------------------------------
 OIDC_RP_CLIENT_ID = env("OIDC_RP_CLIENT_ID", default="no_oidc_cl_id")
@@ -346,5 +339,7 @@ OIDC_RP_SCOPES = "openid email profile address phone id"
 
 # GFBio Helpdesk Shadow-Account Service
 # ------------------------------------------------------------------------------
-JIRA_ACCOUNT_SERVICE_USER = env("JIRA_ACCOUNT_SERVICE_USER", default="no_account_service_user")
-JIRA_ACCOUNT_SERVICE_PASSWORD = env("JIRA_ACCOUNT_SERVICE_PASSWORD", default="no_account_service_password")
+JIRA_ACCOUNT_SERVICE_USER = env("JIRA_ACCOUNT_SERVICE_USER",
+                                default="no_account_service_user")
+JIRA_ACCOUNT_SERVICE_PASSWORD = env("JIRA_ACCOUNT_SERVICE_PASSWORD",
+                                    default="no_account_service_password")
