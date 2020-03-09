@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_ROOT, SUBMISSIONS, USER_URL } from '../../globalConstants';
+import { API_ROOT, SUBMISSIONS } from '../../globalConstants';
 
 export function getSubmissions(token, userId) {
 
@@ -12,7 +12,7 @@ export function getSubmissions(token, userId) {
   // TODO: remove API_ROOT compare above TODOs
   // console.log(`${API_ROOT + SUBMISSIONS + USER_URL + userId}/`);
   return axios.get(
-    `${API_ROOT + SUBMISSIONS + USER_URL + userId}/`,
+    `${API_ROOT + SUBMISSIONS}/`,
     config,
   );
 
