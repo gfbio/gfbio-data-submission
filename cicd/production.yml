@@ -20,6 +20,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - django_media:/app/gfbio_submissions/media
+    command: /bin/sh shutdown -h now
 
   django:
     <<: *base
@@ -29,6 +30,7 @@ services:
       - internal
     deploy:
       mode: global
+    restart: always
     labels:
       - traefik.enable=true
       - traefik.http.routers.https.rule=Host(`ISSUEURL.dev.submissions.gfbio.org`)
@@ -53,11 +55,13 @@ services:
     image: gfbio_submissions_production_postgres
     networks:
       - internal
+    restart: always
     env_file:
       - ../.envs/.production/.postgres
 
   redis:
     image: redis:5.0
+    restart: always
     networks:
       - internal
 
@@ -65,17 +69,20 @@ services:
     <<: *base
     image: gfbio_submissions_production_celeryworker
     command: /start-celeryworker
+    restart: always
 
   celerybeat:
     <<: *base
     image: gfbio_submissions_production_celerybeat
     command: /start-celerybeat
+    restart: always
 
   flower:
     <<: *base
     image: gfbio_submissions_production_flower
     ports:
       - "5555:5555"
+    restart: always
     command: /start-flower
 
 networks:

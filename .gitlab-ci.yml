@@ -1,6 +1,6 @@
 stages:
   - build
-  - autoMr
+  - autoMerge
   - afterMerge
   - test
   - createWebTest
@@ -24,8 +24,6 @@ docker_stop_web_test:
   stage: afterMerge
   script:
     - docker stack rm $CI_COMMIT_REF_NAME
-  environment:
-    name: $CI_COMMIT_REF_NAME
   only:
     refs:
       - master
@@ -35,7 +33,7 @@ docker_stop_web_test:
     - dev
 
 create_merge_request:
-  stage: autoMr
+  stage: autoMerge
   only:
     - branches
   except:
@@ -52,6 +50,7 @@ docker_web_test:
   script:
     - rsync -a /home/gitlab-runner/.envs .
     - docker stack rm $CI_COMMIT_REF_NAME || true
+    - while [[ $(docker ps | grep $CI_COMMIT_REF_NAME | wc -l) > 0 ]]; do sleep 1; done
     - sed -i s/ISSUEURL/$CI_COMMIT_REF_NAME/g cicd/production.yml
     - sed -i s/DJANGO_ALLOWED_HOSTS=.*/DJANGO_ALLOWED_HOSTS=\.dev\.submissions\.gfbio\.org/g .envs/.production/.django
     - ADMIN_NICKNAME=${ADMIN_NICKNAME} ADMIN_EMAIL=${ADMIN_EMAIL} ADMIN_PASSWORD=${ADMIN_PASSWORD} docker stack deploy -c cicd/production.yml $CI_COMMIT_REF_NAME
