@@ -50,6 +50,7 @@ create_merge_request:
 docker_web_test:
   stage: createWebTest
   script:
+    - echo "test"
     - echo $CI_COMMIT_REF_NAME
     - echo $CI_ENVIRONMENT_SLUG
     - rsync -a /home/gitlab-runner/.envs .
