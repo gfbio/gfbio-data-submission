@@ -10,7 +10,7 @@ build_images:
   stage: build
   script:
     - rsync -a /home/gitlab-runner/.envs .
-    - docker-compose -f cicd/production.yml build
+    - docker-compose -f production.yml build
   environment:
     name: $CI_COMMIT_REF_NAME
   only:
@@ -23,7 +23,7 @@ build_images:
 docker_stop_web_test:
   stage: afterMerge
   script:
-    - docker stack rm $CI_ENVIRONMENT_SLUG
+    - docker stack rm $CI_COMMIT_REF_NAME
   environment:
     name: $CI_COMMIT_REF_NAME
   only:
@@ -53,7 +53,8 @@ docker_web_test:
     - rsync -a /home/gitlab-runner/.envs .
     - docker stack rm $CI_COMMIT_REF_NAME || true
     - sed -i s/ISSUEURL/$CI_COMMIT_REF_NAME/g cicd/production.yml
-    - docker stack deploy -c cicd/production.yml $CI_COMMIT_REF_NAME
+    - sed -i s/DJANGO_ALLOWED_HOSTS=.*/DJANGO_ALLOWED_HOSTS=\.dev\.submissions\.gfbio\.org/g .envs/.production/.django
+    - ADMIN_NICKNAME=${ADMIN_NICKNAME} ADMIN_EMAIL=${ADMIN_EMAIL} ADMIN_PASSWORD=${ADMIN_PASSWORD} docker stack deploy -c cicd/production.yml $CI_COMMIT_REF_NAME
   environment:
     name: $CI_COMMIT_REF_NAME
     url: https://$CI_COMMIT_REF_NAME.dev.submissions.gfbio.org
