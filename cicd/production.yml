@@ -4,7 +4,7 @@ volumes:
   django_media: {}
 
 services:
-  base: &base
+  django:
     build:
       context: .
       dockerfile: ../compose/production/django/Dockerfile
@@ -20,10 +20,6 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - django_media:/app/gfbio_submissions/media
-    command: /bin/sh shutdown -h now
-
-  django:
-    <<: *base
     command: /start
     networks:
       - proxy
@@ -66,19 +62,58 @@ services:
       - internal
 
   celeryworker:
-    <<: *base
+    build:
+      context: .
+      dockerfile: ../compose/production/django/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ../.envs/.production/.django
+      - ../.envs/.production/.postgres
+    networks:
+      - internal
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - django_media:/app/gfbio_submissions/media
     image: gfbio_submissions_production_celeryworker
     command: /start-celeryworker
     restart: always
 
   celerybeat:
-    <<: *base
+    build:
+      context: .
+      dockerfile: ../compose/production/django/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ../.envs/.production/.django
+      - ../.envs/.production/.postgres
+    networks:
+      - internal
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - django_media:/app/gfbio_submissions/media
     image: gfbio_submissions_production_celerybeat
     command: /start-celerybeat
     restart: always
 
   flower:
-    <<: *base
+    build:
+      context: .
+      dockerfile: ../compose/production/django/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ../.envs/.production/.django
+      - ../.envs/.production/.postgres
+    networks:
+      - internal
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - django_media:/app/gfbio_submissions/media
     image: gfbio_submissions_production_flower
     ports:
       - "5555:5555"
