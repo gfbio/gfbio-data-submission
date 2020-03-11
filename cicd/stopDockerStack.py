@@ -10,7 +10,7 @@ if len(branch) == 0:
     print("COMMIT_MSG: ", commit_msg)
     sys.exit("branch name not found")
 
-bashCmd = "docker stack rm {} || true".format(branch)
+bashCmd = "docker stack rm {} || true".format(branch[0])
 process = subprocess.Popen(bashCmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 stdout, stderr = process.communicate()
 print(stdout)
