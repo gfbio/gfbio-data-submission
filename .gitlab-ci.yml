@@ -23,7 +23,7 @@ build_images:
 docker_stop_web_test:
   stage: afterMerge
   script:
-    - python cicd/stopDockerStack.py $CI_COMMIT_MESSAGE
+    - python cicd/stopDockerStack.py "${CI_COMMIT_MESSAGE}"
   only:
     refs:
       - master
