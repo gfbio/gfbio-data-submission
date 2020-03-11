@@ -51,6 +51,8 @@ docker_web_test:
   stage: createWebTest
   script:
     - rsync -a /home/gitlab-runner/.envs .
+    - docker stack rm $CI_COMMIT_REF_NAME || true
+    - sed -i s/ISSUEURL/$CI_COMMIT_REF_NAME/g cicd/production.yml
     - docker stack deploy -c cicd/production.yml $CI_COMMIT_REF_NAME
   environment:
     name: $CI_COMMIT_REF_NAME
