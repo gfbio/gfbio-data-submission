@@ -7,6 +7,7 @@ import responses
 from django.test import TestCase
 from django.utils.encoding import smart_text
 
+from gfbio_submissions.brokerage.utils.csv import find_correct_platform_and_model
 from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_CENTER_NAME
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
@@ -50,7 +51,6 @@ class TestEnalizer(TestCase):
         for s in Submission.objects.all():
             print('\n')
             pprint(s.__dict__)
-
 
     def tearDown(self):
         Submission.objects.all().delete()
@@ -272,6 +272,30 @@ class TestEnalizer(TestCase):
             '<VALUE>AB 3730xL Genetic Analyzer</VALUE>'
             '</SAMPLE_ATTRIBUTE>',
             sample_xml)
+
+    def test_find_correct_platform_and_model(self):
+        self.assertEqual(
+            'illumina NextSeq 500',
+            find_correct_platform_and_model("Illumina Nextseq 500"))
+        self.assertEqual(
+            'illumina unspecified',
+            find_correct_platform_and_model("Illumina"))
+        self.assertEqual('illumina Illumina MiSeq', find_correct_platform_and_model("Illumina MiSeq"))
+        self.assertEqual(
+            'oxford_nanopore MinION',
+            find_correct_platform_and_model("MinION"))
+        self.assertEqual(
+            'pacbio_smrt Sequel',
+            find_correct_platform_and_model("Sequel"))
+        self.assertEqual(
+            'pacbio_smrt Sequel',
+            find_correct_platform_and_model("pacbio Sequel"))
+        self.assertEqual(
+            'pacbio_smrt unspecified',
+            find_correct_platform_and_model("PacBio"))
+        self.assertEqual(
+            'oxford_nanopore unspecified',
+            find_correct_platform_and_model("Oxford Nanopore"))
 
     def test_add_experiment_platform_without_initial_sample_attributes(self):
         submission = Submission.objects.last()

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import _csv
 import csv
+import json
 import logging
 import os
 from collections import OrderedDict
@@ -206,7 +207,7 @@ def extract_sample(row, field_names, sample_id):
     sample_attributes = []
     for o in field_names:
         if o not in core_fields and len(row[o]) and \
-                row[o] not in attribute_value_blacklist:
+            row[o] not in attribute_value_blacklist:
             if o in unit_mapping_keys:
                 sample_attributes.append(
                     OrderedDict([
@@ -239,6 +240,102 @@ def extract_sample(row, field_names, sample_id):
     return sample
 
 
+def find_correct_platform_and_model(platform_value):
+    if platform_value == '':
+        return platform_value
+    # removing any leading and trailing whitespaces, make it lower case, don't rely on external methods
+    platform_value_fixed = platform_value.strip()
+    platform_value_fixed = platform_value_fixed.lower()
+
+    # return empty string if value unspecified, which will otherwise be found in multiple platforms
+    if platform_value_fixed == 'unspecified':
+        return ''
+
+    # load ena_experiment_definitions.json
+    path = os.path.join(
+        os.getcwd(),
+        'gfbio_submissions/brokerage/schemas/ena_experiment_definitions.json')
+    with open(path, 'r') as f:
+        json_dict = json.load(f)
+
+    # save all matched platform when fixed value is treated as an instrument
+    matched_platforms_value_as_instrument = []
+    # save all matched platform when fixed value is treated as a platform
+    matched_platforms_value_as_platform = []
+    # when first word in platform value could be a platform name or part of it
+    # examples:
+    # pacbio should match pacbio_smrt unspecified
+    # pacbio Sequel should match pacbio_smrt Sequel
+    # illum should match illumina unspecified
+    partial_platform_match = []
+    # try to connect all words together to find a platform or instrument
+    # stores {} format platform:instrument
+    combined_vlaue_match = []
+    combined_platform_value = '_'.join(platform_value_fixed.split())
+
+    for platform in json_dict:
+        # identify viable platforms in json file
+        if (len(json_dict[platform]) == 2 and
+            "enum" in json_dict[platform].keys() and
+            "type" in json_dict[platform].keys() and
+            json_dict[platform]["type"] == 'string'):
+
+            instruments = json_dict[platform]["enum"]
+
+            # match value as instrument
+            for instrument in instruments:
+                if platform_value_fixed == instrument.lower():
+                    matched_platforms_value_as_instrument.append(platform)
+                # combined value as instrument check
+                if combined_platform_value == instrument.lower():
+                    combined_vlaue_match.append({platform: instrument})
+
+            # match value as platform
+            if platform_value_fixed == platform.lower():
+                matched_platforms_value_as_platform.append(platform)
+
+            # partial match
+            partial_instrument = "unspecified" if len(
+                platform_value_fixed.split()) == 1 else platform_value_fixed.split()[1:]
+            if partial_instrument != "unspecified":
+                partial_instrument = ' '.join(partial_instrument)
+                partial_instrument = partial_instrument.lower()
+            if platform_value_fixed.split()[0] in platform.lower():
+                partial_platform_match.append({platform: ""})
+                for instrument in instruments:
+                    if partial_instrument == instrument.lower():
+                        partial_platform_match[len(partial_platform_match) - 1][platform] = instrument
+
+            # combined value match
+            if combined_platform_value == platform.lower():
+                combined_vlaue_match.append({platform: "unspecified"})
+
+    if len(matched_platforms_value_as_instrument) == 1:
+        return matched_platforms_value_as_instrument[0] + ' ' + platform_value
+    elif len(matched_platforms_value_as_platform) == 1:
+        # check if unspecified value is allowed
+        if 'unspecified' in json_dict[matched_platforms_value_as_platform[0]]["enum"]:
+            return matched_platforms_value_as_platform[0] + ' unspecified'
+        else:
+            return ''
+    elif len(combined_vlaue_match) == 1:
+        platform_key = list(combined_vlaue_match[0].keys())[0]
+        # check if unspecified value is allowed
+        if combined_vlaue_match[0][platform_key] == 'unspecified' and 'unspecified' in json_dict[platform_key]["enum"]:
+            return platform_key + ' unspecified'
+        else:
+            return platform_key + ' ' + combined_vlaue_match[0][platform_key]
+    elif len(partial_platform_match) == 1:
+        platform_key = list(partial_platform_match[0].keys())[0]
+        if partial_platform_match[0][platform_key] == "":
+            return ''
+        else:
+            return platform_key + ' ' + partial_platform_match[0][platform_key]
+    else:
+        # unidentifiable value
+        return ''
+
+
 def extract_experiment(experiment_id, row, sample_id):
     try:
         design_description = int(row.get('design_description', '-1'))
@@ -248,11 +345,10 @@ def extract_experiment(experiment_id, row, sample_id):
         nominal_length = int(row.get('nominal_length', '-1'))
     except ValueError as e:
         nominal_length = -1
+    fixed_platform_value = find_correct_platform_and_model(row.get('sequencing_platform', ''))
     experiment = {
         'experiment_alias': experiment_id,
-        'platform': platform_mappings.get(
-            row.get('sequencing_platform', '').lower(), ''
-        )
+        'platform': fixed_platform_value
     }
 
     library_layout = row.get('library_layout', '').lower()
@@ -394,7 +490,7 @@ def check_for_molecular_content(submission):
     check_performed = False
 
     if submission.release and submission.data.get('requirements', {}).get(
-            'data_center', '').count('ENA'):
+        'data_center', '').count('ENA'):
 
         check_performed = True
         submission.target = ENA_PANGAEA

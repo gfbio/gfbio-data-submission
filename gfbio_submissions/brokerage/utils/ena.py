@@ -22,6 +22,8 @@ from django.utils.encoding import smart_text
 from jsonschema import Draft3Validator
 from pytz import timezone
 
+from gfbio_submissions.brokerage.utils.csv import find_correct_platform_and_model
+
 from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_CENTER_NAME, \
     DEFAULT_ENA_BROKER_NAME, CHECKLIST_ACCESSION_MAPPING, \
@@ -387,13 +389,13 @@ class Enalizer(object):
     def create_platform(root, platform_value):
         # TODO: check and discuss if this new platform is ok -> one string with Instrument + model
         # TODO: assuming platform <space> model <space> model-detail
-        platform = platform_value.split()
+        platform = find_correct_platform_and_model(platform_value).split()
         instrument = SubElement(
             root,
             platform[0].upper()
         )
         instrument_model = SubElement(instrument, 'INSTRUMENT_MODEL')
-        instrument_model.text = ' '.join(platform)
+        instrument_model.text = ' '.join(platform[1:])
 
     def create_attributes(self, root, data_dict, attribute_prefix=''):
         for attribute in data_dict:
