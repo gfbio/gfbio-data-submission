@@ -50,13 +50,11 @@ create_merge_request:
 docker_web_test:
   stage: createWebTest
   script:
-    - echo $CI_COMMIT_REF_NAME
-    - echo $CI_ENVIRONMENT_SLUG
     - rsync -a /home/gitlab-runner/.envs .
-    - docker stack deploy -c cicd/production.yml $CI_ENVIRONMENT_SLUG
+    - docker stack deploy -c cicd/production.yml $CI_COMMIT_REF_NAME
   environment:
     name: $CI_COMMIT_REF_NAME
-    url: https://$CI_ENVIRONMENT_SLUG.dev.submissions.gfbio.org
+    url: https://$CI_COMMIT_REF_NAME.dev.submissions.gfbio.org
   only:
     refs:
       - branches
