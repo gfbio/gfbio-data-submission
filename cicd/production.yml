@@ -1,0 +1,80 @@
+version: '3.7'
+
+volumes:
+  django_media: {}
+
+services:
+  base: &base
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    image: gfbio_submissions_production_django
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ./.envs/.production/.django
+      - ./.envs/.production/.postgres
+    networks:
+      - internal
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - django_media:/app/gfbio_submissions/media
+
+  django:
+    <<: *base
+    command: /start
+    networks:
+      - proxy
+      - internal
+    deploy:
+      mode: global
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.https.rule=Host(`ISSUEURL.dev.submissions.gfbio.org`)
+      - traefik.http.routers.https.entrypoints=websecure
+      - traefik.http.routers.https.tls.certresolver=myresolver
+      - traefik.http.routers.https.tls=true
+      - traefik.http.middlewares.extra-headers.headers.hostsproxyheaders=X-CSRFToken
+      - traefik.http.services.https.loadbalancer.server.port=5000
+      - "traefik.http.routers.http.entrypoints=web"
+      - "traefik.http.routers.http.rule=Host(`ISSUEURL.dev.submissions.gfbio.org`)"
+      - "traefik.http.routers.http.middlewares=https_redirect"
+      - "traefik.http.middlewares.https_redirect.redirectscheme.scheme=https"
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: gfbio_submissions_production_postgres
+    networks:
+      - internal
+    env_file:
+      - ./.envs/.production/.postgres
+
+  redis:
+    image: redis:5.0
+    networks:
+      - internal
+
+  celeryworker:
+    <<: *base
+    image: gfbio_submissions_production_celeryworker
+    command: /start-celeryworker
+
+  celerybeat:
+    <<: *base
+    image: gfbio_submissions_production_celerybeat
+    command: /start-celerybeat
+
+  flower:
+    <<: *base
+    image: gfbio_submissions_production_flower
+    ports:
+      - "5555:5555"
+    command: /start-flower
+
+networks:
+  proxy:
+    external: true
+  internal:

@@ -1,0 +1,70 @@
+stages:
+  - build
+  - autoMr
+  - afterMerge
+  - test
+  - createWebTest
+  - deploy
+
+build_images:
+  stage: build
+  script:
+    - rsync -a /home/gitlab-runner/.envs .
+    - docker-compose -f production.yml build
+  environment:
+    name: development
+  only:
+    changes:
+      - compose/production/**/*
+      - requirements/*
+  tags:
+    - dev
+
+docker_stop_web_test:
+  stage: afterMerge
+  script:
+    - docker stack rm $CI_ENVIRONMENT_SLUG
+  environment:
+    name: $CI_COMMIT_REF_NAME
+  only:
+    refs:
+      - master
+    variables:
+      - $CI_COMMIT_MESSAGE =~ /.*Merge branch.*into.*/
+  tags:
+    - dev
+
+create_merge_request:
+  stage: autoMr
+  only:
+    - branches
+  except:
+     refs:
+       - master
+       - production
+  script:
+    - HOST=${CI_PROJECT_URL} CI_PROJECT_ID=${CI_PROJECT_ID} CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} GITLAB_USER_ID=${GITLAB_USER_ID} PRIVATE_TOKEN=${PRIVATE_TOKEN} ./cicd/autoMergeRequest.sh 
+  tags:
+    - dev
+
+docker_web_test:
+  stage: createWebTest
+  script:
+    - echo $CI_COMMIT_REF_NAME
+    - echo $CI_ENVIRONMENT_SLUG
+    - rsync -a /home/gitlab-runner/.envs .
+    - docker stack deploy -c cicd/production.yml $CI_ENVIRONMENT_SLUG
+  environment:
+    name: $CI_COMMIT_REF_NAME
+    url: https://$CI_ENVIRONMENT_SLUG.dev.submissions.gfbio.org
+  only:
+    refs:
+      - branches
+    variables:
+      - $CI_COMMIT_MESSAGE =~ /.*web-test.*/
+  except:
+     refs:
+       - master
+       - production
+  tags:
+    - dev
