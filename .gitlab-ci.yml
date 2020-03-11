@@ -10,7 +10,7 @@ build_images:
   stage: build
   script:
     - rsync -a /home/gitlab-runner/.envs .
-    - docker-compose -f production.yml build
+    - docker-compose -f cicd/production.yml build
   environment:
     name: $CI_COMMIT_REF_NAME
   only:

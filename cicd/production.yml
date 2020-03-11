@@ -7,14 +7,14 @@ services:
   base: &base
     build:
       context: .
-      dockerfile: ./compose/production/django/Dockerfile
+      dockerfile: ../compose/production/django/Dockerfile
     image: gfbio_submissions_production_django
     depends_on:
       - postgres
       - redis
     env_file:
-      - ./.envs/.production/.django
-      - ./.envs/.production/.postgres
+      - ../.envs/.production/.django
+      - ../.envs/.production/.postgres
     networks:
       - internal
     volumes:
@@ -45,12 +45,12 @@ services:
   postgres:
     build:
       context: .
-      dockerfile: ./compose/production/postgres/Dockerfile
+      dockerfile: ../compose/production/postgres/Dockerfile
     image: gfbio_submissions_production_postgres
     networks:
       - internal
     env_file:
-      - ./.envs/.production/.postgres
+      - ../.envs/.production/.postgres
 
   redis:
     image: redis:5.0
