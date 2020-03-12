@@ -1029,7 +1029,7 @@ form.pagewide-form .validation-error-item i {
 }
 
 form.pagewide-form .form-header-top {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 form.pagewide-form .form-header {
@@ -3253,3 +3253,5 @@ section.molecular-submission div#ui-molecular-data-submission .btn-download:hove
   border-color: rgba(60, 172, 228, 0.6);
   background-color: rgba(60, 172, 228, 0.1);
 }
+
+.metadata-templates::after{margin:0 !important; width:0 !important; height:0 !important}
