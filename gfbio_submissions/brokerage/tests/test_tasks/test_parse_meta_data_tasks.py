@@ -50,7 +50,9 @@ class TestParseMetaDataForUpdateTask(TestTasks):
         self.assertEqual(1, len(experiment))
         experiment = experiment.first()
         self.assertIn(
-            '<PLATFORM><AB><INSTRUMENT_MODEL>AB 3730xL Genetic Analyzer</INSTRUMENT_MODEL></AB></PLATFORM>',
+            '<PLATFORM>'
+            '<CAPILLARY><INSTRUMENT_MODEL>AB 3730xL Genetic Analyzer</INSTRUMENT_MODEL></CAPILLARY>'
+            '</PLATFORM>',
             experiment.text_data)
 
         reparse_chain = \
@@ -84,10 +86,12 @@ class TestParseMetaDataForUpdateTask(TestTasks):
         self.assertEqual(1, len(experiment))
         experiment = experiment.first()
         self.assertNotIn(
-            '<PLATFORM><AB><INSTRUMENT_MODEL>AB 3730xL Genetic Analyzer</INSTRUMENT_MODEL></AB></PLATFORM>',
+            '<PLATFORM>'
+            '<CAPILLARY><INSTRUMENT_MODEL>AB 3730xL Genetic Analyzer</INSTRUMENT_MODEL></CAPILLARY>'
+            '</PLATFORM>',
             experiment.text_data)
         self.assertIn(
-            '<PLATFORM><ION><INSTRUMENT_MODEL>Ion Torrent PGM</INSTRUMENT_MODEL></ION></PLATFORM>',
+            '<PLATFORM><ION_TORRENT><INSTRUMENT_MODEL>Ion Torrent PGM</INSTRUMENT_MODEL></ION_TORRENT></PLATFORM>',
             experiment.text_data)
 
     # TODO: add tests for negative outcome: no submission, no reqs, prev_res = CANCELLED etc
@@ -106,6 +110,7 @@ class TestParseMetaDataForUpdateTask(TestTasks):
             'requirements': {
                 'description': 'Reduced Data for testing',
                 # 'site_object_id': 'user1_1',
+                'study_type': 'Metagenomics',
                 'title': 'Simple ENA Data without run block'
             }
         }
@@ -231,7 +236,9 @@ class TestParseMetaDataForUpdateTask(TestTasks):
         self.assertEqual(1, len(experiment))
         experiment = experiment.first()
         self.assertIn(
-            '<PLATFORM><AB><INSTRUMENT_MODEL>AB 3730xL Genetic Analyzer</INSTRUMENT_MODEL></AB></PLATFORM>',
+            '<PLATFORM>'
+            '<CAPILLARY><INSTRUMENT_MODEL>AB 3730xL Genetic Analyzer</INSTRUMENT_MODEL></CAPILLARY>'
+            '</PLATFORM>',
             experiment.text_data)
 
         result = update_ena_submission_data_task.apply_async(
@@ -255,10 +262,12 @@ class TestParseMetaDataForUpdateTask(TestTasks):
         self.assertEqual(1, len(experiment))
         experiment = experiment.first()
         self.assertNotIn(
-            '<PLATFORM><AB><INSTRUMENT_MODEL>AB 3730xL Genetic Analyzer</INSTRUMENT_MODEL></AB></PLATFORM>',
+            '<PLATFORM>'
+            '<CAPILLARY><INSTRUMENT_MODEL>AB 3730xL Genetic Analyzer</INSTRUMENT_MODEL></CAPILLARY>'
+            '</PLATFORM>',
             experiment.text_data)
         self.assertIn(
-            '<PLATFORM><ION><INSTRUMENT_MODEL>Ion Torrent PGM</INSTRUMENT_MODEL></ION></PLATFORM>',
+            '<PLATFORM><ION_TORRENT><INSTRUMENT_MODEL>Ion Torrent PGM</INSTRUMENT_MODEL></ION_TORRENT></PLATFORM>',
             experiment.text_data)
 
     def test_update_ena_submission_data_task_only(self):

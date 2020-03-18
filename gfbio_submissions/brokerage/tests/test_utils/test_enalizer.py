@@ -262,7 +262,7 @@ class TestEnalizer(TestCase):
         k, sample_xml = data.get('SAMPLE')
         self.assertIn(
             '<PLATFORM>'
-            '<AB><INSTRUMENT_MODEL>AB 3730xL Genetic Analyzer</INSTRUMENT_MODEL></AB>'
+            '<CAPILLARY><INSTRUMENT_MODEL>AB 3730xL Genetic Analyzer</INSTRUMENT_MODEL></CAPILLARY>'
             '</PLATFORM>',
             experiment_xml)
 

@@ -285,7 +285,7 @@ def find_correct_platform_and_model(platform_value):
             # match value as instrument
             for instrument in instruments:
                 if platform_value_fixed == instrument.lower():
-                    matched_platforms_value_as_instrument.append(platform)
+                    matched_platforms_value_as_instrument.append({platform: instrument})
                 # combined value as instrument check
                 if combined_platform_value == instrument.lower():
                     combined_vlaue_match.append({platform: instrument})
@@ -311,7 +311,8 @@ def find_correct_platform_and_model(platform_value):
                 combined_vlaue_match.append({platform: "unspecified"})
 
     if len(matched_platforms_value_as_instrument) == 1:
-        return matched_platforms_value_as_instrument[0] + ' ' + platform_value
+        platform_key = list(matched_platforms_value_as_instrument[0].keys())[0]
+        return platform_key + ' ' + matched_platforms_value_as_instrument[0][platform_key]
     elif len(matched_platforms_value_as_platform) == 1:
         # check if unspecified value is allowed
         if 'unspecified' in json_dict[matched_platforms_value_as_platform[0]]["enum"]:
@@ -348,7 +349,7 @@ def extract_experiment(experiment_id, row, sample_id):
     fixed_platform_value = find_correct_platform_and_model(row.get('sequencing_platform', ''))
     experiment = {
         'experiment_alias': experiment_id,
-        'platform': fixed_platform_value
+        'platform': ' '.join(fixed_platform_value.split()[1:])
     }
 
     library_layout = row.get('library_layout', '').lower()
