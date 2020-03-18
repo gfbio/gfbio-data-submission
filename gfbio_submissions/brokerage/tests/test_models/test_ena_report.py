@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import json
 import os
+from datetime import datetime
 
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.models import EnaReport, BrokerObject, \
-    PersistentIdentifier
+    PersistentIdentifier, Submission
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.ena import \
     update_persistent_identifier_report_status
@@ -120,6 +121,15 @@ class TestEnaReport(TestCase):
         user = User.objects.create(
             username='user1'
         )
+        submission = Submission.objects.create(
+            user=user,
+            status='OPEN',
+            submitting_user='John Doe',
+            target='ENA',
+            release=False,
+            embargo=datetime(2020, 3, 1).date(),
+            data={}
+        )
         broker_object = BrokerObject.objects.create(
             type='study',
             user=user,
@@ -131,6 +141,7 @@ class TestEnaReport(TestCase):
                 'study_alias': 'alias',
             }
         )
+        broker_object.submissions.add(submission)
         PersistentIdentifier.objects.create(
             archive='ENA',
             pid_type='ACC',
@@ -159,6 +170,9 @@ class TestEnaReport(TestCase):
 
         success = update_persistent_identifier_report_status()
         self.assertTrue(success)
+
+        self.assertEqual(datetime(2021, 1, 7).date(),
+                         Submission.objects.first().embargo)
 
         identifiers = PersistentIdentifier.objects.all().exclude(pid_type='DOI')
         self.assertEqual(2, len(identifiers))

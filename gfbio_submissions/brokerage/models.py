@@ -494,7 +494,6 @@ class PersistentIdentifier(TimeStampedModel):
                   'automatically. Thus contains the value of the ENA-Report '
                   'field "releaseStatus"'
     )
-    # "holdDate": "2022-03-10T17:17:04"
     hold_date = models.DateField(
         null=True,
         blank=True)
