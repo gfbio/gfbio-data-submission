@@ -494,6 +494,10 @@ class PersistentIdentifier(TimeStampedModel):
                   'automatically. Thus contains the value of the ENA-Report '
                   'field "releaseStatus"'
     )
+    # "holdDate": "2022-03-10T17:17:04"
+    hold_date = models.DateField(
+        null=True,
+        blank=True)
     resolver_url = models.URLField(max_length=256, default='', blank=True)
     broker_object = models.ForeignKey(BrokerObject, on_delete=models.CASCADE)
     outgoing_request_id = models.UUIDField(primary_key=False, null=True,

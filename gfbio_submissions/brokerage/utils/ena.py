@@ -878,13 +878,14 @@ def update_persistent_identifier_report_status():
                 id = report_dict.get('id')
                 sec_id = report_dict.get('secondaryId')
                 status = report_dict.get('releaseStatus')
+                hold_date = report_dict.get('holdDate')
 
                 if id and status:
                     PersistentIdentifier.objects.filter(pid=id).update(
-                        status=status)
+                        status=status, hold_date=hold_date)
                 if sec_id and status:
                     PersistentIdentifier.objects.filter(pid=sec_id).update(
-                        status=status)
+                        status=status, hold_date=hold_date)
             return True
         else:
             logger.warning(
