@@ -10,7 +10,6 @@ stages:
 run_unit_tests:
   stage: unitTests
   script:
-    - echo test
     - rsync -a /home/gitlab-runner/.envs .
     - docker-compose -f local.yml build
     - docker-compose -f cicd/local.yml up -d
