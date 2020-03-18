@@ -61,7 +61,6 @@ class SubmissionsView(mixins.ListModelMixin,
 
     def post(self, request, *args, **kwargs):
         user = User.objects.get(username=request.user)
-        print('SubmissionView request user fronm db', user.__dict__)
         return self.create(request, *args, **kwargs)
 
 
