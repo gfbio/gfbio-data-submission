@@ -236,7 +236,7 @@ class FormWrapper extends React.PureComponent {
 
             {/*</div>*/}
             {/* left col */}
-            <div className="col-md-9" style={{paddingLeft:'0', paddingRight:'30px'}}>
+            <div className="col-md-9 form-col">
               {/* middle col */}
 
               {this.renderNavigationPrompt()}
@@ -259,7 +259,7 @@ class FormWrapper extends React.PureComponent {
 
             </div>
             {/* end middle col */}
-            <div className="col-md-3" style={{paddingLeft:'0'}}>
+            <div className="col-md-3 sidebar-col" >
               {/* right col */}
 
               <SubmissionInfo
@@ -323,8 +323,7 @@ class FormWrapper extends React.PureComponent {
                 <div className="form-group col-md-12">
                   <button
                     type="submit"
-                    className="btn btn-secondary btn-block green"
-                    style={{marginLeft:'-15px', paddingLeft:'0'}}
+                    className="btn btn-secondary btn-block green submit-btn"
                     onClick={this.props.handleSubmit(values =>
                       this.props.onSubmit({
                         ...values,

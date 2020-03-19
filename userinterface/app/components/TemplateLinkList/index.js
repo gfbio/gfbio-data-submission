@@ -13,20 +13,6 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 /* eslint-disable react/prefer-stateless-function */
 class TemplateLinkList extends React.PureComponent {
   render() {
-    const metadata_data_title = {
-      padding: '5px',
-      marginBottom: '0'
-    };
-    const metadata_data_last_title = {
-      padding: '5px',
-      marginBottom: '0',
-      marginTop: '15px',
-    };
-    const no_border = {
-      borderBottom: 'none',
-      borderBottomWidth: '0',
-      paddingBottom: '0',
-    }
     return (
       <div>
         <header className="header header-left form-header-top">
@@ -52,13 +38,12 @@ class TemplateLinkList extends React.PureComponent {
         </header>
         <div className="form-group list-group template-links">
           
-          <h5 style={metadata_data_title}>Molecular Data Template:</h5>
+          <h5 className="metadata_data_title">Molecular Data Template:</h5>
           <div>
             <a
               href="https://gitlab.gwdg.de/gfbio/molecular-submission-templates/-/raw/master/full_template.csv?inline=false"
-              className="list-group-item list-group-item-action metadata-link"
+              className="list-group-item list-group-item-action metadata-link no-border"
               target="_blank"
-              style={no_border}
               download="download"
             >
               <i className="icon ion-md-download" />
@@ -67,22 +52,20 @@ class TemplateLinkList extends React.PureComponent {
             
             <a
               href="https://gitlab.gwdg.de/gfbio/molecular-submission-templates/-/wikis/Template-Description"
-              className="list-group-item list-group-item-action metadata-link"
+              className="list-group-item list-group-item-action metadata-link no-border"
               target="_blank"
-              style={no_border}
             >
               <i className="icon ion-md-book" />
               Template Description
             </a>
           </div>
           
-          <h5 style={metadata_data_last_title}>Biodiversity, Ecological and Collection Data Template:</h5>
+          <h5 className="metadata_data_last_title">Biodiversity, Ecological and Collection Data Template:</h5>
             <div>
               <a
                 href="https://species-id.net/o/media/1/1d/GFBio_data_submission_template.zip"
-                className="list-group-item list-group-item-action metadata-link"
+                className="list-group-item list-group-item-action metadata-link no-border"
                 target="_blank"
-                style={no_border}
               >
                 <i className="icon ion-md-download" />
                 CSV Template
@@ -90,9 +73,8 @@ class TemplateLinkList extends React.PureComponent {
 
               <a
               href="https://gfbio.biowikifarm.net/wiki/Data_submission_templates_for_biodiversity,_ecological_and_collection_data"
-              className="list-group-item list-group-item-action metadata-link"
+              className="list-group-item list-group-item-action metadata-link no-border"
               target="_blank"
-              style={no_border}
             >
               <i className="icon ion-md-book" />
               Template Description
