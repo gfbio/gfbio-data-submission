@@ -72,7 +72,7 @@ export const resetStateFormValues = (state, initialContributors = []) => {
     .set('metaDataIndex', '')
     // .set('metaDataFileName', '')
     .set('brokerSubmissionId', '')
-    .set('accessionId', '')
+    .set('accessionId', [])
     .set('initialValues', {})
     .set('relatedPublications', fromJS([]))
     .set('dataset_labels', fromJS([]))

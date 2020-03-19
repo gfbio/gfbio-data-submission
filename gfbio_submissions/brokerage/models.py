@@ -286,12 +286,14 @@ class Submission(TimeStampedModel):
 
     def get_accession_id(self):
         try:
-            broker_obj = self.brokerobject_set.filter(type='study')
-            persistent_obj = broker_obj[0].persistentidentifier_set.filter(
-                pid_type='PRJ')
-            return persistent_obj[0].pid
+            broker_objects = self.brokerobject_set.filter(type='study')
+            data = []
+            for broker_object in broker_objects:
+                for persistentidentifier_object in broker_object.persistentidentifier_set.filter(pid_type='PRJ'):
+                    data.append({"pid": persistentidentifier_object.pid, "status": persistentidentifier_object.status})
+            return data
         except IndexError:
-            return ''
+            return []
 
     # TODO: refactor/move: too specific (molecular submission)
     def get_json_with_aliases(self, alias_postfix):

@@ -355,7 +355,7 @@ FormWrapper.propTypes = {
   generalError: PropTypes.bool,
   saveSuccessMessage: PropTypes.object,
   brokerSubmissionId: PropTypes.string,
-  accessionId: PropTypes.string,
+  accessionId: PropTypes.array,
   issue: PropTypes.string,
 };
 
