@@ -49,6 +49,7 @@ class Enalizer(object):
         self.experiments_contain_files = False
         self.run = runs
         self.runs_key = 'runs'
+        self.embargo = submission.embargo
         if submission.center_name is not None \
                 and submission.center_name.center_name != '':
             self.center_name = submission.center_name.center_name
@@ -122,7 +123,7 @@ class Enalizer(object):
 
     def create_submission_xml(self,
                               action='VALIDATE',
-                              hold_date='',
+                              hold_date=None,
                               outgoing_request_id='add_outgoing_id',
                               entities=[]):
         logger.info(
@@ -150,10 +151,12 @@ class Enalizer(object):
                 '<ACTION><{0} source="run.xml" schema="run"/></ACTION>'.format(
                     action.upper())
             )
-        if hold_date == '':
+        if not hold_date:
             # today + 1 year
             hold_date = '{0}'.format((datetime.date.today() +
                                       datetime.timedelta(days=365)).isoformat())
+        else:
+            hold_date = hold_date.isoformat()
         return textwrap.dedent(
             '<?xml version = \'1.0\' encoding = \'UTF-8\'?>'
             '<SUBMISSION alias="{2}" center_name="{3}" broker_name="{4}">'
@@ -559,6 +562,7 @@ class Enalizer(object):
             'submission.xml',
             smart_text(self.create_submission_xml(
                 action=action,
+                hold_date=self.embargo,
                 outgoing_request_id=outgoing_request_id,
                 entities=entities,
             ))
