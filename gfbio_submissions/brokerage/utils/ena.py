@@ -29,7 +29,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_BROKER_NAME, CHECKLIST_ACCESSION_MAPPING, \
     STATIC_SAMPLE_SCHEMA_LOCATION
 from gfbio_submissions.brokerage.models import AuditableTextData, \
-    SiteConfiguration, EnaReport, PersistentIdentifier
+    SiteConfiguration, EnaReport, PersistentIdentifier, BrokerObject, Submission
 
 logger = logging.getLogger(__name__)
 dicttoxml.LOG.setLevel(logging.ERROR)
@@ -866,6 +866,24 @@ def fetch_ena_report(site_configuration, report_type):
     return response, request_id
 
 
+def update_embargo_date_in_submissions(hold_date, study_pid):
+    if len(study_pid) > 0:
+        for study in study_pid:
+            submissions = study.broker_object.submissions.all()
+            for submission in submissions:
+                if hold_date != submission.embargo:
+                    submission.embargo = hold_date
+                    submission.save()
+                    logger.info(
+                        msg='update_embargo_date_in_submissions | '
+                            'ENA hold date does not match Submission embargo | '
+                            'submission date: {} | '
+                            'submission id: {} | '
+                            'persistent_identifier_date: {} | '
+                            'persistent_identifier_id: {}'
+                            ''.format(submission.embargo, submission.broker_submission_id, study.hold_date, study.pid))
+
+
 def update_persistent_identifier_report_status():
     for report_type in EnaReport.REPORT_TYPES:
         report_key, report_name = report_type
@@ -875,16 +893,32 @@ def update_persistent_identifier_report_status():
                         '| process report of type={0}'.format(report_name))
             for report in reports.first().report_data:
                 report_dict = report.get('report', {})
-                id = report_dict.get('id')
+                pri_id = report_dict.get('id')
                 sec_id = report_dict.get('secondaryId')
                 status = report_dict.get('releaseStatus')
+                hold_date = report_dict.get('holdDate')
+                hold_date_time = datetime.datetime.now()
+                if hold_date:
+                    # holdDate from ENA report 2022-03-10T17:17:04
+                    # https://www.journaldev.com/23365/python-string-to-datetime-strptime
+                    ena_hold_date_format = "%Y-%m-%dT%X"
+                    hold_date_time = datetime.datetime.strptime(hold_date, ena_hold_date_format).date()
+                ids_to_use = []
+                if pri_id:
+                    ids_to_use.append(pri_id)
+                if sec_id:
+                    ids_to_use.append(sec_id)
 
-                if id and status:
-                    PersistentIdentifier.objects.filter(pid=id).update(
-                        status=status)
-                if sec_id and status:
-                    PersistentIdentifier.objects.filter(pid=sec_id).update(
-                        status=status)
+                for vid in ids_to_use:
+                    if hold_date and status:
+                        PersistentIdentifier.objects.filter(pid=vid).update(
+                            status=status, hold_date=hold_date_time)
+                        update_embargo_date_in_submissions(hold_date_time,
+                                                           PersistentIdentifier.objects.filter(pid=vid))
+                    elif status:
+                        PersistentIdentifier.objects.filter(pid=vid).update(
+                            status=status)
+
             return True
         else:
             logger.warning(
