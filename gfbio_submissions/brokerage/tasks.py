@@ -13,7 +13,6 @@ from kombu.utils import json
 from requests import ConnectionError, Response
 
 from config.settings.base import HOST_URL_ROOT, ADMIN_URL
-from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
 from gfbio_submissions.users.models import User
 from .configuration.settings import ENA, ENA_PANGAEA, PANGAEA_ISSUE_VIEW_URL, \
     SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME, \

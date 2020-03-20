@@ -15,8 +15,8 @@ CSV_TEMPLATE_STATIC_PATH = getattr(
 # User-name that identifies local site that (self-)hosts react app
 # User object with this name has to exist, has to be site, token has
 # to be generated
-HOSTING_SITE = getattr(
-    settings,
-    'HOSTING_SITE',
-    'local-site'
-)
+# HOSTING_SITE = getattr(
+#     settings,
+#     'HOSTING_SITE',
+#     'local-site'
+# )
