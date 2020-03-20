@@ -182,6 +182,9 @@ class Enalizer(object):
         study_dict['study']['descriptor'] = self.study
         if len(study_attributes):
             study_dict['study']['study_attributes'] = study_attributes
+
+        study_dict['study']['descriptor']['study_type'] = 'Other'
+
         study_dict = self._capitalize_dictionary(study_dict)
 
         study_xml = dicttoxml.dicttoxml(study_dict,
@@ -193,9 +196,9 @@ class Enalizer(object):
         for item in root.findall('./STUDY/STUDY_ATTRIBUTES/item'):
             item.tag = 'STUDY_ATTRIBUTE'
 
-        # study_type = root.find('./STUDY/DESCRIPTOR/STUDY_TYPE')
-        # study_type.set('existing_study_type', study_type.text)
-        # study_type.text = ''
+        study_type = root.find('./STUDY/DESCRIPTOR/STUDY_TYPE')
+        study_type.set('existing_study_type', study_type.text)
+        study_type.text = ''
 
         study = root.find('./STUDY')
         study.set('alias', self.study_alias)

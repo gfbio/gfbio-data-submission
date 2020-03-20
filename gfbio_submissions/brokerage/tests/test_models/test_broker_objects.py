@@ -17,7 +17,7 @@ class BrokerObjectTest(TestCase):
             user=user,
             data={
                 'center_name': 'GFBIO',
-                'study_type': 'Metagenomics',
+                # 'study_type': 'Metagenomics',
                 'study_abstract': 'abstract',
                 'study_title': 'title',
                 'study_alias': 'alias',

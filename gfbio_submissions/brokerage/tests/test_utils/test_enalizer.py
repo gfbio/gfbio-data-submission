@@ -93,7 +93,8 @@ class TestEnalizer(TestCase):
         self.assertIn('<DESCRIPTOR>', study_xml)
 
         # 02.03.2020: study_type was removed in Oct/Nov 2019 !
-        self.assertNotIn('<STUDY_TYPE', study_xml)
+        self.assertIn('<STUDY_TYPE', study_xml)
+        self.assertIn('<STUDY_TYPE existing_study_type="Other" />', study_xml)
 
         self.assertIn('<STUDY_TITLE>', study_xml)
         self.assertIn('<STUDY_ABSTRACT>', study_xml)
