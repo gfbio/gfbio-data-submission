@@ -715,6 +715,7 @@ class SubmissionUpload(TimeStampedModel):
     )
 
     md5_checksum = models.CharField(
+        blank=True,
         max_length=32,
         default='',
         help_text='MD5 checksum of "file"'
