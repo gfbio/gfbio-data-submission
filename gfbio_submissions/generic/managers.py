@@ -7,7 +7,6 @@ from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 
 class SiteConfigurationManager(models.Manager):
 
-    # TODO: add tests
     def get_hosting_site_configuration(self):
         admin, email = ADMINS[0] if len(ADMINS) else (
             'admin', 'default@{0}.de'.format(HOSTING_SITE))

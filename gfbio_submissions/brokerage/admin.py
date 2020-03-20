@@ -10,8 +10,8 @@ from django.utils.encoding import smart_bytes
 
 from .configuration.settings import SUBMISSION_DELAY
 from .models import PersistentIdentifier, \
-    Submission, BrokerObject, RequestLog, \
-    AdditionalReference, TaskProgressReport, SubmissionUpload, \
+    Submission, BrokerObject, AdditionalReference, TaskProgressReport, \
+    SubmissionUpload, \
     AuditableTextData, \
     CenterName, EnaReport
 from .utils.ena import release_study_on_ena
@@ -189,11 +189,11 @@ class SubmissionAdmin(admin.ModelAdmin):
     readonly_fields = ('created', 'modified',)
 
 
-class RequestLogAdmin(admin.ModelAdmin):
-    readonly_fields = ('request_id',)
-    date_hierarchy = 'created'
-    list_filter = ('type', 'site_user', 'response_status',)
-    search_fields = ['submission_id', 'request_id', 'url', ]
+# class RequestLogAdmin(admin.ModelAdmin):
+#     readonly_fields = ('request_id',)
+#     date_hierarchy = 'created'
+#     list_filter = ('type', 'site_user', 'response_status',)
+#     search_fields = ['submission_id', 'request_id', 'url', ]
 
 
 class RunFileRestUploadAdmin(admin.ModelAdmin):
@@ -284,7 +284,7 @@ admin.site.register(BrokerObject, BrokerObjectAdmin)
 admin.site.register(PersistentIdentifier, PersistentIdentifierAdmin)
 # admin.site.register(SiteConfiguration, SiteConfigurationAdmin)
 # admin.site.register(ResourceCredential)
-admin.site.register(RequestLog, RequestLogAdmin)
+# admin.site.register(RequestLog, RequestLogAdmin)
 admin.site.register(AdditionalReference)
 admin.site.register(TaskProgressReport, TaskProgressReportAdmin)
 
