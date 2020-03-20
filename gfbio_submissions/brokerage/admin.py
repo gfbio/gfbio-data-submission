@@ -10,9 +10,8 @@ from django.utils.encoding import smart_bytes
 
 from .configuration.settings import SUBMISSION_DELAY
 from .models import PersistentIdentifier, \
-    Submission, ResourceCredential, BrokerObject, RequestLog, \
-    AdditionalReference, SiteConfiguration, TaskProgressReport, TicketLabel, \
-    SubmissionUpload, \
+    Submission, BrokerObject, RequestLog, \
+    AdditionalReference, TaskProgressReport, SubmissionUpload, \
     AuditableTextData, \
     CenterName, EnaReport
 from .utils.ena import release_study_on_ena
@@ -62,12 +61,12 @@ class AdditionalReferenceInline(admin.TabularInline):
         return 1
 
 
-class TicketLableInline(admin.TabularInline):
-    model = TicketLabel
-
-
-class SiteConfigurationAdmin(admin.ModelAdmin):
-    inlines = (TicketLableInline,)
+# class TicketLableInline(admin.TabularInline):
+#     model = TicketLabel
+#
+#
+# class SiteConfigurationAdmin(admin.ModelAdmin):
+#     inlines = (TicketLableInline,)
 
 
 def continue_release_submissions(modeladmin, request, queryset):
@@ -283,8 +282,8 @@ class EnaReportAdmin(admin.ModelAdmin):
 admin.site.register(Submission, SubmissionAdmin)
 admin.site.register(BrokerObject, BrokerObjectAdmin)
 admin.site.register(PersistentIdentifier, PersistentIdentifierAdmin)
-admin.site.register(SiteConfiguration, SiteConfigurationAdmin)
-admin.site.register(ResourceCredential)
+# admin.site.register(SiteConfiguration, SiteConfigurationAdmin)
+# admin.site.register(ResourceCredential)
 admin.site.register(RequestLog, RequestLogAdmin)
 admin.site.register(AdditionalReference)
 admin.site.register(TaskProgressReport, TaskProgressReportAdmin)
