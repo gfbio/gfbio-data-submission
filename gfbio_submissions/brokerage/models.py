@@ -16,7 +16,7 @@ from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
 from gfbio_submissions.brokerage.managers import SubmissionUploadManager
 from .configuration.settings import ENA, ENA_PANGAEA
 from .configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY
-from .fields import JsonDictField
+from gfbio_submissions.generic.fields import JsonDictField
 from .managers import AuditableTextDataManager
 from .managers import SiteConfigurationManager, \
     SubmissionManager, BrokerObjectManager, TaskProgressReportManager
