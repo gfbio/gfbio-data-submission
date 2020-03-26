@@ -2287,6 +2287,12 @@ section.molecular-submission {
   border-bottom-width: 0 !important;
   padding-bottom: 0 !important; }
 
+.embargo-picker {
+  min-height: 280px; }
+
+.embargo-footer {
+  margin-top: -20px; }
+
 .text-primary {
   color: #345AA2 !important; }
 

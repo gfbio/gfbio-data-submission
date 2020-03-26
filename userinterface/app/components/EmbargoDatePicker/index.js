@@ -33,6 +33,8 @@ import Col from 'react-bootstrap/Col';
 class EmbargoDatePicker extends React.Component {
 
   render() {
+    const earliestEmbargoDate = new Date().setDate(new Date().getDate() + 1);
+    const latestEmbargoDate = new Date().setMonth(new Date().getMonth() + 24);
     return (
       <div>
         <header className="header header-left form-header-top">
@@ -99,7 +101,7 @@ class EmbargoDatePicker extends React.Component {
               </Row>
 
               <Row className="show-grid">
-                <Col xs={12} md={12}>
+                <Col xs={12} md={12} className="embargo-picker">
                   <DatePicker
                     customInput={
                       <ButtonInput
@@ -112,13 +114,15 @@ class EmbargoDatePicker extends React.Component {
                     selected={this.props.embargoDate}
                     onChange={this.props.onChange}
                     dateFormat="MMMM d, yyyy"
+                    maxDate={latestEmbargoDate}
+                    minDate={earliestEmbargoDate}
                   />
                 </Col>
               </Row>
             </Container>
           </Modal.Body>
 
-          <Modal.Footer>
+          <Modal.Footer className="embargo-footer">
             <Container>
               <Row className="show-grid">
                 <Col xs={12} md={12}>
