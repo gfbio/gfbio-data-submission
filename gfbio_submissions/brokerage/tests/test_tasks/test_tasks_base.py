@@ -4,14 +4,15 @@ import responses
 from django.contrib.auth.models import Permission
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models import ResourceCredential, \
-    SiteConfiguration, BrokerObject, AdditionalReference
+from gfbio_submissions.brokerage.models import BrokerObject, AdditionalReference
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import \
     _get_pangaea_soap_response, _get_pangaea_ticket_response, \
     _get_jira_issue_response, _get_ena_data, \
     _get_ena_data_without_runs
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
+from gfbio_submissions.generic.models import SiteConfiguration, \
+    ResourceCredential
 from gfbio_submissions.users.models import User
 
 

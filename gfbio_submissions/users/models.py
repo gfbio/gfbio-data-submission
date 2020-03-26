@@ -4,7 +4,7 @@ from django.db.models import CharField
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
-from gfbio_submissions.brokerage.models import SiteConfiguration
+from gfbio_submissions.generic.models import SiteConfiguration
 from gfbio_submissions.users.managers import CustomUserManager
 
 

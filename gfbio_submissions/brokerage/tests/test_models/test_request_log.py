@@ -2,13 +2,14 @@
 import responses
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models import ResourceCredential, \
-    SiteConfiguration, Submission, RequestLog, BrokerObject
+from gfbio_submissions.brokerage.models import Submission, BrokerObject
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_ena_data, _get_ena_data_without_runs
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
     send_submission_to_ena
+from gfbio_submissions.generic.models import SiteConfiguration, RequestLog, \
+    ResourceCredential
 from gfbio_submissions.users.models import User
 
 

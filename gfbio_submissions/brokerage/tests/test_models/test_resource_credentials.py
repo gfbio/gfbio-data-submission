@@ -2,7 +2,7 @@
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models import ResourceCredential
+from gfbio_submissions.generic.models import ResourceCredential
 
 
 class ResourceCredentialTest(TestCase):

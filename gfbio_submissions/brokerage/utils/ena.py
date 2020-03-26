@@ -29,7 +29,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_BROKER_NAME, CHECKLIST_ACCESSION_MAPPING, \
     STATIC_SAMPLE_SCHEMA_LOCATION
 from gfbio_submissions.brokerage.models import AuditableTextData, \
-    SiteConfiguration, EnaReport, PersistentIdentifier
+    EnaReport, PersistentIdentifier
 
 logger = logging.getLogger(__name__)
 dicttoxml.LOG.setLevel(logging.ERROR)

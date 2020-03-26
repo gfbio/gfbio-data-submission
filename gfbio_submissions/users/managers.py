@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.contrib.auth.models import UserManager
 
-from gfbio_submissions.brokerage.models import SiteConfiguration
+from gfbio_submissions.generic.models import SiteConfiguration
 
 
 class CustomUserManager(UserManager):
