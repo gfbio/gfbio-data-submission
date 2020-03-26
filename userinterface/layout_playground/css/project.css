@@ -750,6 +750,11 @@ form.pagewide-form {
   form.pagewide-form .save-header i {
     padding: 0 .5rem 0 .5rem;
     color: #81B248; }
+  form.pagewide-form .error-header .section-title {
+    font-size: 1.2rem !important; }
+  form.pagewide-form .error-header i {
+    padding: 0 .5rem 0 .5rem;
+    color: #dc3545; }
   form.pagewide-form .save-text {
     padding: .75rem 1.25rem;
     font-size: .9rem;
@@ -2286,9 +2291,8 @@ section.molecular-submission {
 #submission-ui .sidebar-col {
   padding-left: 0; }
 
-#submission-ui .submit-btn {
-  margin-left: -15px;
-  padding-left: 0; }
+#submission-ui .form-footer {
+  margin-left: -15px; }
 
 #submission-ui .metadata_data_title {
   padding: 5px !important;

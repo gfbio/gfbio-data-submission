@@ -159,6 +159,15 @@ const makeSelectShowSaveSuccess = () =>
     substate.get('showSaveSuccess'),
   );
 
+const makeSelectSubmitError = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('submitError'),
+  );
+
+const makeSelectSubmissionErrors = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('submissionErrors'),
+  );
 
 const makeSelectUpdateWithRelease = () =>
   createSelector(selectSubmissionFormDomain, substate =>
@@ -226,5 +235,7 @@ export {
   makeSelectShowEmbargoDialog,
   makeSelectGeneralError,
   makeSelectFileUploadsFromServer,
+  makeSelectSubmitError,
+  makeSelectSubmissionErrors,
   makeSelectFormChanged,
 };
