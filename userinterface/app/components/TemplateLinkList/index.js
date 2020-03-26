@@ -16,8 +16,8 @@ class TemplateLinkList extends React.PureComponent {
     return (
       <div>
         <header className="header header-left form-header-top">
-          <h2 className="section-title">
-            Metadata <br /> Templates
+          <h2 className="section-title metadata-templates">
+            Metadata Templates
             <OverlayTrigger
               placement="right"
               overlay={
@@ -37,22 +37,49 @@ class TemplateLinkList extends React.PureComponent {
 
         </header>
         <div className="form-group list-group template-links">
-          <a
-            href="https://submissions.gfbio.org/ui/molecular/full_template.csv"
-            className="list-group-item list-group-item-action"
-            target="_blank"
-          >
-            <i className="icon ion-md-download" />
-            Molecular Data
-          </a>
-          <a
-            href="https://gfbio.biowikifarm.net/wiki/Data_submission_templates_for_biodiversity,_ecological_and_collection_data"
-            className="list-group-item list-group-item-action"
-            target="_blank"
-          >
-            <i className="icon ion-md-download" />
-            Biodiversity, Ecological and Collection Data
-          </a>
+          
+          <h5 className="metadata_data_title">Molecular Data Template:</h5>
+          <div>
+            <a
+              href="https://gitlab.gwdg.de/gfbio/molecular-submission-templates/-/raw/master/full_template.csv?inline=false"
+              className="list-group-item list-group-item-action metadata-link no-border"
+              target="_blank"
+              download="download"
+            >
+              <i className="icon ion-md-download" />
+              CSV Template
+            </a>
+            
+            <a
+              href="https://gitlab.gwdg.de/gfbio/molecular-submission-templates/-/wikis/Template-Description"
+              className="list-group-item list-group-item-action metadata-link no-border"
+              target="_blank"
+            >
+              <i className="icon ion-md-book" />
+              Template Description
+            </a>
+          </div>
+          
+          <h5 className="metadata_data_last_title">Biodiversity, Ecological and Collection Data Template:</h5>
+            <div>
+              <a
+                href="https://species-id.net/o/media/1/1d/GFBio_data_submission_template.zip"
+                className="list-group-item list-group-item-action metadata-link no-border"
+                target="_blank"
+              >
+                <i className="icon ion-md-download" />
+                CSV Template
+              </a>
+
+              <a
+              href="https://gfbio.biowikifarm.net/wiki/Data_submission_templates_for_biodiversity,_ecological_and_collection_data"
+              className="list-group-item list-group-item-action metadata-link no-border"
+              target="_blank"
+            >
+              <i className="icon ion-md-book" />
+              Template Description
+            </a>
+            </div>
           {/*<a*/}
           {/*  href="https://gfbio.biowikifarm.net/wiki/Data_submission_forms_for_occurrence_data"*/}
           {/*  className="list-group-item list-group-item-action"*/}
