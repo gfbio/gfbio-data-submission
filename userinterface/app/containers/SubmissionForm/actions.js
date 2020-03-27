@@ -57,6 +57,7 @@ import {
   UPLOAD_FILE_PROGRESS,
   UPLOAD_FILE_SUCCESS,
   UPLOAD_FILES_SUCCESS,
+  SET_FORM_CHANGED,
 } from './constants';
 
 export function changeLicense(license) {
@@ -130,6 +131,13 @@ export function setEmbargoDate(date) {
   return {
     type: SET_EMBARGO_DATE,
     date,
+  };
+}
+
+export function setFormChanged(changed) {
+  return {
+    type: SET_FORM_CHANGED,
+    changed,
   };
 }
 

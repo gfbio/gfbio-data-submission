@@ -34,7 +34,7 @@ import {
   SAVE_FORM_ERROR,
   SAVE_FORM_SUCCESS,
   SET_CONTRIBUTORS,
-  SET_EMBARGO_DATE,
+  SET_EMBARGO_DATE, SET_FORM_CHANGED,
   SET_METADATA_INDEX,
   SET_METADATA_ON_SERVER,
   SET_METADATA_ON_SERVER_ERROR,
@@ -108,6 +108,7 @@ export const initialState = fromJS({
   showSaveSuccess: false,
 
   embargoDate: new Date().setFullYear(new Date().getFullYear() + 1),
+  formChanged: false,
 
   // TODO: replace. development default of 2
   // userId: backendParameters.userId || 1,
@@ -181,6 +182,7 @@ function submissionFormReducer(state = initialState, action) {
     case SUBMIT_FORM:
       return state
         .set('promptOnLeave', false)
+        .set('formChanged', false)
         .set('reduxFormForm', action.form);
     case SUBMIT_FORM_START:
       return state.set('submitInProgress', true);
@@ -204,7 +206,11 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .set('showEmbargoDialog', false);
     case SET_EMBARGO_DATE:
-      return state.set('embargoDate', action.date);
+      return state
+        .set('embargoDate', action.date)
+        .set('formChanged', true);
+    case SET_FORM_CHANGED:
+      return state.set('formChanged', action.changed);
     case CHANGE_CURRENT_RELATED_PUBLICATION:
       return state
         .set('currentRelatedPublication', action.value);

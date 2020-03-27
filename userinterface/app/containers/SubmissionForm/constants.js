@@ -21,6 +21,7 @@ export const SUBMIT_FORM_ERROR = 'app/SubmissionForm/SUBMIT_FORM_ERROR';
 export const SHOW_EMBARGO_DIALOG = 'app/SubmissionForm/SHOW_EMBARGO_DIALOG';
 export const CLOSE_EMBARGO_DIALOG = 'app/SubmissionForm/CLOSE_EMBARGO_DIALOG';
 export const SET_EMBARGO_DATE = 'app/SubmissionForm/SET_EMBARGO_DATE';
+export const SET_FORM_CHANGED = 'app/SubmissionForm/SET_FORM_CHANGED';
 
 export const ADD_RELATED_PUBLICATION = 'app/SubmissionForm/ADD_RELATED_PUBLICATION';
 export const REMOVE_RELATED_PUBLICATION = 'app/SubmissionForm/REMOVE_RELATED_PUBLICATION';
