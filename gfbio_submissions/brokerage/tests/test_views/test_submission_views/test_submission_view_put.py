@@ -8,10 +8,11 @@ import responses
 
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL
-from gfbio_submissions.brokerage.models import Submission, SiteConfiguration, \
+from gfbio_submissions.brokerage.models import Submission, \
     TaskProgressReport
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data
+from gfbio_submissions.generic.models import SiteConfiguration
 from .test_submission_view_base import TestSubmissionView
 
 
