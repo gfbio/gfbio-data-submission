@@ -524,66 +524,64 @@ class EnaReport(TimeStampedModel):
         return '{}'.format(self.get_report_type_display())
 
 
-# TODO: candidate for generic app. no direct assocs to brokerage and is a generic concept
-# TODO: review and refactor fields
-class RequestLog(TimeStampedModel):
-    INCOMING = '0'
-    OUTGOING = '1'
-    REQUEST_TYPES = (
-        (INCOMING, 'incoming'),
-        (OUTGOING, 'outgoing')
-    )
-    request_id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        help_text='Primary-key for RequestLog entries')
-    type = models.CharField(
-        max_length=1,
-        choices=REQUEST_TYPES,
-        default=INCOMING,
-        help_text='We separate incoming and outgoing requests')
-    url = models.TextField(
-        help_text='Target url of this Request',
-        blank=True
-    )
-    data = models.TextField(
-        blank=True,
-        help_text='Any kind of payload that comes '
-                  'with with this request (if available)')
-    # TODO: refactor too when changing ownership
-    site_user = models.CharField(
-        max_length=72,
-        help_text='A user of a site registered in our System. E.g. user=joe '
-                  '(this value ...) at site=GFBio.org')
-    submission_id = models.UUIDField(
-        null=True,
-        blank=True,
-        help_text='The submission this request is associated with')
-    response_status = models.IntegerField(
-        null=True,
-        blank=True,
-        help_text='The response-code we send if this is an incoming request. '
-                  'Otherwise the status sent by request-target')
-    response_content = models.TextField(
-        blank=True,
-        help_text='The content we send if this is an incoming request. '
-                  'Otherwise the content sent by request-target')
-    triggered_by = models.ForeignKey(
-        'self',
-        null=True,
-        blank=True,
-        help_text='This will be null for incoming requests Otherwise '
-                  '(outgoing request) it will show the id of the incoming '
-                  'request, that has triggered this request',
-        on_delete=models.SET_NULL,
-    )
-    request_details = JsonDictField(
-        default=dict,
-        help_text='This may contain meta-information regarding this request'
-    )
-
-    def __str__(self):
-        return '{}'.format(self.request_id)
+# class RequestLog(TimeStampedModel):
+#     INCOMING = '0'
+#     OUTGOING = '1'
+#     REQUEST_TYPES = (
+#         (INCOMING, 'incoming'),
+#         (OUTGOING, 'outgoing')
+#     )
+#     request_id = models.UUIDField(
+#         primary_key=True,
+#         default=uuid.uuid4,
+#         help_text='Primary-key for RequestLog entries')
+#     type = models.CharField(
+#         max_length=1,
+#         choices=REQUEST_TYPES,
+#         default=INCOMING,
+#         help_text='We separate incoming and outgoing requests')
+#     url = models.TextField(
+#         help_text='Target url of this Request',
+#         blank=True
+#     )
+#     data = models.TextField(
+#         blank=True,
+#         help_text='Any kind of payload that comes '
+#                   'with with this request (if available)')
+#     # TODO: refactor too when changing ownership
+#     site_user = models.CharField(
+#         max_length=72,
+#         help_text='A user of a site registered in our System. E.g. user=joe '
+#                   '(this value ...) at site=GFBio.org')
+#     submission_id = models.UUIDField(
+#         null=True,
+#         blank=True,
+#         help_text='The submission this request is associated with')
+#     response_status = models.IntegerField(
+#         null=True,
+#         blank=True,
+#         help_text='The response-code we send if this is an incoming request. '
+#                   'Otherwise the status sent by request-target')
+#     response_content = models.TextField(
+#         blank=True,
+#         help_text='The content we send if this is an incoming request. '
+#                   'Otherwise the content sent by request-target')
+#     triggered_by = models.ForeignKey(
+#         'self',
+#         null=True,
+#         blank=True,
+#         help_text='This will be null for incoming requests Otherwise '
+#                   '(outgoing request) it will show the id of the incoming '
+#                   'request, that has triggered this request',
+#         on_delete=models.SET_NULL,
+#     )
+#     request_details = JsonDictField(
+#         default=dict,
+#         help_text='This may contain meta-information regarding this request'
+#     )
+#
+#     def __str__(self):
+#         return '{}'.format(self.request_id)
 
 
 # TODO: in general a candiate for generic app. but has FK to submission

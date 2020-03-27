@@ -9,11 +9,12 @@ from rest_framework.authentication import TokenAuthentication, \
     BasicAuthentication
 from rest_framework.response import Response
 
+from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.users.models import User
 from .configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY, \
     SUBMISSION_DELAY
 from .forms import SubmissionCommentForm
-from .models import Submission, RequestLog, SubmissionUpload
+from .models import Submission, SubmissionUpload
 from .permissions import IsOwnerOrReadOnly
 from .serializers import SubmissionUploadListSerializer, \
     SubmissionDetailSerializer, SubmissionUploadSerializer

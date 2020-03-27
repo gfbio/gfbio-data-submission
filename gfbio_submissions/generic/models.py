@@ -165,6 +165,8 @@ class TicketLabel(models.Model):
                                     self.label_type, self.pk)
 
 
+# TODO: candidate for generic app. no direct assocs to brokerage and is a generic concept
+# TODO: review and refactor fields
 class RequestLog(TimeStampedModel):
     INCOMING = '0'
     OUTGOING = '1'
