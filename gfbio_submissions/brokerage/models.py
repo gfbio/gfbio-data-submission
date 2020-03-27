@@ -524,6 +524,8 @@ class EnaReport(TimeStampedModel):
         return '{}'.format(self.get_report_type_display())
 
 
+# TODO: candidate for generic app. no direct assocs to brokerage and is a generic concept
+# TODO: review and refactor fields
 class RequestLog(TimeStampedModel):
     INCOMING = '0'
     OUTGOING = '1'
@@ -584,6 +586,7 @@ class RequestLog(TimeStampedModel):
         return '{}'.format(self.request_id)
 
 
+# TODO: in general a candiate for generic app. but has FK to submission
 class AdditionalReference(models.Model):
     GFBIO_HELPDESK_TICKET = '0'
     PANGAEA_JIRA_TICKET = '1'
@@ -615,6 +618,7 @@ class AdditionalReference(models.Model):
         return '{}'.format(self.reference_key)
 
 
+# TODO: in general a candiate for generic app. but has FK to submission
 class TaskProgressReport(TimeStampedModel):
     RUNNING = 'RUNNING'
     CANCELLED = 'CANCELLED'
@@ -645,6 +649,10 @@ class TaskProgressReport(TimeStampedModel):
             return 'unnamed_task'
 
 
+# TODO: in general a candiate for generic app. but has FK to submission.
+#  Upload is pretty generic, name could be more generic here, only thing special
+#   is the attack to ticket field and related stuff in save()
+#   --> maybe a candiate for abstract app, where all field except FK are predefined
 class SubmissionUpload(TimeStampedModel):
     submission = models.ForeignKey(
         Submission,
@@ -749,6 +757,9 @@ class SubmissionUpload(TimeStampedModel):
         return ' / '.join(reversed(self.file.name.split(os.sep)))
 
 
+# TODO: FK to submission, either keep this here and focus on xml for molecular,
+#  or move to generic or abstract. read about logic/code in abstract classes vs
+#   instanced classes
 class AuditableTextData(TimeStampedModel):
     data_id = models.UUIDField(primary_key=False, default=uuid.uuid4)
     name = models.CharField(max_length=128)
