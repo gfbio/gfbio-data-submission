@@ -11,7 +11,7 @@ from gfbio_submissions.brokerage.tasks import \
     fetch_ena_reports_task
 from gfbio_submissions.brokerage.tests.utils import \
     _get_test_data_dir_path
-from gfbio_submissions.generic.models import ResourceCredential
+from gfbio_submissions.generic.models import ResourceCredential, RequestLog
 from .test_tasks_base import TestTasks
 
 

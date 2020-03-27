@@ -19,7 +19,7 @@ from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
     send_submission_to_ena, release_study_on_ena
 from gfbio_submissions.generic.models import SiteConfiguration, \
-    ResourceCredential
+    ResourceCredential, RequestLog
 from gfbio_submissions.users.models import User
 
 

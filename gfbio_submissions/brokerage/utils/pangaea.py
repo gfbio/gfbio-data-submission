@@ -42,8 +42,9 @@ def request_pangaea_login_token(resource_credential):
     response = requests.post(url=resource_credential.url, data=body,
                              headers=headers)
     with transaction.atomic():
+        # TODO: since Requestlog has moved to generic, globla import may be possible, check please ..
         # prevent cyclic dependencies
-        from gfbio_submissions.brokerage.models import RequestLog
+        from gfbio_submissions.generic.models import RequestLog
         req_log = RequestLog(
             request_id=uuid.uuid4(),
             type=RequestLog.OUTGOING,

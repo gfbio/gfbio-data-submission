@@ -626,8 +626,9 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data):
     # TODO: tesdatat this !
     with transaction.atomic():
         details = response.headers or ''
+        # TODO: since RequestLog has been moved to generic, is maybe valid to use a global import now. check ..
         # prevent cyclic dependencies
-        from gfbio_submissions.brokerage.models import RequestLog
+        from gfbio_submissions.generic.models import RequestLog
         incoming = None
         try:
             incoming = RequestLog.objects.filter(
@@ -714,7 +715,7 @@ def release_study_on_ena(submission):
         with transaction.atomic():
             details = response.headers or ''
             # prevent cyclic dependencies
-            from gfbio_submissions.brokerage.models import RequestLog
+            from gfbio_submissions.generic.models import RequestLog
             incoming = None
             try:
                 incoming = RequestLog.objects.filter(
@@ -852,7 +853,7 @@ def fetch_ena_report(site_configuration, report_type):
     request_id = uuid.uuid4()
     with transaction.atomic():
         details = response.headers or ''
-        from gfbio_submissions.brokerage.models import RequestLog
+        from gfbio_submissions.generic.models import RequestLog
         req_log = RequestLog(
             request_id=request_id,
             type=RequestLog.OUTGOING,
