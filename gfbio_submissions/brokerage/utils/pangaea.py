@@ -14,8 +14,9 @@ from django.db import transaction
 from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY, \
     CSV_WRITER_QUOTING, SEPARATOR
 from gfbio_submissions.brokerage.forms import Gcdj2CsvForm
-from gfbio_submissions.brokerage.models import TicketLabel, Submission
+from gfbio_submissions.brokerage.models import Submission
 from gfbio_submissions.brokerage.utils.gcdj_utils import flatten_dictionary
+from gfbio_submissions.generic.models import TicketLabel
 
 logger = logging.getLogger(__name__)
 
