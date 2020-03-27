@@ -403,6 +403,23 @@ h1.current-location {
   .red i {
     margin-right: .75rem; }
 
+.btn-red-inverted {
+  border-color: #dc3444;
+  background-color: #fff;
+  color: #dc3545 !important; }
+  .btn-red-inverted:hover, .btn-red-inverted:not(:disabled):not(.disabled):active, .btn-red-inverted:not(:disabled):not(.disabled).active {
+    border-color: #dc3444;
+    background-color: #dc3545;
+    color: #fff !important;
+    box-shadow: none; }
+    .btn-red-inverted:hover:focus, .btn-red-inverted:not(:disabled):not(.disabled):active:focus, .btn-red-inverted:not(:disabled):not(.disabled).active:focus {
+      box-shadow: none; }
+  .btn-red-inverted:focus {
+    box-shadow: none; }
+  .btn-red-inverted:hover {
+    background-color: #dc3545;
+    color: #fff !important; }
+
 .btn-light-blue {
   background-color: #3CACE4;
   border-color: #3bace4; }
