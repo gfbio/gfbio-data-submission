@@ -167,7 +167,7 @@ export class SubmissionForm extends React.Component {
             <header className="header error-header">
               <h2 className="section-title">
                 <i className="fa fa-times" aria-hidden="true" />
-                Submit Error
+                Please correct the errors below
               </h2>
             </header>
             <p className="save-text">{submissionErrors()}</p>
