@@ -16,11 +16,13 @@ from config.settings.base import MEDIA_URL
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL, JIRA_ATTACHMENT_URL
 from gfbio_submissions.brokerage.models import Submission, \
-    SiteConfiguration, ResourceCredential, AdditionalReference, \
+    AdditionalReference, \
     TaskProgressReport, SubmissionUpload, BrokerObject
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_jira_attach_response, \
     _get_jira_issue_response, _get_ena_data_without_runs, _get_ena_data
+from gfbio_submissions.generic.models import SiteConfiguration, \
+    ResourceCredential
 from gfbio_submissions.users.models import User
 
 

@@ -15,8 +15,7 @@ from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL, JIRA_ATTACHMENT_URL
-from gfbio_submissions.brokerage.models import Submission, ResourceCredential, \
-    SiteConfiguration, AdditionalReference
+from gfbio_submissions.brokerage.models import Submission, AdditionalReference
 from gfbio_submissions.brokerage.tests.test_models.test_submission import \
     SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_pangaea_soap_response, \
@@ -24,6 +23,8 @@ from gfbio_submissions.brokerage.tests.utils import _get_pangaea_soap_response, 
     _get_pangaea_ticket_response, _get_jira_issue_response, \
     _get_jira_attach_response, _get_request_comment_response
 from gfbio_submissions.brokerage.utils.jira import JiraClient
+from gfbio_submissions.generic.models import SiteConfiguration, \
+    ResourceCredential
 from gfbio_submissions.users.models import User
 
 

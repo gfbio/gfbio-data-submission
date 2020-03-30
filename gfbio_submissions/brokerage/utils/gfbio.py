@@ -8,11 +8,10 @@ from django.conf import settings
 
 from gfbio_submissions.brokerage.configuration.settings import \
     GFBIO_LICENSE_MAPPINGS, \
-    GFBIO_METASCHEMA_MAPPINGS, \
     GFBIO_DATACENTER_USER_MAPPINGS, GFBIO_REQUEST_TYPE_MAPPINGS, \
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE, JIRA_USERNAME_URL_TEMPLATE, \
     JIRA_FALLBACK_USERNAME, JIRA_FALLBACK_EMAIL
-from gfbio_submissions.brokerage.models import SiteConfiguration
+from gfbio_submissions.generic.models import SiteConfiguration
 
 logger = logging.getLogger(__name__)
 

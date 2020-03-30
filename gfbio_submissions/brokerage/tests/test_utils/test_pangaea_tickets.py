@@ -5,13 +5,14 @@ import requests
 import responses
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models import Submission, ResourceCredential, \
-    SiteConfiguration, AdditionalReference
+from gfbio_submissions.brokerage.models import Submission, AdditionalReference
 from gfbio_submissions.brokerage.tests.utils import _get_pangaea_soap_body, \
     _get_pangaea_soap_response
 from gfbio_submissions.brokerage.utils.pangaea import \
     request_pangaea_login_token, parse_pangaea_login_token_response, \
     get_pangaea_login_token
+from gfbio_submissions.generic.models import SiteConfiguration, \
+    ResourceCredential
 from gfbio_submissions.users.models import User
 
 

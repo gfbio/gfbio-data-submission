@@ -12,9 +12,9 @@ from requests.structures import CaseInsensitiveDict
 
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL
-from gfbio_submissions.brokerage.models import ResourceCredential
 from gfbio_submissions.brokerage.utils.pangaea import \
     get_pangaea_login_token
+from gfbio_submissions.generic.models import ResourceCredential
 
 
 class TestGFBioJiraApi(TestCase):
@@ -495,4 +495,3 @@ class TestGFBioJiraApi(TestCase):
 
         res = issue.update(notify=True, fields={'summary': 'new summary',
                                                 'description': 'A new summary was added'})
-

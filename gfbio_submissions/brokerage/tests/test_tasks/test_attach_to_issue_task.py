@@ -8,13 +8,14 @@ from django.test import override_settings
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL, \
     JIRA_ATTACHMENT_URL
-from gfbio_submissions.brokerage.models import SiteConfiguration, Submission, \
+from gfbio_submissions.brokerage.models import Submission, \
     TaskProgressReport, SubmissionUpload
 from gfbio_submissions.brokerage.tasks import \
     attach_to_submission_issue_task, \
     delete_submission_issue_attachment_task
 from gfbio_submissions.brokerage.tests.utils import \
     _get_jira_attach_response
+from gfbio_submissions.generic.models import SiteConfiguration
 from gfbio_submissions.users.models import User
 from .test_helpdesk_tasks_base import TestHelpDeskTasksBase
 from ..test_utils.test_csv_parsing import TestCSVParsing

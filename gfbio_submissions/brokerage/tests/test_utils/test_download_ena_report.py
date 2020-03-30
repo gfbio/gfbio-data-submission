@@ -5,11 +5,11 @@ from unittest import skip
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models import ResourceCredential, \
-    SiteConfiguration
 from gfbio_submissions.brokerage.utils import csv
 from gfbio_submissions.brokerage.utils.ena import \
     download_submitted_run_files_to_string_io
+from gfbio_submissions.generic.models import SiteConfiguration, \
+    ResourceCredential
 
 
 class TestDownloadEnaReport(TestCase):

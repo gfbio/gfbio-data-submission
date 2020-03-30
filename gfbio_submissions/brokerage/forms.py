@@ -2,7 +2,7 @@
 
 from django import forms
 
-from .fields import OrderedJsonFormField
+from gfbio_submissions.generic.fields import OrderedJsonFormField
 
 
 class Gcdj2CsvForm(forms.Form):

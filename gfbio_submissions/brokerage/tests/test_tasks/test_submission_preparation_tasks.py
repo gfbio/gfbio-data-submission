@@ -2,11 +2,11 @@
 from unittest.mock import patch
 
 from gfbio_submissions.brokerage.models import Submission, BrokerObject, \
-    SiteConfiguration, \
     TaskProgressReport
 from gfbio_submissions.brokerage.tasks import \
     create_broker_objects_from_submission_data_task, \
     check_on_hold_status_task
+from gfbio_submissions.generic.models import SiteConfiguration
 from .test_tasks_base import TestTasks
 
 

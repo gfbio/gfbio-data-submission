@@ -6,16 +6,16 @@ from django.test import override_settings
 
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, JIRA_ATTACHMENT_SUB_URL
-from gfbio_submissions.brokerage.models import SiteConfiguration, Submission, \
-    PersistentIdentifier, \
-    RequestLog
+from gfbio_submissions.brokerage.models import Submission, \
+    PersistentIdentifier
 from gfbio_submissions.brokerage.tasks import \
     create_pangaea_issue_task, attach_to_pangaea_issue_task, \
     add_accession_to_pangaea_issue_task, check_for_pangaea_doi_task
-from .test_tasks_base import TestTasks
 from gfbio_submissions.brokerage.tests.utils import \
     _get_pangaea_soap_response, _get_pangaea_attach_response, \
     _get_pangaea_comment_response, _get_pangaea_ticket_response
+from gfbio_submissions.generic.models import SiteConfiguration, RequestLog
+from .test_tasks_base import TestTasks
 
 
 class TestPangaeaTasks(TestTasks):

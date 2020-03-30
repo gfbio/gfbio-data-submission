@@ -98,7 +98,7 @@ class TestBrokerObjectManager(TestCase):
             object_id=o_id,
             json_data={
                 'center_name': 'GFBIO',
-                'study_type': 'Metagenomics',
+                # 'study_type': 'Metagenomics',
                 'study_abstract': 'abs',
                 'study_title': 't',
                 'study_alias': 'a',

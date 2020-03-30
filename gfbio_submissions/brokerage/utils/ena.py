@@ -29,7 +29,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_BROKER_NAME, CHECKLIST_ACCESSION_MAPPING, \
     STATIC_SAMPLE_SCHEMA_LOCATION
 from gfbio_submissions.brokerage.models import AuditableTextData, \
-    SiteConfiguration, EnaReport, PersistentIdentifier
+    EnaReport, PersistentIdentifier
 
 logger = logging.getLogger(__name__)
 dicttoxml.LOG.setLevel(logging.ERROR)
@@ -182,6 +182,9 @@ class Enalizer(object):
         study_dict['study']['descriptor'] = self.study
         if len(study_attributes):
             study_dict['study']['study_attributes'] = study_attributes
+
+        study_dict['study']['descriptor']['study_type'] = 'Other'
+
         study_dict = self._capitalize_dictionary(study_dict)
 
         study_xml = dicttoxml.dicttoxml(study_dict,
@@ -193,9 +196,9 @@ class Enalizer(object):
         for item in root.findall('./STUDY/STUDY_ATTRIBUTES/item'):
             item.tag = 'STUDY_ATTRIBUTE'
 
-        # study_type = root.find('./STUDY/DESCRIPTOR/STUDY_TYPE')
-        # study_type.set('existing_study_type', study_type.text)
-        # study_type.text = ''
+        study_type = root.find('./STUDY/DESCRIPTOR/STUDY_TYPE')
+        study_type.set('existing_study_type', study_type.text)
+        study_type.text = ''
 
         study = root.find('./STUDY')
         study.set('alias', self.study_alias)
@@ -623,8 +626,9 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data):
     # TODO: tesdatat this !
     with transaction.atomic():
         details = response.headers or ''
+        # TODO: since RequestLog has been moved to generic, is maybe valid to use a global import now. check ..
         # prevent cyclic dependencies
-        from gfbio_submissions.brokerage.models import RequestLog
+        from gfbio_submissions.generic.models import RequestLog
         incoming = None
         try:
             incoming = RequestLog.objects.filter(
@@ -711,7 +715,7 @@ def release_study_on_ena(submission):
         with transaction.atomic():
             details = response.headers or ''
             # prevent cyclic dependencies
-            from gfbio_submissions.brokerage.models import RequestLog
+            from gfbio_submissions.generic.models import RequestLog
             incoming = None
             try:
                 incoming = RequestLog.objects.filter(
@@ -849,7 +853,7 @@ def fetch_ena_report(site_configuration, report_type):
     request_id = uuid.uuid4()
     with transaction.atomic():
         details = response.headers or ''
-        from gfbio_submissions.brokerage.models import RequestLog
+        from gfbio_submissions.generic.models import RequestLog
         req_log = RequestLog(
             request_id=request_id,
             type=RequestLog.OUTGOING,

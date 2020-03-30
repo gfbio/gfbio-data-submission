@@ -4,7 +4,7 @@ import unicodedata
 
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 
-from gfbio_submissions.brokerage.models import SiteConfiguration
+from gfbio_submissions.generic.models import SiteConfiguration
 
 logger = logging.getLogger(__name__)
 

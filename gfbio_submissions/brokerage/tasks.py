@@ -13,7 +13,7 @@ from kombu.utils import json
 from requests import ConnectionError, Response
 
 from config.settings.base import HOST_URL_ROOT, ADMIN_URL
-from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
+from gfbio_submissions.generic.models import SiteConfiguration, RequestLog
 from gfbio_submissions.users.models import User
 from .configuration.settings import ENA, ENA_PANGAEA, PANGAEA_ISSUE_VIEW_URL, \
     SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME, \
@@ -22,8 +22,8 @@ from .configuration.settings import ENA, ENA_PANGAEA, PANGAEA_ISSUE_VIEW_URL, \
 from .configuration.settings import SUBMISSION_MAX_RETRIES, \
     SUBMISSION_RETRY_DELAY
 from .exceptions import TransferServerError, TransferClientError
-from .models import BrokerObject, AuditableTextData, RequestLog, \
-    AdditionalReference, TaskProgressReport, Submission, SiteConfiguration
+from .models import BrokerObject, AuditableTextData, \
+    AdditionalReference, TaskProgressReport, Submission
 from .models import SubmissionUpload, EnaReport
 from .utils.csv import check_for_molecular_content, parse_molecular_csv
 from .utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data, \

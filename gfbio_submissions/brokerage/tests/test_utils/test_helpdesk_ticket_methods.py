@@ -13,8 +13,7 @@ from rest_framework.test import APIClient
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_USERNAME_URL_TEMPLATE, \
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE
-from gfbio_submissions.brokerage.models import ResourceCredential, \
-    SiteConfiguration, AdditionalReference, \
+from gfbio_submissions.brokerage.models import AdditionalReference, \
     SubmissionUpload, BrokerObject
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path, \
@@ -22,6 +21,8 @@ from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path, \
 from gfbio_submissions.brokerage.utils.gfbio import \
     gfbio_prepare_create_helpdesk_payload, \
     get_gfbio_helpdesk_username
+from gfbio_submissions.generic.models import SiteConfiguration, \
+    ResourceCredential
 from gfbio_submissions.users.models import User
 
 

@@ -9,8 +9,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
 from gfbio_submissions.brokerage.exceptions import TransferInternalError, \
     raise_response_exceptions, TransferClientError, raise_no_ticket_exception, \
     NoTicketAvailableError
-from gfbio_submissions.brokerage.models import TaskProgressReport, Submission, \
-    SiteConfiguration
+from gfbio_submissions.brokerage.models import TaskProgressReport, Submission
 
 logger = logging.getLogger(__name__)
 
@@ -38,11 +37,11 @@ def _safe_get_submitted_submission(submission_id):
                 e))
     return submission
 
+
 # TODO: refactor or merge if possible. only submision owners siteconf relevant
 def _safe_get_site_config(submission):
     site_config = None
     if submission and submission.user:
-
         site_config = submission.user.site_configuration
         # try:
         #     site_config = SiteConfiguration.objects.get_site_configuration(

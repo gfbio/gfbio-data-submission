@@ -4,7 +4,6 @@ import base64
 import json
 from pprint import pprint
 from urllib.parse import quote
-from uuid import uuid4
 
 import responses
 from django.contrib.auth.models import Permission
@@ -14,10 +13,11 @@ from rest_framework.test import APIRequestFactory, APIClient
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_USERNAME_URL_TEMPLATE, \
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE
-from gfbio_submissions.brokerage.models import ResourceCredential, \
-    SiteConfiguration, Submission, TaskProgressReport
+from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data
+from gfbio_submissions.generic.models import SiteConfiguration, \
+    ResourceCredential
 from gfbio_submissions.users.models import User
 
 
@@ -161,7 +161,8 @@ class TestInitialChainTasks(TestCase):
         self.assertEqual(201, max_response.status_code)
         content = json.loads(max_response.content)
         pprint(content)
-        sub = Submission.objects.get(broker_submission_id=content.get('broker_submission_id'))
+        sub = Submission.objects.get(
+            broker_submission_id=content.get('broker_submission_id'))
         pprint(sub.__dict__)
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_gfbio_helpdesk_username_task',
