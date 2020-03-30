@@ -30,13 +30,21 @@ function SubmissionInfo(props) {
 
   if (props.accessionId && props.accessionId.length > 0) {
     listItems.push(
-      <li className="list-group-item">
+      <div>
+        <i className="fa fa-archive" aria-hidden="true"></i>ENA Accession:<br />
+      </div>
+    )
+    for (const index in props.accessionId){
+      const accession = props.accessionId[index];
+      listItems.push(
+        <li className="list-group-item">
         <a>
-          <i className="fa fa-archive" aria-hidden="true"></i>ENA Accession:<br />
-          <div className="bsi">{props.accessionId}</div>
+          <div className="bsi"><span style={{fontWeight:600}}>ID</span>: {accession.pid}</div>
+          <div className="bsi" style={{marginTop:0}}><span style={{fontWeight:600}}>Status</span>: {accession.status}</div>
         </a>
-      </li>,
-    );
+      </li>
+      );
+    }
   }
 
   if (props.issue.length > 0) {
@@ -83,7 +91,7 @@ function SubmissionInfo(props) {
 
 SubmissionInfo.propTypes = {
   brokerSubmissionId: PropTypes.string,
-  accessionId: PropTypes.string,
+  accessionId: PropTypes.array,
   issue: PropTypes.string,
 };
 

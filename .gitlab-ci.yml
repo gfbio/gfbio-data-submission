@@ -1,0 +1,93 @@
+stages:
+  - unitTests
+  - buildDockerImages
+  - autoMerge
+  - afterMerge
+  - test
+  - createWebTest
+  - deploy
+
+run_unit_tests:
+  stage: unitTests
+  script:
+    - rsync -a /home/gitlab-runner/.envs .
+    - docker-compose -f local.yml build
+    - docker-compose -f cicd/local.yml up -d
+    - docker-compose -f cicd/local.yml run --rm --user 999:999 django /bin/sh -c "python /app/manage.py collectstatic --noinput && python /app/manage.py migrate && python /app/manage.py test"
+    - docker-compose -f cicd/local.yml down
+  environment:
+    name: $CI_COMMIT_REF_NAME
+  only:
+    - branches
+  except:
+    refs:
+      - master
+      - production
+  tags:
+    - dev
+
+build_images:
+  stage: buildDockerImages
+  script:
+    - rsync -a /home/gitlab-runner/.envs .
+    - docker-compose -f production.yml build
+  environment:
+    name: $CI_COMMIT_REF_NAME
+  only:
+    changes:
+      - compose/production/**/*
+      - requirements/*
+    variables:
+      - $CI_COMMIT_MESSAGE =~ /.*web-test.*/
+  tags:
+    - dev
+
+create_merge_request:
+  stage: autoMerge
+  only:
+    - branches
+  except:
+     refs:
+       - master
+       - production
+  script:
+    - HOST=${CI_PROJECT_URL} CI_PROJECT_ID=${CI_PROJECT_ID} CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} GITLAB_USER_ID=${GITLAB_USER_ID} PRIVATE_TOKEN=${PRIVATE_TOKEN} ./cicd/autoMergeRequest.sh
+  tags:
+    - dev
+
+docker_stop_web_test:
+  stage: afterMerge
+  script:
+    - python cicd/stopDockerStack.py "${CI_COMMIT_MESSAGE}"
+  only:
+    refs:
+      - master
+    variables:
+      - $CI_COMMIT_MESSAGE =~ /.*Merge branch.*into.*/
+  tags:
+    - dev
+
+docker_web_test:
+  stage: createWebTest
+  script:
+    - rsync -a /home/gitlab-runner/.envs .
+    - docker stack rm $CI_COMMIT_REF_NAME || true
+    - while [[ $(docker ps | grep $CI_COMMIT_REF_NAME | wc -l) > 0 ]]; do sleep 1; done
+    - docker-compose -f production.yml build
+    - sed -i s/BRANCH/$CI_COMMIT_REF_NAME/g cicd/production.yml
+    - sed -i s/DJANGO_ALLOWED_HOSTS=.*/DJANGO_ALLOWED_HOSTS=\.dev\.submissions\.gfbio\.org/g .envs/.production/.django
+    - ADMIN_NICKNAME=${ADMIN_NICKNAME} ADMIN_EMAIL=${ADMIN_EMAIL} ADMIN_PASSWORD=${ADMIN_PASSWORD} docker stack deploy -c cicd/production.yml $CI_COMMIT_REF_NAME
+  environment:
+    name: $CI_COMMIT_REF_NAME
+    url: https://$CI_COMMIT_REF_NAME.dev.submissions.gfbio.org
+  only:
+    refs:
+      - branches
+    variables:
+      - $CI_COMMIT_MESSAGE =~ /.*web-test.*/
+  except:
+     refs:
+       - master
+       - production
+  tags:
+    - dev

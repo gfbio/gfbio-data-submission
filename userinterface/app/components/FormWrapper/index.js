@@ -236,7 +236,7 @@ class FormWrapper extends React.PureComponent {
 
             {/*</div>*/}
             {/* left col */}
-            <div className="col-md-9">
+            <div className="col-md-9 form-col">
               {/* middle col */}
 
               {this.renderNavigationPrompt()}
@@ -259,7 +259,7 @@ class FormWrapper extends React.PureComponent {
 
             </div>
             {/* end middle col */}
-            <div className="col-md-3">
+            <div className="col-md-3 sidebar-col" >
               {/* right col */}
 
               <SubmissionInfo
@@ -323,7 +323,7 @@ class FormWrapper extends React.PureComponent {
                 <div className="form-group col-md-12">
                   <button
                     type="submit"
-                    className="btn btn-secondary btn-block green"
+                    className="btn btn-secondary btn-block green submit-btn"
                     onClick={this.props.handleSubmit(values =>
                       this.props.onSubmit({
                         ...values,
@@ -355,7 +355,7 @@ FormWrapper.propTypes = {
   generalError: PropTypes.bool,
   saveSuccessMessage: PropTypes.object,
   brokerSubmissionId: PropTypes.string,
-  accessionId: PropTypes.string,
+  accessionId: PropTypes.array,
   issue: PropTypes.string,
 };
 

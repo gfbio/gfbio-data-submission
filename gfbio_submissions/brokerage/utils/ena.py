@@ -49,6 +49,7 @@ class Enalizer(object):
         self.experiments_contain_files = False
         self.run = runs
         self.runs_key = 'runs'
+        self.embargo = submission.embargo
         if submission.center_name is not None \
                 and submission.center_name.center_name != '':
             self.center_name = submission.center_name.center_name
@@ -122,7 +123,7 @@ class Enalizer(object):
 
     def create_submission_xml(self,
                               action='VALIDATE',
-                              hold_date='',
+                              hold_date=None,
                               outgoing_request_id='add_outgoing_id',
                               entities=[]):
         logger.info(
@@ -150,10 +151,12 @@ class Enalizer(object):
                 '<ACTION><{0} source="run.xml" schema="run"/></ACTION>'.format(
                     action.upper())
             )
-        if hold_date == '':
+        if not hold_date:
             # today + 1 year
             hold_date = '{0}'.format((datetime.date.today() +
                                       datetime.timedelta(days=365)).isoformat())
+        else:
+            hold_date = hold_date.isoformat()
         return textwrap.dedent(
             '<?xml version = \'1.0\' encoding = \'UTF-8\'?>'
             '<SUBMISSION alias="{2}" center_name="{3}" broker_name="{4}">'
@@ -562,6 +565,7 @@ class Enalizer(object):
             'submission.xml',
             smart_text(self.create_submission_xml(
                 action=action,
+                hold_date=self.embargo,
                 outgoing_request_id=outgoing_request_id,
                 entities=entities,
             ))
@@ -870,6 +874,24 @@ def fetch_ena_report(site_configuration, report_type):
     return response, request_id
 
 
+def update_embargo_date_in_submissions(hold_date, study_pid):
+    if len(study_pid) > 0:
+        for study in study_pid:
+            submissions = study.broker_object.submissions.all()
+            for submission in submissions:
+                if hold_date != submission.embargo:
+                    submission.embargo = hold_date
+                    submission.save()
+                    logger.info(
+                        msg='update_embargo_date_in_submissions | '
+                            'ENA hold date does not match Submission embargo | '
+                            'submission date: {} | '
+                            'submission id: {} | '
+                            'persistent_identifier_date: {} | '
+                            'persistent_identifier_id: {}'
+                            ''.format(submission.embargo, submission.broker_submission_id, study.hold_date, study.pid))
+
+
 def update_persistent_identifier_report_status():
     for report_type in EnaReport.REPORT_TYPES:
         report_key, report_name = report_type
@@ -879,16 +901,32 @@ def update_persistent_identifier_report_status():
                         '| process report of type={0}'.format(report_name))
             for report in reports.first().report_data:
                 report_dict = report.get('report', {})
-                id = report_dict.get('id')
+                pri_id = report_dict.get('id')
                 sec_id = report_dict.get('secondaryId')
                 status = report_dict.get('releaseStatus')
+                hold_date = report_dict.get('holdDate')
+                hold_date_time = datetime.datetime.now()
+                if hold_date:
+                    # holdDate from ENA report 2022-03-10T17:17:04
+                    # https://www.journaldev.com/23365/python-string-to-datetime-strptime
+                    ena_hold_date_format = "%Y-%m-%dT%X"
+                    hold_date_time = datetime.datetime.strptime(hold_date, ena_hold_date_format).date()
+                ids_to_use = []
+                if pri_id:
+                    ids_to_use.append(pri_id)
+                if sec_id:
+                    ids_to_use.append(sec_id)
 
-                if id and status:
-                    PersistentIdentifier.objects.filter(pid=id).update(
-                        status=status)
-                if sec_id and status:
-                    PersistentIdentifier.objects.filter(pid=sec_id).update(
-                        status=status)
+                for vid in ids_to_use:
+                    if hold_date and status:
+                        PersistentIdentifier.objects.filter(pid=vid).update(
+                            status=status, hold_date=hold_date_time)
+                        update_embargo_date_in_submissions(hold_date_time,
+                                                           PersistentIdentifier.objects.filter(pid=vid))
+                    elif status:
+                        PersistentIdentifier.objects.filter(pid=vid).update(
+                            status=status)
+
             return True
         else:
             logger.warning(

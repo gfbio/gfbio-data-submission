@@ -56,7 +56,7 @@ class TestSubmissionViewGetDetailRequests(TestSubmissionView):
         response = self.api_client.get(
             '/api/submissions/{0}/'.format(submission.broker_submission_id))
         content = json.loads(response.content.decode('utf-8'))
-        self.assertEqual(content['accession_id'], 'PRJE0815')
+        self.assertEqual(content['accession_id'][0]['pid'], 'PRJE0815')
         self.assertEqual(200, response.status_code)
         self.assertTrue(isinstance(content, dict))
         self.assertEqual('horst', content['user'])

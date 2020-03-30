@@ -51,7 +51,7 @@ class PersistentIdentifierAdmin(admin.ModelAdmin):
                      ]
     date_hierarchy = 'created'
 
-    list_display = ('archive', 'pid_type', 'broker_object',)
+    list_display = ('archive', 'pid', 'pid_type', 'broker_object', 'status', 'hold_date', )
 
 
 class AdditionalReferenceInline(admin.TabularInline):

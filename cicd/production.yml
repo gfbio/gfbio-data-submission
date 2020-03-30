@@ -1,0 +1,124 @@
+version: '3.7'
+
+volumes:
+  django_media: {}
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: ../compose/production/django/Dockerfile
+    image: gfbio_submissions_production_django
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ../.envs/.production/.django
+      - ../.envs/.production/.postgres
+    networks:
+      - internal
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - django_media:/app/gfbio_submissions/media
+    command: /start
+    networks:
+      - proxy
+      - internal
+    deploy:
+      mode: global
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.BRANCH_https.rule=Host(`BRANCH.dev.submissions.gfbio.org`)
+      - traefik.http.routers.BRANCH_https.entrypoints=websecure
+      - traefik.http.routers.BRANCH_https.tls=true
+      - traefik.http.middlewares.BRANCH_extra_headers.headers.hostsproxyheaders=X-CSRFToken
+      - traefik.http.services.BRANCH_https.loadbalancer.server.port=5000
+      - "traefik.http.routers.BRANCH_http.entrypoints=web"
+      - "traefik.http.routers.BRANCH_http.rule=Host(`BRANCH.dev.submissions.gfbio.org`)"
+      - "traefik.http.routers.BRANCH_http.middlewares=https_redirect"
+      - "traefik.http.middlewares.BRANCH_https_redirect.redirectscheme.scheme=https"
+    command: >
+      /bin/sh -c "python /app/manage.py collectstatic --noinput
+      && python /app/manage.py migrate
+      && echo 'from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser(\"$ADMIN_NICKNAME\", \"$ADMIN_EMAIL\", \"$ADMIN_PASSWORD\")' | python /app/manage.py shell
+      && /usr/local/bin/gunicorn config.wsgi --bind 0.0.0.0:5000 --chdir=/app"
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ../compose/production/postgres/Dockerfile
+    image: gfbio_submissions_production_postgres
+    networks:
+      - internal
+    restart: always
+    env_file:
+      - ../.envs/.production/.postgres
+
+  redis:
+    image: redis:5.0
+    restart: always
+    networks:
+      - internal
+
+  celeryworker:
+    build:
+      context: .
+      dockerfile: ../compose/production/django/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ../.envs/.production/.django
+      - ../.envs/.production/.postgres
+    networks:
+      - internal
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - django_media:/app/gfbio_submissions/media
+    image: gfbio_submissions_production_celeryworker
+    command: /start-celeryworker
+    restart: always
+
+  celerybeat:
+    build:
+      context: .
+      dockerfile: ../compose/production/django/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ../.envs/.production/.django
+      - ../.envs/.production/.postgres
+    networks:
+      - internal
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - django_media:/app/gfbio_submissions/media
+    image: gfbio_submissions_production_celerybeat
+    command: /start-celerybeat
+    restart: always
+
+  flower:
+    build:
+      context: .
+      dockerfile: ../compose/production/django/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ../.envs/.production/.django
+      - ../.envs/.production/.postgres
+    networks:
+      - internal
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - django_media:/app/gfbio_submissions/media
+    image: gfbio_submissions_production_flower
+    restart: always
+    command: /start-flower
+
+networks:
+  proxy:
+    external: true
+  internal:
