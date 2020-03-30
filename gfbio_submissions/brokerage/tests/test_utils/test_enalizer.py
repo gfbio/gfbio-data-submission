@@ -178,7 +178,7 @@ class TestEnalizer(TestCase):
         enalizer = Enalizer(submission, 'test-enalizer-sample')
         data = enalizer.prepare_submission_data()
         k, sample_xml = data.get('SAMPLE')
-        self.assertIn('<TAG>water environmental package</TAG>', sample_xml)
+        self.assertIn('<TAG>waterz environmental package</TAG>', sample_xml)
         self.assertIn(
             '<TAG>wastewater sludge environmental package</TAG>',
             sample_xml
