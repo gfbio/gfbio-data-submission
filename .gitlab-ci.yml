@@ -12,9 +12,11 @@ run_unit_tests:
   script:
     - rsync -a /home/gitlab-runner/.envs .
     - docker-compose -f local.yml build
-    - docker-compose -f cicd/local.yml up -d
-    - docker-compose -f cicd/local.yml run --rm --user 999:999 django /bin/sh -c "python /app/manage.py collectstatic --noinput && python /app/manage.py migrate && python /app/manage.py test"
-    - docker-compose -f cicd/local.yml down
+    - docker stack deploy -c cicd/local.yml $CI_COMMIT_REF_NAME
+    - while [[ $(docker ps -a | grep ${CI_COMMIT_REF_NAME}_django | grep Exited | wc -l) == 0 ]]; do sleep 1; done
+    - docker logs $(docker ps -a | grep -oP "$CI_COMMIT_REF_NAME"_django.+\s?)
+    - if [[ $(docker logs $(docker ps -a | grep -oP "$CI_COMMIT_REF_NAME"_django.+\s?) --tail 2 2>&1 | grep FAILED | wc -l) == 1 ]]; then docker stack rm $CI_COMMIT_REF_NAME && exit 1; fi
+    - docker stack rm $CI_COMMIT_REF_NAME
   environment:
     name: $CI_COMMIT_REF_NAME
   only:
