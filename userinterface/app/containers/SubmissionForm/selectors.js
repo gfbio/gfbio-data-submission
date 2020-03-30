@@ -69,6 +69,11 @@ const makeSelectEmbargoDate = () =>
     substate.get('embargoDate'),
   );
 
+const makeSelectFormChanged = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('formChanged'),
+  );
+
 const makeSelectInitialValues = () =>
   createSelector(selectSubmissionFormDomain, substate =>
     substate.get('initialValues'),
@@ -221,4 +226,5 @@ export {
   makeSelectShowEmbargoDialog,
   makeSelectGeneralError,
   makeSelectFileUploadsFromServer,
+  makeSelectFormChanged,
 };

@@ -28,16 +28,6 @@ import dateFormat from 'dateformat';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import {
-  closeEmbargoDialog,
-  setEmbargoDate,
-  showEmbargoDialog,
-} from '../../containers/SubmissionForm/actions';
-import {
-  makeSelectEmbargoDate,
-  makeSelectShowEmbargoDialog,
-} from '../../containers/SubmissionForm/selectors';
-import ButtonInput from './ButtonInput';
 
 /* eslint-disable react/prefer-stateless-function */
 class EmbargoDatePicker extends React.Component {
