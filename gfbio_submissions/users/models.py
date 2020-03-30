@@ -16,6 +16,9 @@ class User(AbstractUser):
     # around the globe.
     name = CharField(_("Name of User"), blank=True, max_length=255)
 
+    # TODO: provide context for external_user_id, e.g. where does it come from,
+    #   so that unique constrain works only in this context.
+    #   e.g. provider_a id=1 is different than provider_b id=1
     # https://docs.djangoproject.com/en/2.2/ref/models/fields/#null
     external_user_id = CharField(
         _('external userid'),
