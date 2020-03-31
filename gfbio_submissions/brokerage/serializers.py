@@ -9,6 +9,8 @@ from .models import Submission, \
 from .utils.schema_validation import \
     validate_data_full, validate_data_min
 
+import datetime
+
 
 class UserSerializer(serializers.ModelSerializer):
     submission = serializers.PrimaryKeyRelatedField(
@@ -67,6 +69,18 @@ class SubmissionSerializer(serializers.ModelSerializer):
 
 class SubmissionDetailSerializer(SubmissionSerializer):
     def validate(self, data):
+        embargo = data.get('embargo', None)
+        if embargo:
+            # check if date is between tomorrow and 2 years from now
+            earliest_embargo_date = datetime.date.today() + datetime.timedelta(days=1)
+            latest_embargo_date = datetime.date(datetime.date.today().year + 2,
+                                                datetime.date.today().month, datetime.date.today().day)
+            if embargo < earliest_embargo_date:
+                raise serializers.ValidationError({
+                    'data': 'Embargo : earliest possible date is 24 hours from today'})
+            elif embargo > latest_embargo_date:
+                raise serializers.ValidationError({
+                    'data': 'Embargo : latest possible date is 2 years from today'})
         if data.get('release', False):
             target = data.get('target', 'NO_TARGET_PROVIDED')
             valid, errors = validate_data_full(data=data.get('data', {}),
