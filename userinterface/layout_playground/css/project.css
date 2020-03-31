@@ -666,16 +666,6 @@ section.sub-navi {
   top: 57px; }
 
 /* end sticky sidebar */
-.tooltip [class$="inner"] {
-  font-size: .8rem;
-  font-weight: 300;
-  background-color: #fff;
-  border: 1px solid #495057;
-  color: #495057; }
-
-.tooltip [class$="arrow"]:before {
-  border-right-color: #495057 !important; }
-
 /*
 
 .tooltip.bs-tooltip-right .arrow:before {
@@ -2317,6 +2307,30 @@ section.molecular-submission {
 
 .embargo-footer {
   margin-top: -20px; }
+
+.embargo-btn {
+  text-align: left;
+  margin-bottom: 0;
+  padding-bottom: 0; }
+
+.tooltip [class$="inner"] {
+  font-size: .8rem;
+  font-weight: 300;
+  background-color: #fff;
+  border: 1px solid #495057;
+  color: #495057; }
+
+.bs-tooltip-bottom .arrow::before, .bs-tooltip-auto[x-placement^="bottom"] .arrow::before {
+  border-bottom-color: #495057 !important; }
+
+.bs-tooltip-right .arrow::before, .bs-tooltip-auto[x-placement^="right"] .arrow::before {
+  border-right-color: #495057 !important; }
+
+.bs-tooltip-left .arrow::before, .bs-tooltip-auto[x-placement^="left"] .arrow::before {
+  border-left-color: #495057 !important; }
+
+.bs-tooltip-top .arrow::before, .bs-tooltip-auto[x-placement^="top"] .arrow::before {
+  border-top-color: #495057 !important; }
 
 .text-primary {
   color: #345AA2 !important; }

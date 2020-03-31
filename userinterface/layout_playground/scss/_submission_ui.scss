@@ -43,4 +43,30 @@
 .embargo-footer {
     margin-top: -20px;
 }
+.embargo-btn {
+  text-align: left;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+// TOOLTIP
+.tooltip [class$="inner"] {
+  font-size: .8rem;
+  font-weight: 300;
+  background-color: $white;
+  border: 1px solid $gray-dark-2;
+  color: $gray-dark-2;
+}
+.bs-tooltip-bottom .arrow::before, .bs-tooltip-auto[x-placement^="bottom"] .arrow::before {
+  border-bottom-color: $gray-dark-2 !important;
+}
+.bs-tooltip-right .arrow::before, .bs-tooltip-auto[x-placement^="right"] .arrow::before {
+  border-right-color: $gray-dark-2 !important;
+}
+.bs-tooltip-left .arrow::before, .bs-tooltip-auto[x-placement^="left"] .arrow::before {
+  border-left-color: $gray-dark-2 !important;
+}
+.bs-tooltip-top .arrow::before, .bs-tooltip-auto[x-placement^="top"] .arrow::before {
+  border-top-color: $gray-dark-2 !important;
+}
+
 
