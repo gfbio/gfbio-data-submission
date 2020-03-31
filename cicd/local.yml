@@ -8,7 +8,7 @@ services:
     image: gfbio_submissions_local_django
     depends_on:
       - postgres
-    user: "$UID:$UID"
+    user: ${CURRENT_UID}
     deploy:
       restart_policy:
         condition: none
