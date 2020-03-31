@@ -12,6 +12,7 @@ services:
     depends_on:
       - postgres
       - redis
+    user: ${CURRENT_UID}
     env_file:
       - ../.envs/.production/.django
       - ../.envs/.production/.postgres
