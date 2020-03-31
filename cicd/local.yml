@@ -1,4 +1,4 @@
-version: '3'
+version: '3.7'
 
 services:
   django: &django
@@ -8,13 +8,20 @@ services:
     image: gfbio_submissions_local_django
     depends_on:
       - postgres
-    user: "999:999"
+    user: "$UID:$UID"
+    deploy:
+      restart_policy:
+        condition: none
+        max_attempts: 0
     volumes:
       - ..:/app
     env_file:
       - ../.envs/.local/.django
       - ../.envs/.local/.postgres
-    command: /start
+    command: >
+      /bin/sh -c "python /app/manage.py collectstatic --noinput
+      && python /app/manage.py migrate
+      && python /app/manage.py test"
 
   postgres:
     build:

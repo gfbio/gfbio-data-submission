@@ -105,6 +105,34 @@ h1.current-location {
   }
 }
 
+.btn-red-inverted {
+  border-color: darken($error-red, .2);
+  background-color: $white;
+  color: $error-red !important;
+
+  &:hover, &:not(:disabled):not(.disabled):active,
+  &:not(:disabled):not(.disabled).active {
+    &:focus {
+      box-shadow: none;
+    }
+
+    border-color: darken($error-red, .2);
+    background-color: $error-red;
+    color: $white !important;
+    box-shadow: none;
+  }
+
+  &:focus {
+    box-shadow: none;
+  }
+
+  &:hover {
+    background-color: $error-red;
+    color: $white !important;
+  }
+}
+
+
 
 // works on btn-secondary
 // TODO: refactor to generic class, light-blue button

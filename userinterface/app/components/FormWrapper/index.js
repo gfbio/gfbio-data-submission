@@ -27,6 +27,12 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
 import SubmissionInfo from '../SubmissionInfo';
+import { createStructuredSelector } from 'reselect';
+import { makeSelectFormChanged } from '../../containers/SubmissionForm/selectors';
+import { setFormChanged } from '../../containers/SubmissionForm/actions';
+import { connect } from 'react-redux';
+import { compose } from 'redux';
+import { closeEmbargoDialog, setEmbargoDate, showEmbargoDialog } from '../../containers/SubmissionForm/actions';
 
 /* eslint-disable react/prefer-stateless-function */
 class FormWrapper extends React.PureComponent {
@@ -105,9 +111,11 @@ class FormWrapper extends React.PureComponent {
     );
   };
 
-
   renderNavigationPrompt = () => {
-    if (this.props.pristine === false && this.props.promptOnLeave) {
+    if (
+      (this.props.pristine === false && this.props.promptOnLeave) ||
+      this.props.formChanged
+    ) {
       return (
         <NavigationPrompt when={true}>
           {({ onConfirm, onCancel }) => (
@@ -163,6 +171,7 @@ class FormWrapper extends React.PureComponent {
                                 e => {
                                   e.preventDefault();
                                   // this.props.onDiscard();
+                                  this.props.setFormChanged(false);
                                   this.props.reset();
                                   onConfirm();
                                 }
@@ -357,8 +366,21 @@ FormWrapper.propTypes = {
   brokerSubmissionId: PropTypes.string,
   accessionId: PropTypes.array,
   issue: PropTypes.string,
+  formChanged: PropTypes.bool,
 };
 
+const mapStateToProps = createStructuredSelector({
+  formChanged: makeSelectFormChanged(),
+});
+
+const mapDispatchToProps = dispatch => ({
+  setFormChanged: () => dispatch(setFormChanged(false)),
+});
+
+FormWrapper = connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(FormWrapper);
 // this is already connected to redux-form reducer ?
 
 // initialValues: {title: 'Preset'} -> is set to form values once form is touched but not shown in browser
