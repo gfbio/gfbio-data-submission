@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
+import shutil
 
 import responses
 from django.core.files.uploadedfile import SimpleUploadedFile
 
+from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA, \
     GENERIC
 from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
@@ -15,6 +17,12 @@ from .test_submission_view_base import \
 
 
 class TestSubmissionViewDataCenterCheck(TestSubmissionView):
+
+    @classmethod
+    def tearDownClass(cls):
+        super(TestSubmissionViewDataCenterCheck, cls).tearDownClass()
+        [shutil.rmtree(path='{0}{1}{2}'.format(MEDIA_ROOT, os.sep, o),
+                       ignore_errors=False) for o in os.listdir(MEDIA_ROOT)]
 
     @responses.activate
     def test_ena_datacenter_no_files(self):

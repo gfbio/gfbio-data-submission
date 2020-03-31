@@ -163,8 +163,6 @@ class TestJiraClient(TestCase):
 
     @responses.activate
     def test_instance(self):
-        print('test_instance')
-
         self._add_jira_field_response()
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         self.assertIsInstance(jira_client.jira, jira.client.JIRA)
