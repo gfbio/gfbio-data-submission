@@ -9,17 +9,7 @@ import DatePicker from 'react-datepicker';
 
 import 'react-datepicker/dist/react-datepicker.css';
 import PropTypes from 'prop-types';
-import ButtonInput from './ButtonInput';
 import { createStructuredSelector } from 'reselect';
-import {
-  makeSelectEmbargoDate,
-  makeSelectShowEmbargoDialog,
-} from '../../containers/SubmissionForm/selectors';
-import {
-  closeEmbargoDialog,
-  setEmbargoDate,
-  showEmbargoDialog,
-} from '../../containers/SubmissionForm/actions';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import Modal from 'react-bootstrap/Modal';
@@ -28,6 +18,16 @@ import dateFormat from 'dateformat';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import {
+  closeEmbargoDialog,
+  setEmbargoDate,
+  showEmbargoDialog,
+} from '../../containers/SubmissionForm/actions';
+import {
+  makeSelectEmbargoDate,
+  makeSelectShowEmbargoDialog,
+} from '../../containers/SubmissionForm/selectors';
+import ButtonInput from './ButtonInput';
 
 /* eslint-disable react/prefer-stateless-function */
 class EmbargoDatePicker extends React.Component {
@@ -35,6 +35,30 @@ class EmbargoDatePicker extends React.Component {
     super(props);
     this.state = { embargoDate: this.props.embargoDate };
   }
+
+  showEmbargoChangeButton = () => {
+    if (
+      this.props.embargoDate &&
+      Object.prototype.toString.call(this.props.embargoDate) === '[object Date]'
+    ) {
+      if (
+        this.props.embargoDate.setHours(0, 0, 0, 0) >
+        new Date().setHours(0, 0, 0, 0)
+      ) {
+        return (
+          <Button
+            variant="link"
+            className="btn-block btn-link-light-blue"
+            onClick={this.props.openEmbargoDialog}
+          >
+            <i className="icon ion-md-calendar align-top" />
+            <span className="">Change embargo date</span>
+          </Button>
+        );
+      }
+    }
+    return null;
+  };
 
   render() {
     const setEmbargo = (date, months) => {
@@ -61,14 +85,7 @@ class EmbargoDatePicker extends React.Component {
           <h4>{dateFormat(this.props.embargoDate, 'dd mmmm yyyy')}</h4>
         </p>
 
-        <Button
-          variant="link"
-          className="btn-block btn-link-light-blue"
-          onClick={this.props.openEmbargoDialog}
-        >
-          <i className="icon ion-md-calendar align-top" />
-          <span className="">Change embargo date</span>
-        </Button>
+        {this.showEmbargoChangeButton()}
 
         <Modal
           show={this.props.showEmbargoDialog}
