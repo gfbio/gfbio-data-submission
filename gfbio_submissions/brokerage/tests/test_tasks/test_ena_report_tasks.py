@@ -6,13 +6,12 @@ from unittest import skip
 import responses
 from django.test import override_settings
 
-from gfbio_submissions.brokerage.models import ResourceCredential, \
-    TaskProgressReport, RequestLog, \
-    EnaReport
+from gfbio_submissions.brokerage.models import TaskProgressReport, EnaReport
 from gfbio_submissions.brokerage.tasks import \
     fetch_ena_reports_task
 from gfbio_submissions.brokerage.tests.utils import \
     _get_test_data_dir_path
+from gfbio_submissions.generic.models import ResourceCredential, RequestLog
 from .test_tasks_base import TestTasks
 
 

@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import os
+import shutil
 from unittest import skip
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
+from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.models import Submission, SubmissionUpload
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.users.models import User
@@ -17,6 +19,12 @@ class TestSubmissionUpload(TestCase):
             username="user1"
         )
         Submission.objects.create(site=user)
+
+    @classmethod
+    def tearDownClass(cls):
+        super(TestSubmissionUpload, cls).tearDownClass()
+        [shutil.rmtree(path='{0}{1}{2}'.format(MEDIA_ROOT, os.sep, o),
+                       ignore_errors=False) for o in os.listdir(MEDIA_ROOT)]
 
     @classmethod
     def _create_submission_upload(cls, size=0):

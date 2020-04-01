@@ -14,8 +14,9 @@ from django.db import transaction
 from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY, \
     CSV_WRITER_QUOTING, SEPARATOR
 from gfbio_submissions.brokerage.forms import Gcdj2CsvForm
-from gfbio_submissions.brokerage.models import TicketLabel, Submission
+from gfbio_submissions.brokerage.models import Submission
 from gfbio_submissions.brokerage.utils.gcdj_utils import flatten_dictionary
+from gfbio_submissions.generic.models import TicketLabel
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +42,9 @@ def request_pangaea_login_token(resource_credential):
     response = requests.post(url=resource_credential.url, data=body,
                              headers=headers)
     with transaction.atomic():
+        # TODO: since Requestlog has moved to generic, globla import may be possible, check please ..
         # prevent cyclic dependencies
-        from gfbio_submissions.brokerage.models import RequestLog
+        from gfbio_submissions.generic.models import RequestLog
         req_log = RequestLog(
             request_id=uuid.uuid4(),
             type=RequestLog.OUTGOING,

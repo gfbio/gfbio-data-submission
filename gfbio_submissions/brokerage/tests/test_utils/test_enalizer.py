@@ -12,13 +12,15 @@ from gfbio_submissions.brokerage.utils.csv import find_correct_platform_and_mode
 from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_CENTER_NAME
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
-    ResourceCredential, SiteConfiguration, RequestLog, BrokerObject
+    BrokerObject
 from gfbio_submissions.brokerage.tests.test_models.test_submission import \
     SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_ena_release_xml_response
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
     send_submission_to_ena, release_study_on_ena
+from gfbio_submissions.generic.models import SiteConfiguration, \
+    ResourceCredential, RequestLog
 from gfbio_submissions.users.models import User
 
 
@@ -94,7 +96,8 @@ class TestEnalizer(TestCase):
         self.assertIn('<DESCRIPTOR>', study_xml)
 
         # 02.03.2020: study_type was removed in Oct/Nov 2019 !
-        self.assertNotIn('<STUDY_TYPE', study_xml)
+        self.assertIn('<STUDY_TYPE', study_xml)
+        self.assertIn('<STUDY_TYPE existing_study_type="Other" />', study_xml)
 
         self.assertIn('<STUDY_TITLE>', study_xml)
         self.assertIn('<STUDY_ABSTRACT>', study_xml)

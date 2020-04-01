@@ -10,7 +10,7 @@ from django.utils.encoding import smart_text
 from config.settings.base import ADMINS
 from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA
 # tO
-from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
+from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 
 logger = logging.getLogger(__name__)
 

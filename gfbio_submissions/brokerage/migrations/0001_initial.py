@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
-import gfbio_submissions.brokerage.fields
+import gfbio_submissions.generic.fields
 import gfbio_submissions.brokerage.utils.submission_tools
 import model_utils.fields
 import uuid
@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
                 ('type', models.CharField(choices=[('study', 'study'), ('sample', 'sample'), ('experiment', 'experiment'), ('run', 'run'), ('submission', 'submission')], max_length=12)),
                 ('site_project_id', models.CharField(blank=True, default='', max_length=128)),
                 ('site_object_id', models.CharField(blank=True, default='', max_length=128)),
-                ('data', gfbio_submissions.brokerage.fields.JsonDictField(default=dict)),
+                ('data', gfbio_submissions.generic.fields.JsonDictField(default=dict)),
                 ('site', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL)),
             ],
         ),
@@ -79,7 +79,7 @@ class Migration(migrations.Migration):
                 ('status', models.CharField(choices=[('OPEN', 'OPEN'), ('SUBMITTED', 'SUBMITTED'), ('CANCELLED', 'CANCELLED'), ('ERROR', 'ERROR'), ('CLOSED', 'CLOSED')], default='OPEN', max_length=10)),
                 ('release', models.BooleanField(default=False)),
                 ('download_url', models.URLField(blank=True, default='')),
-                ('data', gfbio_submissions.brokerage.fields.JsonDictField(default=dict)),
+                ('data', gfbio_submissions.generic.fields.JsonDictField(default=dict)),
                 ('embargo', models.DateField(blank=True, null=True)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('changed', models.DateTimeField(auto_now=True)),
@@ -153,7 +153,7 @@ class Migration(migrations.Migration):
                 ('submission_id', models.UUIDField(blank=True, help_text='The submission this request is associated with', null=True)),
                 ('response_status', models.IntegerField(blank=True, help_text='The response-code we send if this is an incoming request. Otherwise the status sent by request-target', null=True)),
                 ('response_content', models.TextField(blank=True, help_text='The content we send if this is an incoming request. Otherwise the content sent by request-target')),
-                ('request_details', gfbio_submissions.brokerage.fields.JsonDictField(default=dict, help_text='This may contain meta-information regarding this request')),
+                ('request_details', gfbio_submissions.generic.fields.JsonDictField(default=dict, help_text='This may contain meta-information regarding this request')),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('changed', models.DateTimeField(auto_now=True)),
                 ('triggered_by', models.ForeignKey(blank=True, help_text='This will be null for incoming requests Otherwise (outgoing request) it will show the id of the incoming request, that has triggered this request', null=True, on_delete=django.db.models.deletion.SET_NULL, to='brokerage.RequestLog')),

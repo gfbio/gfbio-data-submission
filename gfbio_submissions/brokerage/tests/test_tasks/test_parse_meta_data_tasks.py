@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
+import os
+import shutil
 
+from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.configuration.settings import \
     SUBMISSION_DELAY
 from gfbio_submissions.brokerage.models import Submission, TaskProgressReport, \
@@ -16,6 +19,12 @@ from ..test_utils.test_csv_parsing import TestCSVParsing
 
 
 class TestParseMetaDataForUpdateTask(TestTasks):
+
+    @classmethod
+    def tearDownClass(cls):
+        super(TestParseMetaDataForUpdateTask, cls).tearDownClass()
+        [shutil.rmtree(path='{0}{1}{2}'.format(MEDIA_ROOT, os.sep, o),
+                       ignore_errors=False) for o in os.listdir(MEDIA_ROOT)]
 
     @classmethod
     def _add_submission_upload(cls):

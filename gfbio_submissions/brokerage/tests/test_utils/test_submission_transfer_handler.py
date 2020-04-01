@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from pprint import pprint
 from unittest import skip
 
 import requests
@@ -11,8 +10,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ATTACHMENT_SUB_URL
 from gfbio_submissions.brokerage.exceptions import TransferClientError, \
     raise_response_exceptions, TransferServerError
-from gfbio_submissions.brokerage.models import Submission, ResourceCredential, \
-    SiteConfiguration, AdditionalReference, \
+from gfbio_submissions.brokerage.models import Submission, AdditionalReference, \
     TaskProgressReport, BrokerObject
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
@@ -23,6 +21,8 @@ from gfbio_submissions.brokerage.utils.submission_transfer import \
     SubmissionTransferHandler
 from gfbio_submissions.brokerage.utils.task_utils import \
     get_submission_and_site_configuration
+from gfbio_submissions.generic.models import SiteConfiguration, \
+    ResourceCredential
 from gfbio_submissions.users.models import User
 
 

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import json
+import os
+import shutil
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -12,15 +14,17 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from config.settings.base import MEDIA_URL
+from config.settings.base import MEDIA_URL, MEDIA_ROOT
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL, JIRA_ATTACHMENT_URL
 from gfbio_submissions.brokerage.models import Submission, \
-    SiteConfiguration, ResourceCredential, AdditionalReference, \
+    AdditionalReference, \
     TaskProgressReport, SubmissionUpload, BrokerObject
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_jira_attach_response, \
     _get_jira_issue_response, _get_ena_data_without_runs, _get_ena_data
+from gfbio_submissions.generic.models import SiteConfiguration, \
+    ResourceCredential
 from gfbio_submissions.users.models import User
 
 
@@ -85,6 +89,12 @@ class TestSubmissionUploadView(TestCase):
             primary=True
         )
         cls._create_submission_via_serializer()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(TestSubmissionUploadView, cls).tearDownClass()
+        [shutil.rmtree(path='{0}{1}{2}'.format(MEDIA_ROOT, os.sep, o),
+                       ignore_errors=False) for o in os.listdir(MEDIA_ROOT)]
 
     @classmethod
     def _create_test_data(cls, path, content='test123\n', delete=True,

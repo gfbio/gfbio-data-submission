@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import json
+import os
+import shutil
 from pprint import pprint
 from uuid import UUID
 
@@ -9,6 +11,7 @@ from django.urls import reverse
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
+from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.configuration.settings import \
     GENERIC, ENA_PANGAEA
 from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
@@ -19,6 +22,12 @@ from .test_submission_view_base import TestSubmissionView
 
 
 class TestSubmissionViewFullPosts(TestSubmissionView):
+
+    @classmethod
+    def tearDownClass(cls):
+        super(TestSubmissionViewFullPosts, cls).tearDownClass()
+        [shutil.rmtree(path='{0}{1}{2}'.format(MEDIA_ROOT, os.sep, o),
+                       ignore_errors=False) for o in os.listdir(MEDIA_ROOT)]
 
     @responses.activate
     def test_empty_max_post(self):
@@ -106,7 +115,6 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         content = json.loads(response.content)
         self.assertEqual(200, response.status_code)
         self.assertEqual(1, len(content))
-
 
     @responses.activate
     def test_valid_max_post_target_generic(self):

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models import ResourceCredential, \
-    SiteConfiguration, TicketLabel
+from gfbio_submissions.generic.models import SiteConfiguration, \
+    ResourceCredential, TicketLabel
 from gfbio_submissions.users.models import User
 
 

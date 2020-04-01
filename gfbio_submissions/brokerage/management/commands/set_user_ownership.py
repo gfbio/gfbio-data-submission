@@ -3,7 +3,7 @@
 from django.core.management.base import BaseCommand
 
 from gfbio_submissions.brokerage.models import Submission
-from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
+from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.users.models import User
 
 

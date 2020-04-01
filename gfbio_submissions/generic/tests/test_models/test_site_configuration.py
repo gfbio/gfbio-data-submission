@@ -3,9 +3,9 @@
 from django.test import TestCase
 
 from config.settings.base import ADMINS
-from gfbio_submissions.brokerage.models import ResourceCredential, \
-    SiteConfiguration, TicketLabel
-from gfbio_submissions.submission_ui.configuration.settings import HOSTING_SITE
+from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
+from gfbio_submissions.generic.models import SiteConfiguration, \
+    ResourceCredential, TicketLabel
 from gfbio_submissions.users.models import User
 
 

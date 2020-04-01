@@ -6,7 +6,7 @@ import environ
 
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
-VERSION = '1.92.0'
+VERSION = '1.93.0'
 
 ROOT_DIR = (
         environ.Path(__file__) - 3
@@ -85,7 +85,8 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "gfbio_submissions.users.apps.UsersConfig",
     # Your stuff: custom apps go here
-    "gfbio_submissions.brokerage",
+    "gfbio_submissions.brokerage.apps.BrokerageConfig",
+    "gfbio_submissions.generic.apps.GenericConfig",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
