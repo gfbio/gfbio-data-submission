@@ -45,8 +45,13 @@
 }
 .embargo-btn {
   text-align: left;
-  margin-bottom: 0;
+  margin-bottom: -10px;
   padding-bottom: 0;
+}
+.embargo-btn {
+  .fa {
+    font-size: 1.25rem !important;
+  }
 }
 // TOOLTIP
 .tooltip [class$="inner"] {
