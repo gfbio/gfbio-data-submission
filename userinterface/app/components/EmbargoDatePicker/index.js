@@ -37,38 +37,41 @@ class EmbargoDatePicker extends React.Component {
   }
 
   showReleaseEmbargoButton = () => {
-    if (
-      this.props.embargoDate &&
-      Object.prototype.toString.call(this.props.embargoDate) === '[object Date]'
-    ) {
-      if (
-        this.props.embargoDate.setHours(0, 0, 0, 0) <=
-        new Date().setHours(0, 0, 0, 0)
-      ) {
-        return null;
-      }
-    }
+    // hide if date is in the past
+    // if (
+    //   this.props.embargoDate &&
+    //   Object.prototype.toString.call(this.props.embargoDate) === '[object Date]'
+    // ) {
+    //   if (
+    //     this.props.embargoDate.setHours(0, 0, 0, 0) <=
+    //     new Date().setHours(0, 0, 0, 0)
+    //   ) {
+    //     return null;
+    //   }
+    // }
 
     if (this.props.accessionId && this.props.accessionId.length === 0) {
       return null;
     }
     if (this.props.accessionId && this.props.accessionId.length !== 0) {
-      const earliestEmbargoDate = new Date().setDate(new Date().getDate() + 1);
-      let showReleaseBtn = false;
+      // if at least 1 PID has status PUBLIC do not show button
+      let showButton = true;
       this.props.accessionId.forEach(accession => {
-        if (accession.status === 'PRIVATE') showReleaseBtn = true;
+        if (accession.status === 'PUBLIC') showButton = false;
       });
-      if (showReleaseBtn)
-        return (
-          <Button
-            variant="link"
-            className="btn-block btn-link-light-blue embargo-btn"
-            onClick={() => this.props.setEmbargoDate(earliestEmbargoDate)}
-          >
-            <i className="fa fa-calendar-check-o align-top" />
-            <span className="">Release tomorrow</span>
-          </Button>
-        );
+      if (!showButton) return null;
+      // show button
+      const earliestEmbargoDate = new Date().setDate(new Date().getDate() + 1);
+      return (
+        <Button
+          variant="link"
+          className="btn-block btn-link-light-blue embargo-btn"
+          onClick={() => this.props.setEmbargoDate(earliestEmbargoDate)}
+        >
+          <i className="fa fa-calendar-check-o align-top" />
+          <span className="">Release tomorrow</span>
+        </Button>
+      );
     }
     return null;
   };
