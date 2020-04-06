@@ -36,19 +36,11 @@ class EmbargoDatePicker extends React.Component {
     this.state = { embargoDate: this.props.embargoDate };
   }
 
-  showEmbargo = () => {
-    // hide if date is in the past
-    // if (
-    //   this.props.embargoDate &&
-    //   Object.prototype.toString.call(this.props.embargoDate) === '[object Date]'
-    // ) {
-    //   if (
-    //     this.props.embargoDate.setHours(0, 0, 0, 0) <=
-    //     new Date().setHours(0, 0, 0, 0)
-    //   ) {
-    //     return null;
-    //   }
-    // }
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    console.log(this.props.embargoDate);
+  }
+
+  showEmbargoButton = () => {
     // Do not show button if at least one PID has status PUBLIC
     if (this.props.accessionId && this.props.accessionId.length !== 0) {
       let showButton = true;
@@ -67,7 +59,7 @@ class EmbargoDatePicker extends React.Component {
         </p>
         <Button
           variant="link"
-          className="btn-block btn-link-light-blue"
+          className="btn-block btn-link-light-blue embargo-btn"
           onClick={this.props.openEmbargoDialog}
         >
           <i className="icon ion-md-calendar align-top" />
@@ -78,19 +70,6 @@ class EmbargoDatePicker extends React.Component {
   };
 
   showReleaseEmbargoButton = () => {
-    // hide if date is in the past
-    // if (
-    //   this.props.embargoDate &&
-    //   Object.prototype.toString.call(this.props.embargoDate) === '[object Date]'
-    // ) {
-    //   if (
-    //     this.props.embargoDate.setHours(0, 0, 0, 0) <=
-    //     new Date().setHours(0, 0, 0, 0)
-    //   ) {
-    //     return null;
-    //   }
-    // }
-
     if (this.props.accessionId && this.props.accessionId.length === 0) {
       return null;
     }
@@ -138,8 +117,7 @@ class EmbargoDatePicker extends React.Component {
           <p className="section-subtitle" />
         </header>
 
-        {this.showEmbargo()}
-
+        {this.showEmbargoButton()}
         {this.showReleaseEmbargoButton()}
 
         <Modal
@@ -264,6 +242,7 @@ EmbargoDatePicker.propTypes = {
 };
 
 const mapStateToProps = createStructuredSelector({
+  embargoDate: makeSelectEmbargoDate(),
   showEmbargoDialog: makeSelectShowEmbargoDialog(),
 });
 
