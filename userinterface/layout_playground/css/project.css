@@ -2294,6 +2294,10 @@ section.molecular-submission {
 #submission-ui .form-footer {
   margin-left: -15px; }
 
+#submission-ui .submit-btn {
+  margin-left: -15px;
+  padding-left: 0; }
+
 #submission-ui .metadata_data_title {
   padding: 5px !important;
   margin-bottom: 0 !important; }
