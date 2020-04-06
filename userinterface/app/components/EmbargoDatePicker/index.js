@@ -36,6 +36,47 @@ class EmbargoDatePicker extends React.Component {
     this.state = { embargoDate: this.props.embargoDate };
   }
 
+  showEmbargo = () => {
+    // hide if date is in the past
+    // if (
+    //   this.props.embargoDate &&
+    //   Object.prototype.toString.call(this.props.embargoDate) === '[object Date]'
+    // ) {
+    //   if (
+    //     this.props.embargoDate.setHours(0, 0, 0, 0) <=
+    //     new Date().setHours(0, 0, 0, 0)
+    //   ) {
+    //     return null;
+    //   }
+    // }
+    // Do not show button if at least one PID has status PUBLIC
+    if (this.props.accessionId && this.props.accessionId.length !== 0) {
+      let showButton = true;
+      // if at least 1 PID has status PUBLIC do not show button
+      this.props.accessionId.forEach(accession => {
+        if (accession.status === 'PUBLIC') showButton = false;
+      });
+      if (!showButton)
+        return <p className="text-center">Your data is already public</p>;
+    }
+
+    return (
+      <div>
+        <p className="text-center">
+          <h4>{dateFormat(this.props.embargoDate, 'dd mmmm yyyy')}</h4>
+        </p>
+        <Button
+          variant="link"
+          className="btn-block btn-link-light-blue"
+          onClick={this.props.openEmbargoDialog}
+        >
+          <i className="icon ion-md-calendar align-top" />
+          <span className="">Change embargo date</span>
+        </Button>
+      </div>
+    );
+  };
+
   showReleaseEmbargoButton = () => {
     // hide if date is in the past
     // if (
@@ -97,18 +138,7 @@ class EmbargoDatePicker extends React.Component {
           <p className="section-subtitle" />
         </header>
 
-        <p className="text-center">
-          <h4>{dateFormat(this.props.embargoDate, 'dd mmmm yyyy')}</h4>
-        </p>
-
-        <Button
-          variant="link"
-          className="btn-block btn-link-light-blue embargo-btn"
-          onClick={this.props.openEmbargoDialog}
-        >
-          <i className="icon ion-md-calendar align-top" />
-          <span className="">Change embargo date</span>
-        </Button>
+        {this.showEmbargo()}
 
         {this.showReleaseEmbargoButton()}
 
@@ -234,7 +264,6 @@ EmbargoDatePicker.propTypes = {
 };
 
 const mapStateToProps = createStructuredSelector({
-  embargoDate: makeSelectEmbargoDate(),
   showEmbargoDialog: makeSelectShowEmbargoDialog(),
 });
 
