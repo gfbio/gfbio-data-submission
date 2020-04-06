@@ -42,6 +42,7 @@ services:
       /bin/sh -c "python /app/manage.py collectstatic --noinput
       && python /app/manage.py migrate
       && echo 'from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser(\"$ADMIN_NICKNAME\", \"$ADMIN_EMAIL\", \"$ADMIN_PASSWORD\")' | python /app/manage.py shell
+      && python /app/manage.py shell < /app/cicd/test_data.py 
       && /usr/local/bin/gunicorn config.wsgi --bind 0.0.0.0:5000 --chdir=/app"
 
   postgres:
