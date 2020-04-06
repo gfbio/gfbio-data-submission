@@ -9,17 +9,7 @@ import DatePicker from 'react-datepicker';
 
 import 'react-datepicker/dist/react-datepicker.css';
 import PropTypes from 'prop-types';
-import ButtonInput from './ButtonInput';
 import { createStructuredSelector } from 'reselect';
-import {
-  makeSelectEmbargoDate,
-  makeSelectShowEmbargoDialog,
-} from '../../containers/SubmissionForm/selectors';
-import {
-  closeEmbargoDialog,
-  setEmbargoDate,
-  showEmbargoDialog,
-} from '../../containers/SubmissionForm/actions';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import Modal from 'react-bootstrap/Modal';
@@ -28,6 +18,16 @@ import dateFormat from 'dateformat';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import {
+  closeEmbargoDialog,
+  setEmbargoDate,
+  showEmbargoDialog,
+} from '../../containers/SubmissionForm/actions';
+import {
+  makeSelectEmbargoDate,
+  makeSelectShowEmbargoDialog,
+} from '../../containers/SubmissionForm/selectors';
+import ButtonInput from './ButtonInput';
 
 /* eslint-disable react/prefer-stateless-function */
 class EmbargoDatePicker extends React.Component {
@@ -35,6 +35,46 @@ class EmbargoDatePicker extends React.Component {
     super(props);
     this.state = { embargoDate: this.props.embargoDate };
   }
+
+  showReleaseEmbargoButton = () => {
+    // hide if date is in the past
+    // if (
+    //   this.props.embargoDate &&
+    //   Object.prototype.toString.call(this.props.embargoDate) === '[object Date]'
+    // ) {
+    //   if (
+    //     this.props.embargoDate.setHours(0, 0, 0, 0) <=
+    //     new Date().setHours(0, 0, 0, 0)
+    //   ) {
+    //     return null;
+    //   }
+    // }
+
+    if (this.props.accessionId && this.props.accessionId.length === 0) {
+      return null;
+    }
+    if (this.props.accessionId && this.props.accessionId.length !== 0) {
+      // if at least 1 PID has status PUBLIC do not show button
+      let showButton = true;
+      this.props.accessionId.forEach(accession => {
+        if (accession.status === 'PUBLIC') showButton = false;
+      });
+      if (!showButton) return null;
+      // show button
+      const earliestEmbargoDate = new Date().setDate(new Date().getDate() + 1);
+      return (
+        <Button
+          variant="link"
+          className="btn-block btn-link-light-blue embargo-btn"
+          onClick={() => this.props.setEmbargoDate(earliestEmbargoDate)}
+        >
+          <i className="fa fa-calendar-check-o align-top" />
+          <span className="">Release tomorrow</span>
+        </Button>
+      );
+    }
+    return null;
+  };
 
   render() {
     const setEmbargo = (date, months) => {
@@ -53,7 +93,7 @@ class EmbargoDatePicker extends React.Component {
     return (
       <div>
         <header className="header header-left form-header-top">
-          <h2 className="section-title">Data Embargo</h2>
+          <h2 className="section-title">Embargo Date</h2>
           <p className="section-subtitle" />
         </header>
 
@@ -63,12 +103,14 @@ class EmbargoDatePicker extends React.Component {
 
         <Button
           variant="link"
-          className="btn-block btn-link-light-blue"
+          className="btn-block btn-link-light-blue embargo-btn"
           onClick={this.props.openEmbargoDialog}
         >
           <i className="icon ion-md-calendar align-top" />
           <span className="">Change embargo date</span>
         </Button>
+
+        {this.showReleaseEmbargoButton()}
 
         <Modal
           show={this.props.showEmbargoDialog}
@@ -188,6 +230,7 @@ EmbargoDatePicker.propTypes = {
   showEmbargoDialog: PropTypes.bool,
   openEmbargoDialog: PropTypes.func,
   closeEmbargoDialog: PropTypes.func,
+  accessionId: PropTypes.array,
 };
 
 const mapStateToProps = createStructuredSelector({

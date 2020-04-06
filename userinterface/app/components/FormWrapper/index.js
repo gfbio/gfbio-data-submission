@@ -278,7 +278,7 @@ class FormWrapper extends React.PureComponent {
 
               {/* <MetaDataSchemaForm /> */}
 
-              <EmbargoDatePicker />
+              <EmbargoDatePicker accessionId={this.props.accessionId} />
             </div>
           </div>
 
