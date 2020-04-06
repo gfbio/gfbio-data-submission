@@ -56,6 +56,7 @@ import {
   UPLOAD_FILES,
   UPLOAD_FILES_ERROR,
   UPLOAD_FILES_SUCCESS,
+  CLOSE_ERROR_MESSAGE,
 } from './constants';
 import {
   markMetaDataInScheduledUploads,
@@ -106,6 +107,8 @@ export const initialState = fromJS({
   showUpdateSuccess: false,
 
   showSaveSuccess: false,
+  submitError: false,
+  submissionErrors: [],
 
   embargoDate: new Date().setFullYear(new Date().getFullYear() + 1),
   formChanged: false,
@@ -171,6 +174,10 @@ function submissionFormReducer(state = initialState, action) {
         .set('saveInProgress', false);
     case CLOSE_SAVE_SUCCESS:
       return state;
+    case CLOSE_ERROR_MESSAGE:
+      return state
+        .set('submitError', false)
+        .set('submissionErrors', []);
     case CLOSE_SUBMIT_SUCCESS:
       return state
         .set('showUpdateSuccess', false)
@@ -196,9 +203,12 @@ function submissionFormReducer(state = initialState, action) {
         .set('submitInProgress', false)
         .set('showSubmitSuccess', true);
     case SUBMIT_FORM_ERROR:
+      console.log(action.errorResponse);
       return state
         .set('metaDataIndex', '')
-        .set('submitInProgress', false);
+        .set('submitInProgress', false)
+        .set('submitError', true)
+        .set('submissionErrors', action.errorResponse?.response?.data?.data || ["Server error, please try again later."]);
     case SHOW_EMBARGO_DIALOG:
       return state
         .set('showEmbargoDialog', true);

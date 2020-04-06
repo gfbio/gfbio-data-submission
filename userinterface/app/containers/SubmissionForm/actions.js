@@ -57,6 +57,7 @@ import {
   UPLOAD_FILE_PROGRESS,
   UPLOAD_FILE_SUCCESS,
   UPLOAD_FILES_SUCCESS,
+  CLOSE_ERROR_MESSAGE,
   SET_FORM_CHANGED,
 } from './constants';
 
@@ -306,6 +307,12 @@ export function closeSubmitSuccess() {
 export function closeSaveSuccess() {
   return {
     type: CLOSE_SAVE_SUCCESS,
+  };
+}
+
+export function closeSubmitError() {
+  return {
+    type: CLOSE_ERROR_MESSAGE,
   };
 }
 
