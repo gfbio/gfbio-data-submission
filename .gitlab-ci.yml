@@ -82,6 +82,7 @@ docker_web_test:
     - sed -i s/BRANCH/$CI_COMMIT_REF_NAME/g cicd/production.yml
     - sed -i s/DJANGO_ALLOWED_HOSTS=.*/DJANGO_ALLOWED_HOSTS=\.dev\.submissions\.gfbio\.org/g .envs/.production/.django
     - sed -i 's/DJANGO_ADMIN_URL=.*\//DJANGO_ADMIN_URL='"$ADMIN_URL"'/g' .envs/.production/.django
+    - sed -i s/EMDATE/$(date +%Y-%m-%d -d "+ 365 days")/g cicd/test_data.json
     - docker-compose -f production.yml build
     - ADMIN_NICKNAME=${ADMIN_NICKNAME} ADMIN_EMAIL=${ADMIN_EMAIL} ADMIN_PASSWORD=${ADMIN_PASSWORD} docker stack deploy -c cicd/production.yml $CI_COMMIT_REF_NAME
   environment:
