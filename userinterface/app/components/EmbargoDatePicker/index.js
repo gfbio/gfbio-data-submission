@@ -36,19 +36,24 @@ class EmbargoDatePicker extends React.Component {
     this.state = {
       embargoDate: new Date(this.props.embargoDate),
       embargoOriginal: new Date(this.props.embargoDate),
+      updated: false,
     };
   }
 
   componentDidUpdate(prevProps, prevState) {
-    // as props.embargoDate come later, we need to update state
+    // as props.embargoDate come later, we need to update the state
+    // this will only happen once after the data was loaded from the server
     if (
+      !this.state.updated &&
+      prevState.embargoDate instanceof Date &&
       prevState.embargoDate.setHours(0, 0, 0, 0) !==
-      new Date(this.props.embargoDate).setHours(0, 0, 0, 0)
+        new Date(this.props.embargoDate).setHours(0, 0, 0, 0)
     ) {
       // eslint-disable-next-line react/no-did-update-set-state
       this.setState(() => ({
         embargoDate: this.props.embargoDate,
         embargoOriginal: new Date(this.props.embargoDate),
+        updated: true,
       }));
     }
   }
@@ -99,7 +104,10 @@ class EmbargoDatePicker extends React.Component {
         <Button
           variant="link"
           className="btn-block btn-link-light-blue embargo-btn"
-          onClick={() => this.props.setEmbargoDate(earliestEmbargoDate)}
+          onClick={() => {
+            this.props.setFormChanged(true);
+            this.props.setEmbargoDate(earliestEmbargoDate);
+          }}
         >
           <i className="fa fa-calendar-check-o align-top" />
           <span className="">Release tomorrow</span>
