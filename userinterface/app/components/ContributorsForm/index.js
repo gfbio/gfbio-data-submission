@@ -44,7 +44,7 @@ class ContributorsForm extends React.PureComponent {
     this.handleChangeInstitution = this.handleChangeInstitution.bind(this);
     this.roleOptions = [
       { role: 'Author/Creator', id: 0, category: 'Primary' },
-      { role: 'Content Contact', id: 2, category: 'Secondary' },
+      { role: 'Content Contact', id: 1, category: 'Secondary' },
       { role: 'Principal Investigator', id: 2, category: 'Secondary' },
       { role: 'Data Owner', id: 3 },
       { role: 'Data Curator', id: 4 },
