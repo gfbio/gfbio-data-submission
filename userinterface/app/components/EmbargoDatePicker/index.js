@@ -22,6 +22,7 @@ import {
   closeEmbargoDialog,
   setEmbargoDate,
   showEmbargoDialog,
+  setFormChanged,
 } from '../../containers/SubmissionForm/actions';
 import {
   makeSelectEmbargoDate,
@@ -29,15 +30,27 @@ import {
 } from '../../containers/SubmissionForm/selectors';
 import ButtonInput from './ButtonInput';
 
-/* eslint-disable react/prefer-stateless-function */
 class EmbargoDatePicker extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { embargoDate: this.props.embargoDate };
+    this.state = {
+      embargoDate: new Date(this.props.embargoDate),
+      embargoOriginal: new Date(this.props.embargoDate),
+    };
   }
 
-  componentDidUpdate(prevProps, prevState, snapshot) {
-    console.log(this.props.embargoDate);
+  componentDidUpdate(prevProps, prevState) {
+    // as props.embargoDate come later, we need to update state
+    if (
+      prevState.embargoDate.setHours(0, 0, 0, 0) !==
+      new Date(this.props.embargoDate).setHours(0, 0, 0, 0)
+    ) {
+      // eslint-disable-next-line react/no-did-update-set-state
+      this.setState(() => ({
+        embargoDate: this.props.embargoDate,
+        embargoOriginal: new Date(this.props.embargoDate),
+      }));
+    }
   }
 
   showEmbargoButton = () => {
@@ -99,17 +112,31 @@ class EmbargoDatePicker extends React.Component {
   render() {
     const setEmbargo = (date, months) => {
       if (date) {
-        this.setState((state, props) => ({
+        this.setState(prevState => ({
+          ...prevState,
           embargoDate: date,
         }));
       } else {
-        this.setState((state, props) => ({
+        this.setState(prevState => ({
+          ...prevState,
           embargoDate: new Date().setMonth(new Date().getMonth() + months),
         }));
       }
     };
     const earliestEmbargoDate = new Date().setDate(new Date().getDate() + 1);
     const latestEmbargoDate = new Date().setMonth(new Date().getMonth() + 24);
+    const updateGlobalEmbargo = () => {
+      // set form changed status
+      if (
+        this.state.embargoOriginal.setHours(0, 0, 0, 0) ===
+        this.state.embargoDate.setHours(0, 0, 0, 0)
+      ) {
+        this.props.setFormChanged(false);
+      } else {
+        this.props.setFormChanged(true);
+      }
+      this.props.setEmbargoDate(this.state.embargoDate);
+    };
     return (
       <div>
         <header className="header header-left form-header-top">
@@ -124,7 +151,8 @@ class EmbargoDatePicker extends React.Component {
           show={this.props.showEmbargoDialog}
           onHide={this.props.closeEmbargoDialog}
           onShow={() => {
-            this.setState((state, props) => ({
+            this.setState(prevState => ({
+              ...prevState,
               embargoDate: this.props.embargoDate,
             }));
           }}
@@ -206,7 +234,7 @@ class EmbargoDatePicker extends React.Component {
                     variant="secondary"
                     className="btn-sm btn-block btn-green-inverted"
                     onClick={() => {
-                      this.props.setEmbargoDate(this.state.embargoDate);
+                      updateGlobalEmbargo();
                       this.props.closeEmbargoDialog();
                     }}
                   >
@@ -234,11 +262,11 @@ class EmbargoDatePicker extends React.Component {
 EmbargoDatePicker.propTypes = {
   embargoDate: PropTypes.instanceOf(Date),
   setEmbargoDate: PropTypes.func.isRequired,
-  setEmbargoPeriod: PropTypes.func,
   showEmbargoDialog: PropTypes.bool,
   openEmbargoDialog: PropTypes.func,
   closeEmbargoDialog: PropTypes.func,
   accessionId: PropTypes.array,
+  setFormChanged: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -248,13 +276,10 @@ const mapStateToProps = createStructuredSelector({
 
 function mapDispatchToProps(dispatch) {
   return {
+    setFormChanged: changed => dispatch(setFormChanged(changed)),
     setEmbargoDate: date => dispatch(setEmbargoDate(date)),
     openEmbargoDialog: () => dispatch(showEmbargoDialog()),
     closeEmbargoDialog: () => dispatch(closeEmbargoDialog()),
-    setEmbargoPeriod: months =>
-      dispatch(
-        setEmbargoDate(new Date().setMonth(new Date().getMonth() + months)),
-      ),
   };
 }
 

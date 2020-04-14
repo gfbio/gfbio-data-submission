@@ -217,8 +217,7 @@ function submissionFormReducer(state = initialState, action) {
         .set('showEmbargoDialog', false);
     case SET_EMBARGO_DATE:
       return state
-        .set('embargoDate', action.date)
-        .set('formChanged', true);
+        .set('embargoDate', action.date);
     case SET_FORM_CHANGED:
       return state.set('formChanged', action.changed);
     case CHANGE_CURRENT_RELATED_PUBLICATION:

@@ -20,6 +20,8 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
+import { createStructuredSelector } from 'reselect';
+import { connect } from 'react-redux';
 import TemplateLinkList from '../TemplateLinkList';
 import DatasetLabelForm from '../DatasetLabelForm';
 import DataUrlForm from '../DataUrlForm';
@@ -27,12 +29,8 @@ import EmbargoDatePicker from '../EmbargoDatePicker';
 import RelatedPublicationsForm from '../RelatedPublicationsForm';
 import MinimalSubmissionForm from '../MinimalSubmissionForm';
 import SubmissionInfo from '../SubmissionInfo';
-import { createStructuredSelector } from 'reselect';
 import { makeSelectFormChanged } from '../../containers/SubmissionForm/selectors';
 import { setFormChanged } from '../../containers/SubmissionForm/actions';
-import { connect } from 'react-redux';
-import { compose } from 'redux';
-import { closeEmbargoDialog, setEmbargoDate, showEmbargoDialog } from '../../containers/SubmissionForm/actions';
 
 /* eslint-disable react/prefer-stateless-function */
 class FormWrapper extends React.PureComponent {
@@ -364,7 +362,7 @@ const mapStateToProps = createStructuredSelector({
 });
 
 const mapDispatchToProps = dispatch => ({
-  setFormChanged: () => dispatch(setFormChanged(false)),
+  setFormChanged: changed => dispatch(setFormChanged(changed)),
 });
 
 FormWrapper = connect(
