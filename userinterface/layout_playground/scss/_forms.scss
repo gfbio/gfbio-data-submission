@@ -835,6 +835,22 @@ form.pagewide-form {
 
   }
 
+  #multiselectContainerReact {
+    input {
+
+      &:focus {
+        border-color: transparent !important;
+        box-shadow: none;
+        outline-color: transparent !important;
+      }
+
+    }
+
+    span[class^="chip"] {
+      background: $gfbio-light-blue;
+    }
+  }
+
   option {
     font-size: .9rem;
   }

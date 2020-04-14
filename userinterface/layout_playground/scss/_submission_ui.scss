@@ -37,6 +37,47 @@
     }
 }
 
+.modal-close-btn {
+  max-width: 50%;
+  margin: 0 auto;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+}
+
+.padding-15 {
+  padding: 15px;
+}
+
+.h80 {
+  /* 80% of window height */
+  height: 80%;
+}
+
+.modal-body {
+  /* 100% = dialog height, 120px = header + footer */
+  max-height: 100%;
+  overflow-y: scroll;
+}
+
+.roles-padding {
+  padding: 5px 15px;
+}
+
+.padding-0 {
+  padding: 0;
+}
+
+.question-pointer {
+  font-size: 1.3rem;
+  position: absolute;
+  margin-top: -4px;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
 .embargo-picker {
     min-height: 280px;
 }

@@ -96,6 +96,7 @@
     "loadable-components": "2.2.3",
     "lodash": "^4.17.15",
     "minimist": "^1.2.5",
+    "multiselect-react-dropdown": "^1.4.8",
     "node-sass": "^4.13.1",
     "prop-types": "15.6.2",
     "react": "16.6.0",
