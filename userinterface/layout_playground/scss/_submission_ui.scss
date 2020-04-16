@@ -56,6 +56,11 @@
   height: 80%;
 }
 
+.drag-bars {
+  margin-top: 11px;
+  color: $gfbio-light-blue;
+}
+
 .modal-body {
   /* 100% = dialog height, 120px = header + footer */
   max-height: 100%;

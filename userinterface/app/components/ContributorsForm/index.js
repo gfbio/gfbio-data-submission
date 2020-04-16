@@ -12,6 +12,7 @@ import { compose } from 'redux';
 import Button from 'react-bootstrap/Button';
 import Collapse from 'react-bootstrap/Collapse';
 import { Multiselect } from 'multiselect-react-dropdown';
+import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import {
   addContributor,
   removeContributor,
@@ -26,22 +27,21 @@ class ContributorsForm extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = {
-      firstName: '',
-      lastName: '',
-      emailAddress: '',
-      institution: '',
       roles: [],
       formValues: {},
       current: {},
       formOpen: false,
       detailOpen: false,
       contributorIndex: -1,
+      contributors: this.props.contributors.toJS(),
+      contributorsArray: [],
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleChangeFirstName = this.handleChangeFirstName.bind(this);
     this.handleChangeLastName = this.handleChangeLastName.bind(this);
     this.handleChangeEmailAddress = this.handleChangeEmailAddress.bind(this);
     this.handleChangeInstitution = this.handleChangeInstitution.bind(this);
+    this.onDragEnd = this.onDragEnd.bind(this);
     this.roleOptions = [
       { role: 'Author/Creator', id: 0, category: 'Primary' },
       { role: 'Content Contact', id: 1, category: 'Secondary' },
@@ -53,6 +53,35 @@ class ContributorsForm extends React.PureComponent {
       { role: 'Researcher', id: 7 },
       { role: 'Data Source Organisation', id: 8 },
     ];
+  }
+
+  getContributorsAsArray(contributorsArray) {
+    // sort array
+    contributorsArray.sort((current, next) => current.position - next.position);
+    // fix missing positions if there are any
+    contributorsArray.forEach((c, i) => {
+      if (!c.position && c.position !== 0) {
+        if (i === 0) {
+          c.position = 1;
+        } else {
+          c.position = contributorsArray[i - 1].position + 1;
+        }
+      }
+    });
+    return contributorsArray;
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if (
+      JSON.stringify(prevState.contributors) !==
+      JSON.stringify(this.props.contributors.toJS())
+    ) {
+      const contributorsArray = this.getContributorsAsArray(this.props.contributors.toJS());
+      this.setState({
+        contributors: this.props.contributors.toJS(),
+        contributorsArray,
+      });
+    }
   }
 
   static validateFormValues(formValues) {
@@ -132,6 +161,7 @@ class ContributorsForm extends React.PureComponent {
 
   onSaveEdit = () => {
     const tmp = {
+      position: this.state.position,
       firstName: this.state.firstName,
       lastName: this.state.lastName,
       emailAddress: this.state.emailAddress,
@@ -157,6 +187,7 @@ class ContributorsForm extends React.PureComponent {
     this.setState({
       formOpen: newStatus,
       detailOpen: false,
+      position: this.state.contributorsArray.length,
       roles: [],
     });
   };
@@ -181,18 +212,6 @@ class ContributorsForm extends React.PureComponent {
     this.props.removeContributor(this.state.contributorIndex);
     this.setState({ detailOpen: false });
   };
-
-  getContributorsAsArray() {
-    let contributors = this.props.contributors;
-    // console.log('contributors click Detail');
-    // console.log(this.props.contributors);
-    // console.log(typeof this.props.contributors);
-    if (!Array.isArray(this.props.contributors)) {
-      // console.log('no array. set local contribs');
-      contributors = this.props.contributors.toJS();
-    }
-    return contributors;
-  }
 
   rolesToCSV(selectedList) {
     // roles to string
@@ -224,7 +243,7 @@ class ContributorsForm extends React.PureComponent {
   onClickDetailButton = (newStatus, index = -1) => {
     if (index >= 0) {
       // TODO: read about how this can be handled in immutable js
-      const contributors = this.getContributorsAsArray();
+      const contributors = this.state.contributorsArray;
       const rolesArr = this.rolesToArray(contributors[index].contribution);
       this.setState({
         detailOpen: newStatus,
@@ -250,6 +269,31 @@ class ContributorsForm extends React.PureComponent {
       formValues: values,
     });
   };
+
+  reorder = (list, startIndex, endIndex) => {
+    const result = Array.from(list);
+    const startPosition = result[startIndex].position;
+    result[startIndex].position = result[endIndex].position;
+    result[endIndex].position = startPosition;
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
+    return result;
+  };
+
+  onDragEnd(result) {
+    // dropped outside the list
+    if (!result.destination) {
+      return;
+    }
+    const contributorsArray = this.reorder(
+      this.state.contributorsArray,
+      result.source.index,
+      result.destination.index,
+    );
+    this.setState({
+      contributorsArray,
+    });
+  }
 
   renderEditForm = detailOpen => (
     <div className="card card-body">
@@ -365,26 +409,41 @@ class ContributorsForm extends React.PureComponent {
   );
 
   render() {
+
     const { formOpen, detailOpen } = this.state;
     const editForm = this.renderEditForm(detailOpen);
+    const contributors = this.state.contributorsArray.map((c, index) => (
+      <Draggable
+        key={`drag-key-${index}`}
+        draggableId={`contributor-dragId-${index}`}
+        index={index}
+      >
+        {(provided) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            {...provided.dragHandleProps}
+          >
+            <div className="row">
+              <div className="col-md-2">
+                <i className="fa fa-bars drag-bars" />
+              </div>
+              <div className="col-md-10">
+                <Button
+                  className="btn btn-primary btn-contributor"
+                  onClick={() => this.onClickDetailButton(!detailOpen, index)}
+                  aria-controls="contributorForm"
+                  aria-expanded={detailOpen}
+                >
+                  {`${c.position}. ${c.firstName} ${c.lastName}`}
+                </Button>
+              </div>
+            </div>
 
-    // console.log('contributors click RENDER');
-    // console.log(this.state);
-    // console.log(this.props.contributors);
-    // console.log(typeof this.props.contributors);
-    const contributorsArray = this.getContributorsAsArray();
 
-    const contributors = contributorsArray.map((c, index) => (
-      <li key={index} className="contributor-drag" draggable>
-        <Button
-          className="btn btn-primary btn-contributor"
-          onClick={() => this.onClickDetailButton(!detailOpen, index)}
-          aria-controls="contributorForm"
-          aria-expanded={detailOpen}
-        >
-          <i className="fa fa-bars" /> {`${c.firstName} ${c.lastName}`}
-        </Button>
-      </li>
+          </div>
+        )}
+      </Draggable>
     ));
 
     // TODO: https://react-bootstrap.netlify.com/
@@ -414,9 +473,19 @@ class ContributorsForm extends React.PureComponent {
           </ul>
           <div className="row">
             <div className="col-md-3">
-              <ol id="contributors-list">
-                {contributors}
-              </ol>
+              <DragDropContext onDragEnd={this.onDragEnd}>
+                <Droppable droppableId="droppable">
+                  {(provided) => (
+                    <div
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                    >
+                      {contributors}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
             </div>
             <div className="col-md-9">
               <Collapse in={this.state.formOpen}>
