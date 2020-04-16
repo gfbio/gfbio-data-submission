@@ -72,6 +72,7 @@ if (window.props !== undefined) {
 
 
 function getInitialContributors(backendParameters) {
+  return fromJS([]);
   let realName = backendParameters.userRealName || '';
   let nameSplit = realName.split(' ');
   let firstName, lastName = '';

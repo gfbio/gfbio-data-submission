@@ -205,6 +205,9 @@ class ContributorsForm extends React.PureComponent {
   }
 
   rolesToArray(csv) {
+    if (!csv || csv.length === 0) {
+      return [];
+    }
     const rolesArray = csv.split(',');
     const selectedList = [];
     rolesArray.forEach(role => {
