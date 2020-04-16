@@ -22,6 +22,7 @@ class Command(BaseCommand):
                     row = f.split('\t')
                     if len(row) == 12:
                         request_id = row[0]
+                        # FIXME: this is just a hack. check column order ..
                         # pre timestamped model names
                         changed = row[-2]
                         created = row[-3]
