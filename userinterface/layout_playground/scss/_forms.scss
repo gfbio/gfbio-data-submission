@@ -851,6 +851,14 @@ form.pagewide-form {
     }
   }
 
+  .contributor-drag.dragElem {
+    opacity: 0.4;
+  }
+  .contributor-drag.over {
+    //border: 2px dashed #000;
+    border-top: 2px solid blue;
+  }
+
   option {
     font-size: .9rem;
   }

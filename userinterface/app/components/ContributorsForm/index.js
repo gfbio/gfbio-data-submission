@@ -375,7 +375,7 @@ class ContributorsForm extends React.PureComponent {
     const contributorsArray = this.getContributorsAsArray();
 
     const contributors = contributorsArray.map((c, index) => (
-      <li key={index} className="list-inline-item">
+      <li key={index} className="contributor-drag" draggable>
         <Button
           className="btn btn-primary btn-contributor"
           onClick={() => this.onClickDetailButton(!detailOpen, index)}
@@ -400,7 +400,7 @@ class ContributorsForm extends React.PureComponent {
             <li className="list-inline-item">
               <p className="contributor">Contributors:</p>
             </li>
-            {contributors}
+
             <li className="list-inline-item">
               <Button
                 className="btn btn-primary btn-contributor"
@@ -412,108 +412,118 @@ class ContributorsForm extends React.PureComponent {
               </Button>
             </li>
           </ul>
-
-          <Collapse in={this.state.formOpen}>
-            <div className="card card-body">
-              <h5>Add Contributor</h5>
-              <div className="form-row">
-                <div className="form-group col-md-3">
-                  <label htmlFor="firstName">First Name</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="firstName"
-                    onChange={this.handleChange}
-                  />
-                </div>
-                <div className="form-group col-md-3">
-                  <label htmlFor="lastName">Last Name</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="lastName"
-                    onChange={this.handleChange}
-                  />
-                </div>
-                <div className="form-group col-md-6">
-                  <label htmlFor="emailAddress">Email Address</label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    id="emailAddress"
-                    placeholder="name@example.com"
-                    // defaultValue={emailAddress}
-                    onChange={this.handleChange}
-                  />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group col-md-6">
-                  <label htmlFor="institution">Institution (optional)</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="institution"
-                    onChange={this.handleChange}
-                  />
-                </div>
-                <div className="form-group col-md-6">
-                  <label htmlFor="contribution">
-                    Contributor Role (optional)
-                    <a
-                      className="align-bottom"
-                      data-toggle="modal"
-                      data-target="#rolesInfo"
-                    >
-                      <i
-                        className="icon ion-ios-help-circle-outline question-pointer"
-                        aria-hidden="true"
-                      />
-                    </a>
-                  </label>
-                  <Multiselect
-                    placeholder="Select Roles"
-                    options={this.roleOptions} // Options to display in the dropdown
-                    selectedValues={this.state.roles} // Preselected value to persist in dropdown
-                    onSelect={this.onSelectChange} // Function will trigger on select event
-                    onRemove={this.onSelectChange} // Function will trigger on remove event
-                    displayValue="role" // Property name to display in the dropdown options
-                    groupBy="category"
-                    closeOnSelect={false}
-                    closeIcon="circle"
-                    showCheckbox
-                    avoidHighlightFirstOption
-                  />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group col-md-2">
-                  <Button
-                    className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
-                    onClick={() => this.closeFormBody()}
-                    aria-controls="contributorForm"
-                    aria-expanded={formOpen}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-                <div className="form-group col-md-2" />
-                <div className="form-group col-md-4" />
-                <div className="form-group col-md-4">
-                  <Button
-                    className="btn btn-secondary btn-sm btn-block btn-light-blue"
-                    onClick={this.onSave}
-                    aria-controls="contributorForm"
-                    aria-expanded={formOpen}
-                  >
-                    Save
-                  </Button>
-                </div>
-              </div>
+          <div className="row">
+            <div className="col-md-3">
+              <ol id="contributors-list">
+                {contributors}
+              </ol>
             </div>
-          </Collapse>
+            <div className="col-md-9">
+              <Collapse in={this.state.formOpen}>
+                <div className="card card-body">
+                  <h5>Add Contributor</h5>
+                  <div className="form-row">
+                    <div className="form-group col-md-3">
+                      <label htmlFor="firstName">First Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="firstName"
+                        onChange={this.handleChange}
+                      />
+                    </div>
+                    <div className="form-group col-md-3">
+                      <label htmlFor="lastName">Last Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="lastName"
+                        onChange={this.handleChange}
+                      />
+                    </div>
+                    <div className="form-group col-md-6">
+                      <label htmlFor="emailAddress">Email Address</label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        id="emailAddress"
+                        placeholder="name@example.com"
+                        // defaultValue={emailAddress}
+                        onChange={this.handleChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group col-md-6">
+                      <label htmlFor="institution">
+                        Institution (optional)
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="institution"
+                        onChange={this.handleChange}
+                      />
+                    </div>
+                    <div className="form-group col-md-6">
+                      <label htmlFor="contribution">
+                        Contributor Role (optional)
+                        <a
+                          className="align-bottom"
+                          data-toggle="modal"
+                          data-target="#rolesInfo"
+                        >
+                          <i
+                            className="icon ion-ios-help-circle-outline question-pointer"
+                            aria-hidden="true"
+                          />
+                        </a>
+                      </label>
+                      <Multiselect
+                        placeholder="Select Roles"
+                        options={this.roleOptions} // Options to display in the dropdown
+                        selectedValues={this.state.roles} // Preselected value to persist in dropdown
+                        onSelect={this.onSelectChange} // Function will trigger on select event
+                        onRemove={this.onSelectChange} // Function will trigger on remove event
+                        displayValue="role" // Property name to display in the dropdown options
+                        groupBy="category"
+                        closeOnSelect={false}
+                        closeIcon="circle"
+                        showCheckbox
+                        avoidHighlightFirstOption
+                      />
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group col-md-2">
+                      <Button
+                        className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
+                        onClick={() => this.closeFormBody()}
+                        aria-controls="contributorForm"
+                        aria-expanded={formOpen}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                    <div className="form-group col-md-2" />
+                    <div className="form-group col-md-4" />
+                    <div className="form-group col-md-4">
+                      <Button
+                        className="btn btn-secondary btn-sm btn-block btn-light-blue"
+                        onClick={this.onSave}
+                        aria-controls="contributorForm"
+                        aria-expanded={formOpen}
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Collapse>
 
-          <Collapse in={this.state.detailOpen}>{editForm}</Collapse>
+              <Collapse in={this.state.detailOpen}>{editForm}</Collapse>
+            </div>
+          </div>
         </div>
       </div>
     );
