@@ -409,7 +409,6 @@ class ContributorsForm extends React.PureComponent {
   );
 
   render() {
-
     const { formOpen, detailOpen } = this.state;
     const editForm = this.renderEditForm(detailOpen);
     const contributors = this.state.contributorsArray.map((c, index) => (
@@ -417,6 +416,7 @@ class ContributorsForm extends React.PureComponent {
         key={`drag-key-${index}`}
         draggableId={`contributor-dragId-${index}`}
         index={index}
+        className="no-outline"
       >
         {(provided) => (
           <div
@@ -455,11 +455,10 @@ class ContributorsForm extends React.PureComponent {
           <p className="section-subtitle">(optional)</p>
         </header>
         <div className="form-group">
-          <ul className="list-inline">
+          <ul className="list-inline m-bt-0">
             <li className="list-inline-item">
               <p className="contributor">Contributors:</p>
             </li>
-
             <li className="list-inline-item">
               <Button
                 className="btn btn-primary btn-contributor"
@@ -474,17 +473,19 @@ class ContributorsForm extends React.PureComponent {
           <div className="row">
             <div className="col-md-3">
               <DragDropContext onDragEnd={this.onDragEnd}>
-                <Droppable droppableId="droppable">
-                  {(provided) => (
-                    <div
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                    >
-                      {contributors}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
+                <div className="droppable-contributors">
+                  <Droppable droppableId="droppable">
+                    {(provided) => (
+                      <div
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                      >
+                        {contributors}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </div>
               </DragDropContext>
             </div>
             <div className="col-md-9">

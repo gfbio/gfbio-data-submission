@@ -851,12 +851,16 @@ form.pagewide-form {
     }
   }
 
-  .contributor-drag.dragElem {
-    opacity: 0.4;
+  .droppable-contributors {
+    border: 1px solid #dfdfdf;
+    border-radius: 5px;
+    min-height: 100%;
+    padding: 10px;
+    box-sizing: border-box;
   }
-  .contributor-drag.over {
-    //border: 2px dashed #000;
-    border-top: 2px solid blue;
+
+  .m-bt-0 {
+    margin-bottom: 0;
   }
 
   option {
