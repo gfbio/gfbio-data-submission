@@ -13,6 +13,8 @@ import Button from 'react-bootstrap/Button';
 import Collapse from 'react-bootstrap/Collapse';
 import { Multiselect } from 'multiselect-react-dropdown';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
+import Tooltip from 'react-bootstrap/Tooltip';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import { makeSelectContributors } from '../../containers/SubmissionForm/selectors';
 import RolesInfo from './rolesInfo';
 
@@ -72,7 +74,7 @@ class ContributorsForm extends React.PureComponent {
       const contributorsArray = this.getContributorsAsArray(
         this.props.contributors.toJS(),
       );
-      if (this.props.contributors.toJS().length === 0 ) {
+      if (this.props.contributors.toJS().length === 0) {
         this.cleanEditForm();
         this.setState({
           formValues: {},
@@ -130,7 +132,11 @@ class ContributorsForm extends React.PureComponent {
     if (this.validateFormValues()) {
       const contributorsArray = [...this.state.contributorsArray];
       if (this.state.contributorIndex !== -1) {
-        contributorsArray.splice(this.state.contributorIndex, 1, this.state.formValues);
+        contributorsArray.splice(
+          this.state.contributorIndex,
+          1,
+          this.state.formValues,
+        );
       } else {
         this.state.formValues.position = contributorsArray.length + 1;
         contributorsArray.push(this.state.formValues);
@@ -340,14 +346,24 @@ class ContributorsForm extends React.PureComponent {
                 <i className="fa fa-bars drag-bars" />
               </div>
               <div className="col-md-10">
-                <Button
-                  className="btn btn-primary btn-contributor"
-                  onClick={() => this.onClickDetailButton(index)}
-                  aria-controls="contributorForm"
-                  aria-expanded={detailOpen}
+                <OverlayTrigger
+                  placement="right"
+                  delay={{ show: 250, hide: 400 }}
+                  overlay={
+                    <Tooltip id="tooltip-right" className="text-left">
+                      {`${c.firstName} ${c.lastName}`}
+                    </Tooltip>
+                  }
                 >
-                  {`${c.position}. ${c.firstName} ${c.lastName}`}
-                </Button>
+                  <Button
+                    className="btn btn-primary btn-contributor contributor-draggable-btn"
+                    onClick={() => this.onClickDetailButton(index)}
+                    aria-controls="contributorForm"
+                    aria-expanded={detailOpen}
+                  >
+                    {`${c.position}. ${c.firstName} ${c.lastName}`}
+                  </Button>
+                </OverlayTrigger>
               </div>
             </div>
           </div>
