@@ -46,6 +46,8 @@ export const DELETE_FILE = 'app/SubmissionForm/DELETE_FILE';
 export const DELETE_FILE_ERROR = 'app/SubmissionForm/DELETE_FILE_ERROR';
 export const DELETE_FILE_SUCCESS = 'app/SubmissionForm/DELETE_FILE_SUCCESS';
 
+export const SET_CONTRIBUTORS = 'app/SubmissionForm/SET_CONTRIBUTORS';
+
 export const FETCH_SUBMISSION = 'app/SubmissionForm/FETCH_SUBMISSION';
 export const FETCH_SUBMISSION_SUCCESS = 'app/SubmissionForm/FETCH_SUBMISSION_SUCCESS';
 export const FETCH_SUBMISSION_ERROR = 'app/SubmissionForm/FETCH_SUBMISSION_ERROR';

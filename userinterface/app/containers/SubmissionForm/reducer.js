@@ -11,7 +11,6 @@ import {
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
-  CHANGE_META_DATA_SCHEMA,
   CLOSE_EMBARGO_DIALOG,
   CLOSE_SAVE_SUCCESS,
   CLOSE_SUBMIT_SUCCESS,
@@ -31,7 +30,9 @@ import {
   SAVE_FORM,
   SAVE_FORM_ERROR,
   SAVE_FORM_SUCCESS,
-  SET_EMBARGO_DATE, SET_FORM_CHANGED,
+  SET_CONTRIBUTORS,
+  SET_EMBARGO_DATE,
+  SET_FORM_CHANGED,
   SET_METADATA_INDEX,
   SET_METADATA_ON_SERVER,
   SET_METADATA_ON_SERVER_ERROR,
@@ -290,6 +291,9 @@ function submissionFormReducer(state = initialState, action) {
       return state;
     case DELETE_FILE_ERROR:
       return state;
+    case SET_CONTRIBUTORS:
+      console.log('SAVING CONTRIBUTORS');
+      return state.set('contributors', action.contributors);
     case FETCH_SUBMISSION:
       // TODO: set prop to inidcate loading -> loading gif
       return state.set('requestBrokerSubmissionId', action.brokerSubmissionId);

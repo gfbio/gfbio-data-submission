@@ -26,7 +26,6 @@ import {
   FETCH_SUBMISSION_SUCCESS,
   POST_COMMENT_ERROR,
   POST_COMMENT_SUCCUESS,
-  REMOVE_CONTRIBUTOR,
   REMOVE_DATASET_LABEL,
   REMOVE_FILE_UPLOAD,
   REMOVE_RELATED_PUBLICATION,
@@ -47,7 +46,6 @@ import {
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
   SUBMIT_FORM_SUCCESS,
-  UPDATE_CONTRIBUTOR,
   UPDATE_SUBMISSION,
   UPDATE_SUBMISSION_ERROR,
   UPDATE_SUBMISSION_SUCCESS,
@@ -245,6 +243,13 @@ export function uploadFileSuccess(index) {
 }
 
 /* END File no s for single File */
+
+export function setContributors(contributors) {
+  return {
+    type: SET_CONTRIBUTORS,
+    contributors,
+  };
+}
 
 export function fetchSubmission(brokerSubmissionId) {
   return {

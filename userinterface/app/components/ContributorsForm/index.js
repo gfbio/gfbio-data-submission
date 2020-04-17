@@ -17,6 +17,7 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import { makeSelectContributors } from '../../containers/SubmissionForm/selectors';
 import RolesInfo from './rolesInfo';
+import { setContributors } from '../../containers/SubmissionForm/actions';
 
 /* eslint-disable react/prefer-stateless-function */
 class ContributorsForm extends React.PureComponent {
@@ -29,10 +30,8 @@ class ContributorsForm extends React.PureComponent {
       showContributors: false, // show hide contributor management
       contributorIndex: -1,
       roles: [],
-      contributors: this.props.contributors.toJS(),
-      contributorsArray: this.getContributorsAsArray(
-        this.props.contributors.toJS(),
-      ),
+      contributors: [],
+      contributorsArray: [],
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleInputClick = this.handleInputClick.bind(this);
@@ -67,14 +66,15 @@ class ContributorsForm extends React.PureComponent {
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
+    let propsContributors = this.props.contributors;
+    if (!Array.isArray(this.props.contributors)) {
+      propsContributors = this.props.contributors.toJS();
+    }
     if (
       JSON.stringify(this.state.contributors) !==
-      JSON.stringify(this.props.contributors.toJS())
+      JSON.stringify(propsContributors)
     ) {
-      const contributorsArray = this.getContributorsAsArray(
-        this.props.contributors.toJS(),
-      );
-      if (this.props.contributors.toJS().length === 0) {
+      if (propsContributors.length === 0) {
         this.cleanEditForm();
         this.setState({
           formValues: {},
@@ -85,8 +85,9 @@ class ContributorsForm extends React.PureComponent {
           roles: [],
         });
       }
+      const contributorsArray = this.getContributorsAsArray(propsContributors);
       this.setState({
-        contributors: this.props.contributors.toJS(),
+        contributors: propsContributors,
         contributorsArray,
         formValues: {},
       });
@@ -145,6 +146,7 @@ class ContributorsForm extends React.PureComponent {
       this.setState({
         contributorsArray,
       });
+      this.props.setContributors(contributorsArray);
     }
   };
 
@@ -192,6 +194,7 @@ class ContributorsForm extends React.PureComponent {
     });
     this.showAddContributorDiv();
     this.closeFormBody();
+    this.props.setContributors(contributorsArray);
   };
 
   // delay to wait for formOpen animation to finish
@@ -291,6 +294,7 @@ class ContributorsForm extends React.PureComponent {
       contributorsArray,
       contributorIndex,
     });
+    this.props.setContributors(contributorsArray);
   }
 
   render() {
@@ -348,7 +352,7 @@ class ContributorsForm extends React.PureComponent {
               <div className="col-md-10">
                 <OverlayTrigger
                   placement="right"
-                  delay={{ show: 250, hide: 400 }}
+                  delay={{ show: 250, hide: 0 }}
                   overlay={
                     <Tooltip id="tooltip-right" className="text-left">
                       {`${c.firstName} ${c.lastName}`}
@@ -548,12 +552,22 @@ class ContributorsForm extends React.PureComponent {
 
 ContributorsForm.propTypes = {
   contributors: PropTypes.array,
+  setContributors: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
   contributors: makeSelectContributors(),
 });
 
-const withConnect = connect(mapStateToProps);
+function mapDispatchToProps(dispatch) {
+  return {
+    setContributors: contributors => dispatch(setContributors(contributors)),
+  };
+}
+
+const withConnect = connect(
+  mapStateToProps,
+  mapDispatchToProps,
+);
 
 export default compose(withConnect)(ContributorsForm);
