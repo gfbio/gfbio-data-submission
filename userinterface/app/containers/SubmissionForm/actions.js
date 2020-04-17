@@ -5,7 +5,6 @@
  */
 
 import {
-  ADD_CONTRIBUTOR,
   ADD_DATASET_LABEL,
   ADD_FILE_UPLOAD,
   ADD_RELATED_PUBLICATION,
@@ -247,42 +246,12 @@ export function uploadFileSuccess(index) {
 
 /* END File no s for single File */
 
-export function setContributors(contributors) {
-  return {
-    type: SET_CONTRIBUTORS,
-    contributors,
-  };
-}
-
-export function addContributor(contributor) {
-  return {
-    type: ADD_CONTRIBUTOR,
-    contributor,
-  };
-}
-
-export function updateContributor(contributor, index) {
-  return {
-    type: UPDATE_CONTRIBUTOR,
-    contributor,
-    index,
-  };
-}
-
-export function removeContributor(index) {
-  return {
-    type: REMOVE_CONTRIBUTOR,
-    index,
-  };
-}
-
 export function fetchSubmission(brokerSubmissionId) {
   return {
     type: FETCH_SUBMISSION,
     brokerSubmissionId,
   };
 }
-
 
 export function fetchSubmissionSuccess(response) {
   return {

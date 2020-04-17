@@ -835,28 +835,33 @@ form.pagewide-form {
 
   }
 
-  #multiselectContainerReact {
-    input {
-
-      &:focus {
-        border-color: transparent !important;
-        box-shadow: none;
-        outline-color: transparent !important;
-      }
-
-    }
-
-    span[class^="chip"] {
-      background: $gfbio-light-blue;
-    }
-  }
-
   .droppable-contributors {
     border: 1px solid #dfdfdf;
     border-radius: 5px;
     min-height: 100%;
     padding: 10px;
-    box-sizing: border-box;
+  }
+
+  .add-contributor-col {
+    border: 1px solid #dfdfdf;
+    border-radius: 5px;
+    min-height: 100%;
+    padding: 10px;
+  }
+
+  .add-contributor-col .card-body {
+    border: none;
+    padding: 10px;
+  }
+
+  .add-contributor-div {
+    display: flex;
+    justify-content: center;
+    height: 100%;
+  }
+
+  .show-contributors-btn {
+    padding-top: 4px;
   }
 
   .m-bt-0 {

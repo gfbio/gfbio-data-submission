@@ -5,7 +5,6 @@
  */
 import { fromJS, List } from 'immutable';
 import {
-  ADD_CONTRIBUTOR,
   ADD_DATASET_LABEL,
   ADD_FILE_UPLOAD,
   ADD_RELATED_PUBLICATION,
@@ -25,7 +24,6 @@ import {
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
   FETCH_SUBMISSION_SUCCESS,
-  REMOVE_CONTRIBUTOR,
   REMOVE_DATASET_LABEL,
   REMOVE_FILE_UPLOAD,
   REMOVE_RELATED_PUBLICATION,
@@ -33,7 +31,6 @@ import {
   SAVE_FORM,
   SAVE_FORM_ERROR,
   SAVE_FORM_SUCCESS,
-  SET_CONTRIBUTORS,
   SET_EMBARGO_DATE, SET_FORM_CHANGED,
   SET_METADATA_INDEX,
   SET_METADATA_ON_SERVER,
@@ -45,7 +42,6 @@ import {
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
   SUBMIT_FORM_SUCCESS,
-  UPDATE_CONTRIBUTOR,
   UPDATE_SUBMISSION,
   UPDATE_SUBMISSION_ERROR,
   UPDATE_SUBMISSION_SUCCESS,
@@ -294,18 +290,6 @@ function submissionFormReducer(state = initialState, action) {
       return state;
     case DELETE_FILE_ERROR:
       return state;
-    case SET_CONTRIBUTORS:
-      return state
-        .set('contributors', action.contributors);
-    case ADD_CONTRIBUTOR:
-      return state
-        .update('contributors', (contributors) => contributors.push(action.contributor));
-    case UPDATE_CONTRIBUTOR:
-      return state
-        .update('contributors', (contributors) => contributors.splice(action.index, 1, action.contributor));
-    case REMOVE_CONTRIBUTOR:
-      return state
-        .update('contributors', (contributors) => contributors.splice(action.index, 1));
     case FETCH_SUBMISSION:
       // TODO: set prop to inidcate loading -> loading gif
       return state.set('requestBrokerSubmissionId', action.brokerSubmissionId);
