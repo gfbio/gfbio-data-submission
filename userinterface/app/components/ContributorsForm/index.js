@@ -50,19 +50,21 @@ class ContributorsForm extends React.PureComponent {
   }
 
   getContributorsAsArray(contributorsArray) {
+    // make a deep copy
+    const tempArray = Array.from(contributorsArray, x => Object.assign({}, x));
     // sort array
-    contributorsArray.sort((current, next) => current.position - next.position);
+    tempArray.sort((current, next) => current.position - next.position);
     // fix missing positions if there are any
-    contributorsArray.forEach((c, i) => {
+    tempArray.forEach((c, i) => {
       if (!c.position && c.position !== 0) {
         if (i === 0) {
           c.position = 1;
         } else {
-          c.position = contributorsArray[i - 1].position + 1;
+          c.position = tempArray[i - 1].position + 1;
         }
       }
     });
-    return contributorsArray;
+    return tempArray;
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -83,7 +85,10 @@ class ContributorsForm extends React.PureComponent {
           showContributors: false, // show hide contributor management
           contributorIndex: -1,
           roles: [],
+          contributors: [],
+          contributorsArray: [],
         });
+        return;
       }
       const contributorsArray = this.getContributorsAsArray(propsContributors);
       this.setState({
