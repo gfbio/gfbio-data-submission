@@ -126,6 +126,52 @@
     }
   },
   {
+    "model": "brokerage.submission",
+    "pk": 4,
+    "fields": {
+      "created": "2020-04-14T10:01:58.950Z",
+      "modified": "2020-04-14T10:01:58.950Z",
+      "broker_submission_id": "37257d5a-9dee-44d3-bac2-6a97411d1987",
+      "site": null,
+      "user": 1,
+      "target": "GENERIC",
+      "submitting_user": "1",
+      "submitting_user_common_information": "",
+      "status": "SUBMITTED",
+      "release": true,
+      "download_url": "",
+      "center_name": null,
+      "data": {
+        "requirements": {
+          "title": "CONTRIBUTORS TEST",
+          "license": "CC BY 4.0",
+          "categories": [],
+          "description": "some description",
+          "contributors": [
+            {
+              "lastName": "Bar",
+              "firstName": "Foo",
+              "contribution": "Author/Creator,Data Owner",
+              "emailAddress": "foo@bar.de",
+              "position": 1
+            },
+            {
+              "lastName": "Max",
+              "firstName": "Mustermann",
+              "contribution": "Principal Investigator,Data Curator",
+              "emailAddress": "mm@mm.de",
+              "position": 2
+            }
+          ],
+          "dataset_labels": [],
+          "legal_requirements": [],
+          "related_publications": []
+        }
+      },
+      "embargo": "EMDATE"
+    }
+  },
+  {
     "model": "brokerage.brokerobject",
     "pk": 1,
     "fields": {
