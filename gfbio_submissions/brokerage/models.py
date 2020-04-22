@@ -68,6 +68,7 @@ class Submission(TimeStampedModel):
     site = models.ForeignKey(
         AUTH_USER_MODEL,
         null=True,
+        blank=True,
         related_name='site_submissions',
         on_delete=models.SET_NULL)
     user = models.ForeignKey(
