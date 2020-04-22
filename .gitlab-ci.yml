@@ -121,6 +121,7 @@ update_staging_env:
   stage: updateStaging
   script:
     - rsync -a /home/gitlab-runner/.envs .
+    - sed -i s/DJANGO_ALLOWED_HOSTS=.*/DJANGO_ALLOWED_HOSTS=\.103-171\.cloud\.gwdg\.de/g .envs/.production/.django
     - sed -i 's/rule =.*/rule = "Host:c103-171.cloud.gwdg.de"/g' compose/production/traefik/traefik.toml
     - sed -i 's/DJANGO_ADMIN_URL=.*\//DJANGO_ADMIN_URL='"$ADMIN_URL"'/g' .envs/.production/.django
     - docker-compose -f production.yml down
