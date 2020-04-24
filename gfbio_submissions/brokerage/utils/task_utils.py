@@ -112,6 +112,7 @@ def _get_submitted_submission_and_site_configuration(submission_id, task):
 
 def _get_submission_and_site_configuration(submission_id, task,
                                            include_closed):
+    site_config = None
     try:
         submission = _safe_get_submission(submission_id, include_closed)
         if submission is None:
@@ -131,9 +132,7 @@ def _get_submission_and_site_configuration(submission_id, task,
                     include_closed,
                 )
             )
-        # TODO: refactor for new site/user relation
         site_config = _safe_get_site_config(submission)
-        # site_config = submission.user.site_configuration
         if site_config is None:
             logger.warning(
                 'task_utils.py | _get_submission_and_site_configuration | '
@@ -150,11 +149,6 @@ def _get_submission_and_site_configuration(submission_id, task,
                     submission.site,
                 )
             )
-        if task:
-            TaskProgressReport.objects.create_initial_report(
-                submission=submission,
-                task=task)
-        return submission, site_config
     except TransferInternalError as e:
         logger.warning(
             'task_utils.py | _get_submission_and_site_configuration | task={0} '
@@ -167,7 +161,14 @@ def _get_submission_and_site_configuration(submission_id, task,
                 e
             )
         )
-        return TaskProgressReport.CANCELLED, None
+        submission = TaskProgressReport.CANCELLED
+    # TODO: this may have to move elsewhere since TaskReport need to be created in everytask
+    #   but in the last months some of the newer tasks are not Calling this method
+    if task:
+        TaskProgressReport.objects.create_initial_report(
+            submission=None if submission == TaskProgressReport.CANCELLED else submission,
+            task=task)
+    return submission, site_config
 
 
 def send_task_fail_mail(broker_submission_id, task):

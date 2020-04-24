@@ -51,7 +51,8 @@ class PersistentIdentifierAdmin(admin.ModelAdmin):
                      ]
     date_hierarchy = 'created'
 
-    list_display = ('archive', 'pid', 'pid_type', 'broker_object', 'status', 'hold_date', )
+    list_display = (
+        'archive', 'pid', 'pid_type', 'broker_object', 'status', 'hold_date',)
 
 
 class AdditionalReferenceInline(admin.TabularInline):
@@ -59,14 +60,6 @@ class AdditionalReferenceInline(admin.TabularInline):
 
     def get_extra(self, request, obj=None, **kwargs):
         return 1
-
-
-# class TicketLableInline(admin.TabularInline):
-#     model = TicketLabel
-#
-#
-# class SiteConfigurationAdmin(admin.ModelAdmin):
-#     inlines = (TicketLableInline,)
 
 
 def continue_release_submissions(modeladmin, request, queryset):
@@ -168,7 +161,6 @@ class AuditableTextDataInlineAdmin(admin.StackedInline):
 class SubmissionAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'  # date drill down
     ordering = ('-modified',)  # ordering in list display
-    # form = SubmissionAdminForm
     list_display = ('broker_submission_id',
                     'submitting_user', 'site', 'status',)
     list_filter = ('site', 'status', 'target',)
@@ -189,13 +181,6 @@ class SubmissionAdmin(admin.ModelAdmin):
     readonly_fields = ('created', 'modified',)
 
 
-# class RequestLogAdmin(admin.ModelAdmin):
-#     readonly_fields = ('request_id',)
-#     date_hierarchy = 'created'
-#     list_filter = ('type', 'site_user', 'response_status',)
-#     search_fields = ['submission_id', 'request_id', 'url', ]
-
-
 class RunFileRestUploadAdmin(admin.ModelAdmin):
     readonly_fields = ('created',)
 
@@ -209,15 +194,6 @@ class PrimaryDataFileAdmin(admin.ModelAdmin):
 
 
 def reparse_csv_metadata(modeladmin, request, queryset):
-    # from gfbio_submissions.brokerage.tasks import \
-    #     parse_meta_data_for_update_task
-    # for obj in queryset:
-    #     parse_meta_data_for_update_task.apply_async(
-    #         kwargs={
-    #             'submission_upload_id': obj.pk,
-    #         },
-    #         countdown=SUBMISSION_DELAY,
-    #     )
     from gfbio_submissions.brokerage.tasks import \
         clean_submission_for_update_task, \
         parse_csv_to_update_clean_submission_task, \
@@ -247,7 +223,6 @@ reparse_csv_metadata.short_description = 'Re-parse csv metadata to get updated X
 
 class SubmissionUploadAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'meta_data',
-                    # 'site',
                     'user',
                     'attachment_id',
                     'attach_to_ticket')
@@ -259,18 +234,12 @@ class SubmissionUploadAdmin(admin.ModelAdmin):
         reparse_csv_metadata,
     ]
 
-    # def save_model(self, request, obj, form, change):
-    #     # obj.added_by = request.user
-    #     print('ADMIN save model ', obj.pk)
-    #     # or obj.save with params like ignore-attach
-    #     super().save_model(request, obj, form, change)
-
 
 class TaskProgressReportAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'  # date drill down
     ordering = ('-modified',)  # ordering in list display
     readonly_fields = ('created', 'modified',)
-    list_filter = ('status', 'task_name',)
+    list_filter = ('status', 'task_return_value', 'task_name',)
     search_fields = ['submission__broker_submission_id', 'task_name']
     list_display = ('task_name', 'created', 'modified')
 
@@ -282,9 +251,6 @@ class EnaReportAdmin(admin.ModelAdmin):
 admin.site.register(Submission, SubmissionAdmin)
 admin.site.register(BrokerObject, BrokerObjectAdmin)
 admin.site.register(PersistentIdentifier, PersistentIdentifierAdmin)
-# admin.site.register(SiteConfiguration, SiteConfigurationAdmin)
-# admin.site.register(ResourceCredential)
-# admin.site.register(RequestLog, RequestLogAdmin)
 admin.site.register(AdditionalReference)
 admin.site.register(TaskProgressReport, TaskProgressReportAdmin)
 
