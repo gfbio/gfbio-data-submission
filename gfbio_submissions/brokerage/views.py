@@ -155,6 +155,9 @@ class SubmissionUploadView(mixins.CreateModelMixin,
     serializer_class = SubmissionUploadSerializer
     parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
     authentication_classes = (TokenAuthentication, BasicAuthentication)
+
+    # TODO: add permission class that checks if access to associated
+    #  submission is granted for request.user (this request, upload only)
     permission_classes = (permissions.IsAuthenticated,
                           # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
