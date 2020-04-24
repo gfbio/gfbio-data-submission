@@ -8,6 +8,7 @@ from uuid import uuid4
 
 import responses
 from django.contrib.auth.models import Permission
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
@@ -414,6 +415,44 @@ class TestSubmissionUploadView(TestCase):
         response = self.api_client.delete(url)
         self.assertEqual(204, response.status_code)
         self.assertEqual(b'', response.content)
+
+    @responses.activate
+    def test_delete_without_user(self):
+        submission = Submission.objects.first()
+        site_config = SiteConfiguration.objects.first()
+        simple_file = SimpleUploadedFile('test_submission_upload.txt',
+                                         b'these are the file contents!')
+
+        upload = SubmissionUpload.objects.create(
+            submission=submission,
+            file=simple_file,
+            attachment_id=123,
+        )
+        self.assertIsNone(upload.user)
+
+        responses.add(responses.GET,
+                      '{0}/rest/api/2/field'.format(
+                          site_config.helpdesk_server.url),
+                      status=200)
+        url = '{0}{1}/{2}'.format(
+            site_config.helpdesk_server.url,
+            JIRA_ATTACHMENT_URL,
+            upload.attachment_id)
+        responses.add(responses.DELETE, url, body=b'', status=204)
+
+        url = reverse(
+            'brokerage:submissions_upload_detail',
+            kwargs={
+                'broker_submission_id': submission.broker_submission_id,
+                'pk': upload.pk
+            })
+        response = self.api_client.delete(url)
+        self.assertEqual(403, response.status_code)
+
+        upload.user = submission.user
+        upload.save()
+        response = self.api_client.delete(url)
+        self.assertEqual(204, response.status_code)
 
     @responses.activate
     def test_wrong_submission_put(self):
