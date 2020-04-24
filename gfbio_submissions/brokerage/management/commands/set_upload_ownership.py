@@ -20,7 +20,7 @@ class Command(BaseCommand):
                     print('set user for upload.pk={0} to {1}'.format(upload.pk,
                                                                      upload.submission.user))
                     upload.user = upload.submission.user
-                    upload.save()
+                    upload.save(ignore_attach_to_ticket=True)
                     print(' ... done !')
                 else:
                     print(
