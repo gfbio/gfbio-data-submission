@@ -50,6 +50,9 @@ class SubmissionTask(Task):
     # TODO: consider a report for every def here OR refactor taskreport to
     #  keep track in one report. Keep in mind to resume chains from a certain
     #  point, add a DB clean up task to remove from database
+    # @abstractmethod
+    # def __init__(self):
+    #     super(SubmissionTask, self).__init__()
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
         logger.info('tasks.py | SubmissionTask | on_retry | task_id={0} | '

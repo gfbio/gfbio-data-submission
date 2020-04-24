@@ -162,6 +162,8 @@ def _get_submission_and_site_configuration(submission_id, task,
             )
         )
         submission = TaskProgressReport.CANCELLED
+    # TODO: this may have to move elsewhere since TaskReport need to be created in everytask
+    #   but in the last months some of the newer tasks are not Calling this method
     if task:
         TaskProgressReport.objects.create_initial_report(
             submission=None if submission == TaskProgressReport.CANCELLED else submission,
