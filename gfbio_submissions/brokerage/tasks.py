@@ -891,18 +891,19 @@ def create_submission_issue_task(self, prev_task_result=None,
     pprint(submission)
 
     jira_client = JiraClient(resource=site_configuration.helpdesk_server)
-    jira_client.create_submission_issue(reporter=prev_task_result,
-                                        site_config=site_configuration,
-                                        submission=submission)
+    if jira_client:
+        jira_client.create_submission_issue(reporter=prev_task_result,
+                                            site_config=site_configuration,
+                                            submission=submission)
 
-    jira_error_auto_retry(jira_client=jira_client, task=self,
-                          broker_submission_id=submission.broker_submission_id)
-    if jira_client.issue:
-        submission.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key=jira_client.issue.key,
-            primary=True
-        )
+        jira_error_auto_retry(jira_client=jira_client, task=self,
+                              broker_submission_id=submission.broker_submission_id)
+        if jira_client.issue:
+            submission.additionalreference_set.create(
+                type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+                reference_key=jira_client.issue.key,
+                primary=True
+            )
 
 
 @celery.task(
@@ -1385,5 +1386,31 @@ def update_persistent_identifier_report_status_task(self):
     logger.info(
         msg='tasks.py | update_persistent_identifier_report_status_task '
             '| success={0}'.format(success))
+
+    return True
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.received_jira_ticket_update_task',
+)
+def received_jira_ticket_update_task(self, data=None):
+    TaskProgressReport.objects.create_initial_report(
+        submission=None,
+        task=self)
+    logger.info(
+        msg='received_jira_ticket_update'
+            ' with data={}.'.format(data))
+    # TODO update submission
+    # submission, site_configuration = get_submission_and_site_configuration(
+    #     submission_id=submission_id,
+    #     task=self,
+    #     include_closed=True
+    # )
+    # if submission == TaskProgressReport.CANCELLED:
+    #     return TaskProgressReport.CANCELLED
+    logger.info(
+        msg='received_jira_ticket_update_task'
+            ' process jira data={}.'.format(data))
 
     return True
