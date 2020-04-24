@@ -1117,15 +1117,27 @@ def add_posted_comment_to_issue_task(self, prev_task_result=None,
 )
 def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
                                     submission_upload_id=None, ):
+    logger.info(
+        msg='attach_to_submission_issue_task. submission_id={0} | submission_upload_id={1}'
+            ''.format(submission_id, submission_upload_id))
+
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
         include_closed=True
     )
     if submission == TaskProgressReport.CANCELLED:
+        logger.info(
+            msg='attach_to_submission_issue_task no Submission'
+                ' found. return {2}. | submission_id={0} | submission_upload_id={1}'
+                ''.format(submission_id, submission_upload_id,
+                          TaskProgressReport.CANCELLED))
         return TaskProgressReport.CANCELLED
 
     reference = submission.get_primary_helpdesk_reference()
+
+    logger.info(
+        msg='attach_to_submission_issue_task | reference={0}'.format(reference))
 
     # TODO: if no ticket available, the reason may that this task is started independened of
     #  submission transfer chain that creates the ticket, so a proper retry has to be
@@ -1133,6 +1145,9 @@ def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
     if reference:
         submission_upload = submission.submissionupload_set.filter(
             attach_to_ticket=True).filter(pk=submission_upload_id).first()
+        logger.info(
+            msg='attach_to_submission_issue_task | submission_upload={0}'.format(
+                submission_upload))
         if submission_upload:
 
             do_attach = False
@@ -1142,6 +1157,9 @@ def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
                 do_attach = True
 
             if not do_attach:
+                logger.info(
+                    msg='attach_to_submission_issue_task | do_attach={0} | return {1}'.format(
+                        do_attach, TaskProgressReport.CANCELLED))
                 return TaskProgressReport.CANCELLED
 
             # TODO: access media nginx https://stackoverflow.com/questions/8370658/how-to-serve-django-media-files-via-nginx
@@ -1159,6 +1177,10 @@ def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
             submission_upload.attachment_id = attachment.id
             submission_upload.modified_recently = False
             submission_upload.save(ignore_attach_to_ticket=True)
+
+            logger.info(
+                msg='attach_to_submission_issue_task | do_attach={0} | return {1}'.format(
+                    do_attach, True))
 
             return True
         else:

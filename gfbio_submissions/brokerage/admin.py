@@ -161,7 +161,6 @@ class AuditableTextDataInlineAdmin(admin.StackedInline):
 class SubmissionAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'  # date drill down
     ordering = ('-modified',)  # ordering in list display
-    # form = SubmissionAdminForm
     list_display = ('broker_submission_id',
                     'submitting_user', 'site', 'status',)
     list_filter = ('site', 'status', 'target',)
@@ -224,7 +223,6 @@ reparse_csv_metadata.short_description = 'Re-parse csv metadata to get updated X
 
 class SubmissionUploadAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'meta_data',
-                    # 'site',
                     'user',
                     'attachment_id',
                     'attach_to_ticket')

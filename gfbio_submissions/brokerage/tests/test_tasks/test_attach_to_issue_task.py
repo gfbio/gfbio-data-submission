@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from unittest.mock import patch
 
 import responses
@@ -150,6 +149,38 @@ class TestAttachToIssueTasks(TestHelpDeskTasksBase):
         )
         self.assertTrue(result.successful())
         self.assertTrue(result.get())
+
+    @responses.activate
+    def test_attach_to_issue_task_progress_reports(self):
+        submission = Submission.objects.first()
+        attach_to_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': 123456,
+                # no submission_upload_id ...
+            }
+        )
+        attach_to_submission_issue_task.apply_async(
+            kwargs={
+                # no args at all
+            }
+        )
+        attach_to_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+                'submission_upload_id': 99999,
+            }
+        )
+        attach_to_submission_issue_task.apply_async(
+            kwargs={
+                # no submission_id
+                'submission_upload_id': 99999,
+            }
+        )
+        task_progress_reports = TaskProgressReport.objects.all()
+        self.assertEqual(4, len(task_progress_reports))
+        for t in task_progress_reports:
+            self.assertEqual('tasks.attach_to_submission_issue_task',
+                             t.task_name)
 
     # TODO: take this mock concept for testing retry, and add more tests for
     #  other tasks with retry policy(s)
