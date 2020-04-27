@@ -8,6 +8,7 @@ from .models import TicketLabel, ResourceCredential, SiteConfiguration, \
 
 
 class RequestLogAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'created', 'modified', 'url', 'response_status')
     readonly_fields = ('request_id', 'created', 'modified',)
     date_hierarchy = 'created'
     ordering = ('created',)
