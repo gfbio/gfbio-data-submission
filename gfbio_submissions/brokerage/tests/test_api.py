@@ -11,6 +11,7 @@ class TestAPIEndpoints(APITestCase):
         """
         self.assertEqual(RequestLog.objects.last(), None)
         url = reverse('brokerage:get_jira_updates')
+        print(url)
         response = self.client.post(url, '{foo}', content_type = 'application/json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 

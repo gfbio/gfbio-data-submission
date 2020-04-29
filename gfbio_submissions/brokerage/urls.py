@@ -16,26 +16,19 @@ urlpatterns = [
         view=views.SubmissionDetailView.as_view(),
         name='submissions_detail'
     ),
-    # url(
-    #     regex=r'submissions/user/(?P<submitting_user>.+)/$',
-    #     view=views.UserSubmissionDetailView.as_view(),
-    #     name='submissions_user_detail'
-    # ),
     url(
-        regex='jira_update',
+        regex=r'jira/update/$',
         view=api.jira_ticket_change,
         name='get_jira_updates'
     ),
     url(
         regex=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/$',
         view=views.SubmissionUploadView.as_view(),
-        # name='submissions_new_upload'
         name='submissions_upload'
     ),
     url(
         regex=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/$',
         view=views.SubmissionUploadListView.as_view(),
-        # name='submissions_new_upload'
         name='submissions_uploads'
     ),
     url(
