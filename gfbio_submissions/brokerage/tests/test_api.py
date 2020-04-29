@@ -1,30 +1,26 @@
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
+
 from gfbio_submissions.generic.models import RequestLog
 
 
 class TestAPIEndpoints(APITestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.url = reverse('brokerage:get_jira_updates')
+
     def test_jira_endpoint_status_400(self):
-        """
-        Ensure we get status 400 if wrong json data was sent
-        """
-        self.assertEqual(RequestLog.objects.last(), None)
-        url = reverse('brokerage:get_jira_updates')
-        print(url)
-        response = self.client.post(url, '{foo}', content_type = 'application/json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.post(self.url, '{foo}',
+                                    content_type='application/json')
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(0, len(RequestLog.objects.all()))
 
     def test_jira_endpoint_status_201(self):
-        """
-        Ensure we get status 201
-        Ensure RequestObject was created
-        """
         self.assertEqual(RequestLog.objects.last(), None)
         url = reverse('brokerage:get_jira_updates')
-        data= {"foo":"bar"}
-        data_str = str(data)
+        data = {"foo": "bar"}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        request_obj = RequestLog.objects.last()
-        self.assertEqual(request_obj.data, data_str)
+        self.assertEqual(str(data), RequestLog.objects.last().data)
