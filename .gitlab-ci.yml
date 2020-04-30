@@ -88,7 +88,7 @@ docker_web_test:
     - ADMIN_NICKNAME=${ADMIN_NICKNAME} ADMIN_EMAIL=${ADMIN_EMAIL} ADMIN_PASSWORD=${ADMIN_PASSWORD} docker stack deploy -c cicd/production.yml $CI_COMMIT_REF_NAME
   environment:
     name: review/$CI_COMMIT_REF_NAME
-    url: https://$CI_COMMIT_REF_NAME.dev.submissions.gfbio.org/$ADMIN_URL
+    url: https://$CI_COMMIT_REF_NAME.dev.submissions.gfbio.org/accounts/login
   only:
     refs:
       - branches
