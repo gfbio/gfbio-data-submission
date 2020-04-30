@@ -57,8 +57,12 @@
 }
 
 .drag-bars {
-  margin-top: 11px;
   color: $gfbio-light-blue;
+  margin-top: 10px;
+  margin-left: 18px;
+  margin-right: 10px;
+  position: absolute;
+  left: 0;
 }
 
 .modal-body {

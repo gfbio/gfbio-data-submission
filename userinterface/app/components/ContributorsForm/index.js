@@ -27,7 +27,6 @@ class ContributorsForm extends React.PureComponent {
       formValues: {},
       formOpen: false, // show contributor form
       showAddDiv: true, // show add btn, delay for formOpen animation
-      showContributors: false, // show hide contributor management
       contributorIndex: -1,
       roles: [],
       contributors: [],
@@ -37,15 +36,15 @@ class ContributorsForm extends React.PureComponent {
     this.handleInputClick = this.handleInputClick.bind(this);
     this.onDragEnd = this.onDragEnd.bind(this);
     this.roleOptions = [
-      { role: 'Author/Creator', id: 0, category: 'Primary' },
-      { role: 'Content Contact', id: 1, category: 'Secondary' },
-      { role: 'Principal Investigator', id: 2, category: 'Secondary' },
-      { role: 'Data Owner', id: 3 },
-      { role: 'Data Curator', id: 4 },
-      { role: 'Data Editor/Data Manager', id: 5 },
-      { role: 'Data Owner Contact', id: 6 },
-      { role: 'Researcher', id: 7 },
-      { role: 'Data Source Organisation', id: 8 },
+      { role: 'Author/Creator', id: 0, category: 'Main Roles' },
+      { role: 'Content Contact', id: 1, category: 'Main Roles' },
+      { role: 'Principal Investigator', id: 2, category: 'Main Roles' },
+      { role: 'Data Owner', id: 3, category: 'Additional Roles' },
+      { role: 'Data Curator', id: 4, category: 'Additional Roles' },
+      { role: 'Data Editor/Data Manager', id: 5, category: 'Additional Roles' },
+      { role: 'Data Owner Contact', id: 6, category: 'Additional Roles' },
+      { role: 'Researcher', id: 7, category: 'Additional Roles' },
+      { role: 'Data Source Organisation', id: 8, category: 'Additional Roles' },
     ];
   }
 
@@ -82,7 +81,6 @@ class ContributorsForm extends React.PureComponent {
           formValues: {},
           formOpen: false, // show contributor form
           showAddDiv: true, // show add btn, delay for formOpen animation
-          showContributors: false, // show hide contributor management
           contributorIndex: -1,
           roles: [],
           contributors: [],
@@ -153,13 +151,6 @@ class ContributorsForm extends React.PureComponent {
       });
       this.props.setContributors(contributorsArray);
     }
-  };
-
-  // show contributors div
-  onClickShowContributors = showContributors => {
-    this.setState({
-      showContributors,
-    });
   };
 
   // toggles add form, closes detail
@@ -351,28 +342,16 @@ class ContributorsForm extends React.PureComponent {
             {...provided.dragHandleProps}
           >
             <div className="row">
-              <div className="col-md-2">
+              <div className="col">
                 <i className="fa fa-bars drag-bars" />
-              </div>
-              <div className="col-md-10">
-                <OverlayTrigger
-                  placement="right"
-                  delay={{ show: 250, hide: 0 }}
-                  overlay={
-                    <Tooltip id="tooltip-right" className="text-left">
-                      {`${c.firstName} ${c.lastName}`}
-                    </Tooltip>
-                  }
+                <Button
+                  className="btn btn-primary btn-contributor contributor-draggable-btn"
+                  onClick={() => this.onClickDetailButton(index)}
+                  aria-controls="contributorForm"
+                  aria-expanded={detailOpen}
                 >
-                  <Button
-                    className="btn btn-primary btn-contributor contributor-draggable-btn"
-                    onClick={() => this.onClickDetailButton(index)}
-                    aria-controls="contributorForm"
-                    aria-expanded={detailOpen}
-                  >
-                    {`${c.position}. ${c.firstName} ${c.lastName}`}
-                  </Button>
-                </OverlayTrigger>
+                  {`${c.position}. ${c.firstName} ${c.lastName}`}
+                </Button>
               </div>
             </div>
           </div>
@@ -393,162 +372,141 @@ class ContributorsForm extends React.PureComponent {
           <p className="section-subtitle">(optional)</p>
         </header>
         <div className="form-group">
-          <ul className="list-inline m-bt-0">
-            <li className="list-inline-item">
-              <p className="contributor">Contributors:</p>
-            </li>
-            <li className="list-inline-item">
-              <Button
-                className="btn btn-primary btn-contributor show-contributors-btn"
-                onClick={() =>
-                  this.onClickShowContributors(!this.state.showContributors)
-                }
-                aria-controls="contributorsDiv"
-                aria-expanded={this.state.showContributors}
-              >
-                {this.state.showContributors ? 'hide' : 'show'}
-              </Button>
-            </li>
-          </ul>
-          <Collapse in={this.state.showContributors}>
-            <div className="row">
-              <div className="col-md-3">
-                <DragDropContext onDragEnd={this.onDragEnd}>
-                  <div className="droppable-contributors">
-                    <Droppable droppableId="droppable">
-                      {provided => (
-                        <div
-                          {...provided.droppableProps}
-                          ref={provided.innerRef}
-                        >
-                          {contributors.length === 0
-                            ? noContributorsText
-                            : contributors}
-                          {provided.placeholder}
-                        </div>
-                      )}
-                    </Droppable>
-                  </div>
-                </DragDropContext>
-              </div>
-              <div className="col-md-9 add-contributor-col">
-                {this.state.showAddDiv ? addContributorDiv : null}
-                <Collapse in={this.state.formOpen}>
-                  <div className="card card-body">
-                    <h5>
-                      {this.state.contributorIndex === -1
-                        ? 'Add Contributor'
-                        : 'Edit Contributor'}
-                    </h5>
-                    <div className="form-row">
-                      <div className="form-group col-md-3">
-                        <label htmlFor="firstName">First Name</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="firstName"
-                          onChange={this.handleChange}
-                          onClick={this.handleInputClick}
-                          value={this.state.formValues.firstName}
-                        />
+          <div className="row">
+            <div className="col-md-3">
+              <DragDropContext onDragEnd={this.onDragEnd}>
+                <div className="droppable-contributors">
+                  <Droppable droppableId="droppable">
+                    {provided => (
+                      <div {...provided.droppableProps} ref={provided.innerRef}>
+                        {contributors.length === 0
+                          ? noContributorsText
+                          : contributors}
+                        {provided.placeholder}
                       </div>
-                      <div className="form-group col-md-3">
-                        <label htmlFor="lastName">Last Name</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="lastName"
-                          onChange={this.handleChange}
-                          onClick={this.handleInputClick}
-                          value={this.state.formValues.lastName}
-                        />
-                      </div>
-                      <div className="form-group col-md-6">
-                        <label htmlFor="emailAddress">Email Address</label>
-                        <input
-                          type="email"
-                          className="form-control"
-                          id="emailAddress"
-                          placeholder="name@example.com"
-                          // defaultValue={emailAddress}
-                          onChange={this.handleChange}
-                          onClick={this.handleInputClick}
-                          value={this.state.formValues.emailAddress}
-                        />
-                      </div>
-                    </div>
-                    <div className="form-row">
-                      <div className="form-group col-md-12">
-                        <label htmlFor="institution">
-                          Institution (optional)
-                        </label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="institution"
-                          onChange={this.handleChange}
-                          value={this.state.formValues.institution}
-                        />
-                      </div>
-                      <div className="form-group col-md-12">
-                        <label htmlFor="contribution">
-                          Contributor Role (optional)
-                          <a
-                            className="align-bottom"
-                            data-toggle="modal"
-                            data-target="#rolesInfo"
-                          >
-                            <i
-                              className="icon ion-ios-help-circle-outline question-pointer"
-                              aria-hidden="true"
-                            />
-                          </a>
-                        </label>
-                        <Multiselect
-                          placeholder="Select Roles"
-                          options={this.roleOptions} // Options to display in the dropdown
-                          selectedValues={this.state.roles} // Preselected value to persist in dropdown
-                          onSelect={this.onSelectChange} // Function will trigger on select event
-                          onRemove={this.onSelectChange} // Function will trigger on remove event
-                          displayValue="role" // Property name to display in the dropdown options
-                          groupBy="category"
-                          closeOnSelect={false}
-                          closeIcon="circle"
-                          showCheckbox
-                          avoidHighlightFirstOption
-                        />
-                      </div>
-                    </div>
-                    <div className="row mt-3" />
-                    <div className="form-row">
-                      <div className="form-group col-md-2">
-                        <Button
-                          className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
-                          onClick={() => this.closeFormBody()}
-                          aria-controls="contributorForm"
-                          aria-expanded={formOpen}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                      {removeContributorBtn}
-                      {spaceBetweenButtons}
-                      <div className="form-group col-md-4">
-                        <Button
-                          className="btn btn-secondary btn-sm btn-block btn-light-blue"
-                          onClick={this.onSave}
-                          aria-controls="contributorForm"
-                          aria-expanded={formOpen}
-                        >
-                          Save
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </Collapse>
-              </div>
+                    )}
+                  </Droppable>
+                </div>
+              </DragDropContext>
             </div>
-          </Collapse>
+            <div className="col-md-9 add-contributor-col">
+              {this.state.showAddDiv ? addContributorDiv : null}
+              <Collapse in={this.state.formOpen}>
+                <div className="card card-body">
+                  <h5>
+                    {this.state.contributorIndex === -1
+                      ? 'Add Contributor'
+                      : 'Edit Contributor'}
+                  </h5>
+                  <div className="form-row">
+                    <div className="form-group col-md-3">
+                      <label htmlFor="firstName">First Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="firstName"
+                        onChange={this.handleChange}
+                        onClick={this.handleInputClick}
+                        value={this.state.formValues.firstName}
+                      />
+                    </div>
+                    <div className="form-group col-md-3">
+                      <label htmlFor="lastName">Last Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="lastName"
+                        onChange={this.handleChange}
+                        onClick={this.handleInputClick}
+                        value={this.state.formValues.lastName}
+                      />
+                    </div>
+                    <div className="form-group col-md-6">
+                      <label htmlFor="emailAddress">Email Address</label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        id="emailAddress"
+                        placeholder="name@example.com"
+                        // defaultValue={emailAddress}
+                        onChange={this.handleChange}
+                        onClick={this.handleInputClick}
+                        value={this.state.formValues.emailAddress}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group col-md-12">
+                      <label htmlFor="institution">
+                        Institution (optional)
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="institution"
+                        onChange={this.handleChange}
+                        value={this.state.formValues.institution}
+                      />
+                    </div>
+                    <div className="form-group col-md-12">
+                      <label htmlFor="contribution">
+                        Contributor Role (optional)
+                        <a
+                          className="align-bottom"
+                          data-toggle="modal"
+                          data-target="#rolesInfo"
+                        >
+                          <i
+                            className="icon ion-ios-help-circle-outline question-pointer"
+                            aria-hidden="true"
+                          />
+                        </a>
+                      </label>
+                      <Multiselect
+                        placeholder="Select Roles"
+                        options={this.roleOptions} // Options to display in the dropdown
+                        selectedValues={this.state.roles} // Preselected value to persist in dropdown
+                        onSelect={this.onSelectChange} // Function will trigger on select event
+                        onRemove={this.onSelectChange} // Function will trigger on remove event
+                        displayValue="role" // Property name to display in the dropdown options
+                        groupBy="category"
+                        closeOnSelect={false}
+                        closeIcon="circle"
+                        showCheckbox
+                        avoidHighlightFirstOption
+                      />
+                    </div>
+                  </div>
+                  <div className="row mt-3" />
+                  <div className="form-row">
+                    <div className="form-group col-md-2">
+                      <Button
+                        className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
+                        onClick={() => this.closeFormBody()}
+                        aria-controls="contributorForm"
+                        aria-expanded={formOpen}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                    {removeContributorBtn}
+                    {spaceBetweenButtons}
+                    <div className="form-group col-md-4">
+                      <Button
+                        className="btn btn-secondary btn-sm btn-block btn-light-blue"
+                        onClick={this.onSave}
+                        aria-controls="contributorForm"
+                        aria-expanded={formOpen}
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Collapse>
+            </div>
+          </div>
+          {/* </Collapse> */}
         </div>
       </div>
     );
