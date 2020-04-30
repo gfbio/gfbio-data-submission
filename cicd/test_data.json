@@ -1,5 +1,38 @@
 [
   {
+    "model": "generic.resourcecredential",
+    "pk": 1,
+    "fields": {
+      "created": "2020-03-27T13:41:34.236Z",
+      "modified": "2020-03-27T13:41:34.236Z",
+      "title": "GFBio-JIRA",
+      "url": "https://helpdesk.gfbio.org",
+      "authentication_string": "",
+      "username": "brokeragent",
+      "password": "puN;7_k[-\"_,ZiJi",
+      "comment": "Access GFBio JIRA Helpdesk"
+    }
+  },
+  {
+    "model": "generic.siteconfiguration",
+    "pk": 1,
+    "fields": {
+      "created": "2020-03-27T13:42:15.329Z",
+      "modified": "2020-03-27T13:42:15.329Z",
+      "title": "local-site",
+      "contact": "brokeragent@gfbio.org",
+      "release_submissions": false,
+      "ena_server": null,
+      "ena_report_server": null,
+      "ena_ftp": null,
+      "pangaea_token_server": null,
+      "pangaea_jira_server": null,
+      "helpdesk_server": 1,
+      "jira_project_key": "SAND",
+      "comment": "Default configuration for sites without proper SiteConfig"
+    }
+  },
+  {
     "model": "brokerage.submission",
     "pk": 1,
     "fields": {
@@ -102,9 +135,7 @@
       "data": {
         "test": "test"
       },
-      "submissions": [
-        1
-      ]
+      "submissions": [1]
     }
   },
   {
@@ -117,9 +148,7 @@
       "data": {
         "test": "test"
       },
-      "submissions": [
-        2
-      ]
+      "submissions": [2]
     }
   },
   {
@@ -153,6 +182,33 @@
       "broker_object": 2,
       "outgoing_request_id": null
     }
+  },
+  {
+    "model": "generic.ticketlabel",
+    "pk": 1,
+    "fields": { "site_configuration": 1, "label_type": "G", "label": "TEST" }
+  },
+  {
+    "model": "users.user",
+    "pk": 2,
+    "fields": {
+      "password": "argon2$argon2i$v=19$m=512,t=2,p=2$aUh3OUpPTXF0MEg2$+vAp6xCQESmg8tButquwIg",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "testuser",
+      "first_name": "Max",
+      "last_name": "Mustermann",
+      "email": "max@muster.de",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2020-04-22T13:50:16Z",
+      "is_site": false,
+      "is_user": true,
+      "name": "Mustermann",
+      "external_user_id": null,
+      "site_configuration": 1,
+      "groups": [],
+      "user_permissions": []
+    }
   }
 ]
-

@@ -79,6 +79,7 @@ docker_web_test:
     - while [[ $(docker ps | grep $CI_COMMIT_REF_NAME | wc -l) > 0 ]]; do sleep 1; done
     - cd userinterface && npm i && npm run collect-ci
     - cd ../
+    - cp gfbio_submissions/templates/account/webtest_login.html gfbio_submissions/templates/account/login.html
     - sed -i s/BRANCH/$CI_COMMIT_REF_NAME/g cicd/production.yml
     - sed -i s/DJANGO_ALLOWED_HOSTS=.*/DJANGO_ALLOWED_HOSTS=\.dev\.submissions\.gfbio\.org/g .envs/.production/.django
     - sed -i 's/DJANGO_ADMIN_URL=.*\//DJANGO_ADMIN_URL='"$ADMIN_URL"'/g' .envs/.production/.django
