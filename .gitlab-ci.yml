@@ -105,7 +105,6 @@ build_staging:
   script:
     - rsync -a /home/gitlab-runner/.envs .
     - sed -i 's/rule =.*/rule = "Host:c103-171.cloud.gwdg.de"/g' compose/production/traefik/traefik.toml
-    - sed -i 's/DJANGO_ADMIN_URL=.*\//DJANGO_ADMIN_URL='"$ADMIN_URL"'/g' .envs/.production/.django
     - cd userinterface && npm i && npm run collect-ci
     - cd ../
     - docker-compose -f production.yml build
@@ -122,7 +121,6 @@ update_staging_env:
   script:
     - rsync -a /home/gitlab-runner/.envs .
     - sed -i 's/rule =.*/rule = "Host:c103-171.cloud.gwdg.de"/g' compose/production/traefik/traefik.toml
-    - sed -i 's/DJANGO_ADMIN_URL=.*\//DJANGO_ADMIN_URL='"$ADMIN_URL"'/g' .envs/.production/.django
     - docker-compose -f production.yml down
     - docker-compose -f production.yml up -d
   environment:
