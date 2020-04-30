@@ -24,3 +24,6 @@ class TestAPIEndpoints(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(str(data), RequestLog.objects.last().data)
+
+
+    # def test_real_world_request(self):
