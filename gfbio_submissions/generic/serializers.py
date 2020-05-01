@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import os
-from uuid import uuid4, UUID
+from uuid import UUID
 
 import arrow
 from rest_framework import serializers
 
 # class JiraRequestLogSerializer(serializers.ModelSerializer):
-from gfbio_submissions.brokerage.models import Submission
+from gfbio_submissions.brokerage.models import Submission, AdditionalReference
 from gfbio_submissions.brokerage.utils.schema_validation import validate_data
 
 
@@ -136,21 +136,43 @@ class JiraRequestLogSerializer(serializers.Serializer):
         # end embargo ----------------------------------------
 
         # submission --------------------------
-        print('SUBMISSION')
+        # print('SUBMISSION')
         submission_id = self.initial_data.get('issue', {}).get('fields',
-                                                                   {}).get(
+                                                               {}).get(
             'customfield_10303', '')
-        print('custom f val ', submission_id)
+        # print('custom f val ', submission_id)
+        submission = None
         try:
             # TODO: this here is hint to evtl. move this serializer to brokerag app
-            submission = Submission.objects.get(broker_submission_id=UUID(submission_id))
-            print('submission ', submission)
+            submission = Submission.objects.get(
+                broker_submission_id=UUID(submission_id))
+            # print('submission ', submission)
         except Submission.DoesNotExist as e:
-            print('sub error ', e)
+            # print('sub error ', e)
             raise serializers.ValidationError(
-                {'issue': ["'customfield_10303': {0} {1}".format(e, submission_id)]})
+                {'issue': [
+                    "'customfield_10303': {0} {1}".format(e, submission_id)]})
 
         # end submission -----------------------
+
+        # reference -----------------------
+        if submission:
+            key = self.initial_data.get('issue', {}).get('key', '')
+            # print(submission.additionalreference_set.all())
+            # TODO: this here is hint to evtl. move this serializer to brokerag app
+            references = submission.additionalreference_set.filter(
+                type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+                primary=True,
+                reference_key=key
+            )
+            # print(references)
+            if len(references) == 0:
+                raise serializers.ValidationError(
+                    {'issue': [
+                        "'key': no related issue with key: {0} found for submission {1}".format(
+                            key, submission.broker_submission_id)]})
+
+        # end reference -------------------------
 
         return data
 
