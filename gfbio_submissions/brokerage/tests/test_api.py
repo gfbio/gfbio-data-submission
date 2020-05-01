@@ -1,19 +1,34 @@
 import json
-import datetime
 
 import arrow
+import responses
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from gfbio_submissions.brokerage.models import Submission
+from gfbio_submissions.brokerage.tests.test_models.test_submission import \
+    SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_jira_hook_request_data
 from gfbio_submissions.generic.models import RequestLog
+from gfbio_submissions.users.models import User
 
 
 class TestAPIEndpoints(APITestCase):
 
     @classmethod
+    @responses.activate
     def setUpTestData(cls):
+        super().setUpTestData()
+
+        user = User.objects.create_user(
+            username='horst', email='horst@horst.de', password='password', )
+        user.is_user = True
+        user.is_site = False
+        user.save()
+
+        SubmissionTest._create_submission_via_serializer(
+            username='horst', create_broker_objects=False)
         cls.url = reverse('brokerage:get_jira_updates')
 
     def test_jira_endpoint_status_400(self):
@@ -223,22 +238,40 @@ class TestAPIEndpoints(APITestCase):
         #     format='json')
         # self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
+        # response = self.client.post(
+        #     self.url,
+        #     {
+        #         "issue": {
+        #             "key": "SAND-007",
+        #             "fields": {
+        #                 "customfield_10200": arrow.now().for_json(),
+        #                 # embargo date
+        #                 "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
+        #                 # broker_submission_id
+        #             }
+        #         }
+        #     },
+        #     format='json')
+        # self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+        submission = Submission.objects.first()
         response = self.client.post(
             self.url,
             {
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
-                        "customfield_10200": arrow.now().for_json(),
+                        "customfield_10200": arrow.now().shift(
+                            years=1).for_json(),
                         # embargo date
+                        # "customfield_10303": "{0}".format(submission.broker_submission_id),
                         "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
                         # broker_submission_id
                     }
                 }
             },
             format='json')
-        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-
+        # self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         print('\n', response.status_code)
         print(response.content)
 

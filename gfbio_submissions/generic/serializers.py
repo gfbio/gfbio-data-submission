@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-import datetime
 import os
+from uuid import uuid4, UUID
 
 import arrow
 from rest_framework import serializers
 
 # class JiraRequestLogSerializer(serializers.ModelSerializer):
+from gfbio_submissions.brokerage.models import Submission
 from gfbio_submissions.brokerage.utils.schema_validation import validate_data
 
 
@@ -94,12 +95,12 @@ class JiraRequestLogSerializer(serializers.Serializer):
                 {'issue': [e.message for
                            e in errors]})
         # embargo --------------
-        print('INITIAL DATA ', self.initial_data)
+        # print('INITIAL DATA ', self.initial_data)
         # TODO: constant for customfield key !
         jira_embargo_date = self.initial_data.get('issue', {}).get('fields',
                                                                    {}).get(
             'customfield_10200', '')
-        print(jira_embargo_date)
+        # print(jira_embargo_date)
 
         # date_format = "%Y-%m-%d"
         # embargo_date = datetime.strptime(jira_embargo_date, date_format).date()
@@ -111,7 +112,7 @@ class JiraRequestLogSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 {'issue': ["'customfield_10200': {0}".format(e)]})
 
-        print('DATE/field 10200 ', embargo_date)
+        # print('DATE/field 10200 ', embargo_date)
 
         today = arrow.now()
         # print('todday ', today)
@@ -124,7 +125,7 @@ class JiraRequestLogSerializer(serializers.Serializer):
         if delta.days <= 0:
             raise serializers.ValidationError(
                 {'issue': [
-                    "'customfield_10200': embargo date ends in then past: {0}".format(
+                    "'customfield_10200': embargo date in the past: {0}".format(
                         embargo_date.for_json())]})
         # future, 1 year = 365 days, *2 = 730
         if delta.days > 730:
@@ -132,6 +133,25 @@ class JiraRequestLogSerializer(serializers.Serializer):
                 {'issue': [
                     "'customfield_10200': embargo date too far in the future: {0}".format(
                         embargo_date.for_json())]})
+        # end embargo ----------------------------------------
+
+        # submission --------------------------
+        print('SUBMISSION')
+        submission_id = self.initial_data.get('issue', {}).get('fields',
+                                                                   {}).get(
+            'customfield_10303', '')
+        print('custom f val ', submission_id)
+        try:
+            # TODO: this here is hint to evtl. move this serializer to brokerag app
+            submission = Submission.objects.get(broker_submission_id=UUID(submission_id))
+            print('submission ', submission)
+        except Submission.DoesNotExist as e:
+            print('sub error ', e)
+            raise serializers.ValidationError(
+                {'issue': ["'customfield_10303': {0} {1}".format(e, submission_id)]})
+
+        # end submission -----------------------
+
         return data
 
     # class Meta:
