@@ -35,7 +35,7 @@ class TestAPIEndpoints(APITestCase):
         response = self.client.post(self.url, json.loads(hook_content),
                                     format='json')
         print(response.status_code)
-        print(len(response.content))
+        print(response.content)
 
         r = RequestLog.objects.all()
         print(r)
@@ -50,9 +50,16 @@ class TestAPIEndpoints(APITestCase):
         # print(data)
 
     def test_no_issue(self):
+        # no issue
         response = self.client.post(self.url, {'a': True},
                                     format='json')
-        print(response.status_code)
-        print(response.content)
-        r = RequestLog.objects.first()
-        print(r)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+        # # in issue errors
+        # response = self.client.post(self.url, {"issue": {"key": "SAND-007"}},
+        #                             format='json')
+        # print(response.status_code)
+        # print(response.content)
+        #
+        # r = RequestLog.objects.all()
+        # print(r)

@@ -36,11 +36,17 @@ class JiraIssueUpdate(mixins.CreateModelMixin, generics.GenericAPIView):
         is_valid = serializer.is_valid()
         print('valid ', is_valid)
 
+        details = {
+            'serializer_errors': serializer.errors
+        }
+
+
         RequestLog.objects.create(
             type=RequestLog.INCOMING,
             data=json.dumps(request.data) if isinstance(
                 request.data, dict) else request.data,
             response_status=status.HTTP_201_CREATED if is_valid else status.HTTP_400_BAD_REQUEST,
+            request_details=details
         )
 
         # print('self. request', self.request)

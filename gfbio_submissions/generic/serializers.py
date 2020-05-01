@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
+import os
+from pprint import pprint
 
 from rest_framework import serializers
 
 
 # class JiraRequestLogSerializer(serializers.ModelSerializer):
+from gfbio_submissions.brokerage.utils.schema_validation import validate_data
 
 
 class JiraRequestLogSerializer(serializers.Serializer):
@@ -34,11 +37,30 @@ class JiraRequestLogSerializer(serializers.Serializer):
 
     # TODO: comes before general validate
     # TODO: add schema_validation for issue fields, extend later if needed
-    def validate_issue(self, value):
-        print('VALIDATE_ISSUE ', value.keys())
-        return value
-        # raise serializers.ValidationError(
-        #     {'issue': 'error'})
+    # TODO: fields for embargo update in issue json:
+    #   - issue.id / issue.key
+    #   - 'customfield_10200'  ...... : '{0}'.format(submission.embargo.isoformat())
+    #   - 'customfield_10303'  .........: '{0}'.format(submission.broker_submission_id),
+    # def validate_issue(self, value):
+    #     print('VALIDATE_ISSUE ', value.keys())
+    #
+    #     path = os.path.join(
+    #         os.getcwd(),
+    #         'gfbio_submissions/brokerage/schemas/jira_update_hook_schema.json')
+    #     valid, errors = validate_data(
+    #         data=value,
+    #         schema_file=path, use_draft04_validator=True
+    #     )
+    #     # print(valid)
+    #     # # print(errors)
+    #     # error_messages = [e.message for e in errors]
+    #     # pprint(error_messages)
+    #     if not valid:
+    #         raise serializers.ValidationError(
+    #             {'issue': [e.message for e in errors]})
+    #     return value
+    #     # raise serializers.ValidationError(
+    #     #     {'issue': 'error'})
 
     # TODO: comes after validate_issue
     # TODO: general stuff. maybe skip issue validation and due all here with json schema
@@ -55,6 +77,20 @@ class JiraRequestLogSerializer(serializers.Serializer):
         print('VALIDATE ', data.keys())
         #     print(data)
         #     data['data'] = data.pop('issue', {})
+        path = os.path.join(
+            os.getcwd(),
+            'gfbio_submissions/brokerage/schemas/jira_update_hook_schema.json')
+        valid, errors = validate_data(
+            data=data['issue'],
+            schema_file=path, use_draft04_validator=True
+        )
+
+        # for e in errors:
+        #     pprint(e.__dict__)
+
+        if not valid:
+            raise serializers.ValidationError(
+                {'issue': [e.message.replace(" : \'", "").replace("\'", "") for e in errors]})
         return data
 
     # class Meta:

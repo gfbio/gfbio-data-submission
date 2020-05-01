@@ -1,0 +1,29 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "file:///app/gfbio_submissions/brokerage/schemas/jira_update_hook_schema.json",
+    "type": "object",
+    "properties": {
+        "key": {
+            "type": "string"
+        },
+        "fields": {
+            "type": "object",
+            "properties": {
+                "customfield_10200": {
+                    "type": "string"
+                },
+                "customfield_10303": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "customfield_10200",
+                "customfield_10303"
+            ]
+        }
+    },
+    "required": [
+        "key",
+        "fields"
+    ]
+}
