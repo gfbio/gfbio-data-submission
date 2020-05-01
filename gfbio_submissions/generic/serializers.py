@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import datetime
 import os
 
+import arrow
 from rest_framework import serializers
 
 # class JiraRequestLogSerializer(serializers.ModelSerializer):
@@ -91,6 +93,45 @@ class JiraRequestLogSerializer(serializers.Serializer):
                 # .replace(" : \'", "").replace("\'", "")
                 {'issue': [e.message for
                            e in errors]})
+        # embargo --------------
+        print('INITIAL DATA ', self.initial_data)
+        # TODO: constant for customfield key !
+        jira_embargo_date = self.initial_data.get('issue', {}).get('fields',
+                                                                   {}).get(
+            'customfield_10200', '')
+        print(jira_embargo_date)
+
+        # date_format = "%Y-%m-%d"
+        # embargo_date = datetime.strptime(jira_embargo_date, date_format).date()
+
+        # format
+        try:
+            embargo_date = arrow.get(jira_embargo_date)
+        except arrow.parser.ParserError as e:
+            raise serializers.ValidationError(
+                {'issue': ["'customfield_10200': {0}".format(e)]})
+
+        print('DATE/field 10200 ', embargo_date)
+
+        today = arrow.now()
+        # print('todday ', today)
+        # print(type(embargo_date))
+        # print(type(today))
+        # print(embargo_date - today)
+
+        # past, 1 day granularity
+        delta = embargo_date - today
+        if delta.days <= 0:
+            raise serializers.ValidationError(
+                {'issue': [
+                    "'customfield_10200': embargo date ends in then past: {0}".format(
+                        embargo_date.for_json())]})
+        # future, 1 year = 365 days, *2 = 730
+        if delta.days > 730:
+            raise serializers.ValidationError(
+                {'issue': [
+                    "'customfield_10200': embargo date too far in the future: {0}".format(
+                        embargo_date.for_json())]})
         return data
 
     # class Meta:

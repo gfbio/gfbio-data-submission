@@ -13,10 +13,12 @@
                     "type": "object",
                     "properties": {
                         "customfield_10200": {
-                            "type": "string"
+                            "type": "string",
+                            "minLength": 10
                         },
                         "customfield_10303": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^\\b(uuid:){0,1}\\s*([a-f0-9\\\\-]*){1}\\s*$"
                         }
                     },
                     "required": [

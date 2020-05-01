@@ -46,4 +46,5 @@ jira==2.0.0 # https://github.com/pycontribs/jira
 
 shortid==0.1.2 # https://github.com/corpix/shortid
 
-# fakeredis==1.0.4
+# dates from strings without format and more ...
+arrow==0.15.5
