@@ -6,24 +6,32 @@
         "key": {
             "type": "string"
         },
-        "fields": {
+        "issue": {
             "type": "object",
             "properties": {
-                "customfield_10200": {
-                    "type": "string"
-                },
-                "customfield_10303": {
-                    "type": "string"
+                "fields": {
+                    "type": "object",
+                    "properties": {
+                        "customfield_10200": {
+                            "type": "string"
+                        },
+                        "customfield_10303": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "customfield_10200",
+                        "customfield_10303"
+                    ]
                 }
             },
             "required": [
-                "customfield_10200",
-                "customfield_10303"
+                "key",
+                "fields"
             ]
         }
     },
     "required": [
-        "key",
-        "fields"
+        "issue"
     ]
 }

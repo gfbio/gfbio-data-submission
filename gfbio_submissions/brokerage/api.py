@@ -34,13 +34,14 @@ class JiraIssueUpdate(mixins.CreateModelMixin, generics.GenericAPIView):
         print('CREATE')
         serializer = self.get_serializer(data=request.data)
         is_valid = serializer.is_valid()
-        print('valid ', is_valid)
+        # print('valid ', is_valid)
 
         details = {
             'serializer_errors': serializer.errors
         }
 
-
+        # FIXME: if serializer below throws  excetption than all is rolled back and no
+        #   Requestlog is create . maybe a requestlog on error is not possible, at least not witout manual code
         RequestLog.objects.create(
             type=RequestLog.INCOMING,
             data=json.dumps(request.data) if isinstance(
@@ -54,24 +55,32 @@ class JiraIssueUpdate(mixins.CreateModelMixin, generics.GenericAPIView):
         # print(serializer.validated_data)
         # print(serializer.errors)
 
-        print('\n----- before serializer with exceptipn true\n')
-        serializer.is_valid(raise_exception=True)
+        # print('\n----- before serializer with exceptipn true\n')
+        headers = self.get_success_headers(serializer.data)
+
+        if not is_valid:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST,
+                            headers=headers)
+        # serializer.is_valid(raise_exception=True)
 
         # ----- works if invalid, if valid code below has demands
 
         obj = self.perform_create(serializer)
 
-        headers = self.get_success_headers(serializer.data)
         data_content = dict(serializer.data)
         # data_content = dict(serializer.data)
         # data_content.pop('submission', 0)
         # data_content['id'] = obj.pk
         # data_content['broker_submission_id'] = sub.broker_submission_id
-
+        print('create before return ')
         return Response(data_content, status=status.HTTP_201_CREATED,
                         headers=headers)
         # super(JiraIssueUpdate, self).create(self, request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         print('POST ..')
-        return self.create(request, *args, **kwargs)
+        response = self.create(request, *args, **kwargs)
+        # print('response', response.__dict__)
+        # print('before return ')
+        return response

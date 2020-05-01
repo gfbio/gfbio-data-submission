@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
-from pprint import pprint
 
 from rest_framework import serializers
-
 
 # class JiraRequestLogSerializer(serializers.ModelSerializer):
 from gfbio_submissions.brokerage.utils.schema_validation import validate_data
@@ -81,7 +79,7 @@ class JiraRequestLogSerializer(serializers.Serializer):
             os.getcwd(),
             'gfbio_submissions/brokerage/schemas/jira_update_hook_schema.json')
         valid, errors = validate_data(
-            data=data['issue'],
+            data=data,
             schema_file=path, use_draft04_validator=True
         )
 
@@ -90,7 +88,9 @@ class JiraRequestLogSerializer(serializers.Serializer):
 
         if not valid:
             raise serializers.ValidationError(
-                {'issue': [e.message.replace(" : \'", "").replace("\'", "") for e in errors]})
+                # .replace(" : \'", "").replace("\'", "")
+                {'issue': [e.message for
+                           e in errors]})
         return data
 
     # class Meta:

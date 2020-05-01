@@ -50,16 +50,59 @@ class TestAPIEndpoints(APITestCase):
         # print(data)
 
     def test_no_issue(self):
+        self.assertEqual(0, len(RequestLog.objects.all()))
+
         # no issue
         response = self.client.post(self.url, {'a': True},
                                     format='json')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(1, len(RequestLog.objects.all()))
 
-        # # in issue errors
-        # response = self.client.post(self.url, {"issue": {"key": "SAND-007"}},
-        #                             format='json')
-        # print(response.status_code)
-        # print(response.content)
-        #
-        # r = RequestLog.objects.all()
-        # print(r)
+        # in issue errors
+        response = self.client.post(self.url, {"issue": {"key": "SAND-007"}},
+                                    format='json')
+        self.assertEqual(2, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+        # fields
+        response = self.client.post(self.url, {
+            "issue": {"key": "SAND-007", "fields": {}}},
+                                    format='json')
+        self.assertEqual(3, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+        # only one left missing
+        response = self.client.post(
+            self.url,
+            {
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": "",  # embargo date
+                    }
+                }
+            },
+            format='json')
+        self.assertEqual(4, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+        # values
+        response = self.client.post(
+            self.url,
+            {
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": "",  # embargo date
+                        "customfield_10303": "",  # broker_submission_id
+                    }
+                }
+            },
+            format='json')
+        self.assertEqual(5, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        print('\n', response.status_code)
+        print(response.content)
+
+        r = RequestLog.objects.all()
+        print(r)
