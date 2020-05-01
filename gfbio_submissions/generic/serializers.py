@@ -6,6 +6,8 @@ import arrow
 from rest_framework import serializers
 
 # class JiraRequestLogSerializer(serializers.ModelSerializer):
+from gfbio_submissions.brokerage.configuration.settings import GENERIC, ENA, \
+    ENA_PANGAEA
 from gfbio_submissions.brokerage.models import Submission, AdditionalReference
 from gfbio_submissions.brokerage.utils.schema_validation import validate_data
 
@@ -173,6 +175,35 @@ class JiraRequestLogSerializer(serializers.Serializer):
                             key, submission.broker_submission_id)]})
 
         # end reference -------------------------
+
+        # type ------------------------
+        # TODO: this here is hint to evtl. move this serializer to brokerag app
+        if submission and submission.target == GENERIC:
+            print('GENERIC do update')  # do upate
+        elif submission.target == ENA or submission.target == ENA_PANGAEA:
+            studies = submission.brokerobject_set.filter(type='study')
+            print('studies ', studies)
+            # go through all studie, although there should be only one ...
+            # if any of the relate study broker_objects has a primary ena pid
+            # with status private, the overall update of the submission will be allowed
+            # if status is undefined or other than private, update is rejected
+            private_found = False
+            for s in studies:
+                private = s.persistentidentifier_set.filter(archive='ENA',
+                                                            pid_type='PRJ',
+                                                            status='PRIVATE')
+                if private:
+                    print('PRIVATE found')
+                    private_found = True
+                    break
+                print(s, ' ', private)
+            if not private_found:
+                raise serializers.ValidationError(
+                    {'issue': [
+                        "'key': issue {0}. status prevents update of submission {1} with target {2}".format(
+                            key, submission.broker_submission_id,
+                            submission.target)]})
+            # if submission.brokerobject_set.filter(type='study').
 
         return data
 

@@ -28,7 +28,7 @@ class TestAPIEndpoints(APITestCase):
         user.save()
 
         submission = SubmissionTest._create_submission_via_serializer(
-            username='horst', create_broker_objects=False)
+            username='horst', create_broker_objects=True)
 
         reference = AdditionalReference.objects.create(
             submission=submission,
@@ -300,8 +300,92 @@ class TestAPIEndpoints(APITestCase):
         #     format='json')
         # self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
+        # submission = Submission.objects.first()
+        # submission.additionalreference_set.all().delete()
+        # response = self.client.post(
+        #     self.url,
+        #     {
+        #         "issue": {
+        #             "key": "SAND-007",
+        #             "fields": {
+        #                 "customfield_10200": arrow.now().shift(
+        #                     years=1).for_json(),
+        #                 # embargo date
+        #                 "customfield_10303": "{0}".format(
+        #                     submission.broker_submission_id),
+        #                 # "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
+        #                 # broker_submission_id
+        #             }
+        #         }
+        #     },
+        #     format='json')
+        # self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+        # submission = Submission.objects.first()
+        # response = self.client.post(
+        #     self.url,
+        #     {
+        #         "issue": {
+        #             "key": "SAND-007",
+        #             "fields": {
+        #                 "customfield_10200": arrow.now().shift(
+        #                     years=1).for_json(),
+        #                 # embargo date
+        #                 "customfield_10303": "{0}".format(
+        #                     submission.broker_submission_id),
+        #                 # "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
+        #                 # broker_submission_id
+        #             }
+        #         }
+        #     },
+        #     format='json')
+        # self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+        # submission = Submission.objects.first()
+        # submission.brokerobject_set.create(
+        #     type='study',
+        #     user=submission.user,
+        #     data={'data': True}
+        # )
+        # studies = submission.brokerobject_set.filter(type='study')
+        # studies.first().persistentidentifier_set.create(
+        #     archive='ENA',
+        #     pid_type='PRJ',
+        #     pid='PRJEB0815',
+        #     status='PRIVATE'
+        # )
+        # response = self.client.post(
+        #     self.url,
+        #     {
+        #         "issue": {
+        #             "key": "SAND-007",
+        #             "fields": {
+        #                 "customfield_10200": arrow.now().shift(
+        #                     years=1).for_json(),
+        #                 # embargo date
+        #                 "customfield_10303": "{0}".format(
+        #                     submission.broker_submission_id),
+        #                 # "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
+        #                 # broker_submission_id
+        #             }
+        #         }
+        #     },
+        #     format='json')
+        # self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+
         submission = Submission.objects.first()
-        submission.additionalreference_set.all().delete()
+        submission.brokerobject_set.create(
+            type='study',
+            user=submission.user,
+            data={'data': True}
+        )
+        studies = submission.brokerobject_set.filter(type='study')
+        studies.first().persistentidentifier_set.create(
+            archive='ENA',
+            pid_type='PRJ',
+            pid='PRJEB0815',
+            # status='PRIVATE'
+        )
         response = self.client.post(
             self.url,
             {
