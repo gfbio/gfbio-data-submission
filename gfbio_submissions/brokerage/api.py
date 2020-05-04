@@ -4,11 +4,11 @@ from rest_framework import status, mixins, generics
 from rest_framework.response import Response
 
 from gfbio_submissions.generic.models import RequestLog
-from gfbio_submissions.generic.serializers import JiraRequestLogSerializer
+from gfbio_submissions.generic.serializers import JiraHookRequestSerializer
 
 
 class JiraIssueUpdate(mixins.CreateModelMixin, generics.GenericAPIView):
-    serializer_class = JiraRequestLogSerializer
+    serializer_class = JiraHookRequestSerializer
 
     # def perform_create(self, serializer):
     #     serializer.save(issue=self.request.data)

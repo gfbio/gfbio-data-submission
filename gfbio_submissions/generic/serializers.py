@@ -1,24 +1,45 @@
 # -*- coding: utf-8 -*-
+import logging
 import os
+from pprint import pprint
 from uuid import UUID
 
 import arrow
 from rest_framework import serializers
 
-# class JiraRequestLogSerializer(serializers.ModelSerializer):
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, ENA, \
     ENA_PANGAEA
 from gfbio_submissions.brokerage.models import Submission, AdditionalReference
 from gfbio_submissions.brokerage.utils.schema_validation import validate_data
 
+logger = logging.getLogger(__name__)
 
-class JiraRequestLogSerializer(serializers.Serializer):
+
+class JiraHookRequestSerializer(serializers.Serializer):
     issue = serializers.JSONField()
 
     # TODO: call update stuff here
     # TODO: if saving submission set flag that no jira-issue update should be triggered to prevent loops
     def save(self):
+        # here all should be fine ..
         print('SAVE SER. ', self.validated_data.keys())
+        pprint(self.validated_data)
+        try:
+            embargo_date = arrow.get(self.validated_data.get('issue', {}).get('fields', {}).get('customfield_10200'))
+        except arrow.parser.ParserError as e:
+            logger.error(msg='serializer.py | JiraHookRequestSerializer | unable to parse embargo date | {0}'.format(e))
+
+        submission_id = self.validated_data.get('issue', {}).get('fields', {}).get('customfield_10303', '')
+        try:
+            submission = Submission.objects.get(
+                broker_submission_id=UUID(submission_id))
+        except Submission.DoesNotExist as e:
+            logger.error(
+                msg='serializer.py | JiraHookRequestSerializer | unable to get submission | {0}'.format(e))
+
+        print('embargo type ', type(embargo_date))
+        submission.embargo = embargo_date.date()
+        submission.save()
 
     #     RequestLog.objects.create(
     #         type=RequestLog.INCOMING,
@@ -195,6 +216,7 @@ class JiraRequestLogSerializer(serializers.Serializer):
             return private_found
 
     def validate(self, data):
+        print('VALIDATE')
         self.schema_validation(data)
         self.embargo_date_validation()
         submission = self.submission_existing_check()
