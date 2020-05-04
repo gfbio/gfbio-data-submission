@@ -17,7 +17,7 @@ urlpatterns = [
     ),
     url(
         # regex=r'jira/update/$',
-        regex=r'jira_update/$',
+        regex=r'jira_update$',
         view=api.JiraIssueUpdate.as_view(),
         name='get_jira_updates'
     ),
