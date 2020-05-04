@@ -30,6 +30,19 @@ class TestAPIEndpoints(APITestCase):
         submission = SubmissionTest._create_submission_via_serializer(
             username='horst', create_broker_objects=True)
 
+        submission.brokerobject_set.create(
+            type='study',
+            user=submission.user,
+            data={'data': True}
+        )
+        studies = submission.brokerobject_set.filter(type='study')
+        studies.first().persistentidentifier_set.create(
+            archive='ENA',
+            pid_type='PRJ',
+            pid='PRJEB0815',
+            status='PRIVATE'
+        )
+
         reference = AdditionalReference.objects.create(
             submission=submission,
             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
@@ -47,333 +60,292 @@ class TestAPIEndpoints(APITestCase):
 
     def test_jira_endpoint_status_201(self):
         self.assertEqual(RequestLog.objects.last(), None)
-        data = {"foo": "bar"}
-        response = self.client.post(self.url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(str(data), RequestLog.objects.last().data)
+        response = self.client.post(
+            self.url,
+            {
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": "2021-03-09",
+                        "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
+                    }
+                }
+            },
+            format='json')
 
-    # TODO: just for prototyping ...
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        # tODO: add test for content
+
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+
     def test_real_world_request(self):
-        hook_content = _get_jira_hook_request_data()
-        # pprint(hook_content)
-        response = self.client.post(self.url, json.loads(hook_content),
-                                    format='json')
-        print(response.status_code)
-        print(response.content)
-
-        r = RequestLog.objects.all()
-        print(r)
-        # print(type(r.data))
-        # print("""->\n{}\n<-""".format(r.data))
-        # data = json.loads(r.data)
-        # print(len(r.data))
-        # print(r.type)
-        # print(r.url)
-        # print(r.response_status)
-        # print(r.request_details)
-        # print(data)
-
-    def test_no_issue(self):
-        self.assertEqual(0, len(RequestLog.objects.all()))
-
-        # # no issue
-        # response = self.client.post(self.url, {'a': True},
-        #                             format='json')
-        # self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        # self.assertEqual(1, len(RequestLog.objects.all()))
-        #
-        # # in issue errors
-        # response = self.client.post(self.url, {"issue": {"key": "SAND-007"}},
-        #                             format='json')
-        # self.assertEqual(2, len(RequestLog.objects.all()))
-        # self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        #
-        # # fields
-        # response = self.client.post(self.url, {
-        #     "issue": {"key": "SAND-007", "fields": {}}},
-        #                             format='json')
-        # self.assertEqual(3, len(RequestLog.objects.all()))
-        # self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        #
-        # # only one left missing
-        # response = self.client.post(
-        #     self.url,
-        #     {
-        #         "issue": {
-        #             "key": "SAND-007",
-        #             "fields": {
-        #                 "customfield_10200": "",  # embargo date
-        #             }
-        #         }
-        #     },
-        #     format='json')
-        # self.assertEqual(4, len(RequestLog.objects.all()))
-        # self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        #
-        # # values
-        # response = self.client.post(
-        #     self.url,
-        #     {
-        #         "issue": {
-        #             "key": "SAND-007",
-        #             "fields": {
-        #                 "customfield_10200": "",  # embargo date
-        #                 "customfield_10303": "",  # broker_submission_id
-        #             }
-        #         }
-        #     },
-        #     format='json')
-
-        # response = self.client.post(
-        #     self.url,
-        #     {
-        #         "issue": {
-        #             "key": "SAND-007",
-        #             "fields": {
-        #                 "customfield_10200": "",  # embargo date
-        #                 "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",  # broker_submission_id
-        #             }
-        #         }
-        #     },
-        #     format='json')
-        # self.assertEqual(5, len(RequestLog.objects.all()))
-        # self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        #
-        # # all valid
-        # response = self.client.post(
-        #     self.url,
-        #     {
-        #         "issue": {
-        #             "key": "SAND-007",
-        #             "fields": {
-        #                 "customfield_10200": "2021-03-09",  # embargo date
-        #                 "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",  # broker_submission_id
-        #             }
-        #         }
-        #     },
-        #     format='json')
-        # self.assertEqual(6, len(RequestLog.objects.all()))
-        # self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-
-        # date checks
-        # response = self.client.post(
-        #     self.url,
-        #     {
-        #         "issue": {
-        #             "key": "SAND-007",
-        #             "fields": {
-        #                 "customfield_10200": "2021-03-09",  # embargo date
-        #                 "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
-        #                 # broker_submission_id
-        #             }
-        #         }
-        #     },
-        #     format='json')
-
-        # response = self.client.post(
-        #     self.url,
-        #     {
-        #         "issue": {
-        #             "key": "SAND-007",
-        #             "fields": {
-        #                 "customfield_10200": "2021-xxx-09",  # embargo date
-        #                 "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
-        #                 # broker_submission_id
-        #             }
-        #         }
-        #     },
-        #     format='json')
-
-        # response = self.client.post(
-        #     self.url,
-        #     {
-        #         "issue": {
-        #             "key": "SAND-007",
-        #             "fields": {
-        #                 "customfield_10200": "2021-03-09T00:00:00+00:00",  # embargo date
-        #                 "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
-        #                 # broker_submission_id
-        #             }
-        #         }
-        #     },
-        #     format='json')
-        # today
-        # embargo1 = arrow.now().shift(years=-1)
-        # today = arrow.now()
-        # embargo2 = arrow.now().shift(years=2)
-        # print(embargo1)
-        # print(today)
-        # print(embargo2)
-        # diff = embargo2 - today
-        # print(diff)
-        # print(diff.days)
-        # print(diff.days > 730)
-        # embargo - heute:
-        #  - negativ -> in der vergangenheit
-        #  - positiv -> in der zukunft
-
-        # date_in_the_past = datetime.date.today() - datetime.timedelta(days=1)
-        # print('date in th4 pas 1 day', date_in_the_past)
-        # response = self.client.post(
-        #     self.url,
-        #     {
-        #         "issue": {
-        #             "key": "SAND-007",
-        #             "fields": {
-        #                 "customfield_10200": "2020-04-09T00:00:00+00:00",
-        #                 # embargo date
-        #                 "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
-        #                 # broker_submission_id
-        #             }
-        #         }
-        #     },
-        #     format='json')
-        # self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-
-        # response = self.client.post(
-        #     self.url,
-        #     {
-        #         "issue": {
-        #             "key": "SAND-007",
-        #             "fields": {
-        #                 "customfield_10200": "2029-04-09T00:00:00+00:00",
-        #                 # embargo date
-        #                 "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
-        #                 # broker_submission_id
-        #             }
-        #         }
-        #     },
-        #     format='json')
-        # self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-
-        # response = self.client.post(
-        #     self.url,
-        #     {
-        #         "issue": {
-        #             "key": "SAND-007",
-        #             "fields": {
-        #                 "customfield_10200": arrow.now().for_json(),
-        #                 # embargo date
-        #                 "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
-        #                 # broker_submission_id
-        #             }
-        #         }
-        #     },
-        #     format='json')
-        # self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-
-        # submission = Submission.objects.first()
-        # response = self.client.post(
-        #     self.url,
-        #     {
-        #         "issue": {
-        #             "key": "SAND-007",
-        #             "fields": {
-        #                 "customfield_10200": arrow.now().shift(
-        #                     years=1).for_json(),
-        #                 # embargo date
-        #                 #"customfield_10303": "{0}".format(submission.broker_submission_id),
-        #                 "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
-        #                 # broker_submission_id
-        #             }
-        #         }
-        #     },
-        #     format='json')
-        # self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-
-        # submission = Submission.objects.first()
-        # response = self.client.post(
-        #     self.url,
-        #     {
-        #         "issue": {
-        #             "key": "SAND-007",
-        #             "fields": {
-        #                 "customfield_10200": arrow.now().shift(
-        #                     years=1).for_json(),
-        #                 # embargo date
-        #                 "customfield_10303": "{0}".format(submission.broker_submission_id),
-        #                 #"customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
-        #                 # broker_submission_id
-        #             }
-        #         }
-        #     },
-        #     format='json')
-        # self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-
-        # submission = Submission.objects.first()
-        # submission.additionalreference_set.all().delete()
-        # response = self.client.post(
-        #     self.url,
-        #     {
-        #         "issue": {
-        #             "key": "SAND-007",
-        #             "fields": {
-        #                 "customfield_10200": arrow.now().shift(
-        #                     years=1).for_json(),
-        #                 # embargo date
-        #                 "customfield_10303": "{0}".format(
-        #                     submission.broker_submission_id),
-        #                 # "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
-        #                 # broker_submission_id
-        #             }
-        #         }
-        #     },
-        #     format='json')
-        # self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-
-        # submission = Submission.objects.first()
-        # response = self.client.post(
-        #     self.url,
-        #     {
-        #         "issue": {
-        #             "key": "SAND-007",
-        #             "fields": {
-        #                 "customfield_10200": arrow.now().shift(
-        #                     years=1).for_json(),
-        #                 # embargo date
-        #                 "customfield_10303": "{0}".format(
-        #                     submission.broker_submission_id),
-        #                 # "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
-        #                 # broker_submission_id
-        #             }
-        #         }
-        #     },
-        #     format='json')
-        # self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-
-        # submission = Submission.objects.first()
-        # submission.brokerobject_set.create(
-        #     type='study',
-        #     user=submission.user,
-        #     data={'data': True}
-        # )
-        # studies = submission.brokerobject_set.filter(type='study')
-        # studies.first().persistentidentifier_set.create(
-        #     archive='ENA',
-        #     pid_type='PRJ',
-        #     pid='PRJEB0815',
-        #     status='PRIVATE'
-        # )
-        # response = self.client.post(
-        #     self.url,
-        #     {
-        #         "issue": {
-        #             "key": "SAND-007",
-        #             "fields": {
-        #                 "customfield_10200": arrow.now().shift(
-        #                     years=1).for_json(),
-        #                 # embargo date
-        #                 "customfield_10303": "{0}".format(
-        #                     submission.broker_submission_id),
-        #                 # "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
-        #                 # broker_submission_id
-        #             }
-        #         }
-        #     },
-        #     format='json')
-        # self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-
         submission = Submission.objects.first()
+
+        hook_content = _get_jira_hook_request_data()
+        payload = json.loads(hook_content)
+        payload['issue']['key'] = 'SAND-007'
+        payload['issue']['fields']['customfield_10303'] = '{}'.format(
+            submission.broker_submission_id)
+
+        response = self.client.post(self.url, payload, format='json')
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(status.HTTP_201_CREATED,
+                         RequestLog.objects.first().response_status)
+        # TODO: check response content
+
+    def test_no_issue_in_request(self):
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.client.post(self.url, {'a': True},
+                                    format='json')
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST,
+                         RequestLog.objects.first().response_status)
+
+    def test_error_in_issue(self):
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.client.post(self.url, {"issue": {"key": "SAND-007"}},
+                                    format='json')
+
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertIn(b'fields', response.content)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST,
+                         RequestLog.objects.first().response_status)
+
+    def test_missing_fields(self):
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.client.post(self.url, {
+            "issue": {"key": "SAND-007", "fields": {}}},
+                                    format='json')
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertIn(b'\'customfield_10200\' is a required property',
+                      response.content)
+        self.assertIn(b'\'customfield_10303\' is a required property',
+                      response.content)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST,
+                         RequestLog.objects.first().response_status)
+
+    def test_errors_in_field(self):
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.client.post(
+            self.url,
+            {
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": "",
+                    }
+                }
+            },
+            format='json')
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertIn(b'\'customfield_10303\' is a required property',
+                      response.content)
+        self.assertIn(b'customfield_10200 : \'\' is too short',
+                      response.content)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST,
+                         RequestLog.objects.first().response_status)
+
+    def test_broker_submission_id_field_error(self):
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.client.post(
+            self.url, {
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": "2022-03-01",
+                        "customfield_10303": "",
+                    }
+                }
+            },
+            format='json')
+        self.assertEqual(1, len(RequestLog.objects.all()))
+
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertIn(b'customfield_10303 : \'\' does not match',
+                      response.content)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST,
+                         RequestLog.objects.first().response_status)
+
+    def test_date_format_check(self):
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.client.post(
+            self.url,
+            {
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": "2021-xxx-09",
+                        "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
+
+                    }
+                }
+            },
+            format='json')
+
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+        self.assertIn(b'\'customfield_10200\': Could not match input',
+                      response.content)
+
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST,
+                         RequestLog.objects.first().response_status)
+
+    def test_timestamp_date(self):
+        submission = Submission.objects.first()
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.client.post(
+            self.url,
+            {
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": "2021-03-09T00:00:00+00:00",
+                        "customfield_10303": "{}".format(
+                            submission.broker_submission_id),
+
+                    }
+                }
+            },
+            format='json')
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_201_CREATED,
+                         RequestLog.objects.first().response_status)
+
+    def test_date_in_the_past(self):
+        submission = Submission.objects.first()
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.client.post(
+            self.url,
+            {
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": "2020-04-09T00:00:00+00:00",
+                        "customfield_10303": "{}".format(
+                            submission.broker_submission_id),
+                    }
+                }
+            },
+            format='json')
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertIn(b'\'customfield_10200\': embargo date in the past',
+                      response.content)
+
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST,
+                         RequestLog.objects.first().response_status)
+
+    def test_date_in_the_far_future(self):
+        submission = Submission.objects.first()
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.client.post(
+            self.url,
+            {
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": "2049-04-09T00:00:00+00:00",
+                        "customfield_10303": "{}".format(
+                            submission.broker_submission_id),
+                    }
+                }
+            },
+            format='json')
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertIn(
+            b'\'customfield_10200\': embargo date too far in the future',
+            response.content)
+
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST,
+                         RequestLog.objects.first().response_status)
+
+    def test_embargo_today(self):
+        submission = Submission.objects.first()
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.client.post(
+            self.url,
+            {
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": arrow.now().for_json(),
+                        "customfield_10303": "{}".format(
+                            submission.broker_submission_id),
+                    }
+                }
+            },
+            format='json')
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertIn(
+            b'\'customfield_10200\': embargo date in the past',
+            response.content)
+
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST,
+                         RequestLog.objects.first().response_status)
+
+    def test_missing_issue_reference(self):
+        submission = Submission.objects.first()
+        submission.additionalreference_set.all().delete()
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.client.post(
+            self.url,
+            {
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": arrow.now().shift(
+                            years=1).for_json(),
+                        "customfield_10303": "{}".format(
+                            submission.broker_submission_id),
+                    }
+                }
+            },
+            format='json')
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertIn(
+            b'no related issue with key',
+            response.content)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST,
+                         RequestLog.objects.first().response_status)
+
+    def test_invalid_submission(self):
+        submission = Submission.objects.first()
+        submission.additionalreference_set.all().delete()
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.client.post(
+            self.url,
+            {
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": arrow.now().shift(
+                            years=1).for_json(),
+                        "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
+                    }
+                }
+            },
+            format='json')
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertIn(
+            b'Submission matching query does not exist',
+            response.content)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST,
+                         RequestLog.objects.first().response_status)
+
+    def test_invalid_ena_status(self):
+        submission = Submission.objects.first()
+        submission.brokerobject_set.all().delete()
         submission.brokerobject_set.create(
             type='study',
             user=submission.user,
@@ -384,8 +356,9 @@ class TestAPIEndpoints(APITestCase):
             archive='ENA',
             pid_type='PRJ',
             pid='PRJEB0815',
-            # status='PRIVATE'
+            status='NOT-PRIVATE'
         )
+        self.assertEqual(0, len(RequestLog.objects.all()))
         response = self.client.post(
             self.url,
             {
@@ -394,19 +367,17 @@ class TestAPIEndpoints(APITestCase):
                     "fields": {
                         "customfield_10200": arrow.now().shift(
                             years=1).for_json(),
-                        # embargo date
                         "customfield_10303": "{0}".format(
                             submission.broker_submission_id),
-                        # "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
-                        # broker_submission_id
                     }
                 }
             },
             format='json')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
-        print('\n', response.status_code)
-        print(response.content)
-
-        r = RequestLog.objects.all()
-        print(r)
+        self.assertIn(
+            b'status prevents update of submission',
+            response.content)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST,
+                         RequestLog.objects.first().response_status)

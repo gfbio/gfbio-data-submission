@@ -101,7 +101,8 @@ class JiraRequestLogSerializer(serializers.Serializer):
                 {'issue': ["'customfield_10200': {0}".format(e)]})
         return embargo_date
 
-    def embargo_data_future_check(self, embargo_date, delta):
+    @staticmethod
+    def embargo_data_future_check(embargo_date, delta):
         # future, 1 year = 365 days, *2 = 730
         if delta.days > 730:
             raise serializers.ValidationError(
@@ -109,7 +110,8 @@ class JiraRequestLogSerializer(serializers.Serializer):
                     "'customfield_10200': embargo date too far in the future: {0}".format(
                         embargo_date.for_json())]})
 
-    def embargo_date_past_check(self, embargo_date, delta):
+    @staticmethod
+    def embargo_date_past_check(embargo_date, delta):
         # past, 1 day granularity
         if delta.days <= 0:
             raise serializers.ValidationError(
