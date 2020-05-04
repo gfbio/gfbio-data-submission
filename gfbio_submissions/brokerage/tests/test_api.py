@@ -71,6 +71,11 @@ class TestAPIEndpoints(APITestCase):
 
         cls.url = reverse('brokerage:get_jira_updates')
 
+    @classmethod
+    def tearDownClass(cls):
+        Submission.objects.first().additionalreference_set.all().delete()
+        super(TestAPIEndpoints, cls).tearDownClass()
+
     def test_jira_invalid_request_data(self):
         self.assertEqual(0, len(RequestLog.objects.all()))
         response = self.client.post(self.url, '{foo}',
