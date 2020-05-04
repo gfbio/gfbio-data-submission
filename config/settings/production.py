@@ -18,6 +18,13 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS",
                          default=["submissions.gfbio.org", ])
 
+REST_SAFE_LIST_IPS = [
+    '134.102.43.67', # helpdesk.gfbio.org
+    '134.1.2.171', # issues.pangaea.de
+    '172.', # docker local network /8
+    '10.', # docker swarm network /8
+]
+
 # DATABASES
 # ------------------------------------------------------------------------------
 DATABASES["default"] = env.db("DATABASE_URL")  # noqa F405
