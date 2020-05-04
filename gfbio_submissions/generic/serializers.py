@@ -76,10 +76,9 @@ class JiraRequestLogSerializer(serializers.Serializer):
     #   - mol submission get update when above with the addition of:
     #       - check status of study, if not PRIVATE -> email admins
     #       - if update of edate is successful -> trigger update on ENA (not implemented yet (#259))
-    def validate(self, data):
-        print('VALIDATE ', data.keys())
-        #     print(data)
-        #     data['data'] = data.pop('issue', {})
+
+    @staticmethod
+    def schema_validation(data):
         path = os.path.join(
             os.getcwd(),
             'gfbio_submissions/brokerage/schemas/jira_update_hook_schema.json')
@@ -87,77 +86,67 @@ class JiraRequestLogSerializer(serializers.Serializer):
             data=data,
             schema_file=path, use_draft04_validator=True
         )
-
-        # for e in errors:
-        #     pprint(e.__dict__)
-
         if not valid:
             raise serializers.ValidationError(
-                # .replace(" : \'", "").replace("\'", "")
                 {'issue': [e.message for
                            e in errors]})
-        # embargo --------------
-        # print('INITIAL DATA ', self.initial_data)
-        # TODO: constant for customfield key !
-        jira_embargo_date = self.initial_data.get('issue', {}).get('fields',
-                                                                   {}).get(
-            'customfield_10200', '')
-        # print(jira_embargo_date)
 
-        # date_format = "%Y-%m-%d"
-        # embargo_date = datetime.strptime(jira_embargo_date, date_format).date()
-
+    @staticmethod
+    def embargo_date_format_validation(jira_embargo_date):
         # format
         try:
             embargo_date = arrow.get(jira_embargo_date)
         except arrow.parser.ParserError as e:
             raise serializers.ValidationError(
                 {'issue': ["'customfield_10200': {0}".format(e)]})
+        return embargo_date
 
-        # print('DATE/field 10200 ', embargo_date)
-
-        today = arrow.now()
-        # print('todday ', today)
-        # print(type(embargo_date))
-        # print(type(today))
-        # print(embargo_date - today)
-
-        # past, 1 day granularity
-        delta = embargo_date - today
-        if delta.days <= 0:
-            raise serializers.ValidationError(
-                {'issue': [
-                    "'customfield_10200': embargo date in the past: {0}".format(
-                        embargo_date.for_json())]})
+    def embargo_data_future_check(self, embargo_date, delta):
         # future, 1 year = 365 days, *2 = 730
         if delta.days > 730:
             raise serializers.ValidationError(
                 {'issue': [
                     "'customfield_10200': embargo date too far in the future: {0}".format(
                         embargo_date.for_json())]})
-        # end embargo ----------------------------------------
 
-        # submission --------------------------
-        # print('SUBMISSION')
+    def embargo_date_past_check(self, embargo_date, delta):
+        # past, 1 day granularity
+        if delta.days <= 0:
+            raise serializers.ValidationError(
+                {'issue': [
+                    "'customfield_10200': embargo date in the past: {0}".format(
+                        embargo_date.for_json())]})
+
+    def embargo_date_validation(self):
+        # TODO: constant for customfield key !
+        jira_embargo_date = self.initial_data.get('issue', {}).get('fields',
+                                                                   {}).get(
+            'customfield_10200', '')
+        embargo_date = self.embargo_date_format_validation(jira_embargo_date)
+
+        today = arrow.now()
+        delta = embargo_date - today
+        self.embargo_date_past_check(embargo_date, delta)
+        self.embargo_data_future_check(embargo_date, delta)
+
+    def submission_existing_check(self):
+        # TODO: constant for customfield key !
         submission_id = self.initial_data.get('issue', {}).get('fields',
                                                                {}).get(
             'customfield_10303', '')
-        # print('custom f val ', submission_id)
         submission = None
         try:
             # TODO: this here is hint to evtl. move this serializer to brokerag app
             submission = Submission.objects.get(
                 broker_submission_id=UUID(submission_id))
-            # print('submission ', submission)
         except Submission.DoesNotExist as e:
-            # print('sub error ', e)
             raise serializers.ValidationError(
                 {'issue': [
                     "'customfield_10303': {0} {1}".format(e, submission_id)]})
+        return submission
 
-        # end submission -----------------------
-
-        # reference -----------------------
+    def submission_relation_check(self, submission):
+        key = None
         if submission:
             key = self.initial_data.get('issue', {}).get('key', '')
             # print(submission.additionalreference_set.all())
@@ -173,37 +162,42 @@ class JiraRequestLogSerializer(serializers.Serializer):
                     {'issue': [
                         "'key': no related issue with key: {0} found for submission {1}".format(
                             key, submission.broker_submission_id)]})
+        return key
 
-        # end reference -------------------------
-
-        # type ------------------------
-        # TODO: this here is hint to evtl. move this serializer to brokerag app
+    def submission_type_constraints_check(self, submission, key):
         if submission and submission.target == GENERIC:
-            print('GENERIC do update')  # do upate
+            return True
         elif submission.target == ENA or submission.target == ENA_PANGAEA:
+            # TODO: this here is hint to evtl. move this serializer to brokerag app
             studies = submission.brokerobject_set.filter(type='study')
-            print('studies ', studies)
+
             # go through all studie, although there should be only one ...
             # if any of the relate study broker_objects has a primary ena pid
-            # with status private, the overall update of the submission will be allowed
-            # if status is undefined or other than private, update is rejected
+            # with status private, the overall update of the submission will
+            # be allowed if status is undefined or other than private,
+            # update is rejected
             private_found = False
             for s in studies:
                 private = s.persistentidentifier_set.filter(archive='ENA',
                                                             pid_type='PRJ',
                                                             status='PRIVATE')
                 if private:
-                    print('PRIVATE found')
                     private_found = True
                     break
-                print(s, ' ', private)
             if not private_found:
                 raise serializers.ValidationError(
                     {'issue': [
                         "'key': issue {0}. status prevents update of submission {1} with target {2}".format(
                             key, submission.broker_submission_id,
                             submission.target)]})
-            # if submission.brokerobject_set.filter(type='study').
+            return private_found
+
+    def validate(self, data):
+        self.schema_validation(data)
+        self.embargo_date_validation()
+        submission = self.submission_existing_check()
+        key = self.submission_relation_check(submission)
+        self.submission_type_constraints_check(submission, key)
 
         return data
 

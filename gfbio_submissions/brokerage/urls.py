@@ -15,11 +15,6 @@ urlpatterns = [
         view=views.SubmissionDetailView.as_view(),
         name='submissions_detail'
     ),
-    # url(
-    #     regex=r'jira/update/$',
-    #     view=api.jira_ticket_change,
-    #     name='get_jira_updates'
-    # ),
     url(
         # regex=r'jira/update/$',
         regex=r'jira_update/$',
