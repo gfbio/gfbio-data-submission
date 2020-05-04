@@ -18,7 +18,7 @@ from gfbio_submissions.brokerage.tests.test_models.test_submission import \
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_ena_release_xml_response
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
-    send_submission_to_ena, release_study_on_ena
+    send_submission_to_ena, release_study_on_ena, update_ena_embargo_date
 from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential, RequestLog
 from gfbio_submissions.users.models import User
@@ -506,6 +506,35 @@ class TestEnalizer(TestCase):
         self.assertEqual(200, request_log.response_status)
         self.assertTrue(
             'accession "PRJEB0815" is set to public' in request_log.response_content)
+
+    @responses.activate
+    def test_update_ena_embargo_date(self):
+        submission = Submission.objects.first()
+        submission.embargo = datetime(2030, 1, 10)
+        submission.save()
+        conf = SiteConfiguration.objects.first()
+
+        responses.add(
+            responses.POST,
+            conf.ena_server.url,
+            status=200,
+            body=_get_ena_release_xml_response()
+        )
+        study = submission.brokerobject_set.filter(type='study').first()
+        study.persistentidentifier_set.create(
+            archive='ENA',
+            pid_type='PRJ',
+            pid='PRJEB0815',
+            outgoing_request_id=uuid4()
+        )
+        self.assertEqual(0, len(RequestLog.objects.all()))
+
+        update_ena_embargo_date(submission)
+
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        request_log = RequestLog.objects.first()
+        self.assertEqual(200, request_log.response_status)
+        self.assertTrue('accession "PRJEB0815"' in request_log.response_content)
 
     def test_release_study_on_ena_no_accession_no(self):
         submission = Submission.objects.first()
