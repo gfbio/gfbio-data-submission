@@ -1,4 +1,5 @@
 import json
+from pprint import pprint
 
 import arrow
 import responses
@@ -103,6 +104,9 @@ class TestAPIEndpoints(APITestCase):
             format='json')
 
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+
+        pprint(json.loads(response.content))
+
         self.assertEqual(1, len(RequestLog.objects.all()))
 
     def test_successful_embargo_update(self):
@@ -224,6 +228,7 @@ class TestAPIEndpoints(APITestCase):
                          RequestLog.objects.first().response_status)
 
     def test_date_format_check(self):
+        submission = Submission.objects.first()
         self.assertEqual(0, len(RequestLog.objects.all()))
         response = self.client.post(
             self.url,
@@ -232,7 +237,8 @@ class TestAPIEndpoints(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": "2021-xxx-09",
-                        "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
+                        "customfield_10303": "{}".format(
+                            submission.broker_submission_id),
 
                     }
                 }
