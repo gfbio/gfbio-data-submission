@@ -9,6 +9,13 @@ import json
 @api_view(['POST'])
 def jira_ticket_change(request):
     response = {}
+    remote_host = request.META['REMOTE_ADDR']
+    # allow only 'helpdesk.gfbio.org = 134.102.43.67' and  'issues.pangaea.de = 134.1.2.171'
+    allowed_hosts = ['134.102.43.67', '134.1.2.171']
+    if remote_host not in allowed_hosts:
+        response["detail"] = "Unauthorized"
+        return Response(response, status=status.HTTP_401_UNAUTHORIZED)
+
     try:
         data = json.loads(request.body)
     except ValueError as e:
