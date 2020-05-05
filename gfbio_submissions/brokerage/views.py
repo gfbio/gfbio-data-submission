@@ -18,6 +18,7 @@ from .models import Submission, SubmissionUpload
 from .permissions import IsOwnerOrReadOnly
 from .serializers import SubmissionUploadListSerializer, \
     SubmissionDetailSerializer, SubmissionUploadSerializer
+from .utils.ena import update_ena_embargo_date
 
 
 class SubmissionsView(mixins.ListModelMixin,
@@ -92,6 +93,9 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         # TODO: 06.06.2019 allow edit of submissions with status SUBMITTED ...
         if instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED:
             response = self.update(request, *args, **kwargs)
+            old_submission = Submission.objects.get_submission_instance(instance.broker_submission_id)
+            if instance.embargo != old_submission.embargo:
+                update_ena_embargo_date(instance)
 
             # FIXME: updates to submission download url are not covered here
             # affected_submissions = instance.submission_set.filter(broker_submission_id=instance.broker_submission_id)
