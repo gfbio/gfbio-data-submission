@@ -12,7 +12,9 @@ RUN apk update \
   # CFFI dependencies
   && apk add libffi-dev py-cffi \
   # borkerage git dependencies
-  && apk add git
+  && apk add git \
+  # dig tool to get ip of allowed domains
+  && apk add bind-tools
 
 RUN addgroup -S django \
     && adduser -S -G django django

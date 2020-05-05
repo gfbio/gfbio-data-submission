@@ -12,12 +12,14 @@ SECRET_KEY = env(
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1"]
+# REST API Permissions
 REST_SAFE_LIST_IPS = [
     '127.0.0.1',
     '[::1]',
     '172.', # docker local network /8
     '10.', # docker swarm network /8
 ]
+REST_SAFE_DOMAINS = []
 # CACHES
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#caches
