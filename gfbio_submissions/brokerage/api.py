@@ -1,12 +1,14 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 from rest_framework.response import Response
 from gfbio_submissions.generic.models import RequestLog
 from django.db import transaction
+from .permissions import APIAllowedHosts
 import json
 
 # receive JIRA ticket updates
 @api_view(['POST'])
+@permission_classes([APIAllowedHosts])
 def jira_ticket_change(request):
     response = {}
     try:
