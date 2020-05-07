@@ -845,7 +845,7 @@ def download_submitted_run_files_to_string_io(site_config, decompressed_io):
 
 
 def fetch_ena_report(site_configuration, report_type):
-    url = '{0}/{1}?format=json'.format(
+    url = '{0}{1}?format=json'.format(
         site_configuration.ena_report_server.url, report_type)
     response = requests.get(
         url=url,
