@@ -239,7 +239,7 @@ class TaskProgressReportAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'  # date drill down
     ordering = ('-modified',)  # ordering in list display
     readonly_fields = ('created', 'modified',)
-    list_filter = ('status', 'task_return_value', 'task_name',)
+    list_filter = ('status', 'task_name',)
     search_fields = ['submission__broker_submission_id', 'task_name']
     list_display = ('task_name', 'created', 'modified')
 
