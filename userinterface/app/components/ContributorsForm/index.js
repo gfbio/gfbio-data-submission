@@ -13,11 +13,12 @@ import Button from 'react-bootstrap/Button';
 import Collapse from 'react-bootstrap/Collapse';
 import { Multiselect } from 'multiselect-react-dropdown';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
-import Tooltip from 'react-bootstrap/Tooltip';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import { makeSelectContributors } from '../../containers/SubmissionForm/selectors';
 import RolesInfo from './rolesInfo';
-import { setContributors } from '../../containers/SubmissionForm/actions';
+import {
+  setContributors,
+  setFormChanged,
+} from '../../containers/SubmissionForm/actions';
 
 /* eslint-disable react/prefer-stateless-function */
 class ContributorsForm extends React.PureComponent {
@@ -66,7 +67,7 @@ class ContributorsForm extends React.PureComponent {
     return tempArray;
   }
 
-  componentDidUpdate(prevProps, prevState, snapshot) {
+  componentDidUpdate() {
     let propsContributors = this.props.contributors;
     if (!Array.isArray(this.props.contributors)) {
       propsContributors = this.props.contributors.toJS();
@@ -85,12 +86,14 @@ class ContributorsForm extends React.PureComponent {
           roles: [],
           contributors: [],
           contributorsArray: [],
+          originalContributors: [],
         });
         return;
       }
       const contributorsArray = this.getContributorsAsArray(propsContributors);
       this.setState({
         contributors: propsContributors,
+        originalContributors: propsContributors,
         contributorsArray,
         formValues: {},
       });
@@ -125,6 +128,14 @@ class ContributorsForm extends React.PureComponent {
     document.getElementById(event.target.id).classList.remove('error');
   }
 
+  preventSubmit(event) {
+    if (event.keyCode === 13) {
+      event.preventDefault();
+      return false;
+    }
+    return true;
+  }
+
   cleanEditForm = () => {
     document.getElementById('firstName').value = '';
     document.getElementById('lastName').value = '';
@@ -146,10 +157,25 @@ class ContributorsForm extends React.PureComponent {
         contributorsArray.push(this.state.formValues);
       }
       this.closeFormBody();
-      this.setState({
-        contributorsArray,
-      });
-      this.props.setContributors(contributorsArray);
+      this.setState(
+        {
+          contributorsArray,
+        },
+        this.setFormChanged,
+      );
+    }
+  };
+
+  setFormChanged = () => {
+    const contributorsArray = [...this.state.contributorsArray];
+    const originalContributorsArray = [...this.state.originalContributors];
+    if (
+      JSON.stringify(originalContributorsArray) !==
+      JSON.stringify(contributorsArray)
+    ) {
+      this.props.setFormChanged(true);
+    } else {
+      this.props.setFormChanged(false);
     }
   };
 
@@ -185,12 +211,14 @@ class ContributorsForm extends React.PureComponent {
       return e;
     });
     contributorsArray.splice(this.state.contributorIndex, 1);
-    this.setState({
-      contributorsArray,
-    });
+    this.setState(
+      {
+        contributorsArray,
+      },
+      this.setFormChanged,
+    );
     this.showAddContributorDiv();
     this.closeFormBody();
-    this.props.setContributors(contributorsArray);
   };
 
   // delay to wait for formOpen animation to finish
@@ -286,11 +314,13 @@ class ContributorsForm extends React.PureComponent {
     );
     const contributorIndex =
       this.state.contributorIndex === -1 ? -1 : result.destination.index;
-    this.setState({
-      contributorsArray,
-      contributorIndex,
-    });
-    this.props.setContributors(contributorsArray);
+    this.setState(
+      {
+        contributorsArray,
+        contributorIndex,
+      },
+      this.setFormChanged,
+    );
   }
 
   render() {
@@ -405,6 +435,7 @@ class ContributorsForm extends React.PureComponent {
                         type="text"
                         className="form-control"
                         id="firstName"
+                        onKeyDown={this.preventSubmit}
                         onChange={this.handleChange}
                         onClick={this.handleInputClick}
                         value={this.state.formValues.firstName}
@@ -416,6 +447,7 @@ class ContributorsForm extends React.PureComponent {
                         type="text"
                         className="form-control"
                         id="lastName"
+                        onKeyDown={this.preventSubmit}
                         onChange={this.handleChange}
                         onClick={this.handleInputClick}
                         value={this.state.formValues.lastName}
@@ -427,6 +459,7 @@ class ContributorsForm extends React.PureComponent {
                         type="email"
                         className="form-control"
                         id="emailAddress"
+                        onKeyDown={this.preventSubmit}
                         placeholder="name@example.com"
                         // defaultValue={emailAddress}
                         onChange={this.handleChange}
@@ -444,6 +477,7 @@ class ContributorsForm extends React.PureComponent {
                         type="text"
                         className="form-control"
                         id="institution"
+                        onKeyDown={this.preventSubmit}
                         onChange={this.handleChange}
                         value={this.state.formValues.institution}
                       />
@@ -516,6 +550,7 @@ class ContributorsForm extends React.PureComponent {
 ContributorsForm.propTypes = {
   contributors: PropTypes.array,
   setContributors: PropTypes.func,
+  setFormChanged: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -524,6 +559,7 @@ const mapStateToProps = createStructuredSelector({
 
 function mapDispatchToProps(dispatch) {
   return {
+    setFormChanged: changed => dispatch(setFormChanged(changed)),
     setContributors: contributors => dispatch(setContributors(contributors)),
   };
 }
