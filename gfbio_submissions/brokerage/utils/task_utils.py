@@ -171,7 +171,7 @@ def _get_submission_and_site_configuration(submission_id, task,
     return submission, site_config
 
 
-def send_task_fail_mail(broker_submission_id, task):
+def send_task_fail_mail(broker_submission_id, task, additional_text=''):
     logger.info('task_utils.py | send_task_fail_mail | '
                 'broker_submission_id={0} | '
                 'task={1}'.format(broker_submission_id, task.name))
@@ -184,6 +184,7 @@ def send_task_fail_mail(broker_submission_id, task):
             task.name,
             task.request.retries,
             broker_submission_id,
+            additional_text,
         ),
     )
     return TaskProgressReport.CANCELLED
@@ -234,7 +235,7 @@ def get_submitted_submission_and_site_configuration(submission_id, task):
 
 
 def raise_transfer_server_exceptions(response, task, max_retries,
-                                     broker_submission_id='NO_BSI'):
+                                     broker_submission_id='broker_submission_id_not_available'):
     logger.info('task_utils.py | raise_transfer_server_exceptions | '
                 'resonse.status_code={0} | broker_submission_id={1} | '
                 'task={2} | retries={3}'.format(response.status_code,
@@ -245,7 +246,8 @@ def raise_transfer_server_exceptions(response, task, max_retries,
                     'task.request.retries={0} >= max_retries={1} | '
                     'send_task_fail_mail'.format(task.request.retries,
                                                  max_retries))
-        return send_task_fail_mail(broker_submission_id, task)
+        return send_task_fail_mail(broker_submission_id, task,
+                                   'Maximum number of retries exceeded')
     else:
         try:
             logger.info('task_utils.py | raise_transfer_server_exceptions | '
@@ -256,7 +258,8 @@ def raise_transfer_server_exceptions(response, task, max_retries,
             logger.info('task_utils.py | TransferClientError, '
                         'send_task_fail_mail | task={0} | response={1} | '
                         'error={2}'.format(task, response, ce))
-            return send_task_fail_mail(broker_submission_id, task)
+            return send_task_fail_mail(broker_submission_id, task,
+                                       'Client error:\n{0}'.format(ce))
 
 
 def retry_no_ticket_available_exception(task, broker_submission_id,
