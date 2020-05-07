@@ -15,7 +15,9 @@ RUN apk update \
   # https://docs.djangoproject.com/en/dev/ref/django-admin/#dbshell
   && apk add postgresql-client \
   # borkerage git dependencies
-  && apk add git
+  && apk add git \
+  # dig tool to get ip of allowed domains
+  && apk add bind-tools
 
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements /requirements

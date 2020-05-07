@@ -934,3 +934,99 @@ def update_persistent_identifier_report_status():
                 '| found {0} occurences for report of type={1} found'.format(
                     len(reports), report_name))
             return False
+
+def update_ena_embargo_date(submission):
+    study_primary_accession = submission.brokerobject_set.filter(
+        type='study').first().persistentidentifier_set.filter(
+        pid_type='PRJ').first()
+    site_config = submission.user.site_configuration
+    if site_config is None:
+        logger.warning(
+            'ena.py | update_ena_embargo_date | no site_configuration found | submission_id={0}'.format(
+                submission.broker_submission_id)
+        )
+        return None
+
+    if study_primary_accession:
+        logger.info(
+            'ena.py | update_ena_embargo_date | primary accession no '
+            'found for study | accession_no={0} | submission_id={1}'.format(
+                study_primary_accession,
+                submission.broker_submission_id)
+        )
+
+        current_datetime = datetime.datetime.now(timezone('UTC')).isoformat()
+
+        submission_xml = textwrap.dedent(
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<SUBMISSION_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+            ' xsi:noNamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.submission.xsd">'
+            '<SUBMISSION'
+            ' alias="gfbio:hold:{broker_submission_id}:{time_stamp}"'
+            ' center_name="GFBIO" broker_name="GFBIO">'
+            '<ACTIONS>'
+            '<ACTION>'
+            '<HOLD target="{accession_no}" HoldUntilDate="{hold_date}"/>'
+            '</ACTION>'
+            '</ACTIONS>'
+            '</SUBMISSION>'
+            '</SUBMISSION_SET>'.format(
+                hold_date=submission.embargo.isoformat(),
+                broker_submission_id=submission.broker_submission_id,
+                time_stamp=current_datetime,
+                accession_no=study_primary_accession,
+            )
+        )
+
+        auth_params = {
+            'auth': site_config.ena_server.authentication_string,
+        }
+        data = {'SUBMISSION': ('submission.xml', submission_xml)}
+
+        response = requests.post(
+            site_config.ena_server.url,
+            params=auth_params,
+            files=data,
+            verify=False
+        )
+
+        outgoing_request_id = uuid.uuid4()
+        with transaction.atomic():
+            details = response.headers or ''
+            # prevent cyclic dependencies
+            from gfbio_submissions.generic.models import RequestLog
+            incoming = None
+            try:
+                incoming = RequestLog.objects.filter(
+                    submission_id=submission.broker_submission_id).filter(
+                    type=RequestLog.INCOMING).latest('created')
+            except RequestLog.DoesNotExist:
+                logger.warning(
+                    'ena.py | update_ena_embargo_date | No incoming request for '
+                    'submission_id={0}'.format(submission.broker_submission_id))
+
+            site_user = submission.submitting_user if \
+                submission.submitting_user is not None else ''
+
+            req_log = RequestLog.objects.create(
+                request_id=outgoing_request_id,
+                type=RequestLog.OUTGOING,
+                url=site_config.ena_server.url,
+                data=data,
+                site_user=site_user,
+                submission_id=submission.broker_submission_id,
+                response_status=response.status_code,
+                response_content=response.content,
+                triggered_by=incoming,
+                request_details={
+                    'response_headers': str(details)
+                }
+            )
+        return response, req_log.request_id
+    else:
+        logger.warning(
+            'ena.py | update_ena_embargo_date | no primary accession no '
+            'found for study | submission_id={0}'.format(
+                submission.broker_submission_id)
+        )
+        return None

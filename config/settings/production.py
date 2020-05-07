@@ -17,6 +17,17 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS",
                          default=["submissions.gfbio.org", ])
+# REST API Permissions
+REST_SAFE_LIST_IPS = [
+    '127.0.0.1',
+    '[::1]',
+    '172.', # docker local network /8
+    '10.', # docker swarm network /8
+]
+REST_SAFE_DOMAINS = [
+    'helpdesk.gfbio.org',
+    'issues.pangaea.de',
+]
 
 # DATABASES
 # ------------------------------------------------------------------------------
