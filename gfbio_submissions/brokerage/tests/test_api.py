@@ -442,5 +442,6 @@ class TestAPIEndpoints(APITestCase):
             b'status prevents update of submission',
             response.content)
         self.assertEqual(1, len(RequestLog.objects.all()))
+        print(RequestLog.objects.first().__dict__)
         self.assertEqual(status.HTTP_400_BAD_REQUEST,
                          RequestLog.objects.first().response_status)
