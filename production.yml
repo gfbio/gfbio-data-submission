@@ -22,7 +22,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - django_media:/app/gfbio_submissions/media
       # git has to be initialized, remote origin has to be set.
-      - /var/www/gfbio-submission-auditing:/gfbio-submission-auditing
+      # - /var/www/gfbio-submission-auditing:/gfbio-submission-auditing
     command: /start
 
   postgres:
@@ -48,6 +48,7 @@ services:
     ports:
       - "0.0.0.0:80:80"
       - "0.0.0.0:443:443"
+      - "0.0.0.0:5555:5555"
 
   redis:
     image: redis:5.0
@@ -65,15 +66,4 @@ services:
   flower:
     <<: *django
     image: gfbio_submissions_production_flower
-    ports:
-      - "5555:5555"
     command: /start-flower
-
-  awscli:
-    build:
-      context: .
-      dockerfile: ./compose/production/aws/Dockerfile
-    env_file:
-      - ./.envs/.production/.django
-    volumes:
-      - production_postgres_data_backups:/backups
