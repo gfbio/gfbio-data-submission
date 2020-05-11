@@ -1,10 +1,9 @@
 import logging
 
 import sentry_sdk
-
+from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
-from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.redis import RedisIntegration
 
 from .base import *  # noqa
@@ -21,8 +20,8 @@ ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS",
 REST_SAFE_LIST_IPS = [
     '127.0.0.1',
     '[::1]',
-    '172.', # docker local network /8
-    '10.', # docker swarm network /8
+    '172.',  # docker local network /8
+    '10.',  # docker swarm network /8
 ]
 REST_SAFE_DOMAINS = [
     'helpdesk.gfbio.org',
@@ -45,7 +44,7 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             # Mimicing memcache behavior.
-            # http://niwinz.github.io/django-redis/latest/#_memcached_exceptions_behavior
+            # http://jazzband.github.io/django-redis/latest/#_memcached_exceptions_behavior
             "IGNORE_EXCEPTIONS": True,
         },
     }
@@ -85,7 +84,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # TEMPLATES
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#templates
-TEMPLATES[0]["OPTIONS"]["loaders"] = [  # noqa F405
+TEMPLATES[-1]["OPTIONS"]["loaders"] = [  # type: ignore[index] # noqa F405
     (
         "django.template.loaders.cached.Loader",
         [
@@ -119,23 +118,15 @@ EMAIL_PORT = 587
 # Django Admin URL regex.
 ADMIN_URL = env("DJANGO_ADMIN_URL")
 
-# Anymail (Mailgun)
+# Anymail
 # ------------------------------------------------------------------------------
 # https://anymail.readthedocs.io/en/stable/installation/#installing-anymail
-# INSTALLED_APPS += ["anymail"]  # noqa F405
-# EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
-# # https://anymail.readthedocs.io/en/stable/installation/#anymail-settings-reference
-# ANYMAIL = {
-#     "MAILGUN_API_KEY": env("MAILGUN_API_KEY"),
-#     "MAILGUN_SENDER_DOMAIN": env("MAILGUN_DOMAIN"),
-#     "MAILGUN_API_URL": env("MAILGUN_API_URL",
-#                            default="https://api.mailgun.net/v3"),
-# }
-
-# WhiteNoise
-# ------------------------------------------------------------------------------
-# http://whitenoise.evans.io/en/latest/django.html#enable-whitenoise
-MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")  # noqa F405
+INSTALLED_APPS += ["anymail"]  # noqa F405
+# https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
+# https://anymail.readthedocs.io/en/stable/installation/#anymail-settings-reference
+# https://anymail.readthedocs.io/en/stable/esps
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+ANYMAIL = {}
 
 # LOGGING
 # ------------------------------------------------------------------------------
@@ -154,7 +145,7 @@ LOGGING = {
     },
     "handlers": {
         "console": {
-            "level": "INFO",
+            "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "verbose",
         }
@@ -164,11 +155,11 @@ LOGGING = {
         "django.db.backends": {
             "level": "ERROR",
             "handlers": ["console"],
-            "propagate": True,
+            "propagate": False,
         },
         # Errors logged by the SDK itself
         "sentry_sdk": {"level": "ERROR", "handlers": ["console"],
-                       "propagate": True},
+                       "propagate": False},
         "django.security.DisallowedHost": {
             "level": "ERROR",
             "handlers": ["console"],
