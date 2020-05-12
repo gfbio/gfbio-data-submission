@@ -152,7 +152,7 @@ production_build:
       - tags
   except:
     - branches
-    - /^\d{1,}.*$/i
+    - /^\d+-/i
   tags:
     - production
 
@@ -170,7 +170,7 @@ deploy_to_production:
       - tags
   except:
     - branches
-    - /^\d{1,}.*$/i
+    - /^\d+-/i
   tags:
     - production
 
