@@ -1,14 +1,15 @@
 import pytest
-from django.conf import settings
-from django.urls import reverse, resolve
+from django.urls import resolve, reverse
+
+from gfbio_submissions.users.models import User
 
 pytestmark = pytest.mark.django_db
 
 
-def test_detail(user: settings.AUTH_USER_MODEL):
+def test_detail(user: User):
     assert (
-        reverse("users:detail", kwargs={"username": user.username})
-        == f"/users/{user.username}/"
+            reverse("users:detail", kwargs={"username": user.username})
+            == f"/users/{user.username}/"
     )
     assert resolve(f"/users/{user.username}/").view_name == "users:detail"
 
