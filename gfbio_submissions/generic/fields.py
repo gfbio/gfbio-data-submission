@@ -2,10 +2,10 @@
 import json
 from collections import OrderedDict
 
+import six
 from django import forms
 from django.contrib.postgres.fields import JSONField
 from django.core.serializers.json import DjangoJSONEncoder
-from django.utils import six
 
 
 # adapted from: https://github.com/yjmade/django-pgjsonb/blob/master/django_pgjsonb/fields.py
