@@ -13,9 +13,6 @@ from gfbio_submissions.generic.models import SiteConfiguration, RequestLog, \
 from gfbio_submissions.users.models import User
 
 
-# pytestmark = pytest.mark.django_db
-
-
 class RequestLogTest(TestCase):
     # TODO: redundant in various test_classes move to test_utils
     @classmethod

@@ -333,7 +333,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": (
-    "rest_framework.permissions.IsAuthenticated",),
+        "rest_framework.permissions.IsAuthenticated",),
 }
 
 # Your stuff...
@@ -366,3 +366,13 @@ JIRA_ACCOUNT_SERVICE_USER = env("JIRA_ACCOUNT_SERVICE_USER",
                                 default="no_account_service_user")
 JIRA_ACCOUNT_SERVICE_PASSWORD = env("JIRA_ACCOUNT_SERVICE_PASSWORD",
                                     default="no_account_service_password")
+
+# REST API Permissions
+# ------------------------------------------------------------------------------
+REST_SAFE_LIST_IPS = [
+    '127.0.0.1',
+    '[::1]',
+    '172.',  # docker local network /8
+    '10.',  # docker swarm network /8
+]
+REST_SAFE_DOMAINS = []
