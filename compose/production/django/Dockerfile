@@ -1,5 +1,5 @@
-
-FROM python:3.8-slim-buster
+# TODO: was 3.8 but there were some incompabilities with 3rd party libraries
+FROM python:3.7-slim-buster
 
 ENV PYTHONUNBUFFERED 1
 
