@@ -34,7 +34,7 @@ class JsonDictField(JSONField):
             return None
         return json.dumps(value, **self.encode_kwargs)
 
-    def from_db_value(self, value, expression, connection, context):
+    def from_db_value(self, value, expression, connection):
         if value is not None:
             # this if will take care of legacy db content
             if type(value) is not dict:
