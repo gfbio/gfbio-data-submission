@@ -32,7 +32,7 @@ class TestEnaReportTasks(TestTasks):
             key, val = report_type
             responses.add(
                 responses.GET,
-                '{0}/{1}?format=json'.format(
+                '{0}{1}?format=json'.format(
                     cls.default_site_config.ena_report_server.url, val),
                 status=200,
                 json=data[val]
@@ -44,7 +44,7 @@ class TestEnaReportTasks(TestTasks):
             key, val = report_type
             responses.add(
                 responses.GET,
-                '{0}/{1}?format=json'.format(
+                '{0}{1}?format=json'.format(
                     cls.default_site_config.ena_report_server.url, val),
                 status=401,
             )
@@ -55,7 +55,7 @@ class TestEnaReportTasks(TestTasks):
             key, val = report_type
             responses.add(
                 responses.GET,
-                '{0}/{1}?format=json'.format(
+                '{0}{1}?format=json'.format(
                     cls.default_site_config.ena_report_server.url, val),
                 status=500,
             )

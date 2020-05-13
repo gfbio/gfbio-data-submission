@@ -8,6 +8,7 @@ stages:
   - afterMerge
   - buildStaging
   - updateStaging
+  - buildProduction
   - deploy
 
 flake8:
@@ -47,11 +48,17 @@ build_images:
   environment:
     name: review/$CI_COMMIT_REF_NAME
   only:
+    refs:
+      - branches
     changes:
       - compose/production/**/*
       - requirements/*
     variables:
       - $CI_COMMIT_MESSAGE =~ /.*web-test.*/
+  except:
+    refs:
+      - master
+      - production
   tags:
     - dev
 
@@ -131,6 +138,8 @@ update_staging_env:
   script:
     - rsync -a /home/gitlab-runner/.envs .
     - sed -i 's/rule =.*/rule = "Host:c103-171.cloud.gwdg.de"/g' compose/production/traefik/traefik.toml
+    - docker-compose -f production.yml run --rm postgres backup
+    - docker-compose -f production.yml run --rm django python manage.py migrate
     - docker-compose -f production.yml down
     - docker-compose -f production.yml up -d
   environment:
@@ -141,3 +150,40 @@ update_staging_env:
       - master
   tags:
     - staging
+
+production_build:
+  stage: buildProduction
+  script:
+    - rsync -a /home/gitlab-runner/.envs .
+    - cd userinterface && npm i && npm run collect-ci
+    - cd ../
+    - docker-compose -f production.yml build
+  only:
+    refs:
+      - tags
+  except:
+    - branches
+    - /^\d+-/i
+  tags:
+    - production
+
+deploy_to_production:
+  stage: deploy
+  script:
+    - rsync -a /home/gitlab-runner/.envs .
+    - docker-compose -f production.yml run --rm postgres backup
+    - docker-compose -f production.yml run --rm django python manage.py migrate
+    - docker-compose -f production.yml down
+    - docker-compose -f production.yml up -d
+  environment:
+    name: production
+    url: https://submissions.gfbio.org
+  only:
+    refs:
+      - tags
+  except:
+    - branches
+    - /^\d+-/i
+  tags:
+    - production
+
