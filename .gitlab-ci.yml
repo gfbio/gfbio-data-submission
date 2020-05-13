@@ -118,7 +118,6 @@ build_staging:
     - docker-compose -f production.yml build
   environment:
     name: staging
-  retry: 2
   only:
     refs:
       - master
@@ -156,7 +155,6 @@ production_build:
   except:
     - branches
     - /^\d+-/i
-  retry: 2
   tags:
     - production
 
