@@ -1,6 +1,6 @@
 stages:
-  #  - lint
   - unitTests
+  #  - lint
   - buildDockerImages
   - autoMerge
   - test
