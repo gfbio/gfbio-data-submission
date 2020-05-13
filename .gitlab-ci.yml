@@ -1,6 +1,6 @@
 stages:
-  - unitTests
   #  - lint
+  - unitTests
   - buildDockerImages
   - autoMerge
   - test
@@ -11,13 +11,13 @@ stages:
   - buildProduction
   - deploy
 
-flake8:
-  stage: lint
-  image: python:3.7-alpine
-  before_script:
-    - pip install -q flake8
-  script:
-    - flake8
+#flake8:
+#  stage: lint
+#  image: python:3.7-alpine
+#  before_script:
+#    - pip install -q flake8
+#  script:
+#    - flake8
 
 run_unit_tests:
   stage: unitTests
