@@ -5,7 +5,6 @@ from . import views, api
 
 app_name = "brokerage"
 urlpatterns = [
-    # TODO: use '/' since viewset will do the same
     url(
         regex=r'submissions/$',
         view=views.SubmissionsView.as_view(),
@@ -16,26 +15,20 @@ urlpatterns = [
         view=views.SubmissionDetailView.as_view(),
         name='submissions_detail'
     ),
-    # url(
-    #     regex=r'submissions/user/(?P<submitting_user>.+)/$',
-    #     view=views.UserSubmissionDetailView.as_view(),
-    #     name='submissions_user_detail'
-    # ),
     url(
-        regex='jira_update',
-        view=api.jira_ticket_change,
+        # regex=r'jira/update/$',
+        regex=r'jira_update/$',
+        view=api.JiraIssueUpdate.as_view(),
         name='get_jira_updates'
     ),
     url(
         regex=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/$',
         view=views.SubmissionUploadView.as_view(),
-        # name='submissions_new_upload'
         name='submissions_upload'
     ),
     url(
         regex=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/$',
         view=views.SubmissionUploadListView.as_view(),
-        # name='submissions_new_upload'
         name='submissions_uploads'
     ),
     url(

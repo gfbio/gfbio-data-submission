@@ -15,6 +15,8 @@ class AdditionalReferenceTest(TestCase):
         )
         submission_1 = Submission.objects.create(user=user)
         submission_2 = Submission.objects.create(user=user)
+
+        # this is the only primary
         AdditionalReference.objects.create(
             submission=submission_1,
             type=AdditionalReference.PANGAEA_JIRA_TICKET,
@@ -49,9 +51,10 @@ class AdditionalReferenceTest(TestCase):
     def test_save_primary(self):
         submission = Submission.objects.first()
         submission_references = submission.additionalreference_set.all()
+
         self.assertEqual(3, len(submission_references))
         for ref in submission_references:
-            if ref.pk == 1:
+            if ref.reference_key == 'PDI-0815':
                 self.assertTrue(ref.primary)
             else:
                 self.assertFalse(ref.primary)
