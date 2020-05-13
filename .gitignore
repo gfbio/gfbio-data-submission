@@ -331,6 +331,8 @@ gfbio_submissions/media/
 dev-server.env
 .envs/*
 !.envs/.local/
+.envs-development/*
+!.envs-development/.local/
 
 # User-uploaded media
 gfbio_submissions/media
