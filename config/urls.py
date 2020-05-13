@@ -7,7 +7,7 @@ from django.views import defaults as default_views
 from django.views.generic import TemplateView
 from rest_framework.authtoken.views import obtain_auth_token
 
-from gfbio_submissions.brokerage.views import HomeView
+from gfbio_submissions.submission_ui.views import HomeView
 
 urlpatterns = [
     path("", HomeView.as_view(), name="home"),
