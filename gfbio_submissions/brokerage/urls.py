@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.conf.urls import url
 
-from . import views, api
+from . import views, issue_update_views
 
 app_name = "brokerage"
 urlpatterns = [
@@ -16,10 +16,10 @@ urlpatterns = [
         name='submissions_detail'
     ),
     url(
-        # regex=r'jira/update/$',
-        regex=r'jira_update/$',
-        view=api.JiraIssueUpdate.as_view(),
-        name='get_jira_updates'
+        regex=r'submissions/jira/update/$',
+        # regex=r'jira_update/$',
+        view=issue_update_views.JiraIssueUpdateView.as_view(),
+        name='submissions_jira_update'
     ),
     url(
         regex=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/$',

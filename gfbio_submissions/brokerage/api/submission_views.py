@@ -2,6 +2,7 @@
 import json
 from uuid import uuid4, UUID
 
+from django.conf import settings
 from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
@@ -13,7 +14,6 @@ from rest_framework.response import Response
 
 from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.users.models import User
-from django.conf import settings
 from .configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY, \
     SUBMISSION_DELAY
 from .forms import SubmissionCommentForm
@@ -23,13 +23,15 @@ from .serializers import SubmissionUploadListSerializer, \
     SubmissionDetailSerializer, SubmissionUploadSerializer
 from .utils.ena import update_ena_embargo_date
 
+
 class HomeView(mixins.CreateModelMixin,
-                    generics.GenericAPIView):
+               generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             return HttpResponseRedirect(settings.LOGIN_REDIRECT_URL)
         else:
             return render(request, 'pages/home.html', None)
+
 
 class SubmissionsView(mixins.ListModelMixin,
                       mixins.CreateModelMixin,
@@ -104,7 +106,8 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         # TODO: 06.06.2019 allow edit of submissions with status SUBMITTED ...
         if instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED:
             response = self.update(request, *args, **kwargs)
-            old_submission = Submission.objects.get_submission_instance(instance.broker_submission_id)
+            old_submission = Submission.objects.get_submission_instance(
+                instance.broker_submission_id)
             if instance.embargo != old_submission.embargo:
                 update_ena_embargo_date(instance)
 

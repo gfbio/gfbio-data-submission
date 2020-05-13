@@ -16,7 +16,7 @@ from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.users.models import User
 
 
-class TestAPIEndpoints(APITestCase):
+class TestJiraIssueUpdateView(APITestCase):
 
     # TODO: move to utils or similar ...
     @classmethod
@@ -69,12 +69,12 @@ class TestAPIEndpoints(APITestCase):
             reference_key='SAND-007'
         )
 
-        cls.url = reverse('brokerage:get_jira_updates')
+        cls.url = reverse('brokerage:submissions_jira_update')
 
     @classmethod
     def tearDownClass(cls):
         Submission.objects.first().additionalreference_set.all().delete()
-        super(TestAPIEndpoints, cls).tearDownClass()
+        super(TestJiraIssueUpdateView, cls).tearDownClass()
 
     def test_jira_invalid_request_data(self):
         self.assertEqual(0, len(RequestLog.objects.all()))
@@ -442,6 +442,5 @@ class TestAPIEndpoints(APITestCase):
             b'status prevents update of submission',
             response.content)
         self.assertEqual(1, len(RequestLog.objects.all()))
-        print(RequestLog.objects.first().__dict__)
         self.assertEqual(status.HTTP_400_BAD_REQUEST,
                          RequestLog.objects.first().response_status)
