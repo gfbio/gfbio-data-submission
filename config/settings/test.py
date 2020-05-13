@@ -55,3 +55,12 @@ CELERY_TASK_ALWAYS_EAGER = True
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+# REST API Permissions
+# ------------------------------------------------------------------------------
+# REST_SAFE_LIST_IPS = [
+#     '127.0.0.1',
+#     '[::1]',
+#     '172.',  # docker local network /8
+#     '10.',  # docker swarm network /8
+# ]
+# REST_SAFE_DOMAINS = []

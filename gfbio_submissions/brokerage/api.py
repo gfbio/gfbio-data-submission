@@ -3,11 +3,13 @@ import json
 from rest_framework import status, mixins, generics
 from rest_framework.response import Response
 
+from gfbio_submissions.brokerage import permissions
 from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.generic.serializers import JiraHookRequestSerializer
 
 
 class JiraIssueUpdate(mixins.CreateModelMixin, generics.GenericAPIView):
+    permission_classes = (permissions.APIAllowedHosts,)
     serializer_class = JiraHookRequestSerializer
 
     # def perform_create(self, serializer):
