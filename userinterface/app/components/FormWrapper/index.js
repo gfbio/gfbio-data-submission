@@ -30,7 +30,7 @@ import RelatedPublicationsForm from '../RelatedPublicationsForm';
 import MinimalSubmissionForm from '../MinimalSubmissionForm';
 import SubmissionInfo from '../SubmissionInfo';
 import { makeSelectFormChanged } from '../../containers/SubmissionForm/selectors';
-import { setFormChanged } from '../../containers/SubmissionForm/actions';
+import { resetForm, setFormChanged } from '../../containers/SubmissionForm/actions';
 
 /* eslint-disable react/prefer-stateless-function */
 class FormWrapper extends React.PureComponent {
@@ -355,6 +355,7 @@ FormWrapper.propTypes = {
   accessionId: PropTypes.array,
   issue: PropTypes.string,
   formChanged: PropTypes.bool,
+  reset: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -363,6 +364,7 @@ const mapStateToProps = createStructuredSelector({
 
 const mapDispatchToProps = dispatch => ({
   setFormChanged: changed => dispatch(setFormChanged(changed)),
+  reset: () => dispatch(resetForm()),
 });
 
 FormWrapper = connect(

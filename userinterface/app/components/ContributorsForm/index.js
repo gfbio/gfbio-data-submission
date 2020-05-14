@@ -32,6 +32,7 @@ class ContributorsForm extends React.PureComponent {
       roles: [],
       contributors: [],
       contributorsArray: [],
+      originalContributors: [],
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleInputClick = this.handleInputClick.bind(this);
@@ -90,11 +91,20 @@ class ContributorsForm extends React.PureComponent {
         return;
       }
       const contributorsArray = this.getContributorsAsArray(propsContributors);
-      this.setState({
-        contributors: propsContributors,
-        contributorsArray,
-        formValues: {},
-      });
+      if (this.state.originalContributors.length === 0) {
+        this.setState({
+          contributors: propsContributors,
+          originalContributors: propsContributors,
+          contributorsArray,
+          formValues: {},
+        });
+      } else {
+        this.setState({
+          contributors: propsContributors,
+          contributorsArray,
+          formValues: {},
+        });
+      }
     }
   }
 
@@ -172,7 +182,7 @@ class ContributorsForm extends React.PureComponent {
 
   setFormChanged = () => {
     const contributorsArray = [...this.state.contributorsArray];
-    const originalContributorsArray = [...this.state.contributors];
+    const originalContributorsArray = [...this.state.originalContributors];
     if (
       JSON.stringify(originalContributorsArray) !==
       JSON.stringify(contributorsArray)
@@ -181,6 +191,7 @@ class ContributorsForm extends React.PureComponent {
     } else {
       this.props.setFormChanged(false);
     }
+    this.props.setContributors(contributorsArray);
   };
 
   // toggles add form, closes detail
@@ -281,8 +292,16 @@ class ContributorsForm extends React.PureComponent {
     }
   };
 
+  scrollContributorsToTop() {
+    const contributorsDiv = document.getElementsByClassName(
+      'optionContainer',
+    )[0];
+    contributorsDiv.scrollTop = 0;
+  }
+
   // on role select or remove
   onSelectChange = selectedList => {
+    this.scrollContributorsToTop();
     const values = this.state.formValues;
     values.contribution = this.rolesToCSV(selectedList);
     this.setState({
@@ -508,7 +527,7 @@ class ContributorsForm extends React.PureComponent {
                         onRemove={this.onSelectChange} // Function will trigger on remove event
                         displayValue="role" // Property name to display in the dropdown options
                         groupBy="category"
-                        closeOnSelect={false}
+                        // closeOnSelect={false}
                         closeIcon="circle"
                         showCheckbox
                         avoidHighlightFirstOption
