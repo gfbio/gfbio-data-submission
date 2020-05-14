@@ -1406,60 +1406,55 @@ def notify_user_embargo_expiry_task(self):
         submission=None,
         task=self)
 
-    #
-    # site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
-    # if site_configuration is None or site_configuration.helpdesk_server is None:
-    #     return TaskProgressReport.CANCELLED
+    site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
+    if site_configuration is None or site_configuration.helpdesk_server is None:
+        return TaskProgressReport.CANCELLED
 
     all_submissions = Submission.objects.all()
     for submission in all_submissions:
-        study_pid = submission.brokerobject_set.filter(
-            type='study').first().persistentidentifier_set.filter(
-            pid_type='PRJ').first()
-        return {
-            'embargo': study_pid.hold_date.isoformat(),
-        }
-        if study_pid and study_pid.hold_date:
+        # get study object
+        study = submission.brokerobject_set.filter(type='study').first()
+        if study:
+            # get persistent identifier
+            study_pid = study.persistentidentifier_set.filter(pid_type='PRJ').first()
+            if study_pid and study_pid.hold_date:
+                # check if hold_date is withing 2 weeks
+                two_weeks_from_now = datetime.date.today() + datetime.timedelta(days=14)
+                if study_pid.hold_date < two_weeks_from_now and not study_pid.user_notified:
+                    # send embargo expiry comment to JIRA
+                    comment = """
+                    Dear submitter,
 
-            return {
-                'issue_key': reference.reference_key,
-                'embargo': study_pid.hold_date.isoformat(),
-            }
-            # check if hold_date is withing 2 weeks
-            two_weeks_from_now = datetime.date.today() + datetime.timedelta(days=14)
-            if study_pid.hold_date < two_weeks_from_now and not study_pid.user_notified:
-                comment = """
-                Dear submitter,
+                    the embargo of your data will expire on {}.
+                    After that date, we will release all data associated with this submission.
+                    You can change the embargo date directly in our submission system.
 
-                the embargo of your data will expire on {}.
-                After that date, we will release all data associated with this submission.
-                You can change the embargo date directly in our submission system.
+                    Best regards,
+                    GFBio Data Submission Team""".format(study_pid.hold_date.isoformat())
 
-                Best regards,
-                GFBio Data Submission Team""".format(study_pid.hold_date.isoformat())
-                # send embargo expiry comment to JIRA
+                    submission, site_configuration = get_submission_and_site_configuration(
+                        submission_id=submission.id,
+                        task=self,
+                        include_closed=True
+                    )
+                    reference = submission.get_primary_helpdesk_reference()
 
-                submission, site_configuration = get_submission_and_site_configuration(
-                    submission_id=submission.id,
-                    task=self,
-                    include_closed=True
-                )
-                reference = submission.get_primary_helpdesk_reference()
+                    jira_client = JiraClient(resource=site_configuration.helpdesk_server)
+                    jira_client.add_comment(
+                        key_or_issue=reference.reference_key,
+                        text=comment,
+                    )
 
-                return {
-                    'issue_key': reference.reference_key,
-                    'embargo': study_pid.hold_date.isoformat(),
-                }
+                    jira_error_auto_retry(jira_client=jira_client, task=self,
+                                          broker_submission_id=submission.broker_submission_id)
+                    if jira_client.issue:
+                        study_pid.user_notified = True
+                        study_pid.save()
 
-                # jira_client = JiraClient(resource=site_configuration.helpdesk_server)
-                # jira_client.add_comment(
-                #     key_or_issue=reference.reference_key,
-                #     text=comment,
-                # )
-                #
-                # jira_error_auto_retry(jira_client=jira_client, task=self,
-                #                       broker_submission_id=submission.broker_submission_id)
-                # if jira_client.issue:
-                #     study_pid.user_notified = True
-                #     study_pid.save()
+                        return {
+                            'submission': submission.id,
+                            'issue_key': reference.reference_key,
+                            'embargo': study_pid.hold_date.isoformat(),
+                            'user_notified': True,
+                        }
     return True
