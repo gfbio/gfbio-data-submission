@@ -154,6 +154,18 @@ LOGGING = {
             "handlers": ["console"],
             "propagate": True,  # was False
         },
+        # ---------
+        "django.request": {
+            "level": "DEBUG",  # was ERROR
+            "handlers": ["console"],
+            "propagate": True,  # Was false
+        },
+        "django.server": {
+            "level": "DEBUG",  # was ERROR
+            "handlers": ["console"],
+            "propagate": True,  # Was false
+        },
+
     },
 }
 
