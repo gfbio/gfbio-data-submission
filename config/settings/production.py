@@ -17,13 +17,6 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS",
                          default=["submissions.gfbio.org", ])
 
-# REST API Permissions
-# ------------------------------------------------------------------------------
-REST_SAFE_DOMAINS = [
-    'helpdesk.gfbio.org',
-    'issues.pangaea.de',
-]
-
 # DATABASES
 # ------------------------------------------------------------------------------
 DATABASES["default"] = env.db("DATABASE_URL")  # noqa F405
@@ -181,6 +174,12 @@ sentry_sdk.init(
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+# REST API Permissions
+# ------------------------------------------------------------------------------
+REST_SAFE_DOMAINS = [
+    'helpdesk.gfbio.org',
+    'issues.pangaea.de',
+]
 
 # CORS Settings
 # ------------------------------------------------------------------------------
