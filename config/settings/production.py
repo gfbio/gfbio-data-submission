@@ -146,20 +146,20 @@ LOGGING = {
             "formatter": "verbose",
         }
     },
-    "root": {"level": "INFO", "handlers": ["console"]},
+    "root": {"level": "DEBUG", "handlers": ["console"]},  # was INFO
     "loggers": {
         "django.db.backends": {
-            "level": "ERROR",
+            "level": "DEBUG",  # was ERROR
             "handlers": ["console"],
-            "propagate": False,
+            "propagate": True,  # Was false
         },
         # Errors logged by the SDK itself
         "sentry_sdk": {"level": "ERROR", "handlers": ["console"],
                        "propagate": False},
         "django.security.DisallowedHost": {
-            "level": "ERROR",
+            "level": "DEBUG",  # was ERROR
             "handlers": ["console"],
-            "propagate": False,
+            "propagate": True,  # was False
         },
     },
 }
