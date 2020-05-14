@@ -86,14 +86,12 @@ class ContributorsForm extends React.PureComponent {
           roles: [],
           contributors: [],
           contributorsArray: [],
-          originalContributors: [],
         });
         return;
       }
       const contributorsArray = this.getContributorsAsArray(propsContributors);
       this.setState({
         contributors: propsContributors,
-        originalContributors: propsContributors,
         contributorsArray,
         formValues: {},
       });
@@ -141,12 +139,18 @@ class ContributorsForm extends React.PureComponent {
     document.getElementById('lastName').value = '';
     document.getElementById('emailAddress').value = '';
     document.getElementById('institution').value = '';
+    document.getElementById('firstName').classList.remove('error');
+    document.getElementById('lastName').classList.remove('error');
+    document.getElementById('emailAddress').classList.remove('error');
   };
 
   onSave = () => {
     if (this.validateFormValues()) {
       const contributorsArray = [...this.state.contributorsArray];
-      if (this.state.contributorIndex !== -1) {
+      if (
+        this.state.contributorIndex !== -1 &&
+        contributorsArray.length !== 0
+      ) {
         contributorsArray.splice(
           this.state.contributorIndex,
           1,
@@ -168,7 +172,7 @@ class ContributorsForm extends React.PureComponent {
 
   setFormChanged = () => {
     const contributorsArray = [...this.state.contributorsArray];
-    const originalContributorsArray = [...this.state.originalContributors];
+    const originalContributorsArray = [...this.state.contributors];
     if (
       JSON.stringify(originalContributorsArray) !==
       JSON.stringify(contributorsArray)
