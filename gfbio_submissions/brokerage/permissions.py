@@ -29,7 +29,6 @@ class APIAllowedHosts(permissions.BasePermission):
 
     # recursive method to get all IP addresses from domain name
     def get_ip_from_domain(self, domain_name):
-        logger.debug('APIAllowedHosts {}'.format(domain_name))
         # FIXME: I do not like this
         stream = os.popen('dig +short {}'.format(domain_name))
         results = []

@@ -1,6 +1,7 @@
 import json
 import logging
 
+from django.urls import reverse
 from rest_framework import status, mixins, generics
 from rest_framework.response import Response
 
@@ -32,6 +33,25 @@ logger = logging.getLogger(__name__)
 #     "timeZone": "Europe/Berlin"
 # },
 
+# ------------------
+
+# ""user": {
+#         "self": "https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent",
+#         "name": "brokeragent",
+#         "key": "brokeragent@gfbio.org",
+#         "emailAddress": "brokeragent@gfbio.org",
+#         "avatarUrls": {
+#             "48x48": "https://helpdesk.gfbio.org/secure/useravatar?ownerId=brokeragent%40gfbio.org&avatarId=11100",
+#             "24x24": "https://helpdesk.gfbio.org/secure/useravatar?size=small&ownerId=brokeragent%40gfbio.org&avatarId=11100",
+#             "16x16": "https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&ownerId=brokeragent%40gfbio.org&avatarId=11100",
+#             "32x32": "https://helpdesk.gfbio.org/secure/useravatar?size=medium&ownerId=brokeragent%40gfbio.org&avatarId=11100"
+#         },
+#         "displayName": "Broker Agent",
+#         "active": true,
+#         "timeZone": "Europe/Berlin"
+#     },
+
+
 class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
     permission_classes = (permissions.APIAllowedHosts,)
     serializer_class = JiraHookRequestSerializer
@@ -46,7 +66,9 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
 
         RequestLog.objects.create(
             type=RequestLog.INCOMING,
-            data=json.dumps(request.data) if isinstance(
+            url=reverse('brokerage:submissions_jira_update'),
+            data=json.dumps({"request_data": request.data,
+                             "request_body": request.body}) if isinstance(
                 request.data, dict) else request.data,
             response_status=status.HTTP_201_CREATED if is_valid else status.HTTP_400_BAD_REQUEST,
             request_details=details
