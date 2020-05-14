@@ -299,6 +299,20 @@ def jira_error_auto_retry(jira_client, task, broker_submission_id,
         )
     return True
 
+def jira_error_auto_retry_update_notified(jira_client, task, pid,
+                          max_retries=SUBMISSION_MAX_RETRIES):
+    logger.info('task_utils.py | jira_error_auto_retry | '
+                'pid={0} | task={1} | max_retries={2}'
+                ''.format(pid, task.name, max_retries))
+    if jira_client and jira_client.error:
+        return raise_transfer_server_exceptions(
+            response=jira_client.error.response,
+            task=task,
+            broker_submission_id=broker_submission_id,
+            max_retries=max_retries,
+        )
+    return True
+
 
 def request_error_auto_retry(response, task, broker_submission_id,
                              max_retries=SUBMISSION_MAX_RETRIES):

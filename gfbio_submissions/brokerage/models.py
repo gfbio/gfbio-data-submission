@@ -344,6 +344,10 @@ class PersistentIdentifier(TimeStampedModel):
     broker_object = models.ForeignKey(BrokerObject, on_delete=models.CASCADE)
     outgoing_request_id = models.UUIDField(primary_key=False, null=True,
                                            blank=True)
+    user_notified = models.BooleanField(
+        default=False,
+        null=True,
+        blank=True)
 
     def __str__(self):
         return '{}'.format(self.pid)

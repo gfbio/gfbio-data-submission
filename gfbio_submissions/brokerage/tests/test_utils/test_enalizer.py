@@ -510,9 +510,11 @@ class TestEnalizer(TestCase):
     @responses.activate
     def test_update_ena_embargo_date(self):
         submission = Submission.objects.first()
-        submission.embargo = datetime(2030, 1, 10)
+        submission.embargo = datetime(2030, 1, 10).date()
         submission.save()
         conf = SiteConfiguration.objects.first()
+
+        self.assertEqual('2030-01-10', submission.embargo.isoformat())
 
         responses.add(
             responses.POST,
@@ -521,17 +523,23 @@ class TestEnalizer(TestCase):
             body=_get_ena_release_xml_response()
         )
         study = submission.brokerobject_set.filter(type='study').first()
+        self.assertEqual(0, len(study.persistentidentifier_set.filter(pid_type='PRJ').all()))
+
         study.persistentidentifier_set.create(
             archive='ENA',
             pid_type='PRJ',
             pid='PRJEB0815',
             outgoing_request_id=uuid4()
         )
+
         self.assertEqual(0, len(RequestLog.objects.all()))
 
         update_ena_embargo_date(submission)
+        pid = study.persistentidentifier_set.filter(
+            pid_type='PRJ').first()
 
         self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual('2030-01-10', pid.hold_date.isoformat())
         request_log = RequestLog.objects.first()
         self.assertEqual(200, request_log.response_status)
         self.assertTrue('accession "PRJEB0815"' in request_log.response_content)
