@@ -1416,7 +1416,15 @@ def notify_user_embargo_expiry_task(self):
         study_pid = submission.brokerobject_set.filter(
             type='study').first().persistentidentifier_set.filter(
             pid_type='PRJ').first()
+        return {
+            'embargo': study_pid.hold_date.isoformat(),
+        }
         if study_pid and study_pid.hold_date:
+
+            return {
+                'issue_key': reference.reference_key,
+                'embargo': study_pid.hold_date.isoformat(),
+            }
             # check if hold_date is withing 2 weeks
             two_weeks_from_now = datetime.date.today() + datetime.timedelta(days=14)
             if study_pid.hold_date < two_weeks_from_now and not study_pid.user_notified:
