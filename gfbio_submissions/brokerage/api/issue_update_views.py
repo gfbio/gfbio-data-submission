@@ -52,6 +52,8 @@ logger = logging.getLogger(__name__)
 #     },
 
 
+# request.GET 'QUERY_STRING': 'user_id=brokeragent&user_key=brokeragent%40gfbio.org',
+
 class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
     permission_classes = (permissions.APIAllowedHosts,)
     serializer_class = JiraHookRequestSerializer
