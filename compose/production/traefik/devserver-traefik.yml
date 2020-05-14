@@ -1,6 +1,8 @@
 log:
   level: DEBUG
 
+accessLog: {}
+
 entryPoints:
   web:
     # http
