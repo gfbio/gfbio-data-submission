@@ -1,4 +1,5 @@
 import json
+import logging
 
 from rest_framework import status, mixins, generics
 from rest_framework.response import Response
@@ -6,6 +7,8 @@ from rest_framework.response import Response
 from gfbio_submissions.brokerage import permissions
 from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.generic.serializers import JiraHookRequestSerializer
+
+logger = logging.getLogger(__name__)
 
 
 # "webhookEvent": "jira:issue_updated",

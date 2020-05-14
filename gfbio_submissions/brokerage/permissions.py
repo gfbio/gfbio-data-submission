@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+import logging
 import os
 
 from django.conf import settings
 from rest_framework import permissions
+
+logger = logging.getLogger(__name__)
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -26,6 +29,8 @@ class APIAllowedHosts(permissions.BasePermission):
 
     # recursive method to get all IP addresses from domain name
     def get_ip_from_domain(self, domain_name):
+        logger.debug('APIAllowedHosts {}'.format(domain_name))
+        # FIXME: I do not like this
         stream = os.popen('dig +short {}'.format(domain_name))
         results = []
         domain_records_list = stream.read().split(
