@@ -64,10 +64,10 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
             'serializer_errors': serializer.errors
         }
 
-        logger.debug('#############################')#
-        logger.debug(request.GET)
-        logger.debug(request.user)
-        logger.debug(request.META)
+        logger.warning('#############################')
+        logger.warning(request.GET)
+        logger.warning(request.user)
+        logger.warning(request.META)
 
         RequestLog.objects.create(
             type=RequestLog.INCOMING,
