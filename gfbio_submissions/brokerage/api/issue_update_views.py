@@ -64,10 +64,15 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
             'serializer_errors': serializer.errors
         }
 
+        logger.debug('#############################')#
+        logger.debug(request.GET)
+        logger.debug(request.user)
+        logger.debug(request.META)
+
         RequestLog.objects.create(
             type=RequestLog.INCOMING,
             url=reverse('brokerage:submissions_jira_update'),
-            data={"request_data": request.data, "request_body": request.body},
+            data=request.data,
             # data=json.dumps({"request_data": request.data,
             #                  "request_body": request.body}) if isinstance(
             #     request.data, dict) else request.data,
