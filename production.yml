@@ -21,8 +21,6 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - django_media:/app/gfbio_submissions/media
-      # git has to be initialized, remote origin has to be set.
-      # - /var/www/gfbio-submission-auditing:/gfbio-submission-auditing
     command: /start
 
   postgres:

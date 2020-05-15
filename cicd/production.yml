@@ -1,10 +1,13 @@
-version: '3.7'
+version: '3'
 
 volumes:
+  production_postgres_data: {}
+  production_postgres_data_backups: {}
+  production_traefik: {}
   django_media: {}
 
 services:
-  django:
+  django: &django
     build:
       context: .
       dockerfile: ../compose/production/django/Dockerfile
@@ -50,71 +53,42 @@ services:
       context: .
       dockerfile: ../compose/production/postgres/Dockerfile
     image: gfbio_submissions_production_postgres
-    networks:
-      - internal
-    restart: always
+    volumes:
+      - production_postgres_data:/var/lib/postgresql/data
+      - production_postgres_data_backups:/backups
     env_file:
       - ../.envs/.production/.postgres
 
-  redis:
-    image: redis:5.0
-    restart: always
-    networks:
-      - internal
-
-  celeryworker:
+  traefik:
     build:
       context: .
       dockerfile: ../compose/production/django/Dockerfile
     depends_on:
-      - postgres
-      - redis
-    env_file:
-      - ../.envs/.production/.django
-      - ../.envs/.production/.postgres
-    networks:
-      - internal
+      - django
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - django_media:/app/gfbio_submissions/media
+      - production_traefik:/etc/traefik/acme
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+      - "0.0.0.0:5555:5555"
+
+  redis:
+    image: redis:5.0
+
+  celeryworker:
+    <<: *django
     image: gfbio_submissions_production_celeryworker
     command: /start-celeryworker
     restart: always
 
   celerybeat:
-    build:
-      context: .
-      dockerfile: ../compose/production/django/Dockerfile
-    depends_on:
-      - postgres
-      - redis
-    env_file:
-      - ../.envs/.production/.django
-      - ../.envs/.production/.postgres
-    networks:
-      - internal
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - django_media:/app/gfbio_submissions/media
+    <<: *django
     image: gfbio_submissions_production_celerybeat
     command: /start-celerybeat
     restart: always
 
   flower:
-    build:
-      context: .
-      dockerfile: ../compose/production/django/Dockerfile
-    depends_on:
-      - postgres
-      - redis
-    env_file:
-      - ../.envs/.production/.django
-      - ../.envs/.production/.postgres
-    networks:
-      - internal
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - django_media:/app/gfbio_submissions/media
+    <<: *django
     image: gfbio_submissions_production_flower
     restart: always
     command: /start-flower
