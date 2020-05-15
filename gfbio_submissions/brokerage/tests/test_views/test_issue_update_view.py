@@ -140,6 +140,36 @@ class TestJiraIssueUpdateView(APITestCase):
         submission = Submission.objects.first()
         self.assertEqual(one_year.date(), submission.embargo)
 
+    def test_request_query_string(self):
+        submission = Submission.objects.first()
+        six_months = arrow.now().shift(months=6)
+        submission.embargo = six_months.date()
+        submission.save()
+        url = '{}{}'.format(self.url, '?user_id=brokeragent%40mpi-bremen.de&user_key=maweber%40mpi-bremen.de')
+        print(url)
+
+        # self.assertEqual(six_months.date(), submission.embargo)
+
+        one_year = arrow.now().shift(years=1)
+
+        response = self.client.post(
+            url,
+            {
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": one_year.for_json(),
+                        "customfield_10303": "{0}".format(
+                            submission.broker_submission_id),
+                    }
+                }
+            },
+            format='json')
+        print('CONTENT:', response.content)
+        print(response.status_code)
+        # submission = Submission.objects.first()
+        # self.assertEqual(one_year.date(), submission.embargo)
+
     def test_real_world_request(self):
         submission = Submission.objects.first()
 

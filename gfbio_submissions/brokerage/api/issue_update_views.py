@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from gfbio_submissions.brokerage import permissions
 from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.generic.serializers import JiraHookRequestSerializer
+from ..forms import JiraIssueUpdateQueryForm
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,7 @@ logger = logging.getLogger(__name__)
 
 
 # request.GET 'QUERY_STRING': 'user_id=brokeragent&user_key=brokeragent%40gfbio.org',
+# "POST /api/submissions/jira/update?user_id=maweber%40mpi-bremen.de&user_key=maweber%40mpi-bremen.de
 
 class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
     permission_classes = (permissions.APIAllowedHosts,)
@@ -62,14 +64,19 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         is_valid = serializer.is_valid()
 
-        details = {
-            'serializer_errors': serializer.errors
-        }
+        #
+        # logger.warning('#############################')
+        # logger.warning(request.GET)
+        # logger.warning(request.user)
+        # logger.warning(request.META)
 
-        logger.warning('#############################')
-        logger.warning(request.GET)
-        logger.warning(request.user)
-        logger.warning(request.META)
+        form = JiraIssueUpdateQueryForm(request.GET)
+        form_is_valid = form.is_valid()
+
+        details = {
+            'serializer_errors': serializer.errors,
+            'form_errors': form.errors.as_json()
+        }
 
         RequestLog.objects.create(
             type=RequestLog.INCOMING,
@@ -86,6 +93,10 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
 
         if not is_valid:
             return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST,
+                            headers=headers)
+        if not form_is_valid:
+            return Response(form.errors,
                             status=status.HTTP_400_BAD_REQUEST,
                             headers=headers)
 
