@@ -128,3 +128,10 @@ def _get_pangaea_ticket_response():
             _get_test_data_dir_path(), 'pangaea_ticket_response.json'),
             'r') as data_file:
         return json.load(data_file)
+
+
+def _get_jira_hook_request_data():
+    with open(os.path.join(
+            _get_test_data_dir_path(), 'jira_hook_request_data.json'),
+            'r') as data_file:
+        return data_file.read()

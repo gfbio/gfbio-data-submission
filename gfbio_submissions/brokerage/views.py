@@ -72,6 +72,7 @@ class SubmissionsView(mixins.ListModelMixin,
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
+        # TODO: is this still needed ? user is not used
         user = User.objects.get(username=request.user)
         return self.create(request, *args, **kwargs)
 
