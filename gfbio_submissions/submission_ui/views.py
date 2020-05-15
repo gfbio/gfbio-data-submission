@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 # LoginRequiredMixin, AccessMixin
 class HomeView(TemplateView):
     template_name = 'pages/home.html'
-    logger.debug('HOMEVIEW -> ', )
+    logger.debug('HOMEVIEW -> ')
 
     # def get_redirect_field_name(self):
     #     print('get redir field name ', self.request.user.is_authenticated)
