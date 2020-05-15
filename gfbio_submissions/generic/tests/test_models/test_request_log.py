@@ -4,8 +4,8 @@ from django.test import TestCase
 
 from gfbio_submissions.brokerage.models import Submission, BrokerObject
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
-from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
-    _get_ena_data, _get_ena_data_without_runs
+from gfbio_submissions.brokerage.tests.utils import _get_ena_data_without_runs, \
+    _get_ena_data, _get_ena_xml_response
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
     send_submission_to_ena
 from gfbio_submissions.generic.models import SiteConfiguration, RequestLog, \
@@ -52,12 +52,12 @@ class RequestLogTest(TestCase):
         Submission.objects.all().delete()
 
     def test_create_request_log(self):
-        submission = Submission.objects.first()
+        # submission = Submission.objects.first()
         RequestLog.objects.create(
             type=RequestLog.INCOMING,
             data='{"some_data": 12345}',
             site_user='jdoe',
-            submission_id=submission.broker_submission_id,
+            # submission_id=submission.broker_submission_id,
             response_status=200,
             response_content='Whatever we return',
         )

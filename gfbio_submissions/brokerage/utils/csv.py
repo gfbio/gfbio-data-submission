@@ -6,7 +6,7 @@ import logging
 import os
 from collections import OrderedDict
 
-import dpath
+import dpath.util as dpath
 from django.utils.encoding import smart_text
 from shortid import ShortId
 
@@ -207,7 +207,7 @@ def extract_sample(row, field_names, sample_id):
     sample_attributes = []
     for o in field_names:
         if o not in core_fields and len(row[o]) and \
-            row[o] not in attribute_value_blacklist:
+                row[o] not in attribute_value_blacklist:
             if o in unit_mapping_keys:
                 sample_attributes.append(
                     OrderedDict([
@@ -276,16 +276,17 @@ def find_correct_platform_and_model(platform_value):
     for platform in json_dict:
         # identify viable platforms in json file
         if (len(json_dict[platform]) == 2 and
-            "enum" in json_dict[platform].keys() and
-            "type" in json_dict[platform].keys() and
-            json_dict[platform]["type"] == 'string'):
+                "enum" in json_dict[platform].keys() and
+                "type" in json_dict[platform].keys() and
+                json_dict[platform]["type"] == 'string'):
 
             instruments = json_dict[platform]["enum"]
 
             # match value as instrument
             for instrument in instruments:
                 if platform_value_fixed == instrument.lower():
-                    matched_platforms_value_as_instrument.append({platform: instrument})
+                    matched_platforms_value_as_instrument.append(
+                        {platform: instrument})
                 # combined value as instrument check
                 if combined_platform_value == instrument.lower():
                     combined_vlaue_match.append({platform: instrument})
@@ -296,7 +297,8 @@ def find_correct_platform_and_model(platform_value):
 
             # partial match
             partial_instrument = "unspecified" if len(
-                platform_value_fixed.split()) == 1 else platform_value_fixed.split()[1:]
+                platform_value_fixed.split()) == 1 else platform_value_fixed.split()[
+                                                        1:]
             if partial_instrument != "unspecified":
                 partial_instrument = ' '.join(partial_instrument)
                 partial_instrument = partial_instrument.lower()
@@ -304,7 +306,8 @@ def find_correct_platform_and_model(platform_value):
                 partial_platform_match.append({platform: ""})
                 for instrument in instruments:
                     if partial_instrument == instrument.lower():
-                        partial_platform_match[len(partial_platform_match) - 1][platform] = instrument
+                        partial_platform_match[len(partial_platform_match) - 1][
+                            platform] = instrument
 
             # combined value match
             if combined_platform_value == platform.lower():
@@ -312,17 +315,21 @@ def find_correct_platform_and_model(platform_value):
 
     if len(matched_platforms_value_as_instrument) == 1:
         platform_key = list(matched_platforms_value_as_instrument[0].keys())[0]
-        return platform_key + ' ' + matched_platforms_value_as_instrument[0][platform_key]
+        return platform_key + ' ' + matched_platforms_value_as_instrument[0][
+            platform_key]
     elif len(matched_platforms_value_as_platform) == 1:
         # check if unspecified value is allowed
-        if 'unspecified' in json_dict[matched_platforms_value_as_platform[0]]["enum"]:
+        if 'unspecified' in json_dict[matched_platforms_value_as_platform[0]][
+            "enum"]:
             return matched_platforms_value_as_platform[0] + ' unspecified'
         else:
             return ''
     elif len(combined_vlaue_match) == 1:
         platform_key = list(combined_vlaue_match[0].keys())[0]
         # check if unspecified value is allowed
-        if combined_vlaue_match[0][platform_key] == 'unspecified' and 'unspecified' in json_dict[platform_key]["enum"]:
+        if combined_vlaue_match[0][
+            platform_key] == 'unspecified' and 'unspecified' in \
+                json_dict[platform_key]["enum"]:
             return platform_key + ' unspecified'
         else:
             return platform_key + ' ' + combined_vlaue_match[0][platform_key]
@@ -346,7 +353,8 @@ def extract_experiment(experiment_id, row, sample_id):
         nominal_length = int(row.get('nominal_length', '-1'))
     except ValueError as e:
         nominal_length = -1
-    fixed_platform_value = find_correct_platform_and_model(row.get('sequencing_platform', ''))
+    fixed_platform_value = find_correct_platform_and_model(
+        row.get('sequencing_platform', ''))
     experiment = {
         'experiment_alias': experiment_id,
         'platform': ' '.join(fixed_platform_value.split()[1:])
@@ -354,8 +362,8 @@ def extract_experiment(experiment_id, row, sample_id):
 
     library_layout = row.get('library_layout', '').lower()
 
-    dpath.util.new(experiment, 'design/sample_descriptor', sample_id)
-    dpath.util.new(
+    dpath.new(experiment, 'design/sample_descriptor', sample_id)
+    dpath.new(
         experiment, 'design/library_descriptor/library_strategy',
         library_strategy_mappings.get(
             row.get('library_strategy', '').lower(), ''
@@ -363,38 +371,38 @@ def extract_experiment(experiment_id, row, sample_id):
     )
     # For sake of simplicity library_source is converted to upper case since
     # all values in schema are uppercase
-    dpath.util.new(experiment, 'design/library_descriptor/library_source',
-                   row.get('library_source', '').upper()
-                   )
-    dpath.util.new(
+    dpath.new(experiment, 'design/library_descriptor/library_source',
+              row.get('library_source', '').upper()
+              )
+    dpath.new(
         experiment,
         'design/library_descriptor/library_selection',
         library_selection_mappings.get(
             row.get('library_selection', '').lower(), ''
         )
     )
-    dpath.util.new(experiment,
-                   'design/library_descriptor/library_layout/layout_type',
-                   library_layout)
+    dpath.new(experiment,
+              'design/library_descriptor/library_layout/layout_type',
+              library_layout)
 
-    dpath.util.new(experiment, 'files/forward_read_file_name',
-                   row.get('forward_read_file_name', ''))
-    dpath.util.new(experiment, 'files/forward_read_file_checksum',
-                   row.get('forward_read_file_checksum', ''))
+    dpath.new(experiment, 'files/forward_read_file_name',
+              row.get('forward_read_file_name', ''))
+    dpath.new(experiment, 'files/forward_read_file_checksum',
+              row.get('forward_read_file_checksum', ''))
 
     # TODO: with single layout, only forward_read_file attribute are considered
     #   is it ok to use such a file name for a single ?
     if library_layout != 'single':
-        dpath.util.new(experiment, 'files/reverse_read_file_name',
-                       row.get('reverse_read_file_name', ''))
-        dpath.util.new(experiment, 'files/reverse_read_file_checksum',
-                       row.get('reverse_read_file_checksum', ''))
+        dpath.new(experiment, 'files/reverse_read_file_name',
+                  row.get('reverse_read_file_name', ''))
+        dpath.new(experiment, 'files/reverse_read_file_checksum',
+                  row.get('reverse_read_file_checksum', ''))
 
     if len(row.get('design_description', '').strip()):
-        dpath.util.new(experiment, 'design/design_description',
-                       design_description)
+        dpath.new(experiment, 'design/design_description',
+                  design_description)
     if row.get('library_layout', '') == 'paired':
-        dpath.util.new(
+        dpath.new(
             experiment,
             'design/library_descriptor/library_layout/nominal_length',
             nominal_length
@@ -491,7 +499,7 @@ def check_for_molecular_content(submission):
     check_performed = False
 
     if submission.release and submission.data.get('requirements', {}).get(
-        'data_center', '').count('ENA'):
+            'data_center', '').count('ENA'):
 
         check_performed = True
         submission.target = ENA_PANGAEA
@@ -551,6 +559,7 @@ def check_for_molecular_content(submission):
     #     return False, ['no criteria matched']
     logger.info(
         msg='check_for_molecular_content  | finished | return status={0} '
-            'messages={1} molecular_data_check_performed={2}'.format(status, messages,
-                                                      check_performed))
+            'messages={1} molecular_data_check_performed={2}'.format(status,
+                                                                     messages,
+                                                                     check_performed))
     return status, messages, check_performed

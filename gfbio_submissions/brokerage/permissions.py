@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
-from rest_framework import permissions
-from django.conf import settings
+import logging
 import os
+
+from django.conf import settings
+from rest_framework import permissions
+logger = logging.getLogger(__name__)
+
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
 
@@ -21,19 +25,23 @@ class APIAllowedHosts(permissions.BasePermission):
     """
     Ensure the request's IP address is on the safe list configured in Django settings.
     """
+
     # recursive method to get all IP addresses from domain name
     def get_ip_from_domain(self, domain_name):
+        # FIXME: I do not like this
         stream = os.popen('dig +short {}'.format(domain_name))
         results = []
-        domain_records_list = stream.read().split('\n')  # list of CNAME and A records
+        domain_records_list = stream.read().split(
+            '\n')  # list of CNAME and A records
         for record in domain_records_list:
             record = record.lower()
-            if len(record) > 0: # ignore empty values that come after split \n
-                if not record.islower(): # if it's IP
+            if len(record) > 0:  # ignore empty values that come after split \n
+                if not record.islower():  # if it's IP
                     results.append(record)
-                else: # if it's CNAME record, get IPs
+                else:  # if it's CNAME record, get IPs
                     results.extend(self.get_ip_from_domain(record))
         return results
+
     # check if domain is allowed to use REST API
     def has_permission(self, request, view):
         # get list of allowed IPs
@@ -45,9 +53,10 @@ class APIAllowedHosts(permissions.BasePermission):
         allowed_ip_list = list(set(allowed_ip_list))
         remote_addr = None
         if "HTTP_X_REAL_IP" in request.META:
-            remote_addr = request.META['HTTP_X_REAL_IP'] # traefik reverse proxy header for staging and live systems
+            remote_addr = request.META[
+                'HTTP_X_REAL_IP']  # traefik reverse proxy header for staging and live systems
         else:
-            remote_addr = request.META['REMOTE_ADDR'] # for local purposes
+            remote_addr = request.META['REMOTE_ADDR']  # for local purposes
         if remote_addr:
             for valid_ip in allowed_ip_list:
                 if remote_addr == valid_ip or remote_addr.startswith(valid_ip):

@@ -1,4 +1,5 @@
 stages:
+  #  - lint
   - unitTests
   - buildDockerImages
   - autoMerge
@@ -9,6 +10,14 @@ stages:
   - updateStaging
   - buildProduction
   - deploy
+
+#flake8:
+#  stage: lint
+#  image: python:3.7-alpine
+#  before_script:
+#    - pip install -q flake8
+#  script:
+#    - flake8
 
 run_unit_tests:
   stage: unitTests
@@ -58,9 +67,9 @@ create_merge_request:
   only:
     - branches
   except:
-     refs:
-       - master
-       - production
+    refs:
+      - master
+      - production
   script:
     - HOST=${CI_PROJECT_URL} CI_PROJECT_ID=${CI_PROJECT_ID} CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} GITLAB_USER_ID=${GITLAB_USER_ID} PRIVATE_TOKEN=${PRIVATE_TOKEN} ./cicd/autoMergeRequest.sh
   tags:
@@ -102,9 +111,9 @@ docker_web_test:
     variables:
       - $CI_COMMIT_MESSAGE =~ /.*web-test.*/
   except:
-     refs:
-       - master
-       - production
+    refs:
+      - master
+      - production
   tags:
     - dev
 

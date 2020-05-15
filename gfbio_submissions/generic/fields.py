@@ -2,10 +2,10 @@
 import json
 from collections import OrderedDict
 
+import six
 from django import forms
 from django.contrib.postgres.fields import JSONField
 from django.core.serializers.json import DjangoJSONEncoder
-from django.utils import six
 
 
 # adapted from: https://github.com/yjmade/django-pgjsonb/blob/master/django_pgjsonb/fields.py
@@ -34,7 +34,7 @@ class JsonDictField(JSONField):
             return None
         return json.dumps(value, **self.encode_kwargs)
 
-    def from_db_value(self, value, expression, connection, context):
+    def from_db_value(self, value, expression, connection):
         if value is not None:
             # this if will take care of legacy db content
             if type(value) is not dict:

@@ -12,7 +12,7 @@ class RequestLogAdmin(admin.ModelAdmin):
     readonly_fields = ('request_id', 'created', 'modified',)
     date_hierarchy = 'created'
     ordering = ('-created',)
-    list_filter = ('type', 'url', 'response_status',)
+    list_filter = ('type', 'response_status',)
     search_fields = ['submission_id', 'request_id', 'url', ]
 
 

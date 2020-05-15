@@ -2,23 +2,25 @@
 Base settings to build other settings files upon.
 """
 
+from pathlib import Path
+
 import environ
 
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
+# issue-352 - will be 1.100.0
 VERSION = '1.99.0'
 
-ROOT_DIR = (
-        environ.Path(__file__) - 3
-)  # (gfbio_submissions/config/settings/base.py - 3 = gfbio_submissions/)
-APPS_DIR = ROOT_DIR.path("gfbio_submissions")
+ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
+# gfbio_submissions/
+APPS_DIR = ROOT_DIR / "gfbio_submissions"
 
 env = environ.Env()
 
 READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=False)
 if READ_DOT_ENV_FILE:
     # OS environment variables take precedence over variables from .env
-    env.read_env(str(ROOT_DIR.path(".env")))
+    env.read_env(str(ROOT_DIR / ".env"))
 
 # GENERAL
 # ------------------------------------------------------------------------------
@@ -40,7 +42,7 @@ USE_L10N = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#use-tz
 USE_TZ = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#locale-paths
-LOCALE_PATHS = [ROOT_DIR.path("locale")]
+LOCALE_PATHS = [str(ROOT_DIR / "locale")]
 
 # DATABASES
 # ------------------------------------------------------------------------------
@@ -66,6 +68,7 @@ DJANGO_APPS = [
     "django.contrib.staticfiles",
     # "django.contrib.humanize", # Handy template tags
     "django.contrib.admin",
+    "django.forms",
 ]
 THIRD_PARTY_APPS = [
     "crispy_forms",
@@ -108,7 +111,8 @@ AUTHENTICATION_BACKENDS = [
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-user-model
 AUTH_USER_MODEL = "users.User"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-redirect-url
-LOGIN_REDIRECT_URL = "users:redirect"
+# LOGIN_REDIRECT_URL = "users:redirect"
+LOGIN_REDIRECT_URL = "/ui/submission/list"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-url
 LOGIN_URL = "account_login"
 
@@ -144,23 +148,25 @@ AUTH_PASSWORD_VALIDATORS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.common.BrokenLinkEmailsMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
 # STATIC
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#static-root
-STATIC_ROOT = str(ROOT_DIR("staticfiles"))
+STATIC_ROOT = str(ROOT_DIR / "staticfiles")
 # https://docs.djangoproject.com/en/dev/ref/settings/#static-url
 STATIC_URL = "/static/"
 # https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#std:setting-STATICFILES_DIRS
-STATICFILES_DIRS = [str(APPS_DIR.path("static"))]
+STATICFILES_DIRS = [str(APPS_DIR / "static")]
 # https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#staticfiles-finders
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
@@ -170,7 +176,7 @@ STATICFILES_FINDERS = [
 # MEDIA
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#media-root
-MEDIA_ROOT = str(APPS_DIR("media"))
+MEDIA_ROOT = str(APPS_DIR / "media")
 # https://docs.djangoproject.com/en/dev/ref/settings/#media-url
 MEDIA_URL = "/media/"
 
@@ -182,7 +188,7 @@ TEMPLATES = [
         # https://docs.djangoproject.com/en/dev/ref/settings/#std:setting-TEMPLATES-BACKEND
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         # https://docs.djangoproject.com/en/dev/ref/settings/#template-dirs
-        "DIRS": [str(APPS_DIR.path("templates"))],
+        "DIRS": [str(APPS_DIR / "templates")],
         "OPTIONS": {
             # https://docs.djangoproject.com/en/dev/ref/settings/#template-loaders
             # https://docs.djangoproject.com/en/dev/ref/templates/api/#loader-types
@@ -200,17 +206,22 @@ TEMPLATES = [
                 "django.template.context_processors.static",
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
+                "gfbio_submissions.utils.context_processors.settings_context",
             ],
         },
     }
 ]
+
+# https://docs.djangoproject.com/en/dev/ref/settings/#form-renderer
+FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
+
 # http://django-crispy-forms.readthedocs.io/en/latest/install.html#template-packs
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 # FIXTURES
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#fixture-dirs
-FIXTURE_DIRS = (str(APPS_DIR.path("fixtures")),)
+FIXTURE_DIRS = (str(APPS_DIR / "fixtures"),)
 
 # SECURITY
 # ------------------------------------------------------------------------------
@@ -230,7 +241,7 @@ EMAIL_BACKEND = env(
     "DJANGO_EMAIL_BACKEND",
     default="django.core.mail.backends.smtp.EmailBackend"
 )
-# https://docs.djangoproject.com/en/2.2/ref/settings/#email-timeout
+# https://docs.djangoproject.com/en/dev/ref/settings/#email-timeout
 EMAIL_TIMEOUT = 5
 
 HOST_URL_ROOT = env(
@@ -314,6 +325,18 @@ ACCOUNT_ADAPTER = "gfbio_submissions.users.adapters.AccountAdapter"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 SOCIALACCOUNT_ADAPTER = "gfbio_submissions.users.adapters.SocialAccountAdapter"
 
+# django-rest-framework
+# -------------------------------------------------------------------------------
+# django-rest-framework - https://www.django-rest-framework.org/api-guide/settings/
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",),
+}
+
 # Your stuff...
 # ------------------------------------------------------------------------------
 
@@ -332,7 +355,7 @@ OIDC_OP_USER_ENDPOINT = " https://sso.gfbio.org/simplesaml/module.php/oidc/useri
 
 OIDC_USE_NONCE = False  # Default:	True
 
-LOGIN_REDIRECT_URL = "/ui/submission/list"
+# LOGIN_REDIRECT_URL = "/ui/submission/list"
 LOGOUT_REDIRECT_URL = "/"
 
 OIDC_RP_SCOPES = "openid email profile address phone id"
@@ -344,3 +367,13 @@ JIRA_ACCOUNT_SERVICE_USER = env("JIRA_ACCOUNT_SERVICE_USER",
                                 default="no_account_service_user")
 JIRA_ACCOUNT_SERVICE_PASSWORD = env("JIRA_ACCOUNT_SERVICE_PASSWORD",
                                     default="no_account_service_password")
+
+# REST API Permissions
+# ------------------------------------------------------------------------------
+REST_SAFE_LIST_IPS = [
+    '127.0.0.1',
+    '[::1]',
+    '172.',  # docker local network /8
+    '10.',  # docker swarm network /8
+]
+REST_SAFE_DOMAINS = []
