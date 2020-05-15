@@ -1,23 +1,20 @@
 import logging
 
-from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import redirect
 from django.views.generic import TemplateView
-from rest_framework import generics, mixins
 from rest_framework.authtoken.models import Token
 
 logger = logging.getLogger(__name__)
 
 
-class HomeView(mixins.CreateModelMixin,
-               generics.GenericAPIView):
+class HomeView(TemplateView):
+    template_name = 'pages/home.html'
+
     def get(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return HttpResponseRedirect(settings.LOGIN_REDIRECT_URL)
-        else:
-            return render(request, 'pages/home.html', None)
+        if self.request.user.is_authenticated:
+            return redirect('/ui/submission/list')
+        return super().get(request, *args, **kwargs)
 
 
 class SubmissionFrontendView(LoginRequiredMixin, TemplateView):
@@ -35,7 +32,7 @@ class SubmissionFrontendView(LoginRequiredMixin, TemplateView):
 
         context['parameters'] = {
             'userName': user_name,
-            'userRealName': user.name,  # if user.name != '' else user_name,
+            'userRealName': user.name,
             'userEmail': user_email,
             'userId': user.id,
             'token': str(token),
