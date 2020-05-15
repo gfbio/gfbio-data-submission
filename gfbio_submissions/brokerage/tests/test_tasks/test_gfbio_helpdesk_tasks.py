@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 
 import responses
 from django.test import override_settings
@@ -11,7 +12,7 @@ from gfbio_submissions.brokerage.tasks import create_submission_issue_task, \
     add_accession_to_submission_issue_task, \
     add_pangaealink_to_submission_issue_task, \
     add_posted_comment_to_issue_task, \
-    update_submission_issue_task, add_accession_link_to_submission_issue_task
+    update_submission_issue_task, add_accession_link_to_submission_issue_task, notify_user_embargo_expiry_task
 from gfbio_submissions.generic.models import SiteConfiguration
 from gfbio_submissions.users.models import User
 from .test_helpdesk_tasks_base import TestHelpDeskTasksBase
@@ -546,3 +547,23 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         self.assertEqual(TaskProgressReport.CANCELLED,
                          tpr.first().task_return_value)
         self.assertEqual('502', tpr.first().task_exception)
+
+    @responses.activate
+    def test_notify_user_about_embargo_expiry(self):
+        today = datetime.date.today()
+        submission = Submission.objects.first()
+        submission.embargo = today
+        submission.save()
+        submission.brokerobject_set.filter(
+            type='study'
+        ).first().persistentidentifier_set.create(
+            archive='ENA',
+            pid_type='PRJ',
+            pid='PRJE0815'
+        )
+        url = self._add_comment_reponses()
+        responses.add(responses.POST, url,
+                      json={'bla': 'blubb'},
+                      status=200)
+        result = notify_user_embargo_expiry_task()
+        self.assertEqual(today.isoformat(), result['user_notified_on'])
