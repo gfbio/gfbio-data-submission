@@ -514,8 +514,6 @@ class TestEnalizer(TestCase):
         submission.save()
         conf = SiteConfiguration.objects.first()
 
-        self.assertEqual('2030-01-10', submission.embargo.isoformat())
-
         responses.add(
             responses.POST,
             conf.ena_server.url,
@@ -535,11 +533,8 @@ class TestEnalizer(TestCase):
         self.assertEqual(0, len(RequestLog.objects.all()))
 
         update_ena_embargo_date(submission)
-        pid = study.persistentidentifier_set.filter(
-            pid_type='PRJ').first()
 
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual('2030-01-10', pid.hold_date.isoformat())
         request_log = RequestLog.objects.first()
         self.assertEqual(200, request_log.response_status)
         self.assertTrue('accession "PRJEB0815"' in request_log.response_content)

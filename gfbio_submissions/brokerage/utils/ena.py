@@ -963,10 +963,6 @@ def update_ena_embargo_date(submission):
             verify=False
         )
 
-        if response.status_code == 200:
-            study_primary_accession.hold_date = submission.embargo
-            study_primary_accession.save()
-
         outgoing_request_id = uuid.uuid4()
         with transaction.atomic():
             details = response.headers or ''

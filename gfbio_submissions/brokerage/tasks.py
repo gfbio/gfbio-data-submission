@@ -1417,11 +1417,15 @@ def notify_user_embargo_expiry_task(self):
         if study:
             # get persistent identifier
             study_pid = study.persistentidentifier_set.filter(pid_type='PRJ').first()
-            if study_pid and study_pid.hold_date:
+            if study_pid:
                 # check if hold_date is withing 2 weeks
                 two_weeks_from_now = datetime.date.today() + datetime.timedelta(days=14)
-                if study_pid.hold_date < two_weeks_from_now and not study_pid.user_notified:
-                    # send embargo expiry comment to JIRA
+                should_notify = True
+                # check if user was already notified
+                if study_pid.user_notified and study_pid.user_notified <= two_weeks_from_now:
+                    should_notify = False
+                if submission.embargo <= two_weeks_from_now and should_notify:
+                    # send embargo notification comment to JIRA
                     comment = """
                     Dear submitter,
 
@@ -1430,7 +1434,7 @@ def notify_user_embargo_expiry_task(self):
                     You can change the embargo date directly in our submission system.
 
                     Best regards,
-                    GFBio Data Submission Team""".format(study_pid.hold_date.isoformat())
+                    GFBio Data Submission Team""".format(submission.embargo.isoformat())
 
                     submission, site_configuration = get_submission_and_site_configuration(
                         submission_id=submission.id,
@@ -1447,14 +1451,14 @@ def notify_user_embargo_expiry_task(self):
 
                     jira_error_auto_retry(jira_client=jira_client, task=self,
                                           broker_submission_id=submission.broker_submission_id)
-                    if jira_client.issue:
-                        study_pid.user_notified = True
+                    if jira_client.comment:
+                        study_pid.user_notified = datetime.date.today()
                         study_pid.save()
 
                         return {
                             'submission': submission.id,
                             'issue_key': reference.reference_key,
-                            'embargo': study_pid.hold_date.isoformat(),
-                            'user_notified': True,
+                            'embargo': submission.embargo.isoformat(),
+                            'user_notified_on': datetime.date.today().isoformat(),
                         }
     return True
