@@ -32,9 +32,6 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
             type=RequestLog.INCOMING,
             url=reverse('brokerage:submissions_jira_update'),
             data=request.data,
-            # data=json.dumps({"request_data": request.data,
-            #                  "request_body": request.body}) if isinstance(
-            #     request.data, dict) else request.data,
             response_status=status.HTTP_201_CREATED if is_valid else status.HTTP_400_BAD_REQUEST,
             request_details=details
         )
