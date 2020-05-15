@@ -1,0 +1,167 @@
+#account {
+
+  h4 {
+    font-weight: 300;
+  }
+
+  //.login-or {
+  //  // background-color: $gray-100;
+  //  border-radius: .25rem;
+  //  margin-bottom: 1.5rem;
+  //}
+
+  .gfbio_login {
+    margin-bottom: 5rem;
+
+    a {
+      display: block;
+      text-decoration: none;
+      color: $gray-dark;
+
+      p {
+        margin-bottom: .75rem;
+      }
+
+      .login_background {
+        display: inline-block;
+        background: url('../images/gfbio_logo.dark.svg') no-repeat center center;
+        padding: 53px 107px 0 0 !important;
+      }
+
+      span {
+        @include raleway;
+        font-size: 1.15rem;
+        font-weight: 400;
+      }
+
+      &:hover {
+        color: $gfbio-light-blue;
+
+        p {
+          color: $gfbio-light-blue;
+        }
+
+        .login_background {
+          display: inline-block;
+          background: url('../images/gfbio_logo.smaller.svg') no-repeat center center;
+          padding: 53px 107px 0 0 !important;
+        }
+
+        .localLoginLink {
+          border-color: $gfbio-light-blue;
+          background-color: $white;
+          color: $gfbio-light-blue !important;
+          box-shadow: none;
+        }
+
+      }
+
+    }
+
+  }
+
+  .gfbio_signup {
+    @extend .gfbio_login;
+    margin-bottom: 1rem;
+  }
+
+  .signup_subtext {
+    text-align: center;
+    margin-bottom: 5rem;
+  }
+
+
+  .socialaccount_providers {
+    // list-style: none;
+    padding: 0;
+  }
+
+  .socialaccount_provider {
+    text-decoration: none;
+
+    span {
+      display: block;
+      color: $gray-darker;
+
+      &:hover {
+        color: $gfbio-light-blue;
+      }
+    }
+  }
+
+
+  .socialaccount_text {
+    @include raleway;
+
+    font-size: .9rem;
+
+    i {
+      font-size: 1rem;
+    }
+  }
+
+  .localLoginLink {
+    @include raleway;
+
+    background-color: $gray-100;
+    border-color: $gray-200;
+    color: $gray-darker;
+
+    &:focus {
+      box-shadow: none;
+    }
+
+    &:hover, &:not(:disabled):not(.disabled):active,
+    &:not(:disabled):not(.disabled).active {
+      &:focus {
+        box-shadow: none;
+      }
+
+      border-color: $gfbio-light-blue;
+      background-color: $white;
+      color: $gfbio-light-blue !important;
+      box-shadow: none;
+    }
+  }
+
+  #localLoginForm {
+    margin-top: 1.5rem;
+  }
+
+  label {
+    font-size: .775rem;
+  }
+
+  input {
+
+    //font-size: .8rem;
+
+    //height: calc(1.25rem + 2px);
+
+    height: calc(1.5em + .5rem + 2px);
+    padding: .25rem .5rem;
+    font-size: .775rem;
+    line-height: 1.5;
+    border-radius: .2rem;
+
+    &::placeholder {
+      font-size: 0.775rem;
+    }
+
+    &:focus {
+      border-color: $gfbio-green-0-7;
+      box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+      outline-color: $gfbio-green-0-7;
+    }
+
+  }
+
+}
+
+h4.social {
+  @include raleway;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  margin-bottom: 1.5rem;
+  font-weight: 300;
+}

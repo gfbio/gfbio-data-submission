@@ -1,0 +1,415 @@
+// Styling for the masthead
+header.masthead {
+  padding-top: 5rem;
+  padding-bottom: calc(5rem - 57px);
+  // background-image: url('../images/unsplash_grass_blue.jpeg');
+  // background-image: url('../images/unsplash_grass_bw.jpeg');
+
+  //background: url('../material/images/stock_photos/jason-blackeye-295313-unsplash.jpg') top center;
+  // background: url('../material/images/stock_photos/unsplash_grass3.jpg') top center;
+
+  background: url('../images/chuttersnap-541390-unsplash.jpg') center center;
+
+  //background-image: url('../material/images/stock_photos/photo-1481026469463-66327c86e544-opac25.jpg');
+  //background: url('../images/photo-1481026469463-66327c86e544-opac25-grey.jpg') top center;
+
+  @include background-cover;
+
+  .mt-5rem {
+    margin-top: 5rem;
+  }
+
+  .mt-6rem {
+    margin-top: 6rem;
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  h1, h3 {
+    @include raleway;
+    color: $gray-darkest;
+
+    small {
+      font-weight: inherit;
+    }
+  }
+
+  h3 {
+    font-weight: 300;
+    font-size: 1.4rem;
+  }
+
+  h1 {
+    font-weight: 100;
+  }
+
+  // TODO: move imported fonts t mixins
+  h1.main {
+    //ndisplay: inline-block;
+    margin: 0;
+    color: $gray-darkest;
+    //font-family: 'Zilla Slab', serif; // 300 400 500 600 700 plus italic
+    // font-family: 'Slabo 13px', serif;
+    //font-family: 'Slabo 27px', serif;
+    font-family: 'Roboto Slab', serif; // 100,300,400,700
+    // font-family: 'Merriweather', serif;
+    font-weight: 300;
+
+    // font-family: 'Lora', serif;
+    // font-family: 'Crimson Text', serif;
+    //NOPE font-family: 'Cinzel', serif;
+    // font-family: 'Cormorant Garamond', serif;
+    // font-size: 5rem;
+    // font-family: 'EB Garamond', serif;
+    // font-family: 'Amiri', serif;
+    // font-weight: 400;
+    // NOPE font-family: 'Neuton', serif;
+    // font-family: 'Lustria', serif;
+    //font-family: 'Scheherazade', serif;
+
+    i {
+      font-size: 0.7rem;
+    }
+  }
+
+  .gfbio-logo {
+    background: url(../images/GFBio_logo_png_299x147.png) no-repeat center center;
+    padding: 147px 299px 0 0 !important;
+    // margin: 0;
+  }
+
+  .dfg_logo_container {
+    padding-bottom: 2rem;
+    text-align: left;
+
+    img {
+      height: 30px;
+    }
+  }
+
+  h2.landing-icon {
+    font-size: 10rem;
+    color: $gray-400;
+  }
+
+  p {
+    font-weight: 300;
+    color: $gray-dark;
+  }
+
+  p.landing-page-caption {
+    font-weight: 400;
+    font-size: .85rem;
+
+    background-color: $white-opac;
+    border-radius: 2rem;
+
+    a {
+      // TODO: search color harmonies
+      // http://paletton.com/#uid=33s0u0koNRMdAWOjEUfu5OrJxGX
+      color: $gfbio-light-blue;
+
+      &:hover {
+        text-decoration: none;
+        color: $contrast-1;
+      }
+    }
+  }
+
+  // TODO: refactor to generic class, green button
+  .btn-landing-blue {
+    border-color: darken($gfbio-blue, .2);
+    background-color: $gfbio-blue;
+    color: $white !important;
+
+    &:focus {
+      border-color: $gfbio-blue-0-8;
+      box-shadow: 0 0 0 0.2rem $gfbio-blue-0-6;
+    }
+
+    &:hover {
+      background-color: $white;
+      color: $gfbio-blue !important;
+    }
+
+    &:active {
+      border-color: darken($gfbio-blue, .2) !important;
+      background-color: $gfbio-blue !important;
+      color: $white !important;
+    }
+  }
+
+  // TODO: refactor to generic class, green button
+  .btn-landing-search {
+    border-color: darken($gfbio-green, .2);
+    background-color: $gfbio-green;
+    color: $white !important;
+
+    &:focus {
+      border-color: $gfbio-green-0-7;
+      box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+    }
+
+    &:hover {
+      background-color: $white;
+      color: $gfbio-green !important;
+    }
+
+    &:active {
+      border-color: darken($gfbio-green, .2) !important;
+      background-color: $gfbio-green !important;
+      color: $white !important;
+    }
+  }
+
+  .landing-search {
+    &:focus {
+      border-color: $gfbio-green-0-7;
+      box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+    }
+  }
+
+  .btn {
+    letter-spacing: .05rem;
+    text-transform: uppercase;
+  }
+
+  // TODO: more generic name and move to generic scc
+  // like btn-landing-search with reversed colors
+  .btn-submit {
+
+    font-weight: 400;
+
+    border-color: darken($gfbio-green, .2);
+    background-color: $white;
+    color: $gfbio-green !important;
+
+    &:focus {
+      border-color: $gfbio-green-0-7;
+      box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+    }
+
+    &:hover {
+      color: $white !important;
+      background-color: $gfbio-green;
+    }
+
+    &:active {
+      border-color: darken($gfbio-green, .2) !important;
+      background-color: $white !important;
+      color: $gfbio-green !important;
+    }
+
+    /*//border-color: darken($gfbio-blue, .1);
+    //background-color: $gfbio-blue;
+    //color: $white !important;
+
+    // padding: 1rem;
+    border-color: $gray-400;
+    background-color: $white;
+    color: $gray-700;
+
+    &:focus {
+        box-shadow: none;
+    }
+
+    &:hover {
+        //background-color: $white;
+        //color: $gfbio-blue !important;
+    }*/
+  }
+
+  // TODO: refactor to generic class, light-blue button
+  .btn-search {
+    background-color: $gfbio-light-blue;
+    border-color: darken($gfbio-light-blue, .2);
+
+    &:hover, &:not(:disabled):not(.disabled):active,
+    &:not(:disabled):not(.disabled).active {
+      &:focus {
+        box-shadow: none;
+      }
+
+      border-color: darken($gfbio-light-blue, .2);
+      background-color: $white;
+      color: $gfbio-light-blue !important;
+      box-shadow: none;
+    }
+
+    &:focus {
+      box-shadow: none;
+    }
+
+    &:hover {
+      background-color: $white;
+      color: $gfbio-light-blue !important;
+    }
+  }
+
+  // TODO: still used ?
+  .feature {
+    display: block;
+    border-radius: .33rem;
+
+    i {
+      font-size: 6rem;
+      color: $gray-darkest;
+      opacity: .2;
+      display: inline-block;
+      padding: 1rem 0 2rem 0;
+    }
+
+    h5 {
+      @include raleway;
+      color: $gray-darkest;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 1.2rem;
+      font-weight: 300;
+    }
+
+    p {
+      font-weight: 300;
+      color: $gray-dark;
+    }
+
+    &:hover {
+      i {
+        color: $gfbio-light-blue;
+        opacity: .75;
+      }
+
+      h5 {
+        color: $gfbio-light-blue;
+        font-weight: 500;
+      }
+
+      p {
+        color: $gfbio-light-blue;
+      }
+    }
+  }
+
+  .sign-up {
+    border-color: darken($gfbio-green, .2);
+    background-color: $gfbio-green;
+    color: $white !important;
+
+    &:focus {
+      box-shadow: none;
+    }
+
+    &:hover {
+      background-color: $white;
+      color: $gfbio-green !important;
+    }
+  }
+
+  .sign-in {
+    border-color: darken($gfbio-blue, .1);
+    background-color: $gfbio-blue;
+    color: $white !important;
+
+    &:focus {
+      box-shadow: none;
+    }
+
+    &:hover {
+      background-color: $white;
+      color: $gfbio-blue !important;
+    }
+  }
+
+  .bottom-link {
+    //overflow: auto;
+    //margin: auto;
+    //position: absolute;
+    //// top: 0;
+    //left: 0;
+    //bottom: 0;
+    //right: 0;
+    // border-top: 1px solid red;
+    // position: relative;
+    // margin-top: 33%;
+
+    @include raleway;
+    //border: 2px solid transparent;
+    position: absolute;
+    left: 47%;
+    bottom: 0.4rem;
+    z-index: 99;
+    text-align: center;
+    //text-transform: uppercase;
+
+    color: $gfbio-blue;
+    font-size: 1.1rem;
+    font-weight: 400;
+
+    i {
+      display: block;
+      font-size: 1.6rem;
+
+      color: $gfbio-blue-0-8;
+
+      &:before {
+        // background-color: $white;
+        padding: 0.1rem;
+        border-radius: 6px;
+        // border: 1px solid darken($gfbio-green, .2);
+      }
+    }
+
+    &:hover {
+      //border: 2px solid $gfbio-blue;
+      border-radius: 4px;
+      background-color: rgba(52, 90, 162, .2); // rgba(255, 255, 255, 0.5);
+    }
+  }
+
+  .scroll-link-sleep {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.2s, opacity 0.2s linear;
+    -webkit-transition: visibility 0.2s, opacity 0.2s linear;
+    -moz-transition: visibility 0.2s, opacity 0.2s linear;
+  }
+
+  @media (max-width: 992px) {
+
+    .dfg_logo_container {
+      padding-top: 2rem;
+      padding-bottom: 0;
+      text-align: center;
+
+      img {
+        height: 20px;
+      }
+    }
+
+    #scroll-link {
+      display: none;
+    }
+  }
+
+  @media (min-width: 768px) {
+    p {
+      font-size: 1.15rem;
+    }
+  }
+  @media (min-width: 992px) {
+    height: 100vh;
+    min-height: 650px;
+    padding-top: 0;
+    padding-bottom: 0;
+    h1 {
+      font-size: 2.5rem;
+    }
+  }
+  @media (min-width: 1200px) {
+    h1 {
+      font-size: 3.5rem;
+    }
+  }
+}

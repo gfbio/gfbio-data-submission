@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+
+
+  <meta name="author" content="">
+
+  <title>GFBio Services</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom fonts for this template -->
+  <!-- Icons -->
+  <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet"
+        type="text/css">
+
+  <!-- TODO: consider https://github.com/linea-io/linea-scss -->
+  <link href="vendor/linea_icons/_basic/_ICONFONT/styles.css"
+        rel="stylesheet" type="text/css">
+
+  <!--<link href="vendor/linea_icons/_ecommerce/_ICONFONT/styles.css"-->
+  <!--rel="stylesheet" type="text/css">-->
+
+  <!-- TODO: consider https://github.com/aastrong/themify-icons.scss -->
+  <link href="vendor/themify-icons/themify-icons.css" rel="stylesheet"
+        type="text/css">
+
+  <link href="https://unpkg.com/ionicons@4.2.2/dist/css/ionicons.min.css"
+        rel="stylesheet">
+
+
+  <!-- EXAMPLES FOR USAGE:
+
+      <span class="ti-download"></span>
+      <span class="ti-arrow-up"></span>
+      <i class="fa fa-4x fa-paper-plane text-primary mb-3 sr-icons"></i>
+      <span class="icon icon-basic-accelerator"></span>
+      <div class="icon icon-basic-accelerator"></div>
+
+      <i class="icon ion-md-heart"></i>
+  -->
+
+  <!-- Google Fonts -->
+  <!--
+      as google font selection:
+      https://fonts.google.com/selection?category=Serif&query=slab&selection.family=Amiri:400,400i,700,700i|Cinzel:400,700,900|Cormorant+Garamond:300,300i,400,400i,500,500i,600,600i,700,700i|Crimson+Text:400,400i,600,600i,700,700i|EB+Garamond:400,400i,500,500i,600,600i,700,700i,800,800i|Lora:400,400i,700,700i|Lustria|Merriweather:300,300i,400,400i,700,700i,900,900i|Neuton:200,300,400,400i,700,800|Open+Sans:300,300i,400,400i,600,600i,700,700i,800,800i|Raleway:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i|Roboto+Slab:100,300,400,700|Scheherazade:400,700|Slabo+13px|Slabo+27px|Zilla+Slab:300,300i,400,400i,500,500i,600,600i,700,700i
+  -->
+
+  <link
+    href="https://fonts.googleapis.com/css?family=Amiri:400,400i,700,700i|Cinzel:400,700,900|Cormorant+Garamond:300,300i,400,400i,500,500i,600,600i,700,700i|Crimson+Text:400,400i,600,600i,700,700i|EB+Garamond:400,400i,500,500i,600,600i,700,700i,800,800i|Lora:400,400i,700,700i|Lustria|Merriweather:300,300i,400,400i,700,700i,900,900i|Neuton:200,300,400,400i,700,800|Open+Sans:300,300i,400,400i,600,600i,700,700i,800,800i|Raleway:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i|Roboto+Slab:100,300,400,700|Scheherazade:400,700|Slabo+13px|Slabo+27px|Zilla+Slab:300,300i,400,400i,500,500i,600,600i,700,700i"
+    rel="stylesheet">
+  <!--
+
+      font-family: 'Open Sans', sans-serif;
+      font-family: 'Raleway', sans-serif;
+      font-family: 'Merriweather', serif;
+      font-family: 'Lora', serif;
+      font-family: 'Crimson Text', serif;
+      font-family: 'Cinzel', serif;
+      font-family: 'Cormorant Garamond', serif;
+      font-family: 'EB Garamond', serif;
+      font-family: 'Amiri', serif;
+      font-family: 'Zilla Slab', serif;
+      font-family: 'Neuton', serif;
+      font-family: 'Lustria', serif;
+      font-family: 'Scheherazade', serif;
+      font-family: 'Slabo 13px', serif;
+      font-family: 'Slabo 27px', serif;
+      font-family: 'Roboto Slab', serif;
+
+  -->
+  <!-- Old selection below, all sizes available -->
+  <!--<link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800'
+        rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic,900,900italic'
+        rel='stylesheet' type='text/css'>
+  <link href="https://fonts.googleapis.com/css?family=Raleway:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i"
+        rel="stylesheet">-->
+
+  <!-- Plugin CSS -->
+  <link href="vendor/magnific-popup/magnific-popup.css" rel="stylesheet">
+
+  <!-- Custom styles for this template -->
+  <link href="css/project.min.css" rel="stylesheet">
+
+</head>
+
+<body id="page-top">
+
+<!-- Navigation  id="mainNavBase" -> navbar always white just "mainNav" -> transparent on start  -->
+<nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+  <div class="container-fluid">
+    <a class="navbar-brand js-scroll-trigger" href="#page-top">
+      <!--<span class="blue">G</span>
+      <span class="light-blue">F</span>
+      <span class="green">B</span>io-->
+      GFBio
+      <small class="no-text-transform">e.V.</small>
+      <small>Services</small>
+    </a>
+    <button class="navbar-toggler navbar-toggler-right" type="button"
+            data-toggle="collapse" data-target="#navbarResponsive"
+            aria-controls="navbarResponsive" aria-expanded="false"
+            aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarResponsive">
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+          <a class="nav-link js-scroll-trigger"
+             href="#about">About</a>
+        </li>
+
+        <!--<li class="nav-item dropdown">-->
+        <!--<a class="nav-link has-dropdown" data-toggle="dropdown"-->
+        <!--href="#" role="button" aria-haspopup="true"-->
+        <!--aria-expanded="false">Dropdown</a>-->
+        <!--<div class="dropdown-menu">-->
+        <!--<a class="dropdown-item" href="#">Action</a>-->
+        <!--<a class="dropdown-item" href="#">Another action</a>-->
+        <!--<a class="dropdown-item" href="#">Something else-->
+        <!--here</a>-->
+        <!--<div class="dropdown-divider"></div>-->
+        <!--<a class="dropdown-item" href="#">Separated link</a>-->
+        <!--</div>-->
+        <!--</li>-->
+
+        <!--<li class="nav-item">-->
+        <!--<a class="nav-link js-scroll-trigger" href="#contact">Contact</a>-->
+        <!--</li>-->
+        <li class="nav-item">
+          <a class="nav-link btn btn-secondary btn-sm sign-up"
+             href="#services">
+            Sign Up
+          </a>
+          <!--<a class="nav-link sign" href="#">Sign Up</a>-->
+        </li>
+        <li class="nav-item">
+          <a class="nav-link btn btn-secondary btn-sm sign-in"
+             href="#portfolio">
+            Sign In
+          </a>
+        </li>
+
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<header class="masthead text-center text-white d-flex">
+  <div class="container my-auto">
+
+    <div class="row">
+
+      <div class="col-lg-10 mx-auto">
+        <div class="row">
+          <div class="col-sm-4 align-self-center p-0">
+            <!-- TODO: add PNG fallback for older browsers. https://toddmotto.com/mastering-svg-use-for-a-retina-web-fallbacks-with-png-script/ -->
+            <img class=""
+                 src="images/gfbio_logo_inkscape.ai.svg">
+          </div>
+          <div class="col-sm-8 align-self-center">
+            <h1 class="text-center main">
+              FAIR <i class="fa fa-circle align-middle"
+                      aria-hidden="true"></i> Research <i
+              class="fa fa-circle align-middle"
+              aria-hidden="true"></i> Data
+            </h1>
+            <h3 class="text-center m-0">
+              <!--Data submission & publishing services-->
+              <!--&lt;!&ndash;<br>for the biological and environmental research community&ndash;&gt;-->
+              <!--<br> for -->
+              Biodiversity, Ecology & Environmental Studies
+            </h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-10 mx-auto mt-5rem">
+        <form>
+          <div class="form-row">
+            <div class="form-group col-md-8">
+              <input type="text"
+                     class="form-control landing-search"
+                     id="landing-search-text"
+                     placeholder="Enter a search term ... ">
+            </div>
+            <div class="form-group col-md-4">
+              <button type="submit"
+                      class="btn btn-block btn-secondary btn-landing-search"
+                      id="submit-search"><i
+                class="ti-search icon pr-2"></i>Find
+                Data
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="col-lg-8 mx-auto mt-5">
+        <form>
+          <div class="form-row">
+            <div class="form-group col-md-6 col-sm-12">
+              <a href="#"
+                 class="btn btn-block btn-secondary btn-landing-blue"
+              >
+                <i class="ti-upload icon pr-2"></i>
+                Submit Data
+              </a>
+            </div>
+            <div class="form-group col-md-6 col-sm-12">
+              <a href="#dmp"
+                 class="btn btn-block btn-secondary btn-search js-scroll-trigger"
+              >
+                <i class="ti-check-box icon pr-2"></i>
+                Create a Data Management Plan
+              </a>
+            </div>
+          </div>
+        </form>
+      </div>
+
+    </div>
+
+
+  </div>
+
+  <!-- TODO: BUGGY ...  -->
+  <a id="scroll-link" class="nav-link js-scroll-trigger bottom-link"
+     href="#blue">
+    Learn more
+    <i class="ti-angle-double-down icon"></i>
+  </a>
+
+</header>
+
+
+<section id="blue" class="light-section">
+  <div class="container">
+
+    <div class="row">
+      <div class="col-sm-12 text-center">
+        <h4 class="uppercase mb-5">We are: <i class="icon ion-md-heart" /></h4>
+        <!--<p class="lead mb-5">-->
+        <!--Sed ut perspiciatis unde omnis iste natus error sit-->
+        <!--voluptatem accusantium doloremque laudantium,-->
+        <!--<br>eaque ipsa quae ab illo inventore veritatis et-->
+        <!--quasi architecto beatae vitae.-->
+        <!--</p>-->
+      </div>
+    </div>
+
+    <div class="row">
+
+      <div class="col-md-4 col-sm-12 text-center">
+        <h5>
+          "A network of experts."
+        </h5>
+        <span class="icon icon-basic-share"></span>
+      </div>
+      <div class="col-md-4 col-sm-12 text-center">
+        <h5>
+          "Committed to the highest standards."
+        </h5>
+        <span class="icon icon-basic-notebook-pen"></span>
+      </div>
+      <div class="col-md-4 col-sm-12 text-center">
+        <h5>
+          "Solving your problems."
+        </h5>
+        <i class="ti-check-box icon"></i>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+
+<section id="testimonials" class="light-section">
+  <div class="container">
+
+    <div class="row">
+      <div class="col-sm-12">
+        <h6 class="">What people say about our services</h6>
+        <hr class="mb-100">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-10 mx-auto">
+
+        <div id="carouselExampleControls"
+             class="carousel slide carousel-fade"
+             data-ride="carousel" data-interval="7500">
+          <div class="carousel-inner">
+
+            <div class="carousel-item active">
+
+              <div class="row">
+                <div class="col-sm-8">
+                  <div class="row">
+                    <div class="col-md-10">
+                      <p class="lead">
+                        <i>"I would definitely recommend
+                          GFBio, because its services
+                          significantly aid and
+                          advance the data management
+                          requirements of any project
+                          . "</i>
+                      </p>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-12">
+                      <h1>Dr. Greta Reintjes</h1>
+                      <h5>
+                        Scientist, Max-Planck-Institute
+                        for marine
+                        Microbiology
+                      </h5>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-4 align-self-center">
+                  <img src="images/greta.jpg" width="200"
+                       height="200">
+                </div>
+              </div>
+
+
+            </div>
+
+
+            <div class="carousel-item">
+              <div class="row">
+                <div class="col-sm-8">
+                  <!--<div class="row">-->
+                  <!--<div class="col-md-12">-->
+                  <!--<h1></h1>-->
+                  <!--<h5>-->
+                  <!--</h5>-->
+                  <!--</div>-->
+                  <!--</div>-->
+
+                  <div class="row">
+                    <div class="col-md-10">
+                      <p class="lead-anonymous">
+                        <i>"I always enjoy working with
+                          you. It has made data
+                          submissions much easier for
+                          me."</i>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-4 align-self-center anonymous-quote">
+                  <!--<img src="images/gandalf.jpeg" width="200"-->
+                  <!--height="200">-->
+
+                  <i class="fa fa-quote-right"
+                     aria-hidden="true"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="carousel-item">
+              <div class="row">
+                <div class="col-sm-4 align-self-center anonymous-quote">
+                  <!--<img src="images/gandalf.jpeg" width="200"-->
+                  <!--height="200">-->
+
+                  <i class="fa fa-quote-left"
+                     aria-hidden="true"></i>
+                </div>
+                <div class="col-sm-8">
+                  <!--<div class="row">-->
+                  <!--<div class="col-md-12">-->
+                  <!--<h1></h1>-->
+                  <!--<h5>-->
+                  <!--</h5>-->
+                  <!--</div>-->
+                  <!--</div>-->
+
+                  <div class="row">
+                    <div class="col-md-10">
+                      <p class="lead-anonymous">
+                        <i>"Very useful service, and
+                          submitting sequence data is
+                          not giving me a migraine
+                          anymore!"</i>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="carousel-item">
+              <div class="row">
+                <div class="col-sm-8">
+                  <!--<div class="row">-->
+                  <!--<div class="col-md-12">-->
+                  <!--<h1></h1>-->
+                  <!--<h5>-->
+                  <!--</h5>-->
+                  <!--</div>-->
+                  <!--</div>-->
+
+                  <div class="row">
+                    <div class="col-md-10">
+                      <p class="lead-anonymous">
+                        <i>"Great support, very helpful
+                          people who take time to also
+                          discuss the data
+                          submissions, and they always
+                          find a solution."</i>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-4 align-self-center anonymous-quote">
+                  <!--<img src="images/gandalf.jpeg" width="200"-->
+                  <!--height="200">-->
+
+                  <i class="fa fa-quote-right"
+                     aria-hidden="true"></i>
+                </div>
+              </div>
+            </div>
+
+
+          </div>
+          <!--<a class="carousel-control-prev"-->
+          <!--href="#carouselExampleControls" role="button"-->
+          <!--data-slide="prev">-->
+          <!--<span class="carousel-control-prev-icon"-->
+          <!--aria-hidden="true"></span>-->
+          <!--<span class="sr-only">Previous</span>-->
+          <!--</a>-->
+          <!--<a class="carousel-control-next"-->
+          <!--href="#carouselExampleControls" role="button"-->
+          <!--data-slide="next">-->
+          <!--<span class="carousel-control-next-icon"-->
+          <!--aria-hidden="true"></span>-->
+          <!--<span class="sr-only">Next</span>-->
+          <!--</a>-->
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Style in content-2.scss -->
+
+
+<section class="dark-section" id="twitter">
+  <div class="container">
+
+
+    <div class="row">
+
+      <div class="col-lg-10 mx-auto">
+        <div class="row">
+          <div class="col-md-8">
+
+            <h1><i class="ti-twitter icon"></i>GFBio on Twitter</h1>
+            <p class="lead">
+              Stay informed about our recent activities and keep
+              with
+              the
+              latest developments.
+            </p>
+            <a href="https://twitter.com/GFBio_Project?ref_src=twsrc%5Etfw"
+               class="twitter-follow-button" data-show-count="false"
+               data-size="large">Follow
+              @GFBio_Project</a>
+            <script async
+                    src="https://platform.twitter.com/widgets.js"
+                    charset="utf-8"></script>
+          </div>
+          <div class="col-md-4 col-sm-12 text-center mx-auto">
+            <a class="twitter-timeline"
+               data-dnt="true"
+               data-tweet-limit="1"
+               href="https://twitter.com/GFBio_Project?ref_src=twsrc%5Etfw">
+              Tweets
+              by @GFBio_Project</a>
+            <script async
+                    src="https://platform.twitter.com/widgets.js"
+                    charset="utf-8"></script>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-3 col-sm-6">
+        <a href="https://www.gfbio.org/">
+          <img src="images/gf_bio_white.png">
+        </a>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <h6>GFBio</h6>
+        <hr>
+        <ul class="list-unstyled">
+          <li>
+            <a href="https://www.gfbio.org/">GFBio Project</a>
+          </li>
+          <li>
+            <a href="https://www.gfbio.org/gfbio_ev">GFBio e.V.</a>
+          </li>
+
+          <li>
+            <a href="https://www.gfbio.org/about/legal-notice">Legal
+              Notice</a>
+          </li>
+          <li>
+            <a href="https://www.gfbio.org/about/privacy-policy">Privacy
+              Policy</a>
+          </li>
+        </ul>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <h6>Services</h6>
+        <hr>
+        <ul class="list-unstyled">
+          <li>
+            <a href="https://services.gfbio.org/search/">
+              <i class="ti-search icon"></i>
+              Find
+              Data</a>
+          </li>
+          <li>
+            <a href="#">
+              <i class="ti-upload icon"></i>
+              Submit
+              Data</a>
+          </li>
+          <li>
+            <a href="https://www.gfbio.org/data/plan/dmpt">
+              <i class="ti-check-box icon"></i>
+              Data Management Plan
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <h6>Get in touch</h6>
+        <hr>
+        <ul class="list-unstyled">
+          <li>
+            <a href="https://twitter.com/GFBio_Project">
+              <i class="ti-twitter-alt icon"></i>
+              Twitter
+            </a>
+          </li>
+          <li>
+            <a href="mailto:info@gfbio.org">
+              <i class="ti-email icon"></i>
+              Email
+              us
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Bootstrap core JavaScript -->
+<script src="vendor/jquery/jquery.min.js"></script>
+<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<!-- Plugin JavaScript -->
+<script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+<script src="vendor/scrollreveal/scrollreveal.min.js"></script>
+<script src="vendor/magnific-popup/jquery.magnific-popup.min.js"></script>
+
+<!-- Custom scripts for this template -->
+<script src="js/project.min.js"></script>
+</body>
+
+</html>

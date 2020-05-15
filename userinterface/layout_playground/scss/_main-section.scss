@@ -1,0 +1,27 @@
+.page-title {
+  padding: 0;
+  height: 15rem;
+
+  .page-title-container {
+    position: relative;
+    top: 50%;
+    z-index: 2;
+  }
+
+}
+
+p.lead {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.8rem;
+}
+
+
+#mainSection {
+  min-height: 99vh;
+  //h3.sign-up-icon:before {
+  //  @include themifyBefore;
+  //  font-size: inherit;
+  //  content: "\e60f";
+  //}
+}

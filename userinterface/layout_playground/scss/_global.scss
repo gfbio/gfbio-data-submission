@@ -1,0 +1,144 @@
+// Global styling for this template
+body,
+html {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  // @include serif-font;
+  @include sans-serif-font;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+hr {
+  max-width: 50px;
+  border-width: 3px;
+  border-color: $primary;
+}
+
+hr.light {
+  border-color: $white;
+}
+
+a {
+  color: $primary;
+  @include transition-all;
+  &:hover {
+    color: darken($primary, .1);
+  }
+}
+
+h1,
+h2,
+  //   h3,
+  // h4,
+h5,
+h6 {
+  @include sans-serif-font;
+  // @include raleway;
+}
+
+h3 {
+  @include raleway;
+  font-size: 2rem;
+  line-height: 2.2rem;
+}
+
+h3.uppercase {
+  letter-spacing: 6px;
+  margin-right: -6px;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+h4 {
+  @include raleway;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+h4.uppercase {
+  letter-spacing: 3px;
+  margin-right: -3px;
+  font-weight: 400;
+  text-transform: uppercase;
+  //color: $gray-darkest;
+}
+
+p {
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: $gray-dark;
+  line-height: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+p.lead {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.75rem;
+}
+
+//.uppercase {
+//    font-weight: 400;
+//    text-transform: uppercase;
+//}
+//
+//h4 {
+//    font-size: 24px;
+//    line-height: 32px;
+//}
+
+.bg-primary {
+  background-color: $primary !important;
+  // background-color: $gfbio-blue-0-8 !important;
+}
+
+.bg-green {
+  background-color: $gfbio-green !important;
+}
+
+.bg-secondary {
+  background-color: $gray-100 !important;
+}
+
+.bg-dark {
+  background-color: $gray-darkest !important;
+}
+
+.text-faded {
+  color: fade-out($white, .3);
+}
+
+section {
+  padding: 4rem 0;
+}
+
+.section-heading {
+  margin-top: 0;
+}
+
+::-moz-selection {
+  color: $white;
+  background: $gray-900;
+  text-shadow: none;
+}
+
+::selection {
+  color: $white;
+  background: $gray-900;
+  text-shadow: none;
+}
+
+img::selection {
+  color: $white;
+  background: transparent;
+}
+
+img::-moz-selection {
+  color: $white;
+  background: transparent;
+}
