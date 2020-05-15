@@ -1,5 +1,4 @@
 import json
-from pprint import pprint
 
 import arrow
 import responses
@@ -69,8 +68,9 @@ class TestJiraIssueUpdateView(APITestCase):
             reference_key='SAND-007'
         )
 
+        cls.base_url = reverse('brokerage:submissions_jira_update')
         cls.url = '{}{}'.format(
-            reverse('brokerage:submissions_jira_update'),
+            cls.base_url,
             '?user_id=maweber%40mpi-bremen.de&user_key=maweber%40mpi-bremen.de')
 
     @classmethod
@@ -110,9 +110,7 @@ class TestJiraIssueUpdateView(APITestCase):
             },
             format='json')
 
-        pprint(json.loads(response.content))
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-
         self.assertEqual(1, len(RequestLog.objects.all()))
 
     def test_successful_embargo_update(self):
@@ -141,19 +139,15 @@ class TestJiraIssueUpdateView(APITestCase):
         submission = Submission.objects.first()
         self.assertEqual(one_year.date(), submission.embargo)
 
-    def test_request_query_string(self):
+    def test_brokeragent_get_paramter(self):
         submission = Submission.objects.first()
         six_months = arrow.now().shift(months=6)
         submission.embargo = six_months.date()
         submission.save()
-        url = '{}{}'.format(self.url,
+        url = '{}{}'.format(self.base_url,
                             '?user_id=brokeragent%40mpi-bremen.de&user_key=maweber%40mpi-bremen.de')
-        print(url)
-
-        # self.assertEqual(six_months.date(), submission.embargo)
 
         one_year = arrow.now().shift(years=1)
-
         response = self.client.post(
             url,
             {
@@ -167,10 +161,32 @@ class TestJiraIssueUpdateView(APITestCase):
                 }
             },
             format='json')
-        print('CONTENT:', response.content)
-        print(response.status_code)
-        # submission = Submission.objects.first()
-        # self.assertEqual(one_year.date(), submission.embargo)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+
+    def test_jirauser_get_parameter(self):
+        submission = Submission.objects.first()
+        six_months = arrow.now().shift(months=6)
+        submission.embargo = six_months.date()
+        submission.save()
+
+        self.assertNotIn('brokeragent', self.url)
+        one_year = arrow.now().shift(years=1)
+        response = self.client.post(
+            self.url,
+            {
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": one_year.for_json(),
+                        "customfield_10303": "{0}".format(
+                            submission.broker_submission_id),
+                    }
+                }
+            },
+            format='json')
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(1, len(RequestLog.objects.all()))
 
     def test_real_world_request(self):
         submission = Submission.objects.first()

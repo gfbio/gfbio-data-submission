@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django import forms
-from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 from gfbio_submissions.generic.fields import OrderedJsonFormField
 
@@ -19,10 +19,10 @@ class JiraIssueUpdateQueryForm(forms.Form):
     user_key = forms.CharField(required=False)
 
     def clean_user_id(self):
-        id = self.cleaned_data['user_id']
-        if id.count('brokeragent'):
+        user_id = self.cleaned_data['user_id']
+        if user_id.count('brokeragent'):
             raise ValidationError(
                 _('%(value)s is blacklisted'),
-                params={'value': id},
+                params={'value': user_id},
             )
-        return id
+        return user_id

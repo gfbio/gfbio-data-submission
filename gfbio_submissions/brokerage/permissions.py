@@ -4,7 +4,6 @@ import os
 
 from django.conf import settings
 from rest_framework import permissions
-
 logger = logging.getLogger(__name__)
 
 
