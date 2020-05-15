@@ -69,7 +69,9 @@ class TestJiraIssueUpdateView(APITestCase):
             reference_key='SAND-007'
         )
 
-        cls.url = reverse('brokerage:submissions_jira_update')
+        cls.url = '{}{}'.format(
+            reverse('brokerage:submissions_jira_update'),
+            '?user_id=maweber%40mpi-bremen.de&user_key=maweber%40mpi-bremen.de')
 
     @classmethod
     def tearDownClass(cls):
@@ -108,9 +110,8 @@ class TestJiraIssueUpdateView(APITestCase):
             },
             format='json')
 
-        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-
         pprint(json.loads(response.content))
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
 
         self.assertEqual(1, len(RequestLog.objects.all()))
 
@@ -145,7 +146,8 @@ class TestJiraIssueUpdateView(APITestCase):
         six_months = arrow.now().shift(months=6)
         submission.embargo = six_months.date()
         submission.save()
-        url = '{}{}'.format(self.url, '?user_id=brokeragent%40mpi-bremen.de&user_key=maweber%40mpi-bremen.de')
+        url = '{}{}'.format(self.url,
+                            '?user_id=brokeragent%40mpi-bremen.de&user_key=maweber%40mpi-bremen.de')
         print(url)
 
         # self.assertEqual(six_months.date(), submission.embargo)

@@ -16,7 +16,7 @@ class SubmissionCommentForm(forms.Form):
 
 class JiraIssueUpdateQueryForm(forms.Form):
     user_id = forms.CharField()
-    user_key = forms.CharField()
+    user_key = forms.CharField(required=False)
 
     def clean_user_id(self):
         id = self.cleaned_data['user_id']
