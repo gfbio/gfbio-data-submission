@@ -27,8 +27,8 @@ class HomeView(TemplateView):
     def get(self, request, *args, **kwargs):
         logger.debug('GET ', request)
         if self.request.user.is_authenticated:
-            # return redirect('/ui/submission/list')
-            return HttpResponseRedirect('/ui/submission/list')
+            return redirect('/ui/submission/list')
+        #     return HttpResponseRedirect('/ui/submission/list')
         return super().get(request, *args, **kwargs)
 
 
