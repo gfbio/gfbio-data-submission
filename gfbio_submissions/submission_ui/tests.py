@@ -56,7 +56,6 @@ class TestHomeView(TestCase):
     def test_home_view_authenticated_user(self):
         self.client.login(username='horst', password='password')
         response = self.client.get(self.base_url)
-        # self.assertEqual(302, response.status_code)
+        self.assertEqual(302, response.status_code)
         self.assertNotIn(b'src="/static/images/gfbio_logo_claim_landing.svg"',
                          response.content)
-        print(response.content)
