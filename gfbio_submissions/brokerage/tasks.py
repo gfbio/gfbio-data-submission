@@ -783,48 +783,6 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
         'email': user_email,
         'full_name': user_full_name
     }
-    # if len(submission.submitting_user) == 0:
-    #     logger.info(
-    #         'tasks.py | get_gfbio_helpdesk_username_task | '
-    #         'len(submission.submitting_user) == 0 | return {0}'.format(result))
-    #     return result
-
-    # if submission.site.username == HOSTING_SITE:
-    #     try:
-    #         logger.info(
-    #             'tasks.py | get_gfbio_helpdesk_username_task | try getting a local user | submission={1} | submitting_user={1}'.format(
-    #                 submission.broker_submission_id, submission.submitting_user)
-    #         )
-    #         user = User.objects.get(pk=int(submission.submitting_user))
-    #         user_name = user.external_user_id if user.external_user_id else user.username
-    #         user_email = user.email
-    #         result['email'] = user_email
-    #         user_full_name = user.name
-    #         result['full_name'] = user_full_name
-    #         logger.info(
-    #             'tasks.py | get_gfbio_helpdesk_username_task | try get user | username={0} | goe_id={1}'.format(
-    #                 user.username, user.external_user_id))
-    #     except ValueError as ve:
-    #         logger.warning(
-    #             'tasks.py | get_gfbio_helpdesk_username_task | '
-    #             'submission_id={0} | ValueError with '
-    #             'submission.submiting_user={1} | '
-    #             '{2}'.format(submission_id, submission.submitting_user, ve))
-    #     except User.DoesNotExist as e:
-    #         logger.warning(
-    #             'tasks.py | get_gfbio_helpdesk_username_task | '
-    #             'submission_id={0} | No user with '
-    #             'submission.submiting_user={1} | '
-    #             '{2}'.format(submission_id, submission.submitting_user, e))
-    #         logger.warning(
-    #             'tasks.py | get_gfbio_helpdesk_username_task | '
-    #             'submission_id={0} | Try getting user_email from previous task | user_name='
-    #             '{1}'.format(submission_id, user_name))
-    # else:
-    # TODO: add 'get_user_email method' specific to a site as a parameter to this task, otherwise no email resolution is possible
-    # user_name = submission.user.username
-    # user_email = submission.user.email if len(submission.user.email) else JIRA_FALLBACK_EMAIL
-    # result['email'] = user_email  # if len(user_email) else JIRA_FALLBACK_EMAIL
     user_name = submission.user.external_user_id \
         if submission.user.external_user_id \
         else submission.user.username

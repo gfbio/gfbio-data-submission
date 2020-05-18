@@ -645,9 +645,11 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data):
         req_log = RequestLog(
             request_id=outgoing_request_id,
             type=RequestLog.OUTGOING,
+            method=RequestLog.POST,
             url=archive_access.url,
             data=ena_submission_data,
-            site_user=site_user,
+            # site_user=site_user,
+            user=submission.user,
             submission_id=submission.broker_submission_id,
             response_status=response.status_code,
             response_content=response.content,

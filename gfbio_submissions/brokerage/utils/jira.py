@@ -3,6 +3,7 @@ import json
 import logging
 from io import StringIO
 from json import JSONDecodeError
+from pprint import pprint
 
 from jira import JIRA, JIRAError
 from requests import ConnectionError
@@ -70,6 +71,8 @@ class JiraClient(object):
         try:
             self.issue = self.jira.create_issue(fields=fields)
             self.error = None
+            print('JIRA create_issue')
+            pprint(self.jira.__dict__)
         except JIRAError as e:
             logger.warning(
                 'JiraClient | create_issue | JIRAError {0} | {1}'.format(e,
