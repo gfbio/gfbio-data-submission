@@ -179,11 +179,13 @@ class RequestLog(TimeStampedModel):
     POST = 1
     GET = 2
     PUT = 3
+    PATCH = 4
     METHOD_TYPES = (
         (NONE, 'not available'),
         (POST, 'POST'),
         (GET, 'GET'),
         (PUT, 'PUT'),
+        (PATCH, 'PATCH'),
     )
     request_id = models.UUIDField(
         primary_key=True,
