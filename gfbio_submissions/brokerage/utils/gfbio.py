@@ -37,7 +37,7 @@ def get_gfbio_helpdesk_username(user_name, email, fullname=''):
             method=RequestLog.GET,
             # user=instance.user,
             # submission_id=instance.submission.broker_submission_id,
-            response_content=response.data,
+            response_content=response.content,
             response_status=response.status_code,
         )
     return response

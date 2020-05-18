@@ -86,7 +86,7 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
         self.assertEqual(0, len(submission.submitting_user))
         self.assertEqual('GENERIC', submission.target)
         request_logs = RequestLog.objects.filter(type=RequestLog.INCOMING)
-        self.assertEqual(1, len(request_logs))
+        self.assertEqual(2, len(request_logs))
 
     # TODO: move to integration-test file
     # TODO: modify to use new endpoints
