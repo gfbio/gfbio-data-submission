@@ -6,6 +6,7 @@ import uuid
 from django.db import models
 from model_utils.models import TimeStampedModel
 
+from config.settings.base import AUTH_USER_MODEL
 from .fields import JsonDictField
 from .managers import SiteConfigurationManager
 
@@ -172,7 +173,17 @@ class RequestLog(TimeStampedModel):
     OUTGOING = '1'
     REQUEST_TYPES = (
         (INCOMING, 'incoming'),
-        (OUTGOING, 'outgoing')
+        (OUTGOING, 'outgoing'),
+    )
+    NONE = 0
+    POST = 1
+    GET = 2
+    PUT = 3
+    METHOD_TYPES = (
+        (NONE, 'not available'),
+        (POST, 'POST'),
+        (GET, 'GET'),
+        (PUT, 'PUT'),
     )
     request_id = models.UUIDField(
         primary_key=True,
@@ -183,6 +194,11 @@ class RequestLog(TimeStampedModel):
         choices=REQUEST_TYPES,
         default=INCOMING,
         help_text='We separate incoming and outgoing requests')
+    method = models.IntegerField(
+        choices=METHOD_TYPES,
+        default=NONE,
+        help_text='Http method used, if available'
+    )
     url = models.TextField(
         help_text='Target url of this Request',
         blank=True
@@ -192,10 +208,18 @@ class RequestLog(TimeStampedModel):
         help_text='Any kind of payload that comes '
                   'with with this request (if available)')
     # TODO: refactor too when changing ownership
+    # TODO: keeping it for legacy data
     site_user = models.CharField(
         max_length=72,
         help_text='A user of a site registered in our System. E.g. user=joe '
                   '(this value ...) at site=GFBio.org')
+    user = models.ForeignKey(
+        AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name='user_requestlogs',
+        on_delete=models.SET_NULL
+    )
     submission_id = models.UUIDField(
         null=True,
         blank=True,

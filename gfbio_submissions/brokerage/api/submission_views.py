@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import json
+from pprint import pprint
 from uuid import uuid4, UUID
 
 from django.db import transaction
+from django.urls import reverse
 from rest_framework import generics, mixins, permissions, parsers
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication, \
@@ -36,7 +38,10 @@ class SubmissionsView(mixins.ListModelMixin,
         with transaction.atomic():
             RequestLog.objects.create(
                 type=RequestLog.INCOMING,
-                site_user=submission.submitting_user if submission.submitting_user is not None else '',
+                method=RequestLog.POST,
+                url=reverse('brokerage:submissions'),
+                # site_user=submission.submitting_user if submission.submitting_user is not None else '',
+                user=submission.user,
                 submission_id=submission.broker_submission_id,
                 response_content=submission.data,
                 response_status=201,
@@ -123,36 +128,36 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                     ).set(countdown=SUBMISSION_DELAY)
             chain()
 
-            return response
+            response = response
         else:
-            return Response(
+            response = Response(
                 data={
                     'broker_submission_id': instance.broker_submission_id,
                     'status': instance.status,
                     'embargo': instance.embargo,
                     'error': 'no modifications allowed with current status'
                 }, status=status.HTTP_400_BAD_REQUEST)
+        with transaction.atomic():
+            RequestLog.objects.create(
+                type=RequestLog.INCOMING,
+                method=RequestLog.PUT,
+                url=reverse('brokerage:submissions'),
+                # site_user=submission.submitting_user if submission.submitting_user is not None else '',
+                user=instance.user,
+                submission_id=instance.broker_submission_id,
+                response_content=response.data,
+                response_status=response.status_code,
+                # triggered_by=None,
+            )
+        # print('RESPONSE so far')
+        # pprint(response.__dict__)
+        return response
 
     def delete(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.status = Submission.CANCELLED
         instance.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-# class UserSubmissionDetailView(generics.ListAPIView):
-#     serializer_class = SubmissionDetailSerializer
-#     authentication_classes = (TokenAuthentication, BasicAuthentication)
-#     permission_classes = (permissions.IsAuthenticated,
-#                           permissions.DjangoModelPermissions,
-#                           IsOwnerOrReadOnly)
-#
-#     # TODO: test for real django user here
-#     # TODO: test for ownership additional to site permissions
-#     def get_queryset(self):
-#         submitting_user = self.kwargs['submitting_user']
-#         return Submission.objects.filter(
-#             submitting_user=submitting_user).order_by('-modified')
 
 
 class SubmissionUploadView(mixins.CreateModelMixin,
@@ -173,15 +178,32 @@ class SubmissionUploadView(mixins.CreateModelMixin,
 
     def create(self, request, *args, **kwargs):
         broker_submission_id = kwargs.get('broker_submission_id', uuid4())
+
         try:
             sub = Submission.objects.get(
                 broker_submission_id=broker_submission_id
             )
         except Submission.DoesNotExist as e:
-            return Response({'submission': 'No submission for this '
-                                           'broker_submission_id:'
-                                           ' {0}'.format(broker_submission_id)},
-                            status=status.HTTP_404_NOT_FOUND)
+            response = Response({'submission': 'No submission for this '
+                                               'broker_submission_id:'
+                                               ' {0}'.format(
+                broker_submission_id)},
+                                status=status.HTTP_404_NOT_FOUND)
+
+            with transaction.atomic():
+                RequestLog.objects.create(
+                    type=RequestLog.INCOMING,
+                    # url=reverse('brokerage:submissions_upload'),
+                    method=RequestLog.POST,
+                    # site_user=submission.submitting_user if submission.submitting_user is not None else '',
+                    # user=instance.user,
+                    submission_id=broker_submission_id,
+                    response_content=response.data,
+                    response_status=response.status_code,
+                    # triggered_by=None,
+                )
+
+            return response
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -193,8 +215,22 @@ class SubmissionUploadView(mixins.CreateModelMixin,
         data_content['id'] = obj.pk
         data_content['broker_submission_id'] = sub.broker_submission_id
 
-        return Response(data_content, status=status.HTTP_201_CREATED,
+        response = Response(data_content, status=status.HTTP_201_CREATED,
                         headers=headers)
+
+        with transaction.atomic():
+            RequestLog.objects.create(
+                type=RequestLog.INCOMING,
+                # url=reverse('brokerage:submissions_upload'),
+                method=RequestLog.POST,
+                # site_user=submission.submitting_user if submission.submitting_user is not None else '',
+                user=sub.user,
+                submission_id=sub.broker_submission_id,
+                response_content=response.data,
+                response_status=response.status_code,
+                # triggered_by=None,
+            )
+        return response
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
