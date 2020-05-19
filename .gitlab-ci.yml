@@ -105,7 +105,7 @@ update_staging_env:
   stage: updateStaging
   script:
     - rsync -a /home/gitlab-runner/.envs .
-    - sed -i 's/rule\:.*/rule\: "Host:c103-171.cloud.gwdg.de"/g' compose/production/traefik/traefik.yml
+    - sed -i 's/rule:.*/rule:"Host:c103-171.cloud.gwdg.de"/g' compose/production/traefik/traefik.yml
     - docker-compose -f production.yml up -d postgres
     - docker-compose -f production.yml run --rm postgres backup
     - docker-compose -f production.yml run --rm django python manage.py migrate
