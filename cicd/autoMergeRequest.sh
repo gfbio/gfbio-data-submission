@@ -23,7 +23,8 @@ BODY="{
     \"labels\": \"${ISSUE_LABELS}\",
     \"milestone_id\": \"${ISSUE_MILESTONE}\",
     \"title\": \"WIP: ${CI_COMMIT_REF_NAME}\",
-    \"assignee_ids\": [3832,3834]
+    \"assignee_ids\": [3832,3834],
+    \"description\": \"Closes: #${ISSUE_ID}\"
 }";
 
 # Require a list of all the merge request and take a look if there is already
