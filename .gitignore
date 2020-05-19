@@ -171,13 +171,12 @@ typings/
 # User-specific stuff:
 .idea/dictionaries
 .idea/inspectionProfiles
-.idea/**/workspace.xml
-.idea/**/tasks.xml
-.idea/**/gfbio_submissions.iml
-.idea/**/misc.xml
-.idea/**/modules.xml
-.idea/**/vcs.xml
-.idea/**/workspace.xml
+**/.idea/**/workspace.xml
+**/.idea/**/tasks.xml
+**/.idea/**/gfbio_submissions.iml
+**/.idea/**/misc.xml
+**/.idea/**/modules.xml
+**/.idea/**/vcs.xml
 **/.idea/**/userinterface.iml
 
 # Sensitive or high-churn files:
