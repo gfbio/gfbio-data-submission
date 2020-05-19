@@ -9,7 +9,7 @@ IFS='-' read -ra ISSUE_SPLIT <<< "${CI_COMMIT_REF_NAME}"
 IFS=';'
 ISSUE_ID=${ISSUE_SPLIT[0]}
 
-ISSUE_INFO=`curl --silent "https://gitlab.gwdg.de//api/v4/projects/10414/issues?iids[]=${ISSUE_ID}" --header "PRIVATE-TOKEN:${PRIVATE_TOKEN}" |  python3 -c "import sys, json; print(json.load(sys.stdin)[0])"`
+ISSUE_INFO=`curl --silent "https://gitlab.gwdg.de//api/v4/projects/${CI_PROJECT_ID}/issues?iids[]=${ISSUE_ID}" --header "PRIVATE-TOKEN:${PRIVATE_TOKEN}" |  python3 -c "import sys, json; print(json.load(sys.stdin)[0])"`
 ISSUE_LABELS=`python3 -c "import json; l=${ISSUE_INFO}['labels']; print(','.join(l))"`
 ISSUE_MILESTONE=`python3 -c "import json; print(${ISSUE_INFO}['milestone']['id'])"`
 
