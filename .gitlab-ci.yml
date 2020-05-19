@@ -1,7 +1,5 @@
 stages:
-  #  - lint
   - unitTests
-  - buildDockerImages
   - autoMerge
   - test
   - createWebTest
@@ -10,15 +8,6 @@ stages:
   - updateStaging
   - buildProduction
   - deploy
-
-# TODO: use later as additional stage.
-#flake8:
-#  stage: lint
-#  image: python:3.7-alpine
-#  before_script:
-#    - pip install -q flake8
-#  script:
-#    - flake8
 
 run_unit_tests:
   stage: unitTests
@@ -34,28 +23,6 @@ run_unit_tests:
     name: review/$CI_COMMIT_REF_NAME
   only:
     - branches
-  except:
-    refs:
-      - master
-      - production
-  tags:
-    - dev
-
-build_images:
-  stage: buildDockerImages
-  script:
-    - rsync -a /home/gitlab-runner/.envs .
-    - docker-compose -f production.yml build
-  environment:
-    name: review/$CI_COMMIT_REF_NAME
-  only:
-    refs:
-      - branches
-    changes:
-      - compose/production/**/*
-      - requirements/*
-    variables:
-      - $CI_COMMIT_MESSAGE =~ /.*web-test.*/
   except:
     refs:
       - master
@@ -139,7 +106,8 @@ update_staging_env:
   script:
     - rsync -a /home/gitlab-runner/.envs .
     - sed -i 's/rule =.*/rule = "Host:c103-171.cloud.gwdg.de"/g' compose/production/traefik/traefik.yml
-    # - docker-compose -f production.yml run --rm postgres backup
+    - docker-compose -f production.yml up -d postgres
+    - docker-compose -f production.yml run --rm postgres backup
     - docker-compose -f production.yml run --rm django python manage.py migrate
     - docker-compose -f production.yml down
     - docker-compose -f production.yml up -d
@@ -172,6 +140,7 @@ deploy_to_production:
   stage: deploy
   script:
     - rsync -a /home/gitlab-runner/.envs .
+    - docker-compose -f production.yml up -d postgres
     - docker-compose -f production.yml run --rm postgres backup
     - docker-compose -f production.yml run --rm django python manage.py migrate
     - docker-compose -f production.yml down
