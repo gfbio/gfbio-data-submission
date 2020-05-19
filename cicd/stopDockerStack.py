@@ -3,7 +3,7 @@ import sys
 import subprocess
 
 commit_msg = sys.argv[1]
-pattern = "Merge branch \'([0-9]+-.+)\' into \'master\'"
+pattern = "Merge branch \'([0-9]+-.+)\' into .+"
 branch = re.findall(pattern, commit_msg)
 
 if len(branch) == 0:

@@ -1,9 +1,6 @@
-version: '3'
+version: '3.7'
 
 volumes:
-  production_postgres_data: {}
-  production_postgres_data_backups: {}
-  production_traefik: {}
   django_media: {}
 
 services:
@@ -18,8 +15,6 @@ services:
     env_file:
       - ../.envs/.production/.django
       - ../.envs/.production/.postgres
-    networks:
-      - internal
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - django_media:/app/gfbio_submissions/media
@@ -53,42 +48,68 @@ services:
       context: .
       dockerfile: ../compose/production/postgres/Dockerfile
     image: gfbio_submissions_production_postgres
-    volumes:
-      - production_postgres_data:/var/lib/postgresql/data
-      - production_postgres_data_backups:/backups
+    networks:
+      - internal
+    restart: always
     env_file:
       - ../.envs/.production/.postgres
 
-  traefik:
+  redis:
+    image: redis:5.0
+    restart: always
+    networks:
+      - internal
+
+  celeryworker:
     build:
       context: .
       dockerfile: ../compose/production/django/Dockerfile
     depends_on:
-      - django
+      - postgres
+      - redis
+    env_file:
+      - ../.envs/.production/.django
+      - ../.envs/.production/.postgres
+    networks:
+      - internal
     volumes:
-      - production_traefik:/etc/traefik/acme
-    ports:
-      - "0.0.0.0:80:80"
-      - "0.0.0.0:443:443"
-      - "0.0.0.0:5555:5555"
-
-  redis:
-    image: redis:5.0
-
-  celeryworker:
-    <<: *django
+      - /etc/localtime:/etc/localtime:ro
     image: gfbio_submissions_production_celeryworker
     command: /start-celeryworker
     restart: always
 
   celerybeat:
-    <<: *django
+    build:
+      context: .
+      dockerfile: ../compose/production/django/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ../.envs/.production/.django
+      - ../.envs/.production/.postgres
+    networks:
+      - internal
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
     image: gfbio_submissions_production_celerybeat
     command: /start-celerybeat
     restart: always
 
   flower:
-    <<: *django
+    build:
+      context: .
+      dockerfile: ../compose/production/django/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ../.envs/.production/.django
+      - ../.envs/.production/.postgres
+    networks:
+      - internal
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
     image: gfbio_submissions_production_flower
     restart: always
     command: /start-flower
