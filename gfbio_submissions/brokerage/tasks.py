@@ -1406,12 +1406,17 @@ def notify_user_embargo_expiry_task(self):
         submission=None,
         task=self)
 
+    results = []
+
     site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
     if site_configuration is None or site_configuration.helpdesk_server is None:
         return TaskProgressReport.CANCELLED
 
     all_submissions = Submission.objects.all()
     for submission in all_submissions:
+        # only send notification for closed submissions with PID type PRJ
+        if submission.status != Submission.CLOSED:
+            continue
         # get study object
         study = submission.brokerobject_set.filter(type='study').first()
         if study:
@@ -1455,10 +1460,14 @@ def notify_user_embargo_expiry_task(self):
                         study_pid.user_notified = datetime.date.today()
                         study_pid.save()
 
-                        return {
-                            'submission': submission.id,
+                        results.append({
+                            'submission': submission.broker_submission_id,
                             'issue_key': reference.reference_key,
                             'embargo': submission.embargo.isoformat(),
                             'user_notified_on': datetime.date.today().isoformat(),
-                        }
-    return True
+                        })
+
+    if len(results) != 0:
+        return results
+
+    return "No notifications to send"

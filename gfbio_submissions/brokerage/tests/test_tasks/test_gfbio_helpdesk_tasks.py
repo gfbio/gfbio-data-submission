@@ -553,6 +553,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         today = datetime.date.today()
         submission = Submission.objects.first()
         submission.embargo = today
+        submission.status = Submission.CLOSED
         submission.save()
         submission.brokerobject_set.filter(
             type='study'
@@ -566,4 +567,5 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
                       json={'bla': 'blubb'},
                       status=200)
         result = notify_user_embargo_expiry_task()
-        self.assertEqual(today.isoformat(), result['user_notified_on'])
+        self.assertEqual(1, len(result))
+        self.assertEqual(today.isoformat(), result[0]['user_notified_on'])
