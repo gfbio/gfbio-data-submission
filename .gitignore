@@ -179,6 +179,8 @@ typings/
 **/.idea/**/vcs.xml
 **/.idea/**/userinterface.iml
 
+userinterface/.idea/workspace.xml
+
 # Sensitive or high-churn files:
 .idea/**/dataSources/
 .idea/**/dataSources.ids

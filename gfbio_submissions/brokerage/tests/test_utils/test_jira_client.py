@@ -2,6 +2,7 @@
 
 import datetime
 from io import StringIO
+from pprint import pprint
 from unittest import skip
 
 import jira
@@ -24,7 +25,7 @@ from gfbio_submissions.brokerage.tests.utils import _get_pangaea_soap_response, 
     _get_jira_attach_response, _get_request_comment_response
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.generic.models import SiteConfiguration, \
-    ResourceCredential
+    ResourceCredential, RequestLog
 from gfbio_submissions.users.models import User
 
 
@@ -145,22 +146,6 @@ class TestJiraClient(TestCase):
             status=200,
         )
 
-    # @classmethod
-    # def _create_test_data(cls, path, delete=True):
-    #     if delete:
-    #         cls._delete_test_data()
-    #     f = open(path, 'w')
-    #     f.write('test123\n')
-    #     f.close()
-    #     f = open(path, 'rb')
-    #     return {
-    #         'file': f,
-    #     }
-    #
-    # @staticmethod
-    # def _delete_test_data():
-    #     SubmissionUpload.objects.all().delete()
-
     @responses.activate
     def test_instance(self):
         self._add_jira_field_response()
@@ -179,12 +164,14 @@ class TestJiraClient(TestCase):
         self._add_jira_field_response(status_code=400, body='client_error')
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         self.assertIsNone(jira_client.jira)
+        # pprint(RequestLog.objects.first().__dict__)
 
     @responses.activate
     def test_server_connection_error(self):
         self._add_jira_field_response(status_code=500, body='server_error')
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         self.assertIsNone(jira_client.jira)
+        # pprint(RequestLog.objects.first().__dict__)
 
     @responses.activate
     def test_create_issue(self):
@@ -193,6 +180,7 @@ class TestJiraClient(TestCase):
         jira_client.create_issue(fields=self.minimal_issue_fields)
         self.assertIsNone(jira_client.error)
         self.assertIsNotNone(jira_client.issue)
+        pprint(RequestLog.objects.first().__dict__)
 
     @responses.activate
     def test_create_issue_client_error(self):
@@ -202,6 +190,7 @@ class TestJiraClient(TestCase):
         jira_client.create_issue(fields=self.minimal_issue_fields)
         self.assertIsNotNone(jira_client.error)
         self.assertIsNone(jira_client.issue)
+        pprint(RequestLog.objects.first().__dict__)
 
     @responses.activate
     def test_create_issue_server_error(self):
@@ -445,6 +434,7 @@ class TestJiraClient(TestCase):
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         jira_client.delete_attachment('1')
         self.assertIsNone(jira_client.error)
+        pprint(RequestLog.objects.first().__dict__)
 
     @responses.activate
     def test_delete_attachment_client_error(self):

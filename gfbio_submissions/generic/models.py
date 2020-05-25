@@ -171,21 +171,25 @@ class TicketLabel(models.Model):
 class RequestLog(TimeStampedModel):
     INCOMING = '0'
     OUTGOING = '1'
+    JIRA = '2'
     REQUEST_TYPES = (
         (INCOMING, 'incoming'),
         (OUTGOING, 'outgoing'),
+        (JIRA, 'jira'),
     )
     NONE = 0
     POST = 1
     GET = 2
     PUT = 3
     PATCH = 4
+    DELETE = 5
     METHOD_TYPES = (
         (NONE, 'not available'),
         (POST, 'POST'),
         (GET, 'GET'),
         (PUT, 'PUT'),
         (PATCH, 'PATCH'),
+        (DELETE, 'DELETE')
     )
     request_id = models.UUIDField(
         primary_key=True,
