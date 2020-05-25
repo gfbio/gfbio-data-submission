@@ -26,7 +26,6 @@ logger = logging.getLogger(__name__)
 class JiraClient(object):
 
     def __init__(self, resource, token_resource=None):
-        print('\n ****** JiraClient init')
         self.resource = resource
         self.token_resource = token_resource
         if token_resource is None:
@@ -41,7 +40,6 @@ class JiraClient(object):
         self.max_retry_count = 3
 
     def _get_connection(self, max_retries=0, get_server_info=False, options={}):
-        print('\n ****** JC _get_connection')
         options.update({
             'server': self.resource.url
         })
@@ -53,23 +51,23 @@ class JiraClient(object):
                 get_server_info=get_server_info,
             )
         except ConnectionError as ce:
-            # TODO: Requestlog for connection only on errors
-            # TODO: create a dedicated method to create RequestLogs for jira
-            RequestLog.objects.create(
-                type=RequestLog.JIRA,
-                method=RequestLog.NONE,
-                url=self.resource.url,
-                request_details={'error': '{}'.format(ce)}
+            RequestLog.objects.create_jira_log(
+                {
+                    'method': RequestLog.NONE,
+                    'url': self.resource.url,
+                    'request_details': {'error': '{}'.format(ce)}
+                }
             )
             logger.error(
                 'JiraClient | _get_connection | ConnectionError | {0}'.format(
                     ce))
         except JIRAError as je:
-            RequestLog.objects.create(
-                type=RequestLog.JIRA,
-                method=RequestLog.NONE,
-                url=self.resource.url,
-                request_details={'error': '{}'.format(je)}
+            RequestLog.objects.create_jira_log(
+                {
+                    'method': RequestLog.NONE,
+                    'url': self.resource.url,
+                    'request_details': {'error': '{}'.format(je)}
+                }
             )
             logger.error(
                 'JiraClient | _get_connection | JIRAError | {0}'.format(je))
@@ -84,13 +82,9 @@ class JiraClient(object):
 
     # https://jira.readthedocs.io/en/master/examples.html#issues
     def create_issue(self, fields={}):
-        print('\n ****** JC create issue')
-        # request_log = RequestLog(**{'type': RequestLog.JIRA})
-        # request_log.save()
         log_arguments = {
-            'type': RequestLog.JIRA,
             'method': RequestLog.POST,
-            'data': fields,
+            'data': {'fields': fields},
             'url': self.jira._get_url('issue'),
             'request_details': {
                 'function_called': '{}'.format(self.create_issue)}
@@ -99,10 +93,6 @@ class JiraClient(object):
             self.issue = self.jira.create_issue(fields=fields)
             self.error = None
             log_arguments['response_content'] = self.issue.raw
-            # print('JIRA create_issue try')
-            # pprint(self.__dict__)
-            # pprint(self.jira.__dict__)
-            # pprint(self.issue.raw)
         except JIRAError as e:
             logger.warning(
                 'JiraClient | create_issue | JIRAError {0} | {1}'.format(e,
@@ -110,14 +100,12 @@ class JiraClient(object):
             log_arguments['request_details']['error'] = '{}'.format(e)
             self.issue = None
             self.error = e
-        request_log = RequestLog(**log_arguments)
-        request_log.save()
+        RequestLog.objects.create_jira_log(log_arguments)
 
     def get_issue(self, key=''):
         log_arguments = {
-            'type': RequestLog.JIRA,
             'method': RequestLog.GET,
-            'data': key,
+            'data': {'key': key},
             'url': self.jira._get_url('issue'),
             'request_details': {
                 'function_called': '{}'.format(self.get_issue)}
@@ -133,13 +121,11 @@ class JiraClient(object):
             log_arguments['request_details']['error'] = '{}'.format(e)
             self.issue = None
             self.error = e
-        request_log = RequestLog(**log_arguments)
-        request_log.save()
+        RequestLog.objects.create_jira_log(log_arguments)
 
     def update_issue(self, key, fields, notify=False):
         self.get_issue(key)
         log_arguments = {
-            'type': RequestLog.JIRA,
             'method': RequestLog.PUT,
             'data': {'fiels': fields, 'key': key},
             'url': self.jira._get_url('issue'),
@@ -153,17 +139,14 @@ class JiraClient(object):
         except JIRAError as e:
             self.error = e
             log_arguments['request_details']['error'] = '{}'.format(e)
-        request_log = RequestLog(**log_arguments)
-        request_log.save()
+        RequestLog.objects.create_jira_log(log_arguments)
 
     # https://jira.readthedocs.io/en/master/examples.html#comments
     def add_comment(self, key_or_issue, text):
         log_arguments = {
-            'type': RequestLog.JIRA,
             'method': RequestLog.POST,
             'data': {'key_or_issue': key_or_issue, 'text': text},
-            'url': self.jira._get_url(
-                'issue/' + str(key_or_issue) + '/comment'),
+            'url': self.jira._get_url('issue/{}/comment'.format(key_or_issue)),
             'request_details': {
                 'function_called': '{}'.format(self.add_comment)}
         }
@@ -178,16 +161,14 @@ class JiraClient(object):
             self.comment = None
             self.error = e
             log_arguments['request_details']['error'] = '{}'.format(e)
-        request_log = RequestLog(**log_arguments)
-        request_log.save()
+        RequestLog.objects.create_jira_log(log_arguments)
 
     def get_comments(self, key):
         self.get_issue(key)
         log_arguments = {
-            'type': RequestLog.JIRA,
             'method': RequestLog.GET,
             'data': {'key': key},
-            'url': self.jira._get_url('issue/' + str(key) + '/comment'),
+            'url': self.jira._get_url('issue/{}/comment'.format(key)),
             'request_details': {
                 'function_called': '{}'.format(self.get_comments)}
         }
@@ -202,19 +183,17 @@ class JiraClient(object):
             self.error = e
             log_arguments['request_details']['error'] = '{}'.format(e)
             return None
-        request_log = RequestLog(**log_arguments)
-        request_log.save()
+        RequestLog.objects.create_jira_log(log_arguments)
 
     # https://jira.readthedocs.io/en/master/examples.html#attachments
     # file-like, string-path, stringIO (requires filename)
     def add_attachment(self, key, file, file_name=None):
         self.get_issue(key)
         log_arguments = {
-            'type': RequestLog.JIRA,
             'method': RequestLog.POST,
             'data': {'key': key, 'file': '{}'.format(file)},
             'url': self.jira._get_url(
-                'issue/' + str(self.issue) + '/attachments'),
+                'issue/{}/attachments'.format(self.issue)),
             'request_details': {
                 'function_called': '{}'.format(self.add_attachment)}
         }
@@ -235,15 +214,13 @@ class JiraClient(object):
             self.error = e
             log_arguments['request_details']['error'] = '{}'.format(e)
             return None
-        request_log = RequestLog(**log_arguments)
-        request_log.save()
+        RequestLog.objects.create_jira_log(log_arguments)
 
     def delete_attachment(self, id):
         log_arguments = {
-            'type': RequestLog.JIRA,
             'method': RequestLog.DELETE,
             'data': {'id': id},
-            'url': self.jira._get_url('attachment/' + str(id)),
+            'url': self.jira._get_url('attachment/{}'.format(id)),
             'request_details': {
                 'function_called': '{}'.format(self.delete_attachment)}
         }
@@ -258,16 +235,14 @@ class JiraClient(object):
                                                                               e.text))
             log_arguments['request_details']['error'] = '{}'.format(e)
             self.error = e
-        request_log = RequestLog(**log_arguments)
-        request_log.save()
+        RequestLog.objects.create_jira_log(log_arguments)
 
     def add_remote_link(self, key_or_issue, url='', title=''):
         log_arguments = {
-            'type': RequestLog.JIRA,
             'method': RequestLog.POST,
             'data': {'key_or_issue': key_or_issue, 'url': url, 'title': title},
             'url': self.jira._get_url(
-                'issue/' + str(key_or_issue) + '/remotelink'),
+                'issue/{}/remotelink'.format(key_or_issue)),
             'request_details': {
                 'function_called': '{}'.format(self.add_remote_link)}
         }
@@ -284,8 +259,7 @@ class JiraClient(object):
                                                                             e.text))
             self.error = e
             log_arguments['request_details']['error'] = '{}'.format(e)
-        request_log = RequestLog(**log_arguments)
-        request_log.save()
+        RequestLog.objects.create_jira_log(log_arguments)
 
     # specialized methods ------------------------------------------------------
     # TODO: ADD RequestLogs or aquivalent ...

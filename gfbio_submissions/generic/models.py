@@ -8,7 +8,7 @@ from model_utils.models import TimeStampedModel
 
 from config.settings.base import AUTH_USER_MODEL
 from .fields import JsonDictField
-from .managers import SiteConfigurationManager
+from .managers import SiteConfigurationManager, RequestLogManager
 
 logger = logging.getLogger(__name__)
 
@@ -252,6 +252,8 @@ class RequestLog(TimeStampedModel):
         default=dict,
         help_text='This may contain meta-information regarding this request'
     )
+
+    objects = RequestLogManager()
 
     def __str__(self):
         return '{}'.format(self.request_id)
