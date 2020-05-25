@@ -304,11 +304,7 @@ class JiraClient(object):
                 if 'The reporter specified is not a user' in reporter_errors.get(
                         'reporter', ''):
                     default = {
-                        # FIXME: parameter, not hardcoded. user has to exist
-                        # 'user_email': JIRA_FALLBACK_EMAIL,
                         'name': JIRA_FALLBACK_USERNAME,
-                        # 'user_email': 'maweber@mpi-bremen.de',
-                        # brokeragent@gfbio.org
                         'user_full_name': '',
                         'first_name': '',
                         'last_name': '',
@@ -348,13 +344,6 @@ class JiraClient(object):
             'JiraClient | get_doi_from_pangaea_issue | issue {0} '.format(
                 self.issue))
         if PANGAEA_ISSUE_DOI_FIELD_NAME in self.issue.raw['fields'].keys():
-            # logger.info(
-            #     'JiraClient | get_doi_from_pangaea_issue | doi fieldname in fields {1} | '
-            #     'raw["fields"] keys {0} | type {2} |raw["fields"] \n\n{3}'.format(
-            #         self.issue.raw['fields'].keys(),
-            #         PANGAEA_ISSUE_DOI_FIELD_NAME in self.issue.raw[
-            #             'fields'].keys(), type(self.issue.raw['fields']),
-            #         self.issue.raw['fields']))
             field_value = self.issue.raw['fields'][PANGAEA_ISSUE_DOI_FIELD_NAME]
             logger.info(
                 'JiraClient | get_doi_from_pangaea_issue | field_value={0}'.format(
