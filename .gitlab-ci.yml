@@ -21,23 +21,15 @@ run_unit_tests:
     - docker stack rm ${CI_COMMIT_REF_NAME}-tests
   environment:
     name: review/$CI_COMMIT_REF_NAME
-  only:
-    - branches
-  except:
-    refs:
-      - master
-      - production
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+-/'
   tags:
     - dev
 
 create_merge_request:
   stage: autoMerge
-  only:
-    - branches
-  except:
-    refs:
-      - master
-      - production
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+-/'
   script:
     - HOST=${CI_PROJECT_URL} CI_PROJECT_ID=${CI_PROJECT_ID} CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} GITLAB_USER_ID=${GITLAB_USER_ID} PRIVATE_TOKEN=${PRIVATE_TOKEN} ./cicd/autoMergeRequest.sh
   tags:
@@ -47,11 +39,8 @@ docker_stop_web_test:
   stage: afterMerge
   script:
     - python cicd/stopDockerStack.py "${CI_COMMIT_MESSAGE}"
-  only:
-    refs:
-      - master
-    variables:
-      - $CI_COMMIT_MESSAGE =~ /.*Merge branch.*into.*/
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master" && $CI_COMMIT_MESSAGE =~ /.*Merge branch.*into.*/' 
   tags:
     - dev
 
@@ -73,15 +62,8 @@ docker_web_test:
   environment:
     name: review/$CI_COMMIT_REF_NAME
     url: https://$CI_COMMIT_REF_NAME.dev.submissions.gfbio.org/accounts/login
-  only:
-    refs:
-      - branches
-    variables:
-      - $CI_COMMIT_MESSAGE =~ /.*web-test.*/
-  except:
-    refs:
-      - master
-      - production
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+-/ && $CI_COMMIT_MESSAGE =~ /.*web-test.*/'
   tags:
     - dev
 
@@ -95,9 +77,8 @@ build_staging:
     - docker-compose -f production.yml build
   environment:
     name: staging
-  only:
-    refs:
-      - master
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
   tags:
     - staging
 
@@ -114,9 +95,8 @@ update_staging_env:
   environment:
     name: staging
     url: https://c103-171.cloud.gwdg.de/
-  only:
-    refs:
-      - master
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
   tags:
     - staging
 
@@ -127,12 +107,8 @@ production_build:
     - cd userinterface && npm i && npm run collect-ci
     - cd ../
     - docker-compose -f production.yml build
-  only:
-    refs:
-      - tags
-  except:
-    - branches
-    - /^\d+-/i
+  rules:
+    - if: '$CI_COMMIT_TAG != null && $CI_COMMIT_BRANCH == "master"'
   tags:
     - production
 
@@ -148,12 +124,7 @@ deploy_to_production:
   environment:
     name: production
     url: https://submissions.gfbio.org
-  only:
-    refs:
-      - tags
-  except:
-    - branches
-    - /^\d+-/i
+  rules:
+    - if: '$CI_COMMIT_TAG != null && $CI_COMMIT_BRANCH == "master"'
   tags:
     - production
-
