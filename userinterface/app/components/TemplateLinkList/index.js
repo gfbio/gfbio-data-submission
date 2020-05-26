@@ -30,14 +30,13 @@ class TemplateLinkList extends React.PureComponent {
               <span className="upload-header">
                 <i
                   className="icon ion-ios-help-circle-outline help align-bottom ml-2"
-                  aria-hidden="true"></i>
+                  aria-hidden="true"
+                />
               </span>
             </OverlayTrigger>
           </h2>
-
         </header>
         <div className="form-group list-group template-links">
-          
           <h5 className="metadata_data_title">Molecular Data Template:</h5>
           <div>
             <a
@@ -49,9 +48,9 @@ class TemplateLinkList extends React.PureComponent {
               <i className="icon ion-md-download" />
               CSV Template
             </a>
-            
+
             <a
-              href="https://gitlab.gwdg.de/gfbio/molecular-submission-templates/-/wikis/Template-Description"
+              href="https://gitlab.gwdg.de/gfbio/molecular-submission-templates/-/blob/master/Template-Description.md"
               className="list-group-item list-group-item-action metadata-link no-border"
               target="_blank"
             >
@@ -59,19 +58,21 @@ class TemplateLinkList extends React.PureComponent {
               Template Description
             </a>
           </div>
-          
-          <h5 className="metadata_data_last_title">Biodiversity, Ecological and Collection Data Template:</h5>
-            <div>
-              <a
-                href="https://species-id.net/o/media/1/1d/GFBio_data_submission_template.zip"
-                className="list-group-item list-group-item-action metadata-link no-border"
-                target="_blank"
-              >
-                <i className="icon ion-md-download" />
-                CSV Template
-              </a>
 
-              <a
+          <h5 className="metadata_data_last_title">
+            Biodiversity, Ecological and Collection Data Template:
+          </h5>
+          <div>
+            <a
+              href="https://species-id.net/o/media/1/1d/GFBio_data_submission_template.zip"
+              className="list-group-item list-group-item-action metadata-link no-border"
+              target="_blank"
+            >
+              <i className="icon ion-md-download" />
+              CSV Template
+            </a>
+
+            <a
               href="https://gfbio.biowikifarm.net/wiki/Data_submission_templates_for_biodiversity,_ecological_and_collection_data"
               className="list-group-item list-group-item-action metadata-link no-border"
               target="_blank"
@@ -79,23 +80,23 @@ class TemplateLinkList extends React.PureComponent {
               <i className="icon ion-md-book" />
               Template Description
             </a>
-            </div>
-          {/*<a*/}
-          {/*  href="https://gfbio.biowikifarm.net/wiki/Data_submission_forms_for_occurrence_data"*/}
-          {/*  className="list-group-item list-group-item-action"*/}
-          {/*  target="_blank"*/}
-          {/*>*/}
-          {/*  <i className="icon ion-md-download" />*/}
-          {/*  Occurrence Data*/}
-          {/*</a>*/}
-          {/*<a*/}
-          {/*  href="https://gfbio.biowikifarm.net/wiki/Data_submission_forms_for_the_deposit_of_biological_and_environmental_samples"*/}
-          {/*  className="list-group-item list-group-item-action"*/}
-          {/*  target="_blank"*/}
-          {/*>*/}
-          {/*  <i className="icon ion-md-download" />*/}
-          {/*  Environmental Sample Data*/}
-          {/*</a>*/}
+          </div>
+          {/* <a */}
+          {/*  href="https://gfbio.biowikifarm.net/wiki/Data_submission_forms_for_occurrence_data" */}
+          {/*  className="list-group-item list-group-item-action" */}
+          {/*  target="_blank" */}
+          {/* > */}
+          {/*  <i className="icon ion-md-download" /> */}
+          {/*  Occurrence Data */}
+          {/* </a> */}
+          {/* <a */}
+          {/*  href="https://gfbio.biowikifarm.net/wiki/Data_submission_forms_for_the_deposit_of_biological_and_environmental_samples" */}
+          {/*  className="list-group-item list-group-item-action" */}
+          {/*  target="_blank" */}
+          {/* > */}
+          {/*  <i className="icon ion-md-download" /> */}
+          {/*  Environmental Sample Data */}
+          {/* </a> */}
         </div>
       </div>
     );
