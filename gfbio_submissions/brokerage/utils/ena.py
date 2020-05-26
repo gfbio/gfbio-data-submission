@@ -627,7 +627,7 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data):
     #     files=ena_submission_data,
     #     verify=False
     # )
-    response, request_id = logged_requests.post(
+    return logged_requests.post(
         archive_access.url,
         submission=submission,
         return_log_id=True,
@@ -670,7 +670,7 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data):
     #     )
     #     req_log.save()
     # return response, req_log.request_id
-    return response, request_id
+    # return response, request_id
 
 
 def release_study_on_ena(submission):
@@ -721,7 +721,7 @@ def release_study_on_ena(submission):
         }
         data = {'SUBMISSION': ('submission.xml', submission_xml)}
 
-        response, request_id = logged_requests.post(
+        return logged_requests.post(
             url=site_config.ena_server.url,
             submission=submission,
             return_log_id=True,
@@ -768,7 +768,7 @@ def release_study_on_ena(submission):
         #             'response_headers': str(details)
         #         }
         #     )
-        return response, request_id
+        # return response, request_id
     else:
         logger.warning(
             'ena.py | release_study_on_ena | no primary accession no '
@@ -868,31 +868,32 @@ def download_submitted_run_files_to_string_io(site_config, decompressed_io):
 def fetch_ena_report(site_configuration, report_type):
     url = '{0}{1}?format=json'.format(
         site_configuration.ena_report_server.url, report_type)
-    response = requests.get(
+    return logged_requests.get(
         url=url,
+        return_log_id=True,
         auth=(
             site_configuration.ena_report_server.username,
             site_configuration.ena_report_server.password
         )
     )
-    request_id = uuid.uuid4()
-    with transaction.atomic():
-        details = response.headers or ''
-        from gfbio_submissions.generic.models import RequestLog
-        req_log = RequestLog(
-            request_id=request_id,
-            type=RequestLog.OUTGOING,
-            url=url,
-            # site_user=site_configuration.site.username,
-            response_status=response.status_code,
-            response_content=response.content,
-            request_details={
-                'response_headers': str(details)
-            }
-        )
-        req_log.save()
+    # request_id = uuid.uuid4()
+    # with transaction.atomic():
+    #     details = response.headers or ''
+    #     from gfbio_submissions.generic.models import RequestLog
+    #     req_log = RequestLog(
+    #         request_id=request_id,
+    #         type=RequestLog.OUTGOING,
+    #         url=url,
+    #         # site_user=site_configuration.site.username,
+    #         response_status=response.status_code,
+    #         response_content=response.content,
+    #         request_details={
+    #             'response_headers': str(details)
+    #         }
+    #     )
+    #     req_log.save()
 
-    return response, request_id
+    # return response, request_id
 
 
 def update_embargo_date_in_submissions(hold_date, study_pid):

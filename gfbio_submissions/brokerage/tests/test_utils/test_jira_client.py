@@ -816,7 +816,7 @@ class TestJiraClient(TestCase):
         client = JiraClient(resource=jira_resource)
         issue = client.jira.issue("SAND-1661")
 
-    # @skip('Test against helpdesk server')
+    @skip('Test against helpdesk server')
     def test_jira_client_create_remote_link(self):
         # jira_resource = ResourceCredential.objects.create(
         #     title='jira instance',

@@ -40,7 +40,7 @@ def request_pangaea_login_token(resource_credential):
 </soapenv:Envelope>""".format(resource_credential.username,
                               resource_credential.password))
     # requestlog: ok
-    response = logged_requests.post(
+    return logged_requests.post(
         url=resource_credential.url,
         data=body,
         headers=headers
@@ -67,7 +67,7 @@ def request_pangaea_login_token(resource_credential):
     #     )
     #     req_log.save()
 
-    return response
+    # return response
 
 
 def parse_pangaea_login_token_response(soap_response):

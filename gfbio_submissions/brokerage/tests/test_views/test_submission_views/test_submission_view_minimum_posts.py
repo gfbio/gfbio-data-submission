@@ -99,6 +99,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
         self.assertEqual(201, response.status_code)
         self.assertDictEqual(expected, content)
         self.assertEqual(1, len(Submission.objects.all()))
+        self.assertEqual(3, len(RequestLog.objects.all()))
         submission = Submission.objects.last()
 
         self.assertEqual(UUID(content['broker_submission_id']),
@@ -111,7 +112,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
                          len(submission.submitting_user_common_information))
         self.assertEqual('ENA', submission.target)
         request_logs = RequestLog.objects.filter(type=RequestLog.INCOMING)
-        self.assertEqual(2, len(request_logs))
+        self.assertEqual(1, len(request_logs))
 
     @responses.activate
     def test_valid_explicit_min_post(self):

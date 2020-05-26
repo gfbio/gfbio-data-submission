@@ -41,7 +41,7 @@ class SubmissionsView(mixins.ListModelMixin,
                 user=submission.user,
                 submission_id=submission.broker_submission_id,
                 response_content=submission.data,
-                response_status=201,
+                response_status=status.HTTP_201_CREATED,
             )
 
         from gfbio_submissions.brokerage.tasks import \

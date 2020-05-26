@@ -48,3 +48,29 @@ def post(url, data=None, json=None, submission=None, return_log_id=False,
         return response, log.request_id
 
     return response
+
+
+def get(url, params=None, submission=None, return_log_id=False, **kwargs):
+    response = requests.get(url=url, params=params, **kwargs)
+
+    user = None
+    submission_id = None
+    if submission:
+        user = submission.user
+        submission_id = submission.broker_submission_id
+
+    log = RequestLog.objects.create(
+        type=RequestLog.OUTGOING,
+        method=RequestLog.GET,
+        url=url,
+        user=user,
+        submission_id=submission_id,
+        response_status=response.status_code,
+        response_content=response.content,
+        request_details={
+            'response_headers': str(response.headers or '')
+        }
+    )
+    if return_log_id:
+        return response, log.request_id
+    return response
