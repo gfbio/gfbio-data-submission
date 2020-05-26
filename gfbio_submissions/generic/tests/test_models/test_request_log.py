@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from pprint import pprint
 
 import responses
 from django.test import TestCase
@@ -101,7 +100,6 @@ class RequestLogTest(TestCase):
 
         request_log = RequestLog.objects.get(
             request_id=req_log_request_id)
-        pprint(request_log.__dict__)
         # submitting_user is no longer supported
         self.assertEqual('', request_log.site_user)
         self.assertEqual(submission.user, request_log.user)
