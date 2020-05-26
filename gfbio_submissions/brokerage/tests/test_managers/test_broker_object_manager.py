@@ -267,9 +267,6 @@ class TestBrokerObjectManager(TestCase):
         self.assertEqual(5, len(broker_objects))
         self.assertEqual(5, len(BrokerObject.objects.all()))
         broker_objects = BrokerObject.objects.all()
-        for b in broker_objects:
-            print(b.object_id)
-            # self.assertEqual('{}_{}'.format(b.user, b.pk), b.site_object_id)
 
     @skip(reason='without an object_id from the data or somewhere else,'
                  'there is no way of doing an update_or_create '

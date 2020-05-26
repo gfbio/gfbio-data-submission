@@ -105,9 +105,6 @@ class TestSubmissionTransferHandler(TestCase):
             get_submission_and_site_configuration(
                 submission_id=submission.pk, task=create_submission_issue_task,
                 include_closed=False)
-        # tprs = TaskProgressReport.objects.all()
-        # print(tprs.first().__dict__)
-        # self.assertEqual(0, len(tprs))
         self.assertIsInstance(sub, Submission)
         self.assertIsInstance(conf, SiteConfiguration)
 

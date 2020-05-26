@@ -1,8 +1,6 @@
-import json
 import os
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
-from pprint import pprint
 from unittest import skip
 
 from django.test import TestCase
@@ -59,12 +57,6 @@ class TestSubmissionAdmin(TestCase):
                 platform_instruments_json['{0}'.format(platform_name)][
                     'enum'].append(instr)
 
-        print(json.dumps(platform_definition_json))
-        print('\n-----------------------------------\n')
-        print(json.dumps(platform_instruments_json))
-        print('\n-----------------------------------\n')
-        pprint(platform_mappings)
-
     def test_parse_xsd_for_strategy(self):
 
         library_strategy_json = OrderedDict([
@@ -87,10 +79,6 @@ class TestSubmissionAdmin(TestCase):
             strategy = l.attrib.get('value', '')
             library_strategy_json['enum'].append(strategy)
             library_strategy_mappings[strategy.lower()] = strategy
-
-        print(json.dumps({'library_strategy': library_strategy_json}))
-        print('\n-----------------------------------\n')
-        pprint(library_strategy_mappings)
 
     def test_parse_xsd_for_selection(self):
 
@@ -116,6 +104,3 @@ class TestSubmissionAdmin(TestCase):
             library_selection_mappings[strategy.lower()] = strategy
 
         # library_selection_json.get('enum', []).sort()
-        print(json.dumps({'library_selection': library_selection_json}))
-        print('\n-----------------------------------\n')
-        pprint(library_selection_mappings)

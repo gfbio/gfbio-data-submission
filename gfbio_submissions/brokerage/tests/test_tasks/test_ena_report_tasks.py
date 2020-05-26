@@ -81,9 +81,6 @@ class TestEnaReportTasks(TestTasks):
                          len(EnaReport.objects.all()))
         self.assertEqual(len(EnaReport.REPORT_TYPES),
                          len(RequestLog.objects.all()))
-        # for er in EnaReport.objects.all():
-        #     print('\n type ', er.report_type)
-        #     pprint(er.report_data)
 
     @responses.activate
     def test_get_ena_reports_task(self):

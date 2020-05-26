@@ -63,8 +63,6 @@ class TestGFBioJiraApi(TestCase):
                 'body': 'programmatic update of ticket {}'.format(ticket_key)
             })
         )
-        print(response.status_code)
-        print(response.content)
         # 201
         # b'{"self":"https://helpdesk.gfbio.org/rest/api/2/issue/16029/comment/21606","id":"21606","author":{"self":"https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent","name":"brokeragent","key":"brokeragent@gfbio.org","emailAddress":"brokeragent@gfbio.org","avatarUrls":{"48x48":"https://helpdesk.gfbio.org/secure/useravatar?ownerId=brokeragent%40gfbio.org&avatarId=11100","24x24":"https://helpdesk.gfbio.org/secure/useravatar?size=small&ownerId=brokeragent%40gfbio.org&avatarId=11100","16x16":"https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&ownerId=brokeragent%40gfbio.org&avatarId=11100","32x32":"https://helpdesk.gfbio.org/secure/useravatar?size=medium&ownerId=brokeragent%40gfbio.org&avatarId=11100"},"displayName":"Broker Agent","active":true,"timeZone":"Europe/Berlin"},"body":"programmatic update of ticket SAND-1535","updateAuthor":{"self":"https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent","name":"brokeragent","key":"brokeragent@gfbio.org","emailAddress":"brokeragent@gfbio.org","avatarUrls":{"48x48":"https://helpdesk.gfbio.org/secure/useravatar?ownerId=brokeragent%40gfbio.org&avatarId=11100","24x24":"https://helpdesk.gfbio.org/secure/useravatar?size=small&ownerId=brokeragent%40gfbio.org&avatarId=11100","16x16":"https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&ownerId=brokeragent%40gfbio.org&avatarId=11100","32x32":"https://helpdesk.gfbio.org/secure/useravatar?size=medium&ownerId=brokeragent%40gfbio.org&avatarId=11100"},"displayName":"Broker Agent","active":true,"timeZone":"Europe/Berlin"},"created":"2019-09-17T13:46:17.002+0000","updated":"2019-09-17T13:46:17.002+0000"}'
 
@@ -81,8 +79,6 @@ class TestGFBioJiraApi(TestCase):
                 'Content-Type': 'application/json'
             }
         )
-        print(response.status_code)
-        print(response.content)
         # 200
         # b'{"startAt":0,"maxResults":1048576,"total":1,"comments":[{"self":"https://helpdesk.gfbio.org/rest/api/2/issue/16029/comment/21606","id":"21606","author":{"self":"https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent","name":"brokeragent","key":"brokeragent@gfbio.org","emailAddress":"brokeragent@gfbio.org","avatarUrls":{"48x48":"https://helpdesk.gfbio.org/secure/useravatar?ownerId=brokeragent%40gfbio.org&avatarId=11100","24x24":"https://helpdesk.gfbio.org/secure/useravatar?size=small&ownerId=brokeragent%40gfbio.org&avatarId=11100","16x16":"https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&ownerId=brokeragent%40gfbio.org&avatarId=11100","32x32":"https://helpdesk.gfbio.org/secure/useravatar?size=medium&ownerId=brokeragent%40gfbio.org&avatarId=11100"},"displayName":"Broker Agent","active":true,"timeZone":"Europe/Berlin"},"body":"programmatic update of ticket SAND-1535","updateAuthor":{"self":"https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent","name":"brokeragent","key":"brokeragent@gfbio.org","emailAddress":"brokeragent@gfbio.org","avatarUrls":{"48x48":"https://helpdesk.gfbio.org/secure/useravatar?ownerId=brokeragent%40gfbio.org&avatarId=11100","24x24":"https://helpdesk.gfbio.org/secure/useravatar?size=small&ownerId=brokeragent%40gfbio.org&avatarId=11100","16x16":"https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&ownerId=brokeragent%40gfbio.org&avatarId=11100","32x32":"https://helpdesk.gfbio.org/secure/useravatar?size=medium&ownerId=brokeragent%40gfbio.org&avatarId=11100"},"displayName":"Broker Agent","active":true,"timeZone":"Europe/Berlin"},"created":"2019-09-17T13:46:17.002+0000","updated":"2019-09-17T13:46:17.002+0000"}]}'
 
@@ -117,8 +113,6 @@ class TestGFBioJiraApi(TestCase):
         )
         # self.assertEqual(204, response.status_code)
         # self.assertEqual(0, len(response.content))
-        print(response.status_code)
-        print(response.content)
 
     @skip('Test against helpdesk server')
     def test_add_attachment(self):
@@ -179,7 +173,6 @@ class TestGFBioJiraApi(TestCase):
         # testing get attachment -> WORKS
         # url = '{0}{1}/{2}'.format(self.base_url, '/rest/api/2/attachment',
         #                           '13791', )
-        # print(url)
         # response = requests.get(
         #     url=url,
         #     auth=('brokeragent', ''),
@@ -281,15 +274,13 @@ class TestGFBioJiraApi(TestCase):
         #         {'value': 'Sensitive Personal Information'},
         #     ]
         # })
-        # print(res)
 
         # issue = jira.issue('SAND-1540')
         # res = issue.update(notify=True, fields={'summary': 'new summary Part 2',
         #                                         'description': 'A new summary was added. AGAIN'})
-        # print(res)
         pass
 
-    # @skip('Test against helpdesk server')
+    @skip('Test against helpdesk server')
     @responses.activate
     def test_python_jira_500(self):
         # jira-python fires multiple requests to respective jira servers
@@ -325,7 +316,7 @@ class TestGFBioJiraApi(TestCase):
             print('response ', e.response)
             print('response. status_code ', e.response.status_code)
 
-    # @skip('Test against helpdesk server')
+    @skip('Test against helpdesk server')
     @responses.activate
     def test_python_jira_400(self):
 
@@ -346,22 +337,11 @@ class TestGFBioJiraApi(TestCase):
                         max_retries=1, get_server_info=False)
         except JIRAError as e:
             print('JIRA ERROR ', e)
-            # print('status_code ', e.status_code)
-            # print('text ', e.text)
-            # print('response ', e.response)
-            # print('response. status_code ', e.response.status_code)
         # issues = jira.search_issues('assignee="Marc Weber"')
         # issue = jira.issue('SAND-1539')
 
-        # pprint(issue.__dict__)
-        # print('\n\n')
-
-        # print(issue.fields.summary)
-        # print('issues ', issues)
         # try:
         #     issue = jira.issue('SAND-1539xx')
-        #     print(issue.fields.summary)
-        #     print('issues ', issues)
         # except JIRAError as e:
         #     print(e.__dict__)
         #     print('status_code ', e.status_code)
@@ -463,9 +443,7 @@ class TestGFBioJiraApi(TestCase):
             # <class 'jira.resources.Issue'>
         except JIRAError as e:
             pass
-            # print(e.status_code)
             # # 400
-            # print(e.response.text)
             # {"errorMessages":[],"errors":{"Metadata Description":"data was
             # not an array","customfield_10202":"Could not find valid 'id' or
             # 'value' in the Parent Option object."}}
@@ -476,7 +454,6 @@ class TestGFBioJiraApi(TestCase):
         #     description='Look into this one',
         #     issuetype={'name': 'Bug'}
         # )
-        # print(new_issue)
 
     @skip('Test against helpdesk server')
     def test_python_jira_update(self):
@@ -485,7 +462,6 @@ class TestGFBioJiraApi(TestCase):
         issue = jira.issue('SAND-1543')
         print(issue)
         # comments = jira.comments(issue)
-        # print
         # issue.update(summary='new summary', description='A new summary was added')
 
         # res = issue.update(notify=False, fields={'summary': 'new summary',

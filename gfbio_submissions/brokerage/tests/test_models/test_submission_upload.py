@@ -79,7 +79,6 @@ class TestSubmissionUpload(TestCase):
                 user=User.objects.first(),
                 file=simple_file,
             )
-        print(submission_upload.md5_checksum)
 
     def test_same_file_name(self):
         self.assertEqual(0, len(SubmissionUpload.objects.all()))
@@ -98,8 +97,6 @@ class TestSubmissionUpload(TestCase):
                                     b'these are the file contents! but different'),
         )
         self.assertEqual(2, len(SubmissionUpload.objects.all()))
-        print(SubmissionUpload.objects.first())
-        print(SubmissionUpload.objects.last())
 
         # with default storage filenames will not be the same
         # self.assertNotEqual(SubmissionUpload.objects.first().file.name,

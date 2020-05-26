@@ -78,7 +78,6 @@ class TestSubmissionViewPermissions(TestSubmissionView):
         )
         response = client.post('/api/submissions/', {'some': 'data'},
                                format='json')
-        print(response.content)
         self.assertNotEqual(401, response.status_code)
         self.assertEqual(400, response.status_code)
 

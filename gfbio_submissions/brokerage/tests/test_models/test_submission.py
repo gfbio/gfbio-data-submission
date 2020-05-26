@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import uuid
-from pprint import pprint
 from unittest.mock import patch
 
 from django.test import TestCase
@@ -25,7 +24,8 @@ class SubmissionTest(TestCase):
             'data': _get_ena_data() if runs else _get_ena_data_without_runs()
         })
         serializer.is_valid()
-        user = User.objects.get(username=username) if username else User.objects.first()
+        user = User.objects.get(
+            username=username) if username else User.objects.first()
         submission = serializer.save(user=user)
         if create_broker_objects:
             BrokerObject.objects.add_submission_data(submission)
@@ -156,11 +156,6 @@ class SubmissionTest(TestCase):
         study, samples, experiments, runs = submission.get_json_with_aliases(
             alias_postfix=request_id_fake)
 
-        # print('SAMPLES FOR SUBMISSION')
-        # for s in BrokerObject.objects.filter(submissions=submission).filter(
-        #         type='run'):
-        #     pprint(s.__dict__)
-
         # TODO: expected db content regarding brokerobjects. for debugging.
         # 1 study
         self.assertEqual(
@@ -187,20 +182,6 @@ class SubmissionTest(TestCase):
             len(BrokerObject.objects.filter(submissions=submission).filter(
                 type='run'))
         )
-
-        print('---------------------------')
-        print('\nstudy')
-        pprint(study)
-
-        print('\nsamples')
-        pprint(samples)
-
-        print('\nexperiments')
-        pprint(experiments)
-
-        print('\nruns')
-        pprint(runs)
-        print('---------------------------')
 
         study_alias = study.get('study_alias', None)
         sample_aliases = [s.get('sample_alias', '') for s in samples]

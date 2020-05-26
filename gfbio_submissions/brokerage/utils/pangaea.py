@@ -5,10 +5,8 @@ import io
 import json
 import logging
 import textwrap
-import uuid
 import xml.etree.ElementTree as ET
 
-import requests
 from django.db import transaction
 
 from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY, \
@@ -39,35 +37,11 @@ def request_pangaea_login_token(resource_credential):
   </soapenv:Body>
 </soapenv:Envelope>""".format(resource_credential.username,
                               resource_credential.password))
-    # requestlog: ok
     return logged_requests.post(
         url=resource_credential.url,
         data=body,
         headers=headers
     )
-    # response = requests.post(url=resource_credential.url, data=body,
-    #                          headers=headers)
-    # with transaction.atomic():
-    #     # TODO: since Requestlog has moved to generic, globla import may be possible, check please ..
-    #     # prevent cyclic dependencies
-    #     from gfbio_submissions.generic.models import RequestLog
-    #     req_log = RequestLog(
-    #         request_id=uuid.uuid4(),
-    #         type=RequestLog.OUTGOING,
-    #         url=resource_credential.url,
-    #         data=body,
-    #         site_user='',
-    #         submission_id=None,
-    #         response_status=response.status_code,
-    #         response_content=response.content,
-    #         triggered_by=None,
-    #         request_details={
-    #             'request_headers': str(headers)
-    #         }
-    #     )
-    #     req_log.save()
-
-    # return response
 
 
 def parse_pangaea_login_token_response(soap_response):
@@ -128,10 +102,8 @@ def get_csv_from_samples(submission):
 
 def prepare_pangaea_issue_content(site_configuration, submission):
     data = {
-        # 'fields': {
         'project': {
             'key': 'PDI',
-            # 'id': 'PDI'
         },
         'customfield_10002':
             submission.submitting_user_common_information
@@ -139,9 +111,7 @@ def prepare_pangaea_issue_content(site_configuration, submission):
             else site_configuration.contact,
         'customfield_10004': submission.data.get('requirements', {}).get(
             'title', ''),
-        # 'project': 'PDI',
         'issuetype': {
-            # name needed to identidy correct type
             "name": "Data Submission",
         },
         'description': submission.data.get('requirements', {}).get(
@@ -149,7 +119,6 @@ def prepare_pangaea_issue_content(site_configuration, submission):
         'summary': 'Automated request by GFBio BrokerAgent',
         'labels': site_configuration.get_ticket_labels(
             label_type=TicketLabel.PANGAEA_JIRA)
-        # }
     }
     return data
 
@@ -157,17 +126,6 @@ def prepare_pangaea_issue_content(site_configuration, submission):
 def pull_pangaea_dois(submission, jira_client):
     references = submission.get_primary_pangaea_references()
     for p in references:
-        # TODO: add RequestLog ?
-        # doi = check_for_pangaea_doi(
-        #     ticket_key=p.reference_key,
-        #     login_token=login_token,
-        #     submission=submission,
-        # )
-        # site_config = SiteConfiguration.objects.get_site_configuration(
-        #     site=submission.site
-        # )
-        # jira_client = JiraClient(resource=site_config.helpdesk_server,
-        #                          token_resource=site_config.pangaea_token_server)
         doi = jira_client.get_doi_from_pangaea_issue(p.reference_key)
         if doi:
             study_broker_object = submission.brokerobject_set.filter(

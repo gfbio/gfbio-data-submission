@@ -128,7 +128,6 @@ def __main__():
                         help="common definitions xsd schema file")
     args = parser.parse_args()
 
-    # print(args)
     output_schema_and_mappings(experiment_xsd=args.experiment_xsd,
                                common_xsd=args.common_xsd)
 
