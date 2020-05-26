@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from pprint import pprint
+
 import responses
 from django.test import TestCase
 
@@ -75,6 +77,7 @@ class RequestLogTest(TestCase):
         )
         self.assertEqual(str(request_log.request_id), request_log.__str__())
 
+    # submitting_user is no longer supported
     @responses.activate
     def test_send_site_user_type(self):
         submission = Submission.objects.first()
@@ -98,5 +101,8 @@ class RequestLogTest(TestCase):
 
         request_log = RequestLog.objects.get(
             request_id=req_log_request_id)
-        self.assertEqual(submission.submitting_user, request_log.site_user)
+        pprint(request_log.__dict__)
+        # submitting_user is no longer supported
+        self.assertEqual('', request_log.site_user)
+        self.assertEqual(submission.user, request_log.user)
         self.assertFalse(isinstance(request_log.site_user, tuple))
