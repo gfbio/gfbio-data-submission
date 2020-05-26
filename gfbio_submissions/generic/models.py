@@ -212,7 +212,17 @@ class RequestLog(TimeStampedModel):
     data = models.TextField(
         blank=True,
         help_text='Any kind of payload that comes '
-                  'with with this request (if available)')
+                  'with this request (if available)')
+
+    # TODO: is Textfield the rigth choice for file
+    files = models.TextField(blank=True,
+                             help_text='Log potential file-data. Explicitly introduced '
+                                       'to log requests-library file keyword')
+
+    json = JsonDictField(default=dict,
+                         help_text='Log potential json-data. Explicitly introduced '
+                                   'to log requests-library json keyword')
+
     # TODO: refactor too when changing ownership
     # TODO: keeping it for legacy data
     site_user = models.CharField(

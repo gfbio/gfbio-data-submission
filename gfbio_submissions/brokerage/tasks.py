@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from pprint import pprint
 
 import celery
 from celery import Task
@@ -842,11 +841,6 @@ def create_submission_issue_task(self, prev_task_result=None,
     #   would be cleaner (no .first() on query set)
     # existing_tickets = submission.additionalreference_set.filter(
     #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
-
-    print('\ncreate_submission_issue_task\n')
-    print(site_configuration)
-    print(site_configuration.__dict__)
-    pprint(submission)
 
     jira_client = JiraClient(resource=site_configuration.helpdesk_server)
     jira_client.create_submission_issue(reporter=prev_task_result,

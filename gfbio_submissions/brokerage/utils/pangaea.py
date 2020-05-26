@@ -17,6 +17,7 @@ from gfbio_submissions.brokerage.forms import Gcdj2CsvForm
 from gfbio_submissions.brokerage.models import Submission
 from gfbio_submissions.brokerage.utils.gcdj_utils import flatten_dictionary
 from gfbio_submissions.generic.models import TicketLabel
+from gfbio_submissions.generic.utils import logged_requests
 
 logger = logging.getLogger(__name__)
 
@@ -39,27 +40,32 @@ def request_pangaea_login_token(resource_credential):
 </soapenv:Envelope>""".format(resource_credential.username,
                               resource_credential.password))
     # requestlog: ok
-    response = requests.post(url=resource_credential.url, data=body,
-                             headers=headers)
-    with transaction.atomic():
-        # TODO: since Requestlog has moved to generic, globla import may be possible, check please ..
-        # prevent cyclic dependencies
-        from gfbio_submissions.generic.models import RequestLog
-        req_log = RequestLog(
-            request_id=uuid.uuid4(),
-            type=RequestLog.OUTGOING,
-            url=resource_credential.url,
-            data=body,
-            site_user='',
-            submission_id=None,
-            response_status=response.status_code,
-            response_content=response.content,
-            triggered_by=None,
-            request_details={
-                'request_headers': str(headers)
-            }
-        )
-        req_log.save()
+    response = logged_requests.post(
+        url=resource_credential.url,
+        data=body,
+        headers=headers
+    )
+    # response = requests.post(url=resource_credential.url, data=body,
+    #                          headers=headers)
+    # with transaction.atomic():
+    #     # TODO: since Requestlog has moved to generic, globla import may be possible, check please ..
+    #     # prevent cyclic dependencies
+    #     from gfbio_submissions.generic.models import RequestLog
+    #     req_log = RequestLog(
+    #         request_id=uuid.uuid4(),
+    #         type=RequestLog.OUTGOING,
+    #         url=resource_credential.url,
+    #         data=body,
+    #         site_user='',
+    #         submission_id=None,
+    #         response_status=response.status_code,
+    #         response_content=response.content,
+    #         triggered_by=None,
+    #         request_details={
+    #             'request_headers': str(headers)
+    #         }
+    #     )
+    #     req_log.save()
 
     return response
 

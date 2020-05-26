@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-import pprint
 import uuid
-from pprint import pprint
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
@@ -190,9 +188,7 @@ class Submission(TimeStampedModel):
 
     # TODO: refactor/move: too specific (molecular submission)
     def set_sample_aliases(self, alias_postfix):
-        print('\n\tset_sample_aliases')
         samples = self.brokerobject_set.filter(type='sample')
-        pprint(samples)
         sample_aliases = {
             s.data.get('sample_alias', 'no_sample_alias'):
                 '{0}:{1}'.format(s.id, alias_postfix)

@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-import pprint
-from pprint import pprint
-from uuid import uuid4
 from datetime import datetime
+from uuid import uuid4
 
 import responses
 from django.test import TestCase
 from django.utils.encoding import smart_text
 
-from gfbio_submissions.brokerage.utils.csv import find_correct_platform_and_model
 from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_CENTER_NAME
 from gfbio_submissions.brokerage.models import Submission, CenterName, \
@@ -17,6 +14,8 @@ from gfbio_submissions.brokerage.tests.test_models.test_submission import \
     SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_ena_release_xml_response
+from gfbio_submissions.brokerage.utils.csv import \
+    find_correct_platform_and_model
 from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
     send_submission_to_ena, release_study_on_ena, update_ena_embargo_date
 from gfbio_submissions.generic.models import SiteConfiguration, \
@@ -49,11 +48,6 @@ class TestEnalizer(TestCase):
         user.save()
         SubmissionTest._create_submission_via_serializer()
         SubmissionTest._create_submission_via_serializer(runs=True)
-
-        print('\n----------------------------\n')
-        for s in Submission.objects.all():
-            print('\n')
-            pprint(s.__dict__)
 
     def tearDown(self):
         Submission.objects.all().delete()
@@ -119,7 +113,6 @@ class TestEnalizer(TestCase):
         self.assertEqual(study_xml, smart_text(study_xml_standalone))
 
     def test_sample_xml(self):
-
         self.maxDiff = None
         submission = Submission.objects.first()
         enalizer = Enalizer(submission, 'test-enalizer-sample')
@@ -284,7 +277,8 @@ class TestEnalizer(TestCase):
         self.assertEqual(
             'illumina unspecified',
             find_correct_platform_and_model("Illumina"))
-        self.assertEqual('illumina Illumina MiSeq', find_correct_platform_and_model("Illumina MiSeq"))
+        self.assertEqual('illumina Illumina MiSeq',
+                         find_correct_platform_and_model("Illumina MiSeq"))
         self.assertEqual(
             'oxford_nanopore MinION',
             find_correct_platform_and_model("MinION"))
@@ -366,17 +360,9 @@ class TestEnalizer(TestCase):
         ]
         submission.save()
         submission.brokerobject_set.all().delete()
-        print(len(submission.brokerobject_set.all()))
         BrokerObject.objects.add_submission_data(submission)
-        print(len(submission.brokerobject_set.all()))
-        pprint(submission.data)
-        print('\n+++++++++++++++++++++++++++++++++++\n')
-        for b in submission.brokerobject_set.all():
-            print('\n', b.data)
         enalizer = Enalizer(submission, 'test-enalizer-experiment')
         xml_data = enalizer.prepare_submission_data()
-        print('\n+++++++++++++++++++++++++++++++++++\n')
-        pprint(xml_data)
         self.assertEqual('single',
                          submission.data.get('requirements', {}).get(
                              'experiments', [{}])[0].get('design', {}).get(
@@ -482,8 +468,6 @@ class TestEnalizer(TestCase):
         submission = Submission.objects.first()
         conf = SiteConfiguration.objects.first()
 
-        # print('submission site ', submission.site)
-        # print(SiteConfiguration.objects.filter(site=submission.site).first())
         responses.add(
             responses.POST,
             conf.ena_server.url,
