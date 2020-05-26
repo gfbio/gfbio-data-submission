@@ -124,33 +124,11 @@ class Enalizer(object):
     def create_submission_xml(self,
                               action='VALIDATE',
                               hold_date=None,
-                              outgoing_request_id='add_outgoing_id',
-                              entities=[]):
+                              outgoing_request_id='add_outgoing_id'):
         logger.info(
             msg='Enalizer create_submission_xml. action={} hold_date={}'.format(
                 action, hold_date))
-        actions = ''
-        if len(entities):
-            if 'STUDY' in entities:
-                actions += '<ACTION><{0} source="study.xml" schema="study"/></ACTION>'.format(
-                    action.upper())
-            if 'SAMPLE' in entities:
-                actions += '<ACTION><{0} source="sample.xml" schema="sample"/></ACTION>'.format(
-                    action.upper())
-            if 'EXPERIMENT' in entities:
-                actions += '<ACTION><{0} source="experiment.xml" schema="experiment"/></ACTION>'.format(
-                    action.upper())
-            if 'RUNS' in entities:
-                actions += '<ACTION><{0} source="run.xml" schema="run"/></ACTION>'.format(
-                    action.upper())
-        else:
-            actions = textwrap.dedent(
-                '<ACTION><{0} source="study.xml" schema="study"/></ACTION>'
-                '<ACTION><{0} source="sample.xml" schema="sample"/></ACTION>'
-                '<ACTION><{0} source="experiment.xml" schema="experiment"/></ACTION>'
-                '<ACTION><{0} source="run.xml" schema="run"/></ACTION>'.format(
-                    action.upper())
-            )
+        actions = '<ACTION><{}/></ACTION>'.format(action)
         if not hold_date:
             # today + 1 year
             hold_date = '{0}'.format((datetime.date.today() +
@@ -559,16 +537,13 @@ class Enalizer(object):
             }
 
     def prepare_submission_xml_for_sending(self, action='VALIDATE',
-                                           outgoing_request_id=None,
-                                           entities=[]):
+                                           outgoing_request_id=None):
         return (
             'submission.xml',
             smart_text(self.create_submission_xml(
                 action=action,
                 hold_date=self.embargo,
-                outgoing_request_id=outgoing_request_id,
-                entities=entities,
-            ))
+                outgoing_request_id=outgoing_request_id))
         )
 
 
@@ -615,9 +590,7 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data):
     ena_submission_data[
         'SUBMISSION'] = enalizer.prepare_submission_xml_for_sending(
         action='ADD',
-        outgoing_request_id=outgoing_request_id,
-        entities=ena_submission_data.keys(),
-    )
+        outgoing_request_id=outgoing_request_id)
 
     # requestlog: ok !
     response = requests.post(
