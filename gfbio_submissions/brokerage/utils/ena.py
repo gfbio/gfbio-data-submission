@@ -575,7 +575,7 @@ def store_ena_data_as_auditable_text_data(submission, data):
 
 
 # https://github.com/enasequence/schema/blob/master/src/main/resources/uk/ac/ebi/ena/sra/schema/SRA.study.xsd
-def send_submission_to_ena(submission, archive_access, ena_submission_data):
+def send_submission_to_ena(submission, archive_access, ena_submission_data, action='ADD'):
     logger.info(
         msg='send_submission_to_ena submission_pk={} archive_access_pk={} method=POST'.format(
             submission.pk, archive_access.pk))
@@ -589,8 +589,8 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data):
                         alias_postfix=submission.broker_submission_id)
     ena_submission_data[
         'SUBMISSION'] = enalizer.prepare_submission_xml_for_sending(
-        action='ADD',
-        outgoing_request_id=outgoing_request_id)
+        action=action,
+        outgoing_request_id=outgoing_request_id,)
 
     # requestlog: ok !
     response = requests.post(

@@ -2,14 +2,17 @@
 import logging
 
 from django.core.mail import mail_admins
-
+from django.utils.encoding import smart_text
+from requests import Response
 from gfbio_submissions.brokerage.configuration.settings import \
     TASK_FAIL_SUBJECT_TEMPLATE, TASK_FAIL_TEXT_TEMPLATE, SUBMISSION_MAX_RETRIES, \
     SUBMISSION_UPLOAD_MAX_RETRIES, SUBMISSION_UPLOAD_RETRY_DELAY
 from gfbio_submissions.brokerage.exceptions import TransferInternalError, \
     raise_response_exceptions, TransferClientError, raise_no_ticket_exception, \
     NoTicketAvailableError
-from gfbio_submissions.brokerage.models import TaskProgressReport, Submission
+from gfbio_submissions.brokerage.models import TaskProgressReport, Submission, AuditableTextData
+from gfbio_submissions.brokerage.utils.ena import send_submission_to_ena
+from gfbio_submissions.generic.models import ResourceCredential
 
 logger = logging.getLogger(__name__)
 
@@ -310,3 +313,51 @@ def request_error_auto_retry(response, task, broker_submission_id,
             response, task, broker_submission_id, max_retries
         )
     return True
+
+def send_data_to_ena_for_validation_or_test(task, submission_id, action):
+    # get submission
+    submission = Submission.objects.get(pk=submission_id)
+    if not Submission:
+        TaskProgressReport.objects.create_initial_report(
+            task=task)
+        return 'No submission found with pk {}'.format(submission_id)
+
+    # create initial task report
+    TaskProgressReport.objects.create_initial_report(
+        submission=submission,
+        task=task)
+
+    # get correct resource cred
+    request_server = 'ENA' if action == 'VALIDATE' else 'ENA-Testserver'
+    resource_cred = ResourceCredential.objects.filter(title=request_server).first()
+    if resource_cred is None:
+        return 'No resource credentials found for {}'.format(request_server)
+
+    # check for XML files
+    ena_submission_data = AuditableTextData.objects.assemble_ena_submission_data(
+        submission=submission)
+    if ena_submission_data == {}:
+        return 'No XML files found'
+
+    # submit data to ENA
+    try:
+        response, request_id = send_submission_to_ena(submission,
+                                                      resource_cred,
+                                                      ena_submission_data,
+                                                      action=action,
+                                                      )
+        res = raise_transfer_server_exceptions(
+            response=response,
+            task=task,
+            broker_submission_id=submission.broker_submission_id,
+            max_retries=SUBMISSION_MAX_RETRIES)
+    except ConnectionError as e:
+        logger.error(
+            msg='connection_error {}.url={} title={}'.format(
+                e,
+                resource_cred.url,
+                resource_cred.title)
+        )
+        response = Response()
+    return str(request_id), response.status_code, smart_text(
+        response.content)
