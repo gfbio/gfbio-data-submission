@@ -1,8 +1,8 @@
 #!/bin/bash
-latest_commit="$(git describe)"
+tag_commit="$(git log -1 $CI_COMMIT_TAG | head -n 1 | awk '{print $2}')"
 
 # get all branches and remove * from the output
-branches="$(git branch --contains $latest_commit | sed 's/\*//g')"
+branches="$(git branch --contains $tag_commit | sed 's/\*//g')"
 
 # count all branches and see if commit is in master branch
 counter=0
