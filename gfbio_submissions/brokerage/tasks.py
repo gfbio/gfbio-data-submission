@@ -1415,7 +1415,8 @@ def notify_user_embargo_expiry_task(self):
     all_submissions = Submission.objects.all()
     for submission in all_submissions:
         # only send notification for closed submissions with PID type PRJ
-        if submission.status != Submission.CLOSED:
+        # and when embargo date is not in the past
+        if submission.status != Submission.CLOSED or submission.embargo < datetime.date.today():
             continue
         # get study object
         study = submission.brokerobject_set.filter(type='study').first()
