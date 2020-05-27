@@ -6,5 +6,8 @@ set -o nounset
 
 
 python manage.py migrate
-uvicorn config.asgi:application --host 0.0.0.0 --reload
+
+# lifespan protocol doesn't work with Django 3.0.
+# See this ticket: https://code.djangoproject.com/ticket/31508
+uvicorn config.asgi:application --lifespan=off --host 0.0.0.0 --reload
 
