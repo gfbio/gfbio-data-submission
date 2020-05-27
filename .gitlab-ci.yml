@@ -100,35 +100,23 @@ update_staging_env:
   tags:
     - staging
 
-test_tags:
-  stage: buildProduction
-  script:
-    - echo $CI_COMMIT_TAG
-    - echo $CI_COMMIT_BRANCH
-    - echo $CI_COMMIT_REF_NAME
-    - echo $CI_COMMIT_TITLE
-    - echo $CI_COMMIT_DESCRIPTION
-    - echo $CI_COMMIT_MESSAGE
-  rules:
-    - if: '$CI_COMMIT_TAG'
-  tags:
-    - production
-
 production_build:
   stage: buildProduction
   script:
+    - ./cicd/tags-ci.sh
     - rsync -a /home/gitlab-runner/.envs .
     - cd userinterface && npm i && npm run collect-ci
     - cd ../
     - docker-compose -f production.yml build
   rules:
-    - if: '$CI_COMMIT_TAG && $CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_COMMIT_TAG'
   tags:
     - production
 
 deploy_to_production:
   stage: deploy
   script:
+    - ./cicd/tags-ci.sh
     - rsync -a /home/gitlab-runner/.envs .
     - docker-compose -f production.yml up -d postgres
     - docker-compose -f production.yml run --rm postgres backup
@@ -139,6 +127,6 @@ deploy_to_production:
     name: production
     url: https://submissions.gfbio.org
   rules:
-    - if: '$CI_COMMIT_TAG && $CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_COMMIT_TAG'
   tags:
     - production
