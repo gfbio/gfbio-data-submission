@@ -21,7 +21,7 @@ var __wpo = {
   "externals": [],
   "hashesMap": {
     "5e53ef208f3fa79a48f8374488f473c76e1233de": "/favicon.ico",
-    "0f55cf5b491e7069b57b449c800f2ccf25c68f7a": "/vendor.submission.ui.js",
+    "c42d95da30c3a98b4a21a430c4e54f90cf5930ac": "/vendor.submission.ui.js",
     "1775aac89c7e29d6ed6c3ddcaa45ed754d0a8a66": "/1.96711dc0deb3ba3bd630.chunk.js",
     "3936be5ea6d42d0c1f883c72c133f1c2f3de8ab0": "/submission.ui.js",
     "9659789fc07420bc6213223dd035f9bcd3c60877": "/runtime~submission.ui.js",
@@ -30,12 +30,12 @@ var __wpo = {
     "2983c54e73d24ac353c72ec86dd8d4ae13365476": "/6.57543a5874b4a9943604.chunk.js",
     "61f57978e0d7472b03450fd118bfd2908fd9b485": "/7.e5662c16fe22ebc1dd20.chunk.js",
     "6ec538d385873f53fb7f8c1ee721319d60567a9a": "/8.a55d727e6bad211872be.chunk.js",
-    "b6766ebcf92043108aed4ac253b4d00ac53b5fa6": "/vendor.submission.ui.js.LICENSE.txt",
-    "8de57cf597ac2baa067f5b9aa0960ab634a8f2ed": "/"
+    "f679933362a8fe3e010e514f2acaa0306249645e": "/vendor.submission.ui.js.LICENSE.txt",
+    "6a4c7901cc6ee774bcfcbb47f40bb9a8f11fa185": "/"
   },
   "strategy": "changed",
   "responseStrategy": "cache-first",
-  "version": "5/21/2020, 12:16:00 PM",
+  "version": "2020-5-27 14:12:01",
   "name": "webpack-offline",
   "pluginVersion": "5.0.5",
   "relativePaths": false
