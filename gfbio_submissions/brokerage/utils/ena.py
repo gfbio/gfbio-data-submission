@@ -922,7 +922,7 @@ def update_ena_embargo_date(submission):
 
     if study_primary_accession:
         logger.info(
-            'ena.py | update_ena_embargo_date | primary accession no '
+            'ena.py | update_ena_embargo_date | primary accession '
             'found for study | accession_no={0} | submission_id={1}'.format(
                 study_primary_accession,
                 submission.broker_submission_id)
