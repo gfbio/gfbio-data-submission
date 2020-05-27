@@ -100,6 +100,17 @@ update_staging_env:
   tags:
     - staging
 
+test_tags:
+  stage: buildProduction
+  script:
+    - echo $CI_COMMIT_TAG
+    - echo $CI_COMMIT_BRANCH
+    - echo $CI_COMMIT_REF_NAME
+  rules:
+    - if: '$CI_COMMIT_TAG'
+  tags:
+    - production
+
 production_build:
   stage: buildProduction
   script:
