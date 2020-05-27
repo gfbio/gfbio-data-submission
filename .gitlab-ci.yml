@@ -103,7 +103,6 @@ update_staging_env:
 production_build:
   stage: buildProduction
   script:
-    - CI_COMMIT_TAG=${CI_COMMIT_TAG} ./cicd/tags-ci.sh
     - rsync -a /home/gitlab-runner/.envs .
     - cd userinterface && npm i && npm run collect-ci
     - cd ../
@@ -116,7 +115,6 @@ production_build:
 deploy_to_production:
   stage: deploy
   script:
-    - CI_COMMIT_TAG=${CI_COMMIT_TAG} ./cicd/tags-ci.sh
     - rsync -a /home/gitlab-runner/.envs .
     - docker-compose -f production.yml up -d postgres
     - docker-compose -f production.yml run --rm postgres backup
