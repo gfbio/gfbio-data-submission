@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-import pprint
 import uuid
-from pprint import pprint
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
@@ -130,8 +128,10 @@ class Submission(TimeStampedModel):
             broker_objects = self.brokerobject_set.filter(type='study')
             data = []
             for broker_object in broker_objects:
-                for persistentidentifier_object in broker_object.persistentidentifier_set.filter(pid_type='PRJ'):
-                    data.append({"pid": persistentidentifier_object.pid, "status": persistentidentifier_object.status})
+                for persistentidentifier_object in broker_object.persistentidentifier_set.filter(
+                        pid_type='PRJ'):
+                    data.append({"pid": persistentidentifier_object.pid,
+                                 "status": persistentidentifier_object.status})
             return data
         except IndexError:
             return []
@@ -190,9 +190,7 @@ class Submission(TimeStampedModel):
 
     # TODO: refactor/move: too specific (molecular submission)
     def set_sample_aliases(self, alias_postfix):
-        print('\n\tset_sample_aliases')
         samples = self.brokerobject_set.filter(type='sample')
-        pprint(samples)
         sample_aliases = {
             s.data.get('sample_alias', 'no_sample_alias'):
                 '{0}:{1}'.format(s.id, alias_postfix)
@@ -271,11 +269,9 @@ class BrokerObject(models.Model):
     object_id = models.CharField(max_length=36, default='')
 
     def save(self, *args, **kwargs):
-        # print('SAVE Before SUPER ', self.pk, ' o id ', self.object_id)
         if self.object_id == '':
             self.object_id = '{0}'.format(uuid.uuid4())
         super(BrokerObject, self).save(*args, **kwargs)
-        # print('SAVE after SUPER', self.pk, ' o id ', self.object_id)
 
     data = JsonDictField(default=dict)
     submissions = models.ManyToManyField(Submission)

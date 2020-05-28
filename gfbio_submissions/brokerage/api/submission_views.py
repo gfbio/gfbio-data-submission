@@ -3,6 +3,7 @@ import json
 from uuid import uuid4, UUID
 
 from django.db import transaction
+from django.urls import reverse
 from rest_framework import generics, mixins, permissions, parsers
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication, \
@@ -28,7 +29,6 @@ class SubmissionsView(mixins.ListModelMixin,
     serializer_class = SubmissionDetailSerializer
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def perform_create(self, serializer):
@@ -36,11 +36,12 @@ class SubmissionsView(mixins.ListModelMixin,
         with transaction.atomic():
             RequestLog.objects.create(
                 type=RequestLog.INCOMING,
-                site_user=submission.submitting_user if submission.submitting_user is not None else '',
+                method=RequestLog.POST,
+                url=reverse('brokerage:submissions'),
+                user=submission.user,
                 submission_id=submission.broker_submission_id,
                 response_content=submission.data,
-                response_status=201,
-                triggered_by=None,
+                response_status=status.HTTP_201_CREATED,
             )
 
         from gfbio_submissions.brokerage.tasks import \
@@ -63,7 +64,7 @@ class SubmissionsView(mixins.ListModelMixin,
 
     def post(self, request, *args, **kwargs):
         # TODO: is this still needed ? user is not used
-        user = User.objects.get(username=request.user)
+        # user = User.objects.get(username=request.user)
         return self.create(request, *args, **kwargs)
 
 
@@ -75,7 +76,6 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
     serializer_class = SubmissionDetailSerializer
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     lookup_field = 'broker_submission_id'
@@ -122,37 +122,31 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                             instance.broker_submission_id)
                     ).set(countdown=SUBMISSION_DELAY)
             chain()
-
-            return response
         else:
-            return Response(
+            response = Response(
                 data={
                     'broker_submission_id': instance.broker_submission_id,
                     'status': instance.status,
                     'embargo': instance.embargo,
                     'error': 'no modifications allowed with current status'
                 }, status=status.HTTP_400_BAD_REQUEST)
+        with transaction.atomic():
+            RequestLog.objects.create(
+                type=RequestLog.INCOMING,
+                method=RequestLog.PUT,
+                url=reverse('brokerage:submissions'),
+                user=instance.user,
+                submission_id=instance.broker_submission_id,
+                response_content=response.data,
+                response_status=response.status_code,
+            )
+        return response
 
     def delete(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.status = Submission.CANCELLED
         instance.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-# class UserSubmissionDetailView(generics.ListAPIView):
-#     serializer_class = SubmissionDetailSerializer
-#     authentication_classes = (TokenAuthentication, BasicAuthentication)
-#     permission_classes = (permissions.IsAuthenticated,
-#                           permissions.DjangoModelPermissions,
-#                           IsOwnerOrReadOnly)
-#
-#     # TODO: test for real django user here
-#     # TODO: test for ownership additional to site permissions
-#     def get_queryset(self):
-#         submitting_user = self.kwargs['submitting_user']
-#         return Submission.objects.filter(
-#             submitting_user=submitting_user).order_by('-modified')
 
 
 class SubmissionUploadView(mixins.CreateModelMixin,
@@ -165,7 +159,6 @@ class SubmissionUploadView(mixins.CreateModelMixin,
     # TODO: add permission class that checks if access to associated
     #  submission is granted for request.user (this request, upload only)
     permission_classes = (permissions.IsAuthenticated,
-                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def perform_create(self, serializer, submission):
@@ -173,15 +166,29 @@ class SubmissionUploadView(mixins.CreateModelMixin,
 
     def create(self, request, *args, **kwargs):
         broker_submission_id = kwargs.get('broker_submission_id', uuid4())
+
         try:
             sub = Submission.objects.get(
                 broker_submission_id=broker_submission_id
             )
         except Submission.DoesNotExist as e:
-            return Response({'submission': 'No submission for this '
-                                           'broker_submission_id:'
-                                           ' {0}'.format(broker_submission_id)},
-                            status=status.HTTP_404_NOT_FOUND)
+            response = Response({'submission': 'No submission for this '
+                                               'broker_submission_id:'
+                                               ' {0}'.format(
+                broker_submission_id)},
+                status=status.HTTP_404_NOT_FOUND)
+
+            with transaction.atomic():
+                RequestLog.objects.create(
+                    type=RequestLog.INCOMING,
+                    url='brokerage:submissions_upload',
+                    method=RequestLog.POST,
+                    submission_id=broker_submission_id,
+                    response_content=response.data,
+                    response_status=response.status_code,
+                )
+
+            return response
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -193,8 +200,20 @@ class SubmissionUploadView(mixins.CreateModelMixin,
         data_content['id'] = obj.pk
         data_content['broker_submission_id'] = sub.broker_submission_id
 
-        return Response(data_content, status=status.HTTP_201_CREATED,
-                        headers=headers)
+        response = Response(data_content, status=status.HTTP_201_CREATED,
+                            headers=headers)
+
+        with transaction.atomic():
+            RequestLog.objects.create(
+                type=RequestLog.INCOMING,
+                url='brokerage:submissions_upload',
+                method=RequestLog.POST,
+                user=sub.user,
+                submission_id=sub.broker_submission_id,
+                response_content=response.data,
+                response_status=response.status_code,
+            )
+        return response
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
@@ -206,7 +225,6 @@ class SubmissionUploadListView(generics.ListAPIView):
     parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def get_queryset(self):
@@ -217,7 +235,6 @@ class SubmissionUploadListView(generics.ListAPIView):
 
 class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
                                  mixins.UpdateModelMixin,
-                                 # generics.DestroyAPIView,
                                  mixins.DestroyModelMixin,
                                  generics.GenericAPIView):
     queryset = SubmissionUpload.objects.all()
@@ -225,7 +242,6 @@ class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
     parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def put(self, request, *args, **kwargs):
@@ -233,20 +249,55 @@ class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
         instance = self.get_object()
         if instance.submission.broker_submission_id != UUID(
                 broker_submission_id):
-            return Response({'submission': 'No link to this '
-                                           'broker_submission_id '
-                                           '{0}'.format(broker_submission_id)},
-                            status=status.HTTP_400_BAD_REQUEST)
+            response = Response({'submission': 'No link to this '
+                                               'broker_submission_id '
+                                               '{0}'.format(
+                broker_submission_id)},
+                status=status.HTTP_400_BAD_REQUEST)
+            with transaction.atomic():
+                RequestLog.objects.create(
+                    type=RequestLog.INCOMING,
+                    url='brokerage:submissions_upload_detail',
+                    method=RequestLog.PUT,
+                    user=instance.user,
+                    submission_id=instance.submission.broker_submission_id,
+                    response_content=response.data,
+                    response_status=response.status_code,
+                )
+            return response
         try:
             Submission.objects.get(
                 broker_submission_id=broker_submission_id
             )
         except Submission.DoesNotExist as e:
-            return Response({'submission': 'No submission for this '
-                                           'broker_submission_id '
-                                           '{0}'.format(broker_submission_id)},
-                            status=status.HTTP_404_NOT_FOUND)
-        return self.update(request, *args, **kwargs)
+            response = Response({'submission': 'No submission for this '
+                                               'broker_submission_id '
+                                               '{0}'.format(
+                broker_submission_id)},
+                status=status.HTTP_404_NOT_FOUND)
+            with transaction.atomic():
+                RequestLog.objects.create(
+                    type=RequestLog.INCOMING,
+                    url='brokerage:submissions_upload_detail',
+                    method=RequestLog.PUT,
+                    user=instance.user,
+                    submission_id=instance.submission.broker_submission_id,
+                    response_content=response.data,
+                    response_status=response.status_code,
+                )
+            return response
+        response = self.update(request, *args, **kwargs)
+        with transaction.atomic():
+            RequestLog.objects.create(
+                type=RequestLog.INCOMING,
+                url='brokerage:submissions_upload_detail',
+                method=RequestLog.PUT,
+                user=instance.user,
+                submission_id=instance.submission.broker_submission_id,
+                response_content=response.data,
+                response_status=response.status_code,
+            )
+        return response
 
     def delete(self, request, *args, **kwargs):
         obj = self.get_object()
@@ -269,7 +320,6 @@ class SubmissionUploadPatchView(mixins.UpdateModelMixin,
     parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,
-                          # permissions.DjangoModelPermissions,
                           IsOwnerOrReadOnly)
 
     def patch(self, request, *args, **kwargs):
@@ -277,20 +327,55 @@ class SubmissionUploadPatchView(mixins.UpdateModelMixin,
         instance = self.get_object()
         if instance.submission.broker_submission_id != UUID(
                 broker_submission_id):
-            return Response({'submission': 'No link to this '
-                                           'broker_submission_id '
-                                           '{0}'.format(broker_submission_id)},
-                            status=status.HTTP_400_BAD_REQUEST)
+            response = Response({'submission': 'No link to this '
+                                               'broker_submission_id '
+                                               '{0}'.format(
+                broker_submission_id)},
+                                status=status.HTTP_400_BAD_REQUEST)
+            with transaction.atomic():
+                RequestLog.objects.create(
+                    type=RequestLog.INCOMING,
+                    url='brokerage:submissions_upload_patch',
+                    method=RequestLog.PATCH,
+                    user=instance.user,
+                    submission_id=instance.submission.broker_submission_id,
+                    response_content=response.data,
+                    response_status=response.status_code,
+                )
+            return response
         try:
             Submission.objects.get(
                 broker_submission_id=broker_submission_id
             )
         except Submission.DoesNotExist as e:
-            return Response({'submission': 'No submission for this '
-                                           'broker_submission_id '
-                                           '{0}'.format(broker_submission_id)},
-                            status=status.HTTP_404_NOT_FOUND)
-        return self.partial_update(request, *args, **kwargs)
+            response = Response({'submission': 'No submission for this '
+                                               'broker_submission_id '
+                                               '{0}'.format(
+                broker_submission_id)},
+                                status=status.HTTP_404_NOT_FOUND)
+            with transaction.atomic():
+                RequestLog.objects.create(
+                    type=RequestLog.INCOMING,
+                    url='brokerage:submissions_upload_patch',
+                    method=RequestLog.PATCH,
+                    user=instance.user,
+                    submission_id=instance.submission.broker_submission_id,
+                    response_content=response.data,
+                    response_status=response.status_code,
+                )
+            return response
+        response = self.partial_update(request, *args, **kwargs)
+        with transaction.atomic():
+            RequestLog.objects.create(
+                type=RequestLog.INCOMING,
+                url='brokerage:submissions_upload_patch',
+                method=RequestLog.PATCH,
+                user=instance.user,
+                submission_id=instance.submission.broker_submission_id,
+                response_content=response.data,
+                response_status=response.status_code,
+            )
+        return response
 
 
 class SubmissionCommentView(generics.GenericAPIView):
@@ -335,10 +420,19 @@ class SubmissionCommentView(generics.GenericAPIView):
         form = SubmissionCommentForm(request.POST)
         if form.is_valid():
             broker_submission_id = kwargs.get('broker_submission_id', uuid4())
-            return self._process_post_comment(broker_submission_id,
+            response = self._process_post_comment(broker_submission_id,
                                               form.cleaned_data['comment'])
         else:
-            return Response(
+            response = Response(
                 json.loads(form.errors.as_json()),
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        with transaction.atomic():
+            RequestLog.objects.create(
+                type=RequestLog.INCOMING,
+                url='brokerage:submission_comment',
+                method=RequestLog.POST,
+                response_content=response.data,
+                response_status=response.status_code,
+            )
+        return response

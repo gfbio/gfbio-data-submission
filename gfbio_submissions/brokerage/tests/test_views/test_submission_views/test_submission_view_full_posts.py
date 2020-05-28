@@ -3,7 +3,6 @@
 import json
 import os
 import shutil
-from pprint import pprint
 from uuid import UUID
 
 import responses
@@ -97,10 +96,8 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
              'data': _get_submission_request_data()},
             format='json'
         )
-        print(response.status_code)
         self.assertEqual(201, response.status_code)
         content = json.loads(response.content.decode('utf-8'))
-        pprint(content)
         self.assertEqual('new_user', content['user'])
 
         response = self.api_client.post(
@@ -177,9 +174,6 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         data = self._create_test_meta_data()
 
         response = self.api_client.post(url, data, format='multipart')
-
-        print('\n\n')
-        pprint(json.loads(response.content))
 
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(submission.submissionupload_set.all()))

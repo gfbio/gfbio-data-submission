@@ -5,13 +5,15 @@ from urllib.parse import quote
 
 import requests
 from django.conf import settings
+from django.db import transaction
 
 from gfbio_submissions.brokerage.configuration.settings import \
     GFBIO_LICENSE_MAPPINGS, \
     GFBIO_DATACENTER_USER_MAPPINGS, GFBIO_REQUEST_TYPE_MAPPINGS, \
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE, JIRA_USERNAME_URL_TEMPLATE, \
     JIRA_FALLBACK_USERNAME, JIRA_FALLBACK_EMAIL
-from gfbio_submissions.generic.models import SiteConfiguration
+from gfbio_submissions.generic.models import SiteConfiguration, RequestLog
+from gfbio_submissions.generic.utils import logged_requests
 
 logger = logging.getLogger(__name__)
 
@@ -21,13 +23,25 @@ def get_gfbio_helpdesk_username(user_name, email, fullname=''):
     if len(fullname):
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(user_name, email,
                                                          quote(fullname))
-    return requests.get(
+    return logged_requests.get(
         url=url,
         auth=(
             settings.JIRA_ACCOUNT_SERVICE_USER,
             settings.JIRA_ACCOUNT_SERVICE_PASSWORD
         )
     )
+
+    # with transaction.atomic():
+    #     RequestLog.objects.create(
+    #         type=RequestLog.INCOMING,
+    #         url=url,
+    #         method=RequestLog.GET,
+    #         # user=instance.user,
+    #         # submission_id=instance.submission.broker_submission_id,
+    #         response_content=response.content,
+    #         response_status=response.status_code,
+    #     )
+    # return response
 
 
 def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},

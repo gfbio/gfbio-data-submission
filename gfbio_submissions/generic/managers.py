@@ -21,3 +21,10 @@ class SiteConfigurationManager(models.Manager):
             }
         )
         return obj
+
+
+class RequestLogManager(models.Manager):
+
+    def create_jira_log(self, arguments={}):
+        arguments['type'] = self.model.JIRA
+        self.create(**arguments)

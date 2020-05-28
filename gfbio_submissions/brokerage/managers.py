@@ -199,15 +199,8 @@ class BrokerObjectManager(models.Manager):
                     type='run',
                     user=experiment_broker_object.user,
                     object_id=experiment_broker_object.object_id,
-                    # site_project_id=experiment_broker_object.site_project_id,
-                    # site_object_id='files_block_of_{0}'.format(
-                    #     experiment_broker_object.site_object_id),
                     defaults={'data': data}
                 )
-                # if obj.site_object_id == '':
-                #     obj.site_object_id = '{0}_{1}'.format(obj.user, obj.pk)
-                #     obj.save()
-                # print('add_file_entities created ', created)
                 obj.submissions.add(submission)
 
     def add_entity(self, submission, entity_type, user, json_data,
@@ -232,7 +225,6 @@ class BrokerObjectManager(models.Manager):
         #     obj.object_id = '{0}_{1}'.format(obj.user, obj.pk)
         #     obj.save()
         obj.submissions.add(submission)
-        # print(entity_type, ' add entity created ? ', created)
         return obj
 
     def add_submission_data(self, submission):
@@ -243,7 +235,6 @@ class BrokerObjectManager(models.Manager):
                 pass
 
     def add_ena_submission_data(self, submission):
-        # print('\n\tadd_ena_submission_data')
         # TODO: check submission.data behaviour in this (new) python 3 environment
         if isinstance(submission.data, str):
             data = json.loads(submission.data)
@@ -264,11 +255,8 @@ class BrokerObjectManager(models.Manager):
 
         # data['requirements']['site_object_id'] = obj.site_object_id
         for i in range(0, len(data['requirements']['samples'])):
-            # print('\niterate samples from requirements ', i)
-            # print('submisson user', submission.user)
             # for sample in data['requirements']['samples']:
             sample = data['requirements']['samples'][i]
-            # pprint(sample)
             obj = self.add_entity(submission=submission,
                                   entity_type='sample',
                                   user=submission.user,
@@ -278,16 +266,12 @@ class BrokerObjectManager(models.Manager):
                                   # object_id=sample.get('sample_alias', ''),
 
                                   json_data=sample)
-            # print(obj)
             # data['requirements']['samples'][i][
             #     'site_object_id'] = obj.site_object_id
 
         for i in range(0, len(data['requirements']['experiments'])):
-            # print('\niterate experiments from requirements ', i)
-            # print('submisson user', submission.user)
             # for experiment in data['requirements']['experiments']:
             experiment = data['requirements']['experiments'][i]
-            # pprint(experiment)
             obj = self.add_entity(submission=submission,
                                   entity_type='experiment',
                                   user=submission.user,

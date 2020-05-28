@@ -2,7 +2,6 @@
 import json
 import os
 import time
-from pprint import pprint
 from unittest import skip
 
 import requests
@@ -97,6 +96,4 @@ class TestSubmissionServers(TestCase):
             data=json.dumps(data),
             headers=headers
         )
-        print('response ', response.status_code)
         content = json.loads(response.content.decode('utf-8'))
-        pprint(content)

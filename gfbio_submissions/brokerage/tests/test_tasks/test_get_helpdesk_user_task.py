@@ -119,7 +119,6 @@ class TestGetHelpDeskUserTask(TestTasks):
     @responses.activate
     def test_get_gfbio_helpdesk_username_task_client_error(self):
         submission = Submission.objects.first()
-        print('\nsubmission user ', submission.user.external_user_id, ' ', submission.user.email, ' ', submission.user.name)
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
             submission.user.external_user_id, submission.user.email,
             quote(submission.user.name)

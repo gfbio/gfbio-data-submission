@@ -150,7 +150,6 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 primary=True,
                 reference_key=self.issue_key
             )
-            # print(references)
             if len(references) == 0:
                 self.send_mail_to_admins(reason='Submission embargo date',
                                          message='No issue related to submission found')

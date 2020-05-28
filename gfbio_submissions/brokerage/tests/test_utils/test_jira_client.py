@@ -145,22 +145,6 @@ class TestJiraClient(TestCase):
             status=200,
         )
 
-    # @classmethod
-    # def _create_test_data(cls, path, delete=True):
-    #     if delete:
-    #         cls._delete_test_data()
-    #     f = open(path, 'w')
-    #     f.write('test123\n')
-    #     f.close()
-    #     f = open(path, 'rb')
-    #     return {
-    #         'file': f,
-    #     }
-    #
-    # @staticmethod
-    # def _delete_test_data():
-    #     SubmissionUpload.objects.all().delete()
-
     @responses.activate
     def test_instance(self):
         self._add_jira_field_response()
@@ -826,7 +810,7 @@ class TestJiraClient(TestCase):
         client = JiraClient(resource=jira_resource)
         issue = client.jira.issue("SAND-1661")
 
-    # @skip('Test against helpdesk server')
+    @skip('Test against helpdesk server')
     def test_jira_client_create_remote_link(self):
         # jira_resource = ResourceCredential.objects.create(
         #     title='jira instance',
@@ -844,13 +828,10 @@ class TestJiraClient(TestCase):
         #     'url': 'https://submissions.gfbio.org',
         #     'title': 'Follow this Link ;-)'
         # })
-        # pprint(client.jira.remote_links(issue))
         # client.add_remote_link("SAND-1710", url='http://www.google.de', title='Google here abcd')
-        # print(client.error)
         # issue = client.jira.issue("SAND-1710")
         # client.add_remote_link(issue, url='http://www.google.de',
         #                        title='Google here 1234')
-        # print(client.error)
 
         response = requests.get(
             url='https://helpdesk.gfbio.org/rest/applinks/latest/listApplicationlinks',
@@ -859,5 +840,3 @@ class TestJiraClient(TestCase):
                 'Content-Type': 'application/json'
             }
         )
-        print(response.status_code)
-        print(response.content)

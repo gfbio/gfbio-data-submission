@@ -14,7 +14,6 @@ from ftplib import FTP
 from xml.etree.ElementTree import Element, SubElement
 
 import dicttoxml
-import requests
 from django.conf import settings
 from django.db import transaction
 # TODO: read jsonschem 2.6.0 changelog
@@ -22,14 +21,15 @@ from django.utils.encoding import smart_text
 from jsonschema import Draft3Validator
 from pytz import timezone
 
-from gfbio_submissions.brokerage.utils.csv import find_correct_platform_and_model
-
 from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_CENTER_NAME, \
     DEFAULT_ENA_BROKER_NAME, CHECKLIST_ACCESSION_MAPPING, \
     STATIC_SAMPLE_SCHEMA_LOCATION
 from gfbio_submissions.brokerage.models import AuditableTextData, \
     EnaReport, PersistentIdentifier
+from gfbio_submissions.brokerage.utils.csv import \
+    find_correct_platform_and_model
+from gfbio_submissions.generic.utils import logged_requests
 
 logger = logging.getLogger(__name__)
 dicttoxml.LOG.setLevel(logging.ERROR)
@@ -213,10 +213,6 @@ class Enalizer(object):
                 break
         if 'NO_VAL' not in renamed_additional_checklist_tag:
             sample_attributes.append(
-                # {
-                #     'tag': renamed_additional_checklist_tag,
-                #     'value': renamed_additional_checklist_value
-                # }
                 OrderedDict([('tag', renamed_additional_checklist_tag),
                              ('value', renamed_additional_checklist_value)])
             )
@@ -242,7 +238,6 @@ class Enalizer(object):
                 ]))
         res = OrderedDict()
         res['title'] = s.pop('sample_title', '')
-        # site_object_id = s.pop('site_object_id', '')
         res['sample_alias'] = 'sample_alias_{0}'.format(sample_index)
 
         sname = OrderedDict()
@@ -281,9 +276,6 @@ class Enalizer(object):
                     ]
                 )
             else:
-                # (k.upper(), self._upper_case_ordered_dictionary(v)) for k, v in
-                # s['sample_attributes'] = [{'tag': k, 'value': v} for k, v in
-                #                           flattened_gcdj.items()]F
                 s['sample_attributes'] = [OrderedDict(('tag', k), ('value', v))
                                           for k, v in
                                           flattened_gcdj.items()]
@@ -488,10 +480,6 @@ class Enalizer(object):
     def create_run_xml(self, broker_submission_id=None):
         run_set = Element('RUN_SET')
 
-        # include checksum attributes:
-        # file_attributes = ['filename', 'filetype', 'checksum_method',
-        #                    'checksum']
-
         # without checksum attributes
         file_attributes = ['filename', 'filetype', ]
         for r in self.run:
@@ -592,52 +580,20 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data):
         action='ADD',
         outgoing_request_id=outgoing_request_id)
 
-    # requestlog: ok !
-    response = requests.post(
+    return logged_requests.post(
         archive_access.url,
+        submission=submission,
+        return_log_id=True,
         params=auth_params,
         files=ena_submission_data,
         verify=False
     )
-
-    # TODO: tesdatat this !
-    with transaction.atomic():
-        details = response.headers or ''
-        # TODO: since RequestLog has been moved to generic, is maybe valid to use a global import now. check ..
-        # prevent cyclic dependencies
-        from gfbio_submissions.generic.models import RequestLog
-        incoming = None
-        try:
-            incoming = RequestLog.objects.filter(
-                submission_id=submission.broker_submission_id).filter(
-                type=RequestLog.INCOMING).latest('created')
-        except RequestLog.DoesNotExist:
-            logger.error('No incoming request for submission_id {}'.format(
-                submission.broker_submission_id))
-        site_user = submission.submitting_user if submission.submitting_user is not None else ''
-        req_log = RequestLog(
-            request_id=outgoing_request_id,
-            type=RequestLog.OUTGOING,
-            url=archive_access.url,
-            data=ena_submission_data,
-            site_user=site_user,
-            submission_id=submission.broker_submission_id,
-            response_status=response.status_code,
-            response_content=response.content,
-            triggered_by=incoming,
-            request_details={
-                'response_headers': str(details)
-            }
-        )
-        req_log.save()
-    return response, req_log.request_id
 
 
 def release_study_on_ena(submission):
     study_primary_accession = submission.brokerobject_set.filter(
         type='study').first().persistentidentifier_set.filter(
         pid_type='PRJ').first()
-    # site_config = SiteConfiguration.objects.filter(site=submission.site).first()
     site_config = submission.user.site_configuration
     if site_config is None:
         logger.warning(
@@ -681,46 +637,14 @@ def release_study_on_ena(submission):
         }
         data = {'SUBMISSION': ('submission.xml', submission_xml)}
 
-        response = requests.post(
-            site_config.ena_server.url,
+        return logged_requests.post(
+            url=site_config.ena_server.url,
+            submission=submission,
+            return_log_id=True,
             params=auth_params,
             files=data,
-            verify=False
+            verify=False,
         )
-
-        outgoing_request_id = uuid.uuid4()
-        with transaction.atomic():
-            details = response.headers or ''
-            # prevent cyclic dependencies
-            from gfbio_submissions.generic.models import RequestLog
-            incoming = None
-            try:
-                incoming = RequestLog.objects.filter(
-                    submission_id=submission.broker_submission_id).filter(
-                    type=RequestLog.INCOMING).latest('created')
-            except RequestLog.DoesNotExist:
-                logger.warning(
-                    'ena.py | release_study_on_ena | No incoming request for '
-                    'submission_id={0}'.format(submission.broker_submission_id))
-
-            site_user = submission.submitting_user if \
-                submission.submitting_user is not None else ''
-
-            req_log = RequestLog.objects.create(
-                request_id=outgoing_request_id,
-                type=RequestLog.OUTGOING,
-                url=site_config.ena_server.url,
-                data=data,
-                site_user=site_user,
-                submission_id=submission.broker_submission_id,
-                response_status=response.status_code,
-                response_content=response.content,
-                triggered_by=incoming,
-                request_details={
-                    'response_headers': str(details)
-                }
-            )
-        return response, req_log.request_id
     else:
         logger.warning(
             'ena.py | release_study_on_ena | no primary accession no '
@@ -820,31 +744,14 @@ def download_submitted_run_files_to_string_io(site_config, decompressed_io):
 def fetch_ena_report(site_configuration, report_type):
     url = '{0}{1}?format=json'.format(
         site_configuration.ena_report_server.url, report_type)
-    response = requests.get(
+    return logged_requests.get(
         url=url,
+        return_log_id=True,
         auth=(
             site_configuration.ena_report_server.username,
             site_configuration.ena_report_server.password
         )
     )
-    request_id = uuid.uuid4()
-    with transaction.atomic():
-        details = response.headers or ''
-        from gfbio_submissions.generic.models import RequestLog
-        req_log = RequestLog(
-            request_id=request_id,
-            type=RequestLog.OUTGOING,
-            url=url,
-            # site_user=site_configuration.site.username,
-            response_status=response.status_code,
-            response_content=response.content,
-            request_details={
-                'response_headers': str(details)
-            }
-        )
-        req_log.save()
-
-    return response, request_id
 
 
 def update_embargo_date_in_submissions(hold_date, study_pid):
@@ -862,7 +769,9 @@ def update_embargo_date_in_submissions(hold_date, study_pid):
                             'submission id: {} | '
                             'persistent_identifier_date: {} | '
                             'persistent_identifier_id: {}'
-                            ''.format(submission.embargo, submission.broker_submission_id, study.hold_date, study.pid))
+                            ''.format(submission.embargo,
+                                      submission.broker_submission_id,
+                                      study.hold_date, study.pid))
 
 
 def update_persistent_identifier_report_status():
@@ -883,7 +792,8 @@ def update_persistent_identifier_report_status():
                     # holdDate from ENA report 2022-03-10T17:17:04
                     # https://www.journaldev.com/23365/python-string-to-datetime-strptime
                     ena_hold_date_format = "%Y-%m-%dT%X"
-                    hold_date_time = datetime.datetime.strptime(hold_date, ena_hold_date_format).date()
+                    hold_date_time = datetime.datetime.strptime(hold_date,
+                                                                ena_hold_date_format).date()
                 ids_to_use = []
                 if pri_id:
                     ids_to_use.append(pri_id)
@@ -895,7 +805,8 @@ def update_persistent_identifier_report_status():
                         PersistentIdentifier.objects.filter(pid=vid).update(
                             status=status, hold_date=hold_date_time)
                         update_embargo_date_in_submissions(hold_date_time,
-                                                           PersistentIdentifier.objects.filter(pid=vid))
+                                                           PersistentIdentifier.objects.filter(
+                                                               pid=vid))
                     elif status:
                         PersistentIdentifier.objects.filter(pid=vid).update(
                             status=status)
@@ -907,6 +818,7 @@ def update_persistent_identifier_report_status():
                 '| found {0} occurences for report of type={1} found'.format(
                     len(reports), report_name))
             return False
+
 
 def update_ena_embargo_date(submission):
     study_primary_accession = submission.brokerobject_set.filter(
@@ -956,46 +868,16 @@ def update_ena_embargo_date(submission):
         }
         data = {'SUBMISSION': ('submission.xml', submission_xml)}
 
-        response = requests.post(
-            site_config.ena_server.url,
+        response, request_id = logged_requests.post(
+            url=site_config.ena_server.url,
+            submission=submission,
+            return_log_id=True,
             params=auth_params,
             files=data,
             verify=False
         )
 
-        outgoing_request_id = uuid.uuid4()
-        with transaction.atomic():
-            details = response.headers or ''
-            # prevent cyclic dependencies
-            from gfbio_submissions.generic.models import RequestLog
-            incoming = None
-            try:
-                incoming = RequestLog.objects.filter(
-                    submission_id=submission.broker_submission_id).filter(
-                    type=RequestLog.INCOMING).latest('created')
-            except RequestLog.DoesNotExist:
-                logger.warning(
-                    'ena.py | update_ena_embargo_date | No incoming request for '
-                    'submission_id={0}'.format(submission.broker_submission_id))
-
-            site_user = submission.submitting_user if \
-                submission.submitting_user is not None else ''
-
-            req_log = RequestLog.objects.create(
-                request_id=outgoing_request_id,
-                type=RequestLog.OUTGOING,
-                url=site_config.ena_server.url,
-                data=data,
-                site_user=site_user,
-                submission_id=submission.broker_submission_id,
-                response_status=response.status_code,
-                response_content=response.content,
-                triggered_by=incoming,
-                request_details={
-                    'response_headers': str(details)
-                }
-            )
-        return response, req_log.request_id
+        return response, request_id
     else:
         logger.warning(
             'ena.py | update_ena_embargo_date | no primary accession no '

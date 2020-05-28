@@ -73,8 +73,6 @@ class TestSubmissionView(TestCase):
                 b'horst:password').decode('utf-8')
         )
         cls.api_client = client
-        # print('\nUSER SC: ', user.site_configuration)
-        # pprint(user.site_configuration.__dict__)
 
         user = User.objects.create_user(
             username='kevin', email='kevin@kevin.de', password='secret',
@@ -109,22 +107,12 @@ class TestSubmissionView(TestCase):
 
         cls.factory = APIRequestFactory()
 
-        # client = APIClient()
-        # print(' # ##### ')
-        # print('Basic ' + base64.b64encode(
-        #     b'horst:password').decode('utf-8'))
-        # client.credentials(
-        #     HTTP_AUTHORIZATION='Basic ' + base64.b64encode(
-        #         b'horst:password').decode('utf-8')
-        # )
-        # cls.api_client = client
         other_client = APIClient()
         other_client.credentials(
             HTTP_AUTHORIZATION='Basic ' + base64.b64encode(
                 b'kevin:secret').decode('utf-8')
         )
         cls.other_api_client = other_client
-        print('\nFINISHED --- TESTSUBMISSIONVIEW SETUP TEST DATA')
 
     @staticmethod
     def _add_gfbio_helpdesk_user_service_response(user_name='regular_user',

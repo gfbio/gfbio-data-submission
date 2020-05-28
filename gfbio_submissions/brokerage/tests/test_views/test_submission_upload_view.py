@@ -477,6 +477,8 @@ class TestSubmissionUploadView(TestCase):
         response = self.api_client.post(url, data, format='multipart')
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(SubmissionUpload.objects.all()))
+
+
         fname = SubmissionUpload.objects.all().first().file.name
         self.assertIn('test_primary_data_file_11112222', fname)
         content = json.loads(response.content.decode('utf-8'))

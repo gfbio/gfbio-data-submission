@@ -951,7 +951,6 @@ class TestCSVParsing(TestCase):
         fname, sxml = ena_submission_data['EXPERIMENT']
         dom = xml.dom.minidom.parseString(sxml)
         pretty = dom.toprettyxml()
-        print(pretty)
 
     def test_parse_to_xml_real_world_single_layout(self):
         submission = Submission.objects.first()

@@ -76,15 +76,19 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
         self.assertEqual(201, response.status_code)
         self.assertDictEqual(expected, content)
         self.assertEqual(1, len(Submission.objects.all()))
+
+        # 1 incoming post, 1 get helpdesk user, 1 create issue
+        self.assertEqual(3, len(RequestLog.objects.all()))
+
         submission = Submission.objects.last()
         self.assertEqual(UUID(content['broker_submission_id']),
                          submission.broker_submission_id)
         self.assertIsNone(submission.embargo)
         self.assertFalse(submission.release)
-        # self.assertEqual(0, len(submission.site_project_id))
         self.assertEqual(Submission.OPEN, submission.status)
         self.assertEqual(0, len(submission.submitting_user))
         self.assertEqual('GENERIC', submission.target)
+
         request_logs = RequestLog.objects.filter(type=RequestLog.INCOMING)
         self.assertEqual(1, len(request_logs))
 
