@@ -5,7 +5,7 @@ import sys
 import subprocess
 
 # get commit SHA
-COMMIT_SHA = subprocess.run(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE).stdout.decode('utf-8')
+COMMIT_SHA = subprocess.run(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE).stdout.decode('utf-8')[:8]
 
 # get commit reference
 headers = {'PRIVATE-TOKEN': os.environ['PRIVATE_TOKEN'] }
