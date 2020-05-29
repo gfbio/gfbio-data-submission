@@ -14,18 +14,20 @@ r = requests.get("https://gitlab.gwdg.de/api/v4/projects/{}/repository/commits/{
 isMaster = False
 branchCount = 0
 data = r.json()
+allBranches = 'Tag found in: '
 
 if 'message' in data:
-    print(2)
+    print(data['message'])
     sys.exit(0)
 
 for obj in data:
   if obj['type'] == 'branch':
       branchCount += 1
+      allBranches += '{} '.format(obj['name'])
       if obj['name'] == 'master':
           isMaster = True
 
 if isMaster and branchCount == 1:
     print(1)
 else:
-    print(0)
+    print(allBranches)
