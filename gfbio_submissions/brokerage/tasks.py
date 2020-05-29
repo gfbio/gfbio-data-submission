@@ -420,8 +420,7 @@ def update_ena_submission_data_task(self, previous_task_result=None,
 )
 def clean_submission_for_update_task(self, previous_task_result=None,
                                      submission_upload_id=None):
-    # TODO: here it would be possible to get the related submission for the TaskReport
-    TaskProgressReport.objects.create_initial_report(
+    report, created = TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
     submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(
@@ -443,6 +442,9 @@ def clean_submission_for_update_task(self, previous_task_result=None,
             'no valid SubmissionUpload available | '
             'submission_upload_id={0}'.format(submission_upload_id))
         return TaskProgressReport.CANCELLED
+
+    report.submission = submission_upload.submission
+    report.save()
 
     data = submission_upload.submission.data
     molecular_requirements_keys = ['samples', 'experiments']  # 'study_type',
@@ -466,7 +468,7 @@ def clean_submission_for_update_task(self, previous_task_result=None,
 def parse_csv_to_update_clean_submission_task(self, previous_task_result=None,
                                               submission_upload_id=None):
     # TODO: here it would be possible to get the related submission for the TaskReport
-    TaskProgressReport.objects.create_initial_report(
+    report, created = TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
     submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(
@@ -486,6 +488,8 @@ def parse_csv_to_update_clean_submission_task(self, previous_task_result=None,
             'no valid SubmissionUpload available | '
             'submission_upload_id={0}'.format(submission_upload_id))
         return TaskProgressReport.CANCELLED
+
+    report.submission = submission_upload.submission
 
     with open(submission_upload.file.path, 'r') as file:
         molecular_requirements = parse_molecular_csv(
@@ -510,7 +514,9 @@ def parse_csv_to_update_clean_submission_task(self, previous_task_result=None,
             messages = [e.message for e in full_errors]
             submission_upload.submission.data.update(
                 {'validation': messages})
+            report.task_exception_info = json.dumps({'validation': messages})
 
+        report.save()
         submission_upload.submission.save()
         if not valid:
             # TODO: update tpr with errors from validation
