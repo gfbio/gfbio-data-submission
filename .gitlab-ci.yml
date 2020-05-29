@@ -6,7 +6,6 @@ stages:
   - stop_web_test
   - build_staging
   - update_staging
-  - build_production
   - update_production
   - deploy
 
@@ -90,27 +89,10 @@ update_staging_env:
   tags:
     - staging
 
-production_build:
-  stage: build_production
-  script:
-    - rsync -a /home/gitlab-runner/.envs .
-    - cd userinterface && npm i && npm run collect-ci
-    - cd ../
-    - docker-compose -f production.yml build
-  rules:
-    - if: '$CI_COMMIT_TAG'
-  tags:
-    - production
-
 deploy_to_production:
   stage: update_production
   script:
-    - rsync -a /home/gitlab-runner/.envs .
-    - docker-compose -f production.yml up -d postgres
-    - docker-compose -f production.yml run --rm postgres backup
-    - docker-compose -f production.yml run --rm django python manage.py migrate
-    - docker-compose -f production.yml down
-    - docker-compose -f production.yml up -d
+    - HOST=${CI_PROJECT_URL} CI_PROJECT_ID=${CI_PROJECT_ID} PRIVATE_TOKEN=${PRIVATE_TOKEN} cicd/tagReleaseCheck.sh
   environment:
     name: production
     url: https://submissions.gfbio.org
