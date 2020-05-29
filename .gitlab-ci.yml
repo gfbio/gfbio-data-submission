@@ -1,16 +1,17 @@
 stages:
-  - unitTests
-  - autoMerge
+  - unit_tests
+  - create_merge_request
   - test
-  - createWebTest
-  - afterMerge
-  - buildStaging
-  - updateStaging
-  - buildProduction
+  - check_for_web_test
+  - stop_web_test
+  - build_staging
+  - update_staging
+  - build_production
+  - update_production
   - deploy
 
 run_unit_tests:
-  stage: unitTests
+  stage: unit_tests
   script:
     - rsync -a /home/gitlab-runner/.envs .
     - docker-compose -f local.yml build
@@ -27,7 +28,7 @@ run_unit_tests:
     - dev
 
 create_merge_request:
-  stage: autoMerge
+  stage: create_merge_request
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^\d+-/'
   script:
@@ -35,8 +36,8 @@ create_merge_request:
   tags:
     - dev
 
-docker_stop_web_test:
-  stage: afterMerge
+stop_web_test:
+  stage: stop_web_test
   script:
     - python cicd/stopDockerStack.py "${CI_COMMIT_MESSAGE}"
   rules:
@@ -44,31 +45,20 @@ docker_stop_web_test:
   tags:
     - dev
 
-docker_web_test:
-  stage: createWebTest
+check_for_web_test:
+  stage: check_for_web_test
   script:
-    - rsync -a /home/gitlab-runner/.envs .
-    - docker stack rm $CI_COMMIT_REF_NAME || true
-    - while [[ $(docker ps | grep $CI_COMMIT_REF_NAME | wc -l) > 0 ]]; do sleep 1; done
-    - cd userinterface && npm i && npm run collect-ci
-    - cd ../
-    - cp gfbio_submissions/templates/account/webtest_login.html gfbio_submissions/templates/account/login.html
-    - sed -i s/BRANCH/$CI_COMMIT_REF_NAME/g cicd/production.yml
-    - sed -i s/DJANGO_ALLOWED_HOSTS=.*/DJANGO_ALLOWED_HOSTS=\.dev\.submissions\.gfbio\.org/g .envs/.production/.django
-    - sed -i 's/DJANGO_ADMIN_URL=.*\//DJANGO_ADMIN_URL='"$ADMIN_URL"'/g' .envs/.production/.django
-    - sed -i s/EMDATE/$(date +%Y-%m-%d -d "+ 365 days")/g cicd/test_data.json
-    - docker-compose -f production.yml build
-    - ADMIN_NICKNAME=${ADMIN_NICKNAME} ADMIN_EMAIL=${ADMIN_EMAIL} ADMIN_PASSWORD=${ADMIN_PASSWORD} docker stack deploy -c cicd/production.yml $CI_COMMIT_REF_NAME
+    - ADMIN_NICKNAME=${ADMIN_NICKNAME} ADMIN_EMAIL=${ADMIN_EMAIL} ADMIN_PASSWORD=${ADMIN_PASSWORD} HOST=${CI_PROJECT_URL} CI_PROJECT_ID=${CI_PROJECT_ID} CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} GITLAB_USER_ID=${GITLAB_USER_ID} PRIVATE_TOKEN=${PRIVATE_TOKEN} ./cicd/createWebTest.sh
   environment:
     name: review/$CI_COMMIT_REF_NAME
     url: https://$CI_COMMIT_REF_NAME.dev.submissions.gfbio.org/accounts/login
   rules:
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+-/ && $CI_COMMIT_MESSAGE =~ /.*web-test.*/'
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+-/'
   tags:
     - dev
 
 build_staging:
-  stage: buildStaging
+  stage: build_staging
   script:
     - rsync -a /home/gitlab-runner/.envs .
     - ./cicd/traefikHostReplace.sh
@@ -83,7 +73,7 @@ build_staging:
     - staging
 
 update_staging_env:
-  stage: updateStaging
+  stage: update_staging
   script:
     - rsync -a /home/gitlab-runner/.envs .
     - ./cicd/traefikHostReplace.sh
@@ -101,7 +91,7 @@ update_staging_env:
     - staging
 
 production_build:
-  stage: buildProduction
+  stage: build_production
   script:
     - rsync -a /home/gitlab-runner/.envs .
     - cd userinterface && npm i && npm run collect-ci
@@ -113,7 +103,7 @@ production_build:
     - production
 
 deploy_to_production:
-  stage: deploy
+  stage: update_production
   script:
     - rsync -a /home/gitlab-runner/.envs .
     - docker-compose -f production.yml up -d postgres
