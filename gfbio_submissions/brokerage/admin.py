@@ -162,8 +162,8 @@ class SubmissionAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'  # date drill down
     ordering = ('-modified',)  # ordering in list display
     list_display = ('broker_submission_id',
-                    'submitting_user', 'site', 'status',)
-    list_filter = ('site', 'status', 'target',)
+                    'user', 'created', 'target', 'status',)
+    list_filter = ('status', 'target',)
     search_fields = ['broker_submission_id', 'submitting_user',
                      'submitting_user_common_information',
                      'additionalreference__reference_key'

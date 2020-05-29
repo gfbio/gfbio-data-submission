@@ -427,6 +427,8 @@ def clean_submission_for_update_task(self, previous_task_result=None,
     submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(
         submission_upload_id)
 
+    # TODO: add submission relation from submission_upload, relation
+
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
             'tasks.py | clean_submission_for_update_task | '
@@ -511,6 +513,7 @@ def parse_csv_to_update_clean_submission_task(self, previous_task_result=None,
 
         submission_upload.submission.save()
         if not valid:
+            # TODO: update tpr with errors from validation
             return TaskProgressReport.CANCELLED
         else:
             return True
