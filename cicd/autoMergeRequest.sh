@@ -5,16 +5,19 @@
 # Look which is the default branch
 TARGET_BRANCH=`curl --silent "${HOST}${CI_PROJECT_ID}" --header "PRIVATE-TOKEN:${PRIVATE_TOKEN}" | python3 -c "import sys, json; print(json.load(sys.stdin)['default_branch'])"`;
 
+# get issue id from branch name
 IFS='-' read -ra ISSUE_SPLIT <<< "${CI_COMMIT_REF_NAME}"
 IFS=';'
 ISSUE_ID=${ISSUE_SPLIT[0]}
 
+# get issue info
 ISSUE_INFO=`curl --silent "https://gitlab.gwdg.de//api/v4/projects/${CI_PROJECT_ID}/issues?iids[]=${ISSUE_ID}" --header "PRIVATE-TOKEN:${PRIVATE_TOKEN}" |  python3 -c "import sys, json; print(json.load(sys.stdin)[0])"`
 ISSUE_LABELS_ARR=`python3 -c "print(${ISSUE_INFO}['labels'])"`
 ISSUE_LABELS_STR=`python3 -c "print(','.join(${ISSUE_LABELS_ARR}))"`
 ISSUE_MILESTONE=`python3 -c "print(${ISSUE_INFO}['milestone']['id'])"`
 
-REVIEWERS_IDS=$(PRIVATE_TOKEN=${PRIVATE_TOKEN} ./cicd/get_reviewers_ids.py)
+# get reviewers ids
+REVIEWERS_IDS=$(PRIVATE_TOKEN=${PRIVATE_TOKEN} CI_PROJECT_ID=${CI_PROJECT_ID} ./cicd/get_reviewers_ids.py)
 CODE_REVIEW_IDS=`python3 -c "import re; arr_pattern = re.compile(r'(\[\d*.*\])\s(\[\d*.*\])\s(\[\d*.*\])'); match = arr_pattern.findall(\"${REVIEWERS_IDS}\"); print(match[0][0] if len(match)>0 else [])"`
 FEATURE_REVIEW_IDS=`python3 -c "import re; arr_pattern = re.compile(r'(\[\d*.*\])\s(\[\d*.*\])\s(\[\d*.*\])'); match = arr_pattern.findall(\"${REVIEWERS_IDS}\"); print(match[0][1] if len(match)>0 else [])"`
 ALL_REVIEWERS_IDS=`python3 -c "import re; arr_pattern = re.compile(r'(\[\d*.*\])\s(\[\d*.*\])\s(\[\d*.*\])'); match = arr_pattern.findall(\"${REVIEWERS_IDS}\"); print(match[0][2] if len(match)>0 else [])"`
