@@ -25,5 +25,10 @@ if [ ${IS_MASTER} -eq "1" ]; then
   exit 0
 fi
 
+if [ ${IS_MASTER} -eq "2" ]; then
+  echo "Commit not found"
+  exit 0
+fi
+
 echo "Tag found in multiple branches."
 
