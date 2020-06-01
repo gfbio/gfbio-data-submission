@@ -296,7 +296,6 @@ function submissionFormReducer(state = initialState, action) {
     case DELETE_FILE_ERROR:
       return state;
     case SET_CONTRIBUTORS:
-      console.log('SAVING CONTRIBUTORS');
       return state.set('contributors', action.contributors);
     case FETCH_SUBMISSION:
       // TODO: set prop to inidcate loading -> loading gif

@@ -292,7 +292,6 @@ class ContributorsForm extends React.PureComponent {
   // toogles Detail, closes form
   onClickDetailButton = (index = -1) => {
     if (index >= 0) {
-      console.log(this.state.contributorsArray[index]);
       // close form if user clicked on the same contributor
       if (this.state.contributorIndex === index) {
         this.closeFormBody();
