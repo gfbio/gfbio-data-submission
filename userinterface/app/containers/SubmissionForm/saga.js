@@ -245,6 +245,7 @@ export function* performUpdateSubmissionSaga() {
   const updateWithRelease = yield select(makeSelectUpdateWithRelease());
   const requestData = yield prepareRequestData(userId, updateWithRelease);
   try {
+    console.log('UPDATE');
     let response = yield call(putSubmission, token, brokerSubmissionId, requestData.payload);
     // TODO: updates of file are handled in extra story
     // NOOPE: yield put(uploadFiles());
@@ -260,6 +261,7 @@ export function* performUpdateSubmissionSaga() {
       yield put(push('/list'));
     }
   } catch (error) {
+    console.log('ERROR', error);
     yield put(updateSubmissionError(error));
   }
 }
@@ -267,6 +269,7 @@ export function* performUpdateSubmissionSaga() {
 export function* processSubmitFormTypeSaga() {
   const generalError = yield select(makeSelectGeneralError());
   const reduxFormForm = yield select(makeSelectReduxFormForm());
+  console.log('GENERAL ERROR');
   if (generalError) {
     yield put(submitFormError());
   } else if (reduxFormForm.workflow === 'save') {

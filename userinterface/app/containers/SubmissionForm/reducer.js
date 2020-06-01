@@ -201,12 +201,16 @@ function submissionFormReducer(state = initialState, action) {
         .set('submitInProgress', false)
         .set('showSubmitSuccess', true);
     case SUBMIT_FORM_ERROR:
-      console.log(action.errorResponse);
       return state
         .set('metaDataIndex', '')
         .set('submitInProgress', false)
         .set('submitError', true)
-        .set('submissionErrors', action.errorResponse?.response?.data?.data || ["Server error, please try again later."]);
+        .set(
+          'submissionErrors',
+          action.errorResponse?.response?.data?.data || [
+            'Server error, please try again later.',
+          ],
+        );
     case SHOW_EMBARGO_DIALOG:
       return state
         .set('showEmbargoDialog', true);
@@ -339,7 +343,15 @@ function submissionFormReducer(state = initialState, action) {
         .set('updateWithRelease', false);
     case UPDATE_SUBMISSION_ERROR:
       return state
-        .set('updateWithRelease', action.release);
+        .set('updateWithRelease', action.release)
+        .set('submitInProgress', false)
+        .set('submitError', true)
+        .set(
+          'submissionErrors',
+          action.errorResponse?.response?.data?.data || [
+            'Server error, please try again later.',
+          ],
+        );
     case SET_METADATA_INDEX:
       let newMetaDataIndex = '';
       newMetaDataIndex = markMetaDataInScheduledUploads(state, action.metaDataIndex);

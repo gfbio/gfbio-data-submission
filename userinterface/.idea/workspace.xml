@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="3acf6f6d-6b4c-4f9d-a796-959235492cd3" name="Default Changelist" comment="" />
+    <list default="true" id="3acf6f6d-6b4c-4f9d-a796-959235492cd3" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/../gfbio_submissions/static/js/project.js" beforeDir="false" afterPath="$PROJECT_DIR$/../gfbio_submissions/static/js/project.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../gfbio_submissions/static/js/runtime~submission.ui.js" beforeDir="false" afterPath="$PROJECT_DIR$/../gfbio_submissions/static/js/runtime~submission.ui.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../gfbio_submissions/static/js/sw.js" beforeDir="false" afterPath="$PROJECT_DIR$/../gfbio_submissions/static/js/sw.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/components/ContributorsForm/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/components/ContributorsForm/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/containers/SubmissionForm/reducer.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/containers/SubmissionForm/reducer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/containers/SubmissionForm/saga.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/containers/SubmissionForm/saga.js" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -287,6 +295,7 @@
       <workItem from="1587972325328" duration="4000" />
       <workItem from="1589311560930" duration="1000" />
       <workItem from="1590389037827" duration="1000" />
+      <workItem from="1590998007915" duration="11249000" />
     </task>
     <task id="LOCAL-00273" summary="GFBIO-2504 react to true/false value of checkboxes and add accordingly to request data&#10;&#10;- clean code from debug log messages">
       <created>1559075318134</created>
@@ -690,9 +699,10 @@
       <screen x="0" y="0" width="3840" height="2160" />
     </state>
     <state x="1437" y="614" width="945" height="917" key="StructurePopup/3840.180.3200.1800/0.0.3840.2160@0.0.3840.2160" timestamp="1587136155083" />
-    <state x="1206" y="474" width="1508" height="1176" key="find.popup" timestamp="1583440176563">
-      <screen x="0" y="0" width="3840" height="2160" />
+    <state x="603" y="265" width="754" height="590" key="find.popup" timestamp="1591006007564">
+      <screen x="0" y="36" width="1920" height="1044" />
     </state>
+    <state x="603" y="265" width="754" height="590" key="find.popup/0.36.1920.1044/1920.0.1920.1080@0.36.1920.1044" timestamp="1591006007564" />
     <state x="1206" y="474" width="1508" height="1176" key="find.popup/3840.180.3200.1800/0.0.3840.2160@0.0.3840.2160" timestamp="1583440176563" />
   </component>
 </project>

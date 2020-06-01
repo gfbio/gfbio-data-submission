@@ -33,6 +33,7 @@ class ContributorsForm extends React.PureComponent {
       contributors: [],
       contributorsArray: [],
       originalContributors: [],
+      organisationRoleSelected: false,
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleInputClick = this.handleInputClick.bind(this);
@@ -110,17 +111,30 @@ class ContributorsForm extends React.PureComponent {
 
   validateFormValues() {
     let isValid = true;
-    if (!this.state.formValues.firstName) {
+    if (
+      !this.state.formValues.firstName &&
+      !this.state.organisationRoleSelected
+    ) {
       isValid = false;
       document.getElementById('firstName').classList.add('error');
     }
-    if (!this.state.formValues.lastName) {
+    if (
+      !this.state.formValues.lastName &&
+      !this.state.organisationRoleSelected
+    ) {
       isValid = false;
       document.getElementById('lastName').classList.add('error');
     }
     if (!this.state.formValues.emailAddress) {
       isValid = false;
       document.getElementById('emailAddress').classList.add('error');
+    }
+    if (
+      !this.state.formValues.institution &&
+      this.state.organisationRoleSelected
+    ) {
+      isValid = false;
+      document.getElementById('institution').classList.add('error');
     }
     return isValid;
   }
@@ -137,11 +151,14 @@ class ContributorsForm extends React.PureComponent {
   }
 
   preventSubmit(event) {
+    // ignore enter key
     if (event.keyCode === 13) {
       event.preventDefault();
-      return false;
     }
-    return true;
+    // prevent pipe character
+    if (event.key === '|') {
+      event.preventDefault();
+    }
   }
 
   cleanEditForm = () => {
@@ -152,6 +169,7 @@ class ContributorsForm extends React.PureComponent {
     document.getElementById('firstName').classList.remove('error');
     document.getElementById('lastName').classList.remove('error');
     document.getElementById('emailAddress').classList.remove('error');
+    document.getElementById('institution').classList.remove('error');
   };
 
   onSave = () => {
@@ -210,6 +228,7 @@ class ContributorsForm extends React.PureComponent {
       formOpen: false,
       formValues: {},
       roles: [],
+      organisationRoleSelected: false,
       contributorIndex: -1,
     });
   };
@@ -273,6 +292,7 @@ class ContributorsForm extends React.PureComponent {
   // toogles Detail, closes form
   onClickDetailButton = (index = -1) => {
     if (index >= 0) {
+      console.log(this.state.contributorsArray[index]);
       // close form if user clicked on the same contributor
       if (this.state.contributorIndex === index) {
         this.closeFormBody();
@@ -281,12 +301,32 @@ class ContributorsForm extends React.PureComponent {
       const rolesArr = this.rolesToArray(
         this.state.contributorsArray[index].contribution,
       );
+      let organisationRoleSelected = false;
+      rolesArr.forEach(obj => {
+        if (obj.role === 'Data Source Organisation') {
+          organisationRoleSelected = true;
+        }
+      });
+      const newFormValues = {
+        position: -1,
+        firstName: '',
+        lastName: '',
+        institution: '',
+        contribution: '',
+        emailAddress: '',
+      };
+      // eslint-disable-next-line guard-for-in,no-restricted-syntax
+      for (const key in this.state.contributorsArray[index]) {
+        newFormValues[key] = this.state.contributorsArray[index][key];
+      }
+      console.log(newFormValues);
       this.setState({
-        formValues: { ...this.state.contributorsArray[index] },
+        formValues: { ...newFormValues },
         detailOpen: true,
         formOpen: true,
         showAddDiv: false,
         contributorIndex: index,
+        organisationRoleSelected,
         roles: rolesArr,
       });
     }
@@ -302,10 +342,20 @@ class ContributorsForm extends React.PureComponent {
   // on role select or remove
   onSelectChange = selectedList => {
     this.scrollContributorsToTop();
+    let organisationRoleSelected = false;
     const values = this.state.formValues;
     values.contribution = this.rolesToCSV(selectedList);
+    selectedList.forEach(obj => {
+      if (obj.role === 'Data Source Organisation') {
+        organisationRoleSelected = true;
+      }
+    });
+    if (!organisationRoleSelected) {
+      document.getElementById('institution').classList.remove('error');
+    }
     this.setState({
       roles: selectedList,
+      organisationRoleSelected,
       formValues: values,
     });
   };
@@ -381,36 +431,43 @@ class ContributorsForm extends React.PureComponent {
         <div className="form-group col-md-4" />
       );
 
-    const contributors = this.state.contributorsArray.map((c, index) => (
-      <Draggable
-        key={`drag-key-${c.position}`}
-        draggableId={`contributor-dragId-${c.position}`}
-        index={index}
-        className="no-outline"
-      >
-        {provided => (
-          <div
-            ref={provided.innerRef}
-            {...provided.draggableProps}
-            {...provided.dragHandleProps}
-          >
-            <div className="row">
-              <div className="col">
-                <i className="fa fa-bars drag-bars" />
-                <Button
-                  className="btn btn-primary btn-contributor contributor-draggable-btn"
-                  onClick={() => this.onClickDetailButton(index)}
-                  aria-controls="contributorForm"
-                  aria-expanded={detailOpen}
-                >
-                  {`${c.position}. ${c.firstName} ${c.lastName}`}
-                </Button>
+    const contributors = this.state.contributorsArray.map((c, index) => {
+      const contributorName = c.contribution.includes(
+        'Data Source Organisation',
+      )
+        ? c.institution
+        : `${c.firstName} ${c.lastName}`;
+      return (
+        <Draggable
+          key={`drag-key-${c.position}`}
+          draggableId={`contributor-dragId-${c.position}`}
+          index={index}
+          className="no-outline"
+        >
+          {provided => (
+            <div
+              ref={provided.innerRef}
+              {...provided.draggableProps}
+              {...provided.dragHandleProps}
+            >
+              <div className="row">
+                <div className="col">
+                  <i className="fa fa-bars drag-bars" />
+                  <Button
+                    className="btn btn-primary btn-contributor contributor-draggable-btn"
+                    onClick={() => this.onClickDetailButton(index)}
+                    aria-controls="contributorForm"
+                    aria-expanded={detailOpen}
+                  >
+                    {`${c.position}. ${contributorName}`}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </Draggable>
-    ));
+          )}
+        </Draggable>
+      );
+    });
 
     const noContributorsText = (
       <div className="text-center">Contributors List</div>
@@ -453,7 +510,12 @@ class ContributorsForm extends React.PureComponent {
                   </h5>
                   <div className="form-row">
                     <div className="form-group col-md-3">
-                      <label htmlFor="firstName">First Name</label>
+                      <label htmlFor="firstName">
+                        First Name{' '}
+                        {this.state.organisationRoleSelected
+                          ? '(optional)'
+                          : ''}
+                      </label>
                       <input
                         type="text"
                         className="form-control"
@@ -465,7 +527,12 @@ class ContributorsForm extends React.PureComponent {
                       />
                     </div>
                     <div className="form-group col-md-3">
-                      <label htmlFor="lastName">Last Name</label>
+                      <label htmlFor="lastName">
+                        Last Name{' '}
+                        {this.state.organisationRoleSelected
+                          ? '(optional)'
+                          : ''}
+                      </label>
                       <input
                         type="text"
                         className="form-control"
@@ -494,7 +561,10 @@ class ContributorsForm extends React.PureComponent {
                   <div className="form-row">
                     <div className="form-group col-md-12">
                       <label htmlFor="institution">
-                        Institution (optional)
+                        Institution{' '}
+                        {!this.state.organisationRoleSelected
+                          ? '(optional)'
+                          : ''}
                       </label>
                       <input
                         type="text"
@@ -502,6 +572,7 @@ class ContributorsForm extends React.PureComponent {
                         id="institution"
                         onKeyDown={this.preventSubmit}
                         onChange={this.handleChange}
+                        onClick={this.handleInputClick}
                         value={this.state.formValues.institution}
                       />
                     </div>

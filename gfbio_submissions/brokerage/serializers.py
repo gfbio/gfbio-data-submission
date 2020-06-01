@@ -69,6 +69,21 @@ class SubmissionSerializer(serializers.ModelSerializer):
 
 class SubmissionDetailSerializer(SubmissionSerializer):
     def validate(self, data):
+        # check for pipe character in contributors
+        data_dict = data.get('data', {})
+        contributors = None
+        try:
+            contributors = data_dict['requirements']['contributors']
+        except KeyError:
+            contributors = None
+        if contributors:
+            for contributor in contributors:
+                for key in contributor:
+                    value = '{}'.format(contributor[key])
+                    if "|" in value:
+                        raise serializers.ValidationError({
+                            'data': 'Contributors: pipe "|" character is not allowed'})
+
         embargo = data.get('embargo', None)
         if embargo:
             # check if date is between tomorrow and 2 years from now
