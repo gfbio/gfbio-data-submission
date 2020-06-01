@@ -2,7 +2,7 @@
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.admin import re_create_ena_xml
+from gfbio_submissions.brokerage.admin import re_create_ena_xml, submit_to_ena_test, validate_against_ena
 from gfbio_submissions.brokerage.models import Submission, AuditableTextData, \
     TaskProgressReport
 from gfbio_submissions.generic.models import SiteConfiguration, \
@@ -50,4 +50,20 @@ class TestSubmissionAdmin(TestCase):
         submission = Submission.objects.first()
         self.assertEqual(0, len(submission.auditabletextdata_set.all()))
         self.assertEqual('tasks.prepare_ena_submission_data_task',
+                         TaskProgressReport.objects.first().task_name)
+
+    def test_validate_against_ena(self):
+        validate_against_ena(None, None, Submission.objects.all())
+
+        self.assertEqual('No resource credentials found for ENA', TaskProgressReport.objects.first().task_return_value)
+        self.assertEqual('SUCCESS', TaskProgressReport.objects.first().status)
+        self.assertEqual('tasks.validate_against_ena_task',
+                         TaskProgressReport.objects.first().task_name)
+
+    def test_submit_to_ena_test(self):
+        submit_to_ena_test(None, None, Submission.objects.all())
+
+        self.assertEqual('No resource credentials found for ENA-Testserver', TaskProgressReport.objects.first().task_return_value)
+        self.assertEqual('SUCCESS', TaskProgressReport.objects.first().status)
+        self.assertEqual('tasks.submit_to_ena_test_server_task',
                          TaskProgressReport.objects.first().task_name)

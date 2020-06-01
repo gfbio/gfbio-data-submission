@@ -37,7 +37,7 @@ from .utils.submission_transfer import SubmissionTransferHandler
 from .utils.task_utils import jira_error_auto_retry, \
     get_submission_and_site_configuration, raise_transfer_server_exceptions, \
     retry_no_ticket_available_exception, \
-    get_submitted_submission_and_site_configuration
+    get_submitted_submission_and_site_configuration, send_data_to_ena_for_validation_or_test
 
 logger = logging.getLogger(__name__)
 
@@ -569,6 +569,38 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None):
         response = Response()
     return str(request_id), response.status_code, smart_text(
         response.content)
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.validate_against_ena_task',
+    time_limit=600,
+    autoretry_for=(TransferServerError,
+                   TransferClientError
+                   ),
+    retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
+    retry_backoff=SUBMISSION_RETRY_DELAY,
+    retry_jitter=True
+)
+def validate_against_ena_task(self, submission_id=None, action='VALIDATE'):
+    results = send_data_to_ena_for_validation_or_test(self,submission_id, action)
+    return results
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.submit_to_ena_test_server_task',
+    time_limit=600,
+    autoretry_for=(TransferServerError,
+                   TransferClientError
+                   ),
+    retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
+    retry_backoff=SUBMISSION_RETRY_DELAY,
+    retry_jitter=True
+)
+def submit_to_ena_test_server_task(self, submission_id=None, action='ADD'):
+    results = send_data_to_ena_for_validation_or_test(self, submission_id, action)
+    return results
 
 
 @celery.task(

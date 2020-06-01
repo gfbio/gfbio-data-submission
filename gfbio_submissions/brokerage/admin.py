@@ -150,6 +150,30 @@ def download_auditable_text_data(modeladmin, request, queryset):
 
 download_auditable_text_data.short_description = 'Download XMLs'
 
+def validate_against_ena(modeladmin, request, queryset):
+    from gfbio_submissions.brokerage.tasks import \
+        validate_against_ena_task
+    for obj in queryset:
+        validate_against_ena_task.apply_async(
+            kwargs={
+                'submission_id': obj.pk
+            },
+            countdown=SUBMISSION_DELAY)
+
+validate_against_ena.short_description = 'Validate against ENA production server'
+
+def submit_to_ena_test(modeladmin, request, queryset):
+    from gfbio_submissions.brokerage.tasks import \
+        submit_to_ena_test_server_task
+    for obj in queryset:
+        submit_to_ena_test_server_task.apply_async(
+            kwargs={
+                'submission_id': obj.pk,
+                'action': 'ADD'
+            },
+            countdown=SUBMISSION_DELAY)
+
+submit_to_ena_test.short_description = 'Submit to ENA test server'
 
 class AuditableTextDataInlineAdmin(admin.StackedInline):
     model = AuditableTextData
@@ -172,6 +196,8 @@ class SubmissionAdmin(admin.ModelAdmin):
                AdditionalReferenceInline,)
     actions = [
         release_submission_study_on_ena,
+        validate_against_ena,
+        submit_to_ena_test,
         download_auditable_text_data,
         continue_release_submissions,
         re_create_ena_xml,
