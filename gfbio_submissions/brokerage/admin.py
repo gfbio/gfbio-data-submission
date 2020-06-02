@@ -150,6 +150,7 @@ def download_auditable_text_data(modeladmin, request, queryset):
 
 download_auditable_text_data.short_description = 'Download XMLs'
 
+
 def validate_against_ena(modeladmin, request, queryset):
     from gfbio_submissions.brokerage.tasks import \
         validate_against_ena_task
@@ -160,7 +161,9 @@ def validate_against_ena(modeladmin, request, queryset):
             },
             countdown=SUBMISSION_DELAY)
 
+
 validate_against_ena.short_description = 'Validate against ENA production server'
+
 
 def submit_to_ena_test(modeladmin, request, queryset):
     from gfbio_submissions.brokerage.tasks import \
@@ -173,7 +176,9 @@ def submit_to_ena_test(modeladmin, request, queryset):
             },
             countdown=SUBMISSION_DELAY)
 
+
 submit_to_ena_test.short_description = 'Submit to ENA test server'
+
 
 class AuditableTextDataInlineAdmin(admin.StackedInline):
     model = AuditableTextData
