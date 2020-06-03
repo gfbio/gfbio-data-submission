@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 import json
 import logging
 import os
@@ -189,3 +190,28 @@ def validate_data_min(data):
             STATIC_MIN_REQUIREMENTS_LOCATION),
         use_draft04_validator=True
     )
+
+def validate_contributors(data):
+    try:
+        contributors = data['requirements']['contributors']
+    except KeyError:
+        contributors = None
+    if contributors:
+        for contributor in contributors:
+            for key in contributor:
+                value = '{}'.format(contributor[key])
+                if "|" in value:
+                    return False, 'Contributors: pipe "|" character is not allowed'
+    return True, ''
+
+def validate_embargo(embargo):
+    # check if date is between tomorrow and 2 years from now
+    earliest_embargo_date = datetime.date.today() + datetime.timedelta(days=1)
+    latest_embargo_date = datetime.date(datetime.date.today().year + 2,
+                                        datetime.date.today().month, datetime.date.today().day)
+    if embargo < earliest_embargo_date:
+        return False, 'Embargo : earliest possible date is 24 hours from today'
+    elif embargo > latest_embargo_date:
+        return False, 'Embargo : latest possible date is 2 years from today'
+
+    return True, ''

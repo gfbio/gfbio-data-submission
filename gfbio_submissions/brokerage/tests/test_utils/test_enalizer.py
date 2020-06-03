@@ -456,12 +456,12 @@ class TestEnalizer(TestCase):
 
     def test_prepare_ena_data_embargo(self):
         submission = Submission.objects.first()
-        submission.embargo = datetime(2020, 1, 10)
+        submission.embargo = datetime(2020, 1, 10).date()
         submission.save()
         enalizer = Enalizer(submission=submission,
                             alias_postfix=submission.broker_submission_id)
         file_name, xml = enalizer.prepare_submission_xml_for_sending()
-        self.assertIn('2020-01-10T00:00:00', xml)
+        self.assertIn('2020-01-10', xml)
 
     @responses.activate
     def test_release_study_on_ena(self):
