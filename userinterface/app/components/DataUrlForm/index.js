@@ -5,19 +5,19 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Field } from 'redux-form/immutable';
 import { urlValidation } from './validation';
-// import PropTypes from 'prop-types';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
 class DataUrlForm extends React.PureComponent {
   renderInputField = ({
-                        input,
-                        placeholder,
-                        type,
-                        meta: { touched, error, warning },
-                      }) => (
+    input,
+    placeholder,
+    type,
+    meta: { touched, error, warning },
+  }) => (
     <div>
       <div>
         <input
@@ -25,10 +25,11 @@ class DataUrlForm extends React.PureComponent {
           placeholder={placeholder}
           type={type}
           className="form-control"
+          disabled={this.props.readOnly}
         />
         {touched &&
-        ((error && <span className="input-error">{error}</span>) ||
-          (warning && <span className="input-warning">{warning}</span>))}
+          ((error && <span className="input-error">{error}</span>) ||
+            (warning && <span className="input-warning">{warning}</span>))}
       </div>
     </div>
   );
@@ -47,6 +48,7 @@ class DataUrlForm extends React.PureComponent {
             component={this.renderInputField}
             type="text"
             placeholder="Link to your data, e.g. cloud storage"
+            props={{ readOnly: this.props.readOnly }}
             validate={urlValidation}
           />
         </div>
@@ -55,6 +57,8 @@ class DataUrlForm extends React.PureComponent {
   }
 }
 
-DataUrlForm.propTypes = {};
+DataUrlForm.propTypes = {
+  readOnly: PropTypes.bool,
+};
 
 export default DataUrlForm;

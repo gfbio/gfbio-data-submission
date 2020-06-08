@@ -6,8 +6,8 @@
 
 import React from 'react';
 import { Field } from 'redux-form/lib/immutable';
+import PropTypes from 'prop-types';
 import { LEGAL_REQUIREMENTS_PREFIX } from '../../containers/SubmissionForm/constants';
-// import PropTypes from 'prop-types';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -28,6 +28,7 @@ class LegalRequirementsForm extends React.PureComponent {
               id="nagoyaProtocol"
               component="input"
               type="checkbox"
+              disabled={this.props.readOnly}
             />
             <label className="custom-control-label" htmlFor="nagoyaProtocol">
               Nagoya Protocol
@@ -40,6 +41,7 @@ class LegalRequirementsForm extends React.PureComponent {
               id="iucnList"
               component="input"
               type="checkbox"
+              disabled={this.props.readOnly}
             />
             <label className="custom-control-label" htmlFor="iucnList">
               IUCN Red List of Threatened Species
@@ -52,6 +54,7 @@ class LegalRequirementsForm extends React.PureComponent {
               id="personalInformation"
               component="input"
               type="checkbox"
+              disabled={this.props.readOnly}
             />
             <label
               className="custom-control-label"
@@ -67,6 +70,7 @@ class LegalRequirementsForm extends React.PureComponent {
               id="uncertain"
               component="input"
               type="checkbox"
+              disabled={this.props.readOnly}
             />
             <label className="custom-control-label" htmlFor="uncertain">
               Uncertain
@@ -78,6 +82,8 @@ class LegalRequirementsForm extends React.PureComponent {
   }
 }
 
-LegalRequirementsForm.propTypes = {};
+LegalRequirementsForm.propTypes = {
+  readOnly: PropTypes.bool,
+};
 
 export default LegalRequirementsForm;

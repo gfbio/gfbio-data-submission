@@ -13,36 +13,15 @@ import { compose } from 'redux';
 import reducer from '../../containers/SubmissionForm/reducer';
 import { makeSelectLicense } from '../../containers/SubmissionForm/selectors';
 import { changeLicense } from '../../containers/SubmissionForm/actions';
-import LicenseModals, {
-  licenseDetailData,
-} from './licenseDetailsData';
+import LicenseModals, { licenseDetailData } from './licenseDetailsData';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
 class LicenseSelectionForm extends React.PureComponent {
-
   licenseListElements = Object.keys(licenseDetailData).map(licenseKey => {
-      if (licenseKey === 'OtherLicense') {
-        return (
-          <li className="list-group-item" key={licenseKey}>
-            <button
-              className="btn btn-primary btn-block btn-license text-left"
-              type="button"
-              data-toggle="collapse show"
-              data-target="#collapseLicense"
-              aria-expanded="false"
-              aria-controls="collapseLicense"
-              onClick={() => this.props.onClickLicense(
-                licenseDetailData[licenseKey].name)}
-            >
-              {licenseDetailData[licenseKey].name}
-            </button>
-          </li>
-        );
-      }
+    if (licenseKey === 'OtherLicense') {
       return (
         <li className="list-group-item" key={licenseKey}>
-
           <button
             className="btn btn-primary btn-block btn-license text-left"
             type="button"
@@ -50,19 +29,40 @@ class LicenseSelectionForm extends React.PureComponent {
             data-target="#collapseLicense"
             aria-expanded="false"
             aria-controls="collapseLicense"
-            onClick={() => this.props.onClickLicense(
-              licenseDetailData[licenseKey].name)}
+            onClick={() =>
+              this.props.onClickLicense(licenseDetailData[licenseKey].name)
+            }
           >
             {licenseDetailData[licenseKey].name}
-            <a className="align-bottom" data-toggle="modal"
-               data-target={'#' + licenseKey}>
-              details
-            </a>
           </button>
         </li>
       );
-    },
-  );
+    }
+    return (
+      <li className="list-group-item" key={licenseKey}>
+        <button
+          className="btn btn-primary btn-block btn-license text-left"
+          type="button"
+          data-toggle="collapse show"
+          data-target="#collapseLicense"
+          aria-expanded="false"
+          aria-controls="collapseLicense"
+          onClick={() =>
+            this.props.onClickLicense(licenseDetailData[licenseKey].name)
+          }
+        >
+          {licenseDetailData[licenseKey].name}
+          <a
+            className="align-bottom"
+            data-toggle="modal"
+            data-target={`#${licenseKey}`}
+          >
+            details
+          </a>
+        </button>
+      </li>
+    );
+  });
 
   // TODO:  Maybe a connection to store/reducer is needed
   // TODO: no redux form connection ? set license to form with reeducer ?
@@ -74,11 +74,9 @@ class LicenseSelectionForm extends React.PureComponent {
           <h2 className="section-title">License</h2>
           <p className="section-subtitle" />
         </header>
-        {/* MODAL*/}
-        <LicenseModals
-          onClickLicense={this.props.onClickLicense}
-        />
-        {/* END MODAL*/}
+        {/* MODAL */}
+        <LicenseModals onClickLicense={this.props.onClickLicense} />
+        {/* END MODAL */}
         <div className="form-group accordion-form-content">
           <button
             className="btn btn-primary btn-block btn-license text-left"
@@ -87,6 +85,7 @@ class LicenseSelectionForm extends React.PureComponent {
             data-target="#collapseLicense"
             aria-expanded="false"
             aria-controls="collapseLicense"
+            disabled={this.props.readOnly}
           >
             <i className="fa fa-balance-scale" />
             {this.props.license}
@@ -107,6 +106,7 @@ class LicenseSelectionForm extends React.PureComponent {
 LicenseSelectionForm.propTypes = {
   onClickLicense: PropTypes.func,
   license: PropTypes.string,
+  readOnly: PropTypes.bool,
 };
 
 const mapStateToProps = createStructuredSelector({

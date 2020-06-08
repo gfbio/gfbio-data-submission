@@ -14,13 +14,13 @@ import Collapse from 'react-bootstrap/Collapse';
 import {
   addContributor,
   removeContributor,
-  setContributors, updateContributor,
+  setContributors,
+  updateContributor,
 } from '../../containers/SubmissionForm/actions';
 import { makeSelectContributors } from '../../containers/SubmissionForm/selectors';
 
 /* eslint-disable react/prefer-stateless-function */
 class ContributorsForm extends React.PureComponent {
-
   constructor(props) {
     super(props);
     this.state = {
@@ -45,7 +45,7 @@ class ContributorsForm extends React.PureComponent {
 
   static validateFormValues(formValues) {
     let isValid = true;
-    if (!formValues['firstName']) {
+    if (!formValues.firstName) {
       isValid = false;
     }
     // if (typeof formValues['firstName'] !== 'undefined') {
@@ -55,7 +55,7 @@ class ContributorsForm extends React.PureComponent {
     // }
 
     // No last name required currently
-    if (!formValues['lastName']) {
+    if (!formValues.lastName) {
       isValid = false;
     }
 
@@ -64,7 +64,7 @@ class ContributorsForm extends React.PureComponent {
     //     isValid = false;
     //   }
     // }
-    if (!formValues['emailAddress']) {
+    if (!formValues.emailAddress) {
       isValid = false;
     }
 
@@ -79,7 +79,7 @@ class ContributorsForm extends React.PureComponent {
   }
 
   handleChange(event) {
-    let values = this.state.formValues;
+    const values = this.state.formValues;
     values[event.target.id] = event.target.value;
     this.setState({ formValues: values });
   }
@@ -125,7 +125,7 @@ class ContributorsForm extends React.PureComponent {
   };
 
   onSaveEdit = () => {
-    let tmp = {
+    const tmp = {
       firstName: this.state.firstName,
       lastName: this.state.lastName,
       emailAddress: this.state.emailAddress,
@@ -147,7 +147,7 @@ class ContributorsForm extends React.PureComponent {
   };
 
   // toggles add form, closes detail
-  onClickAddButton = (newStatus) => {
+  onClickAddButton = newStatus => {
     this.setState({ formOpen: newStatus, detailOpen: false });
   };
 
@@ -184,7 +184,7 @@ class ContributorsForm extends React.PureComponent {
   onClickDetailButton = (newStatus, index = -1) => {
     if (index >= 0) {
       // TODO: read about how this can be handled in immutable js
-      let contributors = this.getContributorsAsArray();
+      const contributors = this.getContributorsAsArray();
       this.setState({
         detailOpen: newStatus,
         formOpen: false,
@@ -200,113 +200,130 @@ class ContributorsForm extends React.PureComponent {
     }
   };
 
-  renderEditForm = (detailOpen) => {
-    return (
-      <div className="card card-body">
-        <h5>Edit Contributor</h5>
-        <div className="form-row">
-          <div className="form-group col-md-3">
-            <label htmlFor="firstNameEdit">First Name</label>
-            <input type="text" className="form-control"
-                   id="firstNameEdit"
-                   onChange={this.handleChangeFirstName}
-                   value={this.state.firstName}
-            />
-          </div>
-          <div className="form-group col-md-3">
-            <label htmlFor="lastNameEdit">Last Name</label>
-            <input type="text" className="form-control"
-                   id="lastNameEdit"
-                   onChange={this.handleChangeLastName}
-                   value={this.state.lastName}
-            />
-          </div>
-          <div className="form-group col-md-6">
-            <label htmlFor="emailAddressEdit">Email Address</label>
-            <input
-              type="emailEdit"
-              className="form-control"
-              id="emailAddressEdit"
-              placeholder="name@example.com"
-              onChange={this.handleChangeEmailAddress}
-              value={this.state.emailAddress}
-            />
-          </div>
+  editFormButtons = detailOpen =>
+    this.props.readOnly ? (
+      <div className="form-row">
+        <div className="form-group col-md-2" />
+        <div className="form-group col-md-2" />
+        <div className="form-group col-md-4" />
+        <div className="form-group col-md-4" />
+      </div>
+    ) : (
+      <div className="form-row">
+        <div className="form-group col-md-2">
+          <Button
+            className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
+            onClick={() => this.closeDetailBody()}
+            aria-controls="contributorEditForm"
+            aria-expanded={detailOpen}
+          >
+            Cancel
+          </Button>
         </div>
-        <div className="form-row">
-          <div className="form-group col-md-6">
-            <label htmlFor="institutionEdit">Institution
-              (optional)</label>
-            <input
-              type="text"
-              className="form-control"
-              id="institutionEdit"
-              onChange={this.handleChangeInstitution}
-              value={this.state.institution}
-            />
-          </div>
-          <div className="form-group col-md-6">
-            <label htmlFor="contributionEdit">Contribution
-              (optional)</label>
-            <input
-              type="text"
-              className="form-control"
-              id="contributionEdit"
-              onChange={this.handleChangeContribution}
-              value={this.state.contribution}
-            />
-          </div>
+        <div className="form-group col-md-2">
+          {/* TODO: add remove function / worklfow */}
+          <Button
+            className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
+            onClick={() => this.onClickRemove()}
+            aria-controls="contributorEditForm"
+            aria-expanded={detailOpen}
+          >
+            Remove
+          </Button>
         </div>
-        <div className="form-row">
-          <div className="form-group col-md-2">
-            <Button
-              className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
-              onClick={() => this.closeDetailBody()}
-              aria-controls="contributorEditForm"
-              aria-expanded={detailOpen}
-            >
-              Cancel
-            </Button>
-          </div>
-          <div className="form-group col-md-2">
-            {/* TODO: add remove function / worklfow */}
-            <Button
-              className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
-              onClick={() => this.onClickRemove()}
-              aria-controls="contributorEditForm"
-              aria-expanded={detailOpen}
-            >
-              Remove
-            </Button>
-          </div>
-          <div className="form-group col-md-4" />
-          <div className="form-group col-md-4">
-            <Button
-              className="btn btn-secondary btn-sm btn-block btn-light-blue"
-              onClick={this.onSaveEdit}
-              aria-controls="contributorEditForm"
-              aria-expanded={detailOpen}
-            >
-              Save
-            </Button>
-          </div>
+        <div className="form-group col-md-4" />
+        <div className="form-group col-md-4">
+          <Button
+            className="btn btn-secondary btn-sm btn-block btn-light-blue"
+            onClick={this.onSaveEdit}
+            aria-controls="contributorEditForm"
+            aria-expanded={detailOpen}
+          >
+            Save
+          </Button>
         </div>
       </div>
     );
-  };
+
+  renderEditForm = detailOpen => (
+    <div className="card card-body">
+      <h5>Edit Contributor</h5>
+      <div className="form-row">
+        <div className="form-group col-md-3">
+          <label htmlFor="firstNameEdit">First Name</label>
+          <input
+            type="text"
+            className="form-control"
+            id="firstNameEdit"
+            onChange={this.handleChangeFirstName}
+            value={this.state.firstName}
+            disabled={this.props.readOnly}
+          />
+        </div>
+        <div className="form-group col-md-3">
+          <label htmlFor="lastNameEdit">Last Name</label>
+          <input
+            type="text"
+            className="form-control"
+            id="lastNameEdit"
+            onChange={this.handleChangeLastName}
+            value={this.state.lastName}
+            disabled={this.props.readOnly}
+          />
+        </div>
+        <div className="form-group col-md-6">
+          <label htmlFor="emailAddressEdit">Email Address</label>
+          <input
+            type="emailEdit"
+            className="form-control"
+            id="emailAddressEdit"
+            placeholder="name@example.com"
+            onChange={this.handleChangeEmailAddress}
+            value={this.state.emailAddress}
+            disabled={this.props.readOnly}
+          />
+        </div>
+      </div>
+      <div className="form-row">
+        <div className="form-group col-md-6">
+          <label htmlFor="institutionEdit">Institution (optional)</label>
+          <input
+            type="text"
+            className="form-control"
+            id="institutionEdit"
+            onChange={this.handleChangeInstitution}
+            value={this.state.institution}
+            disabled={this.props.readOnly}
+          />
+        </div>
+        <div className="form-group col-md-6">
+          <label htmlFor="contributionEdit">Contribution (optional)</label>
+          <input
+            type="text"
+            className="form-control"
+            id="contributionEdit"
+            onChange={this.handleChangeContribution}
+            value={this.state.contribution}
+            disabled={this.props.readOnly}
+          />
+        </div>
+      </div>
+      {this.editFormButtons(detailOpen)}
+    </div>
+  );
 
   render() {
     const { formOpen, detailOpen } = this.state;
-    let editForm = this.renderEditForm(detailOpen);
+    const editForm = this.renderEditForm(detailOpen);
 
     // console.log('contributors click RENDER');
     // console.log(this.state);
     // console.log(this.props.contributors);
     // console.log(typeof this.props.contributors);
-    let contributorsArray = this.getContributorsAsArray();
+    const contributorsArray = this.getContributorsAsArray();
 
-    let contributors = contributorsArray.map((c, index) => {
-      return <li key={index} className="list-inline-item">
+    const contributors = contributorsArray.map((c, index) => (
+      <li key={index} className="list-inline-item">
         <Button
           className="btn btn-primary btn-contributor"
           onClick={() => this.onClickDetailButton(!detailOpen, index)}
@@ -315,8 +332,8 @@ class ContributorsForm extends React.PureComponent {
         >
           <i className="fa fa-bars" /> {`${c.firstName} ${c.lastName}`}
         </Button>
-      </li>;
-    });
+      </li>
+    ));
 
     // TODO: https://react-bootstrap.netlify.com/
     return (
@@ -331,16 +348,20 @@ class ContributorsForm extends React.PureComponent {
               <p className="contributor">Contributors:</p>
             </li>
             {contributors}
-            <li className="list-inline-item">
-              <Button
-                className="btn btn-primary btn-contributor"
-                onClick={() => this.onClickAddButton(!formOpen)}
-                aria-controls="contributorForm"
-                aria-expanded={formOpen}
-              >
-                <i className="fa fa-plus" /> add contributor
-              </Button>
-            </li>
+            {this.props.readOnly ? (
+              ''
+            ) : (
+              <li className="list-inline-item">
+                <Button
+                  className="btn btn-primary btn-contributor"
+                  onClick={() => this.onClickAddButton(!formOpen)}
+                  aria-controls="contributorForm"
+                  aria-expanded={formOpen}
+                >
+                  <i className="fa fa-plus" /> add contributor
+                </Button>
+              </li>
+            )}
           </ul>
 
           <Collapse in={this.state.formOpen}>
@@ -349,15 +370,20 @@ class ContributorsForm extends React.PureComponent {
               <div className="form-row">
                 <div className="form-group col-md-3">
                   <label htmlFor="firstName">First Name</label>
-                  <input type="text" className="form-control"
-                         id="firstName"
-                         onChange={this.handleChange}
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="firstName"
+                    onChange={this.handleChange}
                   />
                 </div>
                 <div className="form-group col-md-3">
                   <label htmlFor="lastName">Last Name</label>
-                  <input type="text" className="form-control" id="lastName"
-                         onChange={this.handleChange}
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="lastName"
+                    onChange={this.handleChange}
                   />
                 </div>
                 <div className="form-group col-md-6">
@@ -383,8 +409,7 @@ class ContributorsForm extends React.PureComponent {
                   />
                 </div>
                 <div className="form-group col-md-6">
-                  <label htmlFor="contribution">Contribution
-                    (optional)</label>
+                  <label htmlFor="contribution">Contribution (optional)</label>
                   <input
                     type="text"
                     className="form-control"
@@ -404,8 +429,7 @@ class ContributorsForm extends React.PureComponent {
                     Cancel
                   </Button>
                 </div>
-                <div className="form-group col-md-2">
-                </div>
+                <div className="form-group col-md-2" />
                 <div className="form-group col-md-4" />
                 <div className="form-group col-md-4">
                   <Button
@@ -421,11 +445,7 @@ class ContributorsForm extends React.PureComponent {
             </div>
           </Collapse>
 
-          <Collapse in={this.state.detailOpen}>
-            {editForm}
-          </Collapse>
-
-
+          <Collapse in={this.state.detailOpen}>{editForm}</Collapse>
         </div>
       </div>
     );
@@ -438,19 +458,20 @@ ContributorsForm.propTypes = {
   updateContributor: PropTypes.func,
   removeContributor: PropTypes.func,
   contributors: PropTypes.array,
+  readOnly: PropTypes.bool,
 };
 
 const mapStateToProps = createStructuredSelector({
   contributors: makeSelectContributors(),
 });
 
-
 function mapDispatchToProps(dispatch) {
   return {
     setContributors: contributors => dispatch(setContributors(contributors)),
     addContributor: contributor => dispatch(addContributor(contributor)),
     removeContributor: index => dispatch(removeContributor(index)),
-    updateContributor: (contributor, index) => dispatch(updateContributor(contributor, index)),
+    updateContributor: (contributor, index) =>
+      dispatch(updateContributor(contributor, index)),
   };
 }
 

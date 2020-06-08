@@ -59,6 +59,7 @@ import {
   UPLOAD_FILES_SUCCESS,
   CLOSE_ERROR_MESSAGE,
   SET_FORM_CHANGED,
+  SET_LOADING,
 } from './constants';
 
 export function changeLicense(license) {
@@ -457,4 +458,9 @@ export function postCommentError(error) {
   };
 }
 
-
+export function setLoading(value) {
+  return {
+    type: SET_LOADING,
+    value,
+  };
+}

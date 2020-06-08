@@ -15,6 +15,7 @@ import injectReducer from 'utils/injectReducer';
 import FormWrapper from 'components/FormWrapper';
 import Collapse from 'react-bootstrap/Collapse';
 import Button from 'react-bootstrap/Button';
+import PulseLoader from 'react-spinners/PulseLoader';
 import reducer from './reducer';
 import saga from './saga';
 import {
@@ -22,6 +23,7 @@ import {
   resetForm,
   submitForm,
   closeSubmitError,
+  setLoading,
 } from './actions';
 import {
   makeSelectBrokerSubmissionId,
@@ -36,6 +38,7 @@ import {
   makeSelectSubmissionErrors,
   makeSelectSubmission,
   makeSelectSubmitInProgress,
+  makeSelectLoading,
 } from './selectors';
 import { forEach } from 'react-bootstrap/utils/ElementChildren';
 
@@ -44,6 +47,7 @@ export class SubmissionForm extends React.Component {
   componentDidMount() {
     const { brokerSubmissionId } = this.props.match.params;
     if (brokerSubmissionId !== undefined) {
+      this.props.setLoading(true);
       this.props.fetchSubmission(brokerSubmissionId);
     }
   }
@@ -192,7 +196,7 @@ export class SubmissionForm extends React.Component {
     if (this.props.submission && this.props.submission.issue) {
       issue = this.props.submission.issue;
     }
-    return (
+    return !this.props.isLoading ? (
       <div className="submission-form-wrapper">
         <FormWrapper
           onSubmit={this.props.handleSubmit}
@@ -208,8 +212,15 @@ export class SubmissionForm extends React.Component {
           submitErrorMessage={errorMessage}
           brokerSubmissionId={this.props.brokerSubmissionId}
           accessionId={this.props.accessionId}
+          isClosed={this.props.submission.status === 'CLOSED'}
           issue={issue}
         />
+      </div>
+    ) : (
+      <div className="row">
+        <div className="col spinner">
+          <PulseLoader />
+        </div>
       </div>
     );
   }
@@ -231,6 +242,8 @@ SubmissionForm.propTypes = {
   submissionErrors: PropTypes.array,
   generalError: PropTypes.bool,
   closeSubmitError: PropTypes.func,
+  isLoading: PropTypes.bool,
+  setLoading: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -246,6 +259,7 @@ const mapStateToProps = createStructuredSelector({
   submitError: makeSelectSubmitError(),
   submissionErrors: makeSelectSubmissionErrors(),
   generalError: makeSelectGeneralError(),
+  isLoading: makeSelectLoading(),
 });
 
 function mapDispatchToProps(dispatch) {
@@ -254,6 +268,7 @@ function mapDispatchToProps(dispatch) {
     fetchSubmission: brokerSubmissionId =>
       dispatch(fetchSubmission(brokerSubmissionId)),
     resetForm: () => dispatch(resetForm()),
+    setLoading: value => dispatch(setLoading(value)),
     closeSubmitError: () => dispatch(closeSubmitError()),
   };
 }
