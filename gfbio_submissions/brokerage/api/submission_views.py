@@ -133,6 +133,17 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
             if instance.embargo != new_embargo:
                 instance.embargo = new_embargo
                 instance.save()
+                # update helpdesk
+                from gfbio_submissions.brokerage.tasks import \
+                    update_submission_issue_task, get_gfbio_helpdesk_username_task
+
+                update_chain = get_gfbio_helpdesk_username_task.s(
+                    submission_id=instance.pk).set(
+                    countdown=SUBMISSION_DELAY) \
+                               | update_submission_issue_task.s(
+                    submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+                update_chain()
+                # update ena
                 update_ena_embargo_date(instance)
         else:
             response = Response(
