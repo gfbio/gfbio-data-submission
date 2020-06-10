@@ -907,3 +907,11 @@ def cli_call():
         print('error ', e)
     except FileNotFoundError as e:
         print('fnferror ', e)
+    try:
+        res = subprocess.run(['java', '-jar', 'ena_webin_cli/webin-cli-3.0.0.jar'], capture_output=True,
+                             check=False)
+        print('\n', res)
+    except subprocess.CalledProcessError as e:
+        print('error ', e)
+    except FileNotFoundError as e:
+        print('fnferror ', e)

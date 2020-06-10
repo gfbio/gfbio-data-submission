@@ -44,6 +44,8 @@ COPY ./compose/local/django/celery/flower/start /start-flower
 RUN sed -i 's/\r$//g' /start-flower
 RUN chmod +x /start-flower
 
+COPY ./ena_webin_cli /ena_webin_cli
+
 WORKDIR /app
 
 ENTRYPOINT ["/entrypoint"]
