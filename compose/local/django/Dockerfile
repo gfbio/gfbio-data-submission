@@ -4,6 +4,9 @@ FROM python:3.7-slim-buster
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
 
+# java need this to be created
+RUN mkdir -p /usr/share/man/man1
+
 RUN apt-get update \
   # dependencies for building Python packages
   && apt-get install -y build-essential \
@@ -11,27 +14,11 @@ RUN apt-get update \
   && apt-get install -y libpq-dev \
   # Translations dependencies
   && apt-get install -y gettext \
+  # java-runtime-environment that works with slim-buster
+  && apt-get install -y openjdk-11-jre \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
-
-
-#RUN apk update \
-#  # psycopg2 dependencies
-#  && apk add --virtual build-deps gcc python3-dev musl-dev \
-#  && apk add postgresql-dev \
-#  # Pillow dependencies
-#  && apk add jpeg-dev zlib-dev freetype-dev lcms2-dev openjpeg-dev tiff-dev tk-dev tcl-dev \
-#  # CFFI dependencies
-#  && apk add libffi-dev py-cffi \
-#  # Translations dependencies
-#  && apk add gettext \
-#  # https://docs.djangoproject.com/en/dev/ref/django-admin/#dbshell
-#  && apk add postgresql-client \
-#  # borkerage git dependencies
-#  && apk add git \
-#  # dig tool to get ip of allowed domains
-#  && apk add bind-tools
 
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements /requirements

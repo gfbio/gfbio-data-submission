@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="3acf6f6d-6b4c-4f9d-a796-959235492cd3" name="Default Changelist" comment="" />
+    <list default="true" id="3acf6f6d-6b4c-4f9d-a796-959235492cd3" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/../gfbio_submissions/brokerage/tests/test_cli.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../test_web_cli/Dockerfile" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../test_web_cli/notes.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../test_web_cli/webin-cli-3.0.0.jar" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../compose/local/django/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/../compose/local/django/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../gfbio_submissions/brokerage/utils/ena.py" beforeDir="false" afterPath="$PROJECT_DIR$/../gfbio_submissions/brokerage/utils/ena.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -288,6 +295,7 @@
       <workItem from="1589311560930" duration="1000" />
       <workItem from="1590389037827" duration="1000" />
       <workItem from="1591274396752" duration="37000" />
+      <workItem from="1591781543089" duration="33000" />
     </task>
     <task id="LOCAL-00273" summary="GFBIO-2504 react to true/false value of checkboxes and add accordingly to request data&#10;&#10;- clean code from debug log messages">
       <created>1559075318134</created>
