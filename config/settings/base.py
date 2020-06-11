@@ -8,7 +8,7 @@ import environ
 
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
-VERSION = '1.103.0'
+VERSION = '1.104.0'
 
 ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 # gfbio_submissions/
