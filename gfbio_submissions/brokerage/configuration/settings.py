@@ -306,7 +306,7 @@ GFBIO_DATACENTER_USER_MAPPINGS = getattr(
     'GFBIO_DATACENTER_USER_MAPPINGS',
     {
         # default/no user: 'GFBio Data Centers - our curators will suggest the appropriate one(s)': '',
-        'ENA – European Nucleotide Archive': 'ikostadi',
+        'ENA – European Nucleotide Archive': '',
         'PANGAEA – Data Publisher for Earth & Environmental Science': 'pangaea',
         'BGBM – Botanic Garden and Botanical Museum Berlin, Freie Universität Berlin': 'bgbm',
         'DSMZ – Leibniz Institute DSMZ – German Collection of Microorganisms and Cell Cultures, Braunschweig': 'dsmz',
