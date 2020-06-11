@@ -12,7 +12,7 @@ from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, 
 from gfbio_submissions.brokerage.tests.utils import \
     _get_ena_xml_response, \
     _get_ena_error_xml_response
-from gfbio_submissions.generic.models import SiteConfiguration
+from gfbio_submissions.generic.models import SiteConfiguration, RequestLog
 from .test_tasks_base import TestTasks
 
 
@@ -57,6 +57,33 @@ class TestSubmissionTransferTasks(TestTasks):
         self.assertTrue(result.successful())
         ret_val = result.get()
         self.assertTrue(isinstance(ret_val, tuple))
+
+    @responses.activate
+    def test_transfer_to_ena_task_modify_action_successful(self):
+        submission = Submission.objects.first()
+        conf = SiteConfiguration.objects.first()
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        responses.add(
+            responses.POST,
+            conf.ena_server.url,
+            status=200,
+            body=_get_ena_xml_response()
+        )
+        result = chain(
+            prepare_ena_submission_data_task.s(
+                submission_id=submission.pk
+            ),
+            transfer_data_to_ena_task.s(
+                submission_id=submission.pk,
+                action='MODIFY'
+            )
+        )()
+        text_data = AuditableTextData.objects.filter(submission=submission)
+        self.assertEqual(4, len(text_data))
+        self.assertTrue(result.successful())
+        ret_val = result.get()
+        self.assertTrue(isinstance(ret_val, tuple))
+        self.assertEqual(1, len(RequestLog.objects.all()))
 
     # TODO: add test where nonsense content is returned like '' or {}
     @responses.activate
