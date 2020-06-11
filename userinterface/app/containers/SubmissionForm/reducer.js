@@ -97,7 +97,7 @@ function getInitialContributors(backendParameters) {
 const initialContributors = getInitialContributors(backendParameters);
 
 export const initialState = fromJS({
-  loading: 'false', // show spinner while getting submission
+  loading: false, // show spinner while getting submission
   license: 'CC BY 4.0',
   // metaDataSchema: 'None',
   reduxFormForm: {},
