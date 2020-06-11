@@ -51,10 +51,22 @@ if [ ${COUNTBRANCHES} -eq "0" ]; then
         --header "Content-Type: application/json" \
 	--data "${BODY}" | python3 -c "import sys, json; print(json.load(sys.stdin)['iid'])"`;
 
+    # add code reviewers
+    RULES_BODY="{
+       \"id\": ${CI_PROJECT_ID},
+       \"merge_request_iid\": $MR_ID,
+       \"name\": \"Code Reviewers\",
+       \"approvals_required\": 1,
+       \"user_ids\": ${CODE_REVIEW_IDS}
+      }";
+    curl -X POST "${HOST}${CI_PROJECT_ID}/merge_requests/${MR_ID}/approval_rules" \
+      --header "PRIVATE-TOKEN:${PRIVATE_TOKEN}" \
+      --header "Content-Type: application/json" \
+      --data "${RULES_BODY}";
+
     if [ $IS_WEBTEST -eq "1" ]; then
       echo "Adding approver rules manually"
 
-      # add rules to MR for web-test
       # add feature reviewers
       RULES_BODY="{
          \"id\": ${CI_PROJECT_ID},
@@ -62,19 +74,6 @@ if [ ${COUNTBRANCHES} -eq "0" ]; then
          \"name\": \"Feature Approvers\",
          \"approvals_required\": 1,
          \"user_ids\": ${FEATURE_REVIEW_IDS}
-        }";
-      curl -X POST "${HOST}${CI_PROJECT_ID}/merge_requests/${MR_ID}/approval_rules" \
-        --header "PRIVATE-TOKEN:${PRIVATE_TOKEN}" \
-        --header "Content-Type: application/json" \
-        --data "${RULES_BODY}";
-
-      # add code reviewers
-      RULES_BODY="{
-         \"id\": ${CI_PROJECT_ID},
-         \"merge_request_iid\": $MR_ID,
-         \"name\": \"Code Reviewers\",
-         \"approvals_required\": 1,
-         \"user_ids\": ${CODE_REVIEW_IDS}
         }";
       curl -X POST "${HOST}${CI_PROJECT_ID}/merge_requests/${MR_ID}/approval_rules" \
         --header "PRIVATE-TOKEN:${PRIVATE_TOKEN}" \
