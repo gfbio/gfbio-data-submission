@@ -271,6 +271,7 @@ class FormWrapper extends React.PureComponent {
               <SubmissionInfo
                 brokerSubmissionId={this.props.brokerSubmissionId}
                 accessionId={this.props.accessionId}
+                readOnly={this.props.isClosed}
                 issue={this.props.issue}
               />
 

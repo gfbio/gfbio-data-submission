@@ -72,6 +72,24 @@ function SubmissionInfo(props) {
     );
   }
 
+  // Add closed info text
+  if (props.readOnly) {
+    listItems.push(
+      <li className="list-group-item">
+        {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+        <a>
+          <i className="fa fa-info-circle" aria-hidden="true" />
+          Status: <br />
+          <div className="bsi">
+            Your data was already archived and only the embargo date can be
+            changed. If you need to make other changes, please contact our team
+            by replying to the corresponding Helpdesk ticket.
+          </div>
+        </a>
+      </li>,
+    );
+  }
+
   // Add Help link at the bottom of the box
   listItems.push(
     <li className="list-group-item">
@@ -100,6 +118,7 @@ SubmissionInfo.propTypes = {
   brokerSubmissionId: PropTypes.string,
   accessionId: PropTypes.array,
   issue: PropTypes.string,
+  readOnly: PropTypes.bool,
 };
 
 export default SubmissionInfo;
