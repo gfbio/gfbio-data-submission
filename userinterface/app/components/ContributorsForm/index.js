@@ -148,7 +148,9 @@ class ContributorsForm extends React.PureComponent {
         key !== 'position' &&
         this.state.formValues[key].indexOf('|') !== -1
       ) {
+        document.getElementById(key).classList.add('error');
         isValid = false;
+        this.showContribInputErr(key);
       }
     });
 
