@@ -1,9 +1,9 @@
 var __wpo = {
   "assets": {
     "main": [
-      "/static/js/favicon.ico",
+      "/static/favicon.ico",
       "/static/js/runtime~submission.ui.js",
-      "/static/js/vendor.submission.ui.js.LICENSE.txt",
+      "/static/js/vendor.submission.ui.js",
       "/static/js/"
     ],
     "additional": [
@@ -20,7 +20,7 @@ var __wpo = {
   },
   "externals": [],
   "hashesMap": {
-    "5e53ef208f3fa79a48f8374488f473c76e1233de": "/static/js/favicon.ico",
+    "5e53ef208f3fa79a48f8374488f473c76e1233de": "/static/favicon.ico",
     "86032887e206c9ee150871494920041cf1371c41": "/static/js/vendor.submission.ui.js",
     "1775aac89c7e29d6ed6c3ddcaa45ed754d0a8a66": "/static/js/1.96711dc0deb3ba3bd630.chunk.js",
     "3936be5ea6d42d0c1f883c72c133f1c2f3de8ab0": "/static/js/submission.ui.js",
@@ -30,12 +30,12 @@ var __wpo = {
     "2983c54e73d24ac353c72ec86dd8d4ae13365476": "/static/js/6.57543a5874b4a9943604.chunk.js",
     "61f57978e0d7472b03450fd118bfd2908fd9b485": "/static/js/7.e5662c16fe22ebc1dd20.chunk.js",
     "6ec538d385873f53fb7f8c1ee721319d60567a9a": "/static/js/8.a55d727e6bad211872be.chunk.js",
-    "f679933362a8fe3e010e514f2acaa0306249645e": "/static/js/vendor.submission.ui.js.LICENSE.txt",
+    "f679933362a8fe3e010e514f2acaa0306249645e": "/static/js/vendor.submission.ui.js",
     "a7519649e695ed64c616bdccbe3ea4452ae85d08": "/static/js/"
   },
   "strategy": "changed",
   "responseStrategy": "cache-first",
-  "version": "2020-6-15 17:17:00",
+  "version": "2020-6-15 18:14:45",
   "name": "webpack-offline",
   "pluginVersion": "5.0.5",
   "relativePaths": false
