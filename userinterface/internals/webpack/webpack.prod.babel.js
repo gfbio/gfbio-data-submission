@@ -17,7 +17,7 @@ module.exports = require('./webpack.base.babel')({
   ],
 
   // Utilize long-term caching by adding content hashes (not compilation hashes) to compiled assets
-  // public path need to match dir where js is hosted. If remote server full url is needed
+  // public path need to match dir where js is hosted. If remote sderver full url is needed
   output: {
     filename: '[name].[chunkhash].js',
     chunkFilename: '[name].[chunkhash].chunk.js',
