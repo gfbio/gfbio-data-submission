@@ -96,7 +96,7 @@ module.exports = require('./webpack.base.babel')({
     new OfflinePlugin({
       relativePaths: false,
       publicPath: '/static/js',
-      appShell: '/static/js',
+      appShell: '/',
       ServiceWorker: {
         publicPath: '/static/js/sw.js'
       },

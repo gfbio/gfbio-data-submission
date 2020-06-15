@@ -57,7 +57,8 @@
     "copy-build-js-gz": "copyfiles -f 'build/*.js.gz' '../gfbio_submissions/static/js/'",
     "copy-buildfiles": "npm run copy-build-js",
     "collectstatic": "echo yes | docker-compose -f ../local.yml run --rm django python manage.py collectstatic",
-    "collect": "npm run build && ./copy_layout_to_static.sh && npm run build-rename && npm run sed-sw-js && npm run copy-build-js && npm run collectstatic",
+    "rm-service-worker": "rm -f build/sw.js",
+    "collect": "npm run build && npm run rm-service-worker && ./copy_layout_to_static.sh && npm run build-rename && npm run copy-build-js && npm run collectstatic",
     "collect-ci": "npm run build && ./copy_layout_to_static.sh && npm run build-rename && npm run sed-sw-js && npm run copy-build-js",
     "copylayout": "./copy_layout_to_static.sh && npm run collectstatic",
     "scss": "node-sass layout_playground/scss -o layout_playground/css && cp layout_playground/css/project.css ../gfbio_submissions/static/css/"
