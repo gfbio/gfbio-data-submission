@@ -4,7 +4,6 @@ var __wpo = {
       "/static/favicon.ico",
       "/static/js/runtime~submission.ui.js",
       "/static/js/vendor.submission.ui.js",
-      "/static/js/"
     ],
     "additional": [
       "/static/js/vendor.submission.ui.js",
