@@ -1,41 +1,41 @@
 var __wpo = {
   "assets": {
     "main": [
-      "/favicon.ico",
-      "/runtime~submission.ui.js",
-      "/vendor.submission.ui.js.LICENSE.txt",
-      "/"
+      "/static/js/favicon.ico",
+      "/static/js/runtime~submission.ui.js",
+      "/static/js/vendor.submission.ui.js.LICENSE.txt",
+      "/static/js/"
     ],
     "additional": [
-      "/vendor.submission.ui.js",
-      "/1.96711dc0deb3ba3bd630.chunk.js",
-      "/submission.ui.js",
-      "/4.bdad0f46bf9f70599c86.chunk.js",
-      "/5.266c92c2e9f5576328db.chunk.js",
-      "/6.57543a5874b4a9943604.chunk.js",
-      "/7.e5662c16fe22ebc1dd20.chunk.js",
-      "/8.a55d727e6bad211872be.chunk.js"
+      "/static/js/vendor.submission.ui.js",
+      "/static/js/1.96711dc0deb3ba3bd630.chunk.js",
+      "/static/js/submission.ui.js",
+      "/static/js/4.bdad0f46bf9f70599c86.chunk.js",
+      "/static/js/5.266c92c2e9f5576328db.chunk.js",
+      "/static/js/6.57543a5874b4a9943604.chunk.js",
+      "/static/js/7.e5662c16fe22ebc1dd20.chunk.js",
+      "/static/js/8.a55d727e6bad211872be.chunk.js"
     ],
     "optional": []
   },
   "externals": [],
   "hashesMap": {
-    "5e53ef208f3fa79a48f8374488f473c76e1233de": "/favicon.ico",
-    "c42d95da30c3a98b4a21a430c4e54f90cf5930ac": "/vendor.submission.ui.js",
-    "1775aac89c7e29d6ed6c3ddcaa45ed754d0a8a66": "/1.96711dc0deb3ba3bd630.chunk.js",
-    "3936be5ea6d42d0c1f883c72c133f1c2f3de8ab0": "/submission.ui.js",
-    "9659789fc07420bc6213223dd035f9bcd3c60877": "/runtime~submission.ui.js",
-    "8e48142d88434223624e4ebe318e004e17d614c5": "/4.bdad0f46bf9f70599c86.chunk.js",
-    "c6a573013fd3f463ab2f729da60e40bae0ffcf00": "/5.266c92c2e9f5576328db.chunk.js",
-    "2983c54e73d24ac353c72ec86dd8d4ae13365476": "/6.57543a5874b4a9943604.chunk.js",
-    "61f57978e0d7472b03450fd118bfd2908fd9b485": "/7.e5662c16fe22ebc1dd20.chunk.js",
-    "6ec538d385873f53fb7f8c1ee721319d60567a9a": "/8.a55d727e6bad211872be.chunk.js",
-    "f679933362a8fe3e010e514f2acaa0306249645e": "/vendor.submission.ui.js.LICENSE.txt",
-    "6a4c7901cc6ee774bcfcbb47f40bb9a8f11fa185": "/"
+    "5e53ef208f3fa79a48f8374488f473c76e1233de": "/static/js/favicon.ico",
+    "86032887e206c9ee150871494920041cf1371c41": "/static/js/vendor.submission.ui.js",
+    "1775aac89c7e29d6ed6c3ddcaa45ed754d0a8a66": "/static/js/1.96711dc0deb3ba3bd630.chunk.js",
+    "3936be5ea6d42d0c1f883c72c133f1c2f3de8ab0": "/static/js/submission.ui.js",
+    "9659789fc07420bc6213223dd035f9bcd3c60877": "/static/js/runtime~submission.ui.js",
+    "8e48142d88434223624e4ebe318e004e17d614c5": "/static/js/4.bdad0f46bf9f70599c86.chunk.js",
+    "c6a573013fd3f463ab2f729da60e40bae0ffcf00": "/static/js/5.266c92c2e9f5576328db.chunk.js",
+    "2983c54e73d24ac353c72ec86dd8d4ae13365476": "/static/js/6.57543a5874b4a9943604.chunk.js",
+    "61f57978e0d7472b03450fd118bfd2908fd9b485": "/static/js/7.e5662c16fe22ebc1dd20.chunk.js",
+    "6ec538d385873f53fb7f8c1ee721319d60567a9a": "/static/js/8.a55d727e6bad211872be.chunk.js",
+    "f679933362a8fe3e010e514f2acaa0306249645e": "/static/js/vendor.submission.ui.js.LICENSE.txt",
+    "a7519649e695ed64c616bdccbe3ea4452ae85d08": "/static/js/"
   },
   "strategy": "changed",
   "responseStrategy": "cache-first",
-  "version": "2020-6-15 16:16:35",
+  "version": "2020-6-15 16:57:57",
   "name": "webpack-offline",
   "pluginVersion": "5.0.5",
   "relativePaths": false
@@ -124,12 +124,12 @@ var __wpo = {
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "22249e1ea7baa06e7c1b");
+/******/ 	return __webpack_require__(__webpack_require__.s = "4dcfd1e3fda96febf731");
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ "22249e1ea7baa06e7c1b":
+/***/ "4dcfd1e3fda96febf731":
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -915,7 +915,7 @@ cacheMaps: [
             return;
           }
 
-          return new URL("/", location);
+          return new URL("/static/js", location);
         },
       to: null,
       requestTypes: ["navigate"],
