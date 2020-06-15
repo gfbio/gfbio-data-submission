@@ -38,6 +38,7 @@ class ContributorsForm extends React.PureComponent {
     this.handleChange = this.handleChange.bind(this);
     this.handleInputClick = this.handleInputClick.bind(this);
     this.onDragEnd = this.onDragEnd.bind(this);
+    this.preventSubmit = this.preventSubmit.bind(this);
     this.roleOptions = [
       { role: 'Author/Creator', id: 0, category: 'Main Roles' },
       { role: 'Content Contact', id: 1, category: 'Main Roles' },
@@ -103,7 +104,7 @@ class ContributorsForm extends React.PureComponent {
         this.setState({
           contributors: propsContributors,
           contributorsArray,
-          formValues: {},
+          // formValues: {},
         });
       }
     }
@@ -111,6 +112,11 @@ class ContributorsForm extends React.PureComponent {
 
   validateFormValues() {
     let isValid = true;
+
+    // eslint-disable-next-line no-useless-escape
+    const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    isValid = re.test(String(this.state.formValues.emailAddress).toLowerCase());
+
     if (
       !this.state.formValues.firstName &&
       !this.state.organisationRoleSelected
@@ -136,18 +142,56 @@ class ContributorsForm extends React.PureComponent {
       isValid = false;
       document.getElementById('institution').classList.add('error');
     }
+    // check for pipe character
+    Object.keys(this.state.formValues).forEach(key => {
+      if (
+        key !== 'position' &&
+        this.state.formValues[key].indexOf('|') !== -1
+      ) {
+        isValid = false;
+      }
+    });
+
     return isValid;
   }
 
   handleChange(event) {
     const values = this.state.formValues;
-    document.getElementById(event.target.id).classList.remove('error');
+    if (event.target.value.indexOf('|') === -1) {
+      document.getElementById(event.target.id).classList.remove('error');
+    }
     values[event.target.id] = event.target.value;
     this.setState({ formValues: { ...values } });
   }
 
   handleInputClick(event) {
-    document.getElementById(event.target.id).classList.remove('error');
+    if (event.target.value.indexOf('|') === -1) {
+      document.getElementById(event.target.id).classList.remove('error');
+    }
+  }
+
+  showContribInputErr(id) {
+    document.getElementById(id).classList.add('error');
+    // check if err is shown
+    const errShown = document
+      .getElementById('contribErr')
+      .classList.contains('contributor-input-error');
+    if (errShown) {
+      return;
+    }
+    // if not shown, show err message with fade out effect
+    document.getElementById('contribErr').classList.remove('fade-out');
+    document
+      .getElementById('contribErr')
+      .classList.add('contributor-input-error');
+    setTimeout(() => {
+      document.getElementById('contribErr').classList.add('fade-out');
+      setTimeout(() => {
+        document
+          .getElementById('contribErr')
+          .classList.remove('contributor-input-error');
+      }, 1500); // same as fade out css
+    }, 2000); // ms to show err msg
   }
 
   preventSubmit(event) {
@@ -155,9 +199,9 @@ class ContributorsForm extends React.PureComponent {
     if (event.keyCode === 13) {
       event.preventDefault();
     }
-    // prevent pipe character
+    // show error for pipe input
     if (event.key === '|') {
-      event.preventDefault();
+      this.showContribInputErr(event.target.id);
     }
   }
 
@@ -291,6 +335,7 @@ class ContributorsForm extends React.PureComponent {
 
   // toogles Detail, closes form
   onClickDetailButton = (index = -1) => {
+    this.cleanEditForm();
     if (index >= 0) {
       // close form if user clicked on the same contributor
       if (this.state.contributorIndex === index) {
@@ -306,19 +351,10 @@ class ContributorsForm extends React.PureComponent {
           organisationRoleSelected = true;
         }
       });
-      const newFormValues = {
-        position: -1,
-        firstName: '',
-        lastName: '',
-        institution: '',
-        contribution: '',
-        emailAddress: '',
-      };
-      // eslint-disable-next-line guard-for-in,no-restricted-syntax
-      for (const key in this.state.contributorsArray[index]) {
-        newFormValues[key] = this.state.contributorsArray[index][key];
-      }
-      console.log(newFormValues);
+      const newFormValues = this.getFormValues(
+        this.state.contributorsArray,
+        index,
+      );
       this.setState({
         formValues: { ...newFormValues },
         detailOpen: true,
@@ -386,13 +422,34 @@ class ContributorsForm extends React.PureComponent {
     );
     const contributorIndex =
       this.state.contributorIndex === -1 ? -1 : result.destination.index;
+    const newFormValues = this.getFormValues(
+      contributorsArray,
+      result.destination.index,
+    );
     this.setState(
       {
         contributorsArray,
         contributorIndex,
+        formValues: { ...newFormValues },
       },
       this.setFormChanged,
     );
+  }
+
+  getFormValues(arr, index) {
+    // fix state form values
+    const newFormValues = {
+      position: -1,
+      firstName: '',
+      lastName: '',
+      institution: '',
+      contribution: '',
+      emailAddress: '',
+    };
+    Object.keys(arr[index]).forEach(key => {
+      newFormValues[key] = arr[index][key];
+    });
+    return newFormValues;
   }
 
   render() {
@@ -431,11 +488,13 @@ class ContributorsForm extends React.PureComponent {
       );
 
     const contributors = this.state.contributorsArray.map((c, index) => {
-      const contributorName = c.contribution.includes(
-        'Data Source Organisation',
-      )
-        ? c.institution
-        : `${c.firstName} ${c.lastName}`;
+      let contributorName = `${c.firstName} ${c.lastName}`;
+      if (
+        c.contribution &&
+        c.contribution.includes('Data Source Organisation')
+      ) {
+        contributorName = c.institution;
+      }
       return (
         <Draggable
           key={`drag-key-${c.position}`}
@@ -604,7 +663,11 @@ class ContributorsForm extends React.PureComponent {
                       />
                     </div>
                   </div>
-                  <div className="row mt-3" />
+
+                  <div id="contribErr" className="input-error fade-out">
+                    Pipe character is not allowed
+                  </div>
+
                   <div className="form-row">
                     <div className="form-group col-md-2">
                       <Button

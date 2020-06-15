@@ -35,6 +35,24 @@
         border-bottom-width: 0 !important;
         padding-bottom: 0 !important;
     }
+
+    .contributor-input-error {
+      text-align: center;
+      margin-bottom: 20px;
+      margin-top: -15px;
+      opacity: 1;
+    }
+
+    .fade-out {
+      margin-bottom: 20px;
+      margin-top: -15px;
+      text-align: center;
+      -webkit-transition: opacity 1s ease-in-out;
+      -moz-transition: opacity 1s ease-in-out;
+      -ms-transition: opacity 1s ease-in-out;
+      -o-transition: opacity 1s ease-in-out;
+      opacity: 0;
+    }
 }
 
 .modal-close-btn {
