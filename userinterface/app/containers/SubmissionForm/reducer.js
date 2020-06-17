@@ -57,6 +57,7 @@ import {
   UPLOAD_FILES_ERROR,
   UPLOAD_FILES_SUCCESS,
   CLOSE_ERROR_MESSAGE,
+  SET_LOADING,
 } from './constants';
 import {
   markMetaDataInScheduledUploads,
@@ -96,6 +97,7 @@ function getInitialContributors(backendParameters) {
 const initialContributors = getInitialContributors(backendParameters);
 
 export const initialState = fromJS({
+  loading: false, // show spinner while getting submission
   license: 'CC BY 4.0',
   // metaDataSchema: 'None',
   reduxFormForm: {},
@@ -155,6 +157,8 @@ export const initialState = fromJS({
 
 function submissionFormReducer(state = initialState, action) {
   switch (action.type) {
+    case SET_LOADING:
+      return state.set('loading', action.value);
     case CHANGE_LICENSE:
       return state.set('license', action.license);
     // case CHANGE_META_DATA_SCHEMA:
@@ -313,7 +317,8 @@ function submissionFormReducer(state = initialState, action) {
       // TODO: refactor to some sort of getter with checks
       return setStateFormValues(state, action).set('promptOnLeave', true)
         .set('showUpdateSuccess', false)
-        .set('showSubmitSuccess', false);
+        .set('showSubmitSuccess', false)
+        .set('loading', false);
     case FETCH_SUBMISSION_ERROR:
       return state;
     case FETCH_FILE_UPLOADS_SUCCESS:

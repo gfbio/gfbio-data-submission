@@ -822,7 +822,9 @@ def update_persistent_identifier_report_status():
 
 def update_ena_embargo_date(submission):
     study_primary_accession = submission.brokerobject_set.filter(
-        type='study').first().persistentidentifier_set.filter(
+        type='study').first()
+    if study_primary_accession:
+        study_primary_accession = study_primary_accession.persistentidentifier_set.filter(
         pid_type='PRJ').first()
     site_config = submission.user.site_configuration
     if site_config is None:

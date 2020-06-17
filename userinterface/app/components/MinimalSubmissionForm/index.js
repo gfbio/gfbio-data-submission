@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Field } from 'redux-form/immutable';
 import UploadForm from '../UploadForm';
 import { required } from './validation';
@@ -25,6 +26,7 @@ class MinimalSubmissionForm extends React.PureComponent {
           {...input}
           placeholder={placeholder}
           type={type}
+          disabled={this.props.readOnly}
           className="form-control"
         />
         {touched &&
@@ -48,6 +50,7 @@ class MinimalSubmissionForm extends React.PureComponent {
           placeholder={placeholder}
           type={type}
           rows={rows}
+          disabled={this.props.readOnly}
           className="form-control"
         />
         {touched &&
@@ -69,6 +72,7 @@ class MinimalSubmissionForm extends React.PureComponent {
             name="title"
             className="form-control"
             component={this.renderInputField}
+            props={{ readOnly: this.props.readOnly }}
             type="text"
             placeholder="Enter a title for your dataset"
             validate={required}
@@ -84,18 +88,21 @@ class MinimalSubmissionForm extends React.PureComponent {
             name="description"
             className="form-control"
             component={this.renderTextAreaField}
+            props={{ readOnly: this.props.readOnly }}
             rows="7"
             placeholder="Describe your dataset"
             validate={required}
           />
         </div>
 
-        <UploadForm />
+        <UploadForm readOnly={this.props.readOnly} />
       </div>
     );
   }
 }
 
-MinimalSubmissionForm.propTypes = {};
+MinimalSubmissionForm.propTypes = {
+  readOnly: PropTypes.bool,
+};
 
 export default MinimalSubmissionForm;
