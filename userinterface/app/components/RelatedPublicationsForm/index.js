@@ -7,6 +7,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
+import { connect } from 'react-redux';
+import { compose } from 'redux';
 import {
   makeSelectCurrentRelatedPublication,
   makeSelectRelatedPublications,
@@ -16,33 +18,54 @@ import {
   changeCurrentRelatedPublication,
   removeRelatedPublication,
 } from '../../containers/SubmissionForm/actions';
-import { connect } from 'react-redux';
-import { compose } from 'redux';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
 class RelatedPublicationsForm extends React.PureComponent {
-
-  handleChange = (e) => {
+  handleChange = e => {
     this.props.handleChange(e.target.value);
   };
 
   render() {
     const publicationList = this.props.relatedPublications.map((pub, index) => {
       if (pub !== '') {
-        return <li key={index}
-                   className="list-group-item d-flex justify-content-between align-items-center publication">
-          <span><i className="icon ion-md-paper pub"/> {pub}</span>
-          <button className="btn btn-remove" onClick={(e) => {
-            e.preventDefault();
-            this.props.handleRemove(index);
-          }}>
+        let liClassNames =
+          'list-group-item d-flex justify-content-between align-items-center publication';
+        if (this.props.readOnly) {
+          liClassNames += ' disabled';
+        }
+        const removeButton = this.props.readOnly ? (
+          ''
+        ) : (
+          <button
+            className="btn btn-remove"
+            onClick={e => {
+              e.preventDefault();
+              this.props.handleRemove(index);
+            }}
+          >
             <i className="fa fa-times" />
             Remove
           </button>
-        </li>;
+        );
+        return (
+          <li
+            key={index}
+            className={liClassNames}
+          >
+            <span>
+              <i className="icon ion-md-paper pub" /> {pub}
+            </span>
+            {removeButton}
+          </li>
+        );
       }
     });
+
+    let linkClasses = 'btn btn-secondary btn-block btn-light-blue-inverted';
+    if (this.props.readOnly) {
+      linkClasses += ' disabled';
+    }
 
     return (
       <div>
@@ -50,27 +73,26 @@ class RelatedPublicationsForm extends React.PureComponent {
           <h2 className="section-title">Related Publications </h2>
           <p className="section-subtitle">(optional)</p>
         </header>
-        <ul className="list-group list-group-flush">
-          {publicationList}
-        </ul>
+        <ul className="list-group list-group-flush">{publicationList}</ul>
         <div className="form-row">
           <div className="form-group col-md-10">
-            <input className="form-control" type="text"
-                   id="relatedPublication"
-                   value={this.props.currentRelatedPublication}
-                   placeholder="Enter a full citation or a DOI"
-                   onChange={this.handleChange}
+            <input
+              className="form-control"
+              type="text"
+              id="relatedPublication"
+              value={this.props.currentRelatedPublication}
+              placeholder="Enter a full citation or a DOI"
+              onChange={this.handleChange}
+              disabled={this.props.readOnly}
             />
           </div>
           <div className="form-group col-md-2">
             <a
-              className="btn btn-secondary btn-block
-              btn-light-blue-inverted"
+              className={linkClasses}
               onClick={e => {
                 e.preventDefault();
                 this.props.handleAdd(this.props.currentRelatedPublication);
               }}
-
             >
               Add
             </a>
@@ -87,6 +109,7 @@ RelatedPublicationsForm.propTypes = {
   handleAdd: PropTypes.func,
   handleRemove: PropTypes.func,
   handleChange: PropTypes.func,
+  readOnly: PropTypes.bool,
 };
 
 const mapStateToProps = createStructuredSelector({

@@ -59,6 +59,9 @@ class UploadForm extends React.PureComponent {
   };
 
   onDrop = (acceptedFiles, rejectedFiles) => {
+    if (this.props.readOnly) {
+      return;
+    }
     // // TODO: accepted files will become list of files scheduled for upload, remove etc
     let tmp = [];
     for (let a of acceptedFiles) {
@@ -88,6 +91,21 @@ class UploadForm extends React.PureComponent {
     // TODO: accordion style for no. of file over X ?
     this.matchingUploadLimit();
 
+    const dragDropText = () => {
+      if (this.props.readOnly) {
+        return (
+          <p>
+            No uploads allowed on <b>CLOSED</b> submission
+          </p>
+        );
+      };
+      return (
+        <p>
+          Try <b>dropping</b> some files here, or <b>click</b> to select files
+          to upload.
+        </p>);
+    };
+
     const message = UploadMessage(this.props.showUploadLimitMessage, this.props.dismissShowUploadLimit);
     return (
       <div>
@@ -100,10 +118,13 @@ class UploadForm extends React.PureComponent {
 
         {message}
 
-        <div className="form-group">
+        <div
+          className={this.props.readOnly ? 'form-group disabled' : 'form-group'}
+        >
           <Dropzone
             onDrop={this.onDrop}
             multiple={true}
+            disabled={this.props.readOnly}
           >
             {({ getRootProps, getInputProps, isDragActive }) => (
               <div
@@ -116,10 +137,7 @@ class UploadForm extends React.PureComponent {
                 {isDragActive ? (
                   <p>Drop files here...</p>
                 ) : (
-                  <p>
-                    Try <b>dropping</b> some files here, or <b>click</b> to
-                    select files to upload.
-                  </p>
+                  dragDropText()
                 )}
               </div>
             )}

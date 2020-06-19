@@ -9,10 +9,10 @@ import responses
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL
 from gfbio_submissions.brokerage.models import Submission, \
-    TaskProgressReport
+    TaskProgressReport, BrokerObject, PersistentIdentifier
 from gfbio_submissions.brokerage.tests.utils import \
-    _get_submission_request_data
-from gfbio_submissions.generic.models import SiteConfiguration
+    _get_submission_request_data, _get_ena_release_xml_response
+from gfbio_submissions.generic.models import SiteConfiguration, RequestLog
 from .test_submission_view_base import TestSubmissionView
 
 
@@ -283,3 +283,74 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
             '"broker_submission_id":"{0}"'.format(
                 submission.broker_submission_id),
             content)
+
+    @responses.activate
+    def test_put_submission_update_embargo_ena_trigger(self):
+        self._add_create_ticket_response()
+        self._add_update_ticket_response()
+        self._post_submission()
+        submission = Submission.objects.first()
+        conf = SiteConfiguration.objects.first()
+
+        responses.add(
+            responses.POST,
+            conf.ena_server.url,
+            status=200,
+            body=_get_ena_release_xml_response()
+        )
+
+        broker_object = BrokerObject.objects.create(
+            type='study',
+            user=submission.user,
+            data={
+                'center_name': 'GFBIO',
+                'study_abstract': 'abstract',
+                'study_title': 'title',
+                'study_alias': 'alias',
+            }
+        )
+        broker_object.submissions.add(submission)
+
+        PersistentIdentifier.objects.create(
+            archive='ENA',
+            pid_type='PRJ',
+            broker_object=broker_object,
+            pid='PRJEB0815',
+            outgoing_request_id='da76ebec-7cde-4f11-a7bd-35ef8ebe5b85'
+        )
+
+        RequestLog.objects.all().delete()
+
+        response = self.api_client.put(
+            '/api/submissions/{0}/'.format(submission.broker_submission_id),
+            {'target': 'ENA', 'embargo': '2020-10-01', 'data': {'requirements': {
+                'title': 'A Title 0815',
+                'description': 'A Description 2'}}},
+            format='json'
+        )
+
+        request_log = RequestLog.objects.get(url=conf.ena_server.url)
+        self.assertEqual(200, request_log.response_status)
+        self.assertTrue('accession "PRJEB0815"' in request_log.response_content)
+
+        # UPDATE EMBARGO ON CLOSED SUBMISSION
+
+        RequestLog.objects.all().delete()
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        
+        submission.status = Submission.CLOSED
+        submission.save()
+
+        response = self.api_client.put(
+            '/api/submissions/{0}/'.format(submission.broker_submission_id),
+            {'target': 'ENA', 'embargo': '2020-10-15', 'data': {'requirements': {
+                'title': 'A Title 0815',
+                'description': 'A Description 2'}}},
+            format='json'
+        )
+
+        request_log = RequestLog.objects.get(url=conf.ena_server.url)
+        new_submission = Submission.objects.first()
+        self.assertEqual(datetime.date(2020, 10, 15), new_submission.embargo)
+        self.assertEqual(200, request_log.response_status)
+        self.assertTrue('accession "PRJEB0815"' in request_log.response_content)
