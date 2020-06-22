@@ -76,7 +76,7 @@ export const resetStateFormValues = (state, initialContributors = []) => {
     .set('initialValues', {})
     .set('relatedPublications', fromJS([]))
     .set('dataset_labels', fromJS([]))
-    .set('contributors', initialContributors)
+    .set('contributors', fromJS(initialContributors))
     .set('embargoDate', new Date().setFullYear(new Date().getFullYear() + 1))
     .set('license', 'CC BY 4.0')
     // .set('metaDataSchema', 'None')

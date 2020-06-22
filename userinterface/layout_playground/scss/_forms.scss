@@ -835,6 +835,71 @@ form.pagewide-form {
 
   }
 
+  #multiselectContainerReact {
+    input {
+      &:focus {
+        border-color: transparent !important;
+        box-shadow: none;
+        outline-color: transparent !important;
+      }
+
+    }
+    span[class^="chip"] {
+      background: $gfbio-light-blue;
+    }
+  }
+
+
+  .contributor-draggable-btn {
+    margin: 0 0 0 30px;
+    text-align: left;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 125px;
+    white-space: nowrap;
+    padding-left: 0;
+    padding-top: 6px;
+  }
+
+  .droppable-contributors {
+    border: 1px solid #dfdfdf;
+    border-radius: 5px;
+    min-height: 100%;
+    padding: 10px;
+    max-height: 120px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .add-contributor-col {
+    border: 1px solid #dfdfdf;
+    border-radius: 5px;
+    min-height: 100%;
+    padding: 10px;
+    margin-left: -6px;
+    flex: 0 0 74% !important;
+    max-width: 74% !important;
+  }
+
+  .add-contributor-col .card-body {
+    border: none;
+    padding: 10px;
+  }
+
+  .add-contributor-div {
+    display: flex;
+    justify-content: center;
+    height: 100%;
+  }
+
+  .show-contributors-btn {
+    padding-top: 4px;
+  }
+
+  .m-bt-0 {
+    margin-bottom: 0;
+  }
+
   option {
     font-size: .9rem;
   }
@@ -1179,9 +1244,6 @@ form.pagewide-form {
 
   // works on btn-primary
   .btn-contributor {
-    //border-color: darken($gfbio-green, .2);
-    //background-color: $gfbio-green;
-    //color: $white !important;
     color: $gfbio-light-blue;
     background-color: $white;
     border: none;
@@ -1353,41 +1415,6 @@ form.pagewide-form {
     }
   }
 
-  /*
-    embargo date styles
-
-
-    .btn-contributor {
-    //border-color: darken($gfbio-green, .2);
-    //background-color: $gfbio-green;
-    //color: $white !important;
-    color: $gfbio-light-blue;
-    background-color: $white;
-    border: none;
-
-    &:focus {
-      box-shadow: none;
-    }
-
-    &:hover, &:not(:disabled):not(.disabled):active,
-    &:not(:disabled):not(.disabled).active {
-      &:focus {
-        box-shadow: none;
-      }
-
-      color: $contrast-1;
-      background-color: $white;
-      border: none;
-      box-shadow: none;
-    }
-
-    i {
-      padding-right: .5rem;
-    }
-
-  }
-
-  */
   // btn-link overwrite
   // TODO: make generic as other button classes
   .btn-link-light-blue {

@@ -5,7 +5,6 @@
  */
 
 import {
-  ADD_CONTRIBUTOR,
   ADD_DATASET_LABEL,
   ADD_FILE_UPLOAD,
   ADD_RELATED_PUBLICATION,
@@ -27,7 +26,6 @@ import {
   FETCH_SUBMISSION_SUCCESS,
   POST_COMMENT_ERROR,
   POST_COMMENT_SUCCUESS,
-  REMOVE_CONTRIBUTOR,
   REMOVE_DATASET_LABEL,
   REMOVE_FILE_UPLOAD,
   REMOVE_RELATED_PUBLICATION,
@@ -48,7 +46,6 @@ import {
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
   SUBMIT_FORM_SUCCESS,
-  UPDATE_CONTRIBUTOR,
   UPDATE_SUBMISSION,
   UPDATE_SUBMISSION_ERROR,
   UPDATE_SUBMISSION_SUCCESS,
@@ -255,35 +252,12 @@ export function setContributors(contributors) {
   };
 }
 
-export function addContributor(contributor) {
-  return {
-    type: ADD_CONTRIBUTOR,
-    contributor,
-  };
-}
-
-export function updateContributor(contributor, index) {
-  return {
-    type: UPDATE_CONTRIBUTOR,
-    contributor,
-    index,
-  };
-}
-
-export function removeContributor(index) {
-  return {
-    type: REMOVE_CONTRIBUTOR,
-    index,
-  };
-}
-
 export function fetchSubmission(brokerSubmissionId) {
   return {
     type: FETCH_SUBMISSION,
     brokerSubmissionId,
   };
 }
-
 
 export function fetchSubmissionSuccess(response) {
   return {

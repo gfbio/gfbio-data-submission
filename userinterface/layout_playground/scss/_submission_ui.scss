@@ -35,7 +35,8 @@
         border-bottom-width: 0 !important;
         padding-bottom: 0 !important;
     }
-    .form-group.disabled .dropzone {
+
+    .form-group.disabled .dropzone, #multiselectContainerReact > div.disabled {
       pointer-events: none;
       cursor: default;
       background-color: #e9ecef;
@@ -69,6 +70,78 @@
       cursor: default;
     }
 
+    .contributor-input-error {
+      text-align: center;
+      margin-bottom: 20px;
+      margin-top: -15px;
+      opacity: 1;
+    }
+
+    .fade-out {
+      margin-bottom: 20px;
+      margin-top: -15px;
+      text-align: center;
+      -webkit-transition: opacity 1s ease-in-out;
+      -moz-transition: opacity 1s ease-in-out;
+      -ms-transition: opacity 1s ease-in-out;
+      -o-transition: opacity 1s ease-in-out;
+      opacity: 0;
+    }
+
+    .select-contributor {
+      display: flex;
+      align-items: center;
+    }
+}
+
+.modal-close-btn {
+  max-width: 50%;
+  margin: 0 auto;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+}
+
+.padding-15 {
+  padding: 15px;
+}
+
+.h80 {
+  /* 80% of window height */
+  height: 80%;
+}
+
+.drag-bars {
+  color: $gfbio-light-blue;
+  margin-top: 10px;
+  margin-left: 18px;
+  margin-right: 10px;
+  position: absolute;
+  left: 0;
+}
+
+.modal-body {
+  /* 100% = dialog height, 120px = header + footer */
+  max-height: 100%;
+  overflow-y: scroll;
+}
+
+.roles-padding {
+  padding: 5px 15px;
+}
+
+.padding-0 {
+  padding: 0;
+}
+
+.question-pointer {
+  font-size: 1.3rem;
+  position: absolute;
+  margin-top: -4px;
+  margin-left: 10px;
+  cursor: pointer;
 }
 
 .embargo-picker {

@@ -5,14 +5,12 @@
  */
 import { fromJS, List } from 'immutable';
 import {
-  ADD_CONTRIBUTOR,
   ADD_DATASET_LABEL,
   ADD_FILE_UPLOAD,
   ADD_RELATED_PUBLICATION,
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
-  CHANGE_META_DATA_SCHEMA,
   CLOSE_EMBARGO_DIALOG,
   CLOSE_SAVE_SUCCESS,
   CLOSE_SUBMIT_SUCCESS,
@@ -25,7 +23,6 @@ import {
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
   FETCH_SUBMISSION_SUCCESS,
-  REMOVE_CONTRIBUTOR,
   REMOVE_DATASET_LABEL,
   REMOVE_FILE_UPLOAD,
   REMOVE_RELATED_PUBLICATION,
@@ -34,7 +31,8 @@ import {
   SAVE_FORM_ERROR,
   SAVE_FORM_SUCCESS,
   SET_CONTRIBUTORS,
-  SET_EMBARGO_DATE, SET_FORM_CHANGED,
+  SET_EMBARGO_DATE,
+  SET_FORM_CHANGED,
   SET_METADATA_INDEX,
   SET_METADATA_ON_SERVER,
   SET_METADATA_ON_SERVER_ERROR,
@@ -45,7 +43,6 @@ import {
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
   SUBMIT_FORM_SUCCESS,
-  UPDATE_CONTRIBUTOR,
   UPDATE_SUBMISSION,
   UPDATE_SUBMISSION_ERROR,
   UPDATE_SUBMISSION_SUCCESS,
@@ -73,6 +70,7 @@ if (window.props !== undefined) {
 
 
 function getInitialContributors(backendParameters) {
+  return fromJS([]);
   let realName = backendParameters.userRealName || '';
   let nameSplit = realName.split(' ');
   let firstName, lastName = '';
@@ -207,12 +205,16 @@ function submissionFormReducer(state = initialState, action) {
         .set('submitInProgress', false)
         .set('showSubmitSuccess', true);
     case SUBMIT_FORM_ERROR:
-      console.log(action.errorResponse);
       return state
         .set('metaDataIndex', '')
         .set('submitInProgress', false)
         .set('submitError', true)
-        .set('submissionErrors', action.errorResponse?.response?.data?.data || ["Server error, please try again later."]);
+        .set(
+          'submissionErrors',
+          action.errorResponse?.response?.data?.data || [
+            'Server error, please try again later.',
+          ],
+        );
     case SHOW_EMBARGO_DIALOG:
       return state
         .set('showEmbargoDialog', true);
@@ -298,17 +300,7 @@ function submissionFormReducer(state = initialState, action) {
     case DELETE_FILE_ERROR:
       return state;
     case SET_CONTRIBUTORS:
-      return state
-        .set('contributors', action.contributors);
-    case ADD_CONTRIBUTOR:
-      return state
-        .update('contributors', (contributors) => contributors.push(action.contributor));
-    case UPDATE_CONTRIBUTOR:
-      return state
-        .update('contributors', (contributors) => contributors.splice(action.index, 1, action.contributor));
-    case REMOVE_CONTRIBUTOR:
-      return state
-        .update('contributors', (contributors) => contributors.splice(action.index, 1));
+      return state.set('contributors', action.contributors);
     case FETCH_SUBMISSION:
       // TODO: set prop to inidcate loading -> loading gif
       return state.set('requestBrokerSubmissionId', action.brokerSubmissionId);
@@ -355,7 +347,15 @@ function submissionFormReducer(state = initialState, action) {
         .set('updateWithRelease', false);
     case UPDATE_SUBMISSION_ERROR:
       return state
-        .set('updateWithRelease', action.release);
+        .set('updateWithRelease', action.release)
+        .set('submitInProgress', false)
+        .set('submitError', true)
+        .set(
+          'submissionErrors',
+          action.errorResponse?.response?.data?.data || [
+            'Server error, please try again later.',
+          ],
+        );
     case SET_METADATA_INDEX:
       let newMetaDataIndex = '';
       newMetaDataIndex = markMetaDataInScheduledUploads(state, action.metaDataIndex);
