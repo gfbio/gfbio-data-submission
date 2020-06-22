@@ -201,6 +201,12 @@ class FormWrapper extends React.PureComponent {
       submitButtonText = 'Update Submission';
       submitIconClass = 'fa fa-forward';
     }
+
+    if (this.props.isClosed) {
+      submitButtonText = 'Update Embargo';
+      submitIconClass = 'fa fa-forward';
+    }
+
     if (this.props.submitInProgress) {
       submitIconClass = 'fa-cog fa-spin fa-fw';
       submitButtonText = 'submitting ...';
@@ -242,21 +248,21 @@ class FormWrapper extends React.PureComponent {
 
               {this.renderNavigationPrompt()}
 
-              <MinimalSubmissionForm />
+              <MinimalSubmissionForm readOnly={this.props.isClosed} />
 
-              <DataUrlForm />
+              <DataUrlForm readOnly={this.props.isClosed} />
 
-              <ContributorsForm />
+              <ContributorsForm readOnly={this.props.isClosed} />
 
-              <TargetDataCenterForm />
+              <TargetDataCenterForm readOnly={this.props.isClosed} />
 
-              <DataCategoryForm />
+              <DataCategoryForm readOnly={this.props.isClosed} />
 
-              <DatasetLabelForm />
+              <DatasetLabelForm readOnly={this.props.isClosed} />
 
-              <RelatedPublicationsForm />
+              <RelatedPublicationsForm readOnly={this.props.isClosed} />
 
-              <CommentForm />
+              <CommentForm readOnly={this.props.isClosed} />
             </div>
             {/* end middle col */}
             <div className="col-md-3 sidebar-col">
@@ -265,12 +271,13 @@ class FormWrapper extends React.PureComponent {
               <SubmissionInfo
                 brokerSubmissionId={this.props.brokerSubmissionId}
                 accessionId={this.props.accessionId}
+                readOnly={this.props.isClosed}
                 issue={this.props.issue}
               />
 
-              <LicenseSelectionForm />
+              <LicenseSelectionForm readOnly={this.props.isClosed} />
 
-              <LegalRequirementsForm />
+              <LegalRequirementsForm readOnly={this.props.isClosed} />
 
               <TemplateLinkList />
 
@@ -356,6 +363,7 @@ FormWrapper.propTypes = {
   issue: PropTypes.string,
   formChanged: PropTypes.bool,
   reset: PropTypes.func,
+  isClosed: PropTypes.bool,
 };
 
 const mapStateToProps = createStructuredSelector({

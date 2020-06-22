@@ -172,6 +172,45 @@
     }
   },
   {
+    "model": "brokerage.submission",
+    "pk": 5,
+    "fields": {
+      "created": "2020-05-14T14:01:31.495Z",
+      "modified": "2020-06-09T07:36:01.247Z",
+      "broker_submission_id": "1d266829-6246-4d43-bf2f-1856053f629c",
+      "site": null,
+      "user": 1,
+      "target": "GENERIC",
+      "submitting_user": "1",
+      "submitting_user_common_information": "",
+      "status": "CLOSED",
+      "release": true,
+      "download_url": "",
+      "center_name": null,
+      "data": {
+        "requirements": {
+          "title": "CLOSED SUBMISSION",
+          "license": "CC BY 4.0",
+          "categories": ["Bacteriology or Virology", "Microbiology"],
+          "description": "Testing closed submission functions",
+          "contributors": [
+            {
+              "lastName": "bar",
+              "position": 1,
+              "firstName": "foo",
+              "contribution": "Author/Creator,Data Owner Contact",
+              "emailAddress": "asd@asd.de"
+            }
+          ],
+          "dataset_labels": ["foo"],
+          "legal_requirements": [],
+          "related_publications": ["public"]
+        }
+      },
+      "embargo": "2021-05-17"
+    }
+  },
+  {
     "model": "brokerage.brokerobject",
     "pk": 1,
     "fields": {

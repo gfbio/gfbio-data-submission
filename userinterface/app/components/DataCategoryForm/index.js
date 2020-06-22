@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Field } from 'redux-form/immutable';
 import { DATA_CATEGORY_PREFIX } from '../../containers/SubmissionForm/constants';
 // import PropTypes from 'prop-types';
@@ -32,6 +33,7 @@ class DataCategoryForm extends React.PureComponent {
                 id="algaeProtists"
                 component="input"
                 type="checkbox"
+                disabled={this.props.readOnly}
               />
               <label className="custom-control-label" htmlFor="algaeProtists">
                 Algae & Protists
@@ -44,6 +46,7 @@ class DataCategoryForm extends React.PureComponent {
                 id="bacteriologyOrVirology"
                 component="input"
                 type="checkbox"
+                disabled={this.props.readOnly}
               />
               <label
                 className="custom-control-label"
@@ -59,6 +62,7 @@ class DataCategoryForm extends React.PureComponent {
                 id="botany"
                 component="input"
                 type="checkbox"
+                disabled={this.props.readOnly}
               />
               <label className="custom-control-label" htmlFor="botany">
                 Botany
@@ -73,6 +77,7 @@ class DataCategoryForm extends React.PureComponent {
                 id="ecologyEnvironment"
                 component="input"
                 type="checkbox"
+                disabled={this.props.readOnly}
               />
               <label
                 className="custom-control-label"
@@ -88,6 +93,7 @@ class DataCategoryForm extends React.PureComponent {
                 id="geoscience"
                 component="input"
                 type="checkbox"
+                disabled={this.props.readOnly}
               />
               <label className="custom-control-label" htmlFor="geoscience">
                 Geoscience
@@ -100,6 +106,7 @@ class DataCategoryForm extends React.PureComponent {
                 id="microbiology"
                 component="input"
                 type="checkbox"
+                disabled={this.props.readOnly}
               />
               <label className="custom-control-label" htmlFor="microbiology">
                 Microbiology
@@ -114,6 +121,7 @@ class DataCategoryForm extends React.PureComponent {
                 id="mycology"
                 component="input"
                 type="checkbox"
+                disabled={this.props.readOnly}
               />
               <label className="custom-control-label" htmlFor="mycology">
                 Mycology
@@ -126,6 +134,7 @@ class DataCategoryForm extends React.PureComponent {
                 id="palaeontology"
                 component="input"
                 type="checkbox"
+                disabled={this.props.readOnly}
               />
               <label className="custom-control-label" htmlFor="palaeontology">
                 Palaeontology
@@ -138,6 +147,7 @@ class DataCategoryForm extends React.PureComponent {
                 id="zoology"
                 component="input"
                 type="checkbox"
+                disabled={this.props.readOnly}
               />
               <label className="custom-control-label" htmlFor="zoology">
                 Zoology
@@ -150,6 +160,8 @@ class DataCategoryForm extends React.PureComponent {
   }
 }
 
-DataCategoryForm.propTypes = {};
+DataCategoryForm.propTypes = {
+  readOnly: PropTypes.bool,
+};
 
 export default DataCategoryForm;

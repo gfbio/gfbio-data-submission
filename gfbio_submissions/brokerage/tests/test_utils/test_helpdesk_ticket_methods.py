@@ -109,7 +109,7 @@ class TestHelpDeskTicketMethods(TestCase):
         payload = gfbio_prepare_create_helpdesk_payload(
             site_config=site_config,
             submission=submission)
-        self.assertEqual({'name': 'ikostadi'}, payload['assignee'])
+        self.assertNotIn('assignee', payload.keys())
         self.assertEqual('sand/molecular-data',
                          payload['customfield_10010'])
         # self.assertEqual('MIxS',

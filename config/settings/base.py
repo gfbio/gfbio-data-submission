@@ -8,7 +8,7 @@ import environ
 
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
-VERSION = '1.102.0'
+VERSION = '1.106.5'
 
 ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 # gfbio_submissions/
@@ -256,8 +256,9 @@ ADMIN_URL = env("DJANGO_ADMIN_URL", default="admin/")
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#admins
 ADMINS = [
-    ("""Marc Weber""", "maweber@mpi-bremen.de"),
-    ("""Ivaylo Kostadinov""", 'ikostadi@mpi-bremen.de'),
+    ("""Marc Weber""", 'maweber@mpi-bremen.de'),
+    ("""Ivaylo Kostadinov""", 'ikostadi@gfbio.org'),
+    ("""Deniss Marinuks""", 'd.marinuks@jacobs-university.de'),
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#managers
 MANAGERS = ADMINS

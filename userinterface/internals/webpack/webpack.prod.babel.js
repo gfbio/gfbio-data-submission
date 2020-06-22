@@ -17,7 +17,7 @@ module.exports = require('./webpack.base.babel')({
   ],
 
   // Utilize long-term caching by adding content hashes (not compilation hashes) to compiled assets
-  // public path need to match dir where js is hosted. If remote server full url is needed
+  // public path need to match dir where js is hosted. If remote sderver full url is needed
   output: {
     filename: '[name].[chunkhash].js',
     chunkFilename: '[name].[chunkhash].chunk.js',
@@ -95,8 +95,11 @@ module.exports = require('./webpack.base.babel')({
     // assets manipulations and do leak its manipulations to HtmlWebpackPlugin
     new OfflinePlugin({
       relativePaths: false,
-      publicPath: '/',
+      publicPath: '/static/js',
       appShell: '/',
+      ServiceWorker: {
+        publicPath: '/static/js/sw.js'
+      },
 
       // No need to cache .htaccess. See http://mxs.is/googmp,
       // this is applied before any match in `caches` section

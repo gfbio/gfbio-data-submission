@@ -10,7 +10,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
 from gfbio_submissions.brokerage.exceptions import TransferInternalError, \
     raise_response_exceptions, TransferClientError, raise_no_ticket_exception, \
     NoTicketAvailableError
-from gfbio_submissions.brokerage.models import TaskProgressReport, Submission, AuditableTextData
+from gfbio_submissions.brokerage.models import TaskProgressReport, Submission, AuditableTextData, CenterName
 from gfbio_submissions.brokerage.utils.ena import send_submission_to_ena
 from gfbio_submissions.generic.models import ResourceCredential
 
@@ -317,10 +317,15 @@ def request_error_auto_retry(response, task, broker_submission_id,
 def send_data_to_ena_for_validation_or_test(task, submission_id, action):
     # get submission
     submission = Submission.objects.get(pk=submission_id)
-    if not Submission:
+    if not submission:
         TaskProgressReport.objects.create_initial_report(
             task=task)
         return 'No submission found with pk {}'.format(submission_id)
+
+    # change center name for task without updating submission
+    center_name, created = CenterName.objects.get_or_create(
+        center_name='GFBIO')
+    submission.center_name = center_name
 
     # create initial task report
     TaskProgressReport.objects.create_initial_report(

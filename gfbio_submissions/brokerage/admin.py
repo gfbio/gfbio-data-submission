@@ -150,6 +150,7 @@ def download_auditable_text_data(modeladmin, request, queryset):
 
 download_auditable_text_data.short_description = 'Download XMLs'
 
+
 def validate_against_ena(modeladmin, request, queryset):
     from gfbio_submissions.brokerage.tasks import \
         validate_against_ena_task
@@ -160,7 +161,9 @@ def validate_against_ena(modeladmin, request, queryset):
             },
             countdown=SUBMISSION_DELAY)
 
+
 validate_against_ena.short_description = 'Validate against ENA production server'
+
 
 def submit_to_ena_test(modeladmin, request, queryset):
     from gfbio_submissions.brokerage.tasks import \
@@ -173,7 +176,25 @@ def submit_to_ena_test(modeladmin, request, queryset):
             },
             countdown=SUBMISSION_DELAY)
 
+
 submit_to_ena_test.short_description = 'Submit to ENA test server'
+
+
+def modify_ena_objects_with_current_xml(modeladmin, request, queryset):
+    from gfbio_submissions.brokerage.tasks import \
+        transfer_data_to_ena_task
+    for obj in queryset:
+        transfer_data_to_ena_task.apply_async(
+            kwargs={
+                'submission_id': obj.pk,
+                'action': 'MODIFY'
+            },
+            countdown=SUBMISSION_DELAY
+        )
+
+
+modify_ena_objects_with_current_xml.short_description = 'Modify ENA objects with curent XML'
+
 
 class AuditableTextDataInlineAdmin(admin.StackedInline):
     model = AuditableTextData
@@ -198,6 +219,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         release_submission_study_on_ena,
         validate_against_ena,
         submit_to_ena_test,
+        modify_ena_objects_with_current_xml,
         download_auditable_text_data,
         continue_release_submissions,
         re_create_ena_xml,

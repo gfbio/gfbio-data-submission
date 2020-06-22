@@ -39,6 +39,11 @@ const makeSelectContactForm = () =>
 const makeSelectSubmissionForm = () =>
   createSelector(selectSubmissionFormDomain, substate => substate.toJS());
 
+const makeSelectLoading = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('loading'),
+  );
+
 const makeSelectLicense = () =>
   createSelector(selectSubmissionFormDomain, substate =>
     substate.get('license'),
@@ -80,9 +85,7 @@ const makeSelectInitialValues = () =>
   );
 
 const makeSelectToken = () =>
-  createSelector(selectSubmissionFormDomain, substate =>
-    substate.get('token'),
-  );
+  createSelector(selectSubmissionFormDomain, substate => substate.get('token'));
 
 const makeSelectUserId = () =>
   createSelector(selectSubmissionFormDomain, substate =>
@@ -238,4 +241,5 @@ export {
   makeSelectSubmitError,
   makeSelectSubmissionErrors,
   makeSelectFormChanged,
+  makeSelectLoading,
 };

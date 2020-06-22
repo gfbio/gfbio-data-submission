@@ -537,7 +537,7 @@ def parse_csv_to_update_clean_submission_task(self, previous_task_result=None,
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True
 )
-def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None):
+def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None, action='ADD'):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -553,6 +553,7 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None):
         response, request_id = send_submission_to_ena(submission,
                                                       site_configuration.ena_server,
                                                       ena_submission_data,
+                                                      action
                                                       )
         res = raise_transfer_server_exceptions(
             response=response,
