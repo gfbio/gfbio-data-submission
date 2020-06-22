@@ -70,8 +70,9 @@ class ContributorsForm extends React.PureComponent {
     return tempArray;
   }
 
-  componentDidUpdate() {
+  updateContributorsFromProps() {
     let propsContributors = this.props.contributors;
+    console.log('UPDATE CONTRIB');
     if (!Array.isArray(this.props.contributors)) {
       propsContributors = this.props.contributors.toJS();
     }
@@ -110,12 +111,39 @@ class ContributorsForm extends React.PureComponent {
     }
   }
 
+  setReadOnlyForContributors() {
+    if (this.props.readOnly) {
+      document.getElementsByClassName('searchBox')[0].disabled = true;
+      document
+        .getElementById('multiselectContainerReact')
+        .firstChild.classList.add('disabled');
+    } else {
+      document.getElementsByClassName('searchBox')[0].disabled = false;
+      document
+        .getElementById('multiselectContainerReact')
+        .firstChild.classList.remove('disabled');
+    }
+  }
+
+  componentDidMount() {
+    this.updateContributorsFromProps();
+    this.setReadOnlyForContributors();
+  }
+
+  componentDidUpdate() {
+    this.updateContributorsFromProps();
+    this.setReadOnlyForContributors();
+  }
+
   validateFormValues() {
     let isValid = true;
 
     // eslint-disable-next-line no-useless-escape
     const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    isValid = re.test(String(this.state.formValues.emailAddress).toLowerCase());
+    if (!re.test(String(this.state.formValues.emailAddress).toLowerCase())) {
+      document.getElementById('emailAddress').classList.add('error');
+      isValid = false;
+    }
 
     if (
       !this.state.formValues.firstName &&
@@ -458,14 +486,18 @@ class ContributorsForm extends React.PureComponent {
     const { formOpen, detailOpen } = this.state;
     const addContributorDiv = (
       <div className="add-contributor-div">
-        <Button
-          className="btn btn-primary btn-contributor"
-          onClick={() => this.onClickAddButton(!this.state.showAddDiv)}
-          aria-controls="contributorForm"
-          aria-expanded={formOpen}
-        >
-          <i className="fa fa-plus" /> add contributor
-        </Button>
+        {this.props.readOnly ? (
+          <div className="select-contributor">select contributor</div>
+        ) : (
+          <Button
+            className="btn btn-primary btn-contributor"
+            onClick={() => this.onClickAddButton(!this.state.showAddDiv)}
+            aria-controls="contributorForm"
+            aria-expanded={formOpen}
+          >
+            <i className="fa fa-plus" /> add contributor
+          </Button>
+        )}
       </div>
     );
     const removeContributorBtn =
@@ -503,6 +535,7 @@ class ContributorsForm extends React.PureComponent {
           draggableId={`contributor-dragId-${c.position}`}
           index={index}
           className="no-outline"
+          isDragDisabled={this.props.readOnly}
         >
           {provided => (
             <div
@@ -528,6 +561,49 @@ class ContributorsForm extends React.PureComponent {
         </Draggable>
       );
     });
+
+    const editFormButtons = this.props.readOnly ? (
+      <div className="form-row">
+        <div className="form-group col-md-2">
+          <Button
+            className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
+            onClick={() => this.closeFormBody()}
+            aria-controls="contributorForm"
+            aria-expanded={formOpen}
+          >
+            Close
+          </Button>
+        </div>
+        <div className="form-group col-md-2" />
+        <div className="form-group col-md-4" />
+        <div className="form-group col-md-4" />
+      </div>
+    ) : (
+      <div className="form-row">
+        <div className="form-group col-md-2">
+          <Button
+            className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
+            onClick={() => this.closeFormBody()}
+            aria-controls="contributorForm"
+            aria-expanded={formOpen}
+          >
+            Cancel
+          </Button>
+        </div>
+        {removeContributorBtn}
+        {spaceBetweenButtons}
+        <div className="form-group col-md-4">
+          <Button
+            className="btn btn-secondary btn-sm btn-block btn-light-blue"
+            onClick={this.onSave}
+            aria-controls="contributorForm"
+            aria-expanded={formOpen}
+          >
+            Save
+          </Button>
+        </div>
+      </div>
+    );
 
     const noContributorsText = (
       <div className="text-center">Contributors List</div>
@@ -584,6 +660,7 @@ class ContributorsForm extends React.PureComponent {
                         onChange={this.handleChange}
                         onClick={this.handleInputClick}
                         value={this.state.formValues.firstName}
+                        disabled={this.props.readOnly}
                       />
                     </div>
                     <div className="form-group col-md-3">
@@ -601,6 +678,7 @@ class ContributorsForm extends React.PureComponent {
                         onChange={this.handleChange}
                         onClick={this.handleInputClick}
                         value={this.state.formValues.lastName}
+                        disabled={this.props.readOnly}
                       />
                     </div>
                     <div className="form-group col-md-6">
@@ -615,6 +693,7 @@ class ContributorsForm extends React.PureComponent {
                         onChange={this.handleChange}
                         onClick={this.handleInputClick}
                         value={this.state.formValues.emailAddress}
+                        disabled={this.props.readOnly}
                       />
                     </div>
                   </div>
@@ -634,6 +713,7 @@ class ContributorsForm extends React.PureComponent {
                         onChange={this.handleChange}
                         onClick={this.handleInputClick}
                         value={this.state.formValues.institution}
+                        disabled={this.props.readOnly}
                       />
                     </div>
                     <div className="form-group col-md-12">
@@ -669,36 +749,11 @@ class ContributorsForm extends React.PureComponent {
                   <div id="contribErr" className="input-error fade-out">
                     Pipe character is not allowed
                   </div>
-
-                  <div className="form-row">
-                    <div className="form-group col-md-2">
-                      <Button
-                        className="btn btn-secondary btn-sm btn-block btn-light-blue-inverted"
-                        onClick={() => this.closeFormBody()}
-                        aria-controls="contributorForm"
-                        aria-expanded={formOpen}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                    {removeContributorBtn}
-                    {spaceBetweenButtons}
-                    <div className="form-group col-md-4">
-                      <Button
-                        className="btn btn-secondary btn-sm btn-block btn-light-blue"
-                        onClick={this.onSave}
-                        aria-controls="contributorForm"
-                        aria-expanded={formOpen}
-                      >
-                        Save
-                      </Button>
-                    </div>
-                  </div>
+                  {editFormButtons}
                 </div>
               </Collapse>
             </div>
           </div>
-          {/* </Collapse> */}
         </div>
       </div>
     );

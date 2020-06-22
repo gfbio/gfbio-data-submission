@@ -36,6 +36,40 @@
         padding-bottom: 0 !important;
     }
 
+    .form-group.disabled .dropzone, #multiselectContainerReact > div.disabled {
+      pointer-events: none;
+      cursor: default;
+      background-color: #e9ecef;
+      opacity: 1;
+    }
+
+    .col.spinner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 200px;
+    }
+
+    .col.spinner div div {
+      background-color: $gfbio-green;
+    }
+
+    a.disabled {
+      pointer-events: none;
+      cursor: default;
+      color: white !important;
+      background-color: gray;
+    }
+
+    li.disabled {
+      background-color: #e9ecef;
+    }
+
+    button[disabled] {
+      pointer-events: none;
+      cursor: default;
+    }
+
     .contributor-input-error {
       text-align: center;
       margin-bottom: 20px;
@@ -52,6 +86,11 @@
       -ms-transition: opacity 1s ease-in-out;
       -o-transition: opacity 1s ease-in-out;
       opacity: 0;
+    }
+
+    .select-contributor {
+      display: flex;
+      align-items: center;
     }
 }
 
@@ -103,40 +142,6 @@
   margin-top: -4px;
   margin-left: 10px;
   cursor: pointer;
-    .form-group.disabled .dropzone {
-      pointer-events: none;
-      cursor: default;
-      background-color: #e9ecef;
-      opacity: 1;
-    }
-
-    .col.spinner {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 200px;
-    }
-
-    .col.spinner div div {
-      background-color: $gfbio-green;
-    }
-
-    a.disabled {
-      pointer-events: none;
-      cursor: default;
-      color: white !important;
-      background-color: gray;
-    }
-
-    li.disabled {
-      background-color: #e9ecef;
-    }
-
-    button[disabled] {
-      pointer-events: none;
-      cursor: default;
-    }
-
 }
 
 .embargo-picker {
