@@ -6,6 +6,7 @@ import io
 import json
 import logging
 import os
+import subprocess
 import textwrap
 import uuid
 import xml.etree.ElementTree as ET
@@ -563,7 +564,8 @@ def store_ena_data_as_auditable_text_data(submission, data):
 
 
 # https://github.com/enasequence/schema/blob/master/src/main/resources/uk/ac/ebi/ena/sra/schema/SRA.study.xsd
-def send_submission_to_ena(submission, archive_access, ena_submission_data, action='ADD'):
+def send_submission_to_ena(submission, archive_access, ena_submission_data,
+                           action='ADD'):
     logger.info(
         msg='send_submission_to_ena submission_pk={} archive_access_pk={} method=POST'.format(
             submission.pk, archive_access.pk))
@@ -578,7 +580,7 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data, acti
     ena_submission_data[
         'SUBMISSION'] = enalizer.prepare_submission_xml_for_sending(
         action=action,
-        outgoing_request_id=outgoing_request_id,)
+        outgoing_request_id=outgoing_request_id, )
 
     return logged_requests.post(
         archive_access.url,
@@ -887,3 +889,29 @@ def update_ena_embargo_date(submission):
                 submission.broker_submission_id)
         )
         return None
+
+
+# FIXME: Prototype
+# TODO: exceptions, logging, protocoll for curator
+# TODO: move to task/celeryworkers
+def cli_call():
+    print('cli_call')
+    res = subprocess.run(['ls', '-l'], capture_output=True, check=True)
+    print('\n', res)
+
+    try:
+        res = subprocess.run(['java', '--version'], capture_output=True,
+                             check=True)
+        print('\n', res)
+    except subprocess.CalledProcessError as e:
+        print('error ', e)
+    except FileNotFoundError as e:
+        print('fnferror ', e)
+    try:
+        res = subprocess.run(['java', '-jar', 'ena_webin_cli/webin-cli-3.0.0.jar'], capture_output=True,
+                             check=False)
+        print('\n', res)
+    except subprocess.CalledProcessError as e:
+        print('error ', e)
+    except FileNotFoundError as e:
+        print('fnferror ', e)
