@@ -6,7 +6,6 @@ import io
 import json
 import logging
 import os
-import subprocess
 import textwrap
 import uuid
 import xml.etree.ElementTree as ET
@@ -827,7 +826,7 @@ def update_ena_embargo_date(submission):
         type='study').first()
     if study_primary_accession:
         study_primary_accession = study_primary_accession.persistentidentifier_set.filter(
-        pid_type='PRJ').first()
+            pid_type='PRJ').first()
     site_config = submission.user.site_configuration
     if site_config is None:
         logger.warning(
@@ -889,29 +888,3 @@ def update_ena_embargo_date(submission):
                 submission.broker_submission_id)
         )
         return None
-
-
-# FIXME: Prototype
-# TODO: exceptions, logging, protocoll for curator
-# TODO: move to task/celeryworkers
-def cli_call():
-    print('cli_call')
-    res = subprocess.run(['ls', '-l'], capture_output=True, check=True)
-    print('\n', res)
-
-    try:
-        res = subprocess.run(['java', '--version'], capture_output=True,
-                             check=True)
-        print('\n', res)
-    except subprocess.CalledProcessError as e:
-        print('error ', e)
-    except FileNotFoundError as e:
-        print('fnferror ', e)
-    try:
-        res = subprocess.run(['java', '-jar', 'ena_webin_cli/webin-cli-3.0.0.jar'], capture_output=True,
-                             check=False)
-        print('\n', res)
-    except subprocess.CalledProcessError as e:
-        print('error ', e)
-    except FileNotFoundError as e:
-        print('fnferror ', e)

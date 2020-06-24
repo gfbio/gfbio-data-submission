@@ -2,7 +2,7 @@
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.utils.ena import cli_call
+from gfbio_submissions.brokerage.utils.ena_cli import cli_call
 
 
 class TestCLI(TestCase):
