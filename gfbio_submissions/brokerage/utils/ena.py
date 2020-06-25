@@ -585,7 +585,7 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data,
     return logged_requests.post(
         archive_access.url,
         submission=submission,
-        outgoing_request_id=outgoing_request_id,
+        request_id=outgoing_request_id,
         return_log_id=True,
         params=auth_params,
         files=ena_submission_data,

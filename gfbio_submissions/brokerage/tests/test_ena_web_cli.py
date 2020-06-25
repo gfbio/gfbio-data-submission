@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from pprint import pprint
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 import responses
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -86,8 +86,8 @@ class TestCLI(TestCase):
     def test_targeted_sequences_workflow_prototyping(self):
         submission = Submission.objects.first()
         # to match mocked response submission_id
-        submission.broker_submission_id = uuid4(
-            'd8a8b861-3761-443c-94ff-e0a89ae3b0c9')
+        submission.broker_submission_id = UUID(
+            '4e5c7fb2-fb9f-447f-92db-33a5f99cba8e')
         submission.save()
 
         # print(submission.submissionupload_set.all())
@@ -160,7 +160,7 @@ class TestCLI(TestCase):
             params=auth_params,
             files=request_data,
             verify=False,
-            outgoing_request_id=outgoing_request_id
+            request_id=outgoing_request_id
         )
         # study_bo = BrokerObject.objects.filter(type='study').first()
         # pprint(study_bo.__dict__)
@@ -192,3 +192,9 @@ class TestCLI(TestCase):
         for p in study_bo.persistentidentifier_set.all():
             print('---------------')
             pprint(p.__dict__)
+
+        # TODO: primary PRJ vs regular ACC Persistent ids
+        #   for now use primary
+        # ----------------------------------------------------------------------
+
+
