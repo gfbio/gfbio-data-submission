@@ -2,14 +2,16 @@
 from pprint import pprint
 from uuid import uuid4
 
+import responses
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils.encoding import smart_text
 
 from gfbio_submissions.brokerage.configuration.settings import ENA
 from gfbio_submissions.brokerage.models import Submission, SubmissionUpload, \
-    BrokerObject, AuditableTextData, CenterName
-from gfbio_submissions.brokerage.tests.utils import _get_ena_data
+    BrokerObject, CenterName
+from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
+    _get_ena_register_study_response
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data, Enalizer
 from gfbio_submissions.brokerage.utils.ena_cli import cli_call
@@ -79,6 +81,7 @@ class TestCLI(TestCase):
     def test_simple_calls(self):
         cli_call()
 
+    @responses.activate
     def test_targeted_sequences_workflow_prototyping(self):
         submission = Submission.objects.first()
 
@@ -128,23 +131,31 @@ class TestCLI(TestCase):
             action='ADD',
             outgoing_request_id=outgoing_request_id, )
 
-        pprint(request_data)
+        # pprint(request_data)
 
         ena_resource = submission.user.site_configuration.ena_server
+
+        responses.add(
+            responses.POST,
+            ena_resource.url,
+            body=_get_ena_register_study_response(),
+            status=200,
+        )
+
         auth_params = {
             'auth': ena_resource.authentication_string,
         }
 
         # ACTUAL REQUEST
-        # response, log_id = logged_requests.post(
-        #     ena_resource.url,
-        #     submission=submission,
-        #     return_log_id=True,
-        #     params=auth_params,
-        #     files=request_data,
-        #     verify=False
-        # )
-        # print(response.status_code)
-        # print(response.content)
+        response, log_id = logged_requests.post(
+            ena_resource.url,
+            submission=submission,
+            return_log_id=True,
+            params=auth_params,
+            files=request_data,
+            verify=False
+        )
+        print(response.status_code)
+        print(response.content)
         # print(log_id)
         # pprint(RequestLog.objects.get(request_id=log_id).__dict__)
