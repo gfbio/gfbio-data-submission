@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import csv
+import io
+import os
 from pprint import pprint
 from uuid import uuid4, UUID
 
@@ -7,7 +10,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils.encoding import smart_text
 
-from gfbio_submissions.brokerage.configuration.settings import ENA
+from gfbio_submissions.brokerage.configuration.settings import ENA, \
+    CSV_WRITER_QUOTING
 from gfbio_submissions.brokerage.models import Submission, SubmissionUpload, \
     BrokerObject, CenterName
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
@@ -187,14 +191,40 @@ class TestCLI(TestCase):
         else:
             print('NO SUCCESS')
 
-        study_bo = BrokerObject.objects.filter(type='study').first()
-        pprint(study_bo.__dict__)
-        for p in study_bo.persistentidentifier_set.all():
-            print('---------------')
-            pprint(p.__dict__)
+
+        # pprint(study_bo.__dict__)
+        # for p in study_bo.persistentidentifier_set.all():
+        #     print('---------------')
+        #     pprint(p.__dict__)
 
         # TODO: primary PRJ vs regular ACC Persistent ids
         #   for now use primary
         # ----------------------------------------------------------------------
-
+        # ----------------------------------------------------------------------
+        # MANIFEST
+        # STUDDY
+        study_bo = submission.brokerobject_set.filter(type='study').first()
+        study_pid = study_bo.persistentidentifier_set.filter(archive='ENA').filter(pid_type='PRJ').first()
+        print(study_pid.pid)
+        # Name
+        '{}:{}'.format(study_bo.pk, submission.broker_submission_id)
+        # TAB/flatfile
+        upload = submission.submissionupload_set.filter(file__endswith='.tsv.gz').first()
+        # pprint(upload.__dict__)
+        path, filename = os.path.split(upload.file.name)
+        print(filename)
+        # Authors
+        # ->  contributors / usercomunitcatipon
+        # Address
+        # -> contributor
+        output = io.StringIO()
+        writer = csv.writer(output, delimiter=str('\t'))
+        writer.writerow(('STUDY', study_pid.pid))
+        writer.writerow(('NAME', '{}:{}'.format(study_bo.pk, submission.broker_submission_id)))
+        writer.writerow(('FLATFILE', filename))
+        writer.writerow(('AUTHORS', 'Weber M., Kostadinov I.;'))
+        writer.writerow(('ADDRESS', 'University of Bremen, Leobener Str. 5, 28359 Bremen, Germany'))
+        content = output.getvalue()
+        output.close()
+        print(content)
 
