@@ -1,23 +1,18 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
-<RECEIPT receiptDate="2020-06-24T20:00:50.391+01:00"
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
+<RECEIPT receiptDate="2020-06-25T12:54:35.984+01:00"
          submissionFile="submission.xml" success="true">
-    <STUDY accession="ERP122511" alias="1:19f93f1a-6e0c-4631-8853-01de624a7786"
-           status="PRIVATE" holdUntilDate="2021-06-24+01:00">
-        <EXT_ID
-                accession="PRJEB39045" type="Project"/>
+    <STUDY accession="ERP122534" alias="1:d8a8b861-3761-443c-94ff-e0a89ae3b0c9"
+           status="PRIVATE" holdUntilDate="2021-06-25+01:00">
+        <EXT_ID accession="PRJEB39066" type="Project"/>
     </STUDY>
-    <SUBMISSION accession="ERA2746760"
-                alias="5066cf9e-3c4f-45db-b5f5-3fecbb70a83c"/>
+    <SUBMISSION accession="ERA2747063"
+                alias="4e5c7fb2-fb9f-447f-92db-33a5f99cba8e"/>
     <MESSAGES>
-        <INFO>All objects in this submission are set to
-            private status (HOLD).
+        <INFO>All objects in this submission are set to private status (HOLD).
         </INFO>
-        <INFO>Submission has been
-            committed.
-        </INFO>
-        <INFO>This submission is a TEST submission
-            and will be discarded within 24 hours
+        <INFO>Submission has been committed.</INFO>
+        <INFO>This submission is a TEST submission and will be discarded within
+            24 hours
         </INFO>
     </MESSAGES>
     <ACTIONS>ADD</ACTIONS>

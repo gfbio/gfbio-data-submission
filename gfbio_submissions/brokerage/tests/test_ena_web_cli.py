@@ -13,7 +13,8 @@ from gfbio_submissions.brokerage.models import Submission, SubmissionUpload, \
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
     _get_ena_register_study_response
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
-    store_ena_data_as_auditable_text_data, Enalizer
+    store_ena_data_as_auditable_text_data, Enalizer, \
+    parse_ena_submission_response
 from gfbio_submissions.brokerage.utils.ena_cli import cli_call
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.generic.models import SiteConfiguration, \
@@ -84,8 +85,12 @@ class TestCLI(TestCase):
     @responses.activate
     def test_targeted_sequences_workflow_prototyping(self):
         submission = Submission.objects.first()
+        # to match mocked response submission_id
+        submission.broker_submission_id = uuid4(
+            'd8a8b861-3761-443c-94ff-e0a89ae3b0c9')
+        submission.save()
 
-        print(submission.submissionupload_set.all())
+        # print(submission.submissionupload_set.all())
         # 1 register study
         # regular case: in pre_process_molecular_data_chain of SubmissionTransferHandler
         #   prepare_ena_submission_data_task is called which creates textdatas
@@ -99,6 +104,7 @@ class TestCLI(TestCase):
         # print(study_text_data)
         # print(submission.brokerobject_set.all())
 
+        # ----------------------------------------------------------------------
         # TODO: works only for full valid molecular requirements. not study data alone
         #   +1 for target "targeted sequences" plus schema
         BrokerObject.objects.add_submission_data(submission)
@@ -153,9 +159,36 @@ class TestCLI(TestCase):
             return_log_id=True,
             params=auth_params,
             files=request_data,
-            verify=False
+            verify=False,
+            outgoing_request_id=outgoing_request_id
         )
-        print(response.status_code)
-        print(response.content)
+        # study_bo = BrokerObject.objects.filter(type='study').first()
+        # pprint(study_bo.__dict__)
+
+        # # in real life: request_id = xml submission alias
+        # #               alias in study xml study.pk:submission.bsi
+
+        # print(response.status_code)
+        # print(response.content)
         # print(log_id)
         # pprint(RequestLog.objects.get(request_id=log_id).__dict__)
+
+        # ----------------------------------------------------------------------
+
+        parsed = parse_ena_submission_response(response.content)
+        success = True if parsed.get('success', False) == 'true' else False
+        if success:
+            print('SUCCESS')
+            BrokerObject.objects.append_pids_from_ena_response(parsed)
+            # if close_submission_on_success:
+            #     submission.status = Submission.CLOSED
+            # submission.save()
+            # return True
+        else:
+            print('NO SUCCESS')
+
+        study_bo = BrokerObject.objects.filter(type='study').first()
+        pprint(study_bo.__dict__)
+        for p in study_bo.persistentidentifier_set.all():
+            print('---------------')
+            pprint(p.__dict__)
