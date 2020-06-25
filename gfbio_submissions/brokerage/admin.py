@@ -193,8 +193,8 @@ def perform_assembly_submission(modeladmin, request, queryset):
         #  returned Accession to persistent identifier
 
 
-
 perform_assembly_submission.short_description = 'Perform Assembly Submission'
+
 
 def modify_ena_objects_with_current_xml(modeladmin, request, queryset):
     from gfbio_submissions.brokerage.tasks import \
