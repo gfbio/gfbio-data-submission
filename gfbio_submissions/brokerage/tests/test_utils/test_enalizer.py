@@ -121,6 +121,8 @@ class TestEnalizer(TestCase):
         k, sample_xml = data.get('SAMPLE')
         self.assertEqual('sample.xml', k)
         submission_samples = submission.brokerobject_set.filter(type='sample')
+        # check lower case conversion
+        self.assertIn('mimarks-survey', sample_xml)
         # FIXME: order of samples seem to be random
         self.assertIn(
             '<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="{1}">'
