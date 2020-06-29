@@ -6,6 +6,7 @@ from pprint import pprint
 from uuid import uuid4, UUID
 
 import responses
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils.encoding import smart_text
@@ -40,7 +41,9 @@ class TestCLI(TestCase):
         ena_resource_cred = ResourceCredential.objects.create(
             title='Ena testserver access',
             url='https://www-test.ebi.ac.uk/ena/submit/drop-box/submit/',
-            authentication_string=''  # compare devserver
+            authentication_string='ENA Webin-40945 EgjPKns',  # compare devserver
+            username='Webin-40945',
+            password='EgjPKns'
         )
         site_config = SiteConfiguration.objects.create(
             title=HOSTING_SITE,
@@ -205,18 +208,18 @@ class TestCLI(TestCase):
         # ----------------------------------------------------------------------
         # MANIFEST
         # STUDDY
-        study_bo = submission.brokerobject_set.filter(type='study').first()
-        study_pid = study_bo.persistentidentifier_set.filter(
-            archive='ENA').filter(pid_type='PRJ').first()
-        print(study_pid.pid)
+        # study_bo = submission.brokerobject_set.filter(type='study').first()
+        # study_pid = study_bo.persistentidentifier_set.filter(
+        #     archive='ENA').filter(pid_type='PRJ').first()
+        # print(study_pid.pid)
         # Name
-        '{}:{}'.format(study_bo.pk, submission.broker_submission_id)
-        # TAB/flatfile
-        upload = submission.submissionupload_set.filter(
-            file__endswith='.tsv.gz').first()
-        # pprint(upload.__dict__)
-        path, filename = os.path.split(upload.file.name)
-        print(filename)
+        # '{}:{}'.format(study_bo.pk, submission.broker_submission_id)
+        # # TAB/flatfile
+        # upload = submission.submissionupload_set.filter(
+        #     file__endswith='.tsv.gz').first()
+        # # pprint(upload.__dict__)
+        # path, filename = os.path.split(upload.file.name)
+        # print(filename)
         # Authors
         # ->  contributors / usercomunitcatipon
         # Address
@@ -226,25 +229,33 @@ class TestCLI(TestCase):
         #   -> submission_upload = bsi/filenmame ==> directory = MEDIA/bsi
 
         # OUTPUT dir -> where output from cli should go
-        output = io.StringIO()
-        writer = csv.writer(output, delimiter=str('\t'))
-        writer.writerow(('STUDY', study_pid.pid))
-        writer.writerow(('NAME', '{}:{}'.format(study_bo.pk,
-                                                submission.broker_submission_id)))
-        writer.writerow(('TAB', filename))
-        writer.writerow(('AUTHORS', 'Weber M., Kostadinov I.;'))
-        writer.writerow(('ADDRESS',
-                         'University of Bremen, Leobener Str. 5, 28359 Bremen, Germany'))
-        content = output.getvalue()
-        output.close()
-        print(content)
+        # output = io.StringIO()
+        submission_folder = os.path.join(settings.MEDIA_ROOT,
+                                         str(submission.broker_submission_id))
+        # with open() as output:
+        #     writer = csv.writer(output, delimiter=str('\t'))
+        #     writer.writerow(('STUDY', study_pid.pid))
+        #     writer.writerow(('NAME', '{}:{}'.format(study_bo.pk,
+        #                                             submission.broker_submission_id)))
+        #     writer.writerow(('TAB', filename))
+        #     writer.writerow(('AUTHORS', 'Weber M., Kostadinov I.;'))
+        #     writer.writerow(('ADDRESS',
+        #                      'University of Bremen, Leobener Str. 5, 28359 Bremen, Germany'))
+        #     content = output.getvalue()
+        #     output.close()
+        #     print(content)
         # TODO: next: do webcli to testserver and check output, folders etc 
 
         submit_targeted_sequences(
             username=ena_resource.username,
             password=ena_resource.password,
-            manifest_file=output,
+            # TODO: needs real file
+            # manifest_file=content,  # output
             submission=submission,
         )
-        output.close()
-        print(content)
+        # output.close()
+        # print(content)
+
+        # TODO: put this workflow in tasks, then every error can be reviewed in task progress reports
+        #   take care the input is logges as well. Goal is that this imperfect flow is put
+        #   into a generally working tool. THEN: tickets for  imporovement
