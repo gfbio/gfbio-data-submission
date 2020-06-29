@@ -19,7 +19,8 @@ from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data, Enalizer, \
     parse_ena_submission_response
-from gfbio_submissions.brokerage.utils.ena_cli import cli_call
+from gfbio_submissions.brokerage.utils.ena_cli import cli_call, \
+    submit_targeted_sequences
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential, RequestLog
@@ -61,6 +62,8 @@ class TestCLI(TestCase):
         user.save()
         center = CenterName.objects.create(center_name="test-center")
         submission = Submission.objects.create(
+            broker_submission_id=UUID(
+                '4e5c7fb2-fb9f-447f-92db-33a5f99cba8e'),
             user=user,
             center_name=center,
             target=ENA,
@@ -90,9 +93,9 @@ class TestCLI(TestCase):
     def test_targeted_sequences_workflow_prototyping(self):
         submission = Submission.objects.first()
         # to match mocked response submission_id
-        submission.broker_submission_id = UUID(
-            '4e5c7fb2-fb9f-447f-92db-33a5f99cba8e')
-        submission.save()
+        # submission.broker_submission_id = UUID(
+        #     '4e5c7fb2-fb9f-447f-92db-33a5f99cba8e')
+        # submission.save()
 
         # print(submission.submissionupload_set.all())
         # 1 register study
@@ -191,7 +194,6 @@ class TestCLI(TestCase):
         else:
             print('NO SUCCESS')
 
-
         # pprint(study_bo.__dict__)
         # for p in study_bo.persistentidentifier_set.all():
         #     print('---------------')
@@ -204,12 +206,14 @@ class TestCLI(TestCase):
         # MANIFEST
         # STUDDY
         study_bo = submission.brokerobject_set.filter(type='study').first()
-        study_pid = study_bo.persistentidentifier_set.filter(archive='ENA').filter(pid_type='PRJ').first()
+        study_pid = study_bo.persistentidentifier_set.filter(
+            archive='ENA').filter(pid_type='PRJ').first()
         print(study_pid.pid)
         # Name
         '{}:{}'.format(study_bo.pk, submission.broker_submission_id)
         # TAB/flatfile
-        upload = submission.submissionupload_set.filter(file__endswith='.tsv.gz').first()
+        upload = submission.submissionupload_set.filter(
+            file__endswith='.tsv.gz').first()
         # pprint(upload.__dict__)
         path, filename = os.path.split(upload.file.name)
         print(filename)
@@ -217,14 +221,30 @@ class TestCLI(TestCase):
         # ->  contributors / usercomunitcatipon
         # Address
         # -> contributor
+
+        # INPUT dir -> where files named in manifest are stored
+        #   -> submission_upload = bsi/filenmame ==> directory = MEDIA/bsi
+
+        # OUTPUT dir -> where output from cli should go
         output = io.StringIO()
         writer = csv.writer(output, delimiter=str('\t'))
         writer.writerow(('STUDY', study_pid.pid))
-        writer.writerow(('NAME', '{}:{}'.format(study_bo.pk, submission.broker_submission_id)))
-        writer.writerow(('FLATFILE', filename))
+        writer.writerow(('NAME', '{}:{}'.format(study_bo.pk,
+                                                submission.broker_submission_id)))
+        writer.writerow(('TAB', filename))
         writer.writerow(('AUTHORS', 'Weber M., Kostadinov I.;'))
-        writer.writerow(('ADDRESS', 'University of Bremen, Leobener Str. 5, 28359 Bremen, Germany'))
+        writer.writerow(('ADDRESS',
+                         'University of Bremen, Leobener Str. 5, 28359 Bremen, Germany'))
         content = output.getvalue()
         output.close()
         print(content)
+        # TODO: next: do webcli to testserver and check output, folders etc 
 
+        submit_targeted_sequences(
+            username=ena_resource.username,
+            password=ena_resource.password,
+            manifest_file=output,
+            submission=submission,
+        )
+        output.close()
+        print(content)
