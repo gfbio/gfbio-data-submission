@@ -28,7 +28,8 @@ from .models import SubmissionUpload, EnaReport
 from .utils.csv import check_for_molecular_content, parse_molecular_csv
 from .utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data, \
     send_submission_to_ena, parse_ena_submission_response, fetch_ena_report, \
-    update_persistent_identifier_report_status
+    update_persistent_identifier_report_status, register_study_at_ena
+from .utils.ena_cli import submit_targeted_sequences
 from .utils.gfbio import get_gfbio_helpdesk_username
 from .utils.jira import JiraClient
 from .utils.pangaea import pull_pangaea_dois
@@ -572,6 +573,108 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None,
         response = Response()
     return str(request_id), response.status_code, smart_text(
         response.content)
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.register_study_at_ena_task',
+    time_limit=600,
+    autoretry_for=(TransferServerError,
+                   TransferClientError
+                   ),
+    retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
+    retry_backoff=SUBMISSION_RETRY_DELAY,
+    retry_jitter=True
+)
+def register_study_at_ena_task(self, previous_result=None,
+                               submission_id=None, ):
+    submission, site_configuration = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
+
+    study_text_data = submission.auditabletextdata_set.filter(
+        name='study.xml').first()
+
+    if study_text_data is None:
+        logger.info(
+            'tasks.py | register_study_at_ena | no study textdata found | submission_id={0}'.format(
+                submission.broker_submission_id)
+        )
+        # TODO: add more information to report before returning
+        return TaskProgressReport.CANCELLED
+
+    try:
+        response, request_id = register_study_at_ena(
+            submission=submission,
+            study_text_data=study_text_data)
+        res = raise_transfer_server_exceptions(
+            response=response,
+            task=self,
+            broker_submission_id=submission.broker_submission_id,
+            max_retries=SUBMISSION_MAX_RETRIES)
+    except ConnectionError as e:
+        logger.error(
+            msg='connection_error {}.url={} title={}'.format(
+                e,
+                site_configuration.ena_server.url,
+                site_configuration.ena_server.title)
+        )
+        response = Response()
+    return str(request_id), response.status_code, smart_text(
+        response.content)
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.submit_targeted_sequences_to_ena_task',
+)
+def submit_targeted_sequences_to_ena_task(self, previous_result=None,
+                                          submission_id=None, ):
+    submission, site_configuration = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED or previous_result == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
+    if submission.brokerobject_set.filter(type='study').first() is None:
+        return TaskProgressReport.CANCELLED
+
+    # TODO: error logging, retry ? logging !
+    submit_targeted_sequences(
+        username=site_configuration.ena_server.username,
+        password=site_configuration.ena_server.password,
+        submission=submission
+    )
+
+    return True
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.process_targeted_sequence_results_task',
+)
+def process_targeted_sequence_results_task(self, previous_result=None,
+                                           submission_id=None, ):
+    submission, site_configuration = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
+    logger.info('tasks.py | process_targeted_sequence_results_task | {}'.format(
+        submission.broker_submission_id))
+    # TODO: list/parse results in folders. add to progressreports
+    #   check files in respective folders
+    return True
 
 
 @celery.task(

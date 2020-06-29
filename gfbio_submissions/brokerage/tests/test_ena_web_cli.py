@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-import csv
-import io
+import gzip
 import os
-from pprint import pprint
 from uuid import uuid4, UUID
 
 import responses
@@ -12,7 +10,7 @@ from django.test import TestCase
 from django.utils.encoding import smart_text
 
 from gfbio_submissions.brokerage.configuration.settings import ENA, \
-    CSV_WRITER_QUOTING
+    SUBMISSION_DELAY
 from gfbio_submissions.brokerage.models import Submission, SubmissionUpload, \
     BrokerObject, CenterName
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
@@ -20,11 +18,10 @@ from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data, Enalizer, \
     parse_ena_submission_response
-from gfbio_submissions.brokerage.utils.ena_cli import cli_call, \
-    submit_targeted_sequences
+from gfbio_submissions.brokerage.utils.ena_cli import submit_targeted_sequences
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.generic.models import SiteConfiguration, \
-    ResourceCredential, RequestLog
+    ResourceCredential
 from gfbio_submissions.generic.utils import logged_requests
 from gfbio_submissions.users.models import User
 
@@ -41,9 +38,10 @@ class TestCLI(TestCase):
         ena_resource_cred = ResourceCredential.objects.create(
             title='Ena testserver access',
             url='https://www-test.ebi.ac.uk/ena/submit/drop-box/submit/',
-            authentication_string='ENA Webin-40945 EgjPKns',  # compare devserver
-            username='Webin-40945',
-            password='EgjPKns'
+            authentication_string='',
+            # compare devserver
+            username='',
+            password=''
         )
         site_config = SiteConfiguration.objects.create(
             title=HOSTING_SITE,
@@ -80,27 +78,37 @@ class TestCLI(TestCase):
             # TODO: full data to be able to create brokerobjects
             data=_get_ena_data()
         )
-        simple_file = SimpleUploadedFile('test_submission_upload.tsv.gz',
+
+        submission_folder = os.path.join(settings.MEDIA_ROOT,
+                                         str(submission.broker_submission_id))
+        upload_path = os.path.join(submission_folder,
+                                   'test_submission_upload.tsv')
+
+        simple_file = SimpleUploadedFile('test_submission_upload.tsv',
                                          b'these\tare\tthe\tfile\tcontents')
 
-        submission_upload = SubmissionUpload.objects.create(
+        upload = SubmissionUpload.objects.create(
             submission=submission,
             user=user,
             file=simple_file,
         )
 
-    def test_simple_calls(self):
-        cli_call()
+        with gzip.open(upload_path + '.gz', 'wb') as f:
+            f.writelines(
+                [
+                    b'#template_accession ERT000020\n',
+                    b'ENTRYNUMBER	ORGANISM	ISOLATE	DEVSTAGE	TISSUETYPE	SEX	SPECVOUCH	5CDS	3CDS	5PARTIAL	3PARTIAL	CODONSTART	COITABLE	COUNTRY	AREA	LOCALITY	LATLON	ISOSOURCE	COLDATE	COLBY	IDBY	PFNAME1	PFSEQ1	PRNAME1	PRSEQ1	SEQUENCE\n'
+                    b'1	Glossina morsitans submorsitans	234-51-00004-45-10_G_COI	adult	gut	f	234-51-00004	1, 1	645	yes	yes	1	5	Nigeria	Bauchi State	Yankari Game Reserve	9.81 N 10.62 E	"Savannah woodland; River plain"	23-Feb-2014	"Stephen Sakiu Shaida; Judith Sophie Weber; Usman Baba; Ahmadu Adamu; Jonathan Andrew Nok; Soerge Kelm"	"Judith Sophie Weber; Stephen Sakiu Shaida"	CO1-f	TTGATTTTTTGGTCATCCAGAAGT	CO1-r	TGAAGCTTAAATTCATTGCACTAATC	TTTATTGTCTGAGCTCATCATATATTTACAGTTGGAATAGATGTAGATACTCGTGCATATTTTACTTCAGCTACAATAATTATTGCAGTACCAACAGGAATTAAAATTTTTAGATGATTAGCTACTCTTCATGGAACTCAAATCTCTTACTCTCCGGCTATTCTTTGAGCTCTTGGTTTTATTTTCTTATTTACAGTAGGAGGTTTAACAGGTGTAGTTTTAGCAAATTCATCTGTCGATATTATTTTACATGATACTTATTATGTCGTAGCTCATTTTCATTATGTGTTATCTATAGGAGCTGTATTTGCAATTATAGCTGGATTTATTCATTGATATCCTTTATTTACTGGTTTAACTATAAATTCATCTATATTAAAAAGTCAATTTATAGTAATATTTATTGGAGTAAATTTAACTTTTTTTCCTCAACACTTTTTAGGATTAGCAGGAATACCTCGTCGTTATTCAGATTACCCTGACGCTTACACAACTTGAAATGTAGTTTCTACAATTGGATCAACAATTTCCTTATTAGGAATTTTATTTTTTTTCTTTATTATTTGAGAAAGTTTAATTAGTCAACGAAAAGTTATCTTTCCTATTCAATTAAATTCTTCTATTGAATGATTACAAAATACGCCC'
+                ]
+            )
+            f.close()
+        upload.file.name = upload_path + '.gz'
+        upload.save()
 
     @responses.activate
     def test_targeted_sequences_workflow_prototyping(self):
         submission = Submission.objects.first()
-        # to match mocked response submission_id
-        # submission.broker_submission_id = UUID(
-        #     '4e5c7fb2-fb9f-447f-92db-33a5f99cba8e')
-        # submission.save()
 
-        # print(submission.submissionupload_set.all())
         # 1 register study
         # regular case: in pre_process_molecular_data_chain of SubmissionTransferHandler
         #   prepare_ena_submission_data_task is called which creates textdatas
@@ -108,11 +116,6 @@ class TestCLI(TestCase):
         #   or from admin actions create_broker_objects_and_ena_xml and
         #   re_create_ena_xml
         # -> transfer_data_to_ena_task uses textdata to get payload
-
-        # study_text_data = submission.auditabletextdata_set.filter(
-        #     name='study.xml')
-        # print(study_text_data)
-        # print(submission.brokerobject_set.all())
 
         # ----------------------------------------------------------------------
         # TODO: works only for full valid molecular requirements. not study data alone
@@ -147,8 +150,6 @@ class TestCLI(TestCase):
             action='ADD',
             outgoing_request_id=outgoing_request_id, )
 
-        # pprint(request_data)
-
         ena_resource = submission.user.site_configuration.ena_server
 
         responses.add(
@@ -172,16 +173,14 @@ class TestCLI(TestCase):
             verify=False,
             request_id=outgoing_request_id
         )
-        # study_bo = BrokerObject.objects.filter(type='study').first()
-        # pprint(study_bo.__dict__)
 
         # # in real life: request_id = xml submission alias
         # #               alias in study xml study.pk:submission.bsi
 
+        # print('-------------------------------------------------')
         # print(response.status_code)
         # print(response.content)
-        # print(log_id)
-        # pprint(RequestLog.objects.get(request_id=log_id).__dict__)
+        # print('-------------------------------------------------')
 
         # ----------------------------------------------------------------------
 
@@ -196,11 +195,6 @@ class TestCLI(TestCase):
             # return True
         else:
             print('NO SUCCESS')
-
-        # pprint(study_bo.__dict__)
-        # for p in study_bo.persistentidentifier_set.all():
-        #     print('---------------')
-        #     pprint(p.__dict__)
 
         # TODO: primary PRJ vs regular ACC Persistent ids
         #   for now use primary
@@ -244,18 +238,47 @@ class TestCLI(TestCase):
         #     content = output.getvalue()
         #     output.close()
         #     print(content)
-        # TODO: next: do webcli to testserver and check output, folders etc 
+        # TODO: next: do webcli to testserver and check output, folders etc
 
         submit_targeted_sequences(
             username=ena_resource.username,
             password=ena_resource.password,
-            # TODO: needs real file
-            # manifest_file=content,  # output
             submission=submission,
         )
-        # output.close()
-        # print(content)
 
         # TODO: put this workflow in tasks, then every error can be reviewed in task progress reports
         #   take care the input is logges as well. Goal is that this imperfect flow is put
         #   into a generally working tool. THEN: tickets for  imporovement
+
+    @responses.activate
+    def test_targeted_sequence_submission_chain(self):
+        submission = Submission.objects.first()
+
+        # precondition is:
+        BrokerObject.objects.add_submission_data(submission)
+        ena_submission_data = prepare_ena_data(submission=submission)
+        store_ena_data_as_auditable_text_data(submission=submission,
+                                              data=ena_submission_data)
+        # -------------------------------------------------------------
+
+        responses.add(
+            responses.POST,
+            submission.user.site_configuration.ena_server.url,
+            body=_get_ena_register_study_response(),
+            status=200,
+        )
+        from gfbio_submissions.brokerage.tasks import \
+            register_study_at_ena_task, process_ena_response_task, \
+            submit_targeted_sequences_to_ena_task, \
+            process_targeted_sequence_results_task
+        submission_chain = register_study_at_ena_task.s(
+            submission_id=submission.pk).set(
+            countdown=SUBMISSION_DELAY) | process_ena_response_task.s(
+            submission_id=submission.pk,
+            close_submission_on_success=False).set(
+            countdown=SUBMISSION_DELAY) | submit_targeted_sequences_to_ena_task.s(
+            submission_id=submission.pk).set(
+            countdown=SUBMISSION_DELAY) | process_targeted_sequence_results_task.s(
+            submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
+
+        submission_chain()

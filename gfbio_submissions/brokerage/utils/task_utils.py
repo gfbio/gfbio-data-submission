@@ -10,7 +10,8 @@ from gfbio_submissions.brokerage.configuration.settings import \
 from gfbio_submissions.brokerage.exceptions import TransferInternalError, \
     raise_response_exceptions, TransferClientError, raise_no_ticket_exception, \
     NoTicketAvailableError
-from gfbio_submissions.brokerage.models import TaskProgressReport, Submission, AuditableTextData, CenterName
+from gfbio_submissions.brokerage.models import TaskProgressReport, Submission, \
+    AuditableTextData, CenterName
 from gfbio_submissions.brokerage.utils.ena import send_submission_to_ena
 from gfbio_submissions.generic.models import ResourceCredential
 
@@ -314,6 +315,7 @@ def request_error_auto_retry(response, task, broker_submission_id,
         )
     return True
 
+
 def send_data_to_ena_for_validation_or_test(task, submission_id, action):
     # get submission
     submission = Submission.objects.get(pk=submission_id)
@@ -334,7 +336,8 @@ def send_data_to_ena_for_validation_or_test(task, submission_id, action):
 
     # get correct resource cred
     request_server = 'ENA' if action == 'VALIDATE' else 'ENA-Testserver'
-    resource_cred = ResourceCredential.objects.filter(title=request_server).first()
+    resource_cred = ResourceCredential.objects.filter(
+        title=request_server).first()
     if resource_cred is None:
         return 'No resource credentials found for {}'.format(request_server)
 

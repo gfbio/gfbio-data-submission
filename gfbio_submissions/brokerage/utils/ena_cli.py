@@ -1,38 +1,9 @@
 # -*- coding: utf-8 -*-
 import csv
 import os
-from pprint import pprint
-
-from django.conf import settings
 import subprocess
 
-
-# FIXME: Prototype
-# TODO: exceptions, logging, protocoll for curator
-# TODO: move to task/celeryworkers
-def cli_call():
-    print('cli_call')
-    res = subprocess.run(['ls', '-l'], capture_output=True, check=True)
-    print('\n', res)
-
-    try:
-        res = subprocess.run(['java', '--version'], capture_output=True,
-                             check=True)
-        print('\n', res)
-    except subprocess.CalledProcessError as e:
-        print('error ', e)
-    except FileNotFoundError as e:
-        print('fnferror ', e)
-    try:
-        res = subprocess.run(
-            ['java', '-jar', 'ena_webin_cli/webin-cli-3.0.0.jar'],
-            capture_output=True,
-            check=False)
-        print('\n', res)
-    except subprocess.CalledProcessError as e:
-        print('error ', e)
-    except FileNotFoundError as e:
-        print('fnferror ', e)
+from django.conf import settings
 
 
 def submit_targeted_sequences(
@@ -76,7 +47,7 @@ def submit_targeted_sequences(
                 '-username', username,
                 '-password', password,
                 '-centername', center_name,
-                # TODO: test for testing ...
+                # TODO: remove test flag ...
                 '-test',
                 '-validate',
                 '-manifest', manifest_path,
@@ -90,9 +61,14 @@ def submit_targeted_sequences(
         print('type output ', type(res))
         print('\n', res)
         print('---------------------------------------')
-        print(os.listdir(submission_folder))
-        with open(os.path.join(submission_folder, 'MANIFEST.report'), 'r') as report:
-            pprint(report.readlines())
+        # print(os.listdir(submission_folder))
+        # print('---------------------------------------')
+        # print('---------------------------------------')
+        # with open(os.path.join(submission_folder, ,'MANIFEST.report'), 'r') as report:
+        #     pprint(report.readlines())
+        # TODO: present relevant output to curators ?
+        # TODO: edit Manifest ? auditing trail ? when available use ATextData object ?
+
 
     except subprocess.CalledProcessError as e:
         print('error ', e)
