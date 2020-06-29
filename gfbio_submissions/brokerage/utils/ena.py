@@ -227,6 +227,11 @@ class Enalizer(object):
     def convert_sample(self, s, sample_index,
                        sample_descriptor_platform_mappings):
         sample_attributes = s.pop('sample_attributes', [])
+        # lower case required columns
+        lower_case_cols = ['investigation type']
+        for sample in sample_attributes:
+            if sample['tag'] in lower_case_cols:
+                sample['value'] = sample['value'].lower()
         sample_attributes.append(
             OrderedDict([('tag', 'submitted to insdc'), ('value', 'true')]))
         sample_alias = s.get('sample_alias', 'NO_SAMPLE_ALIAS')
