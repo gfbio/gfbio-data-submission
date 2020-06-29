@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import gzip
 import os
+from unittest import skip
 from uuid import uuid4, UUID
 
 import responses
@@ -105,6 +106,7 @@ class TestCLI(TestCase):
         upload.file.name = upload_path + '.gz'
         upload.save()
 
+    @skip('database inconsistencies when running with other tests')
     @responses.activate
     def test_targeted_sequences_workflow_prototyping(self):
         submission = Submission.objects.first()
