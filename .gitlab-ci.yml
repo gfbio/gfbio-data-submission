@@ -61,7 +61,7 @@ build_staging:
   script:
     - rsync -a /home/gitlab-runner/.envs .
     - ./cicd/traefikHostReplace.sh
-    - sed -i "s/VERSION =.*/VERSION ='$(git describe --tags)'/g" config/settings/base.py
+    - sed -i "s/VERSION =.*/VERSION ='$(git describe --tags | egrep -o '[0-9]+\.[0-9]+\.[0-9]+')'/g" config/settings/base.py
     - cd userinterface && npm i && npm run collect-ci
     - cd ../
     - docker-compose -f production.yml build
