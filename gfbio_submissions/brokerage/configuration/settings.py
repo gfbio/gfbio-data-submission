@@ -143,6 +143,12 @@ JIRA_FALLBACK_EMAIL = getattr(
     'brokeragent@gfbio.org'
 )
 
+JIRA_TICKET_URL = getattr(
+    settings,
+    'JIRA_TICKET_URL',
+    'https://helpdesk.gfbio.org/browse/'
+)
+
 JIRA_ISSUE_URL = getattr(
     settings,
     'JIRA_ISSUE_URL',
@@ -185,10 +191,10 @@ JIRA_ACCESSION_COMMENT_TEMPLATE = getattr(
     """Dear {submitter_name},
 your dataset was successfully deposited in ENA! The INSDC accession number for your data is: {primary_accession}
 Please cite this number to refer to your dataset.
-Be aware that the whole dataset is currently under embargo for one year, 
-which also means you cannot find it on the ENA website (in case reviewers ask). 
+Be aware that the whole dataset is currently under embargo for one year,
+which also means you cannot find it on the ENA website (in case reviewers ask).
 You can contact us at any point and we can set a new release date or release the data immediately.
- 
+
 Best Regards,
 the GFBio Data Submission Team""",
 
