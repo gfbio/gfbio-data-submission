@@ -21,6 +21,7 @@ if [ ${IS_MASTER} -eq "1" ]; then
   docker-compose -f production.yml run --rm postgres backup
   docker-compose -f production.yml run --rm django python manage.py migrate
   docker-compose -f production.yml down
+  sed -i "s/tag: 'GFBio Django'/tag: 'GFBio Django v$(git describe --tags | egrep -o '[0-9]+\.[0-9]+\.[0-9]+')'/g" production.yml
   docker-compose -f production.yml up -d
   exit 0
 fi
