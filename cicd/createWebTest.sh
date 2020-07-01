@@ -20,6 +20,7 @@ if [ $IS_WEBTEST -eq "1" ]; then
     cd ../
     cp gfbio_submissions/templates/account/webtest_login.html gfbio_submissions/templates/account/login.html
     sed -i s/BRANCH/$CI_COMMIT_REF_NAME/g cicd/production.yml
+    sed -i "s/VERSION =.*/VERSION ='$(git describe --tags)'/g" config/settings/base.py
     sed -i s/DJANGO_ALLOWED_HOSTS=.*/DJANGO_ALLOWED_HOSTS=\.dev\.submissions\.gfbio\.org/g .envs/.production/.django
     sed -i 's/DJANGO_ADMIN_URL=.*\//DJANGO_ADMIN_URL='"$ADMIN_URL"'/g' .envs/.production/.django
     sed -i s/EMDATE/$(date +%Y-%m-%d -d "+ 365 days")/g cicd/test_data.json

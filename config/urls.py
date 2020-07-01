@@ -9,6 +9,8 @@ from rest_framework.authtoken.views import obtain_auth_token
 
 from gfbio_submissions.submission_ui.views import HomeView
 
+admin.site.site_header = 'GFBio administration version: {}'.format(settings.VERSION)
+
 urlpatterns = [
     path("", HomeView.as_view(), name="home"),
     path(
