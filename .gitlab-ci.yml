@@ -76,6 +76,7 @@ update_staging_env:
   script:
     - rsync -a /home/gitlab-runner/.envs .
     - ./cicd/traefikHostReplace.sh
+    - ./cicd/setLogDriverTag.sh
     - docker-compose -f production.yml up -d postgres
     - docker-compose -f production.yml run --rm postgres backup
     - docker-compose -f production.yml run --rm django python manage.py migrate
