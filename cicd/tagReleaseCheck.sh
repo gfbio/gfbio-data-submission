@@ -14,6 +14,7 @@ if [ ${IS_MASTER} -eq "1" ]; then
   rsync -a /home/gitlab-runner/.envs .
   cd userinterface && npm i && npm run collect-ci
   cd ../
+  sed -i "s/VERSION =.*/VERSION ='$(git describe --tags | egrep -o '[0-9]+\.[0-9]+\.[0-9]+')'/g" config/settings/base.py
   docker-compose -f production.yml build
 
   # update
