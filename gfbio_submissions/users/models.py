@@ -11,6 +11,7 @@ from gfbio_submissions.users.managers import CustomUserManager
 class User(AbstractUser):
     is_site = models.BooleanField(default=False)
     is_user = models.BooleanField(default=True)
+    is_curator = models.BooleanField(default=False)
 
     # First Name and Last Name do not cover name patterns
     # around the globe.
