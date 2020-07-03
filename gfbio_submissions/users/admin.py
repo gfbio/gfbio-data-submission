@@ -15,8 +15,15 @@ class UserAdmin(auth_admin.UserAdmin):
     fieldsets = (('User', {
         'fields': ('name', 'site_configuration', 'is_site', 'is_user',
                    'external_user_id')}),) + auth_admin.UserAdmin.fieldsets
-    list_display = ['username', 'name', 'email', 'last_login',
+    list_display = ['username', 'name', 'email', 'get_groups', 'last_login',
                     'date_joined']
     list_filter = [
-        'is_staff', 'is_superuser', 'is_active', 'is_site', 'is_user']
-    search_fields = ['name', 'username', 'email']
+        'groups', 'is_staff', 'is_superuser', 'is_active', 'is_site', 'is_user']
+    search_fields = ['name', 'username', 'email', 'groups__name']
+
+    def get_groups(self, obj):
+        res = ['{}'.format(g.name) for g in obj.groups.all()]
+        return res
+
+    get_groups.short_description = 'Groups'
+    get_groups.admin_order_field = 'user__groups'
