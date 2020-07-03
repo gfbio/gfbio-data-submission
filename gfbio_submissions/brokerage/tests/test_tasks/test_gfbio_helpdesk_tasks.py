@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
+from pprint import pprint
 
 import responses
 from django.test import override_settings
@@ -12,7 +13,8 @@ from gfbio_submissions.brokerage.tasks import create_submission_issue_task, \
     add_accession_to_submission_issue_task, \
     add_pangaealink_to_submission_issue_task, \
     add_posted_comment_to_issue_task, \
-    update_submission_issue_task, add_accession_link_to_submission_issue_task, notify_user_embargo_expiry_task
+    update_submission_issue_task, add_accession_link_to_submission_issue_task, \
+    notify_user_embargo_expiry_task
 from gfbio_submissions.generic.models import SiteConfiguration
 from gfbio_submissions.users.models import User
 from .test_helpdesk_tasks_base import TestHelpDeskTasksBase
@@ -289,6 +291,9 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
 
     @responses.activate
     def test_add_accession_link_to_submission_issue_task_success(self):
+
+        print('TPRs ', len(TaskProgressReport.objects.all()))
+
         site_config = SiteConfiguration.objects.first()
         # TODO: do this & other stuff also in test above (comment task)
         self._add_success_responses()
@@ -330,6 +335,69 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         )
         self.assertTrue(result.successful())
         self.assertTrue(result.get())
+        print('TPRs ', len(TaskProgressReport.objects.all()))
+        pprint(TaskProgressReport.objects.first().__dict__)
+
+    @responses.activate
+    def test_add_accession_link_to_submission_issue_task_failure(self):
+        print('TPRs ', len(TaskProgressReport.objects.all()))
+
+        site_config = SiteConfiguration.objects.first()
+        # TODO: do this & other stuff also in test above (comment task)
+        self._add_success_responses()
+        responses.add(
+            responses.GET,
+            '{0}/rest/applinks/latest/listApplicationlinks'.format(
+                site_config.helpdesk_server.url),
+            status=200
+        )
+        responses.add(
+            responses.POST,
+            '{0}/rest/api/2/issue/FAKE_KEY/remotelink'.format(
+                site_config.helpdesk_server.url),
+            json={
+                'id': 10000,
+                'self': '{0}/rest/api/2/issue/SAND-1661/remotelink/10000'.format(
+                    site_config.helpdesk_server.url)
+            },
+            status=200,
+        )
+        submission = Submission.objects.first()
+        submission.brokerobject_set.create(
+            type='study',
+            user=User.objects.first(),
+        )
+        submission.brokerobject_set.filter(
+            type='study'
+        ).first().persistentidentifier_set.create(
+            archive='ENA',
+            pid_type='PRJ',
+            pid='PRJE0815'
+        )
+        # submission.id+99 -> CANcles but name is availabe, explicit in task
+        # result = add_accession_link_to_submission_issue_task.apply_async(
+        #     kwargs={
+        #         'submission_id': submission.id+99,
+        #         'prev_task_result': True,  # mimik successful previous task
+        #         'target_archive': ENA_PANGAEA
+        #     }
+        # )
+
+        submission.site = None
+        submission.user.site_configuration = None
+        submission.user.save()
+        submission.save()
+        result = add_accession_link_to_submission_issue_task.apply_async(
+            kwargs={
+                'submission_id': submission.id ,
+                'prev_task_result': True,  # mimik successful previous task
+                'target_archive': ENA_PANGAEA
+            }
+        )
+        self.assertTrue(result.successful())
+        self.assertTrue(result.get())
+        print('TPRs ', len(TaskProgressReport.objects.all()))
+        pprint(TaskProgressReport.objects.first().__dict__)
 
     @responses.activate
     def test_add_pangaealink_to_submission_issue_task_success(self):
