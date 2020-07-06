@@ -432,47 +432,6 @@ class TaskProgressReport(TimeStampedModel):
             return 'unnamed_task'
 
 
-# TODO: list of tpr without sub, from production system. 6713 of 10437
-# {('',), --> 156
-# ('tasks.add_accession_link_submission_issue_task',), --> 13
-# ('tasks.add_accession_to_submission_issue_task',),
-# ('tasks.add_posted_comment_to_issue_task',),
-# ('tasks.attach_file_to_helpdesk_ticket_task',),
-# ('tasks.attach_to_submission_issue_task',),
-# ('tasks.check_for_molecular_content_in_submission_task',),
-# ('tasks.check_for_pangaea_doi_task',),
-# ('tasks.check_on_hold_status_task',),
-# ('tasks.clean_submission_for_update_task',),
-# ('tasks.comment_helpdesk_ticket_task',),
-# ('tasks.create_submission_issue_task',),
-# ('tasks.fetch_ena_reports_task',),
-# ('tasks.get_gfbio_helpdesk_username_task',),
-# ('tasks.parse_csv_to_update_clean_submission_task',),
-# ('tasks.prepare_ena_submission_data_task',),
-# ('tasks.trigger_submission_transfer',),
-# ('tasks.trigger_submission_transfer_for_updates',),
-# ('tasks.update_ena_submission_data_task',),
-# ('tasks.update_persistent_identifier_report_status_task',),
-# ('tasks.update_submission_issue_task',)}
-
-#  no_sub = TaskProgressReport.objects.filter(submission=None).filter(task_name='tasks.add_accession_link_submission_issue_task')
-# >>> len(no_sub)
-# 1
-# >>> no_sub.first().__dict__
-# {'_state': <django.db.models.base.ModelState object at 0x7f667ac59c90>,
-# 'created': datetime.datetime(2020, 6, 2, 13, 39, 20, 566110, tzinfo=<UTC>),
-# 'modified': datetime.datetime(2020, 6, 2, 13, 39, 20, 592361, tzinfo=<UTC>),
-# 'submission_id': None, 'task_name': 'tasks.add_accession_link_submission_issue_task',
-# 'task_id': UUID('cf232d1d-e0bc-49a7-8193-d124c877e633'), 'status': 'SUCCESS',
-# 'task_return_value': 'CANCELLED', 'task_exception': '', 'task_exception_info': '',
-# 'task_args': "['CANCELLED']", 'task_kwargs': '{"submission_id": 331, "target_archive": "ENA"}'}
-# >>>
-
-
-
-# -----------------------------------------------------------------------------
-
-
 # TODO: in general a candiate for generic app. but has FK to submission.
 #  Upload is pretty generic, name could be more generic here, only thing special
 #   is the attack to ticket field and related stuff in save()
