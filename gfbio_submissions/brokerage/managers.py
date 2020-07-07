@@ -111,6 +111,11 @@ class SubmissionManager(models.Manager):
             # string identifier, here only id of django user possible
             'submitting_user', ).get(broker_submission_id=broker_submission_id)
 
+    def get_submissions_without_primary_helpdesk_issue(self):
+        return self.exclude(
+            Q(additionalreference__primary=True) & Q(additionalreference__type='0')
+        )
+
 
 class BrokerObjectManager(models.Manager):
 

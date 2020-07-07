@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from django.db.models import Q
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.configuration.settings import ENA
@@ -54,7 +54,7 @@ class TestCheckPrimaryIssueTask(TestCase):
             user=user1,
             status=Submission.OPEN,
             target=ENA,
-            data={'has': 'primary non-helpdesk tickt'}
+            data={'has': 'primary non-helpdesk ticket'}
         )
         submission.additionalreference_set.create(
             type=AdditionalReference.PANGAEA_JIRA_TICKET,
@@ -76,11 +76,24 @@ class TestCheckPrimaryIssueTask(TestCase):
         references = AdditionalReference.objects.all()
         self.assertEqual(4, len(references))
 
-        no_ticket_subs = Submission.objects.exclude(
+        no_ticket_subs_1 = Submission.objects.exclude(
             additionalreference__in=AdditionalReference.objects.filter(
                 primary=True,
                 type=AdditionalReference.GFBIO_HELPDESK_TICKET,
             )
         )
 
-        self.assertEqual(3, len(no_ticket_subs))
+        self.assertEqual(3, len(no_ticket_subs_1))
+
+        no_ticket_subs_2 = Submission.objects.exclude(
+            Q(additionalreference__primary=True) & Q(additionalreference__type='0')
+        )
+
+        self.assertEqual(3, len(no_ticket_subs_2))
+
+        no_ticket_subs_3 = Submission.objects.get_submissions_without_primary_helpdesk_issue()
+
+        # self.assertEqual(no_ticket_subs_1, no_ticket_subs_2, no_ticket_subs_3)
+
+        for n in no_ticket_subs_3:
+            print(n.data)
