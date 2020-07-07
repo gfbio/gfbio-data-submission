@@ -18,7 +18,9 @@ from gfbio_submissions.users.models import User
 from .configuration.settings import ENA, ENA_PANGAEA, PANGAEA_ISSUE_VIEW_URL, \
     SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME, \
     JIRA_FALLBACK_EMAIL, APPROVAL_EMAIL_SUBJECT_TEMPLATE, \
-    APPROVAL_EMAIL_MESSAGE_TEMPLATE, JIRA_ACCESSION_COMMENT_TEMPLATE
+    APPROVAL_EMAIL_MESSAGE_TEMPLATE, JIRA_ACCESSION_COMMENT_TEMPLATE, \
+    NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE, \
+    NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE
 from .configuration.settings import SUBMISSION_MAX_RETRIES, \
     SUBMISSION_RETRY_DELAY
 from .exceptions import TransferServerError, TransferClientError
@@ -1488,3 +1490,16 @@ def check_for_submissions_without_helpdesk_issue_task(self):
         submission=None,
         task=self)
     submissions_without_issue = Submission.objects.get_submissions_without_primary_helpdesk_issue()
+    for sub in submissions_without_issue:
+        logger.info(
+            msg='tasks.py | check_for_submissions_without_helpdesk_issue_task '
+                '| no helpdesk issue for submission {} | '
+                'sending mail to admins'.format(sub.broker_submission_id))
+        mail_admins(
+            subject=NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE.format(
+                sub.broker_submission_id),
+            message=NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE.format(
+                sub.broker_submission_id, sub.user.username
+            )
+        )
+    return True

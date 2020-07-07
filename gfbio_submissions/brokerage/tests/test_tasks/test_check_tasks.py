@@ -3,7 +3,10 @@ from django.db.models import Q
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.configuration.settings import ENA
-from gfbio_submissions.brokerage.models import Submission, AdditionalReference
+from gfbio_submissions.brokerage.models import Submission, AdditionalReference, \
+    TaskProgressReport
+from gfbio_submissions.brokerage.tasks import \
+    check_for_submissions_without_helpdesk_issue_task
 from gfbio_submissions.users.models import User
 
 
@@ -82,18 +85,18 @@ class TestCheckPrimaryIssueTask(TestCase):
                 type=AdditionalReference.GFBIO_HELPDESK_TICKET,
             )
         )
-
         self.assertEqual(3, len(no_ticket_subs_1))
 
         no_ticket_subs_2 = Submission.objects.exclude(
-            Q(additionalreference__primary=True) & Q(additionalreference__type='0')
+            Q(additionalreference__primary=True) & Q(
+                additionalreference__type='0')
         )
-
         self.assertEqual(3, len(no_ticket_subs_2))
 
         no_ticket_subs_3 = Submission.objects.get_submissions_without_primary_helpdesk_issue()
+        self.assertEqual(3, len(no_ticket_subs_3))
 
-        # self.assertEqual(no_ticket_subs_1, no_ticket_subs_2, no_ticket_subs_3)
-
-        for n in no_ticket_subs_3:
-            print(n.data)
+    def test_check_for_submissions_without_helpdesk_issue_task(self):
+        result = check_for_submissions_without_helpdesk_issue_task.apply()
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        self.assertTrue(result.successful())
