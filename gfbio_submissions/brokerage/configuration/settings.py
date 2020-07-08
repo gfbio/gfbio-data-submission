@@ -329,6 +329,13 @@ GFBIO_REQUEST_TYPE_MAPPINGS = getattr(
 )
 
 # TODO: move this to admin-editable DB field, also go for templating (django/jinja2)
+NO_SITE_CONFIG_EMAIL_SUBJECT_TEMPLATE = getattr(
+    settings,
+    'NO_SITE_CONFIG_EMAIL_SUBJECT_TEMPLATE',
+    '{0} users without site_configuration found'
+)
+
+# TODO: move this to admin-editable DB field, also go for templating (django/jinja2)
 NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE = getattr(
     settings,
     'NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE',
