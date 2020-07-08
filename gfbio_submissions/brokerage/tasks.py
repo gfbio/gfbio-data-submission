@@ -18,7 +18,9 @@ from gfbio_submissions.users.models import User
 from .configuration.settings import ENA, ENA_PANGAEA, PANGAEA_ISSUE_VIEW_URL, \
     SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME, \
     JIRA_FALLBACK_EMAIL, APPROVAL_EMAIL_SUBJECT_TEMPLATE, \
-    APPROVAL_EMAIL_MESSAGE_TEMPLATE, JIRA_ACCESSION_COMMENT_TEMPLATE
+    APPROVAL_EMAIL_MESSAGE_TEMPLATE, JIRA_ACCESSION_COMMENT_TEMPLATE, \
+    NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE, \
+    NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE
 from .configuration.settings import SUBMISSION_MAX_RETRIES, \
     SUBMISSION_RETRY_DELAY
 from .exceptions import TransferServerError, TransferClientError
@@ -37,7 +39,8 @@ from .utils.submission_transfer import SubmissionTransferHandler
 from .utils.task_utils import jira_error_auto_retry, \
     get_submission_and_site_configuration, raise_transfer_server_exceptions, \
     retry_no_ticket_available_exception, \
-    get_submitted_submission_and_site_configuration, send_data_to_ena_for_validation_or_test
+    get_submitted_submission_and_site_configuration, \
+    send_data_to_ena_for_validation_or_test
 
 logger = logging.getLogger(__name__)
 
@@ -537,7 +540,8 @@ def parse_csv_to_update_clean_submission_task(self, previous_task_result=None,
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True
 )
-def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None, action='ADD'):
+def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None,
+                              action='ADD'):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -571,6 +575,7 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None, act
     return str(request_id), response.status_code, smart_text(
         response.content)
 
+
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -584,8 +589,10 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None, act
     retry_jitter=True
 )
 def validate_against_ena_task(self, submission_id=None, action='VALIDATE'):
-    results = send_data_to_ena_for_validation_or_test(self,submission_id, action)
+    results = send_data_to_ena_for_validation_or_test(self, submission_id,
+                                                      action)
     return results
+
 
 @celery.task(
     base=SubmissionTask,
@@ -600,7 +607,8 @@ def validate_against_ena_task(self, submission_id=None, action='VALIDATE'):
     retry_jitter=True
 )
 def submit_to_ena_test_server_task(self, submission_id=None, action='ADD'):
-    results = send_data_to_ena_for_validation_or_test(self, submission_id, action)
+    results = send_data_to_ena_for_validation_or_test(self, submission_id,
+                                                      action)
     return results
 
 
@@ -1383,6 +1391,7 @@ def update_persistent_identifier_report_status_task(self):
 
     return True
 
+
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -1395,7 +1404,6 @@ def update_persistent_identifier_report_status_task(self):
     retry_jitter=True
 )
 def notify_user_embargo_expiry_task(self):
-
     TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
@@ -1416,10 +1424,12 @@ def notify_user_embargo_expiry_task(self):
         study = submission.brokerobject_set.filter(type='study').first()
         if study:
             # get persistent identifier
-            study_pid = study.persistentidentifier_set.filter(pid_type='PRJ').first()
+            study_pid = study.persistentidentifier_set.filter(
+                pid_type='PRJ').first()
             if study_pid:
                 # check if hold_date is withing 2 weeks
-                two_weeks_from_now = datetime.date.today() + datetime.timedelta(days=14)
+                two_weeks_from_now = datetime.date.today() + datetime.timedelta(
+                    days=14)
                 should_notify = True
                 # check if user was already notified
                 if study_pid.user_notified and study_pid.user_notified <= two_weeks_from_now:
@@ -1434,7 +1444,8 @@ def notify_user_embargo_expiry_task(self):
                     You can change the embargo date directly in our submission system.
 
                     Best regards,
-                    GFBio Data Submission Team""".format(submission.embargo.isoformat())
+                    GFBio Data Submission Team""".format(
+                        submission.embargo.isoformat())
 
                     submission, site_configuration = get_submission_and_site_configuration(
                         submission_id=submission.id,
@@ -1443,7 +1454,8 @@ def notify_user_embargo_expiry_task(self):
                     )
                     reference = submission.get_primary_helpdesk_reference()
 
-                    jira_client = JiraClient(resource=site_configuration.helpdesk_server)
+                    jira_client = JiraClient(
+                        resource=site_configuration.helpdesk_server)
                     jira_client.add_comment(
                         key_or_issue=reference.reference_key,
                         text=comment,
@@ -1466,3 +1478,28 @@ def notify_user_embargo_expiry_task(self):
         return results
 
     return "No notifications to send"
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.check_for_submissions_without_helpdesk_issue_task',
+)
+def check_for_submissions_without_helpdesk_issue_task(self):
+    TaskProgressReport.objects.create_initial_report(
+        submission=None,
+        task=self)
+    submissions_without_issue = Submission.objects.get_submissions_without_primary_helpdesk_issue()
+    for sub in submissions_without_issue:
+        logger.info(
+            msg='tasks.py | check_for_submissions_without_helpdesk_issue_task '
+                '| no helpdesk issue for submission {} | '
+                'sending mail to admins'.format(sub.broker_submission_id))
+        mail_admins(
+            subject=NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE.format(
+                sub.broker_submission_id),
+            message=NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE.format(
+                sub.broker_submission_id, sub.user.username
+            )
+        )
+    return True
