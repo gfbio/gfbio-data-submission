@@ -4,34 +4,31 @@ FROM python:3.7-slim-buster
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
 
+# java need this to be created
+RUN mkdir -p /usr/share/man/man1
+
 RUN apt-get update \
+  #
   # dependencies for building Python packages
   && apt-get install -y build-essential \
   # psycopg2 dependencies
   && apt-get install -y libpq-dev \
   # Translations dependencies
   && apt-get install -y gettext \
+  # java-runtime-environment that works with slim-buster
+  # TODO: this will not work well for ena web cli, but will install the package without trouble
+  # && apt-get install -y openjdk-11-jre \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
 
+# Java
+COPY ./compose/local/django/install_java8_jre.sh /
+RUN chmod +x /install_java8_jre.sh
+RUN /install_java8_jre.sh
 
-#RUN apk update \
-#  # psycopg2 dependencies
-#  && apk add --virtual build-deps gcc python3-dev musl-dev \
-#  && apk add postgresql-dev \
-#  # Pillow dependencies
-#  && apk add jpeg-dev zlib-dev freetype-dev lcms2-dev openjpeg-dev tiff-dev tk-dev tcl-dev \
-#  # CFFI dependencies
-#  && apk add libffi-dev py-cffi \
-#  # Translations dependencies
-#  && apk add gettext \
-#  # https://docs.djangoproject.com/en/dev/ref/django-admin/#dbshell
-#  && apk add postgresql-client \
-#  # borkerage git dependencies
-#  && apk add git \
-#  # dig tool to get ip of allowed domains
-#  && apk add bind-tools
+ENV JAVA_HOME=/opt/java/openjdk \
+      PATH="/opt/java/openjdk/bin:$PATH"
 
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements /requirements
@@ -56,6 +53,8 @@ RUN chmod +x /start-celerybeat
 COPY ./compose/local/django/celery/flower/start /start-flower
 RUN sed -i 's/\r$//g' /start-flower
 RUN chmod +x /start-flower
+
+COPY ./ena_webin_cli /ena_webin_cli
 
 WORKDIR /app
 

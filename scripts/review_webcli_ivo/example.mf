@@ -1,0 +1,5 @@
+STUDY   PRJEB37201
+NAME    2681:21ab188c-ea83-459e-a330-28b9dc02e17c
+TAB Sequences.tsv.gz
+AUTHORS Weber M., Kostadinov I.;
+ADDRESS University of Bremen, Leobener Str. 5, 28359 Bremen, Germany

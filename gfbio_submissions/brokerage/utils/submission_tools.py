@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import hashlib
 import os
-from functools import partial
 
 
 def submission_upload_path(instance, filename):
@@ -26,6 +25,7 @@ def submission_primary_data_file_upload_path(instance, filename):
         os.path.sep,
         filename)
 
+
 def get_embargo_from_request(request):
     # get incoming embargo
     import datetime
@@ -33,7 +33,8 @@ def get_embargo_from_request(request):
     if request.data and 'embargo' in request.data:
         try:
             embargo_date_format = "%Y-%m-%d"
-            new_embargo = datetime.datetime.strptime(request.data['embargo'], embargo_date_format).date()
+            new_embargo = datetime.datetime.strptime(request.data['embargo'],
+                                                     embargo_date_format).date()
         except ValueError:
             new_embargo = None
     return new_embargo
