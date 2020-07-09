@@ -703,7 +703,7 @@ def register_study_at_ena_task(self, previous_result=None,
                                        submission_id))
         return TaskProgressReport.CANCELLED
     if submission is None:
-        logger.error(
+        logger.warning(
             'tasks.py | register_study_at_ena_task | '
             'no valid Submission available | '
             'submission_id={0}'.format(submission_id))
@@ -720,34 +720,48 @@ def register_study_at_ena_task(self, previous_result=None,
 
     study_text_data = submission.auditabletextdata_set.filter(
         name='study.xml').first()
+    study_broker_object = submission.brokerobject_set.filter(
+        type='study').first()
 
     if study_text_data is None:
         logger.info(
             'tasks.py | register_study_at_ena_task | no study textdata found | submission_id={0}'.format(
                 submission.broker_submission_id)
         )
-        # TODO: add more information to report before returning
         return TaskProgressReport.CANCELLED
-
-    try:
-        response, request_id = register_study_at_ena(
-            submission=submission,
-            study_text_data=study_text_data)
-        res = raise_transfer_server_exceptions(
-            response=response,
-            task=self,
-            broker_submission_id=submission.broker_submission_id,
-            max_retries=SUBMISSION_MAX_RETRIES)
-    except ConnectionError as e:
-        logger.error(
-            msg='connection_error {}.url={} title={}'.format(
-                e,
-                site_configuration.ena_server.url,
-                site_configuration.ena_server.title)
+    elif study_broker_object is None:
+        logger.info(
+            'tasks.py | register_study_at_ena_task | no study brokerobject found | submission_id={0}'.format(
+                submission.broker_submission_id)
         )
-        response = Response()
-    return str(request_id), response.status_code, smart_text(
-        response.content)
+        return TaskProgressReport.CANCELLED
+    else:
+        try:
+            response, request_id = register_study_at_ena(
+                submission=submission,
+                study_text_data=study_text_data)
+            logger.info(
+                'tasks.py | register_study_at_ena_task | '
+                'register_study_at_ena executed | submission_id={0} '
+                '| response status_code={1}'.format(
+                    submission.broker_submission_id, response.status_code)
+            )
+            res = raise_transfer_server_exceptions(
+                response=response,
+                task=self,
+                broker_submission_id=submission.broker_submission_id,
+                max_retries=SUBMISSION_MAX_RETRIES)
+        except ConnectionError as e:
+            logger.error(
+                msg='connection_error {}.url={} title={}'.format(
+                    e,
+                    site_configuration.ena_server.url,
+                    site_configuration.ena_server.title)
+            )
+            response = Response()
+        # TODO: followed by process_ena_response_task like in general submission process for ENA
+        return str(request_id), response.status_code, smart_text(
+            response.content)
 
 
 @celery.task(
@@ -871,7 +885,7 @@ def process_ena_response_task(self, transfer_result=None, submission_id=None,
                 submission.broker_submission_id,
                 outgoing_request.request_id)
         )
-        return False
+        return TaskProgressReport.CANCELLED
 
 
 # Pangea submission transfer tasks ---------------------------------------------

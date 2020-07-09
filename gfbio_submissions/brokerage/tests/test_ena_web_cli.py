@@ -179,6 +179,35 @@ class TestTargetedSequencePreparationTasks(TestCase):
         )
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())
 
+    def test_register_study_at_ena_task_no_study_brokerobject(self):
+        submission = Submission.objects.first()
+        study_xml = submission.auditabletextdata_set.create(
+            name='study.xml', text_data='<STUDY></STUDY>')
+        result = register_study_at_ena_task.apply_async(
+            kwargs={'submission_id': submission.pk, }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+
+    @responses.activate
+    def test_register_study_at_ena_task(self):
+        submission = Submission.objects.first()
+        study_bo = BrokerObject.objects.add_study_only(submission)
+        study_xml = submission.auditabletextdata_set.create(
+            name='study.xml', text_data='<STUDY></STUDY>')
+        responses.add(
+            responses.POST,
+            submission.user.site_configuration.ena_server.url,
+            body=_get_ena_register_study_response(),
+            status=200,
+        )
+        result = register_study_at_ena_task.apply_async(
+            kwargs={'submission_id': submission.pk, }
+        )
+        request_id, status_code, content = result.get()
+        self.assertIsNotNone(request_id)
+        self.assertEqual(200, status_code)
+        self.assertTrue(content.startswith('<?xml'))
+
 
 class TestCLI(TestCase):
 
