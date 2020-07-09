@@ -16,7 +16,8 @@ from gfbio_submissions.brokerage.models import Submission, SubmissionUpload, \
     BrokerObject, CenterName, PersistentIdentifier, AuditableTextData, \
     TaskProgressReport
 from gfbio_submissions.brokerage.tasks import \
-    create_study_broker_objects_only_task, prepare_ena_study_xml_task
+    create_study_broker_objects_only_task, prepare_ena_study_xml_task, \
+    register_study_at_ena_task
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
     _get_ena_register_study_response
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
@@ -156,6 +157,20 @@ class TestTargetedSequencePreparationTasks(TestCase):
             }
         )
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+
+    def test_register_study_at_ena_task_existing_pid(self):
+        submission = Submission.objects.first()
+        study_bo = BrokerObject.objects.add_study_only(submission)
+        pid = study_bo.persistentidentifier_set.create(
+            archive='ENA',
+            pid_type='PRJ',
+            pid='PRJ007'
+        )
+
+        result = register_study_at_ena_task.apply_async(
+            kwargs={'submission_id': submission.pk, }
+        )
+        self.assertEqual(pid.pk, result.get())
 
 
 class TestCLI(TestCase):

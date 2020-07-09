@@ -695,8 +695,30 @@ def register_study_at_ena_task(self, previous_result=None,
         task=self,
         include_closed=True
     )
-    if submission == TaskProgressReport.CANCELLED:
+    if previous_result == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | register_study_at_ena_task | '
+            'previous task reported={0} | '
+            'submission_id={1}'.format(TaskProgressReport.CANCELLED,
+                                       submission_id))
         return TaskProgressReport.CANCELLED
+    if submission is None:
+        logger.error(
+            'tasks.py | register_study_at_ena_task | '
+            'no valid Submission available | '
+            'submission_id={0}'.format(submission_id))
+        return TaskProgressReport.CANCELLED
+
+    primary_accession = BrokerObject.objects.get_study_primary_accession_number(
+        submission)
+    if primary_accession is not None:
+        logger.info(
+            'tasks.py | register_study_at_ena_task | '
+            ' persistent_identifier={0} found | return pk={1}'.format(
+                primary_accession, primary_accession.pk))
+        return primary_accession.pk
+
+
 
     study_text_data = submission.auditabletextdata_set.filter(
         name='study.xml').first()
