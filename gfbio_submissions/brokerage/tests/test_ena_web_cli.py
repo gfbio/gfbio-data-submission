@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import gzip
 import os
+from pprint import pprint
 from unittest import skip
 from uuid import uuid4, UUID
 
@@ -17,7 +18,7 @@ from gfbio_submissions.brokerage.models import Submission, SubmissionUpload, \
     TaskProgressReport
 from gfbio_submissions.brokerage.tasks import \
     create_study_broker_objects_only_task, prepare_ena_study_xml_task, \
-    register_study_at_ena_task
+    register_study_at_ena_task, process_ena_response_task
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
     _get_ena_register_study_response
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
@@ -207,6 +208,31 @@ class TestTargetedSequencePreparationTasks(TestCase):
         self.assertIsNotNone(request_id)
         self.assertEqual(200, status_code)
         self.assertTrue(content.startswith('<?xml'))
+
+    @responses.activate
+    def test_register_study_with_parse_result(self):
+        submission = Submission.objects.first()
+        study_bo = BrokerObject.objects.add_study_only(submission)
+        study_xml = submission.auditabletextdata_set.create(
+            name='study.xml', text_data='<STUDY></STUDY>')
+        responses.add(
+            responses.POST,
+            submission.user.site_configuration.ena_server.url,
+            body=_get_ena_register_study_response(),
+            status=200,
+        )
+        register_chain = register_study_at_ena_task.s(
+            submission_id=submission.pk).set(
+            countdown=SUBMISSION_DELAY) | process_ena_response_task.s(
+            submission_id=submission.pk,
+            close_submission_on_success=False).set(
+            countdown=SUBMISSION_DELAY)
+        register_chain()
+        pids = PersistentIdentifier.objects.all()
+        self.assertEqual(2, len(pids))
+        primary = BrokerObject.objects.get_study_primary_accession_number(
+            submission)
+        self.assertEqual(primary, pids.filter(pid_type='PRJ').first())
 
 
 class TestCLI(TestCase):
