@@ -13,7 +13,8 @@ from django.utils.encoding import smart_text
 from gfbio_submissions.brokerage.configuration.settings import ENA, \
     SUBMISSION_DELAY
 from gfbio_submissions.brokerage.models import Submission, SubmissionUpload, \
-    BrokerObject, CenterName, PersistentIdentifier, AuditableTextData
+    BrokerObject, CenterName, PersistentIdentifier, AuditableTextData, \
+    TaskProgressReport
 from gfbio_submissions.brokerage.tasks import \
     create_study_broker_objects_only_task
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
@@ -85,6 +86,17 @@ class TestTargetedSequencePreparationTasks(TestCase):
         self.assertEqual(0, len(PersistentIdentifier.objects.all()))
         self.assertEqual(0, len(AuditableTextData.objects.all()))
 
+    def test_create_study_broker_objects_only_task(self):
+        submission = Submission.objects.first()
+        result = create_study_broker_objects_only_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        bo = BrokerObject.objects.first()
+        self.assertEqual('study', bo.type)
+        self.assertEqual(bo.pk, result.get())
+
     def test_create_study_broker_objects_only_task_existing_study(self):
         submission = Submission.objects.first()
         user = User.objects.first()
@@ -95,6 +107,14 @@ class TestTargetedSequencePreparationTasks(TestCase):
             }
         )
         self.assertEqual(bo.pk, result.get())
+
+    def test_create_study_broker_objects_only_task_no_submission(self):
+        result = create_study_broker_objects_only_task.apply_async(
+            kwargs={
+                'submission_id': 4711,
+            }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
 
 
 class TestCLI(TestCase):

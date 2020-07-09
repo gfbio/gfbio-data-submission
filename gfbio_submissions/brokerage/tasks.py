@@ -299,12 +299,17 @@ def create_study_broker_objects_only_task(self, previous_task_result=None,
         study_pk = submission.brokerobject_set.filter(type='study').first().pk
         logger.info(
             'tasks.py | create_study_broker_objects_only_task | '
-            ' brokerobject of type study found | return pk={0}'.format(
+            ' broker object of type study found | return pk={0}'.format(
                 study_pk))
         # TODO: for now return study BOs primary key
         return study_pk
     else:
-        return -1
+        study = BrokerObject.objects.add_study_only(submission=submission)
+        logger.info(
+            'tasks.py | create_study_broker_objects_only_task | '
+            ' created broker object of type study | return pk={0}'.format(
+                study.pk))
+        return study.pk
 
 
 @celery.task(
