@@ -27,7 +27,7 @@ from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
 from gfbio_submissions.brokerage.utils.ena_cli import submit_targeted_sequences
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.generic.models import SiteConfiguration, \
-    ResourceCredential
+    ResourceCredential, RequestLog
 from gfbio_submissions.generic.utils import logged_requests
 from gfbio_submissions.users.models import User
 
@@ -98,6 +98,9 @@ class TestTargetedSequencePreparationTasks(TestCase):
         bo = BrokerObject.objects.first()
         self.assertEqual('study', bo.type)
         self.assertEqual(bo.pk, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(str(bo.pk), tprs.first().task_return_value)
 
     def test_create_study_broker_objects_only_task_existing_study(self):
         submission = Submission.objects.first()
@@ -109,6 +112,9 @@ class TestTargetedSequencePreparationTasks(TestCase):
             }
         )
         self.assertEqual(bo.pk, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(str(bo.pk), tprs.first().task_return_value)
 
     def test_create_study_broker_objects_only_task_no_submission(self):
         result = create_study_broker_objects_only_task.apply_async(
@@ -117,6 +123,10 @@ class TestTargetedSequencePreparationTasks(TestCase):
             }
         )
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(TaskProgressReport.CANCELLED,
+                         tprs.first().task_return_value)
 
     def test_prepare_ena_study_xml_task(self):
         submission = Submission.objects.first()
@@ -130,6 +140,10 @@ class TestTargetedSequencePreparationTasks(TestCase):
         study_text_data = AuditableTextData.objects.first()
         self.assertEqual('study.xml', study_text_data.name)
         self.assertEqual(study_text_data.pk, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(str(study_text_data.pk),
+                         tprs.first().task_return_value)
 
     def test_prepare_ena_study_xml_task_no_brokerobject(self):
         submission = Submission.objects.first()
@@ -139,6 +153,10 @@ class TestTargetedSequencePreparationTasks(TestCase):
             }
         )
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(TaskProgressReport.CANCELLED,
+                         tprs.first().task_return_value)
 
     def test_prepare_ena_study_xml_task_existing_study_xml(self):
         submission = Submission.objects.first()
@@ -150,6 +168,10 @@ class TestTargetedSequencePreparationTasks(TestCase):
             }
         )
         self.assertEqual(study_xml.pk, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(str(study_xml.pk),
+                         tprs.first().task_return_value)
 
     def test_prepare_ena_study_xml_task_no_submission(self):
         result = prepare_ena_study_xml_task.apply_async(
@@ -158,6 +180,10 @@ class TestTargetedSequencePreparationTasks(TestCase):
             }
         )
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(TaskProgressReport.CANCELLED,
+                         tprs.first().task_return_value)
 
     def test_register_study_at_ena_task_existing_pid(self):
         submission = Submission.objects.first()
@@ -167,11 +193,15 @@ class TestTargetedSequencePreparationTasks(TestCase):
             pid_type='PRJ',
             pid='PRJ007'
         )
-
         result = register_study_at_ena_task.apply_async(
             kwargs={'submission_id': submission.pk, }
         )
         self.assertEqual(pid.pk, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(str(pid.pk),
+                         tprs.first().task_return_value)
+        self.assertEqual(0, len(RequestLog.objects.all()))
 
     def test_register_study_at_ena_task_no_study_xml(self):
         submission = Submission.objects.first()
@@ -179,6 +209,11 @@ class TestTargetedSequencePreparationTasks(TestCase):
             kwargs={'submission_id': submission.pk, }
         )
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(TaskProgressReport.CANCELLED,
+                         tprs.first().task_return_value)
+        self.assertEqual(0, len(RequestLog.objects.all()))
 
     def test_register_study_at_ena_task_no_study_brokerobject(self):
         submission = Submission.objects.first()
@@ -188,6 +223,11 @@ class TestTargetedSequencePreparationTasks(TestCase):
             kwargs={'submission_id': submission.pk, }
         )
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(TaskProgressReport.CANCELLED,
+                         tprs.first().task_return_value)
+        self.assertEqual(0, len(RequestLog.objects.all()))
 
     @responses.activate
     def test_register_study_at_ena_task(self):
@@ -208,6 +248,16 @@ class TestTargetedSequencePreparationTasks(TestCase):
         self.assertIsNotNone(request_id)
         self.assertEqual(200, status_code)
         self.assertTrue(content.startswith('<?xml'))
+
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual('tasks.register_study_at_ena_task',
+                         tprs.first().task_name)
+        request_logs = RequestLog.objects.all()
+        self.assertEqual(1, len(request_logs))
+        log = request_logs.first()
+        self.assertEqual(200, log.response_status)
+        self.assertEqual(submission.broker_submission_id, log.submission_id)
 
     @responses.activate
     def test_register_study_with_parse_result(self):
@@ -233,6 +283,21 @@ class TestTargetedSequencePreparationTasks(TestCase):
         primary = BrokerObject.objects.get_study_primary_accession_number(
             submission)
         self.assertEqual(primary, pids.filter(pid_type='PRJ').first())
+
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(2, len(tprs))
+        task_names = [
+            'tasks.register_study_at_ena_task',
+            'tasks.process_ena_response_task'
+        ]
+        for t in tprs:
+            self.assertIn(t.task_name, task_names)
+            self.assertEqual(t.submission, submission)
+        request_logs = RequestLog.objects.all()
+        self.assertEqual(1, len(request_logs))
+        log = request_logs.first()
+        self.assertEqual(200, log.response_status)
+        self.assertEqual(submission.broker_submission_id, log.submission_id)
 
 
 class TestCLI(TestCase):
