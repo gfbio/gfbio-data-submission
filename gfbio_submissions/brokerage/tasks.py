@@ -718,14 +718,12 @@ def register_study_at_ena_task(self, previous_result=None,
                 primary_accession, primary_accession.pk))
         return primary_accession.pk
 
-
-
     study_text_data = submission.auditabletextdata_set.filter(
         name='study.xml').first()
 
     if study_text_data is None:
         logger.info(
-            'tasks.py | register_study_at_ena | no study textdata found | submission_id={0}'.format(
+            'tasks.py | register_study_at_ena_task | no study textdata found | submission_id={0}'.format(
                 submission.broker_submission_id)
         )
         # TODO: add more information to report before returning

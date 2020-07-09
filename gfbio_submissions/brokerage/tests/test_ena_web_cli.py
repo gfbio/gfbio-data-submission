@@ -172,6 +172,13 @@ class TestTargetedSequencePreparationTasks(TestCase):
         )
         self.assertEqual(pid.pk, result.get())
 
+    def test_register_study_at_ena_task_no_study_xml(self):
+        submission = Submission.objects.first()
+        result = register_study_at_ena_task.apply_async(
+            kwargs={'submission_id': submission.pk, }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+
 
 class TestCLI(TestCase):
 

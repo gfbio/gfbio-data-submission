@@ -384,11 +384,11 @@ class BrokerObjectManager(models.Manager):
         return pids
 
     def get_study_primary_accession_number(self, submission):
-        return self.filter(
-            submissions__exact=submission,
-            type='study').first().persistentidentifier_set.filter(
-            archive='ENA',
-            pid_type='PRJ').first()
+        study = self.filter(submissions__exact=submission, type='study').first()
+        if not study:
+            return None
+        else:
+            return study.persistentidentifier_set.filter(archive='ENA', pid_type='PRJ').first()
 
 
 class TaskProgressReportManager(models.Manager):
