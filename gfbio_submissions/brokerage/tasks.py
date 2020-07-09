@@ -268,6 +268,45 @@ def check_on_hold_status_task(self, previous_task_result=None,
 
 # NEW PREP WORKFLOW BO CREATION AND SOID CREATION ------------------------------
 
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.create_study_broker_objects_only_task',
+)
+def create_study_broker_objects_only_task(self, previous_task_result=None,
+                                          submission_id=None):
+    # TODO: refactor to general method for all tasks where applicable
+    if previous_task_result == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | create_study_broker_objects_only_task | '
+            'previous task reported={0} | '
+            'submission_id={1}'.format(TaskProgressReport.CANCELLED,
+                                       submission_id))
+        return TaskProgressReport.CANCELLED
+    submission, site_configuration = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | create_study_broker_objects_only_task | '
+            ' do nothing because submission={0}'.format(
+                TaskProgressReport.CANCELLED))
+        return TaskProgressReport.CANCELLED
+    if len(submission.brokerobject_set.filter(type='study')):
+        study_pk = submission.brokerobject_set.filter(type='study').first().pk
+        logger.info(
+            'tasks.py | create_study_broker_objects_only_task | '
+            ' brokerobject of type study found | return pk={0}'.format(
+                study_pk))
+        # TODO: for now return study BOs primary key
+        return study_pk
+    else:
+        return -1
+
+
 @celery.task(
     base=SubmissionTask,
     bind=True,
