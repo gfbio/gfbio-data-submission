@@ -31,7 +31,8 @@ from .models import SubmissionUpload, EnaReport
 from .utils.csv import check_for_molecular_content, parse_molecular_csv
 from .utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data, \
     send_submission_to_ena, parse_ena_submission_response, fetch_ena_report, \
-    update_persistent_identifier_report_status, register_study_at_ena
+    update_persistent_identifier_report_status, register_study_at_ena, \
+    prepare_study_data_only, store_single_data_item_as_auditable_text_data
 from .utils.ena_cli import submit_targeted_sequences
 from .utils.gfbio import get_gfbio_helpdesk_username
 from .utils.jira import JiraClient
@@ -381,6 +382,59 @@ def delete_related_auditable_textdata_task(self, prev_task_result=None,
         return TaskProgressReport.CANCELLED
     with transaction.atomic():
         submission.auditabletextdata_set.all().delete()
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.prepare_ena_study_xml_task',
+)
+def prepare_ena_study_xml_task(self, previous_task_result=None,
+                               submission_id=None):
+    # TODO: refactor to general method for all tasks where applicable
+    if previous_task_result == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | prepare_ena_study_xml_task | '
+            'previous task reported={0} | '
+            'submission_id={1}'.format(TaskProgressReport.CANCELLED,
+                                       submission_id))
+        return TaskProgressReport.CANCELLED
+    submission, site_configuration = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | prepare_ena_study_xml_task | '
+            ' do nothing because submission={0}'.format(
+                TaskProgressReport.CANCELLED))
+        return TaskProgressReport.CANCELLED
+
+    if len(submission.auditabletextdata_set.filter(name='study.xml')):
+        study_pk = submission.auditabletextdata_set.filter(
+            name='study.xml').first().pk
+        logger.info(
+            'tasks.py | prepare_ena_study_xml_task | '
+            ' auditable textdata with name study.xml found | return pk={0}'.format(
+                study_pk))
+        # TODO: for now return XMLs primary key
+        return study_pk
+    elif not len(submission.brokerobject_set.filter(type='study')):
+        logger.warning(
+            'tasks.py | prepare_ena_study_xml_task | '
+            ' do nothing because submission={0} has no broker object '
+            'of type study'.format(TaskProgressReport.CANCELLED))
+        return TaskProgressReport.CANCELLED
+    else:
+        study_data = prepare_study_data_only(submission=submission)
+        study_text_data = store_single_data_item_as_auditable_text_data(
+            submission=submission, data=study_data)
+        logger.info(
+            'tasks.py | prepare_ena_study_xml_task | '
+            ' created auditable textdata with name study.xml | return pk={0}'.format(
+                study_text_data.pk if study_text_data is not None else 'invalid'))
+        return TaskProgressReport.CANCELLED if study_text_data is None else study_text_data.pk
 
 
 @celery.task(

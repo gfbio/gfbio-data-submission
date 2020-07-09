@@ -16,7 +16,7 @@ from gfbio_submissions.brokerage.models import Submission, SubmissionUpload, \
     BrokerObject, CenterName, PersistentIdentifier, AuditableTextData, \
     TaskProgressReport
 from gfbio_submissions.brokerage.tasks import \
-    create_study_broker_objects_only_task
+    create_study_broker_objects_only_task, prepare_ena_study_xml_task
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
     _get_ena_register_study_response
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
@@ -112,6 +112,47 @@ class TestTargetedSequencePreparationTasks(TestCase):
         result = create_study_broker_objects_only_task.apply_async(
             kwargs={
                 'submission_id': 4711,
+            }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+
+    def test_prepare_ena_study_xml_task(self):
+        submission = Submission.objects.first()
+        BrokerObject.objects.add_study_only(submission)
+
+        result = prepare_ena_study_xml_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        study_text_data = AuditableTextData.objects.first()
+        self.assertEqual('study.xml', study_text_data.name)
+        self.assertEqual(study_text_data.pk, result.get())
+
+    def test_prepare_ena_study_xml_task_no_brokerobject(self):
+        submission = Submission.objects.first()
+        result = prepare_ena_study_xml_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+
+    def test_prepare_ena_study_xml_task_existing_study_xml(self):
+        submission = Submission.objects.first()
+        study_xml = submission.auditabletextdata_set.create(
+            name='study.xml', text_data='<STUDY></STUDY>')
+        result = prepare_ena_study_xml_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertEqual(study_xml.pk, result.get())
+
+    def test_prepare_ena_study_xml_task_no_submission(self):
+        result = prepare_ena_study_xml_task.apply_async(
+            kwargs={
+                'submission_id': 666,
             }
         )
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())

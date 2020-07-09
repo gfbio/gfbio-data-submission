@@ -545,6 +545,21 @@ class Enalizer(object):
 # END --- ENALIZER  xml for ena -----------------------------------------------
 
 
+def prepare_study_data_only(submission):
+    enalizer = Enalizer(submission=submission,
+                        alias_postfix=submission.broker_submission_id)
+    return ('study.xml', smart_text(enalizer.create_study_xml()))
+
+
+def store_single_data_item_as_auditable_text_data(submission, data):
+    file_name, file_content = data
+    with transaction.atomic():
+        text_data = submission.auditabletextdata_set.create(
+            name=file_name, text_data=file_content
+        )
+        return text_data
+
+
 def prepare_ena_data(submission):
     # outgoing_request_id = uuid.uuid4()
     enalizer = Enalizer(submission=submission,
@@ -954,8 +969,10 @@ def cli_call():
     except FileNotFoundError as e:
         print('fnferror ', e)
     try:
-        res = subprocess.run(['java', '-jar', 'ena_webin_cli/webin-cli-3.0.0.jar'], capture_output=True,
-                             check=False)
+        res = subprocess.run(
+            ['java', '-jar', 'ena_webin_cli/webin-cli-3.0.0.jar'],
+            capture_output=True,
+            check=False)
         print('\n', res)
     except subprocess.CalledProcessError as e:
         print('error ', e)
