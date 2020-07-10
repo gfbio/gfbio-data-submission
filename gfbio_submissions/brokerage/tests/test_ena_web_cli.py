@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import gzip
 import os
-from pprint import pprint
 from unittest import skip
 from uuid import uuid4, UUID
 
@@ -263,12 +262,13 @@ class TestTargetedSequencePreparationTasks(TestCase):
     def test_register_study_with_parse_result(self):
         submission = Submission.objects.first()
         study_bo = BrokerObject.objects.add_study_only(submission)
+        print('STUDY BO pk ', study_bo.pk)
         study_xml = submission.auditabletextdata_set.create(
             name='study.xml', text_data='<STUDY></STUDY>')
         responses.add(
             responses.POST,
             submission.user.site_configuration.ena_server.url,
-            body=_get_ena_register_study_response(),
+            body=_get_ena_register_study_response(study_bo.pk),
             status=200,
         )
         register_chain = register_study_at_ena_task.s(

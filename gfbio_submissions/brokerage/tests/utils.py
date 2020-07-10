@@ -2,6 +2,7 @@
 import json
 import os
 import textwrap
+import xml.etree.ElementTree as ET
 
 
 def _get_test_data_dir_path():
@@ -41,11 +42,14 @@ def _get_ena_xml_response():
         return textwrap.dedent(data_file.read())
 
 
-def _get_ena_register_study_response():
-    with open(os.path.join(
-            _get_test_data_dir_path(), 'ena_register_study_response.xml'),
-            'r') as data_file:
-        return textwrap.dedent(data_file.read())
+def _get_ena_register_study_response(study_bo_pk=1):
+    tree = ET.parse(os.path.join(
+        _get_test_data_dir_path(), 'ena_register_study_response.xml'))
+    root = tree.getroot()
+    study = root.find('STUDY')
+    alias = study.get('alias')
+    study.set('alias', '{}{}'.format(study_bo_pk, alias[1:]))
+    return ET.tostring(root, encoding='utf8', method='xml')
 
 
 def _get_ena_release_xml_response():
