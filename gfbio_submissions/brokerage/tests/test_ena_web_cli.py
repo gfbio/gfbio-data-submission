@@ -22,7 +22,8 @@ from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
     _get_ena_register_study_response
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data, Enalizer, \
-    parse_ena_submission_response
+    parse_ena_submission_response, prepare_study_data_only, \
+    store_single_data_item_as_auditable_text_data
 from gfbio_submissions.brokerage.utils.ena_cli import submit_targeted_sequences
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.generic.models import SiteConfiguration, \
@@ -298,6 +299,29 @@ class TestTargetedSequencePreparationTasks(TestCase):
         log = request_logs.first()
         self.assertEqual(200, log.response_status)
         self.assertEqual(submission.broker_submission_id, log.submission_id)
+
+
+class TestTargetedSequenceSubmissionTasks(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        TestTargetedSequencePreparationTasks.setUpTestData()
+        submission = Submission.objects.first()
+        study_bo = BrokerObject.objects.add_study_only(submission)
+        study_data = prepare_study_data_only(submission=submission)
+        study_text_data = store_single_data_item_as_auditable_text_data(
+            submission=submission, data=study_data)
+
+        parsed = parse_ena_submission_response(
+            _get_ena_register_study_response(study_bo.pk)
+        )
+        BrokerObject.objects.append_pids_from_ena_response(parsed)
+
+    def test_initial_db_content(self):
+        self.assertEqual(1, len(Submission.objects.all()))
+        self.assertEqual(1, len(BrokerObject.objects.all()))
+        self.assertEqual(2, len(PersistentIdentifier.objects.all()))
+        self.assertEqual(1, len(AuditableTextData.objects.all()))
 
 
 class TestCLI(TestCase):
