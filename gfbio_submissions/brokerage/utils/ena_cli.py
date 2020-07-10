@@ -2,6 +2,7 @@
 import csv
 import os
 import subprocess
+from pprint import pprint
 
 from django.conf import settings
 
@@ -61,11 +62,12 @@ def submit_targeted_sequences(
         print('type output ', type(res))
         print('\n', res)
         print('---------------------------------------')
-        # print(os.listdir(submission_folder))
-        # print('---------------------------------------')
-        # print('---------------------------------------')
-        # with open(os.path.join(submission_folder, ,'MANIFEST.report'), 'r') as report:
-        #     pprint(report.readlines())
+        print(os.listdir(submission_folder))
+        print('---------------------------------------')
+        print('---------------------------------------')
+        with open(os.path.join(submission_folder,
+                               'MANIFEST.report'), 'r') as report:
+            pprint(report.readlines())
         # TODO: present relevant output to curators ?
         # TODO: edit Manifest ? auditing trail ? when available use ATextData object ?
 

@@ -695,6 +695,7 @@ def register_study_at_ena_task(self, previous_result=None,
         task=self,
         include_closed=True
     )
+
     if previous_result == TaskProgressReport.CANCELLED:
         logger.warning(
             'tasks.py | register_study_at_ena_task | '
