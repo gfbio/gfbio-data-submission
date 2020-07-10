@@ -36,7 +36,15 @@ def _get_parsed_ena_response():
 
 def _get_ena_xml_response():
     with open(os.path.join(
-            _get_test_data_dir_path(), 'ena_response.xml'), 'r') as data_file:
+            _get_test_data_dir_path(), 'ena_response.xml'),
+            'r') as data_file:
+        return textwrap.dedent(data_file.read())
+
+
+def _get_ena_register_study_response():
+    with open(os.path.join(
+            _get_test_data_dir_path(), 'ena_register_study_response.xml'),
+            'r') as data_file:
         return textwrap.dedent(data_file.read())
 
 

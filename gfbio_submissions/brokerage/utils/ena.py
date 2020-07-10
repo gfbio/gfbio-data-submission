@@ -6,11 +6,13 @@ import io
 import json
 import logging
 import os
+import subprocess
 import textwrap
 import uuid
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
 from ftplib import FTP
+from uuid import uuid4
 from xml.etree.ElementTree import Element, SubElement
 
 import dicttoxml
@@ -568,7 +570,8 @@ def store_ena_data_as_auditable_text_data(submission, data):
 
 
 # https://github.com/enasequence/schema/blob/master/src/main/resources/uk/ac/ebi/ena/sra/schema/SRA.study.xsd
-def send_submission_to_ena(submission, archive_access, ena_submission_data, action='ADD'):
+def send_submission_to_ena(submission, archive_access, ena_submission_data,
+                           action='ADD'):
     logger.info(
         msg='send_submission_to_ena submission_pk={} archive_access_pk={} method=POST'.format(
             submission.pk, archive_access.pk))
@@ -583,15 +586,55 @@ def send_submission_to_ena(submission, archive_access, ena_submission_data, acti
     ena_submission_data[
         'SUBMISSION'] = enalizer.prepare_submission_xml_for_sending(
         action=action,
-        outgoing_request_id=outgoing_request_id,)
+        outgoing_request_id=outgoing_request_id, )
 
     return logged_requests.post(
         archive_access.url,
         submission=submission,
+        request_id=outgoing_request_id,
         return_log_id=True,
         params=auth_params,
         files=ena_submission_data,
         verify=False
+    )
+
+
+def register_study_at_ena(submission, study_text_data):
+    site_config = submission.user.site_configuration
+    if site_config is None:
+        logger.warning(
+            'ena.py | register_study_at_ena | no site_configuration found | submission_id={0}'.format(
+                submission.broker_submission_id)
+        )
+        return None, None
+
+
+    request_data = {
+        'STUDY': (
+            '{0}'.format(smart_text(study_text_data.name)),
+            '{0}'.format(smart_text(study_text_data.text_data))
+        )
+    }
+
+    enalizer = Enalizer(submission=submission,
+                        alias_postfix=submission.broker_submission_id)
+    outgoing_request_id = uuid4()
+    request_data[
+        'SUBMISSION'] = enalizer.prepare_submission_xml_for_sending(
+        action='ADD',
+        outgoing_request_id=outgoing_request_id, )
+    auth_params = {
+        'auth': site_config.ena_server.authentication_string,
+    }
+
+    return logged_requests.post(
+        site_config.ena_server.url,
+        submission=submission,
+        return_log_id=True,
+        params=auth_params,
+        files=request_data,
+        verify=False,
+        request_id=outgoing_request_id
     )
 
 
@@ -830,7 +873,7 @@ def update_ena_embargo_date(submission):
         type='study').first()
     if study_primary_accession:
         study_primary_accession = study_primary_accession.persistentidentifier_set.filter(
-        pid_type='PRJ').first()
+            pid_type='PRJ').first()
     site_config = submission.user.site_configuration
     if site_config is None:
         logger.warning(
@@ -892,3 +935,29 @@ def update_ena_embargo_date(submission):
                 submission.broker_submission_id)
         )
         return None
+
+
+# FIXME: Prototype
+# TODO: exceptions, logging, protocoll for curator
+# TODO: move to task/celeryworkers
+def cli_call():
+    print('cli_call')
+    res = subprocess.run(['ls', '-l'], capture_output=True, check=True)
+    print('\n', res)
+
+    try:
+        res = subprocess.run(['java', '--version'], capture_output=True,
+                             check=True)
+        print('\n', res)
+    except subprocess.CalledProcessError as e:
+        print('error ', e)
+    except FileNotFoundError as e:
+        print('fnferror ', e)
+    try:
+        res = subprocess.run(['java', '-jar', 'ena_webin_cli/webin-cli-3.0.0.jar'], capture_output=True,
+                             check=False)
+        print('\n', res)
+    except subprocess.CalledProcessError as e:
+        print('error ', e)
+    except FileNotFoundError as e:
+        print('fnferror ', e)

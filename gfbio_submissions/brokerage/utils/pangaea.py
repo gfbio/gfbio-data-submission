@@ -6,6 +6,7 @@ import json
 import logging
 import textwrap
 import xml.etree.ElementTree as ET
+from uuid import uuid4
 
 from django.db import transaction
 
@@ -40,7 +41,8 @@ def request_pangaea_login_token(resource_credential):
     return logged_requests.post(
         url=resource_credential.url,
         data=body,
-        headers=headers
+        headers=headers,
+        request_id=uuid4()
     )
 
 

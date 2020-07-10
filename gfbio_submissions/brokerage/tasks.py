@@ -18,7 +18,10 @@ from gfbio_submissions.users.models import User
 from .configuration.settings import ENA, ENA_PANGAEA, PANGAEA_ISSUE_VIEW_URL, \
     SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME, \
     JIRA_FALLBACK_EMAIL, APPROVAL_EMAIL_SUBJECT_TEMPLATE, \
-    APPROVAL_EMAIL_MESSAGE_TEMPLATE, JIRA_ACCESSION_COMMENT_TEMPLATE
+    APPROVAL_EMAIL_MESSAGE_TEMPLATE, JIRA_ACCESSION_COMMENT_TEMPLATE, \
+    NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE, \
+    NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE, \
+    NO_SITE_CONFIG_EMAIL_SUBJECT_TEMPLATE
 from .configuration.settings import SUBMISSION_MAX_RETRIES, \
     SUBMISSION_RETRY_DELAY
 from .exceptions import TransferServerError, TransferClientError
@@ -28,7 +31,8 @@ from .models import SubmissionUpload, EnaReport
 from .utils.csv import check_for_molecular_content, parse_molecular_csv
 from .utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data, \
     send_submission_to_ena, parse_ena_submission_response, fetch_ena_report, \
-    update_persistent_identifier_report_status
+    update_persistent_identifier_report_status, register_study_at_ena
+from .utils.ena_cli import submit_targeted_sequences
 from .utils.gfbio import get_gfbio_helpdesk_username
 from .utils.jira import JiraClient
 from .utils.pangaea import pull_pangaea_dois
@@ -37,7 +41,8 @@ from .utils.submission_transfer import SubmissionTransferHandler
 from .utils.task_utils import jira_error_auto_retry, \
     get_submission_and_site_configuration, raise_transfer_server_exceptions, \
     retry_no_ticket_available_exception, \
-    get_submitted_submission_and_site_configuration, send_data_to_ena_for_validation_or_test
+    get_submitted_submission_and_site_configuration, \
+    send_data_to_ena_for_validation_or_test
 
 logger = logging.getLogger(__name__)
 
@@ -537,7 +542,8 @@ def parse_csv_to_update_clean_submission_task(self, previous_task_result=None,
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True
 )
-def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None, action='ADD'):
+def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None,
+                              action='ADD'):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -571,6 +577,109 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None, act
     return str(request_id), response.status_code, smart_text(
         response.content)
 
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.register_study_at_ena_task',
+    time_limit=600,
+    autoretry_for=(TransferServerError,
+                   TransferClientError
+                   ),
+    retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
+    retry_backoff=SUBMISSION_RETRY_DELAY,
+    retry_jitter=True
+)
+def register_study_at_ena_task(self, previous_result=None,
+                               submission_id=None, ):
+    submission, site_configuration = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
+
+    study_text_data = submission.auditabletextdata_set.filter(
+        name='study.xml').first()
+
+    if study_text_data is None:
+        logger.info(
+            'tasks.py | register_study_at_ena | no study textdata found | submission_id={0}'.format(
+                submission.broker_submission_id)
+        )
+        # TODO: add more information to report before returning
+        return TaskProgressReport.CANCELLED
+
+    try:
+        response, request_id = register_study_at_ena(
+            submission=submission,
+            study_text_data=study_text_data)
+        res = raise_transfer_server_exceptions(
+            response=response,
+            task=self,
+            broker_submission_id=submission.broker_submission_id,
+            max_retries=SUBMISSION_MAX_RETRIES)
+    except ConnectionError as e:
+        logger.error(
+            msg='connection_error {}.url={} title={}'.format(
+                e,
+                site_configuration.ena_server.url,
+                site_configuration.ena_server.title)
+        )
+        response = Response()
+    return str(request_id), response.status_code, smart_text(
+        response.content)
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.submit_targeted_sequences_to_ena_task',
+)
+def submit_targeted_sequences_to_ena_task(self, previous_result=None,
+                                          submission_id=None, ):
+    submission, site_configuration = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED or previous_result == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
+    if submission.brokerobject_set.filter(type='study').first() is None:
+        return TaskProgressReport.CANCELLED
+
+    # TODO: error logging, retry ? logging !
+    submit_targeted_sequences(
+        username=site_configuration.ena_server.username,
+        password=site_configuration.ena_server.password,
+        submission=submission
+    )
+
+    return True
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.process_targeted_sequence_results_task',
+)
+def process_targeted_sequence_results_task(self, previous_result=None,
+                                           submission_id=None, ):
+    submission, site_configuration = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
+    logger.info('tasks.py | process_targeted_sequence_results_task | {}'.format(
+        submission.broker_submission_id))
+    # TODO: list/parse results in folders. add to progressreports
+    #   check files in respective folders
+    return True
+
+
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -584,8 +693,10 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None, act
     retry_jitter=True
 )
 def validate_against_ena_task(self, submission_id=None, action='VALIDATE'):
-    results = send_data_to_ena_for_validation_or_test(self,submission_id, action)
+    results = send_data_to_ena_for_validation_or_test(self, submission_id,
+                                                      action)
     return results
+
 
 @celery.task(
     base=SubmissionTask,
@@ -600,7 +711,8 @@ def validate_against_ena_task(self, submission_id=None, action='VALIDATE'):
     retry_jitter=True
 )
 def submit_to_ena_test_server_task(self, submission_id=None, action='ADD'):
-    results = send_data_to_ena_for_validation_or_test(self, submission_id, action)
+    results = send_data_to_ena_for_validation_or_test(self, submission_id,
+                                                      action)
     return results
 
 
@@ -1383,6 +1495,7 @@ def update_persistent_identifier_report_status_task(self):
 
     return True
 
+
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -1395,7 +1508,6 @@ def update_persistent_identifier_report_status_task(self):
     retry_jitter=True
 )
 def notify_user_embargo_expiry_task(self):
-
     TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
@@ -1416,10 +1528,12 @@ def notify_user_embargo_expiry_task(self):
         study = submission.brokerobject_set.filter(type='study').first()
         if study:
             # get persistent identifier
-            study_pid = study.persistentidentifier_set.filter(pid_type='PRJ').first()
+            study_pid = study.persistentidentifier_set.filter(
+                pid_type='PRJ').first()
             if study_pid:
                 # check if hold_date is withing 2 weeks
-                two_weeks_from_now = datetime.date.today() + datetime.timedelta(days=14)
+                two_weeks_from_now = datetime.date.today() + datetime.timedelta(
+                    days=14)
                 should_notify = True
                 # check if user was already notified
                 if study_pid.user_notified and study_pid.user_notified <= two_weeks_from_now:
@@ -1434,7 +1548,8 @@ def notify_user_embargo_expiry_task(self):
                     You can change the embargo date directly in our submission system.
 
                     Best regards,
-                    GFBio Data Submission Team""".format(submission.embargo.isoformat())
+                    GFBio Data Submission Team""".format(
+                        submission.embargo.isoformat())
 
                     submission, site_configuration = get_submission_and_site_configuration(
                         submission_id=submission.id,
@@ -1443,7 +1558,8 @@ def notify_user_embargo_expiry_task(self):
                     )
                     reference = submission.get_primary_helpdesk_reference()
 
-                    jira_client = JiraClient(resource=site_configuration.helpdesk_server)
+                    jira_client = JiraClient(
+                        resource=site_configuration.helpdesk_server)
                     jira_client.add_comment(
                         key_or_issue=reference.reference_key,
                         text=comment,
@@ -1466,6 +1582,69 @@ def notify_user_embargo_expiry_task(self):
         return results
 
     return "No notifications to send"
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.check_for_submissions_without_helpdesk_issue_task',
+)
+def check_for_submissions_without_helpdesk_issue_task(self):
+    TaskProgressReport.objects.create_initial_report(
+        submission=None,
+        task=self)
+    logger.info(
+        msg='tasks.py | check_for_submissions_without_helpdesk_issue_task |'
+            ' start search')
+    submissions_without_issue = Submission.objects.get_submissions_without_primary_helpdesk_issue()
+    for sub in submissions_without_issue:
+        logger.info(
+            msg='tasks.py | check_for_submissions_without_helpdesk_issue_task '
+                '| no helpdesk issue for submission {} | '
+                'sending mail to admins'.format(sub.broker_submission_id))
+        mail_admins(
+            subject=NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE.format(
+                sub.broker_submission_id),
+            message=NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE.format(
+                sub.broker_submission_id, sub.user.username
+            )
+        )
+    return True
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.check_for_user_without_site_configuration_task',
+)
+def check_for_user_without_site_configuration_task(self):
+    TaskProgressReport.objects.create_initial_report(
+        submission=None,
+        task=self)
+    logger.info(
+        msg='tasks.py | check_for_user_without_site_configuration_task | start search')
+    users_without_config = User.objects.filter(is_user=True,
+                                               site_configuration=None)
+    site_config = SiteConfiguration.objects.get_hosting_site_configuration()
+    mail_content = 'Users without site_configuration found:'
+    for u in users_without_config:
+        logger.info(
+            msg='tasks.py | check_for_user_without_site_configuration_task | '
+                'found user {0} without site_configuration | '
+                'assign site_configuration'
+                ' {1}'.format(u.username, site_config.title))
+        u.site_configuration = site_config
+        u.save()
+        mail_content += '\nusername: {0}\temail: {1}\tpk: {2}'.format(
+            u.username, u.email, u.pk)
+    mail_content += '\nSite_configuration {0} was assigned automatically'.format(
+        site_config.title)
+    if len(users_without_config):
+        mail_admins(
+            subject=NO_SITE_CONFIG_EMAIL_SUBJECT_TEMPLATE.format(
+                len(users_without_config)),
+            message=mail_content)
+    return True
 
 
 @celery.task(
@@ -1523,13 +1702,14 @@ def notify_curators_on_embargo_ends_task(self):
                 result['jira_link'],
                 result['embargo'])
 
-        from django.core.mail import EmailMultiAlternatives
-        mail = EmailMultiAlternatives(
-            '%s%s' % (settings.EMAIL_SUBJECT_PREFIX, ' Embargo expiry notification'), message,
-            settings.SERVER_EMAIL, curators_emails,
-            connection=None,
+        from django.core.mail import send_mail
+        send_mail(
+            subject='%s%s' % (settings.EMAIL_SUBJECT_PREFIX, ' Embargo expiry notification'),
+            message=message,
+            from_email=settings.SERVER_EMAIL, 
+            recipient_list=curators_emails,
+            fail_silently=False,
         )
-        mail.send(fail_silently=False)
         results.append({'curators': curators_emails})
         return results
 
