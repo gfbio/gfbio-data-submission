@@ -13,7 +13,11 @@ from django.utils.encoding import smart_text
 from gfbio_submissions.brokerage.configuration.settings import ENA, \
     SUBMISSION_DELAY
 from gfbio_submissions.brokerage.models import Submission, SubmissionUpload, \
-    BrokerObject, CenterName
+    BrokerObject, CenterName, PersistentIdentifier, AuditableTextData, \
+    TaskProgressReport
+from gfbio_submissions.brokerage.tasks import \
+    create_study_broker_objects_only_task, prepare_ena_study_xml_task, \
+    register_study_at_ena_task, process_ena_response_task
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
     _get_ena_register_study_response
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
@@ -22,9 +26,278 @@ from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
 from gfbio_submissions.brokerage.utils.ena_cli import submit_targeted_sequences
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.generic.models import SiteConfiguration, \
-    ResourceCredential
+    ResourceCredential, RequestLog
 from gfbio_submissions.generic.utils import logged_requests
 from gfbio_submissions.users.models import User
+
+
+class TestTargetedSequencePreparationTasks(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        resource_cred = ResourceCredential.objects.create(
+            title='Resource Title',
+            url='https://www.example.com',
+            authentication_string='letMeIn'
+        )
+        ena_resource_cred = ResourceCredential.objects.create(
+            title='Ena testserver access',
+            url='https://www-test.ebi.ac.uk/ena/submit/drop-box/submit/',
+            authentication_string='',
+            # compare devserver
+            username='',
+            password=''
+        )
+        site_config = SiteConfiguration.objects.create(
+            title=HOSTING_SITE,
+            ena_server=ena_resource_cred,
+            ena_report_server=resource_cred,
+            pangaea_token_server=resource_cred,
+            pangaea_jira_server=resource_cred,
+            helpdesk_server=resource_cred,
+            comment='Default configuration',
+            contact='kevin@horstmeier.de'
+        )
+        user = User.objects.create(
+            username="user1"
+        )
+        user.external_user_id = '0815'
+        user.name = 'Kevin Horstmeier'
+        user.email = 'khors@me.de'
+        user.site_configuration = site_config
+        user.save()
+        center = CenterName.objects.create(center_name="test-center")
+        min_submission = Submission.objects.create(
+            broker_submission_id=UUID(
+                '4e5c7fb2-fb9f-447f-92db-33a5f99cba8e'),
+            user=user,
+            center_name=center,
+            target=ENA,
+            release=True,
+            data={
+                "requirements": {
+                    "title": "Simple ENA Data",
+                    "description": "Reduced Data for testing", }
+            }
+        )
+
+    def test_initial_db_content(self):
+        self.assertEqual(1, len(Submission.objects.all()))
+        self.assertEqual(0, len(BrokerObject.objects.all()))
+        self.assertEqual(0, len(PersistentIdentifier.objects.all()))
+        self.assertEqual(0, len(AuditableTextData.objects.all()))
+
+    def test_create_study_broker_objects_only_task(self):
+        submission = Submission.objects.first()
+        result = create_study_broker_objects_only_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        bo = BrokerObject.objects.first()
+        self.assertEqual('study', bo.type)
+        self.assertEqual(bo.pk, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(str(bo.pk), tprs.first().task_return_value)
+
+    def test_create_study_broker_objects_only_task_existing_study(self):
+        submission = Submission.objects.first()
+        user = User.objects.first()
+        bo = submission.brokerobject_set.create(type='study', user=user)
+        result = create_study_broker_objects_only_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertEqual(bo.pk, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(str(bo.pk), tprs.first().task_return_value)
+
+    def test_create_study_broker_objects_only_task_no_submission(self):
+        result = create_study_broker_objects_only_task.apply_async(
+            kwargs={
+                'submission_id': 4711,
+            }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(TaskProgressReport.CANCELLED,
+                         tprs.first().task_return_value)
+
+    def test_prepare_ena_study_xml_task(self):
+        submission = Submission.objects.first()
+        BrokerObject.objects.add_study_only(submission)
+
+        result = prepare_ena_study_xml_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        study_text_data = AuditableTextData.objects.first()
+        self.assertEqual('study.xml', study_text_data.name)
+        self.assertEqual(study_text_data.pk, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(str(study_text_data.pk),
+                         tprs.first().task_return_value)
+
+    def test_prepare_ena_study_xml_task_no_brokerobject(self):
+        submission = Submission.objects.first()
+        result = prepare_ena_study_xml_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(TaskProgressReport.CANCELLED,
+                         tprs.first().task_return_value)
+
+    def test_prepare_ena_study_xml_task_existing_study_xml(self):
+        submission = Submission.objects.first()
+        study_xml = submission.auditabletextdata_set.create(
+            name='study.xml', text_data='<STUDY></STUDY>')
+        result = prepare_ena_study_xml_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertEqual(study_xml.pk, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(str(study_xml.pk),
+                         tprs.first().task_return_value)
+
+    def test_prepare_ena_study_xml_task_no_submission(self):
+        result = prepare_ena_study_xml_task.apply_async(
+            kwargs={
+                'submission_id': 666,
+            }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(TaskProgressReport.CANCELLED,
+                         tprs.first().task_return_value)
+
+    def test_register_study_at_ena_task_existing_pid(self):
+        submission = Submission.objects.first()
+        study_bo = BrokerObject.objects.add_study_only(submission)
+        pid = study_bo.persistentidentifier_set.create(
+            archive='ENA',
+            pid_type='PRJ',
+            pid='PRJ007'
+        )
+        result = register_study_at_ena_task.apply_async(
+            kwargs={'submission_id': submission.pk, }
+        )
+        self.assertEqual(pid.pk, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(str(pid.pk),
+                         tprs.first().task_return_value)
+        self.assertEqual(0, len(RequestLog.objects.all()))
+
+    def test_register_study_at_ena_task_no_study_xml(self):
+        submission = Submission.objects.first()
+        result = register_study_at_ena_task.apply_async(
+            kwargs={'submission_id': submission.pk, }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(TaskProgressReport.CANCELLED,
+                         tprs.first().task_return_value)
+        self.assertEqual(0, len(RequestLog.objects.all()))
+
+    def test_register_study_at_ena_task_no_study_brokerobject(self):
+        submission = Submission.objects.first()
+        study_xml = submission.auditabletextdata_set.create(
+            name='study.xml', text_data='<STUDY></STUDY>')
+        result = register_study_at_ena_task.apply_async(
+            kwargs={'submission_id': submission.pk, }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual(TaskProgressReport.CANCELLED,
+                         tprs.first().task_return_value)
+        self.assertEqual(0, len(RequestLog.objects.all()))
+
+    @responses.activate
+    def test_register_study_at_ena_task(self):
+        submission = Submission.objects.first()
+        study_bo = BrokerObject.objects.add_study_only(submission)
+        study_xml = submission.auditabletextdata_set.create(
+            name='study.xml', text_data='<STUDY></STUDY>')
+        responses.add(
+            responses.POST,
+            submission.user.site_configuration.ena_server.url,
+            body=_get_ena_register_study_response(),
+            status=200,
+        )
+        result = register_study_at_ena_task.apply_async(
+            kwargs={'submission_id': submission.pk, }
+        )
+        request_id, status_code, content = result.get()
+        self.assertIsNotNone(request_id)
+        self.assertEqual(200, status_code)
+        self.assertTrue(content.startswith('<?xml'))
+
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(1, len(tprs))
+        self.assertEqual('tasks.register_study_at_ena_task',
+                         tprs.first().task_name)
+        request_logs = RequestLog.objects.all()
+        self.assertEqual(1, len(request_logs))
+        log = request_logs.first()
+        self.assertEqual(200, log.response_status)
+        self.assertEqual(submission.broker_submission_id, log.submission_id)
+
+    @responses.activate
+    def test_register_study_with_parse_result(self):
+        submission = Submission.objects.first()
+        study_bo = BrokerObject.objects.add_study_only(submission)
+        print('STUDY BO pk ', study_bo.pk)
+        study_xml = submission.auditabletextdata_set.create(
+            name='study.xml', text_data='<STUDY></STUDY>')
+        responses.add(
+            responses.POST,
+            submission.user.site_configuration.ena_server.url,
+            body=_get_ena_register_study_response(study_bo.pk),
+            status=200,
+        )
+        register_chain = register_study_at_ena_task.s(
+            submission_id=submission.pk).set(
+            countdown=SUBMISSION_DELAY) | process_ena_response_task.s(
+            submission_id=submission.pk,
+            close_submission_on_success=False).set(
+            countdown=SUBMISSION_DELAY)
+        register_chain()
+        pids = PersistentIdentifier.objects.all()
+        self.assertEqual(2, len(pids))
+        primary = BrokerObject.objects.get_study_primary_accession_number(
+            submission)
+        self.assertEqual(primary, pids.filter(pid_type='PRJ').first())
+
+        tprs = TaskProgressReport.objects.all()
+        self.assertEqual(2, len(tprs))
+        task_names = [
+            'tasks.register_study_at_ena_task',
+            'tasks.process_ena_response_task'
+        ]
+        for t in tprs:
+            self.assertIn(t.task_name, task_names)
+            self.assertEqual(t.submission, submission)
+        request_logs = RequestLog.objects.all()
+        self.assertEqual(1, len(request_logs))
+        log = request_logs.first()
+        self.assertEqual(200, log.response_status)
+        self.assertEqual(submission.broker_submission_id, log.submission_id)
 
 
 class TestCLI(TestCase):
