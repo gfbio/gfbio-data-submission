@@ -33,7 +33,8 @@ from .utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data, 
     send_submission_to_ena, parse_ena_submission_response, fetch_ena_report, \
     update_persistent_identifier_report_status, register_study_at_ena, \
     prepare_study_data_only, store_single_data_item_as_auditable_text_data
-from .utils.ena_cli import submit_targeted_sequences
+from .utils.ena_cli import submit_targeted_sequences, \
+    create_ena_manifest_text_data
 from .utils.gfbio import get_gfbio_helpdesk_username
 from .utils.jira import JiraClient
 from .utils.pangaea import pull_pangaea_dois
@@ -763,6 +764,41 @@ def register_study_at_ena_task(self, previous_result=None,
         # TODO: followed by process_ena_response_task like in general submission process for ENA
         return str(request_id), response.status_code, smart_text(
             response.content)
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.create_targeted_sequence_ena_manifest_task',
+)
+def create_targeted_sequence_ena_manifest_task(self, previous_result=None,
+                                               submission_id=None, ):
+    submission, site_configuration = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if previous_result == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | create_targeted_sequence_ena_manifest_task | '
+            'previous task reported={0} | '
+            'submission_id={1}'.format(TaskProgressReport.CANCELLED,
+                                       submission_id))
+        return TaskProgressReport.CANCELLED
+    if submission is None:
+        logger.warning(
+            'tasks.py | create_targeted_sequence_ena_manifest_task | '
+            'no valid Submission available | '
+            'submission_id={0}'.format(submission_id))
+        return TaskProgressReport.CANCELLED
+
+    text_data = create_ena_manifest_text_data(submission=submission)
+    logger.info(
+        'tasks.py | create_targeted_sequence_ena_manifest_task | '
+        'created auditable_text_data pk={0} | '
+        'submission_id={1} '.format(text_data.pk, submission_id))
+    return text_data.pk
+
 
 
 @celery.task(

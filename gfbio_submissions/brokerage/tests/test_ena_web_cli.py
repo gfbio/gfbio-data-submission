@@ -18,7 +18,8 @@ from gfbio_submissions.brokerage.models import Submission, SubmissionUpload, \
     TaskProgressReport
 from gfbio_submissions.brokerage.tasks import \
     create_study_broker_objects_only_task, prepare_ena_study_xml_task, \
-    register_study_at_ena_task, process_ena_response_task
+    register_study_at_ena_task, process_ena_response_task, \
+    create_targeted_sequence_ena_manifest_task
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
     _get_ena_register_study_response, _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
@@ -315,16 +316,41 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         cls.study_text_data = store_single_data_item_as_auditable_text_data(
             submission=submission, data=study_data)
 
-        # parsed = parse_ena_submission_response(
-        #     _get_ena_register_study_response(cls.study_bo.pk)
-        # )
-        # BrokerObject.objects.append_pids_from_ena_response(parsed)
+        parsed = parse_ena_submission_response(
+            _get_ena_register_study_response(cls.study_bo.pk)
+        )
+        BrokerObject.objects.append_pids_from_ena_response(parsed)
+
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'tsv_files/valid_template_example.tsv.gz'),
+                'br') as gz_file:
+            submission.submissionupload_set.create(
+                user=submission.user,
+                file=File(gz_file)
+            )
 
     # def test_initial_db_content(self):
     #     self.assertEqual(1, len(Submission.objects.all()))
     #     self.assertEqual(1, len(BrokerObject.objects.all()))
     #     self.assertEqual(2, len(PersistentIdentifier.objects.all()))
     #     self.assertEqual(1, len(AuditableTextData.objects.all()))
+
+    def test_create_targeted_sequence_ena_manifest_task(self):
+        submission = Submission.objects.first()
+        result = create_targeted_sequence_ena_manifest_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertEqual(1,
+                         len(AuditableTextData.objects.filter(name='MANIFEST')))
+        atd = AuditableTextData.objects.get(name='MANIFEST')
+        self.assertEqual(atd.pk, result.get())
+
+        self.assertIn(
+            PersistentIdentifier.objects.filter(pid_type='PRJ').first().pid,
+            atd.text_data)
 
     @skip('request to real server')
     # @responses.activate
@@ -355,16 +381,15 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         study_text_data = store_single_data_item_as_auditable_text_data(
             submission=submission, data=study_data)
 
-
         with open(os.path.join(_get_test_data_dir_path(),
-            'tsv_files/valid_template_example.tsv.gz'), 'br') as gz_file:
+                               'tsv_files/valid_template_example.tsv.gz'),
+                  'br') as gz_file:
             submission.submissionupload_set.create(
                 user=submission.user,
                 file=File(gz_file)
             )
 
         print('CURRENT BSI: ', submission.broker_submission_id)
-
 
         # responses.add(
         #     responses.POST,
@@ -396,7 +421,6 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         #     password=TestTargetedSequencePreparationTasks.site_config.ena_server.password,
         #     submission=submission
         # )
-
 
         # ---------------
         # from gfbio_submissions.brokerage.tasks import \
