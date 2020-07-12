@@ -7,11 +7,16 @@ from pprint import pprint
 
 from django.conf import settings
 
+from gfbio_submissions.brokerage.models import AuditableTextData
+
 
 def create_ena_manifest_text_data(submission):
+    # TODO: check or return
     study_bo = submission.brokerobject_set.filter(type='study').first()
+    # TODO: check or return
     study_pid = study_bo.persistentidentifier_set.filter(
         archive='ENA').filter(pid_type='PRJ').first()
+    # TODO: check or return
     upload = submission.submissionupload_set.filter(
         file__endswith='.tsv.gz').first()
     tab_file_path = os.path.join(settings.MEDIA_ROOT, upload.file.name)
@@ -35,6 +40,19 @@ def create_ena_manifest_text_data(submission):
     return text_data
 
 
+def store_manifest_to_filesystem(submission):
+    submission_folder = os.path.join(settings.MEDIA_ROOT,
+                                     str(submission.broker_submission_id))
+    manifest_text_data = AuditableTextData.objects.get_ena_manifest_file(
+        submission)
+    if manifest_text_data:
+        with open('{0}{1}{2}'.format(
+                submission_folder,
+                os.sep,
+                manifest_text_data.name), 'w') as output:
+            output.write(manifest_text_data.text_data)
+
+
 def submit_targeted_sequences(
         username,
         password,
@@ -42,31 +60,31 @@ def submit_targeted_sequences(
         center_name='GFBIO'):
     print('submit_targeted_sequences')
 
-    study_bo = submission.brokerobject_set.filter(type='study').first()
-    study_pid = study_bo.persistentidentifier_set.filter(
-        archive='ENA').filter(pid_type='PRJ').first()
-    upload = submission.submissionupload_set.filter(
-        file__endswith='.tsv.gz').first()
-
+    # study_bo = submission.brokerobject_set.filter(type='study').first()
+    # study_pid = study_bo.persistentidentifier_set.filter(
+    #     archive='ENA').filter(pid_type='PRJ').first()
+    # upload = submission.submissionupload_set.filter(
+    #     file__endswith='.tsv.gz').first()
+    #
     submission_folder = os.path.join(settings.MEDIA_ROOT,
                                      str(submission.broker_submission_id))
-    print(os.path.exists(submission_folder))
-
-    tab_file_path = os.path.join(settings.MEDIA_ROOT, upload.file.name)
-    print(os.path.exists(tab_file_path))
-
+    # print(os.path.exists(submission_folder))
+    #
+    # tab_file_path = os.path.join(settings.MEDIA_ROOT, upload.file.name)
+    # print(os.path.exists(tab_file_path))
+    #
     manifest_path = os.path.join(submission_folder, 'MANIFEST')
-    print(os.path.exists(manifest_path))
-
-    with open(manifest_path, 'w') as output:
-        writer = csv.writer(output, delimiter=str('\t'))
-        writer.writerow(('STUDY', study_pid.pid))
-        writer.writerow(('NAME', '{}:{}'.format(study_bo.pk,
-                                                submission.broker_submission_id)))
-        writer.writerow(('TAB', tab_file_path))
-        writer.writerow(('AUTHORS', 'Weber M., Kostadinov I.;'))
-        writer.writerow(('ADDRESS',
-                         'University of Bremen, Leobener Str. 5, 28359 Bremen, Germany'))
+    # print(os.path.exists(manifest_path))
+    #
+    # with open(manifest_path, 'w') as output:
+    #     writer = csv.writer(output, delimiter=str('\t'))
+    #     writer.writerow(('STUDY', study_pid.pid))
+    #     writer.writerow(('NAME', '{}:{}'.format(study_bo.pk,
+    #                                             submission.broker_submission_id)))
+    #     writer.writerow(('TAB', tab_file_path))
+    #     writer.writerow(('AUTHORS', 'Weber M., Kostadinov I.;'))
+    #     writer.writerow(('ADDRESS',
+    #                      'University of Bremen, Leobener Str. 5, 28359 Bremen, Germany'))
 
     try:
         res = subprocess.run(

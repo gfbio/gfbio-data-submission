@@ -464,6 +464,13 @@ class AuditableTextDataManager(models.Manager):
                     '{0}'.format(smart_text(obj.text_data)))
         return res
 
+    # TODO: this will change once more manifestfile usecases are implemented
+    def get_ena_manifest_file(self, submission):
+        data = self.filter(submission=submission, name='MANIFEST')
+        if len(data) == 1:
+            return data.first()
+        else:
+            return None
 
 # TODO: add tests
 class SubmissionUploadManager(models.Manager):

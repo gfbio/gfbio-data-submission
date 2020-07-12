@@ -26,7 +26,8 @@ from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data, Enalizer, \
     parse_ena_submission_response, prepare_study_data_only, \
     store_single_data_item_as_auditable_text_data
-from gfbio_submissions.brokerage.utils.ena_cli import submit_targeted_sequences
+from gfbio_submissions.brokerage.utils.ena_cli import submit_targeted_sequences, \
+    create_ena_manifest_text_data, store_manifest_to_filesystem
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential, RequestLog
@@ -321,14 +322,20 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         )
         BrokerObject.objects.append_pids_from_ena_response(parsed)
 
+        cls.submission_folder = os.path.join(settings.MEDIA_ROOT,
+                                         str(submission.broker_submission_id))
+
         with open(os.path.join(
                 _get_test_data_dir_path(),
                 'tsv_files/valid_template_example.tsv.gz'),
                 'br') as gz_file:
+            f = File(gz_file)
+            f.name = 'valid_template_example.tsv.gz'
             submission.submissionupload_set.create(
                 user=submission.user,
-                file=File(gz_file)
+                file=f
             )
+            f.close()
 
     # def test_initial_db_content(self):
     #     self.assertEqual(1, len(Submission.objects.all()))
@@ -351,6 +358,17 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         self.assertIn(
             PersistentIdentifier.objects.filter(pid_type='PRJ').first().pid,
             atd.text_data)
+
+    def test_store_manifest_to_filesystem(self):
+        submission = Submission.objects.first()
+        create_ena_manifest_text_data(submission)
+
+        store_manifest_to_filesystem(submission)
+
+        dir = os.listdir(self.submission_folder)
+        self.assertIn('MANIFEST', dir)
+        head, tail = os.path.split(submission.submissionupload_set.first().file.name)
+        self.assertIn(tail, dir)
 
     @skip('request to real server')
     # @responses.activate
