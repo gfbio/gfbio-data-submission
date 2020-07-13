@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 import csv
+import json
 import os
 import subprocess
 from io import StringIO
-from pprint import pprint
 
 from django.conf import settings
 
 from gfbio_submissions.brokerage.models import AuditableTextData
+from gfbio_submissions.generic.models import RequestLog
 
 
 def create_ena_manifest_text_data(submission):
@@ -57,68 +58,67 @@ def submit_targeted_sequences(
         username,
         password,
         submission,
-        center_name='GFBIO'):
-    print('submit_targeted_sequences')
-
-    # study_bo = submission.brokerobject_set.filter(type='study').first()
-    # study_pid = study_bo.persistentidentifier_set.filter(
-    #     archive='ENA').filter(pid_type='PRJ').first()
-    # upload = submission.submissionupload_set.filter(
-    #     file__endswith='.tsv.gz').first()
-    #
+        center_name='GFBIO',
+        test=True,
+        validate=True):
     submission_folder = os.path.join(settings.MEDIA_ROOT,
                                      str(submission.broker_submission_id))
-    # print(os.path.exists(submission_folder))
-    #
-    # tab_file_path = os.path.join(settings.MEDIA_ROOT, upload.file.name)
-    # print(os.path.exists(tab_file_path))
-    #
     manifest_path = os.path.join(submission_folder, 'MANIFEST')
-    # print(os.path.exists(manifest_path))
-    #
-    # with open(manifest_path, 'w') as output:
-    #     writer = csv.writer(output, delimiter=str('\t'))
-    #     writer.writerow(('STUDY', study_pid.pid))
-    #     writer.writerow(('NAME', '{}:{}'.format(study_bo.pk,
-    #                                             submission.broker_submission_id)))
-    #     writer.writerow(('TAB', tab_file_path))
-    #     writer.writerow(('AUTHORS', 'Weber M., Kostadinov I.;'))
-    #     writer.writerow(('ADDRESS',
-    #                      'University of Bremen, Leobener Str. 5, 28359 Bremen, Germany'))
 
+    command = [
+        'java', '-jar', 'ena_webin_cli/webin-cli-3.0.0.jar',
+        '-context', 'sequence',
+        '-username', username,
+        '-password', password,
+        '-centername', center_name,
+        '-manifest', manifest_path,
+        '-inputDir', submission_folder,
+        '-outputDir', submission_folder
+    ]
+    if test:
+        command.append('-test')
+    if validate:
+        command.append('-validate')
+    else:
+        command.append('-submit')
+
+    request_log = RequestLog.objects.create(
+        type=RequestLog.OUTGOING,
+        method=RequestLog.NONE,
+        url=manifest_path,
+        submission_id=submission.broker_submission_id,
+        user=submission.user,
+        data='{}'.format(command),
+        files=manifest_path,
+        json={},
+    )
+
+    details = {}
+    success = False
     try:
-        res = subprocess.run(
-            [
-                'java', '-jar', 'ena_webin_cli/webin-cli-3.0.0.jar',
-                '-context', 'sequence',
-                '-username', username,
-                '-password', password,
-                '-centername', center_name,
-                # TODO: remove test flag ...
-                '-test',
-                '-validate',
-                '-manifest', manifest_path,
-                '-inputDir', submission_folder,
-                '-outputDir', submission_folder
-            ],
-            capture_output=True,
-            check=False)
+        res = subprocess.run(command, capture_output=True, check=False)
 
-        print('\n--------------- webcli output -------------')
-        print('type output ', type(res))
-        print('\n', res)
-        print('---------------------------------------')
-        print(os.listdir(submission_folder))
-        print('---------------------------------------')
-        print('---------------------------------------')
+        # details['output'] = '{}'.format(res)
+        details['output'] = {
+            'args': '{}'.format(res.args),
+            'returncode': '{}'.format(res.returncode),
+            'stdout': '{}'.format(res.stdout),
+            'stderr': '{}'.format(res.stderr),
+        }
+        details['folder_content'] = os.listdir(submission_folder)
         with open(os.path.join(submission_folder,
-                               'MANIFEST.report'), 'r') as report:
-            pprint(report.readlines())
-        # TODO: present relevant output to curators ?
+                               'webin-cli.report'), 'r') as report:
+            details['webin_report'] = report.read()
+        success = True
         # TODO: edit Manifest ? auditing trail ? when available use ATextData object ?
 
-
     except subprocess.CalledProcessError as e:
-        print('error ', e)
+        details['called_process_error'] = '{}'.format(e)
+        success = False
     except FileNotFoundError as e:
-        print('fnferror ', e)
+        details['file_not_found_error'] = '{}'.format(e)
+        success = False
+    request_log.request_details = details
+    request_log.save()
+
+    return success

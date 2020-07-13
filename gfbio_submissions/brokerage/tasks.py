@@ -807,7 +807,7 @@ def create_targeted_sequence_ena_manifest_task(self, previous_result=None,
     name='tasks.submit_targeted_sequences_to_ena_task',
 )
 def submit_targeted_sequences_to_ena_task(self, previous_result=None,
-                                          submission_id=None, ):
+                                          submission_id=None, do_test=True, do_validate=True):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -819,13 +819,15 @@ def submit_targeted_sequences_to_ena_task(self, previous_result=None,
         return TaskProgressReport.CANCELLED
 
     # TODO: error logging, retry ? logging !
-    submit_targeted_sequences(
+    success = submit_targeted_sequences(
         username=site_configuration.ena_server.username,
         password=site_configuration.ena_server.password,
-        submission=submission
+        submission=submission,
+        test=do_test,
+        validate=do_validate
     )
 
-    return True
+    return success
 
 
 @celery.task(
