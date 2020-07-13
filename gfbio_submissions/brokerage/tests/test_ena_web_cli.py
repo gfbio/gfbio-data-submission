@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 import gzip
 import os
+from pprint import pprint
 from unittest import skip
 from uuid import uuid4, UUID
 
 import responses
 from django.conf import settings
+from django.core.files import File
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils.encoding import smart_text
@@ -17,13 +19,17 @@ from gfbio_submissions.brokerage.models import Submission, SubmissionUpload, \
     TaskProgressReport
 from gfbio_submissions.brokerage.tasks import \
     create_study_broker_objects_only_task, prepare_ena_study_xml_task, \
-    register_study_at_ena_task, process_ena_response_task
+    register_study_at_ena_task, process_ena_response_task, \
+    create_targeted_sequence_ena_manifest_task, \
+    submit_targeted_sequences_to_ena_task
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
-    _get_ena_register_study_response
+    _get_ena_register_study_response, _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data, Enalizer, \
-    parse_ena_submission_response
-from gfbio_submissions.brokerage.utils.ena_cli import submit_targeted_sequences
+    parse_ena_submission_response, prepare_study_data_only, \
+    store_single_data_item_as_auditable_text_data
+from gfbio_submissions.brokerage.utils.ena_cli import submit_targeted_sequences, \
+    create_ena_manifest_text_data, store_manifest_to_filesystem
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential, RequestLog
@@ -48,7 +54,7 @@ class TestTargetedSequencePreparationTasks(TestCase):
             username='',
             password=''
         )
-        site_config = SiteConfiguration.objects.create(
+        cls.site_config = SiteConfiguration.objects.create(
             title=HOSTING_SITE,
             ena_server=ena_resource_cred,
             ena_report_server=resource_cred,
@@ -64,9 +70,11 @@ class TestTargetedSequencePreparationTasks(TestCase):
         user.external_user_id = '0815'
         user.name = 'Kevin Horstmeier'
         user.email = 'khors@me.de'
-        user.site_configuration = site_config
+        user.site_configuration = cls.site_config
         user.save()
+        cls.user = user
         center = CenterName.objects.create(center_name="test-center")
+        cls.center = center
         min_submission = Submission.objects.create(
             broker_submission_id=UUID(
                 '4e5c7fb2-fb9f-447f-92db-33a5f99cba8e'),
@@ -300,6 +308,252 @@ class TestTargetedSequencePreparationTasks(TestCase):
         self.assertEqual(submission.broker_submission_id, log.submission_id)
 
 
+class TestTargetedSequenceSubmissionTasks(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        TestTargetedSequencePreparationTasks.setUpTestData()
+        submission = Submission.objects.first()
+        cls.study_bo = BrokerObject.objects.add_study_only(submission)
+        study_data = prepare_study_data_only(submission=submission)
+        cls.study_text_data = store_single_data_item_as_auditable_text_data(
+            submission=submission, data=study_data)
+
+        parsed = parse_ena_submission_response(
+            _get_ena_register_study_response(cls.study_bo.pk)
+        )
+        BrokerObject.objects.append_pids_from_ena_response(parsed)
+
+        cls.submission_folder = os.path.join(settings.MEDIA_ROOT,
+                                             str(
+                                                 submission.broker_submission_id))
+
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'tsv_files/valid_template_example.tsv.gz'),
+                'br') as gz_file:
+            f = File(gz_file)
+            f.name = 'valid_template_example.tsv.gz'
+            submission.submissionupload_set.create(
+                user=submission.user,
+                file=f
+            )
+            f.close()
+
+    @classmethod
+    def _register_new_random_study(cls):
+        # TODO: this will always create a new submission with a new id
+        #   this result in always registering a new study for this submission
+        #   when not mocking responses
+        submission = Submission.objects.create(
+            user=TestTargetedSequencePreparationTasks.user,
+            center_name=TestTargetedSequencePreparationTasks.center,
+            target=ENA,
+            release=True,
+            data={
+                "requirements": {
+                    "title": "Simple ENA Data (dynamic ...)",
+                    "description": "Reduced Data for testing", }
+            }
+        )
+        submission.user.site_configuration = TestTargetedSequencePreparationTasks.site_config
+        submission.user.save()
+        study = BrokerObject.objects.add_study_only(submission=submission)
+        study_data = prepare_study_data_only(submission=submission)
+        study_text_data = store_single_data_item_as_auditable_text_data(
+            submission=submission, data=study_data)
+        # TODO: works when credentials are set properly
+        register_chain = register_study_at_ena_task.s(
+            submission_id=submission.pk).set(
+            countdown=SUBMISSION_DELAY) | process_ena_response_task.s(
+            submission_id=submission.pk,
+            close_submission_on_success=False).set(
+            countdown=SUBMISSION_DELAY)
+        register_chain()
+        return study
+
+    @classmethod
+    def _prepare_objects_for_registered_study(cls, broker_submission_id,
+                                              accession_no, do_store=True):
+        submission = Submission.objects.create(
+            broker_submission_id=UUID(broker_submission_id),
+            user=TestTargetedSequencePreparationTasks.user,
+            center_name=TestTargetedSequencePreparationTasks.center,
+            target=ENA,
+            release=True,
+            data={
+                "requirements": {
+                    "title": "Simple ENA Data (dynamic ...)",
+                    "description": "Reduced Data for testing", }
+            }
+        )
+        study = BrokerObject.objects.add_study_only(submission=submission)
+        study.persistentidentifier_set.create(
+            pid_type='PRJ',
+            archive='ENA',
+            pid=accession_no
+        )
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'tsv_files/valid_template_example.tsv.gz'),
+                'br') as gz_file:
+            f = File(gz_file)
+            f.name = 'valid_template_example.tsv.gz'
+            submission.submissionupload_set.create(
+                user=submission.user,
+                file=f
+            )
+            f.close()
+        create_ena_manifest_text_data(submission)
+        if do_store:
+            store_manifest_to_filesystem(submission)
+        return submission
+
+    # def test_initial_db_content(self):
+    #     self.assertEqual(1, len(Submission.objects.all()))
+    #     self.assertEqual(1, len(BrokerObject.objects.all()))
+    #     self.assertEqual(2, len(PersistentIdentifier.objects.all()))
+    #     self.assertEqual(1, len(AuditableTextData.objects.all()))
+
+    def test_create_targeted_sequence_ena_manifest_task(self):
+        submission = Submission.objects.first()
+        result = create_targeted_sequence_ena_manifest_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertEqual(1,
+                         len(AuditableTextData.objects.filter(name='MANIFEST')))
+        atd = AuditableTextData.objects.get(name='MANIFEST')
+        self.assertEqual(atd.pk, result.get())
+
+        self.assertIn(
+            PersistentIdentifier.objects.filter(pid_type='PRJ').first().pid,
+            atd.text_data)
+
+    def test_store_manifest_to_filesystem(self):
+        submission = Submission.objects.first()
+        create_ena_manifest_text_data(submission)
+
+        store_manifest_to_filesystem(submission)
+
+        dir = os.listdir(self.submission_folder)
+        self.assertIn('MANIFEST', dir)
+        head, tail = os.path.split(
+            submission.submissionupload_set.first().file.name)
+        self.assertIn(tail, dir)
+
+    @skip('request to ena test server with flags validate and test')
+    def test_submit_targeted_sequences_validate(self):
+        # ---------------------------------------------
+        # 13.06.2020  Testing started at 12:44 ...
+        # bsi: 7159acef-51a1-4378-9716-78f4495f0db4
+        # study main PRJ: PRJEB39350
+        submission = self._prepare_objects_for_registered_study(
+            '7159acef-51a1-4378-9716-78f4495f0db4', 'PRJEB39350')
+        # ----------------------------------------------
+
+        submit_targeted_sequences(
+            username=TestTargetedSequencePreparationTasks.site_config.ena_server.username,
+            password=TestTargetedSequencePreparationTasks.site_config.ena_server.password,
+            submission=submission,
+            test=True,
+            validate=True
+        )
+
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        r = RequestLog.objects.first()
+        pprint(r.__dict__)
+        self.assertTrue(r.files.endswith('MANIFEST'))
+        self.assertTrue(r.url.endswith('MANIFEST'))
+        expected_keys = ['folder_content', 'output', 'webin_report']
+        for k in r.request_details.keys():
+            self.assertIn(k, expected_keys)
+
+    @skip('request to ena test server with flag test')
+    def test_submit_targeted_sequences_submit(self):
+        # ---------------------------------------------
+        # 13.06.2020  Testing started at 12:44 ...
+        # bsi: 7159acef-51a1-4378-9716-78f4495f0db4
+        # study main PRJ: PRJEB39350
+        submission = self._prepare_objects_for_registered_study(
+            '7159acef-51a1-4378-9716-78f4495f0db4', 'PRJEB39350')
+        # ----------------------------------------------
+
+        submit_targeted_sequences(
+            username=TestTargetedSequencePreparationTasks.site_config.ena_server.username,
+            password=TestTargetedSequencePreparationTasks.site_config.ena_server.password,
+            submission=submission,
+            test=True,
+            validate=False
+        )
+
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        r = RequestLog.objects.first()
+        pprint(r.__dict__)
+        self.assertTrue(r.files.endswith('MANIFEST'))
+        self.assertTrue(r.url.endswith('MANIFEST'))
+        expected_keys = ['folder_content', 'output', 'webin_report']
+        for k in r.request_details.keys():
+            self.assertIn(k, expected_keys)
+
+    @skip('request to real server')
+    def test_submit_targeted_sequences_to_ena_task(self):
+        submission = self._prepare_objects_for_registered_study(
+            '7159acef-51a1-4378-9716-78f4495f0db4', 'PRJEB39350',
+            do_store=False)
+
+        result = submit_targeted_sequences_to_ena_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+                'do_test': True,
+                'do_validate': True,
+            }
+        )
+        res = result.get()
+        print(res)
+        self.assertTrue(res)
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        r = RequestLog.objects.first()
+        pprint(r.__dict__)
+        # study = self._register_new_random_study()
+        #
+        # print('--------------------------------------')
+        # study = BrokerObject.objects.get(pk=study.pk)
+        # print('\n')
+        # pprint(study.__dict__)
+        # for p in study.persistentidentifier_set.all():
+        #     print('\n')
+        #     pprint(p.__dict__)
+
+        # responses.add(
+        #     responses.POST,
+        #     submission.user.site_configuration.ena_server.url,
+        #     body=_get_ena_register_study_response(),
+        #     status=200,
+        # )
+
+        # ---------------
+        # from gfbio_submissions.brokerage.tasks import \
+        #     register_study_at_ena_task, process_ena_response_task, \
+        #     submit_targeted_sequences_to_ena_task, \
+        #     process_targeted_sequence_results_task
+        # submission_chain = register_study_at_ena_task.s(
+        #     submission_id=submission.pk).set(
+        #     countdown=SUBMISSION_DELAY) | process_ena_response_task.s(
+        #     submission_id=submission.pk,
+        #     close_submission_on_success=False).set(
+        #     countdown=SUBMISSION_DELAY) | submit_targeted_sequences_to_ena_task.s(
+        #     submission_id=submission.pk).set(
+        #     countdown=SUBMISSION_DELAY) | process_targeted_sequence_results_task.s(
+        #     submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
+        #
+        # submission_chain()
+
+
+# TODO: remove
+@skip('just for prototyping')
 class TestCLI(TestCase):
 
     @classmethod
@@ -379,7 +633,7 @@ class TestCLI(TestCase):
         upload.file.name = upload_path + '.gz'
         upload.save()
 
-    @skip('database inconsistencies when running with other tests')
+    # @skip('database inconsistencies when running with other tests')
     @responses.activate
     def test_targeted_sequences_workflow_prototyping(self):
         submission = Submission.objects.first()

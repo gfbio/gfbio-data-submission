@@ -33,7 +33,8 @@ from .utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data, 
     send_submission_to_ena, parse_ena_submission_response, fetch_ena_report, \
     update_persistent_identifier_report_status, register_study_at_ena, \
     prepare_study_data_only, store_single_data_item_as_auditable_text_data
-from .utils.ena_cli import submit_targeted_sequences
+from .utils.ena_cli import submit_targeted_sequences, \
+    create_ena_manifest_text_data, store_manifest_to_filesystem
 from .utils.gfbio import get_gfbio_helpdesk_username
 from .utils.jira import JiraClient
 from .utils.pangaea import pull_pangaea_dois
@@ -695,6 +696,7 @@ def register_study_at_ena_task(self, previous_result=None,
         task=self,
         include_closed=True
     )
+
     if previous_result == TaskProgressReport.CANCELLED:
         logger.warning(
             'tasks.py | register_study_at_ena_task | '
@@ -767,28 +769,92 @@ def register_study_at_ena_task(self, previous_result=None,
 @celery.task(
     base=SubmissionTask,
     bind=True,
-    name='tasks.submit_targeted_sequences_to_ena_task',
+    name='tasks.create_targeted_sequence_ena_manifest_task',
 )
-def submit_targeted_sequences_to_ena_task(self, previous_result=None,
-                                          submission_id=None, ):
+def create_targeted_sequence_ena_manifest_task(self, previous_result=None,
+                                               submission_id=None, ):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
         include_closed=True
     )
-    if submission == TaskProgressReport.CANCELLED or previous_result == TaskProgressReport.CANCELLED:
+    if previous_result == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | create_targeted_sequence_ena_manifest_task | '
+            'previous task reported={0} | '
+            'submission_id={1}'.format(TaskProgressReport.CANCELLED,
+                                       submission_id))
         return TaskProgressReport.CANCELLED
-    if submission.brokerobject_set.filter(type='study').first() is None:
+    if submission is None:
+        logger.warning(
+            'tasks.py | create_targeted_sequence_ena_manifest_task | '
+            'no valid Submission available | '
+            'submission_id={0}'.format(submission_id))
         return TaskProgressReport.CANCELLED
 
-    # TODO: error logging, retry ? logging !
-    submit_targeted_sequences(
+    text_data = create_ena_manifest_text_data(submission=submission)
+    logger.info(
+        'tasks.py | create_targeted_sequence_ena_manifest_task | '
+        'created auditable_text_data pk={0} | '
+        'submission_id={1} '.format(text_data.pk, submission_id))
+    return text_data.pk
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.submit_targeted_sequences_to_ena_task',
+)
+def submit_targeted_sequences_to_ena_task(self, previous_result=None,
+                                          submission_id=None, do_test=True,
+                                          do_validate=True):
+    submission, site_configuration = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if previous_result == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | submit_targeted_sequences_to_ena_task | '
+            'previous task reported={0} | '
+            'submission_id={1}'.format(TaskProgressReport.CANCELLED,
+                                       submission_id))
+        return TaskProgressReport.CANCELLED
+    if submission is None:
+        logger.warning(
+            'tasks.py | submit_targeted_sequences_to_ena_task | '
+            'no valid Submission available | '
+            'submission_id={0}'.format(submission_id))
+        return TaskProgressReport.CANCELLED
+    # if submission.brokerobject_set.filter(type='study').first() is None:
+    #     logger.warning(
+    #         'tasks.py | submit_targeted_sequences_to_ena_task | '
+    #         'no valid study | '
+    #         'submission_id={0}'.format(submission_id))
+    #     return TaskProgressReport.CANCELLED
+
+    logger.info(
+        'tasks.py | submit_targeted_sequences_to_ena_task | '
+        'store_manifest_to_filesystem | submission={}'.format(
+            submission.broker_submission_id))
+    store_manifest_to_filesystem(submission)
+    logger.info(
+        'tasks.py | submit_targeted_sequences_to_ena_task | '
+        'submit_targeted_sequences| submission={}'.format(
+            submission.broker_submission_id))
+    success = submit_targeted_sequences(
         username=site_configuration.ena_server.username,
         password=site_configuration.ena_server.password,
-        submission=submission
+        submission=submission,
+        test=do_test,
+        validate=do_validate
     )
-
-    return True
+    logger.info(
+        'tasks.py | submit_targeted_sequences_to_ena_task | '
+        'done | return success={0} | submission={1}'.format(
+            success,
+            submission.broker_submission_id))
+    return success
 
 
 @celery.task(
