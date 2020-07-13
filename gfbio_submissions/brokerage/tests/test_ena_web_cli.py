@@ -374,7 +374,7 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
 
     @classmethod
     def _prepare_objects_for_registered_study(cls, broker_submission_id,
-                                              accession_no):
+                                              accession_no, do_store=True):
         submission = Submission.objects.create(
             broker_submission_id=UUID(broker_submission_id),
             user=TestTargetedSequencePreparationTasks.user,
@@ -405,7 +405,8 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
             )
             f.close()
         create_ena_manifest_text_data(submission)
-        store_manifest_to_filesystem(submission)
+        if do_store:
+            store_manifest_to_filesystem(submission)
         return submission
 
     # def test_initial_db_content(self):
@@ -496,17 +497,26 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         for k in r.request_details.keys():
             self.assertIn(k, expected_keys)
 
-    # @skip('request to real server')
-    # @responses.activate
+    @skip('request to real server')
     def test_submit_targeted_sequences_to_ena_task(self):
         submission = self._prepare_objects_for_registered_study(
-            '7159acef-51a1-4378-9716-78f4495f0db4', 'PRJEB39350')
+            '7159acef-51a1-4378-9716-78f4495f0db4', 'PRJEB39350',
+            do_store=False)
 
         result = submit_targeted_sequences_to_ena_task.apply_async(
             kwargs={
-                ''
+                'submission_id': submission.pk,
+                'do_test': True,
+                'do_validate': True,
             }
         )
+        res = result.get()
+        print(res)
+        self.assertTrue(res)
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        r = RequestLog.objects.first()
+        pprint(r.__dict__)
         # study = self._register_new_random_study()
         #
         # print('--------------------------------------')
@@ -522,21 +532,6 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         #     submission.user.site_configuration.ena_server.url,
         #     body=_get_ena_register_study_response(),
         #     status=200,
-        # )
-
-        # TODO: create manifest file first and add as ATD obj. then check if
-        #  available and use existing
-
-        # TODO: separate cli command to submit. make test and validate paramters
-
-        # TODO: to mock for this:
-        #   - study broker object
-        #   - with pid(s), one of type PRJ (once registered a PRJ stays for 24 hours at test server)
-        #   - on upload with tsv.gz and valid content
-        # submit_targeted_sequences(
-        #     username=TestTargetedSequencePreparationTasks.site_config.ena_server.username,
-        #     password=TestTargetedSequencePreparationTasks.site_config.ena_server.password,
-        #     submission=submission
         # )
 
         # ---------------
@@ -557,8 +552,8 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         # submission_chain()
 
 
-
-
+# TODO: remove
+@skip('just for prototyping')
 class TestCLI(TestCase):
 
     @classmethod
