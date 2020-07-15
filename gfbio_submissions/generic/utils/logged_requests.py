@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
+from uuid import uuid4
+
 import requests
 
 from ..models import RequestLog
 
 
 def post(url, data=None, json=None, submission=None, return_log_id=False,
+         request_id=uuid4(),
          **kwargs):
     response = requests.post(
         url=url,
@@ -31,6 +34,7 @@ def post(url, data=None, json=None, submission=None, return_log_id=False,
     log = RequestLog.objects.create(
         type=RequestLog.OUTGOING,
         method=RequestLog.POST,
+        request_id=request_id,
         url=url,
         data=data,
         files=files,

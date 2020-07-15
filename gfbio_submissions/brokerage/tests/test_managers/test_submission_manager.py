@@ -92,6 +92,11 @@ class SubmissionManagerTest(TestCase):
         with self.assertRaises(Submission.DoesNotExist) as exc:
             Submission.objects.get_submitted_and_error_submissions(database_id)
 
+    def test_get_submissions_without_primary_helpdesk_issue(self):
+        submissions = Submission.objects.all()
+        no_issue_submissions = Submission.objects.get_submissions_without_primary_helpdesk_issue()
+        self.assertEqual(len(submissions), len(no_issue_submissions))
+
 
 class TestSubmissionManagerSubmittingUser(TestCase):
     @classmethod

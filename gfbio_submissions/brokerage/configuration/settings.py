@@ -4,6 +4,7 @@ from builtins import getattr
 
 settings = {}
 
+# TODO: move this to admin-editable DB field, also go for templating (django/jinja2)
 APPROVAL_EMAIL_SUBJECT_TEMPLATE = getattr(
     settings,
     'APPROVAL_EMAIL_SUBJECT_TEMPLATE',
@@ -325,6 +326,27 @@ GFBIO_REQUEST_TYPE_MAPPINGS = getattr(
         'ENA – European Nucleotide Archive': 'molecular',
         'default': 'generic'
     }
+)
+
+# TODO: move this to admin-editable DB field, also go for templating (django/jinja2)
+NO_SITE_CONFIG_EMAIL_SUBJECT_TEMPLATE = getattr(
+    settings,
+    'NO_SITE_CONFIG_EMAIL_SUBJECT_TEMPLATE',
+    '{0} users without site_configuration found'
+)
+
+# TODO: move this to admin-editable DB field, also go for templating (django/jinja2)
+NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE = getattr(
+    settings,
+    'NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE',
+    'Submission {0} has no primary helpdesk issue'
+)
+
+NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE = getattr(
+    settings,
+    'NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE',
+    'There is no primary helpdesk issue available for\nsubmission: {0}'
+    '\nof user: {1}'
 )
 
 PANGAEA = getattr(

@@ -100,6 +100,7 @@ class JiraClient(object):
             log_arguments['request_details']['error'] = '{}'.format(e)
             self.issue = None
             self.error = e
+
         RequestLog.objects.create_jira_log(log_arguments)
 
     def get_issue(self, key=''):
