@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
+from pprint import pprint
 
 import responses
 from django.test import override_settings
@@ -12,7 +13,8 @@ from gfbio_submissions.brokerage.tasks import create_submission_issue_task, \
     add_accession_to_submission_issue_task, \
     add_pangaealink_to_submission_issue_task, \
     add_posted_comment_to_issue_task, \
-    update_submission_issue_task, add_accession_link_to_submission_issue_task, notify_user_embargo_expiry_task
+    update_submission_issue_task, add_accession_link_to_submission_issue_task, \
+    notify_user_embargo_expiry_task
 from gfbio_submissions.generic.models import SiteConfiguration
 from gfbio_submissions.users.models import User
 from .test_helpdesk_tasks_base import TestHelpDeskTasksBase
@@ -289,6 +291,8 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
 
     @responses.activate
     def test_add_accession_link_to_submission_issue_task_success(self):
+        print('TPRs ', len(TaskProgressReport.objects.all()))
+
         site_config = SiteConfiguration.objects.first()
         # TODO: do this & other stuff also in test above (comment task)
         self._add_success_responses()
@@ -330,6 +334,8 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         )
         self.assertTrue(result.successful())
         self.assertTrue(result.get())
+        print('TPRs ', len(TaskProgressReport.objects.all()))
+        pprint(TaskProgressReport.objects.first().__dict__)
 
     @responses.activate
     def test_add_pangaealink_to_submission_issue_task_success(self):

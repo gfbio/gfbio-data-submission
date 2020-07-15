@@ -878,6 +878,7 @@ def process_targeted_sequence_results_task(self, previous_result=None,
     return True
 
 
+
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -1340,7 +1341,9 @@ def add_accession_link_to_submission_issue_task(self, prev_task_result=None,
         task=self,
         include_closed=True
     )
+
     if submission == TaskProgressReport.CANCELLED:
+        print('WILL CANCLE - no submission ')
         return TaskProgressReport.CANCELLED
 
     reference = submission.get_primary_helpdesk_reference()
@@ -1694,6 +1697,7 @@ def update_persistent_identifier_report_status_task(self):
     return True
 
 
+# FIXME: It is possible to set a submission for the taskprogressreport here.
 @celery.task(
     base=SubmissionTask,
     bind=True,
