@@ -10,7 +10,7 @@ from django.test import TestCase
 
 from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.configuration.settings import \
-    GENERIC, ENA_PANGAEA
+    GENERIC, ENA_PANGAEA, ENA
 from gfbio_submissions.brokerage.models import Submission, AdditionalReference, \
     SubmissionUpload, BrokerObject
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
@@ -1035,7 +1035,7 @@ class TestCSVParsing(TestCase):
         submission = Submission.objects.first()
         self.assertIn('samples', submission.data['requirements'].keys())
         self.assertIn('experiments', submission.data['requirements'].keys())
-        self.assertEqual(ENA_PANGAEA, submission.target)
+        self.assertEqual(ENA, submission.target)
 
     def test_check_content_on_submission_with_molecular_data(self):
         submission = Submission.objects.first()

@@ -6,8 +6,7 @@ import responses
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from config.settings.base import MEDIA_ROOT
-from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA, \
-    GENERIC
+from gfbio_submissions.brokerage.configuration.settings import GENERIC, ENA
 from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
 from gfbio_submissions.brokerage.tests.utils import \
     _get_test_data_dir_path
@@ -40,7 +39,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         )
         self.assertEqual(201, response.status_code)
         submission = Submission.objects.first()
-        self.assertEqual(ENA_PANGAEA, submission.target)
+        self.assertEqual(ENA, submission.target)
         expected_tasks = [
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer',
@@ -98,7 +97,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         )
         self.assertEqual(200, response.status_code)
         submission = Submission.objects.first()
-        self.assertEqual(ENA_PANGAEA, submission.target)
+        self.assertEqual(ENA, submission.target)
         expected_tasks = [
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer',
@@ -160,7 +159,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         )
         self.assertEqual(200, response.status_code)
         submission = Submission.objects.first()
-        self.assertEqual(ENA_PANGAEA, submission.target)
+        self.assertEqual(ENA, submission.target)
         expected_tasks = [
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer',
@@ -216,7 +215,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         )
         self.assertEqual(200, response.status_code)
         submission = Submission.objects.first()
-        self.assertEqual(ENA_PANGAEA, submission.target)
+        self.assertEqual(ENA, submission.target)
         expected_tasks = [
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.create_broker_objects_from_submission_data_task',
