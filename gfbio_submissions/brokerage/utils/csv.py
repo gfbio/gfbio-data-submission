@@ -10,7 +10,7 @@ import dpath.util as dpath
 from django.utils.encoding import smart_text
 from shortid import ShortId
 
-from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA
+from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA, ENA
 from gfbio_submissions.brokerage.utils.schema_validation import \
     validate_data_full
 
@@ -502,7 +502,7 @@ def check_for_molecular_content(submission):
             'data_center', '').count('ENA'):
 
         check_performed = True
-        submission.target = ENA_PANGAEA
+        submission.target = ENA
         submission.save()
 
         meta_data_files = submission.submissionupload_set.filter(meta_data=True)

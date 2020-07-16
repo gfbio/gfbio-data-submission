@@ -12,7 +12,7 @@ from rest_framework.test import APIClient
 
 from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.configuration.settings import \
-    GENERIC, ENA_PANGAEA
+    GENERIC, ENA
 from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_submission_post_response
@@ -195,7 +195,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         )
         self.assertEqual(200, response.status_code)
         submission = Submission.objects.first()
-        self.assertEqual(ENA_PANGAEA, submission.target)
+        self.assertEqual(ENA, submission.target)
         self.assertNotIn('validation', submission.data.keys())
 
         expected_task_names = [
@@ -293,7 +293,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             format='json'
         )
         submission = Submission.objects.first()
-        self.assertEqual(ENA_PANGAEA, submission.target)
+        self.assertEqual(ENA, submission.target)
 
         data = self._create_test_meta_data(delete=False, update=True)
         response = self.api_client.post(url, data, format='multipart')
@@ -355,7 +355,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             format='json'
         )
         submission = Submission.objects.first()
-        self.assertEqual(ENA_PANGAEA, submission.target)
+        self.assertEqual(ENA, submission.target)
 
     # TODO: move to dedicatet test class
     @responses.activate
@@ -407,7 +407,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         )
         self.assertEqual(200, response.status_code)
         submission = Submission.objects.first()
-        self.assertEqual(ENA_PANGAEA, submission.target)
+        self.assertEqual(ENA, submission.target)
         self.assertIn('validation', submission.data.keys())
         self.assertEqual(2, len(submission.data.get('validation', [])))
 

@@ -1,14 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="3acf6f6d-6b4c-4f9d-a796-959235492cd3" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/../gfbio_submissions/brokerage/tests/test_cli.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../test_web_cli/Dockerfile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../test_web_cli/notes.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../test_web_cli/webin-cli-3.0.0.jar" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../compose/local/django/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/../compose/local/django/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../gfbio_submissions/brokerage/utils/ena.py" beforeDir="false" afterPath="$PROJECT_DIR$/../gfbio_submissions/brokerage/utils/ena.py" afterDir="false" />
-    </list>
+    <list default="true" id="3acf6f6d-6b4c-4f9d-a796-959235492cd3" name="Default Changelist" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -296,6 +289,7 @@
       <workItem from="1590389037827" duration="1000" />
       <workItem from="1591274396752" duration="37000" />
       <workItem from="1591781543089" duration="33000" />
+      <workItem from="1594905786962" duration="985000" />
     </task>
     <task id="LOCAL-00273" summary="GFBIO-2504 react to true/false value of checkboxes and add accordingly to request data&#10;&#10;- clean code from debug log messages">
       <created>1559075318134</created>
@@ -699,9 +693,9 @@
       <screen x="0" y="0" width="3840" height="2160" />
     </state>
     <state x="1437" y="614" width="945" height="917" key="StructurePopup/3840.180.3200.1800/0.0.3840.2160@0.0.3840.2160" timestamp="1587136155083" />
-    <state x="1206" y="474" width="1508" height="1176" key="find.popup" timestamp="1583440176563">
+    <state x="1426" y="615" width="988" height="930" key="find.popup" timestamp="1594905858981">
       <screen x="0" y="0" width="3840" height="2160" />
     </state>
-    <state x="1206" y="474" width="1508" height="1176" key="find.popup/3840.180.3200.1800/0.0.3840.2160@0.0.3840.2160" timestamp="1583440176563" />
+    <state x="1426" y="615" width="988" height="930" key="find.popup/3840.180.3200.1800/0.0.3840.2160@0.0.3840.2160" timestamp="1594905858981" />
   </component>
 </project>
