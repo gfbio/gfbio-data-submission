@@ -486,6 +486,12 @@ def check_metadata_rule(submission):
         return False
 
 
+# TODO: test
+def check_for_csv_files(submission):
+    return len(
+        submission.submissionupload_set.filter(file__endswith='.csv')) > 0
+
+
 # TODO: may move to other location, perhaps model, serializer or manager method
 def check_for_molecular_content(submission):
     logger.info(
