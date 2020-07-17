@@ -463,6 +463,12 @@ STATIC_GENERIC_REQUIREMENTS_LOCATION = getattr(
     'schemas/gfbio_generic_requirements.json'
 )
 
+SUBMISSION_MIN_COLS = getattr(
+    settings,
+    'SUBMISSION_MIN_COLS',
+    ['sample_title', 'sample_description']
+)
+
 TASK_FAIL_SUBJECT_TEMPLATE = getattr(
     settings,
     'TASK_FAIL_SUBJECT_TEMPLATE',

@@ -10,7 +10,8 @@ import dpath.util as dpath
 from django.utils.encoding import smart_text
 from shortid import ShortId
 
-from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA, ENA
+from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA, ENA, \
+    SUBMISSION_MIN_COLS
 from gfbio_submissions.brokerage.utils.schema_validation import \
     validate_data_full
 
@@ -466,6 +467,25 @@ def parse_molecular_csv(csv_file):
     return molecular_requirements
 
 
+# TODO: test
+def check_metadata_rule(submission):
+    meta_data = submission.submissionupload_set.filter(meta_data=True)
+    if len(meta_data) == 1:
+        with open(meta_data.first().file.path, 'r') as file:
+            line = file.readline()
+            dialect = csv.Sniffer().sniff(smart_text(line))
+            delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
+                                                                   '\t'] else ';'
+            splitted = line.replace('"', '').split(delimiter)
+            res = {col in splitted for col in SUBMISSION_MIN_COLS}
+            if len(res) == 1 and (True in res):
+                return True
+            else:
+                return False
+    else:
+        return False
+
+
 # TODO: may move to other location, perhaps model, serializer or manager method
 def check_for_molecular_content(submission):
     logger.info(
@@ -497,6 +517,8 @@ def check_for_molecular_content(submission):
     status = False
     messages = []
     check_performed = False
+
+    # if
 
     if submission.release and submission.data.get('requirements', {}).get(
             'data_center', '').count('ENA'):
