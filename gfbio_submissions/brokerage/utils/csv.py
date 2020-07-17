@@ -468,28 +468,36 @@ def parse_molecular_csv(csv_file):
 
 
 # TODO: test
+def check_minimum_header_cols(meta_data):
+    with open(meta_data.file.path, 'r') as file:
+        line = file.readline()
+        dialect = csv.Sniffer().sniff(smart_text(line))
+        delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
+                                                               '\t'] else ';'
+        splitted = line.replace('"', '').split(delimiter)
+        res = {col in splitted for col in SUBMISSION_MIN_COLS}
+        if len(res) == 1 and (True in res):
+            return True
+        else:
+            return False
+
+
+# TODO: test
 def check_metadata_rule(submission):
     meta_data = submission.submissionupload_set.filter(meta_data=True)
     if len(meta_data) == 1:
-        with open(meta_data.first().file.path, 'r') as file:
-            line = file.readline()
-            dialect = csv.Sniffer().sniff(smart_text(line))
-            delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
-                                                                   '\t'] else ';'
-            splitted = line.replace('"', '').split(delimiter)
-            res = {col in splitted for col in SUBMISSION_MIN_COLS}
-            if len(res) == 1 and (True in res):
-                return True
-            else:
-                return False
+        return check_minimum_header_cols(meta_data.first())
     else:
         return False
 
 
 # TODO: test
-def check_for_csv_files(submission):
-    return len(
-        submission.submissionupload_set.filter(file__endswith='.csv')) > 0
+def check_csv_file_rule(submission):
+    csv_uploads = submission.submissionupload_set.filter(file__endswith='.csv')
+    if len(csv_uploads):
+        return check_minimum_header_cols(csv_uploads.first())
+    else:
+        return False
 
 
 # TODO: may move to other location, perhaps model, serializer or manager method
