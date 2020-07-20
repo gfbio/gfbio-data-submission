@@ -5,6 +5,7 @@ import json
 import logging
 import os
 from collections import OrderedDict
+from pprint import pprint
 
 import dpath.util as dpath
 from django.utils.encoding import smart_text
@@ -474,7 +475,8 @@ def check_minimum_header_cols(meta_data):
         dialect = csv.Sniffer().sniff(smart_text(line))
         delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
                                                                '\t'] else ';'
-        splitted = line.replace('"', '').split(delimiter)
+        splitted = line.replace('"', '').lower().split(delimiter)
+
         res = {col in splitted for col in SUBMISSION_MIN_COLS}
         if len(res) == 1 and (True in res):
             return True
@@ -494,8 +496,18 @@ def check_metadata_rule(submission):
 # TODO: test
 def check_csv_file_rule(submission):
     csv_uploads = submission.submissionupload_set.filter(file__endswith='.csv')
+
     if len(csv_uploads):
-        return check_minimum_header_cols(csv_uploads.first())
+        for csv_file in csv_uploads:
+            print('\n-----------------')
+            pprint(csv_file.__dict__)
+            is_meta = check_minimum_header_cols(csv_file)
+            print(is_meta)
+            if is_meta:
+                csv_file.meta_data = True
+                csv_file.save()
+            return is_meta
+        return False
     else:
         return False
 
@@ -508,31 +520,54 @@ def check_for_molecular_content(submission):
             ''.format(submission.broker_submission_id, submission.target,
                       submission.release))
 
-    # GFBIO-2658: old state, pass with target ena and check for GENERIC in addition to datacenter
-    # TODO: but csv has to be parsed anyway ? or not ?
-    # TODO: compare with usecase api submissions
-    # if submission.target == ENA or submission.target == ENA_PANGAEA:
-    #     logger.info(
-    #         msg='check_for_molecular_content | '
-    #             'ena is default target return=True')
-    #     return True, []
-
-    # TODO: consider GFBIO_REQUEST_TYPE_MAPPINGS for data_center mappings
-    # elif submission.release and submission.target == GENERIC \
-    #         and submission.data.get('requirements', {}) \
-    #         .get('data_center', '').count('ENA'):
-    # ######################################################################
-
-    # TODO: Note: this check makes only sense for submissions via react app, since
-    #   only there the datacenter selection can be made (of course this could also
-    #   be add explicitly in any POST request). Json-schema does not check for this ..
-    # GFBIO-2658: independent of target, check for data_center ENA
-
     status = False
     messages = []
     check_performed = False
 
-    # if
+    if check_metadata_rule(submission):
+        status = True
+        check_performed = True
+        submission.target = ENA
+        submission.data.get('requirements', {})[
+            'data_center'] = 'ENA – European Nucleotide Archive'
+        submission.save()
+        logger.info(
+            msg='check_for_molecular_content  | check_csv_file_rule=True | '
+                'return status={0} messages={1} '
+                'molecular_data_check_performed={2}'.format(status,
+                                                            messages,
+                                                            check_performed)
+        )
+        # return status, messages, check_performed
+
+    elif check_csv_file_rule(submission):
+        status = True
+        check_performed = True
+        submission.target = ENA
+        submission.data.get('requirements', {})[
+            'data_center'] = 'ENA – European Nucleotide Archive'
+        submission.save()
+        logger.info(
+            msg='check_for_molecular_content  | check_metadata_rule=True | '
+                'return status={0} messages={1} '
+                'molecular_data_check_performed={2}'.format(status,
+                                                            messages,
+                                                            check_performed)
+        )
+    # else:
+    #     logger.info(
+    #         msg='check_for_molecular_content  | check_csv_file_rule=False | '
+    #             'check_metadata_rule=False | return status={0} messages={1} '
+    #             'molecular_data_check_performed={2}'.format(status,
+    #                                                         messages,
+    #                                                         check_performed)
+    #     )
+    #     check_performed = True
+    #     return status, messages, check_performed
+
+    # TODO: check new rules here first, then regular check below
+    #
+    # TODO: refactor check below, since some checks there are not needed anymore after new checks
 
     if submission.release and submission.data.get('requirements', {}).get(
             'data_center', '').count('ENA'):
@@ -587,15 +622,15 @@ def check_for_molecular_content(submission):
             # return False, error_messages
 
         submission.save()
-    #     return status, messages
-    # else:
-    #     logger.info(
-    #         msg='check_for_molecular_content | no criteria matched | '
-    #             'return=False')
-    #     return False, ['no criteria matched']
-    logger.info(
-        msg='check_for_molecular_content  | finished | return status={0} '
-            'messages={1} molecular_data_check_performed={2}'.format(status,
-                                                                     messages,
-                                                                     check_performed))
+        #     return status, messages
+        # else:
+        #     logger.info(
+        #         msg='check_for_molecular_content | no criteria matched | '
+        #             'return=False')
+        #     return False, ['no criteria matched']
+        logger.info(
+            msg='check_for_molecular_content  | finished | return status={0} '
+                'messages={1} molecular_data_check_performed={2}'.format(status,
+                                                                         messages,
+                                                                         check_performed))
     return status, messages, check_performed

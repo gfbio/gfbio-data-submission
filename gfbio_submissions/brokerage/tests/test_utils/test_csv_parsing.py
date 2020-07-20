@@ -21,7 +21,8 @@ from gfbio_submissions.brokerage.models import Submission, AdditionalReference, 
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
-    check_for_molecular_content, extract_sample, check_csv_file_rule
+    check_for_molecular_content, extract_sample, check_csv_file_rule, \
+    check_metadata_rule
 from gfbio_submissions.brokerage.utils.ena import \
     prepare_ena_data
 from gfbio_submissions.brokerage.utils.schema_validation import \
@@ -1099,8 +1100,9 @@ class TestCSVParsing(TestCase):
         pprint(upload.__dict__)
         csv_uploads = submission.submissionupload_set.filter(
             file__endswith='.csv')
-        pprint(csv_uploads)
-        print(csv_uploads.first().file)
+        # pprint(csv_uploads)
+        # print(csv_uploads.first().file)
+        print(check_metadata_rule(submission))
         print(check_csv_file_rule(submission))
         # with open(upload.file.path, 'r') as file:
         #     line = file.readline()

@@ -421,8 +421,8 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             'tasks.check_for_molecular_content_in_submission_task',
             'tasks.trigger_submission_transfer_for_updates',
             'tasks.check_on_hold_status_task',
-            # 'tasks.create_broker_objects_from_submission_data_task',
-            # 'tasks.prepare_ena_submission_data_task',
+            'tasks.create_broker_objects_from_submission_data_task',
+            'tasks.prepare_ena_submission_data_task',
         ]
         all_task_reports = list(
             TaskProgressReport.objects.values_list(
@@ -430,8 +430,10 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         )
         self.assertListEqual(expected_task_names, all_task_reports)
 
-        self.assertEqual(0, len(submission.brokerobject_set.all()))
-        self.assertEqual(0, len(submission.auditabletextdata_set.all()))
+        # self.assertEqual(0, len(submission.brokerobject_set.all()))
+        self.assertEqual(10, len(submission.brokerobject_set.all()))
+        # self.assertEqual(0, len(submission.auditabletextdata_set.all()))
+        self.assertEqual(4, len(submission.auditabletextdata_set.all()))
 
         check_tasks = TaskProgressReport.objects.filter(
             task_name='tasks.check_for_molecular_content_in_submission_task')
