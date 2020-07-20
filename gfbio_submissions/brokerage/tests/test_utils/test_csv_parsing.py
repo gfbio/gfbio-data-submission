@@ -1,28 +1,23 @@
 # -*- coding: utf-8 -*-
-import collections
-import csv
 import os
 import shutil
-from pprint import pprint
-
-import xml.dom.minidom
 from collections import OrderedDict
 
+import xml.dom.minidom
 from django.contrib.auth.models import Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
-from django.utils.encoding import smart_text
 
 from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.configuration.settings import \
-    GENERIC, ENA_PANGAEA, ENA, SUBMISSION_MIN_COLS
+    GENERIC, ENA_PANGAEA, ENA
 from gfbio_submissions.brokerage.models import Submission, AdditionalReference, \
     SubmissionUpload, BrokerObject
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
     check_for_molecular_content, extract_sample, check_csv_file_rule, \
-    check_metadata_rule
+    check_metadata_rule, check_minimum_header_cols
 from gfbio_submissions.brokerage.utils.ena import \
     prepare_ena_data
 from gfbio_submissions.brokerage.utils.schema_validation import \
@@ -1088,55 +1083,126 @@ class TestCSVParsing(TestCase):
                                                                   [])
         self.assertEqual(7, len(experiments))
 
-    def test_check_content_metadata_rules(self):
-        # TEMPLATE_HEADER = '"sample_title";"taxon_id";"sample_description";"sequencing_platform";"library_strategy";"library_source";"library_selection";"library_layout";"nominal_length";"forward_read_file_name";"forward_read_file_checksum";"reverse_read_file_name";"reverse_read_file_checksum";"checksum_method";"investigation type";"environmental package";"collection date";"geographic location (latitude)";"geographic location (longitude)";"geographic location (depth)";"geographic location (elevation)";"geographic location (country and/or sea)";"environment (biome)";"environment (material)";"environment (feature)";"project name";"geographic location (region and locality)";"total depth of water column"'
-        # template_cols = TEMPLATE_HEADER.replace('"', '').split(';')
-        # print(template_cols)
-        # print(len(template_cols))
-
+    def test_check_minimum_header_cols(self):
         submission = Submission.objects.first()
-        self.assertEqual(GENERIC, submission.target)
-        upload = submission.submissionupload_set.first()
-        pprint(upload.__dict__)
-        csv_uploads = submission.submissionupload_set.filter(
-            file__endswith='.csv')
-        # pprint(csv_uploads)
-        # print(csv_uploads.first().file)
-        print(check_metadata_rule(submission))
-        print(check_csv_file_rule(submission))
-        # with open(upload.file.path, 'r') as file:
-        #     line = file.readline()
-        #     print(line)
-        #     print(csv.Sniffer().has_header(line))
-        #     dialect = csv.Sniffer().sniff(smart_text(line))
-        #     delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
-        #                                                            '\t'] else ';'
-        #     print(dialect)
-        #     print(delimiter)
-        #     s = line.replace('"', '').split(delimiter)
-        #     print(collections.Counter(s))
-        #     print(collections.Counter(SUBMISSION_MIN_COLS))
-        #     print(SUBMISSION_MIN_COLS in s)
-        #
-        #     res = {c in s for c in SUBMISSION_MIN_COLS}
-        #     print(res)
-        #     print(type(res))
-        #     if len(res) == 1 and (True in res):
-        #         print('CHECK')
-        #     else:
-        #         print('FAIL')
+        self.assertEqual(1, len(submission.submissionupload_set.filter(
+            file__endswith='.csv')))
+        self.assertTrue(
+            check_minimum_header_cols(
+                submission.submissionupload_set.filter(
+                    file__endswith='.csv').first()
+            )
+        )
 
-        # with open('no_csv', 'w') as file:
-        #     file.writelines(['hdlihglhvkhvd\n', 'isdb ibduab sdb ouub\n'])
-        #
-        # with open('no_csv', 'r') as file:
-        #     line = file.readline()
-        #     # print(line)
-        #     # print(csv.Sniffer().has_header(xfile.read()))
-        #     dialect = csv.Sniffer().sniff(smart_text(line))
-        #     delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
-        #                                                            '\t'] else ';'
-        #     print(dialect)
-        #     print(delimiter)
-        #
-        # TODO: defaults to ; ok ! split to delim and do list comparision. done ...
+    def test_check_minimum_header_cols_fail(self):
+        submission = Submission.objects.first()
+        submission.submissionupload_set.all().delete()
+        SimpleUploadedFile('test_submission_upload.tsv',
+                           b'these\tare\tthe\tfile\tcontents')
+        SubmissionUpload.objects.create(
+            submission=submission,
+            user=submission.user,
+            meta_data=True,
+            file=SimpleUploadedFile('test_submission_upload.csv',
+                                    b'sample_title;NO_DESCR;the;file;contents'),
+        )
+        self.assertEqual(1, len(submission.submissionupload_set.filter(
+            file__endswith='.csv')))
+        self.assertFalse(
+            check_minimum_header_cols(
+                submission.submissionupload_set.filter(
+                    file__endswith='.csv').first()
+            )
+
+        )
+
+    def test_check_metadata_rule(self):
+        submission = Submission.objects.first()
+        self.assertTrue(check_metadata_rule(submission))
+
+    def test_check_metadata_rule_multiple_csvs(self):
+        submission = Submission.objects.first()
+        SubmissionUpload.objects.create(
+            submission=submission,
+            user=submission.user,
+            meta_data=True,
+            file=SimpleUploadedFile('test_submission_upload.csv',
+                                    b'sample_title;NO_DESCR;the;file;contents'),
+        )
+        self.assertEqual(2, len(submission.submissionupload_set.filter(
+            file__endswith='.csv')))
+        self.assertFalse(check_metadata_rule(submission))
+
+    def test_check_csv_file_rule(self):
+        submission = Submission.objects.first()
+        self.assertTrue(check_csv_file_rule(submission))
+
+    def test_check_csv_file_rule_multiple_csvs(self):
+        submission = Submission.objects.first()
+        upload = submission.submissionupload_set.first()
+        upload.meta_data = False
+        upload.save()
+        SubmissionUpload.objects.create(
+            submission=submission,
+            user=submission.user,
+            meta_data=False,
+            file=SimpleUploadedFile('test_submission_upload.csv',
+                                    b'sample_title;NO_DESCR;the;file;contents'),
+        )
+        self.assertEqual(2, len(submission.submissionupload_set.filter(
+            file__endswith='.csv')))
+        self.assertTrue(check_csv_file_rule(submission))
+
+    # # TODO: remove ?
+    # def test_check_content_metadata_rules(self):
+    #     # TEMPLATE_HEADER = '"sample_title";"taxon_id";"sample_description";"sequencing_platform";"library_strategy";"library_source";"library_selection";"library_layout";"nominal_length";"forward_read_file_name";"forward_read_file_checksum";"reverse_read_file_name";"reverse_read_file_checksum";"checksum_method";"investigation type";"environmental package";"collection date";"geographic location (latitude)";"geographic location (longitude)";"geographic location (depth)";"geographic location (elevation)";"geographic location (country and/or sea)";"environment (biome)";"environment (material)";"environment (feature)";"project name";"geographic location (region and locality)";"total depth of water column"'
+    #     # template_cols = TEMPLATE_HEADER.replace('"', '').split(';')
+    #     # print(template_cols)
+    #     # print(len(template_cols))
+    #
+    #     submission = Submission.objects.first()
+    #     self.assertEqual(GENERIC, submission.target)
+    #     upload = submission.submissionupload_set.first()
+    #     pprint(upload.__dict__)
+    #     csv_uploads = submission.submissionupload_set.filter(
+    #         file__endswith='.csv')
+    #     # pprint(csv_uploads)
+    #     # print(csv_uploads.first().file)
+    #     print(check_metadata_rule(submission))
+    #     print(check_csv_file_rule(submission))
+    #     # with open(upload.file.path, 'r') as file:
+    #     #     line = file.readline()
+    #     #     print(line)
+    #     #     print(csv.Sniffer().has_header(line))
+    #     #     dialect = csv.Sniffer().sniff(smart_text(line))
+    #     #     delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
+    #     #                                                            '\t'] else ';'
+    #     #     print(dialect)
+    #     #     print(delimiter)
+    #     #     s = line.replace('"', '').split(delimiter)
+    #     #     print(collections.Counter(s))
+    #     #     print(collections.Counter(SUBMISSION_MIN_COLS))
+    #     #     print(SUBMISSION_MIN_COLS in s)
+    #     #
+    #     #     res = {c in s for c in SUBMISSION_MIN_COLS}
+    #     #     print(res)
+    #     #     print(type(res))
+    #     #     if len(res) == 1 and (True in res):
+    #     #         print('CHECK')
+    #     #     else:
+    #     #         print('FAIL')
+    #
+    #     # with open('no_csv', 'w') as file:
+    #     #     file.writelines(['hdlihglhvkhvd\n', 'isdb ibduab sdb ouub\n'])
+    #     #
+    #     # with open('no_csv', 'r') as file:
+    #     #     line = file.readline()
+    #     #     # print(line)
+    #     #     # print(csv.Sniffer().has_header(xfile.read()))
+    #     #     dialect = csv.Sniffer().sniff(smart_text(line))
+    #     #     delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
+    #     #                                                            '\t'] else ';'
+    #     #     print(dialect)
+    #     #     print(delimiter)
+    #     #
+    #     # TODO: defaults to ; ok ! split to delim and do list comparision. done ...

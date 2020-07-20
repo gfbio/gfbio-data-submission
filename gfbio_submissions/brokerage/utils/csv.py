@@ -5,7 +5,6 @@ import json
 import logging
 import os
 from collections import OrderedDict
-from pprint import pprint
 
 import dpath.util as dpath
 from django.utils.encoding import smart_text
@@ -468,7 +467,6 @@ def parse_molecular_csv(csv_file):
     return molecular_requirements
 
 
-# TODO: test
 def check_minimum_header_cols(meta_data):
     with open(meta_data.file.path, 'r') as file:
         line = file.readline()
@@ -484,7 +482,6 @@ def check_minimum_header_cols(meta_data):
             return False
 
 
-# TODO: test
 def check_metadata_rule(submission):
     meta_data = submission.submissionupload_set.filter(meta_data=True)
     if len(meta_data) == 1:
@@ -493,20 +490,16 @@ def check_metadata_rule(submission):
         return False
 
 
-# TODO: test
 def check_csv_file_rule(submission):
     csv_uploads = submission.submissionupload_set.filter(file__endswith='.csv')
 
     if len(csv_uploads):
         for csv_file in csv_uploads:
-            print('\n-----------------')
-            pprint(csv_file.__dict__)
             is_meta = check_minimum_header_cols(csv_file)
-            print(is_meta)
             if is_meta:
                 csv_file.meta_data = True
                 csv_file.save()
-            return is_meta
+                return is_meta
         return False
     else:
         return False
