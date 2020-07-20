@@ -531,7 +531,6 @@ def check_for_molecular_content(submission):
                                                             messages,
                                                             check_performed)
         )
-        # return status, messages, check_performed
 
     elif check_csv_file_rule(submission):
         status = True
@@ -547,20 +546,6 @@ def check_for_molecular_content(submission):
                                                             messages,
                                                             check_performed)
         )
-    # else:
-    #     logger.info(
-    #         msg='check_for_molecular_content  | check_csv_file_rule=False | '
-    #             'check_metadata_rule=False | return status={0} messages={1} '
-    #             'molecular_data_check_performed={2}'.format(status,
-    #                                                         messages,
-    #                                                         check_performed)
-    #     )
-    #     check_performed = True
-    #     return status, messages, check_performed
-
-    # TODO: check new rules here first, then regular check below
-    #
-    # TODO: refactor check below, since some checks there are not needed anymore after new checks
 
     if submission.release and submission.data.get('requirements', {}).get(
             'data_center', '').count('ENA'):
@@ -596,31 +581,19 @@ def check_for_molecular_content(submission):
             schema_location=path,
         )
         if valid:
-            # submission.target = ENA_PANGAEA
-            # submission.save()
             logger.info(
                 msg='check_for_molecular_content | valid data from csv |'
                     ' return=True')
-            # return True, []
             status = True
         else:
-            # status = False
             messages = [e.message for e in full_errors]
             submission.data.update(
                 {'validation': messages})
-            # submission.save()
             logger.info(
                 msg='check_for_molecular_content  | invalid data from csv |'
                     ' return=False')
-            # return False, error_messages
 
         submission.save()
-        #     return status, messages
-        # else:
-        #     logger.info(
-        #         msg='check_for_molecular_content | no criteria matched | '
-        #             'return=False')
-        #     return False, ['no criteria matched']
         logger.info(
             msg='check_for_molecular_content  | finished | return status={0} '
                 'messages={1} molecular_data_check_performed={2}'.format(status,
