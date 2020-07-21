@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import csv
-import json
 import os
 import subprocess
 from io import StringIO
@@ -98,7 +97,6 @@ def submit_targeted_sequences(
     try:
         res = subprocess.run(command, capture_output=True, check=False)
 
-        # details['output'] = '{}'.format(res)
         details['output'] = {
             'args': '{}'.format(res.args),
             'returncode': '{}'.format(res.returncode),
@@ -122,3 +120,21 @@ def submit_targeted_sequences(
     request_log.save()
 
     return success
+
+
+def extract_accession_from_webin_report(broker_submission_id):
+    submission_folder = os.path.join(settings.MEDIA_ROOT,
+                                     str(broker_submission_id))
+    accession = '-1'
+    if not os.path.exists(submission_folder):
+        return accession
+    file_path = os.path.join(submission_folder, 'webin-cli.report')
+    if not os.path.exists(file_path):
+        return accession
+    with open(file_path, 'r') as report:
+        file_content = report.readlines()
+        for f in file_content:
+            if f.count('accession was assigned'):
+                s = f.replace('\n', '').split('submission:')
+                accession = s[-1].strip() if len(s) == 2 else '-1'
+        return accession
