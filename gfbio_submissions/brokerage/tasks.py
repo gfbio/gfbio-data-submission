@@ -890,6 +890,18 @@ def process_targeted_sequence_results_task(self, previous_result=None,
     if accession == '-1':
         return TaskProgressReport.CANCELLED
     else:
+        study_bo = submission.brokerobject_set.filter(type='study').first()
+        if study_bo is None:
+            logger.warning(
+                'tasks.py | process_targeted_sequence_results_task | '
+                'no valid study broker object available | '
+                'submission_id={0}'.format(submission_id))
+            return TaskProgressReport.CANCELLED
+        study_pid = study_bo.persistentidentifier_set.create(
+            archive='ENA',
+            pid_type='TSQ',
+            pid=accession,
+        )
         return True
 
 

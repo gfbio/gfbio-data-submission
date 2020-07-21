@@ -510,15 +510,12 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
             }
         )
         res = result.get()
-        print(res)
         self.assertTrue(res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
         self.assertEqual(1, len(RequestLog.objects.all()))
         r = RequestLog.objects.first()
         pprint(r.__dict__)
-
         print('--------------------------------------')
-
         t = TaskProgressReport.objects.first()
         pprint(t.__dict__)
 
@@ -563,18 +560,9 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         # 21.07.2020  Testing started at 08:12 ...
         # bsi: 47e651ca-876d-42f7-b3d2-8015b51996f1
         # study main PRJ: PRJEB39475
-        submission = Submission.objects.create(
-            broker_submission_id=UUID('47e651ca-876d-42f7-b3d2-8015b51996f1'),
-            user=TestTargetedSequencePreparationTasks.user,
-            center_name=TestTargetedSequencePreparationTasks.center,
-            target=ENA,
-            release=True,
-            data={
-                "requirements": {
-                    "title": "Simple ENA Data (dynamic ...)",
-                    "description": "Reduced Data for testing", }
-            }
-        )
+        submission = self._prepare_objects_for_registered_study(
+            '47e651ca-876d-42f7-b3d2-8015b51996f1', 'PRJEB39475',
+            do_store=False)
         result = process_targeted_sequence_results_task.apply_async(
             kwargs={
                 'submission_id': submission.pk
@@ -582,9 +570,12 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         )
 
         res = result.get()
-        print(res)
         self.assertTrue(res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        self.assertEqual(1, len(
+            PersistentIdentifier.objects.filter(pid_type='TSQ')))
+        pid = PersistentIdentifier.objects.filter(pid_type='TSQ').first()
+        pprint(pid.__dict__)
 
 
 # TODO: remove

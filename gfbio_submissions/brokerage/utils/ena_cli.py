@@ -138,3 +138,5 @@ def extract_accession_from_webin_report(broker_submission_id):
                 s = f.replace('\n', '').split('submission:')
                 accession = s[-1].strip() if len(s) == 2 else '-1'
         return accession
+
+
