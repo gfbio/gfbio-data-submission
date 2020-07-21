@@ -317,6 +317,7 @@ class PersistentIdentifier(TimeStampedModel):
     PID_TYPES = (
         ('ACC', 'ENA Accession Number'),
         ('PRJ', 'ENA BioProject ID (primary Accession Number)'),
+        ('TSQ', 'ENA Accession for targeted sequence submission'),
         # TODO: rename to Pangea specific identifier for doi
         ('DOI', 'Pangea Doi'),
         ('BSA', 'Biosample'),
