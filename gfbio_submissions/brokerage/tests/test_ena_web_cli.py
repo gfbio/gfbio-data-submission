@@ -574,8 +574,6 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
         self.assertEqual(1, len(
             PersistentIdentifier.objects.filter(pid_type='TSQ')))
-        pid = PersistentIdentifier.objects.filter(pid_type='TSQ').first()
-        pprint(pid.__dict__)
 
 
 # TODO: remove
