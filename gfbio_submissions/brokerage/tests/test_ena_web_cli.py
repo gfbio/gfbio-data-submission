@@ -555,6 +555,7 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         #
         # submission_chain()
 
+    @skip('needs a mocked submission plus folder with content of TS-submission')
     def test_process_targeted_sequence_results_task(self):
         # ---------------------------------------------
         # 21.07.2020  Testing started at 08:12 ...
