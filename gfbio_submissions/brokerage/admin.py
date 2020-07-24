@@ -212,6 +212,34 @@ def modify_ena_objects_with_current_xml(modeladmin, request, queryset):
 modify_ena_objects_with_current_xml.short_description = 'Modify ENA objects with curent XML'
 
 
+def perform_targeted_sequence_submission(modeladmin, request, queryset):
+    from .tasks import create_study_broker_objects_only_task, \
+        prepare_ena_study_xml_task, register_study_at_ena_task, \
+        process_ena_response_task, create_targeted_sequence_ena_manifest_task, \
+        submit_targeted_sequences_to_ena_task, \
+        process_targeted_sequence_results_task
+
+    # FIXME: set do_test to False in submit_targeted_sequences_to_ena_task call below for production
+    for obj in queryset:
+        print('TS submission ', obj.pk)
+        chain = create_study_broker_objects_only_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY) | \
+            prepare_ena_study_xml_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY) | \
+            register_study_at_ena_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY) | \
+            process_ena_response_task.s(submission_id=obj.pk, close_submission_on_success=False).set(countdown=SUBMISSION_DELAY) | \
+            create_targeted_sequence_ena_manifest_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY) | \
+            submit_targeted_sequences_to_ena_task.s(submission_id=obj.pk, do_test=True, do_validate=False).set(countdown=SUBMISSION_DELAY) | \
+            process_targeted_sequence_results_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
+        chain()
+        # chain = create_broker_objects_from_submission_data_task.s(
+        #     submission_id=obj.pk).set(countdown=SUBMISSION_DELAY) \
+        #         | prepare_ena_submission_data_task.s(submission_id=obj.pk).set(
+        #     countdown=SUBMISSION_DELAY)
+        # chain()
+
+
+perform_targeted_sequence_submission.short_description = 'Perform Targeted Sequence Submission'
+
+
 class AuditableTextDataInlineAdmin(admin.StackedInline):
     model = AuditableTextData
 
@@ -241,6 +269,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         re_create_ena_xml,
         create_broker_objects_and_ena_xml,
         delete_broker_objects_and_ena_xml,
+        perform_targeted_sequence_submission,
     ]
     readonly_fields = ('created', 'modified',)
 

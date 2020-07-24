@@ -393,6 +393,12 @@ def delete_related_auditable_textdata_task(self, prev_task_result=None,
 )
 def prepare_ena_study_xml_task(self, previous_task_result=None,
                                submission_id=None):
+
+    submission, site_configuration = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
     # TODO: refactor to general method for all tasks where applicable
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
@@ -401,11 +407,6 @@ def prepare_ena_study_xml_task(self, previous_task_result=None,
             'submission_id={1}'.format(TaskProgressReport.CANCELLED,
                                        submission_id))
         return TaskProgressReport.CANCELLED
-    submission, site_configuration = get_submission_and_site_configuration(
-        submission_id=submission_id,
-        task=self,
-        include_closed=True
-    )
     if submission == TaskProgressReport.CANCELLED:
         logger.warning(
             'tasks.py | prepare_ena_study_xml_task | '
