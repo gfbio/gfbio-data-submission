@@ -393,7 +393,6 @@ def delete_related_auditable_textdata_task(self, prev_task_result=None,
 )
 def prepare_ena_study_xml_task(self, previous_task_result=None,
                                submission_id=None):
-
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -720,7 +719,8 @@ def register_study_at_ena_task(self, previous_result=None,
             'tasks.py | register_study_at_ena_task | '
             ' persistent_identifier={0} found | return pk={1}'.format(
                 primary_accession, primary_accession.pk))
-        return primary_accession.pk
+        # return primary_accession.pk
+        return TaskProgressReport.CANCELLED
 
     study_text_data = submission.auditabletextdata_set.filter(
         name='study.xml').first()
@@ -955,9 +955,24 @@ def process_ena_response_task(self, transfer_result=None, submission_id=None,
         include_closed=True
     )
     if transfer_result == TaskProgressReport.CANCELLED or submission == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | process_ena_response_task | '
+            'transfer_result or submission unavailable | '
+            'submission_id={0} | submission={1} | transfer_result={2} | '
+            'return={3}'.format(
+                submission_id, submission, transfer_result,
+                TaskProgressReport.CANCELLED, ))
         return TaskProgressReport.CANCELLED
 
-    request_id, response_status_code, response_content = transfer_result
+    try:
+        request_id, response_status_code, response_content = transfer_result
+    except TypeError as te:
+        logger.warning(
+            'tasks.py | process_ena_response_task | '
+            'type error parsing transfer_result of previous task | '
+            'submission_id={0} | Error={1} | transfer_result={2}'.format(
+                submission_id, te, transfer_result))
+        return TaskProgressReport.CANCELLED
 
     parsed = parse_ena_submission_response(response_content)
     success = True if parsed.get('success', False) == 'true' else False
