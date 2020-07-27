@@ -219,7 +219,6 @@ def perform_targeted_sequence_submission(modeladmin, request, queryset):
         submit_targeted_sequences_to_ena_task, \
         process_targeted_sequence_results_task
 
-    # FIXME: set do_test to False in submit_targeted_sequences_to_ena_task call below for production
     for obj in queryset:
         chain = \
             create_study_broker_objects_only_task.s(
@@ -240,7 +239,7 @@ def perform_targeted_sequence_submission(modeladmin, request, queryset):
                 countdown=SUBMISSION_DELAY) | \
             submit_targeted_sequences_to_ena_task.s(
                 submission_id=obj.pk,
-                do_test=True,
+                do_test=False,
                 do_validate=False).set(
                 countdown=SUBMISSION_DELAY) | \
             process_targeted_sequence_results_task.s(
@@ -297,7 +296,7 @@ def submit_manifest_to_ena(modeladmin, request, queryset):
     for obj in queryset:
         chain = submit_targeted_sequences_to_ena_task.s(
             submission_id=obj.pk,
-            do_test=True,
+            do_test=False,
             do_validate=False).set(
             countdown=SUBMISSION_DELAY) | \
                 process_targeted_sequence_results_task.s(
