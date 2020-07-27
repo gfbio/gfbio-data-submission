@@ -204,10 +204,10 @@ class TestTargetedSequencePreparationTasks(TestCase):
         result = register_study_at_ena_task.apply_async(
             kwargs={'submission_id': submission.pk, }
         )
-        self.assertEqual(pid.pk, result.get())
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
         tprs = TaskProgressReport.objects.all()
         self.assertEqual(1, len(tprs))
-        self.assertEqual(str(pid.pk),
+        self.assertEqual(TaskProgressReport.CANCELLED,
                          tprs.first().task_return_value)
         self.assertEqual(0, len(RequestLog.objects.all()))
 

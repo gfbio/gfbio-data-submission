@@ -719,7 +719,6 @@ def register_study_at_ena_task(self, previous_result=None,
             'tasks.py | register_study_at_ena_task | '
             ' persistent_identifier={0} found | return pk={1}'.format(
                 primary_accession, primary_accession.pk))
-        # return primary_accession.pk
         return TaskProgressReport.CANCELLED
 
     study_text_data = submission.auditabletextdata_set.filter(
