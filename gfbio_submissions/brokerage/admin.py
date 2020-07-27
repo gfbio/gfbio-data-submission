@@ -278,6 +278,37 @@ def register_study_at_ena(modeladmin, request, queryset):
 register_study_at_ena.short_description = 'Register Study at ENA'
 
 
+def prepare_manifest(modeladmin, request, queryset):
+    from .tasks import create_targeted_sequence_ena_manifest_task
+    for obj in queryset:
+        create_targeted_sequence_ena_manifest_task.apply_async(
+            kwargs={
+                'submission_id': obj.pk,
+            }
+        )
+
+
+prepare_manifest.short_description = 'Prepare MANIFEST file'
+
+
+def submit_manifest_to_ena(modeladmin, request, queryset):
+    from .tasks import submit_targeted_sequences_to_ena_task, \
+        process_targeted_sequence_results_task
+    for obj in queryset:
+        chain = submit_targeted_sequences_to_ena_task.s(
+            submission_id=obj.pk,
+            do_test=True,
+            do_validate=False).set(
+            countdown=SUBMISSION_DELAY) | \
+                process_targeted_sequence_results_task.s(
+                    submission_id=obj.pk).set(
+                    countdown=SUBMISSION_DELAY)
+        chain()
+
+
+submit_manifest_to_ena.short_description = 'Submit MANIFEST file to ENA'
+
+
 class AuditableTextDataInlineAdmin(admin.StackedInline):
     model = AuditableTextData
 
@@ -308,7 +339,9 @@ class SubmissionAdmin(admin.ModelAdmin):
         create_broker_objects_and_ena_xml,
         delete_broker_objects_and_ena_xml,
         perform_targeted_sequence_submission,
-        register_study_at_ena
+        register_study_at_ena,
+        prepare_manifest,
+        submit_manifest_to_ena,
     ]
     readonly_fields = ('created', 'modified',)
 
