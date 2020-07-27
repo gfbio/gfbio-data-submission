@@ -308,6 +308,24 @@ def submit_manifest_to_ena(modeladmin, request, queryset):
 submit_manifest_to_ena.short_description = 'Submit MANIFEST file to ENA'
 
 
+def validate_manifest_at_ena(modeladmin, request, queryset):
+    from .tasks import submit_targeted_sequences_to_ena_task, \
+        process_targeted_sequence_results_task
+    for obj in queryset:
+        chain = submit_targeted_sequences_to_ena_task.s(
+            submission_id=obj.pk,
+            do_test=False,
+            do_validate=True).set(
+            countdown=SUBMISSION_DELAY) | \
+                process_targeted_sequence_results_task.s(
+                    submission_id=obj.pk).set(
+                    countdown=SUBMISSION_DELAY)
+        chain()
+
+
+validate_manifest_at_ena.short_description = 'Validate MANIFEST file at ENA'
+
+
 class AuditableTextDataInlineAdmin(admin.StackedInline):
     model = AuditableTextData
 
@@ -340,6 +358,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         perform_targeted_sequence_submission,
         register_study_at_ena,
         prepare_manifest,
+        validate_manifest_at_ena,
         submit_manifest_to_ena,
     ]
     readonly_fields = ('created', 'modified',)
