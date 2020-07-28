@@ -46,6 +46,14 @@ class TestCheckTasks(TestCase):
             reference_key='PNG-0x',
             primary=False
         )
+        # submission with no primary helpdesk ticket, but CANCELLED
+        submission = Submission.objects.create(
+            user=user1,
+            status=Submission.CANCELLED,
+            target=ENA,
+            data={'has': 'primary helpdeskticket and pangaea ticket'}
+        )
+
 
         # submission with helpdesk ticket, which is not primary
         submission = Submission.objects.create(
@@ -108,7 +116,7 @@ class TestCheckTasks(TestCase):
 
     def test_db_content(self):
         submissions = Submission.objects.all()
-        self.assertEqual(4, len(submissions))
+        self.assertEqual(5, len(submissions))
         references = AdditionalReference.objects.all()
         self.assertEqual(4, len(references))
 
@@ -118,13 +126,13 @@ class TestCheckTasks(TestCase):
                 type=AdditionalReference.GFBIO_HELPDESK_TICKET,
             )
         )
-        self.assertEqual(3, len(no_ticket_subs_1))
+        self.assertEqual(4, len(no_ticket_subs_1))
 
         no_ticket_subs_2 = Submission.objects.exclude(
             Q(additionalreference__primary=True) & Q(
                 additionalreference__type='0')
         )
-        self.assertEqual(3, len(no_ticket_subs_2))
+        self.assertEqual(4, len(no_ticket_subs_2))
 
         no_ticket_subs_3 = Submission.objects.get_submissions_without_primary_helpdesk_issue()
         self.assertEqual(3, len(no_ticket_subs_3))

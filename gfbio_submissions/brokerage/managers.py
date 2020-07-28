@@ -113,7 +113,10 @@ class SubmissionManager(models.Manager):
 
     def get_submissions_without_primary_helpdesk_issue(self):
         return self.exclude(
-            Q(additionalreference__primary=True) & Q(additionalreference__type='0')
+            Q(status=self.model.CANCELLED) | Q(status=self.model.CLOSED)
+        ).exclude(
+            Q(additionalreference__primary=True) & Q(
+                additionalreference__type='0')
         )
 
 
@@ -238,6 +241,18 @@ class BrokerObjectManager(models.Manager):
                 self.add_ena_submission_data(submission)
             else:
                 pass
+
+    def add_study_only(self, submission):
+        return self.add_entity(
+            submission=submission,
+            entity_type='study',
+            user=submission.user,
+            json_data={
+                'study_title': submission.data['requirements']['title'],
+                'study_abstract': submission.data['requirements'][
+                    'description'],
+            }
+        )
 
     def add_ena_submission_data(self, submission):
         # TODO: check submission.data behaviour in this (new) python 3 environment
@@ -370,6 +385,14 @@ class BrokerObjectManager(models.Manager):
         ))
         return pids
 
+    def get_study_primary_accession_number(self, submission):
+        study = self.filter(submissions__exact=submission, type='study').first()
+        if not study:
+            return None
+        else:
+            return study.persistentidentifier_set.filter(archive='ENA',
+                                                         pid_type='PRJ').first()
+
 
 class TaskProgressReportManager(models.Manager):
     @transaction.atomic()
@@ -443,6 +466,14 @@ class AuditableTextDataManager(models.Manager):
                     '{0}'.format(smart_text(obj.name)),
                     '{0}'.format(smart_text(obj.text_data)))
         return res
+
+    # TODO: this will change once more manifestfile usecases are implemented
+    def get_ena_manifest_file(self, submission):
+        data = self.filter(submission=submission, name='MANIFEST')
+        if len(data) == 1:
+            return data.first()
+        else:
+            return None
 
 
 # TODO: add tests

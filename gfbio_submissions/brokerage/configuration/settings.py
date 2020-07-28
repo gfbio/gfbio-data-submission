@@ -190,14 +190,23 @@ JIRA_ACCESSION_COMMENT_TEMPLATE = getattr(
     settings,
     'JIRA_ACCESSION_COMMENT_TEMPLATE',
     """Dear {submitter_name},
-your dataset was successfully deposited in ENA! The INSDC accession number for your data is: {primary_accession}
-Please cite this number to refer to your dataset.
-Be aware that the whole dataset is currently under embargo for one year,
-which also means you cannot find it on the ENA website (in case reviewers ask).
-You can contact us at any point and we can set a new release date or release the data immediately.
+Your data was successfully deposited in ENA. The INSDC accession number for your data is: {primary_accession}
 
-Best Regards,
-the GFBio Data Submission Team""",
+Please cite this number to refer to your data set. Additional details on citing your data can be found here:
+https://ena-docs.readthedocs.io/en/latest/submit/general-guide/accessions.html?#how-to-cite-your-ena-study
+
+Be aware that the whole data set is currently under embargo for one year, which also means you cannot find it on the
+ENA website (in case reviewers ask). You can change the embargo date at any time or release your data immediately
+via the submission interface.
+
+
+Please remember to cite us, the full citation information for GFBio is:
+Diepenbroek M., Glöckner F., Grobe P., Güntsch A., Huber R., König-Ries B., Kostadinov I., Nieschulze J.,
+Seeger B., Tolksdorf R. & Triebel, D. Towards an Integrated Biodiversity and Ecological Research Data Management
+and Archiving Platform: The German Federation for the Curation of Biological Data (GFBio)
+In: Plödereder E, Grunske L, Schneider E, Ull D, editors. Informatik 2014 – Big Data Komplexität meistern.
+GI-Edition: Lecture Notes in Informatics (LNI) – Proceedings. GI edn. Vol. 232. Bonn: Köllen Verlag; 2014. pp. 1711–1724.
+"""
 
 )
 
