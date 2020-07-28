@@ -341,6 +341,7 @@ class PersistentIdentifier(TimeStampedModel):
     broker_object = models.ForeignKey(BrokerObject, on_delete=models.CASCADE)
     outgoing_request_id = models.UUIDField(primary_key=False, null=True,
                                            blank=True)
+    # notify user 2 weeks before the embargo ends
     user_notified = models.DateField(
         null=True,
         blank=True)
