@@ -142,8 +142,9 @@ def _get_pangaea_ticket_response():
         return json.load(data_file)
 
 
-def _get_jira_hook_request_data():
+def _get_jira_hook_request_data(no_changelog=False):
+    file_name = 'jira_hook_request_data_no_changelog.json' if no_changelog else 'jira_hook_request_data.json'
     with open(os.path.join(
-            _get_test_data_dir_path(), 'jira_hook_request_data.json'),
+            _get_test_data_dir_path(), file_name),
             'r') as data_file:
         return data_file.read()
