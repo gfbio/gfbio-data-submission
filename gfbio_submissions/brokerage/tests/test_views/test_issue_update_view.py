@@ -106,6 +106,11 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10303": "{0}".format(
                             submission.broker_submission_id),
                     }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
                 }
             },
             format='json')
@@ -132,6 +137,11 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10303": "{0}".format(
                             submission.broker_submission_id),
                     }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
                 }
             },
             format='json')
@@ -220,11 +230,9 @@ class TestJiraIssueUpdateView(APITestCase):
             submission.broker_submission_id)
 
         response = self.client.post(self.url, payload, format='json')
-        print(response.status_code)
-        print(response.content)
-        # self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-        # self.assertEqual(status.HTTP_201_CREATED,
-        #                  RequestLog.objects.first().response_status)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST,
+                         RequestLog.objects.first().response_status)
         # TODO: check response content
 
     def test_no_issue_in_request(self):
@@ -238,7 +246,12 @@ class TestJiraIssueUpdateView(APITestCase):
 
     def test_error_in_issue(self):
         self.assertEqual(0, len(RequestLog.objects.all()))
-        response = self.client.post(self.url, {"issue": {"key": "SAND-007"}},
+        response = self.client.post(self.url, {"issue": {"key": "SAND-007"},
+                                               "changelog": {
+                                                   "items": [
+                                                       {}
+                                                   ]
+                                               }},
                                     format='json')
 
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -250,7 +263,12 @@ class TestJiraIssueUpdateView(APITestCase):
     def test_missing_fields(self):
         self.assertEqual(0, len(RequestLog.objects.all()))
         response = self.client.post(self.url, {
-            "issue": {"key": "SAND-007", "fields": {}}},
+            "issue": {"key": "SAND-007", "fields": {}},
+            "changelog": {
+                "items": [
+                    {}
+                ]
+            }},
                                     format='json')
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertIn(b'\'customfield_10200\' is a required property',
@@ -271,6 +289,11 @@ class TestJiraIssueUpdateView(APITestCase):
                     "fields": {
                         "customfield_10200": "",
                     }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
                 }
             },
             format='json')
@@ -293,6 +316,11 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": "2022-03-01",
                         "customfield_10303": "",
                     }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
                 }
             },
             format='json')
@@ -319,19 +347,22 @@ class TestJiraIssueUpdateView(APITestCase):
 
                     }
                 },
-                "changelog": {}
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
+                }
             },
             format='json')
 
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        print(response.content)
 
-        # self.assertIn(b'\'customfield_10200\': Could not match input',
-        #               response.content)
-        #
-        # self.assertEqual(1, len(RequestLog.objects.all()))
-        # self.assertEqual(status.HTTP_400_BAD_REQUEST,
-        #                  RequestLog.objects.first().response_status)
+        self.assertIn(b'\'customfield_10200\': Could not match input',
+                      response.content)
+
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST,
+                         RequestLog.objects.first().response_status)
 
     def test_timestamp_date(self):
         submission = Submission.objects.first()
@@ -347,6 +378,11 @@ class TestJiraIssueUpdateView(APITestCase):
                             submission.broker_submission_id),
 
                     }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
                 }
             },
             format='json')
@@ -368,6 +404,11 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
                     }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
                 }
             },
             format='json')
@@ -392,6 +433,11 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
                     }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
                 }
             },
             format='json')
@@ -417,6 +463,11 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
                     }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
                 }
             },
             format='json')
@@ -444,6 +495,11 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
                     }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
                 }
             },
             format='json')
@@ -469,6 +525,11 @@ class TestJiraIssueUpdateView(APITestCase):
                             years=1).for_json(),
                         "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
                     }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
                 }
             },
             format='json')
@@ -507,6 +568,11 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10303": "{0}".format(
                             submission.broker_submission_id),
                     }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
                 }
             },
             format='json')
