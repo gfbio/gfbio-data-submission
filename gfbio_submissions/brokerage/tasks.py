@@ -1905,6 +1905,9 @@ def notify_curators_on_embargo_ends_task(self):
     results = []
     all_submissions = Submission.objects.all()
     for submission in all_submissions:
+        # ignore submission without embargo
+        if not submission.embargo:
+            continue
         # only send notification for closed submissions with PID type PRJ
         # and when embargo date is not in the past
         if submission.status != Submission.CLOSED or submission.embargo < datetime.date.today():
@@ -1949,7 +1952,7 @@ def notify_curators_on_embargo_ends_task(self):
         send_mail(
             subject='%s%s' % (settings.EMAIL_SUBJECT_PREFIX, ' Embargo expiry notification'),
             message=message,
-            from_email=settings.SERVER_EMAIL, 
+            from_email=settings.SERVER_EMAIL,
             recipient_list=curators_emails,
             fail_silently=False,
         )
