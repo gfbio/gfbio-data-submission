@@ -31,9 +31,22 @@
                 "key",
                 "fields"
             ]
+        },
+        "changelog": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "minItems": 1
+                }
+            },
+            "required": [
+                "items"
+            ]
         }
     },
     "required": [
-        "issue"
+        "issue",
+        "changelog"
     ]
 }

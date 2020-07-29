@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+from pprint import pprint
 from uuid import UUID
 
 import arrow
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 class JiraHookRequestSerializer(serializers.Serializer):
     issue = serializers.JSONField()
+    changelog = serializers.JSONField()
     broker_submission_id = serializers.CharField(read_only=True, required=False)
     issue_key = serializers.CharField(read_only=True, required=False)
 
@@ -165,7 +167,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
             # TODO: this here is hint to evtl. move this serializer to brokerag app
             studies = submission.brokerobject_set.filter(type='study')
 
-            # go through all studie, although there should be only one ...
+            # go through all studies, although there should be only one ...
             # if any of the relate study broker_objects has a primary ena pid
             # with status private, the overall update of the submission will
             # be allowed if status is undefined or other than private,
