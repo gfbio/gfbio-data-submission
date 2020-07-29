@@ -480,6 +480,36 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST,
                          RequestLog.objects.first().response_status)
 
+    def test_embargo_is_identical(self):
+        submission = Submission.objects.first()
+        embargo_date = arrow.now().shift(days=14).format('YYYY-MM-DD')
+        embargo_date_hour_offset = arrow.now().shift(days=14, hours=4).format('YYYY-MM-DD')
+        submission.embargo = embargo_date
+        submission.save()
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.client.post(
+            self.url,
+            {
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": embargo_date_hour_offset,
+                        "customfield_10303": "{}".format(
+                            submission.broker_submission_id),
+                    }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
+                }
+            },
+            format='json')
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertIn(
+            b'\'customfield_10200\': no changes detected',
+            response.content)
+
     def test_missing_issue_reference(self):
         submission = Submission.objects.first()
         submission.additionalreference_set.all().delete()
