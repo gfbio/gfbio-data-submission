@@ -34,7 +34,8 @@ from .utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data, 
     update_persistent_identifier_report_status, register_study_at_ena, \
     prepare_study_data_only, store_single_data_item_as_auditable_text_data
 from .utils.ena_cli import submit_targeted_sequences, \
-    create_ena_manifest_text_data, store_manifest_to_filesystem
+    create_ena_manifest_text_data, store_manifest_to_filesystem, \
+    extract_accession_from_webin_report
 from .utils.gfbio import get_gfbio_helpdesk_username
 from .utils.jira import JiraClient
 from .utils.pangaea import pull_pangaea_dois
@@ -392,6 +393,11 @@ def delete_related_auditable_textdata_task(self, prev_task_result=None,
 )
 def prepare_ena_study_xml_task(self, previous_task_result=None,
                                submission_id=None):
+    submission, site_configuration = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
     # TODO: refactor to general method for all tasks where applicable
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
@@ -400,11 +406,6 @@ def prepare_ena_study_xml_task(self, previous_task_result=None,
             'submission_id={1}'.format(TaskProgressReport.CANCELLED,
                                        submission_id))
         return TaskProgressReport.CANCELLED
-    submission, site_configuration = get_submission_and_site_configuration(
-        submission_id=submission_id,
-        task=self,
-        include_closed=True
-    )
     if submission == TaskProgressReport.CANCELLED:
         logger.warning(
             'tasks.py | prepare_ena_study_xml_task | '
@@ -718,7 +719,7 @@ def register_study_at_ena_task(self, previous_result=None,
             'tasks.py | register_study_at_ena_task | '
             ' persistent_identifier={0} found | return pk={1}'.format(
                 primary_accession, primary_accession.pk))
-        return primary_accession.pk
+        return TaskProgressReport.CANCELLED
 
     study_text_data = submission.auditabletextdata_set.filter(
         name='study.xml').first()
@@ -826,12 +827,6 @@ def submit_targeted_sequences_to_ena_task(self, previous_result=None,
             'no valid Submission available | '
             'submission_id={0}'.format(submission_id))
         return TaskProgressReport.CANCELLED
-    # if submission.brokerobject_set.filter(type='study').first() is None:
-    #     logger.warning(
-    #         'tasks.py | submit_targeted_sequences_to_ena_task | '
-    #         'no valid study | '
-    #         'submission_id={0}'.format(submission_id))
-    #     return TaskProgressReport.CANCELLED
 
     logger.info(
         'tasks.py | submit_targeted_sequences_to_ena_task | '
@@ -869,14 +864,45 @@ def process_targeted_sequence_results_task(self, previous_result=None,
         task=self,
         include_closed=True
     )
-    if submission == TaskProgressReport.CANCELLED:
+    if previous_result == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | process_targeted_sequence_results_task | '
+            'previous task reported={0} | '
+            'submission_id={1}'.format(TaskProgressReport.CANCELLED,
+                                       submission_id))
         return TaskProgressReport.CANCELLED
-    logger.info('tasks.py | process_targeted_sequence_results_task | {}'.format(
-        submission.broker_submission_id))
-    # TODO: list/parse results in folders. add to progressreports
-    #   check files in respective folders
-    return True
-
+    if submission is None:
+        logger.warning(
+            'tasks.py | process_targeted_sequence_results_task | '
+            'no valid Submission available | '
+            'submission_id={0}'.format(submission_id))
+        return TaskProgressReport.CANCELLED
+    logger.info(
+        'tasks.py | process_targeted_sequence_results_task | '
+        'extract_accession_from_webin_report | broker_submission_id={}'.format(
+            submission.broker_submission_id))
+    accession = extract_accession_from_webin_report(
+        submission.broker_submission_id)
+    logger.info(
+        'tasks.py | process_targeted_sequence_results_task | '
+        'extract_accession_from_webin_report | accession={}'.format(
+            accession))
+    if accession == '-1':
+        return TaskProgressReport.CANCELLED
+    else:
+        study_bo = submission.brokerobject_set.filter(type='study').first()
+        if study_bo is None:
+            logger.warning(
+                'tasks.py | process_targeted_sequence_results_task | '
+                'no valid study broker object available | '
+                'submission_id={0}'.format(submission_id))
+            return TaskProgressReport.CANCELLED
+        study_pid = study_bo.persistentidentifier_set.create(
+            archive='ENA',
+            pid_type='TSQ',
+            pid=accession,
+        )
+        return True
 
 
 @celery.task(
@@ -928,9 +954,24 @@ def process_ena_response_task(self, transfer_result=None, submission_id=None,
         include_closed=True
     )
     if transfer_result == TaskProgressReport.CANCELLED or submission == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | process_ena_response_task | '
+            'transfer_result or submission unavailable | '
+            'submission_id={0} | submission={1} | transfer_result={2} | '
+            'return={3}'.format(
+                submission_id, submission, transfer_result,
+                TaskProgressReport.CANCELLED, ))
         return TaskProgressReport.CANCELLED
 
-    request_id, response_status_code, response_content = transfer_result
+    try:
+        request_id, response_status_code, response_content = transfer_result
+    except TypeError as te:
+        logger.warning(
+            'tasks.py | process_ena_response_task | '
+            'type error parsing transfer_result of previous task | '
+            'submission_id={0} | Error={1} | transfer_result={2}'.format(
+                submission_id, te, transfer_result))
+        return TaskProgressReport.CANCELLED
 
     parsed = parse_ena_submission_response(response_content)
     success = True if parsed.get('success', False) == 'true' else False
@@ -1847,3 +1888,75 @@ def check_for_user_without_site_configuration_task(self):
                 len(users_without_config)),
             message=mail_content)
     return True
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.notify_curators_on_embargo_ends_task',
+)
+def notify_curators_on_embargo_ends_task(self):
+    from django.conf import settings
+    from .configuration.settings import JIRA_TICKET_URL
+    TaskProgressReport.objects.create_initial_report(
+        submission=None,
+        task=self)
+
+    results = []
+    all_submissions = Submission.objects.all()
+    for submission in all_submissions:
+        # ignore submission without embargo
+        if not submission.embargo:
+            continue
+        # only send notification for closed submissions with PID type PRJ
+        # and when embargo date is not in the past
+        if submission.status != Submission.CLOSED or submission.embargo < datetime.date.today():
+            continue
+        # get study object
+        study = submission.brokerobject_set.filter(type='study').first()
+        if study:
+            # get persistent identifier
+            study_pid = study.persistentidentifier_set.filter(pid_type='PRJ').first()
+            if study_pid:
+                # check if embargo is withing 7 days
+                one_week_from_now = datetime.date.today() + datetime.timedelta(days=6)
+                if submission.embargo <= one_week_from_now:
+                    # get jira link
+                    if submission.get_primary_helpdesk_reference():
+                        jira_link = '{}{}'.format(JIRA_TICKET_URL, submission.get_primary_helpdesk_reference())
+                    else:
+                        jira_link = 'No ticket found'
+
+                    # collect details
+                    results.append({
+                        'submission_id': submission.broker_submission_id,
+                        'accession_id': study_pid.pid,
+                        'jira_link': jira_link,
+                        'embargo': '{}'.format(submission.embargo),
+                    })
+
+
+    curators = User.objects.filter(groups__name='Curators')
+    if len(results) > 0 and len(curators) > 0:
+        # send email
+        curators_emails = [curator.email for curator in curators]
+        message = "List of Embargo dates that expire within 7 days.\n\n"
+        for result in results:
+            message += "Submission ID: {}\nAccession ID: {}\nJira Link: {}\nEmbargo: {}\n\n".format(
+                result['submission_id'],
+                result['accession_id'],
+                result['jira_link'],
+                result['embargo'])
+
+        from django.core.mail import send_mail
+        send_mail(
+            subject='%s%s' % (settings.EMAIL_SUBJECT_PREFIX, ' Embargo expiry notification'),
+            message=message,
+            from_email=settings.SERVER_EMAIL,
+            recipient_list=curators_emails,
+            fail_silently=False,
+        )
+        results.append({'curators': curators_emails})
+        return results
+
+    return "No notifications to send"

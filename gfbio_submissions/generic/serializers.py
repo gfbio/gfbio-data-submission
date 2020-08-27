@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+from pprint import pprint
 from uuid import UUID
 
 import arrow
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 class JiraHookRequestSerializer(serializers.Serializer):
     issue = serializers.JSONField()
+    changelog = serializers.JSONField()
     broker_submission_id = serializers.CharField(read_only=True, required=False)
     issue_key = serializers.CharField(read_only=True, required=False)
 
@@ -118,10 +120,21 @@ class JiraHookRequestSerializer(serializers.Serializer):
                     "'customfield_10200': embargo date in the past: {0}".format(
                         embargo_date.for_json())]})
 
-    def embargo_date_validation(self):
+    def embargo_unchanged_check(self, embargo_date, submission_embargo_date):
+        if embargo_date == submission_embargo_date:
+            raise serializers.ValidationError(
+                {'issue': [
+                    "'customfield_10200': no changes detected. embargo date "
+                    "equals current submission embargo data : {0}".format(
+                        embargo_date.for_json())]})
+
+    def embargo_date_validation(self, submission_embargo):
         # TODO: constant for customfield key !
         jira_embargo_date = self.get_embargo_date_field_value()
         embargo_date = self.embargo_date_format_validation(jira_embargo_date)
+
+        self.embargo_unchanged_check(embargo_date,
+                                     arrow.get(submission_embargo))
 
         today = arrow.now()
         delta = embargo_date - today
@@ -165,7 +178,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
             # TODO: this here is hint to evtl. move this serializer to brokerag app
             studies = submission.brokerobject_set.filter(type='study')
 
-            # go through all studie, although there should be only one ...
+            # go through all studies, although there should be only one ...
             # if any of the relate study broker_objects has a primary ena pid
             # with status private, the overall update of the submission will
             # be allowed if status is undefined or other than private,
@@ -192,6 +205,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
         self.schema_validation(data)
         submission = self.submission_existing_check()
         key = self.submission_relation_check(submission)
-        self.embargo_date_validation()
+
+        self.embargo_date_validation(submission.embargo)
         self.submission_type_constraints_check(submission, key)
         return data

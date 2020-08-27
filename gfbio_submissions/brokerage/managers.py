@@ -113,6 +113,8 @@ class SubmissionManager(models.Manager):
 
     def get_submissions_without_primary_helpdesk_issue(self):
         return self.exclude(
+            Q(status=self.model.CANCELLED) | Q(status=self.model.CLOSED)
+        ).exclude(
             Q(additionalreference__primary=True) & Q(
                 additionalreference__type='0')
         )
@@ -388,7 +390,8 @@ class BrokerObjectManager(models.Manager):
         if not study:
             return None
         else:
-            return study.persistentidentifier_set.filter(archive='ENA', pid_type='PRJ').first()
+            return study.persistentidentifier_set.filter(archive='ENA',
+                                                         pid_type='PRJ').first()
 
 
 class TaskProgressReportManager(models.Manager):
@@ -471,6 +474,7 @@ class AuditableTextDataManager(models.Manager):
             return data.first()
         else:
             return None
+
 
 # TODO: add tests
 class SubmissionUploadManager(models.Manager):

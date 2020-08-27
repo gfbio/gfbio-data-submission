@@ -21,7 +21,8 @@ from gfbio_submissions.brokerage.tasks import \
     create_study_broker_objects_only_task, prepare_ena_study_xml_task, \
     register_study_at_ena_task, process_ena_response_task, \
     create_targeted_sequence_ena_manifest_task, \
-    submit_targeted_sequences_to_ena_task
+    submit_targeted_sequences_to_ena_task, \
+    process_targeted_sequence_results_task
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
     _get_ena_register_study_response, _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
@@ -203,10 +204,10 @@ class TestTargetedSequencePreparationTasks(TestCase):
         result = register_study_at_ena_task.apply_async(
             kwargs={'submission_id': submission.pk, }
         )
-        self.assertEqual(pid.pk, result.get())
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
         tprs = TaskProgressReport.objects.all()
         self.assertEqual(1, len(tprs))
-        self.assertEqual(str(pid.pk),
+        self.assertEqual(TaskProgressReport.CANCELLED,
                          tprs.first().task_return_value)
         self.assertEqual(0, len(RequestLog.objects.all()))
 
@@ -409,12 +410,6 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
             store_manifest_to_filesystem(submission)
         return submission
 
-    # def test_initial_db_content(self):
-    #     self.assertEqual(1, len(Submission.objects.all()))
-    #     self.assertEqual(1, len(BrokerObject.objects.all()))
-    #     self.assertEqual(2, len(PersistentIdentifier.objects.all()))
-    #     self.assertEqual(1, len(AuditableTextData.objects.all()))
-
     def test_create_targeted_sequence_ena_manifest_task(self):
         submission = Submission.objects.first()
         result = create_targeted_sequence_ena_manifest_task.apply_async(
@@ -499,24 +494,32 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
 
     @skip('request to real server')
     def test_submit_targeted_sequences_to_ena_task(self):
+        # ---------------------------------------------
+        # 21.07.2020  Testing started at 08:12 ...
+        # bsi: 47e651ca-876d-42f7-b3d2-8015b51996f1
+        # study main PRJ: PRJEB39475
         submission = self._prepare_objects_for_registered_study(
-            '7159acef-51a1-4378-9716-78f4495f0db4', 'PRJEB39350',
+            '47e651ca-876d-42f7-b3d2-8015b51996f1', 'PRJEB39475',
             do_store=False)
 
         result = submit_targeted_sequences_to_ena_task.apply_async(
             kwargs={
                 'submission_id': submission.pk,
                 'do_test': True,
-                'do_validate': True,
+                'do_validate': False,
             }
         )
         res = result.get()
-        print(res)
         self.assertTrue(res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
         self.assertEqual(1, len(RequestLog.objects.all()))
         r = RequestLog.objects.first()
         pprint(r.__dict__)
+        print('--------------------------------------')
+        t = TaskProgressReport.objects.first()
+        pprint(t.__dict__)
+
+        # ----------------------------------------------------------------------
         # study = self._register_new_random_study()
         #
         # print('--------------------------------------')
@@ -526,6 +529,7 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         # for p in study.persistentidentifier_set.all():
         #     print('\n')
         #     pprint(p.__dict__)
+        # ----------------------------------------------------------------------
 
         # responses.add(
         #     responses.POST,
@@ -550,6 +554,27 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         #     submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
         #
         # submission_chain()
+
+    @skip('needs a mocked submission plus folder with content of TS-submission')
+    def test_process_targeted_sequence_results_task(self):
+        # ---------------------------------------------
+        # 21.07.2020  Testing started at 08:12 ...
+        # bsi: 47e651ca-876d-42f7-b3d2-8015b51996f1
+        # study main PRJ: PRJEB39475
+        submission = self._prepare_objects_for_registered_study(
+            '47e651ca-876d-42f7-b3d2-8015b51996f1', 'PRJEB39475',
+            do_store=False)
+        result = process_targeted_sequence_results_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk
+            }
+        )
+
+        res = result.get()
+        self.assertTrue(res)
+        self.assertEqual(1, len(TaskProgressReport.objects.all()))
+        self.assertEqual(1, len(
+            PersistentIdentifier.objects.filter(pid_type='TSQ')))
 
 
 # TODO: remove
