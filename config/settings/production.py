@@ -1,4 +1,5 @@
 import logging
+import sys
 
 import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
@@ -137,6 +138,7 @@ LOGGING = {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "verbose",
+            "stream": sys.stdout,
         }
     },
     "root": {"level": "DEBUG", "handlers": ["console"]},  # was INFO

@@ -21,6 +21,7 @@ from ..serializers import SubmissionUploadListSerializer, \
     SubmissionDetailSerializer, SubmissionUploadSerializer
 from ..utils.ena import update_ena_embargo_date
 from ..utils.submission_tools import get_embargo_from_request
+from ..utils.task_utils import jira_cancel_issue
 
 
 class SubmissionsView(mixins.ListModelMixin,
@@ -169,6 +170,7 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         instance = self.get_object()
         instance.status = Submission.CANCELLED
         instance.save()
+        jira_cancel_issue(submission_id=instance.pk)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
