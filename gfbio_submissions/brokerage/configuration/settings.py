@@ -207,7 +207,6 @@ and Archiving Platform: The German Federation for the Curation of Biological Dat
 In: Plödereder E, Grunske L, Schneider E, Ull D, editors. Informatik 2014 – Big Data Komplexität meistern.
 GI-Edition: Lecture Notes in Informatics (LNI) – Proceedings. GI edn. Vol. 232. Bonn: Köllen Verlag; 2014. pp. 1711–1724.
 """
-
 )
 
 GFBIO_LICENSE_MAPPINGS = getattr(
