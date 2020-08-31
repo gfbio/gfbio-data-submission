@@ -6,7 +6,6 @@ from django.urls import include, path
 from django.views import defaults as default_views
 from django.views.generic import TemplateView
 from rest_framework.authtoken.views import obtain_auth_token
-from rest_framework.schemas import get_schema_view
 
 from gfbio_submissions.submission_ui.views import HomeView
 
@@ -20,14 +19,13 @@ urlpatterns = [
 
     path('swagger/', TemplateView.as_view(
         template_name='pages/swagger.html',
-        extra_context={'schema_url': 'schema'}
+        extra_context={'schema_url': 'generic:brokerage_schema'}
     ), name='swagger-ui'),
 
     path('redoc/', TemplateView.as_view(
         template_name='pages/redoc.html',
-        extra_context={'schema_url': 'schema'}
+        extra_context={'schema_url': 'generic:brokerage_schema'}
     ), name='redoc'),
-    path('schema/', get_schema_view(), name='schema'),
 
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
@@ -41,6 +39,8 @@ urlpatterns = [
 
     path("api/", include("gfbio_submissions.brokerage.urls", namespace="brokerage")),
     path("ui/", include("gfbio_submissions.submission_ui.urls", namespace="userinterface")),
+    path("generic/", include("gfbio_submissions.generic.urls", namespace="generic")),
+
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
