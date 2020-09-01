@@ -1,13 +1,78 @@
-info:
-  description: ''
-  title: ''
-  version: ''
 openapi: 3.0.0
-paths:
-  /auth-token/:
-    post:
-      operationId: auth-token_create
-      tags:
-      - auth-token
+
+info:
+  # https://github.com/OAI/OpenAPI-Specification/blob/master/examples/v3.0/petstore-expanded.yaml
+  # TODO: add version dynamically
+  version: '1.117.0'
+  title: 'GFBio Submission API'
+  description: 'A service to submit data provided by the GFBio Consortium'
+  termsOfService: 'https://www.gfbio.org/legal-notice'
+  contact:
+    name: 'GFBio Helpdesk'
+    email: 'info@gfbio.org'
+    url: 'https://submissions.gfbio.org/'
+  license:
+    name: 'MIT'
+    url: 'https://opensource.org/licenses/MIT'
+
 servers:
-- url: ''
+  - url: 'https://submissions.gfbio.org/'
+
+paths:
+  /api/submissions/:
+    post:
+      description: 'Creates a new submission'
+      operationId: 'submission-create'
+      requestBody:
+        description: 'Submission to add'
+        required: 'true'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewPet'
+#      parameters:
+#        - name: callbackUrl
+#          in: query
+#          required: true
+#          description: |
+#            the location where data will be sent.  Must be network accessible
+#            by the source server
+#          schema:
+#            type: string
+#            format: uri
+#            example: https://tonys-server.com
+
+components:
+  schemas:
+    Submission:
+      allOf:
+        - $ref: '#/components/schemas/NewPet'
+        - type: object
+          required:
+          - id
+          properties:
+            id:
+              type: integer
+              format: int64
+
+    NewPet:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        tag:
+          type: string
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string

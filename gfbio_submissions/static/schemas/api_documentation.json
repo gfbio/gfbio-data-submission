@@ -1,0 +1,65 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "version": "1.117.0",
+        "title": "GFBio Submission API",
+        "description": "A service to submit data provided by the GFBio Consortium",
+        "termsOfService": "https://www.gfbio.org/legal-notice",
+        "contact": {
+            "name": "GFBio Helpdesk",
+            "email": "info@gfbio.org",
+            "url": "https://submissions.gfbio.org/"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        }
+    },
+    "servers": [
+        {
+            "url": "https://submissions.gfbio.org/api"
+        }
+    ],
+    "paths": {
+        "/submissions/": {
+            "post": {
+                "description": "Create a new Submission",
+                "operationId": "submission-create",
+                "requestBody": {
+                    "description": "Submission to submit",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Submission"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Submission": {
+                "allOf": [
+                    {
+                        "$ref": "common_requirements_definitions.json#/minimal_requirements"
+                    },
+                    {
+                        "type": "object",
+                        "required": [
+                            "id"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "format": "int64"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}
