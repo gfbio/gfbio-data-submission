@@ -386,11 +386,8 @@ class JiraClient(object):
                     cancel_transition_id,
                     fields={'resolution':{'name': resolution_name}},
                 )
-                response_content = response.content
-                response_status = response.status_code
             except JIRAError as e:
-                response_content = e.response.content
-                response_status = e.status_code
+                response = e
                 logger.info('JiraClient | cancel_issue | Error {}'.format(e))
 
             with transaction.atomic():
@@ -400,8 +397,8 @@ class JiraClient(object):
                     url='https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions'.format(issue),
                     user=submission.user,
                     submission_id=submission.broker_submission_id,
-                    response_content=response_content,
-                    response_status=response_status,
+                    response_content=response,
+                    response_status=status.HTTP_200_OK,
                 )
             return
 

@@ -138,7 +138,7 @@ LOGGING = {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "verbose",
-            "stream": sys.stdout,
+            "stream": sys.stdout
         }
     },
     "root": {"level": "DEBUG", "handlers": ["console"]},  # was INFO

@@ -85,11 +85,17 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
     # if len(summary) >= 45:
     #     summary = '{0}{1}'.format(summary[:45], '...')
 
+    # FIXME: 15.07.2020 issue #390: as a hotfix the mapping solution below is
+    #  replaced by a specific check for 'ENA'. At this point of time this is ok
+    #   since there are ony two options: molecular or not (generic)
     # molecular or generic
-    jira_request_target = GFBIO_REQUEST_TYPE_MAPPINGS.get(
-        requirements.get('data_center', ''),
-        GFBIO_REQUEST_TYPE_MAPPINGS.get('default', '')
-    )
+    # jira_request_target = GFBIO_REQUEST_TYPE_MAPPINGS.get(
+    #     requirements.get('data_center', ''),
+    #     GFBIO_REQUEST_TYPE_MAPPINGS.get('default', '')
+    # )
+    jira_request_target = 'molecular' if requirements.get(
+        'data_center', '').startswith('ENA') else 'generic'
+
     jira_request_type = 'sand/{0}-data'.format(jira_request_target)
     if site_config.jira_project_key == SiteConfiguration.DSUB:
         jira_request_type = 'dsub/{0}'.format(jira_request_target) \
