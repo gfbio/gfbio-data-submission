@@ -42,5 +42,6 @@ class AgreeTosSocialSignupForm(SignupForm):
 
         # Add your own processing here.
         user.agreed_to_terms = self.cleaned_data.get('agree_terms')
+        user.save()
         # You must return the original result.
         return user
