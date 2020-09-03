@@ -333,8 +333,12 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = "optional"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_ADAPTER = "gfbio_submissions.users.adapters.AccountAdapter"
+
+# ACCOUNT_SIGNUP_FORM_CLASS = "gfbio_submissions.users.forms.AgreeTosSocialSignupForm"
+SOCIALACCOUNT_FORMS = {'signup': 'gfbio_submissions.users.forms.AgreeTosSocialSignupForm'}
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 SOCIALACCOUNT_ADAPTER = "gfbio_submissions.users.adapters.SocialAccountAdapter"
+
 
 # django-rest-framework
 # -------------------------------------------------------------------------------

@@ -1,3 +1,5 @@
+from allauth.socialaccount.forms import SignupForm
+from django import forms as form
 from django.contrib.auth import forms, get_user_model
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
@@ -27,3 +29,18 @@ class UserCreationForm(forms.UserCreationForm):
             return username
 
         raise ValidationError(self.error_messages["duplicate_username"])
+
+
+class AgreeTosSocialSignupForm(SignupForm):
+    agree_terms = form.BooleanField(required=True,
+                                    label="Agree to terms of service")
+
+    def save(self):
+        # Ensure you call the parent class's save.
+        # .save() returns a User object.
+        user = super(AgreeTosSocialSignupForm, self).save()
+
+        # Add your own processing here.
+        user.agreed_to_terms = self.cleaned_data.get('agree_terms')
+        # You must return the original result.
+        return user

@@ -66,6 +66,7 @@ class GFBioAuthenticationBackend(OIDCAuthenticationBackend):
         user.name = '{0} {1}'.format(claims.get('given_name', ''),
                                      claims.get('family_name', '')).strip()
         user.email = claims.get('email', '')
+        user.username = self.get_username(claims)
         user.external_user_id = claims.get('goe_id', '')
         user.site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
         user.save()
