@@ -14,7 +14,8 @@ class UserAdmin(auth_admin.UserAdmin):
 
     fieldsets = (('User', {
         'fields': ('name', 'site_configuration', 'is_site', 'is_user',
-                   'external_user_id')}),) + auth_admin.UserAdmin.fieldsets
+                   'external_user_id',
+                   'agreed_to_terms')}),) + auth_admin.UserAdmin.fieldsets
     list_display = ['username', 'name', 'email', 'get_groups', 'last_login',
                     'date_joined']
     list_filter = [
