@@ -329,6 +329,7 @@ ACCOUNT_AUTHENTICATION_METHOD = "username"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = True
+SOCIALACCOUNT_AUTO_SIGNUP = False
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 # "mandatory", "optional", or "none"
 ACCOUNT_EMAIL_VERIFICATION = "optional"
