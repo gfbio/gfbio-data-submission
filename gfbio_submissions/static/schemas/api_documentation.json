@@ -89,6 +89,45 @@
                 }
             }
         },
+        "(molecular)/submissions/": {
+            "post": {
+                "description": "Create a new molecular Submission, fully validated",
+                "operationId": "create molecular submission",
+                "requestBody": {
+                    "description": "Submission to submit",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MolecularSubmission"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Submission response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MolecularSubmission"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/submissions/{broker_submission_id}": {
             "get": {
                 "description": "Returns a user based on a single ID, if the user does not have access to the pet",
@@ -178,6 +217,37 @@
                                     "ENA_PANGAEA",
                                     "GENERIC"
                                 ]
+                            },
+                            "embargo": {
+                                "type": "string",
+                                "format": "date"
+                            }
+                        },
+                        "required": [
+                            "target"
+                        ]
+                    },
+                    {
+                        "data": {
+                            "allOf": {
+                                "$ref": "common_requirements_definitions.json#/minimal_requirements"
+                            }
+                        }
+                    }
+                ]
+            },
+            "MolecularSubmission": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "target": {
+                                "type": "string",
+                                "enum": [
+                                    "ENA",
+                                    "ENA_PANGAEA",
+                                    "GENERIC"
+                                ]
                             }
                         },
                         "required": [
@@ -186,6 +256,21 @@
                     },
                     {
                         "$ref": "common_requirements_definitions.json#/minimal_requirements"
+                    },
+                    {
+                        "$ref": "ena_study_definitions.json#/study"
+                    },
+                    {
+                        "$ref": "ena_sample_definitions.json#/sample_array"
+                    },
+                    {
+                        "$ref": "ena_experiment_definitions.json#/experiment_array"
+                    },
+                    {
+                        "$ref": "ena_run_definitions.json#/run_array"
+                    },
+                    {
+                        "$ref": "technical_content_definitions.json#/technical_requirements"
                     }
                 ]
             },
