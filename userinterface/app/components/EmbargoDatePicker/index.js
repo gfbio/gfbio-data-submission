@@ -51,7 +51,7 @@ class EmbargoDatePicker extends React.Component {
     ) {
       // eslint-disable-next-line react/no-did-update-set-state
       this.setState(() => ({
-        embargoDate: this.props.embargoDate,
+        embargoDate: new Date(this.props.embargoDate),
         embargoOriginal: new Date(this.props.embargoDate),
         updated: true,
       }));
@@ -127,7 +127,7 @@ class EmbargoDatePicker extends React.Component {
       } else {
         this.setState(prevState => ({
           ...prevState,
-          embargoDate: new Date().setMonth(new Date().getMonth() + months),
+          embargoDate: new Date(new Date().setMonth(new Date().getMonth() + months)),
         }));
       }
     };
