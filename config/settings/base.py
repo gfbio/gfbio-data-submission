@@ -342,6 +342,7 @@ SOCIALACCOUNT_FORMS = {
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 SOCIALACCOUNT_ADAPTER = "gfbio_submissions.users.adapters.SocialAccountAdapter"
 
+
 # django-rest-framework
 # -------------------------------------------------------------------------------
 # django-rest-framework - https://www.django-rest-framework.org/api-guide/settings/
