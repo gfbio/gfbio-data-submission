@@ -35,10 +35,10 @@ class AgreeTosSocialSignupForm(SignupForm):
     agree_terms = form.BooleanField(required=True,
                                     label="Agree to terms of service")
 
-    def save(self):
+    def save(self, request):
         # Ensure you call the parent class's save.
         # .save() returns a User object.
-        user = super(AgreeTosSocialSignupForm, self).save()
+        user = super(AgreeTosSocialSignupForm, self).save(request)
 
         # Add your own processing here.
         user.agreed_to_terms = self.cleaned_data.get('agree_terms')
