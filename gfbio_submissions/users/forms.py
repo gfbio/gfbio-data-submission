@@ -34,10 +34,10 @@ class UserCreationForm(forms.UserCreationForm):
 class AgreeTosSocialSignupForm(SignupForm):
     agree_terms = form.BooleanField(
         required=True,
-        label="Agree to terms of service, <a href='https://www.google.de'></a>")
+        label="Agree to terms of service")
     agree_privacy = form.BooleanField(
         required=True,
-        label="Agree our privacy policy, <a href='https://www.google.de'></a>")
+        label="Agree to privacy policy")
 
     def save(self, request):
         # Ensure you call the parent class's save.
