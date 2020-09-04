@@ -37,6 +37,7 @@ class User(AbstractUser):
     # True if the user has accepted the current terms of service and
     # privacy policy
     agreed_to_terms = BooleanField(default=False)
+    agreed_to_privacy = BooleanField(default=False)
 
     site_configuration = models.ForeignKey(
         SiteConfiguration,

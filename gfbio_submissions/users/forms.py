@@ -32,8 +32,12 @@ class UserCreationForm(forms.UserCreationForm):
 
 
 class AgreeTosSocialSignupForm(SignupForm):
-    agree_terms = form.BooleanField(required=True,
-                                    label="Agree to terms of service")
+    agree_terms = form.BooleanField(
+        required=True,
+        label="Agree to terms of service, <a href='https://www.google.de'></a>")
+    agree_privacy = form.BooleanField(
+        required=True,
+        label="Agree our privacy policy, <a href='https://www.google.de'></a>")
 
     def save(self, request):
         # Ensure you call the parent class's save.
@@ -42,6 +46,7 @@ class AgreeTosSocialSignupForm(SignupForm):
 
         # Add your own processing here.
         user.agreed_to_terms = self.cleaned_data.get('agree_terms')
+        user.agreed_to_privacy = self.cleaned_data.get('agree_privacy')
         user.save()
         # You must return the original result.
         return user
