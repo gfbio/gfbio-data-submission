@@ -24,26 +24,87 @@
 
                 <p class="text-center">
                     {% blocktrans with provider_name=account.get_provider.name site_name=site.name %}
-                        You are about to use your <b>{{ provider_name }}</b> account to
+                        You are about to use your <b>{{ provider_name }}</b>
+                        account to
                         login
                         to
-                        <b>{{ site_name }}</b>. As a final step, please complete the
+                        <b>{{ site_name }}</b>. As a final step, please complete
+                        the
                         following
                         form:{% endblocktrans %}</p>
 
                 <form class="login" id="signup_form" method="post"
                       action="{% url 'socialaccount_signup' %}">
+
                     {% csrf_token %}
-                    {{ form|crispy }}
+
+                    {#                    {{ form|crispy }}#}
+                    <div class="form-row">
+                        <div class="form-group col-md-6 mb-0">
+                            {{ form.email|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6 mb-0">
+                            {{ form.username|as_crispy_field }}
+                        </div>
+                    </div>
+
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6 mb-0">
+                            {{ form.agree_terms|as_crispy_field }}
+                        </div>
+                        <div class="form-group col-md-6 mb-0">
+                            {{ form.agree_privacy|as_crispy_field }}
+                        </div>
+                    </div>
+
+
                     {% if redirect_field_value %}
                         <input type="hidden" name="{{ redirect_field_name }}"
                                value="{{ redirect_field_value }}"/>
                     {% endif %}
+
                     <button class="btn btn-block btn-secondary green mt-4"
                             type="submit">{% trans "Sign Up" %} &raquo;
                     </button>
 
                 </form>
+
+                TODO: layout manually, see below
+
+                {# https://simpleisbetterthancomplex.com/tutorial/2018/11/28/advanced-form-rendering-with-django-crispy-forms.html #}
+
+                {#            <form method="post">#}
+                {#    {% csrf_token %}#}
+                {#    <div class="form-row">#}
+                {#      <div class="form-group col-md-6 mb-0">#}
+                {#        {{ form.email|as_crispy_field }}#}
+                {#      </div>#}
+                {#      <div class="form-group col-md-6 mb-0">#}
+                {#        {{ form.password|as_crispy_field }}#}
+                {#      </div>#}
+                {#    </div>#}
+                {#    {{ form.address_1|as_crispy_field }}#}
+                {#    {{ form.address_2|as_crispy_field }}#}
+                {#    <div class="form-row">#}
+                {#      <div class="form-group col-md-6 mb-0">#}
+                {#        {{ form.city|as_crispy_field }}#}
+                {#      </div>#}
+                {#      <div class="form-group col-md-4 mb-0">#}
+                {#        {{ form.state|as_crispy_field }}#}
+                {#      </div>#}
+                {#      <div class="form-group col-md-2 mb-0">#}
+                {#        {{ form.zip_code|as_crispy_field }}#}
+                {#      </div>#}
+                {#    </div>#}
+                {#    {{ form.check_me_out|as_crispy_field }}#}
+                {#    <button type="submit" class="btn btn-primary">Sign in</button>#}
+                {#  </form>#}
+
+
             </div>
         </div>
     </div>
