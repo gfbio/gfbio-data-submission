@@ -3,6 +3,7 @@ from django import forms as form
 from django.contrib.auth import forms, get_user_model
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
+from django.utils.safestring import mark_safe
 
 User = get_user_model()
 
@@ -34,9 +35,17 @@ class UserCreationForm(forms.UserCreationForm):
 class AgreeTosSocialSignupForm(SignupForm):
     agree_terms = form.BooleanField(
         required=True,
+        label=mark_safe(
+            'Yes, I accept the <a href="https://www.gfbio.org/terms-of-use">'
+            'GFBio Terms of Use</a>'
+        )
     )
     agree_privacy = form.BooleanField(
         required=True,
+        label=mark_safe(
+            'Yes, I accept the <a href="https://www.gfbio.org/privacy-policy">'
+            'GFBio Privacy Policy</a>'
+        )
     )
 
     def save(self, request):
