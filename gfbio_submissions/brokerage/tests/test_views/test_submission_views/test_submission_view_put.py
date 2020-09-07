@@ -334,10 +334,9 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
         self.assertTrue('accession "PRJEB0815"' in request_log.response_content)
 
         # UPDATE EMBARGO ON CLOSED SUBMISSION
-
         RequestLog.objects.all().delete()
         self.assertEqual(0, len(RequestLog.objects.all()))
-        
+
         submission.status = Submission.CLOSED
         submission.save()
 

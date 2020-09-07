@@ -19,7 +19,6 @@ from ..models import Submission, SubmissionUpload
 from ..permissions import IsOwnerOrReadOnly
 from ..serializers import SubmissionUploadListSerializer, \
     SubmissionDetailSerializer, SubmissionUploadSerializer
-from ..utils.ena import update_ena_embargo_date
 from ..utils.submission_tools import get_embargo_from_request
 
 
@@ -96,10 +95,6 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         # TODO: 06.06.2019 allow edit of submissions with status SUBMITTED ...
         if instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED:
             response = self.update(request, *args, **kwargs)
-            # check for ena embargo update
-            if new_embargo and instance.embargo != new_embargo:
-                instance.embargo = new_embargo
-                update_ena_embargo_date(instance)
 
             # FIXME: updates to submission download url are not covered here
             # affected_submissions = instance.submission_set.filter(broker_submission_id=instance.broker_submission_id)
@@ -107,12 +102,18 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
             from gfbio_submissions.brokerage.tasks import \
                 check_for_molecular_content_in_submission_task, \
                 trigger_submission_transfer_for_updates, \
-                update_submission_issue_task, get_gfbio_helpdesk_username_task
+                update_submission_issue_task, get_gfbio_helpdesk_username_task, \
+                update_ena_embargo_task, notify_user_embargo_changed_task
 
             update_chain = get_gfbio_helpdesk_username_task.s(
                 submission_id=instance.pk).set(
                 countdown=SUBMISSION_DELAY) \
                            | update_submission_issue_task.s(
+                submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+            if new_embargo and instance.embargo != new_embargo:
+                update_chain = update_chain | update_ena_embargo_task.s(
+                submission_id=instance.pk).set(countdown=SUBMISSION_DELAY) \
+                               | notify_user_embargo_changed_task.s(
                 submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
             update_chain()
 
@@ -135,16 +136,19 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                 instance.save()
                 # update helpdesk
                 from gfbio_submissions.brokerage.tasks import \
-                    update_submission_issue_task, get_gfbio_helpdesk_username_task
+                    update_submission_issue_task, get_gfbio_helpdesk_username_task, \
+                    update_ena_embargo_task, notify_user_embargo_changed_task
 
                 update_chain = get_gfbio_helpdesk_username_task.s(
                     submission_id=instance.pk).set(
                     countdown=SUBMISSION_DELAY) \
                                | update_submission_issue_task.s(
-                    submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+                    submission_id=instance.pk).set(countdown=SUBMISSION_DELAY) \
+                    | update_ena_embargo_task.s(
+                        submission_id=instance.pk).set(countdown=SUBMISSION_DELAY) \
+                                   | notify_user_embargo_changed_task.s(
+                        submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
                 update_chain()
-                # update ena
-                update_ena_embargo_date(instance)
         else:
             response = Response(
                 data={

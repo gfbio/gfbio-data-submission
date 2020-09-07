@@ -11,6 +11,8 @@ from django.db.utils import IntegrityError
 from django.utils.encoding import smart_text
 from kombu.utils import json
 from requests import ConnectionError, Response
+from pytz import timezone
+import textwrap
 
 from config.settings.base import HOST_URL_ROOT, ADMIN_URL
 from gfbio_submissions.generic.models import SiteConfiguration, RequestLog
@@ -46,6 +48,7 @@ from .utils.task_utils import jira_error_auto_retry, \
     retry_no_ticket_available_exception, \
     get_submitted_submission_and_site_configuration, \
     send_data_to_ena_for_validation_or_test
+from ..generic.utils import logged_requests
 
 logger = logging.getLogger(__name__)
 
@@ -1960,3 +1963,129 @@ def notify_curators_on_embargo_ends_task(self):
         return results
 
     return "No notifications to send"
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.update_ena_embargo_task',
+)
+def update_ena_embargo_task(self, prev=None, submission_id=None):
+    logger.info('tasks.py | update_ena_embargo_task | submission_id={0}'.format(submission_id))
+    TaskProgressReport.objects.create_initial_report(
+        submission=None,
+        task=self)
+
+    submission = Submission.objects.get(id=submission_id)
+
+    study_primary_accession = submission.brokerobject_set.filter(
+        type='study').first()
+    if study_primary_accession:
+        study_primary_accession = study_primary_accession.persistentidentifier_set.filter(
+            pid_type='PRJ').first()
+    site_config = submission.user.site_configuration
+    if site_config is None:
+        logger.warning(
+            'ena.py | update_ena_embargo_task | no site_configuration found | submission_id={0}'.format(
+                submission.broker_submission_id)
+        )
+        return 'no site_configuration'
+
+    if study_primary_accession:
+        logger.info(
+            'ena.py | update_ena_embargo_task | primary accession '
+            'found for study | accession_no={0} | submission_id={1}'.format(
+                study_primary_accession,
+                submission.broker_submission_id)
+        )
+
+        current_datetime = datetime.datetime.now(timezone('UTC')).isoformat()
+        submission_xml = textwrap.dedent(
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<SUBMISSION_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+            ' xsi:noNamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.submission.xsd">'
+            '<SUBMISSION'
+            ' alias="gfbio:hold:{broker_submission_id}:{time_stamp}"'
+            ' center_name="GFBIO" broker_name="GFBIO">'
+            '<ACTIONS>'
+            '<ACTION>'
+            '<HOLD target="{accession_no}" HoldUntilDate="{hold_date}"/>'
+            '</ACTION>'
+            '</ACTIONS>'
+            '</SUBMISSION>'
+            '</SUBMISSION_SET>'.format(
+                hold_date=submission.embargo.isoformat(),
+                broker_submission_id=submission.broker_submission_id,
+                time_stamp=current_datetime,
+                accession_no=study_primary_accession,
+            )
+        )
+
+        auth_params = {
+            'auth': site_config.ena_server.authentication_string,
+        }
+        data = {'SUBMISSION': ('submission.xml', submission_xml)}
+
+        response = logged_requests.post(
+            url=site_config.ena_server.url,
+            submission=submission,
+            return_log_id=False,
+            params=auth_params,
+            files=data,
+            verify=False
+        )
+        return 'success',
+
+    else:
+        logger.warning(
+            'ena.py | update_ena_embargo_task | no primary accession no '
+            'found for study | submission_id={0}'.format(
+                submission.broker_submission_id)
+        )
+        return 'no primary accession number found, submission={}'.format(submission.broker_submission_id)
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.notify_user_embargo_changed_task',
+    autoretry_for=(TransferServerError,
+                   TransferClientError
+                   ),
+    retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
+    retry_backoff=SUBMISSION_RETRY_DELAY,
+    retry_jitter=True
+)
+def notify_user_embargo_changed_task(self, prev=None, submission_id=None):
+    logger.info('tasks.py | notify_user_embargo_changed_task | submission_id={0}'.format(submission_id))
+    TaskProgressReport.objects.create_initial_report(
+        submission=None,
+        task=self)
+
+    submission = Submission.objects.get(id=submission_id)
+    if submission:
+        site_config = submission.user.site_configuration
+        if site_config:
+            reference = submission.get_primary_helpdesk_reference()
+            if reference:
+                comment = """
+                Dear submitter,
+
+                you have successfully changed the embargo date of your data set.
+                The data will be released on {}.
+
+                Best regards,
+                GFBio Data Submission Team""".format(
+                    submission.embargo.isoformat())
+                jira_client = JiraClient(resource=site_config.helpdesk_server)
+                jira_client.add_comment(
+                    key_or_issue=reference.reference_key,
+                    text=comment
+                )
+                return jira_error_auto_retry(jira_client=jira_client, task=self,
+                                             broker_submission_id=submission.broker_submission_id)
+
+    return {
+        'status': 'error',
+        'submission': '{}'.format(submission.broker_submission_id),
+        'msg': 'missing site_config or jira ticket'
+    }

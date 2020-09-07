@@ -483,7 +483,7 @@ class TestJiraIssueUpdateView(APITestCase):
     def test_embargo_is_identical(self):
         submission = Submission.objects.first()
         embargo_date = arrow.now().shift(days=14).format('YYYY-MM-DD')
-        embargo_date_hour_offset = arrow.now().shift(days=14, hours=4).format('YYYY-MM-DD')
+        embargo_date_hour_offset = arrow.now().shift(days=14, hours=1).format('YYYY-MM-DD')
         submission.embargo = embargo_date
         submission.save()
         self.assertEqual(0, len(RequestLog.objects.all()))
