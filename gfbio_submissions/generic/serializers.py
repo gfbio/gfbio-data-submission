@@ -61,15 +61,24 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 msg='serializer.py | JiraHookRequestSerializer | '
                     'unable to get submission | {0}'.format(e)
             )
-        update_ena = True if submission.embargo != embargo_date.date() else False
+
         submission.embargo = embargo_date.date()
         submission.save()
 
         updating_user = self.validated_data.get('user', {}).get('emailAddress', '')
+        logger.info(
+            msg='serializer.py | JiraHookRequestSerializer | '
+                'updating user | {0}'.format(updating_user)
+        )
         # get curators
         curators = User.objects.filter(groups__name='Curators')
-        if update_ena and updating_user in curators:
-            pass
+        if len(curators) > 0 and updating_user in curators:
+            from gfbio_submissions.brokerage.tasks import update_ena_embargo_task
+            update_ena_embargo_task.apply_async(
+                kwargs={
+                    'submission_id': submission_id,
+                }
+            )
 
     # TODO: !IMPORTANT! Please add a check procedure in the generic parsing of the JSON,
     #  that if the user that caused the action was the brokeragent,
