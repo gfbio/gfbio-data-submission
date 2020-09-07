@@ -303,6 +303,15 @@ def jira_error_auto_retry(jira_client, task, broker_submission_id,
         )
     return True
 
+def jira_cancel_issue(submission_id=None, admin=False):
+    from gfbio_submissions.brokerage.tasks import \
+        jira_cancel_issue_task
+    jira_cancel_issue_task.apply_async(
+        kwargs={
+            'submission_id':submission_id,
+            'admin': admin,
+        }
+    )
 
 def request_error_auto_retry(response, task, broker_submission_id,
                              max_retries=SUBMISSION_MAX_RETRIES):
