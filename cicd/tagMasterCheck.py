@@ -12,7 +12,7 @@ headers = {'PRIVATE-TOKEN': os.environ['PRIVATE_TOKEN'] }
 r = requests.get("https://gitlab.gwdg.de/api/v4/projects/{}/repository/commits/{}/refs".format(os.environ['CI_PROJECT_ID'], COMMIT_SHA), headers=headers)
 
 data = r.json()
-isMaster = False
+isInMaster = False
 branchCount = 0
 allBranches = 'Tag found in: '
 
@@ -25,9 +25,10 @@ for obj in data:
       branchCount += 1
       allBranches += '{} '.format(obj['name'])
       if obj['name'] == 'master':
-          isMaster = True
+          isInMaster = True
 
-if isMaster and branchCount == 1:
+#if isInMaster and branchCount == 1:
+if isInMaster:
     print(1)
 else:
     print(allBranches)
