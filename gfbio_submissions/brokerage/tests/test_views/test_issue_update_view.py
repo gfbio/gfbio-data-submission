@@ -99,6 +99,9 @@ class TestJiraIssueUpdateView(APITestCase):
         response = self.client.post(
             self.url,
             {
+                "user": {
+                    "emailAddress": "test@test.com"
+                },
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
@@ -130,6 +133,9 @@ class TestJiraIssueUpdateView(APITestCase):
         self.client.post(
             self.url,
             {
+                "user": {
+                    "emailAddress": "test@test.com"
+                },
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
@@ -185,6 +191,9 @@ class TestJiraIssueUpdateView(APITestCase):
         response = self.client.post(
             self.url,
             {
+                "user": {
+                    "emailAddress": "test@test.com"
+                },
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
@@ -210,6 +219,7 @@ class TestJiraIssueUpdateView(APITestCase):
 
         hook_content = _get_jira_hook_request_data()
         payload = json.loads(hook_content)
+        payload['user']['emailAddress'] = 'test@test.com'
         payload['issue']['key'] = 'SAND-007'
         payload['issue']['fields']['customfield_10303'] = '{}'.format(
             submission.broker_submission_id)
@@ -225,6 +235,7 @@ class TestJiraIssueUpdateView(APITestCase):
 
         hook_content = _get_jira_hook_request_data(no_changelog=True)
         payload = json.loads(hook_content)
+        payload['user']['emailAddress'] = 'test@test.com'
         payload['issue']['key'] = 'SAND-007'
         payload['issue']['fields']['customfield_10303'] = '{}'.format(
             submission.broker_submission_id)
@@ -246,13 +257,17 @@ class TestJiraIssueUpdateView(APITestCase):
 
     def test_error_in_issue(self):
         self.assertEqual(0, len(RequestLog.objects.all()))
-        response = self.client.post(self.url, {"issue": {"key": "SAND-007"},
-                                               "changelog": {
-                                                   "items": [
-                                                       {}
-                                                   ]
-                                               }},
-                                    format='json')
+        response = self.client.post(self.url, {
+            "user": {
+                "emailAddress": "test@test.com"
+            },
+            "issue": {"key": "SAND-007"},
+            "changelog": {
+               "items": [
+                   {}
+               ]
+            }},
+            format='json')
 
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertIn(b'fields', response.content)
@@ -263,6 +278,9 @@ class TestJiraIssueUpdateView(APITestCase):
     def test_missing_fields(self):
         self.assertEqual(0, len(RequestLog.objects.all()))
         response = self.client.post(self.url, {
+            "user": {
+                "emailAddress": "test@test.com"
+            },
             "issue": {"key": "SAND-007", "fields": {}},
             "changelog": {
                 "items": [
@@ -284,6 +302,9 @@ class TestJiraIssueUpdateView(APITestCase):
         response = self.client.post(
             self.url,
             {
+                "user": {
+                    "emailAddress": "test@test.com"
+                },
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
@@ -310,6 +331,9 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(0, len(RequestLog.objects.all()))
         response = self.client.post(
             self.url, {
+                "user": {
+                    "emailAddress": "test@test.com"
+                },
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
@@ -338,6 +362,9 @@ class TestJiraIssueUpdateView(APITestCase):
         response = self.client.post(
             self.url,
             {
+                "user": {
+                    "emailAddress": "test@test.com"
+                },
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
@@ -370,6 +397,9 @@ class TestJiraIssueUpdateView(APITestCase):
         response = self.client.post(
             self.url,
             {
+                "user": {
+                    "emailAddress": "test@test.com"
+                },
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
@@ -397,6 +427,9 @@ class TestJiraIssueUpdateView(APITestCase):
         response = self.client.post(
             self.url,
             {
+                "user": {
+                    "emailAddress": "test@test.com"
+                },
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
@@ -426,6 +459,9 @@ class TestJiraIssueUpdateView(APITestCase):
         response = self.client.post(
             self.url,
             {
+                "user": {
+                    "emailAddress": "test@test.com"
+                },
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
@@ -456,6 +492,9 @@ class TestJiraIssueUpdateView(APITestCase):
         response = self.client.post(
             self.url,
             {
+                "user": {
+                    "emailAddress": "test@test.com"
+                },
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
@@ -490,6 +529,9 @@ class TestJiraIssueUpdateView(APITestCase):
         response = self.client.post(
             self.url,
             {
+                "user": {
+                    "emailAddress": "test@test.com"
+                },
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
@@ -517,6 +559,9 @@ class TestJiraIssueUpdateView(APITestCase):
         response = self.client.post(
             self.url,
             {
+                "user": {
+                    "emailAddress": "test@test.com"
+                },
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
@@ -541,6 +586,39 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST,
                          RequestLog.objects.first().response_status)
 
+    def test_missing_user_reference(self):
+        submission = Submission.objects.first()
+        submission.additionalreference_set.all().delete()
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.client.post(
+            self.url,
+            {
+                "issue": {
+                    "key": "SAND-007",
+                    "issue": {
+                        "key": "SAND-007",
+                        "fields": {
+                            "customfield_10200": arrow.now().for_json(),
+                            "customfield_10303": "{}".format(
+                                submission.broker_submission_id),
+                        }
+                    },
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
+                }
+            },
+            format='json')
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertIn(
+            b'{"user":["This field is required."]}',
+            response.content)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST,
+                         RequestLog.objects.first().response_status)
+
     def test_invalid_submission(self):
         submission = Submission.objects.first()
         submission.additionalreference_set.all().delete()
@@ -548,6 +626,9 @@ class TestJiraIssueUpdateView(APITestCase):
         response = self.client.post(
             self.url,
             {
+                "user": {
+                    "emailAddress": "test@test.com"
+                },
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
@@ -590,6 +671,9 @@ class TestJiraIssueUpdateView(APITestCase):
         response = self.client.post(
             self.url,
             {
+                "user": {
+                    "emailAddress": "test@test.com"
+                },
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
