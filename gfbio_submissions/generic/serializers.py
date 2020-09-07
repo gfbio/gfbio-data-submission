@@ -6,6 +6,7 @@ from uuid import UUID
 
 import arrow
 from django.core.mail import mail_admins
+from gfbio_submissions.users.models import User
 from rest_framework import serializers
 
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, ENA, \
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class JiraHookRequestSerializer(serializers.Serializer):
+    user = serializers.JSONField()
     issue = serializers.JSONField()
     changelog = serializers.JSONField()
     broker_submission_id = serializers.CharField(read_only=True, required=False)
@@ -59,9 +61,15 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 msg='serializer.py | JiraHookRequestSerializer | '
                     'unable to get submission | {0}'.format(e)
             )
-
+        update_ena = True if submission.embargo != embargo_date.date() else False
         submission.embargo = embargo_date.date()
         submission.save()
+
+        updating_user = self.validated_data.get('user', {}).get('emailAddress', '')
+        # get curators
+        curators = User.objects.filter(groups__name='Curators')
+        if update_ena and updating_user in curators:
+            pass
 
     # TODO: !IMPORTANT! Please add a check procedure in the generic parsing of the JSON,
     #  that if the user that caused the action was the brokeragent,
