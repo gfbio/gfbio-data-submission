@@ -4,6 +4,7 @@ from django.contrib.auth import forms, get_user_model
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
+from django.utils.safestring import mark_safe
 
 from gfbio_submissions.generic.models import SiteConfiguration
 
