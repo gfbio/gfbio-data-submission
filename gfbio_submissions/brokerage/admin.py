@@ -17,6 +17,7 @@ from .models import PersistentIdentifier, \
 from .utils.ena import release_study_on_ena
 from .utils.submission_transfer import \
     SubmissionTransferHandler
+from .utils.task_utils import jira_cancel_issue
 
 
 class PersistentIdentifierInline(admin.TabularInline):
@@ -84,6 +85,13 @@ def release_submission_study_on_ena(modeladmin, request, queryset):
 
 release_submission_study_on_ena.short_description = 'Release Study on ENA'
 
+def cancel_selected_submissions(modeladmin, request, queryset):
+    for obj in queryset:
+        obj.status = Submission.CANCELLED
+        obj.save()
+        jira_cancel_issue(submission_id=obj.pk, admin=True)
+
+cancel_selected_submissions.short_description = 'Cancel selected submissions'
 
 def create_broker_objects_and_ena_xml(modeladmin, request, queryset):
     from gfbio_submissions.brokerage.tasks import \
@@ -346,6 +354,7 @@ class SubmissionAdmin(admin.ModelAdmin):
     inlines = (AuditableTextDataInlineAdmin,
                AdditionalReferenceInline,)
     actions = [
+        cancel_selected_submissions,
         release_submission_study_on_ena,
         validate_against_ena,
         submit_to_ena_test,
@@ -363,6 +372,11 @@ class SubmissionAdmin(admin.ModelAdmin):
     ]
     readonly_fields = ('created', 'modified',)
 
+    def save_model(self, request, obj, form, change):
+        old_sub = Submission.objects.get(id=obj.pk)
+        if change and old_sub.status != obj.status and obj.status == Submission.CANCELLED:
+            jira_cancel_issue(submission_id=obj.pk, admin=True)
+        super(SubmissionAdmin, self).save_model(request, obj, form, change)
 
 class RunFileRestUploadAdmin(admin.ModelAdmin):
     readonly_fields = ('created',)

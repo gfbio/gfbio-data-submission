@@ -4,8 +4,10 @@ import logging
 from io import StringIO
 from json import JSONDecodeError
 
+from django.db import transaction
 from jira import JIRA, JIRAError
 from requests import ConnectionError
+from rest_framework import status
 
 from gfbio_submissions.brokerage.configuration.settings import \
     PANGAEA_ISSUE_DOI_FIELD_NAME, JIRA_FALLBACK_USERNAME, \
@@ -352,3 +354,52 @@ class JiraClient(object):
             if field_value is not None and 'doi' in field_value:
                 return field_value
         return None
+
+    def cancel_issue(self, issue, submission, admin):
+        transitions = self.jira.transitions(issue)
+        with transaction.atomic():
+            RequestLog.objects.create(
+                type=RequestLog.OUTGOING,
+                method=RequestLog.GET,
+                url='https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions'.format(issue),
+                user=submission.user,
+                submission_id=submission.broker_submission_id,
+                response_content=transitions,
+                response_status=status.HTTP_200_OK,
+            )
+
+        cancel_transition_id = '0'
+        # [(t['id'], t['name']) for t in transitions] => [(u'5', u'Resolve Issue'), (u'2', u'Close Issue')]
+        for t in transitions:
+            if t['id'] == '761' or t['id'] == '801':
+                cancel_transition_id = t['id']
+                break
+
+        logger.info(
+            'JiraClient | cancel_issue | key {} | transition_id {} '.format(issue, cancel_transition_id))
+
+        if cancel_transition_id != '0':
+            try:
+                resolution_name = 'Cancelled by submitter' if not admin else 'Incomplete'
+                response = self.jira.transition_issue(
+                    issue,
+                    cancel_transition_id,
+                    fields={'resolution':{'name': resolution_name}},
+                )
+            except JIRAError as e:
+                response = e
+                logger.info('JiraClient | cancel_issue | Error {}'.format(e))
+
+            with transaction.atomic():
+                RequestLog.objects.create(
+                    type=RequestLog.OUTGOING,
+                    method=RequestLog.POST,
+                    url='https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions'.format(issue),
+                    user=submission.user,
+                    submission_id=submission.broker_submission_id,
+                    response_content=response,
+                    response_status=status.HTTP_200_OK,
+                )
+            return
+
+        logger.info('JiraClient | cancel_issue | transition id 801 or 761 not found')
