@@ -130,12 +130,61 @@
         },
         "/submissions/{broker_submission_id}": {
             "get": {
-                "description": "Returns a user based on a single ID, if the user does not have access to the pet",
-                "operationId": "get submission by broker-submission-id"
+                "description": "Returns a single submission, identified by a unique broker_submission_id",
+                "operationId": "get submission by broker-submission-id",
+                "parameters": [
+                    {
+                        "name": "broker_submission_id",
+                        "in": "path",
+                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Submission response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Submission"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
             },
             "put": {
                 "description": "Updates an existing Submission",
                 "operationId": "update submission",
+                "parameters": [
+                    {
+                        "name": "broker_submission_id",
+                        "in": "path",
+                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "description": "Submission to update",
                     "required": true,
@@ -201,6 +250,212 @@
                     }
                 ]
             }
+        },
+        "/submissions/{broker_submission_id}/upload/": {
+            "post": {
+                "description": "Upload a file associated to an existing submission",
+                "operationId": "create submission upload",
+                "parameters": [
+                    {
+                        "name": "broker_submission_id",
+                        "in": "path",
+                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Submission to submit",
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "media": {
+                                        "type": "string",
+                                        "format": "base64"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Submission upload response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubmissionUpload"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/submissions/{broker_submission_id}/upload/{primary_key}": {
+            "put": {
+                "description": "Updates an existing SubmissionUpload",
+                "operationId": "update submission upload",
+                "parameters": [
+                    {
+                        "name": "broker_submission_id",
+                        "in": "path",
+                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "primary_key",
+                        "in": "path",
+                        "description": "Unique id of SubmissionUpload",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Modified SubmissionUpload",
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "media": {
+                                        "type": "string",
+                                        "format": "base64"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "SubmissionUpload response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubmissionUpload"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a SubmissionUpload",
+                "operationId": "delete submission upload",
+                "parameters": [
+                    {
+                        "name": "broker_submission_id",
+                        "in": "path",
+                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "primary_key",
+                        "in": "path",
+                        "description": "Unique id of SubmissionUpload",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "SubmissionUpload successfully deleted"
+                    },
+                    "default": {
+                        "description": "unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/submissions/{broker_submission_id}/uploads/": {
+            "get": {
+                "description": "Returns a list of SubmissionUploads belonging to the same broker_submission_id",
+                "operationId": "get submission uploads by broker-submission-id",
+                "parameters": [
+                    {
+                        "name": "broker_submission_id",
+                        "in": "path",
+                        "description": "Unique id of submission uploads to fetch (A UUID specified by RFC4122).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Submission response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SubmissionUploadListItem"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -228,9 +483,67 @@
                         ]
                     },
                     {
-                        "data": {
-                            "allOf": {
-                                "$ref": "common_requirements_definitions.json#/minimal_requirements"
+                        "$ref": "common_requirements_definitions.json#/minimal_requirements"
+                    }
+                ]
+            },
+            "SubmissionUpload": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "broker_submission_id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "user": {
+                                "type": "string"
+                            },
+                            "file": {
+                                "type": "string"
+                            },
+                            "attach_to_ticket": {
+                                "type": "bool"
+                            },
+                            "meta_data": {
+                                "type": "bool"
+                            }
+                        }
+                    }
+                ]
+            },
+            "SubmissionUploadListItem": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "pk": {
+                                "type": "string"
+                            },
+                            "submission": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "user": {
+                                "type": "string"
+                            },
+                            "file": {
+                                "type": "string"
+                            },
+                            "file_name": {
+                                "type": "string"
+                            },
+                            "file_size": {
+                                "type": "number"
+                            },
+                            "attach_to_ticket": {
+                                "type": "bool"
+                            },
+                            "meta_data": {
+                                "type": "bool"
                             }
                         }
                     }

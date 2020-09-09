@@ -171,6 +171,9 @@ class TestSubmissionUploadView(TestCase):
         uploads_len = len(SubmissionUpload.objects.all())
         response = self.api_client.post(url, data, format='multipart')
 
+        print(response.status_code)
+        print(response.content)
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn(b'broker_submission_id', response.content)
         self.assertIn(b'"id"', response.content)
@@ -519,6 +522,7 @@ class TestSubmissionUploadView(TestCase):
         data = self._create_test_data(path='/tmp/test_primary_data_file_2222',
                                       delete=False)
         response = self.api_client.put(url, data, format='multipart')
+        print(response.content)
         self.assertEqual(200, response.status_code)
         self.assertEqual(1, len(SubmissionUpload.objects.all()))
         fname = SubmissionUpload.objects.all().first().file.name
