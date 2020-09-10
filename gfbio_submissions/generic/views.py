@@ -7,7 +7,6 @@ from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
 from config.settings.base import STATIC_ROOT
 from gfbio_submissions.generic.forms import ValidationSchemaSelectionForm
-from rest_framework.response import Response
 
 
 class BrokerageAPISchemaView(View):
@@ -25,7 +24,6 @@ class BrokerageValidationSchemaView(View):
         print(kwargs)
         form = ValidationSchemaSelectionForm(kwargs)
         if form.is_valid():
-            # print(form.cleaned_data)
             file_name = form.cleaned_data.get('schema')
             path = os.path.join(STATIC_ROOT, 'schemas', file_name)
             return HttpResponse(status=HTTP_200_OK,

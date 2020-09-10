@@ -150,10 +150,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Submission"
-                                    }
+                                    "$ref": "#/components/schemas/Submission"
                                 }
                             }
                         }
@@ -222,6 +219,18 @@
             "delete": {
                 "description": "Deletes a Submission",
                 "operationId": "delete submission",
+                "parameters": [
+                    {
+                        "name": "broker_submission_id",
+                        "in": "path",
+                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
                 "responses": {
                     "204": {
                         "description": "Submission successfully deleted"
@@ -236,19 +245,7 @@
                             }
                         }
                     }
-                },
-                "parameters": [
-                    {
-                        "name": "broker_submission_id",
-                        "in": "path",
-                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ]
+                }
             }
         },
         "/submissions/{broker_submission_id}/upload/": {
@@ -422,7 +419,7 @@
                     {
                         "name": "broker_submission_id",
                         "in": "path",
-                        "description": "Unique id of submission uploads to fetch (A UUID specified by RFC4122).",
+                        "description": "Unique id of a submission, which uploads will be fetched (A UUID specified by RFC4122).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -432,7 +429,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Submission response",
+                        "description": "SubmissionUpload response",
                         "content": {
                             "application/json": {
                                 "schema": {
