@@ -456,6 +456,96 @@
                     }
                 }
             }
+        },
+        "/submissions/{broker_submission_id}/comment/": {
+            "post": {
+                "description": "Add a comment to the primary GFBIO-Helpdesk issue associated with a submission",
+                "operationId": "add comment",
+                "parameters": [
+                    {
+                        "name": "broker_submission_id",
+                        "in": "path",
+                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Comment to attach",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Comment"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Submission response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Comment"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/submissions/jira/update/": {
+            "post": {
+                "description": "Update a Submission based on data of a JIRA issue. Usually invoked via a JIRA hook.",
+                "operationId": "update submission via jira",
+                "requestBody": {
+                    "description": "Data to update a submission via a JIRA hook.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/JiraHookBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Submission response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/JiraHookBody"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -606,6 +696,45 @@
                 "required": [
                     "code",
                     "message"
+                ]
+            },
+            "Comment": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "comment": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "comment"
+                        ]
+                    }
+                ]
+            },
+            "JiraHookBody": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "issue": {
+                                "type": "string",
+                                "format": "json"
+                            },
+                            "changelog": {
+                                "type": "string",
+                                "format": "json"
+                            },
+                            "broker_submission_id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "issue_key": {
+                                "type": "string"
+                            }
+                        }
+                    }
                 ]
             },
             "Error": {
