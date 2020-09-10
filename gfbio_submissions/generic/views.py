@@ -21,7 +21,6 @@ class BrokerageAPISchemaView(View):
 class BrokerageValidationSchemaView(View):
 
     def get(self, request, *args, **kwargs):
-        print(kwargs)
         form = ValidationSchemaSelectionForm(kwargs)
         if form.is_valid():
             file_name = form.cleaned_data.get('schema')
