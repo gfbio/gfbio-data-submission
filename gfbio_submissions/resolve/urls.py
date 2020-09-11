@@ -5,9 +5,9 @@ from . import views
 
 app_name = "resolve"
 urlpatterns = [
-    # url(
-    #     regex=r'insdc/$',
-    #     view=views.XXX.as_view(),
-    #     name='resolve_insdc'
-    # ),
+    url(
+        regex=r'insdc/(?P<pid>[0-9a-zA-Z-]+)$',
+        view=views.PersistentIdentifierResolveView.as_view(),
+        name='resolve_insdc'
+    ),
 ]
