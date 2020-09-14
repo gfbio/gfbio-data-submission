@@ -36,3 +36,7 @@ class TestInsdcResolveView(TestCase):
         response = self.client.get('/resolve/insdc/acc0001')
         print(response.status_code)
         print(response.content)
+        print('\n----------------------\n')
+        response = self.client.get('/resolve/insdc/acc000x')
+        print(response.status_code)
+        print(response.content)
