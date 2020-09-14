@@ -8,8 +8,6 @@ from gfbio_submissions.users.models import User
 
 class TestInsdcResolveView(TestCase):
 
-    # TODO: brokerobject fk is not allowed to be null
-
     @classmethod
     def setUpTestData(cls):
         user = User.objects.create_user(
@@ -34,29 +32,36 @@ class TestInsdcResolveView(TestCase):
         self.assertEqual(10, len(all_pids))
 
     def test_get_200(self):
-        response = self.client.get('/resolve/insdc/acc0002')
+        response = self.client.get('/resolve/api/insdc/acc0002')
         self.assertEqual(200, response.status_code)
         self.assertIn(b'acc0002', response.content)
 
     def test_get_302(self):
-        response = self.client.get('/resolve/insdc/acc0001')
+        response = self.client.get('/resolve/api/insdc/acc0001')
         self.assertEqual(302, response.status_code)
 
     def test_get_404(self):
-        response = self.client.get('/resolve/insdc/acc000x')
+        response = self.client.get('/resolve/api/insdc/acc000x')
         self.assertEqual(404, response.status_code)
         self.assertIn(b'Not found', response.content)
 
     def test_get_status(self):
         pids = PersistentIdentifier.objects.all()
         for p in pids:
-            response = self.client.get('/resolve/insdc/{}'.format(p.pid))
+            response = self.client.get('/resolve/api/insdc/{}'.format(p.pid))
             if p.status == 'PUBLIC':
                 self.assertEqual(302, response.status_code)
             else:
                 self.assertEqual(200, response.status_code)
 
-    def test_template_get(self):
-        response = self.client.get('/resolve/insdc2/acc0001')
-        print(response.status_code)
-        # print(response.content)
+    def test_template_get_302(self):
+        response = self.client.get('/resolve/insdc/acc0001')
+        self.assertEqual(302, response.status_code)
+
+    def test_template_get_200(self):
+        response = self.client.get('/resolve/insdc/acc0002')
+        self.assertEqual(200, response.status_code)
+
+    def test_template_get_404(self):
+        response = self.client.get('/resolve/insdc/acc000x')
+        self.assertEqual(404, response.status_code)
