@@ -85,13 +85,16 @@ def release_submission_study_on_ena(modeladmin, request, queryset):
 
 release_submission_study_on_ena.short_description = 'Release Study on ENA'
 
+
 def cancel_selected_submissions(modeladmin, request, queryset):
     for obj in queryset:
         obj.status = Submission.CANCELLED
         obj.save()
         jira_cancel_issue(submission_id=obj.pk, admin=True)
 
+
 cancel_selected_submissions.short_description = 'Cancel selected submissions'
+
 
 def create_broker_objects_and_ena_xml(modeladmin, request, queryset):
     from gfbio_submissions.brokerage.tasks import \
@@ -378,6 +381,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         if old_sub and change and old_sub.status != obj.status and obj.status == Submission.CANCELLED:
             jira_cancel_issue(submission_id=obj.pk, admin=True)
         super(SubmissionAdmin, self).save_model(request, obj, form, change)
+
 
 class RunFileRestUploadAdmin(admin.ModelAdmin):
     readonly_fields = ('created',)

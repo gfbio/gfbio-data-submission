@@ -34,9 +34,13 @@ class TestInsdcResolveView(TestCase):
         self.assertEqual(10, len(all_pids))
 
     def test_get_200(self):
-        response = self.client.get('/resolve/insdc/acc0001')
+        response = self.client.get('/resolve/insdc/acc0002')
         self.assertEqual(200, response.status_code)
-        self.assertIn(b'acc0001', response.content)
+        self.assertIn(b'acc0002', response.content)
+
+    def test_get_302(self):
+        response = self.client.get('/resolve/insdc/acc0001')
+        self.assertEqual(302, response.status_code)
 
     def test_get_404(self):
         response = self.client.get('/resolve/insdc/acc000x')
@@ -48,13 +52,11 @@ class TestInsdcResolveView(TestCase):
         for p in pids:
             response = self.client.get('/resolve/insdc/{}'.format(p.pid))
             if p.status == 'PUBLIC':
-                self.assertEqual(200, response.status_code)
-                self.assertIn(p.pid, str(response.content))
+                self.assertEqual(302, response.status_code)
             else:
-                self.assertEqual(404, response.status_code)
-                self.assertIn(b'Not found', response.content)
+                self.assertEqual(200, response.status_code)
 
     def test_template_get(self):
         response = self.client.get('/resolve/insdc2/acc0001')
         print(response.status_code)
-        print(response.content)
+        # print(response.content)

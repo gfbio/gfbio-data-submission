@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-from pprint import pprint
 
+from django.shortcuts import redirect
 from rest_framework import mixins, generics, permissions
 from rest_framework.renderers import TemplateHTMLRenderer
+from rest_framework.response import Response
 
 from gfbio_submissions.brokerage.models import PersistentIdentifier
 from gfbio_submissions.resolve.serializer import \
@@ -11,27 +12,28 @@ from gfbio_submissions.resolve.serializer import \
 
 class PersistentIdentifierResolveView(mixins.RetrieveModelMixin,
                                       generics.GenericAPIView):
-    queryset = PersistentIdentifier.objects.filter(status='PUBLIC')
+    queryset = PersistentIdentifier.objects.all()
     serializer_class = PersistentIdentifierResolveSerializer
     lookup_field = 'pid'
     permission_classes = (permissions.AllowAny,)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.status == 'PUBLIC':
+            # TODO: add constant template for ena-url
+            return redirect('http://www.google.dk')
+        else:
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
 
     def get(self, request, *args, **kwargs):
-        response = self.retrieve(request, *args, **kwargs)
-        pprint(response.status_code)
-        pprint(response.data)
-        return response
+        return self.retrieve(request, *args, **kwargs)
 
 
-class PersistentIdentifierRedirectView(generics.RetrieveAPIView):
-    queryset = PersistentIdentifier.objects.filter(status='PUBLIC')
-    serializer_class = PersistentIdentifierResolveSerializer
-    lookup_field = 'pid'
-    permission_classes = (permissions.AllowAny,)
+class PersistentIdentifierRedirectView(PersistentIdentifierResolveView,
+                                       generics.RetrieveAPIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'resolve/resolve_redirect.html'
 
     def get(self, request, *args, **kwargs):
-        response = self.retrieve(request, *args, **kwargs)
-        print('\n\nresponse ', response.status_code)
-        return response
+        return self.retrieve(request, *args, **kwargs)
