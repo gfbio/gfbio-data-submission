@@ -10,7 +10,7 @@ from gfbio_submissions.resolve.serializer import \
 
 class PersistentIdentifierResolveView(mixins.RetrieveModelMixin,
                                       generics.GenericAPIView):
-    queryset = PersistentIdentifier.objects.all()
+    queryset = PersistentIdentifier.objects.filter(status='PUBLIC')
     serializer_class = PersistentIdentifierResolveSerializer
     lookup_field = 'pid'
     permission_classes = (permissions.AllowAny,)

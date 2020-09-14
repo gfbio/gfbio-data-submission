@@ -11,5 +11,4 @@ class PersistentIdentifierResolveSerializer(serializers.ModelSerializer):
         model = PersistentIdentifier
         fields = (
             'pid',
-            'status'
         )

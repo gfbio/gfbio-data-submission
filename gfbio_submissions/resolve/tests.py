@@ -18,6 +18,7 @@ class TestInsdcResolveView(TestCase):
             type='study',
             user=user
         )
+        cls.pid_values = []
         for i in range(0, 10):
             pid = PersistentIdentifier.objects.create(
                 archive='ENA',
@@ -26,17 +27,29 @@ class TestInsdcResolveView(TestCase):
                 broker_object=bo,
                 pid='acc000{}'.format(i + 1)
             )
+            cls.pid_values.append(pid.pid)
 
     def test_database_content(self):
         all_pids = PersistentIdentifier.objects.all()
-        print(all_pids)
         self.assertEqual(10, len(all_pids))
 
-    def test_get(self):
+    def test_get_200(self):
         response = self.client.get('/resolve/insdc/acc0001')
-        print(response.status_code)
-        print(response.content)
-        print('\n----------------------\n')
+        self.assertEqual(200, response.status_code)
+        self.assertIn(b'acc0001', response.content)
+
+    def test_get_404(self):
         response = self.client.get('/resolve/insdc/acc000x')
-        print(response.status_code)
-        print(response.content)
+        self.assertEqual(404, response.status_code)
+        self.assertIn(b'Not found', response.content)
+
+    def test_get_status(self):
+        pids = PersistentIdentifier.objects.all()
+        for p in pids:
+            response = self.client.get('/resolve/insdc/{}'.format(p.pid))
+            if p.status == 'PUBLIC':
+                self.assertEqual(200, response.status_code)
+                self.assertIn(p.pid, str(response.content))
+            else:
+                self.assertEqual(404, response.status_code)
+                self.assertIn(b'Not found', response.content)
