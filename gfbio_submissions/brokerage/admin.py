@@ -373,8 +373,9 @@ class SubmissionAdmin(admin.ModelAdmin):
     readonly_fields = ('created', 'modified',)
 
     def save_model(self, request, obj, form, change):
-        old_sub = Submission.objects.get(id=obj.pk)
-        if change and old_sub.status != obj.status and obj.status == Submission.CANCELLED:
+        # FIXME: this is not good and needs refactoring asap !
+        old_sub = Submission.objects.filter(id=obj.pk).first()
+        if old_sub and change and old_sub.status != obj.status and obj.status == Submission.CANCELLED:
             jira_cancel_issue(submission_id=obj.pk, admin=True)
         super(SubmissionAdmin, self).save_model(request, obj, form, change)
 

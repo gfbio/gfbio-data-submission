@@ -53,3 +53,8 @@ class TestInsdcResolveView(TestCase):
             else:
                 self.assertEqual(404, response.status_code)
                 self.assertIn(b'Not found', response.content)
+
+    def test_template_get(self):
+        response = self.client.get('/resolve/insdc2/acc0001')
+        print(response.status_code)
+        print(response.content)

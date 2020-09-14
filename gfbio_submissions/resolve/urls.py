@@ -10,4 +10,9 @@ urlpatterns = [
         view=views.PersistentIdentifierResolveView.as_view(),
         name='resolve_insdc'
     ),
+url(
+        regex=r'insdc2/(?P<pid>[0-9a-zA-Z-]+)$',
+        view=views.PersistentIdentifierRedirectView.as_view(),
+        name='resolve_insdc2'
+    ),
 ]
