@@ -35,9 +35,9 @@ class TestInsdcResolveView(TestCase):
         all_pids = PersistentIdentifier.objects.all()
         self.assertEqual(10, len(all_pids))
 
-    def test_get_200(self):
+    def test_get_403(self):
         response = self.client.get('/resolve/api/insdc/acc0002')
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(403, response.status_code)
         self.assertIn(b'acc0002', response.content)
 
     def test_get_302(self):
@@ -56,7 +56,7 @@ class TestInsdcResolveView(TestCase):
             if p.status == 'PUBLIC':
                 self.assertEqual(302, response.status_code)
             else:
-                self.assertEqual(200, response.status_code)
+                self.assertEqual(403, response.status_code)
 
     @responses.activate
     def test_template_get_302(self):
@@ -68,9 +68,9 @@ class TestInsdcResolveView(TestCase):
         response = self.client.get('/resolve/insdc/acc0001')
         self.assertEqual(302, response.status_code)
 
-    def test_template_get_200(self):
+    def test_template_get_403(self):
         response = self.client.get('/resolve/insdc/acc0002')
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(403, response.status_code)
 
     def test_template_get_404(self):
         response = self.client.get('/resolve/insdc/acc000x')

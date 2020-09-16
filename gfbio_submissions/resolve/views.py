@@ -4,6 +4,7 @@ from django.shortcuts import redirect
 from rest_framework import mixins, generics, permissions
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
+from rest_framework.status import HTTP_403_FORBIDDEN
 
 from gfbio_submissions.brokerage.configuration.settings import \
     ENA_STUDY_URL_PREFIX
@@ -26,7 +27,7 @@ class PersistentIdentifierResolveView(mixins.RetrieveModelMixin,
             return redirect('{}{}'.format(ENA_STUDY_URL_PREFIX, instance.pid))
         else:
             serializer = self.get_serializer(instance)
-            return Response(serializer.data)
+            return Response(serializer.data, status=HTTP_403_FORBIDDEN)
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
