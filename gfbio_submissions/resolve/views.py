@@ -5,6 +5,8 @@ from rest_framework import mixins, generics, permissions
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
 
+from gfbio_submissions.brokerage.configuration.settings import \
+    ENA_STUDY_URL_PREFIX
 from gfbio_submissions.brokerage.models import PersistentIdentifier
 from gfbio_submissions.resolve.serializer import \
     PersistentIdentifierResolveSerializer
@@ -21,7 +23,7 @@ class PersistentIdentifierResolveView(mixins.RetrieveModelMixin,
         instance = self.get_object()
         if instance.status == 'PUBLIC':
             # TODO: add constant template for ena-url
-            return redirect('http://www.google.dk')
+            return redirect('{}{}'.format(ENA_STUDY_URL_PREFIX, instance.pid))
         else:
             serializer = self.get_serializer(instance)
             return Response(serializer.data)

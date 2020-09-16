@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
+
+import responses
 from django.test import TestCase
 
+from gfbio_submissions.brokerage.configuration.settings import \
+    ENA_STUDY_URL_PREFIX
 from gfbio_submissions.brokerage.models import PersistentIdentifier, \
     BrokerObject
 from gfbio_submissions.users.models import User
@@ -54,7 +58,13 @@ class TestInsdcResolveView(TestCase):
             else:
                 self.assertEqual(200, response.status_code)
 
+    @responses.activate
     def test_template_get_302(self):
+        responses.add(
+            responses.GET,
+            '{}{}'.format(ENA_STUDY_URL_PREFIX, 'acc0001'),
+            status=200,
+        )
         response = self.client.get('/resolve/insdc/acc0001')
         self.assertEqual(302, response.status_code)
 
