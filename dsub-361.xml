@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
+<RECEIPT receiptDate="2020-09-07T10:10:47.810+01:00"
+         submissionFile="submission.xml" success="true">
+    <EXPERIMENT
+            accession="ERX4505699"
+            alias="30546:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05"
+            status="PRIVATE"/>
+    <EXPERIMENT accession="ERX4505700"
+                alias="30544:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05"
+                status="PRIVATE"/>
+    <EXPERIMENT accession="ERX4505701"
+                alias="30542:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05"
+                status="PRIVATE"/>
+    <EXPERIMENT
+            accession="ERX4505702"
+            alias="30540:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05"
+            status="PRIVATE"/>
+    <EXPERIMENT accession="ERX4505703"
+                alias="30538:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05"
+                status="PRIVATE"/>
+    <EXPERIMENT
+            accession="ERX4505704"
+            alias="30536:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05"
+            status="PRIVATE"/>
+    <EXPERIMENT accession="ERX4505705"
+                alias="30534:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05"
+                status="PRIVATE"/>
+    <EXPERIMENT
+            accession="ERX4505706"
+            alias="30532:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05"
+            status="PRIVATE"/>
+    <RUN accession="ERR4570008"
+         alias="30547:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05"
+         status="PRIVATE"/>
+    <RUN
+            accession="ERR4570009"
+            alias="30545:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05"
+            status="PRIVATE"/>
+    <RUN accession="ERR4570010"
+         alias="30543:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05"
+         status="PRIVATE"/>
+    <RUN
+            accession="ERR4570011"
+            alias="30541:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05"
+            status="PRIVATE"/>
+    <RUN accession="ERR4570012"
+         alias="30539:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05"
+         status="PRIVATE"/>
+    <RUN
+            accession="ERR4570013"
+            alias="30537:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05"
+            status="PRIVATE"/>
+    <RUN accession="ERR4570014"
+         alias="30535:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05"
+         status="PRIVATE"/>
+    <RUN
+            accession="ERR4570015"
+            alias="30533:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05"
+            status="PRIVATE"/>
+    <SAMPLE accession="ERS5051469"
+            alias="30531:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05" status="PRIVATE"
+            holdUntilDate="2021-08-12+01:00">
+        <EXT_ID accession="SAMEA7292899"
+                type="biosample"/>
+    </SAMPLE>
+
+    <SAMPLE accession="ERS5051470"
+            alias="30530:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05" status="PRIVATE"
+            holdUntilDate="2021-08-12+01:00">
+        <EXT_ID accession="SAMEA7292900"
+                type="biosample"/>
+    </SAMPLE>
+
+    <SAMPLE accession="ERS5051471"
+            alias="30529:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05" status="PRIVATE"
+            holdUntilDate="2021-08-12+01:00">
+        <EXT_ID accession="SAMEA7292901"
+                type="biosample"/>
+    </SAMPLE>
+
+    <SAMPLE accession="ERS5051472"
+            alias="30528:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05" status="PRIVATE"
+            holdUntilDate="2021-08-12+01:00">
+        <EXT_ID accession="SAMEA7292902"
+                type="biosample"/>
+    </SAMPLE>
+
+    <SAMPLE accession="ERS5051473"
+            alias="30527:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05" status="PRIVATE"
+            holdUntilDate="2021-08-12+01:00">
+        <EXT_ID accession="SAMEA7292903"
+                type="biosample"/>
+    </SAMPLE>
+
+    <SAMPLE accession="ERS5051474"
+            alias="30526:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05" status="PRIVATE"
+            holdUntilDate="2021-08-12+01:00">
+        <EXT_ID accession="SAMEA7292904"
+                type="biosample"/>
+    </SAMPLE>
+
+    <SAMPLE accession="ERS5051475"
+            alias="30525:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05" status="PRIVATE"
+            holdUntilDate="2021-08-12+01:00">
+        <EXT_ID accession="SAMEA7292905"
+                type="biosample"/>
+    </SAMPLE>
+
+    <SAMPLE accession="ERS5051476"
+            alias="30524:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05" status="PRIVATE"
+            holdUntilDate="2021-08-12+01:00">
+        <EXT_ID accession="SAMEA7292906"
+                type="biosample"/>
+    </SAMPLE>
+
+    <STUDY accession="ERP123848"
+           alias="30523:bfe0e768-cde5-45eb-b74e-a98f6d0b7e05" status="PRIVATE"
+           holdUntilDate="2021-08-12+01:00">
+        <EXT_ID accession="PRJEB40233"
+                type="Project"/>
+    </STUDY>
+    <SUBMISSION accession="ERA2833704"
+                alias="488af46b-ee64-4a17-bd5b-f0a8d1c91c67"/>
+    <MESSAGES>
+        <INFO>All objects in this submission are set to
+            private status (HOLD).
+        </INFO>
+        <INFO>Submission has been
+            committed.
+        </INFO>
+    </MESSAGES>
+    <ACTIONS>ADD</ACTIONS>
+    <ACTIONS>HOLD</ACTIONS>
+</RECEIPT>
