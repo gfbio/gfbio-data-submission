@@ -1971,11 +1971,11 @@ def notify_curators_on_embargo_ends_task(self):
 )
 def update_ena_embargo_task(self, prev=None, submission_id=None):
     logger.info('tasks.py | update_ena_embargo_task | submission_id={0}'.format(submission_id))
-    TaskProgressReport.objects.create_initial_report(
-        submission=None,
-        task=self)
-
     submission = Submission.objects.get(id=submission_id)
+
+    TaskProgressReport.objects.create_initial_report(
+        submission=submission,
+        task=self)
 
     study_primary_accession = submission.brokerobject_set.filter(
         type='study').first()
@@ -2057,12 +2057,14 @@ def update_ena_embargo_task(self, prev=None, submission_id=None):
 )
 def notify_user_embargo_changed_task(self, prev=None, submission_id=None):
     logger.info('tasks.py | notify_user_embargo_changed_task | submission_id={0}'.format(submission_id))
-    TaskProgressReport.objects.create_initial_report(
+    report, created = TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
 
     submission = Submission.objects.get(id=submission_id)
     if submission:
+        report.submission = submission
+        report.save()
         site_config = submission.user.site_configuration
         if site_config:
             reference = submission.get_primary_helpdesk_reference()
