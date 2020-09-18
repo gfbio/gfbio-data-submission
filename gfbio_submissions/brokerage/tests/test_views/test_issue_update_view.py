@@ -209,8 +209,6 @@ class TestJiraIssueUpdateView(APITestCase):
                 }
             },
             format='json')
-        print(response.status_code)
-        print(response.content)
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(1, len(RequestLog.objects.all()))
 
