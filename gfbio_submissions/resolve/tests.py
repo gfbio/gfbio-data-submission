@@ -44,10 +44,15 @@ class TestInsdcResolveView(TestCase):
         response = self.client.get('/resolve/api/insdc/acc0001')
         self.assertEqual(302, response.status_code)
 
+    @responses.activate
     def test_get_404(self):
+        responses.add(
+            responses.GET,
+            '{}{}'.format(ENA_STUDY_URL_PREFIX, 'acc000x'),
+            status=200,
+        )
         response = self.client.get('/resolve/api/insdc/acc000x')
-        self.assertEqual(404, response.status_code)
-        self.assertIn(b'Not found', response.content)
+        self.assertEqual(302, response.status_code)
 
     def test_get_status(self):
         pids = PersistentIdentifier.objects.all()
@@ -72,6 +77,12 @@ class TestInsdcResolveView(TestCase):
         response = self.client.get('/resolve/insdc/acc0002')
         self.assertEqual(403, response.status_code)
 
+    @responses.activate
     def test_template_get_404(self):
+        responses.add(
+            responses.GET,
+            '{}{}'.format(ENA_STUDY_URL_PREFIX, 'acc000x'),
+            status=200,
+        )
         response = self.client.get('/resolve/insdc/acc000x')
-        self.assertEqual(404, response.status_code)
+        self.assertEqual(302, response.status_code)

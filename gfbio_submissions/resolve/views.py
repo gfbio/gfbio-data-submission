@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+import logging
 
+from django.http import Http404
 from django.shortcuts import redirect
 from rest_framework import mixins, generics, permissions
 from rest_framework.renderers import TemplateHTMLRenderer
@@ -12,6 +14,8 @@ from gfbio_submissions.brokerage.models import PersistentIdentifier
 from gfbio_submissions.resolve.serializer import \
     PersistentIdentifierResolveSerializer
 
+logger = logging.getLogger(__name__)
+
 
 class PersistentIdentifierResolveView(mixins.RetrieveModelMixin,
                                       generics.GenericAPIView):
@@ -21,9 +25,17 @@ class PersistentIdentifierResolveView(mixins.RetrieveModelMixin,
     permission_classes = (permissions.AllowAny,)
 
     def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        if instance.status == 'PUBLIC':
-            # TODO: add constant template for ena-url
+        instance = None
+        try:
+            instance = self.get_object()
+        except Http404 as e:
+            logger.warning(
+                'PersistentIdentifierResolveView | retrieve pid: '
+                '{} | {}'.format(kwargs.get('pid', ''), e))
+        if instance is None:
+            return redirect(
+                '{}{}'.format(ENA_STUDY_URL_PREFIX, kwargs.get('pid', '')))
+        elif instance.status == 'PUBLIC':
             return redirect('{}{}'.format(ENA_STUDY_URL_PREFIX, instance.pid))
         else:
             serializer = self.get_serializer(instance)
