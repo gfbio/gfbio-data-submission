@@ -60,7 +60,7 @@ class AgreeTosSocialSignupForm(SignupForm):
         user.agreed_to_privacy = self.cleaned_data.get('agree_privacy')
 
         # FIXME: check if redundant to more recent fix of issue #569
-        user.site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
+        # user.site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
 
         user.save()
         # You must return the original result.
