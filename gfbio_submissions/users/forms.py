@@ -2,8 +2,10 @@ from allauth.socialaccount.forms import SignupForm
 from django import forms as form
 from django.contrib.auth import forms, get_user_model
 from django.core.exceptions import ValidationError
-from django.utils.translation import ugettext_lazy as _
 from django.utils.safestring import mark_safe
+from django.utils.translation import ugettext_lazy as _
+
+from gfbio_submissions.generic.models import SiteConfiguration
 
 User = get_user_model()
 
@@ -56,6 +58,10 @@ class AgreeTosSocialSignupForm(SignupForm):
         # Add your own processing here.
         user.agreed_to_terms = self.cleaned_data.get('agree_terms')
         user.agreed_to_privacy = self.cleaned_data.get('agree_privacy')
+
+        # FIXME: check if redundant to more recent fix of issue #569
+        user.site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
+
         user.save()
         # You must return the original result.
         return user
