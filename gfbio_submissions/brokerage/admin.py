@@ -8,7 +8,8 @@ from django.db.models import Count
 from django.http import HttpResponse
 from django.utils.encoding import smart_bytes
 
-from .configuration.settings import SUBMISSION_DELAY
+from .configuration.settings import SUBMISSION_DELAY, \
+    SUBMISSION_UPLOAD_RETRY_DELAY
 from .models import PersistentIdentifier, \
     Submission, BrokerObject, AdditionalReference, TaskProgressReport, \
     SubmissionUpload, \
@@ -85,13 +86,16 @@ def release_submission_study_on_ena(modeladmin, request, queryset):
 
 release_submission_study_on_ena.short_description = 'Release Study on ENA'
 
+
 def cancel_selected_submissions(modeladmin, request, queryset):
     for obj in queryset:
         obj.status = Submission.CANCELLED
         obj.save()
         jira_cancel_issue(submission_id=obj.pk, admin=True)
 
+
 cancel_selected_submissions.short_description = 'Cancel selected submissions'
+
 
 def create_broker_objects_and_ena_xml(modeladmin, request, queryset):
     from gfbio_submissions.brokerage.tasks import \
@@ -334,6 +338,32 @@ def validate_manifest_at_ena(modeladmin, request, queryset):
 validate_manifest_at_ena.short_description = 'Validate MANIFEST file at ENA'
 
 
+def create_helpdesk_issue_manually(modeladmin, request, queryset):
+    from .tasks import create_submission_issue_task, \
+        get_gfbio_helpdesk_username_task, attach_to_submission_issue_task
+    for obj in queryset:
+        chain = get_gfbio_helpdesk_username_task.s(
+            submission_id=obj.pk).set(
+            countdown=SUBMISSION_DELAY) \
+                | create_submission_issue_task.s(
+            submission_id=obj.pk).set(
+            countdown=SUBMISSION_DELAY)
+        chain()
+        related_uploads = SubmissionUpload.objects.filter(submission=obj,
+                                                          attach_to_ticket=True)
+        for upload in related_uploads:
+            attach_to_submission_issue_task.apply_async(
+                kwargs={
+                    'submission_id': '{0}'.format(obj.pk),
+                    'submission_upload_id': '{0}'.format(upload.pk)
+                },
+                countdown=SUBMISSION_UPLOAD_RETRY_DELAY
+            )
+
+
+create_helpdesk_issue_manually.short_description = 'Create helpdesk issue manually'
+
+
 class AuditableTextDataInlineAdmin(admin.StackedInline):
     model = AuditableTextData
 
@@ -354,6 +384,7 @@ class SubmissionAdmin(admin.ModelAdmin):
     inlines = (AuditableTextDataInlineAdmin,
                AdditionalReferenceInline,)
     actions = [
+        create_helpdesk_issue_manually,
         cancel_selected_submissions,
         release_submission_study_on_ena,
         validate_against_ena,
@@ -377,6 +408,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         if change and old_sub.status != obj.status and obj.status == Submission.CANCELLED:
             jira_cancel_issue(submission_id=obj.pk, admin=True)
         super(SubmissionAdmin, self).save_model(request, obj, form, change)
+
 
 class RunFileRestUploadAdmin(admin.ModelAdmin):
     readonly_fields = ('created',)
