@@ -13,6 +13,7 @@ from gfbio_submissions.brokerage.tests.utils import _get_jira_hook_request_data,
     _get_ena_data, _get_ena_data_without_runs
 from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.users.models import User
+from django.contrib.auth.models import Group
 
 
 class TestJiraIssueUpdateView(APITestCase):
@@ -44,6 +45,9 @@ class TestJiraIssueUpdateView(APITestCase):
         user.is_user = True
         user.is_site = False
         user.save()
+
+        curators_group, created = Group.objects.get_or_create(name='Curators')
+        curators_group.user_set.add(user)
 
         submission = cls._create_submission_via_serializer(
             username='horst', create_broker_objects=True)
@@ -100,7 +104,7 @@ class TestJiraIssueUpdateView(APITestCase):
             self.url,
             {
                 "user": {
-                    "emailAddress": "test@test.com"
+                    "emailAddress": "horst@horst.de"
                 },
                 "issue": {
                     "key": "SAND-007",
@@ -134,7 +138,7 @@ class TestJiraIssueUpdateView(APITestCase):
             self.url,
             {
                 "user": {
-                    "emailAddress": "test@test.com"
+                    "emailAddress": "horst@horst.de"
                 },
                 "issue": {
                     "key": "SAND-007",
@@ -192,7 +196,7 @@ class TestJiraIssueUpdateView(APITestCase):
             self.url,
             {
                 "user": {
-                    "emailAddress": "test@test.com"
+                    "emailAddress": "horst@horst.de"
                 },
                 "issue": {
                     "key": "SAND-007",
@@ -217,7 +221,7 @@ class TestJiraIssueUpdateView(APITestCase):
 
         hook_content = _get_jira_hook_request_data()
         payload = json.loads(hook_content)
-        payload['user']['emailAddress'] = 'test@test.com'
+        payload['user']['emailAddress'] = 'horst@horst.de'
         payload['issue']['key'] = 'SAND-007'
         payload['issue']['fields']['customfield_10303'] = '{}'.format(
             submission.broker_submission_id)
@@ -233,7 +237,7 @@ class TestJiraIssueUpdateView(APITestCase):
 
         hook_content = _get_jira_hook_request_data(no_changelog=True)
         payload = json.loads(hook_content)
-        payload['user']['emailAddress'] = 'test@test.com'
+        payload['user']['emailAddress'] = 'horst@horst.de'
         payload['issue']['key'] = 'SAND-007'
         payload['issue']['fields']['customfield_10303'] = '{}'.format(
             submission.broker_submission_id)
@@ -257,7 +261,7 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(0, len(RequestLog.objects.all()))
         response = self.client.post(self.url, {
             "user": {
-                "emailAddress": "test@test.com"
+                "emailAddress": "horst@horst.de"
             },
             "issue": {"key": "SAND-007"},
             "changelog": {
@@ -277,7 +281,7 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(0, len(RequestLog.objects.all()))
         response = self.client.post(self.url, {
             "user": {
-                "emailAddress": "test@test.com"
+                "emailAddress": "horst@horst.de"
             },
             "issue": {"key": "SAND-007", "fields": {}},
             "changelog": {
@@ -301,7 +305,7 @@ class TestJiraIssueUpdateView(APITestCase):
             self.url,
             {
                 "user": {
-                    "emailAddress": "test@test.com"
+                    "emailAddress": "horst@horst.de"
                 },
                 "issue": {
                     "key": "SAND-007",
@@ -330,7 +334,7 @@ class TestJiraIssueUpdateView(APITestCase):
         response = self.client.post(
             self.url, {
                 "user": {
-                    "emailAddress": "test@test.com"
+                    "emailAddress": "horst@horst.de"
                 },
                 "issue": {
                     "key": "SAND-007",
@@ -361,7 +365,7 @@ class TestJiraIssueUpdateView(APITestCase):
             self.url,
             {
                 "user": {
-                    "emailAddress": "test@test.com"
+                    "emailAddress": "horst@horst.de"
                 },
                 "issue": {
                     "key": "SAND-007",
@@ -396,7 +400,7 @@ class TestJiraIssueUpdateView(APITestCase):
             self.url,
             {
                 "user": {
-                    "emailAddress": "test@test.com"
+                    "emailAddress": "horst@horst.de"
                 },
                 "issue": {
                     "key": "SAND-007",
@@ -426,7 +430,7 @@ class TestJiraIssueUpdateView(APITestCase):
             self.url,
             {
                 "user": {
-                    "emailAddress": "test@test.com"
+                    "emailAddress": "horst@horst.de"
                 },
                 "issue": {
                     "key": "SAND-007",
@@ -458,7 +462,7 @@ class TestJiraIssueUpdateView(APITestCase):
             self.url,
             {
                 "user": {
-                    "emailAddress": "test@test.com"
+                    "emailAddress": "horst@horst.de"
                 },
                 "issue": {
                     "key": "SAND-007",
@@ -491,7 +495,7 @@ class TestJiraIssueUpdateView(APITestCase):
             self.url,
             {
                 "user": {
-                    "emailAddress": "test@test.com"
+                    "emailAddress": "horst@horst.de"
                 },
                 "issue": {
                     "key": "SAND-007",
@@ -528,7 +532,7 @@ class TestJiraIssueUpdateView(APITestCase):
             self.url,
             {
                 "user": {
-                    "emailAddress": "test@test.com"
+                    "emailAddress": "horst@horst.de"
                 },
                 "issue": {
                     "key": "SAND-007",
@@ -558,7 +562,7 @@ class TestJiraIssueUpdateView(APITestCase):
             self.url,
             {
                 "user": {
-                    "emailAddress": "test@test.com"
+                    "emailAddress": "horst@horst.de"
                 },
                 "issue": {
                     "key": "SAND-007",
@@ -625,7 +629,7 @@ class TestJiraIssueUpdateView(APITestCase):
             self.url,
             {
                 "user": {
-                    "emailAddress": "test@test.com"
+                    "emailAddress": "horst@horst.de"
                 },
                 "issue": {
                     "key": "SAND-007",
@@ -670,7 +674,7 @@ class TestJiraIssueUpdateView(APITestCase):
             self.url,
             {
                 "user": {
-                    "emailAddress": "test@test.com"
+                    "emailAddress": "horst@horst.de"
                 },
                 "issue": {
                     "key": "SAND-007",
@@ -693,6 +697,38 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertIn(
             b'status prevents update of submission',
             response.content)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST,
+                         RequestLog.objects.first().response_status)
+
+    def test_not_curator(self):
+        submission = Submission.objects.first()
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.client.post(
+            self.url,
+            {
+                "user": {
+                    "emailAddress": "test@test.com"
+                },
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": "2020-04-09T00:00:00+00:00",
+                        "customfield_10303": "{}".format(
+                            submission.broker_submission_id),
+                    }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
+                }
+            },
+            format='json')
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertIn(b'{"issue":["\'user\': user is not in curators group"]}',
+                      response.content)
+
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_400_BAD_REQUEST,
                          RequestLog.objects.first().response_status)

@@ -1,8 +1,8 @@
 version: '3'
 
 volumes:
-  local_postgres_data_l: {}
-  local_postgres_data_backups_l: {}
+  local_postgres_data: {}
+  local_postgres_data_backups: {}
   django_media: {}
 
 services:
@@ -31,8 +31,8 @@ services:
     image: gfbio_submissions_production_postgres
     container_name: postgres
     volumes:
-      - local_postgres_data_l:/var/lib/postgresql/data
-      - local_postgres_data_backups_l:/backups
+      - local_postgres_data:/var/lib/postgresql/data
+      - local_postgres_data_backups:/backups
     env_file:
       - ./.envs/.local/.postgres
 

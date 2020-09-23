@@ -29,14 +29,11 @@ class JiraHookRequestSerializer(serializers.Serializer):
 
     def send_mail_to_admins(self, reason, message):
         mail_admins(
-            subject='JiraHookRequestSerializer | warning regarding {0}'.format(
-                reason),
-            message='Notification for warning regarding {0}:\n'
-                    '{1}\n'
-                    'Jira Hook requested update for:\n'
-                    'broker_submission_id: {2}\n'
-                    'issue key: {3}'.format(
-                reason, message, self.broker_submission_id, self.issue_key)
+            subject=reason,
+            message='{0}\n'
+                    'Submission ID:{1}\n'
+                    'Issue Key:{2}'.format(
+                    message, self.broker_submission_id, self.issue_key)
         )
 
     def save(self):
@@ -70,15 +67,13 @@ class JiraHookRequestSerializer(serializers.Serializer):
             msg='serializer.py | JiraHookRequestSerializer | '
                 'updating user | {0}'.format(updating_user)
         )
-        # get curators
-        curators = User.objects.filter(groups__name='Curators')
-        if len(curators) > 0 and updating_user in curators:
-            from gfbio_submissions.brokerage.tasks import update_ena_embargo_task
-            update_ena_embargo_task.apply_async(
-                kwargs={
-                    'submission_id': submission_id,
-                }
-            )
+        # update ena
+        from gfbio_submissions.brokerage.tasks import update_ena_embargo_task
+        update_ena_embargo_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            }
+        )
 
     # TODO: !IMPORTANT! Please add a check procedure in the generic parsing of the JSON,
     #  that if the user that caused the action was the brokeragent,
@@ -120,8 +115,8 @@ class JiraHookRequestSerializer(serializers.Serializer):
     def embargo_data_future_check(self, embargo_date, delta):
         # future, 1 year = 365 days, *2 = 730
         if delta.days > 730:
-            self.send_mail_to_admins(reason='Submission embargo date',
-                                     message='Embargo date in distant future')
+            self.send_mail_to_admins(reason='WARNING: submission embargo date in the distant future',
+                                     message='WARNING: JIRA hook requested an Embargo Date in the distant future')
             raise serializers.ValidationError(
                 {'issue': [
                     "'customfield_10200': embargo date too far in the future: {0}".format(
@@ -130,8 +125,8 @@ class JiraHookRequestSerializer(serializers.Serializer):
     def embargo_date_past_check(self, embargo_date, delta):
         # past, 1 day granularity
         if delta.days <= 0:
-            self.send_mail_to_admins(reason='Submission embargo date',
-                                     message='Embargo date in the past')
+            self.send_mail_to_admins(reason='WARNING: submission embargo date in the past',
+                                     message='WARNING: JIRA hook requested an Embargo Date in the past')
             raise serializers.ValidationError(
                 {'issue': [
                     "'customfield_10200': embargo date in the past: {0}".format(
@@ -181,12 +176,40 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 reference_key=self.issue_key
             )
             if len(references) == 0:
-                self.send_mail_to_admins(reason='Submission embargo date',
-                                         message='No issue related to submission found')
+                self.send_mail_to_admins(reason='WARNING: submission embargo date, issue not found',
+                    message='WARNING: JIRA hook requested an Embargo Date update,'
+                            ' but issue: {} could not be found'.format(self.issue_key))
                 raise serializers.ValidationError(
                     {'issue': [
                         "'key': no related issue with key: {0} found for submission {1}".format(
                             self.issue_key, self.broker_submission_id)]})
+
+    def curator_validation(self):
+        updating_user = self.initial_data.get('user', {}).get('emailAddress', '')
+        logger.info(
+            msg='serializer.py | curator_validation | updating user {0}'.format(updating_user)
+        )
+        # get curators
+        curators = User.objects.filter(groups__name='Curators')
+        if len(curators) == 0:
+            logger.info(
+                msg='serializer.py | curator_validation | no curators found'
+            )
+            self.send_mail_to_admins(reason='WARNING: submission embargo date, no curators',
+                                     message='WARNING: JIRA hook requested an Embargo Date update,'
+                                             ' but no curators were found'.format(self.issue_key))
+            raise serializers.ValidationError(
+                {'issue': ["'user': user is not in curators group"]})
+        curators_emails = [curator.email for curator in curators]
+        if updating_user not in curators_emails:
+            logger.info(
+                msg='serializer.py | curator_validation | user {0} is not a crurator'.format(updating_user)
+            )
+            self.send_mail_to_admins(reason='WARNING: submission embargo date, user not curator',
+                                     message='WARNING: JIRA hook requested an Embargo Date update,'
+                                             ' but user {} is not a curator'.format(updating_user))
+            raise serializers.ValidationError(
+                {'issue': ["'user': user is not in curators group"]})
 
     def submission_type_constraints_check(self, submission, key):
         if submission and submission.target == GENERIC:
@@ -201,28 +224,53 @@ class JiraHookRequestSerializer(serializers.Serializer):
             # be allowed if status is undefined or other than private,
             # update is rejected
             private_found = False
+            status = None
+            has_primary_accession = False
             for s in studies:
+                if not has_primary_accession and s.persistentidentifier_set.filter(archive='ENA', pid_type='PRJ'):
+                    has_primary_accession = True
+
+                if not status:
+                    status = s.persistentidentifier_set.filter(archive='ENA',  pid_type='PRJ').first().status
                 private = s.persistentidentifier_set.filter(archive='ENA',
                                                             pid_type='PRJ',
                                                             status='PRIVATE')
                 if private:
                     private_found = True
                     break
-            if not private_found:
-                self.send_mail_to_admins(reason='Submission embargo date',
-                                         message='Attempt to update molecular submission which is not PRIVATE')
+            if not has_primary_accession:
+                logger.info(
+                    msg='serializer.py | submission_type_constraints_check | '
+                        'no primary accession for submission {0}'.format(submission.broker_submission_id)
+                )
+                self.send_mail_to_admins(reason='WARNING: submission missing primary accession',
+                                         message='WARNING: JIRA hook requested update of Embargo Date'
+                                                 ' for submission without a primary accession (i.e. BioProject ID)')
                 raise serializers.ValidationError(
                     {'issue': [
-                        "'key': issue {0}. status prevents update of submission {1} with target {2}".format(
+                        "'key': issue {0}. submission without a primary accession, submission {1} with target {2}".format(
                             key, submission.broker_submission_id,
                             submission.target)]})
+            if not private_found:
+                logger.info(
+                    msg='serializer.py | submission_type_constraints_check | '
+                        'not PRIVATE submission {0} status {1}'.format(submission.broker_submission_id, status)
+                )
+                self.send_mail_to_admins(reason='WARNING: submission not PRIVATE',
+                                         message='WARNING: JIRA hook requested update of Embargo Date'
+                                                 ' for submission which is not PRIVATE (status is: {} )'.format(status))
+                raise serializers.ValidationError(
+                    {'issue': [
+                        "'key': issue {0}. status prevents update of submission {1} with target {2} and status:{3}".format(
+                            key, submission.broker_submission_id,
+                            submission.target, status)]})
             return private_found
 
     def validate(self, data):
         self.schema_validation(data)
         submission = self.submission_existing_check()
         key = self.submission_relation_check(submission)
-
+        self.curator_validation()
         self.embargo_date_validation(submission.embargo)
         self.submission_type_constraints_check(submission, key)
         return data
