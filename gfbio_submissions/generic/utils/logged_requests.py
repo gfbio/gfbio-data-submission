@@ -2,9 +2,10 @@
 from uuid import uuid4
 
 import requests
-
+import logging
 from ..models import RequestLog
 
+logger = logging.getLogger(__name__)
 
 def post(url, data=None, json=None, submission=None, return_log_id=False,
          request_id=uuid4(),
@@ -30,6 +31,10 @@ def post(url, data=None, json=None, submission=None, return_log_id=False,
                 type=RequestLog.INCOMING).latest('created')
         except RequestLog.DoesNotExist:
             pass
+
+    if len(RequestLog.objects.filter(request_id=request_id)) > 0:
+        logger.info('logged_requests.py | post | UUID={0} already exists | submission={1}'.format(request_id, submission.broker_submission_id))
+        request_id = uuid4()
 
     log = RequestLog.objects.create(
         type=RequestLog.OUTGOING,
