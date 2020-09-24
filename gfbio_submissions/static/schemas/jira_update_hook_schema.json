@@ -6,6 +6,14 @@
         "key": {
             "type": "string"
         },
+        "user": {
+            "type": "object",
+            "properties": {
+                "emailAddress": {
+                  "type": "string"
+                }
+            }
+        },
         "issue": {
             "type": "object",
             "properties": {
@@ -46,6 +54,7 @@
         }
     },
     "required": [
+        "user",
         "issue",
         "changelog"
     ]
