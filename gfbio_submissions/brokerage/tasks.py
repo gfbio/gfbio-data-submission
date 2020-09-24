@@ -1986,7 +1986,7 @@ def update_ena_embargo_task(self, prev=None, submission_id=None):
         study_primary_accession = study_primary_accession.persistentidentifier_set.filter(
             pid_type='PRJ').first()
 
-    if site_config is None:
+    if site_config is None or not site_config.ena_server:
         logger.warning(
             'ena.py | update_ena_embargo_task | no site_configuration found | submission_id={0}'.format(
                 submission.broker_submission_id)

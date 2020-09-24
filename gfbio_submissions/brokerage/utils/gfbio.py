@@ -3,16 +3,14 @@ import datetime
 import logging
 from urllib.parse import quote
 
-import requests
 from django.conf import settings
-from django.db import transaction
 
 from gfbio_submissions.brokerage.configuration.settings import \
     GFBIO_LICENSE_MAPPINGS, \
-    GFBIO_DATACENTER_USER_MAPPINGS, GFBIO_REQUEST_TYPE_MAPPINGS, \
-    JIRA_USERNAME_URL_FULLNAME_TEMPLATE, JIRA_USERNAME_URL_TEMPLATE, \
+    GFBIO_DATACENTER_USER_MAPPINGS, JIRA_USERNAME_URL_FULLNAME_TEMPLATE, \
+    JIRA_USERNAME_URL_TEMPLATE, \
     JIRA_FALLBACK_USERNAME, JIRA_FALLBACK_EMAIL
-from gfbio_submissions.generic.models import SiteConfiguration, RequestLog
+from gfbio_submissions.generic.models import SiteConfiguration
 from gfbio_submissions.generic.utils import logged_requests
 
 logger = logging.getLogger(__name__)
@@ -31,23 +29,10 @@ def get_gfbio_helpdesk_username(user_name, email, fullname=''):
         )
     )
 
-    # with transaction.atomic():
-    #     RequestLog.objects.create(
-    #         type=RequestLog.INCOMING,
-    #         url=url,
-    #         method=RequestLog.GET,
-    #         # user=instance.user,
-    #         # submission_id=instance.submission.broker_submission_id,
-    #         response_content=response.content,
-    #         response_status=response.status_code,
-    #     )
-    # return response
-
 
 def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
                                           prepare_for_update=False):
     requirements = submission.data.get('requirements', {})
-    # -----------------------------------------------------------------------
     if reporter is None:
         reporter = {
             'jira_user_name': JIRA_FALLBACK_USERNAME,
@@ -78,7 +63,6 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
             contribution,
         )
         authors_text += contributor if len(contributor.strip()) else ''
-    # -----------------------------------------------------------------------
 
     summary = requirements.get('title', '')
     # as requested in: GFBIO-2679 & DEVOPS-3
@@ -139,10 +123,6 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
             requirements.get('license', 'Other License')),
         'customfield_10600': requirements.get('download_url', ''),
     }
-    assignee = GFBIO_DATACENTER_USER_MAPPINGS.get(
-        requirements.get('data_center', ''), '')
-    if len(assignee) > 0:
-        mutual_data['assignee'] = {'name': assignee}
 
     # metadata_schema = requirements.get('metadata_schema',
     #                                    'Other metadata or documentation')
@@ -157,5 +137,9 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
     # mutual_data['customfield_10229'] = metadata_schema_value
 
     if not prepare_for_update:
+        assignee = GFBIO_DATACENTER_USER_MAPPINGS.get(
+            requirements.get('data_center', ''), '')
+        if len(assignee) > 0:
+            mutual_data['assignee'] = {'name': assignee}
         mutual_data['customfield_10010'] = jira_request_type
     return mutual_data
