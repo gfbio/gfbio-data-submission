@@ -1971,18 +1971,21 @@ def notify_curators_on_embargo_ends_task(self):
 )
 def update_ena_embargo_task(self, prev=None, submission_id=None):
     logger.info('tasks.py | update_ena_embargo_task | submission_id={0}'.format(submission_id))
-    submission = Submission.objects.get(id=submission_id)
 
-    TaskProgressReport.objects.create_initial_report(
-        submission=submission,
-        task=self)
+    submission, site_config = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
 
     study_primary_accession = submission.brokerobject_set.filter(
         type='study').first()
     if study_primary_accession:
         study_primary_accession = study_primary_accession.persistentidentifier_set.filter(
             pid_type='PRJ').first()
-    site_config = submission.user.site_configuration
+
     if site_config is None:
         logger.warning(
             'ena.py | update_ena_embargo_task | no site_configuration found | submission_id={0}'.format(
@@ -2057,34 +2060,36 @@ def update_ena_embargo_task(self, prev=None, submission_id=None):
 )
 def notify_user_embargo_changed_task(self, prev=None, submission_id=None):
     logger.info('tasks.py | notify_user_embargo_changed_task | submission_id={0}'.format(submission_id))
-    report, created = TaskProgressReport.objects.create_initial_report(
-        submission=None,
-        task=self)
 
-    submission = Submission.objects.get(id=submission_id)
-    if submission:
-        report.submission = submission
-        report.save()
-        site_config = submission.user.site_configuration
-        if site_config:
-            reference = submission.get_primary_helpdesk_reference()
-            if reference:
-                comment = """
-                Dear submitter,
+    submission, site_config = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
 
-                you have successfully changed the embargo date of your data set.
-                The data will be released on {}.
+    if site_config and site_config.helpdesk_server:
+        reference = submission.get_primary_helpdesk_reference()
+        if reference:
+            comment = """
+            Dear submitter,
 
-                Best regards,
-                GFBio Data Submission Team""".format(
-                    submission.embargo.isoformat())
-                jira_client = JiraClient(resource=site_config.helpdesk_server)
-                jira_client.add_comment(
-                    key_or_issue=reference.reference_key,
-                    text=comment
-                )
-                return jira_error_auto_retry(jira_client=jira_client, task=self,
-                                             broker_submission_id=submission.broker_submission_id)
+            you have successfully changed the embargo date of your data set.
+            The data will be released on {}.
+
+            Best regards,
+            GFBio Data Submission Team""".format(
+                submission.embargo.isoformat())
+            jira_client = JiraClient(resource=site_config.helpdesk_server)
+            jira_client.add_comment(
+                key_or_issue=reference.reference_key,
+                text=comment
+            )
+            return jira_error_auto_retry(jira_client=jira_client, task=self,
+                                         broker_submission_id=submission.broker_submission_id)
+    else:
+        logger.info('tasks.py | notify_user_embargo_changed_task | no site_config for helpdesk_serever')
 
     return {
         'status': 'error',
