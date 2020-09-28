@@ -1062,9 +1062,7 @@ def add_accession_to_pangaea_issue_task(self, kwargs=None, submission_id=None):
 
         # TODO: manager method to get panagea issue without needing pre-chain result
         ticket_key = kwargs.get('issue_key', 'None')
-        study_pid = submission.brokerobject_set.filter(
-            type='study').first().persistentidentifier_set.filter(
-            pid_type='PRJ').first()
+        study_pid = submission.get_primary_accession()
         if study_pid:
             jira_client = JiraClient(
                 resource=site_configuration.pangaea_jira_server,
@@ -1813,6 +1811,7 @@ def notify_user_embargo_expiry_task(self):
 
                     jira_error_auto_retry(jira_client=jira_client, task=self,
                                           broker_submission_id=submission.broker_submission_id)
+
                     if jira_client.comment:
                         study_pid.user_notified = datetime.date.today()
                         study_pid.save()
@@ -1961,6 +1960,74 @@ def notify_curators_on_embargo_ends_task(self):
         )
         results.append({'curators': curators_emails})
         return results
+
+    return "No notifications to send"
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.notify_on_embargo_ended_task',
+    autoretry_for=(TransferServerError,
+                   TransferClientError
+                   ),
+    retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
+    retry_backoff=SUBMISSION_RETRY_DELAY,
+    retry_jitter=True
+)
+def notify_on_embargo_ended_task(self, submission_id=None):
+    if not submission_id:
+        return "submission_id not provided"
+
+    logger.info('tasks.py | notify_on_embargo_ended_task | submission_id={}'.format(submission_id))
+
+    submission, site_config = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
+
+    if site_config and site_config.helpdesk_server:
+        reference = submission.get_primary_helpdesk_reference()
+        primary_accession = submission.get_primary_accession()
+        if reference and primary_accession:
+            comment = """
+            Dear submitter,
+
+            your ENA data set has been released to the public.
+            Please note that it might take up to several days for the data to appear in the ENA Browser.
+            You can view the data set under:
+            https://www.ebi.ac.uk/ena/data/view/{0}
+
+            Please use the INSDC accession number ({0}) to cite your dataset.
+            For more information, please review ENA's citation recommendations:
+            https://ena-docs.readthedocs.io/en/latest/submit/general-guide/accessions.html#how-to-cite-your-ena-study
+
+            this is to confirm that your ENA study and all associated data has been made public.
+            Please note that it may take up to several days for the data to appear in the ENA Browser.
+
+            Best regards,
+            the GFBio Submission Team""".format(primary_accession.pk)
+
+            jira_client = JiraClient(resource=site_config.helpdesk_server)
+            jira_client.add_comment(
+                key_or_issue=reference.reference_key,
+                text=comment
+            )
+
+            jira_error_auto_retry(jira_client=jira_client, task=self,
+                                         broker_submission_id=submission.broker_submission_id)
+
+            if jira_client.comment:
+                primary_accession.user_notified_released = datetime.date.today()
+                primary_accession.save()
+                return {
+                    'submission': submission.broker_submission_id,
+                    'issue_key': reference.reference_key,
+                    'primary_accession': primary_accession.pk,
+                    'user_notified_on': datetime.date.today().isoformat(),
+                }
 
     return "No notifications to send"
 
@@ -2135,4 +2202,51 @@ def jira_cancel_issue_task(self, submission_id=None, admin=False):
         'submission': '{}'.format(submission.broker_submission_id),
         'user': '{}'.format(submission.user),
         'admin': '{}'.format(admin)
+    }
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.jira_transition_issue_task',
+    autoretry_for=(TransferServerError,
+                   TransferClientError
+                   ),
+    retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
+    retry_backoff=SUBMISSION_RETRY_DELAY,
+    retry_jitter=True
+)
+def jira_transition_issue_task(self, prev=None, submission_id=None, transition_id=871, resolution="Done"):
+    logger.info('tasks.py | jira_transition_issue_task | '
+                'submission_id={} transition_id={} resolution={}'.format(submission_id, transition_id, resolution))
+
+    if not submission_id:
+        return "submission_id not provided"
+
+    submission, site_config = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
+
+    if submission and submission.user and site_config:
+        reference = submission.get_primary_helpdesk_reference()
+        if reference:
+            jira_client = JiraClient(resource=site_config.helpdesk_server)
+            jira_client.transition_issue(
+                issue=reference.reference_key,
+                submission=submission,
+                transition_id=transition_id,
+                resolution=resolution
+            )
+            return jira_error_auto_retry(jira_client=jira_client, task=self,
+                                         broker_submission_id=submission.broker_submission_id)
+
+    return {
+        'status': 'transition failed',
+        'submission': '{}'.format(submission.broker_submission_id),
+        'user': '{}'.format(submission.user),
+        'transition_id': '{}'.format(transition_id),
+        'resolution': '{}'.format(resolution),
     }

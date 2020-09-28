@@ -841,7 +841,7 @@ def update_persistent_identifier_report_status():
     for report_type in EnaReport.REPORT_TYPES:
         report_key, report_name = report_type
         reports = EnaReport.objects.filter(report_type=report_key)
-        if len(reports) == 1:
+        if len(reports) > 0:
             logger.info('ena.py | update_persistent_identifier_report_status '
                         '| process report of type={0}'.format(report_name))
             for report in reports.first().report_data:
@@ -864,24 +864,42 @@ def update_persistent_identifier_report_status():
                     ids_to_use.append(sec_id)
 
                 for vid in ids_to_use:
-                    if hold_date and status:
-                        PersistentIdentifier.objects.filter(pid=vid).update(
-                            status=status, hold_date=hold_date_time)
-                        update_embargo_date_in_submissions(hold_date_time,
-                                                           PersistentIdentifier.objects.filter(
-                                                               pid=vid))
-                    elif status:
-                        PersistentIdentifier.objects.filter(pid=vid).update(
-                            status=status)
+                    if status and len(PersistentIdentifier.objects.filter(pid=vid)) > 0:
+                        pid = PersistentIdentifier.objects.filter(pid=vid, pid_type='PRJ').first()
+                        if not pid:
+                            logger.info('ena.py | update_persistent_identifier_report_status '
+                                        '| PersistentIdentifier {} with type PRJ not found'.format(vid))
+                        elif pid.status != "PUBLIC" and status == "PUBLIC":
+                            # notify reporter and close the issue
+                            submission = pid.broker_object.submissions.first()
+                            logger.info('ena.py | update_persistent_identifier_report_status '
+                                        '| executing notify_on_embargo_ended_task and jira_transition_issue_task '
+                                        '| PersistentIdentifier: {} '
+                                        '| submission: {}'.format(vid, submission.broker_submission_id))
 
-            return True
+                            from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY
+                            from gfbio_submissions.brokerage.tasks import \
+                                notify_on_embargo_ended_task, jira_transition_issue_task
+                            chain = notify_on_embargo_ended_task.s(submission_id=submission.pk).set(
+                                countdown=SUBMISSION_DELAY) \
+                            | jira_transition_issue_task.s(submission_id=submission.pk).set(ountdown=SUBMISSION_DELAY)
+                            chain()
+
+                        date_to_use = hold_date_time if hold_date else pid.hold_date
+                        PersistentIdentifier.objects.filter(pid=vid).update(
+                            status=status, hold_date=date_to_use)
+
+                        if hold_date:
+                            update_embargo_date_in_submissions(hold_date_time,
+                                                               PersistentIdentifier.objects.filter(
+                                                                   pid=vid))
         else:
             logger.warning(
                 'ena.py | update_persistent_identifier_report_status '
                 '| found {0} occurences for report of type={1} found'.format(
                     len(reports), report_name))
             return False
-
+    return True
 
 # FIXME: Prototype
 # TODO: exceptions, logging, protocoll for curator
