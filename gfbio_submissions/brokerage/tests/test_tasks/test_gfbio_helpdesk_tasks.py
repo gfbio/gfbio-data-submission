@@ -13,6 +13,7 @@ from gfbio_submissions.brokerage.tasks import create_submission_issue_task, \
     add_accession_to_submission_issue_task, \
     add_pangaealink_to_submission_issue_task, \
     add_posted_comment_to_issue_task, \
+    jira_initial_comment_task, \
     update_submission_issue_task, add_accession_link_to_submission_issue_task, \
     notify_user_embargo_expiry_task
 from gfbio_submissions.generic.models import SiteConfiguration
@@ -575,3 +576,12 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         result = notify_user_embargo_expiry_task()
         self.assertEqual(1, len(result))
         self.assertEqual(today.isoformat(), result[0]['user_notified_on'])
+
+    @responses.activate
+    def test_welcome_comment(self):
+        url = self._add_comment_reponses()
+        responses.add(responses.POST, url,
+                      json={'bla': 'blubb'},
+                      status=200)
+        result = jira_initial_comment_task(submission_id=Submission.objects.first().pk)
+        self.assertEqual("initial comment sent",result["status"])
