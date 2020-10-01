@@ -1,18 +1,13 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "version": "1.117.0",
         "title": "GFBio Submission API",
-        "description": "A service to submit data provided by the GFBio Consortium",
+        "description": "A service to use the GFBio Data Submission Service programmatically provided by the GFBio Consortium.",
         "termsOfService": "https://www.gfbio.org/legal-notice",
         "contact": {
             "name": "GFBio Helpdesk",
             "email": "info@gfbio.org",
             "url": "https://submissions.gfbio.org/"
-        },
-        "license": {
-            "name": "MIT",
-            "url": "https://opensource.org/licenses/MIT"
         }
     },
     "servers": [
@@ -21,13 +16,13 @@
         }
     ],
     "paths": {
-        "/submissions/": {
+        "/submissions/ (minimal/generic)": {
             "get": {
                 "description": "List all submissions you have permission to access.",
                 "operationId": "list submissions",
                 "responses": {
                     "200": {
-                        "description": "Submissions response",
+                        "description": "List of all submissions you are permitted to access.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -38,24 +33,14 @@
                                 }
                             }
                         }
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            }
-                        }
                     }
                 }
             },
             "post": {
                 "description": "Create a new Submission",
-                "operationId": "create submission",
+                "operationId": "create minimal/generic submission",
                 "requestBody": {
-                    "description": "Submission to submit",
+                    "description": "Data to submit",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -89,7 +74,7 @@
                 }
             }
         },
-        "(molecular)/submissions/": {
+        "/submissions/  (molecular)": {
             "post": {
                 "description": "Create a new molecular Submission, fully validated",
                 "operationId": "create molecular submission",
@@ -130,13 +115,13 @@
         },
         "/submissions/{broker_submission_id}": {
             "get": {
-                "description": "Returns a single submission, identified by a unique broker_submission_id",
-                "operationId": "get submission by broker-submission-id",
+                "description": "Returns a single submission, identified by a unique submission ID (broker_submission_id)",
+                "operationId": "get submission by submission ID",
                 "parameters": [
                     {
                         "name": "broker_submission_id",
                         "in": "path",
-                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
+                        "description": "Unique id of submission to retrieve (A UUID specified by RFC4122).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -154,16 +139,6 @@
                                 }
                             }
                         }
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            }
-                        }
                     }
                 }
             },
@@ -174,7 +149,7 @@
                     {
                         "name": "broker_submission_id",
                         "in": "path",
-                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
+                        "description": "Unique submission ID of submission to update (A UUID specified by RFC4122).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -183,7 +158,7 @@
                     }
                 ],
                 "requestBody": {
-                    "description": "Submission to update",
+                    "description": "Data to update the existing submission.",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -217,13 +192,13 @@
                 }
             },
             "delete": {
-                "description": "Deletes a Submission",
-                "operationId": "delete submission",
+                "description": "Cancels a Submission",
+                "operationId": "cancel submission",
                 "parameters": [
                     {
                         "name": "broker_submission_id",
                         "in": "path",
-                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
+                        "description": "Unique submission ID of submission to delete (A UUID specified by RFC4122).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -233,17 +208,7 @@
                 ],
                 "responses": {
                     "204": {
-                        "description": "Submission successfully deleted"
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            }
-                        }
+                        "description": "Submission successfully cancelled"
                     }
                 }
             }
@@ -256,7 +221,7 @@
                     {
                         "name": "broker_submission_id",
                         "in": "path",
-                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
+                        "description": "Unique submission ID of submission to upload a file to (A UUID specified by RFC4122).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -265,7 +230,7 @@
                     }
                 ],
                 "requestBody": {
-                    "description": "Submission to submit",
+                    "description": "File to upload",
                     "required": true,
                     "content": {
                         "multipart/form-data": {
@@ -307,13 +272,13 @@
         },
         "/submissions/{broker_submission_id}/upload/{primary_key}": {
             "put": {
-                "description": "Updates an existing SubmissionUpload",
+                "description": "Updates an existing file associated with a submission.",
                 "operationId": "update submission upload",
                 "parameters": [
                     {
                         "name": "broker_submission_id",
                         "in": "path",
-                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
+                        "description": "Unique id of submission whose file is updated (A UUID specified by RFC4122).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -323,7 +288,7 @@
                     {
                         "name": "primary_key",
                         "in": "path",
-                        "description": "Unique id of SubmissionUpload",
+                        "description": "Unique id of file associated with a submission.",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -331,7 +296,7 @@
                     }
                 ],
                 "requestBody": {
-                    "description": "Modified SubmissionUpload",
+                    "description": "File associated with a submission",
                     "required": true,
                     "content": {
                         "multipart/form-data": {
@@ -371,13 +336,13 @@
                 }
             },
             "delete": {
-                "description": "Deletes a SubmissionUpload",
+                "description": "Deletes a file associated with a submission",
                 "operationId": "delete submission upload",
                 "parameters": [
                     {
                         "name": "broker_submission_id",
                         "in": "path",
-                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
+                        "description": "Unique id of submission to delete (A UUID specified by RFC4122).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -387,7 +352,7 @@
                     {
                         "name": "primary_key",
                         "in": "path",
-                        "description": "Unique id of SubmissionUpload",
+                        "description": "Unique id of file associated with a submission.",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -396,30 +361,20 @@
                 ],
                 "responses": {
                     "204": {
-                        "description": "SubmissionUpload successfully deleted"
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            }
-                        }
+                        "description": "File associated with a submission was successfully deleted"
                     }
                 }
             }
         },
         "/submissions/{broker_submission_id}/uploads/": {
             "get": {
-                "description": "Returns a list of SubmissionUploads belonging to the same broker_submission_id",
+                "description": "Returns a list of files, belonging to the same broker_submission_id",
                 "operationId": "get submission uploads by broker-submission-id",
                 "parameters": [
                     {
                         "name": "broker_submission_id",
                         "in": "path",
-                        "description": "Unique id of a submission, which uploads will be fetched (A UUID specified by RFC4122).",
+                        "description": "Unique id of a submission, which uploads will be returned as a result (A UUID specified by RFC4122).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -437,106 +392,6 @@
                                     "items": {
                                         "$ref": "#/components/schemas/SubmissionUploadListItem"
                                     }
-                                }
-                            }
-                        }
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/submissions/{broker_submission_id}/comment/": {
-            "post": {
-                "description": "Add a comment to the primary GFBIO-Helpdesk issue associated with a submission",
-                "operationId": "add comment",
-                "parameters": [
-                    {
-                        "name": "broker_submission_id",
-                        "in": "path",
-                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "description": "Comment to attach",
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Comment"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Submission response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Comment"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Validation error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/submissions/jira/update/": {
-            "post": {
-                "description": "Update a Submission based on data of a JIRA issue. Usually invoked via a JIRA hook.",
-                "operationId": "update submission via jira",
-                "requestBody": {
-                    "description": "Data to update a submission via a JIRA hook.",
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/JiraHookBody"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Submission response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/JiraHookBody"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Validation error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ValidationError"
                                 }
                             }
                         }
