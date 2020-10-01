@@ -17,16 +17,6 @@ urlpatterns = [
         "about/", TemplateView.as_view(template_name="pages/about.html"), name="about"
     ),
 
-    path('swagger/', TemplateView.as_view(
-        template_name='pages/swagger.html',
-        extra_context={'schema_url': 'generic:brokerage_schema'}
-    ), name='swagger-ui'),
-
-    path('redoc/', TemplateView.as_view(
-        template_name='pages/redoc.html',
-        extra_context={'schema_url': 'generic:brokerage_schema'}
-    ), name='redoc'),
-
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
 
@@ -36,7 +26,6 @@ urlpatterns = [
     path("oidc/", include("mozilla_django_oidc.urls")),
 
     # Your stuff: custom urls includes go here
-
     path("api/", include("gfbio_submissions.brokerage.urls", namespace="brokerage")),
     path("ui/", include("gfbio_submissions.submission_ui.urls", namespace="userinterface")),
     path("generic/", include("gfbio_submissions.generic.urls", namespace="generic")),

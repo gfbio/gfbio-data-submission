@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.conf.urls import url
+from django.views.generic import TemplateView
 
 from .api import submission_views as views, issue_update_views
 
@@ -46,5 +47,9 @@ urlpatterns = [
         view=issue_update_views.JiraIssueUpdateView.as_view(),
         name='submissions_jira_update'
     ),
+    url('documentation/', TemplateView.as_view(
+        template_name='pages/api.html',
+        extra_context={'schema_url': 'generic:brokerage_schema'}
+    ), name='redoc'),
 
 ]
