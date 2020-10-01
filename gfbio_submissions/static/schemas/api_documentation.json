@@ -2,16 +2,12 @@
     "openapi": "3.0.0",
     "info": {
         "title": "GFBio Submission API",
-        "description": "A service to submit data provided by the GFBio Consortium",
+        "description": "A service to use the GFBio Data Submission Service programmatically provided by the GFBio Consortium.",
         "termsOfService": "https://www.gfbio.org/legal-notice",
         "contact": {
             "name": "GFBio Helpdesk",
             "email": "info@gfbio.org",
             "url": "https://submissions.gfbio.org/"
-        },
-        "license": {
-            "name": "MIT",
-            "url": "https://opensource.org/licenses/MIT"
         }
     },
     "servers": [
@@ -20,12 +16,31 @@
         }
     ],
     "paths": {
-        "/submissions/": {
+        "/submissions/ (minimal/generic)": {
+            "get": {
+                "description": "List all submissions you have permission to access.",
+                "operationId": "list submissions",
+                "responses": {
+                    "200": {
+                        "description": "List of all submissions you are permitted to access.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Submission"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Create a new Submission",
-                "operationId": "create submission",
+                "operationId": "create minimal/generic submission",
                 "requestBody": {
-                    "description": "Submission to submit",
+                    "description": "Data to submit",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -57,28 +72,9 @@
                         }
                     }
                 }
-            },
-            "get": {
-                "description": "List all submissions you have permission to access.",
-                "operationId": "list submissions",
-                "responses": {
-                    "200": {
-                        "description": "Submissions response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Submission"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
             }
         },
-        "(molecular)/submissions/": {
+        "/submissions/  (molecular)": {
             "post": {
                 "description": "Create a new molecular Submission, fully validated",
                 "operationId": "create molecular submission",
@@ -119,13 +115,13 @@
         },
         "/submissions/{broker_submission_id}": {
             "get": {
-                "description": "Returns a single submission, identified by a unique broker_submission_id",
-                "operationId": "get submission by broker-submission-id",
+                "description": "Returns a single submission, identified by a unique submission ID (broker_submission_id)",
+                "operationId": "get submission by submission ID",
                 "parameters": [
                     {
                         "name": "broker_submission_id",
                         "in": "path",
-                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
+                        "description": "Unique id of submission to retrieve (A UUID specified by RFC4122).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -153,7 +149,7 @@
                     {
                         "name": "broker_submission_id",
                         "in": "path",
-                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
+                        "description": "Unique submission ID of submission to update (A UUID specified by RFC4122).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -162,7 +158,7 @@
                     }
                 ],
                 "requestBody": {
-                    "description": "Submission to update",
+                    "description": "Data to update the existing submission.",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -202,7 +198,7 @@
                     {
                         "name": "broker_submission_id",
                         "in": "path",
-                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
+                        "description": "Unique submission ID of submission to delete (A UUID specified by RFC4122).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -225,7 +221,7 @@
                     {
                         "name": "broker_submission_id",
                         "in": "path",
-                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
+                        "description": "Unique submission ID of submission to upload a file to (A UUID specified by RFC4122).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -234,7 +230,7 @@
                     }
                 ],
                 "requestBody": {
-                    "description": "Submission to submit",
+                    "description": "File to upload",
                     "required": true,
                     "content": {
                         "multipart/form-data": {
@@ -276,13 +272,13 @@
         },
         "/submissions/{broker_submission_id}/upload/{primary_key}": {
             "put": {
-                "description": "Updates an existing SubmissionUpload",
+                "description": "Updates an existing file associated with a submission.",
                 "operationId": "update submission upload",
                 "parameters": [
                     {
                         "name": "broker_submission_id",
                         "in": "path",
-                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
+                        "description": "Unique id of submission whose file is updated (A UUID specified by RFC4122).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -292,7 +288,7 @@
                     {
                         "name": "primary_key",
                         "in": "path",
-                        "description": "Unique id of SubmissionUpload",
+                        "description": "Unique id of file associated with a submission.",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -300,7 +296,7 @@
                     }
                 ],
                 "requestBody": {
-                    "description": "Modified SubmissionUpload",
+                    "description": "File associated with a submission",
                     "required": true,
                     "content": {
                         "multipart/form-data": {
@@ -340,13 +336,13 @@
                 }
             },
             "delete": {
-                "description": "Deletes a SubmissionUpload",
+                "description": "Deletes a file associated with a submission",
                 "operationId": "delete submission upload",
                 "parameters": [
                     {
                         "name": "broker_submission_id",
                         "in": "path",
-                        "description": "Unique id of submission to fetch (A UUID specified by RFC4122).",
+                        "description": "Unique id of submission to delete (A UUID specified by RFC4122).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -356,7 +352,7 @@
                     {
                         "name": "primary_key",
                         "in": "path",
-                        "description": "Unique id of SubmissionUpload",
+                        "description": "Unique id of file associated with a submission.",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -365,20 +361,20 @@
                 ],
                 "responses": {
                     "204": {
-                        "description": "SubmissionUpload successfully deleted"
+                        "description": "File associated with a submission was successfully deleted"
                     }
                 }
             }
         },
         "/submissions/{broker_submission_id}/uploads/": {
             "get": {
-                "description": "Returns a list of SubmissionUploads belonging to the same broker_submission_id",
+                "description": "Returns a list of files, belonging to the same broker_submission_id",
                 "operationId": "get submission uploads by broker-submission-id",
                 "parameters": [
                     {
                         "name": "broker_submission_id",
                         "in": "path",
-                        "description": "Unique id of a submission, which uploads will be fetched (A UUID specified by RFC4122).",
+                        "description": "Unique id of a submission, which uploads will be returned as a result (A UUID specified by RFC4122).",
                         "required": true,
                         "schema": {
                             "type": "string",
