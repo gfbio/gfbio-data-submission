@@ -37,7 +37,7 @@
                 }
             },
             "post": {
-                "description": "Create a new Submission",
+                "description": "Create a new Submission. Generic ...",
                 "operationId": "create minimal/generic submission",
                 "requestBody": {
                     "description": "Data to submit",
