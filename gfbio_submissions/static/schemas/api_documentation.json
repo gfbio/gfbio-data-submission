@@ -21,35 +21,6 @@
     ],
     "paths": {
         "/submissions/": {
-            "get": {
-                "description": "List all submissions you have permission to access.",
-                "operationId": "list submissions",
-                "responses": {
-                    "200": {
-                        "description": "Submissions response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Submission"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
             "post": {
                 "description": "Create a new Submission",
                 "operationId": "create submission",
@@ -81,6 +52,25 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "description": "List all submissions you have permission to access.",
+                "operationId": "list submissions",
+                "responses": {
+                    "200": {
+                        "description": "Submissions response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Submission"
+                                    }
                                 }
                             }
                         }
@@ -150,16 +140,6 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Submission"
-                                }
-                            }
-                        }
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
                                 }
                             }
                         }
@@ -233,16 +213,6 @@
                 "responses": {
                     "204": {
                         "description": "Submission successfully cancelled"
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            }
-                        }
                     }
                 }
             }
@@ -396,16 +366,6 @@
                 "responses": {
                     "204": {
                         "description": "SubmissionUpload successfully deleted"
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            }
-                        }
                     }
                 }
             }
@@ -436,16 +396,6 @@
                                     "items": {
                                         "$ref": "#/components/schemas/SubmissionUploadListItem"
                                     }
-                                }
-                            }
-                        }
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
                                 }
                             }
                         }
