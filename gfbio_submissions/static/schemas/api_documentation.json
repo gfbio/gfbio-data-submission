@@ -16,7 +16,7 @@
         }
     ],
     "paths": {
-        "/submissions/ (minimal/generic)": {
+        "/submissions/": {
             "get": {
                 "description": "List all submissions you have permission to access.",
                 "operationId": "list submissions",
@@ -37,8 +37,8 @@
                 }
             },
             "post": {
-                "description": "Create a new Submission. Generic ...",
-                "operationId": "create minimal/generic submission",
+                "description": "Create a new Submission. Below you find a list of required (and non-required) fields needed to create a new submission.</br><ul><li>In its simplest form you would only need to choose target='GENERIC' and provide a title and an abstract to your submission, and thus start the whole submission process when posting this data.</li><li>One way to submit molecular data would be to follow the same principle, and to additionally upload a CSV file containing the needed meta-data. To perform the upload refer to the <a href='#operation/create%20submission%20upload'>'create submission upload'</a> documentation below.</br>Additional information and the template can be found here:<ul><li><a href='https://gitlab.gwdg.de/gfbio/molecular-submission-templates/-/blob/master/full_template.csv'>Molecular CSV Template</a></li><li><a href='xxx'>WIKI ?</a></li></ul></li><li>It is also possible to submit molecular data without uploading a template, by directly providing all meta-data as json also using this endpoint.</li></ul>",
+                "operationId": "create submission",
                 "requestBody": {
                     "description": "Data to submit",
                     "required": true,
@@ -57,45 +57,6 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Submission"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Validation error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/submissions/  (molecular)": {
-            "post": {
-                "description": "Create a new molecular Submission, fully validated",
-                "operationId": "create molecular submission",
-                "requestBody": {
-                    "description": "Submission to submit",
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/MolecularSubmission"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Submission response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/MolecularSubmission"
                                 }
                             }
                         }
