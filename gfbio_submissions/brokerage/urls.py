@@ -47,7 +47,7 @@ urlpatterns = [
         view=issue_update_views.JiraIssueUpdateView.as_view(),
         name='submissions_jira_update'
     ),
-    url('documentation/', TemplateView.as_view(
+    url('', TemplateView.as_view(
         template_name='pages/api.html',
         extra_context={'schema_url': 'generic:brokerage_schema'}
     ), name='redoc'),
