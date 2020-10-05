@@ -1,0 +1,21 @@
+{% extends "base_content.html" %}
+{% load static %}
+
+{% block content-wrapper %}
+    {% block section %}
+        <section id="mainSection">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <redoc spec-url='{% url schema_url %}'></redoc>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    {% endblock section %}
+{% endblock content-wrapper %}
+
+{% block thirdPartyJavaScript %}
+    <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script>
+{% endblock thirdPartyJavaScript %}

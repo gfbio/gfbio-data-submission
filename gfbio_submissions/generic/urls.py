@@ -7,7 +7,7 @@ app_name = "generic"
 
 urlpatterns = [
     url(
-        regex=r'schema/brokerage_api/(?P<schema>[a-z-_\.json]+)',
+        regex=r'schema/brokerage_api[_\w]*/(?P<schema>[a-z-_\.json]+)',
         view=views.BrokerageValidationSchemaView.as_view(),
         name='brokerage_validation'
     ),
@@ -15,6 +15,11 @@ urlpatterns = [
         regex=r'schema/brokerage_api/$',
         view=views.BrokerageAPISchemaView.as_view(),
         name='brokerage_schema'
+    ),
+    url(
+        regex=r'schema/brokerage_api_molecular/$',
+        view=views.BrokerageMolecularAPISchemaView.as_view(),
+        name='brokerage_schema_molecular'
     ),
 
 ]

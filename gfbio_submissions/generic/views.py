@@ -18,6 +18,16 @@ class BrokerageAPISchemaView(View):
                             content_type='application/vnd.oai.openapi')
 
 
+class BrokerageMolecularAPISchemaView(View):
+
+    def get(self, request):
+        path = os.path.join(STATIC_ROOT, 'schemas',
+                            'api_molecular_documentation.json')
+        return HttpResponse(status=HTTP_200_OK,
+                            content=(open(path).read()),
+                            content_type='application/vnd.oai.openapi')
+
+
 class BrokerageValidationSchemaView(View):
 
     def get(self, request, *args, **kwargs):

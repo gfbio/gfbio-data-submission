@@ -47,9 +47,13 @@ urlpatterns = [
         view=issue_update_views.JiraIssueUpdateView.as_view(),
         name='submissions_jira_update'
     ),
+    url(r'molecular/$', TemplateView.as_view(
+        template_name='pages/api_molecular.html',
+        extra_context={'schema_url': 'generic:brokerage_schema_molecular'}
+    ), name='api_molecular_documentation'),
     url('', TemplateView.as_view(
         template_name='pages/api.html',
         extra_context={'schema_url': 'generic:brokerage_schema'}
-    ), name='redoc'),
+    ), name='api_documentation'),
 
 ]
