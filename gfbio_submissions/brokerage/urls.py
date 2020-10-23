@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.conf.urls import url
+from django.views.generic import TemplateView
 
 from .api import submission_views as views, issue_update_views
 
@@ -46,7 +47,13 @@ urlpatterns = [
         view=issue_update_views.JiraIssueUpdateView.as_view(),
         name='submissions_jira_update'
     ),
+    url(r'molecular/$', TemplateView.as_view(
+        template_name='pages/api_molecular.html',
+        extra_context={'schema_url': 'generic:brokerage_schema_molecular'}
+    ), name='api_molecular_documentation'),
+    url('', TemplateView.as_view(
+        template_name='pages/api.html',
+        extra_context={'schema_url': 'generic:brokerage_schema'}
+    ), name='api_documentation'),
 
-    # http://0.0.0.0:8000/api/docs/?format=openapi
-    # url(r'^docs/$', schema_view, name='rest_api_documentation'),
 ]
