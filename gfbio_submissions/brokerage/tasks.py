@@ -2,6 +2,7 @@
 import datetime
 import logging
 import os
+import textwrap
 
 import celery
 from celery import Task
@@ -10,9 +11,8 @@ from django.db import transaction
 from django.db.utils import IntegrityError
 from django.utils.encoding import smart_text
 from kombu.utils import json
-from requests import ConnectionError, Response
 from pytz import timezone
-import textwrap
+from requests import ConnectionError, Response
 
 from config.settings.base import HOST_URL_ROOT, ADMIN_URL
 from gfbio_submissions.generic.models import SiteConfiguration, RequestLog
@@ -34,7 +34,8 @@ from .utils.csv import check_for_molecular_content, parse_molecular_csv
 from .utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data, \
     send_submission_to_ena, parse_ena_submission_response, fetch_ena_report, \
     update_persistent_identifier_report_status, register_study_at_ena, \
-    prepare_study_data_only, store_single_data_item_as_auditable_text_data
+    prepare_study_data_only, store_single_data_item_as_auditable_text_data, \
+    update_resolver_accessions
 from .utils.ena_cli import submit_targeted_sequences, \
     create_ena_manifest_text_data, store_manifest_to_filesystem, \
     extract_accession_from_webin_report
@@ -1719,6 +1720,26 @@ def fetch_ena_reports_task(self):
 @celery.task(
     base=SubmissionTask,
     bind=True,
+    name='tasks.update_resolver_accessions_task',
+)
+def update_resolver_accessions_task(self):
+    TaskProgressReport.objects.create_initial_report(
+        submission=None,
+        task=self)
+    logger.info(
+        msg='tasks.py | update_resolver_accessions_task '
+            '| start update')
+    success = update_resolver_accessions()
+    logger.info(
+        msg='tasks.py | update_resolver_accessions_task '
+            '| success={0}'.format(success))
+
+    return success
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
     name='tasks.update_persistent_identifier_report_status_task',
 )
 def update_persistent_identifier_report_status_task(self):
@@ -1733,7 +1754,7 @@ def update_persistent_identifier_report_status_task(self):
         msg='tasks.py | update_persistent_identifier_report_status_task '
             '| success={0}'.format(success))
 
-    return True
+    return success
 
 
 # FIXME: It is possible to set a submission for the taskprogressreport here.
@@ -1914,14 +1935,17 @@ def notify_curators_on_embargo_ends_task(self):
         study = submission.brokerobject_set.filter(type='study').first()
         if study:
             # get persistent identifier
-            study_pid = study.persistentidentifier_set.filter(pid_type='PRJ').first()
+            study_pid = study.persistentidentifier_set.filter(
+                pid_type='PRJ').first()
             if study_pid:
                 # check if embargo is withing 7 days
-                one_week_from_now = datetime.date.today() + datetime.timedelta(days=6)
+                one_week_from_now = datetime.date.today() + datetime.timedelta(
+                    days=6)
                 if submission.embargo <= one_week_from_now:
                     # get jira link
                     if submission.get_primary_helpdesk_reference():
-                        jira_link = '{}{}'.format(JIRA_TICKET_URL, submission.get_primary_helpdesk_reference())
+                        jira_link = '{}{}'.format(JIRA_TICKET_URL,
+                                                  submission.get_primary_helpdesk_reference())
                     else:
                         jira_link = 'No ticket found'
 
@@ -1932,7 +1956,6 @@ def notify_curators_on_embargo_ends_task(self):
                         'jira_link': jira_link,
                         'embargo': '{}'.format(submission.embargo),
                     })
-
 
     curators = User.objects.filter(groups__name='Curators')
     if len(results) > 0 and len(curators) > 0:
@@ -1948,7 +1971,8 @@ def notify_curators_on_embargo_ends_task(self):
 
         from django.core.mail import send_mail
         send_mail(
-            subject='%s%s' % (settings.EMAIL_SUBJECT_PREFIX, ' Embargo expiry notification'),
+            subject='%s%s' % (
+                settings.EMAIL_SUBJECT_PREFIX, ' Embargo expiry notification'),
             message=message,
             from_email=settings.SERVER_EMAIL,
             recipient_list=curators_emails,
@@ -1959,13 +1983,15 @@ def notify_curators_on_embargo_ends_task(self):
 
     return "No notifications to send"
 
+
 @celery.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.update_ena_embargo_task',
 )
 def update_ena_embargo_task(self, prev=None, submission_id=None):
-    logger.info('tasks.py | update_ena_embargo_task | submission_id={0}'.format(submission_id))
+    logger.info('tasks.py | update_ena_embargo_task | submission_id={0}'.format(
+        submission_id))
 
     submission, site_config = get_submission_and_site_configuration(
         submission_id=submission_id,
@@ -2039,7 +2065,8 @@ def update_ena_embargo_task(self, prev=None, submission_id=None):
             'found for study | submission_id={0}'.format(
                 submission.broker_submission_id)
         )
-        return 'no primary accession number found, submission={}'.format(submission.broker_submission_id)
+        return 'no primary accession number found, submission={}'.format(
+            submission.broker_submission_id)
 
 
 @celery.task(
@@ -2054,7 +2081,9 @@ def update_ena_embargo_task(self, prev=None, submission_id=None):
     retry_jitter=True
 )
 def notify_user_embargo_changed_task(self, prev=None, submission_id=None):
-    logger.info('tasks.py | notify_user_embargo_changed_task | submission_id={0}'.format(submission_id))
+    logger.info(
+        'tasks.py | notify_user_embargo_changed_task | submission_id={0}'.format(
+            submission_id))
 
     submission, site_config = get_submission_and_site_configuration(
         submission_id=submission_id,
@@ -2084,13 +2113,15 @@ def notify_user_embargo_changed_task(self, prev=None, submission_id=None):
             return jira_error_auto_retry(jira_client=jira_client, task=self,
                                          broker_submission_id=submission.broker_submission_id)
     else:
-        logger.info('tasks.py | notify_user_embargo_changed_task | no site_config for helpdesk_serever')
+        logger.info(
+            'tasks.py | notify_user_embargo_changed_task | no site_config for helpdesk_serever')
 
     return {
         'status': 'error',
         'submission': '{}'.format(submission.broker_submission_id),
         'msg': 'missing site_config or jira ticket'
     }
+
 
 @celery.task(
     base=SubmissionTask,
@@ -2104,7 +2135,9 @@ def notify_user_embargo_changed_task(self, prev=None, submission_id=None):
     retry_jitter=True
 )
 def jira_cancel_issue_task(self, submission_id=None, admin=False):
-    logger.info('tasks.py | jira_cancel_issue_task | submission_id={} admin={}'.format(submission_id, admin))
+    logger.info(
+        'tasks.py | jira_cancel_issue_task | submission_id={} admin={}'.format(
+            submission_id, admin))
     TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
