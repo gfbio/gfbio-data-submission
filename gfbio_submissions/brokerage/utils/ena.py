@@ -32,6 +32,7 @@ from gfbio_submissions.brokerage.models import AuditableTextData, \
 from gfbio_submissions.brokerage.utils.csv import \
     find_correct_platform_and_model
 from gfbio_submissions.generic.utils import logged_requests
+from gfbio_submissions.resolve.models import Accession
 
 logger = logging.getLogger(__name__)
 dicttoxml.LOG.setLevel(logging.ERROR)
@@ -623,7 +624,6 @@ def register_study_at_ena(submission, study_text_data):
         )
         return None, None
 
-
     request_data = {
         'STUDY': (
             '{0}'.format(smart_text(study_text_data.name)),
@@ -836,6 +836,35 @@ def update_embargo_date_in_submissions(hold_date, study_pid):
                             ''.format(submission.embargo,
                                       submission.broker_submission_id,
                                       study.hold_date, study.pid))
+
+
+def update_resolver_accessions():
+    for report_type in EnaReport.REPORT_TYPES:
+        report_key, report_name = report_type
+        reports = EnaReport.objects.filter(report_type=report_key)
+        if len(reports) == 1:
+            logger.info('ena.py | update_resolver_accessions '
+                        '| process report of type={0}'.format(report_name))
+            for report in reports.first().report_data:
+                report_dict = report.get('report', {})
+                status = report_dict.get('releaseStatus')
+                print('status ', status)
+                if status != 'PUBLIC':
+                    print('\t1: ', report_dict.get('id'))
+                    print('\t2: ', report_dict.get('secondaryId'))
+                    Accession.objects.create(
+                        identifier=report_dict.get('id')
+                    )
+                    Accession.objects.create(
+                        identifier=report_dict.get('secondaryId')
+                    )
+            return True
+        else:
+            logger.warning(
+                'ena.py | update_resolver_accessions '
+                '| found {0} occurences for report of type={1} found'.format(
+                    len(reports), report_name))
+            return False
 
 
 def update_persistent_identifier_report_status():

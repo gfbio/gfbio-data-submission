@@ -16,6 +16,20 @@
         },
         {
             "report": {
+                "id": "ERP119xxx",
+                "alias": "25104:eff39647-f889-4370-9287-4fb5cb688e4c",
+                "firstCreated": "2020-01-08T14:35:41",
+                "firstPublic": null,
+                "releaseStatus": "PUBLIC",
+                "submissionAccountId": "Webin-40945",
+                "secondaryId": "PRJEB36xxx",
+                "title": "Anaerobic oxidation of ethane by archaea in different marine environments",
+                "holdDate": "2021-01-07T00:00:00"
+            },
+            "links": []
+        },
+        {
+            "report": {
                 "id": "ERP0815",
                 "alias": "20815:edfd9647-f889-4370-9287-4fb5cb688e4c",
                 "firstCreated": "2020-01-08T14:35:41",

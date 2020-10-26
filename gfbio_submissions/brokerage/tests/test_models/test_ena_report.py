@@ -9,7 +9,8 @@ from gfbio_submissions.brokerage.models import EnaReport, BrokerObject, \
     PersistentIdentifier, Submission
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.ena import \
-    update_persistent_identifier_report_status
+    update_persistent_identifier_report_status, update_resolver_accessions
+from gfbio_submissions.resolve.models import Accession
 from gfbio_submissions.users.models import User
 
 
@@ -116,6 +117,20 @@ class TestEnaReport(TestCase):
                 report_type=EnaReport.STUDY).filter(
                 report_data__contains=[{'report': {'id': 'ERP117556'}}])
         ))
+
+    def test_update_resolver_accessions(self):
+        self.assertEqual(0, len(Accession.objects.all()))
+        success = update_resolver_accessions()
+        self.assertTrue(success)
+        for a in Accession.objects.all():
+            print(a)
+        self.assertEqual(6, len(Accession.objects.all()))
+
+        # PUBLIC content for 'study' EnaReport
+        self.assertEqual(0,
+                         len(Accession.objects.filter(identifier='ERP119xxx')))
+        self.assertEqual(0,
+                         len(Accession.objects.filter(identifier='PRJEB36xxx')))
 
     def test_parsing_for_ena_status(self):
         user = User.objects.create(
