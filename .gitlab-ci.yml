@@ -40,7 +40,7 @@ stop_web_test:
   script:
     - python cicd/stopDockerStack.py "${CI_COMMIT_MESSAGE}"
   rules:
-    - if: '$CI_COMMIT_BRANCH == "master" && $CI_COMMIT_MESSAGE =~ /.*Merge branch.*into.*/' 
+    - if: '$CI_COMMIT_BRANCH == "master" && $CI_COMMIT_MESSAGE =~ /.*Merge branch.*into.*/'
   tags:
     - dev
 
@@ -70,7 +70,7 @@ build_staging:
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
   tags:
-    - staging
+    - gfbio-staging
 
 update_staging_env:
   stage: update_staging
@@ -85,11 +85,11 @@ update_staging_env:
     - docker-compose -f production.yml up -d
   environment:
     name: staging
-    url: https://c103-171.cloud.gwdg.de/
+    url: https://stage.submissions.gfbio.org/
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
   tags:
-    - staging
+    - gfbio-staging
 
 deploy_to_production:
   stage: update_production
