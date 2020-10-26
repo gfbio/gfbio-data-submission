@@ -1682,11 +1682,6 @@ def fetch_ena_reports_task(self):
     TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
-    # user = User.objects.get(username=HOSTING_SITE, is_site=True)
-    # site_configuration = SiteConfiguration.objects.get_site_configuration(
-    #     site=user
-    # )
-    # site_configuration = user.site_configuration
     site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
     if site_configuration is None or site_configuration.ena_report_server is None:
         return TaskProgressReport.CANCELLED
