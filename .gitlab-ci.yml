@@ -85,7 +85,7 @@ update_staging_env:
     - docker-compose -f production.yml up -d
   environment:
     name: staging
-    url: https://c103-171.cloud.gwdg.de/
+    url: https://stage.submissions.gfbio.org/
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
   tags:
