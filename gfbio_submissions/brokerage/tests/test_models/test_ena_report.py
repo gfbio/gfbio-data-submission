@@ -137,8 +137,22 @@ class TestEnaReport(TestCase):
         self.assertEqual(6, len(Accession.objects.all()))
 
         study_report = EnaReport.objects.get(report_type=EnaReport.STUDY)
-        print(type(study_report.report_data[0]))
-        print(study_report.report_data)
+        self.assertFalse(
+            Accession.objects.filter(identifier='ERP119242').first() is None
+        )
+        self.assertFalse(
+            Accession.objects.filter(identifier='PRJEB36096').first() is None
+        )
+        study_report.report_data[0]['report']['releaseStatus'] = 'PUBLIC'
+        study_report.save()
+        success = update_resolver_accessions()
+        self.assertEqual(4, len(Accession.objects.all()))
+        self.assertTrue(
+            Accession.objects.filter(identifier='ERP119242').first() is None
+        )
+        self.assertTrue(
+            Accession.objects.filter(identifier='PRJEB36096').first() is None
+        )
 
     def test_parsing_for_ena_status(self):
         user = User.objects.create(
