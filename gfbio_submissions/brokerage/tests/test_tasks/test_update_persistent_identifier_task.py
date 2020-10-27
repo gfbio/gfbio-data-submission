@@ -69,7 +69,6 @@ class TestUpdatePersistentIdentifierReportStatusTask(TestTasks):
     def test_update_success(self):
         self._add_persistent_identifier_test_data()
         res = update_persistent_identifier_report_status_task.apply_async(
-            kwargs={
-            }
+            kwargs={}
         )
         self.assertTrue(res.successful())

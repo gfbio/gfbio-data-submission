@@ -123,6 +123,19 @@ class Submission(TimeStampedModel):
 
     objects = SubmissionManager()
 
+    # get first PRJ object
+    def get_primary_accession(self):
+        try:
+            broker_objects = self.brokerobject_set.filter(type='study')
+            for obj in broker_objects:
+                for pid in obj.persistentidentifier_set.filter(pid_type='PRJ'):
+                    # return first object, in theory should be only one
+                    return pid
+            return None
+        except IndexError:
+            return None
+
+    # for frontend
     def get_accession_id(self):
         try:
             broker_objects = self.brokerobject_set.filter(type='study')
@@ -343,6 +356,11 @@ class PersistentIdentifier(TimeStampedModel):
                                            blank=True)
     # notify user 2 weeks before the embargo ends
     user_notified = models.DateField(
+        null=True,
+        blank=True)
+
+    # notify user when ena status changed to PUBLIC
+    user_notified_released = models.DateField(
         null=True,
         blank=True)
 

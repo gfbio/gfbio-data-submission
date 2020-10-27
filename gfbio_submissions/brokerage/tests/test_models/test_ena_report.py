@@ -6,7 +6,7 @@ from datetime import datetime
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.models import EnaReport, BrokerObject, \
-    PersistentIdentifier, Submission
+    PersistentIdentifier, Submission, TaskProgressReport
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.ena import \
     update_persistent_identifier_report_status
@@ -29,7 +29,7 @@ class TestEnaReport(TestCase):
 
     def test_db_content(self):
         self.assertEqual(4, len(EnaReport.objects.all()))
-        self.assertEqual(3, len(EnaReport.objects.filter(
+        self.assertEqual(4, len(EnaReport.objects.filter(
             report_type=EnaReport.STUDY).first().report_data))
 
     def test_create_instance(self):
@@ -178,3 +178,50 @@ class TestEnaReport(TestCase):
         self.assertEqual(2, len(identifiers))
         for i in identifiers:
             self.assertNotEqual('', i.status)
+
+    def test_parsing_ena_embargo_ended_task_triggers(self):
+        user = User.objects.create(
+            username='user1'
+        )
+        submission = Submission.objects.create(
+            user=user,
+            status='OPEN',
+            submitting_user='John Doe',
+            target='ENA',
+            release=False,
+            embargo=datetime(2020, 3, 1).date(),
+            data={}
+        )
+        broker_object = BrokerObject.objects.create(
+            type='study',
+            user=user,
+            data={
+                'center_name': 'GFBIO',
+                # 'study_type': 'Metagenomics',
+                'study_abstract': 'abstract',
+                'study_title': 'title',
+                'study_alias': 'alias',
+            }
+        )
+        broker_object.submissions.add(submission)
+        PersistentIdentifier.objects.create(
+            archive='ENA',
+            pid_type='PRJ',
+            broker_object=broker_object,
+            pid='PRJFO1234',
+            status='PRIVATE',
+            outgoing_request_id='da76ebec-7cde-4f11-a7bd-35ef8ebe5b85'
+        )
+        identifiers = PersistentIdentifier.objects.all()
+        self.assertEqual(1, len(identifiers))
+        self.assertEqual('PRIVATE', identifiers[0].status)
+
+        success = update_persistent_identifier_report_status()
+        self.assertTrue(success)
+        self.assertEqual("PUBLIC", PersistentIdentifier.objects.filter(pid="PRJFO1234").first().status)
+        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.notify_on_embargo_ended_task")))
+        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.jira_transition_issue_task")))
+
+        success = update_persistent_identifier_report_status()
+        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.notify_on_embargo_ended_task")))
+        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.jira_transition_issue_task")))
