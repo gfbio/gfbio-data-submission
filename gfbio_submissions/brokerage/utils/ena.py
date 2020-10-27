@@ -847,13 +847,15 @@ def update_resolver_accessions():
                         '| process report of type={0}'.format(report_name))
             for report in reports.first().report_data:
                 report_dict = report.get('report', {})
-                if report_dict.get('releaseStatus') != 'PUBLIC':
-                    Accession.objects.create(
-                        identifier=report_dict.get('id')
-                    )
-                    Accession.objects.create(
-                        identifier=report_dict.get('secondaryId')
-                    )
+                status = report_dict.get('releaseStatus')
+                Accession.objects.create_or_delete(
+                    identifier=report_dict.get('id'),
+                    release_status=status
+                )
+                Accession.objects.create_or_delete(
+                    identifier=report_dict.get('secondaryId'),
+                    release_status=status
+                )
             return True
         else:
             logger.warning(

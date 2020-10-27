@@ -30,7 +30,7 @@ class TestEnaReport(TestCase):
 
     def test_db_content(self):
         self.assertEqual(4, len(EnaReport.objects.all()))
-        self.assertEqual(3, len(EnaReport.objects.filter(
+        self.assertEqual(5, len(EnaReport.objects.filter(
             report_type=EnaReport.STUDY).first().report_data))
 
     def test_create_instance(self):
@@ -131,6 +131,14 @@ class TestEnaReport(TestCase):
                          len(Accession.objects.filter(identifier='ERP119xxx')))
         self.assertEqual(0,
                          len(Accession.objects.filter(identifier='PRJEB36xxx')))
+
+    def test_accession_update_to_public(self):
+        success = update_resolver_accessions()
+        self.assertEqual(6, len(Accession.objects.all()))
+
+        study_report = EnaReport.objects.get(report_type=EnaReport.STUDY)
+        print(type(study_report.report_data[0]))
+        print(study_report.report_data)
 
     def test_parsing_for_ena_status(self):
         user = User.objects.create(
