@@ -403,3 +403,37 @@ class JiraClient(object):
             return
 
         logger.info('JiraClient | cancel_issue | transition id 801 or 761 not found')
+
+    def transition_issue(self, issue, submission, transition_id, resolution):
+        transitions = self.jira.transitions(issue)
+        with transaction.atomic():
+            RequestLog.objects.create(
+                type=RequestLog.OUTGOING,
+                method=RequestLog.GET,
+                url='https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions'.format(issue),
+                user=submission.user,
+                submission_id=submission.broker_submission_id,
+                response_content=transitions,
+                response_status=status.HTTP_200_OK,
+            )
+
+        try:
+            response = self.jira.transition_issue(
+                issue,
+                transition_id,
+                fields={'resolution':{'name': resolution}},
+            )
+        except JIRAError as e:
+            response = e
+            logger.info('JiraClient | transition_issue | Error {}'.format(e))
+
+        with transaction.atomic():
+            RequestLog.objects.create(
+                type=RequestLog.OUTGOING,
+                method=RequestLog.POST,
+                url='https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions'.format(issue),
+                user=submission.user,
+                submission_id=submission.broker_submission_id,
+                response_content=response,
+                response_status=status.HTTP_200_OK,
+            )

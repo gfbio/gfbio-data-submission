@@ -1,2 +1,2 @@
 #!/bin/bash
-sed -i 's/rule:.*/rule: "Host(`c103-171.cloud.gwdg.de`)"/g' compose/production/traefik/traefik.yml
+sed -i 's/rule:.*/rule: "Host(`stage.submissions.gfbio.org`)"/g' compose/production/traefik/traefik.yml

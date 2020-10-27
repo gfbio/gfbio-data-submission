@@ -89,6 +89,7 @@ LOCAL_APPS = [
     # Your stuff: custom apps go here
     "gfbio_submissions.brokerage.apps.BrokerageConfig",
     "gfbio_submissions.generic.apps.GenericConfig",
+    "gfbio_submissions.resolve.apps.ResolveConfig",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -340,6 +341,7 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.coreapi.AutoSchema",
 }
 
 # Your stuff...

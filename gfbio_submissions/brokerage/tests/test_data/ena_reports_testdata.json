@@ -40,6 +40,20 @@
                 "holdDate": "2021-01-07T00:00:00"
             },
             "links": []
+        },
+        {
+            "report": {
+                "id": "FO1234",
+                "alias": "25111:e3339647-f889-4370-9287-4fb5cb688e4c",
+                "firstCreated": "2020-01-08T14:35:41",
+                "firstPublic": null,
+                "releaseStatus": "PUBLIC",
+                "submissionAccountId": "Webin-40945",
+                "secondaryId": "PRJFO1234",
+                "title": "GeoB10351-14",
+                "taxId": "2608703",
+                "scientificName": "Embargo end Trigger"
+            }
         }
     ],
     "samples": [

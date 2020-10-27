@@ -1,0 +1,571 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "GFBio Submission API",
+        "description": "A service to use the GFBio Data Submission Service programmatically provided by the GFBio Consortium.",
+        "termsOfService": "https://www.gfbio.org/legal-notice",
+        "contact": {
+            "name": "GFBio Helpdesk",
+            "email": "info@gfbio.org",
+            "url": "https://submissions.gfbio.org/"
+        }
+    },
+    "servers": [
+        {
+            "url": "https://submissions.gfbio.org/api"
+        }
+    ],
+    "paths": {
+        "/submissions/": {
+            "get": {
+                "description": "List all submissions you have permission to access.",
+                "operationId": "list submissions",
+                "responses": {
+                    "200": {
+                        "description": "List of all submissions you are permitted to access.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Submission"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new Submission. Below you find a list of required (and non-required) fields needed to create a new submission.</br><ul><li>In its simplest form you would only need to choose target='GENERIC' and provide a title and an abstract to your submission, and thus start the whole submission process when posting this data.</li><li>One way to submit molecular data would be to follow the same principle, and to additionally upload a CSV file containing the needed meta-data. To perform the upload refer to the <a href='#operation/create%20submission%20upload'>'create submission upload'</a> documentation below.</br>Additional information and the template can be found here:<ul><li><a href='https://gitlab.gwdg.de/gfbio/molecular-submission-templates/-/blob/master/full_template.csv'>Molecular CSV Template</a></li><li><a href='xxx'>WIKI ?</a></li></ul></li><li>It is also possible to submit molecular data without uploading a template, by directly providing all meta-data as json also using this endpoint.</br>For dedicated information on this, please refer to:<ul><li><a href='/api/molecular/'>Submit molecular data in pure JSON</a></li></ul></li></ul>",
+                "operationId": "create submission",
+                "requestBody": {
+                    "description": "Data to submit",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Submission"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Submission response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Submission"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/submissions/{broker_submission_id}": {
+            "get": {
+                "description": "Returns a single submission, identified by a unique submission ID (broker_submission_id)",
+                "operationId": "get submission by submission ID",
+                "parameters": [
+                    {
+                        "name": "broker_submission_id",
+                        "in": "path",
+                        "description": "Unique id of submission to retrieve (A UUID specified by RFC4122).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Submission response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Submission"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates an existing Submission",
+                "operationId": "update submission",
+                "parameters": [
+                    {
+                        "name": "broker_submission_id",
+                        "in": "path",
+                        "description": "Unique submission ID of submission to update (A UUID specified by RFC4122).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Data to update the existing submission.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Submission"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Submission response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Submission"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Cancels a Submission",
+                "operationId": "cancel submission",
+                "parameters": [
+                    {
+                        "name": "broker_submission_id",
+                        "in": "path",
+                        "description": "Unique submission ID of submission to delete (A UUID specified by RFC4122).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Submission successfully cancelled"
+                    }
+                }
+            }
+        },
+        "/submissions/{broker_submission_id}/upload/": {
+            "post": {
+                "description": "Upload a file associated to an existing submission",
+                "operationId": "create submission upload",
+                "parameters": [
+                    {
+                        "name": "broker_submission_id",
+                        "in": "path",
+                        "description": "Unique submission ID of submission to upload a file to (A UUID specified by RFC4122).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "File to upload",
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "media": {
+                                        "type": "string",
+                                        "format": "base64"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Submission upload response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubmissionUpload"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/submissions/{broker_submission_id}/upload/{primary_key}": {
+            "put": {
+                "description": "Updates an existing file associated with a submission.",
+                "operationId": "update submission upload",
+                "parameters": [
+                    {
+                        "name": "broker_submission_id",
+                        "in": "path",
+                        "description": "Unique id of submission whose file is updated (A UUID specified by RFC4122).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "primary_key",
+                        "in": "path",
+                        "description": "Unique id of file associated with a submission.",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "File associated with a submission",
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "media": {
+                                        "type": "string",
+                                        "format": "base64"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "SubmissionUpload response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubmissionUpload"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a file associated with a submission",
+                "operationId": "delete submission upload",
+                "parameters": [
+                    {
+                        "name": "broker_submission_id",
+                        "in": "path",
+                        "description": "Unique id of submission to delete (A UUID specified by RFC4122).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "primary_key",
+                        "in": "path",
+                        "description": "Unique id of file associated with a submission.",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "File associated with a submission was successfully deleted"
+                    }
+                }
+            }
+        },
+        "/submissions/{broker_submission_id}/uploads/": {
+            "get": {
+                "description": "Returns a list of files, belonging to the same broker_submission_id",
+                "operationId": "get submission uploads by broker-submission-id",
+                "parameters": [
+                    {
+                        "name": "broker_submission_id",
+                        "in": "path",
+                        "description": "Unique id of a submission, which uploads will be returned as a result (A UUID specified by RFC4122).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "SubmissionUpload response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SubmissionUploadListItem"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Submission": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "target": {
+                                "type": "string",
+                                "enum": [
+                                    "ENA",
+                                    "ENA_PANGAEA",
+                                    "GENERIC"
+                                ]
+                            },
+                            "embargo": {
+                                "type": "string",
+                                "format": "date"
+                            }
+                        },
+                        "required": [
+                            "target"
+                        ]
+                    },
+                    {
+                        "$ref": "common_requirements_definitions.json#/minimal_requirements"
+                    }
+                ]
+            },
+            "SubmissionUpload": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "broker_submission_id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "user": {
+                                "type": "string"
+                            },
+                            "file": {
+                                "type": "string"
+                            },
+                            "attach_to_ticket": {
+                                "type": "bool"
+                            },
+                            "meta_data": {
+                                "type": "bool"
+                            }
+                        }
+                    }
+                ]
+            },
+            "SubmissionUploadListItem": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "pk": {
+                                "type": "string"
+                            },
+                            "submission": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "user": {
+                                "type": "string"
+                            },
+                            "file": {
+                                "type": "string"
+                            },
+                            "file_name": {
+                                "type": "string"
+                            },
+                            "file_size": {
+                                "type": "number"
+                            },
+                            "attach_to_ticket": {
+                                "type": "bool"
+                            },
+                            "meta_data": {
+                                "type": "bool"
+                            }
+                        }
+                    }
+                ]
+            },
+            "MolecularSubmission": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "target": {
+                                "type": "string",
+                                "enum": [
+                                    "ENA",
+                                    "ENA_PANGAEA",
+                                    "GENERIC"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "target"
+                        ]
+                    },
+                    {
+                        "$ref": "common_requirements_definitions.json#/minimal_requirements"
+                    },
+                    {
+                        "$ref": "ena_study_definitions.json#/study"
+                    },
+                    {
+                        "$ref": "ena_sample_definitions.json#/sample_array"
+                    },
+                    {
+                        "$ref": "ena_experiment_definitions.json#/experiment_array"
+                    },
+                    {
+                        "$ref": "ena_run_definitions.json#/run_array"
+                    },
+                    {
+                        "$ref": "technical_content_definitions.json#/technical_requirements"
+                    }
+                ]
+            },
+            "ValidationError": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "type": "validationError"
+                        }
+                    },
+                    "optional_validation": {
+                        "type": "array",
+                        "items": {
+                            "type": "validationError"
+                        }
+                    }
+                },
+                "required": [
+                    "code",
+                    "message"
+                ]
+            },
+            "Comment": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "comment": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "comment"
+                        ]
+                    }
+                ]
+            },
+            "JiraHookBody": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "issue": {
+                                "type": "string",
+                                "format": "json"
+                            },
+                            "changelog": {
+                                "type": "string",
+                                "format": "json"
+                            },
+                            "broker_submission_id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "issue_key": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ]
+            },
+            "Error": {
+                "type": "object",
+                "required": [
+                    "code",
+                    "message"
+                ],
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}
