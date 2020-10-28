@@ -5,7 +5,7 @@ from .managers import AccessionManager
 
 
 class Accession(models.Model):
-    identifier = models.CharField(max_length=256)
+    identifier = models.CharField(primary_key=True, max_length=256)
 
     objects = AccessionManager()
 
