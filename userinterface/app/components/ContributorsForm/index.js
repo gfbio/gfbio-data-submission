@@ -71,8 +71,12 @@ class ContributorsForm extends React.PureComponent {
   }
 
   updateContributorsFromProps() {
-    let propsContributors = this.props.contributors;
-    if (!Array.isArray(this.props.contributors)) {
+
+    let propsContributors = [];
+    if (this.props.contributors !== undefined) {
+      propsContributors = this.props.contributors;
+    }
+    if (!Array.isArray(propsContributors)) {
       propsContributors = this.props.contributors.toJS();
     }
     if (
@@ -494,7 +498,7 @@ class ContributorsForm extends React.PureComponent {
             aria-controls="contributorForm"
             aria-expanded={formOpen}
           >
-            <i className="fa fa-plus" /> add contributor
+            <i className="fa fa-plus"/> add contributor
           </Button>
         )}
       </div>
@@ -515,9 +519,9 @@ class ContributorsForm extends React.PureComponent {
 
     const spaceBetweenButtons =
       this.state.contributorIndex === -1 ? (
-        <div className="form-group col-md-6" />
+        <div className="form-group col-md-6"/>
       ) : (
-        <div className="form-group col-md-4" />
+        <div className="form-group col-md-4"/>
       );
 
     const contributors = this.state.contributorsArray.map((c, index) => {
@@ -544,7 +548,7 @@ class ContributorsForm extends React.PureComponent {
             >
               <div className="row">
                 <div className="col">
-                  <i className="fa fa-bars drag-bars" />
+                  <i className="fa fa-bars drag-bars"/>
                   <Button
                     className="btn btn-primary btn-contributor contributor-draggable-btn"
                     onClick={() => this.onClickDetailButton(index)}
@@ -573,9 +577,9 @@ class ContributorsForm extends React.PureComponent {
             Close
           </Button>
         </div>
-        <div className="form-group col-md-2" />
-        <div className="form-group col-md-4" />
-        <div className="form-group col-md-4" />
+        <div className="form-group col-md-2"/>
+        <div className="form-group col-md-4"/>
+        <div className="form-group col-md-4"/>
       </div>
     ) : (
       <div className="form-row">
@@ -611,7 +615,7 @@ class ContributorsForm extends React.PureComponent {
     // TODO: https://react-bootstrap.netlify.com/
     return (
       <div>
-        <RolesInfo />
+        <RolesInfo/>
         <header className="header header-left form-header-top mb-3">
           <h2 className="section-title">Contributors</h2>
           <p className="section-subtitle">(optional)</p>
