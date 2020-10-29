@@ -28,8 +28,6 @@ import UploadMessage from './uploadMessage';
 class UploadForm extends React.PureComponent {
 
   matchingUploadLimit = (acceptedFiles = []) => {
-    // console.log('matchingUploadLimit');
-    // console.log(this.props.fileUploads);
     let tmpTotalSize = 0;
     for (let a of acceptedFiles) {
       tmpTotalSize += a.size;
@@ -82,9 +80,6 @@ class UploadForm extends React.PureComponent {
 
   render() {
 
-    // console.log('UPLOAD FORM RENDER: fileUploads');
-    // console.log(this.props);
-    // console.log('--------------------------');
 
     // TODO: needs different styling
     // TODO: needs different position
@@ -98,7 +93,8 @@ class UploadForm extends React.PureComponent {
             No uploads allowed on <b>CLOSED</b> submission
           </p>
         );
-      };
+      }
+      ;
       return (
         <p>
           Try <b>dropping</b> some files here, or <b>click</b> to select files
@@ -114,7 +110,7 @@ class UploadForm extends React.PureComponent {
           <p className="section-subtitle">(optional)</p>
         </header>
 
-        <FileIndicator />
+        <FileIndicator/>
 
         {message}
 

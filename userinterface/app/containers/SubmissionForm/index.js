@@ -125,8 +125,6 @@ export class SubmissionForm extends React.Component {
   // };
 
   render() {
-    console.info('RENDER SUBMISSIONFORM');
-    console.info(this.props);
 
     if (
       this.props.brokerSubmissionId !== '' &&
@@ -142,7 +140,7 @@ export class SubmissionForm extends React.Component {
           <div className="col-12">
             <header className="header save-header">
               <h2 className="section-title">
-                <i className="fa fa-check" aria-hidden="true" />
+                <i className="fa fa-check" aria-hidden="true"/>
                 Save successful
               </h2>
             </header>
@@ -160,7 +158,7 @@ export class SubmissionForm extends React.Component {
       const errors = [];
       this.props.submissionErrors.forEach(e => {
         errors.push(e);
-        errors.push(<br />);
+        errors.push(<br/>);
       });
       return errors;
     };
@@ -170,7 +168,7 @@ export class SubmissionForm extends React.Component {
           <div className="col-12">
             <header className="header error-header">
               <h2 className="section-title">
-                <i className="fa fa-times" aria-hidden="true" />
+                <i className="fa fa-times" aria-hidden="true"/>
                 Please correct the errors below
               </h2>
             </header>
@@ -219,7 +217,7 @@ export class SubmissionForm extends React.Component {
     ) : (
       <div className="row">
         <div className="col spinner">
-          <PulseLoader />
+          <PulseLoader/>
         </div>
       </div>
     );
