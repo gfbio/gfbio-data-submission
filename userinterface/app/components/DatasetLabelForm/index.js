@@ -27,12 +27,12 @@ class DatasetLabelForm extends React.PureComponent {
   };
 
   render() {
-    // console.log('DatasetLabelForm render');
-    // console.log(this.props);
-    // console.log('----------------------');
-    // console.log(this.state);
-    // console.log('---------------------------------');
-    const labelList = this.props.dataset_labels.map((label, index) => {
+    // Deal with legacy submissions where no datasetlabels were existing
+    let datasetLabels = [];
+    if (this.props.dataset_labels !== undefined) {
+      datasetLabels = this.props.dataset_labels;
+    }
+    const labelList = datasetLabels.map((label, index) => {
       if (label !== '') {
         let liClassNames =
           'list-group-item d-flex justify-content-between align-items-center publication';
@@ -49,7 +49,7 @@ class DatasetLabelForm extends React.PureComponent {
               this.props.handleRemove(index);
             }}
           >
-            <i className="fa fa-times" />
+            <i className="fa fa-times"/>
             Remove
           </button>
         );
@@ -60,7 +60,7 @@ class DatasetLabelForm extends React.PureComponent {
             className={liClassNames}
           >
             <span>
-              <i className="fa fa-tags pub" /> {label}{' '}
+              <i className="fa fa-tags pub"/> {label}{' '}
             </span>
             {removeButton}
           </li>

@@ -39,8 +39,6 @@ function submissionListReducer(state = initialState, action) {
     case FETCH_SUBMISSIONS:
       return state;
     case FETCH_SUBMISSIONS_SUCCESS:
-      // console.log('FETCH_SUBMISSIONS_SUCCESS');
-      // console.log(action.response);
       return state.set('submissions', action.response.data);
     case FETCH_SUBMISSIONS_ERROR:
       return state;

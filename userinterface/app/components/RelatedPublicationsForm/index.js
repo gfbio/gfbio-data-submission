@@ -27,7 +27,12 @@ class RelatedPublicationsForm extends React.PureComponent {
   };
 
   render() {
-    const publicationList = this.props.relatedPublications.map((pub, index) => {
+    // Deal with legacy submissions where no relatedPublications were existing
+    let relatedPublications = [];
+    if (this.props.relatedPublications !== undefined) {
+      relatedPublications = this.props.relatedPublications;
+    }
+    const publicationList = relatedPublications.map((pub, index) => {
       if (pub !== '') {
         let liClassNames =
           'list-group-item d-flex justify-content-between align-items-center publication';

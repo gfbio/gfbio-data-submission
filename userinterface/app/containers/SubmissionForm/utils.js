@@ -24,7 +24,6 @@ export const prepareLegalRequirements = (requirements) => {
 export const prepareForMatchingKeys = (requirements, matchingKeys) => {
   let prepared = {};
   for (let m of matchingKeys) {
-    // console.log(m);
     if (requirements[m] !== undefined) {
       prepared[m] = requirements[m];
     }
@@ -33,8 +32,6 @@ export const prepareForMatchingKeys = (requirements, matchingKeys) => {
 };
 
 export const prepareInitialValues = (submissionData) => {
-  // console.log('prepareInitialValues submissionData');
-  // console.log(submissionData);
   let initialValues = {};
   const directMatchingKeys = ['title', 'description', 'download_url', 'comment', 'data_center'];
   if (submissionData.data !== undefined && submissionData.data.requirements != undefined) {

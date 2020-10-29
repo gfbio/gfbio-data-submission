@@ -14,9 +14,6 @@ import { DATA_CATEGORY_PREFIX } from '../../containers/SubmissionForm/constants'
 class DataCategoryForm extends React.PureComponent {
   // TODO: adapt for generic based solution instead of hardcoding all boxes
   render() {
-    // console.log('--------------render DataCategoryForm');
-    // console.log(this.props);
-    // console.log('###############################');
     return (
       <div>
         <header className="header header-left form-header-top">

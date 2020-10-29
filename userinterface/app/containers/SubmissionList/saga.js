@@ -27,23 +27,17 @@ import { requestDeleteSubmission } from './submissionListApi';
 // }
 
 function* performFetchSubmissionsSaga() {
-  // console.log('performFetchsubmissionsSaga');
   const token = yield select(makeSelectToken());
   const userId = yield select(makeSelectUserId());
   try {
     const response = yield call(getSubmissions, token, userId);
-    // console.log('success');
-    // console.log(response);
     yield put(fetchSubmissionsSuccess(response));
   } catch (error) {
-    // console.log('error');
-    // console.log(error);
     yield put(fetchSubmissionsError(error));
   }
 }
 
 export function* performDeleteSubmissionSaga() {
-  // console.log('performDeleteSubmissionSaga');
   const token = yield select(makeSelectToken());
   const deleteBrokerSubmissionId = yield select(makeSelectDeleteBrokerSubmissionId());
   try {
@@ -51,8 +45,6 @@ export function* performDeleteSubmissionSaga() {
     yield put(deleteSubmissionSuccess(response));
     yield put(fetchSubmissions());
   } catch (error) {
-    // console.log('error');
-    // console.log(error);
     yield put(deleteSubmissionError(error));
   }
 }

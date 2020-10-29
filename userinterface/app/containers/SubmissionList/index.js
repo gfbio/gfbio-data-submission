@@ -46,9 +46,6 @@ export class SubmissionList extends React.Component {
   }
 
   render() {
-    console.log('--------------render SubmissionList');
-    console.log(this.props);
-    console.log('###############################');
     let successHeader = '';
     let successText = '';
 
@@ -73,7 +70,7 @@ export class SubmissionList extends React.Component {
                     to={'/form/' + submission.broker_submission_id}>
                 <div className="col-md-8 col-sm-12 align-self-center">
                   {/*icon ion-ios-redo*/}
-                  <i className="icon ion-md-apps" />
+                  <i className="icon ion-md-apps"/>
                   <span>{submission.data.requirements.title}</span>
                 </div>
 
@@ -103,7 +100,7 @@ export class SubmissionList extends React.Component {
 
               <Link className="action h-100 d-inline-block pr-4"
                     to={'/form/' + submission.broker_submission_id}>
-                <i className="icon ion-md-create" /> Edit
+                <i className="icon ion-md-create"/> Edit
               </Link>
               <a className="action h-100 d-inline-block"
                  href=""
@@ -112,7 +109,7 @@ export class SubmissionList extends React.Component {
                    this.props.showDeleteSubmissionDialog(submission.broker_submission_id);
                  }}
               >
-                <i className="icon ion-md-trash" />Delete</a>
+                <i className="icon ion-md-trash"/>Delete</a>
             </div>
           </div>
 
@@ -134,7 +131,7 @@ export class SubmissionList extends React.Component {
                 <p>
                   You have no submissions yet.
                 </p>
-                <i className="icon ion-ios-add-circle-outline" />
+                <i className="icon ion-ios-add-circle-outline"/>
                 <p>
                   Start a new submission
                 </p>
@@ -187,8 +184,8 @@ export class SubmissionList extends React.Component {
             <div className="row">
               <div className="col-1 mx-auto">
                 <i
-                  className="icon ion-md-checkmark-circle-outline" />
-              {/*    align-bottom */}
+                  className="icon ion-md-checkmark-circle-outline"/>
+                {/*    align-bottom */}
               </div>
               <div className="col-8">
                 <h4>{successHeader}</h4>
@@ -235,14 +232,14 @@ export class SubmissionList extends React.Component {
                 <Col xs={12} md={6}>
                   <Button variant="secondary" className="btn-block green"
                           onClick={this.props.closeDeleteSubmissionDialog}>
-                    <i className="icon ion-md-close" />
+                    <i className="icon ion-md-close"/>
                     Cancel
                   </Button>
                 </Col>
                 <Col xs={12} md={6} className="text-right">
                   <Button variant="secondary" className="btn-block red"
                           onClick={this.props.deleteSubmission}>
-                    <i className="icon ion-md-trash" />
+                    <i className="icon ion-md-trash"/>
                     Delete
                   </Button>
                 </Col>

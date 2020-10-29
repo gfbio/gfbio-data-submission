@@ -72,7 +72,6 @@ class ContributorsForm extends React.PureComponent {
 
   updateContributorsFromProps() {
     let propsContributors = this.props.contributors;
-    console.log('UPDATE CONTRIB');
     if (!Array.isArray(this.props.contributors)) {
       propsContributors = this.props.contributors.toJS();
     }

@@ -30,7 +30,10 @@ import RelatedPublicationsForm from '../RelatedPublicationsForm';
 import MinimalSubmissionForm from '../MinimalSubmissionForm';
 import SubmissionInfo from '../SubmissionInfo';
 import { makeSelectFormChanged } from '../../containers/SubmissionForm/selectors';
-import { resetForm, setFormChanged } from '../../containers/SubmissionForm/actions';
+import {
+  resetForm,
+  setFormChanged
+} from '../../containers/SubmissionForm/actions';
 
 /* eslint-disable react/prefer-stateless-function */
 class FormWrapper extends React.PureComponent {
@@ -80,9 +83,9 @@ class FormWrapper extends React.PureComponent {
       return (
         <li key={index} className="list-group-item">
           <span className="validation-error-item">
-            <i className="ti-layout-line-solid icon " />
+            <i className="ti-layout-line-solid icon "/>
             {errorName}
-            <i className="ti-arrow-right icon pl-1" />
+            <i className="ti-arrow-right icon pl-1"/>
             {errors[errorKey]}
           </span>
         </li>
@@ -95,7 +98,7 @@ class FormWrapper extends React.PureComponent {
     return (
       <Alert variant="light">
         <Alert.Heading>
-          <i className="fa  fa-bolt" /> There are some validation errors
+          <i className="fa  fa-bolt"/> There are some validation errors
         </Alert.Heading>
         <ul className="list-group list-group-flush">
           {errorList}
@@ -141,7 +144,7 @@ class FormWrapper extends React.PureComponent {
                         className="btn-block btn-sm green"
                         onClick={onCancel}
                       >
-                        <i className="icon ion-md-close" />
+                        <i className="icon ion-md-close"/>
                         Cancel
                       </Button>
                     </Col>
@@ -156,7 +159,7 @@ class FormWrapper extends React.PureComponent {
                           }),
                         )}
                       >
-                        <i className="icon ion-ios-save" />
+                        <i className="icon ion-ios-save"/>
                         Save
                       </Button>
                     </Col>
@@ -173,7 +176,7 @@ class FormWrapper extends React.PureComponent {
                           onConfirm();
                         }}
                       >
-                        <i className="icon ion-md-alert" />
+                        <i className="icon ion-md-alert"/>
                         Discard
                       </Button>
                     </Col>
@@ -189,9 +192,6 @@ class FormWrapper extends React.PureComponent {
   };
 
   render() {
-    console.info('RENDER FORMWRAPER');
-    console.info(this.props);
-
     let submitIconClass = 'fa-play';
     let submitButtonText = 'Start Submission';
     let saveIconClass = 'fa-clipboard';
@@ -248,21 +248,21 @@ class FormWrapper extends React.PureComponent {
 
               {this.renderNavigationPrompt()}
 
-              <MinimalSubmissionForm readOnly={this.props.isClosed} />
+              <MinimalSubmissionForm readOnly={this.props.isClosed}/>
 
-              <DataUrlForm readOnly={this.props.isClosed} />
+              <DataUrlForm readOnly={this.props.isClosed}/>
 
-              <ContributorsForm readOnly={this.props.isClosed} />
+              <ContributorsForm readOnly={this.props.isClosed}/>
 
-              <TargetDataCenterForm readOnly={this.props.isClosed} />
+              <TargetDataCenterForm readOnly={this.props.isClosed}/>
 
-              <DataCategoryForm readOnly={this.props.isClosed} />
+              <DataCategoryForm readOnly={this.props.isClosed}/>
 
-              <DatasetLabelForm readOnly={this.props.isClosed} />
+              <DatasetLabelForm readOnly={this.props.isClosed}/>
 
-              <RelatedPublicationsForm readOnly={this.props.isClosed} />
+              <RelatedPublicationsForm readOnly={this.props.isClosed}/>
 
-              <CommentForm readOnly={this.props.isClosed} />
+              <CommentForm readOnly={this.props.isClosed}/>
             </div>
             {/* end middle col */}
             <div className="col-md-3 sidebar-col">
@@ -275,15 +275,15 @@ class FormWrapper extends React.PureComponent {
                 issue={this.props.issue}
               />
 
-              <LicenseSelectionForm readOnly={this.props.isClosed} />
+              <LicenseSelectionForm readOnly={this.props.isClosed}/>
 
-              <LegalRequirementsForm readOnly={this.props.isClosed} />
+              <LegalRequirementsForm readOnly={this.props.isClosed}/>
 
-              <TemplateLinkList />
+              <TemplateLinkList/>
 
               {/* <MetaDataSchemaForm /> */}
 
-              <EmbargoDatePicker accessionId={this.props.accessionId} />
+              <EmbargoDatePicker accessionId={this.props.accessionId}/>
             </div>
           </div>
 
@@ -334,7 +334,7 @@ class FormWrapper extends React.PureComponent {
                       }),
                     )}
                   >
-                    <i className={`fa ${submitIconClass}`} />
+                    <i className={`fa ${submitIconClass}`}/>
                     {submitButtonText}
                   </button>
                 </div>
