@@ -45,6 +45,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             'tasks.trigger_submission_transfer',
             'tasks.get_gfbio_helpdesk_username_task',
             'tasks.create_submission_issue_task',
+            'tasks.jira_initial_comment_task',
             'tasks.check_on_hold_status_task']
         for t in TaskProgressReport.objects.filter(
                 submission=submission).order_by('created'):
@@ -104,6 +105,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             'tasks.check_on_hold_status_task',
             'tasks.get_gfbio_helpdesk_username_task',
             'tasks.create_submission_issue_task',
+            'tasks.jira_initial_comment_task',
             'tasks.update_submission_issue_task',
             'tasks.update_helpdesk_ticket_task',  # x2
             'tasks.trigger_submission_transfer_for_updates',
@@ -167,6 +169,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             'tasks.prepare_ena_submission_data_task',
             'tasks.get_gfbio_helpdesk_username_task',
             'tasks.create_submission_issue_task',
+            'tasks.jira_initial_comment_task',
             'tasks.update_submission_issue_task',
             'tasks.update_helpdesk_ticket_task',
             'tasks.trigger_submission_transfer_for_updates',
@@ -223,6 +226,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             'tasks.trigger_submission_transfer',
             'tasks.get_gfbio_helpdesk_username_task',
             'tasks.create_submission_issue_task',
+            'tasks.jira_initial_comment_task',
             'tasks.update_submission_issue_task',
             'tasks.update_helpdesk_ticket_task',
             'tasks.trigger_submission_transfer_for_updates',

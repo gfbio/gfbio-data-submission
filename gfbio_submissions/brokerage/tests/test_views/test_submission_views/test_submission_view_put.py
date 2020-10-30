@@ -322,10 +322,10 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
         )
 
         RequestLog.objects.all().delete()
-
+        embargo_date = datetime.date.today() + datetime.timedelta(days=365)
         response = self.api_client.put(
             '/api/submissions/{0}/'.format(submission.broker_submission_id),
-            {'target': 'ENA', 'embargo': '2020-10-01',
+            {'target': 'ENA', 'embargo': "{}".format(embargo_date),
              'data': {'requirements': {
                  'title': 'A Title 0815',
                  'description': 'A Description 2'}}},
@@ -346,7 +346,7 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
 
         response = self.api_client.put(
             '/api/submissions/{0}/'.format(submission.broker_submission_id),
-            {'target': 'ENA', 'embargo': '2020-10-15',
+            {'target': 'ENA', 'embargo': "{}".format(embargo_date),
              'data': {'requirements': {
                  'title': 'A Title 0815',
                  'description': 'A Description 2'}}},

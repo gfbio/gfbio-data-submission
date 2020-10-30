@@ -209,6 +209,54 @@ GI-Edition: Lecture Notes in Informatics (LNI) – Proceedings. GI edn. Vol. 232
 """
 )
 
+JIRA_WELCOME_COMMENT_TEMPLATE = getattr(
+    settings,
+    'JIRA_WELCOME_COMMENT_TEMPLATE',
+    """Dear submitter,
+
+thank you for submitting your data via GFBio!
+
+The GFBio Submission ID for your dataset entitled "{title}" is: {id}.
+Please include this ID in any communication regarding this submission.
+
+We will review your submission and get back to you as soon as possible.
+If you have any questions or comments, you can always reply to this email,
+keeping the subject line intact and using the same email account you are registered in GFBio with.
+Alternatively, you can view this submission request under
+https://helpdesk.gfbio.org/servicedesk/customer/portal/6/{reference} (your GFBio credentials are valid there).
+
+Best Regards,
+the GFBio Data Submission Team
+"""
+)
+
+JIRA_WELCOME_MOLECULAR_COMMENT_TEMPLATE = getattr(
+    settings,
+    'JIRA_WELCOME_MOLECULAR_COMMENT_TEMPLATE',
+    """Dear submitter,
+
+thank you for submitting your data via GFBio!
+
+The GFBio Submission ID for your dataset entitled "{title}" is: {id}.
+Please include this ID in any communication regarding this submission.
+
+We will review your submission and get back to you as soon as possible.
+If you have any questions or comments, you can always reply to this email,
+keeping the subject line intact and using the same email account you are registered in GFBio with.
+Alternatively, you can view this submission request under
+https://helpdesk.gfbio.org/servicedesk/customer/portal/6/{reference} (your GFBio credentials are valid there).
+
+Be advised that by depositing data in ENA you agree to the INSDC Policy (http://www.insdc.org/policy.html).
+This includes, but is not limited to, the fact that your data will be available without any restrictions.
+Please note that while we support you in archiving your data to the highest possible standards,
+the responsibility whether you are allowed to release the data to the public and under what restrictions,
+still lies with you. The same applies to the correctness of the data you provide.
+
+Best Regards,
+the GFBio Data Submission Team
+"""
+)
+
 GFBIO_LICENSE_MAPPINGS = getattr(
     settings,
     'GFBIO_LICENSE_MAPPINGS',

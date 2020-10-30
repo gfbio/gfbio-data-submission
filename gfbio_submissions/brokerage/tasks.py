@@ -21,6 +21,7 @@ from .configuration.settings import ENA, ENA_PANGAEA, PANGAEA_ISSUE_VIEW_URL, \
     SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME, \
     JIRA_FALLBACK_EMAIL, APPROVAL_EMAIL_SUBJECT_TEMPLATE, \
     APPROVAL_EMAIL_MESSAGE_TEMPLATE, JIRA_ACCESSION_COMMENT_TEMPLATE, \
+    JIRA_WELCOME_COMMENT_TEMPLATE, JIRA_WELCOME_MOLECULAR_COMMENT_TEMPLATE, \
     NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE, \
     NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE, \
     NO_SITE_CONFIG_EMAIL_SUBJECT_TEMPLATE
@@ -2249,4 +2250,58 @@ def jira_transition_issue_task(self, prev=None, submission_id=None, transition_i
         'user': '{}'.format(submission.user),
         'transition_id': '{}'.format(transition_id),
         'resolution': '{}'.format(resolution),
+    }
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.jira_initial_comment_task',
+    autoretry_for=(TransferServerError,
+                   TransferClientError
+                   ),
+    retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
+    retry_backoff=SUBMISSION_RETRY_DELAY,
+    retry_jitter=True
+)
+def jira_initial_comment_task(self, prev=None, submission_id=None):
+    logger.info('tasks.py | jira_initial_comment_task | submission_id={}'.format(submission_id))
+
+    submission, site_config = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=False
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
+
+    if submission and site_config:
+        reference = submission.get_primary_helpdesk_reference()
+        if reference:
+            comment_template = JIRA_WELCOME_COMMENT_TEMPLATE
+            # check for molecular submission
+            if submission.target == ENA or submission.target == ENA_PANGAEA:
+               comment_template = JIRA_WELCOME_MOLECULAR_COMMENT_TEMPLATE
+
+            jira_client = JiraClient(resource=site_config.helpdesk_server)
+            jira_client.add_comment(
+                key_or_issue=reference.reference_key,
+                text=comment_template.format(
+                    title=submission.data['requirements']['title'],
+                    id=submission.broker_submission_id,
+                    reference=reference.reference_key
+                )
+            )
+            jira_error_auto_retry(jira_client=jira_client, task=self,
+                                         broker_submission_id=submission.broker_submission_id)
+            if jira_client.comment:
+                return {
+                    'status': 'initial comment sent',
+                    'submission': '{}'.format(submission.broker_submission_id),
+                    'reference': '{}'.format(reference.reference_key),
+                }
+
+    return {
+        'status': 'initial comment not sent',
+        'submission': '{}'.format(submission.broker_submission_id),
+        'user': '{}'.format(submission.user),
     }

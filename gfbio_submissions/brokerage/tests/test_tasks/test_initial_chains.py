@@ -110,9 +110,10 @@ class TestInitialChainTasks(TestCase):
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
+                              'tasks.jira_initial_comment_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer', ]
-        self.assertEqual(4, len(task_reports))
+        self.assertEqual(5, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -138,9 +139,10 @@ class TestInitialChainTasks(TestCase):
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
+                              'tasks.jira_initial_comment_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer', ]
-        self.assertEqual(4, len(task_reports))
+        self.assertEqual(5, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -164,6 +166,7 @@ class TestInitialChainTasks(TestCase):
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
+                              'tasks.jira_initial_comment_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer',
                               'tasks.create_broker_objects_from_submission_data_task',
@@ -172,7 +175,7 @@ class TestInitialChainTasks(TestCase):
                               'tasks.update_helpdesk_ticket_task', ]
         tprs = TaskProgressReport.objects.exclude(
             task_name='tasks.update_helpdesk_ticket_task')
-        self.assertEqual(7, len(tprs))
+        self.assertEqual(8, len(tprs))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -193,9 +196,10 @@ class TestInitialChainTasks(TestCase):
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
+                              'tasks.jira_initial_comment_task',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer', ]
-        self.assertEqual(4, len(task_reports))
+        self.assertEqual(5, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -225,11 +229,12 @@ class TestInitialChainTasks(TestCase):
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
+                              'tasks.jira_initial_comment_task',
                               'tasks.update_submission_issue_task',
                               'tasks.trigger_submission_transfer',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer_for_updates',
                               'tasks.update_helpdesk_ticket_task', ]
-        self.assertEqual(8, len(task_reports))
+        self.assertEqual(9, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
