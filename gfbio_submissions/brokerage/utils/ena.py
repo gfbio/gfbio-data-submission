@@ -885,14 +885,22 @@ def update_persistent_identifier_report_status():
                             | jira_transition_issue_task.s(submission_id=submission.pk).set(ountdown=SUBMISSION_DELAY)
                             chain()
 
-                        date_to_use = hold_date_time if hold_date else pid.hold_date
+                        date_to_use = None
+                        if hold_date:
+                            date_to_use = hold_date_time
+                        elif pid:
+                            date_to_use = pid.hold_date
+
                         PersistentIdentifier.objects.filter(pid=vid).update(
                             status=status, hold_date=date_to_use)
 
                         if hold_date:
                             update_embargo_date_in_submissions(hold_date_time,
-                                                               PersistentIdentifier.objects.filter(
-                                                                   pid=vid))
+                                                           PersistentIdentifier.objects.filter(
+                                                               pid=vid))
+                        if not date_to_use:
+                            logger.info('ena.py | update_persistent_identifier_report_status '
+                                        '| no date_to_use could be set for pid: {}'.format(vid))
         else:
             logger.warning(
                 'ena.py | update_persistent_identifier_report_status '
