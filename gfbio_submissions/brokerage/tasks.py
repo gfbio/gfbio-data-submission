@@ -2029,7 +2029,7 @@ def notify_on_embargo_ended_task(self, submission_id=None):
             Please note that it may take up to several days for the data to appear in the ENA Browser.
 
             Best regards,
-            the GFBio Submission Team""".format(primary_accession.pk)
+            the GFBio Submission Team""".format(primary_accession.pid)
 
             jira_client = JiraClient(resource=site_config.helpdesk_server)
             jira_client.add_comment(
@@ -2046,7 +2046,7 @@ def notify_on_embargo_ended_task(self, submission_id=None):
                 return {
                     'submission': submission.broker_submission_id,
                     'issue_key': reference.reference_key,
-                    'primary_accession': primary_accession.pk,
+                    'primary_accession': primary_accession.pid,
                     'user_notified_on': datetime.date.today().isoformat(),
                 }
 
