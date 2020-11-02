@@ -36,6 +36,7 @@ class TestSubmissionPreparationTasks(TestTasks):
             }
         )
         self.assertTrue(result.successful())
+        self.assertTrue(Submission.objects.first().approval_notification_sent)
 
     @patch('gfbio_submissions.brokerage.tasks.logger')
     def test_check_on_hold_proceed_without_email(self, mock_logger):

@@ -272,6 +272,8 @@ def check_on_hold_status_task(self, previous_task_result=None,
                     submission.pk)
             )
         )
+        submission.approval_notification_sent = True
+        submission.save()
 
 
 # NEW PREP WORKFLOW BO CREATION AND SOID CREATION ------------------------------
