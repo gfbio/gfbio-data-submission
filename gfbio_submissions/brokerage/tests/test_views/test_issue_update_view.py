@@ -133,10 +133,7 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(six_months.date(), submission.embargo)
 
         one_year = arrow.now().shift(years=1)
-
-        self.client.post(
-            self.url,
-            {
+        post_data = {
                 "user": {
                     "emailAddress": "horst@horst.de"
                 },
@@ -153,11 +150,70 @@ class TestJiraIssueUpdateView(APITestCase):
                         {}
                     ]
                 }
-            },
+            }
+        self.client.post(
+            self.url,
+            post_data,
             format='json')
 
         submission = Submission.objects.first()
         self.assertEqual(one_year.date(), submission.embargo)
+
+        # change status to SUPPRESSED
+        study = submission.brokerobject_set.filter(type='study').first().persistentidentifier_set.first()
+        study.status = "SUPPRESSED"
+        study.save()
+        submission.embargo = six_months.date()
+        submission.save()
+        self.assertEqual(six_months.date(), submission.embargo)
+
+        self.client.post(
+            self.url,
+            post_data,
+            format='json')
+
+        submission = Submission.objects.first()
+        self.assertEqual(one_year.date(), submission.embargo)
+
+    def test_wrong_status_embargo_update(self):
+        submission = Submission.objects.first()
+        six_months = arrow.now().shift(months=6)
+        submission.embargo = six_months.date()
+        submission.save()
+        self.assertEqual(six_months.date(), submission.embargo)
+        # change status to SUPPRESSED
+        study = submission.brokerobject_set.filter(type='study').first().persistentidentifier_set.first()
+        study.status = "PUBLIC"
+        study.save()
+        self.assertEqual("PUBLIC", study.status)
+
+        one_year = arrow.now().shift(years=1)
+        post_data = {
+                "user": {
+                    "emailAddress": "horst@horst.de"
+                },
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": one_year.for_json(),
+                        "customfield_10303": "{0}".format(
+                            submission.broker_submission_id),
+                    }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
+                }
+            }
+        self.client.post(
+            self.url,
+            post_data,
+            format='json')
+
+        submission = Submission.objects.first()
+        self.assertNotEqual(one_year.date(), submission.embargo)
+
 
     def test_brokeragent_get_paramter(self):
         submission = Submission.objects.first()

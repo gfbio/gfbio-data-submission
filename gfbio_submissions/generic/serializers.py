@@ -8,7 +8,7 @@ import arrow
 from django.core.mail import mail_admins
 from gfbio_submissions.users.models import User
 from rest_framework import serializers
-
+from django.db.models import Q
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, ENA, \
     ENA_PANGAEA
 from gfbio_submissions.brokerage.models import Submission, AdditionalReference
@@ -189,6 +189,11 @@ class JiraHookRequestSerializer(serializers.Serializer):
         logger.info(
             msg='serializer.py | curator_validation | updating user {0}'.format(updating_user)
         )
+        # check for brokeragent user
+        if updating_user == "brokeragent@gfbio.org":
+            raise serializers.ValidationError(
+                {'issue': ["'user': user is brokeragent"]})
+
         # get curators
         curators = User.objects.filter(groups__name='Curators')
         if len(curators) == 0:
@@ -196,10 +201,11 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 msg='serializer.py | curator_validation | no curators found'
             )
             self.send_mail_to_admins(reason='WARNING: submission embargo date, no curators',
-                                     message='WARNING: JIRA hook requested an Embargo Date update,'
-                                             ' but no curators were found'.format(self.issue_key))
+                                    message='WARNING: JIRA hook requested an Embargo Date update,'
+                                            ' but no curators were found'.format(self.issue_key))
             raise serializers.ValidationError(
                 {'issue': ["'user': user is not in curators group"]})
+        
         curators_emails = [curator.email for curator in curators]
         if updating_user not in curators_emails:
             logger.info(
@@ -223,7 +229,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
             # with status private, the overall update of the submission will
             # be allowed if status is undefined or other than private,
             # update is rejected
-            private_found = False
+            change_allowed = False
             status = None
             has_primary_accession = False
             for s in studies:
@@ -232,11 +238,12 @@ class JiraHookRequestSerializer(serializers.Serializer):
 
                 if not status:
                     status = s.persistentidentifier_set.filter(archive='ENA',  pid_type='PRJ').first().status
-                private = s.persistentidentifier_set.filter(archive='ENA',
-                                                            pid_type='PRJ',
-                                                            status='PRIVATE')
-                if private:
-                    private_found = True
+                allowed = s.persistentidentifier_set.filter(archive='ENA',pid_type='PRJ').filter(
+                                                            Q(status='PRIVATE')
+                                                            | Q(status='SUPRESSED')
+                                                            | Q(status='SUPPRESSED'))
+                if allowed:
+                    change_allowed = True
                     break
             if not has_primary_accession:
                 logger.info(
@@ -251,20 +258,21 @@ class JiraHookRequestSerializer(serializers.Serializer):
                         "'key': issue {0}. submission without a primary accession, submission {1} with target {2}".format(
                             key, submission.broker_submission_id,
                             submission.target)]})
-            if not private_found:
+            if not change_allowed:
                 logger.info(
                     msg='serializer.py | submission_type_constraints_check | '
                         'not PRIVATE submission {0} status {1}'.format(submission.broker_submission_id, status)
                 )
-                self.send_mail_to_admins(reason='WARNING: submission not PRIVATE',
+                self.send_mail_to_admins(reason='WARNING: submission status is not PRIVATE or SUPPRESSED',
                                          message='WARNING: JIRA hook requested update of Embargo Date'
-                                                 ' for submission which is not PRIVATE (status is: {} )'.format(status))
+                                                 ' for submission which is not PRIVATE or SUPPRESSED'
+                                                 ' (status is: {} )'.format(status))
                 raise serializers.ValidationError(
                     {'issue': [
                         "'key': issue {0}. status prevents update of submission {1} with target {2} and status:{3}".format(
                             key, submission.broker_submission_id,
                             submission.target, status)]})
-            return private_found
+            return change_allowed
 
     def validate(self, data):
         self.schema_validation(data)
