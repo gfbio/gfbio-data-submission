@@ -249,31 +249,32 @@ def check_on_hold_status_task(self, previous_task_result=None,
         )
         transfer_handler.execute()
     else:
-        # email admins, then do smth. to trigger chain once ok
-        logger.info(
-            msg='check_on_hold_status_task. submission pk={0}. '
-                'site_config pk={1}. site_configuration.release_submissions'
-                '={2}. send mail to admins.'
-                ''.format(submission_id, site_configuration.pk,
-                          site_configuration.release_submissions))
-        # TODO: refactor to method in task_utils, and use templates/constants
-        mail_admins(
-            subject=APPROVAL_EMAIL_SUBJECT_TEMPLATE.format(
-                HOST_URL_ROOT,
-                # site_configuration.site.username if site_configuration.site else site_configuration.title,
-                submission.user.username if submission.user else site_configuration.title,
-                submission.broker_submission_id
-            ),
-            message=APPROVAL_EMAIL_MESSAGE_TEMPLATE.format(
-                submission.broker_submission_id,
-                '{0}{1}brokerage/submission/{2}/change/'.format(
+        if not submission.approval_notification_sent:
+            # email admins, then do smth. to trigger chain once ok
+            logger.info(
+                msg='check_on_hold_status_task. submission pk={0}. '
+                    'site_config pk={1}. site_configuration.release_submissions'
+                    '={2}. send mail to admins.'
+                    ''.format(submission_id, site_configuration.pk,
+                              site_configuration.release_submissions))
+            # TODO: refactor to method in task_utils, and use templates/constants
+            mail_admins(
+                subject=APPROVAL_EMAIL_SUBJECT_TEMPLATE.format(
                     HOST_URL_ROOT,
-                    ADMIN_URL,
-                    submission.pk)
+                    # site_configuration.site.username if site_configuration.site else site_configuration.title,
+                    submission.user.username if submission.user else site_configuration.title,
+                    submission.broker_submission_id
+                ),
+                message=APPROVAL_EMAIL_MESSAGE_TEMPLATE.format(
+                    submission.broker_submission_id,
+                    '{0}{1}brokerage/submission/{2}/change/'.format(
+                        HOST_URL_ROOT,
+                        ADMIN_URL,
+                        submission.pk)
+                )
             )
-        )
-        submission.approval_notification_sent = True
-        submission.save()
+            submission.approval_notification_sent = True
+            submission.save()
 
 
 # NEW PREP WORKFLOW BO CREATION AND SOID CREATION ------------------------------
@@ -2001,7 +2002,9 @@ def notify_on_embargo_ended_task(self, submission_id=None):
     if not submission_id:
         return "submission_id not provided"
 
-    logger.info('tasks.py | notify_on_embargo_ended_task | submission_id={}'.format(submission_id))
+    logger.info(
+        'tasks.py | notify_on_embargo_ended_task | submission_id={}'.format(
+            submission_id))
 
     submission, site_config = get_submission_and_site_configuration(
         submission_id=submission_id,
@@ -2040,7 +2043,7 @@ def notify_on_embargo_ended_task(self, submission_id=None):
             )
 
             jira_error_auto_retry(jira_client=jira_client, task=self,
-                                         broker_submission_id=submission.broker_submission_id)
+                                  broker_submission_id=submission.broker_submission_id)
 
             if jira_client.comment:
                 primary_accession.user_notified_released = datetime.date.today()
@@ -2053,6 +2056,7 @@ def notify_on_embargo_ended_task(self, submission_id=None):
                 }
 
     return "No notifications to send"
+
 
 @celery.task(
     base=SubmissionTask,
@@ -2235,6 +2239,7 @@ def jira_cancel_issue_task(self, submission_id=None, admin=False):
         'admin': '{}'.format(admin)
     }
 
+
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -2246,9 +2251,11 @@ def jira_cancel_issue_task(self, submission_id=None, admin=False):
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True
 )
-def jira_transition_issue_task(self, prev=None, submission_id=None, transition_id=871, resolution="Done"):
+def jira_transition_issue_task(self, prev=None, submission_id=None,
+                               transition_id=871, resolution="Done"):
     logger.info('tasks.py | jira_transition_issue_task | '
-                'submission_id={} transition_id={} resolution={}'.format(submission_id, transition_id, resolution))
+                'submission_id={} transition_id={} resolution={}'.format(
+        submission_id, transition_id, resolution))
 
     if not submission_id:
         return "submission_id not provided"
@@ -2282,6 +2289,7 @@ def jira_transition_issue_task(self, prev=None, submission_id=None, transition_i
         'resolution': '{}'.format(resolution),
     }
 
+
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -2294,7 +2302,9 @@ def jira_transition_issue_task(self, prev=None, submission_id=None, transition_i
     retry_jitter=True
 )
 def jira_initial_comment_task(self, prev=None, submission_id=None):
-    logger.info('tasks.py | jira_initial_comment_task | submission_id={}'.format(submission_id))
+    logger.info(
+        'tasks.py | jira_initial_comment_task | submission_id={}'.format(
+            submission_id))
 
     submission, site_config = get_submission_and_site_configuration(
         submission_id=submission_id,
@@ -2310,7 +2320,7 @@ def jira_initial_comment_task(self, prev=None, submission_id=None):
             comment_template = JIRA_WELCOME_COMMENT_TEMPLATE
             # check for molecular submission
             if submission.target == ENA or submission.target == ENA_PANGAEA:
-               comment_template = JIRA_WELCOME_MOLECULAR_COMMENT_TEMPLATE
+                comment_template = JIRA_WELCOME_MOLECULAR_COMMENT_TEMPLATE
 
             jira_client = JiraClient(resource=site_config.helpdesk_server)
             jira_client.add_comment(
@@ -2322,7 +2332,7 @@ def jira_initial_comment_task(self, prev=None, submission_id=None):
                 )
             )
             jira_error_auto_retry(jira_client=jira_client, task=self,
-                                         broker_submission_id=submission.broker_submission_id)
+                                  broker_submission_id=submission.broker_submission_id)
             if jira_client.comment:
                 return {
                     'status': 'initial comment sent',
