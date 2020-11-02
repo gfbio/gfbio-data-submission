@@ -101,6 +101,7 @@ class Submission(TimeStampedModel):
     )
     status = models.CharField(choices=STATUSES, max_length=10, default=OPEN)
     release = models.BooleanField(default=False)
+    approval_notification_sent = models.BooleanField(default=False)
 
     # TODO: this might be to specific for a general submission model ?
     # TODO: discuss general submission model with subclasses like molecular or similar
