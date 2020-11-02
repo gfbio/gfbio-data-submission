@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from pprint import pprint
 from unittest.mock import patch
 
 from gfbio_submissions.brokerage.models import Submission, BrokerObject, \
@@ -30,12 +31,14 @@ class TestSubmissionPreparationTasks(TestTasks):
         self.assertEqual(5, len(broker_objects))
 
     def test_check_on_hold_status_task(self):
+        self.assertFalse(Submission.objects.first().approval_notification_sent)
         result = check_on_hold_status_task.apply_async(
             kwargs={
                 'submission_id': Submission.objects.first().id
             }
         )
         self.assertTrue(result.successful())
+        self.assertTrue(Submission.objects.first().approval_notification_sent)
 
     @patch('gfbio_submissions.brokerage.tasks.logger')
     def test_check_on_hold_proceed_without_email(self, mock_logger):
