@@ -5,84 +5,55 @@ from django.test import TestCase
 
 from gfbio_submissions.brokerage.configuration.settings import \
     ENA_STUDY_URL_PREFIX
-from gfbio_submissions.brokerage.models import PersistentIdentifier, \
-    BrokerObject
-from gfbio_submissions.users.models import User
+from gfbio_submissions.resolve.models import Accession
+
+
+class TestAccessionModel(TestCase):
+
+    def test_instance(self):
+        acc = Accession.objects.create(identifier='ACC0815')
+        self.assertIsInstance(acc, Accession)
+
+
 
 
 class TestInsdcResolveView(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        user = User.objects.create_user(
-            username='horst', email='horst@horst.de', password='password', )
-        bo = BrokerObject.objects.create(
-            type='study',
-            user=user
-        )
-        cls.pid_values = []
         for i in range(0, 10):
-            pid = PersistentIdentifier.objects.create(
-                archive='ENA',
-                pid_type='ACC',
-                status='PUBLIC' if i % 2 == 0 else '',
-                broker_object=bo,
-                pid='acc000{}'.format(i + 1)
-            )
-            cls.pid_values.append(pid.pid)
+            Accession.objects.create(identifier='acc000{}'.format(i + 1))
 
     def test_database_content(self):
-        all_pids = PersistentIdentifier.objects.all()
-        self.assertEqual(10, len(all_pids))
+        accs = Accession.objects.all()
+        self.assertEqual(10, len(accs))
 
     def test_get_403(self):
-        response = self.client.get('/resolve/api/insdc/acc0002')
-        self.assertEqual(403, response.status_code)
-        self.assertIn(b'acc0002', response.content)
-
-    def test_get_302(self):
+        self.assertEqual('acc0001', Accession.objects.first().identifier)
         response = self.client.get('/resolve/api/insdc/acc0001')
-        self.assertEqual(302, response.status_code)
+        self.assertEqual(403, response.status_code)
+        self.assertIn(b'acc0001', response.content)
 
     @responses.activate
-    def test_get_404(self):
+    def test_get_302(self):
         responses.add(
             responses.GET,
-            '{}{}'.format(ENA_STUDY_URL_PREFIX, 'acc000x'),
+            '{}{}'.format(ENA_STUDY_URL_PREFIX, 'acc000xxx'),
             status=200,
         )
-        response = self.client.get('/resolve/api/insdc/acc000x')
+        response = self.client.get('/resolve/api/insdc/acc000xxx')
         self.assertEqual(302, response.status_code)
-
-    def test_get_status(self):
-        pids = PersistentIdentifier.objects.all()
-        for p in pids:
-            response = self.client.get('/resolve/api/insdc/{}'.format(p.pid))
-            if p.status == 'PUBLIC':
-                self.assertEqual(302, response.status_code)
-            else:
-                self.assertEqual(403, response.status_code)
 
     @responses.activate
     def test_template_get_302(self):
         responses.add(
             responses.GET,
-            '{}{}'.format(ENA_STUDY_URL_PREFIX, 'acc0001'),
+            '{}{}'.format(ENA_STUDY_URL_PREFIX, 'acc0001xx'),
             status=200,
         )
-        response = self.client.get('/resolve/insdc/acc0001')
+        response = self.client.get('/resolve/insdc/acc0001xx')
         self.assertEqual(302, response.status_code)
 
     def test_template_get_403(self):
         response = self.client.get('/resolve/insdc/acc0002')
         self.assertEqual(403, response.status_code)
-
-    @responses.activate
-    def test_template_get_404(self):
-        responses.add(
-            responses.GET,
-            '{}{}'.format(ENA_STUDY_URL_PREFIX, 'acc000x'),
-            status=200,
-        )
-        response = self.client.get('/resolve/insdc/acc000x')
-        self.assertEqual(302, response.status_code)

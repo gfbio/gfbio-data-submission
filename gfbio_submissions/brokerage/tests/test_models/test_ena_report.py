@@ -9,7 +9,8 @@ from gfbio_submissions.brokerage.models import EnaReport, BrokerObject, \
     PersistentIdentifier, Submission, TaskProgressReport
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.ena import \
-    update_persistent_identifier_report_status
+    update_persistent_identifier_report_status, update_resolver_accessions
+from gfbio_submissions.resolve.models import Accession
 from gfbio_submissions.users.models import User
 
 
@@ -29,7 +30,7 @@ class TestEnaReport(TestCase):
 
     def test_db_content(self):
         self.assertEqual(4, len(EnaReport.objects.all()))
-        self.assertEqual(4, len(EnaReport.objects.filter(
+        self.assertEqual(6, len(EnaReport.objects.filter(
             report_type=EnaReport.STUDY).first().report_data))
 
     def test_create_instance(self):
@@ -116,6 +117,42 @@ class TestEnaReport(TestCase):
                 report_type=EnaReport.STUDY).filter(
                 report_data__contains=[{'report': {'id': 'ERP117556'}}])
         ))
+
+    def test_update_resolver_accessions(self):
+        self.assertEqual(0, len(Accession.objects.all()))
+        success = update_resolver_accessions()
+        self.assertTrue(success)
+        for a in Accession.objects.all():
+            print(a)
+        self.assertEqual(6, len(Accession.objects.all()))
+
+        # PUBLIC content for 'study' EnaReport
+        self.assertEqual(0,
+                         len(Accession.objects.filter(identifier='ERP119xxx')))
+        self.assertEqual(0,
+                         len(Accession.objects.filter(identifier='PRJEB36xxx')))
+
+    def test_accession_update_to_public(self):
+        success = update_resolver_accessions()
+        self.assertEqual(6, len(Accession.objects.all()))
+
+        study_report = EnaReport.objects.get(report_type=EnaReport.STUDY)
+        self.assertFalse(
+            Accession.objects.filter(identifier='ERP119242').first() is None
+        )
+        self.assertFalse(
+            Accession.objects.filter(identifier='PRJEB36096').first() is None
+        )
+        study_report.report_data[0]['report']['releaseStatus'] = 'PUBLIC'
+        study_report.save()
+        success = update_resolver_accessions()
+        self.assertEqual(4, len(Accession.objects.all()))
+        self.assertTrue(
+            Accession.objects.filter(identifier='ERP119242').first() is None
+        )
+        self.assertTrue(
+            Accession.objects.filter(identifier='PRJEB36096').first() is None
+        )
 
     def test_parsing_for_ena_status(self):
         user = User.objects.create(
