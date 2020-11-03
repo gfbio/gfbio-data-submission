@@ -769,7 +769,8 @@ class TestJiraIssueUpdateView(APITestCase):
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
-                        "customfield_10200": "2020-04-09T00:00:00+00:00",
+                        "customfield_10200": arrow.now().shift(
+                            years=1).for_json(),
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
                     }

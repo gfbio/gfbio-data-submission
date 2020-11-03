@@ -184,28 +184,33 @@ class JiraHookRequestSerializer(serializers.Serializer):
                         "'key': no related issue with key: {0} found for submission {1}".format(
                             self.issue_key, self.broker_submission_id)]})
 
-    def curator_validation(self):
+    def brokeragent_validation(self):
         updating_user = self.initial_data.get('user', {}).get('emailAddress', '')
         logger.info(
-            msg='serializer.py | curator_validation | updating user {0}'.format(updating_user)
+            msg='serializer.py | brokeragent_validation | user {0}'.format(updating_user)
         )
         # check for brokeragent user
         if updating_user == "brokeragent@gfbio.org":
             raise serializers.ValidationError(
                 {'issue': ["'user': user is brokeragent"]})
 
+    def curator_validation(self):
+        updating_user = self.initial_data.get('user', {}).get('emailAddress', '')
+        logger.info(
+            msg='serializer.py | curator_validation | updating user {0}'.format(updating_user)
+        )
         # get curators
         curators = User.objects.filter(groups__name='Curators')
         if len(curators) == 0:
             logger.info(
                 msg='serializer.py | curator_validation | no curators found'
             )
-            self.send_mail_to_admins(reason='WARNING: submission embargo date, no curators',
+            self.send_mail_to_admins(reason='WARNING: submission embargo date, user not a curator',
                                     message='WARNING: JIRA hook requested an Embargo Date update,'
-                                            ' but no curators were found'.format(self.issue_key))
+                                            ' but user is not a curator'.format(self.issue_key))
             raise serializers.ValidationError(
                 {'issue': ["'user': user is not in curators group"]})
-        
+
         curators_emails = [curator.email for curator in curators]
         if updating_user not in curators_emails:
             logger.info(
@@ -221,6 +226,11 @@ class JiraHookRequestSerializer(serializers.Serializer):
         if submission and submission.target == GENERIC:
             return True
         elif submission.target == ENA or submission.target == ENA_PANGAEA:
+            # molecular submission
+
+            # check if user is a curator
+            self.curator_validation()
+
             # TODO: this here is hint to evtl. move this serializer to brokerag app
             studies = submission.brokerobject_set.filter(type='study')
 
@@ -239,9 +249,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 if not status:
                     status = s.persistentidentifier_set.filter(archive='ENA',  pid_type='PRJ').first().status
                 allowed = s.persistentidentifier_set.filter(archive='ENA',pid_type='PRJ').filter(
-                                                            Q(status='PRIVATE')
-                                                            | Q(status='SUPRESSED')
-                                                            | Q(status='SUPPRESSED'))
+                                                            Q(status='PRIVATE') | Q(status='SUPPRESSED'))
                 if allowed:
                     change_allowed = True
                     break
@@ -261,7 +269,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
             if not change_allowed:
                 logger.info(
                     msg='serializer.py | submission_type_constraints_check | '
-                        'not PRIVATE submission {0} status {1}'.format(submission.broker_submission_id, status)
+                        'not PRIVATE or SUPPRESSED submission {0} status {1}'.format(submission.broker_submission_id, status)
                 )
                 self.send_mail_to_admins(reason='WARNING: submission status is not PRIVATE or SUPPRESSED',
                                          message='WARNING: JIRA hook requested update of Embargo Date'
@@ -278,7 +286,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
         self.schema_validation(data)
         submission = self.submission_existing_check()
         key = self.submission_relation_check(submission)
-        self.curator_validation()
+        self.brokeragent_validation()
         self.embargo_date_validation(submission.embargo)
         self.submission_type_constraints_check(submission, key)
         return data
