@@ -233,7 +233,9 @@
                 "type": "string",
                 "enum": [
                     "GENOMIC",
+                    "GENOMIC SINGLE CELL",
                     "TRANSCRIPTOMIC",
+                    "TRANSCRIPTOMIC SINGLE CELL",
                     "METAGENOMIC",
                     "METATRANSCRIPTOMIC",
                     "SYNTHETIC",
