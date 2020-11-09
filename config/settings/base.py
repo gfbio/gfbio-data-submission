@@ -261,11 +261,16 @@ HOST_URL_ROOT = env(
 ADMIN_URL = env("DJANGO_ADMIN_URL", default="admin/")
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#admins
+DJANGO_ADMINS = env.list('DJANGO_ADMINS', default=[
+    "Marc Weber:maweber@mpi-bremen.de",
+    "Ivaylo Kostadinov:ikostadi@gfbio.org",
+    "Deniss Marinuks:d.marinuks@jacobs-university.de",
+])
 ADMINS = [
-    ("""Marc Weber""", 'maweber@mpi-bremen.de'),
-    ("""Ivaylo Kostadinov""", 'ikostadi@gfbio.org'),
-    ("""Deniss Marinuks""", 'd.marinuks@jacobs-university.de'),
+    ("""{}""".format(x.split(':')[0]), "{}".format(x.split(':')[1]))
+    for x in DJANGO_ADMINS
 ]
+
 # https://docs.djangoproject.com/en/dev/ref/settings/#managers
 MANAGERS = ADMINS
 
