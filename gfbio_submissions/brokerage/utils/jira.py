@@ -6,6 +6,7 @@ from json import JSONDecodeError
 
 from django.db import transaction
 from jira import JIRA, JIRAError
+from jira.resources import ServiceDesk
 from requests import ConnectionError
 from rest_framework import status
 
@@ -40,6 +41,7 @@ class JiraClient(object):
         self.error = None
         self.retry_count = 0
         self.max_retry_count = 3
+        # service_desk = ServiceDesk()
 
     def _get_connection(self, max_retries=0, get_server_info=False, options={}):
         options.update({
@@ -145,16 +147,19 @@ class JiraClient(object):
         RequestLog.objects.create_jira_log(log_arguments)
 
     # https://jira.readthedocs.io/en/master/examples.html#comments
-    def add_comment(self, key_or_issue, text):
+    def add_comment(self, key_or_issue, text, is_internal=True):
         log_arguments = {
             'method': RequestLog.POST,
-            'data': {'key_or_issue': key_or_issue, 'text': text},
+            'data': {'key_or_issue': key_or_issue, 'text': text,
+                     'is_internal': is_internal},
             'url': self.jira._get_url('issue/{}/comment'.format(key_or_issue)),
             'request_details': {
                 'function_called': '{}'.format(self.add_comment)}
         }
         try:
-            self.comment = self.jira.add_comment(key_or_issue, text)
+            print('IS INTERNAL ', is_internal)
+            self.comment = self.jira.add_comment(key_or_issue, text,
+                                                 is_internal=is_internal)
             log_arguments['response_content'] = self.comment.raw
             self.error = None
         except JIRAError as e:
@@ -361,7 +366,8 @@ class JiraClient(object):
             RequestLog.objects.create(
                 type=RequestLog.OUTGOING,
                 method=RequestLog.GET,
-                url='https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions'.format(issue),
+                url='https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions'.format(
+                    issue),
                 user=submission.user,
                 submission_id=submission.broker_submission_id,
                 response_content=transitions,
@@ -376,7 +382,8 @@ class JiraClient(object):
                 break
 
         logger.info(
-            'JiraClient | cancel_issue | key {} | transition_id {} '.format(issue, cancel_transition_id))
+            'JiraClient | cancel_issue | key {} | transition_id {} '.format(
+                issue, cancel_transition_id))
 
         if cancel_transition_id != '0':
             try:
@@ -384,7 +391,7 @@ class JiraClient(object):
                 response = self.jira.transition_issue(
                     issue,
                     cancel_transition_id,
-                    fields={'resolution':{'name': resolution_name}},
+                    fields={'resolution': {'name': resolution_name}},
                 )
             except JIRAError as e:
                 response = e
@@ -394,7 +401,8 @@ class JiraClient(object):
                 RequestLog.objects.create(
                     type=RequestLog.OUTGOING,
                     method=RequestLog.POST,
-                    url='https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions'.format(issue),
+                    url='https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions'.format(
+                        issue),
                     user=submission.user,
                     submission_id=submission.broker_submission_id,
                     response_content=response,
@@ -402,7 +410,8 @@ class JiraClient(object):
                 )
             return
 
-        logger.info('JiraClient | cancel_issue | transition id 801 or 761 not found')
+        logger.info(
+            'JiraClient | cancel_issue | transition id 801 or 761 not found')
 
     def transition_issue(self, issue, submission, transition_id, resolution):
         transitions = self.jira.transitions(issue)
@@ -410,7 +419,8 @@ class JiraClient(object):
             RequestLog.objects.create(
                 type=RequestLog.OUTGOING,
                 method=RequestLog.GET,
-                url='https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions'.format(issue),
+                url='https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions'.format(
+                    issue),
                 user=submission.user,
                 submission_id=submission.broker_submission_id,
                 response_content=transitions,
@@ -421,7 +431,7 @@ class JiraClient(object):
             response = self.jira.transition_issue(
                 issue,
                 transition_id,
-                fields={'resolution':{'name': resolution}},
+                fields={'resolution': {'name': resolution}},
             )
         except JIRAError as e:
             response = e
@@ -431,7 +441,8 @@ class JiraClient(object):
             RequestLog.objects.create(
                 type=RequestLog.OUTGOING,
                 method=RequestLog.POST,
-                url='https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions'.format(issue),
+                url='https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions'.format(
+                    issue),
                 user=submission.user,
                 submission_id=submission.broker_submission_id,
                 response_content=response,
