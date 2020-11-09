@@ -1,6 +1,8 @@
 import logging
 
 from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status, mixins, generics
 from rest_framework.response import Response
 
@@ -53,6 +55,7 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
         return Response(data_content, status=status.HTTP_201_CREATED,
                         headers=headers)
 
+    @method_decorator(csrf_exempt)
     def post(self, request, *args, **kwargs):
         response = self.create(request, *args, **kwargs)
         return response
