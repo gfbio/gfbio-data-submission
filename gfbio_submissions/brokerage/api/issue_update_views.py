@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
-    permission_classes = (permissions.APIAllowedHosts,)
+    # permission_classes = (permissions.APIAllowedHosts,)
     serializer_class = JiraHookRequestSerializer
 
     def create(self, request, *args, **kwargs):
@@ -55,7 +55,8 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
         return Response(data_content, status=status.HTTP_201_CREATED,
                         headers=headers)
 
-    @method_decorator(csrf_exempt)
+    # @method_decorator(csrf_exempt)
     def post(self, request, *args, **kwargs):
+        print('POST ------------')
         response = self.create(request, *args, **kwargs)
         return response
