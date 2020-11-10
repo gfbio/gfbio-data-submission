@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class JiraHookRequestSerializer(serializers.Serializer):
+    print('JiraHookRequestSerializer ------------')
     user = serializers.JSONField()
     issue = serializers.JSONField()
     changelog = serializers.JSONField()
