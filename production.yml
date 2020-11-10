@@ -24,7 +24,7 @@ services:
     logging:
       driver: syslog
       options:
-        tag: 'GFBio Django'
+        tag: 'GFBio-django'
     command: /start
 
   postgres:
@@ -58,20 +58,26 @@ services:
   celeryworker:
     <<: *django
     logging:
-      driver: json-file
+      driver: syslog
+      options:
+        tag: 'GFBio-celery-worker'
     image: gfbio_submissions_production_celeryworker
     command: /start-celeryworker
 
   celerybeat:
     <<: *django
     logging:
-      driver: json-file
+      driver: syslog
+      options:
+        tag: 'GFBio-celery-beat'
     image: gfbio_submissions_production_celerybeat
     command: /start-celerybeat
 
   flower:
     <<: *django
     logging:
-      driver: json-file
+      driver: syslog
+      options:
+        tag: 'GFBio-flower'
     image: gfbio_submissions_production_flower
     command: /start-flower
