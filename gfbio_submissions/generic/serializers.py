@@ -284,6 +284,8 @@ class JiraHookRequestSerializer(serializers.Serializer):
             return change_allowed
 
     def validate(self, data):
+        print('validate ')
+        print(data)
         self.schema_validation(data)
         submission = self.submission_existing_check()
         key = self.submission_relation_check(submission)
