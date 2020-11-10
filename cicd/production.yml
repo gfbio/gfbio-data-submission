@@ -18,10 +18,13 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - django_media:/app/gfbio_submissions/media
-    command: /start
     networks:
       - proxy
       - internal
+    logging:
+      driver: syslog
+      options:
+        tag: 'GFBio-django'
     deploy:
       mode: global
     restart: always
@@ -75,6 +78,10 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
     image: gfbio_submissions_production_celeryworker
+    logging:
+      driver: syslog
+      options:
+        tag: 'GFBio-celery-worker'
     command: /start-celeryworker
     restart: always
 
@@ -93,6 +100,10 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
     image: gfbio_submissions_production_celerybeat
+    logging:
+      driver: syslog
+      options:
+        tag: 'GFBio-celery-beat'
     command: /start-celerybeat
     restart: always
 
@@ -111,6 +122,10 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
     image: gfbio_submissions_production_flower
+    logging:
+      driver: syslog
+      options:
+        tag: 'GFBio-flower'
     restart: always
     command: /start-flower
 
