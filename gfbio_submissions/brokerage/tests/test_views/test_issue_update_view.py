@@ -1,6 +1,8 @@
 import json
+from unittest import skip
 
 import arrow
+import requests
 import responses
 from django.urls import reverse
 from rest_framework import status
@@ -134,23 +136,23 @@ class TestJiraIssueUpdateView(APITestCase):
 
         one_year = arrow.now().shift(years=1)
         post_data = {
-                "user": {
-                    "emailAddress": "horst@horst.de"
-                },
-                "issue": {
-                    "key": "SAND-007",
-                    "fields": {
-                        "customfield_10200": one_year.for_json(),
-                        "customfield_10303": "{0}".format(
-                            submission.broker_submission_id),
-                    }
-                },
-                "changelog": {
-                    "items": [
-                        {}
-                    ]
+            "user": {
+                "emailAddress": "horst@horst.de"
+            },
+            "issue": {
+                "key": "SAND-007",
+                "fields": {
+                    "customfield_10200": one_year.for_json(),
+                    "customfield_10303": "{0}".format(
+                        submission.broker_submission_id),
                 }
+            },
+            "changelog": {
+                "items": [
+                    {}
+                ]
             }
+        }
         self.client.post(
             self.url,
             post_data,
@@ -160,7 +162,8 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(one_year.date(), submission.embargo)
 
         # change status to SUPPRESSED
-        study = submission.brokerobject_set.filter(type='study').first().persistentidentifier_set.first()
+        study = submission.brokerobject_set.filter(
+            type='study').first().persistentidentifier_set.first()
         study.status = "SUPPRESSED"
         study.save()
         submission.embargo = six_months.date()
@@ -175,6 +178,37 @@ class TestJiraIssueUpdateView(APITestCase):
         submission = Submission.objects.first()
         self.assertEqual(one_year.date(), submission.embargo)
 
+    # @skip('request to real server')
+    def test_real_call_to_development_server(self):
+        one_year = arrow.now().shift(years=1)
+        post_data = {
+            "user": {
+                "emailAddress": "marcw@nord-com.net"
+            },
+            "issue": {
+                "key": "SAND-1797",
+                "fields": {
+                    "customfield_10200": one_year.for_json(),
+                    "customfield_10303": "a260377d-8509-4bdc-b0bd-b859460d064d",
+                }
+            },
+            "changelog": {
+                "items": [
+                    {}
+                ]
+            }
+        }
+        response = requests.post(
+            url='https://c103-171.cloud.gwdg.de/api/submissions/jira/update/',
+            auth=('marc', 'djang0ROCKS!'),
+            headers={
+                'Content-Type': 'application/json'
+            },
+            json=post_data,
+        )
+        print('\n---------\n', response.status_code)
+        print('\n---------\n', response.content)
+
     def test_wrong_status_embargo_update(self):
         submission = Submission.objects.first()
         six_months = arrow.now().shift(months=6)
@@ -182,30 +216,31 @@ class TestJiraIssueUpdateView(APITestCase):
         submission.save()
         self.assertEqual(six_months.date(), submission.embargo)
         # change status to SUPPRESSED
-        study = submission.brokerobject_set.filter(type='study').first().persistentidentifier_set.first()
+        study = submission.brokerobject_set.filter(
+            type='study').first().persistentidentifier_set.first()
         study.status = "PUBLIC"
         study.save()
         self.assertEqual("PUBLIC", study.status)
 
         one_year = arrow.now().shift(years=1)
         post_data = {
-                "user": {
-                    "emailAddress": "horst@horst.de"
-                },
-                "issue": {
-                    "key": "SAND-007",
-                    "fields": {
-                        "customfield_10200": one_year.for_json(),
-                        "customfield_10303": "{0}".format(
-                            submission.broker_submission_id),
-                    }
-                },
-                "changelog": {
-                    "items": [
-                        {}
-                    ]
+            "user": {
+                "emailAddress": "horst@horst.de"
+            },
+            "issue": {
+                "key": "SAND-007",
+                "fields": {
+                    "customfield_10200": one_year.for_json(),
+                    "customfield_10303": "{0}".format(
+                        submission.broker_submission_id),
                 }
+            },
+            "changelog": {
+                "items": [
+                    {}
+                ]
             }
+        }
         self.client.post(
             self.url,
             post_data,
@@ -213,7 +248,6 @@ class TestJiraIssueUpdateView(APITestCase):
 
         submission = Submission.objects.first()
         self.assertNotEqual(one_year.date(), submission.embargo)
-
 
     def test_brokeragent_get_paramter(self):
         submission = Submission.objects.first()
@@ -321,11 +355,11 @@ class TestJiraIssueUpdateView(APITestCase):
             },
             "issue": {"key": "SAND-007"},
             "changelog": {
-               "items": [
-                   {}
-               ]
+                "items": [
+                    {}
+                ]
             }},
-            format='json')
+                                    format='json')
 
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertIn(b'fields', response.content)
@@ -580,7 +614,8 @@ class TestJiraIssueUpdateView(APITestCase):
     def test_embargo_is_identical(self):
         submission = Submission.objects.first()
         embargo_date = arrow.now().shift(days=14).format('YYYY-MM-DD')
-        embargo_date_hour_offset = arrow.now().shift(days=14, hours=1).format('YYYY-MM-DD')
+        embargo_date_hour_offset = arrow.now().shift(days=14, hours=1).format(
+            'YYYY-MM-DD')
         submission.embargo = embargo_date
         submission.save()
         self.assertEqual(0, len(RequestLog.objects.all()))
