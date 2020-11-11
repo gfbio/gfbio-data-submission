@@ -13,12 +13,19 @@ from ..forms import JiraIssueUpdateQueryForm
 logger = logging.getLogger(__name__)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
+# @method_decorator(csrf_exempt, name='dispatch')
 class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
     print('JiraIssueUpdateView --- ')
     # permission_classes = (permissions.APIAllowedHosts,)
     permission_classes = (permissions.AllowAny,)
     serializer_class = JiraHookRequestSerializer
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        print('JiraIssueUpdateView --- DISPATCH')
+        print('REQUEST')
+        print(request.__dict__)
+        return super(JiraIssueUpdateView, self).dispatch(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
         print('CREATE')
