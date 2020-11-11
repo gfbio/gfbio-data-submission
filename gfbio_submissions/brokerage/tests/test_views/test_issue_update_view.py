@@ -178,7 +178,7 @@ class TestJiraIssueUpdateView(APITestCase):
         submission = Submission.objects.first()
         self.assertEqual(one_year.date(), submission.embargo)
 
-    # @skip('request to real server')
+    @skip('request to real server')
     def test_real_call_to_development_server(self):
         one_year = arrow.now().shift(years=1)
 
@@ -211,7 +211,7 @@ class TestJiraIssueUpdateView(APITestCase):
             url='https://c103-171.cloud.gwdg.de/api/submissions/jira/update/'
                 '?user_id=marcw@nord-com.net&user_key=marcw@nord-com.net',
             # WORKs WITHOUT AUTH
-            # auth=('marc', 'djang0ROCKS!'),
+            # auth=('marc', ''),
             headers={
                 'Content-Type': 'application/json'
             },
