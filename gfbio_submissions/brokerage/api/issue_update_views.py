@@ -15,8 +15,7 @@ logger = logging.getLogger(__name__)
 class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
     print('JiraIssueUpdateView --- ')
     # permission_classes = (permissions.APIAllowedHosts,)
-    permission_classes = (permissions.IsAuthenticated,
-                          IsOwnerOrReadOnly)
+    permission_classes = (permissions.AllowAny,)
     serializer_class = JiraHookRequestSerializer
 
     def create(self, request, *args, **kwargs):
