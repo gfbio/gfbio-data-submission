@@ -244,10 +244,14 @@ class JiraHookRequestSerializer(serializers.Serializer):
             status = None
             has_primary_accession = False
             for s in studies:
+                # FIXME: add dedicated unit test to check for all possible aggregations for this condition
                 if not has_primary_accession and s.persistentidentifier_set.filter(archive='ENA', pid_type='PRJ'):
                     has_primary_accession = True
 
+                # FIXME: add dedicated unit test to check for all possible aggregations for this condition
                 if not status:
+                    # FIXME: add dedicated unit test to check for all possible aggregations for this condition
+                    #   --> none has no status
                     status = s.persistentidentifier_set.filter(archive='ENA',  pid_type='PRJ').first().status
                 allowed = s.persistentidentifier_set.filter(archive='ENA',pid_type='PRJ').filter(
                                                             Q(status='PRIVATE') | Q(status='SUPPRESSED'))

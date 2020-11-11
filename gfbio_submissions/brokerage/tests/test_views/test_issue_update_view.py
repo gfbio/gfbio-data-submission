@@ -181,6 +181,15 @@ class TestJiraIssueUpdateView(APITestCase):
     # @skip('request to real server')
     def test_real_call_to_development_server(self):
         one_year = arrow.now().shift(years=1)
+
+        # allowany:
+        #   400: b'{"issue":["\'user\': user is not in curators group"]}'
+        # --> add to curators group
+        #   FIXME: filter for 'Curators' in serializer
+        # 500: --> add persistent identifier to BO study
+        #   FIXME: tests !
+        # add url params user_id and user_key
+        # NOW THIS BELOW WORKS
         post_data = {
             "user": {
                 "emailAddress": "marcw@nord-com.net"
@@ -188,7 +197,7 @@ class TestJiraIssueUpdateView(APITestCase):
             "issue": {
                 "key": "SAND-1797",
                 "fields": {
-                    "customfield_10200": one_year.for_json(),
+                    "customfield_10200":  "2021-08-11T12:47:04.964721+01:00",# one_year.for_json(),
                     "customfield_10303": "a260377d-8509-4bdc-b0bd-b859460d064d",
                 }
             },
@@ -199,7 +208,8 @@ class TestJiraIssueUpdateView(APITestCase):
             }
         }
         response = requests.post(
-            url='https://c103-171.cloud.gwdg.de/api/submissions/jira/update/',
+            url='https://c103-171.cloud.gwdg.de/api/submissions/jira/update/'
+                '?user_id=marcw@nord-com.net&user_key=marcw@nord-com.net',
             auth=('marc', 'djang0ROCKS!'),
             headers={
                 'Content-Type': 'application/json'
