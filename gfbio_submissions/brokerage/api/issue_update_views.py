@@ -19,6 +19,10 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
     serializer_class = JiraHookRequestSerializer
 
     def create(self, request, *args, **kwargs):
+        print('CREATE')
+        print(request.__dict__)
+        print(args)
+        print(kwargs)
         serializer = self.get_serializer(data=request.data)
         is_valid = serializer.is_valid()
 

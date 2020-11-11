@@ -197,7 +197,7 @@ class TestJiraIssueUpdateView(APITestCase):
             "issue": {
                 "key": "SAND-1797",
                 "fields": {
-                    "customfield_10200":  "2021-08-11T12:47:04.964721+01:00",# one_year.for_json(),
+                    "customfield_10200":  "2021-09-11T12:47:04.964721+01:00",# one_year.for_json(),
                     "customfield_10303": "a260377d-8509-4bdc-b0bd-b859460d064d",
                 }
             },
@@ -210,7 +210,8 @@ class TestJiraIssueUpdateView(APITestCase):
         response = requests.post(
             url='https://c103-171.cloud.gwdg.de/api/submissions/jira/update/'
                 '?user_id=marcw@nord-com.net&user_key=marcw@nord-com.net',
-            auth=('marc', 'djang0ROCKS!'),
+            # WORKs WITHOUT AUTH
+            # auth=('marc', 'djang0ROCKS!'),
             headers={
                 'Content-Type': 'application/json'
             },
