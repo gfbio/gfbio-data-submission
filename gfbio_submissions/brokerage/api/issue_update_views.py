@@ -1,17 +1,19 @@
 import logging
 
 from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status, mixins, generics, permissions
 from rest_framework.response import Response
 
 from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.generic.serializers import JiraHookRequestSerializer
 from ..forms import JiraIssueUpdateQueryForm
-from ..permissions import IsOwnerOrReadOnly
 
 logger = logging.getLogger(__name__)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
     print('JiraIssueUpdateView --- ')
     # permission_classes = (permissions.APIAllowedHosts,)
