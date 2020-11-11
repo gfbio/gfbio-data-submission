@@ -1,7 +1,7 @@
 import logging
 
 from django.urls import reverse
-from rest_framework import status, mixins, generics
+from rest_framework import status, mixins, generics, permissions
 from rest_framework.response import Response
 
 from gfbio_submissions.brokerage import permissions
