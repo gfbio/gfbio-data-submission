@@ -4,7 +4,6 @@ from django.urls import reverse
 from rest_framework import status, mixins, generics, permissions
 from rest_framework.response import Response
 
-from gfbio_submissions.brokerage import permissions
 from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.generic.serializers import JiraHookRequestSerializer
 from ..forms import JiraIssueUpdateQueryForm
