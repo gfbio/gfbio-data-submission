@@ -209,8 +209,9 @@ class TestJiraIssueUpdateView(APITestCase):
         }
 
         # WITHOUT slash in this url -> 403 referer
+        # NO WITH 403
         response = requests.post(
-            url='https://c103-171.cloud.gwdg.de/api/submissions/jira/update/'
+            url='https://c103-171.cloud.gwdg.de/api/submissions/jira/update'
                 '?user_id=marcw@nord-com.net&user_key=marcw@nord-com.net',
             # WORKs WITHOUT AUTH
             # auth=('marc', ''),
