@@ -4,6 +4,7 @@ from unittest import skip
 import arrow
 import requests
 import responses
+from django.contrib.auth.models import Group
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -15,7 +16,6 @@ from gfbio_submissions.brokerage.tests.utils import _get_jira_hook_request_data,
     _get_ena_data, _get_ena_data_without_runs
 from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.users.models import User
-from django.contrib.auth.models import Group
 
 
 class TestJiraIssueUpdateView(APITestCase):
@@ -178,10 +178,9 @@ class TestJiraIssueUpdateView(APITestCase):
         submission = Submission.objects.first()
         self.assertEqual(one_year.date(), submission.embargo)
 
-    # @skip('request to real server')
+    @skip('request to real server')
     def test_real_call_to_development_server(self):
         one_year = arrow.now().shift(years=1)
-
         # allowany:
         #   400: b'{"issue":["\'user\': user is not in curators group"]}'
         # --> add to curators group
@@ -197,7 +196,8 @@ class TestJiraIssueUpdateView(APITestCase):
             "issue": {
                 "key": "SAND-1797",
                 "fields": {
-                    "customfield_10200":  "2021-09-11T12:47:04.964721+01:00",# one_year.for_json(),
+                    "customfield_10200": "2021-09-11T12:47:04.964721+01:00",
+                    # one_year.for_json(),
                     "customfield_10303": "a260377d-8509-4bdc-b0bd-b859460d064d",
                 }
             },
@@ -208,10 +208,8 @@ class TestJiraIssueUpdateView(APITestCase):
             }
         }
 
-        # WITHOUT slash in this url -> 403 referer
-        # NO WITH 403
         response = requests.post(
-            url='https://c103-171.cloud.gwdg.de/api/submissions/jira/update'
+            url='https://c103-171.cloud.gwdg.de/api/submissions/jira/update/'
                 '?user_id=marcw@nord-com.net&user_key=marcw@nord-com.net',
             # WORKs WITHOUT AUTH
             # auth=('marc', ''),
@@ -220,8 +218,6 @@ class TestJiraIssueUpdateView(APITestCase):
             },
             json=post_data,
         )
-        print('\n---------\n', response.status_code)
-        print('\n---------\n', response.content)
 
     def test_wrong_status_embargo_update(self):
         submission = Submission.objects.first()
