@@ -823,11 +823,13 @@ class TestJiraClient(TestCase):
         )
         client = JiraClient(resource=jira_resource)
         issue = client.jira.issue("SAND-1661")
-        client.add_comment(issue, 'internal ???')
 
-        for l in RequestLog.objects.all():
-            print('\n')
-            pprint(l.__dict__)
+        client.add_comment(issue, 'should be internal')
+        client.add_comment(issue, 'should be public', is_internal=False)
+
+        # for l in RequestLog.objects.all():
+        #     print('\n')
+        #     pprint(l.__dict__)
 
         # WORKS:
         # sd = client.jira.service_desks()

@@ -1076,7 +1076,9 @@ def add_accession_to_pangaea_issue_task(self, kwargs=None, submission_id=None):
                 key_or_issue=ticket_key,
                 text='ENA Accession No. of study {}. broker_submission_id: '
                      '{0}. {1}'.format(study_pid.pid,
-                                       submission.broker_submission_id))
+                                       submission.broker_submission_id),
+                is_internal=False
+            )
 
             return jira_error_auto_retry(jira_client=jira_client, task=self,
                                          broker_submission_id=submission.broker_submission_id)
@@ -1362,7 +1364,8 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
                 text=JIRA_ACCESSION_COMMENT_TEMPLATE.format(
                     submitter_name=submitter_name,
                     primary_accession=study_pid.pid
-                )
+                ),
+                is_internal=False
             )
             return jira_error_auto_retry(jira_client=jira_client, task=self,
                                          broker_submission_id=submission.broker_submission_id)
@@ -1445,7 +1448,9 @@ def add_posted_comment_to_issue_task(self, prev_task_result=None,
         jira_client = JiraClient(resource=site_configuration.helpdesk_server)
         jira_client.add_comment(
             key_or_issue=reference.reference_key,
-            text=comment_text)
+            text=comment_text,
+            is_internal=False
+        )
         return jira_error_auto_retry(jira_client=jira_client, task=self,
                                      broker_submission_id=submission.broker_submission_id)
     else:
@@ -1624,7 +1629,8 @@ def add_pangaea_doi_task(self, prev_task_result=None,
         jira_client.add_comment(
             key_or_issue=reference.reference_key,
             text='Pangaea DOI: {0}. broker_submission_id: {1}'.format(
-                pangaea_doi, submission.broker_submission_id)
+                pangaea_doi, submission.broker_submission_id),
+            is_internal=False
         )
         return jira_error_auto_retry(jira_client=jira_client, task=self,
                                      broker_submission_id=submission.broker_submission_id)
@@ -1664,7 +1670,8 @@ def add_pangaealink_to_submission_issue_task(
             key_or_issue=helpdesk_reference.reference_key,
             text='[Pangaea Ticket {1}|{0}{1}]'.format(
                 PANGAEA_ISSUE_VIEW_URL,
-                pangaea_reference.reference_key)
+                pangaea_reference.reference_key),
+            is_internal=False
         )
         return jira_error_auto_retry(jira_client=jira_client, task=self,
                                      broker_submission_id=submission.broker_submission_id)
@@ -1827,6 +1834,7 @@ def notify_user_embargo_expiry_task(self):
                     jira_client.add_comment(
                         key_or_issue=reference.reference_key,
                         text=comment,
+                        is_internal=False
                     )
 
                     jira_error_auto_retry(jira_client=jira_client, task=self,
@@ -2039,7 +2047,8 @@ def notify_on_embargo_ended_task(self, submission_id=None):
             jira_client = JiraClient(resource=site_config.helpdesk_server)
             jira_client.add_comment(
                 key_or_issue=reference.reference_key,
-                text=comment
+                text=comment,
+                is_internal=False
             )
 
             jira_error_auto_retry(jira_client=jira_client, task=self,
@@ -2182,7 +2191,8 @@ def notify_user_embargo_changed_task(self, prev=None, submission_id=None):
             jira_client = JiraClient(resource=site_config.helpdesk_server)
             jira_client.add_comment(
                 key_or_issue=reference.reference_key,
-                text=comment
+                text=comment,
+                is_internal=False
             )
             return jira_error_auto_retry(jira_client=jira_client, task=self,
                                          broker_submission_id=submission.broker_submission_id)
@@ -2329,7 +2339,8 @@ def jira_initial_comment_task(self, prev=None, submission_id=None):
                     title=submission.data['requirements']['title'],
                     id=submission.broker_submission_id,
                     reference=reference.reference_key
-                )
+                ),
+                is_internal=False
             )
             jira_error_auto_retry(jira_client=jira_client, task=self,
                                   broker_submission_id=submission.broker_submission_id)

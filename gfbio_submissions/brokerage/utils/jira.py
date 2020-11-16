@@ -157,7 +157,6 @@ class JiraClient(object):
                 'function_called': '{}'.format(self.add_comment)}
         }
         try:
-            print('IS INTERNAL ', is_internal)
             self.comment = self.jira.add_comment(key_or_issue, text,
                                                  is_internal=is_internal)
             log_arguments['response_content'] = self.comment.raw
