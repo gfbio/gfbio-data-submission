@@ -2,6 +2,7 @@
 
 import datetime
 from io import StringIO
+from pprint import pprint
 from unittest import skip
 
 import jira
@@ -24,7 +25,7 @@ from gfbio_submissions.brokerage.tests.utils import _get_pangaea_soap_response, 
     _get_jira_attach_response, _get_request_comment_response
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.generic.models import SiteConfiguration, \
-    ResourceCredential
+    ResourceCredential, RequestLog
 from gfbio_submissions.users.models import User
 
 
@@ -811,32 +812,72 @@ class TestJiraClient(TestCase):
         issue = client.jira.issue("SAND-1661")
 
     @skip('Test against helpdesk server')
-    def test_jira_client_create_remote_link(self):
-        # jira_resource = ResourceCredential.objects.create(
-        #     title='jira instance',
-        #     url='http://helpdesk.gfbio.org',
-        #     authentication_string='-',
-        #     username='brokeragent',
-        #     password='',
-        #     comment='-'
-        # )
-        # client = JiraClient(resource=jira_resource)
-        # issue = client.jira.issue("SAND-1710")
-
-        # works
-        # remote_link = client.jira.add_remote_link(issue, {
-        #     'url': 'https://submissions.gfbio.org',
-        #     'title': 'Follow this Link ;-)'
-        # })
-        # client.add_remote_link("SAND-1710", url='http://www.google.de', title='Google here abcd')
-        # issue = client.jira.issue("SAND-1710")
-        # client.add_remote_link(issue, url='http://www.google.de',
-        #                        title='Google here 1234')
-
-        response = requests.get(
-            url='https://helpdesk.gfbio.org/rest/applinks/latest/listApplicationlinks',
-            auth=('brokeragent', ''),
-            headers={
-                'Content-Type': 'application/json'
-            }
+    def test_jira_service_desk_comment(self):
+        jira_resource = ResourceCredential.objects.create(
+            title='jira instance',
+            url='http://helpdesk.gfbio.org',
+            authentication_string='-',
+            username='brokeragent',
+            password='',
+            comment='-'
         )
+        client = JiraClient(resource=jira_resource)
+        issue = client.jira.issue("SAND-1661")
+
+        client.add_comment(issue, 'should be internal')
+        client.add_comment(issue, 'should be public', is_internal=False)
+
+        # for l in RequestLog.objects.all():
+        #     print('\n')
+        #     pprint(l.__dict__)
+
+        # WORKS:
+        # sd = client.jira.service_desks()
+        # pprint(sd)
+        # print(
+        #     'http://helpdesk.gfbio.org/rest/servicedeskapi/request/{}/comment'.format(
+        #         issue.key))
+        # res = requests.post(
+        #     'http://helpdesk.gfbio.org/rest/servicedeskapi/request/{}/comment'.format(
+        #         issue.key),
+        #     auth=('brokeragent', ''),
+        #     headers={
+        #         'Content-Type': 'application/json'
+        #     },
+        #     json={
+        #         "body": "Hello there (PRIVATE)",
+        #         "public": False
+        #     }
+        # )
+        # print(res.content)
+
+        @skip('Test against helpdesk server')
+        def test_jira_client_create_remote_link(self):
+            # jira_resource = ResourceCredential.objects.create(
+            #     title='jira instance',
+            #     url='http://helpdesk.gfbio.org',
+            #     authentication_string='-',
+            #     username='brokeragent',
+            #     password='',
+            #     comment='-'
+            # )
+            # client = JiraClient(resource=jira_resource)
+            # issue = client.jira.issue("SAND-1710")
+
+            # works
+            # remote_link = client.jira.add_remote_link(issue, {
+            #     'url': 'https://submissions.gfbio.org',
+            #     'title': 'Follow this Link ;-)'
+            # })
+            # client.add_remote_link("SAND-1710", url='http://www.google.de', title='Google here abcd')
+            # issue = client.jira.issue("SAND-1710")
+            # client.add_remote_link(issue, url='http://www.google.de',
+            #                        title='Google here 1234')
+
+            response = requests.get(
+                url='https://helpdesk.gfbio.org/rest/applinks/latest/listApplicationlinks',
+                auth=('brokeragent', ''),
+                headers={
+                    'Content-Type': 'application/json'
+                }
+            )
