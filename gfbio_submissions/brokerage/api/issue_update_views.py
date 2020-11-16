@@ -1,21 +1,19 @@
 import logging
 
 from django.urls import reverse
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status, mixins, generics
 from rest_framework.response import Response
 
-from gfbio_submissions.brokerage import permissions
 from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.generic.serializers import JiraHookRequestSerializer
 from ..forms import JiraIssueUpdateQueryForm
+from ..permissions import APIAllowedHosts
 
 logger = logging.getLogger(__name__)
 
 
 class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
-    permission_classes = (permissions.APIAllowedHosts,)
+    permission_classes = (APIAllowedHosts,)
     serializer_class = JiraHookRequestSerializer
 
     def create(self, request, *args, **kwargs):
@@ -55,7 +53,6 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
         return Response(data_content, status=status.HTTP_201_CREATED,
                         headers=headers)
 
-    @method_decorator(csrf_exempt)
     def post(self, request, *args, **kwargs):
         response = self.create(request, *args, **kwargs)
         return response

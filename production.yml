@@ -1,10 +1,10 @@
 version: '3'
 
 volumes:
-  production_postgres_data: {}
-  production_postgres_data_backups: {}
-  production_traefik: {}
-  django_media: {}
+  production_postgres_data: { }
+  production_postgres_data_backups: { }
+  production_traefik: { }
+  django_media: { }
 
 services:
   django: &django
@@ -21,10 +21,6 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - django_media:/app/gfbio_submissions/media
-    logging:
-      driver: syslog
-      options:
-        tag: 'GFBio-django'
     command: /start
 
   postgres:
@@ -57,27 +53,15 @@ services:
 
   celeryworker:
     <<: *django
-    logging:
-      driver: syslog
-      options:
-        tag: 'GFBio-celery-worker'
     image: gfbio_submissions_production_celeryworker
     command: /start-celeryworker
 
   celerybeat:
     <<: *django
-    logging:
-      driver: syslog
-      options:
-        tag: 'GFBio-celery-beat'
     image: gfbio_submissions_production_celerybeat
     command: /start-celerybeat
 
   flower:
     <<: *django
-    logging:
-      driver: syslog
-      options:
-        tag: 'GFBio-flower'
     image: gfbio_submissions_production_flower
     command: /start-flower

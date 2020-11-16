@@ -43,7 +43,7 @@ urlpatterns = [
         name='submission_comment'
     ),
     url(
-        regex=r'submissions/jira/update/$',
+        regex=r'submissions/jira/update(/)?$',
         view=issue_update_views.JiraIssueUpdateView.as_view(),
         name='submissions_jira_update'
     ),
