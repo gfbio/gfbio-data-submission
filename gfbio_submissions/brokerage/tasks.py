@@ -1739,14 +1739,6 @@ def fetch_ena_reports_task(self):
     return result
 
 
-# TODO: - update_resolver_accessions_task will move to chain with fetch_ena_reports_task
-#       - update update_persistent_identifier_report_status_task same
-#       - no explicit cron for fetch_ena_reports_task task needed
-#       - one chain for all 3 tasks
-#       - warning email for failing fetch_ena_reports_task and second task
-#       - no exec of 2nd/3rd task if fetch_ena_reports_task fails
-#       - if 2nd fails do execute 3rd if fetch_ena_reports_task was ok
-#       - new cron for chains
 @celery.task(
     base=SubmissionTask,
     bind=True,
@@ -1764,13 +1756,19 @@ def update_resolver_accessions_task(self, previous_task_result=False):
             msg='tasks.py | update_resolver_accessions_task '
                 '| error(s) in previous tasks | return={0}'.format(
                 previous_task_result))
-        return TaskProgressReport.CANCELLED
+        mail_admins(
+            subject='Failing update caused by error in "tasks.fetch_ena_reports_task"',
+            message='Due to an error in "tasks.fetch_ena_reports_task" the execution'
+                    'of {} was stopped.\nWARNING: Resolver tables are not '
+                    'updated properly !'.format(self.name)
+        )
+        return TaskProgressReport.CANCELLED, TaskProgressReport.CANCELLED
     success = update_resolver_accessions()
     logger.info(
         msg='tasks.py | update_resolver_accessions_task '
             '| success={0}'.format(success))
 
-    return success
+    return success, previous_task_result
 
 
 @celery.task(
@@ -1786,11 +1784,22 @@ def update_persistent_identifier_report_status_task(self,
     logger.info(
         msg='tasks.py | update_persistent_identifier_report_status_task '
             '| previous_task_result={0}'.format(previous_task_result))
-    if previous_task_result == TaskProgressReport.CANCELLED or previous_task_result is None:
+    fetch_report_status = False
+    try:
+        previous_task_status, fetch_report_status = previous_task_result
+    except TypeError:
+        pass
+    if fetch_report_status == TaskProgressReport.CANCELLED or fetch_report_status is None:
         logger.info(
             msg='tasks.py | update_resolver_accessions_task '
                 '| error(s) in previous tasks | return={0}'.format(
                 previous_task_result))
+        mail_admins(
+            subject='Failing update caused by error in "tasks.fetch_ena_reports_task"',
+            message='Due to an error in "tasks.fetch_ena_reports_task" the execution'
+                    'of {} was stopped.\nWARNING: Persistent Identifier tables are not '
+                    'updated properly !'.format(self.name)
+        )
         return TaskProgressReport.CANCELLED
     success = update_persistent_identifier_report_status()
     logger.info(
@@ -1798,30 +1807,6 @@ def update_persistent_identifier_report_status_task(self,
             '| success={0}'.format(success))
 
     return success
-
-
-@celery.task(
-    base=SubmissionTask,
-    bind=True,
-    name='tasks.result_feedback_task',
-)
-def result_feedback_task(self, previous_task_result=None, task_name='', ):
-    TaskProgressReport.objects.create_initial_report(
-        submission=None,
-        task=self)
-    logger.info(
-        msg='tasks.py | result_feedback_task '
-            '| previous_task_result={0}'.format(previous_task_result))
-    if previous_task_result == TaskProgressReport.CANCELLED or previous_task_result is None:
-        mail_admins(
-            subject='Brokerage Task(s) | Error while executing: {}'.format(
-                task_name),
-            message='An Error occurred while executing {0}.\n'
-                    'Consider inspecting related TaskProgressReport(s)'
-                    ''.format(task_name)
-        )
-
-    return True
 
 
 @celery.task(

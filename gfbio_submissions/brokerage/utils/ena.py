@@ -955,13 +955,11 @@ def execute_update_accession_objects_chain(name_on_error=''):
     from gfbio_submissions.brokerage.tasks import \
         fetch_ena_reports_task, \
         update_persistent_identifier_report_status_task, \
-        update_resolver_accessions_task, result_feedback_task
+        update_resolver_accessions_task
 
     (fetch_ena_reports_task.s().set(countdown=SUBMISSION_DELAY) \
      | update_resolver_accessions_task.s().set(countdown=SUBMISSION_DELAY) \
      | update_persistent_identifier_report_status_task.s().set(
-                countdown=SUBMISSION_DELAY) \
-     | result_feedback_task.s(task_name=name_on_error).set(
                 countdown=SUBMISSION_DELAY))()
 
     # FIXME: Prototype

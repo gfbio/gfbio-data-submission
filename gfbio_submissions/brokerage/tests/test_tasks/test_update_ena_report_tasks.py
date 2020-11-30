@@ -155,18 +155,17 @@ class TestUpdateAccessionsChain(TestTasks):
         self._add_report_responses()
         result = update_accession_objects_from_ena_report_task.apply_async()
         tpr = TaskProgressReport.objects.all()
-        self.assertEqual(5, len(tpr))
+        self.assertEqual(4, len(tpr))
         expected_task_names = [
             'tasks.fetch_ena_reports_task',
             'tasks.update_resolver_accessions_task',
             'tasks.update_persistent_identifier_report_status_task',
-            'tasks.result_feedback_task',
             'tasks.update_accession_objects_from_ena_report_task',
         ]
         for t in tpr:
             self.assertIn(t.task_name, expected_task_names)
             self.assertNotEqual(TaskProgressReport.CANCELLED,
-                             t.task_return_value)
+                                t.task_return_value)
 
     @responses.activate
     def test_update_accession_objects_failing_ena_report(self):
@@ -176,18 +175,16 @@ class TestUpdateAccessionsChain(TestTasks):
         site_configuration.delete()
         update_accession_objects_from_ena_report_task.apply_async()
         tpr = TaskProgressReport.objects.all()
-        self.assertEqual(5, len(tpr))
+        self.assertEqual(4, len(tpr))
         expected_task_names = [
             'tasks.fetch_ena_reports_task',
             'tasks.update_resolver_accessions_task',
             'tasks.update_persistent_identifier_report_status_task',
-            'tasks.result_feedback_task',
             'tasks.update_accession_objects_from_ena_report_task',
         ]
         for t in tpr:
             if t.task_name not in [
-                'tasks.result_feedback_task',
                 'tasks.update_accession_objects_from_ena_report_task', ]:
-                self.assertEqual(TaskProgressReport.CANCELLED,
-                                 t.task_return_value)
+                self.assertIn(TaskProgressReport.CANCELLED,
+                              t.task_return_value)
             self.assertIn(t.task_name, expected_task_names)
