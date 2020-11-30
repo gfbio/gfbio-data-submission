@@ -2,13 +2,17 @@
 import json
 import os
 
+import responses
+
 from gfbio_submissions.brokerage.models import PersistentIdentifier, \
-    BrokerObject, EnaReport
+    BrokerObject, EnaReport, TaskProgressReport
 from gfbio_submissions.brokerage.tasks import \
     update_persistent_identifier_report_status_task, \
-    update_resolver_accessions_task
+    update_resolver_accessions_task, \
+    update_accession_objects_from_ena_report_task
 from gfbio_submissions.brokerage.tests.utils import \
     _get_test_data_dir_path
+from gfbio_submissions.generic.models import SiteConfiguration
 from gfbio_submissions.resolve.models import Accession
 from gfbio_submissions.users.models import User
 from .test_tasks_base import TestTasks
@@ -93,3 +97,97 @@ class TestUpdatePersistentIdentifierReportStatusTask(TestTasks):
             kwargs={}
         )
         self.assertTrue(res.successful())
+
+
+class TestUpdateAccessionsChain(TestTasks):
+    def setUp(self):
+        with open(os.path.join(_get_test_data_dir_path(),
+                               'ena_reports_testdata.json'),
+                  'r') as file:
+            data = json.load(file)
+        for report_type in EnaReport.REPORT_TYPES:
+            key, val = report_type
+            EnaReport.objects.create(
+                report_type=key,
+                report_data=data[val]
+            )
+
+    @classmethod
+    def _add_report_responses(cls):
+        with open(os.path.join(_get_test_data_dir_path(),
+                               'ena_reports_testdata.json'),
+                  'r') as file:
+            data = json.load(file)
+        for report_type in EnaReport.REPORT_TYPES:
+            key, val = report_type
+            responses.add(
+                responses.GET,
+                '{0}{1}?format=json'.format(
+                    cls.default_site_config.ena_report_server.url, val),
+                status=200,
+                json=data[val]
+            )
+
+    @classmethod
+    def _add_client_error_responses(cls):
+        for report_type in EnaReport.REPORT_TYPES:
+            key, val = report_type
+            responses.add(
+                responses.GET,
+                '{0}{1}?format=json'.format(
+                    cls.default_site_config.ena_report_server.url, val),
+                status=401,
+            )
+
+    @classmethod
+    def _add_server_error_responses(cls):
+        for report_type in EnaReport.REPORT_TYPES:
+            key, val = report_type
+            responses.add(
+                responses.GET,
+                '{0}{1}?format=json'.format(
+                    cls.default_site_config.ena_report_server.url, val),
+                status=500,
+            )
+
+    @responses.activate
+    def test_update_accession_objects_from_ena_report(self):
+        self._add_report_responses()
+        result = update_accession_objects_from_ena_report_task.apply_async()
+        tpr = TaskProgressReport.objects.all()
+        self.assertEqual(5, len(tpr))
+        expected_task_names = [
+            'tasks.fetch_ena_reports_task',
+            'tasks.update_resolver_accessions_task',
+            'tasks.update_persistent_identifier_report_status_task',
+            'tasks.result_feedback_task',
+            'tasks.update_accession_objects_from_ena_report_task',
+        ]
+        for t in tpr:
+            self.assertIn(t.task_name, expected_task_names)
+            self.assertNotEqual(TaskProgressReport.CANCELLED,
+                             t.task_return_value)
+
+    @responses.activate
+    def test_update_accession_objects_failing_ena_report(self):
+        self._add_server_error_responses()
+        # provoke an error in  first task
+        site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
+        site_configuration.delete()
+        update_accession_objects_from_ena_report_task.apply_async()
+        tpr = TaskProgressReport.objects.all()
+        self.assertEqual(5, len(tpr))
+        expected_task_names = [
+            'tasks.fetch_ena_reports_task',
+            'tasks.update_resolver_accessions_task',
+            'tasks.update_persistent_identifier_report_status_task',
+            'tasks.result_feedback_task',
+            'tasks.update_accession_objects_from_ena_report_task',
+        ]
+        for t in tpr:
+            if t.task_name not in [
+                'tasks.result_feedback_task',
+                'tasks.update_accession_objects_from_ena_report_task', ]:
+                self.assertEqual(TaskProgressReport.CANCELLED,
+                                 t.task_return_value)
+            self.assertIn(t.task_name, expected_task_names)

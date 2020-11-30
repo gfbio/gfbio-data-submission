@@ -102,10 +102,11 @@ class TestEnaReportTasks(TestTasks):
     def test_get_ena_reports_task_client_error(self):
         self._add_client_error_responses()
         self.assertEqual(0, len(EnaReport.objects.all()))
-        fetch_ena_reports_task.apply_async(
+        res = fetch_ena_reports_task.apply_async(
             kwargs={
             }
         )
+        self.assertEqual(TaskProgressReport.CANCELLED, res.get())
         self.assertEqual(0, len(EnaReport.objects.all()))
         self.assertEqual(len(EnaReport.REPORT_TYPES),
                          len(RequestLog.objects.all()))
@@ -116,10 +117,11 @@ class TestEnaReportTasks(TestTasks):
     def test_get_ena_reports_task_server_error(self):
         self._add_server_error_responses()
         self.assertEqual(0, len(EnaReport.objects.all()))
-        fetch_ena_reports_task.apply(
+        res = fetch_ena_reports_task.apply(
             kwargs={
             }
         )
+        self.assertEqual(None, res.get())
         self.assertEqual(0, len(EnaReport.objects.all()))
 
         # 1 execute plus 2 retries for first reporttype,

@@ -26,7 +26,7 @@ from pytz import timezone
 from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_CENTER_NAME, \
     DEFAULT_ENA_BROKER_NAME, CHECKLIST_ACCESSION_MAPPING, \
-    STATIC_SAMPLE_SCHEMA_LOCATION
+    STATIC_SAMPLE_SCHEMA_LOCATION, SUBMISSION_DELAY
 from gfbio_submissions.brokerage.models import AuditableTextData, \
     EnaReport, PersistentIdentifier
 from gfbio_submissions.brokerage.utils.csv import \
@@ -892,25 +892,36 @@ def update_persistent_identifier_report_status():
                     ids_to_use.append(sec_id)
 
                 for vid in ids_to_use:
-                    if status and len(PersistentIdentifier.objects.filter(pid=vid)) > 0:
-                        pid = PersistentIdentifier.objects.filter(pid=vid, pid_type='PRJ').first()
+                    if status and len(
+                            PersistentIdentifier.objects.filter(pid=vid)) > 0:
+                        pid = PersistentIdentifier.objects.filter(pid=vid,
+                                                                  pid_type='PRJ').first()
                         if not pid:
-                            logger.info('ena.py | update_persistent_identifier_report_status '
-                                        '| PersistentIdentifier {} with type PRJ not found'.format(vid))
+                            logger.info(
+                                'ena.py | update_persistent_identifier_report_status '
+                                '| PersistentIdentifier {} with type PRJ not found'.format(
+                                    vid))
                         elif pid.status != "PUBLIC" and status == "PUBLIC":
                             # notify reporter and close the issue
                             submission = pid.broker_object.submissions.first()
-                            logger.info('ena.py | update_persistent_identifier_report_status '
-                                        '| executing notify_on_embargo_ended_task and jira_transition_issue_task '
-                                        '| PersistentIdentifier: {} '
-                                        '| submission: {}'.format(vid, submission.broker_submission_id))
+                            logger.info(
+                                'ena.py | update_persistent_identifier_report_status '
+                                '| executing notify_on_embargo_ended_task and jira_transition_issue_task '
+                                '| PersistentIdentifier: {} '
+                                '| submission: {}'.format(vid,
+                                                          submission.broker_submission_id))
 
-                            from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY
+                            from gfbio_submissions.brokerage.configuration.settings import \
+                                SUBMISSION_DELAY
                             from gfbio_submissions.brokerage.tasks import \
-                                notify_on_embargo_ended_task, jira_transition_issue_task
-                            chain = notify_on_embargo_ended_task.s(submission_id=submission.pk).set(
+                                notify_on_embargo_ended_task, \
+                                jira_transition_issue_task
+                            chain = notify_on_embargo_ended_task.s(
+                                submission_id=submission.pk).set(
                                 countdown=SUBMISSION_DELAY) \
-                            | jira_transition_issue_task.s(submission_id=submission.pk).set(ountdown=SUBMISSION_DELAY)
+                                    | jira_transition_issue_task.s(
+                                submission_id=submission.pk).set(
+                                ountdown=SUBMISSION_DELAY)
                             chain()
 
                         date_to_use = None
@@ -924,11 +935,13 @@ def update_persistent_identifier_report_status():
 
                         if hold_date:
                             update_embargo_date_in_submissions(hold_date_time,
-                                                           PersistentIdentifier.objects.filter(
-                                                               pid=vid))
+                                                               PersistentIdentifier.objects.filter(
+                                                                   pid=vid))
                         if not date_to_use:
-                            logger.info('ena.py | update_persistent_identifier_report_status '
-                                        '| no date_to_use could be set for pid: {}'.format(vid))
+                            logger.info(
+                                'ena.py | update_persistent_identifier_report_status '
+                                '| no date_to_use could be set for pid: {}'.format(
+                                    vid))
         else:
             logger.warning(
                 'ena.py | update_persistent_identifier_report_status '
@@ -937,29 +950,43 @@ def update_persistent_identifier_report_status():
             return False
     return True
 
-# FIXME: Prototype
-# TODO: exceptions, logging, protocoll for curator
-# TODO: move to task/celeryworkers
-def cli_call():
-    print('cli_call')
-    res = subprocess.run(['ls', '-l'], capture_output=True, check=True)
-    print('\n', res)
 
-    try:
-        res = subprocess.run(['java', '--version'], capture_output=True,
-                             check=True)
-        print('\n', res)
-    except subprocess.CalledProcessError as e:
-        print('error ', e)
-    except FileNotFoundError as e:
-        print('fnferror ', e)
-    try:
-        res = subprocess.run(
-            ['java', '-jar', 'ena_webin_cli/webin-cli-3.0.0.jar'],
-            capture_output=True,
-            check=False)
-        print('\n', res)
-    except subprocess.CalledProcessError as e:
-        print('error ', e)
-    except FileNotFoundError as e:
-        print('fnferror ', e)
+def execute_update_accession_objects_chain(name_on_error=''):
+    from gfbio_submissions.brokerage.tasks import \
+        fetch_ena_reports_task, \
+        update_persistent_identifier_report_status_task, \
+        update_resolver_accessions_task, result_feedback_task
+
+    (fetch_ena_reports_task.s().set(countdown=SUBMISSION_DELAY) \
+     | update_resolver_accessions_task.s().set(countdown=SUBMISSION_DELAY) \
+     | update_persistent_identifier_report_status_task.s().set(
+                countdown=SUBMISSION_DELAY) \
+     | result_feedback_task.s(task_name=name_on_error).set(
+                countdown=SUBMISSION_DELAY))()
+
+    # FIXME: Prototype
+    # TODO: exceptions, logging, protocoll for curator
+    # TODO: move to task/celeryworkers
+    # def cli_call():
+    #     print('cli_call')
+    #     res = subprocess.run(['ls', '-l'], capture_output=True, check=True)
+    #     print('\n', res)
+    #
+    #     try:
+    #         res = subprocess.run(['java', '--version'], capture_output=True,
+    #                              check=True)
+    #         print('\n', res)
+    #     except subprocess.CalledProcessError as e:
+    #         print('error ', e)
+    #     except FileNotFoundError as e:
+    #         print('fnferror ', e)
+    #     try:
+    #         res = subprocess.run(
+    #             ['java', '-jar', 'ena_webin_cli/webin-cli-3.0.0.jar'],
+    #             capture_output=True,
+    #             check=False)
+    #         print('\n', res)
+    #     except subprocess.CalledProcessError as e:
+    #         print('error ', e)
+    #     except FileNotFoundError as e:
+    #         print('fnferror ', e)

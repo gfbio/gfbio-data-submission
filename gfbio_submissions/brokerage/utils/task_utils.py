@@ -258,6 +258,7 @@ def raise_transfer_server_exceptions(response, task, max_retries,
                         'raise_response_exceptions | task={0} | response={1} | '
                         ''.format(task.name, response))
             raise_response_exceptions(response)
+            return True
         except TransferClientError as ce:
             logger.info('task_utils.py | TransferClientError, '
                         'send_task_fail_mail | task={0} | response={1} | '
@@ -276,8 +277,7 @@ def retry_no_ticket_available_exception(task, broker_submission_id,
                         'task.request.retries={0} >= max_retries={1} | '
                         'send_task_fail_mail'.format(task.request.retries,
                                                      SUBMISSION_UPLOAD_MAX_RETRIES))
-            send_task_fail_mail(broker_submission_id, task)
-            return TaskProgressReport.CANCELLED
+            return send_task_fail_mail(broker_submission_id, task)
         else:
             logger.info('task_utils.py | retry_no_ticket_available_exception | '
                         'task={0} | error={1} | '
