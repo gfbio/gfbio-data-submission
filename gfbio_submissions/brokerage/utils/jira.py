@@ -4,6 +4,7 @@ import logging
 from io import StringIO
 from json import JSONDecodeError
 
+from django.core.mail import mail_admins
 from django.db import transaction
 from jira import JIRA, JIRAError
 from jira.resources import ServiceDesk
@@ -102,6 +103,10 @@ class JiraClient(object):
                 'JiraClient | create_issue | JIRAError {0} | {1}'.format(e,
                                                                          e.text))
             log_arguments['request_details']['error'] = '{}'.format(e)
+            mail_admins(
+                subject='JIRA - create issue error',
+                message='Error: {}'.format(e)
+            )
             self.issue = None
             self.error = e
 
@@ -144,6 +149,10 @@ class JiraClient(object):
         except JIRAError as e:
             self.error = e
             log_arguments['request_details']['error'] = '{}'.format(e)
+            mail_admins(
+                subject='JIRA - update issue error',
+                message='Error: {}'.format(e)
+            )
         RequestLog.objects.create_jira_log(log_arguments)
 
     # https://jira.readthedocs.io/en/master/examples.html#comments
@@ -167,6 +176,10 @@ class JiraClient(object):
                                                                         e.text))
             self.comment = None
             self.error = e
+            mail_admins(
+                subject='JIRA - add comment error',
+                message='Error: {}'.format(e)
+            )
             log_arguments['request_details']['error'] = '{}'.format(e)
         RequestLog.objects.create_jira_log(log_arguments)
 
@@ -213,6 +226,7 @@ class JiraClient(object):
                 attachement = self.jira.add_attachment(issue=self.issue.key,
                                                        attachment=file)
             log_arguments['response_content'] = attachement.raw
+            RequestLog.objects.create_jira_log(log_arguments)
             return attachement
         except JIRAError as e:
             logger.warning(
@@ -220,8 +234,11 @@ class JiraClient(object):
                                                                            e.text))
             self.error = e
             log_arguments['request_details']['error'] = '{}'.format(e)
+            mail_admins(
+                subject='JIRA - add attachment error',
+                message='Error: {}'.format(e)
+            )
             return None
-        RequestLog.objects.create_jira_log(log_arguments)
 
     def delete_attachment(self, id):
         log_arguments = {
@@ -241,6 +258,10 @@ class JiraClient(object):
                 'JiraClient | delete_attachment | JIRAError {0} | {1}'.format(e,
                                                                               e.text))
             log_arguments['request_details']['error'] = '{}'.format(e)
+            mail_admins(
+                subject='JIRA - delete attachment error',
+                message='Error: {}'.format(e)
+            )
             self.error = e
         RequestLog.objects.create_jira_log(log_arguments)
 
@@ -266,6 +287,10 @@ class JiraClient(object):
                                                                             e.text))
             self.error = e
             log_arguments['request_details']['error'] = '{}'.format(e)
+            mail_admins(
+                subject='JIRA - add remote link error',
+                message='Error: {}'.format(e)
+            )
         RequestLog.objects.create_jira_log(log_arguments)
 
     # specialized methods ------------------------------------------------------
@@ -395,6 +420,10 @@ class JiraClient(object):
             except JIRAError as e:
                 response = e
                 logger.info('JiraClient | cancel_issue | Error {}'.format(e))
+                mail_admins(
+                    subject='JIRA - cancel issue error',
+                    message='Error: {}'.format(e)
+                )
 
             with transaction.atomic():
                 RequestLog.objects.create(
@@ -435,6 +464,10 @@ class JiraClient(object):
         except JIRAError as e:
             response = e
             logger.info('JiraClient | transition_issue | Error {}'.format(e))
+            mail_admins(
+                subject='JIRA - issue transition error',
+                message='Error: {}'.format(e)
+            )
 
         with transaction.atomic():
             RequestLog.objects.create(
