@@ -36,7 +36,7 @@ from .utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data, 
     send_submission_to_ena, parse_ena_submission_response, fetch_ena_report, \
     update_persistent_identifier_report_status, register_study_at_ena, \
     prepare_study_data_only, store_single_data_item_as_auditable_text_data, \
-    update_resolver_accessions
+    update_resolver_accessions, execute_update_accession_objects_chain
 from .utils.ena_cli import submit_targeted_sequences, \
     create_ena_manifest_text_data, store_manifest_to_filesystem, \
     extract_accession_from_webin_report
@@ -1695,9 +1695,13 @@ def fetch_ena_reports_task(self):
     site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
     if site_configuration is None or site_configuration.ena_report_server is None:
         return TaskProgressReport.CANCELLED
-
+    result = True
+    logger.info(msg='tasks.py | fetch_ena_reports_task | start update')
     for report_type in EnaReport.REPORT_TYPES:
         type_key, type_name = report_type
+        logger.info(
+            msg='tasks.py | fetch_ena_reports_task | get report of type={0}'.format(
+                type_name))
         try:
             response, request_id = fetch_ena_report(site_configuration,
                                                     type_name)
@@ -1710,10 +1714,19 @@ def fetch_ena_reports_task(self):
                     }
                 )
             else:
-                res = raise_transfer_server_exceptions(
+                # FIXME: retry count applies to fetch_ena_reports_task not
+                #  single report type, thus if a retry is counted for a single
+                #  report, this accumulates for all following reports types.
+                #  e.g.: study retry+1. sample retry+1. no retries left
+                #  for experiment or run
+                result = raise_transfer_server_exceptions(
                     response=response,
                     task=self,
                     max_retries=SUBMISSION_MAX_RETRIES)
+                logger.info(
+                    msg='tasks.py | fetch_ena_reports_task | '
+                        'raise_transfer_server_exceptions result={0}'.format(
+                        result))
         except ConnectionError as e:
             logger.error(
                 msg='tasks.py | fetch_ena_reports_task | url={1} title={2} '
@@ -1723,7 +1736,7 @@ def fetch_ena_reports_task(self):
                     site_configuration.ena_report_server.title)
             )
             return TaskProgressReport.CANCELLED
-    return True
+    return result
 
 
 @celery.task(
@@ -1731,16 +1744,66 @@ def fetch_ena_reports_task(self):
     bind=True,
     name='tasks.update_resolver_accessions_task',
 )
-def update_resolver_accessions_task(self):
+def update_resolver_accessions_task(self, previous_task_result=False):
     TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
     logger.info(
         msg='tasks.py | update_resolver_accessions_task '
-            '| start update')
+            '| previous_task_result={0}'.format(previous_task_result))
+    if previous_task_result == TaskProgressReport.CANCELLED or previous_task_result is None:
+        logger.info(
+            msg='tasks.py | update_resolver_accessions_task '
+                '| error(s) in previous tasks | return={0}'.format(
+                previous_task_result))
+        mail_admins(
+            subject='Failing update caused by error in "tasks.fetch_ena_reports_task"',
+            message='Due to an error in "tasks.fetch_ena_reports_task" the execution'
+                    'of {} was stopped.\nWARNING: Resolver tables are not '
+                    'updated properly !'.format(self.name)
+        )
+        return TaskProgressReport.CANCELLED, TaskProgressReport.CANCELLED
     success = update_resolver_accessions()
     logger.info(
         msg='tasks.py | update_resolver_accessions_task '
+            '| success={0}'.format(success))
+
+    return success, previous_task_result
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.update_persistent_identifier_report_status_task',
+)
+def update_persistent_identifier_report_status_task(self,
+                                                    previous_task_result=None):
+    TaskProgressReport.objects.create_initial_report(
+        submission=None,
+        task=self)
+    logger.info(
+        msg='tasks.py | update_persistent_identifier_report_status_task '
+            '| previous_task_result={0}'.format(previous_task_result))
+    fetch_report_status = False
+    try:
+        previous_task_status, fetch_report_status = previous_task_result
+    except TypeError:
+        pass
+    if fetch_report_status == TaskProgressReport.CANCELLED or fetch_report_status is None:
+        logger.info(
+            msg='tasks.py | update_resolver_accessions_task '
+                '| error(s) in previous tasks | return={0}'.format(
+                previous_task_result))
+        mail_admins(
+            subject='Failing update caused by error in "tasks.fetch_ena_reports_task"',
+            message='Due to an error in "tasks.fetch_ena_reports_task" the execution'
+                    'of {} was stopped.\nWARNING: Persistent Identifier tables are not '
+                    'updated properly !'.format(self.name)
+        )
+        return TaskProgressReport.CANCELLED
+    success = update_persistent_identifier_report_status()
+    logger.info(
+        msg='tasks.py | update_persistent_identifier_report_status_task '
             '| success={0}'.format(success))
 
     return success
@@ -1749,21 +1812,22 @@ def update_resolver_accessions_task(self):
 @celery.task(
     base=SubmissionTask,
     bind=True,
-    name='tasks.update_persistent_identifier_report_status_task',
+    name='tasks.update_accession_objects_from_ena_report_task',
 )
-def update_persistent_identifier_report_status_task(self):
+def update_accession_objects_from_ena_report_task(self):
     TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
     logger.info(
-        msg='tasks.py | update_persistent_identifier_report_status_task '
+        msg='tasks.py | update_accession_objects_from_ena_report_task '
             '| start update')
-    success = update_persistent_identifier_report_status()
+    execute_update_accession_objects_chain(
+        name_on_error=self.name
+    )
     logger.info(
-        msg='tasks.py | update_persistent_identifier_report_status_task '
-            '| success={0}'.format(success))
-
-    return success
+        msg='tasks.py | update_accession_objects_from_ena_report_task '
+            '| finished')
+    return True
 
 
 # FIXME: It is possible to set a submission for the taskprogressreport here.
