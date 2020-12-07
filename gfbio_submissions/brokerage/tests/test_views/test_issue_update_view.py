@@ -1,6 +1,5 @@
 import json
 from unittest import skip
-from uuid import UUID
 
 import arrow
 import requests
@@ -14,7 +13,7 @@ from gfbio_submissions.brokerage.models import Submission, AdditionalReference, 
     BrokerObject
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_jira_hook_request_data, \
-    _get_ena_data, _get_ena_data_without_runs, _get_faulty_embargo_hook_response
+    _get_ena_data, _get_ena_data_without_runs
 from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.users.models import User
 
