@@ -1,5 +1,6 @@
 import json
 from unittest import skip
+from uuid import UUID
 
 import arrow
 import requests
@@ -13,7 +14,7 @@ from gfbio_submissions.brokerage.models import Submission, AdditionalReference, 
     BrokerObject
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_jira_hook_request_data, \
-    _get_ena_data, _get_ena_data_without_runs
+    _get_ena_data, _get_ena_data_without_runs, _get_faulty_embargo_hook_response
 from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.users.models import User
 
@@ -553,6 +554,36 @@ class TestJiraIssueUpdateView(APITestCase):
 
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_400_BAD_REQUEST,
+                         RequestLog.objects.first().response_status)
+
+    def test_date_tomorrow(self):
+        submission = Submission.objects.first()
+        embargo_tomorrow = arrow.now().shift(days=1).format('YYYY-MM-DD')
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.client.post(
+            self.url,
+            {
+                "user": {
+                    "emailAddress": "horst@horst.de"
+                },
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": embargo_tomorrow,
+                        "customfield_10303": "{}".format(
+                            submission.broker_submission_id),
+                    }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
+                }
+            },
+            format='json')
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_201_CREATED,
                          RequestLog.objects.first().response_status)
 
     def test_date_in_the_far_future(self):
