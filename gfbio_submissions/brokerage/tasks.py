@@ -2103,8 +2103,7 @@ def notify_on_embargo_ended_task(self, submission_id=None):
             https://ena-docs.readthedocs.io/en/latest/submit/general-guide/accessions.html#how-to-cite-your-ena-study
 
             this is to confirm that your ENA study and all associated data has been made public.
-            Please note that it may take up to several days for the data to appear in the ENA Browser.
-
+            
             Best regards,
             the GFBio Submission Team""".format(primary_accession.pid)
 
