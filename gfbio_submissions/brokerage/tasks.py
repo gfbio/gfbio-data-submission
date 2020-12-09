@@ -2102,8 +2102,6 @@ def notify_on_embargo_ended_task(self, submission_id=None):
             For more information, please review ENA's citation recommendations:
             https://ena-docs.readthedocs.io/en/latest/submit/general-guide/accessions.html#how-to-cite-your-ena-study
 
-            this is to confirm that your ENA study and all associated data has been made public.
-            
             Best regards,
             the GFBio Submission Team""".format(primary_accession.pid)
 
