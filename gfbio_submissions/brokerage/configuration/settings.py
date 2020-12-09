@@ -525,14 +525,13 @@ SUBMISSION_MIN_COLS = getattr(
 TASK_FAIL_SUBJECT_TEMPLATE = getattr(
     settings,
     'TASK_FAIL_SUBJECT_TEMPLATE',
-    'Task "{0}" failed for submission "{1}"'
+    'Task "{0}" failed. {1}'
 )
 
 TASK_FAIL_TEXT_TEMPLATE = getattr(
     settings,
     'TASK_FAIL_TEXT_TEMPLATE',
-    'Task "{0}" failed after {1} retries. Please refer to submission '
-    'with broker_submission_id "{2}".\n{3}'
+    'Task "{0}" failed after {1} retries. {2}'
 )
 
 SUBMISSION_COMMENT_TEMPLATE = getattr(
