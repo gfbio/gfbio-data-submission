@@ -376,6 +376,18 @@ header.masthead {
     -moz-transition: visibility 0.2s, opacity 0.2s linear;
   }
 
+
+  .alert-success {
+    color: darken($gfbio-green, .1);
+    border-color: $gfbio-green-0-7;
+    background-color: rgba(129, 178, 72, .3);
+
+    p {
+      font-weight: 400;
+      font-size: 1rem;
+    }
+  }
+
   @media (max-width: 992px) {
 
     .dfg_logo_container {

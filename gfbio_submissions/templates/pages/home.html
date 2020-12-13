@@ -13,10 +13,10 @@
                         <div class="col-sm-4 align-self-center p-0">
                             <!-- TODO: add PNG fallback for older browsers. https://toddmotto.com/mastering-svg-use-for-a-retina-web-fallbacks-with-png-script/ -->
                             <a href="https://www.gfbio.org">
-                              <img class=""
-                                      {#                                                                     src="{% static 'images/gfbio_logo_landing.svg' %}"#}
-                                   src="{% static 'images/gfbio_logo_claim_landing.svg' %}"
-                               alt="GFBio">
+                                <img class=""
+                                        {#                                                                     src="{% static 'images/gfbio_logo_landing.svg' %}"#}
+                                     src="{% static 'images/gfbio_logo_claim_landing.svg' %}"
+                                     alt="GFBio">
                             </a>
                         </div>
                         <div class="col-sm-8 align-self-center">
@@ -54,6 +54,25 @@
                         <a href="/accounts/login/">Sign In</a></p>
                 </div>
 
+                {# TODO: quick and dirty message for christams season 2021, remove afterwards   #}
+                {# TODO: replace and add permanent solution to allow messages without release, #}
+                {#    compare django messages used in base template for logout messages etc.  #}
+                {#  QnD HOLIDAY ALERL -------------------------------------------------------  #}
+                <div class="alert alert-success" role="alert">
+                    <h4 class="alert-heading">
+                        <i class="fa fa-lg fa-tree" aria-hidden="true"></i>&nbsp;&nbsp;
+                        Reduced Service during Holiday Season&nbsp;&nbsp;
+                        <i class="fa fa-lg fa-tree" aria-hidden="true"></i>
+                    </h4>
+                    <p>Aww yeah, you successfully read this important alert
+                        message. This example text is going to run a bit longer
+                        so that you can see how spacing within an alert works
+                        with this kind of content.</p>
+{#                    <hr>#}
+{#                    <p class="mb-0">Whenever you need to, be sure to use margin#}
+{#                        utilities to keep things nice and tidy.</p>#}
+                </div>
+                {#  End QnD HOLIDAY ALERL -------------------------------------------------------  #}
 
             </div>
 
