@@ -15,8 +15,9 @@ class AccountAdapter(DefaultAccountAdapter):
     def save_user(self, request, user, form, commit=False):
         user = super(AccountAdapter, self).save_user(
             request, user, form, commit=False)
-        user.site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
-        user.save()
+        if not user.site_configuration:
+            user.site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
+            user.save()
         return user
 
 
@@ -27,5 +28,6 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
     def populate_user(self, request, sociallogin, data):
         user = super(SocialAccountAdapter, self).populate_user(
             request, sociallogin, data)
-        user.site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
+        if not user.site_configuration:
+            user.site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
         return user
