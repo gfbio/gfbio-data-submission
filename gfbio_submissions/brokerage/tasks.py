@@ -1954,6 +1954,43 @@ def check_for_submissions_without_helpdesk_issue_task(self):
 @celery.task(
     base=SubmissionTask,
     bind=True,
+    name='tasks.check_issue_existing_for_submission_task',
+)
+def check_issue_existing_for_submission_task(self, prev=None, submission_id=None):
+    logger.info('tasks.py | check_issue_existing_for_submission_task | '
+                'submission_id={0}'.format(submission_id))
+
+    submission, site_config = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
+
+    if len(submission.additionalreference_set.filter(
+            primary=True, type=AdditionalReference.GFBIO_HELPDESK_TICKET)) < 1:
+        logger.error(
+            'tasks.py | check_issue_existing_for_submission_task | '
+            'no helpdesk issue found for submission={0}  | '
+            'submission_id={1}'.format(
+                submission.broker_submission_id, submission_id)
+        )
+        mail_admins(
+            subject=NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE.format(
+                submission.broker_submission_id),
+            message=NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE.format(
+                submission.broker_submission_id, submission.user.username
+            )
+        )
+        return TaskProgressReport.CANCELLED
+
+    return True
+
+
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
     name='tasks.check_for_user_without_site_configuration_task',
 )
 def check_for_user_without_site_configuration_task(self):

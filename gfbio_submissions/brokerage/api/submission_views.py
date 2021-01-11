@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.users.models import User
 from ..configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY, \
-    SUBMISSION_DELAY
+    SUBMISSION_DELAY, SUBMISSION_ISSUE_CHECK_DELAY
 from ..forms import SubmissionCommentForm
 from ..models import Submission, SubmissionUpload
 from ..permissions import IsOwnerOrReadOnly
@@ -49,7 +49,8 @@ class SubmissionsView(mixins.ListModelMixin,
             get_gfbio_helpdesk_username_task, \
             create_submission_issue_task, \
             check_for_molecular_content_in_submission_task, \
-            trigger_submission_transfer
+            trigger_submission_transfer, \
+            check_issue_existing_for_submission_task
 
         chain = get_gfbio_helpdesk_username_task.s(
             submission_id=submission.pk).set(countdown=SUBMISSION_DELAY) \
@@ -60,6 +61,10 @@ class SubmissionsView(mixins.ListModelMixin,
                 | trigger_submission_transfer.s(
             submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
         chain()
+
+        check_issue_existing_for_submission_task.s(
+            submission_id=submission.pk).set(
+            countdown=SUBMISSION_ISSUE_CHECK_DELAY)()
 
     def get_queryset(self):
         user = self.request.user

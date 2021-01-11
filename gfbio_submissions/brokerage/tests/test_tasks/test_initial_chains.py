@@ -112,8 +112,9 @@ class TestInitialChainTasks(TestCase):
                               'tasks.create_submission_issue_task',
                               'tasks.jira_initial_comment_task',
                               'tasks.check_for_molecular_content_in_submission_task',
-                              'tasks.trigger_submission_transfer', ]
-        self.assertEqual(5, len(task_reports))
+                              'tasks.trigger_submission_transfer',
+                              'tasks.check_issue_existing_for_submission_task', ]
+        self.assertEqual(6, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -141,8 +142,9 @@ class TestInitialChainTasks(TestCase):
                               'tasks.create_submission_issue_task',
                               'tasks.jira_initial_comment_task',
                               'tasks.check_for_molecular_content_in_submission_task',
-                              'tasks.trigger_submission_transfer', ]
-        self.assertEqual(5, len(task_reports))
+                              'tasks.trigger_submission_transfer',
+                              'tasks.check_issue_existing_for_submission_task', ]
+        self.assertEqual(6, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -172,10 +174,11 @@ class TestInitialChainTasks(TestCase):
                               'tasks.create_broker_objects_from_submission_data_task',
                               'tasks.prepare_ena_submission_data_task',
                               'tasks.check_on_hold_status_task',
-                              'tasks.update_helpdesk_ticket_task', ]
+                              'tasks.update_helpdesk_ticket_task',
+                              'tasks.check_issue_existing_for_submission_task', ]
         tprs = TaskProgressReport.objects.exclude(
             task_name='tasks.update_helpdesk_ticket_task')
-        self.assertEqual(8, len(tprs))
+        self.assertEqual(9, len(tprs))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -198,8 +201,9 @@ class TestInitialChainTasks(TestCase):
                               'tasks.create_submission_issue_task',
                               'tasks.jira_initial_comment_task',
                               'tasks.check_for_molecular_content_in_submission_task',
-                              'tasks.trigger_submission_transfer', ]
-        self.assertEqual(5, len(task_reports))
+                              'tasks.trigger_submission_transfer',
+                              'tasks.check_issue_existing_for_submission_task', ]
+        self.assertEqual(6, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -234,7 +238,8 @@ class TestInitialChainTasks(TestCase):
                               'tasks.trigger_submission_transfer',
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer_for_updates',
-                              'tasks.update_helpdesk_ticket_task', ]
-        self.assertEqual(9, len(task_reports))
+                              'tasks.update_helpdesk_ticket_task',
+                              'tasks.check_issue_existing_for_submission_task', ]
+        self.assertEqual(10, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
