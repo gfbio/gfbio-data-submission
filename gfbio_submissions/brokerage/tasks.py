@@ -110,7 +110,9 @@ class SubmissionTask(Task):
     bind=True,
     name='tasks.check_for_molecular_content_in_submission_task',
 )
-def check_for_molecular_content_in_submission_task(self, submission_id=None):
+def check_for_molecular_content_in_submission_task(self,
+                                                   previous_task_result=None,
+                                                   submission_id=None):
     logger.info(
         msg='check_for_molecular_content_in_submission_task. get submission'
             ' with pk={}.'.format(submission_id))

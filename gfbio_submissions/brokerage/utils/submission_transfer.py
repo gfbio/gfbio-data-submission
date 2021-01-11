@@ -40,8 +40,8 @@ class SubmissionTransferHandler(object):
             'submission_id={0} target_archive={1}'.format(self.submission_id,
                                                           self.target_archive))
         from gfbio_submissions.brokerage.tasks import \
-            create_submission_issue_task, jira_initial_comment_task, \
-            check_on_hold_status_task, get_gfbio_helpdesk_username_task
+            jira_initial_comment_task, \
+            check_on_hold_status_task
 
         logger.info(
             'SubmissionTransferHandler. update={0} release={1}'
@@ -68,13 +68,7 @@ class SubmissionTransferHandler(object):
                     chain = chain | self.pre_process_molecular_data_chain()
 
         elif not update:
-            chain = get_gfbio_helpdesk_username_task.s(
-                submission_id=self.submission_id).set(
-                countdown=SUBMISSION_DELAY) \
-                    | create_submission_issue_task.s(
-                submission_id=self.submission_id).set(
-                countdown=SUBMISSION_DELAY) \
-                    | jira_initial_comment_task.s(
+            chain = jira_initial_comment_task.s(
                 submission_id=self.submission_id).set(
                 countdown=SUBMISSION_DELAY)
             if release:
