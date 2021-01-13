@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.users.models import User
 from ..configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY, \
-    SUBMISSION_DELAY
+    SUBMISSION_DELAY, SUBMISSION_ISSUE_CHECK_DELAY
 from ..forms import SubmissionCommentForm
 from ..models import Submission, SubmissionUpload
 from ..permissions import IsOwnerOrReadOnly
@@ -46,14 +46,25 @@ class SubmissionsView(mixins.ListModelMixin,
             )
 
         from gfbio_submissions.brokerage.tasks import \
+            get_gfbio_helpdesk_username_task, \
+            create_submission_issue_task, \
             check_for_molecular_content_in_submission_task, \
-            trigger_submission_transfer
-        chain = check_for_molecular_content_in_submission_task.s(
-            submission_id=submission.pk
-        ).set(countdown=SUBMISSION_DELAY) | trigger_submission_transfer.s(
-            submission_id=submission.pk
-        ).set(countdown=SUBMISSION_DELAY)
+            trigger_submission_transfer, \
+            check_issue_existing_for_submission_task
+
+        chain = get_gfbio_helpdesk_username_task.s(
+            submission_id=submission.pk).set(countdown=SUBMISSION_DELAY) \
+                | create_submission_issue_task.s(
+            submission_id=submission.pk).set(countdown=SUBMISSION_DELAY) \
+                | check_for_molecular_content_in_submission_task.s(
+            submission_id=submission.pk).set(countdown=SUBMISSION_DELAY) \
+                | trigger_submission_transfer.s(
+            submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
         chain()
+
+        check_issue_existing_for_submission_task.s(
+            submission_id=submission.pk).set(
+            countdown=SUBMISSION_ISSUE_CHECK_DELAY)()
 
     def get_queryset(self):
         user = self.request.user
@@ -113,9 +124,9 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                 submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
             if new_embargo and instance.embargo != new_embargo:
                 update_chain = update_chain | update_ena_embargo_task.s(
-                submission_id=instance.pk).set(countdown=SUBMISSION_DELAY) \
+                    submission_id=instance.pk).set(countdown=SUBMISSION_DELAY) \
                                | notify_user_embargo_changed_task.s(
-                submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+                    submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
             update_chain()
 
             chain = check_for_molecular_content_in_submission_task.s(
@@ -137,7 +148,8 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                 instance.save()
                 # update helpdesk
                 from gfbio_submissions.brokerage.tasks import \
-                    update_submission_issue_task, get_gfbio_helpdesk_username_task, \
+                    update_submission_issue_task, \
+                    get_gfbio_helpdesk_username_task, \
                     update_ena_embargo_task, notify_user_embargo_changed_task
 
                 update_chain = get_gfbio_helpdesk_username_task.s(
@@ -145,10 +157,10 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                     countdown=SUBMISSION_DELAY) \
                                | update_submission_issue_task.s(
                     submission_id=instance.pk).set(countdown=SUBMISSION_DELAY) \
-                    | update_ena_embargo_task.s(
-                        submission_id=instance.pk).set(countdown=SUBMISSION_DELAY) \
-                                   | notify_user_embargo_changed_task.s(
-                        submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+                               | update_ena_embargo_task.s(
+                    submission_id=instance.pk).set(countdown=SUBMISSION_DELAY) \
+                               | notify_user_embargo_changed_task.s(
+                    submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
                 update_chain()
         else:
             response = Response(
@@ -360,7 +372,7 @@ class SubmissionUploadPatchView(mixins.UpdateModelMixin,
                                                'broker_submission_id '
                                                '{0}'.format(
                 broker_submission_id)},
-                                status=status.HTTP_400_BAD_REQUEST)
+                status=status.HTTP_400_BAD_REQUEST)
             with transaction.atomic():
                 RequestLog.objects.create(
                     type=RequestLog.INCOMING,
@@ -381,7 +393,7 @@ class SubmissionUploadPatchView(mixins.UpdateModelMixin,
                                                'broker_submission_id '
                                                '{0}'.format(
                 broker_submission_id)},
-                                status=status.HTTP_404_NOT_FOUND)
+                status=status.HTTP_404_NOT_FOUND)
             with transaction.atomic():
                 RequestLog.objects.create(
                     type=RequestLog.INCOMING,
@@ -450,7 +462,7 @@ class SubmissionCommentView(generics.GenericAPIView):
         if form.is_valid():
             broker_submission_id = kwargs.get('broker_submission_id', uuid4())
             response = self._process_post_comment(broker_submission_id,
-                                              form.cleaned_data['comment'])
+                                                  form.cleaned_data['comment'])
         else:
             response = Response(
                 json.loads(form.errors.as_json()),
