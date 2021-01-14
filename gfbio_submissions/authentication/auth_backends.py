@@ -45,6 +45,10 @@ class GFBioAuthenticationBackend(OIDCAuthenticationBackend):
         user.external_user_id = claims.get('goe_id', '')
         user.site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
 
+        # TODO: via #552 tos&privacy-policy. If available, take from claims
+        user.agreed_to_terms = True
+        user.agreed_to_privacy = True
+
         logger.info(
             'GFBioAuthenticationBackend | create_user | user={0} | '
             'external_user_id={1} (goesternid) |'
@@ -69,6 +73,11 @@ class GFBioAuthenticationBackend(OIDCAuthenticationBackend):
         user.username = self.get_username(claims)
         user.external_user_id = claims.get('goe_id', '')
         user.site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
+
+        # TODO: via #552 tos&privacy-policy. If available, take from claims
+        user.agreed_to_terms = True
+        user.agreed_to_privacy = True
+
         user.save()
         logger.info('GFBioAuthenticationBackend | update_user | email={0}  | '
                     ''.format(claims.get('email', 'NO_EMAIL_IN_CLAIM')))
