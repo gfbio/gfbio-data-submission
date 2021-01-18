@@ -340,14 +340,15 @@ validate_manifest_at_ena.short_description = 'Validate MANIFEST file at ENA'
 
 def create_helpdesk_issue_manually(modeladmin, request, queryset):
     from .tasks import create_submission_issue_task, \
-        get_gfbio_helpdesk_username_task, attach_to_submission_issue_task
+        get_gfbio_helpdesk_username_task, attach_to_submission_issue_task, \
+        jira_initial_comment_task
     for obj in queryset:
         chain = get_gfbio_helpdesk_username_task.s(
-            submission_id=obj.pk).set(
-            countdown=SUBMISSION_DELAY) \
+            submission_id=obj.pk).set(countdown=SUBMISSION_DELAY) \
                 | create_submission_issue_task.s(
-            submission_id=obj.pk).set(
-            countdown=SUBMISSION_DELAY)
+            submission_id=obj.pk).set(countdown=SUBMISSION_DELAY) \
+                | jira_initial_comment_task.s(
+            submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
         chain()
         related_uploads = SubmissionUpload.objects.filter(submission=obj,
                                                           attach_to_ticket=True)
