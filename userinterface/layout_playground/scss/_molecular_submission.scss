@@ -1,49 +1,57 @@
+#holidayAlert {
+  p {
+    color: darken($gfbio-green, .1);
+    padding-left: 2rem;
+    margin-bottom: 0;
+  }
+}
+
 section.molecular-submission {
 
-    padding-top: 3rem;
+  padding-top: 3rem;
 
-    // TODO: most styles are aiming to compensate for BS3 in widget. refactor.
-    div#ui-molecular-data-submission {
+  // TODO: most styles are aiming to compensate for BS3 in widget. refactor.
+  div#ui-molecular-data-submission {
 
-        legend {
-            text-transform: none;
-            color: $gray-dark-2;
-            letter-spacing: normal;
-            border-bottom: 1px solid $gray-medium;
-        }
-
-        input {
-            &:focus {
-                border-color: $gfbio-green-0-7;
-                box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
-                outline-color: $gfbio-green-0-7;
-            }
-        }
-
-        select {
-            &:focus {
-                border-color: $gfbio-green-0-7;
-                box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
-            }
-        }
-
-        textarea {
-            &:focus {
-                border-color: $gfbio-green-0-7;
-                box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
-            }
-        }
-
-        .btn-download {
-            color: $white;
-            background-color: $gfbio-light-blue;
-            border-color: darken($gfbio-light-blue, .2);
-
-            &:hover {
-                background-color: $white;
-                color: $gfbio-light-blue;
-            }
-        }
-
+    legend {
+      text-transform: none;
+      color: $gray-dark-2;
+      letter-spacing: normal;
+      border-bottom: 1px solid $gray-medium;
     }
+
+    input {
+      &:focus {
+        border-color: $gfbio-green-0-7;
+        box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+        outline-color: $gfbio-green-0-7;
+      }
+    }
+
+    select {
+      &:focus {
+        border-color: $gfbio-green-0-7;
+        box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+      }
+    }
+
+    textarea {
+      &:focus {
+        border-color: $gfbio-green-0-7;
+        box-shadow: 0 0 0 0.2rem $gfbio-green-0-3;
+      }
+    }
+
+    .btn-download {
+      color: $white;
+      background-color: $gfbio-light-blue;
+      border-color: darken($gfbio-light-blue, .2);
+
+      &:hover {
+        background-color: $white;
+        color: $gfbio-light-blue;
+      }
+    }
+
+  }
 }

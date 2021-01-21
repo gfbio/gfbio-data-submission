@@ -151,7 +151,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
         self.embargo_unchanged_check(embargo_date,
                                      arrow.get(submission_embargo))
 
-        today = arrow.now()
+        today = arrow.get(arrow.now().format('YYYY-MM-DD'))
         delta = embargo_date - today
         self.embargo_date_past_check(embargo_date, delta)
         self.embargo_data_future_check(embargo_date, delta)
@@ -237,13 +237,11 @@ class JiraHookRequestSerializer(serializers.Serializer):
     def submission_type_constraints_check(self, submission, key):
         if submission and submission.target == GENERIC:
             return True
+        # molecular submission
         elif submission.target == ENA or submission.target == ENA_PANGAEA:
-            # molecular submission
-
             # check if user is a curator
             self.curator_validation()
-
-            # TODO: this here is hint to evtl. move this serializer to brokerag app
+            # TODO: this here is hint to evtl. move this serializer to brokerage app
             studies = submission.brokerobject_set.filter(type='study')
 
             # go through all studies, although there should be only one ...
@@ -255,40 +253,39 @@ class JiraHookRequestSerializer(serializers.Serializer):
             status = None
             has_primary_accession = False
             for s in studies:
-                # FIXME: add dedicated unit test to check for all possible aggregations for this condition
-                if not has_primary_accession and s.persistentidentifier_set.filter(
-                        archive='ENA', pid_type='PRJ'):
-                    has_primary_accession = True
+                primary_accession = s.persistentidentifier_set.filter(
+                    archive='ENA',
+                    pid_type='PRJ').first()
 
-                # FIXME: add dedicated unit test to check for all possible aggregations for this condition
+                if not has_primary_accession and primary_accession is not None:
+                    has_primary_accession = True
+                else:
+                    logger.warning(
+                        msg='serializer.py | submission_type_constraints_check | '
+                            'no primary accession for submission {0}'.format(
+                            submission.broker_submission_id)
+                    )
+                    self.send_mail_to_admins(
+                        reason='WARNING: submission missing primary accession',
+                        message='WARNING: JIRA hook requested update of Embargo Date'
+                                ' for submission without a primary accession (i.e. BioProject ID)')
+                    raise serializers.ValidationError(
+                        {'issue': [
+                            "'key': issue {0}. submission without a primary accession, submission {1} with target {2}".format(
+                                key, submission.broker_submission_id,
+                                submission.target)]})
                 if not status:
-                    # FIXME: add dedicated unit test to check for all possible aggregations for this condition
-                    #   --> none has no status
-                    status = s.persistentidentifier_set.filter(archive='ENA',
-                                                               pid_type='PRJ').first().status
-                allowed = s.persistentidentifier_set.filter(archive='ENA',
-                                                            pid_type='PRJ').filter(
-                    Q(status='PRIVATE') | Q(status='SUPPRESSED'))
+                    status = primary_accession.status
+
+                allowed = s.persistentidentifier_set.filter(
+                    archive='ENA', pid_type='PRJ').filter(
+                    Q(status='PRIVATE') | Q(status='SUPPRESSED')
+                )
                 if allowed:
                     change_allowed = True
                     break
-            if not has_primary_accession:
-                logger.info(
-                    msg='serializer.py | submission_type_constraints_check | '
-                        'no primary accession for submission {0}'.format(
-                        submission.broker_submission_id)
-                )
-                self.send_mail_to_admins(
-                    reason='WARNING: submission missing primary accession',
-                    message='WARNING: JIRA hook requested update of Embargo Date'
-                            ' for submission without a primary accession (i.e. BioProject ID)')
-                raise serializers.ValidationError(
-                    {'issue': [
-                        "'key': issue {0}. submission without a primary accession, submission {1} with target {2}".format(
-                            key, submission.broker_submission_id,
-                            submission.target)]})
             if not change_allowed:
-                logger.info(
+                logger.warning(
                     msg='serializer.py | submission_type_constraints_check | '
                         'not PRIVATE or SUPPRESSED submission {0} status {1}'.format(
                         submission.broker_submission_id, status)

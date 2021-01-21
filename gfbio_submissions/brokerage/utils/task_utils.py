@@ -179,15 +179,22 @@ def send_task_fail_mail(broker_submission_id, task, additional_text=''):
     logger.info('task_utils.py | send_task_fail_mail | '
                 'broker_submission_id={0} | '
                 'task={1}'.format(broker_submission_id, task.name))
+    subject_addition = ''
+    if broker_submission_id:
+        subject_addition = 'Compare submission "{0}"'.format(
+            broker_submission_id)
+        additional_text = 'Please refer to submission with ' \
+                          'broker_submission_id "{0}".' \
+                          '\n{1}'.format(broker_submission_id, additional_text)
+
     mail_admins(
         subject=TASK_FAIL_SUBJECT_TEMPLATE.format(
             task.name,
-            broker_submission_id
+            subject_addition
         ),
         message=TASK_FAIL_TEXT_TEMPLATE.format(
             task.name,
             task.request.retries,
-            broker_submission_id,
             additional_text,
         ),
     )
@@ -239,7 +246,7 @@ def get_submitted_submission_and_site_configuration(submission_id, task):
 
 
 def raise_transfer_server_exceptions(response, task, max_retries,
-                                     broker_submission_id='broker_submission_id_not_available'):
+                                     broker_submission_id=None):
     logger.info('task_utils.py | raise_transfer_server_exceptions | '
                 'resonse.status_code={0} | broker_submission_id={1} | '
                 'task={2} | retries={3}'.format(response.status_code,
@@ -303,15 +310,17 @@ def jira_error_auto_retry(jira_client, task, broker_submission_id,
         )
     return True
 
+
 def jira_cancel_issue(submission_id=None, admin=False):
     from gfbio_submissions.brokerage.tasks import \
         jira_cancel_issue_task
     jira_cancel_issue_task.apply_async(
         kwargs={
-            'submission_id':submission_id,
+            'submission_id': submission_id,
             'admin': admin,
         }
     )
+
 
 def request_error_auto_retry(response, task, broker_submission_id,
                              max_retries=SUBMISSION_MAX_RETRIES):

@@ -474,6 +474,13 @@ SUBMISSION_RETRY_DELAY = getattr(
     3600
 )
 
+SUBMISSION_ISSUE_CHECK_DELAY = getattr(
+    settings,
+    'SUBMISSION_ISSUE_CHECK_DELAY',
+    # seconds 60*60*3=3hrs = 3x SUBMISSION_RETRY_DELAY
+    10800
+)
+
 STATIC_SAMPLE_SCHEMA_LOCATION = getattr(
     settings,
     'STATIC_SAMPLE_SCHEMA_LOCATION',
@@ -525,14 +532,13 @@ SUBMISSION_MIN_COLS = getattr(
 TASK_FAIL_SUBJECT_TEMPLATE = getattr(
     settings,
     'TASK_FAIL_SUBJECT_TEMPLATE',
-    'Task "{0}" failed for submission "{1}"'
+    'Task "{0}" failed. {1}'
 )
 
 TASK_FAIL_TEXT_TEMPLATE = getattr(
     settings,
     'TASK_FAIL_TEXT_TEMPLATE',
-    'Task "{0}" failed after {1} retries. Please refer to submission '
-    'with broker_submission_id "{2}".\n{3}'
+    'Task "{0}" failed after {1} retries. {2}'
 )
 
 SUBMISSION_COMMENT_TEMPLATE = getattr(

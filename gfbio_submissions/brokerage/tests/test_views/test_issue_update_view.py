@@ -555,6 +555,36 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST,
                          RequestLog.objects.first().response_status)
 
+    def test_date_tomorrow(self):
+        submission = Submission.objects.first()
+        embargo_tomorrow = arrow.now().shift(days=1).format('YYYY-MM-DD')
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.client.post(
+            self.url,
+            {
+                "user": {
+                    "emailAddress": "horst@horst.de"
+                },
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": embargo_tomorrow,
+                        "customfield_10303": "{}".format(
+                            submission.broker_submission_id),
+                    }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
+                }
+            },
+            format='json')
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_201_CREATED,
+                         RequestLog.objects.first().response_status)
+
     def test_date_in_the_far_future(self):
         submission = Submission.objects.first()
         self.assertEqual(0, len(RequestLog.objects.all()))
@@ -801,6 +831,42 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_400_BAD_REQUEST,
                          RequestLog.objects.first().response_status)
+
+    def test_no_persistent_identifier_to_check_status(self):
+        submission = Submission.objects.first()
+        bos = submission.brokerobject_set.all()
+        for b in bos:
+            b.persistentidentifier_set.all().delete()
+        response = self.client.post(
+            self.url,
+            {
+                "user": {
+                    "emailAddress": "horst@horst.de"
+                },
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": arrow.now().shift(
+                            years=1).for_json(),
+                        "customfield_10303": "{0}".format(
+                            submission.broker_submission_id),
+                    }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
+                }
+            },
+            format='json')
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertIn(
+            b'submission without a primary accession',
+            response.content)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST,
+                         RequestLog.objects.first().response_status)
+
 
     def test_not_curator(self):
         submission = Submission.objects.first()

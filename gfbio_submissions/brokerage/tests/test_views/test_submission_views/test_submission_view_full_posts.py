@@ -199,11 +199,12 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertNotIn('validation', submission.data.keys())
 
         expected_task_names = [
-            'tasks.check_for_molecular_content_in_submission_task',
-            'tasks.trigger_submission_transfer',
             'tasks.get_gfbio_helpdesk_username_task',
             'tasks.create_submission_issue_task',
+            'tasks.check_for_molecular_content_in_submission_task',
+            'tasks.trigger_submission_transfer',
             'tasks.jira_initial_comment_task',
+            'tasks.check_issue_existing_for_submission_task',
             'tasks.get_gfbio_helpdesk_username_task',
             'tasks.update_submission_issue_task',
             'tasks.check_for_molecular_content_in_submission_task',
@@ -413,11 +414,12 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(2, len(submission.data.get('validation', [])))
 
         expected_task_names = [
-            'tasks.check_for_molecular_content_in_submission_task',
-            'tasks.trigger_submission_transfer',
             'tasks.get_gfbio_helpdesk_username_task',
             'tasks.create_submission_issue_task',
+            'tasks.check_for_molecular_content_in_submission_task',
+            'tasks.trigger_submission_transfer',
             'tasks.jira_initial_comment_task',
+            'tasks.check_issue_existing_for_submission_task',
             'tasks.get_gfbio_helpdesk_username_task',
             'tasks.update_submission_issue_task',
             'tasks.check_for_molecular_content_in_submission_task',
