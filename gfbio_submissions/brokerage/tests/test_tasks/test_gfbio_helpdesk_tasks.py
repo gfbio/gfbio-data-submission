@@ -21,10 +21,14 @@ from .test_helpdesk_tasks_base import TestHelpDeskTasksBase
 
 
 class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
-    
+
     def setUp(self):
+        JiraMessage.objects.create(name="ACCESSION_COMMENT", message="test")
         JiraMessage.objects.create(name="WELCOME_COMMENT", message="test")
         JiraMessage.objects.create(name="WELCOME_MOLECULAR_COMMENT", message="test")
+        JiraMessage.objects.create(name="NOTIFY_EMBARGO_CHANGED", message="test")
+        JiraMessage.objects.create(name="NOTIFY_EMBARGO_EXPIRY", message="test")
+        JiraMessage.objects.create(name="NOTIFY_EMBARGO_RELEASE", message="test")
 
     # TODO: may these have to be moved to other test class (Taskprogressreport ...)
     #   or removed ... Now for testing behaviour on GFBIO-2589
