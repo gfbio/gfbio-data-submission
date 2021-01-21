@@ -46,7 +46,7 @@
       "created": "2021-01-21T13:41:34.236Z",
       "modified": "2021-01-21T13:41:34.236Z",
       "name": "NOTIFY_EMBARGO_RELEASE",
-      "message": "Dear submitter,\r\n\r\nyour ENA data set has been released to the public.\r\nPlease note that it might take up to several days for the data to appear in the ENA Browser.\r\nYou can view the data set under:\r\nhttps://www.ebi.ac.uk/ena/data/view/{primary_accession}\r\n\r\nPlease use the INSDC accession number ({primary_accession}) to cite your dataset.\r\nFor more information, please review ENA's citation recommendations:\r\nhttps://ena-docs.readthedocs.io/en/latest/submit/general-guide/accessions.html#how-to-cite-your-ena-study\r\n\r\nthis is to confirm that your ENA study and all associated data has been made public.\r\nPlease note that it may take up to several days for the data to appear in the ENA Browser.\r\n\r\nBest regards,\r\nthe GFBio Submission Team"
+      "message": "Dear submitter,\r\n\r\nyour ENA data set has been released to the public.\r\nPlease note that it might take up to several days for the data to appear in the ENA Browser.\r\nYou can view the data set under:\r\nhttps://www.ebi.ac.uk/ena/data/view/{primary_accession}\r\n\r\nPlease use the INSDC accession number ({primary_accession}) to cite your dataset.\r\nFor more information, please review ENA's citation recommendations:\r\nhttps://ena-docs.readthedocs.io/en/latest/submit/general-guide/accessions.html#how-to-cite-your-ena-study\r\n\r\nBest regards,\r\nthe GFBio Submission Team"
     }
   },
   {
