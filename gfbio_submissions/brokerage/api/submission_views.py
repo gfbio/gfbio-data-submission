@@ -62,9 +62,12 @@ class SubmissionsView(mixins.ListModelMixin,
             submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
         chain()
 
-        check_issue_existing_for_submission_task.s(
-            submission_id=submission.pk).set(
-            countdown=SUBMISSION_ISSUE_CHECK_DELAY)()
+        check_issue_existing_for_submission_task.apply_async(
+            kwargs={
+                'submission_id': submission.pk,
+            },
+            countdown=SUBMISSION_ISSUE_CHECK_DELAY
+        )
 
     def get_queryset(self):
         user = self.request.user
