@@ -1,0 +1,62 @@
+[
+  {
+    "model": "brokerage.jiramessage",
+    "pk": 1,
+    "fields": {
+      "created": "2021-01-21T13:41:34.236Z",
+      "modified": "2021-01-21T13:41:34.236Z",
+      "name": "ACCESSION_COMMENT",
+      "message": "Dear {submitter},\r\n\r\nYour data was successfully deposited in ENA. The INSDC accession number for your data is: {primary_accession}\r\n\r\nPlease cite this number to refer to your data set. Additional details on citing your data can be found here:\r\nhttps://ena-docs.readthedocs.io/en/latest/submit/general-guide/accessions.html?#how-to-cite-your-ena-study\r\n\r\nBe aware that the whole data set is currently under embargo for one year, which also means you cannot find it on the ENA website (in case reviewers ask). You can change the embargo date at any time or release your data immediately via the submission interface.\r\n\r\nPlease remember to cite us, the full citation information for GFBio is:\r\nDiepenbroek M., Gl\u00f6ckner F., Grobe P., G\u00fcntsch A., Huber R., K\u00f6nig-Ries B., Kostadinov I., Nieschulze J.,\r\nSeeger B., Tolksdorf R. & Triebel, D. Towards an Integrated Biodiversity and Ecological Research Data Management\r\nand Archiving Platform: The German Federation for the Curation of Biological Data (GFBio)\r\nIn: Pl\u00f6dereder E, Grunske L, Schneider E, Ull D, editors. Informatik 2014 \u2013 Big Data Komplexit\u00e4t meistern.\r\nGI-Edition: Lecture Notes in Informatics (LNI) \u2013 Proceedings. GI edn. Vol. 232. Bonn: K\u00f6llen Verlag; 2014. pp. 1711\u20131724."
+    }
+  },
+  {
+    "model": "brokerage.jiramessage",
+    "pk": 2,
+    "fields": {
+      "created": "2021-01-21T13:41:34.236Z",
+      "modified": "2021-01-21T13:41:34.236Z",
+      "name": "WELCOME_COMMENT",
+      "message": "Dear submitter,\r\n\r\nthank you for submitting your data via GFBio!\r\n\r\nThe GFBio Submission ID for your dataset entitled \"{title}\" is: {id}.\r\nPlease include this ID in any communication regarding this submission.\r\n\r\nWe will review your submission and get back to you as soon as possible.\r\nIf you have any questions or comments, you can always reply to this email,\r\nkeeping the subject line intact and using the same email account you are registered in GFBio with.\r\nAlternatively, you can view this submission request under\r\nhttps://helpdesk.gfbio.org/servicedesk/customer/portal/6/{reference} (your GFBio credentials are valid there).\r\n\r\nBest Regards,\r\nthe GFBio Data Submission Team"
+    }
+  },
+  {
+    "model": "brokerage.jiramessage",
+    "pk": 3,
+    "fields": {
+      "created": "2021-01-21T13:41:34.236Z",
+      "modified": "2021-01-21T13:41:34.236Z",
+      "name": "WELCOME_MOLECULAR_COMMENT",
+      "message": "Dear submitter,\r\n\r\nthank you for submitting your data via GFBio!\r\n\r\nThe GFBio Submission ID for your dataset entitled \"{title}\" is: {id}.\r\nPlease include this ID in any communication regarding this submission.\r\n\r\nWe will review your submission and get back to you as soon as possible.\r\nIf you have any questions or comments, you can always reply to this email,\r\nkeeping the subject line intact and using the same email account you are registered in GFBio with.\r\nAlternatively, you can view this submission request under\r\nhttps://helpdesk.gfbio.org/servicedesk/customer/portal/6/{reference} (your GFBio credentials are valid there).\r\n\r\nBe advised that by depositing data in ENA you agree to the INSDC Policy (http://www.insdc.org/policy.html).\r\nThis includes, but is not limited to, the fact that your data will be available without any restrictions.\r\nPlease note that while we support you in archiving your data to the highest possible standards,\r\nthe responsibility whether you are allowed to release the data to the public and under what restrictions,\r\nstill lies with you. The same applies to the correctness of the data you provide.\r\n\r\nBest Regards,\r\nthe GFBio Data Submission Team"
+    }
+  },
+  {
+    "model": "brokerage.jiramessage",
+    "pk": 4,
+    "fields": {
+      "created": "2021-01-21T13:41:34.236Z",
+      "modified": "2021-01-21T13:41:34.236Z",
+      "name": "NOTIFY_EMBARGO_EXPIRY",
+      "message": "Dear submitter,\r\n\r\nthe embargo of your data will expire on {embargo}.\r\nAfter that date, we will release all data associated with this submission.\r\nYou can change the embargo date directly in our submission system.\r\n\r\nBest regards,\r\nGFBio Data Submission Team"
+    }
+  },
+  {
+    "model": "brokerage.jiramessage",
+    "pk": 5,
+    "fields": {
+      "created": "2021-01-21T13:41:34.236Z",
+      "modified": "2021-01-21T13:41:34.236Z",
+      "name": "NOTIFY_EMBARGO_RELEASE",
+      "message": "Dear submitter,\r\n\r\nyour ENA data set has been released to the public.\r\nPlease note that it might take up to several days for the data to appear in the ENA Browser.\r\nYou can view the data set under:\r\nhttps://www.ebi.ac.uk/ena/data/view/{primary_accession}\r\n\r\nPlease use the INSDC accession number ({primary_accession}) to cite your dataset.\r\nFor more information, please review ENA's citation recommendations:\r\nhttps://ena-docs.readthedocs.io/en/latest/submit/general-guide/accessions.html#how-to-cite-your-ena-study\r\n\r\nBest regards,\r\nthe GFBio Submission Team"
+    }
+  },
+  {
+    "model": "brokerage.jiramessage",
+    "pk": 6,
+    "fields": {
+      "created": "2021-01-21T13:41:34.236Z",
+      "modified": "2021-01-21T13:41:34.236Z",
+      "name": "NOTIFY_EMBARGO_CHANGED",
+      "message": "Dear submitter,\r\n\r\nyou have successfully changed the embargo date of your data set.\r\nThe data will be released on {embargo}.\r\n\r\nBest regards,\r\nGFBio Data Submission Team"
+    }
+  }
+]

@@ -4,6 +4,7 @@ import os
 import uuid
 
 from django.contrib.postgres.fields import JSONField
+from django.core.mail import mail_admins
 from django.db import models
 from django.db.models import Q
 from model_utils.models import TimeStampedModel
@@ -619,3 +620,21 @@ class AuditableTextData(TimeStampedModel):
 
     def __str__(self):
         return 'AuditableTextData_{0}'.format(self.data_id)
+
+
+class JiraMessage(TimeStampedModel):
+    name = models.CharField(
+        max_length=128,
+        blank=False,
+        null=False,
+        default='')
+    message = models.TextField(
+        blank=False,
+        null=False,
+        help_text="{submitter} - will be replaced with 'Submitter' or user's name if found<br />"
+                  "{title} - will be replaced with submission's title<br />"
+                  "{id} - will be replaced with submission's id<br />"
+                  "{primary_accession} - replaced with primary accession number<br />"
+                  "{reference} - will be replaced with jira's ticket reference<br />"
+                  "{embargo} -  will be replaced with the embargo date"
+    )

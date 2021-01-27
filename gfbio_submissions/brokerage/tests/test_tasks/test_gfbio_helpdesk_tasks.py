@@ -7,7 +7,7 @@ from django.test import override_settings
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, ENA_PANGAEA
 from gfbio_submissions.brokerage.models import Submission, \
-    TaskProgressReport
+    TaskProgressReport, JiraMessage
 from gfbio_submissions.brokerage.tasks import create_submission_issue_task, \
     add_accession_to_submission_issue_task, \
     add_pangaealink_to_submission_issue_task, \
@@ -21,6 +21,14 @@ from .test_helpdesk_tasks_base import TestHelpDeskTasksBase
 
 
 class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
+
+    def setUp(self):
+        JiraMessage.objects.create(name="ACCESSION_COMMENT", message="test")
+        JiraMessage.objects.create(name="WELCOME_COMMENT", message="test")
+        JiraMessage.objects.create(name="WELCOME_MOLECULAR_COMMENT", message="test")
+        JiraMessage.objects.create(name="NOTIFY_EMBARGO_CHANGED", message="test")
+        JiraMessage.objects.create(name="NOTIFY_EMBARGO_EXPIRY", message="test")
+        JiraMessage.objects.create(name="NOTIFY_EMBARGO_RELEASE", message="test")
 
     # TODO: may these have to be moved to other test class (Taskprogressreport ...)
     #   or removed ... Now for testing behaviour on GFBIO-2589

@@ -11,7 +11,7 @@ from gfbio_submissions.brokerage.exceptions import TransferInternalError, \
     raise_response_exceptions, TransferClientError, raise_no_ticket_exception, \
     NoTicketAvailableError
 from gfbio_submissions.brokerage.models import TaskProgressReport, Submission, \
-    AuditableTextData, CenterName
+    AuditableTextData, CenterName, JiraMessage
 from gfbio_submissions.brokerage.utils.ena import send_submission_to_ena
 from gfbio_submissions.generic.models import ResourceCredential
 
@@ -387,3 +387,15 @@ def send_data_to_ena_for_validation_or_test(task, submission_id, action):
         response = Response()
     return str(request_id), response.status_code, smart_text(
         response.content)
+
+
+def get_jira_comment_template(template_name, task_name):
+        template = JiraMessage.objects.filter(name=template_name).first()
+        if not template:
+            mail_admins(
+                subject='Failed to send JIRA Comment"',
+                message='Template {} not found in the database, '
+                        'task: "{}".'.format(template_name, task_name)
+            )
+            return None
+        return template.message

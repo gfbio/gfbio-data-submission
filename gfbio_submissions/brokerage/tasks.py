@@ -49,7 +49,7 @@ from .utils.task_utils import jira_error_auto_retry, \
     get_submission_and_site_configuration, raise_transfer_server_exceptions, \
     retry_no_ticket_available_exception, \
     get_submitted_submission_and_site_configuration, \
-    send_data_to_ena_for_validation_or_test
+    send_data_to_ena_for_validation_or_test, get_jira_comment_template
 from ..generic.utils import logged_requests
 
 logger = logging.getLogger(__name__)
@@ -1318,6 +1318,12 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
         task=self,
         include_closed=True
     )
+
+    comment = get_jira_comment_template(
+        template_name="ACCESSION_COMMENT", task_name="add_accession_to_submission_issue_task")
+    if not comment:
+        return TaskProgressReport.CANCELLED
+
     if submission == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
 
@@ -1363,7 +1369,7 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
                 resource=site_configuration.helpdesk_server)
             jira_client.add_comment(
                 key_or_issue=reference.reference_key,
-                text=JIRA_ACCESSION_COMMENT_TEMPLATE.format(
+                text=comment.format(
                     submitter_name=submitter_name,
                     primary_accession=study_pid.pid
                 ),
@@ -1877,16 +1883,10 @@ def notify_user_embargo_expiry_task(self):
                     should_notify = False
                 if submission.embargo <= two_weeks_from_now and should_notify:
                     # send embargo notification comment to JIRA
-                    comment = """
-                    Dear submitter,
-
-                    the embargo of your data will expire on {}.
-                    After that date, we will release all data associated with this submission.
-                    You can change the embargo date directly in our submission system.
-
-                    Best regards,
-                    GFBio Data Submission Team""".format(
-                        submission.embargo.isoformat())
+                    comment = get_jira_comment_template(
+                        template_name="NOTIFY_EMBARGO_EXPIRY", task_name="notify_user_embargo_expiry_task")
+                    if not comment:
+                        return TaskProgressReport.CANCELLED
 
                     submission, site_configuration = get_submission_and_site_configuration(
                         submission_id=submission.id,
@@ -1899,7 +1899,7 @@ def notify_user_embargo_expiry_task(self):
                         resource=site_configuration.helpdesk_server)
                     jira_client.add_comment(
                         key_or_issue=reference.reference_key,
-                        text=comment,
+                        text=comment.format(embargo=submission.embargo.isoformat()),
                         is_internal=False
                     )
 
@@ -2129,25 +2129,15 @@ def notify_on_embargo_ended_task(self, submission_id=None):
         reference = submission.get_primary_helpdesk_reference()
         primary_accession = submission.get_primary_accession()
         if reference and primary_accession:
-            comment = """
-            Dear submitter,
-
-            your ENA data set has been released to the public.
-            Please note that it might take up to several days for the data to appear in the ENA Browser.
-            You can view the data set under:
-            https://www.ebi.ac.uk/ena/data/view/{0}
-
-            Please use the INSDC accession number ({0}) to cite your dataset.
-            For more information, please review ENA's citation recommendations:
-            https://ena-docs.readthedocs.io/en/latest/submit/general-guide/accessions.html#how-to-cite-your-ena-study
-
-            Best regards,
-            the GFBio Submission Team""".format(primary_accession.pid)
+            comment = get_jira_comment_template(
+                template_name="NOTIFY_EMBARGO_RELEASE", task_name="notify_on_embargo_ended_task")
+            if not comment:
+                return TaskProgressReport.CANCELLED
 
             jira_client = JiraClient(resource=site_config.helpdesk_server)
             jira_client.add_comment(
                 key_or_issue=reference.reference_key,
-                text=comment,
+                text=comment.format(primary_accession=primary_accession.pid),
                 is_internal=False
             )
 
@@ -2279,19 +2269,15 @@ def notify_user_embargo_changed_task(self, prev=None, submission_id=None):
     if site_config and site_config.helpdesk_server:
         reference = submission.get_primary_helpdesk_reference()
         if reference:
-            comment = """
-            Dear submitter,
+            comment = get_jira_comment_template(
+                template_name="NOTIFY_EMBARGO_CHANGED", task_name="notify_user_embargo_changed_task")
+            if not comment:
+                return TaskProgressReport.CANCELLED
 
-            you have successfully changed the embargo date of your data set.
-            The data will be released on {}.
-
-            Best regards,
-            GFBio Data Submission Team""".format(
-                submission.embargo.isoformat())
             jira_client = JiraClient(resource=site_config.helpdesk_server)
             jira_client.add_comment(
                 key_or_issue=reference.reference_key,
-                text=comment,
+                text=comment.format(embargo=submission.embargo.isoformat()),
                 is_internal=False
             )
             return jira_error_auto_retry(jira_client=jira_client, task=self,
@@ -2427,10 +2413,14 @@ def jira_initial_comment_task(self, prev=None, submission_id=None):
     if submission and site_config:
         reference = submission.get_primary_helpdesk_reference()
         if reference:
-            comment_template = JIRA_WELCOME_COMMENT_TEMPLATE
-            # check for molecular submission
+            comment_template_name = "WELCOME_COMMENT"
             if submission.target == ENA or submission.target == ENA_PANGAEA:
-                comment_template = JIRA_WELCOME_MOLECULAR_COMMENT_TEMPLATE
+                comment_template_name = "WELCOME_MOLECULAR_COMMENT"
+
+            comment_template = get_jira_comment_template(
+                template_name=comment_template_name, task_name="jira_initial_comment_task")
+            if not comment_template:
+                return TaskProgressReport.CANCELLED
 
             jira_client = JiraClient(resource=site_config.helpdesk_server)
             jira_client.add_comment(
