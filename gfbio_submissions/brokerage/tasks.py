@@ -49,7 +49,7 @@ from .utils.task_utils import jira_error_auto_retry, \
     get_submission_and_site_configuration, raise_transfer_server_exceptions, \
     retry_no_ticket_available_exception, \
     get_submitted_submission_and_site_configuration, \
-    send_data_to_ena_for_validation_or_test, get_jira_comment_template
+    send_data_to_ena_for_validation_or_test, get_jira_comment_template, jira_comment_replace
 from ..generic.utils import logged_requests
 
 logger = logging.getLogger(__name__)
@@ -1365,14 +1365,15 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
                 pid_type='PRJ'
             ).first()
 
+            comment = jira_comment_replace(
+                comment=comment,
+                submitter=submitter_name,
+                primary_accession=study_pid.pid)
             jira_client = JiraClient(
                 resource=site_configuration.helpdesk_server)
             jira_client.add_comment(
                 key_or_issue=reference.reference_key,
-                text=comment.format(
-                    submitter_name=submitter_name,
-                    primary_accession=study_pid.pid
-                ),
+                text=comment,
                 is_internal=False
             )
             return jira_error_auto_retry(jira_client=jira_client, task=self,
@@ -1895,11 +1896,15 @@ def notify_user_embargo_expiry_task(self):
                     )
                     reference = submission.get_primary_helpdesk_reference()
 
+                    comment = jira_comment_replace(
+                        comment=comment,
+                        embargo=submission.embargo.isoformat())
+
                     jira_client = JiraClient(
                         resource=site_configuration.helpdesk_server)
                     jira_client.add_comment(
                         key_or_issue=reference.reference_key,
-                        text=comment.format(embargo=submission.embargo.isoformat()),
+                        text=comment,
                         is_internal=False
                     )
 
@@ -2134,10 +2139,14 @@ def notify_on_embargo_ended_task(self, submission_id=None):
             if not comment:
                 return TaskProgressReport.CANCELLED
 
+            comment = jira_comment_replace(
+                comment=comment,
+                primary_accession=primary_accession.pid)
+
             jira_client = JiraClient(resource=site_config.helpdesk_server)
             jira_client.add_comment(
                 key_or_issue=reference.reference_key,
-                text=comment.format(primary_accession=primary_accession.pid),
+                text=comment,
                 is_internal=False
             )
 
@@ -2274,10 +2283,14 @@ def notify_user_embargo_changed_task(self, prev=None, submission_id=None):
             if not comment:
                 return TaskProgressReport.CANCELLED
 
+            comment = jira_comment_replace(
+                comment=comment,
+                embargo=submission.embargo.isoformat())
+
             jira_client = JiraClient(resource=site_config.helpdesk_server)
             jira_client.add_comment(
                 key_or_issue=reference.reference_key,
-                text=comment.format(embargo=submission.embargo.isoformat()),
+                text=comment,
                 is_internal=False
             )
             return jira_error_auto_retry(jira_client=jira_client, task=self,
@@ -2417,19 +2430,22 @@ def jira_initial_comment_task(self, prev=None, submission_id=None):
             if submission.target == ENA or submission.target == ENA_PANGAEA:
                 comment_template_name = "WELCOME_MOLECULAR_COMMENT"
 
-            comment_template = get_jira_comment_template(
+            comment = get_jira_comment_template(
                 template_name=comment_template_name, task_name="jira_initial_comment_task")
-            if not comment_template:
+            if not comment:
                 return TaskProgressReport.CANCELLED
+
+            comment = jira_comment_replace(
+                comment=comment,
+                title=submission.data['requirements']['title'],
+                submission_id=submission.broker_submission_id,
+                reference=reference.reference_key
+            )
 
             jira_client = JiraClient(resource=site_config.helpdesk_server)
             jira_client.add_comment(
                 key_or_issue=reference.reference_key,
-                text=comment_template.format(
-                    title=submission.data['requirements']['title'],
-                    id=submission.broker_submission_id,
-                    reference=reference.reference_key
-                ),
+                text=comment,
                 is_internal=False
             )
             jira_error_auto_retry(jira_client=jira_client, task=self,

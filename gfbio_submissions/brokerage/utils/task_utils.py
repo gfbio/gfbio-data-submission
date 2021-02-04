@@ -399,3 +399,21 @@ def get_jira_comment_template(template_name, task_name):
             )
             return None
         return template.message
+
+def jira_comment_replace(comment=None, submitter=None, title=None, submission_id=None,
+                         primary_accession=None, reference=None, embargo=None):
+    if not comment:
+        return ""
+    if submitter:
+        comment = comment.replace('{submitter}', '{}'.format(submitter))
+    if title:
+        comment = comment.replace('{title}', '{}'.format(title))
+    if submission_id:
+        comment = comment.replace('{id}', '{}'.format(submission_id))
+    if primary_accession:
+        comment = comment.replace('{primary_accession}', '{}'.format(primary_accession))
+    if reference:
+        comment = comment.replace('{reference}', '{}'.format(reference))
+    if embargo:
+        comment = comment.replace('{embargo}', '{}'.format(embargo))
+    return comment
