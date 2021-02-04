@@ -11,7 +11,7 @@ from gfbio_submissions.brokerage.exceptions import TransferInternalError, \
     raise_response_exceptions, TransferClientError, raise_no_ticket_exception, \
     NoTicketAvailableError
 from gfbio_submissions.brokerage.models import TaskProgressReport, Submission, \
-    AuditableTextData, CenterName
+    AuditableTextData, CenterName, JiraMessage
 from gfbio_submissions.brokerage.utils.ena import send_submission_to_ena
 from gfbio_submissions.generic.models import ResourceCredential
 
@@ -387,3 +387,33 @@ def send_data_to_ena_for_validation_or_test(task, submission_id, action):
         response = Response()
     return str(request_id), response.status_code, smart_text(
         response.content)
+
+
+def get_jira_comment_template(template_name, task_name):
+        template = JiraMessage.objects.filter(name=template_name).first()
+        if not template:
+            mail_admins(
+                subject='Failed to send JIRA Comment"',
+                message='Template {} not found in the database, '
+                        'task: "{}".'.format(template_name, task_name)
+            )
+            return None
+        return template.message
+
+def jira_comment_replace(comment=None, submitter=None, title=None, submission_id=None,
+                         primary_accession=None, reference=None, embargo=None):
+    if not comment:
+        return ""
+    if submitter:
+        comment = comment.replace('{submitter}', '{}'.format(submitter))
+    if title:
+        comment = comment.replace('{title}', '{}'.format(title))
+    if submission_id:
+        comment = comment.replace('{id}', '{}'.format(submission_id))
+    if primary_accession:
+        comment = comment.replace('{primary_accession}', '{}'.format(primary_accession))
+    if reference:
+        comment = comment.replace('{reference}', '{}'.format(reference))
+    if embargo:
+        comment = comment.replace('{embargo}', '{}'.format(embargo))
+    return comment
