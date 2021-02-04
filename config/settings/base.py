@@ -328,13 +328,20 @@ ACCOUNT_ALLOW_REGISTRATION = env.bool("DJANGO_ACCOUNT_ALLOW_REGISTRATION", True)
 ACCOUNT_AUTHENTICATION_METHOD = "username"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = True
+SOCIALACCOUNT_AUTO_SIGNUP = False
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 # "mandatory", "optional", or "none"
 ACCOUNT_EMAIL_VERIFICATION = "optional"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_ADAPTER = "gfbio_submissions.users.adapters.AccountAdapter"
+
+# ACCOUNT_SIGNUP_FORM_CLASS = "gfbio_submissions.users.forms.AgreeTosSocialSignupForm"
+SOCIALACCOUNT_FORMS = {
+    'signup': 'gfbio_submissions.users.forms.AgreeTosSocialSignupForm'}
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 SOCIALACCOUNT_ADAPTER = "gfbio_submissions.users.adapters.SocialAccountAdapter"
+
 
 # django-rest-framework
 # -------------------------------------------------------------------------------
