@@ -230,7 +230,7 @@ class Enalizer(object):
                        sample_descriptor_platform_mappings):
         sample_attributes = s.pop('sample_attributes', [])
         # lower case required columns
-        lower_case_cols = ['investigation type']
+        lower_case_cols = ['investigation type', 'library_layout']
         for sample in sample_attributes:
             if sample['tag'] in lower_case_cols:
                 sample['value'] = sample['value'].lower()
