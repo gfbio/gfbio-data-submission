@@ -1,6 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.db.models import CharField
+from django.db.models import CharField, BooleanField
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
@@ -33,6 +33,11 @@ class User(AbstractUser):
             'unique': _("A user with that external_user_id already exists."),
         },
     )
+
+    # True if the user has accepted the current terms of service and
+    # privacy policy
+    agreed_to_terms = BooleanField(default=False)
+    agreed_to_privacy = BooleanField(default=False)
 
     site_configuration = models.ForeignKey(
         SiteConfiguration,
