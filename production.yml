@@ -18,6 +18,11 @@ services:
     env_file:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
+    logging:
+      driver: syslog
+      options:
+        tag: 'GFBio-django'
+    restart: always
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - django_media:/app/gfbio_submissions/media
@@ -33,6 +38,7 @@ services:
       - production_postgres_data_backups:/backups
     env_file:
       - ./.envs/.production/.postgres
+    restart: always
 
   traefik:
     build:
@@ -47,21 +53,35 @@ services:
       - "0.0.0.0:80:80"
       - "0.0.0.0:443:443"
       - "0.0.0.0:5555:5555"
+    restart: always
 
   redis:
     image: redis:5.0
+    restart: always
 
   celeryworker:
     <<: *django
     image: gfbio_submissions_production_celeryworker
+    logging:
+      driver: syslog
+      options:
+        tag: 'GFBio-celery-worker'
     command: /start-celeryworker
 
   celerybeat:
     <<: *django
     image: gfbio_submissions_production_celerybeat
+    logging:
+      driver: syslog
+      options:
+        tag: 'GFBio-celery-beat'
     command: /start-celerybeat
 
   flower:
     <<: *django
     image: gfbio_submissions_production_flower
+    logging:
+      driver: syslog
+      options:
+        tag: 'GFBio-flower'
     command: /start-flower
