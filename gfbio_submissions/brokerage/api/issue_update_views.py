@@ -1,5 +1,6 @@
 import logging
 
+from django.core.mail import mail_admins
 from django.urls import reverse
 from rest_framework import status, mixins, generics
 from rest_framework.response import Response
@@ -10,7 +11,6 @@ from ..forms import JiraIssueUpdateQueryForm
 from ..permissions import APIAllowedHosts
 
 logger = logging.getLogger(__name__)
-
 
 class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
     permission_classes = (APIAllowedHosts,)
@@ -40,10 +40,17 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
         headers = self.get_success_headers(serializer.data)
 
         if not is_valid:
+            mail_admins(
+                subject="Submission update via jira hook failed",
+                message='Data provided by Jira hook is not valid.\n'
+                        '{0}'.format(serializer.errors)
+            )
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST,
                             headers=headers)
         if not form_is_valid:
+            # request came from blacklisted users
+            # blacklist users: brokeragent
             return Response(form.errors,
                             status=status.HTTP_400_BAD_REQUEST,
                             headers=headers)

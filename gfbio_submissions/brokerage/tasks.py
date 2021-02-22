@@ -2181,6 +2181,11 @@ def update_ena_embargo_task(self, prev=None, submission_id=None):
         include_closed=True
     )
     if submission == TaskProgressReport.CANCELLED:
+        mail_admins(
+            subject="update_ena_embargo_task failed",
+            message='Failed to get submission and site_config for the task.\n'
+                    'Submission_id: {0}'.format(submission_id)
+        )
         return TaskProgressReport.CANCELLED
 
     study_primary_accession = submission.brokerobject_set.filter(

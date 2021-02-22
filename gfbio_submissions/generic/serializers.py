@@ -47,6 +47,10 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 msg='serializer.py | JiraHookRequestSerializer | '
                     'unable to parse embargo date | {0}'.format(e)
             )
+            self.send_mail_to_admins(
+                reason='Submission update via Jira hook failed',
+                message='serializer.py | JiraHookRequestSerializer | '
+                    'unable to parse embargo date | {0}'.format(e))
 
         submission_id = self.validated_data.get(
             'issue', {}).get('fields', {}).get('customfield_10303', '')
@@ -58,6 +62,10 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 msg='serializer.py | JiraHookRequestSerializer | '
                     'unable to get submission | {0}'.format(e)
             )
+            self.send_mail_to_admins(
+                reason='Submission update via Jira hook failed',
+                message='serializer.py | JiraHookRequestSerializer | '
+                        'unable to get submission | {0}'.format(e))
 
         submission.embargo = embargo_date.date()
         submission.save()
