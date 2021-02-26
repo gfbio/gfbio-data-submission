@@ -40,11 +40,13 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
         headers = self.get_success_headers(serializer.data)
 
         if not is_valid:
-            mail_admins(
-                subject="Submission update via jira hook failed",
-                message='Data provided by Jira hook is not valid.\n'
-                        '{0}'.format(serializer.errors)
-            )
+            # ignore validation errors when embargo did not change
+            if "'customfield_10200': no changes detected" not in '{0}'.format(serializer.errors):
+                mail_admins(
+                    subject="Submission update via jira hook failed",
+                    message='Data provided by Jira hook is not valid.\n'
+                            '{0}'.format(serializer.errors)
+                )
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST,
                             headers=headers)
