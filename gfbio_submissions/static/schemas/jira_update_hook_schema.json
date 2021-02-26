@@ -10,7 +10,7 @@
             "type": "object",
             "properties": {
                 "emailAddress": {
-                  "type": "string"
+                    "type": "string"
                 }
             }
         },
@@ -55,7 +55,6 @@
     },
     "required": [
         "user",
-        "issue",
-        "changelog"
+        "issue"
     ]
 }

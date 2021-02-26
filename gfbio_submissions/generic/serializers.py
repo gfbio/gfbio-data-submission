@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class JiraHookRequestSerializer(serializers.Serializer):
     user = serializers.JSONField()
     issue = serializers.JSONField()
-    changelog = serializers.JSONField()
+    changelog = serializers.JSONField(required=False)
     broker_submission_id = serializers.CharField(read_only=True, required=False)
     issue_key = serializers.CharField(read_only=True, required=False)
 
