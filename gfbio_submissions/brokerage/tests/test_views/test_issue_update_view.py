@@ -343,8 +343,8 @@ class TestJiraIssueUpdateView(APITestCase):
             submission.broker_submission_id)
 
         response = self.client.post(self.url, payload, format='json')
-        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEqual(status.HTTP_400_BAD_REQUEST,
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(status.HTTP_201_CREATED,
                          RequestLog.objects.first().response_status)
         # TODO: check response content
 
