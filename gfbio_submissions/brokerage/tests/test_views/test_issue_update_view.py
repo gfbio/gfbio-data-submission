@@ -327,6 +327,7 @@ class TestJiraIssueUpdateView(APITestCase):
             submission.broker_submission_id)
 
         response = self.client.post(self.url, payload, format='json')
+        print(response.content)
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(status.HTTP_201_CREATED,
                          RequestLog.objects.first().response_status)
@@ -505,7 +506,7 @@ class TestJiraIssueUpdateView(APITestCase):
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
-                        "customfield_10200": "2021-03-09T00:00:00+00:00",
+                        "customfield_10200": "2023-03-09T00:00:00+00:00",
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
 
