@@ -371,7 +371,7 @@ GFBIO_DATACENTER_USER_MAPPINGS = getattr(
         # default/no user: 'GFBio Data Centers - our curators will suggest the appropriate one(s)': '',
         'ENA – European Nucleotide Archive': '',
         'PANGAEA – Data Publisher for Earth & Environmental Science': 'pangaea',
-        'IPK - Leibniz Institute of Plant Genetics and Crop Plant Research': 'ipk',
+        'IPK - Leibniz Institute of Plant Genetics and Crop Plant Research': '',
         'BGBM – Botanic Garden and Botanical Museum Berlin, Freie Universität Berlin': 'bgbm',
         'DSMZ – Leibniz Institute DSMZ – German Collection of Microorganisms and Cell Cultures, Braunschweig': 'dsmz',
         'MfN – Leibniz Institute for Research on Evolution and Biodiversity, Berlin': 'mfn',
