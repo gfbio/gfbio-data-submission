@@ -154,7 +154,8 @@ class TestHelpDeskTicketMethods(TestCase):
                 _get_test_data_dir_path(),
                 'generic_data.json'), 'r') as data_file:
             data = json.load(data_file)
-            data['requirements']['data_center'] = 'IPK - Leibniz Institute of Plant Genetics and Crop Plant Research'
+            data['requirements'][
+                'data_center'] = 'IPK - Leibniz Institute of Plant Genetics and Crop Plant Research'
 
         serializer = SubmissionSerializer(data={
             'target': 'GENERIC',
@@ -167,9 +168,7 @@ class TestHelpDeskTicketMethods(TestCase):
         payload = gfbio_prepare_create_helpdesk_payload(
             site_config=site_config,
             submission=submission)
-        self.assertIn('assignee', payload.keys())
-        self.assertDictEqual({'name': 'ipk'}, payload.get('assignee', {}))
-
+        self.assertNotIn('assignee', payload.keys())
 
     @skip('metadata_schema is no longer used. compare GFBIO-2742')
     def test_prepare_helpdesk_payload_metadataschema_is_none(self):
