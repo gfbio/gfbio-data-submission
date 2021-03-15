@@ -41,7 +41,9 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
 
         if not is_valid:
             # ignore validation errors when embargo did not change
-            if "'customfield_10200': no changes detected" not in '{0}'.format(serializer.errors):
+            err_msg = '{0}'.format(serializer.errors)
+            if "'customfield_10200': no changes detected" not in err_msg\
+                and "'user': user is brokeragent" not in err_msg:
                 mail_admins(
                     subject="Submission update via jira hook failed",
                     message='Data provided by Jira hook is not valid.\n'

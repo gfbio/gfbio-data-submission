@@ -37,19 +37,25 @@ class TestJiraIssueUpdateView(APITestCase):
             BrokerObject.objects.add_submission_data(submission)
         return submission
 
-    @classmethod
-    @responses.activate
-    def setUpTestData(cls):
-        super().setUpTestData()
-
+    @staticmethod
+    def _create_user(username, email):
         user = User.objects.create_user(
-            username='horst', email='horst@horst.de', password='password', )
+            username=username, email=email, password='password', )
         user.is_user = True
         user.is_site = False
         user.save()
 
         curators_group, created = Group.objects.get_or_create(name='Curators')
         curators_group.user_set.add(user)
+        return user
+
+    @classmethod
+    @responses.activate
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls._create_user('horst', 'horst@horst.de')
+        cls._create_user('brokeragent', 'brokeragent@gfbio.org')
 
         submission = cls._create_submission_via_serializer(
             username='horst', create_broker_objects=True)
@@ -125,6 +131,34 @@ class TestJiraIssueUpdateView(APITestCase):
             format='json')
 
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+
+    def test_jira_brokeragent_error(self):
+        submission = Submission.objects.first()
+        one_year = arrow.now().shift(years=1)
+        response = self.client.post(
+            self.url,
+            {
+                "user": {
+                    "emailAddress": "brokeragent@gfbio.org"
+                },
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": one_year.for_json(),
+                        "customfield_10303": "{0}".format(
+                            submission.broker_submission_id),
+                    }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
+                }
+            },
+            format='json')
+
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(1, len(RequestLog.objects.all()))
 
     def test_successful_embargo_update(self):
