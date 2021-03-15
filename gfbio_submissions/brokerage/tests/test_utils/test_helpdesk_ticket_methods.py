@@ -149,6 +149,27 @@ class TestHelpDeskTicketMethods(TestCase):
             submission=submission)
         self.assertNotIn('assignee', payload.keys())
 
+    def test_ipk_datacenter_assignee(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'generic_data.json'), 'r') as data_file:
+            data = json.load(data_file)
+            data['requirements'][
+                'data_center'] = 'IPK - Leibniz Institute of Plant Genetics and Crop Plant Research'
+
+        serializer = SubmissionSerializer(data={
+            'target': 'GENERIC',
+            'release': True,
+            'data': data
+        })
+        serializer.is_valid()
+        submission = serializer.save(user=User.objects.first())
+        site_config = SiteConfiguration.objects.first()
+        payload = gfbio_prepare_create_helpdesk_payload(
+            site_config=site_config,
+            submission=submission)
+        self.assertNotIn('assignee', payload.keys())
+
     @skip('metadata_schema is no longer used. compare GFBIO-2742')
     def test_prepare_helpdesk_payload_metadataschema_is_none(self):
         with open(os.path.join(
