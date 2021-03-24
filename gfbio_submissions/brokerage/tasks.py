@@ -6,6 +6,7 @@ import textwrap
 
 import celery
 from celery import Task
+from celery.exceptions import SoftTimeLimitExceeded
 from django.core.mail import mail_admins
 from django.db import transaction
 from django.db.utils import IntegrityError
@@ -20,9 +21,7 @@ from gfbio_submissions.users.models import User
 from .configuration.settings import ENA, ENA_PANGAEA, PANGAEA_ISSUE_VIEW_URL, \
     SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME, \
     JIRA_FALLBACK_EMAIL, APPROVAL_EMAIL_SUBJECT_TEMPLATE, \
-    APPROVAL_EMAIL_MESSAGE_TEMPLATE, JIRA_ACCESSION_COMMENT_TEMPLATE, \
-    JIRA_WELCOME_COMMENT_TEMPLATE, JIRA_WELCOME_MOLECULAR_COMMENT_TEMPLATE, \
-    NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE, \
+    APPROVAL_EMAIL_MESSAGE_TEMPLATE, NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE, \
     NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE, \
     NO_SITE_CONFIG_EMAIL_SUBJECT_TEMPLATE
 from .configuration.settings import SUBMISSION_MAX_RETRIES, \
@@ -49,7 +48,8 @@ from .utils.task_utils import jira_error_auto_retry, \
     get_submission_and_site_configuration, raise_transfer_server_exceptions, \
     retry_no_ticket_available_exception, \
     get_submitted_submission_and_site_configuration, \
-    send_data_to_ena_for_validation_or_test, get_jira_comment_template, jira_comment_replace
+    send_data_to_ena_for_validation_or_test, get_jira_comment_template, \
+    jira_comment_replace
 from ..generic.utils import logged_requests
 
 logger = logging.getLogger(__name__)
@@ -644,7 +644,6 @@ def parse_csv_to_update_clean_submission_task(self, previous_task_result=None,
     base=SubmissionTask,
     bind=True,
     name='tasks.transfer_data_to_ena_task',
-    time_limit=600,
     autoretry_for=(TransferServerError,
                    TransferClientError
                    ),
@@ -676,9 +675,17 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None,
             task=self,
             broker_submission_id=submission.broker_submission_id,
             max_retries=SUBMISSION_MAX_RETRIES)
+    except SoftTimeLimitExceeded as se:
+        logger.error(
+            'tasks.py | transfer_data_to_ena_task | '
+            'SoftTimeLimitExceeded | '
+            'submission_id={0} | error={1}'.format(submission_id, se)
+        )
+        response = Response()
     except ConnectionError as e:
         logger.error(
-            msg='connection_error {}.url={} title={}'.format(
+            msg='tasks.py | transfer_data_to_ena_task | connection_error '
+                '{}.url={} title={}'.format(
                 e,
                 site_configuration.ena_server.url,
                 site_configuration.ena_server.title)
@@ -692,7 +699,6 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None,
     base=SubmissionTask,
     bind=True,
     name='tasks.register_study_at_ena_task',
-    time_limit=600,
     autoretry_for=(TransferServerError,
                    TransferClientError
                    ),
@@ -919,7 +925,6 @@ def process_targeted_sequence_results_task(self, previous_result=None,
     base=SubmissionTask,
     bind=True,
     name='tasks.validate_against_ena_task',
-    time_limit=600,
     autoretry_for=(TransferServerError,
                    TransferClientError
                    ),
@@ -937,7 +942,6 @@ def validate_against_ena_task(self, submission_id=None, action='VALIDATE'):
     base=SubmissionTask,
     bind=True,
     name='tasks.submit_to_ena_test_server_task',
-    time_limit=600,
     autoretry_for=(TransferServerError,
                    TransferClientError
                    ),
@@ -1320,7 +1324,8 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
     )
 
     comment = get_jira_comment_template(
-        template_name="ACCESSION_COMMENT", task_name="add_accession_to_submission_issue_task")
+        template_name="ACCESSION_COMMENT",
+        task_name="add_accession_to_submission_issue_task")
     if not comment:
         return TaskProgressReport.CANCELLED
 
@@ -1885,7 +1890,8 @@ def notify_user_embargo_expiry_task(self):
                 if submission.embargo <= two_weeks_from_now and should_notify:
                     # send embargo notification comment to JIRA
                     comment = get_jira_comment_template(
-                        template_name="NOTIFY_EMBARGO_EXPIRY", task_name="notify_user_embargo_expiry_task")
+                        template_name="NOTIFY_EMBARGO_EXPIRY",
+                        task_name="notify_user_embargo_expiry_task")
                     if not comment:
                         return TaskProgressReport.CANCELLED
 
@@ -1961,7 +1967,8 @@ def check_for_submissions_without_helpdesk_issue_task(self):
     bind=True,
     name='tasks.check_issue_existing_for_submission_task',
 )
-def check_issue_existing_for_submission_task(self, prev=None, submission_id=None):
+def check_issue_existing_for_submission_task(self, prev=None,
+                                             submission_id=None):
     logger.info('tasks.py | check_issue_existing_for_submission_task | '
                 'submission_id={0}'.format(submission_id))
 
@@ -2135,7 +2142,8 @@ def notify_on_embargo_ended_task(self, submission_id=None):
         primary_accession = submission.get_primary_accession()
         if reference and primary_accession:
             comment = get_jira_comment_template(
-                template_name="NOTIFY_EMBARGO_RELEASE", task_name="notify_on_embargo_ended_task")
+                template_name="NOTIFY_EMBARGO_RELEASE",
+                task_name="notify_on_embargo_ended_task")
             if not comment:
                 return TaskProgressReport.CANCELLED
 
@@ -2284,7 +2292,8 @@ def notify_user_embargo_changed_task(self, prev=None, submission_id=None):
         reference = submission.get_primary_helpdesk_reference()
         if reference:
             comment = get_jira_comment_template(
-                template_name="NOTIFY_EMBARGO_CHANGED", task_name="notify_user_embargo_changed_task")
+                template_name="NOTIFY_EMBARGO_CHANGED",
+                task_name="notify_user_embargo_changed_task")
             if not comment:
                 return TaskProgressReport.CANCELLED
 
@@ -2436,7 +2445,8 @@ def jira_initial_comment_task(self, prev=None, submission_id=None):
                 comment_template_name = "WELCOME_MOLECULAR_COMMENT"
 
             comment = get_jira_comment_template(
-                template_name=comment_template_name, task_name="jira_initial_comment_task")
+                template_name=comment_template_name,
+                task_name="jira_initial_comment_task")
             if not comment:
                 return TaskProgressReport.CANCELLED
 

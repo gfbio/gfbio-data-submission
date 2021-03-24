@@ -1,30 +1,47 @@
 # -*- coding: utf-8 -*-
+import logging
 from uuid import uuid4
 
 import requests
-import logging
+
 from ..models import RequestLog
 
 logger = logging.getLogger(__name__)
 
+
 def post(url, data=None, json=None, submission=None, return_log_id=False,
          request_id=uuid4(),
          **kwargs):
+    if len(RequestLog.objects.filter(request_id=request_id)) > 0:
+        logger.info(
+            'logged_requests.py | post | UUID={0} already exists | submission={1}'.format(
+                request_id, submission.broker_submission_id))
+        request_id = uuid4()
+
+    data = data or ''
+    log = RequestLog.objects.create(
+        type=RequestLog.OUTGOING,
+        method=RequestLog.POST,
+        request_id=request_id,
+        url=url,
+        data=data,
+        user=submission.user if submission else None,
+        submission_id=submission.broker_submission_id if submission else None,
+        request_details={
+            'initial_report': True
+        }
+    )
+
     response = requests.post(
         url=url,
         data=data,
         json=json,
         **kwargs,
     )
-    user = None
-    submission_id = None
     incoming = None
-    data = data or ''  # TODO: files ? json ?
     files = kwargs.get('files', '')
     json = json or {}
     if submission:
-        user = submission.user
-        submission_id = submission.broker_submission_id
         try:
             incoming = RequestLog.objects.filter(
                 submission_id=submission.broker_submission_id).filter(
@@ -32,24 +49,15 @@ def post(url, data=None, json=None, submission=None, return_log_id=False,
         except RequestLog.DoesNotExist:
             pass
 
-    if len(RequestLog.objects.filter(request_id=request_id)) > 0:
-        logger.info('logged_requests.py | post | UUID={0} already exists | submission={1}'.format(request_id, submission.broker_submission_id))
-        request_id = uuid4()
-
-    log = RequestLog.objects.create(
-        type=RequestLog.OUTGOING,
-        method=RequestLog.POST,
+    RequestLog.objects.filter(pk=log.pk).update(
         request_id=request_id,
-        url=url,
-        data=data,
         files=files,
         json=json,
-        user=user,
-        submission_id=submission_id,
         response_status=response.status_code,
         response_content=response.content,
         triggered_by=incoming,
         request_details={
+            'initial_report': False,
             'response_headers': str(response.headers or '')
         }
     )
