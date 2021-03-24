@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from pprint import pprint
 from unittest import skip
 
 import requests
@@ -259,6 +260,7 @@ class TestSubmissionTransferHandler(TestCase):
         sth.execute_submission_to_ena_and_pangaea()
         # self.assertLess(0, len(TaskProgressReport.objects.all()))
         task_reports = TaskProgressReport.objects.all()
+
         expected_task_names = [
             'tasks.transfer_data_to_ena_task',
             'tasks.process_ena_response_task',

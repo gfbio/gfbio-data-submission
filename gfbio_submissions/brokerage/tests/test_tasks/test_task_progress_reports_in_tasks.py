@@ -94,7 +94,7 @@ class TestTaskProgressReportInTasks(TestTasks):
             task_id=uuid4(),
         )
         self.assertTrue(created)
-        self.assertEqual('unnamed_task', report.__str__())
+        self.assertEqual('no_name_provided', report.__str__())
 
     def test_task_report_update_on_wrong_submission(self):
         self._run_task(submission_id=1111)
