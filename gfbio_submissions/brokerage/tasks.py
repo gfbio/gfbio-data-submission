@@ -73,7 +73,7 @@ class SubmissionTask(Task):
         # TODO: capture this idea of reporting to sentry
         # sentrycli.captureException(exc)
         TaskProgressReport.objects.update_report_on_exception(
-            'RETRY', exc, task_id, args, kwargs, einfo)
+            'RETRY', exc, task_id, args, kwargs, einfo, task_name=self.name)
         super(SubmissionTask, self).on_retry(exc, task_id, args, kwargs, einfo)
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
@@ -81,7 +81,7 @@ class SubmissionTask(Task):
                     'name={1}| args={2} | kwargs={3} | einfo={4} | '
                     ''.format(task_id, self.name, args, kwargs, einfo))
         TaskProgressReport.objects.update_report_on_exception(
-            'FAILURE', exc, task_id, args, kwargs, einfo)
+            'FAILURE', exc, task_id, args, kwargs, einfo, task_name=self.name)
         super(SubmissionTask, self).on_failure(exc, task_id, args, kwargs,
                                                einfo)
 
@@ -89,7 +89,7 @@ class SubmissionTask(Task):
         logger.info('tasks.py | SubmissionTask | on_success | task_id={0} | '
                     'name={1} | retval={2}'.format(task_id, self.name, retval))
         TaskProgressReport.objects.update_report_on_success(
-            retval, task_id, args, kwargs)
+            retval, task_id, args, kwargs, task_name=self.name)
         super(SubmissionTask, self).on_success(retval, task_id, args, kwargs)
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
@@ -97,7 +97,8 @@ class SubmissionTask(Task):
                     'name={1} | args={2} | kwargs={3} | einfo={4} | '
                     'retval={5}'.format(task_id, self.name, args, kwargs, einfo,
                                         retval))
-        TaskProgressReport.objects.update_report_after_return(status, task_id)
+        TaskProgressReport.objects.update_report_after_return(status, task_id,
+                                                              task_name=self.name)
         super(SubmissionTask, self).after_return(
             status, retval, task_id, args, kwargs, einfo)
 
@@ -1316,6 +1317,13 @@ def update_submission_issue_task(self, prev_task_result=None,
 def add_accession_to_submission_issue_task(self, prev_task_result=None,
                                            submission_id=None,
                                            target_archive=None):
+    if prev_task_result == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | add_accession_to_submission_issue_task | '
+            'previous task reported={0} | '
+            'submission_id={1}'.format(TaskProgressReport.CANCELLED,
+                                       submission_id))
+        return TaskProgressReport.CANCELLED
     # No submission will be returned if submission.status is error
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
@@ -1399,6 +1407,13 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
 def add_accession_link_to_submission_issue_task(self, prev_task_result=None,
                                                 submission_id=None,
                                                 target_archive=None):
+    if prev_task_result == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | add_accession_link_to_submission_issue_task | '
+            'previous task reported={0} | '
+            'submission_id={1}'.format(TaskProgressReport.CANCELLED,
+                                       submission_id))
+        return TaskProgressReport.CANCELLED
     # No submission will be returned if submission.status is error
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
@@ -1407,7 +1422,6 @@ def add_accession_link_to_submission_issue_task(self, prev_task_result=None,
     )
 
     if submission == TaskProgressReport.CANCELLED:
-        print('WILL CANCLE - no submission ')
         return TaskProgressReport.CANCELLED
 
     reference = submission.get_primary_helpdesk_reference()
