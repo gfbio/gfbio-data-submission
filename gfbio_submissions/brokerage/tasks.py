@@ -1331,13 +1331,13 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
         include_closed=True
     )
 
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
+
     comment = get_jira_comment_template(
         template_name="ACCESSION_COMMENT",
         task_name="add_accession_to_submission_issue_task")
     if not comment:
-        return TaskProgressReport.CANCELLED
-
-    if submission == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
 
     # TODO: althouht filter for primary should deliver only on ticket, a dedicated manager method
