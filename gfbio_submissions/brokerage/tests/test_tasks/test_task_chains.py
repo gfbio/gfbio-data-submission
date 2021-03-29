@@ -10,12 +10,12 @@ from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, JIRA_ATTACHMENT_SUB_URL, \
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE, SUBMISSION_DELAY
 from gfbio_submissions.brokerage.models import Submission, \
-    AuditableTextData
+    AuditableTextData, TaskProgressReport
 from gfbio_submissions.brokerage.tasks import \
     create_submission_issue_task, \
     create_pangaea_issue_task, attach_to_pangaea_issue_task, \
     trigger_submission_transfer, \
-    get_gfbio_helpdesk_username_task
+    get_gfbio_helpdesk_username_task, trigger_submission_transfer_for_updates
 from gfbio_submissions.brokerage.tests.utils import \
     _get_pangaea_attach_response, \
     _get_jira_issue_response
@@ -137,6 +137,66 @@ class TestTaskChains(TestTasks):
 
         )()
         self.assertTrue(result.successful())
+
+    def test_trigger_submission_transfer_no_errors_from_previous_task(self):
+        submission = Submission.objects.first()
+        prev_task_result = {
+            'molecular_data_available': True,
+            'messages': [],
+            'molecular_data_check_performed': True,
+        }
+        result = trigger_submission_transfer.apply(
+            kwargs={
+                'previous_task_result': prev_task_result,
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertNotEqual(TaskProgressReport.CANCELLED, result.get())
+
+    def test_trigger_submission_transfer_errors_from_previous_task(self):
+        submission = Submission.objects.first()
+        prev_task_result = {
+            'molecular_data_available': True,
+            'messages': ['invalid no. of meta_data_files, 8'],
+            'molecular_data_check_performed': True,
+        }
+        result = trigger_submission_transfer.apply(
+            kwargs={
+                'previous_task_result': prev_task_result,
+                'submission_id': submission.pk,
+            }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
+
+    def test_trigger_submission_transfer_for_updates_no_errors_from_previous_task(self):
+        submission = Submission.objects.first()
+        prev_task_result = {
+            'molecular_data_available': True,
+            'messages': [],
+            'molecular_data_check_performed': True,
+        }
+        result = trigger_submission_transfer_for_updates.apply(
+            kwargs={
+                'previous_task_result': prev_task_result,
+                'broker_submission_id': '{}'.format(submission.broker_submission_id),
+            }
+        )
+        self.assertNotEqual(TaskProgressReport.CANCELLED, result.get())
+
+    def test_trigger_submission_transfer_for_updates_errors_from_previous_task(self):
+        submission = Submission.objects.first()
+        prev_task_result = {
+            'molecular_data_available': True,
+            'messages': ['invalid no. of meta_data_files, 8'],
+            'molecular_data_check_performed': True,
+        }
+        result = trigger_submission_transfer_for_updates.apply(
+            kwargs={
+                'previous_task_result': prev_task_result,
+                'broker_submission_id': submission.pk,
+            }
+        )
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
 
     @responses.activate
     def test_initiate_submission_chain_success(self):

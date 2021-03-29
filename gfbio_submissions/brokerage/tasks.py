@@ -145,29 +145,39 @@ def check_for_molecular_content_in_submission_task(self,
     }
 
 
+# FIXME: redundant/duplicate code with trigger_submission_transfer_for_updates. Refactor !
 @celery.task(base=SubmissionTask, bind=True,
              name='tasks.trigger_submission_transfer', )
 def trigger_submission_transfer(self, previous_task_result=None,
                                 submission_id=None):
     molecular_data_available = False
     check_performed = False
+    messages = []
 
     if isinstance(previous_task_result, dict):
         molecular_data_available = previous_task_result.get(
             'molecular_data_available', False)
         check_performed = previous_task_result.get(
             'molecular_data_check_performed', False)
+        messages = previous_task_result.get('messages', [])
 
     logger.info(
         msg='trigger_submission_transfer. get submission with pk={}.'.format(
             submission_id)
     )
+    if len(messages):
+        logger.warning(
+            'tasks.py | trigger_submission_transfer | '
+            'previous task reported error messages={0} | '
+            'submission_id={1}'.format(messages, submission_id))
+        return TaskProgressReport.CANCELLED
     # TODO: needs only submission, not both.
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
         include_closed=True
     )
+
     if submission == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
 
@@ -188,11 +198,13 @@ def trigger_submission_transfer_for_updates(self, previous_task_result=None,
                                             broker_submission_id=None):
     molecular_data_available = False
     check_performed = False
+    messages = []
     if isinstance(previous_task_result, dict):
         molecular_data_available = previous_task_result.get(
             'molecular_data_available', False)
         check_performed = previous_task_result.get(
             'molecular_data_check_performed', False)
+        messages = previous_task_result.get('messages', [])
 
     logger.info(
         msg='trigger_submission_transfer_for_updates. get submission_id with broker_submission_id={}.'.format(
@@ -201,6 +213,11 @@ def trigger_submission_transfer_for_updates(self, previous_task_result=None,
     submission_id = Submission.objects.get_open_submission_id_for_bsi(
         broker_submission_id=broker_submission_id)
 
+    if len(messages):
+        logger.warning(
+            'tasks.py | trigger_submission_transfer | '
+            'previous task reported error messages={0} | '
+            'submission_id={1}'.format(messages, submission_id))
     # TODO: needs only submission, not both.
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
