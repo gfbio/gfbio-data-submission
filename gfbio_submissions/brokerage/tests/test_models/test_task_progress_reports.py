@@ -12,7 +12,7 @@ class TestTaskProgressReport(TestCase):
         user = User.objects.create(
             username="user1"
         )
-        Submission.objects.create(site=user)
+        Submission.objects.create(user=user)
 
     def test_instance(self):
         self.assertEqual(0, len(TaskProgressReport.objects.all()))

@@ -20,10 +20,10 @@ class Command(BaseCommand):
             username='old_gfbio_portal')
         print('\tcreated user "old_gfbio_portal" ', created, ' pk: ',
               old_gfbio_portal.pk)
-        print('\n\tpk:\tsite:\tuser:\tsubmission.submitting_user')
+        print('\n\tpk:\tuser:\tsubmission.submitting_user')
 
         for submission in gfbio_related_submissions:
-            print('\t{0}\t{1}\t{2}\t{3}'.format(submission.pk, submission.site,
+            print('\t{0}\t{1}\t{2}'.format(submission.pk,
                                                 submission.user,
                                                 submission.submitting_user))
             if submission.user is None:
@@ -36,7 +36,7 @@ class Command(BaseCommand):
             site__username=HOSTING_SITE)
         print('\n****************\tlocal_site_submissions\t**************')
         print(
-            '\n\tpk:\tsite:\tuser:\tsubmitting_user:\tuser_for_submitting_user:')
+            '\n\tpk:\tuser:\tsubmitting_user:\tuser_for_submitting_user:')
         for submission in local_site_submissions:
             user = None
             try:
@@ -46,8 +46,8 @@ class Command(BaseCommand):
                 user_status = 'no user found for pk={0}'.format(
                     int(submission.submitting_user))
 
-            print('\t{0}\t{1}\t{2}\t{3}\t{4}'.format(
-                submission.pk, submission.site, submission.user,
+            print('\t{0}\t{1}\t{2}\t{3}'.format(
+                submission.pk, submission.user,
                 submission.submitting_user, user_status)
             )
             if user and submission.user is None:

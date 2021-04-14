@@ -64,12 +64,12 @@ class Submission(TimeStampedModel):
     # TODO: be careful with existing submissions using this field.
     #  maybe check if user field is used by submission, then first remove user
     #  then rename site to user in 2 migration steps
-    site = models.ForeignKey(
-        AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        related_name='site_submissions',
-        on_delete=models.SET_NULL)
+    # site = models.ForeignKey(
+    #     AUTH_USER_MODEL,
+    #     null=True,
+    #     blank=True,
+    #     related_name='site_submissions',
+    #     on_delete=models.SET_NULL)
     user = models.ForeignKey(
         AUTH_USER_MODEL,
         null=True,

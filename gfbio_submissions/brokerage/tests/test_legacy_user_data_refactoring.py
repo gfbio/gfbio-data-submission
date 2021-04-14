@@ -34,15 +34,15 @@ class TestSubmittingUserMigration(TestCase):
         cls.permissions = Permission.objects.filter(
             content_type__app_label='brokerage',
             name__endswith='upload')
-        cls.site = User.objects.create(
-            username=HOSTING_SITE
-        )
-        cls.site.name = 'hosting site'
-        cls.site.email = 'hosting@site.de'
-        cls.site.is_site = True
-        cls.site.is_user = False
-        cls.site.save()
-        cls.site.user_permissions.add(*cls.permissions)
+        # cls.site = User.objects.create(
+        #     username=HOSTING_SITE
+        # )
+        # cls.site.name = 'hosting site'
+        # cls.site.email = 'hosting@site.de'
+        # cls.site.is_site = True
+        # cls.site.is_user = False
+        # cls.site.save()
+        # cls.site.user_permissions.add(*cls.permissions)
 
     @classmethod
     def _generate_submissions(cls, count=1):
@@ -62,7 +62,6 @@ class TestSubmittingUserMigration(TestCase):
             user.user_permissions.add(*cls.permissions)
 
             Submission.objects.create(
-                site=cls.site,
                 user=user,
                 submitting_user=user.id,
                 submitting_user_common_information='{};{}'.format(user.name,
@@ -70,7 +69,7 @@ class TestSubmittingUserMigration(TestCase):
 
     def map_submitting_user(self):
         for s in Submission.objects.all():
-            print('\nprocessing: ', s, ' user: ', s.user, ' site: ', s.site,
+            print('\nprocessing: ', s, ' user: ', s.user,
                   ' submitting_user ', s.submitting_user, ' common info. ',
                   s.submitting_user_common_information)
             spl = s.submitting_user_common_information.split(';')
