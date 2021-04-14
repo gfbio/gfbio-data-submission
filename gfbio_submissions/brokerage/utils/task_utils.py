@@ -4,6 +4,7 @@ import logging
 from django.core.mail import mail_admins
 from django.utils.encoding import smart_text
 from requests import Response
+
 from gfbio_submissions.brokerage.configuration.settings import \
     TASK_FAIL_SUBJECT_TEMPLATE, TASK_FAIL_TEXT_TEMPLATE, SUBMISSION_MAX_RETRIES, \
     SUBMISSION_UPLOAD_MAX_RETRIES, SUBMISSION_UPLOAD_RETRY_DELAY
@@ -47,12 +48,6 @@ def _safe_get_site_config(submission):
     site_config = None
     if submission and submission.user:
         site_config = submission.user.site_configuration
-        # try:
-        #     site_config = SiteConfiguration.objects.get_site_configuration(
-        #         submission.site)
-        # except SiteConfiguration.DoesNotExist as e:
-        #     logger.warning(
-        #         'task_utils.py | _safe_get_site_config | error {0}'.format(e))
     return site_config
 
 
@@ -90,8 +85,8 @@ def _get_submitted_submission_and_site_configuration(submission_id, task):
             raise TransferInternalError(
                 'SubmissionTransferHandler | '
                 '_get_submitted_submission_and_site_configuration | '
-                'no SiteConfiguration available for site={0}.'.format(
-                    submission.site,
+                'no SiteConfiguration available for user={0}.'.format(
+                    submission.user if submission.user else '',
                 )
             )
         if task:
@@ -149,8 +144,8 @@ def _get_submission_and_site_configuration(submission_id, task,
             )
             raise TransferInternalError(
                 'SubmissionTransferHandler | get_submission_and_site_configuration | '
-                'no SiteConfiguration available for site={0}.'.format(
-                    submission.site,
+                'no SiteConfiguration available for user={0}.'.format(
+                    submission.user if submission.user else '',
                 )
             )
     except TransferInternalError as e:
@@ -390,17 +385,19 @@ def send_data_to_ena_for_validation_or_test(task, submission_id, action):
 
 
 def get_jira_comment_template(template_name, task_name):
-        template = JiraMessage.objects.filter(name=template_name).first()
-        if not template:
-            mail_admins(
-                subject='Failed to send JIRA Comment"',
-                message='Template {} not found in the database, '
-                        'task: "{}".'.format(template_name, task_name)
-            )
-            return None
-        return template.message
+    template = JiraMessage.objects.filter(name=template_name).first()
+    if not template:
+        mail_admins(
+            subject='Failed to send JIRA Comment"',
+            message='Template {} not found in the database, '
+                    'task: "{}".'.format(template_name, task_name)
+        )
+        return None
+    return template.message
 
-def jira_comment_replace(comment=None, submitter=None, title=None, submission_id=None,
+
+def jira_comment_replace(comment=None, submitter=None, title=None,
+                         submission_id=None,
                          primary_accession=None, reference=None, embargo=None):
     if not comment:
         return ""
@@ -411,7 +408,8 @@ def jira_comment_replace(comment=None, submitter=None, title=None, submission_id
     if submission_id:
         comment = comment.replace('{id}', '{}'.format(submission_id))
     if primary_accession:
-        comment = comment.replace('{primary_accession}', '{}'.format(primary_accession))
+        comment = comment.replace('{primary_accession}',
+                                  '{}'.format(primary_accession))
     if reference:
         comment = comment.replace('{reference}', '{}'.format(reference))
     if embargo:

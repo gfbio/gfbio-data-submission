@@ -257,7 +257,7 @@ class TestSubmissionUploadView(TestCase):
                       'https://www.example.com/rest/api/2/issue/FAKE_KEY',
                       body='', status=200)
         submission = Submission.objects.first()
-        submission.site = User.objects.last()
+        # submission.site = User.objects.last()
         submission.save()
         site_config = SiteConfiguration.objects.first()
         url = reverse('brokerage:submissions_upload', kwargs={
