@@ -83,13 +83,13 @@ class Submission(TimeStampedModel):
     # TODO: investigate where this field is used
     # TODO: adapt to new situation of local users (sso, social, django user)
     #  and external (site only)  BE CAREFUL ! LEGACY DATA !
-    submitting_user = models.CharField(max_length=72, default='', blank=True,
-                                       null=True,
-                                       help_text=
-                                       'Identifier of submitting user. May '
-                                       'vary for different sites, e.g. user-id'
-                                       ' from database, uniquq login-name, '
-                                       'etc..')
+    # submitting_user = models.CharField(max_length=72, default='', blank=True,
+    #                                    null=True,
+    #                                    help_text=
+    #                                    'Identifier of submitting user. May '
+    #                                    'vary for different sites, e.g. user-id'
+    #                                    ' from database, uniquq login-name, '
+    #                                    'etc..')
     # TODO: remove in Submission ownership refactoring. BE CAREFUL ! LEGACY DATA !
     submitting_user_common_information = models.TextField(
         default='',

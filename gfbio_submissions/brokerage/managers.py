@@ -98,18 +98,18 @@ class SubmissionManager(models.Manager):
         except self.model.DoesNotExist:
             return -1
 
-    def get_submissions_of_submitting_user(self,
-                                           submitting_user_identifier=None):
-        return self.filter(
-            Q(submitting_user=submitting_user_identifier),
-            ~Q(submitting_user='')
-        )
+    # def get_submissions_of_submitting_user(self,
+    #                                        submitting_user_identifier=None):
+    #     return self.filter(
+    #         Q(submitting_user=submitting_user_identifier),
+    #         ~Q(submitting_user='')
+    #     )
 
     def get_submission_values(self, broker_submission_id=None):
         return self.values(
             'pk',
             # string identifier, here only id of django user possible
-            'submitting_user', ).get(broker_submission_id=broker_submission_id)
+            'user', ).get(broker_submission_id=broker_submission_id)
 
     def get_submissions_without_primary_helpdesk_issue(self):
         return self.exclude(

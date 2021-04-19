@@ -65,7 +65,6 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
             'issue': '',
             'target': 'GENERIC',
             'user': 'horst',
-            'submitting_user': '',
             'data': {
                 'requirements': {
                     'description': 'A Generic Description',
@@ -86,7 +85,7 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
         self.assertIsNone(submission.embargo)
         self.assertFalse(submission.release)
         self.assertEqual(Submission.OPEN, submission.status)
-        self.assertEqual(0, len(submission.submitting_user))
+        # self.assertEqual(0, len(submission.submitting_user))
         self.assertEqual('GENERIC', submission.target)
 
         request_logs = RequestLog.objects.filter(type=RequestLog.INCOMING)

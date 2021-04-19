@@ -68,7 +68,7 @@ class TestSubmittingUserMigration(TestCase):
             user = cls._create_random_user()
             Submission.objects.create(
                 user=user,
-                submitting_user=user.id,
+                # submitting_user=user.id,
                 submitting_user_common_information='{};{}'.format(user.name,
                                                                   user.email) if not space else '{} {}'.format(
                     user.name, user.email), )
@@ -78,13 +78,13 @@ class TestSubmittingUserMigration(TestCase):
         user = None
         Submission.objects.create(
             user=user,
-            submitting_user='' if not user else user.id,
+            # submitting_user='' if not user else user.id,
             submitting_user_common_information='bjkla;oin@oai.de;oiha',
         )
         user = cls._create_random_user()
         Submission.objects.create(
             user=user,
-            submitting_user=user.id,
+            # submitting_user=user.id,
             submitting_user_common_information='only_email@aol.de',
         )
         user_g = User.objects.create(
@@ -92,7 +92,7 @@ class TestSubmittingUserMigration(TestCase):
         )
         Submission.objects.create(
             user=user_g,
-            submitting_user='' if not user_g else user_g.id,
+            # submitting_user='' if not user_g else user_g.id,
             submitting_user_common_information=';;{}'.format(user.email),
         )
 
@@ -128,7 +128,7 @@ class TestSubmittingUserMigration(TestCase):
         user = self._create_random_user()
         submission = Submission.objects.create(
             user=user,
-            submitting_user=user.id,
+            # submitting_user=user.id,
             submitting_user_common_information='',
         )
         self.call_command('--write_db')
@@ -138,7 +138,7 @@ class TestSubmittingUserMigration(TestCase):
         user = self._create_random_user()
         submission = Submission.objects.create(
             user=user,
-            submitting_user=user.id,
+            # submitting_user=user.id,
             submitting_user_common_information=';{0};{1};;'.format(user.name,
                                                                    user.email),
         )
@@ -155,7 +155,7 @@ class TestSubmittingUserMigration(TestCase):
         )
         submission = Submission.objects.create(
             user=user_g,
-            submitting_user=user_g.id,
+            # submitting_user=user_g.id,
             submitting_user_common_information=';;{}'.format(user.email),
         )
         self.assertIn(user.email, submission.submitting_user_common_information)
@@ -171,7 +171,7 @@ class TestSubmittingUserMigration(TestCase):
         user_2 = self._create_random_user()
         submission = Submission.objects.create(
             user=user_1,
-            submitting_user=user_1.id,
+            # submitting_user=user_1.id,
             submitting_user_common_information=';{0};{1};;'.format(user_2.name,
                                                                    user_2.email),
         )
@@ -183,7 +183,7 @@ class TestSubmittingUserMigration(TestCase):
         email = 'j.doe@example.com'
         submission = Submission.objects.create(
             user=None,
-            submitting_user='',
+            # submitting_user='',
             submitting_user_common_information='John Doe;{0};'.format(email),
         )
         self.assertEqual(0, len(User.objects.filter(email=email)))
@@ -200,7 +200,7 @@ class TestSubmittingUserMigration(TestCase):
         email = user.email
         submission = Submission.objects.create(
             user=user,
-            submitting_user=user.id,
+            # submitting_user=user.id,
             submitting_user_common_information=';{0};{1};;'.format(
                 user.name, email.replace('@', ' @')),
         )

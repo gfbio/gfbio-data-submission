@@ -1364,7 +1364,7 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
 
     submitter_name = 'Submitter'
     try:
-        user = User.objects.get(pk=int(submission.submitting_user))
+        user = submission.user
         if len(user.name):
             submitter_name = user.name
     except User.DoesNotExist as e:
@@ -1372,13 +1372,13 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
             'tasks.py | add_accession_to_submission_issue_task | '
             'submission_id={0} | No user with '
             'submission.submiting_user={1} | '
-            '{2}'.format(submission_id, submission.submitting_user, e))
+            '{2}'.format(submission_id, submission.user, e))
     except ValueError as ve:
         logger.warning(
             'tasks.py | add_accession_to_submission_issue_task | '
             'submission_id={0} | ValueError with '
             'submission.submiting_user={1} | '
-            '{2}'.format(submission_id, submission.submitting_user, ve))
+            '{2}'.format(submission_id, submission.user, ve))
 
     # TODO: previous task is process_ena_response_task, if ena responded successfully
     #  and delievered accesstions, theses are appended as persistentidentifiers

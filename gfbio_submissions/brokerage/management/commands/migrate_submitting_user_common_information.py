@@ -34,9 +34,9 @@ class Command(BaseCommand):
             return
         print(
             '-------------------------------------------\nprocessing: '
-            '{0} | user: {1} | submitting_user: {2} | '
-            'submitting_user_common_information: {3}'.format(
-                submission, submission.user, submission.submitting_user,
+            '{0} | user: {1} | '
+            'submitting_user_common_information: {2}'.format(
+                submission, submission.user,
                 submission.submitting_user_common_information)
         )
         if len(submission.submitting_user_common_information) == 0:
@@ -109,7 +109,8 @@ class Command(BaseCommand):
                                 info, submission.user))
                 else:
                     print(
-                        '\tFound forbidden char "{0}" in string with @ ...  do nothing here'.format(failing_char))
+                        '\tFound forbidden char "{0}" in string with @ ...  do nothing here'.format(
+                            failing_char))
             else:
                 pass
 

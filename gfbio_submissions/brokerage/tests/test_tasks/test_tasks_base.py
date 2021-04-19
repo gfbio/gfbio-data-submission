@@ -82,8 +82,8 @@ class TestTasks(TestCase):
         )
 
         submission = cls._create_submission_via_serializer()
-        submission.submitting_user = '16250'
-        submission.save()
+        # submission.submitting_user = '16250'
+        # submission.save()
 
         cls.issue_json = _get_jira_issue_response()
         cls.pangaea_issue_json = _get_pangaea_ticket_response()

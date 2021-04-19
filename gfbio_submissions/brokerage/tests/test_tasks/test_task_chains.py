@@ -28,10 +28,10 @@ class TestTaskChains(TestTasks):
 
     @responses.activate
     def test_reporter_for_issue_chain(self):
-        user = User.objects.first()
+        # user = User.objects.first()
         submission = Submission.objects.first()
-        submission.submitting_user = '{}'.format(user.pk)
-        submission.save()
+        # submission.submitting_user = '{}'.format(user.pk)
+        # submission.save()
         site_config = SiteConfiguration.objects.first()
 
         # get_user_email_task responses ----------------------------------------
@@ -200,10 +200,10 @@ class TestTaskChains(TestTasks):
 
     @responses.activate
     def test_initiate_submission_chain_success(self):
-        user = User.objects.first()
+        # user = User.objects.first()
         submission = Submission.objects.first()
-        submission.submitting_user = '{}'.format(user.pk)
-        submission.save()
+        # submission.submitting_user = '{}'.format(user.pk)
+        # submission.save()
         site_config = SiteConfiguration.objects.first()
 
         len_auditable_data = len(AuditableTextData.objects.all())
