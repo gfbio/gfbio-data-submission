@@ -29,7 +29,7 @@ class Command(BaseCommand):
         )
 
     def migrate_common_information_to_user(self, submission, split_char,
-                                           write=False):
+                                           forbidden_chars, write=False):
         if not submission:
             return
         print(
@@ -48,7 +48,14 @@ class Command(BaseCommand):
         for info in splitted_info:
             info = info.strip()
             if '@' in info:
-                if info.count(' ') == 0:
+                forbidden = False
+                failing_char = ''
+                for f in forbidden_chars:
+                    if f in info:
+                        forbidden = True
+                        failing_char = f
+                        break
+                if not forbidden:
                     users = User.objects.filter(email=info)
                     if len(users) == 1:
                         if users[0] == submission.user:
@@ -102,7 +109,7 @@ class Command(BaseCommand):
                                 info, submission.user))
                 else:
                     print(
-                        '\tFound whitespaces in string with @ ...  do nothing here ')
+                        '\tFound forbidden char "{0}" in string with @ ...  do nothing here'.format(failing_char))
             else:
                 pass
 
@@ -112,8 +119,15 @@ class Command(BaseCommand):
             print('Running in dry mode, not hitting the database '
                   '(--write_db not passed)')
         submissions = Submission.objects.select_for_update()
+        allowed_split_chars = [';', ' ']
+        if kwargs['split_char'] not in allowed_split_chars:
+            print('Invalid split_char: {0}. Allowed values are: {1}'.format(
+                kwargs['split_char'], allowed_split_chars))
+            return
+        else:
+            print('Using split_char "{0}"'.format(kwargs['split_char']))
+        allowed_split_chars.remove(kwargs['split_char'])
         for submission in submissions:
-            self.migrate_common_information_to_user(submission=submission,
-                                                    split_char=kwargs[
-                                                        'split_char'],
-                                                    write=write_db)
+            self.migrate_common_information_to_user(
+                submission=submission, split_char=kwargs['split_char'],
+                forbidden_chars=allowed_split_chars, write=write_db)

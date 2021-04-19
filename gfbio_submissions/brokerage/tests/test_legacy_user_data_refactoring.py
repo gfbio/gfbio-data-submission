@@ -207,6 +207,10 @@ class TestSubmittingUserMigration(TestCase):
         self.call_command('--write_db')
         self.assertEqual(submission, Submission.objects.first())
 
+    def test_invalid_split_char(self):
+        self._generate_submissions(4)
+        self.call_command(split_char='x')
+
     def test_semicolon_split_char(self):
         # only ; as split char
         self._generate_submissions(4)
@@ -214,3 +218,15 @@ class TestSubmittingUserMigration(TestCase):
         for submission in Submission.objects.all():
             self.assertNotEqual('',
                                 submission.submitting_user_common_information)
+        self.call_command('--write_db', split_char=';')
+        for submission in Submission.objects.all():
+            self.assertEqual('',
+                             submission.submitting_user_common_information)
+
+    def test_full_migration(self):
+        self._generate_test_data()
+        start_len = len(Submission.objects.all())
+        self.call_command('--write_db', split_char=';')
+        self.call_command('--write_db', split_char=' ')
+        end_len = len(Submission.objects.filter(submitting_user_common_information=''))
+        self.assertEqual((start_len-1), end_len)
