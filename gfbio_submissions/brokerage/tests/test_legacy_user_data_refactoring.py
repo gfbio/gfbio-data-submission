@@ -1,15 +1,26 @@
 # -*- coding: utf-8 -*-
 import random
 import string
+from io import StringIO
 
 from django.contrib.auth.models import Permission
-from django.test import TestCase
+from django.core.management import call_command
+from django.test import SimpleTestCase, TestCase
 
+from gfbio_submissions.brokerage.management.commands.migrate_submitting_user_common_information import \
+    Command
 from gfbio_submissions.brokerage.models import Submission
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential
 from gfbio_submissions.users.models import User
+
+
+class TestMigrateCommonInformation(SimpleTestCase):
+
+    def test_none_args(self):
+        result = Command().migrate_common_information_to_user(None, None)
+        self.assertIsNone(result)
 
 
 class TestSubmittingUserMigration(TestCase):
@@ -34,16 +45,6 @@ class TestSubmittingUserMigration(TestCase):
         cls.permissions = Permission.objects.filter(
             content_type__app_label='brokerage',
             name__endswith='upload')
-
-        cls._generate_submissions(4)
-        cls._generate_submissions(2, space=True)
-        all = Submission.objects.all()
-        sub1 = all[2]
-        sub2 = all[3]
-        sub1.user = sub2.user
-        sub1.save()
-        all[1].user.delete()
-        cls._generate_with_special_cases()
 
     @classmethod
     def _create_random_user(cls):
@@ -95,114 +96,121 @@ class TestSubmittingUserMigration(TestCase):
             submitting_user_common_information=';;{}'.format(user.email),
         )
 
-    # @staticmethod
-    # def print_processing(s):
-    #     print('--------------------------------------\nprocessing: ', s,
-    #           ' user: ', s.user,
-    #           ' submitting_user ', s.submitting_user, ' common info. >',
-    #           s.submitting_user_common_information, '<')
-    #
-    # def conditional_user_create(self, s, splitted_info, simulate=True):
-    #     if simulate:
-    #         print(
-    #             '\n---\tRunning as simulation, printing to console only\t---\n')
-    #     for e in splitted_info:
-    #         e = e.strip()
-    #         if '@' in e:
-    #             if e.count(' ') == 0:
-    #                 users = User.objects.filter(email=e)
-    #                 if len(users) == 1:
-    #                     if users[0] == s.user:
-    #                         print('\tuser: ', users[0],
-    #                               ' found and is matching submission.user, do '
-    #                               'nothing except common inf can be set to ""')
-    #                         if not simulate:
-    #                             s.submitting_user_common_information = ''
-    #                             s.save()
-    #                     else:
-    #                         print(
-    #                             '\tsubmission user: {}. not matching found user: {}'.format(
-    #                                 s.user, users[0]))
-    #                         if 'gfbio' in s.user.username:
-    #                             print(
-    #                                 '\t\treplace gfbio with found user for this '
-    #                                 'submission')
-    #                             if not simulate:
-    #                                 s.user = users[0]
-    #                                 s.submitting_user_common_information = ''
-    #                                 s.save()
-    #                         else:
-    #                             print('\t\t ... do nothing')
-    #                 # TODO multiple users with same email is basically an error
-    #                 elif len(users) > 1:
-    #                     print('\tmultiple user found for {} ... '.format(e, ),
-    #                           len(users))
-    #                     for mu in users:
-    #                         print('\t\tuser: ', mu, ' email: ', mu.email)
-    #                 elif len(users) == 0:
-    #                     print('\t', e,
-    #                           ' user not in sytem .. create one and set in '
-    #                           'submission ...')
-    #                     if not simulate:
-    #                         u = User.objects.create(
-    #                             username=e,
-    #                             email=e,
-    #                             is_active=False,
-    #                             site_configuration=self.default_site_config,
-    #                         )
-    #                         s.user = u
-    #                         s.submitting_user_common_information = ''
-    #                         s.save()
-    #                     print('\t.... done. username: ', e,
-    #                           ' | submission.user: ',
-    #                           s.user)
-    #             else:
-    #                 print(
-    #                     '\tFound whitespaces in string with @ ...  do nothing here ')
-    #         else:
-    #             pass
+    @classmethod
+    def _generate_test_data(cls):
+        cls._generate_submissions(4)
+        cls._generate_submissions(2, space=True)
+        all = Submission.objects.all()
+        sub1 = all[2]
+        sub2 = all[3]
+        sub1.user = sub2.user
+        sub1.save()
+        all[1].user.delete()
+        cls._generate_with_special_cases()
 
-    # def map_submitting_user(self):
-    #     for s in Submission.objects.all():
-    #         self.print_processing(s)
-    #         # FIXME: info where ; is not split character, but space
-    #         spl = s.submitting_user_common_information.split(';',)
-    #         self.conditional_user_create(s, spl, simulate=False)
+    def call_command(self, *args, **kwargs):
+        call_command(
+            "migrate_submitting_user_common_information",
+            *args,
+            stdout=StringIO(),
+            stderr=StringIO(),
+            **kwargs,
+        )
 
-    # def test_map_common_inf(self):
-    #     self._generate_submissions(4)
-    #     self._generate_submissions(2, space=True)
-    #     all = Submission.objects.all()
-    #     sub1 = all[2]
-    #     sub2 = all[3]
-    #     sub1.user = sub2.user
-    #     sub1.save()
-    #
-    #     all[1].user.delete()
-    #     self._generate_with_special_cases()
-    #
-    #     for s in Submission.objects.all():
-    #         self.print_processing(s)
-    #         spl = s.submitting_user_common_information.split(';', )
-    #         self.conditional_user_create(s, spl, simulate=False)
-    #
-    #     print('\n\n##########################\n\n')
-    #
-    #     for s in Submission.objects.all():
-    #         self.print_processing(s)
-    #         spl = s.submitting_user_common_information.split(';', )
-    #         self.conditional_user_create(s, spl, simulate=False)
-    #
-    #     print('\n\n##########################\n\n')
-    #
-    #     for s in Submission.objects.all():
-    #         self.print_processing(s)
-    #         spl = s.submitting_user_common_information.split(' ', )
-    #         self.conditional_user_create(s, spl, simulate=False)
-    #
-    #     print('\n\n##########################\n\n')
-    #
-    #     for s in Submission.objects.all():
-    #         self.print_processing(s)
-    #         spl = s.submitting_user_common_information.split(' ', )
-    #         self.conditional_user_create(s, spl, simulate=False)
+    def test_dry_run(self):
+        self._generate_test_data()
+        self.call_command()
+        for submission in Submission.objects.all():
+            self.assertNotEqual('',
+                                submission.submitting_user_common_information)
+
+    def test_empty_common_inf(self):
+        user = self._create_random_user()
+        submission = Submission.objects.create(
+            user=user,
+            submitting_user=user.id,
+            submitting_user_common_information='',
+        )
+        self.call_command('--write_db')
+        self.assertEqual(submission, Submission.objects.first())
+
+    def test_user_match_common_inf(self):
+        user = self._create_random_user()
+        submission = Submission.objects.create(
+            user=user,
+            submitting_user=user.id,
+            submitting_user_common_information=';{0};{1};;'.format(user.name,
+                                                                   user.email),
+        )
+        self.assertIn(user.email, submission.submitting_user_common_information)
+        self.assertEqual(user, submission.user)
+        self.call_command('--write_db')
+        submission = Submission.objects.first()
+        self.assertEqual('', submission.submitting_user_common_information)
+
+    def test_no_match_gfbio_user(self):
+        user = self._create_random_user()
+        user_g = User.objects.create(
+            username='gfbio',
+        )
+        submission = Submission.objects.create(
+            user=user_g,
+            submitting_user=user_g.id,
+            submitting_user_common_information=';;{}'.format(user.email),
+        )
+        self.assertIn(user.email, submission.submitting_user_common_information)
+        self.assertEqual(user_g, submission.user)
+        self.assertNotEqual(user, submission.user)
+        self.call_command('--write_db')
+        submission = Submission.objects.first()
+        self.assertEqual('', submission.submitting_user_common_information)
+        self.assertEqual(user, submission.user)
+
+    def test_no_matching_user(self):
+        user_1 = self._create_random_user()
+        user_2 = self._create_random_user()
+        submission = Submission.objects.create(
+            user=user_1,
+            submitting_user=user_1.id,
+            submitting_user_common_information=';{0};{1};;'.format(user_2.name,
+                                                                   user_2.email),
+        )
+        self.call_command('--write_db')
+        self.assertEqual(user_1, submission.user)
+        self.assertNotEqual('', submission.submitting_user_common_information)
+
+    def test_no_user_found(self):
+        email = 'j.doe@example.com'
+        submission = Submission.objects.create(
+            user=None,
+            submitting_user='',
+            submitting_user_common_information='John Doe;{0};'.format(email),
+        )
+        self.assertEqual(0, len(User.objects.filter(email=email)))
+        self.assertNotEqual('', submission.submitting_user_common_information)
+        self.call_command('--write_db')
+        submission = Submission.objects.first()
+        self.assertEqual('', submission.submitting_user_common_information)
+        user = User.objects.get(email=email)
+        self.assertEqual(email, user.username)
+        self.assertEqual(user, submission.user)
+
+    def test_white_space_email(self):
+        user = self._create_random_user()
+        email = user.email
+        submission = Submission.objects.create(
+            user=user,
+            submitting_user=user.id,
+            submitting_user_common_information=';{0};{1};;'.format(
+                user.name, email.replace('@', ' @')),
+        )
+        self.call_command('--write_db')
+        self.assertEqual(submission, Submission.objects.first())
+
+    def test_semicolon_split_char(self):
+        # only ; as split char
+        self._generate_submissions(4)
+        self.call_command('--write_db', split_char=' ')
+        for submission in Submission.objects.all():
+            self.assertNotEqual('',
+                                submission.submitting_user_common_information)
