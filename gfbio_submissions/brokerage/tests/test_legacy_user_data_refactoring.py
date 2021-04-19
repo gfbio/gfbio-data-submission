@@ -35,6 +35,16 @@ class TestSubmittingUserMigration(TestCase):
             content_type__app_label='brokerage',
             name__endswith='upload')
 
+        cls._generate_submissions(4)
+        cls._generate_submissions(2, space=True)
+        all = Submission.objects.all()
+        sub1 = all[2]
+        sub2 = all[3]
+        sub1.user = sub2.user
+        sub1.save()
+        all[1].user.delete()
+        cls._generate_with_special_cases()
+
     @classmethod
     def _create_random_user(cls):
         letters = string.ascii_lowercase
@@ -85,68 +95,72 @@ class TestSubmittingUserMigration(TestCase):
             submitting_user_common_information=';;{}'.format(user.email),
         )
 
-    @staticmethod
-    def print_processing(s):
-        print('--------------------------------------\nprocessing: ', s,
-              ' user: ', s.user,
-              ' submitting_user ', s.submitting_user, ' common info. >',
-              s.submitting_user_common_information, '<')
-
-    def conditional_user_create(self, s, splitted_info, simulate=True):
-        if simulate:
-            print(
-                '\n---\tRunning as simulation, printing to console only\t---\n')
-        for e in splitted_info:
-            e = e.strip()
-            if '@' in e:
-                if e.count(' ') == 0:
-                    users = User.objects.filter(email=e)
-                    if len(users) == 1:
-                        if users[0] == s.user:
-                            print('\tuser: ', users[0],
-                                  ' found and is matching submission.user, common inf can be deleted/set to ""')
-                            if not simulate:
-                                s.submitting_user_common_information = ''
-                                s.save()
-                        else:
-                            print(
-                                '\tsubmission user: {}. not matching found user: {}'.format(
-                                    s.user, users[0]))
-                            if 'gfbio' in s.user.username:
-                                print(
-                                    '\t\treplace gfbio with found user for this submission')
-                                if not simulate:
-                                    s.user = users[0]
-                                    s.submitting_user_common_information = ''
-                                    s.save()
-                            else:
-                                print('\t\t ... do nothing')
-                    # TODO multiple users with same email is basically an error
-                    elif len(users) > 1:
-                        print('\tmultiple user found for {} ... '.format(e, ),
-                              len(users))
-                        for mu in users:
-                            print('\t\tuser: ', mu, ' email: ', mu.email)
-                    elif len(users) == 0:
-                        print('\t', e,
-                              ' user not in sytem .. create one and set in submission ...')
-                        if not simulate:
-                            u = User.objects.create(
-                                username=e,
-                                email=e,
-                                is_active=False,
-                                site_configuration=self.default_site_config,
-                            )
-                            s.user = u
-                            s.submitting_user_common_information = ''
-                            s.save()
-                        print('\t.... done. username: ', e, ' | submission.user: ',
-                              s.user)
-                else:
-                    print(
-                        '\tFound whitespaces in string with @ ...  do nothing here ')
-            else:
-                pass
+    # @staticmethod
+    # def print_processing(s):
+    #     print('--------------------------------------\nprocessing: ', s,
+    #           ' user: ', s.user,
+    #           ' submitting_user ', s.submitting_user, ' common info. >',
+    #           s.submitting_user_common_information, '<')
+    #
+    # def conditional_user_create(self, s, splitted_info, simulate=True):
+    #     if simulate:
+    #         print(
+    #             '\n---\tRunning as simulation, printing to console only\t---\n')
+    #     for e in splitted_info:
+    #         e = e.strip()
+    #         if '@' in e:
+    #             if e.count(' ') == 0:
+    #                 users = User.objects.filter(email=e)
+    #                 if len(users) == 1:
+    #                     if users[0] == s.user:
+    #                         print('\tuser: ', users[0],
+    #                               ' found and is matching submission.user, do '
+    #                               'nothing except common inf can be set to ""')
+    #                         if not simulate:
+    #                             s.submitting_user_common_information = ''
+    #                             s.save()
+    #                     else:
+    #                         print(
+    #                             '\tsubmission user: {}. not matching found user: {}'.format(
+    #                                 s.user, users[0]))
+    #                         if 'gfbio' in s.user.username:
+    #                             print(
+    #                                 '\t\treplace gfbio with found user for this '
+    #                                 'submission')
+    #                             if not simulate:
+    #                                 s.user = users[0]
+    #                                 s.submitting_user_common_information = ''
+    #                                 s.save()
+    #                         else:
+    #                             print('\t\t ... do nothing')
+    #                 # TODO multiple users with same email is basically an error
+    #                 elif len(users) > 1:
+    #                     print('\tmultiple user found for {} ... '.format(e, ),
+    #                           len(users))
+    #                     for mu in users:
+    #                         print('\t\tuser: ', mu, ' email: ', mu.email)
+    #                 elif len(users) == 0:
+    #                     print('\t', e,
+    #                           ' user not in sytem .. create one and set in '
+    #                           'submission ...')
+    #                     if not simulate:
+    #                         u = User.objects.create(
+    #                             username=e,
+    #                             email=e,
+    #                             is_active=False,
+    #                             site_configuration=self.default_site_config,
+    #                         )
+    #                         s.user = u
+    #                         s.submitting_user_common_information = ''
+    #                         s.save()
+    #                     print('\t.... done. username: ', e,
+    #                           ' | submission.user: ',
+    #                           s.user)
+    #             else:
+    #                 print(
+    #                     '\tFound whitespaces in string with @ ...  do nothing here ')
+    #         else:
+    #             pass
 
     # def map_submitting_user(self):
     #     for s in Submission.objects.all():
@@ -155,40 +169,40 @@ class TestSubmittingUserMigration(TestCase):
     #         spl = s.submitting_user_common_information.split(';',)
     #         self.conditional_user_create(s, spl, simulate=False)
 
-    def test_map_common_inf(self):
-        self._generate_submissions(4)
-        self._generate_submissions(2, space=True)
-        all = Submission.objects.all()
-        sub1 = all[2]
-        sub2 = all[3]
-        sub1.user = sub2.user
-        sub1.save()
-
-        all[1].user.delete()
-        self._generate_with_special_cases()
-
-        for s in Submission.objects.all():
-            self.print_processing(s)
-            spl = s.submitting_user_common_information.split(';', )
-            self.conditional_user_create(s, spl, simulate=False)
-
-        print('\n\n##########################\n\n')
-
-        for s in Submission.objects.all():
-            self.print_processing(s)
-            spl = s.submitting_user_common_information.split(';', )
-            self.conditional_user_create(s, spl, simulate=False)
-
-        print('\n\n##########################\n\n')
-
-        for s in Submission.objects.all():
-            self.print_processing(s)
-            spl = s.submitting_user_common_information.split(' ', )
-            self.conditional_user_create(s, spl, simulate=False)
-
-        print('\n\n##########################\n\n')
-
-        for s in Submission.objects.all():
-            self.print_processing(s)
-            spl = s.submitting_user_common_information.split(' ', )
-            self.conditional_user_create(s, spl, simulate=False)
+    # def test_map_common_inf(self):
+    #     self._generate_submissions(4)
+    #     self._generate_submissions(2, space=True)
+    #     all = Submission.objects.all()
+    #     sub1 = all[2]
+    #     sub2 = all[3]
+    #     sub1.user = sub2.user
+    #     sub1.save()
+    #
+    #     all[1].user.delete()
+    #     self._generate_with_special_cases()
+    #
+    #     for s in Submission.objects.all():
+    #         self.print_processing(s)
+    #         spl = s.submitting_user_common_information.split(';', )
+    #         self.conditional_user_create(s, spl, simulate=False)
+    #
+    #     print('\n\n##########################\n\n')
+    #
+    #     for s in Submission.objects.all():
+    #         self.print_processing(s)
+    #         spl = s.submitting_user_common_information.split(';', )
+    #         self.conditional_user_create(s, spl, simulate=False)
+    #
+    #     print('\n\n##########################\n\n')
+    #
+    #     for s in Submission.objects.all():
+    #         self.print_processing(s)
+    #         spl = s.submitting_user_common_information.split(' ', )
+    #         self.conditional_user_create(s, spl, simulate=False)
+    #
+    #     print('\n\n##########################\n\n')
+    #
+    #     for s in Submission.objects.all():
+    #         self.print_processing(s)
+    #         spl = s.submitting_user_common_information.split(' ', )
+    #         self.conditional_user_create(s, spl, simulate=False)
