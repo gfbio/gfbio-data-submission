@@ -19,7 +19,7 @@ from gfbio_submissions.users.models import User
 class TestMigrateCommonInformation(SimpleTestCase):
 
     def test_none_args(self):
-        result = Command().migrate_common_information_to_user(None, None)
+        result = Command().migrate_common_information_to_user(None, None, None)
         self.assertIsNone(result)
 
 
