@@ -80,8 +80,8 @@ class RequestLogTest(TestCase):
     @responses.activate
     def test_send_site_user_type(self):
         submission = Submission.objects.first()
-        submission.submitting_user = '666'
-        submission.save()
+        # submission.submitting_user = '666'
+        # submission.save()
         conf = SiteConfiguration.objects.first()
         responses.add(
             responses.POST,

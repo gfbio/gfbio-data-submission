@@ -93,7 +93,6 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             'release': False,
             'user': 'horst',
             'status': 'OPEN',
-            'submitting_user': '',
             'target': 'ENA'
         }
         self.assertEqual(201, response.status_code)
@@ -107,7 +106,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
         self.assertIsNone(submission.embargo)
         self.assertFalse(submission.release)
         self.assertEqual(Submission.OPEN, submission.status)
-        self.assertEqual(0, len(submission.submitting_user))
+        # self.assertEqual(0, len(submission.submitting_user))
         self.assertEqual(0,
                          len(submission.submitting_user_common_information))
         self.assertEqual('ENA', submission.target)
@@ -134,7 +133,6 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             'release': False,
             'user': 'horst',
             'status': 'OPEN',
-            'submitting_user': '',
             'target': 'ENA'}
         self.assertEqual(201, response.status_code)
         self.assertDictEqual(expected, content)

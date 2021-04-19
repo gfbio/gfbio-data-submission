@@ -379,7 +379,7 @@ class SubmissionAdmin(admin.ModelAdmin):
     list_display = ('broker_submission_id',
                     'user', 'created', 'target', 'status',)
     list_filter = ('status', 'target',)
-    search_fields = ['broker_submission_id', 'submitting_user',
+    search_fields = ['broker_submission_id',
                      'submitting_user_common_information',
                      'additionalreference__reference_key'
                      ]
