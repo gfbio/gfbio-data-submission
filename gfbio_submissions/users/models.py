@@ -3,6 +3,7 @@ from django.db import models
 from django.db.models import CharField, BooleanField
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
+from model_utils.models import TimeStampedModel
 
 from gfbio_submissions.generic.models import SiteConfiguration
 from gfbio_submissions.users.managers import CustomUserManager
@@ -16,6 +17,8 @@ class User(AbstractUser):
     # around the globe.
     name = CharField(_("Name of User"), blank=True, max_length=255)
 
+
+    # TODO: need 2-step migration, first migrate to new model then remove here
     # TODO: provide context for external_user_id, e.g. where does it come from,
     #   so that unique constrain works only in this context.
     #   e.g. provider_a id=1 is different than provider_b id=1
@@ -60,3 +63,29 @@ class User(AbstractUser):
             if len(user_set) == 1:
                 user_values = user_set[0]
         return user_values
+
+
+class ExternalUserId(TimeStampedModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    external_id = CharField(
+        null=False, blank=False, max_length=32,
+        help_text=_('Not Required. 32 characters or fewer. Has to be unique '
+                    'if not Null.'),
+    )
+    provider = CharField(
+        max_length=32,
+        help_text=_('Name of provider of this external id')
+    )
+    resolver_url = models.URLField(
+        null=True, blank=True, max_length=64,
+        help_text=_('An URL to resolve the value of "external_id"')
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['external_id', 'provider'],
+                                    name='unique_id_for_provider'),
+            models.UniqueConstraint(fields=['user', 'provider'],
+                                    name='unique_id_for_user'),
+
+        ]
