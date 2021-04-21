@@ -1209,9 +1209,9 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
         'email': user_email,
         'full_name': user_full_name
     }
-    user_name = submission.user.external_user_id \
-        if submission.user.external_user_id \
-        else submission.user.username
+    goe_id = submission.user.externaluserid_set.filter(
+        provider='goe_id').first()
+    user_name = goe_id.external_id if goe_id else submission.user.username
     user_email = submission.user.email
     user_full_name = submission.user.name
     result['email'] = user_email if len(user_email) else JIRA_FALLBACK_EMAIL

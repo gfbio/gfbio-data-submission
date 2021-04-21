@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.db import models
+from django.db import models, IntegrityError
 from django.db.models import CharField, BooleanField
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
@@ -16,7 +16,6 @@ class User(AbstractUser):
     # First Name and Last Name do not cover name patterns
     # around the globe.
     name = CharField(_("Name of User"), blank=True, max_length=255)
-
 
     # TODO: need 2-step migration, first migrate to new model then remove here
     # TODO: provide context for external_user_id, e.g. where does it come from,
@@ -54,6 +53,23 @@ class User(AbstractUser):
     def get_absolute_url(self):
         return reverse("users:detail", kwargs={"username": self.username})
 
+    def update_or_create_external_user_id(self, external_id, provider,
+                                          resolver_url=''):
+        default_vals = {
+            'external_id': external_id,
+            'provider': provider,
+        }
+        if len(resolver_url):
+            default_vals['resolver_url'] = resolver_url
+        try:
+            return self.externaluserid_set.update_or_create(
+                external_id=external_id,
+                provider=provider,
+                defaults=default_vals,
+            )
+        except IntegrityError as ie:
+            return (None, False)
+
     @classmethod
     def get_user_values_safe(cls, submitting_user_id):
         user_values = {}
@@ -89,3 +105,6 @@ class ExternalUserId(TimeStampedModel):
                                     name='unique_id_for_user'),
 
         ]
+
+    def __str__(self):
+        return '{}_{}'.format(self.user.username, self.provider)
