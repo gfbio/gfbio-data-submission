@@ -46,6 +46,8 @@ class TestInitialChainTasks(TestCase):
         user.user_permissions.add(*cls.permissions)
         user.site_configuration = cls.site_config
         user.save()
+        user.update_or_create_external_user_id('0815', 'goe_id')
+
         cls.factory = APIRequestFactory()
 
         client = APIClient()
@@ -70,7 +72,7 @@ class TestInitialChainTasks(TestCase):
         responses.add(responses.GET, url, body='{0}'.format(user.username),
                       status=200)
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
-            user.external_user_id, user.email,
+            user.externaluserid_set.first().external_id, user.email,
             quote(user.name)
         )
         responses.add(responses.GET, url, body='{0}'.format(user.username),

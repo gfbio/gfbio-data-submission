@@ -34,7 +34,8 @@ class TestGetHelpDeskUserTask(TestTasks):
     def test_get_gfbio_helpdesk_username_task_success(self):
         submission = Submission.objects.last()
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
-            submission.user.external_user_id, submission.user.email,
+            submission.user.externaluserid_set.first().external_id,
+            submission.user.email,
             submission.user.name
         )
         responses.add(responses.GET, url, body=b'0815', status=200)
@@ -46,13 +47,13 @@ class TestGetHelpDeskUserTask(TestTasks):
         )
         res = result.get()
         expected_result = {
-            'jira_user_name': submission.user.external_user_id,
+            'jira_user_name': submission.user.externaluserid_set.first().external_id,
             'email': submission.user.email,
             'full_name': submission.user.name
         }
         self.assertEqual(expected_result, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        expected_value = "{'jira_user_name': '" + submission.user.external_user_id + \
+        expected_value = "{'jira_user_name': '" + submission.user.externaluserid_set.first().external_id + \
                          "', 'email': '" + submission.user.email + \
                          "', 'full_name': '" + submission.user.name + "'}"
         self.assertEqual(expected_value,
@@ -62,7 +63,8 @@ class TestGetHelpDeskUserTask(TestTasks):
     def test_get_gfbio_helpdesk_username_task_success_no_fullname(self):
         submission = Submission.objects.last()
         url = JIRA_USERNAME_URL_TEMPLATE.format(
-            submission.user.external_user_id, submission.user.email,
+            submission.user.externaluserid_set.first().external_id,
+            submission.user.email,
         )
         responses.add(responses.GET, url, body=b'0815', status=200)
         submission.user.name = ''
@@ -74,14 +76,14 @@ class TestGetHelpDeskUserTask(TestTasks):
         )
         res = result.get()
         expected_result = {
-            'jira_user_name': submission.user.external_user_id,
+            'jira_user_name': submission.user.externaluserid_set.first().external_id,
             'email': submission.user.email,
             'full_name': ''
         }
         self.assertEqual(expected_result, res)
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        expected_value = "{'jira_user_name': '" + submission.user.external_user_id + "', " \
-                                                                                     "'email': '" + submission.user.email + "', 'full_name': ''}"
+        expected_value = "{'jira_user_name': '" + submission.user.externaluserid_set.first().external_id + "', " \
+                                                                                                           "'email': '" + submission.user.email + "', 'full_name': ''}"
         self.assertEqual(expected_value,
                          TaskProgressReport.objects.first().task_return_value)
 
@@ -94,7 +96,8 @@ class TestGetHelpDeskUserTask(TestTasks):
         responses.add(responses.GET, url, body='{0}'.format(user.username),
                       status=200)
 
-        user.external_user_id = None
+        # user.external_user_id = None
+        user.externaluserid_set.all().delete()
         user.name = ''
         user.save()
         submission = Submission.objects.first()
@@ -120,7 +123,8 @@ class TestGetHelpDeskUserTask(TestTasks):
     def test_get_gfbio_helpdesk_username_task_client_error(self):
         submission = Submission.objects.first()
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
-            submission.user.external_user_id, submission.user.email,
+            submission.user.externaluserid_set.first().external_id,
+            submission.user.email,
             quote(submission.user.name)
         )
         responses.add(responses.GET, url, status=403)
@@ -150,7 +154,8 @@ class TestGetHelpDeskUserTask(TestTasks):
     def test_get_gfbio_helpdesk_username_task_server_error(self):
         submission = Submission.objects.first()
         url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
-            submission.user.external_user_id, submission.user.email,
+            submission.user.externaluserid_set.first().external_id,
+            submission.user.email,
             quote(submission.user.name)
         )
         responses.add(responses.GET, url, body=b'', status=500)

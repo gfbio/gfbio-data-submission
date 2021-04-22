@@ -3,12 +3,23 @@ from django.contrib.auth import admin as auth_admin
 from django.contrib.auth import get_user_model
 
 from gfbio_submissions.users.forms import UserChangeForm, UserCreationForm
+from gfbio_submissions.users.models import ExternalUserId
 
 User = get_user_model()
 
 
+@admin.register(ExternalUserId)
+class ExternalUserIdAdmin(admin.ModelAdmin):
+    model = ExternalUserId
+
+
+class ExternalUserIdAdminInline(admin.TabularInline):
+    model = ExternalUserId
+
+
 @admin.register(User)
 class UserAdmin(auth_admin.UserAdmin):
+    inlines = (ExternalUserIdAdminInline,)
     form = UserChangeForm
     add_form = UserCreationForm
 

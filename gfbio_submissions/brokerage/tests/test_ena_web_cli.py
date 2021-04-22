@@ -68,7 +68,7 @@ class TestTargetedSequencePreparationTasks(TestCase):
         user = User.objects.create(
             username="user1"
         )
-        user.external_user_id = '0815'
+        user.update_or_create_external_user_id('0815', 'goe_id')
         user.name = 'Kevin Horstmeier'
         user.email = 'khors@me.de'
         user.site_configuration = cls.site_config
@@ -609,7 +609,7 @@ class TestCLI(TestCase):
         user = User.objects.create(
             username="user1"
         )
-        user.external_user_id = '0815'
+        user.update_or_create_external_user_id('0815', 'goe_id')
         user.name = 'Kevin Horstmeier'
         user.email = 'khors@me.de'
         user.site_configuration = site_config
