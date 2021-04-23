@@ -91,7 +91,7 @@ class TestSubmissionViewGetRequests(TestSubmissionView):
         self.assertEqual(200, response.status_code)
         self.assertEqual(3, len(content))
         for sub in content:
-            self.assertEqual('', sub['submitting_user'])
+            # self.assertEqual('', sub['submitting_user'])
             self.assertEqual(user.username, sub['user'])
             self.assertNotIn('site', sub.keys())
 
@@ -106,7 +106,6 @@ class TestSubmissionViewGetRequests(TestSubmissionView):
         self.assertEqual(200, response.status_code)
         self.assertEqual(2, len(content))
         for sub in content:
-            self.assertEqual('', sub['submitting_user'])
             self.assertEqual(user.username, sub['user'])
             self.assertNotIn('site', sub.keys())
 
@@ -121,7 +120,6 @@ class TestSubmissionViewGetRequests(TestSubmissionView):
         self.assertEqual(200, response.status_code)
         self.assertEqual(1, len(content))
         for sub in content:
-            self.assertEqual('', sub['submitting_user'])
             self.assertEqual(user.username, sub['user'])
             self.assertNotIn('site', sub.keys())
 

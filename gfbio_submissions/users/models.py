@@ -52,13 +52,12 @@ class User(AbstractUser):
             return (None, False)
 
     @classmethod
-    def get_user_values_safe(cls, submitting_user_id):
+    def get_user_values_safe(cls, user_id):
         user_values = {}
-        if submitting_user_id != '':
-            user_set = cls.objects.filter(
-                pk=int(submitting_user_id)).values('email', 'username')
-            if len(user_set) == 1:
-                user_values = user_set[0]
+        user_set = cls.objects.filter(
+            pk=user_id).values('email', 'username')
+        if len(user_set) == 1:
+            user_values = user_set[0]
         return user_values
 
 

@@ -25,7 +25,7 @@ class TestBrokerObjectManager(TestCase):
         Submission.objects.create(
             user=user,
             status='OPEN',
-            submitting_user='John Doe',
+            # submitting_user='John Doe',
             target='ENA',
             release=False,
             data={}
@@ -162,7 +162,7 @@ class TestBrokerObjectManager(TestCase):
             }
         )
         self.assertTrue(serializer.is_valid())
-        submission = serializer.save(site=User.objects.first())
+        submission = serializer.save(user=User.objects.first())
         self.assertEqual('OPEN', submission.status)
         BrokerObject.objects.add_submission_data(submission)
         broker_objects = BrokerObject.objects.all()

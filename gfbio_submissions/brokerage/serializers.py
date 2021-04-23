@@ -59,7 +59,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
             'issue',
             # 'site',
             'user',
-            'submitting_user',
+            # 'submitting_user',
             'target', 'status',
             'release', 'data', 'embargo', 'download_url',
         )

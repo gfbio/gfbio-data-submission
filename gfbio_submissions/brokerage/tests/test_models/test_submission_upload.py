@@ -18,7 +18,7 @@ class TestSubmissionUpload(TestCase):
         user = User.objects.create(
             username="user1"
         )
-        Submission.objects.create(site=user)
+        Submission.objects.create(user=user)
 
     @classmethod
     def tearDownClass(cls):
@@ -30,20 +30,15 @@ class TestSubmissionUpload(TestCase):
     def _create_submission_upload(cls, size=0):
         simple_file = SimpleUploadedFile('test_submission_upload.txt',
                                          b'these are the file contents!')
-        # if size > 0:
-        #     simple_file = SimpleUploadedFile('test_submission_upload.txt',
-        #                                      b'these are the file contents!')
-
         return SubmissionUpload.objects.create(
             submission=Submission.objects.first(),
-            # site=User.objects.first(),
             user=User.objects.first(),
             file=simple_file,
         )
 
     def test_instance(self):
         self.assertEqual(0, len(SubmissionUpload.objects.all()))
-        submission_upload = self._create_submission_upload()
+        self._create_submission_upload()
         self.assertEqual(1, len(SubmissionUpload.objects.all()))
 
     def test_str(self):
@@ -73,9 +68,8 @@ class TestSubmissionUpload(TestCase):
                   'rb') as data_file:
             simple_file = SimpleUploadedFile('test_submission_upload.txt',
                                              data_file.read())
-            submission_upload = SubmissionUpload.objects.create(
+            SubmissionUpload.objects.create(
                 submission=Submission.objects.first(),
-                # site=User.objects.first(),
                 user=User.objects.first(),
                 file=simple_file,
             )
@@ -84,14 +78,12 @@ class TestSubmissionUpload(TestCase):
         self.assertEqual(0, len(SubmissionUpload.objects.all()))
         SubmissionUpload.objects.create(
             submission=Submission.objects.first(),
-            # site=User.objects.first(),
             user=User.objects.first(),
             file=SimpleUploadedFile('test_submission_upload.txt',
                                     b'these are the file contents!'),
         )
         SubmissionUpload.objects.create(
             submission=Submission.objects.first(),
-            # site=User.objects.first(),
             user=User.objects.first(),
             file=SimpleUploadedFile('test_submission_upload.txt',
                                     b'these are the file contents! but different'),

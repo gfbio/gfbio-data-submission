@@ -63,7 +63,7 @@ class TestSubmissionTransferHandler(TestCase):
             helpdesk_server=resource_cred,
             comment='Comment',
         )
-        user = User.objects.create(
+        User.objects.create(
             username="user1",
             site_configuration=site_configuration
         )
@@ -72,21 +72,12 @@ class TestSubmissionTransferHandler(TestCase):
             username='no-conf', email='no@co.nf'
         )
 
-        # SiteConfiguration.objects.create(
-        #     title='default',
-        #     ena_server=resource_cred_2,
-        #     pangaea_token_server=resource_cred,
-        #     pangaea_jira_server=resource_cred,
-        #     helpdesk_server=resource_cred,
-        #     comment='Comment',
-        # )
         submission = cls._create_submission_via_serializer()
         submission.additionalreference_set.create(
             type=AdditionalReference.PANGAEA_JIRA_TICKET,
             reference_key='FAKE_KEY',
             primary=True
         )
-        submission = Submission.objects.create(site=None)
 
     def test_instance(self):
         submission = Submission.objects.first()

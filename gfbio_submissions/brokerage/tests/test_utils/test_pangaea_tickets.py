@@ -29,7 +29,7 @@ class PangaeaTicketTest(TestCase):
             username='gfbio-broker',
             password='secret'
         )
-        site_conf = SiteConfiguration.objects.create(
+        SiteConfiguration.objects.create(
             title='Title',
             ena_server=resource_cred,
             pangaea_token_server=resource_cred,
@@ -37,9 +37,9 @@ class PangaeaTicketTest(TestCase):
             helpdesk_server=resource_cred,
             comment='Comment',
         )
-        submission = Submission.objects.create(site=user)
-        Submission.objects.create(site=user)
-        reference = AdditionalReference.objects.create(
+        submission = Submission.objects.create(user=user)
+        Submission.objects.create(user=None)
+        AdditionalReference.objects.create(
             submission=submission,
             type=AdditionalReference.PANGAEA_JIRA_TICKET,
             reference_key='PDI-0815',
@@ -67,13 +67,6 @@ class PangaeaTicketTest(TestCase):
             'xmlns:ns1="urn:java:de.pangaea.login.PanLogin">'
             '<loginReturn xsi:type="xsd:string">', response.content
         )
-
-    # @skip('request to PANGAEA server')
-    # def test_create_pangaea_ticket(self):
-    #     site_config = SiteConfiguration.objects.first()
-    #     login_token = get_pangaea_login_token(site_config.pangaea_token_server)
-    #     response = create_pangaea_jira_ticket(login_token,
-    #                                           site_configuration=site_config)
 
     @skip('request to PANGAEA server')
     def test_doi_parsing(self):

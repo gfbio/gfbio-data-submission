@@ -38,16 +38,6 @@ class TestTasks(TestCase):
             url='https://www.example.com',
             authentication_string='letMeIn'
         )
-        # cls.default_site_config = SiteConfiguration.objects.create(
-        #     title='default',
-        #     site=None,
-        #     ena_server=resource_cred,
-        #     pangaea_token_server=resource_cred,
-        #     pangaea_jira_server=resource_cred,
-        #     helpdesk_server=resource_cred,
-        #     comment='Default configuration',
-        #     contact='kevin@horstmeier.de'
-        # )
         cls.default_site_config = SiteConfiguration.objects.create(
             title=HOSTING_SITE,
             ena_server=resource_cred,
@@ -79,26 +69,6 @@ class TestTasks(TestCase):
         user.save()
         user.user_permissions.add(*permissions)
 
-        site = User.objects.create(
-            username=HOSTING_SITE
-        )
-        site.name = 'hosting site'
-        site.email = 'hosting@site.de'
-        site.is_site = True
-        site.is_user = False
-        site.save()
-        site.user_permissions.add(*permissions)
-
-        external_site = User.objects.create(
-            username='external_site'
-        )
-        external_site.name = 'external site'
-        external_site.email = 'external@site.de'
-        external_site.is_site = True
-        external_site.is_user = False
-        external_site.save()
-        external_site.user_permissions.add(*permissions)
-
         submission = cls._create_submission_via_serializer()
         submission.additionalreference_set.create(
             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
@@ -110,13 +80,10 @@ class TestTasks(TestCase):
             reference_key='PANGAEA_FAKE_KEY',
             primary=True
         )
-        submission.site = site
-        submission.save()
 
         submission = cls._create_submission_via_serializer()
-        submission.submitting_user = '16250'
-        submission.site = external_site
-        submission.save()
+        # submission.submitting_user = '16250'
+        # submission.save()
 
         cls.issue_json = _get_jira_issue_response()
         cls.pangaea_issue_json = _get_pangaea_ticket_response()

@@ -34,7 +34,7 @@ class TestSubmissionAdmin(TestCase):
         Submission.objects.create(
             user=user,
             status='OPEN',
-            submitting_user='John Doe',
+            # submitting_user='John Doe',
             target='ENA',
             release=False,
             data={}

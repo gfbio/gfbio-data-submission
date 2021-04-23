@@ -171,7 +171,7 @@ class TestSubmissionView(TestCase):
                 'target': 'ENA',
                 'release': False,
                 # TODO: remove after site/user refactorings are done
-                'submitting_user': '{}'.format(submitting_user),
+                # 'submitting_user': '{}'.format(submitting_user),
                 'data': {
                     'requirements': {
                         'title': 'A Title',
