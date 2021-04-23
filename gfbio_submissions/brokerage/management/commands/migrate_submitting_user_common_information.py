@@ -88,12 +88,13 @@ class Command(BaseCommand):
                             ''.format(info, len(users)))
                         for mu in users:
                             print(
-                                '\t\tuser: {0} | email: {}'.format(mu,
-                                                                   mu.email))
+                                '\t\tuser: {0} | email: {1}'.format(mu,
+                                                                    mu.email))
                     elif len(users) == 0:
                         print(
                             '\t{0} | user not found ... create one and set as submission owner'.format(
                                 info))
+                        submission_user = 'notAvailable'
                         if write:
                             user = User.objects.create(
                                 username=info,
@@ -104,9 +105,10 @@ class Command(BaseCommand):
                             submission.user = user
                             submission.submitting_user_common_information = ''
                             submission.save()
+                            submission_user = submission.user
                         print(
                             '\t.... done. username: {0} | submission.user: {1}'.format(
-                                info, submission.user))
+                                info, submission_user))
                 else:
                     print(
                         '\tFound forbidden char "{0}" in string with @ ...  do nothing here'.format(
