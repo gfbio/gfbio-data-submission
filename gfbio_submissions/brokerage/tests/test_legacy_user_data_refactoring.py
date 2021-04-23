@@ -50,10 +50,8 @@ class TestSubmittingUserMigration(TestCase):
     def _create_random_user(cls):
         letters = string.ascii_lowercase
         rand_str = ''.join(random.choice(letters) for i in range(4))
-        rand_int = random.randint(0, 10000)
         user = User.objects.create(
             username=rand_str,
-            external_user_id='{}'.format(rand_int),
         )
         user.name = '{} {}'.format(rand_str, rand_str)
         user.email = '{}@{}.de'.format(rand_str, rand_str)
@@ -228,5 +226,6 @@ class TestSubmittingUserMigration(TestCase):
         start_len = len(Submission.objects.all())
         self.call_command('--write_db', split_char=';')
         self.call_command('--write_db', split_char=' ')
-        end_len = len(Submission.objects.filter(submitting_user_common_information=''))
-        self.assertEqual((start_len-1), end_len)
+        end_len = len(
+            Submission.objects.filter(submitting_user_common_information=''))
+        self.assertEqual((start_len - 1), end_len)
