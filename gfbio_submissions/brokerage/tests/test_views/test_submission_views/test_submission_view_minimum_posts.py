@@ -106,9 +106,6 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
         self.assertIsNone(submission.embargo)
         self.assertFalse(submission.release)
         self.assertEqual(Submission.OPEN, submission.status)
-        # self.assertEqual(0, len(submission.submitting_user))
-        self.assertEqual(0,
-                         len(submission.submitting_user_common_information))
         self.assertEqual('ENA', submission.target)
         request_logs = RequestLog.objects.filter(type=RequestLog.INCOMING)
         self.assertEqual(1, len(request_logs))
