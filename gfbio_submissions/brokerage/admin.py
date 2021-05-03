@@ -380,7 +380,6 @@ class SubmissionAdmin(admin.ModelAdmin):
                     'user', 'created', 'target', 'status',)
     list_filter = ('status', 'target',)
     search_fields = ['broker_submission_id',
-                     'submitting_user_common_information',
                      'additionalreference__reference_key'
                      ]
     inlines = (AuditableTextDataInlineAdmin,
