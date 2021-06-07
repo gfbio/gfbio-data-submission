@@ -11,4 +11,3 @@ class ResolveConfig(AppConfig):
             import gfbio_submissions.resolver.signals  # noqa F401
         except ImportError:
             pass
-h
