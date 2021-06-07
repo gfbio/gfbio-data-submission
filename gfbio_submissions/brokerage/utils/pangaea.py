@@ -107,10 +107,7 @@ def prepare_pangaea_issue_content(site_configuration, submission):
         'project': {
             'key': 'PDI',
         },
-        'customfield_10002':
-            submission.submitting_user_common_information
-            if submission.submitting_user_common_information != ''
-            else site_configuration.contact,
+        'customfield_10002': submission.user.email,
         'customfield_10004': submission.data.get('requirements', {}).get(
             'title', ''),
         'issuetype': {

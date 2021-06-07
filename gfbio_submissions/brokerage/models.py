@@ -91,15 +91,15 @@ class Submission(TimeStampedModel):
     #                                    ' from database, uniquq login-name, '
     #                                    'etc..')
     # TODO: remove in Submission ownership refactoring. BE CAREFUL ! LEGACY DATA !
-    submitting_user_common_information = models.TextField(
-        default='',
-        blank=True,
-        null=True,
-        help_text='General information regarding the submitting user in '
-                  'free-text form, e.g. full name and/or email-address, ORCID,'
-                  ' etc.. . Will be used to fill Helpdesk/Jira fields that ask'
-                  ' for this kind of verbose information'
-    )
+    # submitting_user_common_information = models.TextField(
+    #     default='',
+    #     blank=True,
+    #     null=True,
+    #     help_text='General information regarding the submitting user in '
+    #               'free-text form, e.g. full name and/or email-address, ORCID,'
+    #               ' etc.. . Will be used to fill Helpdesk/Jira fields that ask'
+    #               ' for this kind of verbose information'
+    # )
     status = models.CharField(choices=STATUSES, max_length=10, default=OPEN)
     release = models.BooleanField(default=False)
     approval_notification_sent = models.BooleanField(default=False)
