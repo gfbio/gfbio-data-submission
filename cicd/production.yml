@@ -1,7 +1,7 @@
 version: '3.7'
 
 volumes:
-  django_media: {}
+  django_media: { }
 
 services:
   django: &django
@@ -19,6 +19,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - django_media:/app/gfbio_submissions/media
     networks:
+      - default
       - proxy
       - internal
     logging:
@@ -131,6 +132,10 @@ services:
     command: /start-flower
 
 networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1450
   proxy:
     external: true
   internal:

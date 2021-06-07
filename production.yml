@@ -6,6 +6,12 @@ volumes:
   production_traefik: { }
   django_media: { }
 
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1450
+
 services:
   django: &django
     build:
@@ -23,6 +29,8 @@ services:
       options:
         tag: 'GFBio-django'
     restart: always
+    networks:
+      - default
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - django_media:/app/gfbio_submissions/media
@@ -45,6 +53,8 @@ services:
       context: .
       dockerfile: ./compose/production/traefik/Dockerfile
     image: gfbio_submissions_production_traefik
+    networks:
+      - default
     depends_on:
       - django
     volumes:
