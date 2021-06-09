@@ -452,6 +452,19 @@ def reparse_csv_metadata(modeladmin, request, queryset):
 reparse_csv_metadata.short_description = 'Re-parse csv metadata to get updated XMLs'
 
 
+def download_submission_upload_file(modeladmin, request, queryset):
+    for obj in queryset:
+        f = obj.file
+        response = HttpResponse(f.read(),
+                                content_type='application/force-download')
+        response['Content-Disposition'] = 'attachment; filename=%s' % \
+                                          f.name.split('/')[-1:][0]
+        return response
+
+
+download_submission_upload_file.short_description = 'Download the file of the selected SubmissionUpload.'
+
+
 class SubmissionUploadAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'meta_data',
                     'user',
@@ -463,6 +476,7 @@ class SubmissionUploadAdmin(admin.ModelAdmin):
     search_fields = ['submission__broker_submission_id']
     actions = [
         reparse_csv_metadata,
+        download_submission_upload_file,
     ]
 
 
@@ -478,13 +492,15 @@ class TaskProgressReportAdmin(admin.ModelAdmin):
 class EnaReportAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
 
+
 class JiraMessageAdmin(admin.ModelAdmin):
     fields = ('name', 'message')
     readonly_fields = ('name',)
     ordering = ('name',)
     list_filter = ('name',)
-    search_fields = ['name',]
+    search_fields = ['name', ]
     list_display = ('name', 'modified')
+
 
 admin.site.register(Submission, SubmissionAdmin)
 admin.site.register(BrokerObject, BrokerObjectAdmin)
