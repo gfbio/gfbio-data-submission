@@ -1908,14 +1908,14 @@ def notify_user_embargo_expiry_task(self):
             study_pid = study.persistentidentifier_set.filter(
                 pid_type='PRJ').first()
             if study_pid:
-                # check if hold_date is withing 2 weeks
-                two_weeks_from_now = datetime.date.today() + datetime.timedelta(
-                    days=14)
+                # check if hold_date is withing 4 weeks
+                four_weeks_from_now = datetime.date.today() + datetime.timedelta(
+                    days=28)
                 should_notify = True
                 # check if user was already notified
-                if study_pid.user_notified and study_pid.user_notified <= two_weeks_from_now:
+                if study_pid.user_notified and study_pid.user_notified <= four_weeks_from_now:
                     should_notify = False
-                if submission.embargo <= two_weeks_from_now and should_notify:
+                if submission.embargo <= four_weeks_from_now and should_notify:
                     # send embargo notification comment to JIRA
                     comment = get_jira_comment_template(
                         template_name="NOTIFY_EMBARGO_EXPIRY",

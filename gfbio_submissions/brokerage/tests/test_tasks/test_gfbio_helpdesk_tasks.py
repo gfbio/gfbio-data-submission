@@ -621,13 +621,45 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
             pid_type='PRJ',
             pid='PRJE0815'
         )
+
         url = self._add_comment_reponses()
         responses.add(responses.POST, url,
                       json={'bla': 'blubb'},
                       status=200)
-        result = notify_user_embargo_expiry_task()
-        self.assertEqual(1, len(result))
-        self.assertEqual(today.isoformat(), result[0]['user_notified_on'])
+
+        notify_user_embargo_expiry_task()
+        pid = submission.brokerobject_set.filter(
+            type='study'
+        ).first().persistentidentifier_set.filter().first()
+
+        self.assertEqual(today.isoformat(), pid.user_notified.isoformat())
+
+    @responses.activate
+    def test_notify_user_no_notification(self):
+        future_date = datetime.date.today() + datetime.timedelta(days=29)
+        submission = Submission.objects.first()
+        submission.embargo = future_date
+        submission.status = Submission.CLOSED
+        submission.save()
+        submission.brokerobject_set.filter(
+            type='study'
+        ).first().persistentidentifier_set.create(
+            archive='ENA',
+            pid_type='PRJ',
+            pid='PRJE0815'
+        )
+
+        url = self._add_comment_reponses()
+        responses.add(responses.POST, url,
+                      json={'bla': 'blubb'},
+                      status=200)
+
+        notify_user_embargo_expiry_task()
+        pid = submission.brokerobject_set.filter(
+            type='study'
+        ).first().persistentidentifier_set.filter().first()
+
+        self.assertEqual(pid.user_notified, None)
 
     @responses.activate
     def test_welcome_comment(self):
