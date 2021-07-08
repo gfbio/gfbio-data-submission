@@ -662,6 +662,66 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         self.assertEqual(pid.user_notified, None)
 
     @responses.activate
+    def test_notify_user_no_double_notification(self):
+        date = datetime.date.today() + datetime.timedelta(days=10)
+        submission = Submission.objects.first()
+        submission.embargo = date
+        submission.status = Submission.CLOSED
+        submission.save()
+        submission.brokerobject_set.filter(
+            type='study'
+        ).first().persistentidentifier_set.create(
+            archive='ENA',
+            pid_type='PRJ',
+            pid='PRJE0815'
+        )
+
+        url = self._add_comment_reponses()
+        responses.add(responses.POST, url,
+                      json={'bla': 'blubb'},
+                      status=200)
+
+        notify_user_embargo_expiry_task()
+        pid = submission.brokerobject_set.filter(
+            type='study'
+        ).first().persistentidentifier_set.filter().first()
+
+        self.assertEqual(datetime.date.today().isoformat(), pid.user_notified.isoformat())
+
+        r = notify_user_embargo_expiry_task()
+        pid = submission.brokerobject_set.filter(
+            type='study'
+        ).first().persistentidentifier_set.filter().first()
+
+        self.assertIn("No notifications to send", r)
+        self.assertEqual(datetime.date.today().isoformat(), pid.user_notified.isoformat())
+
+    @responses.activate
+    def test_notify_user_date_is_null(self):
+        submission = Submission.objects.first()
+        submission.embargo = None
+        submission.save()
+        submission.brokerobject_set.filter(
+            type='study'
+        ).first().persistentidentifier_set.create(
+            archive='ENA',
+            pid_type='PRJ',
+            pid='PRJE0815'
+        )
+
+        url = self._add_comment_reponses()
+        responses.add(responses.POST, url,
+                      json={'bla': 'blubb'},
+                      status=200)
+
+        r = notify_user_embargo_expiry_task()
+        pid = submission.brokerobject_set.filter(
+            type='study'
+        ).first().persistentidentifier_set.filter().first()
+
+        self.assertIn("No notifications to send", r)
+
+    @responses.activate
     def test_welcome_comment(self):
         url = self._add_comment_reponses()
         responses.add(responses.POST, url,
