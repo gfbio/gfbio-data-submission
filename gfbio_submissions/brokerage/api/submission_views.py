@@ -48,6 +48,7 @@ class SubmissionsView(mixins.ListModelMixin,
         from gfbio_submissions.brokerage.tasks import \
             get_gfbio_helpdesk_username_task, \
             create_submission_issue_task, \
+            jira_initial_comment_task, \
             check_for_molecular_content_in_submission_task, \
             trigger_submission_transfer, \
             check_issue_existing_for_submission_task
@@ -55,6 +56,8 @@ class SubmissionsView(mixins.ListModelMixin,
         chain = get_gfbio_helpdesk_username_task.s(
             submission_id=submission.pk).set(countdown=SUBMISSION_DELAY) \
                 | create_submission_issue_task.s(
+            submission_id=submission.pk).set(countdown=SUBMISSION_DELAY) \
+                | jira_initial_comment_task.s(
             submission_id=submission.pk).set(countdown=SUBMISSION_DELAY) \
                 | check_for_molecular_content_in_submission_task.s(
             submission_id=submission.pk).set(countdown=SUBMISSION_DELAY) \
