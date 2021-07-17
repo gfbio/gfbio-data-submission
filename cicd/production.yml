@@ -133,7 +133,7 @@ services:
 
 networks:
   default:
-    driver: bridge
+    driver: overlay
     driver_opts:
       com.docker.network.driver.mtu: 1450
   proxy:
