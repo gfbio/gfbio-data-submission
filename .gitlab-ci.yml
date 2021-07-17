@@ -41,7 +41,7 @@ stop_web_test:
     - IFS='-' read -ra ISSUE_SPLIT <<< "${CI_COMMIT_REF_NAME}"
     - IFS=';'
     - ISSUE_ID=${ISSUE_SPLIT[0]}
-    - python cicd/stopDockerStack.py "${ISSUE_ID}"
+    - docker stack rm $ISSUE_ID || true
   rules:
     - if: '$CI_COMMIT_BRANCH == "master" && $CI_COMMIT_MESSAGE =~ /.*Merge branch.*into.*/'
   tags:
