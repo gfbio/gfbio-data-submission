@@ -38,10 +38,7 @@ create_merge_request:
 stop_web_test:
   stage: stop_web_test
   script:
-    - IFS='-' read -ra ISSUE_SPLIT <<< "${CI_COMMIT_REF_NAME}"
-    - IFS=';'
-    - ISSUE_ID=${ISSUE_SPLIT[0]}
-    - docker stack rm $ISSUE_ID || true
+    - python cicd/stopDockerStack.py "${CI_COMMIT_MESSAGE}"
   rules:
     - if: '$CI_COMMIT_BRANCH == "master" && $CI_COMMIT_MESSAGE =~ /.*Merge branch.*into.*/'
   tags:
