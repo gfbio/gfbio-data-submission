@@ -40,7 +40,6 @@ class SubmissionTransferHandler(object):
             'submission_id={0} target_archive={1}'.format(self.submission_id,
                                                           self.target_archive))
         from gfbio_submissions.brokerage.tasks import \
-            jira_initial_comment_task, \
             check_on_hold_status_task
 
         logger.info(
@@ -67,19 +66,15 @@ class SubmissionTransferHandler(object):
                         self.molecular_data_check_performed and self.molecular_data_found):
                     chain = chain | self.pre_process_molecular_data_chain()
 
-        elif not update:
-            chain = jira_initial_comment_task.s(
+        elif not update and release:
+            chain = check_on_hold_status_task.s(
                 submission_id=self.submission_id).set(
                 countdown=SUBMISSION_DELAY)
-            if release:
-                chain = chain | check_on_hold_status_task.s(
-                    submission_id=self.submission_id).set(
-                    countdown=SUBMISSION_DELAY)
-                if self.target_archive == ENA \
-                        or self.target_archive == ENA_PANGAEA:
-                    if not self.molecular_data_check_performed or (
-                            self.molecular_data_check_performed and self.molecular_data_found):
-                        chain = chain | self.pre_process_molecular_data_chain()
+            if self.target_archive == ENA \
+                    or self.target_archive == ENA_PANGAEA:
+                if not self.molecular_data_check_performed or (
+                        self.molecular_data_check_performed and self.molecular_data_found):
+                    chain = chain | self.pre_process_molecular_data_chain()
         else:
             return None
         chain()

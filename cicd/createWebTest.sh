@@ -14,8 +14,8 @@ IS_WEBTEST=`python3 -c "print(1 if 'web-test' in ${ISSUE_LABELS_ARR} else 0)"`
 if [ $IS_WEBTEST -eq "1" ]; then
     echo $PWD
     rsync -a /home/gitlab-runner/.envs .
-    docker stack rm $CI_COMMIT_REF_NAME || true
-    while [[ $(docker ps | grep $CI_COMMIT_REF_NAME | wc -l) > 0 ]]; do sleep 1; done
+    docker stack rm $ISSUE_ID || true
+    while [[ $(docker ps | grep $ISSUE_ID | wc -l) > 0 ]]; do sleep 1; done
     cd userinterface && npm i && npm run collect-ci
     cd ../
     cp gfbio_submissions/templates/account/webtest_login.html gfbio_submissions/templates/account/login.html
@@ -25,7 +25,7 @@ if [ $IS_WEBTEST -eq "1" ]; then
     sed -i 's/DJANGO_ADMIN_URL=.*\//DJANGO_ADMIN_URL='"$ADMIN_URL"'/g' .envs/.production/.django
     sed -i s/EMDATE/$(date +%Y-%m-%d -d "+ 365 days")/g cicd/test_data.json
     docker-compose -f production.yml build
-    ADMIN_NICKNAME=${ADMIN_NICKNAME} ADMIN_EMAIL=${ADMIN_EMAIL} ADMIN_PASSWORD=${ADMIN_PASSWORD} docker stack deploy -c cicd/production.yml $CI_COMMIT_REF_NAME
+    ADMIN_NICKNAME=${ADMIN_NICKNAME} ADMIN_EMAIL=${ADMIN_EMAIL} ADMIN_PASSWORD=${ADMIN_PASSWORD} docker stack deploy -c cicd/production.yml $ISSUE_ID
 fi
 
 echo "No web-test label found, skipping web-test creation."

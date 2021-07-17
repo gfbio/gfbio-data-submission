@@ -132,6 +132,7 @@ def check_for_molecular_content_in_submission_task(self,
 
     molecular_data_available, messages, check_performed = check_for_molecular_content(
         submission)
+
     logger.info(
         msg='check_for_molecular_content_in_submission_task. '
             'valid molecular data available={0}'
