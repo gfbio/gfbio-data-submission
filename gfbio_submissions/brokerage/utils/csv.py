@@ -402,7 +402,7 @@ def extract_experiment(experiment_id, row, sample_id):
     if len(row.get('design_description', '').strip()):
         dpath.new(experiment, 'design/design_description',
                   design_description)
-    if row.get('library_layout', '') == 'paired':
+    if library_layout == 'paired':
         dpath.new(
             experiment,
             'design/library_descriptor/library_layout/nominal_length',
