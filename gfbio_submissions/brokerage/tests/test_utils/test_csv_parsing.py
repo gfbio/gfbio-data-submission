@@ -718,6 +718,36 @@ class TestCSVParsing(TestCase):
         self.assertIn('experiments', requirements_keys)
         self.assertIn('samples', requirements_keys)
 
+    def test_lower_case_columns(self):
+        with open(os.path.join(
+                _get_test_data_dir_path(),
+                'csv_files/molecular_upper_case.csv'),
+                'r') as data_file:
+            requirements = parse_molecular_csv(data_file)
+
+        layout_type = requirements.get('experiments', [{}])[0].get('design',{})\
+            .get('library_descriptor',{}).get('library_layout',{}).get('layout_type','')
+        # check if paired is lower case
+        self.assertEqual(layout_type, 'paired')
+
+        library_layout = requirements.get('experiments', [{}])[0].get('design', {}) \
+            .get('library_descriptor', {}).get('library_layout', {})
+        # check if library_layout has 2 keys
+        self.assertEqual(len(library_layout), 2)
+
+        submission = Submission.objects.first()
+        submission.data.get('requirements', {}).update(requirements)
+        path = os.path.join(
+            os.getcwd(),
+            'gfbio_submissions/brokerage/schemas/ena_requirements.json')
+        valid, full_errors = validate_data_full(
+            data=submission.data,
+            target=ENA_PANGAEA,
+            schema_location=path,
+        )
+
+        self.assertTrue(valid)
+
     def test_whitespaces_with_occasional_quotes(self):
         with open(os.path.join(
                 _get_test_data_dir_path(),
