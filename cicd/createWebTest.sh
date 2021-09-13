@@ -16,8 +16,10 @@ if [ $IS_WEBTEST -eq "1" ]; then
     rm -r .envs && cp -r /home/gitlab-runner/.gfbio_envs/ .envs
     docker stack rm $ISSUE_ID || true
     while [[ $(docker ps | grep $ISSUE_ID | wc -l) > 0 ]]; do sleep 1; done
+    nvm use 8
     cd userinterface && npm i && npm run collect-ci
     cd ../
+    nvm use default
     cp gfbio_submissions/templates/account/webtest_login.html gfbio_submissions/templates/account/login.html
     sed -i s/BRANCH/$CI_COMMIT_REF_NAME/g cicd/production.yml
     sed -i "s/VERSION =.*/VERSION ='$(git describe --tags | egrep -o '[0-9]+\.[0-9]+\.[0-9]+')'/g" config/settings/base.py
