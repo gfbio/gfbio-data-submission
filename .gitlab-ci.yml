@@ -4,7 +4,6 @@ stages:
   - test
   - check_for_web_test
   - stop_web_test
-  - build_staging
   - update_staging
   - update_production
   - deploy
@@ -56,40 +55,27 @@ check_for_web_test:
   tags:
     - dev-denbi
 
-build_staging:
-  stage: build_staging
+update_staging:
+  stage: update_staging
   script:
     - rm -r .envs && cp -r /home/gitlab-runner/.gfbio_envs/ .envs
-    - ./cicd/traefikHostReplace.sh
     - sed -i "s/VERSION =.*/VERSION ='$(git describe --tags | egrep -o '[0-9]+\.[0-9]+\.[0-9]+')'/g" config/settings/base.py
     - cd userinterface && npm i && npm run collect-ci
     - cd ../
     - docker-compose -f production.yml build
-  environment:
-    name: staging
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
-  tags:
-    - gfbio-staging
-
-update_staging_env:
-  stage: update_staging
-  script:
-    - rm -r .envs && cp -r /home/gitlab-runner/.gfbio_envs/ .envs
-    - ./cicd/traefikHostReplace.sh
     - ./cicd/setLogDriverTag.sh
-    - docker-compose -f production.yml up -d postgres
-    - docker-compose -f production.yml run --rm postgres backup
-    - docker-compose -f production.yml run --rm django python manage.py migrate
-    - docker-compose -f production.yml down
-    - docker-compose -f production.yml up -d
+    - docker-compose -f staging.yml up -d postgres
+    - docker-compose -f staging.yml run --rm postgres backup
+    - docker-compose -f staging.yml run --rm django python manage.py migrate
+    - docker-compose -f staging.yml down
+    - docker-compose -f staging.yml up -d
   environment:
     name: staging
-    url: https://stage.submissions.gfbio.org/
+    url: https://submissions.gfbio.dev/
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
   tags:
-    - gfbio-staging
+    - staging-denbi
 
 deploy_to_production:
   stage: update_production
