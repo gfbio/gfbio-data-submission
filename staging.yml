@@ -11,7 +11,6 @@ services:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
     image: gfbio_submissions_production_django
-    container_name: gfbio-django
     depends_on:
       - postgres
       - redis
