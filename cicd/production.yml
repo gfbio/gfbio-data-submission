@@ -31,15 +31,10 @@ services:
     restart: always
     labels:
       - traefik.enable=true
-      - traefik.http.routers.BRANCH_https.rule=Host(`BRANCH.dev.submissions.gfbio.org`)
-      - traefik.http.routers.BRANCH_https.entrypoints=websecure
-      - traefik.http.routers.BRANCH_https.tls=true
+      - traefik.http.routers.BRANCH_httpsrule=Host(`BRANCH.submissions.gfbio.dev`)
+      - traefik.http.routers.BRANCH_http.entrypoints=web
       - traefik.http.middlewares.BRANCH_extra_headers.headers.hostsproxyheaders=X-CSRFToken
-      - traefik.http.services.BRANCH_https.loadbalancer.server.port=5000
-      - "traefik.http.routers.BRANCH_http.entrypoints=web"
-      - "traefik.http.routers.BRANCH_http.rule=Host(`BRANCH.dev.submissions.gfbio.org`)"
-      - "traefik.http.routers.BRANCH_http.middlewares=https_redirect"
-      - "traefik.http.middlewares.BRANCH_https_redirect.redirectscheme.scheme=https"
+      - traefik.http.services.BRANCH_http.loadbalancer.server.port=5000
     command: >
       /bin/sh -c "python /app/manage.py collectstatic --noinput
       && python /app/manage.py migrate
@@ -132,10 +127,7 @@ services:
     command: /start-flower
 
 networks:
-  default:
-    driver: overlay
-    driver_opts:
-      com.docker.network.driver.mtu: 1450
   proxy:
-    external: true
+    external:
+      name: internalProxy
   internal:
