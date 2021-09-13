@@ -1,0 +1,91 @@
+version: '3'
+
+volumes:
+  production_postgres_data: { }
+  production_postgres_data_backups: { }
+  django_media: { }
+
+services:
+  django: &django
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    image: gfbio_submissions_production_django
+    container_name: gfbio-django
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ./.envs/.production/.django
+      - ./.envs/.production/.postgres
+    logging:
+      driver: syslog
+      options:
+        tag: 'GFBio-django'
+    restart: always
+    networks:
+      - default
+      - internalProxy
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - django_media:/app/gfbio_submissions/media
+    command: /start
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: gfbio_submissions_production_postgres
+    volumes:
+      - production_postgres_data:/var/lib/postgresql/data
+      - production_postgres_data_backups:/backups
+    networks:
+      - default
+    env_file:
+      - ./.envs/.production/.postgres
+    restart: always
+
+  redis:
+    image: redis:5.0
+    networks:
+      - default
+    restart: always
+
+  celeryworker:
+    <<: *django
+    image: gfbio_submissions_production_celeryworker
+    networks:
+      - default
+    logging:
+      driver: syslog
+      options:
+        tag: 'GFBio-celery-worker'
+    command: /start-celeryworker
+
+  celerybeat:
+    <<: *django
+    image: gfbio_submissions_production_celerybeat
+    networks:
+      - default
+    logging:
+      driver: syslog
+      options:
+        tag: 'GFBio-celery-beat'
+    command: /start-celerybeat
+
+  flower:
+    <<: *django
+    image: gfbio_submissions_production_flower
+    networks:
+      - default
+    logging:
+      driver: syslog
+      options:
+        tag: 'GFBio-flower'
+    command: /start-flower
+
+networks:
+  default:
+  internalProxy:
+    external:
+      name: internalProxy
