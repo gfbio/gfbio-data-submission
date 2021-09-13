@@ -12,7 +12,11 @@ ISSUE_LABELS_ARR=`python3 -c "print(${ISSUE_INFO}['labels'])"`
 IS_WEBTEST=`python3 -c "print(1 if 'web-test' in ${ISSUE_LABELS_ARR} else 0)"`
 
 if [ $IS_WEBTEST -eq "1" ]; then
-    echo $PWD
+    # load nvm
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+    # script
     rm -r .envs && cp -r /home/gitlab-runner/.gfbio_envs/ .envs
     docker stack rm $ISSUE_ID || true
     while [[ $(docker ps | grep $ISSUE_ID | wc -l) > 0 ]]; do sleep 1; done
