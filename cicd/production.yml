@@ -30,10 +30,10 @@ services:
     restart: always
     labels:
       - traefik.enable=true
-      - traefik.http.routers.BRANCH_httpsrule=Host(`BRANCH.submissions.gfbio.dev`)
-      - traefik.http.routers.BRANCH_http.entrypoints=web
-      - traefik.http.middlewares.BRANCH_extra_headers.headers.hostsproxyheaders=X-CSRFToken
-      - traefik.http.services.BRANCH_http.loadbalancer.server.port=5000
+      - traefik.http.routers.BRANCH.rule=Host(`BRANCH.submissions.gfbio.dev`)
+      - traefik.http.routers.BRANCH.entrypoints=web
+      - traefik.http.middlewares.BRANCH_headers.headers.hostsproxyheaders=X-CSRFToken
+      - traefik.http.services.BRANCH.loadbalancer.server.port=5000
     command: >
       /bin/sh -c "python /app/manage.py collectstatic --noinput
       && python /app/manage.py migrate
