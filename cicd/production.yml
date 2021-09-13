@@ -19,7 +19,6 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - django_media:/app/gfbio_submissions/media
     networks:
-      - default
       - proxy
       - internal
     logging:
