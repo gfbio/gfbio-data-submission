@@ -58,17 +58,7 @@ check_for_web_test:
 update_staging:
   stage: update_staging
   script:
-    - rm -r .envs && cp -r /home/gitlab-runner/.gfbio_envs/ .envs
-    - sed -i "s/VERSION =.*/VERSION ='$(git describe --tags | egrep -o '[0-9]+\.[0-9]+\.[0-9]+')'/g" config/settings/base.py
-    - cd userinterface && npm i && npm run collect-ci
-    - cd ../
-    - docker-compose -f production.yml build
-    - ./cicd/setLogDriverTag.sh
-    - docker-compose -f staging.yml up -d postgres
-    - docker-compose -f staging.yml run --rm postgres backup
-    - docker-compose -f staging.yml run --rm django python manage.py migrate
-    - docker-compose -f staging.yml down
-    - docker-compose -f staging.yml up -d
+    - ./cicd/updateStaging.sh
   environment:
     name: staging
     url: https://submissions.gfbio.dev/
