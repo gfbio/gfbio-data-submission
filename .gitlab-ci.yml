@@ -12,7 +12,7 @@ stages:
 run_unit_tests:
   stage: unit_tests
   script:
-    - rsync -a /home/gitlab-runner/.envs .
+    - rm -r .envs && cp -r /home/gitlab-runner/.gfbio_envs/ .envs
     - docker-compose -f local.yml build
     - CURRENT_UID=$(id -u):$(id -g) docker stack deploy -c cicd/local.yml ${CI_COMMIT_REF_NAME}-tests
     - while [[ $(docker ps -a | grep ${CI_COMMIT_REF_NAME}-tests_django | grep Exited | wc -l) == 0 ]]; do sleep 1; done
@@ -24,7 +24,7 @@ run_unit_tests:
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^\d+-/'
   tags:
-    - dev
+    - dev-denbi
 
 create_merge_request:
   stage: create_merge_request
@@ -33,7 +33,7 @@ create_merge_request:
   script:
     - HOST=${CI_PROJECT_URL} CI_PROJECT_ID=${CI_PROJECT_ID} CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} GITLAB_USER_ID=${GITLAB_USER_ID} PRIVATE_TOKEN=${PRIVATE_TOKEN} ./cicd/autoMergeRequest.sh
   tags:
-    - dev
+    - dev-denbi
 
 stop_web_test:
   stage: stop_web_test
@@ -42,7 +42,7 @@ stop_web_test:
   rules:
     - if: '$CI_COMMIT_BRANCH == "master" && $CI_COMMIT_MESSAGE =~ /.*Merge branch.*into.*/'
   tags:
-    - dev
+    - dev-denbi
 
 check_for_web_test:
   stage: check_for_web_test
@@ -50,16 +50,16 @@ check_for_web_test:
     - ADMIN_NICKNAME=${ADMIN_NICKNAME} ADMIN_EMAIL=${ADMIN_EMAIL} ADMIN_PASSWORD=${ADMIN_PASSWORD} HOST=${CI_PROJECT_URL} CI_PROJECT_ID=${CI_PROJECT_ID} CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} GITLAB_USER_ID=${GITLAB_USER_ID} PRIVATE_TOKEN=${PRIVATE_TOKEN} ./cicd/createWebTest.sh
   environment:
     name: review/$CI_COMMIT_REF_NAME
-    url: https://$CI_COMMIT_REF_NAME.dev.submissions.gfbio.org/accounts/login
+    url: https://$CI_COMMIT_REF_NAME.submissions.gfbio.dev/accounts/login
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^\d+-/'
   tags:
-    - dev
+    - dev-denbi
 
 build_staging:
   stage: build_staging
   script:
-    - rsync -a /home/gitlab-runner/.envs .
+    - rm -r .envs && cp -r /home/gitlab-runner/.gfbio_envs/ .envs
     - ./cicd/traefikHostReplace.sh
     - sed -i "s/VERSION =.*/VERSION ='$(git describe --tags | egrep -o '[0-9]+\.[0-9]+\.[0-9]+')'/g" config/settings/base.py
     - cd userinterface && npm i && npm run collect-ci
@@ -75,7 +75,7 @@ build_staging:
 update_staging_env:
   stage: update_staging
   script:
-    - rsync -a /home/gitlab-runner/.envs .
+    - rm -r .envs && cp -r /home/gitlab-runner/.gfbio_envs/ .envs
     - ./cicd/traefikHostReplace.sh
     - ./cicd/setLogDriverTag.sh
     - docker-compose -f production.yml up -d postgres

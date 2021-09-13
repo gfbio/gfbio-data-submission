@@ -12,16 +12,23 @@ ISSUE_LABELS_ARR=`python3 -c "print(${ISSUE_INFO}['labels'])"`
 IS_WEBTEST=`python3 -c "print(1 if 'web-test' in ${ISSUE_LABELS_ARR} else 0)"`
 
 if [ $IS_WEBTEST -eq "1" ]; then
-    echo $PWD
-    rsync -a /home/gitlab-runner/.envs .
+    # load nvm
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+    # script
+    rm -r .envs && cp -r /home/gitlab-runner/.gfbio_envs/ .envs
     docker stack rm $ISSUE_ID || true
     while [[ $(docker ps | grep $ISSUE_ID | wc -l) > 0 ]]; do sleep 1; done
+    nvm use 8
     cd userinterface && npm i && npm run collect-ci
     cd ../
+    nvm use default
     cp gfbio_submissions/templates/account/webtest_login.html gfbio_submissions/templates/account/login.html
     sed -i s/BRANCH/$CI_COMMIT_REF_NAME/g cicd/production.yml
     sed -i "s/VERSION =.*/VERSION ='$(git describe --tags | egrep -o '[0-9]+\.[0-9]+\.[0-9]+')'/g" config/settings/base.py
-    sed -i s/DJANGO_ALLOWED_HOSTS=.*/DJANGO_ALLOWED_HOSTS=\.dev\.submissions\.gfbio\.org/g .envs/.production/.django
+    sed -i s/DJANGO_ALLOWED_HOSTS=.*/DJANGO_ALLOWED_HOSTS=\.submissions\.gfbio\.dev/g .envs/.production/.django
+    sed -i s/HOST_URL_ROOT=.*/HOST_URL_ROOT=https:\/\/$CI_COMMIT_REF_NAME\.submissions\.gfbio\.dev/g .envs/.production/.django
     sed -i 's/DJANGO_ADMIN_URL=.*\//DJANGO_ADMIN_URL='"$ADMIN_URL"'/g' .envs/.production/.django
     sed -i s/EMDATE/$(date +%Y-%m-%d -d "+ 365 days")/g cicd/test_data.json
     docker-compose -f production.yml build
