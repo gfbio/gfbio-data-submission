@@ -19,7 +19,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - django_media:/app/gfbio_submissions/media
     networks:
-      - proxy
+      - internalProxy
       - internal
     logging:
       driver: syslog
@@ -126,6 +126,7 @@ services:
     command: /start-flower
 
 networks:
-  proxy:
-    external: true
+  internalProxy:
+    external:
+      name: internalProxy
   internal:
