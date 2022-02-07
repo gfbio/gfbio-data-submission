@@ -170,7 +170,7 @@ def validate_ena_relations(data):
 # FIXME: since id determins root for looking up included files
 def validate_data_full(data, target, schema_location=None):
     if schema_location is None:
-        schema_location = os.path.join(
+        schema_location = os.path.join(settings.STATICFILES_DIRS[0],
             settings.STATIC_ROOT, TARGET_SCHEMA_MAPPINGS[target])
     valid, errors = validate_data(
         data=data, schema_file=schema_location,

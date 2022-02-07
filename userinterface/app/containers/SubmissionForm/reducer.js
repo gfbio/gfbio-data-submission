@@ -176,6 +176,7 @@ function submissionFormReducer(state = initialState, action) {
         .set('saveInProgress', false);
     case CLOSE_SAVE_SUCCESS:
       return state;
+
     case CLOSE_ERROR_MESSAGE:
       return state
         .set('submitError', false)

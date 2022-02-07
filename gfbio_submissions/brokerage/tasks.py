@@ -626,7 +626,8 @@ def parse_csv_to_update_clean_submission_task(self, previous_task_result=None,
     report.submission = submission_upload.submission
 
     with open(submission_upload.file.path, 'r') as file:
-        molecular_requirements = parse_molecular_csv(
+        molecular_requirements = \
+            parse_molecular_csv(
             file,
         )
 

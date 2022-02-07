@@ -218,7 +218,15 @@ def extract_sample(row, field_names, sample_id):
                     ])
                 )
             else:
-                sample_attributes.append(
+                #if(str(o).to_lower() in ['environmental package']):  #expandable
+                if(str(o).lower()=='environmental package'):  #is already
+                    sample_attributes.append(
+                        OrderedDict([
+                            ('tag', o), ('value', row[o].lower())
+                        ])
+                    )
+                else:
+                    sample_attributes.append(
                     OrderedDict([
                         ('tag', o), ('value', row[o])
                     ])
@@ -373,6 +381,7 @@ def extract_experiment(experiment_id, row, sample_id):
     # For sake of simplicity library_source is converted to upper case since
     # all values in schema are uppercase
     dpath.new(experiment, 'design/library_descriptor/library_source',
+
               row.get('library_source', '').upper()
               )
     dpath.new(
