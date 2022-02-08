@@ -721,14 +721,14 @@ class TestCSVParsing(TestCase):
 
     def test_parse_environmental_package(self):
         file_names = [
-            #'csv_files/molecular_metadata.csv',
-            'csv_files/molecular_metadata_uppers.csv',
-            #'csv_files/GFBIO_submission_illumina_HE533_18S_P20_new1.csv'  format!!
+            'csv_files/molecular_metadata.csv',
+            'csv_files/molecular_metadata_uppers.csv',  # phantasy env
+            'csv_files/GFBIO_submission_Illumina_HE533_18S_P20_new_utf8.csv',   #file from Jimena, changed to utf8
             'csv_files/example_GFBIO_submission.csv',
-            #'csv_files/mol_5_items_comma_some_double_quotes.csv',
-            #'csv_files/mol_5_items_comma_no_quoting_in_header.csv',
-            #'csv_files/mol_5_items_semi_no_quoting.csv',
-            'csv_files/mol_comma_with_empty_rows_cols.csv',  #fails in the last part  look for original last part
+            'csv_files/mol_5_items_comma_some_double_quotes.csv',
+            'csv_files/mol_5_items_comma_no_quoting_in_header.csv',
+            'csv_files/mol_5_items_semi_no_quoting.csv',
+            #'csv_files/mol_comma_with_empty_rows_cols.csv',  #fails in the last part  , no minimal_requirements in some lines
         ]
 
         for fn in file_names:
@@ -737,19 +737,8 @@ class TestCSVParsing(TestCase):
                 requirements = parse_molecular_csv(data_file)
 
         requirements_keys = requirements.keys()
-        #self.assertIn('experiments', requirements_keys)
         self.assertIn('samples', requirements_keys)
 
-        # third test for content of environmental package
-        # list of dicts with tag, value pairs:
-        #env_pack = requirements.get('samples', [{}][0]).get('sample_attributes', [{}])
-        #run through env_pack
-
-        #taxon_id = requirements.get('samples', [{}])[0].get('taxon_id', 'no value')
-        # check if paired is lower case
-        #self.assertEqual(layout_type, layout_type.islower())
-
-        #FROM EXAMPLE
         sample_attribute_tags = []
         env_pack = ''
         for s in requirements.get(
@@ -760,7 +749,6 @@ class TestCSVParsing(TestCase):
                 env_pack = s.get('value', 'no envpack')
 
         self.assertEqual( env_pack.islower(),True)
-        #self.assertEqual('Atlantic Ocean', geo_location)
 
         submission = Submission.objects.first()
         submission.data.get('requirements', {}).update(requirements)
@@ -774,7 +762,7 @@ class TestCSVParsing(TestCase):
         )
         self.assertTrue(valid)
 
-        #end my test
+    #end test_parse_environmental_package
 
     def test_lower_case_columns(self):
         with open(os.path.join(
