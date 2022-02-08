@@ -570,7 +570,7 @@ class TestCSVParsing(TestCase):
              ('reverse_read_file_checksum', ''),
              ('checksum_method', ''),
              ('investigation type', 'mimarks-survey'),
-             ('environmental package', 'Sediment'),
+             ('environmental package', 'sediment'),
              ('collection date', '2016-06-25'),
              ('geographic location (latitude)', '78.61N'),
              ('geographic location (longitude)', '5.04E'),
@@ -602,7 +602,7 @@ class TestCSVParsing(TestCase):
                              ('value', 'Sediment community in station S3')]),
                 OrderedDict([('tag', 'investigation type'),
                              ('value', 'mimarks-survey')]), OrderedDict(
-                    [('tag', 'environmental package'), ('value', 'Sediment')]),
+                    [('tag', 'environmental package'), ('value', 'sediment')]),
                 OrderedDict(
                     [('tag', 'collection date'), ('value', '2016-06-25')]),
                 OrderedDict([('tag', 'geographic location (latitude)'),
@@ -640,7 +640,7 @@ class TestCSVParsing(TestCase):
              ('reverse_read_file_checksum', ''),
              ('checksum_method', ''),
              ('investigation type', 'na'),  # no
-             ('environmental package', 'Sediment'),
+             ('environmental package', 'sediment'),
              ('collection date', '2016-06-25'),
              ('geographic location (latitude)', '78.61N'),
              ('geographic location (longitude)', '5.04E'),
@@ -673,7 +673,7 @@ class TestCSVParsing(TestCase):
                 # OrderedDict([('tag', 'investigation type'),
                 #              ('value', 'mimarks-survey')]),
                 OrderedDict(
-                    [('tag', 'environmental package'), ('value', 'Sediment')]),
+                    [('tag', 'environmental package'), ('value', 'sediment')]),
                 OrderedDict(
                     [('tag', 'collection date'), ('value', '2016-06-25')]),
                 OrderedDict([('tag', 'geographic location (latitude)'),
