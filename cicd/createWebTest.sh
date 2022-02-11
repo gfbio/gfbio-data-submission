@@ -26,12 +26,17 @@ if [ $IS_WEBTEST -eq "1" ]; then
     nvm use default
     cp gfbio_submissions/templates/account/webtest_login.html gfbio_submissions/templates/account/login.html
     sed -i s/BRANCH/$CI_COMMIT_REF_NAME/g cicd/production.yml
+    sed -i s/ISSUE_ID/$ISSUE_ID/g cicd/production.yml
     sed -i "s/VERSION =.*/VERSION ='$(git describe --tags | egrep -o '[0-9]+\.[0-9]+\.[0-9]+')'/g" config/settings/base.py
     sed -i s/DJANGO_ALLOWED_HOSTS=.*/DJANGO_ALLOWED_HOSTS=\.submissions\.gfbio\.dev/g .envs/.production/.django
     sed -i s/HOST_URL_ROOT=.*/HOST_URL_ROOT=https:\/\/$CI_COMMIT_REF_NAME\.submissions\.gfbio\.dev/g .envs/.production/.django
     sed -i 's/DJANGO_ADMIN_URL=.*\//DJANGO_ADMIN_URL='"$ADMIN_URL"'/g' .envs/.production/.django
     sed -i s/EMDATE/$(date +%Y-%m-%d -d "+ 365 days")/g cicd/test_data.json
-    docker-compose -f production.yml build
+    docker-compose -f cicd/production.yml build
+    # create docker volume
+    mkdir -p /home/gitlab-runner/volumes/gfbio-${ISSUE_ID}
+    docker volume create --name gfbio-${ISSUE_ID} --opt type=none --opt device=/home/gitlab-runner/volumes/gfbio-${ISSUE_ID}
+    # start stack
     ADMIN_NICKNAME=${ADMIN_NICKNAME} ADMIN_EMAIL=${ADMIN_EMAIL} ADMIN_PASSWORD=${ADMIN_PASSWORD} docker stack deploy -c cicd/production.yml $ISSUE_ID
 fi
 

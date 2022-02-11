@@ -1,13 +1,13 @@
 version: '3.7'
 
-volumes:
-  django_media: { }
-
 services:
   django: &django
     build:
-      context: .
-      dockerfile: ../compose/production/django/Dockerfile
+      context: ../
+      dockerfile: ./cicd/Dockerfile
+      args:
+        GROUP_ID: 997
+        USER_ID: 998
     image: gfbio_submissions_production_django
     depends_on:
       - postgres
@@ -17,7 +17,7 @@ services:
       - ../.envs/.production/.postgres
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - django_media:/app/gfbio_submissions/media
+      - /home/gitlab-runner/volumes/gfbio-ISSUE_ID:/app/gfbio_submissions/media
     networks:
       - internalProxy
       - internal
@@ -44,8 +44,8 @@ services:
 
   postgres:
     build:
-      context: .
-      dockerfile: ../compose/production/postgres/Dockerfile
+      context: ../
+      dockerfile: ./compose/production/postgres/Dockerfile
     image: gfbio_submissions_production_postgres
     networks:
       - internal
@@ -61,8 +61,8 @@ services:
 
   celeryworker:
     build:
-      context: .
-      dockerfile: ../compose/production/django/Dockerfile
+      context: ../
+      dockerfile: ./compose/production/django/Dockerfile
     depends_on:
       - postgres
       - redis
@@ -73,6 +73,7 @@ services:
       - internal
     volumes:
       - /etc/localtime:/etc/localtime:ro
+      - /home/gitlab-runner/volumes/gfbio-ISSUE_ID:/app/gfbio_submissions/media
     image: gfbio_submissions_production_celeryworker
     logging:
       driver: syslog
@@ -83,8 +84,8 @@ services:
 
   celerybeat:
     build:
-      context: .
-      dockerfile: ../compose/production/django/Dockerfile
+      context: ../
+      dockerfile: ./compose/production/django/Dockerfile
     depends_on:
       - postgres
       - redis
@@ -105,8 +106,8 @@ services:
 
   flower:
     build:
-      context: .
-      dockerfile: ../compose/production/django/Dockerfile
+      context: ../
+      dockerfile: ./compose/production/django/Dockerfile
     depends_on:
       - postgres
       - redis
