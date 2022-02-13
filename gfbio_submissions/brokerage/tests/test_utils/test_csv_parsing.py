@@ -719,16 +719,16 @@ class TestCSVParsing(TestCase):
         self.assertIn('experiments', requirements_keys)
         self.assertIn('samples', requirements_keys)
 
+
     def test_parse_environmental_package(self):
         file_names = [
             'csv_files/molecular_metadata.csv',
-            'csv_files/molecular_metadata_uppers.csv',  # phantasy env
-            'csv_files/GFBIO_submission_Illumina_HE533_18S_P20_new_utf8.csv',   #file from Jimena, changed to utf8
+            'csv_files/molecular_metadata_uppers.csv',
+            'csv_files/GFBIO_submission_Illumina_HE533_18S_P20_new_utf8.csv',
             'csv_files/example_GFBIO_submission.csv',
             'csv_files/mol_5_items_comma_some_double_quotes.csv',
             'csv_files/mol_5_items_comma_no_quoting_in_header.csv',
             'csv_files/mol_5_items_semi_no_quoting.csv',
-            #'csv_files/mol_comma_with_empty_rows_cols.csv',  #fails in the last part  , no minimal_requirements in some lines
         ]
 
         for fn in file_names:
@@ -736,33 +736,22 @@ class TestCSVParsing(TestCase):
                       'r') as data_file:
                 requirements = parse_molecular_csv(data_file)
 
-        requirements_keys = requirements.keys()
-        self.assertIn('samples', requirements_keys)
+                requirements_keys = requirements.keys()
+                self.assertIn('samples', requirements_keys)
 
-        sample_attribute_tags = []
-        env_pack = ''
-        for s in requirements.get(
-                'samples', [{}])[0].get('sample_attributes', []):
-            tag = s.get('tag')
-            sample_attribute_tags.append(tag)
-            if 'environmental package' in tag:
-                env_pack = s.get('value', 'no envpack')
+                env_pack = ''
+                recount = 0
+                for x in range(0, len(requirements['samples'])):
+                    recount += 1
+                    for s in requirements.get(
+                            'samples', [{}])[x].get('sample_attributes', []):
+                        tag = s.get('tag')
+                        if 'environmental package' in tag:
+                            env_pack = s.get('value', 'NO_envpack')
+                            self.assertEqual( env_pack.islower(),True)
+                
+                self.assertTrue(recount==len(requirements['samples']))
 
-        self.assertEqual( env_pack.islower(),True)
-
-        submission = Submission.objects.first()
-        submission.data.get('requirements', {}).update(requirements)
-        path = os.path.join(
-            os.getcwd(),
-            'gfbio_submissions/brokerage/schemas/ena_requirements.json')
-        valid, full_errors = validate_data_full(
-            data=submission.data,
-            target=ENA_PANGAEA,
-            schema_location=path,
-        )
-        self.assertTrue(valid)
-
-    #end test_parse_environmental_package
 
     def test_lower_case_columns(self):
         with open(os.path.join(
