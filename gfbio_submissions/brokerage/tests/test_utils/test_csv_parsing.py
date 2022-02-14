@@ -715,10 +715,9 @@ class TestCSVParsing(TestCase):
             with open(os.path.join(_get_test_data_dir_path(), fn),
                       'r') as data_file:
                 requirements = parse_molecular_csv(data_file)
-        requirements_keys = requirements.keys()
-        self.assertIn('experiments', requirements_keys)
-        self.assertIn('samples', requirements_keys)
-
+                requirements_keys = requirements.keys()
+                self.assertIn('experiments', requirements_keys)
+                self.assertIn('samples', requirements_keys)
 
     def test_parse_environmental_package(self):
         file_names = [
@@ -739,19 +738,13 @@ class TestCSVParsing(TestCase):
                 requirements_keys = requirements.keys()
                 self.assertIn('samples', requirements_keys)
 
-                env_pack = ''
-                recount = 0
                 for x in range(0, len(requirements['samples'])):
-                    recount += 1
                     for s in requirements.get(
                             'samples', [{}])[x].get('sample_attributes', []):
                         tag = s.get('tag')
                         if 'environmental package' in tag:
-                            env_pack = s.get('value', 'NO_envpack')
-                            self.assertEqual( env_pack.islower(),True)
-                
-                self.assertTrue(recount==len(requirements['samples']))
-
+                            env_pack = s.get('value')
+                            self.assertEqual(env_pack.islower(), True)
 
     def test_lower_case_columns(self):
         with open(os.path.join(
@@ -760,8 +753,8 @@ class TestCSVParsing(TestCase):
                 'r') as data_file:
             requirements = parse_molecular_csv(data_file)
 
-        layout_type = requirements.get('experiments', [{}])[0].get('design',{})\
-            .get('library_descriptor',{}).get('library_layout',{}).get('layout_type','')
+        layout_type = requirements.get('experiments', [{}])[0].get('design', {}) \
+            .get('library_descriptor', {}).get('library_layout', {}).get('layout_type', '')
         # check if paired is lower case
         self.assertEqual(layout_type, 'paired')
 

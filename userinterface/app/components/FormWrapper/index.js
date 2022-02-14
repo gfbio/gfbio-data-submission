@@ -193,7 +193,7 @@ class FormWrapper extends React.PureComponent {
 
   render() {
     let submitIconClass = 'fa-play';
-    let submitButtonText = '++Start Submission';
+    let submitButtonText = 'Start Submission';
     let saveIconClass = 'fa-clipboard';
     let saveButtonText = 'Save Draft';
 

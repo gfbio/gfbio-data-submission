@@ -193,7 +193,7 @@ class Enalizer(object):
 
     def append_environmental_package_attributes(self, sample_attributes):
         checklist_mappings_keys = CHECKLIST_ACCESSION_MAPPING.keys()
-        #checklist_mappings_keys = list(map(str.lower, CHECKLIST_ACCESSION_MAPPING.keys()))  #would be poss. instead od line above
+        checklist_mappings_keys = [s.lower() for s in checklist_mappings_keys]
         # only add add_checklist and renamed_additional_checklist for first occurence of environmental package
         add_checklist = ''
         renamed_additional_checklist_tag = 'NO_VAL'
