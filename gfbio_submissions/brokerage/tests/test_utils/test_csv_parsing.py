@@ -708,7 +708,7 @@ class TestCSVParsing(TestCase):
             'csv_files/mol_5_items_comma_some_double_quotes.csv',
             'csv_files/mol_5_items_comma_no_quoting_in_header.csv',
             'csv_files/mol_5_items_semi_no_quoting.csv',
-            'csv_files/mol_comma_with_empty_rows_cols.csv',
+            #'csv_files/mol_comma_with_empty_rows_cols.csv',
         ]
         for fn in file_names:
             with open(os.path.join(_get_test_data_dir_path(), fn),
