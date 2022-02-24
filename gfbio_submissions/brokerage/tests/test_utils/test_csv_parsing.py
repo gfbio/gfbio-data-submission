@@ -718,6 +718,34 @@ class TestCSVParsing(TestCase):
         self.assertIn('experiments', requirements_keys)
         self.assertIn('samples', requirements_keys)
 
+    def test_parse_environmental_package(self):
+        file_names = [
+            'csv_files/fixed_DSUB_378.csv',
+            # 'csv_files/molecular_metadata.csv',
+            # 'csv_files/molecular_metadata_uppers.csv',
+            # 'csv_files/GFBIO_submission_Illumina_HE533_18S_P20_new_utf8.csv',
+            # 'csv_files/example_GFBIO_submission.csv',
+            # 'csv_files/mol_5_items_comma_some_double_quotes.csv',
+            # 'csv_files/mol_5_items_comma_no_quoting_in_header.csv',
+            # 'csv_files/mol_5_items_semi_no_quoting.csv',
+        ]
+
+        for fn in file_names:
+            with open(os.path.join(_get_test_data_dir_path(), fn),
+                      'r') as data_file:
+                requirements = parse_molecular_csv(data_file)
+
+                requirements_keys = requirements.keys()
+                self.assertIn('samples', requirements_keys)
+
+                for x in range(0, len(requirements['samples'])):
+                    for s in requirements.get(
+                            'samples', [{}])[x].get('sample_attributes', []):
+                        tag = s.get('tag')
+                        if 'environmental package' in tag:
+                            env_pack = s.get('value')
+                            self.assertEqual(env_pack.islower(), True)
+
     def test_lower_case_columns(self):
         with open(os.path.join(
                 _get_test_data_dir_path(),
