@@ -1,6 +1,6 @@
 import logging
 import sys
-
+import re
 import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
@@ -185,6 +185,12 @@ sentry_sdk.init(
     integrations=[sentry_logging, DjangoIntegration(), CeleryIntegration(),
                   RedisIntegration()],
 )
+
+IGNORABLE_404_URLS = [
+    re.compile(r'^/ws.js'),
+    re.compile(r'^/robots.txt'),
+    re.compile(r'^/favorite.ico'),
+]
 
 # Your stuff...
 # ------------------------------------------------------------------------------
