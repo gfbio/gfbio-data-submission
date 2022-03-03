@@ -37,6 +37,16 @@ from gfbio_submissions.resolve.models import Accession
 logger = logging.getLogger(__name__)
 dicttoxml.LOG.setLevel(logging.ERROR)
 
+locus_attributes_ena = [
+    '16S rRNA',
+    '18S rRNA',
+    '28S rRNA',
+    'RBCL',
+    'matK',
+    'COX1',
+    'ITS1-5.8S-ITS2',
+    'exome'
+]
 
 #  ENALIZER  xml for ena -------------------------------------------------------
 class Enalizer(object):
@@ -368,6 +378,21 @@ class Enalizer(object):
                 self.create_subelement(probe_set, 'id', probe_set_data)
                 self.create_subelement(probe_set, 'label', probe_set_data)
 
+    def create_targeted_loci2(self, root, data_dict):
+        if 'targeted_loci' in data_dict.keys():
+            description = data_dict.get('targeted_loci', {}).get(
+                'description', '')
+            if len(description):
+                odict = OrderedDict([('locus_name', data_dict.get('targeted_loci', {}).get(
+                        'locus_name', '')), ('description', data_dict.get('targeted_loci', {}).get(
+                    'description', ''))])
+                locus = SubElement(root, 'LOCUS',odict)
+            else:
+                locus = SubElement(root, 'LOCUS', {
+                    'locus_name': data_dict.get('targeted_loci', {}).get(
+                        'locus_name', ''),
+                })
+
     # FIXME: this uppper() and lower() stuff has to be simplified, also in json-schema !
     @staticmethod
     def create_platform(root, platform_value):
@@ -390,6 +415,30 @@ class Enalizer(object):
                 self.create_subelement(experiment_attribute, 'value', attribute)
             if 'units' in attribute.keys():
                 self.create_subelement(experiment_attribute, 'units', attribute)
+
+    def translate_target_gene(self, sample_descriptor, targeted_loci_dict):
+        for s in self.sample:
+            sample_alias = s.get('sample_alias', 'NO_SAMPLE_ALIAS')
+            if sample_alias in sample_descriptor:
+                if 'sample_attributes' in s.keys():
+                    sample_attributes = s.get('sample_attributes', [])
+                    for a in sample_attributes:
+                        if a.get('tag', 'no_tag_found').lower() == 'target gene':
+                            # try to extract description
+                            found = False
+                            for locus in locus_attributes_ena:
+                                gene_loc = str(a.get('value','no_value_found')).strip()
+                                if gene_loc.startswith(locus) and len(locus)<len(gene_loc):
+                                    targeted_loci_dict['targeted_loci'] = dict(targeted_loci_dict, **OrderedDict([
+                                        ('locus_name', str(locus)),
+                                        ('description', str(gene_loc[len(str(locus)):]).strip())]))
+                                    found = True
+                                    break
+                            if(found==False):
+                                targeted_loci_dict['targeted_loci'] = dict(targeted_loci_dict, **OrderedDict([
+                                        ('locus_name', a.get('value', 'no_value_found'))]))
+                break
+        return targeted_loci_dict
 
     def create_single_experiment_xml(self, experiment_set, data,
                                      sample_descriptor_platform_mappings):
@@ -418,15 +467,17 @@ class Enalizer(object):
         self.create_subelements(
             library_descriptor,
             ['library_name', 'library_strategy', 'library_source',
-             'library_selection', ],
+             'library_selection'],
             library_descriptor_data)
 
         self.create_library_layout(library_descriptor, library_descriptor_data)
 
-        targeted_loci_data = library_descriptor_data.get('targeted_loci', {})
-        if len(targeted_loci_data) > 0:
+        targeted_loci_dict = OrderedDict()  #{}
+        targeted_loci_dict = self.translate_target_gene(sample_decriptor, targeted_loci_dict)
+
+        if len(targeted_loci_dict) > 0:
             targeted_loci = SubElement(library_descriptor, 'TARGETED_LOCI')
-            self.create_targeted_loci(targeted_loci, targeted_loci_data)
+            self.create_targeted_loci2(targeted_loci, targeted_loci_dict)
 
         self.create_subelement(library_descriptor, 'pooling_strategy',
                                library_descriptor_data)

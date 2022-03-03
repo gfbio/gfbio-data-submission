@@ -718,7 +718,7 @@ class TestCSVParsing(TestCase):
         self.assertIn('experiments', requirements_keys)
         self.assertIn('samples', requirements_keys)
 
-    def test_parse_environmental_package(self):
+    def test_parse_environmental_package_2(self):
         file_names = [
             'csv_files/fixed_DSUB_378.csv',
             # 'csv_files/molecular_metadata.csv',
