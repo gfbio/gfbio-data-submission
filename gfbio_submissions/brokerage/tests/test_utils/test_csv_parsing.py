@@ -721,6 +721,7 @@ class TestCSVParsing(TestCase):
 
     def test_parse_environmental_package(self):
         file_names = [
+            'csv_files/fixed_DSUB_378.csv',
             'csv_files/molecular_metadata.csv',
             'csv_files/molecular_metadata_uppers.csv',
             'csv_files/GFBIO_submission_Illumina_HE533_18S_P20_new_utf8.csv',
@@ -745,64 +746,6 @@ class TestCSVParsing(TestCase):
                         if 'environmental package' in tag:
                             env_pack = s.get('value')
                             self.assertEqual(env_pack.islower(), True)
-
-    def test_parse_environmental_package_2(self):
-        file_names = [
-            'csv_files/fixed_DSUB_378.csv',
-            # 'csv_files/molecular_metadata.csv',
-            # 'csv_files/molecular_metadata_uppers.csv',
-            # 'csv_files/GFBIO_submission_Illumina_HE533_18S_P20_new_utf8.csv',
-            # 'csv_files/example_GFBIO_submission.csv',
-            # 'csv_files/mol_5_items_comma_some_double_quotes.csv',
-            # 'csv_files/mol_5_items_comma_no_quoting_in_header.csv',
-            # 'csv_files/mol_5_items_semi_no_quoting.csv',
-        ]
-
-        for fn in file_names:
-            with open(os.path.join(_get_test_data_dir_path(), fn),
-                      'r') as data_file:
-                requirements = parse_molecular_csv(data_file)
-
-                requirements_keys = requirements.keys()
-                self.assertIn('samples', requirements_keys)
-
-                for x in range(0, len(requirements['samples'])):
-                    for s in requirements.get(
-                            'samples', [{}])[x].get('sample_attributes', []):
-                        tag = s.get('tag')
-                        if 'environmental package' in tag:
-                            env_pack = s.get('value')
-                            self.assertEqual(env_pack.islower(), True)
-
-    def test_lower_case_columns(self):
-        with open(os.path.join(
-                _get_test_data_dir_path(),
-                'csv_files/molecular_upper_case.csv'),
-                'r') as data_file:
-            requirements = parse_molecular_csv(data_file)
-
-        layout_type = requirements.get('experiments', [{}])[0].get('design', {}) \
-            .get('library_descriptor', {}).get('library_layout', {}).get('layout_type', '')
-        # check if paired is lower case
-        self.assertEqual(layout_type, 'paired')
-
-        library_layout = requirements.get('experiments', [{}])[0].get('design', {}) \
-            .get('library_descriptor', {}).get('library_layout', {})
-        # check if library_layout has 2 keys
-        self.assertEqual(len(library_layout), 2)
-
-        submission = Submission.objects.first()
-        submission.data.get('requirements', {}).update(requirements)
-        path = os.path.join(
-            os.getcwd(),
-            'gfbio_submissions/brokerage/schemas/ena_requirements.json')
-        valid, full_errors = validate_data_full(
-            data=submission.data,
-            target=ENA_PANGAEA,
-            schema_location=path,
-        )
-
-        self.assertTrue(valid)
 
     def test_whitespaces_with_occasional_quotes(self):
         with open(os.path.join(
