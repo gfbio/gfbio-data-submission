@@ -32,13 +32,25 @@
                 "taxon_id": 1081887,
                 "description": "Escherichia coli 09BKT078844, ...",
                 "sample_alias": "sample_j09gp7eb",
-                "sample_title": "Sample No. 2"
+                "sample_title": "Sample No. 2",
+                "sample_attributes": [
+                    {
+                        "tag": "target gene",
+                        "value": "cox1"
+                    }
+                ]
             },
             {
                 "taxon_id": 2056630,
                 "description": "Candidatus Korarchaeota archaeon, ..",
                 "sample_alias": "sample_j09gp7ed",
-                "sample_title": "Sample No. 3"
+                "sample_title": "Sample No. 3",
+                 "sample_attributes": [
+                    {
+                        "tag": "target gene",
+                        "value": "matK"
+                    }
+                ]
             },
             {
                 "taxon_id": 1126011,

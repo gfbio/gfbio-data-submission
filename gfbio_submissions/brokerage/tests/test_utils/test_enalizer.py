@@ -239,6 +239,35 @@ class TestEnalizer(TestCase):
 
         self.assertTrue(enalizer.experiments_contain_files)
 
+    def test_experiment_xml_targeted_loci(self):
+        submission = Submission.objects.last()
+        enalizer = Enalizer(submission, 'test-enalizer-sample')
+        self.assertFalse(enalizer.experiments_contain_files)
+        data = enalizer.prepare_submission_data()
+        k, experiment_xml = data.get('EXPERIMENT')
+        self.assertEqual('experiment.xml', k)
+        k, sample_xml = data.get('SAMPLE')
+        self.assertEqual('sample.xml', k)
+        # tests, if structure is (not) in container:
+        self.assertIn(
+            '<TARGETED_LOCI><LOCUS locus_name="16S rRNA" /></TARGETED_LOCI></LIBRARY_DESCRIPTOR>',
+           experiment_xml)
+        self.assertNotIn(
+            '<SAMPLE_ATTRIBUTE><TAG>target gene</TAG><VALUE>16S rRNA</VALUE></SAMPLE_ATTRIBUTE>',
+            sample_xml)
+        self.assertIn(
+            '<TARGETED_LOCI><LOCUS description="cox1" locus_name="other" /></TARGETED_LOCI></LIBRARY_DESCRIPTOR>',
+            experiment_xml)
+        self.assertNotIn(
+            '<SAMPLE_ATTRIBUTE><TAG>target gene</TAG><VALUE>cox1</VALUE></SAMPLE_ATTRIBUTE>',
+            sample_xml)
+        self.assertIn(
+            '<TARGETED_LOCI><LOCUS description="18S rRNA for fish" locus_name="other" /></TARGETED_LOCI></LIBRARY_DESCRIPTOR>',
+            experiment_xml)
+        self.assertNotIn(
+            '<SAMPLE_ATTRIBUTE><TAG>TARGet gene</TAG><VALUE>18S rRNA for fish</VALUE></SAMPLE_ATTRIBUTE>',
+            sample_xml)
+
     def test_experiment_xml_center_name(self):
         submission = Submission.objects.last()
         center_name, created = CenterName.objects.get_or_create(

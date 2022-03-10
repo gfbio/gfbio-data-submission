@@ -422,22 +422,22 @@ class Enalizer(object):
             sample_alias = s.get('sample_alias', 'NO_SAMPLE_ALIAS')
             if sample_alias in sample_descriptor:
                 if 'sample_attributes' in s.keys():
-                    sample_attributes = s.get('sample_attributes', [])
-                    for a in sample_attributes:
-                        if a.get('tag', 'no_tag_found').lower() == 'target gene':
-                            # try to extract description
+                    for m in range(len(s.get('sample_attributes', []))):
+                        if str(s.get('sample_attributes', [])[m]['tag']).lower() == 'target gene':
                             found = False
+                            gene_loc = s.get('sample_attributes', [])[m]['value']
                             for locus in locus_attributes_ena:
-                                gene_loc = str(a.get('value','no_value_found')).strip()
-                                if gene_loc.startswith(locus) and len(locus)<len(gene_loc):
+                                if locus == gene_loc:
                                     targeted_loci_dict['targeted_loci'] = dict(targeted_loci_dict, **OrderedDict([
-                                        ('locus_name', str(locus)),
-                                        ('description', str(gene_loc[len(str(locus)):]).strip())]))
+                                        ('locus_name', gene_loc)]))
                                     found = True
                                     break
-                            if(found==False):
+                            if found == False and len(gene_loc):
                                 targeted_loci_dict['targeted_loci'] = dict(targeted_loci_dict, **OrderedDict([
-                                        ('locus_name', a.get('value', 'no_value_found'))]))
+                                    ('locus_name', 'other'),
+                                    ('description', str(gene_loc))]))
+                            del s.get('sample_attributes', [])[m]
+                            break
                 break
         return targeted_loci_dict
 
@@ -473,7 +473,7 @@ class Enalizer(object):
 
         self.create_library_layout(library_descriptor, library_descriptor_data)
 
-        targeted_loci_dict = OrderedDict()  #{}
+        targeted_loci_dict = OrderedDict()  # {}
         targeted_loci_dict = self.translate_target_gene(sample_decriptor, targeted_loci_dict)
 
         if len(targeted_loci_dict) > 0:
