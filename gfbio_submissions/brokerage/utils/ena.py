@@ -379,7 +379,7 @@ class Enalizer(object):
                 self.create_subelement(probe_set, 'id', probe_set_data)
                 self.create_subelement(probe_set, 'label', probe_set_data)
 
-    def create_targeted_loci2(self, root, data_dict):
+    def create_targeted_loci_without_probe_set(self, root, data_dict):
         if 'targeted_loci' in data_dict.keys():
             description = data_dict.get('targeted_loci', {}).get(
                 'description', '')
@@ -478,7 +478,7 @@ class Enalizer(object):
 
         if len(targeted_loci_dict) > 0:
             targeted_loci = SubElement(library_descriptor, 'TARGETED_LOCI')
-            self.create_targeted_loci2(targeted_loci, targeted_loci_dict)
+            self.create_targeted_loci_without_probe_set(targeted_loci, targeted_loci_dict)
 
         self.create_subelement(library_descriptor, 'pooling_strategy',
                                library_descriptor_data)

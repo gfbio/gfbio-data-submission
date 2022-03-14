@@ -724,6 +724,7 @@ class TestCSVParsing(TestCase):
             'csv_files/fixed_DSUB_378.csv',
             'csv_files/molecular_metadata.csv',
             'csv_files/molecular_metadata_uppers.csv',
+
             'csv_files/GFBIO_submission_Illumina_HE533_18S_P20_new_utf8.csv',
             'csv_files/example_GFBIO_submission.csv',
             'csv_files/mol_5_items_comma_some_double_quotes.csv',
