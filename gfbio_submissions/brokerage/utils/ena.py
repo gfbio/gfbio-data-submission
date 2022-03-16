@@ -48,6 +48,17 @@ locus_attributes_ena = [
     'exome'
 ]
 
+locus_attribute_mappings = {
+    '16s rrna': '16S rRNA',
+    '18s rrna': '18S rRNA',
+    '28s rrna': '28S rRNA',
+    'rbcl': 'RBCL',
+    'matk': 'matK',
+    'cox1': 'COX1',
+    'its1-5.8s-its2': 'ITS1-5.8S-ITS2',
+    'exome': 'exome',
+}
+
 #  ENALIZER  xml for ena -------------------------------------------------------
 class Enalizer(object):
     def __init__(self, submission, alias_postfix=uuid.uuid4()):
@@ -417,25 +428,23 @@ class Enalizer(object):
             if 'units' in attribute.keys():
                 self.create_subelement(experiment_attribute, 'units', attribute)
 
-    def translate_target_gene(self, sample_descriptor, targeted_loci_dict):
+    def translate_target_gene_insensitiv(self, sample_descriptor, targeted_loci_dict):
         for s in self.sample:
             sample_alias = s.get('sample_alias', 'NO_SAMPLE_ALIAS')
             if sample_alias in sample_descriptor:
                 if 'sample_attributes' in s.keys():
                     for m in range(len(s.get('sample_attributes', []))):
                         if str(s.get('sample_attributes', [])[m]['tag']).lower() == 'target gene':
-                            found = False
                             gene_loc = s.get('sample_attributes', [])[m]['value']
-                            for locus in locus_attributes_ena:
-                                if locus == gene_loc:
+                            if len(gene_loc):
+                                mapped_locus = locus_attribute_mappings.get(gene_loc.lower())
+                                if (mapped_locus is not None):
                                     targeted_loci_dict['targeted_loci'] = dict(targeted_loci_dict, **OrderedDict([
-                                        ('locus_name', gene_loc)]))
-                                    found = True
-                                    break
-                            if found == False and len(gene_loc):
-                                targeted_loci_dict['targeted_loci'] = dict(targeted_loci_dict, **OrderedDict([
-                                    ('locus_name', 'other'),
-                                    ('description', str(gene_loc))]))
+                                        ('locus_name', mapped_locus)]))
+                                else:
+                                    targeted_loci_dict['targeted_loci'] = dict(targeted_loci_dict, **OrderedDict([
+                                        ('locus_name', 'other'),
+                                        ('description', str(gene_loc))]))
                             del s.get('sample_attributes', [])[m]
                             break
                 break
@@ -474,7 +483,7 @@ class Enalizer(object):
         self.create_library_layout(library_descriptor, library_descriptor_data)
 
         targeted_loci_dict = OrderedDict()  # {}
-        targeted_loci_dict = self.translate_target_gene(sample_decriptor, targeted_loci_dict)
+        targeted_loci_dict = self.translate_target_gene_insensitiv(sample_decriptor, targeted_loci_dict)
 
         if len(targeted_loci_dict) > 0:
             targeted_loci = SubElement(library_descriptor, 'TARGETED_LOCI')
