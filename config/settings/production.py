@@ -186,12 +186,6 @@ sentry_sdk.init(
                   RedisIntegration()],
 )
 
-IGNORABLE_404_URLS = [
-    re.compile(r'^/ws.js'),
-    re.compile(r'^/robots.txt'),
-    re.compile(r'^/favorite.ico'),
-]
-
 # Your stuff...
 # ------------------------------------------------------------------------------
 # REST API Permissions
