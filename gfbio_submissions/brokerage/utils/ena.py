@@ -37,17 +37,6 @@ from gfbio_submissions.resolve.models import Accession
 logger = logging.getLogger(__name__)
 dicttoxml.LOG.setLevel(logging.ERROR)
 
-locus_attributes_ena = [
-    '16S rRNA',
-    '18S rRNA',
-    '28S rRNA',
-    'RBCL',
-    'matK',
-    'COX1',
-    'ITS1-5.8S-ITS2',
-    'exome'
-]
-
 locus_attribute_mappings = {
     '16s rrna': '16S rRNA',
     '18s rrna': '18S rRNA',
@@ -57,6 +46,9 @@ locus_attribute_mappings = {
     'cox1': 'COX1',
     'its1-5.8s-its2': 'ITS1-5.8S-ITS2',
     'exome': 'exome',
+    '16s': '16S rRNA',
+    '18s': '18S rRNA',
+    '28s': '28S rRNA',
 }
 
 #  ENALIZER  xml for ena -------------------------------------------------------
