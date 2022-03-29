@@ -112,7 +112,7 @@ class TestAttachToIssueTasks(TestHelpDeskTasksBase):
         self.assertEqual(3, len(all_uploads))
 
         for i in range(0, len(all_uploads)):
-            self.assertEqual('eb2d6ce5162106abe3a0d902c9578787',
+            self.assertEqual('3bc38ceb0c2dd4571737fb5e6ed22a62',
                              all_uploads[i].md5_checksum)
             result = attach_to_submission_issue_task.apply_async(
                 kwargs={
