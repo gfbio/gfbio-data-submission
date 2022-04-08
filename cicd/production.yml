@@ -1,5 +1,9 @@
 version: '3.7'
 
+volumes:
+  gfbio-ISSUE_ID:
+    external: true
+
 services:
   django: &django
     build:
@@ -17,7 +21,7 @@ services:
       - ../.envs/.production/.postgres
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /home/gitlab-runner/volumes/gfbio-ISSUE_ID:/app/gfbio_submissions/media
+      - gfbio-ISSUE_ID:/app/gfbio_submissions/media
     networks:
       - internalProxy
       - internal
@@ -73,7 +77,7 @@ services:
       - internal
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /home/gitlab-runner/volumes/gfbio-ISSUE_ID:/app/gfbio_submissions/media
+      - gfbio-ISSUE_ID:/app/gfbio_submissions/media
     image: gfbio_submissions_production_celeryworker
     logging:
       driver: syslog

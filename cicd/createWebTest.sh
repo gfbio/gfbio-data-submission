@@ -36,7 +36,7 @@ if [ "$IS_WEBTEST" -eq "1" ]; then
     # create docker volume
     VOLUME_PATH=/home/gitlab-runner/volumes/gfbio-"$ISSUE_ID"
     mkdir -p "$VOLUME_PATH"
-    docker volume create --name gfbio-"$ISSUE_ID" --opt type=none --opt device="$VOLUME_PATH"
+    docker volume create --name gfbio-"$ISSUE_ID" --opt type=none --opt device="$VOLUME_PATH" --opt o=bind
     # start stack
     ADMIN_NICKNAME=${ADMIN_NICKNAME} ADMIN_EMAIL=${ADMIN_EMAIL} ADMIN_PASSWORD=${ADMIN_PASSWORD} docker stack deploy -c cicd/production.yml "$ISSUE_ID"
     exit 0

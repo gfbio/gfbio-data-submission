@@ -34,7 +34,7 @@ BODY="{
     \"remove_source_branch\": true,
     \"labels\": \"${ISSUE_LABELS_STR}\",
     \"milestone_id\": \"${ISSUE_MILESTONE}\",
-    \"title\": \"WIP: ${CI_COMMIT_REF_NAME}\",
+    \"title\": \"Draft: ${CI_COMMIT_REF_NAME}\",
     \"assignee_ids\": ${ASSIGNED_USERS},
     \"description\": \"Closes: #${ISSUE_ID}\"
 }";
@@ -81,7 +81,7 @@ if [ ${COUNTBRANCHES} -eq "0" ]; then
         --data "${RULES_BODY}";
     fi
 
-    echo "Opened a new merge request: WIP: ${CI_COMMIT_REF_NAME} and assigned to you";
+    echo "Opened a new merge request: Draft: ${CI_COMMIT_REF_NAME} and assigned to you";
     exit;
 fi
 
