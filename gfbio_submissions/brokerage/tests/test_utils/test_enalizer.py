@@ -256,10 +256,16 @@ class TestEnalizer(TestCase):
             '<SAMPLE_ATTRIBUTE><TAG>target gene</TAG><VALUE>16S rRNA</VALUE></SAMPLE_ATTRIBUTE>',
             sample_xml)
         self.assertIn(
-            '<TARGETED_LOCI><LOCUS description="cox1" locus_name="other" /></TARGETED_LOCI></LIBRARY_DESCRIPTOR>',
+            '<TARGETED_LOCI><LOCUS locus_name="28S rRNA" /></TARGETED_LOCI></LIBRARY_DESCRIPTOR>',
             experiment_xml)
         self.assertNotIn(
-            '<SAMPLE_ATTRIBUTE><TAG>target gene</TAG><VALUE>cox1</VALUE></SAMPLE_ATTRIBUTE>',
+            '<SAMPLE_ATTRIBUTE><TAG>target gene</TAG><VALUE>28S</VALUE></SAMPLE_ATTRIBUTE>',
+            sample_xml)
+        self.assertIn(
+            '<TARGETED_LOCI><LOCUS locus_name="ITS1-5.8S-ITS2" /></TARGETED_LOCI></LIBRARY_DESCRIPTOR>',
+            experiment_xml)
+        self.assertNotIn(
+            '<SAMPLE_ATTRIBUTE><TAG>target gene</TAG><VALUE>iTS1-5.8S-ITs2</VALUE></SAMPLE_ATTRIBUTE>',
             sample_xml)
         self.assertIn(
             '<TARGETED_LOCI><LOCUS description="18S rRNA for fish" locus_name="other" /></TARGETED_LOCI></LIBRARY_DESCRIPTOR>',
