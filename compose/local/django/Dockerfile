@@ -25,6 +25,7 @@ RUN apt-get update \
 # Java
 COPY ./compose/local/django/install_java8_jre.sh /
 RUN chmod +x /install_java8_jre.sh
+RUN sed -i 's/\r$//g' /install_java8_jre.sh
 RUN /install_java8_jre.sh
 
 ENV JAVA_HOME=/opt/java/openjdk \
