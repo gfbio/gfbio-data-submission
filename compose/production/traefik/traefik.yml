@@ -17,7 +17,7 @@ certificatesResolvers:
   letsencrypt:
     # https://docs.traefik.io/master/https/acme/#lets-encrypt
     acme:
-      email: "maweber@mpi-bremen.de"
+      email: "mweber@gfbio.org"
       storage: /etc/traefik/acme/acme.json
       # https://docs.traefik.io/master/https/acme/#httpchallenge
       httpChallenge:

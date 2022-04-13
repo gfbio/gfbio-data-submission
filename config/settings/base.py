@@ -262,7 +262,7 @@ ADMIN_URL = env("DJANGO_ADMIN_URL", default="admin/")
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#admins
 DJANGO_ADMINS = env.list('DJANGO_ADMINS', default=[
-    "Marc Weber:maweber@mpi-bremen.de",
+    "Marc Weber:mweber@gfbio.org",
     "Ivaylo Kostadinov:ikostadi@gfbio.org",
     "Deniss Marinuks:d.marinuks@jacobs-university.de",
 ])
