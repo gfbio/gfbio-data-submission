@@ -7,10 +7,8 @@ set -u
 #Get the first error in chained commands
 set -o pipefail
 
-# FIXME: needs to be adapted for ci pipeline
-COMPOSE_FILE="/home/gitlab-runner/builds/fVfCytz7/0/gfbio/submission.gfbio.org/production.yml"
-# TODO: may a better location needs to be found
-LOCAL_BACKUP_DIR="/home/gitlab-runner/submisssion_automatic_backups"
+COMPOSE_FILE="/var/www/gfbio_submissions/production.yml"
+LOCAL_BACKUP_DIR="/var/www/gfbio_submissions/backups"
 REMOTE_BACKUP_URL="https://owncloud.mpi-bremen.de/remote.php/webdav/broker_db_backup/" #NB: trailing slash is MANDATORY!!!
 CURL_CONF="/root/mpi-owncloud.conf"
 PASSPHRASE_FILE="/root/db_backup_passphrase.txt"
@@ -31,3 +29,4 @@ tar -cf "$LATEST_BACKUP_TAR" "$LATEST_BACKUP_ENCRYPTED" "$LATEST_BACKUP_MD5"
 curl --digest -K "$CURL_CONF" -T "$LATEST_BACKUP_TAR" "$REMOTE_BACKUP_URL"
 
 rm "$LATEST_BACKUP_ENCRYPTED" "$LATEST_BACKUP_TAR" "$LATEST_BACKUP_MD5"
+
