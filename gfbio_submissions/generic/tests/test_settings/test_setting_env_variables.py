@@ -16,14 +16,15 @@ class EnvVariablesDefaultsTest(TestCase):
     def test_django_admins_default(self):
         admins = DJANGO_ADMINS
         self.assertTrue(type(admins) == list)
-        self.assertIn("Marc Weber:maweber@mpi-bremen.de", admins)
+        #self.assertIn("Marc Weber:maweber@mpi-bremen.de", admins) Marc Weber:mweber@gfbio.org
+        self.assertIn("Marc Weber:mweber@gfbio.org", admins)
         self.assertIn("Ivaylo Kostadinov:ikostadi@gfbio.org", admins)
         self.assertIn("Deniss Marinuks:d.marinuks@jacobs-university.de", admins)
 
     def test_default_admins(self):
         admins = ADMINS
         self.assertListEqual(
-            [('Marc Weber', 'maweber@mpi-bremen.de'),
+            [('Marc Weber', 'mweber@gfbio.org'),
              ('Ivaylo Kostadinov', 'ikostadi@gfbio.org'),
              ('Deniss Marinuks', 'd.marinuks@jacobs-university.de')],
             admins

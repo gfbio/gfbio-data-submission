@@ -12,6 +12,7 @@ from requests.structures import CaseInsensitiveDict
 
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL
+from gfbio_submissions.brokerage.tests.test_utils.test_helpdesk_ticket_methods import TestHelpDeskTicketMethods
 from gfbio_submissions.brokerage.utils.pangaea import \
     get_pangaea_login_token
 from gfbio_submissions.generic.models import ResourceCredential
