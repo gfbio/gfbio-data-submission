@@ -54,8 +54,7 @@ check_for_web_test:
     - if: '$CI_COMMIT_BRANCH =~ /^\d+-/'
   tags:
     - dev-denbi
-#
-#
+
 update_staging:
   stage: update_staging
   script:
