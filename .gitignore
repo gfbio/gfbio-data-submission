@@ -336,6 +336,7 @@ gfbio_submissions/media/
 
 .ipython/
 .env
+.env*
 dev-server.env
 .envs/*
 !.envs/.local/
