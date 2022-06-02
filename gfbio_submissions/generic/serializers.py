@@ -84,6 +84,112 @@ class JiraHookRequestSerializer(serializers.Serializer):
             }
         )
 
+    def save_reporter(self):
+
+        reporter_name = None
+        reporter_email = None
+        reporter_key = None
+
+        rep_isknown = False
+
+        try:
+            reporter_name = self.validated_data.get('issue', {}).get('fields', {}).get(
+                    'reporter',{}).get('name','')
+
+        except Exception as e:
+            logger.error(
+                msg='serializer.py | JiraHookRequestSerializer | '
+                        'unable to get reporter name | {0}'.format(e))
+
+
+        try:
+           reporter_email = self.validated_data.get('issue', {}).get('fields', {}).get(
+                    'reporter', {}).get('emailAddress')
+        except Exception as e:
+            logger.error(
+                msg='serializer.py | JiraHookRequestSerializer | '
+                    'unable to get reporter email'
+            )
+
+            self.send_mail_to_admins(
+                reason='Submission update via Jira hook failed',
+                message='serializer.py | JiraHookRequestSerializer | '
+                        'unable to get reporter email | {0}'.format(e))
+
+        try:
+           reporter_key = self.validated_data.get('issue', {}).get('fields', {}).get(
+                    'reporter', {}).get('key')
+        except Exception as e:
+            logger.error(
+                msg='serializer.py | JiraHookRequestSerializer | '
+                    'unable to get reporter key'
+            )
+
+            self.send_mail_to_admins(
+                reason='Submission update via Jira hook failed',
+                message='serializer.py | JiraHookRequestSerializer | '
+                        'unable to get reporter key | {0}'.format(e))
+
+        submission_id = self.validated_data.get(
+            'issue', {}).get('fields', {}).get('customfield_10303', '')
+        try:
+            submission = Submission.objects.get(
+                broker_submission_id=UUID(submission_id))
+        except Submission.DoesNotExist as e:
+            logger.error(
+                msg='serializer.py | JiraHookRequestSerializer | '
+                    'unable to get submission | {0}'.format(e)
+            )
+            self.send_mail_to_admins(
+                reason='Submission update via Jira hook failed',
+                message='serializer.py | JiraHookRequestSerializer | '
+                        'unable to get submission | {0}'.format(e))
+
+        # three tests:
+
+        # first: is reporter the same as reporter or user from current submission?
+        # second: search across all Submission users, is reporter included?
+        # third: if neither, add as new user
+
+        #ad0:
+        submission = Submission.objects.get(
+            broker_submission_id=UUID(submission_id))
+        sub_user = submission.user
+        if str(sub_user.email) == str(reporter_email):
+            rep_isknown = True
+
+        # ad1:
+        if not (rep_isknown):
+            updating_user = str(self.validated_data.get('user', {}).get('emailAddress',''))
+            logger.info(
+                msg='serializer.py | JiraHookRequestSerializer | '
+                    'updating user | {0}'.format(updating_user)
+            )
+            if str(updating_user) == str(reporter_email):
+                rep_isknown = True
+
+        # ad2:  reporter 'name': JIRA_FALLBACK_USERNAME,
+        if  not (rep_isknown):
+            users_from_subm = User.objects.filter(is_user=True)
+            for user in users_from_subm:
+                if str(user.email) == str(reporter_email):
+                    rep_isknown = True
+                    break
+
+        # ad3:
+        from django.contrib.auth.models import Permission
+        if not (rep_isknown):
+            user = User.objects.create_user(
+                username=reporter_name, email=reporter_email)
+            permissions = Permission.objects.filter(
+                content_type__app_label='brokerage',
+                codename__endswith='upload')
+            user.user_permissions.add(*permissions)
+
+
+        submission.save()
+
+
     # TODO: !IMPORTANT! Please add a check procedure in the generic parsing of the JSON,
     #  that if the user that caused the action was the brokeragent,
     #  any further processing is skipped.
@@ -95,6 +201,10 @@ class JiraHookRequestSerializer(serializers.Serializer):
     def get_embargo_date_field_value(self):
         return self.initial_data.get('issue', {}).get('fields', {}).get(
             'customfield_10200', '')
+
+    def get_reporter_email_field_value(self):
+        return self.initial_data.get('issue', {}).get('fields', {}).get(
+                    'reporter', {}).get('emailAddress')
 
     def schema_validation(self, data):
         path = os.path.join(

@@ -2,6 +2,7 @@
 import json
 from uuid import uuid4, UUID
 
+from django.contrib.auth.models import Permission
 from django.db import transaction
 from django.urls import reverse
 from rest_framework import generics, mixins, permissions, parsers
@@ -13,14 +14,17 @@ from rest_framework.response import Response
 from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.users.models import User
 from ..configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY, \
-    SUBMISSION_DELAY, SUBMISSION_ISSUE_CHECK_DELAY
+    SUBMISSION_DELAY, SUBMISSION_ISSUE_CHECK_DELAY, JIRA_FALLBACK_EMAIL, JIRA_FALLBACK_USERNAME
 from ..forms import SubmissionCommentForm
 from ..models import Submission, SubmissionUpload
 from ..permissions import IsOwnerOrReadOnly
 from ..serializers import SubmissionUploadListSerializer, \
     SubmissionDetailSerializer, SubmissionUploadSerializer
-from ..utils.submission_tools import get_embargo_from_request
+from ..utils.submission_tools import get_embargo_from_request, \
+    get_reporter_from_request
 from ..utils.task_utils import jira_cancel_issue
+
+#import gfbio_submissions.authentication
 
 
 class SubmissionsView(mixins.ListModelMixin,
@@ -110,6 +114,15 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         instance = self.get_object()
         new_embargo = get_embargo_from_request(request)
 
+        # should return empty dict or None if request reading error:
+        new_reporter = {
+            'jira_user_name': JIRA_FALLBACK_USERNAME,
+            'email': JIRA_FALLBACK_EMAIL,
+            'full_name': ''
+        }
+        new_reporter = get_reporter_from_request(request)  #submission_tools.py
+        # emai = new_reporter.get('email')
+
         # TODO: 06.06.2019 allow edit of submissions with status SUBMITTED ...
         if instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED:
             response = self.update(request, *args, **kwargs)
@@ -121,7 +134,8 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                 check_for_molecular_content_in_submission_task, \
                 trigger_submission_transfer_for_updates, \
                 update_submission_issue_task, get_gfbio_helpdesk_username_task, \
-                update_ena_embargo_task, notify_user_embargo_changed_task
+                update_ena_embargo_task, notify_user_embargo_changed_task, \
+                update_reporter_task, notify_user_reporter_changed_task
 
             update_chain = get_gfbio_helpdesk_username_task.s(
                 submission_id=instance.pk).set(
@@ -134,6 +148,45 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                                | notify_user_embargo_changed_task.s(
                     submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
             update_chain()
+
+            # compare details!
+            if new_reporter is not None and new_reporter.get('email') != JIRA_FALLBACK_EMAIL:
+                # verify_claims(self, new_reporter)
+                #does user exist already?
+                #the_user =  instance.submission.user.e
+                if new_reporter.get('email') !=instance.submission.user.site_configuration.contact:
+
+                    bio_user = None
+                    bio_user_id = None
+                    bio_user = User.objects.get(email=new_reporter.get('email'))  #login values
+                    if(bio_user.is_user):
+                        bio_user_id = bio_user.id   # pk
+                    else:
+                        bio_user = User.objects.create_user(username=new_reporter.jira_user_name, email=new_reporter.get('email'))
+                        permissions = Permission.objects.filter(
+                            content_type__app_label='brokerage',
+                            codename__endswith='submission'
+                        )
+                        bio_user.user_permissions.add(*permissions)
+                        bio_user.site_configuration = instance.submission.user.site_configuration
+                        bio_user.save()
+                        bio_user_id = bio_user.id   # pk  #or broker_submission_id
+
+                    update_chain = update_chain | update_reporter_task.s(
+                        submission_id=instance.pk, reporter=new_reporter).set(countdown=SUBMISSION_DELAY) \
+                                     | notify_user_reporter_changed_task.s(
+                            submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+                update_chain()
+
+                # the_user = instance.submission.user.update_or_create_external_user_id(bio_user_id) later, save the key here?
+
+                # error:
+                #if bio_user_id:
+                #    update_chain = update_chain | notify_user_reporter_changed_task.s(
+                #       submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+                #update_chain()
+                # end error
+                #reporter end
 
             chain = check_for_molecular_content_in_submission_task.s(
                 submission_id=instance.pk

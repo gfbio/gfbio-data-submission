@@ -2351,6 +2351,58 @@ def notify_user_embargo_changed_task(self, prev=None, submission_id=None):
         'msg': 'missing site_config or jira ticket'
     }
 
+@celery.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.update_reporter_task',
+)
+def update_reporter_task(self, prev=None, submission_id=None, reporter={}):
+    logger.info('tasks.py | update_reporter_task | submission_id={0}'.format(
+        submission_id))
+
+    submission, site_config = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        mail_admins(
+            subject="update_reporter_task failed",
+            message='Failed to get submission and site_config for the task.\n'
+                    'Submission_id: {0}'.format(submission_id)
+        )
+        return TaskProgressReport.CANCELLED
+
+    if site_config is None:
+        logger.warning(
+            'update_reporter_task | no site_configuration found | submission_id={0}'.format(
+                submission.broker_submission_id)
+        )
+        return 'no site_configuration'
+
+    if reporter is not None and reporter.get('email') != JIRA_FALLBACK_EMAIL:
+        # verify_claims(self, new_reporter)
+        # does user exist already?
+        # the_user =  instance.submission.user.e
+        if reporter.get('email') != submission.user.site_configuration.contact:
+
+            bio_user = None
+            bio_user_id = None
+            bio_user = User.objects.get(email=reporter.get('email'))  # login values
+            if (bio_user.is_user):
+                bio_user_id = bio_user.id  # pk
+            else:
+                bio_user = User.objects.create_user(username=reporter.jira_user_name, email=reporter.get('email'))
+                from django.contrib.auth.models import Permission
+                permissions = Permission.objects.filter(
+                    content_type__app_label='brokerage',
+                    codename__endswith='submission'
+                )
+                bio_user.user_permissions.add(*permissions)
+                bio_user.site_configuration = submission.user.site_configuration
+                bio_user.save()
+            bio_user.site_configuration.contact = reporter.get('email')
+            bio_user.save()
 
 @celery.task(
     base=SubmissionTask,
@@ -2385,9 +2437,14 @@ def notify_user_reporter_changed_task(self, prev=None, submission_id=None):
             if not comment:
                 return TaskProgressReport.CANCELLED
 
+            goe_id = submission.user.externaluserid_set.filter(
+                provider='goe_id').first()
+            user_name = goe_id.external_id if goe_id else submission.user.username
+            user_email = submission.user.email
+
             comment = jira_comment_replace(
                 comment=comment,
-                username=submission.user)
+                username=user_name)
 
             jira_client = JiraClient(resource=site_config.helpdesk_server)
             jira_client.add_comment(
@@ -2399,7 +2456,7 @@ def notify_user_reporter_changed_task(self, prev=None, submission_id=None):
                                          broker_submission_id=submission.broker_submission_id)
     else:
         logger.info(
-            'tasks.py | notify_user_embargo_changed_task | no site_config for helpdesk_serever')
+            'tasks.py | notify_user_reporter_changed_task | no site_config for helpdesk_server')
 
     return {
         'status': 'error',
