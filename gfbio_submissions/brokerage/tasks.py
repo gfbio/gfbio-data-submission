@@ -2384,15 +2384,22 @@ def update_reporter_task(self, prev=None, submission_id=None, reporter={}):
         # verify_claims(self, new_reporter)
         # does user exist already?
         # the_user =  instance.submission.user.e
-        if reporter.get('email') != submission.user.site_configuration.contact:
-
+        #if reporter.get('email') != submission.user.site_configuration.contact:
+        #reporter has no flag is_user until now!
+        if reporter.get('email') != submission.user.email:
             bio_user = None
             bio_user_id = None
             bio_user = User.objects.get(email=reporter.get('email'))  # login values
-            if (bio_user.is_user):
+            if (bio_user is not None and bio_user.is_user):
                 bio_user_id = bio_user.id  # pk
+                # change link to submission:
+                submission.user=bio_user
+                submission.save()
             else:
-                bio_user = User.objects.create_user(username=reporter.jira_user_name, email=reporter.get('email'))
+                # bio_user = User.objects.create_user(username=reporter['jira_user_name'], email=reporter.get('email'))
+                # or
+                bio_user = User.objects.create_user(username=reporter.get('jira_user_name', ''), email = reporter.get('email'))
+
                 from django.contrib.auth.models import Permission
                 permissions = Permission.objects.filter(
                     content_type__app_label='brokerage',
@@ -2401,8 +2408,11 @@ def update_reporter_task(self, prev=None, submission_id=None, reporter={}):
                 bio_user.user_permissions.add(*permissions)
                 bio_user.site_configuration = submission.user.site_configuration
                 bio_user.save()
-            bio_user.site_configuration.contact = reporter.get('email')
-            bio_user.save()
+                bio_user.site_configuration.contact = reporter.get('email')  #additional
+                bio_user.save()
+
+                submission.user = bio_user
+                submission.save()
 
 @celery.task(
     base=SubmissionTask,

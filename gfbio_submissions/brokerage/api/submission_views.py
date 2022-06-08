@@ -121,7 +121,6 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
             'full_name': ''
         }
         new_reporter = get_reporter_from_request(request)  #submission_tools.py
-        # emai = new_reporter.get('email')
 
         # TODO: 06.06.2019 allow edit of submissions with status SUBMITTED ...
         if instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED:
@@ -152,41 +151,12 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
             # compare details!
             if new_reporter is not None and new_reporter.get('email') != JIRA_FALLBACK_EMAIL:
                 # verify_claims(self, new_reporter)
-                #does user exist already?
+                #does user exist already  only in task now ?
                 #the_user =  instance.submission.user.e
-                if new_reporter.get('email') !=instance.submission.user.site_configuration.contact:
-
-                    bio_user = None
-                    bio_user_id = None
-                    bio_user = User.objects.get(email=new_reporter.get('email'))  #login values
-                    if(bio_user.is_user):
-                        bio_user_id = bio_user.id   # pk
-                    else:
-                        bio_user = User.objects.create_user(username=new_reporter.jira_user_name, email=new_reporter.get('email'))
-                        permissions = Permission.objects.filter(
-                            content_type__app_label='brokerage',
-                            codename__endswith='submission'
-                        )
-                        bio_user.user_permissions.add(*permissions)
-                        bio_user.site_configuration = instance.submission.user.site_configuration
-                        bio_user.save()
-                        bio_user_id = bio_user.id   # pk  #or broker_submission_id
-
+                if new_reporter.get('email') !=instance.submission.user.email:
                     update_chain = update_chain | update_reporter_task.s(
-                        submission_id=instance.pk, reporter=new_reporter).set(countdown=SUBMISSION_DELAY) \
-                                     | notify_user_reporter_changed_task.s(
-                            submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
-                update_chain()
-
-                # the_user = instance.submission.user.update_or_create_external_user_id(bio_user_id) later, save the key here?
-
-                # error:
-                #if bio_user_id:
-                #    update_chain = update_chain | notify_user_reporter_changed_task.s(
-                #       submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
-                #update_chain()
-                # end error
-                #reporter end
+                        submission_id=instance.pk, reporter=new_reporter).set(countdown=SUBMISSION_DELAY)
+                    update_chain()
 
             chain = check_for_molecular_content_in_submission_task.s(
                 submission_id=instance.pk
