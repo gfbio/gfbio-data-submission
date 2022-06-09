@@ -156,7 +156,7 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                 if new_reporter.get('email') !=instance.submission.user.email:
                     update_chain = update_chain | update_reporter_task.s(
                         submission_id=instance.pk, reporter=new_reporter).set(countdown=SUBMISSION_DELAY)
-                    update_chain()
+                update_chain()
 
             chain = check_for_molecular_content_in_submission_task.s(
                 submission_id=instance.pk

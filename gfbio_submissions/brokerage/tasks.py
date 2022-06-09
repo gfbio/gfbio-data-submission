@@ -2389,30 +2389,47 @@ def update_reporter_task(self, prev=None, submission_id=None, reporter={}):
         if reporter.get('email') != submission.user.email:
             bio_user = None
             bio_user_id = None
-            bio_user = User.objects.get(email=reporter.get('email'))  # login values
-            if (bio_user is not None and bio_user.is_user):
-                bio_user_id = bio_user.id  # pk
-                # change link to submission:
-                submission.user=bio_user
-                submission.save()
-            else:
-                # bio_user = User.objects.create_user(username=reporter['jira_user_name'], email=reporter.get('email'))
-                # or
-                bio_user = User.objects.create_user(username=reporter.get('jira_user_name', ''), email = reporter.get('email'))
+            #bio_user = User.objects.get(email=reporter.get('email')) if reporter.get('email') else None # didnot work
 
-                from django.contrib.auth.models import Permission
-                permissions = Permission.objects.filter(
-                    content_type__app_label='brokerage',
-                    codename__endswith='submission'
-                )
-                bio_user.user_permissions.add(*permissions)
-                bio_user.site_configuration = submission.user.site_configuration
-                bio_user.save()
-                bio_user.site_configuration.contact = reporter.get('email')  #additional
-                bio_user.save()
+            bio_user = None
+            users_from_subm = User.objects.filter(is_user=True)
+            for user in users_from_subm:
+                if str(user.email) == str(reporter.get('email')):
+                    rep_isknown = True
+                    bio_user = user
+                    if (bio_user is not None and bio_user.is_user):
+                        # change link to submission:
+                        submission.user = bio_user
+                        submission.save()
+                    break
 
-                submission.user = bio_user
-                submission.save()
+
+            #if (bio_user is not None and bio_user.is_user):
+            #   bio_user_id = bio_user.id  # pk
+            #    # change link to submission:
+            #   submission.user=bio_user
+            #  submission.save()
+            #else:
+            if bio_user is None:
+                if reporter.get('jira_user_name'):
+                    # bio_user = User.objects.create_user(username=reporter['jira_user_name'], email=reporter.get('email'))
+                    # or
+                    bio_user = User.objects.create_user(username=reporter.get('jira_user_name'), email = reporter.get('email'))
+
+                    from django.contrib.auth.models import Permission
+                    permissions = Permission.objects.filter(
+                        content_type__app_label='brokerage',
+                        codename__endswith='submission'
+                    )
+                    bio_user.user_permissions.add(*permissions)
+                    bio_user.site_configuration = submission.user.site_configuration
+                    bio_user.save()
+                    bio_user.site_configuration.contact = reporter.get('email')  #additional
+                    bio_user.save()
+
+                    submission.user = bio_user
+                    submission.save()
+
 
 @celery.task(
     base=SubmissionTask,

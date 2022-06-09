@@ -87,6 +87,8 @@ class JiraHookRequestSerializer(serializers.Serializer):
             }
         )
 
+        self.save_reporter()
+
     def save_reporter(self):
 
         new_reporter = {
@@ -96,15 +98,11 @@ class JiraHookRequestSerializer(serializers.Serializer):
             'display_name': ''
         }
 
-        #reporter_name = None
-        #reporter_email = None
-        #reporter_key = None
-        #reporter_displayName = None
-
         rep_isknown = False
+        submission = None
 
         try:
-            new_reporter.reporter_name = self.validated_data.get('issue', {}).get('fields', {}).get(
+            new_reporter['jira_user_name'] = self.validated_data.get('issue', {}).get('fields', {}).get(
                     'reporter',{}).get('name','')
 
         except Exception as e:
@@ -112,9 +110,12 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 msg='serializers.py | JiraHookRequestSerializer | '
                         'unable to get reporter name | {0}'.format(e))
 
+        # in case the reporters name is empty, cannot create a user, username ist obligatory! for creation
+        if new_reporter.get('jira_user_name') in (None, '') or not new_reporter.get('jira_user_name').strip():
+            return
 
         try:
-           new_reporter.reporter_email = self.validated_data.get('issue', {}).get('fields', {}).get(
+           new_reporter['email'] = self.validated_data.get('issue', {}).get('fields', {}).get(
                     'reporter', {}).get('emailAddress')
         except Exception as e:
             logger.error(
@@ -128,7 +129,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
                         'unable to get reporter email | {0}'.format(e))
 
         try:
-           new_reporter.reporter_key = self.validated_data.get('issue', {}).get('fields', {}).get(
+           new_reporter['full_name'] = self.validated_data.get('issue', {}).get('fields', {}).get(
                     'reporter', {}).get('key')
         except Exception as e:
             logger.error(
@@ -164,48 +165,48 @@ class JiraHookRequestSerializer(serializers.Serializer):
 
         #all the things happen in the task!?
 
-        # update reporter
-        from gfbio_submissions.brokerage.tasks import update_reporter_task
 
-        update_reporter_task.apply_async(
-            kwargs={
-                'submission_id': submission.pk,
-                'reporter': new_reporter,
-            }
-        )
         #ad 0:
         submission = Submission.objects.get(
             broker_submission_id=UUID(submission_id))
         sub_user = submission.user
-        if str(sub_user.email) == str(new_reporter.reporter_email):
+        if str(sub_user.email) == str(new_reporter['email']):
             rep_isknown = True
+            return
 
+        bio_user = None
         # ad2:  reporter 'name': JIRA_FALLBACK_USERNAME,
         if  not (rep_isknown):
             users_from_subm = User.objects.filter(is_user=True)
             for user in users_from_subm:
-                if str(user.email) == str(new_reporter.reporter_email):
+                if str(user.email) == str(new_reporter['email']):
                     rep_isknown = True
                     bio_user = user
                     if (bio_user is not None and bio_user.is_user):
                         # change link to submission:
                         submission.user = bio_user
                         submission.save()
+                        rep_isknown = True
                     break
 
         # ad3 new user with shadow account:
         from django.contrib.auth.models import Permission
         if not (rep_isknown):
-            user = User.objects.create_user(
-                username=new_reporter.reporter_name, email=new_reporter.reporter_email)
+            bio_user = User.objects.create_user(
+                username=new_reporter['jira_user_name'], email=new_reporter['email'])
             permissions = Permission.objects.filter(
                 content_type__app_label='brokerage',
                 codename__endswith='upload')
-            user.user_permissions.add(*permissions)
+            bio_user.user_permissions.add(*permissions)
             submission.user = bio_user
             submission.save()
 
+        # update reporter
+        from gfbio_submissions.brokerage.tasks import update_reporter_task
 
+        update_reporter_task.apply_async(
+            kwargs=dict(submission_id=submission.pk, reporter=new_reporter)
+        )
 
     # TODO: !IMPORTANT! Please add a check procedure in the generic parsing of the JSON,
     #  that if the user that caused the action was the brokeragent,
