@@ -20,8 +20,7 @@ from ..models import Submission, SubmissionUpload
 from ..permissions import IsOwnerOrReadOnly
 from ..serializers import SubmissionUploadListSerializer, \
     SubmissionDetailSerializer, SubmissionUploadSerializer
-from ..utils.submission_tools import get_embargo_from_request, \
-    get_reporter_from_request
+from ..utils.submission_tools import get_embargo_from_request
 from ..utils.task_utils import jira_cancel_issue
 
 #import gfbio_submissions.authentication
@@ -114,14 +113,6 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
         instance = self.get_object()
         new_embargo = get_embargo_from_request(request)
 
-        # should return empty dict or None if request reading error:
-        new_reporter = {
-            'jira_user_name': JIRA_FALLBACK_USERNAME,
-            'email': JIRA_FALLBACK_EMAIL,
-            'full_name': ''
-        }
-        new_reporter = get_reporter_from_request(request)  #submission_tools.py
-
         # TODO: 06.06.2019 allow edit of submissions with status SUBMITTED ...
         if instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED:
             response = self.update(request, *args, **kwargs)
@@ -133,9 +124,8 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                 check_for_molecular_content_in_submission_task, \
                 trigger_submission_transfer_for_updates, \
                 update_submission_issue_task, get_gfbio_helpdesk_username_task, \
-                update_ena_embargo_task, notify_user_embargo_changed_task, \
-                update_reporter_task, notify_user_reporter_changed_task
-
+                update_ena_embargo_task, notify_user_embargo_changed_task
+               
             update_chain = get_gfbio_helpdesk_username_task.s(
                 submission_id=instance.pk).set(
                 countdown=SUBMISSION_DELAY) \
@@ -147,16 +137,6 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                                | notify_user_embargo_changed_task.s(
                     submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
             update_chain()
-
-            # compare details!
-            if new_reporter is not None and new_reporter.get('email') != JIRA_FALLBACK_EMAIL:
-                # verify_claims(self, new_reporter)
-                #does user exist already  only in task now ?
-                #the_user =  instance.submission.user.e
-                if new_reporter.get('email') !=instance.submission.user.email:
-                    update_chain = update_chain | update_reporter_task.s(
-                        submission_id=instance.pk, reporter=new_reporter).set(countdown=SUBMISSION_DELAY)
-                update_chain()
 
             chain = check_for_molecular_content_in_submission_task.s(
                 submission_id=instance.pk

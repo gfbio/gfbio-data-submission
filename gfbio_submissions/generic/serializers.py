@@ -89,125 +89,6 @@ class JiraHookRequestSerializer(serializers.Serializer):
 
         #self.save_reporter()
 
-    def save_reporter(self):
-
-        new_reporter = {
-            'jira_user_name': JIRA_FALLBACK_USERNAME,
-            'email': JIRA_FALLBACK_EMAIL,
-            'full_name': '',
-            'display_name': ''
-        }
-
-        rep_isknown = False
-        # submission = None
-
-        try:
-            new_reporter['jira_user_name'] = self.validated_data.get('issue', {}).get('fields', {}).get(
-                    'reporter',{}).get('name','')
-
-        except Exception as e:
-            logger.error(
-                msg='serializers.py | JiraHookRequestSerializer | '
-                        'unable to get reporter name | {0}'.format(e))
-
-        # in case the reporters name is empty, cannot create a user, username ist obligatory! for creation
-        if new_reporter.get('jira_user_name') in (None, '') or not new_reporter.get('jira_user_name').strip():
-            return
-
-        try:
-           new_reporter['email'] = self.validated_data.get('issue', {}).get('fields', {}).get(
-                    'reporter', {}).get('emailAddress')
-        except Exception as e:
-            logger.error(
-                msg='serializers.py | JiraHookRequestSerializer | '
-                    'unable to get reporter email'
-            )
-
-            self.send_mail_to_admins(
-                reason='Submission update via Jira hook failed',
-                message='serializers.py | JiraHookRequestSerializer | '
-                        'unable to get reporter email | {0}'.format(e))
-
-        try:
-           new_reporter['full_name'] = self.validated_data.get('issue', {}).get('fields', {}).get(
-                    'reporter', {}).get('key')
-        except Exception as e:
-            logger.error(
-                msg='serializer.py | JiraHookRequestSerializer | '
-                    'unable to get reporter key'
-            )
-
-            self.send_mail_to_admins(
-                reason='Submission update via Jira hook failed',
-                message='serializers.py | JiraHookRequestSerializer | '
-                        'unable to get reporter key | {0}'.format(e))
-
-        submission_id = self.validated_data.get(
-            'issue', {}).get('fields', {}).get('customfield_10303', '')
-        try:
-            submission = Submission.objects.get(
-                broker_submission_id=UUID(submission_id))
-        except Submission.DoesNotExist as e:
-            logger.error(
-                msg='serializer.py | JiraHookRequestSerializer | '
-                    'unable to get submission | {0}'.format(e)
-            )
-            self.send_mail_to_admins(
-                reason='Submission update via Jira hook failed',
-                message='serializer.py | JiraHookRequestSerializer | '
-                        'unable to get submission | {0}'.format(e))
-
-        # three tests:
-
-        # first: is reporter the same as reporter or user from current submission?
-        # second: search across all Submission users, is reporter included?
-        # third: if neither, add as new user
-
-        #all the things happen in the task!?
-
-
-        #ad 0:
-        submission = Submission.objects.get(
-            broker_submission_id=UUID(submission_id))
-        sub_user = submission.user
-        if str(sub_user.email) == str(new_reporter['email']):
-            rep_isknown = True
-            return
-
-        bio_user = None
-        # ad2:  reporter 'name': JIRA_FALLBACK_USERNAME,
-        if  not (rep_isknown):
-            users_from_subm = User.objects.filter(is_user=True)
-            for user in users_from_subm:
-                if str(user.email) == str(new_reporter['email']):
-                    rep_isknown = True
-                    bio_user = user
-                    if (bio_user is not None and bio_user.is_user):
-                        # change link to submission:
-                        submission.user = bio_user
-                        submission.save()
-                        rep_isknown = True
-                    break
-
-        # ad3 new user with shadow account:
-        from django.contrib.auth.models import Permission
-        if not (rep_isknown):
-            bio_user = User.objects.create_user(
-                username=new_reporter['jira_user_name'], email=new_reporter['email'])
-            permissions = Permission.objects.filter(
-                content_type__app_label='brokerage',
-                codename__endswith='upload')
-            bio_user.user_permissions.add(*permissions)
-            submission.user = bio_user
-            submission.save()
-
-        # update reporter
-        from gfbio_submissions.brokerage.tasks import update_reporter_task
-
-        update_reporter_task.apply_async(
-            kwargs=dict(submission_id=submission.pk, reporter=new_reporter)
-        )
-
     # TODO: !IMPORTANT! Please add a check procedure in the generic parsing of the JSON,
     #  that if the user that caused the action was the brokeragent,
     #  any further processing is skipped.
@@ -219,10 +100,6 @@ class JiraHookRequestSerializer(serializers.Serializer):
     def get_embargo_date_field_value(self):
         return self.initial_data.get('issue', {}).get('fields', {}).get(
             'customfield_10200', '')
-
-    def get_reporter_email_field_value(self):
-        return self.initial_data.get('issue', {}).get('fields', {}).get(
-                    'reporter', {}).get('emailAddress','')
 
     def schema_validation(self, data):
         path = os.path.join(
