@@ -87,7 +87,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
             }
         )
 
-        self.save_reporter()
+        #self.save_reporter()
 
     def save_reporter(self):
 
@@ -99,7 +99,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
         }
 
         rep_isknown = False
-        submission = None
+        # submission = None
 
         try:
             new_reporter['jira_user_name'] = self.validated_data.get('issue', {}).get('fields', {}).get(
@@ -222,7 +222,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
 
     def get_reporter_email_field_value(self):
         return self.initial_data.get('issue', {}).get('fields', {}).get(
-                    'reporter', {}).get('emailAddress')
+                    'reporter', {}).get('emailAddress','')
 
     def schema_validation(self, data):
         path = os.path.join(
