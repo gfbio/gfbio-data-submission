@@ -2,7 +2,6 @@
 import json
 from uuid import uuid4, UUID
 
-from django.contrib.auth.models import Permission
 from django.db import transaction
 from django.urls import reverse
 from rest_framework import generics, mixins, permissions, parsers
@@ -14,7 +13,7 @@ from rest_framework.response import Response
 from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.users.models import User
 from ..configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY, \
-    SUBMISSION_DELAY, SUBMISSION_ISSUE_CHECK_DELAY, JIRA_FALLBACK_EMAIL, JIRA_FALLBACK_USERNAME
+    SUBMISSION_DELAY, SUBMISSION_ISSUE_CHECK_DELAY
 from ..forms import SubmissionCommentForm
 from ..models import Submission, SubmissionUpload
 from ..permissions import IsOwnerOrReadOnly
@@ -22,8 +21,6 @@ from ..serializers import SubmissionUploadListSerializer, \
     SubmissionDetailSerializer, SubmissionUploadSerializer
 from ..utils.submission_tools import get_embargo_from_request
 from ..utils.task_utils import jira_cancel_issue
-
-#import gfbio_submissions.authentication
 
 
 class SubmissionsView(mixins.ListModelMixin,
@@ -125,7 +122,7 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                 trigger_submission_transfer_for_updates, \
                 update_submission_issue_task, get_gfbio_helpdesk_username_task, \
                 update_ena_embargo_task, notify_user_embargo_changed_task
-               
+
             update_chain = get_gfbio_helpdesk_username_task.s(
                 submission_id=instance.pk).set(
                 countdown=SUBMISSION_DELAY) \

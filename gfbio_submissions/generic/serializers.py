@@ -14,9 +14,6 @@ from gfbio_submissions.brokerage.models import Submission, AdditionalReference
 from gfbio_submissions.brokerage.utils.schema_validation import validate_data
 from gfbio_submissions.users.models import User
 
-from gfbio_submissions.brokerage.configuration.settings import \
-    JIRA_FALLBACK_USERNAME, JIRA_FALLBACK_EMAIL
-
 logger = logging.getLogger(__name__)
 
 
@@ -86,8 +83,6 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 'submission_id': submission.pk,
             }
         )
-
-        #self.save_reporter()
 
     # TODO: !IMPORTANT! Please add a check procedure in the generic parsing of the JSON,
     #  that if the user that caused the action was the brokeragent,

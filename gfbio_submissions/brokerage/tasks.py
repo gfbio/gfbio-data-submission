@@ -2351,6 +2351,7 @@ def notify_user_embargo_changed_task(self, prev=None, submission_id=None):
         'msg': 'missing site_config or jira ticket'
     }
 
+
 @celery.task(
     base=SubmissionTask,
     bind=True,

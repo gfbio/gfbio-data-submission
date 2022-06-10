@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import hashlib
 import os
-from gfbio_submissions.brokerage.configuration.settings import \
-    JIRA_FALLBACK_USERNAME, JIRA_FALLBACK_EMAIL
 
 
 def submission_upload_path(instance, filename):
@@ -40,25 +38,3 @@ def get_embargo_from_request(request):
         except ValueError:
             new_embargo = None
     return new_embargo
-
-def get_reporter_from_request(request):
-    # get incoming reporter
-    #are the submission terms, not jira terms:
-    new_reporter_ret = {
-         'jira_user_name': JIRA_FALLBACK_USERNAME,
-        'email': JIRA_FALLBACK_EMAIL,
-        'full_name': '',
-        'display_name': ''
-    }
-
-    if request.data and 'reporter' in request.data:
-        try:
-            # new_reporter_ret = new_reporter
-            new_reporter_ret['jira_user_name'] = request.data['reporter']['name']
-            new_reporter_ret['email'] = request.data['reporter']['emailAddress']
-            new_reporter_ret['full_name'] = request.data['reporter']['key']   # displayName exists also!
-            new_reporter_ret['display_name'] = request.data['reporter']['displayName']
-
-        except ValueError:
-            new_reporter_ret = None
-    return new_reporter_ret

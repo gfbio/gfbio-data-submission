@@ -58,15 +58,5 @@
       "name": "NOTIFY_EMBARGO_CHANGED",
       "message": "Dear submitter,\r\n\r\nyou have successfully changed the embargo date of your data set.\r\nThe data will be released on {embargo}.\r\n\r\nBest regards,\r\nGFBio Data Submission Team"
     }
-  },
-  {
-    "model": "brokerage.jiramessage",
-    "pk": 7,
-    "fields": {
-      "created": "2022-05-06T13:41:34.236Z",
-      "modified": "2022-05-06T13:41:34.236Z",
-      "name": "NOTIFY_REPORTER_CHANGED",
-      "message": "Dear submitter,\r\n\r\nthe reporter of your ticket has been changed.\r\nIt is now {username}.\r\n\r\nBest regards,\r\nGFBio Data Submission Team"
-    }
   }
 ]

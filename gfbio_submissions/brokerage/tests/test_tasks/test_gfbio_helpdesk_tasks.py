@@ -29,7 +29,6 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         JiraMessage.objects.create(name="NOTIFY_EMBARGO_CHANGED", message="test")
         JiraMessage.objects.create(name="NOTIFY_EMBARGO_EXPIRY", message="test")
         JiraMessage.objects.create(name="NOTIFY_EMBARGO_RELEASE", message="test")
-        JiraMessage.objects.create(name="NOTIFY_REPORTER_CHANGED", message="test")
 
     # TODO: may these have to be moved to other test class (Taskprogressreport ...)
     #   or removed ... Now for testing behaviour on GFBIO-2589
