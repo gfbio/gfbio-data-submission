@@ -27,11 +27,29 @@
                         "customfield_10303": {
                             "type": "string",
                             "pattern": "^\\b(uuid:){0,1}\\s*([a-f0-9\\\\-]*){1}\\s*$"
+                        },
+                        "reporter": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string"
+                                },
+                                "emailAddress": {
+                                    "type": "string"
+                                },
+                                "key": {
+                                    "type": "string"
+                                },
+                                "displayName": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "required": [
                         "customfield_10200",
-                        "customfield_10303"
+                        "customfield_10303",
+                        "reporter"
                     ]
                 }
             },

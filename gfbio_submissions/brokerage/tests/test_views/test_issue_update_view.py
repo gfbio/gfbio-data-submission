@@ -124,6 +124,12 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": one_year.for_json(),
                         "customfield_10303": "{0}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "key": "JIRAUSER15790",
+                            "emailAddress": "repo@repo.de",
+                            "displayName": "repo123",
+                        },
                     }
                 },
                 "changelog": {
@@ -183,6 +189,12 @@ class TestJiraIssueUpdateView(APITestCase):
                     "customfield_10200": one_year.for_json(),
                     "customfield_10303": "{0}".format(
                         submission.broker_submission_id),
+                    "reporter": {
+                        "name": "repo123_loginame",
+                        "key": "JIRAUSER15790",
+                        "emailAddress": "repo@repo.de",
+                        "displayName": "repo123",
+                    },
                 }
             },
             "changelog": {
@@ -342,6 +354,12 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": one_year.for_json(),
                         "customfield_10303": "{0}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "key": "JIRAUSER15790",
+                            "emailAddress": "repo@repo.de",
+                            "displayName": "repo123",
+                        },
                     }
                 },
                 "changelog": {
@@ -512,7 +530,12 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": "2021-xxx-09",
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
-
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "key": "JIRAUSER15790",
+                            "emailAddress": "repo@repo.de",
+                            "displayName": "repo123",
+                        },
                     }
                 },
                 "changelog": {
@@ -547,7 +570,12 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": "2023-03-09T00:00:00+00:00",
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
-
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "key": "JIRAUSER15790",
+                            "emailAddress": "repo@repo.de",
+                            "displayName": "repo123",
+                        },
                     }
                 },
                 "changelog": {
@@ -613,6 +641,12 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": "2020-04-09T00:00:00+00:00",
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "key": "JIRAUSER15790",
+                            "emailAddress": "repo@repo.de",
+                            "displayName": "repo123",
+                        },
                     }
                 },
                 "changelog": {
@@ -646,6 +680,12 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": embargo_tomorrow,
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "key": "JIRAUSER15790",
+                            "emailAddress": "repo@repo.de",
+                            "displayName": "repo123",
+                        },
                     }
                 },
                 "changelog": {
@@ -675,6 +715,12 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": "2049-04-09T00:00:00+00:00",
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "key": "JIRAUSER15790",
+                            "emailAddress": "repo@repo.de",
+                            "displayName": "repo123",
+                        },
                     }
                 },
                 "changelog": {
@@ -708,6 +754,12 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": arrow.now().for_json(),
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "key": "JIRAUSER15790",
+                            "emailAddress": "repo@repo.de",
+                            "displayName": "repo123",
+                        },
                     }
                 },
                 "changelog": {
@@ -746,6 +798,12 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": embargo_date_hour_offset,
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "key": "JIRAUSER15790",
+                            "emailAddress": "repo@repo.de",
+                            "displayName": "repo123",
+                        },
                     }
                 },
                 "changelog": {
@@ -755,8 +813,8 @@ class TestJiraIssueUpdateView(APITestCase):
                 }
             },
             format='json')
-        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertIn(
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertNotIn(
             b'\'customfield_10200\': no changes detected',
             response.content)
 
@@ -777,6 +835,12 @@ class TestJiraIssueUpdateView(APITestCase):
                             years=1).for_json(),
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "key": "JIRAUSER15790",
+                            "emailAddress": "repo@repo.de",
+                            "displayName": "repo123",
+                        },
                     }
                 },
                 "changelog": {
@@ -843,6 +907,12 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": arrow.now().shift(
                             years=1).for_json(),
                         "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "key": "JIRAUSER15790",
+                            "emailAddress": "repo@repo.de",
+                            "displayName": "repo123",
+                        },
                     }
                 },
                 "changelog": {
@@ -889,6 +959,12 @@ class TestJiraIssueUpdateView(APITestCase):
                             years=1).for_json(),
                         "customfield_10303": "{0}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "key": "JIRAUSER15790",
+                            "emailAddress": "repo@repo.de",
+                            "displayName": "repo123",
+                        },
                     }
                 },
                 "changelog": {
@@ -925,6 +1001,12 @@ class TestJiraIssueUpdateView(APITestCase):
                             years=1).for_json(),
                         "customfield_10303": "{0}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "key": "JIRAUSER15790",
+                            "emailAddress": "repo@repo.de",
+                            "displayName": "repo123",
+                        },
                     }
                 },
                 "changelog": {
@@ -959,6 +1041,12 @@ class TestJiraIssueUpdateView(APITestCase):
                             years=1).for_json(),
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "key": "JIRAUSER15790",
+                            "emailAddress": "repo@repo.de",
+                            "displayName": "repo123",
+                        },
                     }
                 },
                 "changelog": {

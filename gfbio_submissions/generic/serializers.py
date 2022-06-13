@@ -291,8 +291,8 @@ class JiraHookRequestSerializer(serializers.Serializer):
         jira_embargo_date = self.get_embargo_date_field_value()
         embargo_date = self.embargo_date_format_validation(jira_embargo_date)
 
-        self.embargo_unchanged_check(embargo_date,
-                                     arrow.get(submission_embargo))
+        # self.embargo_unchanged_check(embargo_date,
+        #                            arrow.get(submission_embargo))
 
         today = arrow.get(arrow.now().format('YYYY-MM-DD'))
         delta = embargo_date - today
