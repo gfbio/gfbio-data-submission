@@ -625,6 +625,7 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_201_CREATED,
                          RequestLog.objects.first().response_status)
+        self.assertEqual(submission.user.username,'horst')
 
     def test_date_in_the_past(self):
         submission = Submission.objects.first()

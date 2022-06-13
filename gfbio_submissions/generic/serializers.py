@@ -25,7 +25,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
     issue_key = serializers.CharField(read_only=True, required=False)
 
     class Meta:
-        fields = ['issue', ]
+        fields = ['user','user_id','issue', ]
 
     def send_mail_to_admins(self, reason, message):
         mail_admins(
@@ -106,7 +106,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
         }
 
         rep_isknown = False
-        submission = None
+        #submission = None
 
         try:
             new_reporter['jira_user_name'] = self.validated_data.get('issue', {}).get('fields', {}).get(
@@ -148,7 +148,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
 
         # in case reporter has no emailAddress, return
         if new_reporter.get('email') in (None, '') or not new_reporter.get('email').strip():
-            return
+            return False
 
         try:
             new_reporter['key'] = self.validated_data.get('issue', {}).get('fields', {}).get(
@@ -202,6 +202,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
                     if (bio_user is not None and bio_user.is_user):
                         # change link to submission:
                         submission.user = bio_user
+                        submission.user_id = bio_user.id
                         submission.save()
                         rep_isknown = True
                     break
@@ -216,8 +217,8 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 codename__endswith='upload')
             bio_user.user_permissions.add(*permissions)
             submission.user = bio_user
+            submission.user_id = bio_user.id
             submission.save()
-
 
     # TODO: !IMPORTANT! Please add a check procedure in the generic parsing of the JSON,
     #  that if the user that caused the action was the brokeragent,
