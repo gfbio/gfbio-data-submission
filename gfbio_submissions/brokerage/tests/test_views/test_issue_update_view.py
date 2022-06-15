@@ -126,9 +126,7 @@ class TestJiraIssueUpdateView(APITestCase):
                             submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
-                            "key": "JIRAUSER15790",
                             "emailAddress": "repo@repo.de",
-                            "displayName": "repo123",
                         },
                     }
                 },
@@ -190,11 +188,9 @@ class TestJiraIssueUpdateView(APITestCase):
                     "customfield_10303": "{0}".format(
                         submission.broker_submission_id),
                     "reporter": {
-                        "name": "repo123_loginame",
-                        "key": "JIRAUSER15790",
-                        "emailAddress": "repo@repo.de",
-                        "displayName": "repo123",
-                    },
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
                 }
             },
             "changelog": {
@@ -356,9 +352,7 @@ class TestJiraIssueUpdateView(APITestCase):
                             submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
-                            "key": "JIRAUSER15790",
                             "emailAddress": "repo@repo.de",
-                            "displayName": "repo123",
                         },
                     }
                 },
@@ -532,9 +526,7 @@ class TestJiraIssueUpdateView(APITestCase):
                             submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
-                            "key": "JIRAUSER15790",
                             "emailAddress": "repo@repo.de",
-                            "displayName": "repo123",
                         },
                     }
                 },
@@ -572,9 +564,7 @@ class TestJiraIssueUpdateView(APITestCase):
                             submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
-                            "key": "JIRAUSER15790",
                             "emailAddress": "repo@repo.de",
-                            "displayName": "repo123",
                         },
                     }
                 },
@@ -590,7 +580,7 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(status.HTTP_201_CREATED,
                          RequestLog.objects.first().response_status)
 
-    def test_jira_reporter(self):
+    def test_jira_reporter_gfbio_unknown(self):
         submission = Submission.objects.first()
         self.assertEqual(0, len(RequestLog.objects.all()))
         response = self.client.post(
@@ -607,11 +597,8 @@ class TestJiraIssueUpdateView(APITestCase):
                             submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
-                            "key": "JIRAUSER15790",
                             "emailAddress": "repo@repo.de",
-                            "displayName": "repo123",
                         },
-
                     }
                 },
                 "changelog": {
@@ -625,6 +612,77 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_201_CREATED,
                          RequestLog.objects.first().response_status)
+        submission = Submission.objects.first()
+        self.assertEqual(submission.user.username,'repo123_loginame')
+
+    def test_jira_reporter_gfbio_known(self):
+        submission = Submission.objects.first()
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.client.post(
+            self.url,
+            {
+                "user": {
+                    "emailAddress": "horst@horst.de"
+                },
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": "2023-03-09T00:00:00+00:00",
+                        "customfield_10303": "{}".format(
+                            submission.broker_submission_id),
+                        "reporter": {
+                            "name": "brokeragent",
+                            "emailAddress": "brokeragent@gfbio.org",
+                        },
+                    }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
+                }
+            },
+            format='json')
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_201_CREATED,
+                         RequestLog.objects.first().response_status)
+        submission = Submission.objects.first()
+        self.assertEqual(submission.user.username,'brokeragent')
+
+    def test_jira_reporter_gfbio_same(self):
+        submission = Submission.objects.first()
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.client.post(
+            self.url,
+            {
+                "user": {
+                    "emailAddress": "horst@horst.de"
+                },
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": "2023-03-09T00:00:00+00:00",
+                        "customfield_10303": "{}".format(
+                            submission.broker_submission_id),
+                        "reporter": {
+                            "name": "horst",
+                            "emailAddress": "horst@horst.de",
+                        },
+                    }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
+                }
+            },
+            format='json')
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_201_CREATED,
+                         RequestLog.objects.first().response_status)
+        submission = Submission.objects.first()
         self.assertEqual(submission.user.username,'horst')
 
     def test_date_in_the_past(self):
@@ -644,9 +702,7 @@ class TestJiraIssueUpdateView(APITestCase):
                             submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
-                            "key": "JIRAUSER15790",
                             "emailAddress": "repo@repo.de",
-                            "displayName": "repo123",
                         },
                     }
                 },
@@ -683,9 +739,7 @@ class TestJiraIssueUpdateView(APITestCase):
                             submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
-                            "key": "JIRAUSER15790",
                             "emailAddress": "repo@repo.de",
-                            "displayName": "repo123",
                         },
                     }
                 },
@@ -718,9 +772,7 @@ class TestJiraIssueUpdateView(APITestCase):
                             submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
-                            "key": "JIRAUSER15790",
                             "emailAddress": "repo@repo.de",
-                            "displayName": "repo123",
                         },
                     }
                 },
@@ -757,9 +809,7 @@ class TestJiraIssueUpdateView(APITestCase):
                             submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
-                            "key": "JIRAUSER15790",
                             "emailAddress": "repo@repo.de",
-                            "displayName": "repo123",
                         },
                     }
                 },
@@ -801,9 +851,7 @@ class TestJiraIssueUpdateView(APITestCase):
                             submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
-                            "key": "JIRAUSER15790",
                             "emailAddress": "repo@repo.de",
-                            "displayName": "repo123",
                         },
                     }
                 },
@@ -838,9 +886,7 @@ class TestJiraIssueUpdateView(APITestCase):
                             submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
-                            "key": "JIRAUSER15790",
                             "emailAddress": "repo@repo.de",
-                            "displayName": "repo123",
                         },
                     }
                 },
@@ -910,9 +956,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
                         "reporter": {
                             "name": "repo123_loginame",
-                            "key": "JIRAUSER15790",
                             "emailAddress": "repo@repo.de",
-                            "displayName": "repo123",
                         },
                     }
                 },
@@ -962,9 +1006,7 @@ class TestJiraIssueUpdateView(APITestCase):
                             submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
-                            "key": "JIRAUSER15790",
                             "emailAddress": "repo@repo.de",
-                            "displayName": "repo123",
                         },
                     }
                 },
@@ -1004,9 +1046,7 @@ class TestJiraIssueUpdateView(APITestCase):
                             submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
-                            "key": "JIRAUSER15790",
                             "emailAddress": "repo@repo.de",
-                            "displayName": "repo123",
                         },
                     }
                 },
@@ -1044,9 +1084,7 @@ class TestJiraIssueUpdateView(APITestCase):
                             submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
-                            "key": "JIRAUSER15790",
                             "emailAddress": "repo@repo.de",
-                            "displayName": "repo123",
                         },
                     }
                 },
@@ -1064,107 +1102,4 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_400_BAD_REQUEST,
                          RequestLog.objects.first().response_status)
-
-    def test_successful_reporter_update1(self):
-
-        from gfbio_submissions.generic.models import SiteConfiguration
-        submission = Submission.objects.first()
-        from gfbio_submissions.brokerage.tasks import \
-            create_submission_issue_task
-        sub, conf = \
-            get_submission_and_site_configuration(
-                submission_id=submission.pk, task=create_submission_issue_task,
-                include_closed=False)
-        self.assertIsInstance(sub, Submission)
-        self.assertIsInstance(conf, SiteConfiguration)
-
-        resource_cred = ResourceCredential.objects.create(
-            title='Resource Title',
-            url='https://www.example.com',
-            authentication_string='letMeIn'
-        )
-        ena_resource_cred = ResourceCredential.objects.create(
-            title='Ena testserver access',
-            url='https://www-test.ebi.ac.uk/ena/submit/drop-box/submit/',
-            authentication_string='',
-            # compare devserver
-            username='',
-            password=''
-        )
-
-        site_config = SiteConfiguration.objects.create(
-            title='Contact_try',
-            ena_server=ena_resource_cred,
-            ena_report_server=resource_cred,
-            pangaea_token_server=resource_cred,
-            pangaea_jira_server=resource_cred,
-            helpdesk_server=resource_cred,
-            comment='Default configuration',
-            contact='kevin123@horstmeier.de'
-        )
-
-        submission.user.site_configuration = site_config
-        submission.save()
-
-        submission.user.update_or_create_external_user_id('100', 'goe_id')
-        submission.save()
-        self.assertEqual('100', submission.user.externaluserid_set.first().external_id)
-
-        #part from jira_hook_request_data:
-        post_data = {
-            "user": {
-                "emailAddress": "horst@horst.de"
-            },
-            "issue": {
-                "key": "SAND-007",
-                "fields": {
-                    "customfield_10200": arrow.now().shift(
-                        years=1).for_json(),
-                    "customfield_10303": "{0}".format(
-                        submission.broker_submission_id),
-                    "reporter": {
-                        "name": "repo123_loginame",
-                        "key": "JIRAUSER15790",
-                        "emailAddress": "repo@repo.de",
-                    }
-                }
-            },
-            "changelog": {
-                "items": [
-                    {}
-                ]
-            }
-        }
-
-        self.client.post(
-            self.url,
-            post_data,
-            format='json')
-
-        submission.save()
-
-        #following does nozt work, request data missing!
-        #from gfbio_submissions.brokerage.utils.submission_tools import get_reporter_from_request
-        #ttest_repo = get_reporter_from_request(post_data)
-        #if test_repo is not None:
-            #submission.user.site_configuration.contact = test_repo['jira_user_name']
-            #submission.save()
-            #self.assertIn('repo_loginame', submission.user.site_configuration.contact)
-                          #submission = Submission.objects.first()
-
-        self.assertEqual('100', submission.user.externaluserid_set.first().external_id)
-
-        #submission = serializer.save(user=User.objects.first())
-        #site_config muss reporter mail bekommen, z.zt. die standard contact vom create drin., muss aud request log da rein!
-        #site_config = SiteConfiguration.objects.first()  ok
-        site_config = submission.user.site_configuration
-        from gfbio_submissions.brokerage.utils.gfbio import gfbio_prepare_create_helpdesk_payload
-        payload = gfbio_prepare_create_helpdesk_payload(
-            site_config=site_config,
-            submission=submission,
-            reporter={'jira_user_name': 'repo_loginame','key': 'JIRAUSER15790','email': 'repo@repo.de','name': 'Paul Reporter'})
-        self.assertNotIn('assignee', payload.keys())
-        self.assertIn('reporter', payload.keys())
-        self.assertIn('repo_loginame', payload['reporter']['name'])
-        submission = Submission.objects.first()
 

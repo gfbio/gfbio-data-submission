@@ -25,7 +25,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
     issue_key = serializers.CharField(read_only=True, required=False)
 
     class Meta:
-        fields = ['user','user_id','issue', ]
+        fields = ['issue', ]
 
     def send_mail_to_admins(self, reason, message):
         mail_admins(
@@ -96,17 +96,15 @@ class JiraHookRequestSerializer(serializers.Serializer):
                     'unable to parse reporter | {0}'.format(e)
             )
 
-
     def update_submission_user(self):
         new_reporter = {
             'jira_user_name': JIRA_FALLBACK_USERNAME,
             'email': JIRA_FALLBACK_EMAIL,
-            'key': '',
-            'display_name': ''
+            # 'key': '',
+            # 'display_name': ''
         }
 
-        rep_isknown = False
-        #submission = None
+        rep_is_known = False
 
         try:
             new_reporter['jira_user_name'] = self.validated_data.get('issue', {}).get('fields', {}).get(
@@ -123,14 +121,14 @@ class JiraHookRequestSerializer(serializers.Serializer):
                         'unable to get reporter name | {0}'.format(e))
 
         # in case the reporters name is empty, cannot create a user, username ist obligatory! for creation, see User class
-        try:
-            if new_reporter.get('jira_user_name') in (None, '') or not new_reporter.get('jira_user_name').strip():
-                return
-        except Exception as e:
-            logger.error(
-                msg='serializers.py | JiraHookRequestSerializer | '
-                    'reporter name is None or empty'
-            )
+        # try:
+        #    if new_reporter.get('jira_user_name') in (None, '') or not new_reporter.get('jira_user_name').strip():
+        #         return
+        # except Exception as e:
+        #     logger.error(
+        #         msg='serializers.py | JiraHookRequestSerializer | '
+        #             'reporter name is None or empty'
+        #     )
 
         try:
             new_reporter['email'] = self.validated_data.get('issue', {}).get('fields', {}).get(
@@ -147,17 +145,17 @@ class JiraHookRequestSerializer(serializers.Serializer):
                         'unable to get reporter email | {0}'.format(e))
 
         # in case reporter has no emailAddress, return
-        if new_reporter.get('email') in (None, '') or not new_reporter.get('email').strip():
-            return False
+        # if new_reporter.get('email') in (None, '') or not new_reporter.get('email').strip():
+        #     return False
 
-        try:
-            new_reporter['key'] = self.validated_data.get('issue', {}).get('fields', {}).get(
-                    'reporter', {}).get('key')
-        except Exception as e:
-            logger.error(
-                msg='serializer.py | JiraHookRequestSerializer | '
-                    'unable to get reporter key'
-            )
+        # try:
+        #     new_reporter['key'] = self.validated_data.get('issue', {}).get('fields', {}).get(
+        #             'reporter', {}).get('key')
+        # except Exception as e:
+        #      logger.error(
+        #         msg='serializer.py | JiraHookRequestSerializer | '
+        #            'unable to get reporter key'
+        #    )
 
         submission_id = self.validated_data.get(
             'issue', {}).get('fields', {}).get('customfield_10303', '')
@@ -184,38 +182,34 @@ class JiraHookRequestSerializer(serializers.Serializer):
         submission = Submission.objects.get(
             broker_submission_id=UUID(submission_id))
         submission_current_user = User.objects.get(username=submission.user.username)
-        #sub_user = submission.user
-        site_config_current = submission_current_user.site_configuration
         email_current = submission_current_user.email
         if str(email_current) == str(new_reporter['email']).strip():
-            rep_isknown = True
+            rep_is_known = True
 
 
         bio_user = None
-        # ad second:
-        if  not rep_isknown:
+        # on the second:
+        if  not rep_is_known:
             users_from_subm = User.objects.filter(is_user=True)
             for user in users_from_subm:
                 if str(user.email) == str(new_reporter['email']).strip():
-                    rep_isknown = True
+                    rep_is_known = True
                     bio_user = user
-                    if (bio_user is not None and bio_user.is_user):
-                        # change link to submission:
-                        submission.user = bio_user
-                        submission.user_id = bio_user.id
-                        submission.save()
-                        rep_isknown = True
+                    # change link to submission:
+                    submission.user = bio_user
+                    submission.user_id = bio_user.id
+                    submission.save()
                     break
 
-        # ad third new user with shadow account:
-        from django.contrib.auth.models import Permission
-        if not rep_isknown:
+        # on the third new user with shadow account:
+        # from django.contrib.auth.models import Permission
+        if not rep_is_known:
             bio_user = User.objects.create_user(
                 username=new_reporter['jira_user_name'], email=new_reporter['email'])
-            permissions = Permission.objects.filter(
-                content_type__app_label='brokerage',
-                codename__endswith='upload')
-            bio_user.user_permissions.add(*permissions)
+            # permissions = Permission.objects.filter(
+            #     content_type__app_label='brokerage',
+            #    codename__endswith='upload')
+            # bio_user.user_permissions.add(*permissions)
             submission.user = bio_user
             submission.user_id = bio_user.id
             submission.save()

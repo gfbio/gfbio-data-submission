@@ -36,12 +36,6 @@
                                 },
                                 "emailAddress": {
                                     "type": "string"
-                                },
-                                "key": {
-                                    "type": "string"
-                                },
-                                "displayName": {
-                                    "type": "string"
                                 }
                             }
                         }
