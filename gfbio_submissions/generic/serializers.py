@@ -122,8 +122,10 @@ class JiraHookRequestSerializer(serializers.Serializer):
             'email': JIRA_FALLBACK_EMAIL,
         }
 
-        new_reporter['jira_user_name']  = self._validated_data_get('reporter',  'name')
-        new_reporter['email'] = self._validated_data_get('reporter', 'emailAddress')
+        if self._validated_data_get('reporter', 'name'):
+            new_reporter['jira_user_name']  = self._validated_data_get('reporter',  'name')
+        if self._validated_data_get('reporter', 'emailAddress'):
+            new_reporter['email'] = self._validated_data_get('reporter', 'emailAddress')
         submission_id = self._validated_data_get('customfield_10303', '')
 
         try:
@@ -156,15 +158,13 @@ class JiraHookRequestSerializer(serializers.Serializer):
 
         bio_user = None
         # on the second:
-        users_from_subm = User.objects.filter(is_user=True)
-        for user in users_from_subm:
-            if str(user.email) == str(new_reporter['email']).strip():
-                bio_user = user
-                # change link to submission:
-                submission.user = bio_user
-                submission.user_id = bio_user.id
-                submission.save()
-                return
+        found_users = User.objects.filter(is_user=True, email=new_reporter['email'])
+        if found_users.count() > 0:
+            # change link to submission:
+            submission.user = found_users.first()
+            submission.user_id = found_users.first().id
+            submission.save()
+            return
 
         # on the third, new user with shadow account:
         bio_user = User.objects.create_user(
@@ -244,9 +244,6 @@ class JiraHookRequestSerializer(serializers.Serializer):
         # TODO: constant for customfield key !
         jira_embargo_date = self.get_embargo_date_field_value()
         embargo_date = self.embargo_date_format_validation(jira_embargo_date)
-
-        # self.embargo_unchanged_check(embargo_date,
-        #                            arrow.get(submission_embargo))
 
         today = arrow.get(arrow.now().format('YYYY-MM-DD'))
         delta = embargo_date - today
