@@ -583,6 +583,9 @@ class TestJiraIssueUpdateView(APITestCase):
     def test_jira_reporter_gfbio_unknown(self):
         submission = Submission.objects.first()
         self.assertEqual(0, len(RequestLog.objects.all()))
+        # number of all users at the start:
+        users_in_db = len(User.objects.all())
+
         response = self.client.post(
             self.url,
             {
@@ -608,16 +611,23 @@ class TestJiraIssueUpdateView(APITestCase):
                 }
             },
             format='json')
-        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+
+        self.assertEqual(users_in_db + 1, len(User.objects.all()))
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_201_CREATED,
-                         RequestLog.objects.first().response_status)
+                        RequestLog.objects.first().response_status)
         submission = Submission.objects.first()
         self.assertEqual(submission.user.username,'repo123_loginame')
+        self.assertEqual(submission.user.email, 'repo@repo.de')
 
     def test_jira_reporter_gfbio_known(self):
         submission = Submission.objects.first()
+        # submission.user.email at the start:
+        user_mail = submission.user.email
         self.assertEqual(0, len(RequestLog.objects.all()))
+        # number of all users at the start:
+        users_in_db = len(User.objects.all())
+
         response = self.client.post(
             self.url,
             {
@@ -643,16 +653,23 @@ class TestJiraIssueUpdateView(APITestCase):
                 }
             },
             format='json')
-        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+
+        self.assertEqual(users_in_db, len(User.objects.all()))
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_201_CREATED,
                          RequestLog.objects.first().response_status)
         submission = Submission.objects.first()
-        self.assertEqual(submission.user.username,'brokeragent')
+        self.assertNotEqual(submission.user.email, user_mail)
+        self.assertEqual(submission.user.email,'brokeragent@gfbio.org')
 
     def test_jira_reporter_gfbio_same(self):
         submission = Submission.objects.first()
+        # submission.user.email at the start:
+        user_mail = submission.user.email
         self.assertEqual(0, len(RequestLog.objects.all()))
+        # number of all users at the start:
+        users_in_db = len(User.objects.all())
+
         response = self.client.post(
             self.url,
             {
@@ -678,12 +695,13 @@ class TestJiraIssueUpdateView(APITestCase):
                 }
             },
             format='json')
-        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+
+        self.assertEqual(users_in_db, len(User.objects.all()))
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_201_CREATED,
                          RequestLog.objects.first().response_status)
         submission = Submission.objects.first()
-        self.assertEqual(submission.user.username,'horst')
+        self.assertEqual(submission.user.email,user_mail)
 
     def test_date_in_the_past(self):
         submission = Submission.objects.first()
