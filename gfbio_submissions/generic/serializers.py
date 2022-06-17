@@ -156,7 +156,6 @@ class JiraHookRequestSerializer(serializers.Serializer):
         if str(email_current) == str(new_reporter['email']).strip():
             return
 
-        bio_user = None
         # on the second:
         found_users = User.objects.filter(is_user=True, email=new_reporter['email'])
         if found_users.count() > 0:

@@ -703,6 +703,49 @@ class TestJiraIssueUpdateView(APITestCase):
         submission = Submission.objects.first()
         self.assertEqual(submission.user.email,user_mail)
 
+    def test_jira_reporter_gfbio_mail_empty(self):
+        submission = Submission.objects.first()
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        # number of all users at the start:
+        users_in_db = len(User.objects.all())
+
+        response = self.client.post(
+            self.url,
+            {
+                "user": {
+                    "emailAddress": "horst@horst.de"
+                },
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": "2023-03-09T00:00:00+00:00",
+                        "customfield_10303": "{}".format(
+                            submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "",
+                        },
+                    }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
+                }
+            },
+            format='json')
+
+        self.assertEqual(users_in_db, len(User.objects.all()))
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_201_CREATED,
+                         RequestLog.objects.first().response_status)
+        submission = Submission.objects.first()
+        self.assertNotEqual(submission.user.username, 'repo123_loginame')
+        from gfbio_submissions.brokerage.configuration.settings import JIRA_FALLBACK_EMAIL
+        from gfbio_submissions.brokerage.configuration.settings import JIRA_FALLBACK_USERNAME
+        self.assertEqual(submission.user.username, JIRA_FALLBACK_USERNAME)
+        self.assertEqual(submission.user.email, JIRA_FALLBACK_EMAIL)
+
     def test_date_in_the_past(self):
         submission = Submission.objects.first()
         self.assertEqual(0, len(RequestLog.objects.all()))
