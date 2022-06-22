@@ -118,8 +118,8 @@ class JiraHookRequestSerializer(serializers.Serializer):
 
     def update_submission_user(self):
         new_reporter = {
-            'jira_user_name': JIRA_FALLBACK_USERNAME,
-            'email': JIRA_FALLBACK_EMAIL,
+            'jira_user_name': '',
+            'email': '',
         }
 
         if self._validated_data_get('reporter', 'name'):
@@ -294,6 +294,15 @@ class JiraHookRequestSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 {'issue': ["'user': user is brokeragent"]})
 
+    def reporter_email_validation(self):
+        repo_mail = str(self.initial_data.get('issue', {}).get('fields', {}).get(
+            'reporter', {}).get('emailAddress', '')).strip()
+        # check for empty reporter mail:
+        if  not len(repo_mail):
+            raise serializers.ValidationError(
+                {'issue': ["'reporter': reporter's Jira emailAddress is empty!"]})
+
+
     def curator_validation(self):
         updating_user = self.initial_data.get('user', {}).get('emailAddress',
                                                               '')
@@ -400,6 +409,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
         submission = self.submission_existing_check()
         key = self.submission_relation_check(submission)
         self.brokeragent_validation()
+        self.reporter_email_validation()
         self.embargo_date_validation(submission.embargo)
         self.submission_type_constraints_check(submission, key)
         return data

@@ -737,14 +737,8 @@ class TestJiraIssueUpdateView(APITestCase):
 
         self.assertEqual(users_in_db, len(User.objects.all()))
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual(status.HTTP_201_CREATED,
+        self.assertEqual(status.HTTP_400_BAD_REQUEST,
                          RequestLog.objects.first().response_status)
-        submission = Submission.objects.first()
-        self.assertNotEqual(submission.user.username, 'repo123_loginame')
-        from gfbio_submissions.brokerage.configuration.settings import JIRA_FALLBACK_EMAIL
-        from gfbio_submissions.brokerage.configuration.settings import JIRA_FALLBACK_USERNAME
-        self.assertEqual(submission.user.username, JIRA_FALLBACK_USERNAME)
-        self.assertEqual(submission.user.email, JIRA_FALLBACK_EMAIL)
 
     def test_date_in_the_past(self):
         submission = Submission.objects.first()
