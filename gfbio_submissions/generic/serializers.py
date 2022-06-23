@@ -57,6 +57,27 @@ class JiraHookRequestSerializer(serializers.Serializer):
                         'unable to get {1} {2} | {0}'.format(e, key, sub_key))
         return resp
 
+    def _data_get(self, data, key: str, sub_key: str):
+        resp = ''
+        try:
+            if sub_key:
+                resp = str(data.get('issue', {}).get('fields', {}).get(
+                    key, {}).get(sub_key, '')).strip()
+            else:
+                resp = str(data.get('issue', {}).get('fields', {}).get(
+                    key, '')).strip()
+
+        except Exception as e:
+            logger.error(
+                msg='serializers.py | JiraHookRequestSerializer | '
+                    'unable to get {1} {2} | {0}'.format(e, key, sub_key))
+
+            self.send_mail_to_admins(
+                reason='Submission update via Jira hook failed',
+                message='serializers.py | JiraHookRequestSerializer | '
+                        'unable to get {1} {2} | {0}'.format(e, key, sub_key))
+        return resp
+
     def save(self):
         try:
             embargo_date = arrow.get(
@@ -122,11 +143,11 @@ class JiraHookRequestSerializer(serializers.Serializer):
             'email': '',
         }
 
-        if self._validated_data_get('reporter', 'name'):
-            new_reporter['jira_user_name']  = self._validated_data_get('reporter',  'name')
-        if self._validated_data_get('reporter', 'emailAddress'):
-            new_reporter['email'] = self._validated_data_get('reporter', 'emailAddress')
-        submission_id = self._validated_data_get('customfield_10303', '')
+        if self._data_get(self.validated_data, 'reporter', 'name'):
+            new_reporter['jira_user_name']  = self._data_get(self.validated_data, 'reporter',  'name')
+        if self._data_get(self.validated_data, 'reporter', 'emailAddress'):
+            new_reporter['email'] = self._data_get(self.validated_data, 'reporter', 'emailAddress')
+        submission_id = self._data_get(self.validated_data, 'customfield_10303', '')
 
         try:
             submission = Submission.objects.get(
@@ -295,13 +316,19 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 {'issue': ["'user': user is brokeragent"]})
 
     def reporter_email_validation(self):
-        repo_mail = str(self.initial_data.get('issue', {}).get('fields', {}).get(
-            'reporter', {}).get('emailAddress', '')).strip()
+        repo_mail = self._data_get(self.initial_data, 'reporter', 'emailAddress')
+
         # check for empty reporter mail:
         if  not len(repo_mail):
+            logger.info(
+                msg='serializer.py | reporter_email_validation | reporters Jira emailAddress is empty!'
+            )
+            self.send_mail_to_admins(
+                reason='WARNING: no submission user change, reporters Jira emailAddress is empty!',
+                message='WARNING: JIRA hook requested an user update,'
+                        ' but reporters Jira emailAddress is empty!')
             raise serializers.ValidationError(
-                {'issue': ["'reporter': reporter's Jira emailAddress is empty!"]})
-
+                {'issue': ["'reporter': reporters Jira emailAddress is empty!"]})
 
     def curator_validation(self):
         updating_user = self.initial_data.get('user', {}).get('emailAddress',
