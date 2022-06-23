@@ -36,27 +36,6 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 message, self.broker_submission_id, self.issue_key)
         )
 
-    def _validated_data_get(self, key: str, sub_key: str):
-        resp = ''
-        try:
-            if sub_key:
-                resp = self.validated_data.get('issue', {}).get('fields', {}).get(
-                    key, {}).get(sub_key, '')
-            else:
-                resp = self.validated_data.get('issue', {}).get('fields', {}).get(
-                    key, '')
-
-        except Exception as e:
-            logger.error(
-                msg='serializers.py | JiraHookRequestSerializer | '
-                    'unable to get {1} {2} | {0}'.format(e, key, sub_key))
-
-            self.send_mail_to_admins(
-                reason='Submission update via Jira hook failed',
-                message='serializers.py | JiraHookRequestSerializer | '
-                        'unable to get {1} {2} | {0}'.format(e, key, sub_key))
-        return resp
-
     def _data_get(self, data, key: str, sub_key: str):
         resp = ''
         try:
@@ -321,14 +300,14 @@ class JiraHookRequestSerializer(serializers.Serializer):
         # check for empty reporter mail:
         if  not len(repo_mail):
             logger.info(
-                msg='serializer.py | reporter_email_validation | reporters Jira emailAddress is empty!'
+                msg="serializer.py | reporter_email_validation | reporter's Jira emailAddress is empty!"
             )
             self.send_mail_to_admins(
-                reason='WARNING: no submission user change, reporters Jira emailAddress is empty!',
-                message='WARNING: JIRA hook requested an user update,'
-                        ' but reporters Jira emailAddress is empty!')
+                reason="WARNING: no submission user change, reporter's Jira emailAddress is empty!",
+                message="WARNING: JIRA hook requested an user update,"
+                        " but reporter's Jira emailAddress is empty!")
             raise serializers.ValidationError(
-                {'issue': ["'reporter': reporters Jira emailAddress is empty!"]})
+                {'issue': ["'reporter': reporter's Jira emailAddress is empty!"]})
 
     def curator_validation(self):
         updating_user = self.initial_data.get('user', {}).get('emailAddress',
