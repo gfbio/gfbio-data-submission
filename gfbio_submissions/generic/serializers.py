@@ -36,7 +36,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 message, self.broker_submission_id, self.issue_key)
         )
 
-    def _data_get(self, data, key: str, sub_key: str):
+    def _data_get(self, data: dict, key: str, sub_key: str):
         resp = ''
         try:
             if sub_key:
