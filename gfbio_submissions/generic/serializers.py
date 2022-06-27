@@ -60,8 +60,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
     def save(self):
         try:
             embargo_date = arrow.get(
-                self.validated_data.get('issue', {}).get('fields', {}).get(
-                    'customfield_10200')
+                self._data_get(self.validated_data, 'customfield_10200', '')
             )
         except arrow.parser.ParserError as e:
             logger.error(
@@ -73,8 +72,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 message='serializer.py | JiraHookRequestSerializer | '
                     'unable to parse embargo date | {0}'.format(e))
 
-        submission_id = self.validated_data.get(
-            'issue', {}).get('fields', {}).get('customfield_10303', '')
+        submission_id = self._data_get(self.validated_data, 'customfield_10303', '')
         try:
             submission = Submission.objects.get(
                 broker_submission_id=UUID(submission_id))
@@ -147,7 +145,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
         # second: search across all Submission users, is reporter included via email?
         # third: if neither, add as new user, take name and email
 
-        # first,:
+        # first:
         submission = Submission.objects.get(
             broker_submission_id=UUID(submission_id))
 
@@ -177,12 +175,10 @@ class JiraHookRequestSerializer(serializers.Serializer):
     #  any further processing is skipped.
 
     def get_broker_submission_id_field_value(self):
-        return self.initial_data.get('issue', {}).get('fields', {}).get(
-            'customfield_10303', '')
+        return self._data_get(self.initial_data, 'customfield_10303', '')
 
     def get_embargo_date_field_value(self):
-        return self.initial_data.get('issue', {}).get('fields', {}).get(
-            'customfield_10200', '')
+        return self._data_get(self.initial_data, 'customfield_10200', '')
 
     def schema_validation(self, data):
         path = os.path.join(
