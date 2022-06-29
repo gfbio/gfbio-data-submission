@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+from typing import List
 from uuid import UUID
 
 import arrow
@@ -36,31 +37,32 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 message, self.broker_submission_id, self.issue_key)
         )
 
-    def _data_get(self, data: dict, key: str, sub_key: str = ''):
-        resp = ''
+    def _data_get(self, data: dict, keys: List[str]):
+        resp = data
         try:
-            if sub_key:
-                resp = str(data.get('issue', {}).get('fields', {}).get(
-                    key, {}).get(sub_key, '')).strip()
-            else:
-                resp = str(data.get('issue', {}).get('fields', {}).get(
-                    key, '')).strip()
-
+            for key in keys:
+                resp = resp[key]
         except Exception as e:
             logger.error(
-                msg='serializers.py | JiraHookRequestSerializer | '
-                    'unable to get {1} {2} | {0}'.format(e, key, sub_key))
+                msg="serializers.py | JiraHookRequestSerializer | "
+                    "unable to get {1} | {0}".format(e, " ".join(keys))
+            )
 
             self.send_mail_to_admins(
-                reason='Submission update via Jira hook failed',
-                message='serializers.py | JiraHookRequestSerializer | '
-                        'unable to get {1} {2} | {0}'.format(e, key, sub_key))
+                reason="Submission update via Jira hook failed",
+                message="serializers.py | JiraHookRequestSerializer | "
+                        "unable to get {1} | {0}".format(e, " ".join(keys))
+            )
+
+        if isinstance(resp, str):
+            return resp.strip()
+
         return resp
 
     def save(self):
         try:
             embargo_date = arrow.get(
-                self._data_get(self.validated_data, 'customfield_10200')
+                self._data_get(self.validated_data, ['issue', 'fields', 'customfield_10200'])
             )
         except arrow.parser.ParserError as e:
             logger.error(
@@ -72,7 +74,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 message='serializer.py | JiraHookRequestSerializer | '
                     'unable to parse embargo date | {0}'.format(e))
 
-        submission_id = self._data_get(self.validated_data, 'customfield_10303')
+        submission_id = self._data_get(self.validated_data, ['issue', 'fields', 'customfield_10303'])
         try:
             submission = Submission.objects.get(
                 broker_submission_id=UUID(submission_id))
@@ -89,8 +91,8 @@ class JiraHookRequestSerializer(serializers.Serializer):
         submission.embargo = embargo_date.date()
         submission.save()
 
-        updating_user = self.validated_data.get('user', {}).get('emailAddress',
-                                                                '')
+        updating_user = self._data_get(self.validated_data, ['user', 'emailAddress'])
+
         logger.info(
             msg='serializer.py | JiraHookRequestSerializer | '
                 'updating user | {0}'.format(updating_user)
@@ -120,11 +122,11 @@ class JiraHookRequestSerializer(serializers.Serializer):
             'email': '',
         }
 
-        if self._data_get(self.validated_data, 'reporter', 'name'):
-            new_reporter['jira_user_name']  = self._data_get(self.validated_data, 'reporter',  'name')
-        if self._data_get(self.validated_data, 'reporter', 'emailAddress'):
-            new_reporter['email'] = self._data_get(self.validated_data, 'reporter', 'emailAddress')
-        submission_id = self._data_get(self.validated_data, 'customfield_10303')
+        if self._data_get(self.validated_data, ['issue', 'fields', 'reporter', 'name']):
+            new_reporter['jira_user_name']  = self._data_get(self.validated_data, ['issue', 'fields', 'reporter', 'name'])
+        if self._data_get(self.validated_data, ['issue', 'fields', 'reporter', 'emailAddress']):
+            new_reporter['email'] =self._data_get(self.validated_data, ['issue', 'fields', 'reporter', 'emailAddress'])
+        submission_id = self._data_get(self.validated_data, ['issue', 'fields', 'customfield_10303'])
 
         try:
             submission = Submission.objects.get(
@@ -175,10 +177,10 @@ class JiraHookRequestSerializer(serializers.Serializer):
     #  any further processing is skipped.
 
     def get_broker_submission_id_field_value(self):
-        return self._data_get(self.initial_data, 'customfield_10303')
+        return self._data_get(self.initial_data, ['issue', 'fields', 'customfield_10303'])
 
     def get_embargo_date_field_value(self):
-        return self._data_get(self.initial_data, 'customfield_10200')
+        return self._data_get(self.initial_data, ['issue', 'fields', 'customfield_10200'])
 
     def schema_validation(self, data):
         path = os.path.join(
@@ -194,7 +196,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
                            e in errors]})
 
         self.broker_submission_id = self.get_broker_submission_id_field_value()
-        self.issue_key = self.initial_data.get('issue', {}).get('key', '')
+        self.issue_key = self._data_get(self.initial_data, ['issue', 'key'])
 
     @staticmethod
     def embargo_date_format_validation(jira_embargo_date):
@@ -271,8 +273,8 @@ class JiraHookRequestSerializer(serializers.Serializer):
                             self.issue_key, self.broker_submission_id)]})
 
     def brokeragent_validation(self):
-        updating_user = self.initial_data.get('user', {}).get('emailAddress',
-                                                              '')
+        updating_user = self._data_get(self.initial_data, ['user', 'emailAddress'])
+
         logger.info(
             msg='serializer.py | brokeragent_validation | user {0}'.format(
                 updating_user)
@@ -283,7 +285,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 {'issue': ["'user': user is brokeragent"]})
 
     def reporter_email_validation(self):
-        repo_mail = self._data_get(self.initial_data, 'reporter', 'emailAddress')
+        repo_mail = self._data_get(self.initial_data, ['issue', 'fields',  'reporter', 'emailAddress'])
 
         # check for empty reporter mail:
         if  not len(repo_mail):
@@ -298,8 +300,8 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 {'issue': ["'reporter': reporter's Jira emailAddress is empty!"]})
 
     def curator_validation(self):
-        updating_user = self.initial_data.get('user', {}).get('emailAddress',
-                                                              '')
+        updating_user = self._data_get(self.initial_data, ['user', 'emailAddress'])
+
         logger.info(
             msg='serializer.py | curator_validation | updating user {0}'.format(
                 updating_user)
