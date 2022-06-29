@@ -36,7 +36,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 message, self.broker_submission_id, self.issue_key)
         )
 
-    def _data_get(self, data: dict, key: str, sub_key: str):
+    def _data_get(self, data: dict, key: str, sub_key: str = ''):
         resp = ''
         try:
             if sub_key:
@@ -60,7 +60,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
     def save(self):
         try:
             embargo_date = arrow.get(
-                self._data_get(self.validated_data, 'customfield_10200', '')
+                self._data_get(self.validated_data, 'customfield_10200')
             )
         except arrow.parser.ParserError as e:
             logger.error(
@@ -72,7 +72,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 message='serializer.py | JiraHookRequestSerializer | '
                     'unable to parse embargo date | {0}'.format(e))
 
-        submission_id = self._data_get(self.validated_data, 'customfield_10303', '')
+        submission_id = self._data_get(self.validated_data, 'customfield_10303')
         try:
             submission = Submission.objects.get(
                 broker_submission_id=UUID(submission_id))
@@ -124,7 +124,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
             new_reporter['jira_user_name']  = self._data_get(self.validated_data, 'reporter',  'name')
         if self._data_get(self.validated_data, 'reporter', 'emailAddress'):
             new_reporter['email'] = self._data_get(self.validated_data, 'reporter', 'emailAddress')
-        submission_id = self._data_get(self.validated_data, 'customfield_10303', '')
+        submission_id = self._data_get(self.validated_data, 'customfield_10303')
 
         try:
             submission = Submission.objects.get(
@@ -175,10 +175,10 @@ class JiraHookRequestSerializer(serializers.Serializer):
     #  any further processing is skipped.
 
     def get_broker_submission_id_field_value(self):
-        return self._data_get(self.initial_data, 'customfield_10303', '')
+        return self._data_get(self.initial_data, 'customfield_10303')
 
     def get_embargo_date_field_value(self):
-        return self._data_get(self.initial_data, 'customfield_10200', '')
+        return self._data_get(self.initial_data, 'customfield_10200')
 
     def schema_validation(self, data):
         path = os.path.join(
@@ -225,14 +225,6 @@ class JiraHookRequestSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 {'issue': [
                     "'customfield_10200': embargo date in the past: {0}".format(
-                        embargo_date.for_json())]})
-
-    def embargo_unchanged_check(self, embargo_date, submission_embargo_date):
-        if embargo_date == submission_embargo_date:
-            raise serializers.ValidationError(
-                {'issue': [
-                    "'customfield_10200': no changes detected. embargo date "
-                    "equals current submission embargo data : {0}".format(
                         embargo_date.for_json())]})
 
     def embargo_date_validation(self, submission_embargo):
