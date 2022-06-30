@@ -110,7 +110,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
                     'reporter',{})
             if len(reporter_dict):
                 self.update_submission_user()
-        except arrow.parser.ParserError as e:
+        except Exception as e:
             logger.error(
                 msg='serializer.py | JiraHookRequestSerializer | '
                     'unable to parse reporter | {0}'.format(e)
@@ -122,10 +122,14 @@ class JiraHookRequestSerializer(serializers.Serializer):
             'email': '',
         }
 
-        if self._data_get(self.validated_data, ['issue', 'fields', 'reporter', 'name']):
-            new_reporter['jira_user_name']  = self._data_get(self.validated_data, ['issue', 'fields', 'reporter', 'name'])
-        if self._data_get(self.validated_data, ['issue', 'fields', 'reporter', 'emailAddress']):
-            new_reporter['email'] =self._data_get(self.validated_data, ['issue', 'fields', 'reporter', 'emailAddress'])
+        reporter_name = self._data_get(self.validated_data, ['issue', 'fields', 'reporter', 'name'])
+        if(reporter_name):
+            new_reporter['jira_user_name']  = reporter_name
+
+        reporter_email = self._data_get(self.validated_data, ['issue', 'fields', 'reporter', 'emailAddress'])
+        if (reporter_email):
+            new_reporter['email'] = reporter_email
+
         submission_id = self._data_get(self.validated_data, ['issue', 'fields', 'customfield_10303'])
 
         try:
@@ -285,7 +289,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 {'issue': ["'user': user is brokeragent"]})
 
     def reporter_email_validation(self):
-        repo_mail = self._data_get(self.initial_data, ['issue', 'fields',  'reporter', 'emailAddress'])
+        repo_mail = self._data_get(self.initial_data, ['issue', 'fields', 'reporter', 'emailAddress'])
 
         # check for empty reporter mail:
         if  not len(repo_mail):
