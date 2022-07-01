@@ -123,11 +123,11 @@ class JiraHookRequestSerializer(serializers.Serializer):
         }
 
         reporter_name = self._data_get(self.validated_data, ['issue', 'fields', 'reporter', 'name'])
-        if(reporter_name):
+        if reporter_name:
             new_reporter['jira_user_name']  = reporter_name
 
         reporter_email = self._data_get(self.validated_data, ['issue', 'fields', 'reporter', 'emailAddress'])
-        if (reporter_email):
+        if reporter_email:
             new_reporter['email'] = reporter_email
 
         submission_id = self._data_get(self.validated_data, ['issue', 'fields', 'customfield_10303'])
