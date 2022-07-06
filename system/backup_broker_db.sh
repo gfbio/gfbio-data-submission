@@ -1,4 +1,8 @@
-#!/usr/bin/env bash
+#!/bin/bash
+
+# To use this script in cron add an entry to crontab. Check if PATH contains an entry where docker-compose can be found
+# PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+# 0 1 * * * /bin/bash -c /etc/cron.daily/backup_broker_db >> /tmp/backup_logs.txt 2>&1
 
 #Exit if command fails
 set -e
