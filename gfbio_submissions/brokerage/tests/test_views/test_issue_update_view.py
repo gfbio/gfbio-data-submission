@@ -14,8 +14,12 @@ from gfbio_submissions.brokerage.models import Submission, AdditionalReference, 
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_jira_hook_request_data, \
     _get_ena_data, _get_ena_data_without_runs
-from gfbio_submissions.generic.models import RequestLog
+from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration
+from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
+from gfbio_submissions.generic.models import RequestLog, ResourceCredential
 from gfbio_submissions.users.models import User
+from gfbio_submissions.generic.models import SiteConfiguration
+
 
 
 class TestJiraIssueUpdateView(APITestCase):
@@ -120,6 +124,10 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": one_year.for_json(),
                         "customfield_10303": "{0}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
                     }
                 },
                 "changelog": {
@@ -179,6 +187,10 @@ class TestJiraIssueUpdateView(APITestCase):
                     "customfield_10200": one_year.for_json(),
                     "customfield_10303": "{0}".format(
                         submission.broker_submission_id),
+                    "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
                 }
             },
             "changelog": {
@@ -338,6 +350,10 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": one_year.for_json(),
                         "customfield_10303": "{0}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
                     }
                 },
                 "changelog": {
@@ -508,7 +524,10 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": "2021-xxx-09",
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
-
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
                     }
                 },
                 "changelog": {
@@ -543,7 +562,10 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": "2023-03-09T00:00:00+00:00",
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
-
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
                     }
                 },
                 "changelog": {
@@ -556,6 +578,166 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_201_CREATED,
+                         RequestLog.objects.first().response_status)
+
+    def test_jira_reporter_gfbio_unknown(self):
+        submission = Submission.objects.first()
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        # number of all users at the start:
+        users_in_db = len(User.objects.all())
+
+        response = self.client.post(
+            self.url,
+            {
+                "user": {
+                    "emailAddress": "horst@horst.de"
+                },
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": "2023-03-09T00:00:00+00:00",
+                        "customfield_10303": "{}".format(
+                            submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
+                    }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
+                }
+            },
+            format='json')
+
+        self.assertEqual(users_in_db + 1, len(User.objects.all()))
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_201_CREATED,
+                        RequestLog.objects.first().response_status)
+        submission = Submission.objects.first()
+        self.assertEqual(submission.user.username,'repo123_loginame')
+        self.assertEqual(submission.user.email, 'repo@repo.de')
+
+    def test_jira_reporter_gfbio_known(self):
+        submission = Submission.objects.first()
+        # submission.user.email at the start:
+        user_mail = submission.user.email
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        # number of all users at the start:
+        users_in_db = len(User.objects.all())
+
+        response = self.client.post(
+            self.url,
+            {
+                "user": {
+                    "emailAddress": "horst@horst.de"
+                },
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": "2023-03-09T00:00:00+00:00",
+                        "customfield_10303": "{}".format(
+                            submission.broker_submission_id),
+                        "reporter": {
+                            "name": "brokeragent",
+                            "emailAddress": "brokeragent@gfbio.org",
+                        },
+                    }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
+                }
+            },
+            format='json')
+
+        self.assertEqual(users_in_db, len(User.objects.all()))
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_201_CREATED,
+                         RequestLog.objects.first().response_status)
+        submission = Submission.objects.first()
+        self.assertNotEqual(submission.user.email, user_mail)
+        self.assertEqual(submission.user.email,'brokeragent@gfbio.org')
+
+    def test_jira_reporter_gfbio_same(self):
+        submission = Submission.objects.first()
+        # submission.user.email at the start:
+        user_mail = submission.user.email
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        # number of all users at the start:
+        users_in_db = len(User.objects.all())
+
+        response = self.client.post(
+            self.url,
+            {
+                "user": {
+                    "emailAddress": "horst@horst.de"
+                },
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": "2023-03-09T00:00:00+00:00",
+                        "customfield_10303": "{}".format(
+                            submission.broker_submission_id),
+                        "reporter": {
+                            "name": "horst",
+                            "emailAddress": "horst@horst.de",
+                        },
+                    }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
+                }
+            },
+            format='json')
+
+        self.assertEqual(users_in_db, len(User.objects.all()))
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_201_CREATED,
+                         RequestLog.objects.first().response_status)
+        submission = Submission.objects.first()
+        self.assertEqual(submission.user.email,user_mail)
+
+    def test_jira_reporter_gfbio_mail_empty(self):
+        submission = Submission.objects.first()
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        # number of all users at the start:
+        users_in_db = len(User.objects.all())
+
+        response = self.client.post(
+            self.url,
+            {
+                "user": {
+                    "emailAddress": "horst@horst.de"
+                },
+                "issue": {
+                    "key": "SAND-007",
+                    "fields": {
+                        "customfield_10200": "2023-03-09T00:00:00+00:00",
+                        "customfield_10303": "{}".format(
+                            submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "",
+                        },
+                    }
+                },
+                "changelog": {
+                    "items": [
+                        {}
+                    ]
+                }
+            },
+            format='json')
+
+        self.assertEqual(users_in_db, len(User.objects.all()))
+        self.assertEqual(1, len(RequestLog.objects.all()))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST,
                          RequestLog.objects.first().response_status)
 
     def test_date_in_the_past(self):
@@ -573,6 +755,10 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": "2020-04-09T00:00:00+00:00",
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
                     }
                 },
                 "changelog": {
@@ -606,6 +792,10 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": embargo_tomorrow,
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
                     }
                 },
                 "changelog": {
@@ -635,6 +825,10 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": "2049-04-09T00:00:00+00:00",
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
                     }
                 },
                 "changelog": {
@@ -668,6 +862,10 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": arrow.now().for_json(),
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
                     }
                 },
                 "changelog": {
@@ -706,6 +904,10 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": embargo_date_hour_offset,
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
                     }
                 },
                 "changelog": {
@@ -715,8 +917,8 @@ class TestJiraIssueUpdateView(APITestCase):
                 }
             },
             format='json')
-        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertIn(
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertNotIn(
             b'\'customfield_10200\': no changes detected',
             response.content)
 
@@ -737,6 +939,10 @@ class TestJiraIssueUpdateView(APITestCase):
                             years=1).for_json(),
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
                     }
                 },
                 "changelog": {
@@ -803,6 +1009,10 @@ class TestJiraIssueUpdateView(APITestCase):
                         "customfield_10200": arrow.now().shift(
                             years=1).for_json(),
                         "customfield_10303": "a49a1008-866b-4ada-a60d-38cd21273475",
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
                     }
                 },
                 "changelog": {
@@ -849,6 +1059,10 @@ class TestJiraIssueUpdateView(APITestCase):
                             years=1).for_json(),
                         "customfield_10303": "{0}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
                     }
                 },
                 "changelog": {
@@ -885,6 +1099,10 @@ class TestJiraIssueUpdateView(APITestCase):
                             years=1).for_json(),
                         "customfield_10303": "{0}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
                     }
                 },
                 "changelog": {
@@ -919,6 +1137,10 @@ class TestJiraIssueUpdateView(APITestCase):
                             years=1).for_json(),
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
+                        "reporter": {
+                            "name": "repo123_loginame",
+                            "emailAddress": "repo@repo.de",
+                        },
                     }
                 },
                 "changelog": {
@@ -935,3 +1157,4 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_400_BAD_REQUEST,
                          RequestLog.objects.first().response_status)
+
