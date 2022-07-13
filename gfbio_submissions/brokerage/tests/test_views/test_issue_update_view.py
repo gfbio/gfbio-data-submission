@@ -21,7 +21,6 @@ from gfbio_submissions.users.models import User
 from gfbio_submissions.generic.models import SiteConfiguration
 
 
-
 class TestJiraIssueUpdateView(APITestCase):
 
     # TODO: move to utils or similar ...
