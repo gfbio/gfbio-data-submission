@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+from typing import List
 from uuid import UUID
 
 import arrow
@@ -27,7 +28,17 @@ class JiraHookRequestSerializer(serializers.Serializer):
     class Meta:
         fields = ['issue', ]
 
-    def send_mail_to_admins(self, reason: str, message: str, b_subid: bool = True, b_issuekey: bool = True):
+    def send_mail_to_admins(self, reason: str, message: str, add_submission_id: bool = True,
+                            add_issue_key: bool = True):
+        submission_msg = f"Submission ID: {self.broker_submission_id}" if add_submission_id else ""
+        issue_msg = f"Issue Key: {self.issue_key}" if add_issue_key else ""
+        msg = "\n".join(filter(None, [message, submission_msg, issue_msg]))
+        mail_admins(
+            subject=reason,
+            message=msg
+        )
+
+    def send_mail_to_admins_old(self, reason: str, message: str, b_subid: bool = True, b_issuekey: bool = True):
         blist = [True, b_subid, b_issuekey]
         flist = ['{}', 'Submission ID: {}', 'Issue Key: {}']
         clist = [message, "p1", "p2"]
@@ -42,33 +53,34 @@ class JiraHookRequestSerializer(serializers.Serializer):
             subject=reason,
             message=str('\n'.join(tuple(filtered_preformat))).format(
                 *filtered_format)
-        )
+        )    
 
-    def _data_get(self, data: dict, key: str, sub_key: str = ''):
-        resp = ''
+    def _data_get(self, data: dict, keys: List[str]):
+        resp = data
         try:
-            if sub_key:
-                resp = str(data.get('issue', {}).get('fields', {}).get(
-                    key, {}).get(sub_key, '')).strip()
-            else:
-                resp = str(data.get('issue', {}).get('fields', {}).get(
-                    key, '')).strip()
-
+            for key in keys:
+                resp = resp[key]
         except Exception as e:
             logger.error(
-                msg='serializers.py | JiraHookRequestSerializer | '
-                    'unable to get {1} {2} | {0}'.format(e, key, sub_key))
+                msg="serializers.py | JiraHookRequestSerializer | "
+                    "unable to get {1} | {0}".format(e, " ".join(keys))
+            )
 
             self.send_mail_to_admins(
-                reason='Submission update via Jira hook failed',
-                message='serializers.py | JiraHookRequestSerializer | '
-                        'unable to get {1} {2} | {0}'.format(e, key, sub_key))
+                reason="Submission update via Jira hook failed",
+                message="serializers.py | JiraHookRequestSerializer | "
+                        "unable to get {1} | {0}".format(e, " ".join(keys))
+            )
+
+        if isinstance(resp, str):
+            return resp.strip()
+
         return resp
 
     def save(self):
         try:
             embargo_date = arrow.get(
-                self._data_get(self.validated_data, 'customfield_10200')
+                self._data_get(self.validated_data, ['issue', 'fields', 'customfield_10200'])
             )
         except arrow.parser.ParserError as e:
             logger.error(
@@ -80,7 +92,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 message='serializer.py | JiraHookRequestSerializer | '
                     'unable to parse embargo date | {0}'.format(e))
 
-        submission_id = self._data_get(self.validated_data, 'customfield_10303')
+        submission_id = self._data_get(self.validated_data, ['issue', 'fields', 'customfield_10303'])
         try:
             submission = Submission.objects.get(
                 broker_submission_id=UUID(submission_id))
@@ -97,8 +109,8 @@ class JiraHookRequestSerializer(serializers.Serializer):
         submission.embargo = embargo_date.date()
         submission.save()
 
-        updating_user = self.validated_data.get('user', {}).get('emailAddress',
-                                                                '')
+        updating_user = self._data_get(self.validated_data, ['user', 'emailAddress'])
+
         logger.info(
             msg='serializer.py | JiraHookRequestSerializer | '
                 'updating user | {0}'.format(updating_user)
@@ -124,7 +136,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
             self.send_mail_to_admins(
                 reason='Submission update via Jira hook failed',
                 message='serializer.py | JiraHookRequestSerializer | '
-                        'unable to parse reporter | {0}'.format(e))
+                        'unable to parse reporter | {0}'.format(e))                                
 
     def update_submission_user(self):
         new_reporter = {
@@ -132,11 +144,15 @@ class JiraHookRequestSerializer(serializers.Serializer):
             'email': '',
         }
 
-        if self._data_get(self.validated_data, 'reporter', 'name'):
-            new_reporter['jira_user_name']  = self._data_get(self.validated_data, 'reporter',  'name')
-        if self._data_get(self.validated_data, 'reporter', 'emailAddress'):
-            new_reporter['email'] = self._data_get(self.validated_data, 'reporter', 'emailAddress')
-        submission_id = self._data_get(self.validated_data, 'customfield_10303')
+        reporter_name = self._data_get(self.validated_data, ['issue', 'fields', 'reporter', 'name'])
+        if reporter_name:
+            new_reporter['jira_user_name']  = reporter_name
+
+        reporter_email = self._data_get(self.validated_data, ['issue', 'fields', 'reporter', 'emailAddress'])
+        if reporter_email:
+            new_reporter['email'] = reporter_email
+
+        submission_id = self._data_get(self.validated_data, ['issue', 'fields', 'customfield_10303'])
 
         try:
             submission = Submission.objects.get(
@@ -187,10 +203,10 @@ class JiraHookRequestSerializer(serializers.Serializer):
     #  any further processing is skipped.
 
     def get_broker_submission_id_field_value(self):
-        return self._data_get(self.initial_data, 'customfield_10303')
+        return self._data_get(self.initial_data, ['issue', 'fields', 'customfield_10303'])
 
     def get_embargo_date_field_value(self):
-        return self._data_get(self.initial_data, 'customfield_10200')
+        return self._data_get(self.initial_data, ['issue', 'fields', 'customfield_10200'])
 
     def schema_validation(self, data):
         path = os.path.join(
@@ -205,27 +221,25 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 reason="Submission update via jira hook failed",
                 message='Data provided by Jira hook is not valid.\n'
                         '{0}'.format({'issue': [e.message for
-                           e in errors]}), b_subid=False, b_issuekey=False
-            )
+                           e in errors]}), add_submission_id=False, add_issue_key=False
+            )                                      
             raise serializers.ValidationError(
                 {'issue': [e.message for
                            e in errors]})
 
         self.broker_submission_id = self.get_broker_submission_id_field_value()
-        self.issue_key = self.initial_data.get('issue', {}).get('key', '')
+        self.issue_key = self._data_get(self.initial_data, ['issue', 'key'])
 
     @staticmethod
     def embargo_date_format_validation(self, jira_embargo_date):
         try:
             embargo_date = arrow.get(jira_embargo_date)
         except arrow.parser.ParserError as e:
-
             self.send_mail_to_admins(
                 reason='Submission update via Jira hook failed',
                 message='serializer.py | JiraHookRequestSerializer | '
                         'customfield_10200\n'
                         '{0}'.format(e))
-
             raise serializers.ValidationError(
                 {'issue': ["'customfield_10200': {0}".format(e)]})
         return embargo_date
@@ -274,7 +288,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
             self.send_mail_to_admins(
                 reason='Submission update via Jira hook failed',
                 message='serializer.py | JiraHookRequestSerializer | '
-                        'unable to get submission for customfield_10303 | {0} {1}'.format(e,submission_id), b_subid = False)
+                        'unable to get submission for customfield_10303 | {0} {1}'.format(e,submission_id), add_submission_id = False)
             raise serializers.ValidationError(
                 {'issue': [
                     "'customfield_10303': {0} {1}".format(e, submission_id)]})
@@ -293,15 +307,15 @@ class JiraHookRequestSerializer(serializers.Serializer):
                     reason='WARNING: submission embargo date, issue not found',
                     message='WARNING: JIRA hook requested an Embargo Date update,'
                             ' but issue: {0} could not be found for submission {1}'.format(
-                        self.issue_key, self.broker_submission_id), b_subid = False, b_issuekey = False)
+                        self.issue_key, self.broker_submission_id), add_submission_id = False, add_issue_key = False)
                 raise serializers.ValidationError(
                     {'issue': [
                         "'key': no related issue with key: {0} found for submission {1}".format(
                             self.issue_key, self.broker_submission_id)]})
 
     def brokeragent_validation(self):
-        updating_user = self.initial_data.get('user', {}).get('emailAddress',
-                                                              '')
+        updating_user = self._data_get(self.initial_data, ['user', 'emailAddress'])
+
         logger.info(
             msg='serializer.py | brokeragent_validation | user {0}'.format(
                 updating_user)
@@ -312,7 +326,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 {'issue': ["'user': user is brokeragent"]})
 
     def reporter_email_validation(self):
-        repo_mail = self._data_get(self.initial_data, 'reporter', 'emailAddress')
+        repo_mail = self._data_get(self.initial_data, ['issue', 'fields', 'reporter', 'emailAddress'])
 
         # check for empty reporter mail:
         if  not len(repo_mail):
@@ -327,8 +341,8 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 {'issue': ["'reporter': reporter's Jira emailAddress is empty!"]})
 
     def curator_validation(self):
-        updating_user = self.initial_data.get('user', {}).get('emailAddress',
-                                                              '')
+        updating_user = self._data_get(self.initial_data, ['user', 'emailAddress'])
+
         logger.info(
             msg='serializer.py | curator_validation | updating user {0}'.format(
                 updating_user)
@@ -342,7 +356,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
             self.send_mail_to_admins(
                 reason='WARNING: submission embargo date, user not a curator',
                 message='WARNING: JIRA hook requested an Embargo Date update for issue: {0}'
-                        ' but user is not a curator'.format(self.issue_key), b_issuekey = False)
+                        ' but user is not a curator'.format(self.issue_key), add_issue_key = False)
             raise serializers.ValidationError(
                 {'issue': ["'user': user is not in curators group"]})
 
@@ -395,7 +409,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
                         message='WARNING: JIRA hook requested update of Embargo Date'
                                 ' for submission without a primary accession (i.e. BioProject ID), submission {0} with target {1}'.format(
                                 submission.broker_submission_id,
-                                submission.target), b_subid = False)
+                                submission.target), add_submission_id = False)
                     raise serializers.ValidationError(
                         {'issue': [
                             "'key': issue {0}. submission without a primary accession, submission {1} with target {2}".format(
@@ -421,7 +435,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
                     reason='WARNING: submission status is not PRIVATE or SUPPRESSED',
                     message='WARNING: JIRA hook requested update of Embargo Date'
                             ' for submission {0} which is not PRIVATE or SUPPRESSED'
-                            ' (status is: {0} )'.format(submission.broker_submission_id, status), b_subid = False)
+                            ' (status is: {0} )'.format(submission.broker_submission_id, status), add_submission_id = False)
                 raise serializers.ValidationError(
                     {'issue': [
                         "'key': issue {0}. status prevents update of submission {1} with target {2} and status:{3}".format(
