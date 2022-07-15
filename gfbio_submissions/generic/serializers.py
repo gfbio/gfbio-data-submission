@@ -38,23 +38,6 @@ class JiraHookRequestSerializer(serializers.Serializer):
             message=msg
         )
 
-    def send_mail_to_admins_old(self, reason: str, message: str, b_subid: bool = True, b_issuekey: bool = True):
-        blist = [True, b_subid, b_issuekey]
-        flist = ['{}', 'Submission ID: {}', 'Issue Key: {}']
-        clist = [message, "p1", "p2"]
-
-        filtered_preformat = [f for (f, b) in zip(flist, blist) if b]
-        filtered_format = [c  for (c, b) in zip(clist, blist) if b]
-
-        filtered_format = [self.broker_submission_id if item == "p1" else item for item in filtered_format]
-        filtered_format = [self.issue_key if item == "p2" else item for item in filtered_format]
-
-        mail_admins(
-            subject=reason,
-            message=str('\n'.join(tuple(filtered_preformat))).format(
-                *filtered_format)
-        )    
-
     def _data_get(self, data: dict, keys: List[str]):
         resp = data
         try:
