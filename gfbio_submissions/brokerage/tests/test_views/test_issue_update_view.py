@@ -971,7 +971,7 @@ class TestJiraIssueUpdateView(APITestCase):
                          RequestLog.objects.first().response_status)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(str(mail.outbox[0].body.strip()), 'WARNING: JIRA hook requested an Embargo Date update, '
-                'but issue could not be found for submission\n'
+                'but issue could not be found for the submission\n'
                         'Submission ID: {0}\n'
                         'Issue Key: SAND-007'.format(
             submission.broker_submission_id))
