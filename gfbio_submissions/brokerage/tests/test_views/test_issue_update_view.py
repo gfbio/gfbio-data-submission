@@ -483,7 +483,8 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(str(mail.outbox[0].body.strip()),
                          'Data provided by Jira hook is not valid.\n{\'issue\': ["customfield_10200 : \'\' is too short", '
-                         '"fields : \'customfield_10303\' is a required property", "fields : \'reporter\' is a required property"]}')
+                         '"fields : \'customfield_10303\' is a required property", "fields : \'reporter\' is a required property"]}'
+        )
 
     def test_broker_submission_id_field_error(self):
         self.assertEqual(0, len(RequestLog.objects.all()))
@@ -970,8 +971,10 @@ class TestJiraIssueUpdateView(APITestCase):
                          RequestLog.objects.first().response_status)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(str(mail.outbox[0].body.strip()), 'WARNING: JIRA hook requested an Embargo Date update, '
-                'but issue: SAND-007 could not be found for submission {0}'.format(
-                submission.broker_submission_id))
+                'but issue could not be found for submission\n'
+                        'Submission ID: {0}\n'
+                        'Issue Key: SAND-007'.format(
+            submission.broker_submission_id))
 
     def test_missing_user_reference(self):
         submission = Submission.objects.first()
