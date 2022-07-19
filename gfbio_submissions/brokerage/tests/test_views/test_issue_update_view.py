@@ -6,6 +6,7 @@ import requests
 import responses
 from django.contrib.auth.models import Group
 from django.urls import reverse
+from django.core import mail
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -479,6 +480,11 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(status.HTTP_400_BAD_REQUEST,
                          RequestLog.objects.first().response_status)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(str(mail.outbox[0].body.strip()),
+                         'Data provided by Jira hook is not valid.\n{\'issue\': ["customfield_10200 : \'\' is too short", '
+                         '"fields : \'customfield_10303\' is a required property", "fields : \'reporter\' is a required property"]}'
+        )
 
     def test_broker_submission_id_field_error(self):
         self.assertEqual(0, len(RequestLog.objects.all()))
@@ -739,6 +745,10 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_400_BAD_REQUEST,
                          RequestLog.objects.first().response_status)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(str(mail.outbox[0].body.strip()), "WARNING: JIRA hook requested an user update, but reporter\'s Jira emailAddress is empty!\n"
+                "Submission ID: {0}\n"
+                "Issue Key: SAND-007".format(submission.broker_submission_id))
 
     def test_date_in_the_past(self):
         submission = Submission.objects.first()
@@ -959,6 +969,12 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_400_BAD_REQUEST,
                          RequestLog.objects.first().response_status)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(str(mail.outbox[0].body.strip()), 'WARNING: JIRA hook requested an Embargo Date update, '
+                'but issue could not be found for the submission\n'
+                        'Submission ID: {0}\n'
+                        'Issue Key: SAND-007'.format(
+            submission.broker_submission_id))
 
     def test_missing_user_reference(self):
         submission = Submission.objects.first()

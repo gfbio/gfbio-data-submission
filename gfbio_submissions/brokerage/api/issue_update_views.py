@@ -40,18 +40,11 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
         headers = self.get_success_headers(serializer.data)
 
         if not is_valid:
-            # ignore validation errors when embargo did not change
-            err_msg = '{0}'.format(serializer.errors)
-            if "'customfield_10200': no changes detected" not in err_msg\
-                and "'user': user is brokeragent" not in err_msg:
-                mail_admins(
-                    subject="Submission update via jira hook failed",
-                    message='Data provided by Jira hook is not valid.\n'
-                            '{0}'.format(serializer.errors)
-                )
+            # in case of JiraHookRequestSerializer  errors:
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST,
                             headers=headers)
+
         if not form_is_valid:
             # request came from blacklisted users
             # blacklist users: brokeragent
