@@ -41,6 +41,8 @@ services:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
     image: gfbio_submissions_production_postgres
+    networks:
+      - default
     volumes:
       - production_postgres_data:/var/lib/postgresql/data
       - production_postgres_data_backups:/backups
@@ -67,6 +69,8 @@ services:
 
   redis:
     image: redis:5.0
+    networks:
+      - default
     restart: always
 
   celeryworker:
