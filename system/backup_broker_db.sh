@@ -53,3 +53,4 @@ echo "... after curl, delete files now"
 
 rm "$LATEST_BACKUP_ENCRYPTED" "$LATEST_BACKUP_TAR" "$LATEST_BACKUP_MD5"
 
+

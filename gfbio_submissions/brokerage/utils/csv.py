@@ -524,6 +524,7 @@ def check_for_molecular_content(submission):
     messages = []
     check_performed = False
 
+    # FIXME: this is redundant to method below
     if check_metadata_rule(submission):
         status = True
         check_performed = True
@@ -539,6 +540,7 @@ def check_for_molecular_content(submission):
                                                             check_performed)
         )
 
+    # FIXME: this is redundant to method above
     elif check_csv_file_rule(submission):
         status = True
         check_performed = True
