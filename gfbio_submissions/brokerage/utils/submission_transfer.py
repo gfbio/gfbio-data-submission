@@ -2,7 +2,7 @@
 import logging
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    SUBMISSION_DELAY, ENA, ENA_PANGAEA
+    SUBMISSION_DELAY, ENA, ENA_PANGAEA, ATAX
 
 logger = logging.getLogger(__name__)
 

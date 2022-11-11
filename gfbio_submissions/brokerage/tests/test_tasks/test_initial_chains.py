@@ -168,7 +168,7 @@ class TestInitialChainTasks(TestCase):
                     }
                 }
             }))
-        self.assertEqual(400, min_response.status_code)
+        self.assertEqual(201, min_response.status_code)
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = ['tasks.get_gfbio_helpdesk_username_task',
                               'tasks.create_submission_issue_task',
@@ -176,7 +176,7 @@ class TestInitialChainTasks(TestCase):
                               'tasks.check_for_molecular_content_in_submission_task',
                               'tasks.trigger_submission_transfer',
                               'tasks.check_issue_existing_for_submission_task', ]
-        self.assertEqual(0, len(task_reports))
+        self.assertEqual(6, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 

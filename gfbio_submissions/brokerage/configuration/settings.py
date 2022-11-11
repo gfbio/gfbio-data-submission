@@ -130,6 +130,12 @@ GENERIC = getattr(
     'GENERIC'
 )
 
+ATAX = getattr(
+    settings,
+    'ATAX',
+    'ATAX'
+)
+
 # https://helpdesk.gfbio.org/secure/ViewProfile.jspa?name=brokeragent
 JIRA_FALLBACK_USERNAME = getattr(
     settings,
