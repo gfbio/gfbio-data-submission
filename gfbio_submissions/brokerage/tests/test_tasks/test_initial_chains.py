@@ -151,7 +151,7 @@ class TestInitialChainTasks(TestCase):
             self.assertIn(t.task_name, expected_tasknames)
 
     @responses.activate
-    def test_no_release_unknown_target_initial_chain(self):
+    def test_no_release_new_target_initial_chain(self):
         self._add_create_ticket_response()
         task_reports = TaskProgressReport.objects.all()
         self.assertEqual(0, len(task_reports))

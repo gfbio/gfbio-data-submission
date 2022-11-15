@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "file:///app/gfbio_submissions/brokerage/schemas/gfbio_generic_requirements.json",
+    "type": "object",
+    "properties": {
+        "requirements": {
+            "allOf": [
+                {
+                    "$ref": "common_requirements_definitions.json#/minimal_requirements"
+                },
+                {
+                    "$ref": "gfbio_generic_definitions.json#/generic"
+                },
+                {
+                    "$ref": "technical_content_definitions.json#/technical_requirements"
+                }
+            ]
+        }
+    },
+    "required": [
+        "requirements"
+    ]
+}

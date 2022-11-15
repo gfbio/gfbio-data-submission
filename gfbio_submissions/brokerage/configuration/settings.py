@@ -530,6 +530,12 @@ STATIC_GENERIC_REQUIREMENTS_LOCATION = getattr(
     'schemas/gfbio_generic_requirements.json'
 )
 
+STATIC_ATAX_REQUIREMENTS_LOCATION = getattr(
+    settings,
+    'STATIC_ATAX_REQUIREMENTS_LOCATION',
+    'schemas/gfbio_atax_requirements.json'
+)
+
 SUBMISSION_MIN_COLS = getattr(
     settings,
     'SUBMISSION_MIN_COLS',
