@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 
 volumes:
   gfbio-ISSUE_ID:
@@ -28,16 +28,16 @@ services:
     logging:
       driver: syslog
       options:
-        tag: 'GFBio-django'
+        tag: "GFBio-django"
     deploy:
       mode: global
     restart: always
     labels:
       - traefik.enable=true
-      - traefik.http.routers.BRANCH.rule=Host(`BRANCH.submissions.gfbio.dev`)
-      - traefik.http.routers.BRANCH.entrypoints=web
-      - traefik.http.middlewares.BRANCH_headers.headers.hostsproxyheaders=X-CSRFToken
-      - traefik.http.services.BRANCH.loadbalancer.server.port=5000
+      - traefik.http.routers.ISSUE_ID.rule=Host(`ISSUE_ID.test.gfbio.dev`)
+      - traefik.http.routers.ISSUE_ID.entrypoints=web
+      - traefik.http.middlewares.ISSUE_ID_headers.headers.hostsproxyheaders=X-CSRFToken
+      - traefik.http.services.ISSUE_ID.loadbalancer.server.port=5000
     command: >
       /bin/sh -c "python /app/manage.py collectstatic --noinput
       && python /app/manage.py migrate
@@ -82,7 +82,7 @@ services:
     logging:
       driver: syslog
       options:
-        tag: 'GFBio-celery-worker'
+        tag: "GFBio-celery-worker"
     command: /start-celeryworker
     restart: always
 
@@ -104,7 +104,7 @@ services:
     logging:
       driver: syslog
       options:
-        tag: 'GFBio-celery-beat'
+        tag: "GFBio-celery-beat"
     command: /start-celerybeat
     restart: always
 
@@ -126,7 +126,7 @@ services:
     logging:
       driver: syslog
       options:
-        tag: 'GFBio-flower'
+        tag: "GFBio-flower"
     restart: always
     command: /start-flower
 
