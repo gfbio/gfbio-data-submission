@@ -1,12 +1,19 @@
+include:
+  - project: gfbio/cicd
+    file:
+      - ".create_merge_request_v3.yml"
+      - ".tag_release.yml"
+      - ".web_test_v2.yml"
+
 stages:
   - unit_tests
   - create_merge_request
-  - test
-  - check_for_web_test
-  - stop_web_test
+  - web_test_check
+  - web_test_update
+  - web_test_stop
   - update_staging
-  - update_production
-  - deploy
+  - tag_release_check
+  - tag_release
 
 run_unit_tests:
   stage: unit_tests
@@ -22,38 +29,28 @@ run_unit_tests:
     name: review/$CI_COMMIT_REF_NAME
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^\d+-/'
+    - if: '$CI_COMMIT_BRANCH =~ /^\w+-\d+/'
   tags:
     - dev-denbi
 
 create_merge_request:
-  stage: create_merge_request
-  rules:
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+-/'
-  script:
-    - HOST=${CI_PROJECT_URL} CI_PROJECT_ID=${CI_PROJECT_ID} CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} GITLAB_USER_ID=${GITLAB_USER_ID} PRIVATE_TOKEN=${PRIVATE_TOKEN} ./cicd/autoMergeRequest.sh
+  variables:
+    PROJECT_NAME: "submissions"
   tags:
     - dev-denbi
 
-stop_web_test:
-  stage: stop_web_test
+web_test_update:
+  variables:
+    PROJECT_NAME: "submissions"
   script:
-    - python cicd/stopDockerStack.py "${CI_COMMIT_MESSAGE}"
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master" && $CI_COMMIT_MESSAGE =~ /.*Merge branch.*into.*/'
-  tags:
-    - dev-denbi
+    - ISSUE_ID=$(awk -F- '{print $2}' <<< ${CI_COMMIT_REF_NAME})
+    - TEST_NAME=$ISSUE_ID-$PROJECT_NAME
+    - TEST_NAME=${TEST_NAME} ADMIN_NICKNAME=${ADMIN_NICKNAME} ADMIN_EMAIL=${ADMIN_EMAIL} ADMIN_PASSWORD=${ADMIN_PASSWORD} ./cicd/createWebTest.sh
 
-check_for_web_test:
-  stage: check_for_web_test
-  script:
-    - ADMIN_NICKNAME=${ADMIN_NICKNAME} ADMIN_EMAIL=${ADMIN_EMAIL} ADMIN_PASSWORD=${ADMIN_PASSWORD} HOST=${CI_PROJECT_URL} CI_PROJECT_ID=${CI_PROJECT_ID} CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} GITLAB_USER_ID=${GITLAB_USER_ID} PRIVATE_TOKEN=${PRIVATE_TOKEN} ./cicd/createWebTest.sh
-  environment:
-    name: review/$CI_COMMIT_REF_NAME
-    url: https://$CI_COMMIT_REF_NAME.submissions.gfbio.dev/accounts/login
-  rules:
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+-/'
-  tags:
-    - dev-denbi
+web_test_stop:
+  variables:
+    MAIN_BRANCH_NAME: "master"
+    PROJECT_NAME: "submissions"
 
 update_staging:
   stage: update_staging
@@ -67,14 +64,19 @@ update_staging:
   tags:
     - staging-denbi
 
-deploy_to_production:
-  stage: update_production
+tag_release_check:
+  variables:
+    MAIN_BRANCH_NAME: "master"
+  tags:
+    - development-denbi
+
+tag_release:
+  variables:
+    GIT_SUBMODULE_STRATEGY: normal
   script:
-    - HOST=${CI_PROJECT_URL} CI_PROJECT_ID=${CI_PROJECT_ID} PRIVATE_TOKEN=${PRIVATE_TOKEN} cicd/tagReleaseCheck.sh
+    - HOST=${CI_PROJECT_URL} CI_PROJECT_ID=${CI_PROJECT_ID} PRIVATE_TOKEN=${PRIVATE_TOKEN} cicd/tagRelease.sh
   environment:
     name: production
     url: https://submissions.gfbio.org
-  rules:
-    - if: '$CI_COMMIT_TAG'
   tags:
     - production
