@@ -150,6 +150,7 @@ class TestInitialChainTasks(TestCase):
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
+
     @responses.activate
     def test_max_post_with_release_initial_chain(self):
         self._add_create_ticket_response()
