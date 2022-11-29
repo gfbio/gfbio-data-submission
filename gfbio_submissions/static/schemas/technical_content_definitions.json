@@ -9,5 +9,22 @@
                 "type": "string"
             }
         }
+    },
+	"technical_requirements_atax": {
+        "type": "object",
+        "properties": {
+            "specimen_file_name": {
+                "type": "string"
+            },
+            "specimen_index": {
+                "type": "string"
+            },
+			"files_file_name": {
+                "type": "string"
+            },
+            "files_index": {
+                "type": "string"
+            }
+        }
     }
 }
