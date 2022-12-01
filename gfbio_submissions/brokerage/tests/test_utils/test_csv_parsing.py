@@ -1235,3 +1235,17 @@ class TestCSVParsing(TestCase):
     #     #     print(delimiter)
     #     #
     #     # TODO: defaults to ; ok ! split to delim and do list comparision. done ...
+
+    def test_parse_atax_as_csv(self):
+        file_names = [
+            'csv_files/specimen_table_Platypelis.csv',
+            'csv_files/file_table_Platypelis.csv'
+        ]
+
+        for fn in file_names:
+            with open(os.path.join(_get_test_data_dir_path(), fn),
+                      'r') as data_file:
+                requirements = parse_molecular_csv(data_file)
+                requirements_keys = requirements.keys()
+                #AssertionError: 'samples' unexpectedly found in dict_keys(['samples', 'experiments'])
+                self.assertIn('samples', requirements_keys)
