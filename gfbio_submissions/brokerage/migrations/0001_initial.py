@@ -73,7 +73,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('broker_submission_id', models.UUIDField(default=uuid.uuid4)),
                 ('site_project_id', models.CharField(blank=True, default='', max_length=128)),
-                ('target', models.CharField(choices=[('ENA', 'ENA'), ('ENA_PANGAEA', 'ENA_PANGAEA'), ('GENERIC', 'GENERIC')], max_length=16)),
+                ('target', models.CharField(choices=[('ENA', 'ENA'), ('ENA_PANGAEA', 'ENA_PANGAEA'), ('GENERIC', 'GENERIC'),('ATAX', 'ATAX')], max_length=16)),
                 ('submitting_user', models.CharField(blank=True, default='', help_text='Identifier of submitting user. May vary for different sites, e.g. user-id from database, uniquq login-name, etc..', max_length=72, null=True)),
                 ('submitting_user_common_information', models.TextField(blank=True, default='', help_text='General information regarding the submitting user in free-text form, e.g. full name and/or email-address, ORCID, etc.. . Will be used to fill Helpdesk/Jira fields that ask for this kind of verbose information', null=True)),
                 ('status', models.CharField(choices=[('OPEN', 'OPEN'), ('SUBMITTED', 'SUBMITTED'), ('CANCELLED', 'CANCELLED'), ('ERROR', 'ERROR'), ('CLOSED', 'CLOSED')], default='OPEN', max_length=10)),

@@ -130,6 +130,12 @@ GENERIC = getattr(
     'GENERIC'
 )
 
+ATAX = getattr(
+    settings,
+    'ATAX',
+    'ATAX'
+)
+
 # https://helpdesk.gfbio.org/secure/ViewProfile.jspa?name=brokeragent
 JIRA_FALLBACK_USERNAME = getattr(
     settings,
@@ -522,6 +528,12 @@ STATIC_GENERIC_REQUIREMENTS_LOCATION = getattr(
     settings,
     'STATIC_GENERIC_REQUIREMENTS_LOCATION',
     'schemas/gfbio_generic_requirements.json'
+)
+
+STATIC_ATAX_REQUIREMENTS_LOCATION = getattr(
+    settings,
+    'STATIC_ATAX_REQUIREMENTS_LOCATION',
+    'schemas/gfbio_atax_requirements.json'
 )
 
 SUBMISSION_MIN_COLS = getattr(

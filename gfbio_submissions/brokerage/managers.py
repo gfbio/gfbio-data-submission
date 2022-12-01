@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.utils.encoding import smart_text
 
 from config.settings.base import ADMINS
-from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA
+from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA,ATAX
 # tO
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 
