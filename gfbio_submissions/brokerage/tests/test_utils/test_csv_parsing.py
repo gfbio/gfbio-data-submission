@@ -17,7 +17,7 @@ from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
     check_for_molecular_content, extract_sample, check_csv_file_rule, \
-    check_metadata_rule, check_minimum_header_cols
+    check_metadata_rule, check_minimum_header_cols, parse_atax_csv
 from gfbio_submissions.brokerage.utils.ena import \
     prepare_ena_data
 from gfbio_submissions.brokerage.utils.schema_validation import \
@@ -1245,7 +1245,7 @@ class TestCSVParsing(TestCase):
         for fn in file_names:
             with open(os.path.join(_get_test_data_dir_path(), fn),
                       'r') as data_file:
-                requirements = parse_molecular_csv(data_file)
+                requirements = parse_atax_csv(data_file)
                 requirements_keys = requirements.keys()
                 #AssertionError: 'samples' unexpectedly found in dict_keys(['samples', 'experiments'])
-                self.assertIn('samples', requirements_keys)
+                self.assertIn('specimen_array', requirements_keys)
