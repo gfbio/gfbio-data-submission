@@ -15,7 +15,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
-    JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL, JIRA_ATTACHMENT_URL
+    JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL, JIRA_ATTACHMENT_URL, GENERIC
 from gfbio_submissions.brokerage.models import Submission, AdditionalReference
 from gfbio_submissions.brokerage.tests.test_models.test_submission import \
     SubmissionTest
@@ -23,6 +23,7 @@ from gfbio_submissions.brokerage.tests.utils import _get_pangaea_soap_response, 
     _get_pangaea_attach_response, _get_pangaea_comment_response, \
     _get_pangaea_ticket_response, _get_jira_issue_response, \
     _get_jira_attach_response, _get_request_comment_response
+from gfbio_submissions.brokerage.utils.gfbio import gfbio_prepare_create_helpdesk_payload
 from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential, RequestLog
@@ -797,6 +798,46 @@ class TestJiraClient(TestCase):
 
         }
         client.create_issue(issue_dict)
+
+    @skip('Test against helpdesk server')
+    def test_jira_client_publication_list_fields(self):
+        jira_resource = ResourceCredential.objects.create(
+            title='jira instance',
+            url='https://helpdesk.gfbio.org',
+            authentication_string='-',
+            username='',
+            password='',
+            comment='-'
+        )
+        site_config = SiteConfiguration.objects.create(title='jira', jira_project_key=SiteConfiguration.DSUB,
+                                                       helpdesk_server=jira_resource)
+        submission = Submission.objects.create(
+            release=True,
+            target=GENERIC,
+            data={"requirements": {
+                "title": "The use of non-local Leucanthemum vulgare seeds in the course of restoration measures can no longer be detected several years after their application",
+                "license": "CC BY 4.0", "categories": ["Botany", "Ecology & Environment"],
+                "description": "Ecological restoration along roadside verges and on compensatory sites requires large-scale reintroductions of plants in form of seeds or seedlings; however, the genetic basis of seed or seedling sourcing is a controversial issue. Formerly, non-local seed sourcing of naturally occurring herbaceous species was common practice. Lately local provenancing got wide attention, and additional strategies are being recommended. All of these, however, raise the costs for restoration efforts.\nHere we test whether the earlier introduction of non-local seeds of Leucanthemum vulgare agg. in the course of ecological restoration can still be detected several years after the measure. The results are used to provide conservation recommendations for this widespread herbaceous insect-pollinated species.\nWe analyzed the population genetic pattern (AFLP) of the ox-eye daisy in Central Germany on sites formerly restored with non-local seed sources (R) and compared these to the ones of indigenous populations (I). All populations of L. vulgare agg. were genetically diverse and did not clearly distinguish between R and I sites. Furthermore, no clear evidence of distinct local genetic patterns was observed. Based on our results, we argue for the use of non-native seeds in the course of restoration measures for ox-eye daisies due to cost savings, but support the demand for a broader population genetic monitoring in order to put the entire system of seed provenance on a solid empirical basis.\n",
+                "contributors": [{"lastName": "Gemeinholzer", "position": 1, "firstName": "Birgit", "institution": "",
+                                  "contribution": "Author/Creator", "emailAddress": "b.gemeinholzer@uni-kassel.de"},
+                                 {"lastName": "Reiker", "position": 2, "firstName": "Jutta",
+                                  "contribution": "Data Owner", "emailAddress": "J.Reiker@gmx.de"},
+                                 {"lastName": "M\u00fcller", "position": 3, "firstName": "Christina", "institution": "",
+                                  "contribution": "", "emailAddress": "Christina.M.Mueller@bot1.bio.uni-giessen.de"},
+                                 {"lastName": "Wissemann", "position": 4, "firstName": "Volker ",
+                                  "emailAddress": "Volker.Wissemann@bot1.bio.uni-giessen.de"}],
+                "dataset_labels": ["", ""], "legal_requirements": [],
+                # related publication caused errors when creating an issue in JIRA
+                # with exactly this data below.
+                # the error could not be reproduced by testing with methods below.
+                # tested for SAND and DSUB projects.
+                "related_publications": ["", "doi: 10.1002/ece3.1817", "doi.org/10.1556/034.62.2020.1-2.8",
+                                         "doi.org/10.1111/plb.13174"]}}
+        )
+        client = JiraClient(resource=jira_resource)
+        data = gfbio_prepare_create_helpdesk_payload(site_config=site_config, submission=submission)
+        client.create_submission_issue(site_config=site_config,
+                                       submission=submission, reporter={})
 
     @skip('Test against helpdesk server')
     def test_jira_client_get_issue(self):
