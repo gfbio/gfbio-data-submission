@@ -633,7 +633,7 @@ def parse_atax_csv(csv_file):
     try:
         field_names = csv_reader.fieldnames
         for i in range(0, len(field_names)):
-            field_names[i] = field_names[i].strip().lower()
+            field_names[i] = field_names[i].strip().strip('\ufeff').lower()
 
     except _csv.Error as e:
         return atax_requirements
@@ -642,7 +642,7 @@ def parse_atax_csv(csv_file):
     specimen_identifiers = []
     for row in csv_reader:
         # every row is one sample (except header), specimen_id
-        spec_id = row.get("Specimen identifier", None)
+        spec_id = row.get('specimen identifier', None)
         if spec_id:
             file_id = short_id.generate()
             if spec_id not in specimen_identifier:
