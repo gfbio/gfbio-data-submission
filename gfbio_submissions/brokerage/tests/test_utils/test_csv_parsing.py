@@ -10,14 +10,15 @@ from django.test import TestCase
 
 from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.configuration.settings import \
-    GENERIC, ENA_PANGAEA, ENA
+    GENERIC, ENA_PANGAEA, ENA, ATAX
 from gfbio_submissions.brokerage.models import Submission, AdditionalReference, \
     SubmissionUpload, BrokerObject
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
     check_for_molecular_content, extract_sample, check_csv_file_rule, \
-    check_metadata_rule, check_minimum_header_cols, parse_atax_csv
+    check_metadata_rule, check_minimum_header_cols, parse_atax_csv, \
+    validate_atax_data
 from gfbio_submissions.brokerage.utils.ena import \
     prepare_ena_data
 from gfbio_submissions.brokerage.utils.schema_validation import \
@@ -1239,14 +1240,15 @@ class TestCSVParsing(TestCase):
     def test_parse_atax_as_csv(self):
         file_names = [
             'csv_files/specimen_table_Platypelis_red4x3.csv',
-            'csv_files/file_table_Platypelis_red4x7.csv'
+           # 'csv_files/file_table_Platypelis_red4x7.csv'
         ]
 
         for fn in file_names:
             with open(os.path.join(_get_test_data_dir_path(), fn),
-                      'r') as data_file:
+                      'r', encoding='utf-8-sig') as data_file:
                 
                 requirements = parse_atax_csv(data_file)
-                requirements_keys = requirements.keys()
-                #AssertionError: 'samples' unexpectedly found in dict_keys(['samples', 'experiments'])
-                self.assertIn('specimen_array', requirements_keys)
+
+                valid, errors = validate_atax_data(requirements, ATAX)
+
+                self.assertTrue(valid)

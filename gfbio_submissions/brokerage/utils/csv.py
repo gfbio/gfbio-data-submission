@@ -610,6 +610,14 @@ def check_for_molecular_content(submission):
                                                                          check_performed))
     return status, messages, check_performed
 
+
+def validate_atax_data(data, target):
+
+    full_valid, full_errors = validate_data_full(data, target, None)
+
+    return full_valid, full_errors
+
+
 def parse_atax_csv(csv_file):
     header = csv_file.readline()
     dialect = csv.Sniffer().sniff(smart_text(header))
@@ -625,40 +633,23 @@ def parse_atax_csv(csv_file):
         restkey='extra_columns_found',
         restval='extra_value_found',
     )
+
     atax_requirements = {
-        # 'study_type': 'Other',
         'specimen_array': [],
         'file_array': [],
     }
     try:
         field_names = csv_reader.fieldnames
         for i in range(0, len(field_names)):
-            field_names[i] = field_names[i].strip().strip('\ufeff').lower()
-
+            field_names[i] = field_names[i].strip().lower()
     except _csv.Error as e:
         return atax_requirements
-    short_id = ShortId()
-    specimen_identifier = []
-    specimen_identifiers = []
+
+    json_records_str = str()
+
     for row in csv_reader:
-        # every row is one sample (except header), specimen_id
-        spec_id = row.get('specimen identifier', None)
-        if spec_id:
-            file_id = short_id.generate()
-            if spec_id not in specimen_identifier:
-                specimen_identifier.append(spec_id)
-                spec_id = short_id.generate()
-                specimen_identifiers.append(spec_id)
-                specimen = extract_sample(row, field_names, spec_id)
-                atax_requirements['specimen_array'].append(
-                    specimen
-                )
+        jsonStr = json.dumps(row)
+        json_records_str = json_records_str + jsonStr
 
-                file = extract_experiment(file_id, row, spec_id)
-            else:
-                file= extract_experiment(file_id, row, specimen_identifiers[
-                    specimen_identifiers.index(spec_id)])
+    return json_records_str
 
-            atax_requirements['file_array'].append( file)
-
-    return atax_requirements
