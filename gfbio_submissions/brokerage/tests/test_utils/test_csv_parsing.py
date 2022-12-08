@@ -17,8 +17,8 @@ from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
     check_for_molecular_content, extract_sample, check_csv_file_rule, \
-    check_metadata_rule, check_minimum_header_cols, parse_atax_csv, \
-    validate_atax_data
+    check_metadata_rule, check_minimum_header_cols
+
 from gfbio_submissions.brokerage.utils.ena import \
     prepare_ena_data
 from gfbio_submissions.brokerage.utils.schema_validation import \
@@ -1237,42 +1237,39 @@ class TestCSVParsing(TestCase):
     #     #
     #     # TODO: defaults to ; ok ! split to delim and do list comparision. done ...
 
-    def test_parse_atax_as_csv(self):
-        file_names = [
-            'csv_files/specimen_table_Platypelis_red3x3.csv',
-           # 'csv_files/file_table_Platypelis_red4x7.csv'
-        ]
-
-        for fn in file_names:
-            with open(os.path.join(_get_test_data_dir_path(), fn),
-                      'r', encoding='utf-8-sig') as data_file:
-                
-                requirements = parse_atax_csv(data_file)
-
-                valid, errors = validate_atax_data(requirements, ATAX)
-
-                self.assertTrue(valid)
-
     def test_validate_atax_json(self):
-
-        short_data = [
-            {
-                "Specimen identifier": "ZSM 5652/2012",
-                "Basis of record": "Preserved Specimen",
-                "Scientific name": "Platypelis laetus"
-            },
-            {
-                "Specimen identifier": "ZSM 5651/2012",
-                "Basis of record": "Preserved Specimen",
-                "Scientific name": "Platypelis laetus"
-            },
-            {
-                "Specimen identifier": "ZSM 5653/2012",
-                "Basis of record": "Preserved Specimen",
-               "Scientific name": "Platypelis laetus"
+        import json
+        data = {
+            'requirements': {
+                'atax_specimens': [{
+                    'Specimen identifier': 'ZSM 5652/2012',
+                    'Basis of record': 'Preserved Specimen',
+                    'Scientific name': 'Platypelis laetus'
+                    },
+                    {
+                        'Specimen identifier': 'ZSM 5651/2012',
+                        'Basis of record': 'Preserved Specimen',
+                        'Scientific name': 'Platypelis laetus'
+                    },
+                    {
+                        'Specimen identifier': 'ZSM 5653/2012',
+                        'Basis of record': 'Preserved Specimen',
+                        'Scientific name': 'Platypelis laetus'
+                    },
+                ]
             }
-        ]
+        }
 
-        valid, errors = validate_data_full(short_data, ATAX, None)
+        jsonStr = json.dumps(data)
+
+        # Checking type of object returned by json.dumps
+        t1 = type(jsonStr)
+
+        my_obj = json.loads(jsonStr)
+
+        # Checking type of object returned by json.loads
+        t2 = type(my_obj)
+
+        valid, errors = validate_data_full(my_obj, ATAX, None)
 
         self.assertTrue(valid)

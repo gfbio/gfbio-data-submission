@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "file:///app/staticfiles/schemas/gfbio_generic_requirements.json",
+    "id": "file:///app/gfbio_submissions/brokerage/schemas/gfbio_generic_requirements.json",
     "type": "object",
     "properties": {
         "requirements": {
