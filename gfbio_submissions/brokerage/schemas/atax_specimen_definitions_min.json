@@ -11,16 +11,12 @@
             },
             "Scientific name": {
                 "type": "string"
-            },
-			"Country (Area)": {
-                "type": "string"
             }
         },
         "required": [
             "Specimen identifier",
             "Basis of record",
-			"Scientific name",
-			"Country (Area)",
+			"Scientific name"
         ]
     },
     "atax_specimen_array": {

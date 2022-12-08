@@ -1239,7 +1239,7 @@ class TestCSVParsing(TestCase):
 
     def test_parse_atax_as_csv(self):
         file_names = [
-            'csv_files/specimen_table_Platypelis_red4x3.csv',
+            'csv_files/specimen_table_Platypelis_red3x3.csv',
            # 'csv_files/file_table_Platypelis_red4x7.csv'
         ]
 
@@ -1252,3 +1252,27 @@ class TestCSVParsing(TestCase):
                 valid, errors = validate_atax_data(requirements, ATAX)
 
                 self.assertTrue(valid)
+
+    def test_validate_atax_json(self):
+
+        short_data = [
+            {
+                "Specimen identifier": "ZSM 5652/2012",
+                "Basis of record": "Preserved Specimen",
+                "Scientific name": "Platypelis laetus"
+            },
+            {
+                "Specimen identifier": "ZSM 5651/2012",
+                "Basis of record": "Preserved Specimen",
+                "Scientific name": "Platypelis laetus"
+            },
+            {
+                "Specimen identifier": "ZSM 5653/2012",
+                "Basis of record": "Preserved Specimen",
+               "Scientific name": "Platypelis laetus"
+            }
+        ]
+
+        valid, errors = validate_data_full(short_data, ATAX, None)
+
+        self.assertTrue(valid)
