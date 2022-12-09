@@ -1256,7 +1256,95 @@ class TestCSVParsing(TestCase):
                         'Basis of record': 'Preserved Specimen',
                         'Scientific name': 'Platypelis laetus'
                     },
+                ],
+                'atax_files': [{
+                        'Specimen identifier': 'ZSM 5652/2012',
+                        'IPR': 'Andolalao Rakotoarison',
+                        'File type': 'Image',
+                        'File name': 'Holotype_FGZC3761.jpg'
+                    }
                 ]
+            }
+        }
+
+        jsonStr = json.dumps(data)
+
+        # Checking type of object returned by json.dumps
+        t1 = type(jsonStr)
+
+        my_obj = json.loads(jsonStr)
+
+        # Checking type of object returned by json.loads
+        t2 = type(my_obj)
+
+        valid, errors = validate_data_full(my_obj, ATAX, None)
+
+        self.assertTrue(valid)
+
+
+    def test_validate_atax_files_json(self):
+        import json
+        data = {
+            'requirements': {
+                'atax_specimens': [{
+                    'Specimen identifier': 'ZSM 5652/2012',
+                    'Basis of record': 'Preserved Specimen',
+                    'Scientific name': 'Platypelis laetus'
+                    },
+                    {
+                        'Specimen identifier': 'ZSM 5651/2012',
+                        'Basis of record': 'Preserved Specimen',
+                        'Scientific name': 'Platypelis laetus'
+                    },
+                    {
+                        'Specimen identifier': 'ZSM 5653/2012',
+                        'Basis of record': 'Preserved Specimen',
+                        'Scientific name': 'Platypelis laetus'
+                    },
+                ],
+                'atax_files': [{
+                    'Specimen identifier': 'ZSM 5652/2012',
+                    'IPR': 'Andolalao Rakotoarison',
+                    'File type': 'Image',
+                    'File name': 'Holotype_FGZC3761.jpg'
+                    },
+                    {
+                        'Specimen identifier': 'ZSM 5652/2012',
+                        'IPR': 'Frank Glaw',
+                        'File type': 'Image',
+                        'File name': '_MAD2789.tif'
+                    },
+                    {
+                        'Specimen identifier': 'ZSM 5651/2012',
+                        'IPR': 'Andolalao Rakotoarison',
+                        'File type': 'Image',
+                        'File name': 'FGZC 3588.jpg'
+                    },
+                    {
+                        'Specimen identifier': 'ZSM 5651/2012',
+                        'IPR': 'Andolalao Rakotoarison',
+                        'File type': 'Image',
+                        'File name': 'FGZC 3588.jpg_ventral'
+                    },
+                    {
+                        'Specimen identifier': 'ZSM 5653/2012',
+                        'IPR': 'Andolalao Rakotoarison',
+                        'File type': 'Image',
+                        'File name': 'FGZC 3762.jpg'
+                    },
+                    {
+                        'Specimen identifier': 'ZSM 5653/2012',
+                        'IPR': 'Andolalao Rakotoarison',
+                        'File type': 'Image',
+                        'File name': 'FGZC 3762_ventral.jpg'
+                    },
+                    {
+                        'Specimen identifier': 'ZSM 5651/2012',
+                        'IPR': 'Miguel Vences',
+                        'File type': 'Image',
+                        'File name': 'Platypelis_Sorata_plates_01July2019..jpg'
+                    }
+                ],
             }
         }
 

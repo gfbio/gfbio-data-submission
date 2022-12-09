@@ -7,16 +7,16 @@
             "allOf": [
                 {
                     "$ref": "common_requirements_definitions.json#/minimal_requirements_atax"
+                },			
+                {
+                    "$ref": "atax_specimen_definitions_min.json#/atax_specimen_array"
                 },
                 {
-                    "$ref": "atax_specimen_definitions.json#/atax_specimen_array"
-                },
-				{
-                    "$ref": "atax_files_definitions.json#/atax_file_array"
+                    "$ref": "atax_files_definitions_min.json#/atax_files_array"
                 },
                 {
                     "$ref": "technical_content_definitions.json#/technical_requirements_atax"
-                }
+                }			
             ]
         }
     },

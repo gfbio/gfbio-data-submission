@@ -4,9 +4,12 @@
     "type": "object",
     "properties": {
         "requirements": {
-            "allOf": [               
+            "allOf": [    			
                 {
                     "$ref": "atax_specimen_definitions_min.json#/atax_specimen_array"
+                },
+                {
+                    "$ref": "atax_files_definitions_min.json#/atax_files_array"
                 }				
             ]
         }
