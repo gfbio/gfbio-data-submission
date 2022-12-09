@@ -1,0 +1,42 @@
+{
+	"$id": "file:///app/gfbio_submissions/brokerage/schemas/atax_files_definitions_min.json",
+    "atax_files": {
+        "type": "object",
+        "properties": {
+            "Specimen identifier": {
+                "type": "string",
+                "minLength": 1 
+            },
+            "IPR": {
+                "type": "string"
+            },
+			"File type": {
+                "type": "string"
+            },
+			"File name": {
+                "type": "string"
+            }
+		},	
+        "required": [
+            "Specimen identifier",
+			"File type",
+			"File name"		
+        ]
+    },
+    "atax_files_array": {
+        "type": "object",
+        "properties": {
+            "atax_files": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                    "$ref": "#/atax_files"
+                }
+            }
+        },
+        "required": [
+            "atax_files"
+        ]
+    }
+}
+
