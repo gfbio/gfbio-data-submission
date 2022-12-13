@@ -1,5 +1,4 @@
 {
-	"$id": "file:///app/gfbio_submissions/brokerage/schemas/atax_files_definitions_min.json",
     "atax_files": {
         "type": "object",
         "properties": {

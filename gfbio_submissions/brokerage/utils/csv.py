@@ -10,7 +10,7 @@ import dpath.util as dpath
 from django.utils.encoding import smart_text
 from shortid import ShortId
 
-from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA, ENA, ATAX,\
+from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA, ENA,\
     SUBMISSION_MIN_COLS
 from gfbio_submissions.brokerage.utils.schema_validation import \
     validate_data_full

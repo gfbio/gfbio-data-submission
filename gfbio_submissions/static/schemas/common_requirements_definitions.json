@@ -15,22 +15,5 @@
             "title",
             "description"
         ]
-    },	
-    "minimal_requirements_atax": {
-        "type": "object",
-        "properties": {
-            "Specimen identifier": {
-                "type": "string",
-                "minLength": 4
-            },
-            "Basis of record": {
-                "type": "string",
-                "minLength": 3
-            }
-        },
-        "required": [
-            "Specimen identifier",
-            "Basis of record"
-        ]
     }
 }

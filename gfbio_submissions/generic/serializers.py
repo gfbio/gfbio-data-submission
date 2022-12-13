@@ -10,7 +10,7 @@ from django.db.models import Q
 from rest_framework import serializers
 
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, ENA, \
-    ENA_PANGAEA, ATAX, JIRA_FALLBACK_USERNAME, JIRA_FALLBACK_EMAIL
+    ENA_PANGAEA, JIRA_FALLBACK_USERNAME, JIRA_FALLBACK_EMAIL
 from gfbio_submissions.brokerage.models import Submission, AdditionalReference
 from gfbio_submissions.brokerage.utils.schema_validation import validate_data
 from gfbio_submissions.users.models import User
