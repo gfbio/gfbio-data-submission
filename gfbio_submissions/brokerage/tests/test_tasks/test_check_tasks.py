@@ -3,7 +3,7 @@
 from django.db.models import Q
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.configuration.settings import ENA
+from gfbio_submissions.brokerage.configuration.settings import ENA, ATAX
 from gfbio_submissions.brokerage.models import Submission, AdditionalReference, \
     TaskProgressReport
 from gfbio_submissions.brokerage.tasks import \
@@ -13,7 +13,8 @@ from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.generic.models import ResourceCredential, \
     SiteConfiguration
 from gfbio_submissions.users.models import User
-
+from gfbio_submissions.brokerage.utils.schema_validation import \
+    validate_data_full
 
 class TestCheckTasks(TestCase):
 
@@ -114,6 +115,17 @@ class TestCheckTasks(TestCase):
         user2.is_site = False
         user2.save()
 
+    def rename_keys(self, iterable):
+        if type(iterable) is dict:
+            for key in iterable.keys():
+                iterable[key.lower().strip()] = iterable.pop(key)
+                if type(iterable[key.lower().strip()]) is dict or type(iterable[key.lower().strip()]) is list:
+                    iterable[key.lower().strip()] = self.rename_keys(iterable[key.lower().strip()])
+        elif type(iterable) is list:
+            for item in iterable:
+                item = self.rename_keys(item)
+        return iterable
+
     def test_db_content(self):
         submissions = Submission.objects.all()
         self.assertEqual(5, len(submissions))
@@ -150,3 +162,95 @@ class TestCheckTasks(TestCase):
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
         self.assertTrue(result.successful())
         self.assertEqual(0, len(User.objects.filter(site_configuration=None)))
+
+
+    def test_validate_atax_json(self):
+        import json
+        data = {
+            'requirements': {
+                'atax_specimens': [{
+                    'Specimen identifier': 'ZSM 5652/2012',
+                    'Basis of record': 'Preserved Specimen',
+                    'Scientific name': 'Platypelis laetus'
+                    },
+                    {
+                    'Specimen identifier': 'ZSM 5651/2012',
+                    'Basis of record': 'Preserved Specimen',
+                    'Scientific name': 'Platypelis laetus'
+                    },
+                    {
+                    'Specimen identifier': 'ZSM 5653/2012',
+                    'Basis of record': 'Preserved Specimen',
+                    'Scientific name': 'Platypelis laetus'
+                    },
+                ]
+            }
+        }
+
+        # to lower case and strip for all keys:
+        clean_data = self.rename_keys(data)
+
+        valid, errors = validate_data_full(clean_data, ATAX, None)
+        self.assertTrue(valid)
+
+
+    def test_validate_atax_json_with_spaces(self):
+        import json
+        data = {
+            'requirements': {
+                'atax_specimens': [{
+                    '  Specimen identifier': '  ZSM 5652/2012',
+                    'Basis of record': 'Preserved Specimen',
+                    'Scientific name': 'Platypelis laetus'
+                    },
+                    {
+                        'Specimen identifier': 'ZSM 5651/2012',
+                        'Basis of record': 'Preserved Specimen',
+                        'Scientific name': 'Platypelis laetus'
+                    },
+                    {
+                        'Specimen identifier': 'ZSM 5653/2012',
+                        '   Basis of record   ': 'Preserved Specimen',
+                        'Scientific name': 'Platypelis laetus'
+                    },
+                ]
+            }
+        }
+
+        # to lower case and strip for all keys:
+        clean_data = self.rename_keys(data)
+
+        valid, errors = validate_data_full(clean_data, ATAX, None)
+        self.assertTrue(valid)
+
+    def test_validate_atax_json_invalid(self):
+        import json
+        data = {
+            'requirements': {
+                'atax_specimens': [{
+                    'Specimen identifier': 5652,
+                    'Basis of record': 'Preserved Specimen',
+                    'Scientific name': 'Platypelis laetus'
+                },
+                    {
+                        'Specimen identifier': 'ZSM 5651/2012',
+                        'Basis of record': 'Preserved Specimen',
+                        'Scientific name': 'Platypelis laetus'
+                    },
+                    {
+                        'Specimen identifier': 'ZSM 5653/2012',
+                        'Basis of record': 'Preserved Specimen',
+                        'Scientific name': 'Platypelis laetus'
+                    },
+                ]
+            }
+        }
+
+        # to lower case and strip for all keys:
+        clean_data = self.rename_keys(data)
+
+        valid, errors = validate_data_full(clean_data, ATAX, None)
+        self.assertFalse(valid)
+
+        self.assertEqual(1, len(errors))
+        self.assertIn("specimen identifier : 5652 is not of type 'string'", errors[0])

@@ -533,7 +533,7 @@ STATIC_GENERIC_REQUIREMENTS_LOCATION = getattr(
 STATIC_ATAX_REQUIREMENTS_LOCATION = getattr(
     settings,
     'STATIC_ATAX_REQUIREMENTS_LOCATION',
-    'schemas/atax_requirements_min.json'
+    'schemas/atax_requirements.json'
 )
 
 SUBMISSION_MIN_COLS = getattr(
