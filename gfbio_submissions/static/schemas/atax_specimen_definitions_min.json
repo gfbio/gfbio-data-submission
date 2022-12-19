@@ -16,7 +16,7 @@
         "required": [
             "specimen identifier",
             "basis of record",
-			"scientific name"
+            "scientific name"
         ]
     },
     "atax_specimen_array": {
