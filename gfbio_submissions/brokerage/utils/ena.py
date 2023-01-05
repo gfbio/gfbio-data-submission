@@ -6,7 +6,6 @@ import io
 import json
 import logging
 import os
-import subprocess
 import textwrap
 import uuid
 import xml.etree.ElementTree as ET
@@ -18,8 +17,7 @@ from xml.etree.ElementTree import Element, SubElement
 import dicttoxml
 from django.conf import settings
 from django.db import transaction
-# TODO: read jsonschem 2.6.0 changelog
-from django.utils.encoding import smart_text
+from django.utils.encoding import smart_str
 from jsonschema import Draft3Validator
 from pytz import timezone
 
@@ -51,6 +49,7 @@ locus_attribute_mappings = {
     '28s': '28S rRNA',
 }
 
+
 #  ENALIZER  xml for ena -------------------------------------------------------
 class Enalizer(object):
     def __init__(self, submission, alias_postfix=uuid.uuid4()):
@@ -67,7 +66,7 @@ class Enalizer(object):
         self.runs_key = 'runs'
         self.embargo = submission.embargo
         if submission.center_name is not None \
-                and submission.center_name.center_name != '':
+            and submission.center_name.center_name != '':
             self.center_name = submission.center_name.center_name
         else:
             self.center_name = DEFAULT_ENA_CENTER_NAME
@@ -222,8 +221,8 @@ class Enalizer(object):
                 break
         for s in sample_attributes:
             if s.get('tag', 'no_tag_found') == 'environmental package' \
-                    and s.get('value', 'no_value_found') \
-                    in checklist_mappings_keys:
+                and s.get('value', 'no_value_found') \
+                in checklist_mappings_keys:
                 add_checklist = CHECKLIST_ACCESSION_MAPPING.get(
                     s.get('value', ''), ''
                 )
@@ -388,9 +387,9 @@ class Enalizer(object):
                 'description', '')
             if len(description):
                 odict = OrderedDict([('locus_name', data_dict.get('targeted_loci', {}).get(
-                        'locus_name', '')), ('description', data_dict.get('targeted_loci', {}).get(
+                    'locus_name', '')), ('description', data_dict.get('targeted_loci', {}).get(
                     'description', ''))])
-                locus = SubElement(root, 'LOCUS',odict)
+                locus = SubElement(root, 'LOCUS', odict)
             else:
                 locus = SubElement(root, 'LOCUS', {
                     'locus_name': data_dict.get('targeted_loci', {}).get(
@@ -572,24 +571,24 @@ class Enalizer(object):
             sample_descriptor_platform_mappings=sample_descriptor_platform_mappings)
         if len(self.run):
             return {
-                'STUDY': ('study.xml', smart_text(self.create_study_xml())),
-                'SAMPLE': ('sample.xml', smart_text(sample_xml)),
-                'EXPERIMENT': ('experiment.xml', smart_text(experiment_xml)),
-                'RUN': ('run.xml', smart_text(self.create_run_xml(
+                'STUDY': ('study.xml', smart_str(self.create_study_xml())),
+                'SAMPLE': ('sample.xml', smart_str(sample_xml)),
+                'EXPERIMENT': ('experiment.xml', smart_str(experiment_xml)),
+                'RUN': ('run.xml', smart_str(self.create_run_xml(
                     broker_submission_id=broker_submission_id))),
             }
         else:
             return {
-                'STUDY': ('study.xml', smart_text(self.create_study_xml())),
-                'SAMPLE': ('sample.xml', smart_text(sample_xml)),
-                'EXPERIMENT': ('experiment.xml', smart_text(experiment_xml)),
+                'STUDY': ('study.xml', smart_str(self.create_study_xml())),
+                'SAMPLE': ('sample.xml', smart_str(sample_xml)),
+                'EXPERIMENT': ('experiment.xml', smart_str(experiment_xml)),
             }
 
     def prepare_submission_xml_for_sending(self, action='VALIDATE',
                                            outgoing_request_id=None):
         return (
             'submission.xml',
-            smart_text(self.create_submission_xml(
+            smart_str(self.create_submission_xml(
                 action=action,
                 hold_date=self.embargo,
                 outgoing_request_id=outgoing_request_id))
@@ -602,7 +601,7 @@ class Enalizer(object):
 def prepare_study_data_only(submission):
     enalizer = Enalizer(submission=submission,
                         alias_postfix=submission.broker_submission_id)
-    return ('study.xml', smart_text(enalizer.create_study_xml()))
+    return ('study.xml', smart_str(enalizer.create_study_xml()))
 
 
 def store_single_data_item_as_auditable_text_data(submission, data):
@@ -679,8 +678,8 @@ def register_study_at_ena(submission, study_text_data):
 
     request_data = {
         'STUDY': (
-            '{0}'.format(smart_text(study_text_data.name)),
-            '{0}'.format(smart_text(study_text_data.text_data))
+            '{0}'.format(smart_str(study_text_data.name)),
+            '{0}'.format(smart_str(study_text_data.text_data))
         )
     }
 
@@ -946,7 +945,7 @@ def update_persistent_identifier_report_status():
 
                 for vid in ids_to_use:
                     if status and len(
-                            PersistentIdentifier.objects.filter(pid=vid)) > 0:
+                        PersistentIdentifier.objects.filter(pid=vid)) > 0:
                         pid = PersistentIdentifier.objects.filter(pid=vid,
                                                                   pid_type='PRJ').first()
                         if not pid:
@@ -1013,4 +1012,4 @@ def execute_update_accession_objects_chain(name_on_error=''):
     (fetch_ena_reports_task.s().set(countdown=SUBMISSION_DELAY) \
      | update_resolver_accessions_task.s().set(countdown=SUBMISSION_DELAY) \
      | update_persistent_identifier_report_status_task.s().set(
-                countdown=SUBMISSION_DELAY))()
+            countdown=SUBMISSION_DELAY))()

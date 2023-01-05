@@ -5,7 +5,7 @@ import logging
 
 from django.db import models, transaction
 from django.db.models import Q
-from django.utils.encoding import smart_text
+from django.utils.encoding import smart_str
 
 from config.settings.base import ADMINS
 from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA
@@ -123,7 +123,7 @@ class SubmissionManager(models.Manager):
 class BrokerObjectManager(models.Manager):
 
     def add_downloaded_pids_to_existing_broker_objects(
-            self, study_pid, decompressed_file):
+        self, study_pid, decompressed_file):
 
         entities_to_check = ['STUDY', 'EXPERIMENT', 'RUN', 'SAMPLE', ]
         reader = csv.DictReader(decompressed_file, delimiter=str('\t'))
@@ -468,8 +468,8 @@ class AuditableTextDataManager(models.Manager):
             if len(obj_qs):
                 obj = obj_qs.first()
                 res[r.upper()] = (
-                    '{0}'.format(smart_text(obj.name)),
-                    '{0}'.format(smart_text(obj.text_data)))
+                    '{0}'.format(smart_str(obj.name)),
+                    '{0}'.format(smart_str(obj.text_data)))
         return res
 
     # TODO: this will change once more manifestfile usecases are implemented

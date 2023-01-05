@@ -7,7 +7,7 @@ import os
 from collections import OrderedDict
 
 import dpath.util as dpath
-from django.utils.encoding import smart_text
+from django.utils.encoding import smart_str
 from shortid import ShortId
 
 from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA, ENA, \
@@ -421,7 +421,7 @@ def extract_experiment(experiment_id, row, sample_id):
 # TODO: maybe csv is in a file like implemented or comes as text/string
 def parse_molecular_csv(csv_file):
     header = csv_file.readline()
-    dialect = csv.Sniffer().sniff(smart_text(header))
+    dialect = csv.Sniffer().sniff(smart_str(header))
     csv_file.seek(0)
     delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
                                                            '\t'] else ';'
@@ -477,7 +477,7 @@ def parse_molecular_csv(csv_file):
 def check_minimum_header_cols(meta_data):
     with open(meta_data.file.path, 'r') as file:
         line = file.readline()
-        dialect = csv.Sniffer().sniff(smart_text(line))
+        dialect = csv.Sniffer().sniff(smart_str(line))
         delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
                                                                '\t'] else ';'
         splitted = line.replace('"', '').lower().split(delimiter)
