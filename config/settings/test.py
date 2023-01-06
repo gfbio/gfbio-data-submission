@@ -32,15 +32,19 @@ PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 # TEMPLATES
 # ------------------------------------------------------------------------------
-TEMPLATES[-1]["OPTIONS"]["loaders"] = [  # type: ignore[index] # noqa F405
-    (
-        "django.template.loaders.cached.Loader",
-        [
-            "django.template.loaders.filesystem.Loader",
-            "django.template.loaders.app_directories.Loader",
-        ],
-    )
-]
+# TEMPLATES[-1]["OPTIONS"]["loaders"] = [  # type: ignore[index] # noqa F405
+#     (
+#         "django.template.loaders.cached.Loader",
+#         [
+#             "django.template.loaders.filesystem.Loader",
+#             "django.template.loaders.app_directories.Loader",
+#         ],
+#     )
+# ]
+
+# DEBUGING FOR TEMPLATES
+# ------------------------------------------------------------------------------
+TEMPLATES[0]["OPTIONS"]["debug"] = True  # type: ignore # noqa F405
 
 # EMAIL
 # ------------------------------------------------------------------------------
@@ -55,12 +59,3 @@ CELERY_TASK_ALWAYS_EAGER = True
 
 # Your stuff...
 # ------------------------------------------------------------------------------
-# REST API Permissions
-# ------------------------------------------------------------------------------
-# REST_SAFE_LIST_IPS = [
-#     '127.0.0.1',
-#     '[::1]',
-#     '172.',  # docker local network /8
-#     '10.',  # docker swarm network /8
-# ]
-# REST_SAFE_DOMAINS = []

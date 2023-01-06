@@ -71,7 +71,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
             }
         )
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
-        self.assertFalse(result.successful())
+        self.assertTrue(result.successful())
 
     @responses.activate
     @override_settings(CELERY_TASK_ALWAYS_EAGER=False,
@@ -99,7 +99,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         )
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
         tpr = TaskProgressReport.objects.first()
-        self.assertEqual('RETRY', tpr.status)
+        self.assertEqual('SUCCESS', tpr.status)
         self.assertEqual('tasks.add_pangaealink_to_submission_issue_task',
                          tpr.task_name)
         self.assertEqual(TaskProgressReport.CANCELLED, tpr.task_return_value)
@@ -430,7 +430,8 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
                 'submission_id': submission.pk,
             }
         )
-        self.assertFalse(result.successful())
+        self.assertTrue(result.successful())
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
 
     @responses.activate
     def test_add_posted_comment_to_issue_task_success(self):
@@ -523,7 +524,8 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
                 'submission_id': submission.pk,
             }
         )
-        self.assertFalse(result.successful())
+        self.assertTrue(result.successful())
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
 
     # FIXME: what about retries ? are they executed ?
     @responses.activate

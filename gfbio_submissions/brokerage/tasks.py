@@ -1067,7 +1067,8 @@ def create_pangaea_issue_task(self, prev=None, submission_id=None):
         return {
             'issue_key': jira_client.issue.key,
         }
-
+    else:
+        return TaskProgressReport.CANCELLED
 
 @app.task(
     base=SubmissionTask,
@@ -1280,6 +1281,8 @@ def create_submission_issue_task(self, prev_task_result=None,
             reference_key=jira_client.issue.key,
             primary=True
         )
+    else:
+        return TaskProgressReport.CANCELLED
 
 
 @app.task(

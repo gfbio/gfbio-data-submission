@@ -121,7 +121,7 @@ class TestEnaReportTasks(TestTasks):
             kwargs={
             }
         )
-        self.assertEqual(None, res.get())
+        self.assertEqual(TaskProgressReport.CANCELLED, res.get())
         self.assertEqual(0, len(EnaReport.objects.all()))
 
         # 1 execute plus 2 retries for first reporttype,

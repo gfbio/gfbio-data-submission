@@ -128,8 +128,7 @@ class TestSubmissionTransferTasks(TestTasks):
                 submission_id=submission.pk
             )
         ).apply()
-        # ret_val = result.get()
-        self.assertEqual('RETRY', submission.taskprogressreport_set.filter(
+        self.assertEqual('SUCCESS', submission.taskprogressreport_set.filter(
             task_name='tasks.transfer_data_to_ena_task').first().status)
 
     # TODO: add test where nonsense content is returned like '' or {}
