@@ -10,7 +10,7 @@ from celery.exceptions import SoftTimeLimitExceeded
 from django.core.mail import mail_admins
 from django.db import transaction
 from django.db.utils import IntegrityError
-from django.utils.encoding import smart_text
+from django.utils.encoding import smart_str
 from kombu.utils import json
 from pytz import timezone
 from requests import ConnectionError, Response
@@ -710,7 +710,7 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None,
                 site_configuration.ena_server.title)
         )
         response = Response()
-    return str(request_id), response.status_code, smart_text(
+    return str(request_id), response.status_code, smart_str(
         response.content)
 
 
@@ -798,7 +798,7 @@ def register_study_at_ena_task(self, previous_result=None,
             )
             response = Response()
         # TODO: followed by process_ena_response_task like in general submission process for ENA
-        return str(request_id), response.status_code, smart_text(
+        return str(request_id), response.status_code, smart_str(
             response.content)
 
 
@@ -1230,7 +1230,7 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
     )
 
     if response.status_code == 200:
-        result['jira_user_name'] = smart_text(response.content)
+        result['jira_user_name'] = smart_str(response.content)
 
     logger.info(
         'tasks.py | get_gfbio_helpdesk_username_task |return={0}'.format(

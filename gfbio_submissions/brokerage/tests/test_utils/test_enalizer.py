@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import responses
 from django.test import TestCase
-from django.utils.encoding import smart_text
+from django.utils.encoding import smart_str
 
 from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_CENTER_NAME
@@ -96,7 +96,7 @@ class TestEnalizer(TestCase):
         self.assertIn('<STUDY_TITLE>', study_xml)
         self.assertIn('<STUDY_ABSTRACT>', study_xml)
         study_xml_standalone = enalizer.create_study_xml()
-        self.assertEqual(study_xml, smart_text(study_xml_standalone))
+        self.assertEqual(study_xml, smart_str(study_xml_standalone))
 
     def test_study_xml_center_name(self):
         submission = Submission.objects.first()
@@ -110,7 +110,7 @@ class TestEnalizer(TestCase):
         self.assertEqual('study.xml', k)
         self.assertIn('center_name="CustomCenter"', study_xml)
         study_xml_standalone = ena.create_study_xml()
-        self.assertEqual(study_xml, smart_text(study_xml_standalone))
+        self.assertEqual(study_xml, smart_str(study_xml_standalone))
 
     def test_sample_xml(self):
         self.maxDiff = None
