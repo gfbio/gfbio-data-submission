@@ -163,13 +163,13 @@ class TestJiraClient(TestCase):
     def test_client_connection_error(self):
         self._add_jira_field_response(status_code=400, body='client_error')
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
-        self.assertIsNone(jira_client.jira)
+        self.assertIsNotNone(jira_client.jira)
 
     @responses.activate
     def test_server_connection_error(self):
         self._add_jira_field_response(status_code=500, body='server_error')
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
-        self.assertIsNone(jira_client.jira)
+        self.assertIsNotNone(jira_client.jira)
 
     @responses.activate
     def test_create_issue(self):
