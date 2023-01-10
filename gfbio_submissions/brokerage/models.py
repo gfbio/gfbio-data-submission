@@ -14,7 +14,7 @@ from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
     DEFAULT_ENA_CENTER_NAME
 from gfbio_submissions.brokerage.managers import SubmissionUploadManager
 from gfbio_submissions.generic.fields import JsonDictField
-from .configuration.settings import ENA, ENA_PANGAEA
+from .configuration.settings import ENA, ENA_PANGAEA,ATAX
 from .configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY
 from .managers import AuditableTextDataManager
 from .managers import SubmissionManager, BrokerObjectManager, \
@@ -54,7 +54,8 @@ class Submission(TimeStampedModel):
     TARGETS = (
         (ENA, ENA),
         (ENA_PANGAEA, ENA_PANGAEA),
-        (GENERIC, GENERIC)
+        (GENERIC, GENERIC),
+        #(ATAX, ATAX)
     )
 
     broker_submission_id = models.UUIDField(primary_key=False,

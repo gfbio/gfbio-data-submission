@@ -10,7 +10,7 @@ import dpath.util as dpath
 from django.utils.encoding import smart_text
 from shortid import ShortId
 
-from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA, ENA, \
+from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA, ENA,\
     SUBMISSION_MIN_COLS
 from gfbio_submissions.brokerage.utils.schema_validation import \
     validate_data_full
@@ -609,3 +609,4 @@ def check_for_molecular_content(submission):
                                                                          messages,
                                                                          check_performed))
     return status, messages, check_performed
+

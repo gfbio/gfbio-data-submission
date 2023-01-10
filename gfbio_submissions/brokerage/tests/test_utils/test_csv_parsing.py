@@ -10,7 +10,7 @@ from django.test import TestCase
 
 from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.configuration.settings import \
-    GENERIC, ENA_PANGAEA, ENA
+    GENERIC, ENA_PANGAEA, ENA, ATAX
 from gfbio_submissions.brokerage.models import Submission, AdditionalReference, \
     SubmissionUpload, BrokerObject
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
@@ -18,6 +18,7 @@ from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
     check_for_molecular_content, extract_sample, check_csv_file_rule, \
     check_metadata_rule, check_minimum_header_cols
+
 from gfbio_submissions.brokerage.utils.ena import \
     prepare_ena_data
 from gfbio_submissions.brokerage.utils.schema_validation import \
