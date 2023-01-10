@@ -231,7 +231,7 @@ class TestCheckTasks(TestCase):
                     'Specimen identifier': 5652,
                     'Basis of record': 'Preserved Specimen',
                     'Scientific name': 'Platypelis laetus'
-                },
+                    },
                     {
                         'Specimen identifier': 'ZSM 5651/2012',
                         'Basis of record': 'Preserved Specimen',
