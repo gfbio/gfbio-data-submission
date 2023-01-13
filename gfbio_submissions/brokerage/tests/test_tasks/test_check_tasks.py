@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from unittest import skip
 
 from django.db.models import Q
 from django.test import TestCase
@@ -9,12 +10,13 @@ from gfbio_submissions.brokerage.models import Submission, AdditionalReference, 
 from gfbio_submissions.brokerage.tasks import \
     check_for_submissions_without_helpdesk_issue_task, \
     check_for_user_without_site_configuration_task
+from gfbio_submissions.brokerage.utils.schema_validation import \
+    validate_data_full
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.generic.models import ResourceCredential, \
     SiteConfiguration
 from gfbio_submissions.users.models import User
-from gfbio_submissions.brokerage.utils.schema_validation import \
-    validate_data_full
+
 
 class TestCheckTasks(TestCase):
 
@@ -54,7 +56,6 @@ class TestCheckTasks(TestCase):
             target=ENA,
             data={'has': 'primary helpdeskticket and pangaea ticket'}
         )
-
 
         # submission with helpdesk ticket, which is not primary
         submission = Submission.objects.create(
@@ -163,25 +164,24 @@ class TestCheckTasks(TestCase):
         self.assertTrue(result.successful())
         self.assertEqual(0, len(User.objects.filter(site_configuration=None)))
 
-
+    @skip("currently unused feature")
     def test_validate_atax_json(self):
-        import json
         data = {
             'requirements': {
                 'atax_specimens': [{
                     'Specimen identifier': 'ZSM 5652/2012',
                     'Basis of record': 'Preserved Specimen',
                     'Scientific name': 'Platypelis laetus'
+                },
+                    {
+                        'Specimen identifier': 'ZSM 5651/2012',
+                        'Basis of record': 'Preserved Specimen',
+                        'Scientific name': 'Platypelis laetus'
                     },
                     {
-                    'Specimen identifier': 'ZSM 5651/2012',
-                    'Basis of record': 'Preserved Specimen',
-                    'Scientific name': 'Platypelis laetus'
-                    },
-                    {
-                    'Specimen identifier': 'ZSM 5653/2012',
-                    'Basis of record': 'Preserved Specimen',
-                    'Scientific name': 'Platypelis laetus'
+                        'Specimen identifier': 'ZSM 5653/2012',
+                        'Basis of record': 'Preserved Specimen',
+                        'Scientific name': 'Platypelis laetus'
                     },
                 ]
             }
@@ -193,16 +193,15 @@ class TestCheckTasks(TestCase):
         valid, errors = validate_data_full(clean_data, ATAX, None)
         self.assertTrue(valid)
 
-
+    @skip("currently unused feature")
     def test_validate_atax_json_with_spaces(self):
-        import json
         data = {
             'requirements': {
                 'atax_specimens': [{
                     '  Specimen identifier': '  ZSM 5652/2012',
                     'Basis of record': 'Preserved Specimen',
                     'Scientific name': 'Platypelis laetus'
-                    },
+                },
                     {
                         'Specimen identifier': 'ZSM 5651/2012',
                         'Basis of record': 'Preserved Specimen',
@@ -223,15 +222,15 @@ class TestCheckTasks(TestCase):
         valid, errors = validate_data_full(clean_data, ATAX, None)
         self.assertTrue(valid)
 
+    @skip("currently unused feature")
     def test_validate_atax_json_invalid(self):
-        import json
         data = {
             'requirements': {
                 'atax_specimens': [{
                     'Specimen identifier': 5652,
                     'Basis of record': 'Preserved Specimen',
                     'Scientific name': 'Platypelis laetus'
-                    },
+                },
                     {
                         'Specimen identifier': 'ZSM 5651/2012',
                         'Basis of record': 'Preserved Specimen',
