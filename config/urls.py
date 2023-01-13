@@ -1,11 +1,12 @@
 from django.conf import settings
-from django.conf.urls import url
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
+from django.urls import re_path
 from django.views import defaults as default_views
 from django.views.generic import TemplateView, RedirectView
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.authtoken.views import obtain_auth_token
 
 from gfbio_submissions.submission_ui.views import HomeView
@@ -32,8 +33,8 @@ urlpatterns = [
     path("ui/", include("gfbio_submissions.submission_ui.urls", namespace="userinterface")),
     path("generic/", include("gfbio_submissions.generic.urls", namespace="generic")),
 
-    url(r'favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),
-    url(r'sw\.js$', RedirectView.as_view(url='/static/js/sw.js')),
+    re_path(r'favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),
+    re_path(r'sw\.js$', RedirectView.as_view(url='/static/js/sw.js')),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
@@ -47,6 +48,12 @@ urlpatterns += [
     path("api/", include("config.api_router")),
     # DRF auth token
     path("auth-token/", obtain_auth_token),
+    path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),
+    path(
+        "api/docs/",
+        SpectacularSwaggerView.as_view(url_name="api-schema"),
+        name="api-docs",
+    ),
 ]
 
 if settings.DEBUG:

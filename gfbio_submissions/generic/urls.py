@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*-
-from django.conf.urls import url
+from django.urls import re_path
 
 from . import views
 
 app_name = "generic"
 
 urlpatterns = [
-    url(
-        regex=r'schema/brokerage_api[_\w]*/(?P<schema>[a-z-_\.json]+)',
+    re_path(
+        route=r'schema/brokerage_api[_\w]*/(?P<schema>[a-z-_\.json]+)',
         view=views.BrokerageValidationSchemaView.as_view(),
         name='brokerage_validation'
     ),
-    url(
-        regex=r'schema/brokerage_api/$',
+    re_path(
+        route=r'schema/brokerage_api/$',
         view=views.BrokerageAPISchemaView.as_view(),
         name='brokerage_schema'
     ),
-    url(
-        regex=r'schema/brokerage_api_molecular/$',
+    re_path(
+        route=r'schema/brokerage_api_molecular/$',
         view=views.BrokerageMolecularAPISchemaView.as_view(),
         name='brokerage_schema_molecular'
     ),

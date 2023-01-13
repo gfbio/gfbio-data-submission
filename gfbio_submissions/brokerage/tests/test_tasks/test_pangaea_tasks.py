@@ -7,7 +7,7 @@ from django.test import override_settings
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, JIRA_ATTACHMENT_SUB_URL
 from gfbio_submissions.brokerage.models import Submission, \
-    PersistentIdentifier
+    PersistentIdentifier, TaskProgressReport
 from gfbio_submissions.brokerage.tasks import \
     create_pangaea_issue_task, attach_to_pangaea_issue_task, \
     add_accession_to_pangaea_issue_task, check_for_pangaea_doi_task
@@ -72,7 +72,7 @@ class TestPangaeaTasks(TestTasks):
             }
         )
         self.assertTrue(result.successful())
-        self.assertIsNone(result.get())
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
         additional_references = submission.additionalreference_set.all()
         self.assertEqual(len_before, len(additional_references))
         # request_logs = RequestLog.objects.all()
@@ -103,7 +103,8 @@ class TestPangaeaTasks(TestTasks):
                 'submission_id': submission.pk,
             }
         )
-        self.assertFalse(result.successful())
+        self.assertTrue(result.successful())
+        self.assertEqual(TaskProgressReport.CANCELLED, result.get())
         additional_references = submission.additionalreference_set.all()
         self.assertEqual(len_before, len(additional_references))
 
@@ -232,12 +233,14 @@ class TestPangaeaTasks(TestTasks):
                 }
             }
         )
-        self.assertFalse(result.successful())
+        self.assertTrue(result.successful())
         res = result.get()
-        self.assertIsNone(res)
-        # self.assertDictEqual(
-        #     {
-        #         'issue_key': 'PDI-12428'}, res)
+        self.assertDictEqual(
+            {
+                'issue_key': 'PDI-12428'
+            },
+            res
+        )
 
     @responses.activate
     def test_add_accession_to_pangaea_issue_task_success(self):

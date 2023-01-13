@@ -1,70 +1,108 @@
-# TODO: was 3.8 but there were some incompabilities with 3rd party libraries
-FROM python:3.7-slim-buster
+ARG PYTHON_VERSION=3.10-slim-bullseye
+
+
+# define an alias for the specfic python version used in this file.
+FROM python:${PYTHON_VERSION} as python
+
+# Python build stage
+FROM python as python-build-stage
+
+ARG BUILD_ENVIRONMENT=production
+
+# Install apt packages
+RUN apt-get update && apt-get install --no-install-recommends -y \
+  # dependencies for building Python packages
+  build-essential \
+  # psycopg2 dependencies
+  libpq-dev
+
+# Requirements are installed here to ensure they will be cached.
+COPY ./requirements .
+
+# Create Python Dependency and Sub-Dependency Wheels.
+RUN pip wheel --wheel-dir /usr/src/app/wheels  \
+  -r ${BUILD_ENVIRONMENT}.txt
+
+
+# Python 'run' stage
+FROM python as python-run-stage
+
+ARG BUILD_ENVIRONMENT=production
+ARG APP_HOME=/app
 
 ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV BUILD_ENV ${BUILD_ENVIRONMENT}
 
-RUN apt-get update \
-  # dependencies for building Python packages
-  && apt-get install -y build-essential \
+WORKDIR ${APP_HOME}
+
+RUN addgroup --system django \
+    && adduser --system --ingroup django django
+
+#RUN apt-get update \
+#  # dependencies for building Python packages
+#  && apt-get install -y build-essential \
+#  # psycopg2 dependencies
+#  && apt-get install -y libpq-dev \
+#  # Translations dependencies
+#  && apt-get install -y gettext \
+#  # dig tool to get ip of allowed domains
+#  && apt-get install -y dnsutils \
+#  # cleaning up unused files
+#  && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+#  && rm -rf /var/lib/apt/lists/*
+
+
+# Install required system dependencies
+RUN apt-get update && apt-get install --no-install-recommends -y \
   # psycopg2 dependencies
-  && apt-get install -y libpq-dev \
+  libpq-dev \
   # Translations dependencies
-  && apt-get install -y gettext \
-  # dig tool to get ip of allowed domains
-  && apt-get install -y dnsutils \
+  gettext \
+  #
+  dnsutils \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
 
 
-#RUN apk update \
-#  # psycopg2 dependencies
-#  && apk add --virtual build-deps gcc python3-dev musl-dev \
-#  && apk add postgresql-dev \
-#  # Pillow dependencies
-#  && apk add jpeg-dev zlib-dev freetype-dev lcms2-dev openjpeg-dev tiff-dev tk-dev tcl-dev \
-#  # CFFI dependencies
-#  && apk add libffi-dev py-cffi \
-#  # borkerage git dependencies
-#  && apk add git \
-#  # dig tool to get ip of allowed domains
-#  && apk add bind-tools
+# All absolute dir copies ignore workdir instruction. All relative dir copies are wrt to the workdir instruction
+# copy python dependency wheels from python-build-stage
+COPY --from=python-build-stage /usr/src/app/wheels  /wheels/
 
-RUN addgroup --system django \
-    && adduser --system --ingroup django django
+# use wheels to install python dependencies
+RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
+  && rm -rf /wheels/
 
 
-# Requirements are installed here to ensure they will be cached.
-COPY ./requirements /requirements
-RUN pip install --no-cache-dir -r /requirements/production.txt \
-    && rm -rf /requirements
-
-COPY ./compose/production/django/entrypoint /entrypoint
+COPY --chown=django:django ./compose/production/django/entrypoint /entrypoint
 RUN sed -i 's/\r$//g' /entrypoint
 RUN chmod +x /entrypoint
-RUN chown django /entrypoint
 
-COPY ./compose/production/django/start /start
+
+COPY --chown=django:django ./compose/production/django/start /start
 RUN sed -i 's/\r$//g' /start
 RUN chmod +x /start
-RUN chown django /start
-COPY ./compose/production/django/celery/worker/start /start-celeryworker
+COPY --chown=django:django ./compose/production/django/celery/worker/start /start-celeryworker
 RUN sed -i 's/\r$//g' /start-celeryworker
 RUN chmod +x /start-celeryworker
-RUN chown django /start-celeryworker
 
-COPY ./compose/production/django/celery/beat/start /start-celerybeat
+
+COPY --chown=django:django ./compose/production/django/celery/beat/start /start-celerybeat
 RUN sed -i 's/\r$//g' /start-celerybeat
 RUN chmod +x /start-celerybeat
-RUN chown django /start-celerybeat
+
 
 COPY ./compose/production/django/celery/flower/start /start-flower
 RUN sed -i 's/\r$//g' /start-flower
 RUN chmod +x /start-flower
-COPY --chown=django:django . /app
+
+# copy application code to WORKDIR
+COPY --chown=django:django . ${APP_HOME}
+
+# make django owner of the WORKDIR directory as well.
+RUN chown django:django ${APP_HOME}
 
 USER django
-
-WORKDIR /app
 
 ENTRYPOINT ["/entrypoint"]

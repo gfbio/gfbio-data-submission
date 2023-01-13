@@ -5,16 +5,16 @@ import os
 import textwrap
 
 import celery
-from celery import Task
 from celery.exceptions import SoftTimeLimitExceeded
 from django.core.mail import mail_admins
 from django.db import transaction
 from django.db.utils import IntegrityError
-from django.utils.encoding import smart_text
+from django.utils.encoding import smart_str
 from kombu.utils import json
 from pytz import timezone
 from requests import ConnectionError, Response
 
+from config.celery_app import app
 from config.settings.base import HOST_URL_ROOT, ADMIN_URL
 from gfbio_submissions.generic.models import SiteConfiguration, RequestLog
 from gfbio_submissions.users.models import User
@@ -57,7 +57,7 @@ logger = logging.getLogger(__name__)
 
 # abstract base class for tasks ------------------------------------------------
 
-class SubmissionTask(Task):
+class SubmissionTask(celery.Task):
     abstract = True
 
     # TODO: consider a report for every def here OR refactor taskreport to
@@ -106,7 +106,7 @@ class SubmissionTask(Task):
 # common tasks -----------------------------------------------------------------
 
 # TODO: re-consider if needed when workflow is clear
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.check_for_molecular_content_in_submission_task',
@@ -147,7 +147,7 @@ def check_for_molecular_content_in_submission_task(self,
 
 
 # FIXME: redundant/duplicate code with trigger_submission_transfer_for_updates. Refactor !
-@celery.task(base=SubmissionTask, bind=True,
+@app.task(base=SubmissionTask, bind=True,
              name='tasks.trigger_submission_transfer', )
 def trigger_submission_transfer(self, previous_task_result=None,
                                 submission_id=None):
@@ -193,7 +193,7 @@ def trigger_submission_transfer(self, previous_task_result=None,
     )
 
 
-@celery.task(base=SubmissionTask, bind=True,
+@app.task(base=SubmissionTask, bind=True,
              name='tasks.trigger_submission_transfer_for_updates', )
 def trigger_submission_transfer_for_updates(self, previous_task_result=None,
                                             broker_submission_id=None):
@@ -242,7 +242,7 @@ def trigger_submission_transfer_for_updates(self, previous_task_result=None,
 
 # TODO: on_hold check is in this form obsolete, if target is ENA etc
 #   submission to ena is triggered without prior creation of BOs and XML
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.check_on_hold_status_task',
@@ -301,7 +301,7 @@ def check_on_hold_status_task(self, previous_task_result=None,
 # NEW PREP WORKFLOW BO CREATION AND SOID CREATION ------------------------------
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.create_study_broker_objects_only_task',
@@ -344,7 +344,7 @@ def create_study_broker_objects_only_task(self, previous_task_result=None,
         return study.pk
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.create_broker_objects_from_submission_data_task',
@@ -397,7 +397,7 @@ def create_broker_objects_from_submission_data_task(
 
 # ENA submission transfer tasks ------------------------------------------------
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.delete_related_auditable_textdata_task',
@@ -415,7 +415,7 @@ def delete_related_auditable_textdata_task(self, prev_task_result=None,
         submission.auditabletextdata_set.all().delete()
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.prepare_ena_study_xml_task',
@@ -468,7 +468,7 @@ def prepare_ena_study_xml_task(self, previous_task_result=None,
         return TaskProgressReport.CANCELLED if study_text_data is None else study_text_data.pk
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.prepare_ena_submission_data_task',
@@ -501,7 +501,7 @@ def prepare_ena_submission_data_task(self, prev_task_result=None,
         return TaskProgressReport.CANCELLED
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.update_ena_submission_data_task',
@@ -547,7 +547,7 @@ def update_ena_submission_data_task(self, previous_task_result=None,
         return True
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.clean_submission_for_update_task',
@@ -594,7 +594,7 @@ def clean_submission_for_update_task(self, previous_task_result=None,
     return True
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.parse_csv_to_update_clean_submission_task',
@@ -659,7 +659,7 @@ def parse_csv_to_update_clean_submission_task(self, previous_task_result=None,
             return True
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.transfer_data_to_ena_task',
@@ -710,11 +710,11 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None,
                 site_configuration.ena_server.title)
         )
         response = Response()
-    return str(request_id), response.status_code, smart_text(
+    return str(request_id), response.status_code, smart_str(
         response.content)
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.register_study_at_ena_task',
@@ -798,11 +798,11 @@ def register_study_at_ena_task(self, previous_result=None,
             )
             response = Response()
         # TODO: followed by process_ena_response_task like in general submission process for ENA
-        return str(request_id), response.status_code, smart_text(
+        return str(request_id), response.status_code, smart_str(
             response.content)
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.create_targeted_sequence_ena_manifest_task',
@@ -836,7 +836,7 @@ def create_targeted_sequence_ena_manifest_task(self, previous_result=None,
     return text_data.pk
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.submit_targeted_sequences_to_ena_task',
@@ -887,7 +887,7 @@ def submit_targeted_sequences_to_ena_task(self, previous_result=None,
     return success
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.process_targeted_sequence_results_task',
@@ -940,7 +940,7 @@ def process_targeted_sequence_results_task(self, previous_result=None,
         return True
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.validate_against_ena_task',
@@ -957,7 +957,7 @@ def validate_against_ena_task(self, submission_id=None, action='VALIDATE'):
     return results
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.submit_to_ena_test_server_task',
@@ -974,7 +974,7 @@ def submit_to_ena_test_server_task(self, submission_id=None, action='ADD'):
     return results
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.process_ena_response_task',
@@ -1031,7 +1031,7 @@ def process_ena_response_task(self, transfer_result=None, submission_id=None,
 
 # Pangea submission transfer tasks ---------------------------------------------
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.create_pangaea_issue_task',
@@ -1067,9 +1067,10 @@ def create_pangaea_issue_task(self, prev=None, submission_id=None):
         return {
             'issue_key': jira_client.issue.key,
         }
+    else:
+        return TaskProgressReport.CANCELLED
 
-
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.add_accession_to_pangaea_issue_task',
@@ -1111,7 +1112,7 @@ def add_accession_to_pangaea_issue_task(self, kwargs=None, submission_id=None):
         return TaskProgressReport.CANCELLED
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.attach_to_pangaea_issue_task',
@@ -1147,7 +1148,7 @@ def attach_to_pangaea_issue_task(self, kwargs={}, submission_id=None):
         return TaskProgressReport.CANCELLED
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.check_for_pangaea_doi_task',
@@ -1176,7 +1177,7 @@ def check_for_pangaea_doi_task(self, resource_credential_id=None):
 # HELPDESK TASKS --------------------------------------------------------------
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.get_gfbio_helpdesk_username_task',
@@ -1230,7 +1231,7 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
     )
 
     if response.status_code == 200:
-        result['jira_user_name'] = smart_text(response.content)
+        result['jira_user_name'] = smart_str(response.content)
 
     logger.info(
         'tasks.py | get_gfbio_helpdesk_username_task |return={0}'.format(
@@ -1238,7 +1239,7 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None,
     return result
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.create_submission_issue_task',
@@ -1280,9 +1281,11 @@ def create_submission_issue_task(self, prev_task_result=None,
             reference_key=jira_client.issue.key,
             primary=True
         )
+    else:
+        return TaskProgressReport.CANCELLED
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.update_submission_issue_task',
@@ -1318,7 +1321,7 @@ def update_submission_issue_task(self, prev_task_result=None,
         return TaskProgressReport.CANCELLED
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.add_accession_to_submission_issue_task',
@@ -1408,7 +1411,7 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
                                          broker_submission_id=submission.broker_submission_id)
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.add_accession_link_submission_issue_task',
@@ -1457,7 +1460,7 @@ def add_accession_link_to_submission_issue_task(self, prev_task_result=None,
                                          broker_submission_id=submission.broker_submission_id)
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.add_posted_comment_to_issue_task',
@@ -1510,7 +1513,7 @@ def add_posted_comment_to_issue_task(self, prev_task_result=None,
 
 
 # FIXME: here problems while using new jirclient to attach, especiall while put submissionupload
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.attach_to_submission_issue_task',
@@ -1608,7 +1611,7 @@ def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
         )
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.delete_submission_issue_attachment_task',
@@ -1645,7 +1648,7 @@ def delete_submission_issue_attachment_task(self, kwargs=None,
 
 
 # TODO: add tests ...
-@celery.task(
+@app.task(
     base=SubmissionTask, bind=True, name='tasks.add_pangaea_doi_task',
     autoretry_for=(TransferServerError,
                    TransferClientError
@@ -1679,7 +1682,7 @@ def add_pangaea_doi_task(self, prev_task_result=None,
                                      broker_submission_id=submission.broker_submission_id)
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.add_pangaealink_to_submission_issue_task',
@@ -1720,7 +1723,7 @@ def add_pangaealink_to_submission_issue_task(
                                      broker_submission_id=submission.broker_submission_id)
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.fetch_ena_reports_task',
@@ -1782,7 +1785,7 @@ def fetch_ena_reports_task(self):
     return result
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.update_resolver_accessions_task',
@@ -1814,7 +1817,7 @@ def update_resolver_accessions_task(self, previous_task_result=False):
     return success, previous_task_result
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.update_persistent_identifier_report_status_task',
@@ -1852,7 +1855,7 @@ def update_persistent_identifier_report_status_task(self,
     return success
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.update_accession_objects_from_ena_report_task',
@@ -1874,7 +1877,7 @@ def update_accession_objects_from_ena_report_task(self):
 
 
 # FIXME: It is possible to set a submission for the taskprogressreport here.
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.notify_user_embargo_expiry_task',
@@ -1966,7 +1969,7 @@ def notify_user_embargo_expiry_task(self):
     return "No notifications to send"
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.check_for_submissions_without_helpdesk_issue_task',
@@ -1994,7 +1997,7 @@ def check_for_submissions_without_helpdesk_issue_task(self):
     return True
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.check_issue_existing_for_submission_task',
@@ -2032,7 +2035,7 @@ def check_issue_existing_for_submission_task(self, prev=None,
     return True
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.check_for_user_without_site_configuration_task',
@@ -2067,7 +2070,7 @@ def check_for_user_without_site_configuration_task(self):
     return True
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.notify_curators_on_embargo_ends_task',
@@ -2142,7 +2145,7 @@ def notify_curators_on_embargo_ends_task(self):
     return "No notifications to send"
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.notify_on_embargo_ended_task',
@@ -2206,7 +2209,7 @@ def notify_on_embargo_ended_task(self, submission_id=None):
     return "No notifications to send"
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.update_ena_embargo_task',
@@ -2296,7 +2299,7 @@ def update_ena_embargo_task(self, prev=None, submission_id=None):
             submission.broker_submission_id)
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.notify_user_embargo_changed_task',
@@ -2352,7 +2355,7 @@ def notify_user_embargo_changed_task(self, prev=None, submission_id=None):
     }
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.jira_cancel_issue_task',
@@ -2395,7 +2398,7 @@ def jira_cancel_issue_task(self, submission_id=None, admin=False):
     }
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.jira_transition_issue_task',
@@ -2445,7 +2448,7 @@ def jira_transition_issue_task(self, prev=None, submission_id=None,
     }
 
 
-@celery.task(
+@app.task(
     base=SubmissionTask,
     bind=True,
     name='tasks.jira_initial_comment_task',

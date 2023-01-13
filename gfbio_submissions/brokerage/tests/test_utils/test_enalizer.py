@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import responses
 from django.test import TestCase
-from django.utils.encoding import smart_text
+from django.utils.encoding import smart_str
 
 from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_CENTER_NAME
@@ -96,7 +96,7 @@ class TestEnalizer(TestCase):
         self.assertIn('<STUDY_TITLE>', study_xml)
         self.assertIn('<STUDY_ABSTRACT>', study_xml)
         study_xml_standalone = enalizer.create_study_xml()
-        self.assertEqual(study_xml, smart_text(study_xml_standalone))
+        self.assertEqual(study_xml, smart_str(study_xml_standalone))
 
     def test_study_xml_center_name(self):
         submission = Submission.objects.first()
@@ -110,7 +110,7 @@ class TestEnalizer(TestCase):
         self.assertEqual('study.xml', k)
         self.assertIn('center_name="CustomCenter"', study_xml)
         study_xml_standalone = ena.create_study_xml()
-        self.assertEqual(study_xml, smart_text(study_xml_standalone))
+        self.assertEqual(study_xml, smart_str(study_xml_standalone))
 
     def test_sample_xml(self):
         self.maxDiff = None
@@ -125,7 +125,7 @@ class TestEnalizer(TestCase):
         self.assertIn('mimarks-survey', sample_xml)
         # FIXME: order of samples seem to be random
         self.assertIn(
-            '<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="{1}">'
+            '<SAMPLE alias="{0}:test-enalizer-sample" center_name="{1}" broker_name="GFBIO">'
             '<TITLE>sample title</TITLE>'
             '<SAMPLE_NAME>'
             '<TAXON_ID>530564</TAXON_ID>'
@@ -133,7 +133,7 @@ class TestEnalizer(TestCase):
             '<DESCRIPTION />'.format(submission_samples[0].pk,
                                      DEFAULT_ENA_CENTER_NAME), sample_xml)
         self.assertIn(
-            '<SAMPLE alias="{0}:test-enalizer-sample" broker_name="GFBIO" center_name="{1}">'
+            '<SAMPLE alias="{0}:test-enalizer-sample" center_name="{1}" broker_name="GFBIO">'
             '<TITLE>sample title 2</TITLE>'
             '<SAMPLE_NAME>'
             '<TAXON_ID>530564</TAXON_ID>'
@@ -251,7 +251,7 @@ class TestEnalizer(TestCase):
         # tests, if structure is (not) in container:
         self.assertIn(
             '<TARGETED_LOCI><LOCUS locus_name="16S rRNA" /></TARGETED_LOCI></LIBRARY_DESCRIPTOR>',
-           experiment_xml)
+            experiment_xml)
         self.assertNotIn(
             '<SAMPLE_ATTRIBUTE><TAG>target gene</TAG><VALUE>16S rRNA</VALUE></SAMPLE_ATTRIBUTE>',
             sample_xml)
@@ -268,7 +268,7 @@ class TestEnalizer(TestCase):
             '<SAMPLE_ATTRIBUTE><TAG>target gene</TAG><VALUE>iTS1-5.8S-ITs2</VALUE></SAMPLE_ATTRIBUTE>',
             sample_xml)
         self.assertIn(
-            '<TARGETED_LOCI><LOCUS description="18S rRNA for fish" locus_name="other" /></TARGETED_LOCI></LIBRARY_DESCRIPTOR>',
+            '<TARGETED_LOCI><LOCUS locus_name="other" description="18S rRNA for fish" /></TARGETED_LOCI></LIBRARY_DESCRIPTOR>',
             experiment_xml)
         self.assertNotIn(
             '<SAMPLE_ATTRIBUTE><TAG>TARGet gene</TAG><VALUE>18S rRNA for fish</VALUE></SAMPLE_ATTRIBUTE>',

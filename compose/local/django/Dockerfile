@@ -1,26 +1,63 @@
-# TODO: was 3.8 but there were some incompabilities with 3rd party libraries
-FROM python:3.7-slim-buster
+ARG PYTHON_VERSION=3.10-slim-bullseye
+
+# define an alias for the specfic python version used in this file.
+FROM python:${PYTHON_VERSION} as python
+
+# Python build stage
+FROM python as python-build-stage
+
+ARG BUILD_ENVIRONMENT=local
+
+# Install apt packages
+RUN apt-get update && apt-get install --no-install-recommends -y \
+  # dependencies for building Python packages
+  build-essential \
+  # psycopg2 dependencies
+  libpq-dev
+
+# Requirements are installed here to ensure they will be cached.
+COPY ./requirements .
+
+# Create Python Dependency and Sub-Dependency Wheels.
+RUN pip wheel --wheel-dir /usr/src/app/wheels  \
+  -r ${BUILD_ENVIRONMENT}.txt
+
+
+# Python 'run' stage
+FROM python as python-run-stage
+
+ARG BUILD_ENVIRONMENT=local
+ARG APP_HOME=/app
 
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
+ENV BUILD_ENV ${BUILD_ENVIRONMENT}
+
+WORKDIR ${APP_HOME}
 
 # java need this to be created
 RUN mkdir -p /usr/share/man/man1
 
-RUN apt-get update \
-  #
-  # dependencies for building Python packages
-  && apt-get install -y build-essential \
+
+# Install required system dependencies
+RUN apt-get update && apt-get install --no-install-recommends -y \
   # psycopg2 dependencies
-  && apt-get install -y libpq-dev \
+  libpq-dev \
   # Translations dependencies
-  && apt-get install -y gettext \
-  # java-runtime-environment that works with slim-buster
-  # TODO: this will not work well for ena web cli, but will install the package without trouble
-  # && apt-get install -y openjdk-11-jre \
+  gettext \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
+
+# All absolute dir copies ignore workdir instruction. All relative dir copies are wrt to the workdir instruction
+# copy python dependency wheels from python-build-stage
+COPY --from=python-build-stage /usr/src/app/wheels  /wheels/
+
+
+# use wheels to install python dependencies
+RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
+	&& rm -rf /wheels/
+
 
 # Java
 COPY ./compose/local/django/install_java8_jre.sh /
@@ -57,6 +94,7 @@ RUN chmod +x /start-flower
 
 COPY ./ena_webin_cli /ena_webin_cli
 
-WORKDIR /app
+# copy application code to WORKDIR
+COPY . ${APP_HOME}
 
 ENTRYPOINT ["/entrypoint"]

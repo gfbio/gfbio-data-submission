@@ -165,7 +165,7 @@ class TestGetHelpDeskUserTask(TestTasks):
             }
         )
         tpr = TaskProgressReport.objects.first()
-        self.assertEqual('RETRY', tpr.status)
+        self.assertEqual('SUCCESS', tpr.status)
         expected_value = "{'jira_user_name': '" + JIRA_FALLBACK_USERNAME + \
                          "', 'email': 'khors@me.de', " \
                          "'full_name': 'Kevin Horstmeier'}"

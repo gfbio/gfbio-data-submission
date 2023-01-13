@@ -2,7 +2,7 @@
 import logging
 
 from django.core.mail import mail_admins
-from django.utils.encoding import smart_text
+from django.utils.encoding import smart_str
 from requests import Response
 
 from gfbio_submissions.brokerage.configuration.settings import \
@@ -380,7 +380,7 @@ def send_data_to_ena_for_validation_or_test(task, submission_id, action):
                 resource_cred.title)
         )
         response = Response()
-    return str(request_id), response.status_code, smart_text(
+    return str(request_id), response.status_code, smart_str(
         response.content)
 
 

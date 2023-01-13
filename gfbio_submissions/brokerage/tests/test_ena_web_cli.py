@@ -10,7 +10,7 @@ from django.conf import settings
 from django.core.files import File
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
-from django.utils.encoding import smart_text
+from django.utils.encoding import smart_str
 
 from gfbio_submissions.brokerage.configuration.settings import ENA, \
     SUBMISSION_DELAY
@@ -690,8 +690,8 @@ class TestCLI(TestCase):
         # print(study_text_data)
         request_data = {
             'STUDY': (
-                '{0}'.format(smart_text(study_text_data.name)),
-                '{0}'.format(smart_text(study_text_data.text_data))
+                '{0}'.format(smart_str(study_text_data.name)),
+                '{0}'.format(smart_str(study_text_data.text_data))
             )
         }
 
