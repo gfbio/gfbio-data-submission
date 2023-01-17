@@ -14,8 +14,9 @@ services:
     container_name: django
     depends_on:
       - postgres
+      - redis
     volumes:
-      - .:/app
+      - .:/app:z
       - django_media:/app/gfbio_submissions/media
     env_file:
       - ./.envs/.local/.django
@@ -37,6 +38,23 @@ services:
       - ./.envs/.local/.postgres
     ports:
       - "5444:5432"
+
+
+  docs:
+    image: gfbio_submissions_local_docs
+    container_name: submission_gfbio_org_local_docs
+    build:
+      context: .
+      dockerfile: ./compose/local/docs/Dockerfile
+    env_file:
+      - ./.envs/.local/.django
+    volumes:
+      - ./docs:/docs:z
+      - ./config:/app/config:z
+      - ./gfbio_submissions:/app/gfbio_submissions:z
+    ports:
+      - "9000:9000"
+    command: /start-docs
 
   redis:
     image: redis:5.0

@@ -68,7 +68,7 @@ services:
     restart: always
 
   redis:
-    image: redis:5.0
+    image: redis:6
     networks:
       - default
     restart: always

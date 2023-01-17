@@ -47,7 +47,7 @@ services:
     restart: always
 
   redis:
-    image: redis:5.0
+    image: redis:6
     container_name: gfbio-redis
     networks:
       - default
