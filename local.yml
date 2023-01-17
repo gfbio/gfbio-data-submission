@@ -36,13 +36,13 @@ services:
       - local_postgres_data_backups:/backups
     env_file:
       - ./.envs/.local/.postgres
-    ports:
-      - "5444:5432"
+#    ports:
+#      - "5444:5432"
 
 
   docs:
     image: gfbio_submissions_local_docs
-    container_name: submission_gfbio_org_local_docs
+    container_name: gfbio_submissions_local_docs
     build:
       context: .
       dockerfile: ./compose/local/docs/Dockerfile
