@@ -16,9 +16,12 @@ from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.generic.models import ResourceCredential, \
     SiteConfiguration
 from gfbio_submissions.users.models import User
+import os
 import xmlschema
 from lxml import etree
 import xml.etree.ElementTree as ET
+from gfbio_submissions.brokerage.tests.utils import \
+    _get_test_data_dir_path
 
 class TestCheckTasks(TestCase):
 
@@ -258,66 +261,101 @@ class TestCheckTasks(TestCase):
 
     #Staatliche Naturwissenschaftliche Sammlungen Bayerns
     def test_atax_real_xml(self):
-        schema = xmlschema.XMLSchema('/opt/project/gfbio_submissions/brokerage/tests/test_data/xml_files/ABCD_2.06.xsd')
 
-        valid = schema.is_valid(
-            '/opt/project/gfbio_submissions/brokerage/tests/test_data/xml_files/SNSB_Mimophis.xml')
+        schema = xmlschema.XMLSchema(os.path.join(
+                    _get_test_data_dir_path(),
+                    'xml_files/ABCD_2.06.xsd'))
+
+        valid = schema.is_valid(os.path.join(
+                    _get_test_data_dir_path(),
+                    'xml_files/SNSB_Mimophis.xml'))
         self.assertTrue(valid)
 
     # Biocase, Botanischer Garten Berlin
     def test_atax_real_xml2(self):
-        schema = xmlschema.XMLSchema('/opt/project/gfbio_submissions/brokerage/tests/test_data/xml_files/ABCD_2.06.xsd')
 
-        valid = schema.is_valid(
-            '/opt/project/gfbio_submissions/brokerage/tests/test_data/xml_files/Desmidiaceae_biocase.xml')
+        schema = xmlschema.XMLSchema(os.path.join(
+            _get_test_data_dir_path(),
+            'xml_files/ABCD_2.06.xsd'))
+
+        valid = schema.is_valid(os.path.join(
+            _get_test_data_dir_path(),
+            'xml_files/Desmidiaceae_biocase.xml'))
         self.assertTrue(valid)
 
     # Staatliche Naturwissenschaftliche Sammlungen Bayerns
     def test_atax_real_xml3(self):
-        schema = xmlschema.XMLSchema('/opt/project/gfbio_submissions/brokerage/tests/test_data/xml_files/ABCD_2.06.xsd')
 
-        valid = schema.is_valid(
-            '/opt/project/gfbio_submissions/brokerage/tests/test_data/xml_files/SNSB_Mimophis_single.xml')
+        schema = xmlschema.XMLSchema(os.path.join(
+            _get_test_data_dir_path(),
+            'xml_files/ABCD_2.06.xsd'))
+
+        valid = schema.is_valid(os.path.join(
+            _get_test_data_dir_path(),
+            'xml_files/SNSB_Mimophis_single.xml'))
         self.assertTrue(valid)
 
     #xml with own Vences data (subset):
     def test_atax_real_xml4(self):
-        schema = xmlschema.XMLSchema('/opt/project/gfbio_submissions/brokerage/tests/test_data/xml_files/ABCD_2.06.xsd')
 
-        valid = schema.is_valid(
-            '/opt/project/gfbio_submissions/brokerage/tests/test_data/xml_files/TAX_ABCD_example.xml')
+        schema = xmlschema.XMLSchema(os.path.join(
+            _get_test_data_dir_path(),
+            'xml_files/ABCD_2.06.xsd'))
+
+        valid = schema.is_valid(os.path.join(
+            _get_test_data_dir_path(),
+            'xml_files/TAX_ABCD_example.xml'))
         self.assertTrue(valid)
 
     # xml with own Vences data (subset), file extension pdf, but does not matter:
     def test_atax_real_xml5(self):
-        schema = xmlschema.XMLSchema('/opt/project/gfbio_submissions/brokerage/tests/test_data/xml_files/ABCD_2.06.xsd')
 
-        valid = schema.is_valid(
-            '/opt/project/gfbio_submissions/brokerage/tests/test_data/xml_files/TAX_ABCD_example.pdf')
+        schema = xmlschema.XMLSchema(os.path.join(
+            _get_test_data_dir_path(),
+            'xml_files/ABCD_2.06.xsd'))
+
+        valid = schema.is_valid(os.path.join(
+            _get_test_data_dir_path(),
+            'xml_files/TAX_ABCD_example.pdf'))
         self.assertTrue(valid)
 
     #no xml file at all (but json)
     def test_atax_no_xml(self):
-        schema = xmlschema.XMLSchema('/opt/project/gfbio_submissions/brokerage/tests/test_data/xml_files/ABCD_2.06.xsd')
+
+        schema = xmlschema.XMLSchema(os.path.join(
+            _get_test_data_dir_path(),
+            'xml_files/ABCD_2.06.xsd'))
         try:
             schema.validate(
-                '/opt/project/gfbio_submissions/brokerage/tests/test_data/xml_files/atax_specimen_definitions_min.json')
+                os.path.join(
+                    _get_test_data_dir_path(),
+                    'xml_files/atax_specimen_definitions_min.json'))
         except ET.ParseError as parse_error:
-            self.assertIn('not well-formed (invalid token)', parse_error.__repr__())
+            self.assertIn('not well-formed (invalid token): line 1, column 0', parse_error.__repr__())
 
     #RecordBasis (Field for Taxonomics) not from the given selection
     def test_atax_wrong_data(self):
-        schema = xmlschema.XMLSchema('/opt/project/gfbio_submissions/brokerage/tests/test_data/xml_files/ABCD_2.06.xsd')
-        valid = schema.is_valid(
-            '/opt/project/gfbio_submissions/brokerage/tests/test_data/xml_files/TAX_ABCD_example_wrong_RecordBasis.xml')
+
+        schema = xmlschema.XMLSchema(os.path.join(
+            _get_test_data_dir_path(),
+            'xml_files/ABCD_2.06.xsd'))
+
+        valid = schema.is_valid(os.path.join(
+            _get_test_data_dir_path(),
+            'xml_files/TAX_ABCD_example_wrong_RecordBasis.xml'))
         self.assertFalse(valid)
 
     #special ParseError, tag not closed:
     def test_atax_tag_not_closed(self):
-        schema = xmlschema.XMLSchema('/opt/project/gfbio_submissions/brokerage/tests/test_data/xml_files/ABCD_2.06.xsd')
+
+        schema = xmlschema.XMLSchema(os.path.join(
+            _get_test_data_dir_path(),
+            'xml_files/ABCD_2.06.xsd'))
         try:
             schema.validate(
-                '/opt/project/gfbio_submissions/brokerage/tests/test_data/xml_files/TAX_ABCD_example_tag_not_closed.xml')
+                os.path.join(
+                    _get_test_data_dir_path(),
+                    'xml_files/TAX_ABCD_example_tag_not_closed.xml'))
         except ET.ParseError as parse_error:
             self.assertIn('mismatched tag', parse_error.__repr__())
 
