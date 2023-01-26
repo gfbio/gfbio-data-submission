@@ -264,7 +264,7 @@ class TestCheckTasks(TestCase):
 
         schema = xmlschema.XMLSchema(os.path.join(
                     _get_test_data_dir_path(),
-                    'xml_files/ABCD_2.06.xsd'))
+                    'xml_files/ABCD_2.06.XSD'))
 
         valid = schema.is_valid(os.path.join(
                     _get_test_data_dir_path(),
@@ -276,7 +276,7 @@ class TestCheckTasks(TestCase):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
-            'xml_files/ABCD_2.06.xsd'))
+            'xml_files/ABCD_2.06.XSD'))
 
         valid = schema.is_valid(os.path.join(
             _get_test_data_dir_path(),
@@ -288,7 +288,7 @@ class TestCheckTasks(TestCase):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
-            'xml_files/ABCD_2.06.xsd'))
+            'xml_files/ABCD_2.06.XSD'))
 
         valid = schema.is_valid(os.path.join(
             _get_test_data_dir_path(),
@@ -300,7 +300,7 @@ class TestCheckTasks(TestCase):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
-            'xml_files/ABCD_2.06.xsd'))
+            'xml_files/ABCD_2.06.XSD'))
 
         valid = schema.is_valid(os.path.join(
             _get_test_data_dir_path(),
@@ -312,7 +312,7 @@ class TestCheckTasks(TestCase):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
-            'xml_files/ABCD_2.06.xsd'))
+            'xml_files/ABCD_2.06.XSD'))
 
         valid = schema.is_valid(os.path.join(
             _get_test_data_dir_path(),
@@ -324,7 +324,7 @@ class TestCheckTasks(TestCase):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
-            'xml_files/ABCD_2.06.xsd'))
+            'xml_files/ABCD_2.06.XSD'))
         try:
             schema.validate(
                 os.path.join(
@@ -338,7 +338,7 @@ class TestCheckTasks(TestCase):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
-            'xml_files/ABCD_2.06.xsd'))
+            'xml_files/ABCD_2.06.XSD'))
 
         valid = schema.is_valid(os.path.join(
             _get_test_data_dir_path(),
@@ -350,7 +350,7 @@ class TestCheckTasks(TestCase):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
-            'xml_files/ABCD_2.06.xsd'))
+            'xml_files/ABCD_2.06.XSD'))
         try:
             schema.validate(
                 os.path.join(
