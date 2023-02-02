@@ -37,7 +37,7 @@ services:
     env_file:
       - ./.envs/.local/.postgres
 #    ports:
-#      - "5444:5432"
+#    - "5444:5432"
 
 # lorem ipsum ...
 

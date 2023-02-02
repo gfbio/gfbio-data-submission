@@ -1,4 +1,4 @@
-# No issue for a submission
+# No issue for a submi
 
 On 19.06.2020 Ivo noticed that there was a submission without a related primary
 helpdesk ticket. This really bad since the user got no notification from jira
