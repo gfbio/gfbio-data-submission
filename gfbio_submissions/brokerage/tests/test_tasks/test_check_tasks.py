@@ -174,19 +174,19 @@ class TestCheckTasks(TestCase):
         data = {
             'requirements': {
                 'atax_specimens': [{
-                    'Specimen identifier': 'ZSM 5652/2012',
-                    'Basis of record': 'Preserved Specimen',
-                    'Scientific name': 'Platypelis laetus'
+                    'UnitID': 'ZSM 5652/2012',
+                    'RecordBasis': 'Preserved Specimen',
+                    'FullScientificNameString': 'Platypelis laetus'
                 },
                     {
-                        'Specimen identifier': 'ZSM 5651/2012',
-                        'Basis of record': 'Preserved Specimen',
-                        'Scientific name': 'Platypelis laetus'
+                        'UnitID': 'ZSM 5651/2012',
+                        'RecordBasis': 'Preserved Specimen',
+                        'FullScientificNameString': 'Platypelis laetus'
                     },
                     {
-                        'Specimen identifier': 'ZSM 5653/2012',
-                        'Basis of record': 'Preserved Specimen',
-                        'Scientific name': 'Platypelis laetus'
+                        'UnitID': 'ZSM 5653/2012',
+                        'RecordBasis': 'Preserved Specimen',
+                        'FullScientificNameString': 'Platypelis laetus'
                     },
                 ]
             }
