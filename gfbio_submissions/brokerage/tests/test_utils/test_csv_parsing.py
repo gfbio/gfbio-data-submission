@@ -1249,5 +1249,8 @@ class TestCSVParsing(TestCase):
                       'r',  encoding = 'utf-8-sig') as data_file:
                 requirements = parse_taxonomic_csv(data_file)
                 requirements_keys = requirements.keys()
-                self.assertIn('specimens', requirements_keys)
+                self.assertIn('atax_specimens', requirements_keys)
+
+        #valid, errors = validate_data_full(requirements['atax_specimens'], ATAX, None)
+        #self.assertTrue(valid)
 

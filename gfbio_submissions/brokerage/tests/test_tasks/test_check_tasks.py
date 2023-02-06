@@ -124,9 +124,9 @@ class TestCheckTasks(TestCase):
     def rename_keys(self, iterable):
         if type(iterable) is dict:
             for key in iterable.copy().keys():
-                iterable[key.lower().strip()] = iterable.pop(key)
-                if type(iterable[key.lower().strip()]) is dict or type(iterable[key.lower().strip()]) is list:
-                    iterable[key.lower().strip()] = self.rename_keys(iterable[key.lower().strip()])
+                iterable[key.strip()] = iterable.pop(key)
+                if type(iterable[key.strip()]) is dict or type(iterable[key.strip()]) is list:
+                    iterable[key.strip()] = self.rename_keys(iterable[key.strip()])
         elif type(iterable) is list:
             for item in iterable:
                 item = self.rename_keys(item)
@@ -203,19 +203,19 @@ class TestCheckTasks(TestCase):
         data = {
             'requirements': {
                 'atax_specimens': [{
-                    '  Specimen identifier': '  ZSM 5652/2012',
-                    'Basis of record': 'Preserved Specimen',
-                    'Scientific name': 'Platypelis laetus'
+                    '  UnitID': '  ZSM 5652/2012',
+                    'RecordBasis': 'Preserved Specimen',
+                    'FullScientificNameString': 'Platypelis laetus'
                 },
                     {
-                        'Specimen identifier': 'ZSM 5651/2012',
-                        'Basis of record': 'Preserved Specimen',
-                        'Scientific name': 'Platypelis laetus'
+                        'UnitID': 'ZSM 5651/2012',
+                        'RecordBasis': 'Preserved Specimen',
+                        'FullScientificNameString': 'Platypelis laetus'
                     },
                     {
-                        'Specimen identifier': 'ZSM 5653/2012',
-                        '   Basis of record   ': 'Preserved Specimen',
-                        'Scientific name': 'Platypelis laetus'
+                        'UnitID': 'ZSM 5653/2012',
+                        '   RecordBasis   ': 'Preserved Specimen',
+                        'FullScientificNameString': 'Platypelis laetus'
                     },
                 ]
             }
@@ -232,19 +232,19 @@ class TestCheckTasks(TestCase):
         data = {
             'requirements': {
                 'atax_specimens': [{
-                    'Specimen identifier': 5652,
-                    'Basis of record': 'Preserved Specimen',
-                    'Scientific name': 'Platypelis laetus'
+                    'UnitID': 5652,
+                    'RecordBasis': 'Preserved Specimen',
+                    'FullScientificNameString': 'Platypelis laetus'
                 },
                     {
-                        'Specimen identifier': 'ZSM 5651/2012',
-                        'Basis of record': 'Preserved Specimen',
-                        'Scientific name': 'Platypelis laetus'
+                        'UnitID': 'ZSM 5651/2012',
+                        'RecordBasis': 'Preserved Specimen',
+                        'FullScientificNameString': 'Platypelis laetus'
                     },
                     {
-                        'Specimen identifier': 'ZSM 5653/2012',
-                        'Basis of record': 'Preserved Specimen',
-                        'Scientific name': 'Platypelis laetus'
+                        'UnitID': 'ZSM 5653/2012',
+                        'RecordBasis': 'Preserved Specimen',
+                        'FullScientificNameString': 'Platypelis laetus'
                     },
                 ]
             }
@@ -257,7 +257,7 @@ class TestCheckTasks(TestCase):
         self.assertFalse(valid)
 
         self.assertEqual(1, len(errors))
-        self.assertIn("specimen identifier : 5652 is not of type 'string'", errors[0])
+        self.assertIn("UnitID : 5652 is not of type 'string'", errors[0])
 
     #Staatliche Naturwissenschaftliche Sammlungen Bayerns
     def test_atax_real_xml(self):
