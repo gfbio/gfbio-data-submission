@@ -2,21 +2,21 @@
     "atax_specimen": {
         "type": "object",
         "properties": {
-            "specimen identifier": {
+            "UnitID": {
                 "type": "string",
                 "minLength": 1
             },
-            "basis of record": {
+            "RecordBasis": {
                 "type": "string"
             },
-            "scientific name": {
+            "FullScientificNameString": {
                 "type": "string"
             }
         },
         "required": [
-            "specimen identifier",
-            "basis of record",
-            "scientific name"
+            "UnitID",
+            "RecordBasis",
+            "FullScientificNameString"
         ]
     },
     "atax_specimen_array": {

@@ -161,8 +161,8 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             '/api/submissions/',
             content_type='application/json',
             data=json.dumps({
-                'target': 'ATAX',
-                'release': False,
+                'target': 'ENA',
+                'release': True,
                 'data': {
                     'requirements': {
                         'title': 'A Title',
@@ -171,8 +171,20 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
                 }
             }))
         # for  the following line add ATAX target in models.py!
-        #self.assertEqual(201, min_response.status_code)
-        self.assertEqual(400, min_response.status_code)
+        self.assertEqual(201, min_response.status_code)
+        #self.assertEqual(400, min_response.status_code)
+
+        from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
+        task_reports = TaskProgressReport.objects.all()
+        expected_tasknames = ['tasks.get_gfbio_helpdesk_username_task',
+                              'tasks.create_submission_issue_task',
+                              'tasks.jira_initial_comment_task',
+                              'tasks.check_for_molecular_content_in_submission_task',
+                              'tasks.trigger_submission_transfer',
+                              'tasks.check_issue_existing_for_submission_task', ]
+        self.assertEqual(6, len(task_reports))
+        for t in task_reports:
+            self.assertIn(t.task_name, expected_tasknames)
 
     @responses.activate
     def test_no_release_unknown_target(self):

@@ -17,7 +17,7 @@ from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
     check_for_molecular_content, extract_sample, check_csv_file_rule, \
-    check_metadata_rule, check_minimum_header_cols
+    check_metadata_rule, check_minimum_header_cols, parse_taxonomic_csv, extract_specimen
 
 from gfbio_submissions.brokerage.utils.ena import \
     prepare_ena_data
@@ -1236,3 +1236,18 @@ class TestCSVParsing(TestCase):
     #     #     print(delimiter)
     #     #
     #     # TODO: defaults to ; ok ! split to delim and do list comparision. done ...
+
+
+    def test_parse_taxonomic_csv(self):
+        file_names = [
+            'csv_files/specimen_table_Platypelis.csv',
+            #'csv_files/mol_comma_with_empty_rows_cols.csv',
+        ]
+
+        for fn in file_names:
+            with open(os.path.join(_get_test_data_dir_path(), fn),
+                      'r',  encoding = 'utf-8-sig') as data_file:
+                requirements = parse_taxonomic_csv(data_file)
+                requirements_keys = requirements.keys()
+                self.assertIn('specimens', requirements_keys)
+

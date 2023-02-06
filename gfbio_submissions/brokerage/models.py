@@ -54,7 +54,7 @@ class Submission(TimeStampedModel):
         (ENA, ENA),
         (ENA_PANGAEA, ENA_PANGAEA),
         (GENERIC, GENERIC),
-        #(ATAX, ATAX)
+        (ATAX, ATAX)
     )
 
     broker_submission_id = models.UUIDField(primary_key=False,
