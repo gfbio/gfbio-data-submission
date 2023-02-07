@@ -174,10 +174,10 @@ class TestCheckTasks(TestCase):
         data = {
             'requirements': {
                 'atax_specimens': [{
-                    'UnitID': 'ZSM 5652/2012',
-                    'RecordBasis': 'Preserved Specimen',
-                    'FullScientificNameString': 'Platypelis laetus'
-                },
+                        'UnitID': 'ZSM 5652/2012',
+                        'RecordBasis': 'Preserved Specimen',
+                        'FullScientificNameString': 'Platypelis laetus'
+                    },
                     {
                         'UnitID': 'ZSM 5651/2012',
                         'RecordBasis': 'Preserved Specimen',
@@ -203,10 +203,10 @@ class TestCheckTasks(TestCase):
         data = {
             'requirements': {
                 'atax_specimens': [{
-                    '  UnitID': '  ZSM 5652/2012',
-                    'RecordBasis': 'Preserved Specimen',
-                    'FullScientificNameString': 'Platypelis laetus'
-                },
+                        '  UnitID': '  ZSM 5652/2012',
+                        'RecordBasis': 'Preserved Specimen',
+                        'FullScientificNameString': 'Platypelis laetus'
+                    },
                     {
                         'UnitID': 'ZSM 5651/2012',
                         'RecordBasis': 'Preserved Specimen',
@@ -232,10 +232,10 @@ class TestCheckTasks(TestCase):
         data = {
             'requirements': {
                 'atax_specimens': [{
-                    'UnitID': 5652,
-                    'RecordBasis': 'Preserved Specimen',
-                    'FullScientificNameString': 'Platypelis laetus'
-                },
+                        'UnitID': 5652,
+                        'RecordBasis': 'Preserved Specimen',
+                        'FullScientificNameString': 'Platypelis laetus'
+                    },
                     {
                         'UnitID': 'ZSM 5651/2012',
                         'RecordBasis': 'Preserved Specimen',
