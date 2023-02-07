@@ -169,30 +169,36 @@ class TestCheckTasks(TestCase):
         self.assertTrue(result.successful())
         self.assertEqual(0, len(User.objects.filter(site_configuration=None)))
 
-    #@skip("currently unused feature")
-    def test_validate_atax_json(self):
+
+    # @skip("currently unused feature")
+    def test_validate_atax_json2(self):
         data = {
             'requirements': {
-                'atax_specimens': [{
-                        'UnitID': 'ZSM 5652/2012',
-                        'RecordBasis': 'Preserved Specimen',
-                        'FullScientificNameString': 'Platypelis laetus'
-                    },
-                    {
-                        'UnitID': 'ZSM 5651/2012',
-                        'RecordBasis': 'Preserved Specimen',
-                        'FullScientificNameString': 'Platypelis laetus'
-                    },
-                    {
-                        'UnitID': 'ZSM 5653/2012',
-                        'RecordBasis': 'Preserved Specimen',
-                        'FullScientificNameString': 'Platypelis laetus'
-                    },
-                ]
+                'title': 'atax submission',
+                'description': 'atax sub Description',
+                'atax_specimens':
+                    [
+                        {
+                            'UnitID': 'ZSM 5652/2012',
+                            'RecordBasis': 'Preserved Specimen',
+                            'FullScientificNameString': 'Platypelis laetus'
+                        },
+                        {
+                            'UnitID': 'ZSM 5651/2012',
+                            'RecordBasis': 'Preserved Specimen',
+                            'FullScientificNameString': 'Platypelis laetus'
+                        },
+                        {
+                            'UnitID': 'ZSM 5653/2012',
+                            'RecordBasis': 'Preserved Specimen',
+                            'FullScientificNameString': 'Platypelis laetus'
+                        }
+                    ]
+                }
             }
-        }
 
         # to lower case and strip for all keys:
+        # only strip the keys, abcd mapped keywords are necessary
         clean_data = self.rename_keys(data)
 
         valid, errors = validate_data_full(clean_data, ATAX, None)
@@ -202,24 +208,28 @@ class TestCheckTasks(TestCase):
     def test_validate_atax_json_with_spaces(self):
         data = {
             'requirements': {
-                'atax_specimens': [{
-                        '  UnitID': '  ZSM 5652/2012',
-                        'RecordBasis': 'Preserved Specimen',
-                        'FullScientificNameString': 'Platypelis laetus'
-                    },
-                    {
-                        'UnitID': 'ZSM 5651/2012',
-                        'RecordBasis': 'Preserved Specimen',
-                        'FullScientificNameString': 'Platypelis laetus'
-                    },
-                    {
-                        'UnitID': 'ZSM 5653/2012',
-                        '   RecordBasis   ': 'Preserved Specimen',
-                        'FullScientificNameString': 'Platypelis laetus'
-                    },
-                ]
+                'title': 'atax submission',
+                'description': 'atax sub Description',
+                'atax_specimens':
+                    [
+                        {
+                            '  UnitID': 'ZSM 5652/2012',
+                            'RecordBasis': 'Preserved Specimen',
+                            'FullScientificNameString': 'Platypelis laetus'
+                        },
+                        {
+                            'UnitID': 'ZSM 5651/2012',
+                            'RecordBasis  ': 'Preserved Specimen',
+                            'FullScientificNameString': 'Platypelis laetus'
+                        },
+                        {
+                            'UnitID': 'ZSM 5653/2012',
+                            'RecordBasis': 'Preserved Specimen',
+                            ' FullScientificNameString ': 'Platypelis laetus'
+                        }
+                    ]
+                }
             }
-        }
 
         # to lower case and strip for all keys:
         clean_data = self.rename_keys(data)
@@ -231,24 +241,28 @@ class TestCheckTasks(TestCase):
     def test_validate_atax_json_invalid(self):
         data = {
             'requirements': {
-                'atax_specimens': [{
-                        'UnitID': 5652,
-                        'RecordBasis': 'Preserved Specimen',
-                        'FullScientificNameString': 'Platypelis laetus'
-                    },
-                    {
-                        'UnitID': 'ZSM 5651/2012',
-                        'RecordBasis': 'Preserved Specimen',
-                        'FullScientificNameString': 'Platypelis laetus'
-                    },
-                    {
-                        'UnitID': 'ZSM 5653/2012',
-                        'RecordBasis': 'Preserved Specimen',
-                        'FullScientificNameString': 'Platypelis laetus'
-                    },
-                ]
+                'title': 'atax submission',
+                'description': 'atax sub Description',
+                'atax_specimens':
+                    [
+                        {
+                            'UnitID': 5652,
+                            'RecordBasis': 'Preserved Specimen',
+                            'FullScientificNameString': 'Platypelis laetus'
+                        },
+                        {
+                            'UnitID': 'ZSM 5651/2012',
+                            'RecordBasis': 'Preserved Specimen',
+                            'FullScientificNameString': 'Platypelis laetus'
+                        },
+                        {
+                            'UnitID': 'ZSM 5653/2012',
+                            'RecordBasis': 'Preserved Specimen',
+                            'FullScientificNameString': 'Platypelis laetus'
+                        }
+                    ]
+                }
             }
-        }
 
         # to lower case and strip for all keys:
         clean_data = self.rename_keys(data)
