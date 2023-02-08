@@ -18,7 +18,7 @@ from config.celery_app import app
 from config.settings.base import HOST_URL_ROOT, ADMIN_URL
 from gfbio_submissions.generic.models import SiteConfiguration, RequestLog
 from gfbio_submissions.users.models import User
-from .configuration.settings import ENA, ENA_PANGAEA, PANGAEA_ISSUE_VIEW_URL, \
+from .configuration.settings import ENA, ENA_PANGAEA, ATAX, PANGAEA_ISSUE_VIEW_URL, \
     SUBMISSION_COMMENT_TEMPLATE, JIRA_FALLBACK_USERNAME, \
     JIRA_FALLBACK_EMAIL, APPROVAL_EMAIL_SUBJECT_TEMPLATE, \
     APPROVAL_EMAIL_MESSAGE_TEMPLATE, NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE, \
@@ -2478,6 +2478,8 @@ def jira_initial_comment_task(self, prev=None, submission_id=None):
             comment_template_name = "WELCOME_COMMENT"
             if submission.target == ENA or submission.target == ENA_PANGAEA:
                 comment_template_name = "WELCOME_MOLECULAR_COMMENT"
+            elif submission.target == ATAX:
+                comment_template_name = "WELCOME_ATAX_COMMENT"
 
             comment = get_jira_comment_template(
                 template_name=comment_template_name,

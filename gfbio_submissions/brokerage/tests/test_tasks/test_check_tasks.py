@@ -171,7 +171,7 @@ class TestCheckTasks(TestCase):
 
 
     # @skip("currently unused feature")
-    def test_validate_atax_json2(self):
+    def test_validate_atax_json(self):
         data = {
             'requirements': {
                 'title': 'atax submission',

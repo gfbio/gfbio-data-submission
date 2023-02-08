@@ -15,7 +15,8 @@ from gfbio_submissions.brokerage.configuration.settings import \
     GENERIC, ENA
 from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
 from gfbio_submissions.brokerage.tests.utils import \
-    _get_submission_request_data, _get_submission_post_response
+    _get_submission_request_data, _get_submission_post_response, _get_submission_atax_min_request_data, \
+    _get_submission_atax_nonoblig_request_data
 from gfbio_submissions.users.models import User
 from .test_submission_view_base import TestSubmissionView
 
@@ -491,3 +492,31 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(400, response.status_code)
         self.assertIn('description', response.content.decode('utf-8'))
         self.assertEqual(0, len(Submission.objects.all()))
+
+    @responses.activate
+    def test_valid_max_post_with_taxonomic_min_data(self):
+        self._add_create_ticket_response()
+        self.assertEqual(0, len(Submission.objects.all()))
+        data = _get_submission_atax_min_request_data()
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'ATAX', 'release': True, 'data': data},
+            format='json'
+        )
+        self.assertEqual(201, response.status_code)
+        # self.assertIn('description', response.content.decode('utf-8'))
+        self.assertEqual(1, len(Submission.objects.all()))
+
+    @responses.activate
+    def test_valid_max_post_with_taxonomic_nonoblig_data(self):
+        self._add_create_ticket_response()
+        self.assertEqual(0, len(Submission.objects.all()))
+        data = _get_submission_atax_nonoblig_request_data()
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'ATAX', 'release': True, 'data': data},
+            format='json'
+        )
+        self.assertEqual(201, response.status_code)
+        #self.assertIn('description', response.content.decode('utf-8'))
+        self.assertEqual(1, len(Submission.objects.all()))

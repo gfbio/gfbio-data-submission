@@ -1,0 +1,23 @@
+{
+    "requirements": {
+        "title": "ATAX submission",
+        "description": "This ATAX Submission contains three taxonomic records.",
+		"atax_specimens": [
+			{
+				"UnitID": "ZSM 5652/2012",
+				"RecordBasis": "Preserved Specimen",
+				"FullScientificNameString": "Platypelis laetus"
+			},
+			{
+				"UnitID": "ZSM 5651/2012",
+				"RecordBasis": "Preserved Specimen",
+				"FullScientificNameString": "Platypelis laetus"
+			},
+			{
+				"UnitID": "ZSM 5653/2012",
+				"RecordBasis": "Preserved Specimen",
+				"FullScientificNameString": "Platypelis laetus"
+			}
+		]
+    }
+}
