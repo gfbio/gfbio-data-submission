@@ -13,7 +13,8 @@ from rest_framework.response import Response
 from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.users.models import User
 from ..configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY, \
-    SUBMISSION_DELAY, SUBMISSION_ISSUE_CHECK_DELAY
+    SUBMISSION_DELAY, SUBMISSION_ISSUE_CHECK_DELAY, \
+    ATAX
 from ..forms import SubmissionCommentForm
 from ..models import Submission, SubmissionUpload
 from ..permissions import IsOwnerOrReadOnly
@@ -59,10 +60,13 @@ class SubmissionsView(mixins.ListModelMixin,
             submission_id=submission.pk).set(countdown=SUBMISSION_DELAY) \
                 | jira_initial_comment_task.s(
             submission_id=submission.pk).set(countdown=SUBMISSION_DELAY) \
-                | check_for_molecular_content_in_submission_task.s(
+
+        if submission.target != ATAX:
+            chain = chain | check_for_molecular_content_in_submission_task.s(
             submission_id=submission.pk).set(countdown=SUBMISSION_DELAY) \
                 | trigger_submission_transfer.s(
             submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
+
         chain()
 
         check_issue_existing_for_submission_task.apply_async(

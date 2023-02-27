@@ -238,7 +238,7 @@ class TestCheckTasks(TestCase):
         self.assertTrue(valid)
 
     #@skip("currently unused feature")
-    def test_validate_atax_json_invalid(self):
+    def test_validate_atax_json_invalid_value(self):
         data = {
             'requirements': {
                 'title': 'atax submission',
@@ -273,8 +273,8 @@ class TestCheckTasks(TestCase):
         self.assertEqual(1, len(errors))
         self.assertIn("UnitID : 5652 is not of type 'string'", errors[0])
 
-    #Staatliche Naturwissenschaftliche Sammlungen Bayerns
-    def test_atax_real_xml(self):
+    # Staatliche Naturwissenschaftliche Sammlungen Bayerns
+    def test_validate_Natural_Science_Collections_file_against_abcd_xml(self):
 
         schema = xmlschema.XMLSchema(os.path.join(
                     _get_test_data_dir_path(),
@@ -286,7 +286,7 @@ class TestCheckTasks(TestCase):
         self.assertTrue(valid)
 
     # Biocase, Botanischer Garten Berlin
-    def test_atax_real_xml2(self):
+    def test_validate_Biocase_Botanical_Garden_file_against_abcd_xml(self):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
@@ -298,7 +298,7 @@ class TestCheckTasks(TestCase):
         self.assertTrue(valid)
 
     # Staatliche Naturwissenschaftliche Sammlungen Bayerns
-    def test_atax_real_xml3(self):
+    def test_validate_Natural_Science_Collections_single_case_against_abcd_xml(self):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
@@ -310,7 +310,7 @@ class TestCheckTasks(TestCase):
         self.assertTrue(valid)
 
     #xml with own Vences data (subset):
-    def test_atax_real_xml4(self):
+    def test_Vences_specimen_xml_against_abcd_xml(self):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
@@ -322,7 +322,7 @@ class TestCheckTasks(TestCase):
         self.assertTrue(valid)
 
     # xml with own Vences data (subset), file extension pdf, but does not matter:
-    def test_atax_real_xml5(self):
+    def test_Vences_specimen_pdf_against_abcd_xml(self):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
@@ -334,7 +334,7 @@ class TestCheckTasks(TestCase):
         self.assertTrue(valid)
 
     #no xml file at all (but json)
-    def test_atax_no_xml(self):
+    def test_not_xml_file_against_abcd_xml(self):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
@@ -348,7 +348,7 @@ class TestCheckTasks(TestCase):
             self.assertIn('not well-formed (invalid token): line 1, column 0', parse_error.__repr__())
 
     #RecordBasis (Field for Taxonomics) not from the given selection
-    def test_atax_wrong_data(self):
+    def test_wrong_xml_values_against_abcd_xml(self):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
@@ -360,7 +360,7 @@ class TestCheckTasks(TestCase):
         self.assertFalse(valid)
 
     #special ParseError, tag not closed:
-    def test_atax_tag_not_closed(self):
+    def test_xml_tag_not_closed_against_abcd_xml(self):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
