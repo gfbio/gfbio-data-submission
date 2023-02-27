@@ -9,7 +9,7 @@ COMMIT_SHA = subprocess.run(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE
 
 # get commit reference
 headers = {'PRIVATE-TOKEN': os.environ['PRIVATE_TOKEN'] }
-r = requests.get("https://gitlab.gwdg.de/api/v4/projects/{}/repository/commits/{}/refs".format(os.environ['CI_PROJECT_ID'], COMMIT_SHA), headers=headers)
+r = requests.get("https://gitlab-pe.gwdg.de/api/v4/projects/{}/repository/commits/{}/refs".format(os.environ['CI_PROJECT_ID'], COMMIT_SHA), headers=headers)
 
 data = r.json()
 isInMaster = False

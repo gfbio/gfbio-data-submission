@@ -3,7 +3,7 @@ import requests
 import os
 
 headers = {'PRIVATE-TOKEN': os.environ['PRIVATE_TOKEN'] }
-r = requests.get("https://gitlab.gwdg.de//api/v4/projects/{}/approval_rules".format(os.environ['CI_PROJECT_ID']), headers=headers)
+r = requests.get("https://gitlab-pe.gwdg.de//api/v4/projects/{}/approval_rules".format(os.environ['CI_PROJECT_ID']), headers=headers)
 
 review_ids = []
 feature_ids = []

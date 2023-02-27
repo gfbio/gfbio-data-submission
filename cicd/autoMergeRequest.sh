@@ -11,7 +11,7 @@ IFS=';'
 ISSUE_ID=${ISSUE_SPLIT[0]}
 
 # get issue info
-ISSUE_INFO=`curl --silent "https://gitlab.gwdg.de//api/v4/projects/${CI_PROJECT_ID}/issues?iids[]=${ISSUE_ID}" --header "PRIVATE-TOKEN:${PRIVATE_TOKEN}" |  python3 -c "import sys, json; print(json.load(sys.stdin)[0])"`
+ISSUE_INFO=`curl --silent "https://gitlab-pe.gwdg.de//api/v4/projects/${CI_PROJECT_ID}/issues?iids[]=${ISSUE_ID}" --header "PRIVATE-TOKEN:${PRIVATE_TOKEN}" |  python3 -c "import sys, json; print(json.load(sys.stdin)[0])"`
 ISSUE_LABELS_ARR=`python3 -c "print(${ISSUE_INFO}['labels'])"`
 ISSUE_LABELS_STR=`python3 -c "print(','.join(${ISSUE_LABELS_ARR}))"`
 ISSUE_MILESTONE=`python3 -c "print(${ISSUE_INFO}['milestone']['id'])"`

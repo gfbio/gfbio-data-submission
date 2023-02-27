@@ -40,7 +40,7 @@ class TemplateLinkList extends React.PureComponent {
           <h5 className="metadata_data_title">Molecular Data Template:</h5>
           <div>
             <a
-              href="https://gitlab.gwdg.de/gfbio/molecular-submission-templates/-/raw/master/full_template.csv?inline=false"
+              href="https://gitlab-pe.gwdg.de/gfbio/molecular-submission-templates/-/raw/master/full_template.csv?inline=false"
               className="list-group-item list-group-item-action metadata-link no-border"
               target="_blank"
               download="download"
@@ -50,7 +50,7 @@ class TemplateLinkList extends React.PureComponent {
             </a>
 
             <a
-              href="https://gitlab.gwdg.de/gfbio/molecular-submission-templates/-/blob/master/Template-Description.md"
+              href="https://gitlab-pe.gwdg.de/gfbio/molecular-submission-templates/-/blob/master/Template-Description.md"
               className="list-group-item list-group-item-action metadata-link no-border"
               target="_blank"
             >
