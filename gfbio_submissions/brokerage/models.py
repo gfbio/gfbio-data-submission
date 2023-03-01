@@ -4,7 +4,7 @@ import os
 import uuid
 
 from django.db import models
-from django.db.models import JSONField
+from django.contrib.postgres.fields import JSONField
 from django.db.models import Q
 from model_utils.models import TimeStampedModel
 
@@ -24,7 +24,7 @@ from .utils.submission_tools import \
 
 logger = logging.getLogger(__name__)
 
-
+# kommentar
 class CenterName(models.Model):
     center_name = models.CharField(max_length=128, default='')
 

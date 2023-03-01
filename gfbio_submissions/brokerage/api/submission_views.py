@@ -132,22 +132,25 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                 countdown=SUBMISSION_DELAY) \
                            | update_submission_issue_task.s(
                 submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
-            if new_embargo and instance.embargo != new_embargo:
-                update_chain = update_chain | update_ena_embargo_task.s(
-                    submission_id=instance.pk).set(countdown=SUBMISSION_DELAY) \
-                               | notify_user_embargo_changed_task.s(
-                    submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+            if instance.submission.target != ATAX:
+                if new_embargo and instance.embargo != new_embargo:
+                    update_chain = update_chain | update_ena_embargo_task.s(
+                        submission_id=instance.pk).set(countdown=SUBMISSION_DELAY) \
+                                   | notify_user_embargo_changed_task.s(
+                        submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
             update_chain()
 
-            chain = check_for_molecular_content_in_submission_task.s(
-                submission_id=instance.pk
-            ).set(countdown=SUBMISSION_DELAY) | \
-                    trigger_submission_transfer_for_updates.s(
-                        broker_submission_id='{0}'.format(
-                            instance.broker_submission_id)
-                    ).set(countdown=SUBMISSION_DELAY)
-            chain()
-        elif instance.status == Submission.CLOSED and new_embargo:
+            if instance.submission.target != ATAX:
+                chain = check_for_molecular_content_in_submission_task.s(
+                    submission_id=instance.pk
+                ).set(countdown=SUBMISSION_DELAY) | \
+                        trigger_submission_transfer_for_updates.s(
+                            broker_submission_id='{0}'.format(
+                                instance.broker_submission_id)
+                        ).set(countdown=SUBMISSION_DELAY)
+                chain()
+        elif instance.status == Submission.CLOSED and new_embargo and \
+                instance.submission.target != ATAX:
             response = Response(
                 data={
                     'message': 'Embargo updated'
