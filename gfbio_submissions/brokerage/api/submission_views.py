@@ -132,7 +132,7 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                 countdown=SUBMISSION_DELAY) \
                            | update_submission_issue_task.s(
                 submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
-            if instance.submission.target != ATAX:
+            if instance.target != ATAX:
                 if new_embargo and instance.embargo != new_embargo:
                     update_chain = update_chain | update_ena_embargo_task.s(
                         submission_id=instance.pk).set(countdown=SUBMISSION_DELAY) \
@@ -140,7 +140,7 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                         submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
             update_chain()
 
-            if instance.submission.target != ATAX:
+            if instance.target != ATAX:
                 chain = check_for_molecular_content_in_submission_task.s(
                     submission_id=instance.pk
                 ).set(countdown=SUBMISSION_DELAY) | \
