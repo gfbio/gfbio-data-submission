@@ -7,7 +7,7 @@ from django.conf import settings
 
 from gfbio_submissions.brokerage.configuration.settings import \
     GFBIO_LICENSE_MAPPINGS, \
-    GFBIO_DATACENTER_USER_MAPPINGS, JIRA_USERNAME_URL_FULLNAME_TEMPLATE, \
+    JIRA_USERNAME_URL_FULLNAME_TEMPLATE, \
     JIRA_USERNAME_URL_TEMPLATE, \
     JIRA_FALLBACK_USERNAME, JIRA_FALLBACK_EMAIL
 from gfbio_submissions.generic.models import SiteConfiguration
@@ -39,10 +39,11 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
             'email': JIRA_FALLBACK_EMAIL,
             'full_name': ''
         }
-    author = '{0} {1}'.format(
-        reporter.get('full_name', ''),
-        reporter.get('email', '')
-    )
+    # TODO: DASS-497: currently not used
+    # author = '{0} {1}'.format(
+    #     reporter.get('full_name', ''),
+    #     reporter.get('email', '')
+    # )
 
     contributors = requirements.get('contributors', [])
     # FIXME: include author ?
@@ -137,9 +138,10 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={},
     # mutual_data['customfield_10229'] = metadata_schema_value
 
     if not prepare_for_update:
-        assignee = GFBIO_DATACENTER_USER_MAPPINGS.get(
-            requirements.get('data_center', ''), '')
-        if len(assignee) > 0:
-            mutual_data['assignee'] = {'name': assignee}
+        # TODO: DASS-497: The general process has changed, so Curator is always assigning the submissions manually.
+        # assignee = GFBIO_DATACENTER_USER_MAPPINGS.get(
+        #     requirements.get('data_center', ''), '')
+        # if len(assignee) > 0:
+        #     mutual_data['assignee'] = {'name': assignee}
         mutual_data['customfield_10010'] = jira_request_type
     return mutual_data
