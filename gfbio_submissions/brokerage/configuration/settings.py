@@ -263,6 +263,27 @@ the GFBio Data Submission Team
 """
 )
 
+JIRA_WELCOME_ATAX_COMMENT_TEMPLATE = getattr(
+    settings,
+    'JIRA_WELCOME_ATAX_COMMENT_TEMPLATE',
+    """Dear submitter,
+
+thank you for submitting your taxonomic data via GFBio!
+
+The GFBio Submission ID for your dataset entitled "{title}" is: {id}.
+Please include this ID in any communication regarding this submission.
+
+We will review your submission and get back to you as soon as possible.
+If you have any questions or comments, you can always reply to this email,
+keeping the subject line intact and using the same email account you are registered in GFBio with.
+Alternatively, you can view this submission request under
+https://helpdesk.gfbio.org/servicedesk/customer/portal/6/{reference} (your GFBio credentials are valid there).
+
+Best Regards,
+the GFBio Data Submission Team
+"""
+)
+
 GFBIO_LICENSE_MAPPINGS = getattr(
     settings,
     'GFBIO_LICENSE_MAPPINGS',

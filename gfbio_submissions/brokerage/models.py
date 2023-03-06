@@ -24,7 +24,7 @@ from .utils.submission_tools import \
 
 logger = logging.getLogger(__name__)
 
-
+# kommentar
 class CenterName(models.Model):
     center_name = models.CharField(max_length=128, default='')
 
@@ -54,7 +54,7 @@ class Submission(TimeStampedModel):
         (ENA, ENA),
         (ENA_PANGAEA, ENA_PANGAEA),
         (GENERIC, GENERIC),
-        #(ATAX, ATAX)
+        (ATAX, ATAX)
     )
 
     broker_submission_id = models.UUIDField(primary_key=False,

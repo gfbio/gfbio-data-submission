@@ -200,6 +200,36 @@ attribute_value_blacklist = [
     'na', 'NA', 'n/a', 'N/A',
 ]
 
+specimen_core_fields = [
+    'specimen identifier',
+    'basis of record',
+    'scientific name'
+]
+
+abcd_mapping = {
+'specimen identifier': 'UnitID',
+'basis of record': 'RecordBasis',
+'scientific name': 'FullScientificNameString',
+'country (area)': 'Country',
+'locality': 'AreaDetail',
+'date: day': 'ISODateTimeBegin',
+'date: month': 'ISODateTimeBegin',
+'date: year': 'ISODateTimeBegin',
+'catalogue number': 'PhysicalObjectID',
+'field number': 'CollectorFieldNumber',
+'collector/observer': 'AgentText',
+'sex': 'Sex',
+'kingdom': 'HigherClassification',
+'other higher taxon': 'HigherTaxonName',
+'rank of other higher taxon': 'HigherTaxonRank',
+'longitude (decimal, wgs84)': 'LongitudeDecimal',
+'latitude decimal (decimal, wgs84)': 'LatitudeDecimal',
+'type status': 'TypeStatus',
+'original name linked to type': 'TypifiedName',
+'globally unique identifier (if existing)': 'UnitGUID',
+}
+
+abcd_mapping_keys = abcd_mapping.keys()
 
 def extract_sample(row, field_names, sample_id):
     for k in row.keys():
@@ -610,3 +640,95 @@ def check_for_molecular_content(submission):
                                                                          check_performed))
     return status, messages, check_performed
 
+def extract_specimen(row, field_names, sample_id):
+    for k in row.keys():
+        row[k] = row[k].strip()
+
+    date_string = str()
+
+    specimen_attributes = []
+    for o in field_names:
+        if o not in specimen_core_fields and len(row[o]) and \
+                row[o] not in attribute_value_blacklist:
+            if o in abcd_mapping_keys and str(o) == 'date: year':
+               date_string = date_string+str(row[o])
+            elif o in abcd_mapping_keys and str(o) == 'date: month':
+                date_string = date_string + str('-')
+                date_string = date_string+str(row[o])
+            elif o in abcd_mapping_keys and str(o) == 'date: day':
+                date_string = date_string + str('-')
+                date_string = date_string+str(row[o])
+            elif o in abcd_mapping_keys:
+                specimen_attributes.append(
+                    OrderedDict([
+                        ('tag', abcd_mapping[o]),
+                        ('value', row[o]),
+                    ])
+                )
+
+    if(date_string):
+        specimen_attributes.append(
+            OrderedDict([
+                ('tag', 'IsoDateTimeBegin'),
+                ('value', date_string),
+            ])
+        )
+
+
+    try:
+        unit_id= str(row.get('specimen identifier', 'empty value'))
+    except:
+        unit_id =  'empty value'
+    specimen = {
+        'UnitId': row.get('specimen identifier', ''),
+        'RecordBasis': row.get('Basis of record', ''),
+        'FullScientificNameString': row.get('Scientific name', '')
+    }
+    if len(specimen_attributes):
+        specimen['specimen_attributes'] = specimen_attributes
+
+    return specimen
+
+def parse_taxonomic_csv(csv_file):
+    header = csv_file.readline()
+    dialect = csv.Sniffer().sniff(smart_str(header))
+    csv_file.seek(0)
+    delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
+                                                           '\t'] else ';'
+    csv_reader = csv.DictReader(
+        csv_file,
+        quoting=csv.QUOTE_ALL,
+        delimiter=delimiter,
+        quotechar='"',
+        skipinitialspace=True,
+        restkey='extra_columns_found',
+        restval='extra_value_found',
+    )
+    taxonomic_requirements = {
+        'atax_specimens': [],
+    }
+    try:
+        field_names = csv_reader.fieldnames
+        for i in range(0, len(field_names)):
+            field_names[i] = field_names[i].strip().lower()
+    except _csv.Error as e:
+        return taxonomic_requirements
+
+    short_id = ShortId()
+    specimen_identifiers = []
+    specimen_ids = []
+
+    for row in csv_reader:
+        # every row is one sample (except header)
+        identifier = row.get('specimen identifier', None)
+        if identifier:
+            if identifier not in specimen_identifiers:
+                specimen_identifiers.append(identifier)
+                specimen_id = short_id.generate()
+                specimen_ids.append(specimen_id)
+                specimen = extract_specimen(row, field_names, specimen_id)
+                taxonomic_requirements['atax_specimens'].append(
+                    specimen
+                )
+
+    return taxonomic_requirements

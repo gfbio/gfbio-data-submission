@@ -13,7 +13,8 @@ from rest_framework.response import Response
 from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.users.models import User
 from ..configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY, \
-    SUBMISSION_DELAY, SUBMISSION_ISSUE_CHECK_DELAY
+    SUBMISSION_DELAY, SUBMISSION_ISSUE_CHECK_DELAY, \
+    ATAX
 from ..forms import SubmissionCommentForm
 from ..models import Submission, SubmissionUpload
 from ..permissions import IsOwnerOrReadOnly
@@ -59,10 +60,13 @@ class SubmissionsView(mixins.ListModelMixin,
             submission_id=submission.pk).set(countdown=SUBMISSION_DELAY) \
                 | jira_initial_comment_task.s(
             submission_id=submission.pk).set(countdown=SUBMISSION_DELAY) \
-                | check_for_molecular_content_in_submission_task.s(
+
+        if submission.target != ATAX:
+            chain = chain | check_for_molecular_content_in_submission_task.s(
             submission_id=submission.pk).set(countdown=SUBMISSION_DELAY) \
                 | trigger_submission_transfer.s(
             submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
+
         chain()
 
         check_issue_existing_for_submission_task.apply_async(
@@ -128,6 +132,7 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                 countdown=SUBMISSION_DELAY) \
                            | update_submission_issue_task.s(
                 submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+
             if new_embargo and instance.embargo != new_embargo:
                 update_chain = update_chain | update_ena_embargo_task.s(
                     submission_id=instance.pk).set(countdown=SUBMISSION_DELAY) \
@@ -135,14 +140,15 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                     submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
             update_chain()
 
-            chain = check_for_molecular_content_in_submission_task.s(
-                submission_id=instance.pk
-            ).set(countdown=SUBMISSION_DELAY) | \
-                    trigger_submission_transfer_for_updates.s(
-                        broker_submission_id='{0}'.format(
-                            instance.broker_submission_id)
-                    ).set(countdown=SUBMISSION_DELAY)
-            chain()
+            if instance.target != ATAX:
+                chain = check_for_molecular_content_in_submission_task.s(
+                    submission_id=instance.pk
+                ).set(countdown=SUBMISSION_DELAY) | \
+                        trigger_submission_transfer_for_updates.s(
+                            broker_submission_id='{0}'.format(
+                                instance.broker_submission_id)
+                        ).set(countdown=SUBMISSION_DELAY)
+                chain()
         elif instance.status == Submission.CLOSED and new_embargo:
             response = Response(
                 data={

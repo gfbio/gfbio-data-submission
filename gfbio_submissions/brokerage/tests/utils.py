@@ -148,3 +148,15 @@ def _get_jira_hook_request_data(no_changelog=False):
             _get_test_data_dir_path(), file_name),
             'r') as data_file:
         return data_file.read()
+
+def _get_submission_atax_min_request_data():
+    with open(os.path.join(
+            _get_test_data_dir_path(),
+            'submission_atax_request_data.json'), 'r') as data_file:
+        return json.load(data_file)
+
+def _get_submission_atax_nonoblig_request_data():
+    with open(os.path.join(
+            _get_test_data_dir_path(),
+            'submission_atax_request_data_with_nonoblig.json'), 'r') as data_file:
+        return json.load(data_file)

@@ -124,9 +124,9 @@ class TestCheckTasks(TestCase):
     def rename_keys(self, iterable):
         if type(iterable) is dict:
             for key in iterable.copy().keys():
-                iterable[key.lower().strip()] = iterable.pop(key)
-                if type(iterable[key.lower().strip()]) is dict or type(iterable[key.lower().strip()]) is list:
-                    iterable[key.lower().strip()] = self.rename_keys(iterable[key.lower().strip()])
+                iterable[key.strip()] = iterable.pop(key)
+                if type(iterable[key.strip()]) is dict or type(iterable[key.strip()]) is list:
+                    iterable[key.strip()] = self.rename_keys(iterable[key.strip()])
         elif type(iterable) is list:
             for item in iterable:
                 item = self.rename_keys(item)
@@ -169,30 +169,36 @@ class TestCheckTasks(TestCase):
         self.assertTrue(result.successful())
         self.assertEqual(0, len(User.objects.filter(site_configuration=None)))
 
-    #@skip("currently unused feature")
+
+    # @skip("currently unused feature")
     def test_validate_atax_json(self):
         data = {
             'requirements': {
-                'atax_specimens': [{
-                    'Specimen identifier': 'ZSM 5652/2012',
-                    'Basis of record': 'Preserved Specimen',
-                    'Scientific name': 'Platypelis laetus'
-                },
-                    {
-                        'Specimen identifier': 'ZSM 5651/2012',
-                        'Basis of record': 'Preserved Specimen',
-                        'Scientific name': 'Platypelis laetus'
-                    },
-                    {
-                        'Specimen identifier': 'ZSM 5653/2012',
-                        'Basis of record': 'Preserved Specimen',
-                        'Scientific name': 'Platypelis laetus'
-                    },
-                ]
+                'title': 'atax submission',
+                'description': 'atax sub Description',
+                'atax_specimens':
+                    [
+                        {
+                            'UnitID': 'ZSM 5652/2012',
+                            'RecordBasis': 'Preserved Specimen',
+                            'FullScientificNameString': 'Platypelis laetus'
+                        },
+                        {
+                            'UnitID': 'ZSM 5651/2012',
+                            'RecordBasis': 'Preserved Specimen',
+                            'FullScientificNameString': 'Platypelis laetus'
+                        },
+                        {
+                            'UnitID': 'ZSM 5653/2012',
+                            'RecordBasis': 'Preserved Specimen',
+                            'FullScientificNameString': 'Platypelis laetus'
+                        }
+                    ]
+                }
             }
-        }
 
         # to lower case and strip for all keys:
+        # only strip the keys, abcd mapped keywords are necessary
         clean_data = self.rename_keys(data)
 
         valid, errors = validate_data_full(clean_data, ATAX, None)
@@ -202,24 +208,28 @@ class TestCheckTasks(TestCase):
     def test_validate_atax_json_with_spaces(self):
         data = {
             'requirements': {
-                'atax_specimens': [{
-                    '  Specimen identifier': '  ZSM 5652/2012',
-                    'Basis of record': 'Preserved Specimen',
-                    'Scientific name': 'Platypelis laetus'
-                },
-                    {
-                        'Specimen identifier': 'ZSM 5651/2012',
-                        'Basis of record': 'Preserved Specimen',
-                        'Scientific name': 'Platypelis laetus'
-                    },
-                    {
-                        'Specimen identifier': 'ZSM 5653/2012',
-                        '   Basis of record   ': 'Preserved Specimen',
-                        'Scientific name': 'Platypelis laetus'
-                    },
-                ]
+                'title': 'atax submission',
+                'description': 'atax sub Description',
+                'atax_specimens':
+                    [
+                        {
+                            '  UnitID': 'ZSM 5652/2012',
+                            'RecordBasis': 'Preserved Specimen',
+                            'FullScientificNameString': 'Platypelis laetus'
+                        },
+                        {
+                            'UnitID': 'ZSM 5651/2012',
+                            'RecordBasis  ': 'Preserved Specimen',
+                            'FullScientificNameString': 'Platypelis laetus'
+                        },
+                        {
+                            'UnitID': 'ZSM 5653/2012',
+                            'RecordBasis': 'Preserved Specimen',
+                            ' FullScientificNameString ': 'Platypelis laetus'
+                        }
+                    ]
+                }
             }
-        }
 
         # to lower case and strip for all keys:
         clean_data = self.rename_keys(data)
@@ -228,27 +238,31 @@ class TestCheckTasks(TestCase):
         self.assertTrue(valid)
 
     #@skip("currently unused feature")
-    def test_validate_atax_json_invalid(self):
+    def test_validate_atax_json_invalid_value(self):
         data = {
             'requirements': {
-                'atax_specimens': [{
-                    'Specimen identifier': 5652,
-                    'Basis of record': 'Preserved Specimen',
-                    'Scientific name': 'Platypelis laetus'
-                },
-                    {
-                        'Specimen identifier': 'ZSM 5651/2012',
-                        'Basis of record': 'Preserved Specimen',
-                        'Scientific name': 'Platypelis laetus'
-                    },
-                    {
-                        'Specimen identifier': 'ZSM 5653/2012',
-                        'Basis of record': 'Preserved Specimen',
-                        'Scientific name': 'Platypelis laetus'
-                    },
-                ]
+                'title': 'atax submission',
+                'description': 'atax sub Description',
+                'atax_specimens':
+                    [
+                        {
+                            'UnitID': 5652,
+                            'RecordBasis': 'Preserved Specimen',
+                            'FullScientificNameString': 'Platypelis laetus'
+                        },
+                        {
+                            'UnitID': 'ZSM 5651/2012',
+                            'RecordBasis': 'Preserved Specimen',
+                            'FullScientificNameString': 'Platypelis laetus'
+                        },
+                        {
+                            'UnitID': 'ZSM 5653/2012',
+                            'RecordBasis': 'Preserved Specimen',
+                            'FullScientificNameString': 'Platypelis laetus'
+                        }
+                    ]
+                }
             }
-        }
 
         # to lower case and strip for all keys:
         clean_data = self.rename_keys(data)
@@ -257,10 +271,10 @@ class TestCheckTasks(TestCase):
         self.assertFalse(valid)
 
         self.assertEqual(1, len(errors))
-        self.assertIn("specimen identifier : 5652 is not of type 'string'", errors[0])
+        self.assertIn("UnitID : 5652 is not of type 'string'", errors[0])
 
-    #Staatliche Naturwissenschaftliche Sammlungen Bayerns
-    def test_atax_real_xml(self):
+    # Staatliche Naturwissenschaftliche Sammlungen Bayerns
+    def test_validate_Natural_Science_Collections_file_against_abcd_xml(self):
 
         schema = xmlschema.XMLSchema(os.path.join(
                     _get_test_data_dir_path(),
@@ -272,7 +286,7 @@ class TestCheckTasks(TestCase):
         self.assertTrue(valid)
 
     # Biocase, Botanischer Garten Berlin
-    def test_atax_real_xml2(self):
+    def test_validate_Biocase_Botanical_Garden_file_against_abcd_xml(self):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
@@ -284,7 +298,7 @@ class TestCheckTasks(TestCase):
         self.assertTrue(valid)
 
     # Staatliche Naturwissenschaftliche Sammlungen Bayerns
-    def test_atax_real_xml3(self):
+    def test_validate_Natural_Science_Collections_single_case_against_abcd_xml(self):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
@@ -296,7 +310,7 @@ class TestCheckTasks(TestCase):
         self.assertTrue(valid)
 
     #xml with own Vences data (subset):
-    def test_atax_real_xml4(self):
+    def test_Vences_specimen_xml_against_abcd_xml(self):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
@@ -308,7 +322,7 @@ class TestCheckTasks(TestCase):
         self.assertTrue(valid)
 
     # xml with own Vences data (subset), file extension pdf, but does not matter:
-    def test_atax_real_xml5(self):
+    def test_Vences_specimen_pdf_against_abcd_xml(self):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
@@ -320,7 +334,7 @@ class TestCheckTasks(TestCase):
         self.assertTrue(valid)
 
     #no xml file at all (but json)
-    def test_atax_no_xml(self):
+    def test_not_xml_file_against_abcd_xml(self):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
@@ -334,7 +348,7 @@ class TestCheckTasks(TestCase):
             self.assertIn('not well-formed (invalid token): line 1, column 0', parse_error.__repr__())
 
     #RecordBasis (Field for Taxonomics) not from the given selection
-    def test_atax_wrong_data(self):
+    def test_wrong_xml_values_against_abcd_xml(self):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
@@ -346,7 +360,7 @@ class TestCheckTasks(TestCase):
         self.assertFalse(valid)
 
     #special ParseError, tag not closed:
-    def test_atax_tag_not_closed(self):
+    def test_xml_tag_not_closed_against_abcd_xml(self):
 
         schema = xmlschema.XMLSchema(os.path.join(
             _get_test_data_dir_path(),
