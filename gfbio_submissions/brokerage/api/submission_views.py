@@ -132,12 +132,12 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                 countdown=SUBMISSION_DELAY) \
                            | update_submission_issue_task.s(
                 submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
-            if instance.target != ATAX:
-                if new_embargo and instance.embargo != new_embargo:
-                    update_chain = update_chain | update_ena_embargo_task.s(
-                        submission_id=instance.pk).set(countdown=SUBMISSION_DELAY) \
-                                   | notify_user_embargo_changed_task.s(
-                        submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+
+            if new_embargo and instance.embargo != new_embargo:
+                update_chain = update_chain | update_ena_embargo_task.s(
+                    submission_id=instance.pk).set(countdown=SUBMISSION_DELAY) \
+                               | notify_user_embargo_changed_task.s(
+                    submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
             update_chain()
 
             if instance.target != ATAX:
@@ -149,8 +149,7 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
                                 instance.broker_submission_id)
                         ).set(countdown=SUBMISSION_DELAY)
                 chain()
-        elif instance.status == Submission.CLOSED and new_embargo and \
-                instance.submission.target != ATAX:
+        elif instance.status == Submission.CLOSED and new_embargo:
             response = Response(
                 data={
                     'message': 'Embargo updated'
