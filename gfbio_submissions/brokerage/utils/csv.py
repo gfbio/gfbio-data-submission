@@ -641,23 +641,34 @@ def check_for_molecular_content(submission):
     return status, messages, check_performed
 
 def extract_specimen(row, field_names, sample_id):
+    from datetime import date
+    import datetime
+
     for k in row.keys():
         row[k] = row[k].strip()
 
     date_string = str()
+    year = ''
+    month = ''
+    day = ''
 
     specimen_attributes = []
     for o in field_names:
         if o not in specimen_core_fields and len(row[o]) and \
                 row[o] not in attribute_value_blacklist:
             if o in abcd_mapping_keys and str(o) == 'date: year':
-               date_string = date_string+str(row[o])
+               year = str(row[o])
+               dt_obj = datetime.datetime(int(year),int(month),int(day))
+               dt_str = dt_obj.strftime("%Y-%m-%d")  #should be a string
+               specimen_attributes.append(
+                   OrderedDict([
+                       ('tag', 'IsoDateTimeBegin'),
+                       ('value', dt_str),
+                   ]))
             elif o in abcd_mapping_keys and str(o) == 'date: month':
-                date_string = date_string + str('-')
-                date_string = date_string+str(row[o])
+                month = str(row[o])
             elif o in abcd_mapping_keys and str(o) == 'date: day':
-                date_string = date_string + str('-')
-                date_string = date_string+str(row[o])
+                day = str(row[o])
             elif o in abcd_mapping_keys:
                 specimen_attributes.append(
                     OrderedDict([
@@ -665,15 +676,6 @@ def extract_specimen(row, field_names, sample_id):
                         ('value', row[o]),
                     ])
                 )
-
-    if(date_string):
-        specimen_attributes.append(
-            OrderedDict([
-                ('tag', 'IsoDateTimeBegin'),
-                ('value', date_string),
-            ])
-        )
-
 
     try:
         unit_id= str(row.get('specimen identifier', 'empty value'))
@@ -732,3 +734,199 @@ def parse_taxonomic_csv(csv_file):
                 )
 
     return taxonomic_requirements
+
+def AddDataSet( root):
+
+    from lxml import etree
+    import os
+
+    abcd = "http://www.tdwg.org/schemas/abcd/2.06"
+    dataset = etree.SubElement(root, "{" + abcd + "}" + "DataSet")
+    return dataset
+
+def AddTechnicalContacts(user, dataset):
+
+    from lxml import etree
+    import os
+
+    abcd = "http://www.tdwg.org/schemas/abcd/2.06"
+    contacts = etree.SubElement(dataset, "{" + abcd + "}" + "TechnicalContacts")
+    contact = etree.SubElement(contacts, "{" + abcd + "}" + "TechnicalContact")
+    name = etree.SubElement(contact, "{" + abcd + "}" + "Name")
+    name.text  = user.email
+
+def AddContentContacts(user, dataset):
+
+    from lxml import etree
+    import os
+
+    abcd = "http://www.tdwg.org/schemas/abcd/2.06"
+    contacts = etree.SubElement(dataset, "{" + abcd + "}" + "ContentContacts")
+    contact = etree.SubElement(contacts, "{" + abcd + "}" + "ContentContact")
+    name = etree.SubElement(contact, "{" + abcd + "}" + "Name")
+    name.text  = user.username
+
+def AddMetaData(user, created, dataset):
+
+    from lxml import etree
+    import os
+    abcd = "http://www.tdwg.org/schemas/abcd/2.06"
+    metadata = etree.SubElement(dataset, "{" + abcd + "}" + "Metadata")
+    description = etree.SubElement(metadata, "{" + abcd + "}" + "Description")
+    representation = etree.SubElement(description, "{" + abcd + "}" + "Representation", language="EN")
+    title = etree.SubElement(representation, "{" + abcd + "}" + "Title")
+    title.text = 'TaxonOmics - New approaches to discovering and naming biodiversity'
+    uri = etree.SubElement(representation, "{" + abcd + "}" + "URI")
+    uri.text = 'https://www.taxon-omics.com/projects'
+    revisiondata = etree.SubElement(metadata, "{" + abcd + "}" + "RevisionData")
+    creators = etree.SubElement(revisiondata, "{" + abcd + "}" + "Creators")
+    creators.text = user.username
+    datemodified = etree.SubElement(revisiondata, "{" + abcd + "}" + "DateModified")
+    datemodified.text = date_time = created.strftime("%Y-%m-%dT%H:%M:%S")
+
+def AddUnits( dataset):
+
+    from lxml import etree
+    import os
+
+    abcd = "http://www.tdwg.org/schemas/abcd/2.06"
+    units = etree.SubElement(dataset, "{" + abcd + "}" + "Units")
+    return units
+
+def AddUnit( units):
+
+    from lxml import etree
+    import os
+
+    abcd = "http://www.tdwg.org/schemas/abcd/2.06"
+    unit = etree.SubElement(units, "{" + abcd + "}" + "Unit")
+    return unit
+
+def AddUnitData(unit,requirements):
+    from lxml import etree
+    import os
+
+    abcd = "http://www.tdwg.org/schemas/abcd/2.06"
+    #unit = etree.SubElement(units, "{" + abcd + "}" + "Unit")
+    sourceinstitutionid = etree.SubElement(unit, "{" + abcd + "}" + "SourceInstitutionID")
+    sourceinstitutionid.text = 'Place here SourceInstitutionID'
+    sourceid = etree.SubElement(unit, "{" + abcd + "}" + "SourceID")
+    sourceid.text = 'Place here SourceIdD'
+    unitid = etree.SubElement(unit, "{" + abcd + "}" + "UnitID")
+    unitid.text = 'Place here UnitID'
+    identifications = etree.SubElement(unit, "{" + abcd + "}" + "Identifications")
+    identification = etree.SubElement(identifications, "{" + abcd + "}" + "Identification")
+    result = etree.SubElement(identification, "{" + abcd + "}" + "Result")
+    taxonidentified = etree.SubElement(result, "{" + abcd + "}" + "TaxonIdentified")
+    scientificname = etree.SubElement(taxonidentified, "{" + abcd + "}" + "ScientificName")
+    fullscientificnamestring = etree.SubElement(scientificname, "{" + abcd + "}" + "FullScientificNameString")
+    fullscientificnamestring.text = 'Place FullScientificNameString here'
+    recordbasis = etree.SubElement(unit, "{" + abcd + "}" + "RecordBasis")
+    recordbasis.text = 'PreservedSpecimen'
+
+
+
+def create_taxonomic_xml_from_dict(csv_file):
+    # use a real path later on
+    from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
+    import xml.etree.ElementTree as ET
+    #from xml.etree.ElementTree import Element, SubElement, tostring, XML
+
+    # switching is possible:
+    # from lxml import etree as ElementTree, more functions
+    import os
+
+    file_names = [
+            'csv_files/specimen_table_Platypelis.csv',
+            #'csv_files/mol_comma_with_empty_rows_cols.csv',
+        ]
+
+    for fn in file_names:
+        with open(os.path.join(_get_test_data_dir_path(), fn),
+            'r',  encoding = 'utf-8-sig') as data_file:
+            requirements = parse_taxonomic_csv(data_file)
+
+        #Creating XML Using the ElementTree Module:
+        root = ET.Element('abcd:DataSet')
+
+        tree = ET.ElementTree(root)
+
+        ET.register_namespace('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
+        ET.register_namespace('xmlns:abcd', 'http://www.tdwg.org/schemas/abcd/2.06')
+        ET.register_namespace('xsi:schemaLocation', 'http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD')
+        name_space = {
+            'xmlns: xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns: abcd = "http://www.tdwg.org/schemas/abcd/2.06" xsi: schemaLocation = " http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"'
+        }
+        namespace = ET.Element(name_space)
+        root.append(namespace)
+
+
+        #xml_file_name = os.path.basename(fn).split('/')[-1]
+        xml_file_name = os.path.basename(fn)
+        xml_file_name = xml_file_name + '.xml'
+        xml_file_name = ''.join(('xml_files/',xml_file_name))
+        with open(os.path.join(_get_test_data_dir_path(), xml_file_name),
+                  'wb') as f:
+            #f.write('<?xml version="1.0"?>' + "\n")
+            #f.write('abcd:DataSets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:abcd="http://www.tdwg.org/schemas/abcd/2.06" xsi:schemaLocation=" http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"'+ "\n")
+            tree.write(f)
+            f.close()
+
+def create_taxonomic_xml_from_dict_lxml(submission, csv_file):
+    # use a real path later on
+    from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
+
+    import lxml
+    from lxml import etree
+    import os
+
+    file_names = [
+            'csv_files/specimen_table_Platypelis.csv',
+            #'csv_files/mol_comma_with_empty_rows_cols.csv',
+        ]
+
+    for fn in file_names:
+        with open(os.path.join(_get_test_data_dir_path(), fn),
+            'r',  encoding = 'utf-8-sig') as data_file:
+            requirements = parse_taxonomic_csv(data_file)
+
+        #Creating XML Using the lxml  etree Module:
+        # set of strings, not used
+        nsmap = {
+            'xmlns: xsi = "http://www.w3.org/2001/XMLSchema-instance",'
+            ' xmlns: abcd = "http://www.tdwg.org/schemas/abcd/2.06",'
+            ' xsi: schemaLocation = " http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"'
+        }
+        xsi = "http://www.w3.org/2001/XMLSchema-instance"
+        abcd = "http://www.tdwg.org/schemas/abcd/2.06"
+        schemaLocation = " http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"
+
+
+        #goal:
+        #abcd: DataSets
+        #xmlns: xsi = "http://www.w3.org/2001/XMLSchema-instance"
+        #xmlns: abcd = "http://www.tdwg.org/schemas/abcd/2.06"
+        #xsi: schemaLocation = " http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"
+
+
+        ns = {"xsi": xsi, "abcd": abcd} # "schemaLocation": schemaLocation}
+        root = etree.Element("{" + abcd + "}DataSets", attrib={"{" + xsi + "}schemaLocation": schemaLocation}, nsmap=ns)
+        #etree.SubElement(root, "{" + abcd + "}" + "DataSet").text = "The data of one line"
+        dataset = AddDataSet( root)
+        AddTechnicalContacts(submission.user, dataset)
+        AddContentContacts(submission.user, dataset)
+        AddMetaData(submission.user, submission.created, dataset)
+        units = AddUnits( dataset)
+        unit = AddUnit(units)
+        AddUnitData(unit,requirements)
+
+        xml_file_name = os.path.basename(fn)
+        xml_file_name = (os.path.splitext(xml_file_name))[0]
+        xml_file_name = xml_file_name + '.xml'
+        xml_file_name = ''.join(('xml_files/',xml_file_name))
+
+        with open(os.path.join(_get_test_data_dir_path(), xml_file_name),
+                  'wb') as f:
+            tree = root.getroottree()
+            tree.write(f, encoding="utf-8", xml_declaration=True, pretty_print=True)
+            f.close()

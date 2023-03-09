@@ -17,7 +17,8 @@ from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
     check_for_molecular_content, extract_sample, check_csv_file_rule, \
-    check_metadata_rule, check_minimum_header_cols, parse_taxonomic_csv, extract_specimen
+    check_metadata_rule, check_minimum_header_cols, parse_taxonomic_csv, extract_specimen, \
+    create_taxonomic_xml_from_dict, create_taxonomic_xml_from_dict_lxml
 
 from gfbio_submissions.brokerage.utils.ena import \
     prepare_ena_data
@@ -1254,3 +1255,39 @@ class TestCSVParsing(TestCase):
         #valid, errors = validate_data_full(requirements['atax_specimens'], ATAX, None)
         #self.assertTrue(valid)
 
+    def test_create_taxonomic_xml(self):
+        import xmlschema
+        import xml.etree.ElementTree as ET
+
+        submission = Submission.objects.first()
+        SubmissionUpload.objects.create(
+            submission=submission,
+            user=submission.user,
+            meta_data=True,
+            file=SimpleUploadedFile('test_submission_upload.csv',
+                                    b'sample_title;NO_DESCR;the;file;contents'),
+        )
+        #use this upload later for file names list
+        file_names = [
+            'csv_files/specimen_table_Platypelis.csv',
+            #'csv_files/mol_comma_with_empty_rows_cols.csv',
+        ]
+
+        for fn in file_names:
+            with open(os.path.join(_get_test_data_dir_path(), fn),
+                      'r',  encoding = 'utf-8-sig') as data_file:
+
+                #create_taxonomic_xml_from_dict(data_file)
+                create_taxonomic_xml_from_dict_lxml(submission,data_file)
+
+                schema = xmlschema.XMLSchema(os.path.join(
+                    _get_test_data_dir_path(),
+                    'xml_files/ABCD_2.06.XSD'))
+
+                try:
+                    valid = schema.is_valid(os.path.join(
+                        _get_test_data_dir_path(),
+                        'xml_files/specimen_table_Platypelis.xml'))
+                    self.assertTrue(valid)
+                except ET.ParseError as parse_error:
+                    self.assertIn('mismatched tag', parse_error.__repr__())
