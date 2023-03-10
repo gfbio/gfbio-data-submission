@@ -1,4 +1,5 @@
 import json
+from pprint import pprint
 from unittest import skip
 
 import arrow
@@ -565,7 +566,7 @@ class TestJiraIssueUpdateView(APITestCase):
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
-                        "customfield_10200": "2023-03-09T00:00:00+00:00",
+                        "customfield_10200": "2025-03-09T00:00:00+00:00",
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
                         "reporter": {
@@ -601,7 +602,7 @@ class TestJiraIssueUpdateView(APITestCase):
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
-                        "customfield_10200": "2023-03-09T00:00:00+00:00",
+                        "customfield_10200": "2025-03-09T00:00:00+00:00",
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
                         "reporter": {
@@ -643,7 +644,7 @@ class TestJiraIssueUpdateView(APITestCase):
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
-                        "customfield_10200": "2023-03-09T00:00:00+00:00",
+                        "customfield_10200": "2025-03-09T00:00:00+00:00",
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
                         "reporter": {
@@ -659,6 +660,8 @@ class TestJiraIssueUpdateView(APITestCase):
                 }
             },
             format='json')
+
+        pprint(response.content)
 
         self.assertEqual(users_in_db, len(User.objects.all()))
         self.assertEqual(1, len(RequestLog.objects.all()))
@@ -685,7 +688,7 @@ class TestJiraIssueUpdateView(APITestCase):
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
-                        "customfield_10200": "2023-03-09T00:00:00+00:00",
+                        "customfield_10200": "2025-03-09T00:00:00+00:00",
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
                         "reporter": {
