@@ -201,9 +201,9 @@ attribute_value_blacklist = [
 ]
 
 specimen_core_fields = [
-    'specimen identifier',
-    'basis of record',
-    'scientific name'
+    'specimen identifier'
+    #'basis of record',
+    #'scientific name'
 ]
 
 abcd_mapping = {
@@ -211,7 +211,7 @@ abcd_mapping = {
 'basis of record': 'RecordBasis',
 'scientific name': 'FullScientificNameString',
 'country (area)': 'Country',
-'locality': 'AreaDetail',
+'locality': 'LocalityText',
 'date: day': 'ISODateTimeBegin',
 'date: month': 'ISODateTimeBegin',
 'date: year': 'ISODateTimeBegin',
@@ -683,8 +683,8 @@ def extract_specimen(row, field_names, sample_id):
         unit_id =  'empty value'
     specimen = {
         'UnitId': row.get('specimen identifier', ''),
-        'RecordBasis': row.get('Basis of record', ''),
-        'FullScientificNameString': row.get('Scientific name', '')
+        #'RecordBasis': row.get('Basis of record', ''),
+        #'FullScientificNameString': row.get('Scientific name', '')
     }
     if len(specimen_attributes):
         specimen['specimen_attributes'] = specimen_attributes
@@ -802,29 +802,96 @@ def AddUnit( units):
     unit = etree.SubElement(units, "{" + abcd + "}" + "Unit")
     return unit
 
-def AddUnitData(unit,requirements):
+def AddUnitData(unit, unid, attr_list):
     from lxml import etree
     import os
 
+    lookup_list = ['UnitID',
+    'RecordBasis',
+    'FullScientificNameString',
+    'Country',
+    'AreaDetail',
+    'ISODateTimeBegin',
+    'PhysicalObjectID',
+    'CollectorFieldNumber',
+    'AgentText',
+    'Sex',
+    'HigherClassification',
+    'HigherTaxonName',
+    'HigherTaxonRank',
+    'LongitudeDecimal',
+    'LatitudeDecimal',
+    'TypeStatus',
+    'TypifiedName',
+    'UnitGUID'
+    ]
+    cdict = {}
+    hlist = []
+    ndict = {}
+
+    for e in attr_list:
+        sdict = dict(e)
+        tagval = ''
+        valval = ''
+        #iterate over the two items and reduce:
+        for key in sdict.keys():
+            #key is a string
+            if(key=='tag'):
+                tagval=sdict[key]
+            elif(key == 'value'):
+                valval=sdict[key]
+        #ndict = {tagval, valval}
+        #cdict.update(ndict)
+        cdict[tagval] = valval
+
     abcd = "http://www.tdwg.org/schemas/abcd/2.06"
     #unit = etree.SubElement(units, "{" + abcd + "}" + "Unit")
+    unitguid = etree.SubElement(unit, "{" + abcd + "}" + "UnitGUID")
+    unitguid.text = 'Place here UnitGUID if there'
     sourceinstitutionid = etree.SubElement(unit, "{" + abcd + "}" + "SourceInstitutionID")
     sourceinstitutionid.text = 'Place here SourceInstitutionID'
     sourceid = etree.SubElement(unit, "{" + abcd + "}" + "SourceID")
-    sourceid.text = 'Place here SourceIdD'
+    sourceid.text = unid[0:2]   #'Place here SourceID'
     unitid = etree.SubElement(unit, "{" + abcd + "}" + "UnitID")
-    unitid.text = 'Place here UnitID'
+    unitid.text = unid   #'Place here UnitID'
     identifications = etree.SubElement(unit, "{" + abcd + "}" + "Identifications")
     identification = etree.SubElement(identifications, "{" + abcd + "}" + "Identification")
     result = etree.SubElement(identification, "{" + abcd + "}" + "Result")
     taxonidentified = etree.SubElement(result, "{" + abcd + "}" + "TaxonIdentified")
+    highertaxa = etree.SubElement(taxonidentified, "{" + abcd + "}" + "HigherTaxa")
+    highertaxon = etree.SubElement(highertaxa, "{" + abcd + "}" + "HigherTaxon")
+    highertaxonname = etree.SubElement(highertaxon, "{" + abcd + "}" + "HigherTaxonName")
+    highertaxonname.text = cdict.get('HigherTaxonName')
+    highertaxonrank = etree.SubElement(highertaxon, "{" + abcd + "}" + "HigherTaxonRank")
+    highertaxonrank.text = 'familia'  #cdict.get('HigherTaxonRank') is not correct
     scientificname = etree.SubElement(taxonidentified, "{" + abcd + "}" + "ScientificName")
     fullscientificnamestring = etree.SubElement(scientificname, "{" + abcd + "}" + "FullScientificNameString")
-    fullscientificnamestring.text = 'Place FullScientificNameString here'
+    fullscientificnamestring.text = cdict.get('FullScientificNameString')  #cdict['FullScientificNameString']   #'Place here FullScientificNameString'
     recordbasis = etree.SubElement(unit, "{" + abcd + "}" + "RecordBasis")
-    recordbasis.text = 'PreservedSpecimen'
-
-
+    recordbasis.text = cdict.get('RecordBasis')   #cdict['RecordBasis']   #''place here fixed vocabulary for RecordBasis ,PreservedSpecimen'
+    gathering = etree.SubElement(unit, "{" + abcd + "}" + "Gathering")
+    datetime = etree.SubElement(gathering, "{" + abcd + "}" + "DateTime")
+    isodatetimebegin = etree.SubElement(datetime, "{" + abcd + "}" + "ISODateTimeBegin")
+    isodatetimebegin.text = cdict.get('IsoDateTimeBegin')
+    agents = etree.SubElement(gathering, "{" + abcd + "}" + "Agents")
+    gatheringagentstext = etree.SubElement(agents, "{" + abcd + "}" + "GatheringAgentsText")
+    gatheringagentstext.text = cdict.get('AgentText')
+    localitytext = etree.SubElement(gathering, "{" + abcd + "}" + "LocalityText")
+    localitytext.text = cdict.get('LocalityText')
+    country = etree.SubElement(gathering, "{" + abcd + "}" + "Country")
+    name = etree.SubElement(country, "{" + abcd + "}" + "Name")
+    name.text = cdict.get('Country')
+    sitecoordinatesets = etree.SubElement(gathering, "{" + abcd + "}" + "SiteCoordinateSets")
+    sitecoordinates = etree.SubElement(sitecoordinatesets, "{" + abcd + "}" + "SiteCoordinates")
+    coordinateslatlong = etree.SubElement(sitecoordinates, "{" + abcd + "}" + "CoordinatesLatLong")
+    longitudedecimal = etree.SubElement(coordinateslatlong, "{" + abcd + "}" + "LongitudeDecimal")
+    longitudedecimal.text = cdict.get('LongitudeDecimal')
+    latitudedecimal = etree.SubElement(coordinateslatlong, "{" + abcd + "}" + "LatitudeDecimal")
+    latitudedecimal.text = cdict.get('LatitudeDecimal')
+    collectorsfieldnumber = etree.SubElement(unit, "{" + abcd + "}" + "CollectorsFieldNumber")
+    collectorsfieldnumber.text =cdict.get('CollectorFieldNumber')
+    sex = etree.SubElement(unit, "{" + abcd + "}" + "Sex")
+    sex.text = cdict.get('Sex')[:1]
 
 def create_taxonomic_xml_from_dict(csv_file):
     # use a real path later on
@@ -917,16 +984,28 @@ def create_taxonomic_xml_from_dict_lxml(submission, csv_file):
         AddContentContacts(submission.user, dataset)
         AddMetaData(submission.user, submission.created, dataset)
         units = AddUnits( dataset)
+        #requirement = atax_specimens:
+        unid=None
+        attr_list = None
+        #requirements: dict 1
+        for key, value in requirements.items():
+            if(key=='atax_specimens'):
+                attr_list = value
+        #attr_list: list of dicts
+        attr_list.count(len)
+        unid = attr_list[0]['UnitId']
+        inhalt = attr_list[0] ['specimen_attributes']  #list 14
+
         unit = AddUnit(units)
-        AddUnitData(unit,requirements)
+        AddUnitData(unit, unid, inhalt)
 
         xml_file_name = os.path.basename(fn)
         xml_file_name = (os.path.splitext(xml_file_name))[0]
         xml_file_name = xml_file_name + '.xml'
         xml_file_name = ''.join(('xml_files/',xml_file_name))
 
-        with open(os.path.join(_get_test_data_dir_path(), xml_file_name),
-                  'wb') as f:
-            tree = root.getroottree()
-            tree.write(f, encoding="utf-8", xml_declaration=True, pretty_print=True)
-            f.close()
+        #with open(os.path.join(_get_test_data_dir_path(), xml_file_name),
+        #          'wb') as f:
+        # tree = root.getroottree()
+        # tree.write(f, encoding="utf-8", xml_declaration=True, pretty_print=True)
+        # f.close()

@@ -1,513 +1,528 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<abcd:DataSets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:abcd="http://www.tdwg.org/schemas/abcd/2.06" xsi:schemaLocation=" http://www.tdwg.org/schemas/abcd/2.06 http://rs.tdwg.org/abcd/2.06/ABCD_2.06.xsd">
-<abcd:DataSet>
-<abcd:DatasetGUID>http://id.snsb.info/gfbio/projects_gfbio/975</abcd:DatasetGUID>
-<abcd:TechnicalContacts>
-<abcd:TechnicalContact>
-<abcd:Name>
-Staatliche Naturwissenschaftliche Sammlungen Bayerns – SNSB IT Center, München
-</abcd:Name>
-<abcd:Email>snsb-it-center@snsb.de</abcd:Email>
-</abcd:TechnicalContact>
-</abcd:TechnicalContacts>
-<abcd:ContentContacts>
-<abcd:ContentContact>
-<abcd:Name>Teddy Bruy</abcd:Name>
-<abcd:Email>teddy.bruy@gmail.com</abcd:Email>
-</abcd:ContentContact>
-</abcd:ContentContacts>
-<abcd:Metadata>
-<abcd:Description>
-<abcd:Representation language="en">
-<abcd:Title>
-A detailed morphological dataset outlining the diversity of the genus Mimophis (Serpentes: Psammophiinae)
-</abcd:Title>
-<abcd:Details>
-The purpose of this project is to produce a comprehensive integrative study of the snake genus Mimophis. These snakes have one of the largest distribution on the island of Madagascar, where they are endemic. Until 2017, this genus was considered as monotypic and represented by the species M. mahfalensis. The M. occultus species, recently described, is only distinguishable by molecular and geographical data and its status still in debate. We thus focus our effort on the morphological data and introduce for the first time an integrative study of the population of the Highlands. For this study, we generated a morphological dataset for 200 specimens of the MNHN (Muséum National d'Histoire Naturelle, Paris) and the ZSM (Zoologische Staatssammlung München). The timespan is 2017-07-01 to 2018-03-21.
-</abcd:Details>
-<abcd:URI>
-http://biocase.snsb.info/wrapper/querytool/main.cgi?dsa=GFBio201900216SNSB
-</abcd:URI>
-</abcd:Representation>
-</abcd:Description>
-<abcd:RevisionData>
-<abcd:DateModified>2021-01-18T12:50:37</abcd:DateModified>
-</abcd:RevisionData>
-<abcd:IPRStatements>
-<abcd:Copyrights>
-<abcd:Copyright language="en">
-<abcd:Text>MNHN, SNSB-ZSM</abcd:Text>
-</abcd:Copyright>
-</abcd:Copyrights>
-<abcd:Citations>
-<abcd:Citation language="en">
-<abcd:Text>
-Bruy, Teddy; Vences, Miguel; Glaw, Frank &amp; Miralles, Aurélien (2021). A detailed morphological dataset outlining the diversity of the genus Mimophis (Serpentes: Psammophiinae). [Dataset]. Version: 20211016. Data Publisher: Staatliche Naturwissenschaftliche Sammlungen Bayerns – SNSB IT Center, München. http://biocase.snsb.info/wrapper/querytool/main.cgi?dsa=GFBio201900216SNSB.
-</abcd:Text>
-</abcd:Citation>
-</abcd:Citations>
-</abcd:IPRStatements>
-</abcd:Metadata>
-<abcd:Units>
-<abcd:Unit>
-<abcd:SourceInstitutionID>MNHM</abcd:SourceInstitutionID>
-<abcd:SourceID>GFBio201900216SNSB</abcd:SourceID>
-<abcd:UnitID>MNHN-RA-1901.197 / 246 / 41</abcd:UnitID>
-<abcd:DateLastEdited>2019-02-19T12:10:09</abcd:DateLastEdited>
-<abcd:Identifications>
-<abcd:Identification>
-<abcd:Result>
-<abcd:TaxonIdentified>
-<abcd:HigherTaxa>
-<abcd:HigherTaxon>
-<abcd:HigherTaxonName>Animalia</abcd:HigherTaxonName>
-<abcd:HigherTaxonRank>regnum</abcd:HigherTaxonRank>
-</abcd:HigherTaxon>
-</abcd:HigherTaxa>
-<abcd:ScientificName>
-<abcd:FullScientificNameString>Mimophis</abcd:FullScientificNameString>
-</abcd:ScientificName>
-</abcd:TaxonIdentified>
-</abcd:Result>
-</abcd:Identification>
-</abcd:Identifications>
-<abcd:RecordBasis>PreservedSpecimen</abcd:RecordBasis>
-<abcd:KindOfUnit language="en">preserved specimen</abcd:KindOfUnit>
-<abcd:Gathering>
-<abcd:DateTime>
-<abcd:ISODateTimeBegin>1901-04-18</abcd:ISODateTimeBegin>
-</abcd:DateTime>
-<abcd:Agents>
-<abcd:GatheringAgent>
-<abcd:AgentText>Alluaud, Charles</abcd:AgentText>
-</abcd:GatheringAgent>
-</abcd:Agents>
-<abcd:Country>
-<abcd:Name>Madagascar</abcd:Name>
-<abcd:ISO3166Code>MDG</abcd:ISO3166Code>
-</abcd:Country>
-<abcd:SiteCoordinateSets>
-<abcd:SiteCoordinates>
-<abcd:CoordinatesLatLong>
-<abcd:LongitudeDecimal>46.883332</abcd:LongitudeDecimal>
-<abcd:LatitudeDecimal>-21.433351</abcd:LatitudeDecimal>
-<abcd:SpatialDatum>WGS84</abcd:SpatialDatum>
-</abcd:CoordinatesLatLong>
-</abcd:SiteCoordinates>
-</abcd:SiteCoordinateSets>
-</abcd:Gathering>
-<abcd:MeasurementsOrFacts>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>Midbody width</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>9,18</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>Midbody width</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>Ventral scales count</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>150,00</abcd:LowerValue>
-<abcd:UnitOfMeasurement>count</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>Ventral scales count</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>Caudal scales count</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>77,00</abcd:LowerValue>
-<abcd:UnitOfMeasurement>count</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>Caudal scales count</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>Dorsal scales count</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>17,00</abcd:LowerValue>
-<abcd:UnitOfMeasurement>count</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>Dorsal scales count</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>Temporal scales left side count</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>2,00</abcd:LowerValue>
-<abcd:UnitOfMeasurement>count</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>Temporal scales left side count</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>Temporal scales right side count</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>2,00</abcd:LowerValue>
-<abcd:UnitOfMeasurement>count</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>Temporal scales right side count</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>Head parietal width</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>8,27</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>Head parietal width</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>Head parietal length</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>13,50</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>Head parietal length</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>Head parietal height</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>6,72</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>Head parietal height</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>Head postoccular width</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>8,57</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>Head postoccular width</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>Head postoccular length</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>7,89</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>Head postoccular length</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>Head internasal length</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>3,63</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>Head internasal length</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>Head internasal width</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>6,51</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>Head internasal width</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>BIO1</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>180</abcd:LowerValue>
-<abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>BIO1</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>BIO2</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>110</abcd:LowerValue>
-<abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>BIO2</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>BIO3</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>60</abcd:LowerValue>
-<abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>BIO3</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>BIO4</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>2541</abcd:LowerValue>
-<abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>BIO4</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>BIO5</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>267</abcd:LowerValue>
-<abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>BIO5</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>BIO6</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>86</abcd:LowerValue>
-<abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>BIO6</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>BIO7</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>181</abcd:LowerValue>
-<abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>BIO7</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>BIO8</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>206</abcd:LowerValue>
-<abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>BIO8</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>BIO9</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>143</abcd:LowerValue>
-<abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>BIO9</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>BIO10</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>206</abcd:LowerValue>
-<abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>BIO10</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>BIO11</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>143</abcd:LowerValue>
-<abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>BIO11</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>BIO12</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>1148</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>BIO12</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>BIO13</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>287</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>BIO13</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>BIO14</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>16</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>BIO14</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>BIO15</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>100</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>BIO15</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>BIO16</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>711</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>BIO16</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>BIO17</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>50</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>BIO17</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>BIO18</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>651</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>BIO18</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>BIO19</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>50</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>BIO19</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>Dorsal pattern</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>Zig-zag</abcd:LowerValue>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>Dorsal pattern</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>SVL</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>375,00</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>SVL</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>Tail length</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>129,00</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>Tail length</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>Total length</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>504,00</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>Total length</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-<abcd:MeasurementOrFact>
-<abcd:MeasurementOrFactAtomised>
-<abcd:Parameter>Relative tail length</abcd:Parameter>
-<abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
-<abcd:LowerValue>375,00</abcd:LowerValue>
-<abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
-<abcd:MeasurementOrFactReference>
-<abcd:TitleCitation>Relative tail length</abcd:TitleCitation>
-</abcd:MeasurementOrFactReference>
-</abcd:MeasurementOrFactAtomised>
-</abcd:MeasurementOrFact>
-</abcd:MeasurementsOrFacts>
-<abcd:RecordURI>
-http://biocase.snsb.info/wrapper/querytool/details.cgi?dsa=GFBio201900216SNSB&amp;detail=unit&amp;wrapper_url=http://biocase.snsb.info/wrapper/pywrapper.cgi?dsa=GFBio201900216SNSBschema=http://www.tdwg.org/schemas/abcd/2.06&amp;cat=MNHN-RA-1901.197 / 246 / 41
-</abcd:RecordURI>
-</abcd:Unit>
-</abcd:Units>
-</abcd:DataSet>
+<abcd:DataSets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:abcd="http://www.tdwg.org/schemas/abcd/2.06"
+               xsi:schemaLocation=" http://www.tdwg.org/schemas/abcd/2.06 http://rs.tdwg.org/abcd/2.06/ABCD_2.06.xsd">
+    <abcd:DataSet>
+        <abcd:DatasetGUID>http://id.snsb.info/gfbio/projects_gfbio/975</abcd:DatasetGUID>
+        <abcd:TechnicalContacts>
+            <abcd:TechnicalContact>
+                <abcd:Name>
+                    Staatliche Naturwissenschaftliche Sammlungen Bayerns – SNSB IT Center, München
+                </abcd:Name>
+                <abcd:Email>snsb-it-center@snsb.de</abcd:Email>
+            </abcd:TechnicalContact>
+        </abcd:TechnicalContacts>
+        <abcd:ContentContacts>
+            <abcd:ContentContact>
+                <abcd:Name>Teddy Bruy</abcd:Name>
+                <abcd:Email>teddy.bruy@gmail.com</abcd:Email>
+            </abcd:ContentContact>
+        </abcd:ContentContacts>
+        <abcd:Metadata>
+            <abcd:Description>
+                <abcd:Representation language="en">
+                    <abcd:Title>
+                        A detailed morphological dataset outlining the diversity of the genus Mimophis (Serpentes:
+                        Psammophiinae)
+                    </abcd:Title>
+                    <abcd:Details>
+                        The purpose of this project is to produce a comprehensive integrative study of the snake genus
+                        Mimophis. These snakes have one of the largest distribution on the island of Madagascar, where
+                        they are endemic. Until 2017, this genus was considered as monotypic and represented by the
+                        species M. mahfalensis. The M. occultus species, recently described, is only distinguishable by
+                        molecular and geographical data and its status still in debate. We thus focus our effort on the
+                        morphological data and introduce for the first time an integrative study of the population of
+                        the Highlands. For this study, we generated a morphological dataset for 200 specimens of the
+                        MNHN (Muséum National d'Histoire Naturelle, Paris) and the ZSM (Zoologische Staatssammlung
+                        München). The timespan is 2017-07-01 to 2018-03-21.
+                    </abcd:Details>
+                    <abcd:URI>
+                        http://biocase.snsb.info/wrapper/querytool/main.cgi?dsa=GFBio201900216SNSB
+                    </abcd:URI>
+                </abcd:Representation>
+            </abcd:Description>
+            <abcd:RevisionData>
+                <abcd:DateModified>2021-01-18T12:50:37</abcd:DateModified>
+            </abcd:RevisionData>
+            <abcd:IPRStatements>
+                <abcd:Copyrights>
+                    <abcd:Copyright language="en">
+                        <abcd:Text>MNHN, SNSB-ZSM</abcd:Text>
+                    </abcd:Copyright>
+                </abcd:Copyrights>
+                <abcd:Citations>
+                    <abcd:Citation language="en">
+                        <abcd:Text>
+                            Bruy, Teddy; Vences, Miguel; Glaw, Frank &amp; Miralles, Aurélien (2021). A detailed
+                            morphological dataset outlining the diversity of the genus Mimophis (Serpentes:
+                            Psammophiinae). [Dataset]. Version: 20211016. Data Publisher: Staatliche
+                            Naturwissenschaftliche Sammlungen Bayerns – SNSB IT Center, München.
+                            http://biocase.snsb.info/wrapper/querytool/main.cgi?dsa=GFBio201900216SNSB.
+                        </abcd:Text>
+                    </abcd:Citation>
+                </abcd:Citations>
+            </abcd:IPRStatements>
+        </abcd:Metadata>
+        <abcd:Units>
+            <abcd:Unit>
+                <abcd:SourceInstitutionID>MNHM</abcd:SourceInstitutionID>
+                <abcd:SourceID>GFBio201900216SNSB</abcd:SourceID>
+                <abcd:UnitID>MNHN-RA-1901.197 / 246 / 41</abcd:UnitID>
+                <abcd:DateLastEdited>2019-02-19T12:10:09</abcd:DateLastEdited>
+                <abcd:Identifications>
+                    <abcd:Identification>
+                        <abcd:Result>
+                            <abcd:TaxonIdentified>
+                                <abcd:HigherTaxa>
+                                    <abcd:HigherTaxon>
+                                        <abcd:HigherTaxonName>Animalia</abcd:HigherTaxonName>
+                                        <abcd:HigherTaxonRank>regnum</abcd:HigherTaxonRank>
+                                    </abcd:HigherTaxon>
+                                </abcd:HigherTaxa>
+                                <abcd:ScientificName>
+                                    <abcd:FullScientificNameString>Mimophis</abcd:FullScientificNameString>
+                                </abcd:ScientificName>
+                            </abcd:TaxonIdentified>
+                        </abcd:Result>
+                    </abcd:Identification>
+                </abcd:Identifications>
+                <abcd:RecordBasis>PreservedSpecimen</abcd:RecordBasis>
+                <abcd:KindOfUnit language="en">preserved specimen</abcd:KindOfUnit>
+                <abcd:Gathering>
+                    <abcd:DateTime>
+                        <abcd:ISODateTimeBegin>1901-04-18</abcd:ISODateTimeBegin>
+                    </abcd:DateTime>
+                    <abcd:Agents>
+                        <abcd:GatheringAgent>
+                            <abcd:AgentText>Alluaud, Charles</abcd:AgentText>
+                        </abcd:GatheringAgent>
+                    </abcd:Agents>
+                    <abcd:Country>
+                        <abcd:Name>Madagascar</abcd:Name>
+                        <abcd:ISO3166Code>MDG</abcd:ISO3166Code>
+                    </abcd:Country>
+                    <abcd:SiteCoordinateSets>
+                        <abcd:SiteCoordinates>
+                            <abcd:CoordinatesLatLong>
+                                <abcd:LongitudeDecimal>46.883332</abcd:LongitudeDecimal>
+                                <abcd:LatitudeDecimal>-21.433351</abcd:LatitudeDecimal>
+                                <abcd:SpatialDatum>WGS84</abcd:SpatialDatum>
+                            </abcd:CoordinatesLatLong>
+                        </abcd:SiteCoordinates>
+                    </abcd:SiteCoordinateSets>
+                </abcd:Gathering>
+                <abcd:MeasurementsOrFacts>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>Midbody width</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>9,18</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>Midbody width</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>Ventral scales count</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>150,00</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>count</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>Ventral scales count</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>Caudal scales count</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>77,00</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>count</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>Caudal scales count</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>Dorsal scales count</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>17,00</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>count</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>Dorsal scales count</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>Temporal scales left side count</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>2,00</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>count</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>Temporal scales left side count</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>Temporal scales right side count</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>2,00</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>count</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>Temporal scales right side count</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>Head parietal width</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>8,27</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>Head parietal width</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>Head parietal length</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>13,50</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>Head parietal length</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>Head parietal height</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>6,72</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>Head parietal height</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>Head postoccular width</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>8,57</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>Head postoccular width</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>Head postoccular length</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>7,89</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>Head postoccular length</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>Head internasal length</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>3,63</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>Head internasal length</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>Head internasal width</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>6,51</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>Head internasal width</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>BIO1</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>180</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>BIO1</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>BIO2</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>110</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>BIO2</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>BIO3</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>60</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>BIO3</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>BIO4</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>2541</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>BIO4</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>BIO5</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>267</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>BIO5</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>BIO6</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>86</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>BIO6</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>BIO7</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>181</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>BIO7</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>BIO8</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>206</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>BIO8</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>BIO9</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>143</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>BIO9</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>BIO10</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>206</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>BIO10</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>BIO11</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>143</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>°C/10</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>BIO11</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>BIO12</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>1148</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>BIO12</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>BIO13</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>287</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>BIO13</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>BIO14</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>16</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>BIO14</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>BIO15</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>100</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>BIO15</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>BIO16</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>711</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>BIO16</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>BIO17</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>50</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>BIO17</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>BIO18</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>651</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>BIO18</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>BIO19</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>50</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>BIO19</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>Dorsal pattern</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>Zig-zag</abcd:LowerValue>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>Dorsal pattern</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>SVL</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>375,00</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>SVL</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>Tail length</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>129,00</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>Tail length</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>Total length</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>504,00</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>Total length</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                    <abcd:MeasurementOrFact>
+                        <abcd:MeasurementOrFactAtomised>
+                            <abcd:Parameter>Relative tail length</abcd:Parameter>
+                            <abcd:AppliesTo>(Analysis 1)</abcd:AppliesTo>
+                            <abcd:LowerValue>375,00</abcd:LowerValue>
+                            <abcd:UnitOfMeasurement>mm</abcd:UnitOfMeasurement>
+                            <abcd:MeasurementOrFactReference>
+                                <abcd:TitleCitation>Relative tail length</abcd:TitleCitation>
+                            </abcd:MeasurementOrFactReference>
+                        </abcd:MeasurementOrFactAtomised>
+                    </abcd:MeasurementOrFact>
+                </abcd:MeasurementsOrFacts>
+                <abcd:RecordURI>
+                    http://biocase.snsb.info/wrapper/querytool/details.cgi?dsa=GFBio201900216SNSB&amp;detail=unit&amp;wrapper_url=http://biocase.snsb.info/wrapper/pywrapper.cgi?dsa=GFBio201900216SNSBschema=http://www.tdwg.org/schemas/abcd/2.06&amp;cat=MNHN-RA-1901.197
+                    / 246 / 41
+                </abcd:RecordURI>
+            </abcd:Unit>
+        </abcd:Units>
+    </abcd:DataSet>
 </abcd:DataSets>

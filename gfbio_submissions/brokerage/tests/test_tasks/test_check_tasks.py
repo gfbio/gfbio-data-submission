@@ -321,6 +321,21 @@ class TestCheckTasks(TestCase):
             'xml_files/TAX_ABCD_example.xml'))
         self.assertTrue(valid)
 
+    @skip('For development tests')
+    def test_Vences_specimen_xml_against_abcd_extended_xml(self):
+
+        schema = xmlschema.XMLSchema(os.path.join(
+            _get_test_data_dir_path(),
+            'xml_files/ABCD_2.06.XSD'))
+        try:
+            valid = schema.is_valid(os.path.join(
+                _get_test_data_dir_path(),
+                'xml_files/TAX_ABCD_example_to_extend.xml'))
+        except ET.ParseError as parse_error:
+            self.assertIn('not well-formed (invalid token): line 1, column 0', parse_error.__repr__())
+
+        self.assertTrue(valid)
+
     # xml with own Vences data (subset), file extension pdf, but does not matter:
     def test_Vences_specimen_pdf_against_abcd_xml(self):
 
