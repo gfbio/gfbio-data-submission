@@ -171,8 +171,8 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
                 }
             }))
         # for  the following line add ATAX target in models.py!
-        #self.assertEqual(201, min_response.status_code)
-        self.assertEqual(400, min_response.status_code)
+        self.assertEqual(201, min_response.status_code)
+
 
     @responses.activate
     def test_no_release_unknown_target(self):

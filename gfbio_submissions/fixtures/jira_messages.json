@@ -58,5 +58,15 @@
       "name": "NOTIFY_EMBARGO_CHANGED",
       "message": "Dear submitter,\r\n\r\nyou have successfully changed the embargo date of your data set.\r\nThe data will be released on {embargo}.\r\n\r\nBest regards,\r\nGFBio Data Submission Team"
     }
+  },
+  {
+    "model": "brokerage.jiramessage",
+    "pk": 7,
+    "fields": {
+      "created": "2021-01-21T13:41:34.236Z",
+      "modified": "2021-01-21T13:41:34.236Z",
+      "name": "WELCOME_ATAX_COMMENT",
+      "message": "Dear submitter,\r\n\r\nthank you for submitting your data via GFBio!\r\n\r\nThe GFBio Submission ID for your dataset entitled \"{title}\" is: {id}.\r\nPlease include this ID in any communication regarding this submission.\r\n\r\nWe will review your submission and get back to you as soon as possible.\r\nIf you have any questions or comments, you can always reply to this email,\r\nkeeping the subject line intact and using the same email account you are registered in GFBio with.\r\nAlternatively, you can view this submission request under\r\nhttps://helpdesk.gfbio.org/servicedesk/customer/portal/6/{reference} (your GFBio credentials are valid there).\r\n\r\nBe advised that by depositing data in ENA you agree to the INSDC Policy (http://www.insdc.org/policy.html).\r\nThis includes, but is not limited to, the fact that your data will be available without any restrictions.\r\nPlease note that while we support you in archiving your data to the highest possible standards,\r\nthe responsibility whether you are allowed to release the data to the public and under what restrictions,\r\nstill lies with you. The same applies to the correctness of the data you provide.\r\n\r\nBest Regards,\r\nthe GFBio Data Submission Team"
+    }
   }
 ]
