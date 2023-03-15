@@ -859,16 +859,26 @@ def AddUnitData(unit, unid, attr_list):
     result = etree.SubElement(identification, "{" + abcd + "}" + "Result")
     taxonidentified = etree.SubElement(result, "{" + abcd + "}" + "TaxonIdentified")
     highertaxa = etree.SubElement(taxonidentified, "{" + abcd + "}" + "HigherTaxa")
-    highertaxon = etree.SubElement(highertaxa, "{" + abcd + "}" + "HigherTaxon")
-    highertaxonname = etree.SubElement(highertaxon, "{" + abcd + "}" + "HigherTaxonName")
+    highertaxon1 = etree.SubElement(highertaxa, "{" + abcd + "}" + "HigherTaxon")
+    highertaxonname = etree.SubElement(highertaxon1, "{" + abcd + "}" + "HigherTaxonName")
     highertaxonname.text = cdict.get('HigherTaxonName')
-    highertaxonrank = etree.SubElement(highertaxon, "{" + abcd + "}" + "HigherTaxonRank")
+    highertaxonrank = etree.SubElement(highertaxon1, "{" + abcd + "}" + "HigherTaxonRank")
     highertaxonrank.text = 'familia'  #cdict.get('HigherTaxonRank') is not correct
+    highertaxon2 = etree.SubElement(highertaxa, "{" + abcd + "}" + "HigherTaxon")
+    highertaxonname = etree.SubElement(highertaxon2, "{" + abcd + "}" + "HigherTaxonName")
+    highertaxonname.text = cdict.get('HigherClassification')
+    highertaxonrank = etree.SubElement(highertaxon2, "{" + abcd + "}" + "HigherTaxonRank")
+    highertaxonrank.text = 'regnum'
     scientificname = etree.SubElement(taxonidentified, "{" + abcd + "}" + "ScientificName")
     fullscientificnamestring = etree.SubElement(scientificname, "{" + abcd + "}" + "FullScientificNameString")
     fullscientificnamestring.text = cdict.get('FullScientificNameString')  #cdict['FullScientificNameString']   #'Place here FullScientificNameString'
     recordbasis = etree.SubElement(unit, "{" + abcd + "}" + "RecordBasis")
     recordbasis.text = cdict.get('RecordBasis')   #cdict['RecordBasis']   #''place here fixed vocabulary for RecordBasis ,PreservedSpecimen'
+    specimenunit = etree.SubElement(unit, "{" + abcd + "}" + "SpecimenUnit")
+    nomenclaturaltypedesignations = etree.SubElement(specimenunit, "{" + abcd + "}" + "NomenclaturalTypeDesignations")
+    nomenclaturaltypedesignation = etree.SubElement(nomenclaturaltypedesignations, "{" + abcd + "}" + "NomenclaturalTypeDesignation")
+    typestatus = etree.SubElement(nomenclaturaltypedesignation, "{" + abcd + "}" + "TypeStatus")
+    typestatus.text = 'TOPO'    #cdict.get('TypeStatus') if not empty
     gathering = etree.SubElement(unit, "{" + abcd + "}" + "Gathering")
     datetime = etree.SubElement(gathering, "{" + abcd + "}" + "DateTime")
     isodatetimebegin = etree.SubElement(datetime, "{" + abcd + "}" + "ISODateTimeBegin")
@@ -877,6 +887,7 @@ def AddUnitData(unit, unid, attr_list):
     gatheringagentstext = etree.SubElement(agents, "{" + abcd + "}" + "GatheringAgentsText")
     gatheringagentstext.text = cdict.get('AgentText')
     localitytext = etree.SubElement(gathering, "{" + abcd + "}" + "LocalityText")
+    localitytext.set('language', ''"EN"'')
     localitytext.text = cdict.get('LocalityText')
     country = etree.SubElement(gathering, "{" + abcd + "}" + "Country")
     name = etree.SubElement(country, "{" + abcd + "}" + "Name")
@@ -890,8 +901,9 @@ def AddUnitData(unit, unid, attr_list):
     latitudedecimal.text = cdict.get('LatitudeDecimal')
     collectorsfieldnumber = etree.SubElement(unit, "{" + abcd + "}" + "CollectorsFieldNumber")
     collectorsfieldnumber.text =cdict.get('CollectorFieldNumber')
-    sex = etree.SubElement(unit, "{" + abcd + "}" + "Sex")
-    sex.text = cdict.get('Sex')[:1]
+    if cdict.get('Sex',None):
+        sex = etree.SubElement(unit, "{" + abcd + "}" + "Sex")
+        sex.text = cdict.get('Sex')[:1]
 
 def create_taxonomic_xml_from_dict(csv_file):
     # use a real path later on
@@ -932,8 +944,7 @@ def create_taxonomic_xml_from_dict(csv_file):
         xml_file_name = os.path.basename(fn)
         xml_file_name = xml_file_name + '.xml'
         xml_file_name = ''.join(('xml_files/',xml_file_name))
-        with open(os.path.join(_get_test_data_dir_path(), xml_file_name),
-                  'wb') as f:
+        with open(os.path.join(_get_test_data_dir_path(), xml_file_name),'wb') as f:
             #f.write('<?xml version="1.0"?>' + "\n")
             #f.write('abcd:DataSets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:abcd="http://www.tdwg.org/schemas/abcd/2.06" xsi:schemaLocation=" http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"'+ "\n")
             tree.write(f)
@@ -992,20 +1003,22 @@ def create_taxonomic_xml_from_dict_lxml(submission, csv_file):
             if(key=='atax_specimens'):
                 attr_list = value
         #attr_list: list of dicts
-        attr_list.count(len)
-        unid = attr_list[0]['UnitId']
-        inhalt = attr_list[0] ['specimen_attributes']  #list 14
 
-        unit = AddUnit(units)
-        AddUnitData(unit, unid, inhalt)
+        length = len(attr_list)
+
+        for i in range(length):
+            unid = attr_list[i]['UnitId']
+            inhalt = attr_list[i] ['specimen_attributes']  #list 14
+
+            unit = AddUnit(units)
+            AddUnitData(unit, unid, inhalt)
 
         xml_file_name = os.path.basename(fn)
         xml_file_name = (os.path.splitext(xml_file_name))[0]
         xml_file_name = xml_file_name + '.xml'
         xml_file_name = ''.join(('xml_files/',xml_file_name))
 
-        #with open(os.path.join(_get_test_data_dir_path(), xml_file_name),
-        #          'wb') as f:
-        # tree = root.getroottree()
-        # tree.write(f, encoding="utf-8", xml_declaration=True, pretty_print=True)
-        # f.close()
+        # with open(os.path.join(_get_test_data_dir_path(), xml_file_name),'wb') as f:
+            # tree = root.getroottree()
+            # tree.write(f, encoding="utf-8", xml_declaration=True, pretty_print=True)
+            # f.close()
