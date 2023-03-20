@@ -20,7 +20,7 @@
       </abcd:Description>
       <abcd:RevisionData>
         <abcd:Creators>horst</abcd:Creators>
-        <abcd:DateModified>2023-03-15T16:38:15</abcd:DateModified>
+        <abcd:DateModified>2023-03-20T12:17:24</abcd:DateModified>
       </abcd:RevisionData>
     </abcd:Metadata>
     <abcd:Units>
@@ -52,11 +52,9 @@
         </abcd:Identifications>
         <abcd:RecordBasis>PreservedSpecimen</abcd:RecordBasis>
         <abcd:SpecimenUnit>
-          <abcd:NomenclaturalTypeDesignations>
-            <abcd:NomenclaturalTypeDesignation>
-              <abcd:TypeStatus>TOPO</abcd:TypeStatus>
-            </abcd:NomenclaturalTypeDesignation>
-          </abcd:NomenclaturalTypeDesignations>
+          <abcd:Accessions>
+            <abcd:AccessionNumber>ZSM 5652/2012</abcd:AccessionNumber>
+          </abcd:Accessions>
         </abcd:SpecimenUnit>
         <abcd:Gathering>
           <abcd:DateTime>
@@ -109,11 +107,9 @@
         </abcd:Identifications>
         <abcd:RecordBasis>PreservedSpecimen</abcd:RecordBasis>
         <abcd:SpecimenUnit>
-          <abcd:NomenclaturalTypeDesignations>
-            <abcd:NomenclaturalTypeDesignation>
-              <abcd:TypeStatus>TOPO</abcd:TypeStatus>
-            </abcd:NomenclaturalTypeDesignation>
-          </abcd:NomenclaturalTypeDesignations>
+          <abcd:Accessions>
+            <abcd:AccessionNumber>ZSM 5651/2012</abcd:AccessionNumber>
+          </abcd:Accessions>
         </abcd:SpecimenUnit>
         <abcd:Gathering>
           <abcd:DateTime>
@@ -166,11 +162,9 @@
         </abcd:Identifications>
         <abcd:RecordBasis>PreservedSpecimen</abcd:RecordBasis>
         <abcd:SpecimenUnit>
-          <abcd:NomenclaturalTypeDesignations>
-            <abcd:NomenclaturalTypeDesignation>
-              <abcd:TypeStatus>TOPO</abcd:TypeStatus>
-            </abcd:NomenclaturalTypeDesignation>
-          </abcd:NomenclaturalTypeDesignations>
+          <abcd:Accessions>
+            <abcd:AccessionNumber>ZSM 5653/2012</abcd:AccessionNumber>
+          </abcd:Accessions>
         </abcd:SpecimenUnit>
         <abcd:Gathering>
           <abcd:DateTime>
@@ -221,13 +215,6 @@
           </abcd:Identification>
         </abcd:Identifications>
         <abcd:RecordBasis>PreservedSpecimen</abcd:RecordBasis>
-        <abcd:SpecimenUnit>
-          <abcd:NomenclaturalTypeDesignations>
-            <abcd:NomenclaturalTypeDesignation>
-              <abcd:TypeStatus>TOPO</abcd:TypeStatus>
-            </abcd:NomenclaturalTypeDesignation>
-          </abcd:NomenclaturalTypeDesignations>
-        </abcd:SpecimenUnit>
         <abcd:Gathering>
           <abcd:DateTime>
             <abcd:ISODateTimeBegin>2012-12-01</abcd:ISODateTimeBegin>
@@ -277,13 +264,6 @@
           </abcd:Identification>
         </abcd:Identifications>
         <abcd:RecordBasis>PreservedSpecimen</abcd:RecordBasis>
-        <abcd:SpecimenUnit>
-          <abcd:NomenclaturalTypeDesignations>
-            <abcd:NomenclaturalTypeDesignation>
-              <abcd:TypeStatus>TOPO</abcd:TypeStatus>
-            </abcd:NomenclaturalTypeDesignation>
-          </abcd:NomenclaturalTypeDesignations>
-        </abcd:SpecimenUnit>
         <abcd:Gathering>
           <abcd:DateTime>
             <abcd:ISODateTimeBegin>2012-12-01</abcd:ISODateTimeBegin>
@@ -333,13 +313,6 @@
           </abcd:Identification>
         </abcd:Identifications>
         <abcd:RecordBasis>PreservedSpecimen</abcd:RecordBasis>
-        <abcd:SpecimenUnit>
-          <abcd:NomenclaturalTypeDesignations>
-            <abcd:NomenclaturalTypeDesignation>
-              <abcd:TypeStatus>TOPO</abcd:TypeStatus>
-            </abcd:NomenclaturalTypeDesignation>
-          </abcd:NomenclaturalTypeDesignations>
-        </abcd:SpecimenUnit>
         <abcd:Gathering>
           <abcd:DateTime>
             <abcd:ISODateTimeBegin>2012-11-28</abcd:ISODateTimeBegin>
@@ -390,11 +363,9 @@
         </abcd:Identifications>
         <abcd:RecordBasis>PreservedSpecimen</abcd:RecordBasis>
         <abcd:SpecimenUnit>
-          <abcd:NomenclaturalTypeDesignations>
-            <abcd:NomenclaturalTypeDesignation>
-              <abcd:TypeStatus>TOPO</abcd:TypeStatus>
-            </abcd:NomenclaturalTypeDesignation>
-          </abcd:NomenclaturalTypeDesignations>
+          <abcd:Accessions>
+            <abcd:AccessionNumber>ZSM 5654/2012</abcd:AccessionNumber>
+          </abcd:Accessions>
         </abcd:SpecimenUnit>
         <abcd:Gathering>
           <abcd:DateTime>
@@ -446,11 +417,9 @@
         </abcd:Identifications>
         <abcd:RecordBasis>PreservedSpecimen</abcd:RecordBasis>
         <abcd:SpecimenUnit>
-          <abcd:NomenclaturalTypeDesignations>
-            <abcd:NomenclaturalTypeDesignation>
-              <abcd:TypeStatus>TOPO</abcd:TypeStatus>
-            </abcd:NomenclaturalTypeDesignation>
-          </abcd:NomenclaturalTypeDesignations>
+          <abcd:Accessions>
+            <abcd:AccessionNumber>ZSM 5655/2012</abcd:AccessionNumber>
+          </abcd:Accessions>
         </abcd:SpecimenUnit>
         <abcd:Gathering>
           <abcd:DateTime>
@@ -502,11 +471,9 @@
         </abcd:Identifications>
         <abcd:RecordBasis>PreservedSpecimen</abcd:RecordBasis>
         <abcd:SpecimenUnit>
-          <abcd:NomenclaturalTypeDesignations>
-            <abcd:NomenclaturalTypeDesignation>
-              <abcd:TypeStatus>TOPO</abcd:TypeStatus>
-            </abcd:NomenclaturalTypeDesignation>
-          </abcd:NomenclaturalTypeDesignations>
+          <abcd:Accessions>
+            <abcd:AccessionNumber>ZSM 5656/2012</abcd:AccessionNumber>
+          </abcd:Accessions>
         </abcd:SpecimenUnit>
         <abcd:Gathering>
           <abcd:DateTime>
@@ -557,13 +524,6 @@
           </abcd:Identification>
         </abcd:Identifications>
         <abcd:RecordBasis>PreservedSpecimen</abcd:RecordBasis>
-        <abcd:SpecimenUnit>
-          <abcd:NomenclaturalTypeDesignations>
-            <abcd:NomenclaturalTypeDesignation>
-              <abcd:TypeStatus>TOPO</abcd:TypeStatus>
-            </abcd:NomenclaturalTypeDesignation>
-          </abcd:NomenclaturalTypeDesignations>
-        </abcd:SpecimenUnit>
         <abcd:Gathering>
           <abcd:DateTime>
             <abcd:ISODateTimeBegin>2012-11-28</abcd:ISODateTimeBegin>

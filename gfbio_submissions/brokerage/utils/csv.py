@@ -870,15 +870,26 @@ def AddUnitData(unit, unid, attr_list):
     highertaxonrank = etree.SubElement(highertaxon2, "{" + abcd + "}" + "HigherTaxonRank")
     highertaxonrank.text = 'regnum'
     scientificname = etree.SubElement(taxonidentified, "{" + abcd + "}" + "ScientificName")
-    fullscientificnamestring = etree.SubElement(scientificname, "{" + abcd + "}" + "FullScientificNameString")
-    fullscientificnamestring.text = cdict.get('FullScientificNameString')  #cdict['FullScientificNameString']   #'Place here FullScientificNameString'
+    fullscientificnamestring1 = etree.SubElement(scientificname, "{" + abcd + "}" + "FullScientificNameString")
+    fullscientificnamestring1.text = cdict.get('FullScientificNameString')  #cdict['FullScientificNameString']   #'Place here FullScientificNameString'
     recordbasis = etree.SubElement(unit, "{" + abcd + "}" + "RecordBasis")
     recordbasis.text = cdict.get('RecordBasis')   #cdict['RecordBasis']   #''place here fixed vocabulary for RecordBasis ,PreservedSpecimen'
-    specimenunit = etree.SubElement(unit, "{" + abcd + "}" + "SpecimenUnit")
-    nomenclaturaltypedesignations = etree.SubElement(specimenunit, "{" + abcd + "}" + "NomenclaturalTypeDesignations")
-    nomenclaturaltypedesignation = etree.SubElement(nomenclaturaltypedesignations, "{" + abcd + "}" + "NomenclaturalTypeDesignation")
-    typestatus = etree.SubElement(nomenclaturaltypedesignation, "{" + abcd + "}" + "TypeStatus")
-    typestatus.text = 'TOPO'    #cdict.get('TypeStatus') if not empty
+    if cdict.get('PhysicalObjectID', None) or cdict.get('TypifiedName', None) or cdict.get('TypeStatus', None):
+        specimenunit = etree.SubElement(unit, "{" + abcd + "}" + "SpecimenUnit")
+        if cdict.get('PhysicalObjectID', None):
+            accessions = etree.SubElement(specimenunit, "{" + abcd + "}" + "Accessions")
+            accessionnumber = etree.SubElement(accessions, "{" + abcd + "}" + "AccessionNumber")
+            accessionnumber.text = cdict.get('PhysicalObjectID')  # Phacidium congener Ces.
+        if cdict.get('TypifiedName', None) or cdict.get('TypeStatus', None):
+            nomenclaturaltypedesignations = etree.SubElement(specimenunit, "{" + abcd + "}" + "NomenclaturalTypeDesignations")
+            nomenclaturaltypedesignation = etree.SubElement(nomenclaturaltypedesignations, "{" + abcd + "}" + "NomenclaturalTypeDesignation")
+        if cdict.get('TypifiedName', None):
+            typifiedname = etree.SubElement(nomenclaturaltypedesignation, "{" + abcd + "}" + "TypifiedName")
+            fullscientificnamestring2 = etree.SubElement(typifiedname, "{" + abcd + "}" + "FullScientificNameString")
+            fullscientificnamestring2.text = cdict.get('TypifiedName')  #Phacidium congener Ces.
+        if cdict.get('TypeStatus', None):
+            typestatus = etree.SubElement(nomenclaturaltypedesignation, "{" + abcd + "}" + "TypeStatus")
+            typestatus.text = cdict.get('TypeStatus')
     gathering = etree.SubElement(unit, "{" + abcd + "}" + "Gathering")
     datetime = etree.SubElement(gathering, "{" + abcd + "}" + "DateTime")
     isodatetimebegin = etree.SubElement(datetime, "{" + abcd + "}" + "ISODateTimeBegin")
@@ -945,8 +956,8 @@ def create_taxonomic_xml_from_dict(csv_file):
         xml_file_name = xml_file_name + '.xml'
         xml_file_name = ''.join(('xml_files/',xml_file_name))
         with open(os.path.join(_get_test_data_dir_path(), xml_file_name),'wb') as f:
-            #f.write('<?xml version="1.0"?>' + "\n")
-            #f.write('abcd:DataSets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:abcd="http://www.tdwg.org/schemas/abcd/2.06" xsi:schemaLocation=" http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"'+ "\n")
+           #f.write('<?xml version="1.0"?>' + "\n")
+           #f.write('abcd:DataSets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:abcd="http://www.tdwg.org/schemas/abcd/2.06" xsi:schemaLocation=" http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"'+ "\n")
             tree.write(f)
             f.close()
 
@@ -1018,7 +1029,7 @@ def create_taxonomic_xml_from_dict_lxml(submission, csv_file):
         xml_file_name = xml_file_name + '.xml'
         xml_file_name = ''.join(('xml_files/',xml_file_name))
 
-        # with open(os.path.join(_get_test_data_dir_path(), xml_file_name),'wb') as f:
-            # tree = root.getroottree()
-            # tree.write(f, encoding="utf-8", xml_declaration=True, pretty_print=True)
-            # f.close()
+        with open(os.path.join(_get_test_data_dir_path(), xml_file_name),'wb') as f:
+            tree = root.getroottree()
+            tree.write(f, encoding="utf-8", xml_declaration=True, pretty_print=True)
+            f.close()
