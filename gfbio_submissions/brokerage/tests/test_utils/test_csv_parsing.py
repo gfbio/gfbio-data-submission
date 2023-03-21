@@ -1269,15 +1269,14 @@ class TestCSVParsing(TestCase):
         )
         #use this upload later for file names list
         file_names = [
-            'csv_files/specimen_table_Platypelis.csv',
-            #'csv_files/mol_comma_with_empty_rows_cols.csv',
+           'csv_files/specimen_table_Platypelis.csv',
+            #'csv_files/specimen_table_Platypelis_with_gaps.csv'
         ]
 
         for fn in file_names:
             with open(os.path.join(_get_test_data_dir_path(), fn),
                       'r',  encoding = 'utf-8-sig') as data_file:
 
-                #create_taxonomic_xml_from_dict(data_file)
                 create_taxonomic_xml_from_dict_lxml(submission,data_file)
 
                 schema = xmlschema.XMLSchema(os.path.join(

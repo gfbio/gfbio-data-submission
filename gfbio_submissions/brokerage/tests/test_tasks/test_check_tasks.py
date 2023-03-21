@@ -336,6 +336,35 @@ class TestCheckTasks(TestCase):
 
         self.assertTrue(valid)
 
+    def test_self_generated_specimen_xml_against_abcd_schemal(self):
+
+        schema = xmlschema.XMLSchema(os.path.join(
+            _get_test_data_dir_path(),
+            'xml_files/ABCD_2.06.XSD'))
+        try:
+            valid = schema.is_valid(os.path.join(
+                _get_test_data_dir_path(),
+                'xml_files/specimen_table_Platypelis.xml'))
+        except ET.ParseError as parse_error:
+            self.assertIn('not well-formed (invalid token): line 1, column 0', parse_error.__repr__())
+
+        self.assertTrue(valid)
+
+    @skip('For development tests')
+    def test_self_generated_specimen_xml_with_gaps_against_abcd_schemal(self):
+
+        schema = xmlschema.XMLSchema(os.path.join(
+            _get_test_data_dir_path(),
+            'xml_files/ABCD_2.06.XSD'))
+        try:
+            valid = schema.is_valid(os.path.join(
+                _get_test_data_dir_path(),
+                'xml_files/specimen_table_Platypelis_with_gaps.xml'))
+        except ET.ParseError as parse_error:
+            self.assertIn('not well-formed (invalid token): line 1, column 0', parse_error.__repr__())
+
+        self.assertTrue(valid)
+
     # xml with own Vences data (subset), file extension pdf, but does not matter:
     def test_Vences_specimen_pdf_against_abcd_xml(self):
 

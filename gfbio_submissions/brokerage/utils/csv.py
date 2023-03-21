@@ -845,35 +845,49 @@ def AddUnitData(unit, unid, attr_list):
         cdict[tagval] = valval
 
     abcd = "http://www.tdwg.org/schemas/abcd/2.06"
-    #unit = etree.SubElement(units, "{" + abcd + "}" + "Unit")
+    # unit node is created via AddUnit( units)!
+    # Following first nodes are necessary for abcd xml structure, here first with fictitious content:
     unitguid = etree.SubElement(unit, "{" + abcd + "}" + "UnitGUID")
     unitguid.text = 'Place here UnitGUID if there'
     sourceinstitutionid = etree.SubElement(unit, "{" + abcd + "}" + "SourceInstitutionID")
     sourceinstitutionid.text = 'Place here SourceInstitutionID'
     sourceid = etree.SubElement(unit, "{" + abcd + "}" + "SourceID")
     sourceid.text = unid[0:2]   #'Place here SourceID'
+
+    # UnitID is given as first element:
     unitid = etree.SubElement(unit, "{" + abcd + "}" + "UnitID")
-    unitid.text = unid   #'Place here UnitID'
+    unitid.text = unid
+
+    # first structure: Identifications, with with non-mandatory and mandatory fields:
     identifications = etree.SubElement(unit, "{" + abcd + "}" + "Identifications")
     identification = etree.SubElement(identifications, "{" + abcd + "}" + "Identification")
     result = etree.SubElement(identification, "{" + abcd + "}" + "Result")
     taxonidentified = etree.SubElement(result, "{" + abcd + "}" + "TaxonIdentified")
-    highertaxa = etree.SubElement(taxonidentified, "{" + abcd + "}" + "HigherTaxa")
-    highertaxon1 = etree.SubElement(highertaxa, "{" + abcd + "}" + "HigherTaxon")
-    highertaxonname = etree.SubElement(highertaxon1, "{" + abcd + "}" + "HigherTaxonName")
-    highertaxonname.text = cdict.get('HigherTaxonName')
-    highertaxonrank = etree.SubElement(highertaxon1, "{" + abcd + "}" + "HigherTaxonRank")
-    highertaxonrank.text = 'familia'  #cdict.get('HigherTaxonRank') is not correct
-    highertaxon2 = etree.SubElement(highertaxa, "{" + abcd + "}" + "HigherTaxon")
-    highertaxonname = etree.SubElement(highertaxon2, "{" + abcd + "}" + "HigherTaxonName")
-    highertaxonname.text = cdict.get('HigherClassification')
-    highertaxonrank = etree.SubElement(highertaxon2, "{" + abcd + "}" + "HigherTaxonRank")
-    highertaxonrank.text = 'regnum'
+    if cdict.get('HigherClassification', None) or cdict.get('HigherTaxonName', None) or cdict.get('HigherTaxonRank', None):
+        highertaxa = etree.SubElement(taxonidentified, "{" + abcd + "}" + "HigherTaxa")
+        if cdict.get('HigherTaxonName', None) and cdict.get('HigherTaxonRank', None):
+            highertaxon1 = etree.SubElement(highertaxa, "{" + abcd + "}" + "HigherTaxon")
+            if cdict.get('HigherTaxonName', None):
+                highertaxonname = etree.SubElement(highertaxon1, "{" + abcd + "}" + "HigherTaxonName")
+                highertaxonname.text = cdict.get('HigherTaxonName')
+            if cdict.get('HigherTaxonRank', None):
+                highertaxonrank = etree.SubElement(highertaxon1, "{" + abcd + "}" + "HigherTaxonRank")
+                highertaxonrank.text = 'familia'   #cdict.get('HigherTaxonRank') is not given correct
+        if cdict.get('HigherClassification', None):
+            highertaxon2 = etree.SubElement(highertaxa, "{" + abcd + "}" + "HigherTaxon")
+            highertaxonname = etree.SubElement(highertaxon2, "{" + abcd + "}" + "HigherTaxonName")
+            highertaxonname.text = cdict.get('HigherClassification')
+            highertaxonrank = etree.SubElement(highertaxon2, "{" + abcd + "}" + "HigherTaxonRank")
+            highertaxonrank.text = 'regnum'
     scientificname = etree.SubElement(taxonidentified, "{" + abcd + "}" + "ScientificName")
     fullscientificnamestring1 = etree.SubElement(scientificname, "{" + abcd + "}" + "FullScientificNameString")
     fullscientificnamestring1.text = cdict.get('FullScientificNameString')  #cdict['FullScientificNameString']   #'Place here FullScientificNameString'
+
+    # structure: RecordBasis, with with mandatory fields:
     recordbasis = etree.SubElement(unit, "{" + abcd + "}" + "RecordBasis")
     recordbasis.text = cdict.get('RecordBasis')   #cdict['RecordBasis']   #''place here fixed vocabulary for RecordBasis ,PreservedSpecimen'
+
+    # structure: SpecimenUnit, with with non-mandatory fields:
     if cdict.get('PhysicalObjectID', None) or cdict.get('TypifiedName', None) or cdict.get('TypeStatus', None):
         specimenunit = etree.SubElement(unit, "{" + abcd + "}" + "SpecimenUnit")
         if cdict.get('PhysicalObjectID', None):
@@ -890,28 +904,39 @@ def AddUnitData(unit, unid, attr_list):
         if cdict.get('TypeStatus', None):
             typestatus = etree.SubElement(nomenclaturaltypedesignation, "{" + abcd + "}" + "TypeStatus")
             typestatus.text = cdict.get('TypeStatus')
+
+    # structure: Gathering, with with non-mandatory and mandatory fields:
     gathering = etree.SubElement(unit, "{" + abcd + "}" + "Gathering")
     datetime = etree.SubElement(gathering, "{" + abcd + "}" + "DateTime")
     isodatetimebegin = etree.SubElement(datetime, "{" + abcd + "}" + "ISODateTimeBegin")
     isodatetimebegin.text = cdict.get('IsoDateTimeBegin')
-    agents = etree.SubElement(gathering, "{" + abcd + "}" + "Agents")
-    gatheringagentstext = etree.SubElement(agents, "{" + abcd + "}" + "GatheringAgentsText")
-    gatheringagentstext.text = cdict.get('AgentText')
+    if cdict.get('AgentText',None):
+        agents = etree.SubElement(gathering, "{" + abcd + "}" + "Agents")
+        gatheringagentstext = etree.SubElement(agents, "{" + abcd + "}" + "GatheringAgentsText")
+        gatheringagentstext.text = cdict.get('AgentText')
     localitytext = etree.SubElement(gathering, "{" + abcd + "}" + "LocalityText")
     localitytext.set('language', ''"EN"'')
     localitytext.text = cdict.get('LocalityText')
     country = etree.SubElement(gathering, "{" + abcd + "}" + "Country")
     name = etree.SubElement(country, "{" + abcd + "}" + "Name")
     name.text = cdict.get('Country')
-    sitecoordinatesets = etree.SubElement(gathering, "{" + abcd + "}" + "SiteCoordinateSets")
-    sitecoordinates = etree.SubElement(sitecoordinatesets, "{" + abcd + "}" + "SiteCoordinates")
-    coordinateslatlong = etree.SubElement(sitecoordinates, "{" + abcd + "}" + "CoordinatesLatLong")
-    longitudedecimal = etree.SubElement(coordinateslatlong, "{" + abcd + "}" + "LongitudeDecimal")
-    longitudedecimal.text = cdict.get('LongitudeDecimal')
-    latitudedecimal = etree.SubElement(coordinateslatlong, "{" + abcd + "}" + "LatitudeDecimal")
-    latitudedecimal.text = cdict.get('LatitudeDecimal')
-    collectorsfieldnumber = etree.SubElement(unit, "{" + abcd + "}" + "CollectorsFieldNumber")
-    collectorsfieldnumber.text =cdict.get('CollectorFieldNumber')
+    if cdict.get('LongitudeDecimal') and cdict.get('LatitudeDecimal'):
+        sitecoordinatesets = etree.SubElement(gathering, "{" + abcd + "}" + "SiteCoordinateSets")
+        sitecoordinates = etree.SubElement(sitecoordinatesets, "{" + abcd + "}" + "SiteCoordinates")
+        coordinateslatlong = etree.SubElement(sitecoordinates, "{" + abcd + "}" + "CoordinatesLatLong")
+        if cdict.get('LongitudeDecimal'):
+            longitudedecimal = etree.SubElement(coordinateslatlong, "{" + abcd + "}" + "LongitudeDecimal")
+            longitudedecimal.text = cdict.get('LongitudeDecimal')
+        if cdict.get('LatitudeDecimal'):
+            latitudedecimal = etree.SubElement(coordinateslatlong, "{" + abcd + "}" + "LatitudeDecimal")
+            latitudedecimal.text = cdict.get('LatitudeDecimal')
+
+    # structure: CollectorsFieldNumber, with with non-mandatory fields:
+    if cdict.get('CollectorFieldNumber',None):
+        collectorsfieldnumber = etree.SubElement(unit, "{" + abcd + "}" + "CollectorsFieldNumber")
+        collectorsfieldnumber.text =cdict.get('CollectorFieldNumber')
+
+    # structure: Sex, with with non-mandatory fields:
     if cdict.get('Sex',None):
         sex = etree.SubElement(unit, "{" + abcd + "}" + "Sex")
         sex.text = cdict.get('Sex')[:1]
@@ -971,7 +996,7 @@ def create_taxonomic_xml_from_dict_lxml(submission, csv_file):
 
     file_names = [
             'csv_files/specimen_table_Platypelis.csv',
-            #'csv_files/mol_comma_with_empty_rows_cols.csv',
+            # 'csv_files/specimen_table_Platypelis_with_gaps.csv',
         ]
 
     for fn in file_names:
