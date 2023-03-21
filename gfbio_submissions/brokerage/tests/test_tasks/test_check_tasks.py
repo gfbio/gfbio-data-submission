@@ -350,7 +350,7 @@ class TestCheckTasks(TestCase):
 
         self.assertTrue(valid)
 
-    @skip('For development tests')
+    # @skip('For development tests')
     def test_self_generated_specimen_xml_with_gaps_against_abcd_schemal(self):
 
         schema = xmlschema.XMLSchema(os.path.join(

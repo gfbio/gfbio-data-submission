@@ -18,7 +18,7 @@ from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
     check_for_molecular_content, extract_sample, check_csv_file_rule, \
     check_metadata_rule, check_minimum_header_cols, parse_taxonomic_csv, extract_specimen, \
-    create_taxonomic_xml_from_dict, create_taxonomic_xml_from_dict_lxml
+    create_taxonomic_xml_from_dict_lxml
 
 from gfbio_submissions.brokerage.utils.ena import \
     prepare_ena_data
@@ -1269,8 +1269,8 @@ class TestCSVParsing(TestCase):
         )
         #use this upload later for file names list
         file_names = [
-           'csv_files/specimen_table_Platypelis.csv',
-            #'csv_files/specimen_table_Platypelis_with_gaps.csv'
+           # 'csv_files/specimen_table_Platypelis.csv',
+            'csv_files/specimen_table_Platypelis_with_gaps.csv'
         ]
 
         for fn in file_names:
@@ -1286,7 +1286,7 @@ class TestCSVParsing(TestCase):
                 try:
                     valid = schema.is_valid(os.path.join(
                         _get_test_data_dir_path(),
-                        'xml_files/specimen_table_Platypelis.xml'))
+                        'xml_files/specimen_table_Platypelis_with_gaps.xml'))
                     self.assertTrue(valid)
                 except ET.ParseError as parse_error:
                     self.assertIn('mismatched tag', parse_error.__repr__())

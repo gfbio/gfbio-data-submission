@@ -863,7 +863,7 @@ def AddUnitData(unit, unid, attr_list):
     identification = etree.SubElement(identifications, "{" + abcd + "}" + "Identification")
     result = etree.SubElement(identification, "{" + abcd + "}" + "Result")
     taxonidentified = etree.SubElement(result, "{" + abcd + "}" + "TaxonIdentified")
-    if cdict.get('HigherClassification', None) or cdict.get('HigherTaxonName', None) or cdict.get('HigherTaxonRank', None):
+    if cdict.get('HigherClassification', None) or (cdict.get('HigherTaxonName', None) and cdict.get('HigherTaxonRank', None)):
         highertaxa = etree.SubElement(taxonidentified, "{" + abcd + "}" + "HigherTaxa")
         if cdict.get('HigherTaxonName', None) and cdict.get('HigherTaxonRank', None):
             highertaxon1 = etree.SubElement(highertaxa, "{" + abcd + "}" + "HigherTaxon")
@@ -941,50 +941,6 @@ def AddUnitData(unit, unid, attr_list):
         sex = etree.SubElement(unit, "{" + abcd + "}" + "Sex")
         sex.text = cdict.get('Sex')[:1]
 
-def create_taxonomic_xml_from_dict(csv_file):
-    # use a real path later on
-    from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
-    import xml.etree.ElementTree as ET
-    #from xml.etree.ElementTree import Element, SubElement, tostring, XML
-
-    # switching is possible:
-    # from lxml import etree as ElementTree, more functions
-    import os
-
-    file_names = [
-            'csv_files/specimen_table_Platypelis.csv',
-            #'csv_files/mol_comma_with_empty_rows_cols.csv',
-        ]
-
-    for fn in file_names:
-        with open(os.path.join(_get_test_data_dir_path(), fn),
-            'r',  encoding = 'utf-8-sig') as data_file:
-            requirements = parse_taxonomic_csv(data_file)
-
-        #Creating XML Using the ElementTree Module:
-        root = ET.Element('abcd:DataSet')
-
-        tree = ET.ElementTree(root)
-
-        ET.register_namespace('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
-        ET.register_namespace('xmlns:abcd', 'http://www.tdwg.org/schemas/abcd/2.06')
-        ET.register_namespace('xsi:schemaLocation', 'http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD')
-        name_space = {
-            'xmlns: xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns: abcd = "http://www.tdwg.org/schemas/abcd/2.06" xsi: schemaLocation = " http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"'
-        }
-        namespace = ET.Element(name_space)
-        root.append(namespace)
-
-
-        #xml_file_name = os.path.basename(fn).split('/')[-1]
-        xml_file_name = os.path.basename(fn)
-        xml_file_name = xml_file_name + '.xml'
-        xml_file_name = ''.join(('xml_files/',xml_file_name))
-        with open(os.path.join(_get_test_data_dir_path(), xml_file_name),'wb') as f:
-           #f.write('<?xml version="1.0"?>' + "\n")
-           #f.write('abcd:DataSets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:abcd="http://www.tdwg.org/schemas/abcd/2.06" xsi:schemaLocation=" http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"'+ "\n")
-            tree.write(f)
-            f.close()
 
 def create_taxonomic_xml_from_dict_lxml(submission, csv_file):
     # use a real path later on
@@ -995,8 +951,8 @@ def create_taxonomic_xml_from_dict_lxml(submission, csv_file):
     import os
 
     file_names = [
-            'csv_files/specimen_table_Platypelis.csv',
-            # 'csv_files/specimen_table_Platypelis_with_gaps.csv',
+            # 'csv_files/specimen_table_Platypelis.csv',
+            'csv_files/specimen_table_Platypelis_with_gaps.csv',
         ]
 
     for fn in file_names:
