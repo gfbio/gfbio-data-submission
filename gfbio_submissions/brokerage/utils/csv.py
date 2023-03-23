@@ -910,6 +910,7 @@ def AddUnitData(unit, unid, attr_list):
     localitytext.text = cdict.get('LocalityText')
     country = etree.SubElement(gathering, "{" + abcd + "}" + "Country")
     name = etree.SubElement(country, "{" + abcd + "}" + "Name")
+    name.set('language', ''"EN"'')
     name.text = cdict.get('Country')
     if cdict.get('LongitudeDecimal') and cdict.get('LatitudeDecimal'):
         sitecoordinatesets = etree.SubElement(gathering, "{" + abcd + "}" + "SiteCoordinateSets")
