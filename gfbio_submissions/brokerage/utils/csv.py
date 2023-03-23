@@ -736,7 +736,6 @@ def parse_taxonomic_csv(csv_file):
     return taxonomic_requirements
 
 def AddDataSet( root):
-
     from lxml import etree
     import os
 
@@ -745,7 +744,6 @@ def AddDataSet( root):
     return dataset
 
 def AddTechnicalContacts(user, dataset):
-
     from lxml import etree
     import os
 
@@ -756,7 +754,6 @@ def AddTechnicalContacts(user, dataset):
     name.text  = user.email
 
 def AddContentContacts(user, dataset):
-
     from lxml import etree
     import os
 
@@ -767,7 +764,6 @@ def AddContentContacts(user, dataset):
     name.text  = user.username
 
 def AddMetaData(user, created, dataset):
-
     from lxml import etree
     import os
     abcd = "http://www.tdwg.org/schemas/abcd/2.06"
@@ -785,7 +781,6 @@ def AddMetaData(user, created, dataset):
     datemodified.text = date_time = created.strftime("%Y-%m-%dT%H:%M:%S")
 
 def AddUnits( dataset):
-
     from lxml import etree
     import os
 
@@ -794,7 +789,6 @@ def AddUnits( dataset):
     return units
 
 def AddUnit( units):
-
     from lxml import etree
     import os
 
@@ -806,6 +800,7 @@ def AddUnitData(unit, unid, attr_list):
     from lxml import etree
     import os
 
+    # the mandatory and non mandatory csv fields fro first Vences example
     lookup_list = ['UnitID',
     'RecordBasis',
     'FullScientificNameString',
@@ -826,8 +821,6 @@ def AddUnitData(unit, unid, attr_list):
     'UnitGUID'
     ]
     cdict = {}
-    hlist = []
-    ndict = {}
 
     for e in attr_list:
         sdict = dict(e)
@@ -840,8 +833,6 @@ def AddUnitData(unit, unid, attr_list):
                 tagval=sdict[key]
             elif(key == 'value'):
                 valval=sdict[key]
-        #ndict = {tagval, valval}
-        #cdict.update(ndict)
         cdict[tagval] = valval
 
     abcd = "http://www.tdwg.org/schemas/abcd/2.06"
@@ -942,70 +933,66 @@ def AddUnitData(unit, unid, attr_list):
         sex.text = cdict.get('Sex')[:1]
 
 
-def create_taxonomic_xml_from_dict_lxml(submission, csv_file):
+def create_taxonomic_xml_file_from_dict_lxml(submission, csv_file_name, as_temp):
     # use a real path later on
     from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 
     import lxml
     from lxml import etree
     import os
+    import tempfile
 
-    file_names = [
-            # 'csv_files/specimen_table_Platypelis.csv',
-            'csv_files/specimen_table_Platypelis_with_gaps.csv',
-        ]
+    with open(os.path.join(_get_test_data_dir_path(), csv_file_name),
+        'r',  encoding = 'utf-8-sig') as data_file:
+        requirements = parse_taxonomic_csv(data_file)
 
-    for fn in file_names:
-        with open(os.path.join(_get_test_data_dir_path(), fn),
-            'r',  encoding = 'utf-8-sig') as data_file:
-            requirements = parse_taxonomic_csv(data_file)
-
-        #Creating XML Using the lxml  etree Module:
-        # set of strings, not used
-        nsmap = {
-            'xmlns: xsi = "http://www.w3.org/2001/XMLSchema-instance",'
-            ' xmlns: abcd = "http://www.tdwg.org/schemas/abcd/2.06",'
-            ' xsi: schemaLocation = " http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"'
-        }
-        xsi = "http://www.w3.org/2001/XMLSchema-instance"
-        abcd = "http://www.tdwg.org/schemas/abcd/2.06"
-        schemaLocation = " http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"
+    #Creating XML structure Using the lxml  etree Module:
+    # namespaces:
+    xsi = "http://www.w3.org/2001/XMLSchema-instance"
+    abcd = "http://www.tdwg.org/schemas/abcd/2.06"
+    schemaLocation = " http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"
 
 
-        #goal:
-        #abcd: DataSets
-        #xmlns: xsi = "http://www.w3.org/2001/XMLSchema-instance"
-        #xmlns: abcd = "http://www.tdwg.org/schemas/abcd/2.06"
-        #xsi: schemaLocation = " http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"
+    #goal:
+    #abcd: DataSets
+    #xmlns: xsi = "http://www.w3.org/2001/XMLSchema-instance"
+    #xmlns: abcd = "http://www.tdwg.org/schemas/abcd/2.06"
+    #xsi: schemaLocation = " http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"
 
 
-        ns = {"xsi": xsi, "abcd": abcd} # "schemaLocation": schemaLocation}
-        root = etree.Element("{" + abcd + "}DataSets", attrib={"{" + xsi + "}schemaLocation": schemaLocation}, nsmap=ns)
-        #etree.SubElement(root, "{" + abcd + "}" + "DataSet").text = "The data of one line"
-        dataset = AddDataSet( root)
-        AddTechnicalContacts(submission.user, dataset)
-        AddContentContacts(submission.user, dataset)
-        AddMetaData(submission.user, submission.created, dataset)
-        units = AddUnits( dataset)
-        #requirement = atax_specimens:
-        unid=None
-        attr_list = None
-        #requirements: dict 1
-        for key, value in requirements.items():
-            if(key=='atax_specimens'):
-                attr_list = value
-        #attr_list: list of dicts
+    ns = {"xsi": xsi, "abcd": abcd} # "schemaLocation": schemaLocation}
+    root = etree.Element("{" + abcd + "}DataSets", attrib={"{" + xsi + "}schemaLocation": schemaLocation}, nsmap=ns)
 
-        length = len(attr_list)
+    #etree.SubElement(root, "{" + abcd + "}" + "DataSet").text = "The data of one line"
+    dataset = AddDataSet( root)
 
-        for i in range(length):
-            unid = attr_list[i]['UnitId']
-            inhalt = attr_list[i] ['specimen_attributes']  #list 14
+    AddTechnicalContacts(submission.user, dataset)
+    AddContentContacts(submission.user, dataset)
+    AddMetaData(submission.user, submission.created, dataset)
 
-            unit = AddUnit(units)
-            AddUnitData(unit, unid, inhalt)
+    units = AddUnits( dataset)
 
-        xml_file_name = os.path.basename(fn)
+    unid=None
+    attr_list = None
+
+    for key, value in requirements.items():
+        if(key=='atax_specimens'):
+            attr_list = value
+    #attr_list: list of dicts
+
+    length = len(attr_list)
+
+    for i in range(length):
+        unid = attr_list[i]['UnitId']
+        inhalt = attr_list[i] ['specimen_attributes']  #list 14
+
+        unit = AddUnit(units)
+        AddUnitData(unit, unid, inhalt)
+
+    #differentiate between physical xml file at the end and temporary file which is deleted at the end:
+    if as_temp==0:
+
+        xml_file_name = os.path.basename(csv_file_name)
         xml_file_name = (os.path.splitext(xml_file_name))[0]
         xml_file_name = xml_file_name + '.xml'
         xml_file_name = ''.join(('xml_files/',xml_file_name))
@@ -1014,3 +1001,20 @@ def create_taxonomic_xml_from_dict_lxml(submission, csv_file):
             tree = root.getroottree()
             tree.write(f, encoding="utf-8", xml_declaration=True, pretty_print=True)
             f.close()
+
+        return xml_file_name  # or later a string only?
+
+    elif as_temp == 1:
+
+        f = tempfile.NamedTemporaryFile(delete=False)
+        tree = root.getroottree()
+        tree.write(f, encoding="utf-8", xml_declaration=True, pretty_print=True)
+
+        f.close()  # file is not immediately deleted because  of delete=False
+
+        return f.file.name
+        # used delete=False
+
+
+
+

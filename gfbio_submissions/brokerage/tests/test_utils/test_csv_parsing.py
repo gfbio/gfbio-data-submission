@@ -18,7 +18,7 @@ from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
     check_for_molecular_content, extract_sample, check_csv_file_rule, \
     check_metadata_rule, check_minimum_header_cols, parse_taxonomic_csv, extract_specimen, \
-    create_taxonomic_xml_from_dict_lxml
+    create_taxonomic_xml_file_from_dict_lxml
 
 from gfbio_submissions.brokerage.utils.ena import \
     prepare_ena_data
@@ -1255,7 +1255,9 @@ class TestCSVParsing(TestCase):
         #valid, errors = validate_data_full(requirements['atax_specimens'], ATAX, None)
         #self.assertTrue(valid)
 
-    def test_create_taxonomic_xml(self):
+    #create a xml structure from given csv structure and store it in a xml file
+    # use two different csv structures, one with gaps in all non-mandatory columns
+    def test_create_taxonomic_xml_file(self):
         import xmlschema
         import xml.etree.ElementTree as ET
 
@@ -1268,25 +1270,65 @@ class TestCSVParsing(TestCase):
                                     b'sample_title;NO_DESCR;the;file;contents'),
         )
         #use this upload later for file names list
-        file_names = [
-           # 'csv_files/specimen_table_Platypelis.csv',
-            'csv_files/specimen_table_Platypelis_with_gaps.csv'
+        file_pathes = [
+            'csv_files/specimen_table_Platypelis.csv',
+            'csv_files/specimen_table_Platypelis_with_gaps.csv',
         ]
 
-        for fn in file_names:
-            with open(os.path.join(_get_test_data_dir_path(), fn),
-                      'r',  encoding = 'utf-8-sig') as data_file:
+        for fp in file_pathes:
+            jfp = os.path.join(_get_test_data_dir_path(), fp)
+            xml_file_name = create_taxonomic_xml_file_from_dict_lxml(submission, jfp, 0) #data_file)
 
-                create_taxonomic_xml_from_dict_lxml(submission,data_file)
+            schema = xmlschema.XMLSchema(os.path.join(
+                _get_test_data_dir_path(),
+                'xml_files/ABCD_2.06.XSD'))
 
-                schema = xmlschema.XMLSchema(os.path.join(
+            try:
+                valid = schema.is_valid(os.path.join(
                     _get_test_data_dir_path(),
-                    'xml_files/ABCD_2.06.XSD'))
+                    xml_file_name))
+                    # 'xml_files/specimen_table_Platypelis_with_gaps.xml'))
+                self.assertTrue(valid)
+            except ET.ParseError as parse_error:
+                self.assertIn('mismatched tag', parse_error.__repr__())
 
+    # create a xml structure from given csv structure and store it in a temporary xml file
+    # use two different csv structures, one with gaps in all non-mandatory columns
+    def test_create_taxtemp_xml_file(self):
+        import xmlschema
+        import xml.etree.ElementTree as ET
+
+        import os
+        import tempfile
+
+        submission = Submission.objects.first()
+        SubmissionUpload.objects.create(
+            submission=submission,
+            user=submission.user,
+            meta_data=True,
+            file=SimpleUploadedFile('test_submission_upload.csv',
+                                    b'sample_title;NO_DESCR;the;file;contents'),
+        )
+        #use this upload later for file names list
+        file_pathes = [
+            'csv_files/specimen_table_Platypelis.csv',
+            'csv_files/specimen_table_Platypelis_with_gaps.csv',
+        ]
+
+        for fp in file_pathes:
+            jfp = os.path.join(_get_test_data_dir_path(), fp)   # create the csv input file path/name
+            tfp = create_taxonomic_xml_file_from_dict_lxml(submission, jfp,1)  #returns temporary file
+
+            schema = xmlschema.XMLSchema(os.path.join(
+                _get_test_data_dir_path(),
+                'xml_files/ABCD_2.06.XSD'))
+
+            if(tfp):
                 try:
-                    valid = schema.is_valid(os.path.join(
-                        _get_test_data_dir_path(),
-                        'xml_files/specimen_table_Platypelis_with_gaps.xml'))
+                    valid = schema.is_valid(tfp)
+                        # 'xml_files/specimen_table_Platypelis_with_gaps.xml'))
                     self.assertTrue(valid)
                 except ET.ParseError as parse_error:
                     self.assertIn('mismatched tag', parse_error.__repr__())
+
+                os.unlink(tfp)
