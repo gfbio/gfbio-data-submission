@@ -727,7 +727,7 @@ class TestJiraIssueUpdateView(APITestCase):
                 "issue": {
                     "key": "SAND-007",
                     "fields": {
-                        "customfield_10200": "2023-03-09T00:00:00+00:00",
+                        "customfield_10200": "2025-03-09T00:00:00+00:00",
                         "customfield_10303": "{}".format(
                             submission.broker_submission_id),
                         "reporter": {
