@@ -1,25 +1,23 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
+import xml.dom.minidom
 from collections import OrderedDict
 
-import xml.dom.minidom
 from django.contrib.auth.models import Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
 from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.configuration.settings import \
-    GENERIC, ENA_PANGAEA, ENA, ATAX
+    GENERIC, ENA_PANGAEA, ENA
 from gfbio_submissions.brokerage.models import Submission, AdditionalReference, \
     SubmissionUpload, BrokerObject
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
     check_for_molecular_content, extract_sample, check_csv_file_rule, \
-    check_metadata_rule, check_minimum_header_cols, parse_taxonomic_csv, extract_specimen, \
-    create_taxonomic_xml_file_from_dict_lxml
-
+    check_metadata_rule, check_minimum_header_cols
 from gfbio_submissions.brokerage.utils.ena import \
     prepare_ena_data
 from gfbio_submissions.brokerage.utils.schema_validation import \
@@ -710,7 +708,7 @@ class TestCSVParsing(TestCase):
             'csv_files/mol_5_items_comma_some_double_quotes.csv',
             'csv_files/mol_5_items_comma_no_quoting_in_header.csv',
             'csv_files/mol_5_items_semi_no_quoting.csv',
-            #'csv_files/mol_comma_with_empty_rows_cols.csv',
+            # 'csv_files/mol_comma_with_empty_rows_cols.csv',
         ]
 
         for fn in file_names:
@@ -743,7 +741,7 @@ class TestCSVParsing(TestCase):
 
                 for x in range(0, len(requirements['samples'])):
                     for s in requirements.get(
-                            'samples', [{}])[x].get('sample_attributes', []):
+                        'samples', [{}])[x].get('sample_attributes', []):
                         tag = s.get('tag')
                         if 'environmental package' in tag:
                             env_pack = s.get('value')
@@ -751,9 +749,9 @@ class TestCSVParsing(TestCase):
 
     def test_whitespaces_with_occasional_quotes(self):
         with open(os.path.join(
-                _get_test_data_dir_path(),
-                'csv_files/molecular_metadata_white_spaces.csv'),
-                'r') as data_file:
+            _get_test_data_dir_path(),
+            'csv_files/molecular_metadata_white_spaces.csv'),
+            'r') as data_file:
             requirements = parse_molecular_csv(data_file)
         requirements_keys = requirements.keys()
         self.assertEqual('Sample No. 1',
@@ -774,7 +772,7 @@ class TestCSVParsing(TestCase):
         sample_attribute_tags = []
         geo_location = ''
         for s in requirements.get(
-                'samples', [{}])[0].get('sample_attributes', []):
+            'samples', [{}])[0].get('sample_attributes', []):
             tag = s.get('tag')
             sample_attribute_tags.append(tag)
             if 'geographic location (country and/or sea)' in tag:
@@ -798,9 +796,9 @@ class TestCSVParsing(TestCase):
 
     def test_whitespaces_all_double_quoted(self):
         with open(os.path.join(
-                _get_test_data_dir_path(),
-                'csv_files/molecular_metadata_double_quoting_white_spaces.csv'),
-                'r') as data_file:
+            _get_test_data_dir_path(),
+            'csv_files/molecular_metadata_double_quoting_white_spaces.csv'),
+            'r') as data_file:
             requirements = parse_molecular_csv(data_file)
         self.assertEqual('Sample No. 1',
                          requirements.get('samples', [{}])[0].get(
@@ -820,7 +818,7 @@ class TestCSVParsing(TestCase):
         sample_attribute_tags = []
         geo_location = ''
         for s in requirements.get(
-                'samples', [{}])[0].get('sample_attributes', []):
+            'samples', [{}])[0].get('sample_attributes', []):
             tag = s.get('tag')
             sample_attribute_tags.append(tag)
             if 'geographic location (country and/or sea)' in tag:
@@ -844,9 +842,9 @@ class TestCSVParsing(TestCase):
 
     def test_whitespaces_unquoted(self):
         with open(os.path.join(
-                _get_test_data_dir_path(),
-                'csv_files/molecular_metadata_no_quoting_white_spaces.csv'),
-                'r') as data_file:
+            _get_test_data_dir_path(),
+            'csv_files/molecular_metadata_no_quoting_white_spaces.csv'),
+            'r') as data_file:
             requirements = parse_molecular_csv(data_file)
         self.assertEqual('Sample No. 1',
                          requirements.get('samples', [{}])[0].get(
@@ -866,7 +864,7 @@ class TestCSVParsing(TestCase):
         sample_attribute_tags = []
         geo_location = ''
         for s in requirements.get(
-                'samples', [{}])[0].get('sample_attributes', []):
+            'samples', [{}])[0].get('sample_attributes', []):
             tag = s.get('tag')
             sample_attribute_tags.append(tag)
             if 'geographic location (country and/or sea)' in tag:
@@ -890,9 +888,9 @@ class TestCSVParsing(TestCase):
 
     def test_parse_comma_with_some_quotes(self):
         with open(os.path.join(
-                _get_test_data_dir_path(),
-                'csv_files/mol_5_items_comma_some_double_quotes.csv'),
-                'r') as data_file:
+            _get_test_data_dir_path(),
+            'csv_files/mol_5_items_comma_some_double_quotes.csv'),
+            'r') as data_file:
             requirements = parse_molecular_csv(data_file)
         requirements_keys = requirements.keys()
         self.assertIn('experiments', requirements_keys)
@@ -902,9 +900,9 @@ class TestCSVParsing(TestCase):
 
     def test_parse_comma_no_quotes_in_header(self):
         with open(os.path.join(
-                _get_test_data_dir_path(),
-                'csv_files/mol_5_items_comma_no_quoting_in_header.csv'),
-                'r') as data_file:
+            _get_test_data_dir_path(),
+            'csv_files/mol_5_items_comma_no_quoting_in_header.csv'),
+            'r') as data_file:
             requirements = parse_molecular_csv(data_file)
         requirements_keys = requirements.keys()
         self.assertIn('experiments', requirements_keys)
@@ -914,9 +912,9 @@ class TestCSVParsing(TestCase):
 
     def test_parse_comma_with_empty_rows(self):
         with open(os.path.join(
-                _get_test_data_dir_path(),
-                'csv_files/mol_comma_with_empty_rows_cols.csv'),
-                'r') as data_file:
+            _get_test_data_dir_path(),
+            'csv_files/mol_comma_with_empty_rows_cols.csv'),
+            'r') as data_file:
             requirements = parse_molecular_csv(data_file)
         requirements_keys = requirements.keys()
         self.assertIn('experiments', requirements_keys)
@@ -928,9 +926,9 @@ class TestCSVParsing(TestCase):
 
     def test_parse_semi_no_quoting(self):
         with open(os.path.join(
-                _get_test_data_dir_path(),
-                'csv_files/mol_5_items_semi_no_quoting.csv'),
-                'r') as data_file:
+            _get_test_data_dir_path(),
+            'csv_files/mol_5_items_semi_no_quoting.csv'),
+            'r') as data_file:
             requirements = parse_molecular_csv(data_file)
         requirements_keys = requirements.keys()
         self.assertIn('experiments', requirements_keys)
@@ -940,9 +938,9 @@ class TestCSVParsing(TestCase):
 
     def test_parse_semi_double_quoting(self):
         with open(os.path.join(
-                _get_test_data_dir_path(),
-                'csv_files/mol_5_items_semi_double_quoting.csv'),
-                'r') as data_file:
+            _get_test_data_dir_path(),
+            'csv_files/mol_5_items_semi_double_quoting.csv'),
+            'r') as data_file:
             requirements = parse_molecular_csv(data_file)
         requirements_keys = requirements.keys()
         self.assertIn('experiments', requirements_keys)
@@ -952,9 +950,9 @@ class TestCSVParsing(TestCase):
 
     def test_parse_real_world_example(self):
         with open(os.path.join(
-                _get_test_data_dir_path(),
-                'csv_files/PS99_sediment_gfbio_submission_form.csv'),
-                'r') as data_file:
+            _get_test_data_dir_path(),
+            'csv_files/PS99_sediment_gfbio_submission_form.csv'),
+            'r') as data_file:
             requirements = parse_molecular_csv(data_file)
         self.assertEqual(7, len(requirements['samples']))
         self.assertEqual(7, len(requirements['experiments']))
@@ -1040,9 +1038,9 @@ class TestCSVParsing(TestCase):
     def test_parse_tab(self):
         self.maxDiff = None
         with open(os.path.join(
-                _get_test_data_dir_path(),
-                'csv_files/mol_5_items_tab.csv'),
-                'r') as data_file:
+            _get_test_data_dir_path(),
+            'csv_files/mol_5_items_tab.csv'),
+            'r') as data_file:
             requirements = parse_molecular_csv(data_file)
         requirements_keys = requirements.keys()
         self.assertIn('experiments', requirements_keys)
@@ -1096,9 +1094,9 @@ class TestCSVParsing(TestCase):
         # no additional sample is added, just an experiment with reference
         # to the already existing sample (one-sample to many-experiments)
         with open(os.path.join(
-                _get_test_data_dir_path(),
-                'csv_files/mol_5_items_semi_double_quoting.csv'),
-                'r') as data_file:
+            _get_test_data_dir_path(),
+            'csv_files/mol_5_items_semi_double_quoting.csv'),
+            'r') as data_file:
             submission = Submission.objects.first()
         submission.submissionupload_set.all().delete()
         submission.save()
@@ -1237,98 +1235,3 @@ class TestCSVParsing(TestCase):
     #     #     print(delimiter)
     #     #
     #     # TODO: defaults to ; ok ! split to delim and do list comparision. done ...
-
-
-    def test_parse_taxonomic_csv(self):
-        file_names = [
-            'csv_files/specimen_table_Platypelis.csv',
-            #'csv_files/mol_comma_with_empty_rows_cols.csv',
-        ]
-
-        for fn in file_names:
-            with open(os.path.join(_get_test_data_dir_path(), fn),
-                      'r',  encoding = 'utf-8-sig') as data_file:
-                requirements = parse_taxonomic_csv(data_file)
-                requirements_keys = requirements.keys()
-                self.assertIn('atax_specimens', requirements_keys)
-
-        #valid, errors = validate_data_full(requirements['atax_specimens'], ATAX, None)
-        #self.assertTrue(valid)
-
-    #create a xml structure from given csv structure and store it in a xml file
-    # use two different csv structures, one with gaps in all non-mandatory columns
-    def test_create_taxonomic_xml_file(self):
-        import xmlschema
-        import xml.etree.ElementTree as ET
-
-        submission = Submission.objects.first()
-        SubmissionUpload.objects.create(
-            submission=submission,
-            user=submission.user,
-            meta_data=True,
-            file=SimpleUploadedFile('test_submission_upload.csv',
-                                    b'sample_title;NO_DESCR;the;file;contents'),
-        )
-        #use this upload later for file names list
-        file_pathes = [
-            'csv_files/specimen_table_Platypelis.csv',
-            'csv_files/specimen_table_Platypelis_with_gaps.csv',
-        ]
-
-        for fp in file_pathes:
-            jfp = os.path.join(_get_test_data_dir_path(), fp)
-            xml_file_name = create_taxonomic_xml_file_from_dict_lxml(submission, jfp, 0) #data_file)
-
-            schema = xmlschema.XMLSchema(os.path.join(
-                _get_test_data_dir_path(),
-                'xml_files/ABCD_2.06.XSD'))
-
-            try:
-                valid = schema.is_valid(os.path.join(
-                    _get_test_data_dir_path(),
-                    xml_file_name))
-                    # 'xml_files/specimen_table_Platypelis_with_gaps.xml'))
-                self.assertTrue(valid)
-            except ET.ParseError as parse_error:
-                self.assertIn('mismatched tag', parse_error.__repr__())
-
-    # create a xml structure from given csv structure and store it in a temporary xml file
-    # use two different csv structures, one with gaps in all non-mandatory columns
-    def test_create_taxtemp_xml_file(self):
-        import xmlschema
-        import xml.etree.ElementTree as ET
-
-        import os
-        import tempfile
-
-        submission = Submission.objects.first()
-        SubmissionUpload.objects.create(
-            submission=submission,
-            user=submission.user,
-            meta_data=True,
-            file=SimpleUploadedFile('test_submission_upload.csv',
-                                    b'sample_title;NO_DESCR;the;file;contents'),
-        )
-        #use this upload later for file names list
-        file_pathes = [
-            'csv_files/specimen_table_Platypelis.csv',
-            'csv_files/specimen_table_Platypelis_with_gaps.csv',
-        ]
-
-        for fp in file_pathes:
-            jfp = os.path.join(_get_test_data_dir_path(), fp)   # create the csv input file path/name
-            tfp = create_taxonomic_xml_file_from_dict_lxml(submission, jfp,1)  #returns temporary file
-
-            schema = xmlschema.XMLSchema(os.path.join(
-                _get_test_data_dir_path(),
-                'xml_files/ABCD_2.06.XSD'))
-
-            if(tfp):
-                try:
-                    valid = schema.is_valid(tfp)
-                        # 'xml_files/specimen_table_Platypelis_with_gaps.xml'))
-                    self.assertTrue(valid)
-                except ET.ParseError as parse_error:
-                    self.assertIn('mismatched tag', parse_error.__repr__())
-
-                os.unlink(tfp)

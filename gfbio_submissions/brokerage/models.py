@@ -13,7 +13,7 @@ from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
     DEFAULT_ENA_CENTER_NAME
 from gfbio_submissions.brokerage.managers import SubmissionUploadManager
 from gfbio_submissions.generic.fields import JsonDictField
-from .configuration.settings import ENA, ENA_PANGAEA,ATAX
+from .configuration.settings import ENA, ENA_PANGAEA
 from .configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY
 from .managers import AuditableTextDataManager
 from .managers import SubmissionManager, BrokerObjectManager, \
@@ -24,7 +24,7 @@ from .utils.submission_tools import \
 
 logger = logging.getLogger(__name__)
 
-# kommentar
+
 class CenterName(models.Model):
     center_name = models.CharField(max_length=128, default='')
 
@@ -54,7 +54,6 @@ class Submission(TimeStampedModel):
         (ENA, ENA),
         (ENA_PANGAEA, ENA_PANGAEA),
         (GENERIC, GENERIC),
-        (ATAX, ATAX)
     )
 
     broker_submission_id = models.UUIDField(primary_key=False,
@@ -144,7 +143,7 @@ class Submission(TimeStampedModel):
             data = []
             for broker_object in broker_objects:
                 for persistentidentifier_object in broker_object.persistentidentifier_set.filter(
-                        pid_type='PRJ'):
+                    pid_type='PRJ'):
                     data.append({"pid": persistentidentifier_object.pid,
                                  "status": persistentidentifier_object.status})
             return data
@@ -163,7 +162,7 @@ class Submission(TimeStampedModel):
         runs = self.set_run_aliases(alias_postfix, experiment_aliases)
 
         return study.data, [s.data for s in samples], \
-               [s.data for s in experiments], [s.data for s in runs]
+            [s.data for s in experiments], [s.data for s in runs]
 
     # TODO: refactor/move: too specific (molecular submission)
     def set_run_aliases(self, alias_postfix, experiment_aliases):

@@ -130,12 +130,6 @@ GENERIC = getattr(
     'GENERIC'
 )
 
-ATAX = getattr(
-    settings,
-    'ATAX',
-    'ATAX'
-)
-
 # https://helpdesk.gfbio.org/secure/ViewProfile.jspa?name=brokeragent
 JIRA_FALLBACK_USERNAME = getattr(
     settings,
@@ -257,27 +251,6 @@ This includes, but is not limited to, the fact that your data will be available 
 Please note that while we support you in archiving your data to the highest possible standards,
 the responsibility whether you are allowed to release the data to the public and under what restrictions,
 still lies with you. The same applies to the correctness of the data you provide.
-
-Best Regards,
-the GFBio Data Submission Team
-"""
-)
-
-JIRA_WELCOME_ATAX_COMMENT_TEMPLATE = getattr(
-    settings,
-    'JIRA_WELCOME_ATAX_COMMENT_TEMPLATE',
-    """Dear submitter,
-
-thank you for submitting your taxonomic data via GFBio!
-
-The GFBio Submission ID for your dataset entitled "{title}" is: {id}.
-Please include this ID in any communication regarding this submission.
-
-We will review your submission and get back to you as soon as possible.
-If you have any questions or comments, you can always reply to this email,
-keeping the subject line intact and using the same email account you are registered in GFBio with.
-Alternatively, you can view this submission request under
-https://helpdesk.gfbio.org/servicedesk/customer/portal/6/{reference} (your GFBio credentials are valid there).
 
 Best Regards,
 the GFBio Data Submission Team
@@ -549,12 +522,6 @@ STATIC_GENERIC_REQUIREMENTS_LOCATION = getattr(
     settings,
     'STATIC_GENERIC_REQUIREMENTS_LOCATION',
     'schemas/gfbio_generic_requirements.json'
-)
-
-STATIC_ATAX_REQUIREMENTS_LOCATION = getattr(
-    settings,
-    'STATIC_ATAX_REQUIREMENTS_LOCATION',
-    'schemas/atax_requirements.json'
 )
 
 SUBMISSION_MIN_COLS = getattr(

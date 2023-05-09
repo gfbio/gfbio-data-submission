@@ -12,8 +12,7 @@ from gfbio_submissions.brokerage.configuration.settings import \
     STATIC_ENA_REQUIREMENTS_LOCATION, STATIC_MIN_REQUIREMENTS_LOCATION, ENA, \
     ENA_PANGAEA, STATIC_SAMPLE_SCHEMA_LOCATION, \
     STATIC_STUDY_SCHEMA_LOCATION, STATIC_EXPERIMENT_SCHEMA_LOCATION, \
-    STATIC_RUN_SCHEMA_LOCATION, GENERIC, STATIC_GENERIC_REQUIREMENTS_LOCATION, \
-    ATAX, STATIC_ATAX_REQUIREMENTS_LOCATION
+    STATIC_RUN_SCHEMA_LOCATION, GENERIC, STATIC_GENERIC_REQUIREMENTS_LOCATION
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +114,6 @@ TARGET_SCHEMA_MAPPINGS = {
     ENA: STATIC_ENA_REQUIREMENTS_LOCATION,
     ENA_PANGAEA: STATIC_ENA_REQUIREMENTS_LOCATION,
     GENERIC: STATIC_GENERIC_REQUIREMENTS_LOCATION,
-    ATAX: STATIC_ATAX_REQUIREMENTS_LOCATION,
 }
 
 
@@ -193,6 +191,7 @@ def validate_data_min(data):
         use_draft04_validator=True
     )
 
+
 def validate_contributors(data):
     try:
         contributors = data['requirements']['contributors']
@@ -205,6 +204,7 @@ def validate_contributors(data):
                 if "|" in value:
                     return False, 'Contributors: pipe "|" character is not allowed'
     return True, ''
+
 
 def validate_embargo(embargo):
     # check if date is between tomorrow and 2 years from now
