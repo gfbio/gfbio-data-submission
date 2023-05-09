@@ -26,7 +26,6 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         JiraMessage.objects.create(name="ACCESSION_COMMENT", message="test")
         JiraMessage.objects.create(name="WELCOME_COMMENT", message="test")
         JiraMessage.objects.create(name="WELCOME_MOLECULAR_COMMENT", message="test")
-        JiraMessage.objects.create(name="WELCOME_ATAX_COMMENT", message="test")
         JiraMessage.objects.create(name="NOTIFY_EMBARGO_CHANGED", message="test")
         JiraMessage.objects.create(name="NOTIFY_EMBARGO_EXPIRY", message="test")
         JiraMessage.objects.create(name="NOTIFY_EMBARGO_RELEASE", message="test")

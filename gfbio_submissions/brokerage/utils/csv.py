@@ -10,7 +10,7 @@ import dpath.util as dpath
 from django.utils.encoding import smart_str
 from shortid import ShortId
 
-from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA, ENA,\
+from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA, ENA, \
     SUBMISSION_MIN_COLS
 from gfbio_submissions.brokerage.utils.schema_validation import \
     validate_data_full
@@ -200,36 +200,6 @@ attribute_value_blacklist = [
     'na', 'NA', 'n/a', 'N/A',
 ]
 
-specimen_core_fields = [
-    'specimen identifier'
-    #'basis of record',
-    #'scientific name'
-]
-
-abcd_mapping = {
-'specimen identifier': 'UnitID',
-'basis of record': 'RecordBasis',
-'scientific name': 'FullScientificNameString',
-'country (area)': 'Country',
-'locality': 'LocalityText',
-'date: day': 'ISODateTimeBegin',
-'date: month': 'ISODateTimeBegin',
-'date: year': 'ISODateTimeBegin',
-'catalogue number': 'PhysicalObjectID',
-'field number': 'CollectorFieldNumber',
-'collector/observer': 'AgentText',
-'sex': 'Sex',
-'kingdom': 'HigherClassification',
-'other higher taxon': 'HigherTaxonName',
-'rank of other higher taxon': 'HigherTaxonRank',
-'longitude (decimal, wgs84)': 'LongitudeDecimal',
-'latitude decimal (decimal, wgs84)': 'LatitudeDecimal',
-'type status': 'TypeStatus',
-'original name linked to type': 'TypifiedName',
-'globally unique identifier (if existing)': 'UnitGUID',
-}
-
-abcd_mapping_keys = abcd_mapping.keys()
 
 def extract_sample(row, field_names, sample_id):
     for k in row.keys():
@@ -238,7 +208,7 @@ def extract_sample(row, field_names, sample_id):
     sample_attributes = []
     for o in field_names:
         if o not in core_fields and len(row[o]) and \
-                row[o] not in attribute_value_blacklist:
+            row[o] not in attribute_value_blacklist:
             if o in unit_mapping_keys:
                 sample_attributes.append(
                     OrderedDict([
@@ -256,10 +226,10 @@ def extract_sample(row, field_names, sample_id):
                     )
                 else:
                     sample_attributes.append(
-                    OrderedDict([
-                        ('tag', o), ('value', row[o])
-                    ])
-                )
+                        OrderedDict([
+                            ('tag', o), ('value', row[o])
+                        ])
+                    )
 
     try:
         taxon_id = int(row.get('taxon_id', '-1'))
@@ -314,9 +284,9 @@ def find_correct_platform_and_model(platform_value):
     for platform in json_dict:
         # identify viable platforms in json file
         if (len(json_dict[platform]) == 2 and
-                "enum" in json_dict[platform].keys() and
-                "type" in json_dict[platform].keys() and
-                json_dict[platform]["type"] == 'string'):
+            "enum" in json_dict[platform].keys() and
+            "type" in json_dict[platform].keys() and
+            json_dict[platform]["type"] == 'string'):
 
             instruments = json_dict[platform]["enum"]
 
@@ -367,7 +337,7 @@ def find_correct_platform_and_model(platform_value):
         # check if unspecified value is allowed
         if combined_vlaue_match[0][
             platform_key] == 'unspecified' and 'unspecified' in \
-                json_dict[platform_key]["enum"]:
+            json_dict[platform_key]["enum"]:
             return platform_key + ' unspecified'
         else:
             return platform_key + ' ' + combined_vlaue_match[0][platform_key]
@@ -410,8 +380,8 @@ def extract_experiment(experiment_id, row, sample_id):
     # For sake of simplicity library_source is converted to upper case since
     # all values in schema are uppercase
     dpath.new(experiment, 'design/library_descriptor/library_source',
-                       row.get('library_source', '').upper()
-                      )
+              row.get('library_source', '').upper()
+              )
     dpath.new(
         experiment,
         'design/library_descriptor/library_selection',
@@ -587,7 +557,7 @@ def check_for_molecular_content(submission):
         )
 
     if submission.release and submission.data.get('requirements', {}).get(
-            'data_center', '').count('ENA'):
+        'data_center', '').count('ENA'):
 
         check_performed = True
         submission.target = ENA
@@ -639,383 +609,3 @@ def check_for_molecular_content(submission):
                                                                          messages,
                                                                          check_performed))
     return status, messages, check_performed
-
-def extract_specimen(row, field_names, sample_id):
-    from datetime import date
-    import datetime
-
-    for k in row.keys():
-        row[k] = row[k].strip()
-
-    date_string = str()
-    year = ''
-    month = ''
-    day = ''
-
-    specimen_attributes = []
-    for o in field_names:
-        if o not in specimen_core_fields and len(row[o]) and \
-                row[o] not in attribute_value_blacklist:
-            if o in abcd_mapping_keys and str(o) == 'date: year':
-               year = str(row[o])
-               dt_obj = datetime.datetime(int(year),int(month),int(day))
-               dt_str = dt_obj.strftime("%Y-%m-%d")  #should be a string
-               specimen_attributes.append(
-                   OrderedDict([
-                       ('tag', 'IsoDateTimeBegin'),
-                       ('value', dt_str),
-                   ]))
-            elif o in abcd_mapping_keys and str(o) == 'date: month':
-                month = str(row[o])
-            elif o in abcd_mapping_keys and str(o) == 'date: day':
-                day = str(row[o])
-            elif o in abcd_mapping_keys:
-                specimen_attributes.append(
-                    OrderedDict([
-                        ('tag', abcd_mapping[o]),
-                        ('value', row[o]),
-                    ])
-                )
-
-    try:
-        unit_id= str(row.get('specimen identifier', 'empty value'))
-    except:
-        unit_id =  'empty value'
-    specimen = {
-        'UnitId': row.get('specimen identifier', ''),
-        #'RecordBasis': row.get('Basis of record', ''),
-        #'FullScientificNameString': row.get('Scientific name', '')
-    }
-    if len(specimen_attributes):
-        specimen['specimen_attributes'] = specimen_attributes
-
-    return specimen
-
-def parse_taxonomic_csv(csv_file):
-    header = csv_file.readline()
-    dialect = csv.Sniffer().sniff(smart_str(header))
-    csv_file.seek(0)
-    delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
-                                                           '\t'] else ';'
-    csv_reader = csv.DictReader(
-        csv_file,
-        quoting=csv.QUOTE_ALL,
-        delimiter=delimiter,
-        quotechar='"',
-        skipinitialspace=True,
-        restkey='extra_columns_found',
-        restval='extra_value_found',
-    )
-    taxonomic_requirements = {
-        'atax_specimens': [],
-    }
-    try:
-        field_names = csv_reader.fieldnames
-        for i in range(0, len(field_names)):
-            field_names[i] = field_names[i].strip().lower()
-    except _csv.Error as e:
-        return taxonomic_requirements
-
-    short_id = ShortId()
-    specimen_identifiers = []
-    specimen_ids = []
-
-    for row in csv_reader:
-        # every row is one sample (except header)
-        identifier = row.get('specimen identifier', None)
-        if identifier:
-            if identifier not in specimen_identifiers:
-                specimen_identifiers.append(identifier)
-                specimen_id = short_id.generate()
-                specimen_ids.append(specimen_id)
-                specimen = extract_specimen(row, field_names, specimen_id)
-                taxonomic_requirements['atax_specimens'].append(
-                    specimen
-                )
-
-    return taxonomic_requirements
-
-def AddDataSet( root):
-    from lxml import etree
-    import os
-
-    abcd = "http://www.tdwg.org/schemas/abcd/2.06"
-    dataset = etree.SubElement(root, "{" + abcd + "}" + "DataSet")
-    return dataset
-
-def AddTechnicalContacts(user, dataset):
-    from lxml import etree
-    import os
-
-    abcd = "http://www.tdwg.org/schemas/abcd/2.06"
-    contacts = etree.SubElement(dataset, "{" + abcd + "}" + "TechnicalContacts")
-    contact = etree.SubElement(contacts, "{" + abcd + "}" + "TechnicalContact")
-    name = etree.SubElement(contact, "{" + abcd + "}" + "Name")
-    name.text  = user.email
-
-def AddContentContacts(user, dataset):
-    from lxml import etree
-    import os
-
-    abcd = "http://www.tdwg.org/schemas/abcd/2.06"
-    contacts = etree.SubElement(dataset, "{" + abcd + "}" + "ContentContacts")
-    contact = etree.SubElement(contacts, "{" + abcd + "}" + "ContentContact")
-    name = etree.SubElement(contact, "{" + abcd + "}" + "Name")
-    name.text  = user.username
-
-def AddMetaData(user, created, dataset):
-    from lxml import etree
-    import os
-    abcd = "http://www.tdwg.org/schemas/abcd/2.06"
-    metadata = etree.SubElement(dataset, "{" + abcd + "}" + "Metadata")
-    description = etree.SubElement(metadata, "{" + abcd + "}" + "Description")
-    representation = etree.SubElement(description, "{" + abcd + "}" + "Representation", language="EN")
-    title = etree.SubElement(representation, "{" + abcd + "}" + "Title")
-    title.text = 'TaxonOmics - New approaches to discovering and naming biodiversity'
-    uri = etree.SubElement(representation, "{" + abcd + "}" + "URI")
-    uri.text = 'https://www.taxon-omics.com/projects'
-    revisiondata = etree.SubElement(metadata, "{" + abcd + "}" + "RevisionData")
-    creators = etree.SubElement(revisiondata, "{" + abcd + "}" + "Creators")
-    creators.text = user.username
-    datemodified = etree.SubElement(revisiondata, "{" + abcd + "}" + "DateModified")
-    datemodified.text = date_time = created.strftime("%Y-%m-%dT%H:%M:%S")
-
-def AddUnits( dataset):
-    from lxml import etree
-    import os
-
-    abcd = "http://www.tdwg.org/schemas/abcd/2.06"
-    units = etree.SubElement(dataset, "{" + abcd + "}" + "Units")
-    return units
-
-def AddUnit( units):
-    from lxml import etree
-    import os
-
-    abcd = "http://www.tdwg.org/schemas/abcd/2.06"
-    unit = etree.SubElement(units, "{" + abcd + "}" + "Unit")
-    return unit
-
-def AddUnitData(unit, unid, attr_list):
-    from lxml import etree
-    import os
-
-    # the mandatory and non mandatory csv fields fro first Vences example
-    lookup_list = ['UnitID',
-    'RecordBasis',
-    'FullScientificNameString',
-    'Country',
-    'AreaDetail',
-    'ISODateTimeBegin',
-    'PhysicalObjectID',
-    'CollectorFieldNumber',
-    'AgentText',
-    'Sex',
-    'HigherClassification',
-    'HigherTaxonName',
-    'HigherTaxonRank',
-    'LongitudeDecimal',
-    'LatitudeDecimal',
-    'TypeStatus',
-    'TypifiedName',
-    'UnitGUID'
-    ]
-    cdict = {}
-
-    for e in attr_list:
-        sdict = dict(e)
-        tagval = ''
-        valval = ''
-        #iterate over the two items and reduce:
-        for key in sdict.keys():
-            #key is a string
-            if(key=='tag'):
-                tagval=sdict[key]
-            elif(key == 'value'):
-                valval=sdict[key]
-        cdict[tagval] = valval
-
-    abcd = "http://www.tdwg.org/schemas/abcd/2.06"
-    # unit node is created via AddUnit( units)!
-    # Following first nodes are necessary for abcd xml structure, here first with fictitious content:
-    unitguid = etree.SubElement(unit, "{" + abcd + "}" + "UnitGUID")
-    unitguid.text = 'Place here UnitGUID if there'
-    sourceinstitutionid = etree.SubElement(unit, "{" + abcd + "}" + "SourceInstitutionID")
-    sourceinstitutionid.text = 'Place here SourceInstitutionID'
-    sourceid = etree.SubElement(unit, "{" + abcd + "}" + "SourceID")
-    sourceid.text = unid[0:2]   #'Place here SourceID'
-
-    # UnitID is given as first element:
-    unitid = etree.SubElement(unit, "{" + abcd + "}" + "UnitID")
-    unitid.text = unid
-
-    # first structure: Identifications, with with non-mandatory and mandatory fields:
-    identifications = etree.SubElement(unit, "{" + abcd + "}" + "Identifications")
-    identification = etree.SubElement(identifications, "{" + abcd + "}" + "Identification")
-    result = etree.SubElement(identification, "{" + abcd + "}" + "Result")
-    taxonidentified = etree.SubElement(result, "{" + abcd + "}" + "TaxonIdentified")
-    if cdict.get('HigherClassification', None) or (cdict.get('HigherTaxonName', None) and cdict.get('HigherTaxonRank', None)):
-        highertaxa = etree.SubElement(taxonidentified, "{" + abcd + "}" + "HigherTaxa")
-        if cdict.get('HigherTaxonName', None) and cdict.get('HigherTaxonRank', None):
-            highertaxon1 = etree.SubElement(highertaxa, "{" + abcd + "}" + "HigherTaxon")
-            if cdict.get('HigherTaxonName', None):
-                highertaxonname = etree.SubElement(highertaxon1, "{" + abcd + "}" + "HigherTaxonName")
-                highertaxonname.text = cdict.get('HigherTaxonName')
-            if cdict.get('HigherTaxonRank', None):
-                highertaxonrank = etree.SubElement(highertaxon1, "{" + abcd + "}" + "HigherTaxonRank")
-                highertaxonrank.text = 'familia'   #cdict.get('HigherTaxonRank') is not given correct
-        if cdict.get('HigherClassification', None):
-            highertaxon2 = etree.SubElement(highertaxa, "{" + abcd + "}" + "HigherTaxon")
-            highertaxonname = etree.SubElement(highertaxon2, "{" + abcd + "}" + "HigherTaxonName")
-            highertaxonname.text = cdict.get('HigherClassification')
-            highertaxonrank = etree.SubElement(highertaxon2, "{" + abcd + "}" + "HigherTaxonRank")
-            highertaxonrank.text = 'regnum'
-    scientificname = etree.SubElement(taxonidentified, "{" + abcd + "}" + "ScientificName")
-    fullscientificnamestring1 = etree.SubElement(scientificname, "{" + abcd + "}" + "FullScientificNameString")
-    fullscientificnamestring1.text = cdict.get('FullScientificNameString')  #cdict['FullScientificNameString']   #'Place here FullScientificNameString'
-
-    # structure: RecordBasis, with with mandatory fields:
-    recordbasis = etree.SubElement(unit, "{" + abcd + "}" + "RecordBasis")
-    recordbasis.text = cdict.get('RecordBasis')   #cdict['RecordBasis']   #''place here fixed vocabulary for RecordBasis ,PreservedSpecimen'
-
-    # structure: SpecimenUnit, with with non-mandatory fields:
-    if cdict.get('PhysicalObjectID', None) or cdict.get('TypifiedName', None) or cdict.get('TypeStatus', None):
-        specimenunit = etree.SubElement(unit, "{" + abcd + "}" + "SpecimenUnit")
-        if cdict.get('PhysicalObjectID', None):
-            accessions = etree.SubElement(specimenunit, "{" + abcd + "}" + "Accessions")
-            accessionnumber = etree.SubElement(accessions, "{" + abcd + "}" + "AccessionNumber")
-            accessionnumber.text = cdict.get('PhysicalObjectID')  # Phacidium congener Ces.
-        if cdict.get('TypifiedName', None) or cdict.get('TypeStatus', None):
-            nomenclaturaltypedesignations = etree.SubElement(specimenunit, "{" + abcd + "}" + "NomenclaturalTypeDesignations")
-            nomenclaturaltypedesignation = etree.SubElement(nomenclaturaltypedesignations, "{" + abcd + "}" + "NomenclaturalTypeDesignation")
-        if cdict.get('TypifiedName', None):
-            typifiedname = etree.SubElement(nomenclaturaltypedesignation, "{" + abcd + "}" + "TypifiedName")
-            fullscientificnamestring2 = etree.SubElement(typifiedname, "{" + abcd + "}" + "FullScientificNameString")
-            fullscientificnamestring2.text = cdict.get('TypifiedName')  #Phacidium congener Ces.
-        if cdict.get('TypeStatus', None):
-            typestatus = etree.SubElement(nomenclaturaltypedesignation, "{" + abcd + "}" + "TypeStatus")
-            typestatus.text = cdict.get('TypeStatus')
-
-    # structure: Gathering, with with non-mandatory and mandatory fields:
-    gathering = etree.SubElement(unit, "{" + abcd + "}" + "Gathering")
-    datetime = etree.SubElement(gathering, "{" + abcd + "}" + "DateTime")
-    isodatetimebegin = etree.SubElement(datetime, "{" + abcd + "}" + "ISODateTimeBegin")
-    isodatetimebegin.text = cdict.get('IsoDateTimeBegin')
-    if cdict.get('AgentText',None):
-        agents = etree.SubElement(gathering, "{" + abcd + "}" + "Agents")
-        gatheringagentstext = etree.SubElement(agents, "{" + abcd + "}" + "GatheringAgentsText")
-        gatheringagentstext.text = cdict.get('AgentText')
-    localitytext = etree.SubElement(gathering, "{" + abcd + "}" + "LocalityText")
-    localitytext.set('language', ''"EN"'')
-    localitytext.text = cdict.get('LocalityText')
-    country = etree.SubElement(gathering, "{" + abcd + "}" + "Country")
-    name = etree.SubElement(country, "{" + abcd + "}" + "Name")
-    name.set('language', ''"EN"'')
-    name.text = cdict.get('Country')
-    if cdict.get('LongitudeDecimal') and cdict.get('LatitudeDecimal'):
-        sitecoordinatesets = etree.SubElement(gathering, "{" + abcd + "}" + "SiteCoordinateSets")
-        sitecoordinates = etree.SubElement(sitecoordinatesets, "{" + abcd + "}" + "SiteCoordinates")
-        coordinateslatlong = etree.SubElement(sitecoordinates, "{" + abcd + "}" + "CoordinatesLatLong")
-        if cdict.get('LongitudeDecimal'):
-            longitudedecimal = etree.SubElement(coordinateslatlong, "{" + abcd + "}" + "LongitudeDecimal")
-            longitudedecimal.text = cdict.get('LongitudeDecimal')
-        if cdict.get('LatitudeDecimal'):
-            latitudedecimal = etree.SubElement(coordinateslatlong, "{" + abcd + "}" + "LatitudeDecimal")
-            latitudedecimal.text = cdict.get('LatitudeDecimal')
-
-    # structure: CollectorsFieldNumber, with with non-mandatory fields:
-    if cdict.get('CollectorFieldNumber',None):
-        collectorsfieldnumber = etree.SubElement(unit, "{" + abcd + "}" + "CollectorsFieldNumber")
-        collectorsfieldnumber.text =cdict.get('CollectorFieldNumber')
-
-    # structure: Sex, with with non-mandatory fields:
-    if cdict.get('Sex',None):
-        sex = etree.SubElement(unit, "{" + abcd + "}" + "Sex")
-        sex.text = cdict.get('Sex')[:1]
-
-
-def create_taxonomic_xml_file_from_dict_lxml(submission, csv_file_name, as_temp):
-    # use a real path later on
-    from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
-
-    import lxml
-    from lxml import etree
-    import os
-    import tempfile
-
-    with open(os.path.join(_get_test_data_dir_path(), csv_file_name),
-        'r',  encoding = 'utf-8-sig') as data_file:
-        requirements = parse_taxonomic_csv(data_file)
-
-    #Creating XML structure Using the lxml  etree Module:
-    # namespaces:
-    xsi = "http://www.w3.org/2001/XMLSchema-instance"
-    abcd = "http://www.tdwg.org/schemas/abcd/2.06"
-    schemaLocation = " http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"
-
-
-    #goal:
-    #abcd: DataSets
-    #xmlns: xsi = "http://www.w3.org/2001/XMLSchema-instance"
-    #xmlns: abcd = "http://www.tdwg.org/schemas/abcd/2.06"
-    #xsi: schemaLocation = " http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"
-
-
-    ns = {"xsi": xsi, "abcd": abcd} # "schemaLocation": schemaLocation}
-    root = etree.Element("{" + abcd + "}DataSets", attrib={"{" + xsi + "}schemaLocation": schemaLocation}, nsmap=ns)
-
-    #etree.SubElement(root, "{" + abcd + "}" + "DataSet").text = "The data of one line"
-    dataset = AddDataSet( root)
-
-    AddTechnicalContacts(submission.user, dataset)
-    AddContentContacts(submission.user, dataset)
-    AddMetaData(submission.user, submission.created, dataset)
-
-    units = AddUnits( dataset)
-
-    unid=None
-    attr_list = None
-
-    for key, value in requirements.items():
-        if(key=='atax_specimens'):
-            attr_list = value
-    #attr_list: list of dicts
-
-    length = len(attr_list)
-
-    for i in range(length):
-        unid = attr_list[i]['UnitId']
-        inhalt = attr_list[i] ['specimen_attributes']  #list 14
-
-        unit = AddUnit(units)
-        AddUnitData(unit, unid, inhalt)
-
-    #differentiate between physical xml file at the end and temporary file which is deleted at the end:
-    if as_temp==0:
-
-        xml_file_name = os.path.basename(csv_file_name)
-        xml_file_name = (os.path.splitext(xml_file_name))[0]
-        xml_file_name = xml_file_name + '.xml'
-        xml_file_name = ''.join(('xml_files/',xml_file_name))
-
-        with open(os.path.join(_get_test_data_dir_path(), xml_file_name),'wb') as f:
-            tree = root.getroottree()
-            tree.write(f, encoding="utf-8", xml_declaration=True, pretty_print=True)
-            f.close()
-
-        return xml_file_name  # or later a string only?
-
-    elif as_temp == 1:
-
-        f = tempfile.NamedTemporaryFile(delete=False)
-        tree = root.getroottree()
-        tree.write(f, encoding="utf-8", xml_declaration=True, pretty_print=True)
-
-        f.close()  # file is not immediately deleted because  of delete=False
-
-        return f.file.name
-        # used delete=False
-
-
-
-
