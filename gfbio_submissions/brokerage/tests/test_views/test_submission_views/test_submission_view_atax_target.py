@@ -49,7 +49,7 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
         }
         self.assertEqual(201, response.status_code)
 
-        expected['broker_submission_id'] = content['broker_submission_id']
+        expected['broker_submission_id'] = content.get('broker_submission_id', 'ERROR')
         self.assertDictEqual(expected, content)
         self.assertEqual(1, len(Submission.objects.all()))
 
@@ -172,7 +172,7 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
             'download_url': ''
         }
 
-        expected_update['broker_submission_id'] = content['broker_submission_id']
+        expected_update['broker_submission_id'] = content.get('broker_submission_id', 'ERROR')
         self.assertDictEqual(expected_update, content)
 
         self.assertEqual(2, len(TaskProgressReport.objects.filter(task_name="tasks.get_gfbio_helpdesk_username_task")))
@@ -182,3 +182,25 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
         self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.update_submission_issue_task")))
         self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.update_ena_embargo_task")))
         self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.notify_user_embargo_changed_task")))
+
+    @responses.activate
+    def test_atax_post_created_and_correct_target(self):
+        self._add_create_ticket_response()
+
+        subm_number = len(Submission.objects.all())
+
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'ATAX',
+             'release': False,
+             'data': {
+                 'requirements': {
+                     'title': 'The original alpha_tax Title',
+                     'description': 'The original alpha_tax Description'}}},
+            format='json'
+        )
+
+        subm_number1 = len(Submission.objects.all())
+
+        self.assertEqual(subm_number1, subm_number +1)
+        self.assertEqual(Submission.objects.last().target, ATAX)

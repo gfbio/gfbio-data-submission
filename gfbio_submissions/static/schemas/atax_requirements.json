@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "file:///app/gfbio_submissions/brokerage/schemas/atax_requirements.json",
+    "id": "file:///app/staticfiles/schemas/atax_requirements.json",
     "type": "object",
     "properties": {
         "requirements": {
