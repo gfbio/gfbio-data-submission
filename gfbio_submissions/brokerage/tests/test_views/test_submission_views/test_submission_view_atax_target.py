@@ -68,6 +68,11 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
         request_logs = RequestLog.objects.filter(type=RequestLog.INCOMING)
         self.assertEqual(1, len(request_logs))
 
+        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.get_gfbio_helpdesk_username_task")))
+        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.create_submission_issue_task")))
+        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.jira_initial_comment_task")))
+        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.check_issue_existing_for_submission_task")))
+
     @responses.activate
     def test_no_release_unknown_target(self):
         self._add_create_ticket_response()
@@ -177,7 +182,7 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
 
         self.assertEqual(2, len(TaskProgressReport.objects.filter(task_name="tasks.get_gfbio_helpdesk_username_task")))
         self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.create_submission_issue_task")))
-        # self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.tasks.jira_initial_comment_task")))
+        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.jira_initial_comment_task")))
         self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.check_issue_existing_for_submission_task")))
         self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.update_submission_issue_task")))
         self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.update_ena_embargo_task")))
