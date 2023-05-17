@@ -5,12 +5,14 @@ import datetime
 
 import responses
 
-from gfbio_submissions.brokerage.models import Submission
 from gfbio_submissions.generic.models import RequestLog
 from .test_submission_view_base import \
     TestSubmissionView
 from gfbio_submissions.brokerage.configuration.settings import ATAX
-from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
+from gfbio_submissions.brokerage.models import Submission, TaskProgressReport, JiraMessage
+from gfbio_submissions.brokerage.tasks import  jira_initial_comment_task
+from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY
+from gfbio_submissions.brokerage.models import AdditionalReference
 
 class TestSubmissionViewAtaxTarget(TestSubmissionView):
 
@@ -209,3 +211,168 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
 
         self.assertEqual(subm_number1, subm_number +1)
         self.assertEqual(Submission.objects.last().target, ATAX)
+
+    @responses.activate
+    def test_ordered_task_chain_atax_post_start_with_no_release(self):
+        self._add_create_ticket_response()
+        self.assertEqual(0, len(Submission.objects.all()))
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'ATAX',
+             'release': False,
+             'data': {
+                 'requirements': {
+                     'title': 'The alpha_tax Title',
+                     'description': 'The alpha_tax Description'}}},
+            format='json'
+        )
+
+        expected_task_names = [
+            'tasks.get_gfbio_helpdesk_username_task',
+            'tasks.create_submission_issue_task',
+            'tasks.jira_initial_comment_task',
+            'tasks.check_for_molecular_content_in_submission_task',
+            'tasks.trigger_submission_transfer',
+            'tasks.check_issue_existing_for_submission_task',
+        ]
+
+        all_task_reports = list(
+            TaskProgressReport.objects.values_list(
+                'task_name', flat=True).order_by('created')
+        )
+        self.assertListEqual(expected_task_names, all_task_reports)
+
+
+    @responses.activate
+    def test_ordered_task_chain_atax_release_as_update(self):
+        self._add_create_ticket_response()
+        self.assertEqual(0, len(Submission.objects.all()))
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'ATAX',
+             'release': False,
+             'data': {
+                 'requirements': {
+                     'title': 'The alpha_tax Title',
+                     'description': 'The alpha_tax Description - no release'}}},
+            format='json'
+        )
+
+        self.assertEqual(201, response.status_code)
+
+        self.assertEqual(1, len(Submission.objects.all()))
+        submission = Submission.objects.first()
+
+        response = self.api_client.put(
+            '/api/submissions/{0}/'.format(submission.broker_submission_id),
+            {
+                'target': 'ATAX',
+                'release': True,
+                'data': {
+                    'requirements': {
+                        'title': 'The updated alpha_tax Title',
+                        'description': 'The updated alpha_tax Description - with release'
+                    }
+                },
+            },
+            format='json'
+        )
+        self.assertEqual(200, response.status_code)
+        submission = Submission.objects.first()
+        self.assertEqual('ATAX', submission.target)
+
+        expected_task_names = [
+            'tasks.get_gfbio_helpdesk_username_task',
+            'tasks.create_submission_issue_task',
+            'tasks.jira_initial_comment_task',
+            'tasks.check_for_molecular_content_in_submission_task',
+            'tasks.trigger_submission_transfer',
+            'tasks.check_issue_existing_for_submission_task',
+            'tasks.get_gfbio_helpdesk_username_task',
+            'tasks.update_submission_issue_task',
+            'tasks.check_for_molecular_content_in_submission_task',
+            'tasks.trigger_submission_transfer_for_updates',
+            'tasks.check_on_hold_status_task',
+        ]
+
+        all_task_reports = list(
+            TaskProgressReport.objects.values_list(
+                'task_name', flat=True).order_by('created')
+        )
+        self.assertListEqual(expected_task_names, all_task_reports)
+
+    @responses.activate
+    def test_ordered_task_chain_atax_post_start_with_release(self):
+        self._add_create_ticket_response()
+        self.assertEqual(0, len(Submission.objects.all()))
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'ATAX',
+             'release': True,
+             'data': {
+                 'requirements': {
+                     'title': 'The alpha_tax Title',
+                     'description': 'The alpha_tax Description'}}},
+            format='json'
+        )
+
+        expected_task_names = [
+            'tasks.get_gfbio_helpdesk_username_task',
+            'tasks.create_submission_issue_task',
+            'tasks.jira_initial_comment_task',
+            'tasks.check_for_molecular_content_in_submission_task',
+            'tasks.trigger_submission_transfer',
+            'tasks.check_on_hold_status_task',
+            'tasks.check_issue_existing_for_submission_task',
+        ]
+
+        all_task_reports = list(
+            TaskProgressReport.objects.values_list(
+                'task_name', flat=True).order_by('created')
+        )
+        self.assertListEqual(expected_task_names, all_task_reports)
+
+    @responses.activate
+    def test_initial_comment_atax_post_no_release(self):
+        self._add_create_ticket_response()
+        self.assertEqual(0, len(Submission.objects.all()))
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.api_client.post(
+            '/api/submissions/',
+            {'target': 'ATAX',
+             'release': False,
+             'data': {
+                 'requirements': {
+                     'title': 'The alpha_tax Title',
+                     'description': 'The alpha_tax Description'}}},
+            format='json'
+        )
+
+        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.jira_initial_comment_task")))
+
+        self.assertEqual(201, response.status_code)
+        submission = Submission.objects.first()
+        self.assertEqual('ATAX', submission.target)
+
+        reference = AdditionalReference.objects.create(
+            submission=submission,
+            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+            reference_key='PDI-0815',
+            primary=True
+        )
+        reference.save()
+
+        self.assertTrue(reference.primary)
+        self.assertTrue(isinstance(reference, AdditionalReference))
+
+        result = jira_initial_comment_task.apply_async(
+            kwargs={
+                'submission_id': Submission.objects.first().pk,
+            },
+            countdown=SUBMISSION_DELAY,
+        ).get()
+        #self.assertEqual("initial comment sent", result['status'])
+
