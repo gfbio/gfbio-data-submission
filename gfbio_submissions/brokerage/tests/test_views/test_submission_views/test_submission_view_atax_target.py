@@ -374,5 +374,7 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
             },
             countdown=SUBMISSION_DELAY,
         ).get()
+        #test is incomplete: no entry at all in database table for JiraMessages
+        # get_jira_comment_template
         #self.assertEqual("initial comment sent", result['status'])
 

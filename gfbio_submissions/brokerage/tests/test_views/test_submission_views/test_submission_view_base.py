@@ -202,3 +202,20 @@ class TestSubmissionView(TestCase):
     @staticmethod
     def _delete_test_data():
         SubmissionUpload.objects.all().delete()
+
+    @classmethod
+    def _create_atax_csv_meta_data(cls, delete=True, invalid=False, update=False):
+        file_name = 'csv_files/specimen_table_Platypelis_with_gaps.csv' if invalid else 'csv_files/specimen_table_Platypelis.csv'
+        if update:
+            file_name = 'csv_files/specimen_table_Platypelis.csv'
+
+        if delete:
+            cls._delete_test_data()
+        csv_file = open(
+            os.path.join(_get_test_data_dir_path(), file_name),
+            'rb'
+        )
+        return {
+            'file': csv_file,
+            'meta_data': True,
+        }

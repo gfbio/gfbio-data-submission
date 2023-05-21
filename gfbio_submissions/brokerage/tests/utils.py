@@ -148,3 +148,10 @@ def _get_jira_hook_request_data(no_changelog=False):
         _get_test_data_dir_path(), file_name),
         'r') as data_file:
         return data_file.read()
+
+def _get_taxonomic_min_data():
+    with open(os.path.join(
+        _get_test_data_dir_path(),
+        'taxonomic_min_data.json'), 'r') as data_file:
+        return json.load(data_file)
+

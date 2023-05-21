@@ -459,6 +459,13 @@ class TaskProgressReport(TimeStampedModel):
 #   is the attack to ticket field and related stuff in save()
 #   --> maybe a candiate for abstract app, where all field except FK are predefined
 class SubmissionUpload(TimeStampedModel):
+    TARGETS = (
+        (ENA, ENA),
+        (ENA_PANGAEA, ENA_PANGAEA),
+        (GENERIC, GENERIC),
+        (ATAX, ATAX),
+    )
+
     submission = models.ForeignKey(
         Submission,
         null=True,
@@ -534,9 +541,21 @@ class SubmissionUpload(TimeStampedModel):
         help_text='MD5 checksum of "file"'
     )
 
+    target = models.CharField(
+        blank=True,
+        max_length=16,
+        default='',
+        choices=TARGETS,
+        help_text='in case of ATAX submission put this target into this field'
+    )
+
     objects = SubmissionUploadManager()
 
     def save(self, ignore_attach_to_ticket=False, *args, **kwargs):
+
+        if self.submission is not None:
+            if self.submission.target == ATAX:
+                self.target = ATAX
         # TODO: consider task/chain for this. every new/save resets md5 to '' then task is
         #   put to queue
         if self.pk is None:
@@ -547,6 +566,19 @@ class SubmissionUpload(TimeStampedModel):
                 self.modified_recently = True
                 self.md5_checksum = md5
         super(SubmissionUpload, self).save(*args, **kwargs)
+
+        # put this into serializer and test the returns
+        if self.target == ATAX:
+            from .tasks import \
+                atax_submission_parse_csv_upload_to_xml_task
+            atax_submission_parse_csv_upload_to_xml_task.apply_async(
+                kwargs={
+                    'submission_id': '{0}'.format(self.submission.pk),
+                    'submission_upload_id': '{0}'.format(self.pk)
+                },
+                countdown=SUBMISSION_UPLOAD_RETRY_DELAY
+            )
+
         if self.attach_to_ticket and not ignore_attach_to_ticket:
             from .tasks import \
                 attach_to_submission_issue_task
