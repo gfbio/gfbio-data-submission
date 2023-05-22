@@ -315,8 +315,8 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(b'No file was submitted.', response.content)
 
-    @skip('does not work yet')
-    # @responses.activate
+    # @skip('does not work yet')
+    @responses.activate
     def test_valid_atax_file_patch_no_task(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
@@ -339,7 +339,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         #data = self._create_atax_csv_test_data(delete=True, invalid=True, attach=False)
         response = self.api_client.post(url, data, format='multipart')
         content = json.loads(response.content.decode('utf-8'))
-        self.assertFalse(SubmissionUpload.objects.first().attach_to_ticket)
+        self.assertFalse(SubmissionUpload.objects.first().meta_data)
 
         url = reverse(
             'brokerage:submissions_upload_patch',
@@ -347,6 +347,6 @@ class TestSubmissionAtaxUploadView(TestCase):
                 'broker_submission_id': submission.broker_submission_id,
                 'pk': content.get('id')
             })
-        response = self.api_client.patch(url, {'attach_to_ticket': True})
+        response = self.api_client.patch(url, {'meta_data': True})
         self.assertEqual(200, response.status_code)
-        self.assertTrue(SubmissionUpload.objects.first().attach_to_ticket)
+        self.assertTrue(SubmissionUpload.objects.first().meta_data)
