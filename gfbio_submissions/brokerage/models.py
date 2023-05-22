@@ -556,6 +556,8 @@ class SubmissionUpload(TimeStampedModel):
         if self.submission is not None:
             if self.submission.target == ATAX:
                 self.target = ATAX
+            else:
+                self.target = ''
         # TODO: consider task/chain for this. every new/save resets md5 to '' then task is
         #   put to queue
         if self.pk is None:
