@@ -2528,7 +2528,7 @@ def jira_initial_comment_task(self, prev=None, submission_id=None):
     retry_jitter=True
 )
 def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None, kwargs=None,
-                                              submission_id=None,  submission_upload_id=None):
+                                              submission_id=None,  submission_upload_file=None):
 
     logger.info(
         'tasks.py | jira_initial_comment_task | submission_id={}'.format(
@@ -2546,8 +2546,9 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
     report, created = TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
-    submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
-        submission_upload_id)
+    #submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
+    #    submission_upload_id)
+    submission_upload = submission_upload_file
 
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
@@ -2564,7 +2565,7 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
             'submission_id={0}'.format(submission_id))
         return TaskProgressReport.CANCELLED
 
-    report.submission = submission_upload.submission
+    report.submission = submission
 
     # here: create a taxonomic xml file from csv  structure, csv  file type is not yet approved, later!
 

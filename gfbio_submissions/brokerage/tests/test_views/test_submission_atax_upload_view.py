@@ -290,7 +290,7 @@ class TestSubmissionAtaxUploadView(TestCase):
                 'broker_submission_id': submission.broker_submission_id,
                 'pk': content.get('id')
             })
-
+        # update with other taxonomic test csv file with more gaps:
         data = self._create_atax_csv_test_data(delete=False,invalid=True,attach=True)
         self.api_client.put(url, data, format='multipart')
 

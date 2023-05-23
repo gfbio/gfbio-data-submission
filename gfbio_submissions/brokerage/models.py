@@ -22,6 +22,10 @@ from .storage import OverwriteStorage
 from .utils.submission_tools import \
     submission_upload_path, hash_file
 
+from django.db.models.signals import pre_save
+# from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 logger = logging.getLogger(__name__)
 
 
@@ -323,7 +327,6 @@ class BrokerObject(models.Model):
     # class Meta:
     #     unique_together = (('type', 'site', 'site_project_id', 'site_object_id'),)
 
-
 class PersistentIdentifier(TimeStampedModel):
     ARCHIVES = (
         ('ENA', 'ENA'),
@@ -558,6 +561,7 @@ class SubmissionUpload(TimeStampedModel):
                 self.target = ATAX
             else:
                 self.target = ''
+
         # TODO: consider task/chain for this. every new/save resets md5 to '' then task is
         #   put to queue
         if self.pk is None:
@@ -568,18 +572,6 @@ class SubmissionUpload(TimeStampedModel):
                 self.modified_recently = True
                 self.md5_checksum = md5
         super(SubmissionUpload, self).save(*args, **kwargs)
-
-        # put this into serializer and test the returns
-        if self.target == ATAX:
-            from .tasks import \
-                atax_submission_parse_csv_upload_to_xml_task
-            atax_submission_parse_csv_upload_to_xml_task.apply_async(
-                kwargs={
-                    'submission_id': '{0}'.format(self.submission.pk),
-                    'submission_upload_id': '{0}'.format(self.pk)
-                },
-                countdown=SUBMISSION_UPLOAD_RETRY_DELAY
-            )
 
         if self.attach_to_ticket and not ignore_attach_to_ticket:
             from .tasks import \
@@ -595,6 +587,30 @@ class SubmissionUpload(TimeStampedModel):
     def __str__(self):
         return ' / '.join(reversed(self.file.name.split(os.sep)))
 
+@receiver(pre_save, sender=SubmissionUpload)
+def convert_atax_csv_to_xml_file(sender, instance, *args, **kwargs):
+    # put this into serializer and test the returns
+    if instance.target == ATAX:
+        from .tasks import \
+            atax_submission_parse_csv_upload_to_xml_task
+        atax_submission_parse_csv_upload_to_xml_task.apply_async(
+            kwargs={
+                'submission_id': '{0}'.format(instance.submission.pk),
+                'submission_upload_file': '{0}'.format(instance.file)
+            },
+            countdown=SUBMISSION_UPLOAD_RETRY_DELAY
+        )
+
+@receiver(pre_save, sender=SubmissionUpload)
+def schema_validation_atax_xml_file(sender, instance, *args, **kwargs):
+    # here, do a new type of pre_save action, new validation task
+    #and save result in auditable textdata of submission, if valid
+    pass
+
+@receiver(pre_save, sender=SubmissionUpload)
+def schema_validation_atax_xml_file(sender, instance, *args, **kwargs):
+    # here, do a new type of pre_save action for SubmissionUpload
+    pass
 
 # TODO: FK to submission, either keep this here and focus on xml for molecular,
 #  or move to generic or abstract. read about logic/code in abstract classes vs
