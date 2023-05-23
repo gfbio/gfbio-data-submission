@@ -135,7 +135,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         )
         return {
             'file': csv_file,
-            'meta_data': True,
+            'meta_data': False,
             'attach_to_ticket': attach,
         }
 
@@ -198,7 +198,7 @@ class TestSubmissionAtaxUploadView(TestCase):
 
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(submission.submissionupload_set.all()))
-        self.assertTrue(submission.submissionupload_set.first().meta_data)
+        self.assertFalse(submission.submissionupload_set.first().meta_data)
 
         self.assertEqual(submission.target, response.data['target'])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -335,8 +335,8 @@ class TestSubmissionAtaxUploadView(TestCase):
                       ),
                       json=_get_jira_attach_response(),
                       status=200)
-        data = self._create_test_data('/tmp/test_primary_data_file_1111')
-        #data = self._create_atax_csv_test_data(delete=True, invalid=True, attach=False)
+
+        data = self._create_atax_csv_test_data(delete=True, invalid=True, attach=False)
         response = self.api_client.post(url, data, format='multipart')
         content = json.loads(response.content.decode('utf-8'))
         self.assertFalse(SubmissionUpload.objects.first().meta_data)
