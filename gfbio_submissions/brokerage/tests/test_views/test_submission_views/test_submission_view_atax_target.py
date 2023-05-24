@@ -335,6 +335,9 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
         )
         self.assertListEqual(expected_task_names, all_task_reports)
 
+    # TODO: test is incomplete: no entry at all in database table for JiraMessages
+    # TODO: get_jira_comment_template gives no result
+    # TODO: should be the test: self.assertEqual("initial comment sent", result['status'])
     @responses.activate
     def test_initial_comment_atax_post_no_release(self):
         self._add_create_ticket_response()
@@ -374,7 +377,5 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
             },
             countdown=SUBMISSION_DELAY,
         ).get()
-        #test is incomplete: no entry at all in database table for JiraMessages
-        # get_jira_comment_template
-        #self.assertEqual("initial comment sent", result['status'])
+
 

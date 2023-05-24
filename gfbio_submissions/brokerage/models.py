@@ -4,8 +4,7 @@ import os
 import uuid
 
 from django.db import models
-from django.db.models import JSONField
-from django.db.models import Q
+from django.db.models import JSONField, Q
 from model_utils.models import TimeStampedModel
 
 from config.settings.base import AUTH_USER_MODEL
@@ -13,18 +12,13 @@ from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
     DEFAULT_ENA_CENTER_NAME
 from gfbio_submissions.brokerage.managers import SubmissionUploadManager
 from gfbio_submissions.generic.fields import JsonDictField
-from .configuration.settings import ENA, ENA_PANGAEA, ATAX
-from .configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY
-from .managers import AuditableTextDataManager
-from .managers import SubmissionManager, BrokerObjectManager, \
-    TaskProgressReportManager
+from .configuration.settings import ENA, ENA_PANGAEA, ATAX, \
+    SUBMISSION_UPLOAD_RETRY_DELAY
+from .managers import AuditableTextDataManager, SubmissionManager, \
+    BrokerObjectManager, TaskProgressReportManager
 from .storage import OverwriteStorage
 from .utils.submission_tools import \
     submission_upload_path, hash_file
-
-from django.db.models.signals import pre_save
-# from django.db.models.signals import post_save
-from django.dispatch import receiver
 
 logger = logging.getLogger(__name__)
 
@@ -549,7 +543,8 @@ class SubmissionUpload(TimeStampedModel):
         max_length=16,
         default='',
         choices=TARGETS,
-        help_text='in case of ATAX submission put this target into this field'
+        help_text='optional: field for transferring the submission target'
+                  ' to this SubmissionUpload'
     )
 
     objects = SubmissionUploadManager()
@@ -584,33 +579,33 @@ class SubmissionUpload(TimeStampedModel):
                 countdown=SUBMISSION_UPLOAD_RETRY_DELAY
             )
 
+        if self.target == ATAX:
+            from .tasks import \
+                atax_submission_parse_csv_upload_to_xml_task
+            atax_submission_parse_csv_upload_to_xml_task.apply_async(
+                kwargs={
+                    'submission_id': '{0}'.format(self.submission.pk),
+                    'submission_upload_id': '{0}'.format(self.pk)
+                },
+                countdown=SUBMISSION_UPLOAD_RETRY_DELAY
+            )
+
     def __str__(self):
         return ' / '.join(reversed(self.file.name.split(os.sep)))
 
-@receiver(pre_save, sender=SubmissionUpload)
-def convert_atax_csv_to_xml_file(sender, instance, *args, **kwargs):
-    # put this into serializer and test the returns
-    if instance.target == ATAX:
-        from .tasks import \
-            atax_submission_parse_csv_upload_to_xml_task
-        atax_submission_parse_csv_upload_to_xml_task.apply_async(
-            kwargs={
-                'submission_id': '{0}'.format(instance.submission.pk),
-                'submission_upload_file': '{0}'.format(instance.file)
-            },
-            countdown=SUBMISSION_UPLOAD_RETRY_DELAY
-        )
+# TODO: later: do a new type of pre_save action for Submission_Upload
+# @receiver(pre_save, sender=SubmissionUpload)
+# def schema_validation_atax_xml_file(sender, instance, *args, **kwargs):
+    #  new validation task
+    # or save result in auditable textdata of submission, if valid
+    #pass
 
-@receiver(pre_save, sender=SubmissionUpload)
-def schema_validation_atax_xml_file(sender, instance, *args, **kwargs):
-    # here, do a new type of pre_save action, new validation task
-    #and save result in auditable textdata of submission, if valid
-    pass
+# TODO: later: do a new type of post_save action for Submission_Upload
+# @receiver(post_save, sender=SubmissionUpload)
+# def sending_emails_to_curators_or_submitters(sender, instance, *args, **kwargs):
+    # maybe use this action for sending mails
+    # pass
 
-@receiver(pre_save, sender=SubmissionUpload)
-def schema_validation_atax_xml_file(sender, instance, *args, **kwargs):
-    # here, do a new type of pre_save action for SubmissionUpload
-    pass
 
 # TODO: FK to submission, either keep this here and focus on xml for molecular,
 #  or move to generic or abstract. read about logic/code in abstract classes vs

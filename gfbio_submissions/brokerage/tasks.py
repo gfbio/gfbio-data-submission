@@ -1979,7 +1979,7 @@ def check_for_submissions_without_helpdesk_issue_task(self):
         submission=None,
         task=self)
     logger.info(
-        msg='tasks.py | check_for_submissions_without_helpdesk_issue_task |'
+        msg='tasks.py |  check_for_submissions_without_helpdesk_issue_task |'
             ' start search')
     submissions_without_issue = Submission.objects.get_submissions_without_primary_helpdesk_issue()
     for sub in submissions_without_issue:
@@ -2528,7 +2528,7 @@ def jira_initial_comment_task(self, prev=None, submission_id=None):
     retry_jitter=True
 )
 def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None, kwargs=None,
-                                              submission_id=None,  submission_upload_file=None):
+                                              submission_id=None,  submission_upload_id=None):
 
     logger.info(
         'tasks.py | jira_initial_comment_task | submission_id={}'.format(
@@ -2546,16 +2546,16 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
     report, created = TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
-    #submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
-    #    submission_upload_id)
-    submission_upload = submission_upload_file
+    submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
+        submission_upload_id)
 
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
             'tasks.py | parse_csv_as_xml_to_update_clean_submission_task | '
             'previous task reported={0} | '
-            'submission_upload_id={1}'.format(TaskProgressReport.CANCELLED,
-                                              submission_id))
+            'submission_id={1} |'
+            'submission_upload_id={2}'.format(TaskProgressReport.CANCELLED,
+                                              submission_id, submission_upload_id))
         return TaskProgressReport.CANCELLED
 
     if submission_upload is None:
