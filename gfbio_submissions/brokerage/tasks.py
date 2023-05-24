@@ -1979,7 +1979,7 @@ def check_for_submissions_without_helpdesk_issue_task(self):
         submission=None,
         task=self)
     logger.info(
-        msg='tasks.py | check_for_submissions_without_helpdesk_issue_task |'
+        msg='tasks.py |  check_for_submissions_without_helpdesk_issue_task |'
             ' start search')
     submissions_without_issue = Submission.objects.get_submissions_without_primary_helpdesk_issue()
     for sub in submissions_without_issue:
@@ -2514,3 +2514,61 @@ def jira_initial_comment_task(self, prev=None, submission_id=None):
         'submission': '{}'.format(submission.broker_submission_id),
         'user': '{}'.format(submission.user),
     }
+
+
+@app.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.atax_submission_parse_csv_upload_to_xml_task',
+    autoretry_for=(TransferServerError,
+                   TransferClientError
+                   ),
+    retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
+    retry_backoff=SUBMISSION_RETRY_DELAY,
+    retry_jitter=True
+)
+def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None, kwargs=None,
+                                              submission_id=None,  submission_upload_id=None):
+
+    logger.info(
+        'tasks.py | jira_initial_comment_task | submission_id={}'.format(
+            submission_id))
+
+    submission, site_config = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=False
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
+
+    # TODO: here it would be possible to get the related submission for the TaskReport
+    report, created = TaskProgressReport.objects.create_initial_report(
+        submission=None,
+        task=self)
+    submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
+        submission_upload_id)
+
+    if previous_task_result == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | parse_csv_as_xml_to_update_clean_submission_task | '
+            'previous task reported={0} | '
+            'submission_id={1} |'
+            'submission_upload_id={2}'.format(TaskProgressReport.CANCELLED,
+                                              submission_id, submission_upload_id))
+        return TaskProgressReport.CANCELLED
+
+    if submission_upload is None:
+        logger.error(
+            'tasks.py | parse_csv_as_xml_to_update_clean_submission_task | '
+            'no valid SubmissionUpload available | '
+            'submission_id={0}'.format(submission_id))
+        return TaskProgressReport.CANCELLED
+
+    report.submission = submission
+
+    # here: create a taxonomic xml file from csv  structure, csv  file type is not yet approved, later!
+
+    # store the xml structure in AuditableTextData of submission similar to ENA!?
+
+    return True

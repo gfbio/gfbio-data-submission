@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.utils.encoding import smart_str
 
 from config.settings.base import ADMINS
-from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA
+from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, ATAX
 # tO
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 
@@ -511,3 +511,12 @@ class SubmissionUploadManager(models.Manager):
         if submission_upload is None:
             return None
         return submission_upload.submission.id
+
+    def get_linked_atax_submission_upload(self, submission_upload_id):
+        submission_upload = self.get_upload_with_related_submission(
+            submission_upload_id)
+        if submission_upload is None:
+            return None
+        if submission_upload.target != ATAX:
+            return None
+        return submission_upload

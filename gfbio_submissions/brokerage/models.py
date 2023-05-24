@@ -4,8 +4,7 @@ import os
 import uuid
 
 from django.db import models
-from django.db.models import JSONField
-from django.db.models import Q
+from django.db.models import JSONField, Q
 from model_utils.models import TimeStampedModel
 
 from config.settings.base import AUTH_USER_MODEL
@@ -13,11 +12,10 @@ from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
     DEFAULT_ENA_CENTER_NAME
 from gfbio_submissions.brokerage.managers import SubmissionUploadManager
 from gfbio_submissions.generic.fields import JsonDictField
-from .configuration.settings import ENA, ENA_PANGAEA, ATAX
-from .configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY
-from .managers import AuditableTextDataManager
-from .managers import SubmissionManager, BrokerObjectManager, \
-    TaskProgressReportManager
+from .configuration.settings import ENA, ENA_PANGAEA, ATAX, \
+    SUBMISSION_UPLOAD_RETRY_DELAY
+from .managers import AuditableTextDataManager, SubmissionManager, \
+    BrokerObjectManager, TaskProgressReportManager
 from .storage import OverwriteStorage
 from .utils.submission_tools import \
     submission_upload_path, hash_file
@@ -323,7 +321,6 @@ class BrokerObject(models.Model):
     # class Meta:
     #     unique_together = (('type', 'site', 'site_project_id', 'site_object_id'),)
 
-
 class PersistentIdentifier(TimeStampedModel):
     ARCHIVES = (
         ('ENA', 'ENA'),
@@ -459,6 +456,13 @@ class TaskProgressReport(TimeStampedModel):
 #   is the attack to ticket field and related stuff in save()
 #   --> maybe a candiate for abstract app, where all field except FK are predefined
 class SubmissionUpload(TimeStampedModel):
+    TARGETS = (
+        (ENA, ENA),
+        (ENA_PANGAEA, ENA_PANGAEA),
+        (GENERIC, GENERIC),
+        (ATAX, ATAX),
+    )
+
     submission = models.ForeignKey(
         Submission,
         null=True,
@@ -534,9 +538,25 @@ class SubmissionUpload(TimeStampedModel):
         help_text='MD5 checksum of "file"'
     )
 
+    target = models.CharField(
+        blank=True,
+        max_length=16,
+        default='',
+        choices=TARGETS,
+        help_text='optional: field for transferring the submission target'
+                  ' to this SubmissionUpload'
+    )
+
     objects = SubmissionUploadManager()
 
     def save(self, ignore_attach_to_ticket=False, *args, **kwargs):
+
+        if self.submission is not None:
+            if self.submission.target == ATAX:
+                self.target = ATAX
+            else:
+                self.target = ''
+
         # TODO: consider task/chain for this. every new/save resets md5 to '' then task is
         #   put to queue
         if self.pk is None:
@@ -547,6 +567,7 @@ class SubmissionUpload(TimeStampedModel):
                 self.modified_recently = True
                 self.md5_checksum = md5
         super(SubmissionUpload, self).save(*args, **kwargs)
+
         if self.attach_to_ticket and not ignore_attach_to_ticket:
             from .tasks import \
                 attach_to_submission_issue_task
@@ -558,8 +579,32 @@ class SubmissionUpload(TimeStampedModel):
                 countdown=SUBMISSION_UPLOAD_RETRY_DELAY
             )
 
+        if self.target == ATAX:
+            from .tasks import \
+                atax_submission_parse_csv_upload_to_xml_task
+            atax_submission_parse_csv_upload_to_xml_task.apply_async(
+                kwargs={
+                    'submission_id': '{0}'.format(self.submission.pk),
+                    'submission_upload_id': '{0}'.format(self.pk)
+                },
+                countdown=SUBMISSION_UPLOAD_RETRY_DELAY
+            )
+
     def __str__(self):
         return ' / '.join(reversed(self.file.name.split(os.sep)))
+
+# TODO: later: do a new type of pre_save action for Submission_Upload
+# @receiver(pre_save, sender=SubmissionUpload)
+# def schema_validation_atax_xml_file(sender, instance, *args, **kwargs):
+    #  new validation task
+    # or save result in auditable textdata of submission, if valid
+    #pass
+
+# TODO: later: do a new type of post_save action for Submission_Upload
+# @receiver(post_save, sender=SubmissionUpload)
+# def sending_emails_to_curators_or_submitters(sender, instance, *args, **kwargs):
+    # maybe use this action for sending mails
+    # pass
 
 
 # TODO: FK to submission, either keep this here and focus on xml for molecular,
