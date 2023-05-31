@@ -31,6 +31,7 @@ from .models import BrokerObject, AuditableTextData, \
     AdditionalReference, TaskProgressReport, Submission
 from .models import SubmissionUpload, EnaReport
 from .utils.csv import check_for_molecular_content, parse_molecular_csv
+from .utils.csv_atax import parse_taxonomic_csv, parse_taxonomic_csv_new
 from .utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data, \
     send_submission_to_ena, parse_ena_submission_response, fetch_ena_report, \
     update_persistent_identifier_report_status, register_study_at_ena, \
@@ -2567,8 +2568,26 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
 
     report.submission = submission
 
-    # here: create a taxonomic xml file from csv  structure, csv  file type is not yet approved, later!
+    meta_data_files = submission.submissionupload_set.filter(meta_data=True)
+    no_of_meta_data_files = len(meta_data_files)
 
+    if no_of_meta_data_files != 1:
+        logger.info(
+            msg='create_taxonomic_xml_file | '
+                'invalid no. of meta_data_files, {0} | return=False'
+                ''.format(no_of_meta_data_files))
+        messages = ['invalid no. of meta_data_files, '
+                    '{0}'.format(no_of_meta_data_files)]
+        return messages
+
+    meta_data_file = meta_data_files.first()
+
+    with open(meta_data_file.file.path,
+              'r', encoding='utf-8-sig') as data_file:
+        requirements = parse_taxonomic_csv_new(submission, data_file)
+
+    # here: create a taxonomic xml file from csv  structure, csv  file type is not yet approved, later!
+    # parse_taxonomic_csv_new(csv_file)
     # store the xml structure in AuditableTextData of submission similar to ENA!?
 
     return True
