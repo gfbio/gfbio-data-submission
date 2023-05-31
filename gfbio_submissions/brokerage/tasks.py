@@ -31,7 +31,7 @@ from .models import BrokerObject, AuditableTextData, \
     AdditionalReference, TaskProgressReport, Submission
 from .models import SubmissionUpload, EnaReport
 from .utils.csv import check_for_molecular_content, parse_molecular_csv
-from .utils.csv_atax import parse_taxonomic_csv, parse_taxonomic_csv_new
+from .utils.csv_atax import parse_taxonomic_csv_new
 from .utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data, \
     send_submission_to_ena, parse_ena_submission_response, fetch_ena_report, \
     update_persistent_identifier_report_status, register_study_at_ena, \
