@@ -3,7 +3,7 @@
   <abcd:DataSet>
     <abcd:TechnicalContacts>
       <abcd:TechnicalContact>
-        <abcd:Name>horst@horst.de</abcd:Name>
+        <abcd:Name>hans@hans.de</abcd:Name>
       </abcd:TechnicalContact>
     </abcd:TechnicalContacts>
     <abcd:ContentContacts>
@@ -20,7 +20,7 @@
       </abcd:Description>
       <abcd:RevisionData>
         <abcd:Creators>horst</abcd:Creators>
-        <abcd:DateModified>2023-03-23T19:32:22</abcd:DateModified>
+        <abcd:DateModified>2023-06-01T12:18:57</abcd:DateModified>
       </abcd:RevisionData>
     </abcd:Metadata>
     <abcd:Units>

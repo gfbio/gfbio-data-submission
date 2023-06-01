@@ -183,7 +183,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         return cls.api_client.post(url, data, format='multipart')
 
     #start with unit tests:
-    @skip('task does not work yet ')
+
     @responses.activate
     def test_valid_atax_upload_post_with_taxonomic_file_data(self):
         submission = Submission.objects.first()
@@ -192,6 +192,7 @@ class TestSubmissionAtaxUploadView(TestCase):
 
         url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
+
         responses.add(responses.POST, url, json={}, status=200)
         data = self._create_atax_csv_test_data(meta_data=True)
         # validation
@@ -222,7 +223,6 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertIn(b'No submission', response.content)
 
-    @skip('task does not work yet ')
     @responses.activate
     def test_valid_atax_upload_one_task(self):
         submission = Submission.objects.all().first()
@@ -250,7 +250,6 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(len(TaskProgressReport.objects.all()), reports_len+1)
         self.assertGreater(len(SubmissionUpload.objects.all()), uploads_len)
 
-    @skip('task does not work yet ')
     @responses.activate
     def test_valid_atax_file_put_no_task(self):
         submission = Submission.objects.first()
@@ -276,7 +275,6 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertIn('specimen_table_Platypelis', fname)
         self.assertEqual(len(TaskProgressReport.objects.all()), reports_len+2)
 
-    @skip('task does not work yet ')
     @responses.activate
     def test_atax_file_put_modified_content_with_task(self):
         submission = Submission.objects.first()
@@ -308,7 +306,6 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertTrue(task_reports.first().task_return_value)
         self.assertTrue(task_reports.last().task_return_value)
 
-    @skip('task does not work yet ')
     def test_empty_atax_upload(self):
         submission = Submission.objects.first()
         url = reverse(
@@ -320,7 +317,6 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(b'No file was submitted.', response.content)
 
-    @skip('does not work yet')
     @responses.activate
     def test_valid_atax_file_patch_no_task(self):
         submission = Submission.objects.first()
