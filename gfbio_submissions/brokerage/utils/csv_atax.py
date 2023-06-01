@@ -10,11 +10,11 @@ from django.utils.encoding import smart_str
 from shortid import ShortId
 
 import xml.etree.ElementTree as ET
-from xml.etree.ElementTree import Element, ElementTree
+from xml.etree.ElementTree import Element, SubElement
+
 from xml.dom import minidom
 import xmlschema
 
-from lxml import etree
 
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 
@@ -54,59 +54,53 @@ attribute_value_blacklist = [
 ]
 
 def add_data_set( parent, ns):
-    from lxml import etree
-    dataset = etree.SubElement(parent, ns + "DataSet")
+
+    dataset = SubElement(parent, ns + "DataSet")
     return dataset
 
 def add_technical_contacts(parent, ns, user):
-    from lxml import etree
 
-    contacts = etree.SubElement(parent, ns + "TechnicalContacts")
-    contact = etree.SubElement(contacts, ns + "TechnicalContact")
-    name = etree.SubElement(contact, ns + "Name")
+    contacts = SubElement(parent, ns + "TechnicalContacts")
+    contact = SubElement(contacts, ns + "TechnicalContact")
+    name = SubElement(contact, ns + "Name")
     name.text  = user.email
 
 def add_content_contacts(parent, ns, user):
-    from lxml import etree
 
-    contacts = etree.SubElement(parent, ns + "ContentContacts")
-    contact = etree.SubElement(contacts, ns + "ContentContact")
-    name = etree.SubElement(contact, ns + "Name")
+    contacts = SubElement(parent, ns + "ContentContacts")
+    contact = SubElement(contacts, ns + "ContentContact")
+    name = SubElement(contact, ns + "Name")
     name.text  = user.username
 
 def add_meta_data(parent, ns, user, created):
-    from lxml import etree
 
-    metadata = etree.SubElement(parent, ns + "Metadata")
-    description = etree.SubElement(metadata, ns + "Description")
-    representation = etree.SubElement(description, ns + "Representation", language="EN")
-    title = etree.SubElement(representation, ns + "Title")
+    metadata = SubElement(parent, ns + "Metadata")
+    description = SubElement(metadata, ns + "Description")
+    representation = SubElement(description, ns + "Representation", language="EN")
+    title = SubElement(representation, ns + "Title")
     title.text = 'TaxonOmics - New approaches to discovering and naming biodiversity'
-    uri = etree.SubElement(representation, ns + "URI")
+    uri = SubElement(representation, ns + "URI")
     uri.text = 'https://www.taxon-omics.com/projects'
-    revisiondata = etree.SubElement(metadata, ns + "RevisionData")
-    creators = etree.SubElement(revisiondata, ns + "Creators")
+    revisiondata = SubElement(metadata, ns + "RevisionData")
+    creators = SubElement(revisiondata, ns + "Creators")
     creators.text = user.username
-    datemodified = etree.SubElement(revisiondata, ns + "DateModified")
+    datemodified = SubElement(revisiondata, ns + "DateModified")
     datemodified.text = date_time = created.strftime("%Y-%m-%dT%H:%M:%S")
 
 def add_units(parent, ns):
-    from lxml import etree
 
-    units = etree.SubElement(parent, ns + "Units")
+    units = SubElement(parent, ns + "Units")
     return units
 
 def add_unit( parent, ns):
-    from lxml import etree
 
-    unit = etree.SubElement(parent, ns + "Unit")
+    unit = SubElement(parent, ns + "Unit")
     return unit
 
 # the units (lines of the csv file) are added one by one to the xml construct
 # to have faster access to the data content, the specimen_attributes are restructured from a list to a dictionary
 # the lookup_list  is not used here, it contains the mapped specimen attributes in its order
 def add_unit_data(parent, ns, unid, csvdict):
-    from lxml import etree
 
     # the mandatory and non mandatory csv fields from first Vences example, mapped to ABCD terms
     lookup_list = ['UnitID',
@@ -132,99 +126,99 @@ def add_unit_data(parent, ns, unid, csvdict):
     #abcd = "http://www.tdwg.org/schemas/abcd/2.06"
     # unit node is created via AddUnit( units)!
     # Following first nodes are necessary for abcd xml structure, here first with fictitious content:
-    unitguid = etree.SubElement(parent, ns + "UnitGUID")
+    unitguid = SubElement(parent, ns + "UnitGUID")
     unitguid.text = 'Place here UnitGUID if there'
-    sourceinstitutionid = etree.SubElement(parent, ns + "SourceInstitutionID")
+    sourceinstitutionid = SubElement(parent, ns + "SourceInstitutionID")
     sourceinstitutionid.text = 'Place here SourceInstitutionID'
-    sourceid = etree.SubElement(parent, ns + "SourceID")
+    sourceid = SubElement(parent, ns + "SourceID")
     sourceid.text = unid[0:2]   #'Place here SourceID'
 
     # UnitID is given as first element:
-    unitid = etree.SubElement(parent, ns + "UnitID")
+    unitid = SubElement(parent, ns + "UnitID")
     unitid.text = unid
 
     # first structure: Identifications, with with non-mandatory and mandatory fields:
-    identifications = etree.SubElement(parent, ns + "Identifications")
-    identification = etree.SubElement(identifications, ns + "Identification")
-    result = etree.SubElement(identification, ns + "Result")
-    taxonidentified = etree.SubElement(result, ns + "TaxonIdentified")
+    identifications = SubElement(parent, ns + "Identifications")
+    identification = SubElement(identifications, ns + "Identification")
+    result = SubElement(identification, ns + "Result")
+    taxonidentified = SubElement(result, ns + "TaxonIdentified")
     if csvdict.get('HigherClassification', None) or (csvdict.get('HigherTaxonName', None) and csvdict.get('HigherTaxonRank', None)):
-        highertaxa = etree.SubElement(taxonidentified, ns + "HigherTaxa")
+        highertaxa = SubElement(taxonidentified, ns + "HigherTaxa")
         if csvdict.get('HigherTaxonName', None) and csvdict.get('HigherTaxonRank', None):
-            highertaxon1 = etree.SubElement(highertaxa, ns + "HigherTaxon")
+            highertaxon1 = SubElement(highertaxa, ns + "HigherTaxon")
             if csvdict.get('HigherTaxonName', None):
-                highertaxonname = etree.SubElement(highertaxon1, ns + "HigherTaxonName")
+                highertaxonname = SubElement(highertaxon1, ns + "HigherTaxonName")
                 highertaxonname.text = csvdict.get('HigherTaxonName')
             if csvdict.get('HigherTaxonRank', None):
-                highertaxonrank = etree.SubElement(highertaxon1, ns + "HigherTaxonRank")
+                highertaxonrank = SubElement(highertaxon1, ns + "HigherTaxonRank")
                 highertaxonrank.text = 'familia'   #csvdict.get('HigherTaxonRank') is not given correct
         if csvdict.get('HigherClassification', None):
-            highertaxon2 = etree.SubElement(highertaxa, ns + "HigherTaxon")
-            highertaxonname = etree.SubElement(highertaxon2, ns + "HigherTaxonName")
+            highertaxon2 = SubElement(highertaxa, ns + "HigherTaxon")
+            highertaxonname = SubElement(highertaxon2, ns + "HigherTaxonName")
             highertaxonname.text = csvdict.get('HigherClassification')
-            highertaxonrank = etree.SubElement(highertaxon2, ns + "HigherTaxonRank")
+            highertaxonrank = SubElement(highertaxon2, ns + "HigherTaxonRank")
             highertaxonrank.text = 'regnum'
-    scientificname = etree.SubElement(taxonidentified, ns + "ScientificName")
-    fullscientificnamestring1 = etree.SubElement(scientificname, ns + "FullScientificNameString")
+    scientificname = SubElement(taxonidentified, ns + "ScientificName")
+    fullscientificnamestring1 = SubElement(scientificname, ns + "FullScientificNameString")
     fullscientificnamestring1.text = csvdict.get('FullScientificNameString')  #csvdict['FullScientificNameString']   #'Place here FullScientificNameString'
 
     # structure: RecordBasis, with with mandatory fields:
-    recordbasis = etree.SubElement(parent, ns + "RecordBasis")
+    recordbasis = SubElement(parent, ns + "RecordBasis")
     recordbasis.text = csvdict.get('RecordBasis')   #csvdict['RecordBasis']   #''place here fixed vocabulary for RecordBasis ,PreservedSpecimen'
 
     # structure: SpecimenUnit, with with non-mandatory fields:
     if csvdict.get('PhysicalObjectID', None) or csvdict.get('TypifiedName', None) or csvdict.get('TypeStatus', None):
-        specimenunit = etree.SubElement(parent, ns + "SpecimenUnit")
+        specimenunit = SubElement(parent, ns + "SpecimenUnit")
         if csvdict.get('PhysicalObjectID', None):
-            accessions = etree.SubElement(specimenunit, ns + "Accessions")
-            accessionnumber = etree.SubElement(accessions, ns + "AccessionNumber")
+            accessions = SubElement(specimenunit, ns + "Accessions")
+            accessionnumber = SubElement(accessions, ns + "AccessionNumber")
             accessionnumber.text = csvdict.get('PhysicalObjectID')  # Phacidium congener Ces.
         if csvdict.get('TypifiedName', None) or csvdict.get('TypeStatus', None):
-            nomenclaturaltypedesignations = etree.SubElement(specimenunit, ns + "NomenclaturalTypeDesignations")
-            nomenclaturaltypedesignation = etree.SubElement(nomenclaturaltypedesignations, ns + "NomenclaturalTypeDesignation")
+            nomenclaturaltypedesignations = SubElement(specimenunit, ns + "NomenclaturalTypeDesignations")
+            nomenclaturaltypedesignation = SubElement(nomenclaturaltypedesignations, ns + "NomenclaturalTypeDesignation")
             if csvdict.get('TypifiedName', None):
-                typifiedname = etree.SubElement(nomenclaturaltypedesignation, ns + "TypifiedName")
-                fullscientificnamestring2 = etree.SubElement(typifiedname, ns + "FullScientificNameString")
+                typifiedname = SubElement(nomenclaturaltypedesignation, ns + "TypifiedName")
+                fullscientificnamestring2 = SubElement(typifiedname, ns + "FullScientificNameString")
                 fullscientificnamestring2.text = csvdict.get('TypifiedName')  #Phacidium congener Ces.
             if csvdict.get('TypeStatus', None):
-                typestatus = etree.SubElement(nomenclaturaltypedesignation, ns + "TypeStatus")
+                typestatus = SubElement(nomenclaturaltypedesignation, ns + "TypeStatus")
                 typestatus.text = csvdict.get('TypeStatus')
 
     # structure: Gathering, with with non-mandatory and mandatory fields:
-    gathering = etree.SubElement(parent, ns + "Gathering")
-    datetime = etree.SubElement(gathering, ns + "DateTime")
-    isodatetimebegin = etree.SubElement(datetime, ns + "ISODateTimeBegin")
+    gathering = SubElement(parent, ns + "Gathering")
+    datetime = SubElement(gathering, ns + "DateTime")
+    isodatetimebegin = SubElement(datetime, ns + "ISODateTimeBegin")
     isodatetimebegin.text = csvdict.get('IsoDateTimeBegin')
     if csvdict.get('AgentText',None):
-        agents = etree.SubElement(gathering, ns + "Agents")
-        gatheringagentstext = etree.SubElement(agents, ns + "GatheringAgentsText")
+        agents = SubElement(gathering, ns + "Agents")
+        gatheringagentstext = SubElement(agents, ns + "GatheringAgentsText")
         gatheringagentstext.text = csvdict.get('AgentText')
-    localitytext = etree.SubElement(gathering, ns + "LocalityText")
+    localitytext = SubElement(gathering, ns + "LocalityText")
     localitytext.set('language', ''"EN"'')
     localitytext.text = csvdict.get('LocalityText')
-    country = etree.SubElement(gathering, ns + "Country")
-    name = etree.SubElement(country, ns + "Name")
+    country = SubElement(gathering, ns + "Country")
+    name = SubElement(country, ns + "Name")
     name.set('language', ''"EN"'')
     name.text = csvdict.get('Country')
     if csvdict.get('LongitudeDecimal') and csvdict.get('LatitudeDecimal'):
-        sitecoordinatesets = etree.SubElement(gathering, ns + "SiteCoordinateSets")
-        sitecoordinates = etree.SubElement(sitecoordinatesets, ns + "SiteCoordinates")
-        coordinateslatlong = etree.SubElement(sitecoordinates, ns + "CoordinatesLatLong")
+        sitecoordinatesets = SubElement(gathering, ns + "SiteCoordinateSets")
+        sitecoordinates = SubElement(sitecoordinatesets, ns + "SiteCoordinates")
+        coordinateslatlong = SubElement(sitecoordinates, ns + "CoordinatesLatLong")
         if csvdict.get('LongitudeDecimal'):
-            longitudedecimal = etree.SubElement(coordinateslatlong, ns + "LongitudeDecimal")
+            longitudedecimal = SubElement(coordinateslatlong, ns + "LongitudeDecimal")
             longitudedecimal.text = csvdict.get('LongitudeDecimal')
         if csvdict.get('LatitudeDecimal'):
-            latitudedecimal = etree.SubElement(coordinateslatlong, ns + "LatitudeDecimal")
+            latitudedecimal = SubElement(coordinateslatlong, ns + "LatitudeDecimal")
             latitudedecimal.text = csvdict.get('LatitudeDecimal')
 
     # structure: CollectorsFieldNumber, with with non-mandatory fields:
     if csvdict.get('CollectorFieldNumber',None):
-        collectorsfieldnumber = etree.SubElement(parent, ns + "CollectorsFieldNumber")
+        collectorsfieldnumber = SubElement(parent, ns + "CollectorsFieldNumber")
         collectorsfieldnumber.text =csvdict.get('CollectorFieldNumber')
 
     # structure: Sex, with with non-mandatory fields:
     if csvdict.get('Sex',None):
-        sex = etree.SubElement(parent, ns + "Sex")
+        sex = SubElement(parent, ns + "Sex")
         sex.text = csvdict.get('Sex')[:1]
 
 
@@ -322,8 +316,11 @@ def parse_taxonomic_csv_new(submission, csv_file):
     # xsi: schemaLocation = " http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"
 
     ns = {"xsi": xsi, "abcd": abcd}  # namespaces
+    ET.register_namespace("abcd","http://www.tdwg.org/schemas/abcd/2.06")
     abcdns = "{" + abcd + "}"   # namespace abcd for creating Elements
-    root = etree.Element(abcdns+"DataSets", attrib={"{" + xsi + "}schemaLocation": schemaLocation}, nsmap=ns)
+
+    root = Element("{http://www.tdwg.org/schemas/abcd/2.06}DataSets", attrib={"{" + xsi + "}schemaLocation": schemaLocation})
+    #root = Element(abcdns + "DataSets", attrib={"{" + xsi + "}schemaLocation": schemaLocation}, nsmap="abcd")
 
     # create xml structure according abcd rules:
     # add root of the xml structure and add sub structures in the right order
@@ -350,8 +347,9 @@ def parse_taxonomic_csv_new(submission, csv_file):
         xml_file_name = ''.join(('xml_files/', xml_file_name))
         # another path construction necessary here!
         with open(os.path.join(_get_test_data_dir_path(), xml_file_name), 'wb') as f:
-            tree = root.getroottree()
-            tree.write(f, encoding="utf-8", xml_declaration=True, pretty_print=True)
+            # tree = root.getroottree()
+            tree = ET.ElementTree(root)
+            tree.write(f, encoding="utf-8", xml_declaration=True)  #, pretty_print=True, lxml only)
             f.close()
 
         return xml_file_name  # or later a string only?

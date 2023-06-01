@@ -30,6 +30,13 @@ class JSONSchemaContentTest(TestCase):
             app_f_path = '{0}{1}{2}'.format(app_path, os.sep, f)
             self.assertTrue(os.path.exists(app_f_path))
             self.assertTrue(os.path.exists(static_f_path))
+            # exclude XSD schemas:
+            xml_file_name1 = os.path.basename(app_f_path)
+            xml_file_ext1 = (os.path.splitext(xml_file_name1))[1]
+            xml_file_name2 = os.path.basename(static_f_path)
+            xml_file_ext2 = (os.path.splitext(xml_file_name2))[1]
+            if xml_file_ext1 == '.XSD' or xml_file_ext2 == '.XSD':
+                continue
             with open(static_f_path, 'r') as schema_a:
                 with open(app_f_path, 'r') as schema_b:
                     schema_a_dict = json.load(schema_a)
