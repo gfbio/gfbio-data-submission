@@ -3,11 +3,14 @@ import csv
 
 import logging
 import os
+import io
 from collections import OrderedDict
 
 import dpath.util as dpath
 from django.utils.encoding import smart_str
 from shortid import ShortId
+from django.db import transaction
+from gfbio_submissions.brokerage.models import AuditableTextData
 
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement
@@ -222,7 +225,7 @@ def add_unit_data(parent, ns, unid, csvdict):
         sex.text = csvdict.get('Sex')[:1]
 
 
-def map_fields1(csv_dict, abcd_dict, result_dict=None):
+def map_fields(csv_dict, abcd_dict, result_dict=None):
     import datetime
     date_string = str()
     year = 1
@@ -254,17 +257,6 @@ def map_fields1(csv_dict, abcd_dict, result_dict=None):
             result_dict[k] = v
     return result_dict
 
-def map_fields(csv_dict, abcd_dict, result_dict=None):
-    result_dict = result_dict or {}
-    csv_dict = {k.strip().lower(): v for k, v in csv_dict.items()}
-    for k, v in csv_dict.items():
-        if isinstance(v, dict):
-            v = map_fields(v, abcd_dict)
-        if k in abcd_dict.keys():
-            k = str(abcd_dict[k])
-        result_dict[k] = v
-    return result_dict
-
 
 # the csv file is read line by line,
 # and the entirety of the rows is added as a key-value list
@@ -290,7 +282,7 @@ def parse_taxonomic_csv_new(submission, csv_file):
     csv_data = []
     csv_data_p = list(csv_reader)
     for rowdict in csv_data_p:
-        row = map_fields1(rowdict, abcd_mapping)
+        row = map_fields(rowdict, abcd_mapping)
         csv_data.append(row)
 
     #  determine the path for the ABCD validation schema file
@@ -345,14 +337,19 @@ def parse_taxonomic_csv_new(submission, csv_file):
         xml_file_name = (os.path.splitext(xml_file_name))[0]
         xml_file_name = xml_file_name + '.xml'
         xml_file_name = ''.join(('xml_files/', xml_file_name))
-        # another path construction necessary here!
+
+        # for test purposes only, remove it later!
         with open(os.path.join(_get_test_data_dir_path(), xml_file_name), 'wb') as f:
-            # tree = root.getroottree()
             tree = ET.ElementTree(root)
-            tree.write(f, encoding="utf-8", xml_declaration=True)  #, pretty_print=True, lxml only)
+            tree.write(f, encoding="utf-8", xml_declaration=True)
             f.close()
 
-        return xml_file_name  # or later a string only?
+        with io.BytesIO() as fbytes:
+            tree = ET.ElementTree(root)
+            tree.write(fbytes, encoding="utf-8", xml_declaration=True)
+            return fbytes
+
+
     except:
         return None
     # end explicit procedure
@@ -387,3 +384,22 @@ def parse_taxonomic_csv_new(submission, csv_file):
     #xml_string = minidom.parseString(ET.tostring(root)).toprettyxml(indent="  ")
     #with open(xml_file_name, "w") as file:    #output.xml
     #   file.write(xml_string)
+
+
+def store_xml_data_as_auditable_text_data(submission, file_name, data):
+
+    filename = file_name
+    filecontent = data
+    logger.info(
+    msg='store_xml_data_as_auditable_text_data create '
+        'AuditableTextData | submission_pk={0} filename={1}'
+        ''.format(submission.pk, filename)
+    )
+    with transaction.atomic():
+        xmlbytes = AuditableTextData.objects.create(
+            name=filename,
+            submission=submission,
+            text_data=filecontent
+        )
+        #following gives errors yet, filename has no correct Char field format
+        xmlbytes.save()
