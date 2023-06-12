@@ -31,7 +31,7 @@ from .models import BrokerObject, AuditableTextData, \
     AdditionalReference, TaskProgressReport, Submission
 from .models import SubmissionUpload, EnaReport
 from .utils.csv import check_for_molecular_content, parse_molecular_csv
-from .utils.csv_atax import parse_taxonomic_csv_new
+from .utils.atax import parse_taxonomic_csv_short
 from .utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data, \
     send_submission_to_ena, parse_ena_submission_response, fetch_ena_report, \
     update_persistent_identifier_report_status, register_study_at_ena, \
@@ -52,7 +52,7 @@ from .utils.task_utils import jira_error_auto_retry, \
     send_data_to_ena_for_validation_or_test, get_jira_comment_template, \
     jira_comment_replace
 from ..generic.utils import logged_requests
-from .utils.csv_atax import store_xml_data_as_auditable_text_data
+from .utils.csv_atax import store_atax_data_as_auditable_text_data
 
 logger = logging.getLogger(__name__)
 
@@ -2583,20 +2583,20 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
 
     meta_data_file = meta_data_files.first()
 
-    # create xml data:
+    # create xml data, instead of bytes string possible!:
     with open(meta_data_file.file.path,
               'r', encoding='utf-8-sig') as data_file:
-        xml_data_as_bytes = parse_taxonomic_csv_new(submission, data_file)
+        xml_data_as_string = parse_taxonomic_csv_short(submission, data_file)
 
     # store xml data:
     # or sys.getsizeof(xml_data_as_bytes)
-    if xml_data_as_bytes.__sizeof__() > 0:
+    if xml_data_as_string.__sizeof__() > 0:
         with transaction.atomic():
             submission.auditabletextdata_set.all().delete()
-        store_xml_data_as_auditable_text_data(submission=submission, file_name= os.path.basename(meta_data_file.file.path),
-                                              data=xml_data_as_bytes)
+        store_atax_data_as_auditable_text_data(submission=submission, file_name= os.path.basename(meta_data_file.file.path),
+                                              data=xml_data_as_string)
 
-        return xml_data_as_bytes
+        return xml_data_as_string
     else:
         logger.info(
             msg='atax_submission_parse_csv_upload_to_xml_task. no uploaded xml data. '
