@@ -2590,25 +2590,27 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
 
     # store xml data:
     # or sys.getsizeof(xml_data_as_bytes)
-    if xml_data_as_string.__sizeof__() > 0:
-        with transaction.atomic():
-            submission.auditabletextdata_set.all().delete()
-        store_atax_data_as_auditable_text_data(submission=submission, file_name= os.path.basename(meta_data_file.file.path),
-                                              data=xml_data_as_string)
+    if xml_data_as_string is not None:
+        # success:
+        if xml_data_as_string.__sizeof__() > 0:
+            with transaction.atomic():
+                submission.auditabletextdata_set.all().delete()
+            store_atax_data_as_auditable_text_data(submission=submission, file_name= os.path.basename(meta_data_file.file.path),
+                                                  data=xml_data_as_string)
 
-        return xml_data_as_string
+            return True   # or return the string?
+    # no success while csv to xml  transformation:
     else:
+        submission.status = Submission.ERROR
+        submission.save()
+
         logger.info(
-            msg='atax_submission_parse_csv_upload_to_xml_task. no uploaded xml data. '
+            msg='atax_submission_parse_csv_upload_to_xml_task. no transformed xml upload data. '
                 'return={0} '
                 'submission_id={1}'.format(TaskProgressReport.CANCELLED,
                                            submission_id)
         )
         return TaskProgressReport.CANCELLED
-
-    # here: create a taxonomic xml file from csv  structure, csv  file type is not yet approved, later!
-    # parse_taxonomic_csv_new(csv_file)
-    # store the xml structure in AuditableTextData of submission similar to ENA!?
 
     return True
 

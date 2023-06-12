@@ -216,10 +216,11 @@ def store_atax_data_as_auditable_text_data(submission, file_name, data):
         ''.format(submission.pk, filename)
     )
     with transaction.atomic():
+        submission.auditabletextdata_set.all().delete()
         textbytes = AuditableTextData.objects.create(
             name=filename,
             submission=submission,
             text_data=filecontent
         )
-        #following gives errors yet, filename has no correct Char field format
+
         textbytes.save()

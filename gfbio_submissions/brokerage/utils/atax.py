@@ -169,24 +169,6 @@ class Ataxer(object):
             add_unit_data(unit, self.abcdns, unid, csv_data[i])
 
     def finish_atax_xml(self, root):
-        #test only remove:
-        try:
-            # write into test directory, remove later on:
-            xml_file_name = "specimen_test_Platypelis.csv"  #os.path.basename(csv_file.name)
-            xml_file_name = (os.path.splitext(xml_file_name))[0]
-            xml_file_name = xml_file_name + '.xml'
-            xml_file_name = ''.join(('xml_files/', xml_file_name))
-
-            # for test purposes only, remove it later!
-            with open(os.path.join(_get_test_data_dir_path(), xml_file_name), 'wb') as f:
-                tree = ET.ElementTree(root)
-                tree.write(f, encoding="utf-8", xml_declaration=True)
-                f.close()
-        except:
-            pass
-            # return None
-        # end test only remove
-
         try:
             with io.BytesIO() as fbytes:
                 tree = ET.ElementTree(root)
@@ -208,16 +190,19 @@ def create_ataxer(submission):
 
 def parse_taxonomic_csv_short(submission, csv_file):
 
-    ataxer = create_ataxer(submission)
+    try:
+        ataxer = create_ataxer(submission)
 
-    root, units = ataxer.create_atax_submission_base_xml()
+        root, units = ataxer.create_atax_submission_base_xml()
 
-    # returns a list
-    csv_data = ataxer.read_and_map_csv(csv_file)
+        # returns a list
+        csv_data = ataxer.read_and_map_csv(csv_file)
 
-    ataxer.convert_csv_data_to_xml(csv_data, units)
+        ataxer.convert_csv_data_to_xml(csv_data, units)
 
-    xml_string = ataxer.finish_atax_xml(root)
+        xml_string = ataxer.finish_atax_xml(root)
 
-    return xml_string
+        return xml_string
+    except:
+        return None  #False, error
 
