@@ -194,7 +194,7 @@ class TestSubmissionAtaxUploadView(TestCase):
             'broker_submission_id': submission.broker_submission_id})
 
         responses.add(responses.POST, url, json={}, status=200)
-        data = self._create_atax_csv_test_data(meta_data=True)
+        data = self._create_atax_csv_test_data(meta_data=True)   #same success with invalid=True, tested
         # validation
         response = self.api_client.post(url, data, format='multipart')
 

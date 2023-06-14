@@ -8,6 +8,9 @@ from django.conf import settings
 from django.forms import ValidationError
 from jsonschema.validators import Draft3Validator, Draft4Validator
 
+import xmlschema
+import xml.etree.ElementTree as ET
+
 from gfbio_submissions.brokerage.configuration.settings import \
     STATIC_ENA_REQUIREMENTS_LOCATION, STATIC_MIN_REQUIREMENTS_LOCATION, ENA, \
     ENA_PANGAEA, STATIC_SAMPLE_SCHEMA_LOCATION, \

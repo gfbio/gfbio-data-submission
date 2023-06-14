@@ -2548,8 +2548,8 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
     report, created = TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
-    submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
-        submission_upload_id)
+    primary_upload = None
+    primary_upload = submission.submissionupload_set.filter(pk=submission_upload_id).filter(target=ATAX)   #.first()
 
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
@@ -2560,7 +2560,7 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
                                               submission_id, submission_upload_id))
         return TaskProgressReport.CANCELLED
 
-    if submission_upload is None:
+    if primary_upload is None:
         logger.error(
             'tasks.py | parse_csv_as_xml_to_update_clean_submission_task | '
             'no valid SubmissionUpload available | '
@@ -2569,36 +2569,37 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
 
     report.submission = submission
 
-    meta_data_files = submission.submissionupload_set.filter(meta_data=True)
-    no_of_meta_data_files = len(meta_data_files)
+    no_of_primary_upload_files = primary_upload.count()
 
-    if no_of_meta_data_files != 1:
+    if no_of_primary_upload_files != 1:
         logger.info(
             msg='create_taxonomic_xml_file | '
                 'invalid no. of meta_data_files, {0} | return=False'
-                ''.format(no_of_meta_data_files))
+                ''.format(no_of_primary_upload_files))
         messages = ['invalid no. of meta_data_files, '
-                    '{0}'.format(no_of_meta_data_files)]
+                    '{0}'.format(no_of_primary_upload_files)]
         return messages
 
-    meta_data_file = meta_data_files.first()
+    primary_upload_file = primary_upload.first()
 
-    # create xml data, instead of bytes string possible!:
-    with open(meta_data_file.file.path,
+    # create xml data, instead of bytes string possible! no:
+    with open(primary_upload_file.file.path,
               'r', encoding='utf-8-sig') as data_file:
         xml_data_as_string = parse_taxonomic_csv_short(submission, data_file)
 
-    # store xml data:
-    # or sys.getsizeof(xml_data_as_bytes)
+    # store xml data in auditabletextdata:
+
     if xml_data_as_string is not None:
         # success:
         if xml_data_as_string.__sizeof__() > 0:
             with transaction.atomic():
                 submission.auditabletextdata_set.all().delete()
-            store_atax_data_as_auditable_text_data(submission=submission, file_name= os.path.basename(meta_data_file.file.path),
+            store_atax_data_as_auditable_text_data(submission=submission,
+                                                   file_name= os.path.basename(primary_upload_file.file.path),
                                                   data=xml_data_as_string)
 
-            return True   # or return the string?
+            return xml_data_as_string
+
     # no success while csv to xml  transformation:
     else:
         submission.status = Submission.ERROR
@@ -2612,7 +2613,8 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
         )
         return TaskProgressReport.CANCELLED
 
-    return True
+    return False
+
 
 @app.task(
     base=SubmissionTask,

@@ -2,7 +2,6 @@ import csv
 import os
 import datetime
 import logging
-import io
 
 
 from django.utils.encoding import smart_str
@@ -16,7 +15,6 @@ from gfbio_submissions.brokerage.utils.csv_atax import \
     add_unit_data, add_data_set, add_technical_contacts, \
     add_content_contacts, add_meta_data, add_units, add_unit
 
-from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path  #remove later
 
 logger = logging.getLogger(__name__)
 
@@ -160,6 +158,7 @@ class Ataxer(object):
 
         return csv_data
 
+
     def convert_csv_data_to_xml(self, csv_data, units):
         # explicit procedure 'add_unit_data' to fill data records:
         length = len(csv_data)
@@ -168,17 +167,13 @@ class Ataxer(object):
             unit = add_unit(units, self.abcdns)
             add_unit_data(unit, self.abcdns, unid, csv_data[i])
 
+
     def finish_atax_xml(self, root):
         try:
-            with io.BytesIO() as fbytes:
-                tree = ET.ElementTree(root)
-                tree.write(fbytes, encoding="utf-8", xml_declaration=True)
-                # return fbytes
-
-            return ET.tostring(root, encoding='utf8', method='xml')
+            # unicode is important , we need a string to continue!
+            return ET.tostring(root, encoding='unicode', method='xml')
         except:
             return None
-
 
     # End ATAXER
 
