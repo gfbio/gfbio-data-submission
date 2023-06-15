@@ -2588,18 +2588,11 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
         xml_data_as_string = parse_taxonomic_csv_short(submission, data_file)
 
     # store xml data in auditabletextdata:
-
-    if xml_data_as_string is not None:
-        # success:
-        if xml_data_as_string.__sizeof__() > 0:
-            with transaction.atomic():
-                submission.auditabletextdata_set.all().delete()
-            store_atax_data_as_auditable_text_data(submission=submission,
-                                                   file_name= os.path.basename(primary_upload_file.file.path),
-                                                  data=xml_data_as_string)
-
-            return xml_data_as_string
-
+    if xml_data_as_string is not None and  len(xml_data_as_string) > 0:
+        store_atax_data_as_auditable_text_data(submission=submission,
+                                file_name= os.path.basename(primary_upload_file.file.path),
+                                data=xml_data_as_string)
+        return xml_data_as_string
     # no success while csv to xml  transformation:
     else:
         submission.status = Submission.ERROR
