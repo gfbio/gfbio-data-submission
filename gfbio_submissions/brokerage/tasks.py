@@ -43,7 +43,7 @@ from .utils.ena_cli import submit_targeted_sequences, \
 from .utils.gfbio import get_gfbio_helpdesk_username
 from .utils.jira import JiraClient
 from .utils.pangaea import pull_pangaea_dois
-from .utils.schema_validation import validate_data_full
+from .utils.schema_validation import validate_data_full, validate_atax_data
 from .utils.submission_transfer import SubmissionTransferHandler
 from .utils.task_utils import jira_error_auto_retry, \
     get_submission_and_site_configuration, raise_transfer_server_exceptions, \
@@ -2607,6 +2607,102 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
         return TaskProgressReport.CANCELLED
 
     return False
+
+
+@app.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.atax_submission_validate_xml_converted_upload_task',
+    autoretry_for=(TransferServerError,
+                   TransferClientError
+                   ),
+    retry_kwargs={'max_retries': SUBMISSION_MAX_RETRIES},
+    retry_backoff=SUBMISSION_RETRY_DELAY,
+    retry_jitter=True
+)
+def atax_submission_validate_xml_converted_upload_task(self, previous_task_result=None,
+                                              submission_id=None, string_xml_converted=None):
+
+    logger.info(
+        'tasks.py | jira_initial_comment_task | submission_id={}'.format(
+            submission_id))
+
+    submission, site_config = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=False
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
+
+    # TODO: here it would be possible to get the related submission for the TaskReport
+    # maybe this is for the filename to extract from auditable text data
+    # or omit this and do this by passing the xml string as parameter
+    report, created = TaskProgressReport.objects.create_initial_report(
+        submission=None,
+        task=self)
+    submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
+        submission_id)
+
+    if previous_task_result == TaskProgressReport.CANCELLED:
+        logger.warning(
+            'tasks.py | atax_submission_has_upload_task | '
+            'previous task reported={0} | '
+            'submission_upload_id={1}'.format(TaskProgressReport.CANCELLED,
+                                              submission_id))
+        return TaskProgressReport.CANCELLED
+
+    # or test here if xml_string is None
+    if submission_upload is None:
+        logger.error(
+            'tasks.py | atax_submission_has_upload_task | '
+            'no valid SubmissionUpload available | '
+            'submission_id={0}'.format(submission_id))
+        return TaskProgressReport.CANCELLED
+
+    report.submission = submission_upload.submission
+
+    #  determine the path for the ABCD validation schema file
+    path = os.path.join(
+        os.getcwd(),
+        'gfbio_submissions/brokerage/schemas/ABCD_2.06.XSD')
+
+    # return  the auditabletextdata from Upload, [0] means first element in the upload list:
+    upload_name = submission_upload.file.name.split('/')[-1:][0]
+
+    text_to_validate=''
+    if len(submission.auditabletextdata_set.filter(name=upload_name)):
+        specimen_pk = submission.auditabletextdata_set.filter(
+            name=upload_name).first().pk
+        if specimen_pk is None:
+            logger.info(
+                'tasks.py | atax_audi_task | no  textdata found | submission_id={0}'.format(
+                    submission.broker_submission_id)
+            )
+        fname_of_first_upload = submission.auditabletextdata_set.filter(
+            name=upload_name).first()
+        if fname_of_first_upload is not None:
+            text_to_validate = fname_of_first_upload.text_data
+
+        valid, full_errors = validate_atax_data(
+            schema_file='ABCD_2.06.XSD',
+            xml_string=text_to_validate  # string_xml_converted
+        )
+        if not valid:
+            messages = [e.message for e in full_errors]
+            submission_upload.submission.data.update(
+                {'validation': messages})
+            report.task_exception_info = json.dumps({'validation': messages})
+
+            report.save()
+            submission_upload.submission.save()
+
+            return TaskProgressReport.CANCELLED
+        else:
+            return True
+
+    return False
+
 
 
 @app.task(

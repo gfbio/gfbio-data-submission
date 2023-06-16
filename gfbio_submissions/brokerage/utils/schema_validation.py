@@ -166,6 +166,22 @@ def validate_ena_relations(data):
                                 'experiments'.format(e)))
     return errors
 
+def validate_atax_data(schema_file=None, xml_string=None):
+
+    xml_string_valid = False
+    messages = []
+    path = os.path.join(settings.STATIC_ROOT, 'schemas', schema_file)
+    schema = xmlschema.XMLSchema(path)
+
+    if (xml_string):
+        try:
+            root = ET.fromstring(xml_string)
+            xml_string_valid = schema.is_valid(root)
+
+        except ET.ParseError as parse_error:
+            messages = [parse_error.__repr__()]
+
+    return xml_string_valid, messages
 
 # TODO: remove draft03 stuff completly or invert logic and make draft04 default
 
