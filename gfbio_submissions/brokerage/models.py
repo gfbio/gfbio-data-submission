@@ -584,13 +584,13 @@ class SubmissionUpload(TimeStampedModel):
                 atax_submission_parse_csv_upload_to_xml_task, \
                 atax_submission_validate_xml_converted_upload_task
 
-            chain = \
-                atax_submission_parse_csv_upload_to_xml_task.s(
+            chain = atax_submission_parse_csv_upload_to_xml_task.s(
                     submission_id=self.submission.pk,
                     submission_upload_id=self.pk).set(
-                    countdown=SUBMISSION_UPLOAD_RETRY_DELAY) | \
-                atax_submission_validate_xml_converted_upload_task.s(
-                    submission_id=self.submission.pk).set(
+                    countdown=SUBMISSION_UPLOAD_RETRY_DELAY) \
+                        | atax_submission_validate_xml_converted_upload_task.s(
+                    submission_id=self.submission.pk,
+                    submission_upload_id=self.pk).set(
                     countdown=SUBMISSION_UPLOAD_RETRY_DELAY)
             chain()
 

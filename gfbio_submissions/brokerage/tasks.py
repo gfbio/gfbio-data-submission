@@ -2548,8 +2548,6 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
     report, created = TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
-    primary_upload = None
-    primary_upload = submission.submissionupload_set.filter(pk=submission_upload_id).filter(target=ATAX)   #.first()
 
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
@@ -2560,37 +2558,44 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
                                               submission_id, submission_upload_id))
         return TaskProgressReport.CANCELLED
 
-    if primary_upload is None:
+    submission_upload = None
+    #submission_upload = submission.submissionupload_set.filter(pk=submission_upload_id).filter(target=ATAX)  # .first()
+    submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
+        submission_upload_id)
+
+
+    if submission_upload is None:
         logger.error(
             'tasks.py | parse_csv_as_xml_to_update_clean_submission_task | '
             'no valid SubmissionUpload available | '
             'submission_id={0}'.format(submission_id))
         return TaskProgressReport.CANCELLED
+        # determine the mimetype, do this in an extra task outside here:
+    else:
+        import mimetypes
+        from django.forms import ValidationError
+        errors = []
+        file_mime = mimetypes.guess_type(submission_upload.file.path)
+        the_mimes = ('text/csv',)
+
+        if not file_mime[0] in the_mimes:
+            logger.warning(
+                'tasks.py | atax_submission_parse_csv_upload_to_xml | '
+                'SubmissionUpload file"{0}" is not in csv format={0} | '
+                'submission_id={1}'.format(submission_upload.file.path, submission_id))
+            return TaskProgressReport.CANCELLED
 
     report.submission = submission
 
-    no_of_primary_upload_files = primary_upload.count()
-
-    if no_of_primary_upload_files != 1:
-        logger.info(
-            msg='create_taxonomic_xml_file | '
-                'invalid no. of meta_data_files, {0} | return=False'
-                ''.format(no_of_primary_upload_files))
-        messages = ['invalid no. of meta_data_files, '
-                    '{0}'.format(no_of_primary_upload_files)]
-        return messages
-
-    primary_upload_file = primary_upload.first()
-
     # create xml data, instead of bytes string possible! no:
-    with open(primary_upload_file.file.path,
+    with open(submission_upload.file.path,
               'r', encoding='utf-8-sig') as data_file:
         xml_data_as_string = parse_taxonomic_csv_short(submission, data_file)
 
     # store xml data in auditabletextdata:
     if xml_data_as_string is not None and  len(xml_data_as_string) > 0:
         store_atax_data_as_auditable_text_data(submission=submission,
-                                file_name= os.path.basename(primary_upload_file.file.path),
+                                file_name= os.path.basename(submission_upload.file.path),
                                 data=xml_data_as_string)
         return xml_data_as_string
     # no success while csv to xml  transformation:
@@ -2621,7 +2626,7 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
     retry_jitter=True
 )
 def atax_submission_validate_xml_converted_upload_task(self, previous_task_result=None,
-                                              submission_id=None, string_xml_converted=None):
+                                              submission_id=None, submission_upload_id=None):
 
     logger.info(
         'tasks.py | jira_initial_comment_task | submission_id={}'.format(
