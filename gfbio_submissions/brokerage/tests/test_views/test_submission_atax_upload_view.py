@@ -122,7 +122,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         }
 
     @classmethod
-    def _create_atax_csv_test_data(cls, delete=True, invalid=False, update=False, attach=False):
+    def _create_atax_csv_test_data(cls, delete=True, invalid=False, update=False, attach=False, meta_data=False):
         file_name = 'csv_files/specimen_table_Platypelis_with_gaps.csv' if invalid else 'csv_files/specimen_table_Platypelis.csv'
         if update:
             file_name = 'csv_files/specimen_table_Platypelis.csv'
@@ -135,7 +135,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         )
         return {
             'file': csv_file,
-            'meta_data': False,
+            'meta_data': meta_data,
             'attach_to_ticket': attach,
         }
 
@@ -182,7 +182,8 @@ class TestSubmissionAtaxUploadView(TestCase):
 
         return cls.api_client.post(url, data, format='multipart')
 
-    #start with unit tests
+    #start with unit tests:
+
     @responses.activate
     def test_valid_atax_upload_post_with_taxonomic_file_data(self):
         submission = Submission.objects.first()
@@ -191,14 +192,15 @@ class TestSubmissionAtaxUploadView(TestCase):
 
         url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
+
         responses.add(responses.POST, url, json={}, status=200)
-        data = self._create_atax_csv_test_data()
+        data = self._create_atax_csv_test_data(meta_data=True)   #same success with invalid=True, tested
         # validation
         response = self.api_client.post(url, data, format='multipart')
 
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(submission.submissionupload_set.all()))
-        self.assertFalse(submission.submissionupload_set.first().meta_data)
+        self.assertTrue(submission.submissionupload_set.first().meta_data)
 
         self.assertEqual(submission.target, response.data['target'])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -315,7 +317,6 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(b'No file was submitted.', response.content)
 
-    # @skip('does not work yet')
     @responses.activate
     def test_valid_atax_file_patch_no_task(self):
         submission = Submission.objects.first()

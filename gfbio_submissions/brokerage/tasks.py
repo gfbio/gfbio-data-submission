@@ -31,6 +31,7 @@ from .models import BrokerObject, AuditableTextData, \
     AdditionalReference, TaskProgressReport, Submission
 from .models import SubmissionUpload, EnaReport
 from .utils.csv import check_for_molecular_content, parse_molecular_csv
+from .utils.atax import parse_taxonomic_csv_short
 from .utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data, \
     send_submission_to_ena, parse_ena_submission_response, fetch_ena_report, \
     update_persistent_identifier_report_status, register_study_at_ena, \
@@ -51,6 +52,7 @@ from .utils.task_utils import jira_error_auto_retry, \
     send_data_to_ena_for_validation_or_test, get_jira_comment_template, \
     jira_comment_replace
 from ..generic.utils import logged_requests
+from .utils.csv_atax import store_atax_data_as_auditable_text_data
 
 logger = logging.getLogger(__name__)
 
@@ -2546,8 +2548,8 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
     report, created = TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
-    submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
-        submission_upload_id)
+    primary_upload = None
+    primary_upload = submission.submissionupload_set.filter(pk=submission_upload_id).filter(target=ATAX)   #.first()
 
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
@@ -2558,7 +2560,7 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
                                               submission_id, submission_upload_id))
         return TaskProgressReport.CANCELLED
 
-    if submission_upload is None:
+    if primary_upload is None:
         logger.error(
             'tasks.py | parse_csv_as_xml_to_update_clean_submission_task | '
             'no valid SubmissionUpload available | '
@@ -2567,8 +2569,74 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
 
     report.submission = submission
 
-    # here: create a taxonomic xml file from csv  structure, csv  file type is not yet approved, later!
+    no_of_primary_upload_files = primary_upload.count()
 
-    # store the xml structure in AuditableTextData of submission similar to ENA!?
+    if no_of_primary_upload_files != 1:
+        logger.info(
+            msg='create_taxonomic_xml_file | '
+                'invalid no. of meta_data_files, {0} | return=False'
+                ''.format(no_of_primary_upload_files))
+        messages = ['invalid no. of meta_data_files, '
+                    '{0}'.format(no_of_primary_upload_files)]
+        return messages
 
-    return True
+    primary_upload_file = primary_upload.first()
+
+    # create xml data, instead of bytes string possible! no:
+    with open(primary_upload_file.file.path,
+              'r', encoding='utf-8-sig') as data_file:
+        xml_data_as_string = parse_taxonomic_csv_short(submission, data_file)
+
+    # store xml data in auditabletextdata:
+    if xml_data_as_string is not None and  len(xml_data_as_string) > 0:
+        store_atax_data_as_auditable_text_data(submission=submission,
+                                file_name= os.path.basename(primary_upload_file.file.path),
+                                data=xml_data_as_string)
+        return xml_data_as_string
+    # no success while csv to xml  transformation:
+    else:
+        submission.status = Submission.ERROR
+        submission.save()
+
+        logger.info(
+            msg='atax_submission_parse_csv_upload_to_xml_task. no transformed xml upload data. '
+                'return={0} '
+                'submission_id={1}'.format(TaskProgressReport.CANCELLED,
+                                           submission_id)
+        )
+        return TaskProgressReport.CANCELLED
+
+    return False
+
+
+@app.task(
+    base=SubmissionTask,
+    bind=True,
+    name='tasks.prepare_ena_submission_data_task',
+)
+def prepare_ena_submission_data_task(self, prev_task_result=None,
+                                     submission_id=None):
+    submission, site_configuration = get_submission_and_site_configuration(
+        submission_id=submission_id,
+        task=self,
+        include_closed=True
+    )
+    if submission == TaskProgressReport.CANCELLED:
+        return TaskProgressReport.CANCELLED
+
+    if len(submission.brokerobject_set.all()) > 0:
+        with transaction.atomic():
+            submission.auditabletextdata_set.all().delete()
+        ena_submission_data = prepare_ena_data(submission=submission)
+        store_ena_data_as_auditable_text_data(submission=submission,
+                                              data=ena_submission_data)
+        # TODO: this will become obsolete once, data is taken from AuditableTextData ....
+        return ena_submission_data
+    else:
+        logger.info(
+            msg='prepare_ena_submission_data_task. no brokerobjects. '
+                'return={0} '
+                'submission_id={1}'.format(TaskProgressReport.CANCELLED,
+                                           submission_id)
+        )
+        return TaskProgressReport.CANCELLED

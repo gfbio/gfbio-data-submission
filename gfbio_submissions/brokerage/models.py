@@ -13,7 +13,7 @@ from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
 from gfbio_submissions.brokerage.managers import SubmissionUploadManager
 from gfbio_submissions.generic.fields import JsonDictField
 from .configuration.settings import ENA, ENA_PANGAEA, ATAX, \
-    SUBMISSION_UPLOAD_RETRY_DELAY
+    SUBMISSION_UPLOAD_RETRY_DELAY, SUBMISSION_DELAY
 from .managers import AuditableTextDataManager, SubmissionManager, \
     BrokerObjectManager, TaskProgressReportManager
 from .storage import OverwriteStorage
@@ -582,6 +582,7 @@ class SubmissionUpload(TimeStampedModel):
         if self.target == ATAX:
             from .tasks import \
                 atax_submission_parse_csv_upload_to_xml_task
+
             atax_submission_parse_csv_upload_to_xml_task.apply_async(
                 kwargs={
                     'submission_id': '{0}'.format(self.submission.pk),
