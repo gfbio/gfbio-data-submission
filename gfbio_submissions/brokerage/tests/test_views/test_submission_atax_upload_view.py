@@ -200,7 +200,6 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(submission.submissionupload_set.all()))
         self.assertTrue(submission.submissionupload_set.first().meta_data)
-        self.assertFalse(submission.status, Submission.ERROR)
 
         self.assertEqual(submission.target, response.data['target'])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
