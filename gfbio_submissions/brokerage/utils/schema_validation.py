@@ -3,6 +3,7 @@ import datetime
 import json
 import logging
 import os
+from io import BytesIO
 
 from django.conf import settings
 from django.forms import ValidationError
@@ -10,6 +11,8 @@ from jsonschema.validators import Draft3Validator, Draft4Validator
 
 import xmlschema
 import xml.etree.ElementTree as ET
+
+from xmlschema import XMLSchemaValidationError
 
 from gfbio_submissions.brokerage.configuration.settings import \
     STATIC_ENA_REQUIREMENTS_LOCATION, STATIC_MIN_REQUIREMENTS_LOCATION, ENA, \
@@ -41,6 +44,12 @@ def collect_validation_errors(data, validator):
         ) for error in validator.iter_errors(data)
     ]
 
+def collect_validation_xml_errors(data, validator):
+    return [
+        ValidationError('error : {}'.format(
+            error.message.replace('u\'', '\''))
+        ) for error in validator.iter_errors(data)
+    ]
 
 def validate_data(data={}, schema_file=None, schema_string='{}',
                   use_draft04_validator=False):
@@ -166,22 +175,24 @@ def validate_ena_relations(data):
                                 'experiments'.format(e)))
     return errors
 
-def validate_atax_data(schema_file=None, xml_string=None):
+
+def validate_atax_data_is_valid(schema_file=None, xml_string=None):
 
     xml_string_valid = False
-    messages = []
+
     path = os.path.join(settings.STATIC_ROOT, 'schemas', schema_file)
     schema = xmlschema.XMLSchema(path)
 
     if (xml_string):
-        try:
-            root = ET.fromstring(xml_string)
-            xml_string_valid = schema.is_valid(root)
 
-        except ET.ParseError as parse_error:
-            messages = [parse_error.__repr__()]
+        root = ET.fromstring(xml_string)
+        tree = ET.ElementTree(ET.fromstring(xml_string))
 
-    return xml_string_valid, messages
+        xml_string_valid = schema.is_valid(tree)
+        errors = [] if xml_string_valid else collect_validation_xml_errors(tree, schema)
+
+        return xml_string_valid, errors
+
 
 # TODO: remove draft03 stuff completly or invert logic and make draft04 default
 

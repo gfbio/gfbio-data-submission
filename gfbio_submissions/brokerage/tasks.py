@@ -43,7 +43,7 @@ from .utils.ena_cli import submit_targeted_sequences, \
 from .utils.gfbio import get_gfbio_helpdesk_username
 from .utils.jira import JiraClient
 from .utils.pangaea import pull_pangaea_dois
-from .utils.schema_validation import validate_data_full, validate_atax_data
+from .utils.schema_validation import validate_data_full, validate_atax_data_is_valid
 from .utils.submission_transfer import SubmissionTransferHandler
 from .utils.task_utils import jira_error_auto_retry, \
     get_submission_and_site_configuration, raise_transfer_server_exceptions, \
@@ -2689,21 +2689,24 @@ def atax_submission_validate_xml_converted_upload_task(self, previous_task_resul
         if fname_of_first_upload is not None:
             text_to_validate = fname_of_first_upload.text_data
 
-        valid, full_errors = validate_atax_data(
+        # valid, full_errors = validate_atax_data_validate(
+        is_val, errors=validate_atax_data_is_valid(
             schema_file='ABCD_2.06.XSD',
             xml_string=text_to_validate  # string_xml_converted
         )
-        if not valid:
-            messages = [e.message for e in full_errors]
+        #if not valid:
+        if errors:
+            messages = [e.message for e in errors]
             submission_upload.submission.data.update(
                 {'validation': messages})
             report.task_exception_info = json.dumps({'validation': messages})
 
             report.save()
-            submission_upload.submission.save()
+            submission.status = Submission.ERROR
 
             return TaskProgressReport.CANCELLED
         else:
+            submission_upload.submission.save()
             return True
 
     return False
