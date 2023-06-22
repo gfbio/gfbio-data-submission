@@ -2529,20 +2529,20 @@ def jira_initial_comment_task(self, prev=None, submission_id=None):
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True
 )
-def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None, kwargs=None,
+def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None,
                                               submission_id=None,  submission_upload_id=None):
 
     logger.info(
-        'tasks.py | jira_initial_comment_task | submission_id={}'.format(
+        'tasks.py | atax_submission_parse_csv_upload_to_xml_task | submission_id={}'.format(
             submission_id))
 
-    submission, site_config = get_submission_and_site_configuration(
-        submission_id=submission_id,
-        task=self,
-        include_closed=False
-    )
-    if submission == TaskProgressReport.CANCELLED:
-        return TaskProgressReport.CANCELLED
+    # submission, site_config = get_submission_and_site_configuration(
+        # submission_id=submission_id,
+        # task=self,
+        # include_closed=True
+    # )
+    # if submission == TaskProgressReport.CANCELLED:
+        # return TaskProgressReport.CANCELLED
 
     # TODO: here it would be possible to get the related submission for the TaskReport
     report, created = TaskProgressReport.objects.create_initial_report(
@@ -2556,7 +2556,8 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
             'submission_id={1} |'
             'submission_upload_id={2}'.format(TaskProgressReport.CANCELLED,
                                               submission_id, submission_upload_id))
-        return TaskProgressReport.CANCELLED
+        pass
+        #return TaskProgressReport.CANCELLED
 
     submission_upload = None
     #submission_upload = submission.submissionupload_set.filter(pk=submission_upload_id).filter(target=ATAX)  # .first()
@@ -2570,8 +2571,9 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
             'no valid SubmissionUpload available | '
             'submission_id={0}'.format(submission_id))
         return TaskProgressReport.CANCELLED
-        # determine the mimetype, do this in an extra task outside here:
+
     else:
+        # determine the mimetype, do this in an extra task outside here:
         import mimetypes
         from django.forms import ValidationError
         errors = []
@@ -2585,23 +2587,25 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
                 'submission_id={1}'.format(submission_upload.file.path, submission_id))
             return TaskProgressReport.CANCELLED
 
-    report.submission = submission
+    #report.submission = submission
+    report.submission = submission_upload.submission
 
-    # create xml data, instead of bytes string possible! no:
+    # create xml data as string:
     with open(submission_upload.file.path,
               'r', encoding='utf-8-sig') as data_file:
-        xml_data_as_string = parse_taxonomic_csv_short(submission, data_file)
+        xml_data_as_string = parse_taxonomic_csv_short(submission_upload.submission, data_file)
 
     # store xml data in auditabletextdata:
     if xml_data_as_string is not None and  len(xml_data_as_string) > 0:
-        store_atax_data_as_auditable_text_data(submission=submission,
+        store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
                                 file_name= os.path.basename(submission_upload.file.path),
                                 data=xml_data_as_string)
         return xml_data_as_string
-    # no success while csv to xml  transformation:
+
     else:
-        submission.status = Submission.ERROR
-        submission.save()
+        # no success while csv to xml  transformation:
+        submission_upload.submission.status = Submission.ERROR
+        submission_upload.submission.save()
 
         logger.info(
             msg='atax_submission_parse_csv_upload_to_xml_task. no transformed xml upload data. '
@@ -2611,7 +2615,9 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
         )
         return TaskProgressReport.CANCELLED
 
-    return False
+
+    #return False
+    return True
 
 
 @app.task(
@@ -2646,16 +2652,17 @@ def atax_submission_validate_xml_converted_upload_task(self, previous_task_resul
     report, created = TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
-    submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
-        submission_id)
 
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
             'tasks.py | atax_submission_has_upload_task | '
             'previous task reported={0} | '
             'submission_upload_id={1}'.format(TaskProgressReport.CANCELLED,
-                                              submission_id))
+                                              submission_upload_id))
         return TaskProgressReport.CANCELLED
+
+    submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
+        submission_upload_id)
 
     # or test here if xml_string is None
     if submission_upload is None:
@@ -2677,19 +2684,18 @@ def atax_submission_validate_xml_converted_upload_task(self, previous_task_resul
 
     text_to_validate=''
     if len(submission.auditabletextdata_set.filter(name=upload_name)):
-        specimen_pk = submission.auditabletextdata_set.filter(
+        auditable_xml = submission_upload.submission.auditabletextdata_set.filter(
             name=upload_name).first().pk
-        if specimen_pk is None:
+        if auditable_xml is None:
             logger.info(
-                'tasks.py | atax_audi_task | no  textdata found | submission_id={0}'.format(
-                    submission.broker_submission_id)
+                'tasks.py | atax_auditable_task | no  textdata found | submission_id={0}'.format(
+                    submission_upload.submission.broker_submission_id)
             )
-        fname_of_first_upload = submission.auditabletextdata_set.filter(
+        fname_of_first_upload = submission_upload.submission.auditabletextdata_set.filter(
             name=upload_name).first()
         if fname_of_first_upload is not None:
             text_to_validate = fname_of_first_upload.text_data
 
-        # valid, full_errors = validate_atax_data_validate(
         is_val, errors=validate_atax_data_is_valid(
             schema_file='ABCD_2.06.XSD',
             xml_string=text_to_validate  # string_xml_converted
@@ -2702,7 +2708,7 @@ def atax_submission_validate_xml_converted_upload_task(self, previous_task_resul
             report.task_exception_info = json.dumps({'validation': messages})
 
             report.save()
-            submission.status = Submission.ERROR
+            submission_upload.submission.status = Submission.ERROR
 
             return TaskProgressReport.CANCELLED
         else:
