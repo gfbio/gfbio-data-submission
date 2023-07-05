@@ -13,7 +13,7 @@ from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
 from gfbio_submissions.brokerage.managers import SubmissionUploadManager
 from gfbio_submissions.generic.fields import JsonDictField
 from .configuration.settings import ENA, ENA_PANGAEA, ATAX, \
-    SUBMISSION_UPLOAD_RETRY_DELAY, SUBMISSION_DELAY
+    SUBMISSION_UPLOAD_RETRY_DELAY, SUBMISSION_RETRY_DELAY, SUBMISSION_DELAY
 from .managers import AuditableTextDataManager, SubmissionManager, \
     BrokerObjectManager, TaskProgressReportManager
 from .storage import OverwriteStorage
@@ -581,15 +581,18 @@ class SubmissionUpload(TimeStampedModel):
 
         if self.target == ATAX:
             from .tasks import \
-                atax_submission_parse_csv_upload_to_xml_task
+                atax_submission_parse_csv_upload_to_xml_task, \
+                atax_submission_validate_xml_converted_upload_task
 
-            atax_submission_parse_csv_upload_to_xml_task.apply_async(
-                kwargs={
-                    'submission_id': '{0}'.format(self.submission.pk),
-                    'submission_upload_id': '{0}'.format(self.pk)
-                },
-                countdown=SUBMISSION_UPLOAD_RETRY_DELAY
-            )
+            chain = atax_submission_parse_csv_upload_to_xml_task.s(
+                    submission_id=self.submission.pk,
+                    submission_upload_id=self.pk).set(
+                    countdown=SUBMISSION_RETRY_DELAY) \
+                        | atax_submission_validate_xml_converted_upload_task.s(
+                    submission_id=self.submission.pk,
+                    submission_upload_id=self.pk).set(
+                    countdown=SUBMISSION_RETRY_DELAY)
+            chain()
 
     def __str__(self):
         return ' / '.join(reversed(self.file.name.split(os.sep)))

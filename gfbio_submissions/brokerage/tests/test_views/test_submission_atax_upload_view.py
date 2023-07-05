@@ -123,7 +123,7 @@ class TestSubmissionAtaxUploadView(TestCase):
 
     @classmethod
     def _create_atax_csv_test_data(cls, delete=True, invalid=False, update=False, attach=False, meta_data=False):
-        file_name = 'csv_files/specimen_table_Platypelis_with_gaps.csv' if invalid else 'csv_files/specimen_table_Platypelis.csv'
+        file_name = 'csv_files/specimen_table_Platypelis_with_error.csv' if invalid else 'csv_files/specimen_table_Platypelis.csv'
         if update:
             file_name = 'csv_files/specimen_table_Platypelis.csv'
 
@@ -183,7 +183,6 @@ class TestSubmissionAtaxUploadView(TestCase):
         return cls.api_client.post(url, data, format='multipart')
 
     #start with unit tests:
-
     @responses.activate
     def test_valid_atax_upload_post_with_taxonomic_file_data(self):
         submission = Submission.objects.first()
@@ -194,7 +193,7 @@ class TestSubmissionAtaxUploadView(TestCase):
             'broker_submission_id': submission.broker_submission_id})
 
         responses.add(responses.POST, url, json={}, status=200)
-        data = self._create_atax_csv_test_data(meta_data=True)   #same success with invalid=True, tested
+        data = self._create_atax_csv_test_data(meta_data=True)
         # validation
         response = self.api_client.post(url, data, format='multipart')
 
@@ -212,6 +211,36 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))
 
+    @responses.activate
+    def test_valid_atax_upload_post_with_invalid_taxonomic_file_data(self):
+        submission = Submission.objects.first()
+
+        self.assertEqual('ATAX', submission.target)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+
+        responses.add(responses.POST, url, json={}, status=200)
+        data = self._create_atax_csv_test_data(meta_data=True, invalid=True)
+        # validation
+        response = self.api_client.post(url, data, format='multipart')
+
+        self.assertEqual(201, response.status_code)
+        self.assertEqual(1, len(submission.submissionupload_set.all()))
+        self.assertTrue(submission.submissionupload_set.first().meta_data)
+        self.assertTrue(submission.status,Submission.ERROR)
+
+        self.assertEqual(submission.target, response.data['target'])
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn(b'broker_submission_id', response.content)
+        self.assertIn(b'"id"', response.content)
+        self.assertIn(b'user', response.content)
+        self.assertEqual(User.objects.first().username, response.data['user'])
+        self.assertIn(b'file', response.content)
+        self.assertTrue(
+            urlparse(response.data['file']).path.startswith(MEDIA_URL))
+
+
     def test_random_submission_no_upload(self):
         url = reverse(
             'brokerage:submissions_upload',
@@ -224,7 +253,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertIn(b'No submission', response.content)
 
     @responses.activate
-    def test_valid_atax_upload_one_task(self):
+    def test_valid_atax_upload_two_tasks(self):
         submission = Submission.objects.all().first()
         self.assertEqual('ATAX', submission.target)
 
@@ -247,7 +276,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))
         # TODO: no task is triggered yet
-        self.assertEqual(len(TaskProgressReport.objects.all()), reports_len+1)
+        self.assertEqual(len(TaskProgressReport.objects.all()), reports_len+2)
         self.assertGreater(len(SubmissionUpload.objects.all()), uploads_len)
 
     @responses.activate
@@ -273,7 +302,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(1, len(SubmissionUpload.objects.all()))
         fname = SubmissionUpload.objects.all().first().file.name
         self.assertIn('specimen_table_Platypelis', fname)
-        self.assertEqual(len(TaskProgressReport.objects.all()), reports_len+2)
+        self.assertEqual(len(TaskProgressReport.objects.all()), reports_len+4)
 
     @responses.activate
     def test_atax_file_put_modified_content_with_task(self):
@@ -302,7 +331,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertFalse(submission_upload.modified_recently)
 
         task_reports = TaskProgressReport.objects.all().order_by('created')
-        self.assertEqual(6, len(task_reports))
+        self.assertEqual(10, len(task_reports))
         self.assertTrue(task_reports.first().task_return_value)
         self.assertTrue(task_reports.last().task_return_value)
 
