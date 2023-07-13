@@ -31,7 +31,8 @@ from .models import BrokerObject, AuditableTextData, \
     AdditionalReference, TaskProgressReport, Submission
 from .models import SubmissionUpload, EnaReport
 from .utils.csv import check_for_molecular_content, parse_molecular_csv
-from .utils.atax import parse_taxonomic_csv_short
+from .utils.atax import parse_taxonomic_csv_specimen, parse_taxonomic_csv_measurement, \
+    parse_taxonomic_csv_multimedia, analyze_filename_and_type
 from .utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data, \
     send_submission_to_ena, parse_ena_submission_response, fetch_ena_report, \
     update_persistent_identifier_report_status, register_study_at_ena, \
@@ -2532,6 +2533,12 @@ def jira_initial_comment_task(self, prev=None, submission_id=None):
 def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None,
                                               submission_id=None,  submission_upload_id=None):
 
+    expected_key_words = [
+        'specimen',
+        'measurement',
+        'multimedia'
+    ]
+
     logger.info(
         'tasks.py | atax_submission_parse_csv_upload_to_xml_task | submission_id={}'.format(
             submission_id))
@@ -2590,30 +2597,55 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
     #report.submission = submission
     report.submission = submission_upload.submission
 
-    # create xml data as string:
-    with open(submission_upload.file.path,
-              'r', encoding='utf-8-sig') as data_file:
-        xml_data_as_string = parse_taxonomic_csv_short(submission_upload.submission, data_file)
+    #differentiate between specimen and measurement csv file:
+    file_key = analyze_filename_and_type(os.path.basename(submission_upload.file.path),submission_upload.meta_data )
+    if file_key in expected_key_words:
 
-    # store xml data in auditabletextdata:
-    if xml_data_as_string is not None and  len(xml_data_as_string) > 0:
-        store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
-                                file_name= os.path.basename(submission_upload.file.path),
-                                data=xml_data_as_string)
-        return xml_data_as_string
+        match str(file_key):
+            case 'specimen':
 
-    else:
-        # no success while csv to xml  transformation:
-        submission_upload.submission.status = Submission.ERROR
-        submission_upload.submission.save()
+                # create xml data as string:
+                with open(submission_upload.file.path,
+                          'r', encoding='utf-8-sig') as data_file:
+                    xml_data_as_string = parse_taxonomic_csv_specimen(submission_upload.submission, data_file)
 
-        logger.info(
-            msg='atax_submission_parse_csv_upload_to_xml_task. no transformed xml upload data. '
-                'return={0} '
-                'submission_id={1}'.format(TaskProgressReport.CANCELLED,
-                                           submission_id)
-        )
-        return TaskProgressReport.CANCELLED
+            case 'measurement':
+
+                with open(submission_upload.file.path,
+                          'r', encoding='utf-8-sig') as data_file:
+                    xml_data_as_string = parse_taxonomic_csv_measurement(submission_upload.submission, data_file)
+
+            case 'multimedia':
+                with open(submission_upload.file.path,
+                  'r', encoding='utf-8-sig') as data_file:
+                    xml_data_as_string = parse_taxonomic_csv_multimedia(submission_upload.submission, data_file)
+
+            case _:
+                logger.warning(
+                    'tasks.py | atax_submission_parse_csv_upload_to_xml | '
+                    'SubmissionUpload file"{0}" has no expected type={0} | '
+                    'submission_id={1}'.format(submission_upload.file.path, submission_id))
+                return TaskProgressReport.CANCELLED
+
+        # store xml data in auditabletextdata:
+        if xml_data_as_string is not None and  len(xml_data_as_string) > 0:
+            store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
+                                    file_name= os.path.basename(submission_upload.file.path),
+                                    data=xml_data_as_string)
+            return xml_data_as_string
+
+        else:
+            # no success while csv to xml  transformation:
+            submission_upload.submission.status = Submission.ERROR
+            submission_upload.submission.save()
+
+            logger.info(
+                msg='atax_submission_parse_csv_upload_to_xml_task. no transformed xml upload data. '
+                    'return={0} '
+                    'submission_id={1}'.format(TaskProgressReport.CANCELLED,
+                                               submission_id)
+            )
+            return TaskProgressReport.CANCELLED
 
 
     #return False
