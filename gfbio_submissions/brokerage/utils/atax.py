@@ -48,7 +48,8 @@ abcd_mapping_specimen = {
 
 abcd_mapping_specimen_keys = abcd_mapping_specimen.keys()
 
-#Measured by,Method,Trial,Time,Date: Day,Date: Month,Date: Year,Snout-vent length (mm),Head width (mm),Head length (mm),Tympanum diameter (mm),Eye diameter (mm),Eye-nostril distance (mm),Nostril-snout tip distance (mm),Nostril-nostril distance (mm),Forelimb length (mm),Hand length (mm),Hindlimb length (mm),Foot+tarsus length (mm),Foot length (mm),Tibia length (mm)
+# original headers:
+# Measured by,Method,Trial,Time,Date: Day,Date: Month,Date: Year,Snout-vent length (mm),Head width (mm),Head length (mm),Tympanum diameter (mm),Eye diameter (mm),Eye-nostril distance (mm),Nostril-snout tip distance (mm),Nostril-nostril distance (mm),Forelimb length (mm),Hand length (mm),Hindlimb length (mm),Foot+tarsus length (mm),Foot length (mm),Tibia length (mm)
 
 abcd_mapping_measurement = {
 'specimen identifier': 'UnitID',
@@ -104,8 +105,8 @@ class Ataxer(object):
 
         # Create XML root element:
         # root = Element(schema.root.name, attrib=schema.root.attributes)
-
         # self.root = Element(self.abcdns + "DataSets", attrib={"{" + self.xsi + "}schemaLocation": self.schemaLocation}, nsmap="abcd")
+
         self.root = Element("{http://www.tdwg.org/schemas/abcd/2.06}DataSets",
             attrib={"{" + self.xsi + "}schemaLocation": self.schemaLocation})
 
@@ -216,24 +217,11 @@ class Ataxer(object):
             msg='Ataxer create_submission_xml. currentdate={}'.format(
                 datetime.date.today().isoformat()))
 
-        # root = Element(abcdns + "DataSets", attrib={"{" + xsi + "}schemaLocation": schemaLocation}, nsmap="abcd")
-
-        # create xml structure according abcd rules:
-        # add root of the xml structure and add sub structures in the right order
         dataset = add_data_set(self.root, self.abcdns)
 
-        for elem in self.root.iter():
-            if 'DataSet' in elem.tag:
-                print("123")
-            else:
-                continue
         # add necessary abcd nodes:
         add_technical_contacts(dataset, self.abcdns, self.atax_submission.user)
-        for elem in self.root.iter():
-            if 'TechnicalContacts' in elem.tag:
-                print("456")
-            else:
-                continue
+
         add_content_contacts(dataset, self.abcdns, self.atax_submission.user)
         add_meta_data(dataset, self.abcdns, self.atax_submission.user, self.atax_submission.created)
         units = add_units(dataset, self.abcdns)
@@ -268,7 +256,6 @@ class Ataxer(object):
         return csv_data
 
     def read_and_map_measurement_csv(self,  csv_file):
-        import re
 
         header = csv_file.readline()
         dialect = csv.Sniffer().sniff(smart_str(header))
@@ -301,15 +288,15 @@ class Ataxer(object):
             reduced_row = {}
             extra_row = {}
             unit_dict = {}
-            #one_row_list.clear()
+
             one_row_list = []
-            #one_row_list.clear()
+
             row = self.map_fields_measurement(dictrow, abcd_mapping_measurement)
             for i in row.keys():
-                #reduced_row = {}
+
                 reformed_row = {}
                 collection_dict = {}
-                #extra_row = {}
+
                 if(i in known_tags):
                     val = row[i]
                     reduced_row[i] = val
@@ -317,7 +304,7 @@ class Ataxer(object):
                     if i==known_tags[0] and len(unit_dict)==0:
                         unit_dict[i] = val
                         one_row_list.append(unit_dict)
-                elif (i in extra_tags):  #allpliesto=trial
+                elif (i in extra_tags):
                     val = row[i]
                     extra_row[i] = val
                 else:
@@ -337,7 +324,6 @@ class Ataxer(object):
                         reformed_row["IsQuantitative"] = 'true'
                     else:
                         reformed_row["IsQuantitative"] = 'false'
-                    #reformed_row.update("Parameter": key) #= {"Parameter": key, "LowerValue": value}  #[{"Parameter": key, "LowerValue": value}  for key, value in row.items()  and key not in known_tags]
 
                     collection_dict.update(reduced_row)
                     if reformed_row:
@@ -347,8 +333,6 @@ class Ataxer(object):
             if not reformed_row:
                 one_row_list.append(collection_dict)
             csv_data.append(one_row_list)
-            #csv_data.append(row)
-
 
         return csv_data
 
@@ -396,24 +380,6 @@ class Ataxer(object):
                 case _:
                     pass
 
-    def convert_measurement_csv_data_to_xml_alt(self, csv_data, units, keyword):
-        # explicit procedure 'add_unit_data' to fill data records:
-        length = len(csv_data)   ##csv_data is a doulbe list [[]]
-
-        for i, item in enumerate(csv_data):
-
-            unit_dict = item[i]  # dict with UnitID
-            if isinstance(unit_dict, dict):
-                if i == 0:
-                    if unit_dict.get('UnitID', None):
-                        unit = add_unit(units, self.abcdns)
-                else:
-                    add_necc_nodes_measurements(unit, self.abcdns, unit_dict.get('UnitID'))
-                    add_unit_data_measurement(unit, self.abcdns, unit_dict.get('UnitID'), item[i])
-                        # unit = add_unit_id(units, self.abcdns, unit_dict.get('UnitID'))
-            # else:
-                    # add_unit_data_measurement(unit, self.abcdns, unit_dict.get('UnitID'), item[i])
-
     def convert_measurement_csv_data_to_xml(self, csv_data, units, keyword):
 
         for child in self.root:
@@ -431,8 +397,6 @@ class Ataxer(object):
                         if single_dict.get('UnitID', None):
                             unit = add_unit(units, self.abcdns)
 
-                            for child in self.root:
-                                print(child.tag, child.attrib)
                             add_necc_nodes_measurements(unit, self.abcdns, single_dict.get('UnitID'))
                             add_unit_id(unit, self.abcdns, single_dict.get('UnitID'))
                             measurementsorfacts = add_measurements_or_facts(unit, self.abcdns)
@@ -445,14 +409,13 @@ class Ataxer(object):
 
     def finish_atax_xml(self, root):
         try:
-            #xml_file_name = os.path.basename(self.csv_file.name)
-            #xml_file_name = (os.path.splitext(xml_file_name))[0]
+
             xml_file_name = "test_measurement_csv"
             xml_file_name = xml_file_name + '1.xml'
             xml_file_name = ''.join(('xml_files/', xml_file_name))
             # another path construction necessary here!
             with open(os.path.join(_get_test_data_dir_path(), xml_file_name), 'wb') as f:
-                # tree = root.getroottree()
+
                 for child in self.root:
                     print(child.tag, child.attrib)
                 tree = ET.ElementTree(self.root)
@@ -460,8 +423,6 @@ class Ataxer(object):
                 f.close()
         except:
             pass
-
-        xmlstr = minidom.parseString(ET.tostring(root)).toprettyxml(indent="    ")
 
         try:
             # unicode is important , we need a string to continue!
@@ -514,27 +475,10 @@ def parse_taxonomic_csv_measurement(submission, csv_file):
 
         root, units = ataxer.create_atax_submission_base_xml()
 
-        for elem in root.iter():
-            if 'Units' in elem.tag:
-                print("456")
-            else:
-                continue
-
         # returns a list
         csv_data = ataxer.read_and_map_measurement_csv(csv_file)
 
         ataxer.convert_measurement_csv_data_to_xml(csv_data, units, 'measurement')
-
-        for elem in root.iter():
-            if 'Unit' in elem.tag:
-                print("456")
-            else:
-                continue
-        for elem in ataxer.root.iter():
-            if 'Unit' in elem.tag:
-                print("456")
-            else:
-                continue
 
         xml_string = ataxer.finish_atax_xml(ataxer.root)
 

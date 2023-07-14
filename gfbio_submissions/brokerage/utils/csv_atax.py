@@ -272,10 +272,6 @@ def add_unit_data(parent, ns, unid, csvdict):
 
 def add_unit_data_measurement(parent, ns, unid, csvdict):
 
-    #add_necc_nodes(parent, ns, unid)
-    #add_unit_id(parent, ns, unid)
-
-    #measurementsorfacts=add_measurements_or_facts(parent, ns)
     add_measurement_or_fact(parent, ns, unid, csvdict)
 
 
