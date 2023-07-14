@@ -279,10 +279,11 @@ def add_unit_data_measurement(parent, ns, unid, csvdict):
     add_measurement_or_fact(parent, ns, unid, csvdict)
 
 
-def store_atax_data_as_auditable_text_data(submission, file_name, data):
+def store_atax_data_as_auditable_text_data(submission, file_name, data, comment):
 
     filename = file_name
     filecontent = data
+    real_filename = comment
     logger.info(
     msg='store_atax_data_as_auditable_text_data create '
         'AuditableTextData | submission_pk={0} filename={1}'
@@ -294,7 +295,8 @@ def store_atax_data_as_auditable_text_data(submission, file_name, data):
         AuditableTextData.objects.create(
             name=filename,
             submission=submission,
-            text_data=filecontent
+            text_data=filecontent,
+            comment=real_filename
         )
 
        #textbytes.save()
