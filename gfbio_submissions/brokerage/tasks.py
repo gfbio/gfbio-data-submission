@@ -2533,13 +2533,11 @@ def jira_initial_comment_task(self, prev=None, submission_id=None):
 def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None,
                                               submission_id=None,  submission_upload_id=None):
 
-    request_file_keys = [
+    expected_key_words = [
         'specimen',
         'measurement',
         'multimedia'
     ]
-    atax_xml_file_names = ['specimen.xml', 'measurement.xml', 'multimedia.xml', ]
-    atax_xml_file_name = ''
 
     logger.info(
         'tasks.py | atax_submission_parse_csv_upload_to_xml_task | submission_id={}'.format(
@@ -2601,27 +2599,26 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
 
     #differentiate between specimen and measurement csv file:
     file_key = analyze_filename_and_type(os.path.basename(submission_upload.file.path),submission_upload.meta_data )
-    if file_key in request_file_keys:
+    if file_key in expected_key_words:
 
         match str(file_key):
             case 'specimen':
+
                 # create xml data as string:
                 with open(submission_upload.file.path,
                           'r', encoding='utf-8-sig') as data_file:
                     xml_data_as_string = parse_taxonomic_csv_specimen(submission_upload.submission, data_file)
-                atax_xml_file_name = atax_xml_file_names[0]
 
             case 'measurement':
+
                 with open(submission_upload.file.path,
                           'r', encoding='utf-8-sig') as data_file:
                     xml_data_as_string = parse_taxonomic_csv_measurement(submission_upload.submission, data_file)
-                atax_xml_file_name = atax_xml_file_names[1]
 
             case 'multimedia':
                 with open(submission_upload.file.path,
-                          'r', encoding='utf-8-sig') as data_file:
+                  'r', encoding='utf-8-sig') as data_file:
                     xml_data_as_string = parse_taxonomic_csv_multimedia(submission_upload.submission, data_file)
-                atax_xml_file_name = atax_xml_file_names[2]
 
             case _:
                 logger.warning(
@@ -2630,12 +2627,11 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
                     'submission_id={1}'.format(submission_upload.file.path, submission_id))
                 return TaskProgressReport.CANCELLED
 
-        # store xml data informations in auditabletextdata:
+        # store xml data in auditabletextdata:
         if xml_data_as_string is not None and  len(xml_data_as_string) > 0:
             store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
-                          file_name=atax_xml_file_name,
-                          data=xml_data_as_string,
-                          comment=os.path.basename(submission_upload.file.path))
+                                    file_name= os.path.basename(submission_upload.file.path),
+                                    data=xml_data_as_string)
             return xml_data_as_string
 
         else:
@@ -2719,16 +2715,16 @@ def atax_submission_validate_xml_converted_upload_task(self, previous_task_resul
     upload_name = submission_upload.file.name.split('/')[-1:][0]
 
     text_to_validate=''
-    if len(submission.auditabletextdata_set.filter(comment=upload_name)):
+    if len(submission.auditabletextdata_set.filter(name=upload_name)):
         auditable_xml = submission_upload.submission.auditabletextdata_set.filter(
-            comment=upload_name).first().pk
+            name=upload_name).first().pk
         if auditable_xml is None:
             logger.info(
                 'tasks.py | atax_auditable_task | no  textdata found | submission_id={0}'.format(
                     submission_upload.submission.broker_submission_id)
             )
         fname_of_first_upload = submission_upload.submission.auditabletextdata_set.filter(
-            comment=upload_name).first()
+            name=upload_name).first()
         if fname_of_first_upload is not None:
             text_to_validate = fname_of_first_upload.text_data
 
@@ -2747,24 +2743,11 @@ def atax_submission_validate_xml_converted_upload_task(self, previous_task_resul
             submission_upload.submission.status = Submission.ERROR
 
             return TaskProgressReport.CANCELLED
-
         else:
             submission_upload.submission.save()
-
-            #t he test here, if you can insert measurement values into specimen
-            # not necessary, only if the specimen.xml should contain all the information
-            atax_submission_upload = AuditableTextData.objects.assemble_atax_submission_uploads(
-                submission=submission)
-            if atax_submission_upload == {}:
-                return TaskProgressReport.CANCELLED
-            else:
-                pass
-                # try to integrate measurements or/ and multimedia into specimen.xml:
-
             return True
 
     return False
-
 
 
 @app.task(

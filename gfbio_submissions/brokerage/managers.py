@@ -480,24 +480,6 @@ class AuditableTextDataManager(models.Manager):
         else:
             return None
 
-    def assemble_atax_submission_uploads(self, submission):
-
-        atax_xml_file_names = ['specimen.xml', 'measurement.xml', 'multimedia.xml',]
-        request_file_keys = ['specimen', 'measurement', 'multimedia', ]
-        # just one hit on the database, then work on queryset
-        atax_uploads = self.filter(submission=submission).filter(
-            name__in=atax_xml_file_names)
-        res = {}
-        for r in request_file_keys:
-            obj_qs = atax_uploads.filter(name__contains=r)
-            if len(obj_qs):
-                obj = obj_qs.first()
-                res[r.upper()] = (
-                    '{0}'.format(smart_str(obj.name)),
-                    '{0}'.format(smart_str(obj.text_data)),
-                    '{0}'.format(smart_str(obj.comment)))
-        return res
-
 # TODO: add tests
 class SubmissionUploadManager(models.Manager):
 
