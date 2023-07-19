@@ -505,3 +505,89 @@ def parse_taxonomic_csv_multimedia(submission, csv_file):
     except:
         return None  #False, error
 
+
+def update_specimen_measurements_abcd_xml(atax_submission_upload):
+
+    if 'SPECIMEN' in atax_submission_upload.keys():
+
+        specimen_tuple = atax_submission_upload['SPECIMEN']
+        specimen_abcd = str(specimen_tuple[1])
+
+        #do this, if both specimen nd measurements are there:
+        if 'MEASUREMENT' in atax_submission_upload.keys():
+            measurement_tuple = atax_submission_upload['MEASUREMENT']
+            measurement_abcd = str(measurement_tuple[1])
+
+            tree_meas_root = ET.fromstring(measurement_abcd)
+            tree_spec_root = ET.fromstring(specimen_abcd)
+
+            #take the following from Ataxer:
+            xsi = "http://www.w3.org/2001/XMLSchema-instance"
+            abcd = "http://www.tdwg.org/schemas/abcd/2.06"
+            schemaLocation = " http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"
+
+            ET.register_namespace("abcd", "http://www.tdwg.org/schemas/abcd/2.06")
+            abcdns = "{" + abcd + "}"  # namespace abcd for creating Elements
+
+            result = {}
+
+            # namespaces
+            ns = {"xsi":xsi, "abcd":abcd}
+
+            collection1 = tree_meas_root.findall(".//{http://www.tdwg.org/schemas/abcd/2.06}Units")  #list of elements
+            # units is there max 1x
+            collection1_string = ET.tostring(collection1[0], encoding='unicode', method='xml')
+            units_root = ET.fromstring(collection1_string)
+            # this should work with whole tree_meas_root too instead of subelement units_root!
+            collection = units_root.findall(".//{http://www.tdwg.org/schemas/abcd/2.06}Unit")   #list of elements
+
+            # create dictionary for UnitID, MeasurementOrFacts  xml string
+            for unit in collection:
+                unit_string = ET.tostring(unit, encoding='unicode', method='xml')
+                unit_root = ET.fromstring(unit_string)
+
+                unitid = unit_root.find(".//{http://www.tdwg.org/schemas/abcd/2.06}UnitID")       #Element
+                measorfacts = unit_root.find(".//{http://www.tdwg.org/schemas/abcd/2.06}MeasurementsOrFacts")  #Element
+                unitid_content = unitid.text
+                result[unitid_content] = measorfacts
+
+
+        # insert  MeasurementOrFacts into specimen part:
+        for unit_spec in tree_spec_root.findall(".//{http://www.tdwg.org/schemas/abcd/2.06}Unit"):
+
+            unitidstr = str(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}UnitID").text)
+
+            #new for removing sex, this belongs in the sequence after MeasurementsOrFacts:
+
+            elemsex = unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}Sex")
+            if elemsex is not None:
+                #unitsexstr = str(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}Sex").text)
+                #if unitsexstr:
+                unit_spec.remove(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}Sex"))
+
+            if unitidstr in result.keys():
+                unit_spec.append(result[unitidstr])  #element append measurements
+                if elemsex is not None:
+                    unit_spec.append(elemsex)
+
+        res_after_insert = ET.tostring( tree_spec_root, encoding='unicode', method='xml')
+
+        #test writing, remove:
+
+        try:
+
+            xml_file_name = "test_measurement_csv"
+            xml_file_name = xml_file_name + 'C.xml'
+            xml_file_name = ''.join(('xml_files/', xml_file_name))
+            # another path construction necessary here!
+            with open(os.path.join(_get_test_data_dir_path(), xml_file_name), 'wb') as f:
+
+                for child in tree_spec_root:
+                    print(child.tag, child.attrib)
+                tree = ET.ElementTree(tree_spec_root)
+                tree.write(f, encoding="utf-8", xml_declaration=True)  # , pretty_print=True, lxml only)
+                f.close()
+        except:
+            pass
+
+    return res_after_insert

@@ -482,8 +482,8 @@ class AuditableTextDataManager(models.Manager):
 
     def assemble_atax_submission_uploads(self, submission):
 
-        atax_xml_file_names = ['specimen.xml', 'measurement.xml', 'multimedia.xml',]
-        request_file_keys = ['specimen', 'measurement', 'multimedia', ]
+        atax_xml_file_names = ['specimen.xml', 'measurement.xml', 'multimedia.xml','specimen_2.xml', 'specimen_3.xml', 'specimen_C.xml']
+        request_file_keys = ['specimen', 'measurement', 'multimedia', 'specimen_2', 'specimen_3','specimen_C']
         # just one hit on the database, then work on queryset
         atax_uploads = self.filter(submission=submission).filter(
             name__in=atax_xml_file_names)

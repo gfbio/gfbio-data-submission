@@ -54,6 +54,7 @@ from .utils.task_utils import jira_error_auto_retry, \
     jira_comment_replace
 from ..generic.utils import logged_requests
 from .utils.csv_atax import store_atax_data_as_auditable_text_data
+from .utils.atax import update_specimen_measurements_abcd_xml
 
 logger = logging.getLogger(__name__)
 
@@ -2751,15 +2752,50 @@ def atax_submission_validate_xml_converted_upload_task(self, previous_task_resul
         else:
             submission_upload.submission.save()
 
-            #t he test here, if you can insert measurement values into specimen
+
+            # INSERTION of MEASUREMENT values into SPECIMEN
             # not necessary, only if the specimen.xml should contain all the information
             atax_submission_upload = AuditableTextData.objects.assemble_atax_submission_uploads(
                 submission=submission)
             if atax_submission_upload == {}:
                 return TaskProgressReport.CANCELLED
             else:
-                pass
-                # try to integrate measurements or/ and multimedia into specimen.xml:
+                #  integrate measurements or/ and multimedia into specimen.xml:
+                if len(atax_submission_upload)>1 and 'SPECIMEN' in atax_submission_upload.keys():
+                    if 'MEASUREMENT' in atax_submission_upload.keys():
+                        specimen_abcd_updated = update_specimen_measurements_abcd_xml(atax_submission_upload)
+                        #validate the combined construct:
+
+                        is_val, errors = validate_atax_data_is_valid(
+                            schema_file='ABCD_2.06.XSD',
+                            xml_string=specimen_abcd_updated  # string_xml_converted
+                        )
+                        # if not valid:
+                        if errors:
+                            messages = [e.message for e in errors]
+                            submission_upload.submission.data.update(
+                                {'validation of measurements integrated in specimen': messages})
+                            report.task_exception_info = json.dumps({'validation of measurements integrated in specimen': messages})
+
+                            report.save()
+                            # submission_upload.submission.status = Submission.ERROR
+                            # return TaskProgressReport.CANCELLED
+                        else:
+                            # submission_upload.submission.save()
+                            # save enlarged xml structure (SPECIMEN and MEASUREMENT):
+                            specimen_tuple = atax_submission_upload['SPECIMEN']
+                            specimen_base = str(specimen_tuple[2])
+
+                            measurement_tuple = atax_submission_upload['MEASUREMENT']
+                            measurement_base = str(measurement_tuple[2])
+
+                            if specimen_abcd_updated is not None and len(specimen_abcd_updated) > 0:
+                                store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
+                                                                       file_name='specimen_2.xml',
+                                                                       data=specimen_abcd_updated,
+                                                                       comment=specimen_base+', '+measurement_base)
+
+                                # return xml_data_as_string
 
             return True
 
