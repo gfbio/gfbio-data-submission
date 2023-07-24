@@ -582,7 +582,9 @@ class SubmissionUpload(TimeStampedModel):
         if self.target == ATAX:
             from .tasks import \
                 atax_submission_parse_csv_upload_to_xml_task, \
-                atax_submission_validate_xml_converted_upload_task
+                atax_submission_validate_xml_converted_upload_task, \
+                atax_submission_combine_xmls_and_validate_task, \
+                atax_submission_validate_xml_combination_task
 
             chain = atax_submission_parse_csv_upload_to_xml_task.s(
                     submission_id=self.submission.pk,
@@ -591,7 +593,16 @@ class SubmissionUpload(TimeStampedModel):
                         | atax_submission_validate_xml_converted_upload_task.s(
                     submission_id=self.submission.pk,
                     submission_upload_id=self.pk).set(
+                    countdown=SUBMISSION_RETRY_DELAY) \
+                        | atax_submission_combine_xmls_and_validate_task.s(
+                    submission_id=self.submission.pk,
+                    submission_upload_id=self.pk).set(
+                    countdown=SUBMISSION_RETRY_DELAY) \
+                        | atax_submission_validate_xml_combination_task.s(
+                    submission_id=self.submission.pk).set(
                     countdown=SUBMISSION_RETRY_DELAY)
+
+
             chain()
 
     def __str__(self):

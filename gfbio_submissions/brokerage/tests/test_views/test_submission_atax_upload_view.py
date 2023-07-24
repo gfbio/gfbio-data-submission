@@ -157,6 +157,25 @@ class TestSubmissionAtaxUploadView(TestCase):
             'attach_to_ticket': attach,
         }
 
+    @classmethod
+    def _create_atax_multimedia_data(cls, delete=True, invalid=False, update=False, attach=False, meta_data=False):
+        file_name = 'jpg_files/Holotype_FGZC3761.jpg'
+        if update:
+            file_name = 'jpg_files/Holotype_FGZC3761.jpg'
+
+        if delete:
+            cls._delete_test_data()
+        csv_file = open(
+            os.path.join(_get_test_data_dir_path(), file_name),
+            'rb'
+        )
+        return {
+            'file': csv_file,
+            'meta_data': meta_data,
+            'attach_to_ticket': attach,
+        }
+
+
     @staticmethod
     def _delete_test_data():
         SubmissionUpload.objects.all().delete()
@@ -327,6 +346,29 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertIn(b'file', response.content)
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))
+
+    # both conversion/validation tasks are started,
+    # but cancelled because of the upload mime type!
+    @responses.activate
+    def test_valid_atax_upload_post_with_multimedia_data(self):
+        submission = Submission.objects.first()
+
+        self.assertEqual('ATAX', submission.target)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+
+        responses.add(responses.POST, url, json={}, status=200)
+        data = self._create_atax_multimedia_data(meta_data=False)
+        # validation
+        response = self.api_client.post(url, data, format='multipart')
+
+        self.assertEqual(201, response.status_code)
+        self.assertEqual(1, len(submission.submissionupload_set.all()))
+        self.assertFalse(submission.submissionupload_set.first().meta_data)
+
+        self.assertEqual(submission.target, response.data['target'])
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @responses.activate
     def test_valid_atax_upload_post_with_invalid_taxonomic_specimen_data(self):
