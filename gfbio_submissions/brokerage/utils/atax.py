@@ -78,6 +78,8 @@ attribute_value_blacklist = [
     'na', 'NA', 'n/a', 'N/A',
 ]
 
+global_schema = None
+
 #  ATAXER  base xml for atax -------------------------------------------------------
 class Ataxer(object):
 
@@ -91,8 +93,12 @@ class Ataxer(object):
             os.getcwd(),
             'gfbio_submissions/brokerage/schemas/ABCD_2.06.XSD')
 
+        global global_schema
+        if not global_schema:
         # Load and compile XSD schema
-        self.schema = xmlschema.XMLSchema(self.path_xsd)
+            global_schema = xmlschema.XMLSchema(self.path_xsd)
+
+        self.schema =  global_schema
 
         # namespaces:
         self.xsi = "http://www.w3.org/2001/XMLSchema-instance"
@@ -103,6 +109,7 @@ class Ataxer(object):
         ET.register_namespace("abcd", "http://www.tdwg.org/schemas/abcd/2.06")
         self.abcdns = "{" + self.abcd + "}"  # namespace abcd for creating Elements
 
+
         # Create XML root element:
         # root = Element(schema.root.name, attrib=schema.root.attributes)
         # self.root = Element(self.abcdns + "DataSets", attrib={"{" + self.xsi + "}schemaLocation": self.schemaLocation}, nsmap="abcd")
@@ -110,7 +117,20 @@ class Ataxer(object):
         self.root = Element("{http://www.tdwg.org/schemas/abcd/2.06}DataSets",
             attrib={"{" + self.xsi + "}schemaLocation": self.schemaLocation})
 
+    # make class JSON serializable:
+    def to_json(self):
 
+        return {
+            'atax_submission': self.atax_submission,
+            'path_xsd': self.path_xsd,
+            'schema': self.schema,
+            'xsi': self.xsi,
+            'abcd': self.abcd,
+            'schemaLocation': self.schemaLocation,
+            'ns': self.ns,
+            'abcdns': self.abcdns,
+            'root': self.root
+        }
 
     def map_fields_specimen(self, csv_dict, abcd_dict, result_dict=None):
         import datetime
@@ -170,8 +190,12 @@ class Ataxer(object):
                 if k in time_keys3:
                     if len(v) and v.strip().lower() not in unknowns and crea_date==True:
                         year = str(v)
-                        dtobj = datetime.datetime(int(year), int(month), int(day), int(time.hour), int(time.minute))
-                        dtstr = dtobj.strftime("%Y-%m-%dT%H:%M:%S")  # should be a string
+                        if time:
+                            dtobj = datetime.datetime(int(year), int(month), int(day), int(time.hour), int(time.minute))
+                            dtstr = dtobj.strftime("%Y-%m-%dT%H:%M:%S")  # should be a string
+                        else:
+                            dtobj = datetime.datetime(int(year), int(month), int(day),0,0)
+                            dtstr = dtobj.strftime("%Y-%m-%dT%H:%M:%S")  # should be a string
                         result_dict["MeasurementDateTime"] = dtstr
                     else:
                         crea_date=False
@@ -189,7 +213,8 @@ class Ataxer(object):
                     if len(v) and v.strip().lower() not in unknowns:
                         time = datetime.datetime.strptime(v, '%H:%M')  #print time.hour, time.minut
                     else:
-                        crea_date=False
+                        time = None
+                    #    crea_date=False
                 k = str(abcd_dict[k])  # key is changed
             if (time_mapped.count(str(k))==0) and len(v) and v.strip().lower() not in unknowns:
                 result_dict[k] = v
@@ -437,6 +462,7 @@ def create_ataxer(submission):
     ataxer = Ataxer(submission=submission)
     return ataxer
 
+
 def analyze_filename_and_type(upload_name, meta_type):
 
     if 'specimen' in upload_name or meta_type is True:
@@ -452,6 +478,7 @@ def analyze_filename_and_type(upload_name, meta_type):
 def parse_taxonomic_csv_specimen(submission, csv_file):
 
     try:
+
         ataxer = create_ataxer(submission)
 
         root, units = ataxer.create_atax_submission_base_xml()
@@ -471,6 +498,7 @@ def parse_taxonomic_csv_specimen(submission, csv_file):
 def parse_taxonomic_csv_measurement(submission, csv_file):
 
     try:
+
         ataxer = create_ataxer(submission)
 
         root, units = ataxer.create_atax_submission_base_xml()
@@ -490,6 +518,7 @@ def parse_taxonomic_csv_measurement(submission, csv_file):
 def parse_taxonomic_csv_multimedia(submission, csv_file):
 
     try:
+
         ataxer = create_ataxer(submission)
 
         root, units = ataxer.create_atax_submission_base_xml()

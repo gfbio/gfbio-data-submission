@@ -12,6 +12,8 @@ from jsonschema.validators import Draft3Validator, Draft4Validator
 import xmlschema
 import xml.etree.ElementTree as ET
 
+from gfbio_submissions.brokerage.utils.atax import Ataxer, create_ataxer
+
 from xmlschema import XMLSchemaValidationError
 
 from gfbio_submissions.brokerage.configuration.settings import \
@@ -176,12 +178,15 @@ def validate_ena_relations(data):
     return errors
 
 
-def validate_atax_data_is_valid(schema_file=None, xml_string=None):
+def validate_atax_data_is_valid(submission = None, schema_file=None, xml_string=None):
 
     xml_string_valid = False
+    # create ataxer
+    ataxer = create_ataxer(submission)
+    schema = ataxer.schema
 
-    path = os.path.join(settings.STATIC_ROOT, 'schemas', schema_file)
-    schema = xmlschema.XMLSchema(path)
+    #path = os.path.join(settings.STATIC_ROOT, 'schemas', schema_file)
+    #schema = xmlschema.XMLSchema(path)
 
     if (xml_string):
 

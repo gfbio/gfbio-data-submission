@@ -54,7 +54,8 @@ from .utils.task_utils import jira_error_auto_retry, \
     jira_comment_replace
 from ..generic.utils import logged_requests
 from .utils.csv_atax import store_atax_data_as_auditable_text_data
-from .utils.atax import update_specimen_measurements_abcd_xml
+from .utils.atax import update_specimen_measurements_abcd_xml, \
+    create_ataxer, Ataxer
 
 logger = logging.getLogger(__name__)
 
@@ -2602,6 +2603,8 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
     report.submission = submission_upload.submission
 
     xml_data_as_string = ''
+
+    # or use submission_id direct!?
     #differentiate between specimen and measurement and multimedia and combination csv file:
     file_key = analyze_filename_and_type(os.path.basename(submission_upload.file.path),submission_upload.meta_data )
     if file_key in request_file_keys:
@@ -2737,6 +2740,7 @@ def atax_submission_validate_xml_converted_upload_task(self, previous_task_resul
             text_to_validate = fname_of_first_upload.text_data
 
             is_val, errors=validate_atax_data_is_valid(
+                submission = submission_upload.submission,
                 schema_file='ABCD_2.06.XSD',
                 xml_string=text_to_validate  # string_xml_converted
             )
@@ -2754,6 +2758,13 @@ def atax_submission_validate_xml_converted_upload_task(self, previous_task_resul
 
             else:
                 submission_upload.submission.save()
+                # try to update audit entry:
+
+                if fname_of_first_upload is not None:
+
+                    fname_of_first_upload.comment = fname_of_first_upload.comment + " - ABCD validated!"
+                    fname_of_first_upload.save()
+
                 return text_to_validate
 
         '''
@@ -2870,7 +2881,8 @@ def atax_submission_combine_xmls_and_validate_task(self, previous_task_result=No
         'gfbio_submissions/brokerage/schemas/ABCD_2.06.XSD')
 
     # return  the auditabletextdata from Upload, [0] means first element in the upload list:
-    upload_name = submission_upload.file.name.split('/')[-1:][0]
+    # precondition: is valid, has this addition
+    upload_name = submission_upload.file.name.split('/')[-1:][0] + " - ABCD validated!"
 
     text_to_validate=''
     if len(submission_upload.submission.auditabletextdata_set.filter(comment=upload_name)):
