@@ -71,7 +71,7 @@ def add_unit(parent, ns):
     unit = SubElement(parent, ns + "Unit")
     return unit
 
-# the mandatory and non mandatory csv fields from first Vences example, mapped to ABCD terms
+# the mandatory and non mandatory csv specimen fields from first Vences example, mapped to ABCD terms
 lookup_list = ['UnitID',
     'RecordBasis',
     'FullScientificNameString',

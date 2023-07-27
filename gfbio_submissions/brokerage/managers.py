@@ -548,6 +548,6 @@ class SubmissionUploadManager(models.Manager):
             submission_upload_id)
         if submission_upload is None:
             return None
-        if submission_upload.target != ATAX:
+        if submission_upload.submission.target != ATAX:
             return None
         return submission_upload

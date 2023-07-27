@@ -238,7 +238,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(1, len(submission.submissionupload_set.all()))
         self.assertTrue(submission.submissionupload_set.first().meta_data)
 
-        self.assertEqual(submission.target, response.data['target'])
+        #self.assertEqual(submission.target, response.data['target'])   #response upload target no longer used!
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn(b'broker_submission_id', response.content)
         self.assertIn(b'"id"', response.content)
@@ -266,7 +266,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(1, len(submission.submissionupload_set.all()))
         self.assertFalse(submission.submissionupload_set.first().meta_data)
 
-        self.assertEqual(submission.target, response.data['target'])
+        #self.assertEqual(submission.target, response.data['target'])   #response upload target no longer used!
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn(b'broker_submission_id', response.content)
         self.assertIn(b'"id"', response.content)
@@ -294,7 +294,9 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(1, len(submission.submissionupload_set.all()))
         self.assertTrue(submission.submissionupload_set.first().meta_data)
 
-        self.assertEqual(submission.target, response.data['target'])
+        #self.assertEqual(submission.target, response.data['target'])   ???which targets
+        #after upload:
+        self.assertEqual('ATAX', submission.target)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn(b'broker_submission_id', response.content)
         self.assertIn(b'"id"', response.content)
@@ -337,7 +339,9 @@ class TestSubmissionAtaxUploadView(TestCase):
         # the specimen:
         self.assertTrue(submission.submissionupload_set.first().meta_data)
 
-        self.assertEqual(submission.target, response.data['target'])
+        #self.assertEqual(submission.target, response.data['target'])   ???which targets
+        # after upload:
+        self.assertEqual('ATAX', submission.target)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn(b'broker_submission_id', response.content)
         self.assertIn(b'"id"', response.content)
@@ -367,7 +371,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(1, len(submission.submissionupload_set.all()))
         self.assertFalse(submission.submissionupload_set.first().meta_data)
 
-        self.assertEqual(submission.target, response.data['target'])
+        #self.assertEqual(submission.target, response.data['target'])   #response upload target no longer used!
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @responses.activate
@@ -389,7 +393,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertTrue(submission.submissionupload_set.first().meta_data)
         self.assertTrue(submission.status,Submission.ERROR)
 
-        self.assertEqual(submission.target, response.data['target'])
+        #self.assertEqual(submission.target, response.data['target'])   #response upload target no longer used!
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn(b'broker_submission_id', response.content)
         self.assertIn(b'"id"', response.content)
@@ -427,7 +431,7 @@ class TestSubmissionAtaxUploadView(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn(b'broker_submission_id', response.content)
-        self.assertEqual(submission.target, response.data['target'])
+        #self.assertEqual(submission.target, response.data['target']) #response upload target no longer used!
         self.assertIn(b'"id"', response.content)
         self.assertIn(b'user', response.content)
         self.assertEqual(User.objects.first().username, response.data['user'])

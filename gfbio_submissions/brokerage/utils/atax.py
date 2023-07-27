@@ -68,8 +68,18 @@ abcd_mapping_measurement = {
 
 abcd_mapping_measurement_keys = abcd_mapping_measurement.values()
 
+# right order here:
 abcd_mapping_multimedia = {
-'specimen identifier': 'UnitID',
+'specimen identifier': 'UnitID',  #ZSM 5652/2012
+'File name': 'MultiMediaObject/ID',   #Holotype_FGZC3761.jpg'
+'File description': 'MultiMediaObject/Context',   # Holotype of Platypelis lateus (FGZC 3761) in life   /IPRStatements' Comment wäre auch mgl., nee für was anderes
+'File type': 'MultiMediaObject/Format',   #Image
+'IPR': 'MultiMediaObject/IPR/Text',   # Andolalao Rakotoarison    person with intellectual rights Text or without??
+'License Holder': 'MultiMediaObject/IPR/Copyrights/Copyright',   # Zoologische Staatssammlung München
+'License Type': 'MultiMediObject/IPR//Licenses/License/Text',   # CC BY-NC-SA 4.0   for statement, additionally add here 'URI'' like https://creativecommons.org/licenses/by-sa...
+'Creator': 'MultiMediaObject/Creator',  #Andolalao Rakotoarison
+
+
 }
 
 abcd_mapping_multimedia_keys = abcd_mapping_multimedia.keys()
