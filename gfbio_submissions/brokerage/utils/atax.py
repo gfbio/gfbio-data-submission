@@ -474,12 +474,12 @@ def create_ataxer(submission):
 
 
 def analyze_filename_and_type(upload_name, meta_type):
-
-    if 'specimen' in upload_name or meta_type is True:
+    #meta_type conditions are removed, maybe its possible to use them as an additional indicator?
+    if 'specimen' in upload_name:
         return 'specimen'
-    elif 'measurement' in upload_name and meta_type is False:
+    elif 'measurement' in upload_name:
         return 'measurement'
-    elif 'multimedia' in upload_name and meta_type is False:
+    elif 'multimedia' in upload_name:
         return 'multimedia'
     else:
         return ''
