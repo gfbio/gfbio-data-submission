@@ -69,7 +69,7 @@ abcd_mapping_measurement = {
 abcd_mapping_measurement_keys = abcd_mapping_measurement.values()
 
 # right order here:
-abcd_mapping_multimedia = {
+abcd_mapping_multimedia_pathes = {
 'specimen identifier': 'UnitID',  #ZSM 5652/2012
 'File name': 'MultiMediaObject/ID',   #Holotype_FGZC3761.jpg'
 'File description': 'MultiMediaObject/Context',   # Holotype of Platypelis lateus (FGZC 3761) in life   /IPRStatements' Comment wäre auch mgl., nee für was anderes
@@ -78,10 +78,19 @@ abcd_mapping_multimedia = {
 'License Holder': 'MultiMediaObject/IPR/Copyrights/Copyright',   # Zoologische Staatssammlung München
 'License Type': 'MultiMediObject/IPR//Licenses/License/Text',   # CC BY-NC-SA 4.0   for statement, additionally add here 'URI'' like https://creativecommons.org/licenses/by-sa...
 'Creator': 'MultiMediaObject/Creator',  #Andolalao Rakotoarison
-
-
 }
 
+
+abcd_mapping_multimedia = {
+'specimen identifier': 'UnitID',
+'File name': 'MultiMediaObject/ID',
+'File description': 'Context',
+'File type': 'Format',
+'IPR': 'Text',
+'License Holder': 'Copyright',
+'License Type': 'Text',
+'Creator': 'Creator',
+}
 abcd_mapping_multimedia_keys = abcd_mapping_multimedia.keys()
 
 attribute_value_blacklist = [
@@ -231,21 +240,15 @@ class Ataxer(object):
         return result_dict
 
     def map_fields_multimedia(self, csv_dict, abcd_dict, result_dict=None):
-        import datetime
-        date_string = str()
-        year = 1
-        month = 1
-        day = 1
-
-        time_keys1 = ['date: day']
-        time_keys2 = ['date: month']
-        time_keys3 = ['date: year']
-        time_mapped = ['IsoDateTimeBegin']
 
         result_dict = result_dict or {}
-
+        csv_dict = {k.strip().lower(): v for k, v in csv_dict.items()}
+        for k, v in csv_dict.items():
+            if isinstance(v, dict):
+                v = self.map_fields_multimedia(v, abcd_dict)
+            if k in abcd_dict.keys():
+                result_dict[k] = v
         return result_dict
-
 
     def create_atax_submission_base_xml(self):
         logger.info(
@@ -378,7 +381,9 @@ class Ataxer(object):
         csv_file.seek(0)
         delimiter = dialect.delimiter if dialect.delimiter in [',', ';',
                                                                '\t'] else ';'
-        # read the csv data from file:
+        known_tags = ['UnitID', 'MeasuredBy', 'MeasurementDateTime', 'Method']
+        extra_tags = ['AppliesTo']
+        delimiters = '(|['
         csv_reader = csv.DictReader(
             csv_file,
             quoting=csv.QUOTE_ALL,
@@ -390,10 +395,11 @@ class Ataxer(object):
         )
 
         # map the csv fields to abcd terms:
+        # map the csv fields to abcd terms, from specimen:
         csv_data = []
         csv_data_p = list(csv_reader)
         for rowdict in csv_data_p:
-            row = self.map_fields_multimedia(rowdict, abcd_mapping_multimedia)
+            row = self.map_fields_specimen(rowdict, abcd_mapping_specimen)
             csv_data.append(row)
 
         return csv_data
@@ -440,7 +446,30 @@ class Ataxer(object):
                         if(facts_node):
                             add_unit_data_measurement(measurementsorfacts, self.abcdns, single_dict.get('UnitID'), mdict)
 
+    def convert_multimedia_csv_data_to_xml(self, csv_data, units, keyword):
 
+        for child in self.root:
+            print(child.tag, child.attrib)
+        length = len(csv_data)   ##csv_data is a double list [[]]
+        for item in csv_data:  #11 elems
+            i=-1
+            facts_node = False
+            for mdict in item:     #15 elems, ordered as list
+                i=i+1
+
+                single_dict = mdict  # dict with UnitID
+                if isinstance(single_dict, dict):
+                    if i == 0:
+                        if single_dict.get('UnitID', None):
+                            unit = add_unit(units, self.abcdns)
+
+                            add_necc_nodes_measurements(unit, self.abcdns, single_dict.get('UnitID'))
+                            add_unit_id(unit, self.abcdns, single_dict.get('UnitID'))
+                            measurementsorfacts = add_measurements_or_facts(unit, self.abcdns)
+                            facts_node = True
+                    else:
+                        if(facts_node):
+                            add_unit_data_measurement(measurementsorfacts, self.abcdns, single_dict.get('UnitID'), mdict)
 
     def finish_atax_xml(self, root):
 
