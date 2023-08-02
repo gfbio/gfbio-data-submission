@@ -122,6 +122,7 @@ class SubmissionUploadSerializer(serializers.ModelSerializer):
         fields = ('user', 'file', 'submission', 'attach_to_ticket', 'meta_data')
 
 
+
 class SubmissionUploadListSerializer(serializers.ModelSerializer):
     # my_field = serializers.ReadOnlyField(source='get_file_name')
     # defaults to get_<fieldname> or method_name=
