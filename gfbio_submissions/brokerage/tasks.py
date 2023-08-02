@@ -2880,9 +2880,9 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
 
                         if specimen_abcd_updated is not None and len(specimen_abcd_updated) > 0:
                             store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
-                                                                   file_name_basis='combination',
-                                                                   data=specimen_abcd_updated,
-                                                                   comment=specimen_base+', '+measurement_base)
+                                        file_name_basis='combination',
+                                        data=specimen_abcd_updated,
+                                        comment=specimen_base+', '+measurement_base)
                             # for database entry of these auditable data:
                             submission_upload.submission.save()
                             return specimen_abcd_updated

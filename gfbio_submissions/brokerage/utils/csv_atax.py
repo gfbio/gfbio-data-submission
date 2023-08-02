@@ -273,12 +273,12 @@ def add_unit_data(parent, ns, unid, csvdict):
 def add_unit_data_measurement(parent, ns, unid, csvdict):
 
     add_measurement_or_fact(parent, ns, unid, csvdict)
+    
 
 def store_atax_data_as_auditable_text_data(submission, file_name_basis, data, comment):
 
     number_continuation = 0
     filecontent = data
-
     real_filename = comment
 
     atax_xml_file_names_basis = ['specimen', 'measurement', 'multimedia', 'combination', ]
@@ -292,7 +292,6 @@ def store_atax_data_as_auditable_text_data(submission, file_name_basis, data, co
     elif file_name_basis in atax_xml_file_names_basis[3]: number_continuation = n4
 
     filename = file_name_basis +"_"+str(number_continuation+1)+".xml"
-
     logger.info(
         msg='store_atax_data_as_auditable_text_data create '
             'AuditableTextData | submission_pk={0} filename={1}'
@@ -305,7 +304,8 @@ def store_atax_data_as_auditable_text_data(submission, file_name_basis, data, co
         AuditableTextData.objects.create(
             name=filename,
             submission=submission,
-            text_data=filecontent
+            text_data=filecontent,
+            comment=real_filename
         )
 
        #textbytes.save()
