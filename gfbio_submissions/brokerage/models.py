@@ -538,15 +538,6 @@ class SubmissionUpload(TimeStampedModel):
         help_text='MD5 checksum of "file"'
     )
 
-    target = models.CharField(
-        blank=True,
-        max_length=16,
-        default='',
-        choices=TARGETS,
-        help_text='optional: field for transferring the submission target'
-                  ' to this SubmissionUpload'
-    )
-
     objects = SubmissionUploadManager()
 
     def save(self, ignore_attach_to_ticket=False, *args, **kwargs):

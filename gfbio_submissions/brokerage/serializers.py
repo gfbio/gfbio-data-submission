@@ -116,11 +116,10 @@ class SubmissionUploadSerializer(serializers.ModelSerializer):
     submission = serializers.PrimaryKeyRelatedField(read_only=True)
     attach_to_ticket = serializers.BooleanField(required=False)
     meta_data = serializers.BooleanField(required=False)
-    target = serializers.CharField(required=False)
 
     class Meta:
         model = SubmissionUpload
-        fields = ('user', 'file', 'submission', 'attach_to_ticket', 'meta_data', 'target')
+        fields = ('user', 'file', 'submission', 'attach_to_ticket', 'meta_data')
 
 
 class SubmissionUploadListSerializer(serializers.ModelSerializer):
@@ -140,4 +139,4 @@ class SubmissionUploadListSerializer(serializers.ModelSerializer):
         model = SubmissionUpload
         fields = (
             'user', 'file', 'submission', 'attach_to_ticket', 'file_name',
-            'file_size', 'meta_data', 'pk', 'target')
+            'file_size', 'meta_data', 'pk')
