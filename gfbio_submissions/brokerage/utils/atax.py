@@ -465,11 +465,12 @@ class Ataxer(object):
 
                             add_necc_nodes_measurements(unit, self.abcdns, single_dict.get('UnitID'))
                             add_unit_id(unit, self.abcdns, single_dict.get('UnitID'))
-                            measurementsorfacts = add_measurements_or_facts(unit, self.abcdns)
+                            # uncomment again!
+                            #multimediaobjects = add_multimediaobjects(unit, self.abcdns)
                             facts_node = True
                     else:
                         if(facts_node):
-                            add_unit_data_measurement(measurementsorfacts, self.abcdns, single_dict.get('UnitID'), mdict)
+                            add_unit_data_multimedia(multimediaobjects, self.abcdns, single_dict.get('UnitID'), mdict)
 
     def finish_atax_xml(self, root):
 
