@@ -551,12 +551,6 @@ class SubmissionUpload(TimeStampedModel):
 
     def save(self, ignore_attach_to_ticket=False, *args, **kwargs):
 
-        if self.submission is not None:
-            if self.submission.target == ATAX:
-                self.target = ATAX
-            else:
-                self.target = ''
-
         # TODO: consider task/chain for this. every new/save resets md5 to '' then task is
         #   put to queue
         if self.pk is None:
@@ -579,20 +573,32 @@ class SubmissionUpload(TimeStampedModel):
                 countdown=SUBMISSION_UPLOAD_RETRY_DELAY
             )
 
-        if self.target == ATAX:
-            from .tasks import \
-                atax_submission_parse_csv_upload_to_xml_task, \
-                atax_submission_validate_xml_converted_upload_task
+        if self.submission is not None:
+            if self.submission.target == ATAX:
+                from .tasks import \
+                    atax_submission_parse_csv_upload_to_xml_task, \
+                    atax_submission_validate_xml_upload_task, \
+                    atax_submission_combine_xmls_to_one_structure_task, \
+                    atax_submission_validate_xml_combination_task
 
-            chain = atax_submission_parse_csv_upload_to_xml_task.s(
-                    submission_id=self.submission.pk,
-                    submission_upload_id=self.pk).set(
-                    countdown=SUBMISSION_RETRY_DELAY) \
-                        | atax_submission_validate_xml_converted_upload_task.s(
-                    submission_id=self.submission.pk,
-                    submission_upload_id=self.pk).set(
-                    countdown=SUBMISSION_RETRY_DELAY)
-            chain()
+                #atax_direct = create_ataxer(self.submission)
+                chain = atax_submission_parse_csv_upload_to_xml_task.s(
+                        submission_id=self.submission.pk,
+                        submission_upload_id=self.pk).set(
+                        countdown=SUBMISSION_RETRY_DELAY) \
+                            | atax_submission_validate_xml_upload_task.s(
+                        submission_id=self.submission.pk,
+                        submission_upload_id=self.pk).set(
+                        countdown=SUBMISSION_RETRY_DELAY) \
+                            | atax_submission_combine_xmls_to_one_structure_task.s(
+                        submission_id=self.submission.pk,
+                        submission_upload_id=self.pk).set(
+                        countdown=SUBMISSION_RETRY_DELAY) \
+                            | atax_submission_validate_xml_combination_task.s(
+                        submission_id=self.submission.pk).set(
+                        countdown=SUBMISSION_RETRY_DELAY)
+
+                chain()
 
     def __str__(self):
         return ' / '.join(reversed(self.file.name.split(os.sep)))
