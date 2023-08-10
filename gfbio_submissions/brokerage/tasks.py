@@ -2825,9 +2825,9 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
 
     text_to_validate=''
     if len(submission_upload.submission.auditabletextdata_set.filter(comment=upload_name)):
-        auditable_xml_id = submission_upload.submission.auditabletextdata_set.filter(
-            comment=upload_name).first().pk
-        if auditable_xml_id is None:
+        auditable_xml = submission_upload.submission.auditabletextdata_set.filter(
+            comment=upload_name).first()
+        if auditable_xml is None:
             logger.info(
                 'tasks.py | atax_auditable_task | no  textdata found | submission_id={0}'.format(
                     submission_upload.submission.broker_submission_id)
@@ -2840,92 +2840,66 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
         # INSERTION of MEASUREMENT values into SPECIMEN
         # if the specimen.xml should contain all the information
         # build dictionary structure for auditable datas, present is the last upload only!
+        specimen_abcd_updated = str()
+        combi_name = str()
+        keys_found = []  # UnitIds of measures or multimedias found in specimen or combination
+
         atax_submission_upload = AuditableTextData.objects.assemble_atax_submission_uploads(
             submission=submission_upload.submission)
         if atax_submission_upload == {}:
             return TaskProgressReport.CANCELLED
+        elif len(atax_submission_upload)<=1:
+            return None
         else:
             #  integrate measurements or/ and multimedia into specimen.xml:
-            if len(atax_submission_upload)>1 and 'SPECIMEN' in atax_submission_upload.keys():
-                if 'MEASUREMENT' in atax_submission_upload.keys():
-                    specimen_abcd_updated = update_specimen_measurements_abcd_xml(atax_submission_upload)
-                    #validate the combined construct:
-                    errors = []
-                    #this reactivate!
-                    # is_val, errors = validate_atax_data_is_valid(
-                    #    schema_file='ABCD_2.06.XSD',
-                    #    xml_string=specimen_abcd_updated  # string_xml_converted
-                    #)
-                    # if combination not valid:
-                    if errors:
-                        messages = [e.message for e in errors]
-                        submission_upload.submission.data.update(
-                            {'validation of measurements integrated into specimen failed': messages})
-                        report.task_exception_info = json.dumps({'validation of measurements integrated into specimen failed': messages})
+            if len(atax_submission_upload)>1 and 'COMBINATION' in atax_submission_upload.keys():
+                combi_name='combination'
+            elif len(atax_submission_upload)>1 and 'SPECIMEN' in atax_submission_upload.keys():
+                combi_name='specimen'
+                #if 'COMBINATION' in atax_submission_upload.keys():
+                #if 'MEASUREMENT' in atax_submission_upload.keys():
+            if auditable_xml.name =='measurement':
+                specimen_abcd_updated, keys_found = update_specimen_measurements_abcd_xml(upload=atax_submission_upload, name=combi_name)
+            elif auditable_xml.name == 'multimedia':
+                specimen_abcd_updated, keys_found = update_specimen_multimedia_abcd_xml(upload=atax_submission_upload, name=combi_name)
+                #validate the combined construct:
+            errors = []
+            #this reactivate!
+            # is_val, errors = validate_atax_data_is_valid(
+            #    schema_file='ABCD_2.06.XSD',
+            #    xml_string=specimen_abcd_updated  # string_xml_converted
+            #)
+            # if combination not valid:
+            if errors:
+                messages = [e.message for e in errors]
+                submission_upload.submission.data.update(
+                    {'validation of measurements integrated into specimen failed': messages})
+                report.task_exception_info = json.dumps({'validation of measurements integrated into specimen failed': messages})
 
-                        report.save()
+                report.save()
 
-                        # submission_upload.submission.status = Submission.ERROR ?
-                        submission_upload.submission.save()
-                        return TaskProgressReport.CANCELLED
+                # submission_upload.submission.status = Submission.ERROR ?
+                submission_upload.submission.save()
+                return TaskProgressReport.CANCELLED
 
+            else:
+                # save enlarged xml structure (SPECIMEN and MEASUREMENT):
 
-                    else:
-                        # save enlarged xml structure (SPECIMEN and MEASUREMENT):
-                        specimen_tuple = atax_submission_upload['SPECIMEN']
-                        specimen_base = str(specimen_tuple[2])
+                #specimen_tuple = atax_submission_upload['SPECIMEN']
+                #specimen_base = str(specimen_tuple[2])
 
-                        measurement_tuple = atax_submission_upload['MEASUREMENT']
-                        measurement_base = str(measurement_tuple[2])
+                #measurement_tuple = atax_submission_upload['MEASUREMENT']
+                #measurement_base = str(measurement_tuple[2])
 
-                        if specimen_abcd_updated is not None and len(specimen_abcd_updated) > 0:
-                            store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
-                                        file_name_basis='combination',
-                                        data=specimen_abcd_updated,
-                                        comment=specimen_base+', '+measurement_base)
-                            # for database entry of these auditable data:
-                            submission_upload.submission.save()
-                            return specimen_abcd_updated
-
-                if 'MULTIMEDIA' in atax_submission_upload.keys():
-                    specimen_abcd_updated = update_specimen_multimedia_abcd_xml(atax_submission_upload)
-                    #validate the combined construct:
-                    errors = []
-                    #this reactivate!
-                    # is_val, errors = validate_atax_data_is_valid(
-                    #    schema_file='ABCD_2.06.XSD',
-                    #    xml_string=specimen_abcd_updated  # string_xml_converted
-                    #)
-                    # if combination not valid:
-                    if errors:
-                        messages = [e.message for e in errors]
-                        submission_upload.submission.data.update(
-                            {'validation of measurements integrated into specimen failed': messages})
-                        report.task_exception_info = json.dumps({'validation of measurements integrated into specimen failed': messages})
-
-                        report.save()
-
-                        # submission_upload.submission.status = Submission.ERROR ?
-                        submission_upload.submission.save()
-                        return TaskProgressReport.CANCELLED
-
-
-                    else:
-                        # save enlarged xml structure (SPECIMEN and MEASUREMENT):
-                        specimen_tuple = atax_submission_upload['SPECIMEN']
-                        specimen_base = str(specimen_tuple[2])
-
-                        multimedia_tuple = atax_submission_upload['MULTIMEDIA']
-                        multimedia_base = str(multimedia_tuple[2])
-
-                        if specimen_abcd_updated is not None and len(specimen_abcd_updated) > 0:
-                            store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
-                                        file_name_basis='combination',
-                                        data=specimen_abcd_updated,
-                                        comment=specimen_base+', '+multimedia_base)
-                            # for database entry of these auditable data:
-                            submission_upload.submission.save()
-                            return specimen_abcd_updated
+                if specimen_abcd_updated is not None and len(specimen_abcd_updated) > 0:
+                    store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
+                                file_name_basis='combination',
+                                data=specimen_abcd_updated,
+                                comment = combi_name+'   '+auditable_xml.name)
+                                #comment=specimen_base+'    '+measurement_base)
+                    # for database entry of these auditable data:
+                    submission_upload.submission.save()
+                    return specimen_abcd_updated
 
         return True
 

@@ -356,11 +356,23 @@ def store_atax_data_as_auditable_text_data(submission, file_name_basis, data, co
     with transaction.atomic():
         # submission.auditabletextdata_set.all().delete()
         #textbytes = AuditableTextData.objects.create(
-        AuditableTextData.objects.create(
+        #AuditableTextData.objects.create(
+         #   name=filename,
+         #  submission=submission,
+         # text_data=filecontent,
+         #comment=real_filename
+         #)
+
+        updated_values = {'text_data': filecontent, 'comment': real_filename}
+
+        AuditableTextData.objects.update_or_create(
             name=filename,
             submission=submission,
-            text_data=filecontent,
-            comment=real_filename
+            defaults = updated_values
         )
 
+    #obj, created = submission_upload.submission.auditabletextdata_set.update_or_create(
+    #   name=filename,
+    #  defaults={'text_data': filecontent}
+    #)
        #textbytes.save()

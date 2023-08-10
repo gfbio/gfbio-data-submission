@@ -567,20 +567,24 @@ def parse_taxonomic_csv_multimedia(submission, csv_file):
         return None  #False, error
 
 
-def update_specimen_measurements_abcd_xml(atax_submission_upload):
+def update_specimen_measurements_abcd_xml(upload, name):  #atax_submission_upload, combi_name)
+    # basis:
+    if str(name).upper() in upload.keys():
+        if str(name).upper()=='COMBINATION':
+            toinclude_tuple = upload['COMBINATION']
+            toinclude_abcd = str(toinclude_tuple[1])
+        elif str(name).upper()=='SPECIMEN':
+            toinclude_tuple = upload['SPECIMEN']
+            toinclude_abcd = str(toinclude_tuple[1])
 
-    if 'SPECIMEN' in atax_submission_upload.keys():
-
-        specimen_tuple = atax_submission_upload['SPECIMEN']
-        specimen_abcd = str(specimen_tuple[1])
 
         #do this, if both specimen nd measurements are there:
-        if 'MEASUREMENT' in atax_submission_upload.keys():
-            measurement_tuple = atax_submission_upload['MEASUREMENT']
+        if 'MEASUREMENT' in upload.keys():
+            measurement_tuple = upload['MEASUREMENT']
             measurement_abcd = str(measurement_tuple[1])
 
             tree_meas_root = ET.fromstring(measurement_abcd)
-            tree_spec_root = ET.fromstring(specimen_abcd)
+            tree_spec_root = ET.fromstring(toinclude_abcd)
 
             #take the following from Ataxer:
             xsi = "http://www.w3.org/2001/XMLSchema-instance"
@@ -591,6 +595,7 @@ def update_specimen_measurements_abcd_xml(atax_submission_upload):
             abcdns = "{" + abcd + "}"  # namespace abcd for creating Elements
 
             result = {}
+            meas_keys_found = []
 
             # namespaces
             ns = {"xsi":xsi, "abcd":abcd}
@@ -616,20 +621,35 @@ def update_specimen_measurements_abcd_xml(atax_submission_upload):
         # insert  MeasurementOrFacts into specimen part:
         for unit_spec in tree_spec_root.findall(".//{http://www.tdwg.org/schemas/abcd/2.06}Unit"):
 
+            posi = -1
+            found = False
+            for child in unit_spec:
+                posi = posi + 1
+                if str(child.tag).endswith('Sex'):
+                    found = True
+                    break
+            #does not exist index = child.index("{http://www.tdwg.org/schemas/abcd/2.06}Sex")
+
             unitidstr = str(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}UnitID").text)
 
             #new for removing sex, this belongs in the sequence after MeasurementsOrFacts:
 
-            elemsex = unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}Sex")
-            if elemsex is not None:
+            #elemsex = unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}Sex")
+            #if elemsex is not None:
                 #unitsexstr = str(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}Sex").text)
                 #if unitsexstr:
-                unit_spec.remove(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}Sex"))
+                #unit_spec.remove(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}Sex"))
 
             if unitidstr in result.keys():
-                unit_spec.append(result[unitidstr])  #element append measurements
-                if elemsex is not None:
-                    unit_spec.append(elemsex)
+
+                meas_keys_found.append(unitidstr)
+
+                if found:
+                    unit_spec.insert(posi, result[unitidstr])
+                else:
+                    unit_spec.append(result[unitidstr])  #element append measurements
+                #if elemsex is not None:
+                    #unit_spec.append(elemsex)
 
         res_after_insert = ET.tostring( tree_spec_root, encoding='unicode', method='xml')
 
@@ -638,7 +658,7 @@ def update_specimen_measurements_abcd_xml(atax_submission_upload):
         try:
 
             xml_file_name = "test_measurement_csv"
-            xml_file_name = xml_file_name + 'C.xml'
+            xml_file_name = xml_file_name + 'SM.xml'
             xml_file_name = ''.join(('xml_files/', xml_file_name))
             # another path construction necessary here!
             with open(os.path.join(_get_test_data_dir_path(), xml_file_name), 'wb') as f:
@@ -651,22 +671,25 @@ def update_specimen_measurements_abcd_xml(atax_submission_upload):
         except:
             pass
 
-    return res_after_insert
+    return res_after_insert,  meas_keys_found
 
-def update_specimen_multimedia_abcd_xml(atax_submission_upload):
-
-    if 'SPECIMEN' in atax_submission_upload.keys():
-
-        specimen_tuple = atax_submission_upload['SPECIMEN']
-        specimen_abcd = str(specimen_tuple[1])
+def update_specimen_multimedia_abcd_xml(upload, name):
+    # basis:
+    if str(name).upper() in upload.keys():
+        if str(name).upper() == 'COMBINATION':
+            toinclude_tuple = upload['COMBINATION']
+            toinclude_abcd = str(toinclude_tuple[1])
+        elif str(name).upper() == 'SPECIMEN':
+            toinclude_tuple = upload['SPECIMEN']
+            toinclude_abcd = str(toinclude_tuple[1])
 
         #do this, if both specimen nd measurements are there:
-        if 'MULTIMEDIA' in atax_submission_upload.keys():
-            multimedia_tuple = atax_submission_upload['MULTIMEDIA']
+        if 'MULTIMEDIA' in upload.keys():
+            multimedia_tuple = upload['MULTIMEDIA']
             multimedia_abcd = str(multimedia_tuple[1])
 
             tree_mult_root = ET.fromstring(multimedia_abcd)
-            tree_spec_root = ET.fromstring(specimen_abcd)
+            tree_spec_root = ET.fromstring(toinclude_abcd)
 
             #take the following from Ataxer:
             xsi = "http://www.w3.org/2001/XMLSchema-instance"
@@ -677,6 +700,7 @@ def update_specimen_multimedia_abcd_xml(atax_submission_upload):
             abcdns = "{" + abcd + "}"  # namespace abcd for creating Elements
 
             result = {}
+            multi_keys_found = []
 
             # namespaces
             ns = {"xsi":xsi, "abcd":abcd}
@@ -708,12 +732,37 @@ def update_specimen_multimedia_abcd_xml(atax_submission_upload):
 
             unitidstr = str(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}UnitID").text)
 
+            posi = -1
+            found = False
+            for child in unit_spec:
+                posi = posi + 1
+                if str(child.tag).endswith('Gathering'):
+                    found = True
+                    break
+
+            #index = child.index("{http://www.tdwg.org/schemas/abcd/2.06}Gathering")
+
             if unitidstr in result.keys():
+
+                multi_keys_found.append(unitidstr)
                 #find all elemnts first order
                 #list_first_order = unit_spec.findall()
-                list_first_o2 = [elem.tag for elem in unit_spec.iter()]
+                # all nodes, subnodes too:
+                #ist_all_childs = [elem.tag for elem in unit_spec.iter()]
 
-                unit_spec.append(result[unitidstr])  #element append measurements
+                #try:
+                    #but another value than posi
+                    #index = list_all_childs.index("{http://www.tdwg.org/schemas/abcd/2.06}Gathering")
+                    #print(f"{".//{http://www.tdwg.org/schemas/abcd/2.06}Gathering"} befindet sich an der Index {index} in der Liste.")
+                #except ValueError:
+                    #print(f"{".//{http://www.tdwg.org/schemas/abcd/2.06}Gathering"} ist nicht in der Liste.")
+                    #pass
+
+                #unit_spec.append(result[unitidstr])  #element append measurements
+                if found:
+                    unit_spec.insert(posi, result[unitidstr])
+                else:
+                    unit_spec.append(result[unitidstr])
             #new for removing sex, this belongs in the sequence after MeasurementsOrFacts:
 
         res_after_insert = ET.tostring(tree_spec_root, encoding='unicode', method='xml')
@@ -736,4 +785,4 @@ def update_specimen_multimedia_abcd_xml(atax_submission_upload):
         except:
             pass
 
-    return res_after_insert
+    return res_after_insert, multi_keys_found
