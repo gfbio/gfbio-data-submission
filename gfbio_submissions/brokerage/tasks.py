@@ -55,7 +55,7 @@ from .utils.task_utils import jira_error_auto_retry, \
 from ..generic.utils import logged_requests
 from .utils.csv_atax import store_atax_data_as_auditable_text_data
 from .utils.atax import update_specimen_measurements_abcd_xml, \
-    create_ataxer, Ataxer
+    update_specimen_multimedia_abcd_xml, create_ataxer, Ataxer
 
 logger = logging.getLogger(__name__)
 
@@ -2538,7 +2538,7 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
     request_file_keys = [
         'specimen',
         'measurement',
-        'multimedia'
+        'multimedia',
         'combination'
     ]
     atax_xml_file_names_basis = ['specimen', 'measurement', 'multimedia', 'combination',]
@@ -2756,7 +2756,7 @@ def atax_submission_validate_xml_upload_task(self, previous_task_result=None,
 
                 # try to update comment field (for real filename) audit entry:
                 if fname_of_first_upload is not None:
-                    fname_of_first_upload.comment = fname_of_first_upload.comment + " - ABCD validated!"
+                    fname_of_first_upload.comment = fname_of_first_upload.comment
                     fname_of_first_upload.save()
 
                 return text_to_validate
@@ -2821,7 +2821,7 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
 
     # return  the auditabletextdata from Upload, [0] means first element in the upload list:
     # precondition: is valid, has this addition
-    upload_name = submission_upload.file.name.split('/')[-1:][0] + " - ABCD validated!"
+    upload_name = submission_upload.file.name.split('/')[-1:][0]
 
     text_to_validate=''
     if len(submission_upload.submission.auditabletextdata_set.filter(comment=upload_name)):
@@ -2840,7 +2840,7 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
         # INSERTION of MEASUREMENT values into SPECIMEN
         # if the specimen.xml should contain all the information
         # build dictionary structure for auditable datas, present is the last upload only!
-        atax_submission_upload, n1, n2, n3, n4 = AuditableTextData.objects.assemble_atax_submission_uploads(
+        atax_submission_upload = AuditableTextData.objects.assemble_atax_submission_uploads(
             submission=submission_upload.submission)
         if atax_submission_upload == {}:
             return TaskProgressReport.CANCELLED
@@ -2887,6 +2887,46 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
                             submission_upload.submission.save()
                             return specimen_abcd_updated
 
+                if 'MULTIMEDIA' in atax_submission_upload.keys():
+                    specimen_abcd_updated = update_specimen_multimedia_abcd_xml(atax_submission_upload)
+                    #validate the combined construct:
+                    errors = []
+                    #this reactivate!
+                    # is_val, errors = validate_atax_data_is_valid(
+                    #    schema_file='ABCD_2.06.XSD',
+                    #    xml_string=specimen_abcd_updated  # string_xml_converted
+                    #)
+                    # if combination not valid:
+                    if errors:
+                        messages = [e.message for e in errors]
+                        submission_upload.submission.data.update(
+                            {'validation of measurements integrated into specimen failed': messages})
+                        report.task_exception_info = json.dumps({'validation of measurements integrated into specimen failed': messages})
+
+                        report.save()
+
+                        # submission_upload.submission.status = Submission.ERROR ?
+                        submission_upload.submission.save()
+                        return TaskProgressReport.CANCELLED
+
+
+                    else:
+                        # save enlarged xml structure (SPECIMEN and MEASUREMENT):
+                        specimen_tuple = atax_submission_upload['SPECIMEN']
+                        specimen_base = str(specimen_tuple[2])
+
+                        multimedia_tuple = atax_submission_upload['MULTIMEDIA']
+                        multimedia_base = str(multimedia_tuple[2])
+
+                        if specimen_abcd_updated is not None and len(specimen_abcd_updated) > 0:
+                            store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
+                                        file_name_basis='combination',
+                                        data=specimen_abcd_updated,
+                                        comment=specimen_base+', '+multimedia_base)
+                            # for database entry of these auditable data:
+                            submission_upload.submission.save()
+                            return specimen_abcd_updated
+
         return True
 
 @app.task(
@@ -2919,16 +2959,16 @@ def atax_submission_validate_xml_combination_task(self, previous_task_result=Non
     report.submission = submission
 
     text_to_validate=''
-    if len(submission.auditabletextdata_set.filter(name='combination_1.xml')):
+    if len(submission.auditabletextdata_set.filter(name='combination')):
         auditable_xml_id = submission.auditabletextdata_set.filter(
-            name='combination_1.xml').first().pk
+            name='combination').first().pk
         if auditable_xml_id is None:
             logger.info(
                 'tasks.py | atax_auditable_task | no  textdata found | submission_id={0}'.format(
                     submission.broker_submission_id)
             )
         element_of_combination = submission.auditabletextdata_set.filter(
-            name='combination_1.xml').first()
+            name='combination').first()
         if element_of_combination is not None:
             text_to_validate = element_of_combination.text_data
 

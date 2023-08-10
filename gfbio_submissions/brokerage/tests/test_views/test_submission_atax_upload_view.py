@@ -158,6 +158,24 @@ class TestSubmissionAtaxUploadView(TestCase):
         }
 
     @classmethod
+    def _create_atax_csv_multimedia_data(cls, delete=True, invalid=False, update=False, attach=False, meta_data=False):
+        file_name = 'csv_files/multimedia_table_Platypelis_with_error.csv' if invalid else 'csv_files/multimedia_table_Platypelis.csv'
+        if update:
+            file_name = 'csv_files/multimedia_table_Platypelis.csv'
+
+        if delete:
+            cls._delete_test_data()
+        csv_file = open(
+            os.path.join(_get_test_data_dir_path(), file_name),
+            'rb'
+        )
+        return {
+            'file': csv_file,
+            'meta_data': meta_data,
+            'attach_to_ticket': attach,
+        }
+
+    @classmethod
     def _create_atax_multimedia_data(cls, delete=True, invalid=False, update=False, attach=False, meta_data=False):
         file_name = 'jpg_files/Holotype_FGZC3761.jpg'
         if update:
@@ -340,6 +358,80 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertTrue(submission.submissionupload_set.first().meta_data)
 
         #self.assertEqual(submission.target, response.data['target'])   ???which targets
+        # after upload:
+        self.assertEqual('ATAX', submission.target)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn(b'broker_submission_id', response.content)
+        self.assertIn(b'"id"', response.content)
+        self.assertIn(b'user', response.content)
+        self.assertEqual(User.objects.first().username, response.data['user'])
+        self.assertIn(b'file', response.content)
+        self.assertTrue(
+            urlparse(response.data['file']).path.startswith(MEDIA_URL))
+
+    @responses.activate
+    def test_valid_atax_upload_post_with_combined_specimen_multimedia_data(self):
+        submission = Submission.objects.first()
+
+        self.assertEqual('ATAX', submission.target)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+
+        responses.add(responses.POST, url, json={}, status=200)
+        data = self._create_atax_csv_test_data(meta_data=True)
+        # validation
+        response = self.api_client.post(url, data, format='multipart')
+
+        self.assertEqual(201, response.status_code)
+        self.assertEqual(1, len(submission.submissionupload_set.all()))
+        self.assertTrue(submission.submissionupload_set.first().meta_data)
+
+        # self.assertEqual(submission.target, response.data['target'])   ???which targets
+        # after upload:
+        self.assertEqual('ATAX', submission.target)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn(b'broker_submission_id', response.content)
+        self.assertIn(b'"id"', response.content)
+        self.assertIn(b'user', response.content)
+        self.assertEqual(User.objects.first().username, response.data['user'])
+        self.assertIn(b'file', response.content)
+        self.assertTrue(
+            urlparse(response.data['file']).path.startswith(MEDIA_URL))
+
+        # start measurement:
+        # responses.add(responses.POST, url, json={}, status=200)
+        submission = Submission.objects.first()
+
+        self.assertEqual('ATAX', submission.target)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+
+        data = self._create_atax_csv_multimedia_data(delete=False, meta_data=False)
+        # validation
+        response = self.api_client.post(url, data, format='multipart')
+
+        self.assertEqual(201, response.status_code)
+
+        specimen_upload = submission.submissionupload_set.get(
+            file='{0}/specimen_table_Platypelis.csv'.format(
+                submission.broker_submission_id
+            )
+        )
+        multimedia_upload = submission.submissionupload_set.get(
+            file='{0}/multimedia_table_Platypelis.csv'.format(
+                submission.broker_submission_id
+            )
+        )
+
+        self.assertEqual(3, len(submission.auditabletextdata_set.all()))
+
+        self.assertEqual(2, len(submission.submissionupload_set.all()))
+        # the specimen:
+        self.assertTrue(submission.submissionupload_set.first().meta_data)
+
+        # self.assertEqual(submission.target, response.data['target'])   ???which targets
         # after upload:
         self.assertEqual('ATAX', submission.target)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

@@ -17,7 +17,9 @@ from gfbio_submissions.brokerage.utils.csv_atax import \
     add_unit_data, add_data_set, add_technical_contacts, \
     add_content_contacts, add_meta_data, add_units, add_unit, \
     add_unit_data_measurement, is_float, xsplit,add_unit_id, \
-    add_necc_nodes_measurements, add_measurements_or_facts
+    add_necc_nodes_measurements, add_measurements_or_facts, \
+    add_unit_data_multimedia, add_necc_nodes_multimedia, \
+    add_multimediaobjects, add_multimediaobject
 
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 
@@ -83,13 +85,13 @@ abcd_mapping_multimedia_pathes = {
 
 abcd_mapping_multimedia = {
 'specimen identifier': 'UnitID',
-'File name': 'MultiMediaObject/ID',
-'File description': 'Context',
-'File type': 'Format',
-'IPR': 'Text',
-'License Holder': 'Copyright',
-'License Type': 'Text',
-'Creator': 'Creator',
+'file name': 'ID',
+'file description': 'Context',
+'file type': 'Format',
+'ipr': 'Disclaimer',
+'license holder': 'Copyright',
+'license type': 'LicenseText',
+'creator': 'Creator',
 }
 abcd_mapping_multimedia_keys = abcd_mapping_multimedia.keys()
 
@@ -247,7 +249,8 @@ class Ataxer(object):
             if isinstance(v, dict):
                 v = self.map_fields_multimedia(v, abcd_dict)
             if k in abcd_dict.keys():
-                result_dict[k] = v
+                k = str(abcd_dict[k])  # key is changed
+            result_dict[k] = v
         return result_dict
 
     def create_atax_submission_base_xml(self):
@@ -399,12 +402,12 @@ class Ataxer(object):
         csv_data = []
         csv_data_p = list(csv_reader)
         for rowdict in csv_data_p:
-            row = self.map_fields_specimen(rowdict, abcd_mapping_specimen)
+            row = self.map_fields_multimedia(rowdict, abcd_mapping_multimedia)
             csv_data.append(row)
 
         return csv_data
 
-    # now for sample file only
+    # now for specimen file only
     def convert_csv_data_to_xml(self, csv_data, units, keyword):
         # explicit procedure 'add_unit_data' to fill data records:
         length = len(csv_data)
@@ -450,27 +453,16 @@ class Ataxer(object):
 
         for child in self.root:
             print(child.tag, child.attrib)
-        length = len(csv_data)   ##csv_data is a double list [[]]
-        for item in csv_data:  #11 elems
-            i=-1
-            facts_node = False
-            for mdict in item:     #15 elems, ordered as list
-                i=i+1
+        length = len(csv_data)   #
+        for item in csv_data: #
+            if item.get('UnitID', None):
+                unit = add_unit(units, self.abcdns)
+                add_necc_nodes_multimedia(unit, self.abcdns, item.get('UnitID'))
+                add_unit_id(unit, self.abcdns, item.get('UnitID'))
+                multimediaobjects = add_multimediaobjects(unit, self.abcdns)
+                add_multimediaobject(multimediaobjects, self.abcdns, item.get('UnitID'),item)
 
-                single_dict = mdict  # dict with UnitID
-                if isinstance(single_dict, dict):
-                    if i == 0:
-                        if single_dict.get('UnitID', None):
-                            unit = add_unit(units, self.abcdns)
 
-                            add_necc_nodes_measurements(unit, self.abcdns, single_dict.get('UnitID'))
-                            add_unit_id(unit, self.abcdns, single_dict.get('UnitID'))
-                            # uncomment again!
-                            #multimediaobjects = add_multimediaobjects(unit, self.abcdns)
-                            facts_node = True
-                    else:
-                        if(facts_node):
-                            add_unit_data_multimedia(multimediaobjects, self.abcdns, single_dict.get('UnitID'), mdict)
 
     def finish_atax_xml(self, root):
 
@@ -566,7 +558,7 @@ def parse_taxonomic_csv_multimedia(submission, csv_file):
         # returns a list
         csv_data = ataxer.read_and_map_multimedia_csv(csv_file)
 
-        ataxer.convert_csv_data_to_xml(csv_data, units, 'multimedia')
+        ataxer.convert_multimedia_csv_data_to_xml(csv_data, units, 'multimedia')
 
         xml_string = ataxer.finish_atax_xml(root)
 
@@ -647,6 +639,91 @@ def update_specimen_measurements_abcd_xml(atax_submission_upload):
 
             xml_file_name = "test_measurement_csv"
             xml_file_name = xml_file_name + 'C.xml'
+            xml_file_name = ''.join(('xml_files/', xml_file_name))
+            # another path construction necessary here!
+            with open(os.path.join(_get_test_data_dir_path(), xml_file_name), 'wb') as f:
+
+                for child in tree_spec_root:
+                    print(child.tag, child.attrib)
+                tree = ET.ElementTree(tree_spec_root)
+                tree.write(f, encoding="utf-8", xml_declaration=True)  # , pretty_print=True, lxml only)
+                f.close()
+        except:
+            pass
+
+    return res_after_insert
+
+def update_specimen_multimedia_abcd_xml(atax_submission_upload):
+
+    if 'SPECIMEN' in atax_submission_upload.keys():
+
+        specimen_tuple = atax_submission_upload['SPECIMEN']
+        specimen_abcd = str(specimen_tuple[1])
+
+        #do this, if both specimen nd measurements are there:
+        if 'MULTIMEDIA' in atax_submission_upload.keys():
+            multimedia_tuple = atax_submission_upload['MULTIMEDIA']
+            multimedia_abcd = str(multimedia_tuple[1])
+
+            tree_mult_root = ET.fromstring(multimedia_abcd)
+            tree_spec_root = ET.fromstring(specimen_abcd)
+
+            #take the following from Ataxer:
+            xsi = "http://www.w3.org/2001/XMLSchema-instance"
+            abcd = "http://www.tdwg.org/schemas/abcd/2.06"
+            schemaLocation = " http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"
+
+            ET.register_namespace("abcd", "http://www.tdwg.org/schemas/abcd/2.06")
+            abcdns = "{" + abcd + "}"  # namespace abcd for creating Elements
+
+            result = {}
+
+            # namespaces
+            ns = {"xsi":xsi, "abcd":abcd}
+
+            units_collection = tree_mult_root.findall(".//{http://www.tdwg.org/schemas/abcd/2.06}Units")  #list of elements
+            #units_collection = tree_mult_root.findall(".//{ns[abcd]}Units")  # list of elements
+            # would this work:
+            #unit_collection_ = tree_mult_root.findall((".//{http://www.tdwg.org/schemas/abcd/2.06}Unit"))  # list of elements
+
+            # units is there max 1x
+            units_collection_string = ET.tostring(units_collection[0], encoding='unicode', method='xml')
+            units_root = ET.fromstring(units_collection_string)
+            # this should work with whole tree_meas_root too instead of subelement units_root!
+            unit_collection = units_root.findall(".//{http://www.tdwg.org/schemas/abcd/2.06}Unit")   #list of elements
+
+            # create dictionary for UnitID, MultimediaObjects  xml string
+            for unit in unit_collection:
+                unit_string = ET.tostring(unit, encoding='unicode', method='xml')
+                unit_root = ET.fromstring(unit_string)
+
+                unitid = unit_root.find(".//{http://www.tdwg.org/schemas/abcd/2.06}UnitID")       #Element
+                multis = unit_root.find(".//{http://www.tdwg.org/schemas/abcd/2.06}MultiMediaObjects")  #Element
+                unitid_content = unitid.text
+                result[unitid_content] = multis
+
+
+        # insert  MultimediaObjects into specimen part:
+        for unit_spec in tree_spec_root.findall(".//{http://www.tdwg.org/schemas/abcd/2.06}Unit"):
+
+            unitidstr = str(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}UnitID").text)
+
+            if unitidstr in result.keys():
+                #find all elemnts first order
+                #list_first_order = unit_spec.findall()
+                list_first_o2 = [elem.tag for elem in unit_spec.iter()]
+
+                unit_spec.append(result[unitidstr])  #element append measurements
+            #new for removing sex, this belongs in the sequence after MeasurementsOrFacts:
+
+        res_after_insert = ET.tostring(tree_spec_root, encoding='unicode', method='xml')
+
+        # test writing, remove:
+
+        try:
+
+            xml_file_name = "test_multimedia_csv"
+            xml_file_name = xml_file_name + 'MM.xml'
             xml_file_name = ''.join(('xml_files/', xml_file_name))
             # another path construction necessary here!
             with open(os.path.join(_get_test_data_dir_path(), xml_file_name), 'wb') as f:

@@ -113,6 +113,13 @@ def add_necc_nodes_measurements(parent, ns, unid):
     sourceid = SubElement(parent, ns + "SourceID")
     sourceid.text = unid[0:2]  # 'Place here SourceID'
 
+def add_necc_nodes_multimedia(parent, ns, unid):
+    # Following first nodes are necessary for abcd xml structure, here first with fictitious content:
+    sourceinstitutionid = SubElement(parent, ns + "SourceInstitutionID")
+    sourceinstitutionid.text = 'Place here SourceInstitutionID'
+    sourceid = SubElement(parent, ns + "SourceID")
+    sourceid.text = unid[0:2]  # 'Place here SourceID'
+
 def add_unit_id(parent, ns, unid):
     # UnitID is given as first element:
     unitid = SubElement(parent, ns + "UnitID")
@@ -253,7 +260,50 @@ def add_measurement_or_fact(parent, ns, unid, csvdict):
         isquantitative.text = str(csvdict.get('IsQuantitative'))
 
 
+def add_multimediaobjects(parent, ns):
+    multimediaobjects = SubElement(parent, ns + "MultiMediaObjects")
+    return multimediaobjects
 
+def add_multimediaobject(parent, ns, unid, csvdict):
+
+    multimediaobject = SubElement(parent, ns + "MultiMediaObject")
+    #measurementorfactatomised = SubElement(measurementorfact, ns + "MeasurementOrFactAtomised")
+
+    if csvdict.get('ID', None):
+        id = SubElement(multimediaobject, ns + "ID")
+        id.text = csvdict.get('ID')
+    if csvdict.get('Context', None):
+        context = SubElement(multimediaobject, ns + "Context")
+        context.text = csvdict.get('Context')
+    if csvdict.get('Format', None):
+        format = SubElement(multimediaobject, ns + "Format")
+        format.text = csvdict.get('Format')
+    if csvdict.get('Copyright', None) or csvdict.get('LicenseText', None):
+        ipr = SubElement(multimediaobject, ns + "IPR")
+
+        if csvdict.get('Copyright', None):
+            copyrights = SubElement(ipr, ns + "Copyrights")
+            copyright = SubElement(copyrights, ns + "Copyright", language="EN")
+            copyrighttext = SubElement(copyright, ns + "Text")
+            copyrighttext.text = csvdict.get('Copyright')
+        if csvdict.get('LicenseText', None):
+            licenses = SubElement(ipr, ns + "Licenses")
+            license = SubElement(licenses, ns + "License", language="EN")
+            licensetext = SubElement(license, ns + "Text")
+            licensetext.text = csvdict.get('LicenseText')
+            licenseuri = SubElement(license, ns + "URI")
+            licenseuri.text = "https://creativecommons.org/licenses/by-sa/4.0"
+        if csvdict.get('Disclaimer', None):
+            disclaimers = SubElement(ipr, ns + "Disclaimers")
+            disclaimer = SubElement(disclaimers, ns + "Disclaimer",  language="EN")
+            disclaimertext = SubElement(disclaimer, ns + "Text")
+            disclaimertext.text = csvdict.get('Disclaimer')
+
+    if csvdict.get('Creator', None):
+        creator = SubElement(multimediaobject, ns + "Creator")
+        creator.text = csvdict.get('Creator')
+
+    return multimediaobject
 
 # the units (lines of the csv file) are added one by one to the xml construct to build the specimen xml
 # to have faster access to the data content, the specimen_attributes are restructured from a list to a dictionary
@@ -275,23 +325,28 @@ def add_unit_data_measurement(parent, ns, unid, csvdict):
     add_measurement_or_fact(parent, ns, unid, csvdict)
     
 
+def add_unit_data_multimedia(parent, ns, unid, csvdict):
+
+    add_multimediaobject(parent, ns, unid, csvdict)
+
+
 def store_atax_data_as_auditable_text_data(submission, file_name_basis, data, comment):
 
     number_continuation = 0
     filecontent = data
     real_filename = comment
 
-    atax_xml_file_names_basis = ['specimen', 'measurement', 'multimedia', 'combination', ]
+    #atax_xml_file_names_basis = ['specimen', 'measurement', 'multimedia', 'combination', ]
 
     #build collection from all auditable data stored until now:
-    atax_submission_upload, n1, n2, n3, n4 = AuditableTextData.objects.assemble_atax_submission_uploads(
+    atax_submission_upload = AuditableTextData.objects.assemble_atax_submission_uploads(
         submission=submission)
-    if file_name_basis in atax_xml_file_names_basis[0]: number_continuation = n1
-    elif file_name_basis in atax_xml_file_names_basis[1]: number_continuation = n2
-    elif file_name_basis in atax_xml_file_names_basis[2]: number_continuation = n3
-    elif file_name_basis in atax_xml_file_names_basis[3]: number_continuation = n4
-
-    filename = file_name_basis +"_"+str(number_continuation+1)+".xml"
+    #if file_name_basis in atax_xml_file_names_basis[0]: number_continuation = n1
+    #elif file_name_basis in atax_xml_file_names_basis[1]: number_continuation = n2
+    #elif file_name_basis in atax_xml_file_names_basis[2]: number_continuation = n3
+    #elif file_name_basis in atax_xml_file_names_basis[3]: number_continuation = n4
+    # maybe count the single upload types later on
+    filename = file_name_basis   #+"_"+str(number_continuation+1)+".xml"
     logger.info(
         msg='store_atax_data_as_auditable_text_data create '
             'AuditableTextData | submission_pk={0} filename={1}'
