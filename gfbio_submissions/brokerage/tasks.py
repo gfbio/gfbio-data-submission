@@ -2858,10 +2858,34 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
                 combi_name='specimen'
                 #if 'COMBINATION' in atax_submission_upload.keys():
                 #if 'MEASUREMENT' in atax_submission_upload.keys():
-            if auditable_xml.name =='measurement':
+            if auditable_xml.name =='measurement' and combi_name:
                 specimen_abcd_updated, keys_found = update_specimen_measurements_abcd_xml(upload=atax_submission_upload, name=combi_name)
-            elif auditable_xml.name == 'multimedia':
+            elif auditable_xml.name == 'multimedia' and combi_name:
                 specimen_abcd_updated, keys_found = update_specimen_multimedia_abcd_xml(upload=atax_submission_upload, name=combi_name)
+            elif auditable_xml.name == 'specimen' and not combi_name:
+                # are there measurement data?
+                if len(submission_upload.submission.auditabletextdata_set.filter(name='measurement')):
+                    auditable_xml = submission_upload.submission.auditabletextdata_set.filter(
+                        name='measurement').first()
+                    if auditable_xml is not None:
+                        specimen_abcd_updated, keys_found_ms = update_specimen_measurements_abcd_xml(
+                            upload=atax_submission_upload, name='specimen')
+                        # store specimen plus measurements as combination:
+                        if specimen_abcd_updated is not None and len(specimen_abcd_updated) > 0:
+                            store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
+                                    file_name_basis='combination',
+                                    data=specimen_abcd_updated,
+                                    comment='specimen' + '   ' + auditable_xml.name)
+
+                # are there multimedia data?
+                if len(submission_upload.submission.auditabletextdata_set.filter(name='multimedia')):
+                    auditable_xml = submission_upload.submission.auditabletextdata_set.filter(
+                        name='multimedia').first()
+                    if auditable_xml is not None:
+                        specimen_abcd_updated, keys_found_m = update_specimen_multimedia_abcd_xml(
+                            upload=atax_submission_upload, name='combination')
+                combi_name = 'combination'
+
                 #validate the combined construct:
             errors = []
             #this reactivate!
