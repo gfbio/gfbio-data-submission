@@ -77,7 +77,7 @@ class TestAuditableTextDataManagerForAtax(TestCase):
           comment='specimen_reference_Platypelis.xml')
 
         platypelis1_xml = submission.auditabletextdata_set.filter(
-            name='specimen_1.xml')
+            name='specimen')
 
         self.assertEqual(1, len(platypelis1_xml))
         self.assertEqual(1, len(platypelis_xml))
