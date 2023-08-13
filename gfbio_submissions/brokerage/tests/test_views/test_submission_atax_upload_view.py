@@ -372,7 +372,28 @@ class TestSubmissionAtaxUploadView(TestCase):
             )
         )
 
+
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
+
+        combis = submission.auditabletextdata_set.filter(name='specimen')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='measurement')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='multimedia')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='combination')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
 
         self.assertEqual(3, len(submission.submissionupload_set.all()))
         # the specimen:
@@ -470,6 +491,26 @@ class TestSubmissionAtaxUploadView(TestCase):
 
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
 
+        combis = submission.auditabletextdata_set.filter(name='specimen')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='measurement')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='multimedia')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='combination')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
         self.assertEqual(3, len(submission.submissionupload_set.all()))
         # the specimen:
         self.assertTrue(submission.submissionupload_set.first().meta_data)
@@ -558,12 +599,12 @@ class TestSubmissionAtaxUploadView(TestCase):
                 submission.broker_submission_id
             )
         )
-        # why not?
-        #measurement_upload = submission.submissionupload_set.get(
-        #   file='{0}/measurement_table_Platypelis.csv'.format(
-        #       submission.broker_submission_id
-        #   )
-       # )
+
+        measurement_upload = submission.submissionupload_set.get(
+            file='{0}/measurement_table_Platypelis.csv'.format(
+               submission.broker_submission_id
+           )
+        )
         multimedia_upload = submission.submissionupload_set.get(
             file='{0}/multimedia_table_Platypelis.csv'.format(
                 submission.broker_submission_id
@@ -571,8 +612,27 @@ class TestSubmissionAtaxUploadView(TestCase):
         )
 
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
-        #two uploads only??
-        #self.assertEqual(3, len(submission.submissionupload_set.all()))
+        combis = submission.auditabletextdata_set.filter(name='specimen')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='measurement')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='multimedia')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='combination')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        self.assertEqual(3, len(submission.submissionupload_set.all()))
         # the specimen:
         #self.assertTrue(submission.submissionupload_set.first().meta_data)
 
@@ -659,7 +719,7 @@ class TestSubmissionAtaxUploadView(TestCase):
                 submission.broker_submission_id
             )
         )
-        # why not?
+
         measurement_upload = submission.submissionupload_set.get(
             file='{0}/measurement_table_Platypelis.csv'.format(
                 submission.broker_submission_id
@@ -672,7 +732,26 @@ class TestSubmissionAtaxUploadView(TestCase):
         )
 
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
-        # two uploads only??
+        combis = submission.auditabletextdata_set.filter(name='specimen')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='measurement')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='multimedia')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='combination')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
         self.assertEqual(3, len(submission.submissionupload_set.all()))
         # the specimen:
         # self.assertTrue(submission.submissionupload_set.first().meta_data)
@@ -773,7 +852,26 @@ class TestSubmissionAtaxUploadView(TestCase):
         )
         # no combination in this case, specimen is the last upload
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
-        # two uploads only??
+        combis = submission.auditabletextdata_set.filter(name='specimen')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='measurement')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='multimedia')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='combination')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
         self.assertEqual(3, len(submission.submissionupload_set.all()))
         # the specimen:
         # self.assertTrue(submission.submissionupload_set.first().meta_data)
@@ -861,7 +959,7 @@ class TestSubmissionAtaxUploadView(TestCase):
                 submission.broker_submission_id
             )
         )
-        # why not?
+
         measurement_upload = submission.submissionupload_set.get(
             file='{0}/measurement_table_Platypelis.csv'.format(
                 submission.broker_submission_id
@@ -874,7 +972,26 @@ class TestSubmissionAtaxUploadView(TestCase):
         )
 
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
-        # two uploads only??
+        combis = submission.auditabletextdata_set.filter(name='specimen')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='measurement')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='multimedia')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='combination')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
         self.assertEqual(3, len(submission.submissionupload_set.all()))
         # the specimen:
         # self.assertTrue(submission.submissionupload_set.first().meta_data)
