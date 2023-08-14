@@ -572,7 +572,6 @@ class SubmissionUpload(TimeStampedModel):
                     atax_submission_combine_xmls_to_one_structure_task, \
                     atax_submission_validate_xml_combination_task
 
-                #atax_direct = create_ataxer(self.submission)
                 chain = atax_submission_parse_csv_upload_to_xml_task.s(
                         submission_id=self.submission.pk,
                         submission_upload_id=self.pk).set(

@@ -54,8 +54,8 @@ from .utils.task_utils import jira_error_auto_retry, \
     jira_comment_replace
 from ..generic.utils import logged_requests
 from .utils.csv_atax import store_atax_data_as_auditable_text_data
-from .utils.atax import update_specimen_measurements_abcd_xml, \
-    update_specimen_multimedia_abcd_xml, create_ataxer, Ataxer
+from .utils.atax import update_specimen_with_measurements_abcd_xml, \
+    update_specimen_with_multimedia_abcd_xmlr
 
 logger = logging.getLogger(__name__)
 
@@ -2758,21 +2758,7 @@ def atax_submission_validate_xml_upload_task(self, previous_task_result=None,
 def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_result=None,
                                               submission_id=None, submission_upload_id=None):
 
-    #logger.info(
-    #   'tasks.py | jira_initial_comment_task | submission_id={}'.format(
-    #      submission_id))
 
-    # submission, site_config = get_submission_and_site_configuration(
-      #  submission_id=submission_id,
-       # task=self,
-      #  include_closed=False
-    # )
-    #if submission == TaskProgressReport.CANCELLED:
-     #   return TaskProgressReport.CANCELLED
-
-    # TODO: here it would be possible to get the related submission for the TaskReport
-    # maybe this is for the filename to extract from auditable text data
-    # or omit this and do this by passing the xml string as parameter
     report, created = TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
@@ -2788,7 +2774,6 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
     submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
         submission_upload_id)
 
-    # or test here if xml_string is None
     if submission_upload is None:
         logger.error(
             'tasks.py | atax_submission_combine_xmls_to_one_structure_task | '
@@ -2798,11 +2783,10 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
 
     report.submission = submission_upload.submission
 
-    # return  the auditabletextdata from Upload, [0] means first element in the upload list:
-    # precondition: is valid, has this addition
     upload_name = submission_upload.file.name.split('/')[-1:][0]
 
     text_to_validate=''
+    # each upload belongs to exactly one category (file names different):
     if len(submission_upload.submission.auditabletextdata_set.filter(atax_file_name=upload_name)):
         auditable_xml = submission_upload.submission.auditabletextdata_set.filter(
             atax_file_name=upload_name).first()
@@ -2811,18 +2795,11 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
                 'tasks.py | atax_auditable_task | no  textdata found | submission_id={0}'.format(
                     submission_upload.submission.broker_submission_id)
             )
-        # fname_of_first_upload = submission_upload.submission.auditabletextdata_set.filter(
-        #     comment=upload_name).first()
-        # if fname_of_first_upload is not None:
-        #    text_to_validate = fname_of_first_upload.text_data
 
-        # INSERTION of MEASUREMENT values into SPECIMEN
-        # if the specimen.xml should contain all the information
-        # build dictionary structure for auditable datas, present is the last upload only!
         specimen_abcd_updated = str()
         combi_name = str()
         combi_updated = False
-        keys_found = []  # UnitIds of measures or multimedias found in specimen or combination
+        keys_found = []  # UnitIds of measurements or multimedias, found in specimen or combination for later tests
 
         atax_submission_upload = AuditableTextData.objects.assemble_atax_submission_uploads(
             submission=submission_upload.submission)
@@ -2831,42 +2808,37 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
         elif len(atax_submission_upload)<=1:
             return None
         else:
-            #  integrate measurements or/ and multimedia into specimen.xml:
+            #  integrate measurements /multimedia into specimen.xml:
             if len(atax_submission_upload)>1 and 'COMBINATION' in atax_submission_upload.keys():
                 combi_name='combination'
-            #elif len(atax_submission_upload)>1 and 'SPECIMEN' in atax_submission_upload.keys():
-            #    combi_name='specimen'
-                #if 'COMBINATION' in atax_submission_upload.keys():
-                #if 'MEASUREMENT' in atax_submission_upload.keys():
-            if auditable_xml.name =='measurement' and combi_name:
-                specimen_abcd_updated, keys_found = update_specimen_measurements_abcd_xml(upload=atax_submission_upload, name=combi_name)
-            elif auditable_xml.name == 'multimedia' and combi_name:
-                specimen_abcd_updated, keys_found = update_specimen_multimedia_abcd_xml(upload=atax_submission_upload, name=combi_name)
-            elif auditable_xml.name == 'specimen':   # and combi_name!='combination':
+            # distinguish whether combination is already present or not:
+            if auditable_xml.name =='measurement' and bool(combi_name):
+                specimen_abcd_updated, keys_found = update_specimen_with_measurements_abcd_xml(upload=atax_submission_upload, name=combi_name)
+            elif auditable_xml.name == 'multimedia' and bool(combi_name):
+                specimen_abcd_updated, keys_found = update_specimen_with_multimedia_abcd_xml(upload=atax_submission_upload, name=combi_name)
+            elif auditable_xml.name == 'specimen':
                 # are there measurement data?
                 if len(submission_upload.submission.auditabletextdata_set.filter(name='measurement')):
                     auditable_xml = submission_upload.submission.auditabletextdata_set.filter(
                         name='measurement').first()
                     if auditable_xml is not None:
                         specimen_abcd_updated, keys_found_ms = update_specimen_measurements_abcd_xml(
-                            upload=atax_submission_upload, name='combination')   #name='specimen')
+                            upload=atax_submission_upload, name='combination')
                         # store specimen plus measurements as combination:
                         if specimen_abcd_updated is not None and len(specimen_abcd_updated) > 0:
                             store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
                                     data_type='combination',
                                     data=specimen_abcd_updated,
-                                    comment='combination with measurement',
+                                    comment='specimen combination with measurement',
                                     atax_file_name=auditable_xml.atax_file_name)
                             combi_updated = True
 
                 # are there multimedia data?
-                #refresh auditabeles
+                # refresh auditables
                 atax_submission_upload = AuditableTextData.objects.assemble_atax_submission_uploads(
                     submission=submission_upload.submission)
                 if len(atax_submission_upload) > 1 and 'COMBINATION' in atax_submission_upload.keys():
                     combi_name = 'combination'
-                #elif len(atax_submission_upload) > 1 and 'SPECIMEN' in atax_submission_upload.keys():
-                #    combi_name = 'specimen'
 
                 if len(submission_upload.submission.auditabletextdata_set.filter(name='multimedia')):
                     auditable_xml = submission_upload.submission.auditabletextdata_set.filter(
@@ -2878,50 +2850,21 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
                             store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
                                     data_type='combination',
                                     data=specimen_abcd_updated,
-                                    comment='combination with multimedia',
+                                    comment='specimen combination with multimedia',
                                     atax_file_name=auditable_xml.atax_file_name)
                             combi_updated = True
-                #combi_name = 'combination'
 
-                #validate the combined construct:
-            errors = []
-            #this reactivate!
-            # is_val, errors = validate_atax_data_is_valid(
-            #    schema_file='ABCD_2.06.XSD',
-            #    xml_string=specimen_abcd_updated  # string_xml_converted
-            #)
-            # if combination not valid:
-            if errors:
-                messages = [e.message for e in errors]
-                submission_upload.submission.data.update(
-                    {'validation of measurements integrated into specimen failed': messages})
-                report.task_exception_info = json.dumps({'validation of measurements integrated into specimen failed': messages})
 
-                report.save()
+            if combi_updated==False:
+                if specimen_abcd_updated is not None and len(specimen_abcd_updated) > 0:
+                    store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
+                                data_type='combination',
+                                data=specimen_abcd_updated,
+                                comment = 'combination',
+                                atax_file_name=auditable_xml.atax_file_name)
 
-                # submission_upload.submission.status = Submission.ERROR ?
-                submission_upload.submission.save()
-                return TaskProgressReport.CANCELLED
-
-            else:
-                # save enlarged xml structure (SPECIMEN and MEASUREMENT):
-
-                #specimen_tuple = atax_submission_upload['SPECIMEN']
-                #specimen_base = str(specimen_tuple[2])
-
-                #measurement_tuple = atax_submission_upload['MEASUREMENT']
-                #measurement_base = str(measurement_tuple[2])
-                if combi_updated==False:
-                    if specimen_abcd_updated is not None and len(specimen_abcd_updated) > 0:
-                        store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
-                                    data_type='combination',
-                                    data=specimen_abcd_updated,
-                                    comment = combi_name,
-                                    atax_file_name=auditable_xml.atax_file_name)
-                                    #comment=specimen_base+'    '+measurement_base)
-                        # for database entry of these auditable data:
-                submission_upload.submission.save()
-                return specimen_abcd_updated
+            submission_upload.submission.save()
+            return specimen_abcd_updated
 
         return True
 
@@ -2938,23 +2881,7 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
 )
 def atax_submission_validate_xml_combination_task(self, previous_task_result=None,
                                 submission_upload_id=None):
-    '''
-    if not submission_id:
-        return "submission_id not provided"
 
-    submission, site_config = get_submission_and_site_configuration(
-        submission_id=submission_id,
-        task=self,
-        include_closed=True
-    )
-    if submission == TaskProgressReport.CANCELLED:
-        return TaskProgressReport.CANCELLED
-
-    report, created = TaskProgressReport.objects.create_initial_report(
-        submission=None,
-        task=self)
-    report.submission = submission
-    '''
     submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
         submission_upload_id)
 
@@ -2963,7 +2890,6 @@ def atax_submission_validate_xml_combination_task(self, previous_task_result=Non
         task=self)
     report.submission = submission_upload.submission
 
-    # or test here if xml_string is None
     if submission_upload is None:
         logger.error(
             'tasks.py | atax_submission_combine_xmls_to_one_structure_task | '
@@ -2971,19 +2897,19 @@ def atax_submission_validate_xml_combination_task(self, previous_task_result=Non
             'submission_upload_id={0}'.format(submission_upload_id))
         return TaskProgressReport.CANCELLED
 
-    text_to_validate=''
     if len(submission_upload.submission.auditabletextdata_set.filter(name='combination')):
         auditable_xml_id = submission_upload.submission.auditabletextdata_set.filter(
             name='combination').first().pk
         if auditable_xml_id is None:
             logger.info(
-                'tasks.py | atax_auditable_task | no  textdata found | submission_id={0}'.format(
+                'tasks.py | atax_auditable_task | no  combination data found | submission_id={0}'.format(
                     submission_upload.submission.broker_submission_id)
             )
-        element_of_combination = submission_upload.submission.auditabletextdata_set.filter(
+        combination = submission_upload.submission.auditabletextdata_set.filter(
             name='combination').first()
-        if element_of_combination is not None:
-            text_to_validate = element_of_combination.text_data
+
+        if combination is not None:
+            text_to_validate = combination.text_data
 
             is_val, errors=validate_atax_data_is_valid(
                 schema_file='ABCD_2.06.XSD',
@@ -3004,9 +2930,9 @@ def atax_submission_validate_xml_combination_task(self, previous_task_result=Non
             else:
                 submission_upload.submission.save()
 
-                if element_of_combination is not None:
-                    element_of_combination.atax_xml_valid = True
-                    element_of_combination.save()
+                if combination is not None:
+                    combination.atax_xml_valid = True
+                    combination.save()
                 return text_to_validate
 
     else:

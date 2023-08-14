@@ -98,7 +98,7 @@ def add_data_set(parent, ns):
     return dataset
 
 def add_necc_nodes(parent, ns, unid):
-    # Following first nodes are necessary for abcd xml structure, here first with fictitious content:
+    # Following first nodes are necessary for abcd xml structure, here first with placeholder content:
     unitguid = SubElement(parent, ns + "UnitGUID")
     unitguid.text = 'Place here UnitGUID if there'
     sourceinstitutionid = SubElement(parent, ns + "SourceInstitutionID")
@@ -107,14 +107,14 @@ def add_necc_nodes(parent, ns, unid):
     sourceid.text = unid[0:2]  # 'Place here SourceID'
 
 def add_necc_nodes_measurements(parent, ns, unid):
-    # Following first nodes are necessary for abcd xml structure, here first with fictitious content:
+    # Following first nodes are necessary for abcd xml structure, here first with placeholder content:
     sourceinstitutionid = SubElement(parent, ns + "SourceInstitutionID")
     sourceinstitutionid.text = 'Place here SourceInstitutionID'
     sourceid = SubElement(parent, ns + "SourceID")
     sourceid.text = unid[0:2]  # 'Place here SourceID'
 
 def add_necc_nodes_multimedia(parent, ns, unid):
-    # Following first nodes are necessary for abcd xml structure, here first with fictitious content:
+    # Following first nodes are necessary for abcd xml structure, here first with placeholder content:
     sourceinstitutionid = SubElement(parent, ns + "SourceInstitutionID")
     sourceinstitutionid.text = 'Place here SourceInstitutionID'
     sourceid = SubElement(parent, ns + "SourceID")
@@ -152,11 +152,11 @@ def add_identifications(parent, ns, unid, csvdict):
     scientificname = SubElement(taxonidentified, ns + "ScientificName")
     fullscientificnamestring1 = SubElement(scientificname, ns + "FullScientificNameString")
     fullscientificnamestring1.text = csvdict.get(
-        'FullScientificNameString')  # csvdict['FullScientificNameString']   #'Place here FullScientificNameString'
+        'FullScientificNameString')
 
 def add_record_basis(parent, ns, csvdict):# structure: RecordBasis, with with mandatory fields:
     recordbasis = SubElement(parent, ns + "RecordBasis")
-    recordbasis.text = csvdict.get('RecordBasis')   #csvdict['RecordBasis']   #''place here fixed vocabulary for RecordBasis ,PreservedSpecimen'
+    recordbasis.text = csvdict.get('RecordBasis')   #''place here fixed vocabulary for RecordBasis ,PreservedSpecimen'
 
 def add_specimen_unit(parent, ns, csvdict):
     # structure: SpecimenUnit, with with non-mandatory fields:
@@ -240,8 +240,7 @@ def add_measurement_or_fact(parent, ns, unid, csvdict):
     if csvdict.get('Method', None):
         method = SubElement(measurementorfactatomised, ns + "Method")
         method.text = csvdict.get('Method')
-    # for key in csvdict.keys():
-    #if key not in known_fields and key == 'Parameter':
+
     if csvdict.get('Parameter', None):
         #   is already done: x=str(k).split("(",1)
         parameter = SubElement(measurementorfactatomised, ns + 'Parameter')
@@ -265,9 +264,8 @@ def add_multimediaobjects(parent, ns):
     return multimediaobjects
 
 def add_multimediaobject(parent, ns, unid, csvdict):
-
     multimediaobject = SubElement(parent, ns + "MultiMediaObject")
-    #measurementorfactatomised = SubElement(measurementorfact, ns + "MeasurementOrFactAtomised")
+
 
     if csvdict.get('ID', None):
         id = SubElement(multimediaobject, ns + "ID")
@@ -336,10 +334,6 @@ def store_atax_data_as_auditable_text_data(submission, data_type, data, comment,
     xmlfilecontent = data
     real_filename = atax_file_name
 
-    #build collection from all auditable data stored until now:
-    #atax_submission_upload = AuditableTextData.objects.assemble_atax_submission_uploads(
-    #    submission=submission)
-
     logger.info(
         msg='store_atax_data_as_auditable_text_data create '
             'AuditableTextData | submission_pk={0} typename={1}'
@@ -347,7 +341,7 @@ def store_atax_data_as_auditable_text_data(submission, data_type, data, comment,
     )
 
     with transaction.atomic():
-        # submission.auditabletextdata_set.all().delete()
+
         #textbytes = AuditableTextData.objects.create(
         #AuditableTextData.objects.create(
          #   name=filename,
@@ -363,9 +357,3 @@ def store_atax_data_as_auditable_text_data(submission, data_type, data, comment,
             submission=submission,
             defaults = updated_values
         )
-
-    #obj, created = submission_upload.submission.auditabletextdata_set.update_or_create(
-    #   name=filename,
-    #  defaults={'text_data': filecontent}
-    #)
-       #textbytes.save()
