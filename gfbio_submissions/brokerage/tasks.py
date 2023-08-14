@@ -55,7 +55,7 @@ from .utils.task_utils import jira_error_auto_retry, \
 from ..generic.utils import logged_requests
 from .utils.csv_atax import store_atax_data_as_auditable_text_data
 from .utils.atax import update_specimen_with_measurements_abcd_xml, \
-    update_specimen_with_multimedia_abcd_xmlr
+    update_specimen_with_multimedia_abcd_xml
 
 logger = logging.getLogger(__name__)
 
@@ -2822,7 +2822,7 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
                     auditable_xml = submission_upload.submission.auditabletextdata_set.filter(
                         name='measurement').first()
                     if auditable_xml is not None:
-                        specimen_abcd_updated, keys_found_ms = update_specimen_measurements_abcd_xml(
+                        specimen_abcd_updated, keys_found_ms = update_specimen_with_measurements_abcd_xml(
                             upload=atax_submission_upload, name='combination')
                         # store specimen plus measurements as combination:
                         if specimen_abcd_updated is not None and len(specimen_abcd_updated) > 0:
@@ -2844,7 +2844,7 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
                     auditable_xml = submission_upload.submission.auditabletextdata_set.filter(
                         name='multimedia').first()
                     if auditable_xml is not None:
-                        specimen_abcd_updated, keys_found_m = update_specimen_multimedia_abcd_xml(
+                        specimen_abcd_updated, keys_found_m = update_specimen_with_multimedia_abcd_xml(
                             upload=atax_submission_upload, name=combi_name)  #
                         if specimen_abcd_updated is not None and len(specimen_abcd_updated) > 0:
                             store_atax_data_as_auditable_text_data(submission=submission_upload.submission,

@@ -644,7 +644,7 @@ def update_specimen_with_measurements_abcd_xml(upload, name):
 
     return res_after_insert,  meas_keys_found
 
-def update_specimen_multimedia_abcd_xml(upload, name):
+def update_specimen_with_multimedia_abcd_xml(upload, name):
     # basis:
     if str(name).upper() in upload.keys():
         if str(name).upper() == 'COMBINATION':
