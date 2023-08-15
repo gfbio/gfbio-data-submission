@@ -2630,14 +2630,14 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
             store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
                         data_type=atax_xml_file_type,
                         data=xml_data_as_string,
-                        comment='single xml structure',
+                        comment='ABCD xml structure',
                         atax_file_name = os.path.basename(submission_upload.file.path))
             # store specimen additionally as combination
             if atax_xml_file_type==atax_xml_file_names_basis[0]:
                 store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
                         data_type=atax_xml_file_names_basis[3],
                         data=xml_data_as_string,
-                        comment='combined xml structure,   ',
+                        comment='ABCD xml structure',
                         atax_file_name = os.path.basename(submission_upload.file.path))
 
             return xml_data_as_string
@@ -2829,7 +2829,7 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
                             store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
                                     data_type='combination',
                                     data=specimen_abcd_updated,
-                                    comment='specimen combination with measurement',
+                                    comment='ABCD xml structure',
                                     atax_file_name=auditable_xml.atax_file_name)
                             combi_updated = True
 
@@ -2850,7 +2850,7 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
                             store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
                                     data_type='combination',
                                     data=specimen_abcd_updated,
-                                    comment='specimen combination with multimedia',
+                                    comment='ABCD xml structure',
                                     atax_file_name=auditable_xml.atax_file_name)
                             combi_updated = True
 
@@ -2860,7 +2860,7 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
                     store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
                                 data_type='combination',
                                 data=specimen_abcd_updated,
-                                comment = 'combination',
+                                comment = 'ABCD xml structure',
                                 atax_file_name=auditable_xml.atax_file_name)
 
             submission_upload.submission.save()

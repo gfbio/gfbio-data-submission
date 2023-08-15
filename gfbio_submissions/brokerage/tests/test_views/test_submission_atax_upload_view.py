@@ -297,7 +297,6 @@ class TestSubmissionAtaxUploadView(TestCase):
     @responses.activate
     def test_valid_atax_upload_post_with_combined_specimen_measurement_multimedia_data(self):
         submission = Submission.objects.first()
-
         self.assertEqual('ATAX', submission.target)
 
         url = reverse('brokerage:submissions_upload', kwargs={
@@ -305,56 +304,38 @@ class TestSubmissionAtaxUploadView(TestCase):
 
         responses.add(responses.POST, url, json={}, status=200)
         data = self._create_atax_csv_test_data(delete=False, meta_data=True)
-        # validation
         response = self.api_client.post(url, data, format='multipart')
-
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(submission.submissionupload_set.all()))
-        self.assertTrue(submission.submissionupload_set.first().meta_data)
 
-        #self.assertEqual(submission.target, response.data['target'])   ???which targets
-        #after upload:
-        self.assertEqual('ATAX', submission.target)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn(b'broker_submission_id', response.content)
-        self.assertIn(b'"id"', response.content)
-        self.assertIn(b'user', response.content)
         self.assertEqual(User.objects.first().username, response.data['user'])
         self.assertIn(b'file', response.content)
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))
 
         # start measurement:
-        # responses.add(responses.POST, url, json={}, status=200)
         submission = Submission.objects.first()
-
         self.assertEqual('ATAX', submission.target)
 
         url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
 
         data = self._create_atax_csv_measurement_data(delete=False, meta_data=False)
-        # validation
         response = self.api_client.post(url, data, format='multipart')
-
         self.assertEqual(201, response.status_code)
 
         # start multimedia:
-        # responses.add(responses.POST, url, json={}, status=200)
-        submission = Submission.objects.first()
 
+        submission = Submission.objects.first()
         self.assertEqual('ATAX', submission.target)
 
         url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
 
         data = self._create_atax_csv_multimedia_data(delete=False, meta_data=False)
-        # validation
         response = self.api_client.post(url, data, format='multipart')
-
         self.assertEqual(201, response.status_code)
-
-
 
         specimen_upload = submission.submissionupload_set.get(
             file='{0}/specimen_table_Platypelis.csv'.format(
@@ -371,7 +352,6 @@ class TestSubmissionAtaxUploadView(TestCase):
                 submission.broker_submission_id
             )
         )
-
 
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
 
@@ -396,25 +376,12 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertTrue(combi.atax_xml_valid)
 
         self.assertEqual(3, len(submission.submissionupload_set.all()))
-        # the specimen:
-        self.assertTrue(submission.submissionupload_set.first().meta_data)
-
-        #self.assertEqual(submission.target, response.data['target'])   ???which targets
-        # after upload:
-        self.assertEqual('ATAX', submission.target)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn(b'broker_submission_id', response.content)
-        self.assertIn(b'"id"', response.content)
-        self.assertIn(b'user', response.content)
-        self.assertEqual(User.objects.first().username, response.data['user'])
-        self.assertIn(b'file', response.content)
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))
 
     @responses.activate
     def test_valid_atax_upload_post_with_combined_specimen_multimedia_measurement_data(self):
         submission = Submission.objects.first()
-
         self.assertEqual('ATAX', submission.target)
 
         url = reverse('brokerage:submissions_upload', kwargs={
@@ -422,54 +389,37 @@ class TestSubmissionAtaxUploadView(TestCase):
 
         responses.add(responses.POST, url, json={}, status=200)
         data = self._create_atax_csv_test_data(delete=False, meta_data=True)
-        # validation
         response = self.api_client.post(url, data, format='multipart')
-
         self.assertEqual(201, response.status_code)
-        self.assertEqual(1, len(submission.submissionupload_set.all()))
-        self.assertTrue(submission.submissionupload_set.first().meta_data)
 
-        # self.assertEqual(submission.target, response.data['target'])   ???which targets
-        # after upload:
-        self.assertEqual('ATAX', submission.target)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn(b'broker_submission_id', response.content)
-        self.assertIn(b'"id"', response.content)
-        self.assertIn(b'user', response.content)
+        self.assertEqual(1, len(submission.submissionupload_set.all()))
+
         self.assertEqual(User.objects.first().username, response.data['user'])
         self.assertIn(b'file', response.content)
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))
 
         # start measurement:
-        # responses.add(responses.POST, url, json={}, status=200)
         submission = Submission.objects.first()
-
         self.assertEqual('ATAX', submission.target)
 
         url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
 
         data = self._create_atax_csv_multimedia_data(delete=False, meta_data=False)
-        # validation
         response = self.api_client.post(url, data, format='multipart')
-
         self.assertEqual(201, response.status_code)
         self.assertEqual(2, len(submission.submissionupload_set.all()))
 
         # start measurement:
-        # responses.add(responses.POST, url, json={}, status=200)
         submission = Submission.objects.first()
-
         self.assertEqual('ATAX', submission.target)
 
         url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
 
         data = self._create_atax_csv_measurement_data(delete=False, meta_data=False)
-        # validation
         response = self.api_client.post(url, data, format='multipart')
-
         self.assertEqual(201, response.status_code)
         self.assertEqual(3, len(submission.submissionupload_set.all()))
 
@@ -512,16 +462,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertTrue(combi.atax_xml_valid)
 
         self.assertEqual(3, len(submission.submissionupload_set.all()))
-        # the specimen:
-        self.assertTrue(submission.submissionupload_set.first().meta_data)
 
-        # self.assertEqual(submission.target, response.data['target'])   ???which targets
-        # after upload:
-        self.assertEqual('ATAX', submission.target)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn(b'broker_submission_id', response.content)
-        self.assertIn(b'"id"', response.content)
-        self.assertIn(b'user', response.content)
         self.assertEqual(User.objects.first().username, response.data['user'])
         self.assertIn(b'file', response.content)
         self.assertTrue(
@@ -530,10 +471,7 @@ class TestSubmissionAtaxUploadView(TestCase):
 
     @responses.activate
     def test_valid_atax_upload_post_with_combined_measurement_specimen_multimedia_data(self):
-
-        # start measurement:
         submission = Submission.objects.first()
-
         self.assertEqual('ATAX', submission.target)
 
         url = reverse('brokerage:submissions_upload', kwargs={
@@ -541,56 +479,33 @@ class TestSubmissionAtaxUploadView(TestCase):
 
         responses.add(responses.POST, url, json={}, status=200)
         data = self._create_atax_csv_measurement_data(delete=False, meta_data=True)
-        # validation
         response = self.api_client.post(url, data, format='multipart')
-
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(submission.submissionupload_set.all()))
-
-        #start specimen:
-        #submission = Submission.objects.first()
-
-        self.assertEqual('ATAX', submission.target)
 
         url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
 
         responses.add(responses.POST, url, json={}, status=200)
         data = self._create_atax_csv_test_data(delete=False, meta_data=True)
-        # validation
         response = self.api_client.post(url, data, format='multipart')
-
         self.assertEqual(201, response.status_code)
 
         self.assertIn(b'broker_submission_id', response.content)
-        # self.assertEqual(2, len(submission.submissionupload_set.all())) error??
-        #self.assertTrue(submission.submissionupload_set.first().meta_data)
-
-        # self.assertEqual(submission.target, response.data['target'])   ???which targets
-        # after upload:
-        self.assertEqual('ATAX', submission.target)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn(b'broker_submission_id', response.content)
-        self.assertIn(b'"id"', response.content)
-        self.assertIn(b'user', response.content)
         self.assertEqual(User.objects.first().username, response.data['user'])
         self.assertIn(b'file', response.content)
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))
 
         # start multimedia:
-        # responses.add(responses.POST, url, json={}, status=200)
-        #submission = Submission.objects.first()
-
+        submission = Submission.objects.first()
         self.assertEqual('ATAX', submission.target)
 
         url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
 
         data = self._create_atax_csv_multimedia_data(delete=False, meta_data=False)
-        # validation
         response = self.api_client.post(url, data, format='multipart')
-
         self.assertEqual(201, response.status_code)
         self.assertEqual(3, len(submission.submissionupload_set.all()))
 
@@ -599,7 +514,6 @@ class TestSubmissionAtaxUploadView(TestCase):
                 submission.broker_submission_id
             )
         )
-
         measurement_upload = submission.submissionupload_set.get(
             file='{0}/measurement_table_Platypelis.csv'.format(
                submission.broker_submission_id
@@ -633,16 +547,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertTrue(combi.atax_xml_valid)
 
         self.assertEqual(3, len(submission.submissionupload_set.all()))
-        # the specimen:
-        #self.assertTrue(submission.submissionupload_set.first().meta_data)
 
-        # self.assertEqual(submission.target, response.data['target'])   ???which targets
-        # after upload:
-        self.assertEqual('ATAX', submission.target)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn(b'broker_submission_id', response.content)
-        self.assertIn(b'"id"', response.content)
-        self.assertIn(b'user', response.content)
         self.assertEqual(User.objects.first().username, response.data['user'])
         self.assertIn(b'file', response.content)
         self.assertTrue(
@@ -650,10 +555,7 @@ class TestSubmissionAtaxUploadView(TestCase):
 
     @responses.activate
     def test_valid_atax_upload_post_with_combined_multimedia_specimen_measurement_data(self):
-
-        # start multimedia:
         submission = Submission.objects.first()
-
         self.assertEqual('ATAX', submission.target)
 
         url = reverse('brokerage:submissions_upload', kwargs={
@@ -661,15 +563,12 @@ class TestSubmissionAtaxUploadView(TestCase):
 
         responses.add(responses.POST, url, json={}, status=200)
         data = self._create_atax_csv_multimedia_data(delete=False)
-        # validation
         response = self.api_client.post(url, data, format='multipart')
-
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(submission.submissionupload_set.all()))
 
         # start specimen:
-        # submission = Submission.objects.first()
-
+        submission = Submission.objects.first()
         self.assertEqual('ATAX', submission.target)
 
         url = reverse('brokerage:submissions_upload', kwargs={
@@ -677,49 +576,32 @@ class TestSubmissionAtaxUploadView(TestCase):
 
         responses.add(responses.POST, url, json={}, status=200)
         data = self._create_atax_csv_test_data(delete=False, meta_data=True)
-        # validation
         response = self.api_client.post(url, data, format='multipart')
-
         self.assertEqual(201, response.status_code)
 
         self.assertIn(b'broker_submission_id', response.content)
-        # self.assertEqual(2, len(submission.submissionupload_set.all())) error??
-        # self.assertTrue(submission.submissionupload_set.first().meta_data)
 
-        # self.assertEqual(submission.target, response.data['target'])   ???which targets
-        # after upload:
-        self.assertEqual('ATAX', submission.target)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn(b'broker_submission_id', response.content)
-        self.assertIn(b'"id"', response.content)
-        self.assertIn(b'user', response.content)
         self.assertEqual(User.objects.first().username, response.data['user'])
         self.assertIn(b'file', response.content)
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))
 
         # start measurements:
-        # responses.add(responses.POST, url, json={}, status=200)
-        # submission = Submission.objects.first()
-
+        submission = Submission.objects.first()
         self.assertEqual('ATAX', submission.target)
 
         url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
 
         data = self._create_atax_csv_measurement_data(delete=False, meta_data=True)
-        # validation
         response = self.api_client.post(url, data, format='multipart')
-
         self.assertEqual(201, response.status_code)
-        # self.assertEqual(3, len(submission.submissionupload_set.all()))
 
         specimen_upload = submission.submissionupload_set.get(
             file='{0}/specimen_table_Platypelis.csv'.format(
                 submission.broker_submission_id
             )
         )
-
         measurement_upload = submission.submissionupload_set.get(
             file='{0}/measurement_table_Platypelis.csv'.format(
                 submission.broker_submission_id
@@ -753,16 +635,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertTrue(combi.atax_xml_valid)
 
         self.assertEqual(3, len(submission.submissionupload_set.all()))
-        # the specimen:
-        # self.assertTrue(submission.submissionupload_set.first().meta_data)
 
-        # self.assertEqual(submission.target, response.data['target'])   ???which targets
-        # after upload:
-        self.assertEqual('ATAX', submission.target)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn(b'broker_submission_id', response.content)
-        self.assertIn(b'"id"', response.content)
-        self.assertIn(b'user', response.content)
         self.assertEqual(User.objects.first().username, response.data['user'])
         self.assertIn(b'file', response.content)
         self.assertTrue(
@@ -771,9 +644,8 @@ class TestSubmissionAtaxUploadView(TestCase):
     @responses.activate
     def test_valid_atax_upload_post_with_combined_measurement_multimedia_specimen_data(self):
 
-        # start multimedia:
+        # start measurement:
         submission = Submission.objects.first()
-
         self.assertEqual('ATAX', submission.target)
 
         url = reverse('brokerage:submissions_upload', kwargs={
@@ -787,59 +659,37 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(submission.submissionupload_set.all()))
 
-        # start multimedia:
-        # submission = Submission.objects.first()
-
-        self.assertEqual('ATAX', submission.target)
-
         url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
 
         responses.add(responses.POST, url, json={}, status=200)
         data = self._create_atax_csv_multimedia_data(delete=False, meta_data=True)
-        # validation
         response = self.api_client.post(url, data, format='multipart')
-
         self.assertEqual(201, response.status_code)
 
         self.assertIn(b'broker_submission_id', response.content)
-        # self.assertEqual(2, len(submission.submissionupload_set.all())) error??
-        # self.assertTrue(submission.submissionupload_set.first().meta_data)
 
-        # self.assertEqual(submission.target, response.data['target'])   ???which targets
-        # after upload:
-        self.assertEqual('ATAX', submission.target)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn(b'broker_submission_id', response.content)
-        self.assertIn(b'"id"', response.content)
-        self.assertIn(b'user', response.content)
         self.assertEqual(User.objects.first().username, response.data['user'])
         self.assertIn(b'file', response.content)
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))
 
         # start measurements:
-        # responses.add(responses.POST, url, json={}, status=200)
-        # submission = Submission.objects.first()
-
+        submission = Submission.objects.first()
         self.assertEqual('ATAX', submission.target)
 
         url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
 
         data = self._create_atax_csv_test_data(delete=False, meta_data=True)
-        # validation
         response = self.api_client.post(url, data, format='multipart')
-
         self.assertEqual(201, response.status_code)
-        # self.assertEqual(3, len(submission.submissionupload_set.all()))
 
         specimen_upload = submission.submissionupload_set.get(
             file='{0}/specimen_table_Platypelis.csv'.format(
                 submission.broker_submission_id
             )
         )
-        # why not?
         measurement_upload = submission.submissionupload_set.get(
             file='{0}/measurement_table_Platypelis.csv'.format(
                 submission.broker_submission_id
@@ -850,7 +700,7 @@ class TestSubmissionAtaxUploadView(TestCase):
                  submission.broker_submission_id
             )
         )
-        # no combination in this case, specimen is the last upload
+
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
         combis = submission.auditabletextdata_set.filter(name='specimen')
         self.assertEqual(1, len(combis))
@@ -873,17 +723,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertTrue(combi.atax_xml_valid)
 
         self.assertEqual(3, len(submission.submissionupload_set.all()))
-        # the specimen:
-        # self.assertTrue(submission.submissionupload_set.first().meta_data)
 
-        # self.assertEqual(submission.target, response.data['target'])   ???which targets
-        # after upload:
-        self.assertEqual('ATAX', submission.target)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn(b'broker_submission_id', response.content)
-        self.assertIn(b'"id"', response.content)
-        self.assertIn(b'user', response.content)
-        self.assertEqual(User.objects.first().username, response.data['user'])
         self.assertIn(b'file', response.content)
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))
@@ -893,7 +733,6 @@ class TestSubmissionAtaxUploadView(TestCase):
 
         # start multimedia:
         submission = Submission.objects.first()
-
         self.assertEqual('ATAX', submission.target)
 
         url = reverse('brokerage:submissions_upload', kwargs={
@@ -901,15 +740,12 @@ class TestSubmissionAtaxUploadView(TestCase):
 
         responses.add(responses.POST, url, json={}, status=200)
         data = self._create_atax_csv_multimedia_data(delete=False, meta_data=True)
-        # validation
         response = self.api_client.post(url, data, format='multipart')
-
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(submission.submissionupload_set.all()))
 
         # start specimen:
-        # submission = Submission.objects.first()
-
+        submission = Submission.objects.first()
         self.assertEqual('ATAX', submission.target)
 
         url = reverse('brokerage:submissions_upload', kwargs={
@@ -917,49 +753,30 @@ class TestSubmissionAtaxUploadView(TestCase):
 
         responses.add(responses.POST, url, json={}, status=200)
         data = self._create_atax_csv_measurement_data(delete=False, meta_data=True)
-        # validation
         response = self.api_client.post(url, data, format='multipart')
-
         self.assertEqual(201, response.status_code)
 
-        self.assertIn(b'broker_submission_id', response.content)
-        self.assertEqual(2, len(submission.submissionupload_set.all())) #error??
-        # self.assertTrue(submission.submissionupload_set.first().meta_data)
-
-        # self.assertEqual(submission.target, response.data['target'])   ???which targets
-        # after upload:
-        self.assertEqual('ATAX', submission.target)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn(b'broker_submission_id', response.content)
-        self.assertIn(b'"id"', response.content)
-        self.assertIn(b'user', response.content)
-        self.assertEqual(User.objects.first().username, response.data['user'])
         self.assertIn(b'file', response.content)
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))
 
         # start measurements:
-        # responses.add(responses.POST, url, json={}, status=200)
-        # submission = Submission.objects.first()
-
+        submission = Submission.objects.first()
         self.assertEqual('ATAX', submission.target)
 
         url = reverse('brokerage:submissions_upload', kwargs={
             'broker_submission_id': submission.broker_submission_id})
 
         data = self._create_atax_csv_test_data(delete=False, meta_data=True)
-        # validation
         response = self.api_client.post(url, data, format='multipart')
-
         self.assertEqual(201, response.status_code)
-        # self.assertEqual(3, len(submission.submissionupload_set.all()))
+        self.assertEqual(3, len(submission.submissionupload_set.all()))
 
         specimen_upload = submission.submissionupload_set.get(
             file='{0}/specimen_table_Platypelis.csv'.format(
                 submission.broker_submission_id
             )
         )
-
         measurement_upload = submission.submissionupload_set.get(
             file='{0}/measurement_table_Platypelis.csv'.format(
                 submission.broker_submission_id
@@ -993,17 +810,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertTrue(combi.atax_xml_valid)
 
         self.assertEqual(3, len(submission.submissionupload_set.all()))
-        # the specimen:
-        # self.assertTrue(submission.submissionupload_set.first().meta_data)
 
-        # self.assertEqual(submission.target, response.data['target'])   ???which targets
-        # after upload:
-        self.assertEqual('ATAX', submission.target)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn(b'broker_submission_id', response.content)
-        self.assertIn(b'"id"', response.content)
-        self.assertIn(b'user', response.content)
-        self.assertEqual(User.objects.first().username, response.data['user'])
         self.assertIn(b'file', response.content)
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))
@@ -1021,14 +828,12 @@ class TestSubmissionAtaxUploadView(TestCase):
 
         responses.add(responses.POST, url, json={}, status=200)
         data = self._create_atax_multimedia_data(meta_data=False)
-        # validation
         response = self.api_client.post(url, data, format='multipart')
 
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(submission.submissionupload_set.all()))
         self.assertFalse(submission.submissionupload_set.first().meta_data)
 
-        #self.assertEqual(submission.target, response.data['target'])   #response upload target no longer used!
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @responses.activate
@@ -1050,12 +855,8 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertTrue(submission.submissionupload_set.first().meta_data)
         self.assertTrue(submission.status,Submission.ERROR)
 
-        #self.assertEqual(submission.target, response.data['target'])   #response upload target no longer used!
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn(b'broker_submission_id', response.content)
-        self.assertIn(b'"id"', response.content)
-        self.assertIn(b'user', response.content)
-        self.assertEqual(User.objects.first().username, response.data['user'])
+
         self.assertIn(b'file', response.content)
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))
@@ -1088,10 +889,7 @@ class TestSubmissionAtaxUploadView(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn(b'broker_submission_id', response.content)
-        #self.assertEqual(submission.target, response.data['target']) #response upload target no longer used!
-        self.assertIn(b'"id"', response.content)
-        self.assertIn(b'user', response.content)
-        self.assertEqual(User.objects.first().username, response.data['user'])
+
         self.assertIn(b'file', response.content)
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))

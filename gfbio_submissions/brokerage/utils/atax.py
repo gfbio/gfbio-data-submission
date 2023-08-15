@@ -630,7 +630,7 @@ def update_specimen_with_measurements_abcd_xml(upload, name):
         #test writing, remove:
         try:
 
-            xml_file_name = "further_upload"
+            xml_file_name = "additional_upload"
             xml_file_name = xml_file_name + 'SM.xml'
             xml_file_name = ''.join(('xml_files/', xml_file_name))
             # another path construction necessary here!
@@ -715,7 +715,7 @@ def update_specimen_with_multimedia_abcd_xml(upload, name):
         # test writing, remove:
         try:
 
-            xml_file_name = "further_upload"
+            xml_file_name = "additional_upload"
             xml_file_name = xml_file_name + 'MM.xml'
             xml_file_name = ''.join(('xml_files/', xml_file_name))
             # another path construction necessary here!
