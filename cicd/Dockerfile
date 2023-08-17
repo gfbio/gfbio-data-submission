@@ -1,5 +1,4 @@
-# TODO: was 3.8 but there were some incompabilities with 3rd party libraries
-FROM python:3.7-slim-buster
+FROM python:3.10-slim-bullseye
 
 ENV PYTHONUNBUFFERED 1
 
@@ -34,12 +33,12 @@ ARG USER_ID=998
 ARG GROUP_ID=997
 
 RUN addgroup --system --gid $GROUP_ID django \
-    && adduser --system --uid $USER_ID --ingroup django django
+  && adduser --system --uid $USER_ID --ingroup django django
 
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements /requirements
 RUN pip install --no-cache-dir -r /requirements/production.txt \
-    && rm -rf /requirements
+  && rm -rf /requirements
 
 COPY ./compose/production/django/entrypoint /entrypoint
 RUN sed -i 's/\r$//g' /entrypoint
