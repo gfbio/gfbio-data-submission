@@ -32,7 +32,6 @@ services:
     networks:
       - default
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - django_media:/app/gfbio_submissions/media
     command: /start
 
@@ -46,7 +45,6 @@ services:
     volumes:
       - production_postgres_data:/var/lib/postgresql/data
       - production_postgres_data_backups:/backups
-      - /etc/localtime:/etc/localtime:ro
     env_file:
       - ./.envs/.production/.postgres
     restart: always
@@ -62,7 +60,6 @@ services:
       - django
     volumes:
       - production_traefik:/etc/traefik/acme
-      - /etc/localtime:/etc/localtime:ro
     ports:
       - "0.0.0.0:80:80"
       - "0.0.0.0:443:443"
@@ -73,8 +70,6 @@ services:
     image: redis:6
     networks:
       - default
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
     restart: always
 
   celeryworker:
