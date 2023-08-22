@@ -497,7 +497,8 @@ class AuditableTextDataManager(models.Manager):
                     '{0}'.format(smart_str(obj.text_data)),
                     '{0}'.format(smart_str(obj.comment)),
                     '{0}'.format(smart_str(obj.atax_file_name)),
-                    '{0}'.format(smart_str(obj.atax_xml_valid)))
+                    '{0}'.format(smart_str(obj.atax_xml_valid)),
+                    '{0}'.format(smart_str(obj.atax_exp_index)))
 
 
         return res

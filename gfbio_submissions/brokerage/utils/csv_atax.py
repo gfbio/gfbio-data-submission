@@ -328,7 +328,7 @@ def add_unit_data_multimedia(parent, ns, unid, csvdict):
     add_multimediaobject(parent, ns, unid, csvdict)
 
 
-def store_atax_data_as_auditable_text_data(submission, data_type, data, comment, atax_file_name):
+def store_atax_data_as_auditable_text_data(submission, data_type, data, comment, atax_file_name, atax_exp_index):
 
     typename = data_type
     xmlfilecontent = data
@@ -350,7 +350,7 @@ def store_atax_data_as_auditable_text_data(submission, data_type, data, comment,
          #comment=real_filename
          #)
 
-        updated_values = {'text_data': xmlfilecontent, 'comment': comment, 'atax_file_name': atax_file_name}
+        updated_values = {'text_data': xmlfilecontent, 'comment': comment, 'atax_file_name': atax_file_name, 'atax_exp_index': atax_exp_index}
 
         AuditableTextData.objects.update_or_create(
             name=typename,

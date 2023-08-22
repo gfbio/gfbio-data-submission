@@ -578,14 +578,17 @@ class SubmissionUpload(TimeStampedModel):
                         countdown=SUBMISSION_RETRY_DELAY) \
                             | atax_submission_validate_xml_upload_task.s(
                         submission_id=self.submission.pk,
-                        submission_upload_id=self.pk).set(
+                        submission_upload_id=self.pk,
+                        is_combination=False).set(
                         countdown=SUBMISSION_RETRY_DELAY) \
                             | atax_submission_combine_xmls_to_one_structure_task.s(
                         submission_id=self.submission.pk,
                         submission_upload_id=self.pk).set(
                         countdown=SUBMISSION_RETRY_DELAY) \
-                            | atax_submission_validate_xml_combination_task.s(
-                        submission_upload_id=self.pk).set(
+                            | atax_submission_validate_xml_upload_task.s(
+                        submission_id=self.submission.pk,
+                        submission_upload_id=self.pk,
+                        is_combination=True).set(
                         countdown=SUBMISSION_RETRY_DELAY)
 
                 chain()
@@ -642,6 +645,12 @@ class AuditableTextData(TimeStampedModel):
         default=False,
         help_text="Result of the validation of the xml structure against abcd xml schema",
         verbose_name="validation status",
+    )
+
+    atax_exp_index = models.SmallIntegerField(
+        default=-1,
+        blank=True,
+        help_text='single uploads: exponents for powers of two, combination: sum of single upload powers of two'
     )
 
 

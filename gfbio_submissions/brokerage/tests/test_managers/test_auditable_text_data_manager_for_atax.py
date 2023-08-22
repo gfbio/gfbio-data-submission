@@ -64,14 +64,14 @@ class TestAuditableTextDataManagerForAtax(TestCase):
 
         data = self._create_atax_text_test_data()
         self.assertEqual(0, len(AuditableTextData.objects.all()))
-        store_atax_data_as_auditable_text_data(submission, 'specimen', data,'one test data set','specimen_table_Platypelis.csv')
+        store_atax_data_as_auditable_text_data(submission, 'specimen', data,'one test data set','specimen_table_Platypelis.csv', 1)
         self.assertEqual(1, len(AuditableTextData.objects.all()))
 
     def test_submission_store_xml_audit_file_and_filter_the_content(self):
         submission = Submission.objects.first()
         data = self._create_atax_xml_test_data()
         self.assertEqual(0, len(AuditableTextData.objects.all()))
-        store_atax_data_as_auditable_text_data(submission, 'specimen', data, 'one test data set','specimen_reference_Platypelis.xml')
+        store_atax_data_as_auditable_text_data(submission, 'specimen', data, 'one test data set','specimen_reference_Platypelis.xml',1)
 
         platypelis_xml = submission.auditabletextdata_set.filter(
           atax_file_name='specimen_reference_Platypelis.xml')
