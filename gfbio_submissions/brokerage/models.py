@@ -569,8 +569,7 @@ class SubmissionUpload(TimeStampedModel):
                 from .tasks import \
                     atax_submission_parse_csv_upload_to_xml_task, \
                     atax_submission_validate_xml_upload_task, \
-                    atax_submission_combine_xmls_to_one_structure_task, \
-                    atax_submission_validate_xml_combination_task
+                    atax_submission_combine_xmls_to_one_structure_task
 
                 chain = atax_submission_parse_csv_upload_to_xml_task.s(
                         submission_id=self.submission.pk,

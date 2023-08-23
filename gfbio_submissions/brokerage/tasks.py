@@ -2542,14 +2542,11 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
         'multimedia',
         'combination'
     ]
-    # atax_xml_file_names_basis = ['specimen', 'measurement', 'multimedia', 'combination',]
 
     logger.info(
         'tasks.py | atax_submission_parse_csv_upload_to_xml_task | submission_id={}'.format(
             submission_id))
 
-    # failed not in test, but in reality, reason?:
-    # submission, site_config = get_submission_and_site_configuration(...
 
     report, created = TaskProgressReport.objects.create_initial_report(
         submission=None,
@@ -2607,19 +2604,19 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
                 with open(submission_upload.file.path,
                           'r', encoding='utf-8-sig') as data_file:
                     xml_data_as_string = parse_taxonomic_csv_specimen(submission_upload.submission, data_file)
-                atax_xml_file_type = file_key   #atax_xml_file_names_basis[0]
+                atax_xml_file_type = file_key
                 ind = 0
             case 'measurement':
                 with open(submission_upload.file.path,
                           'r', encoding='utf-8-sig') as data_file:
                     xml_data_as_string = parse_taxonomic_csv_measurement(submission_upload.submission, data_file)
-                atax_xml_file_type = file_key   #atax_xml_file_names_basis[1]
+                atax_xml_file_type = file_key
                 ind = 1
             case 'multimedia':
                 with open(submission_upload.file.path,
                           'r', encoding='utf-8-sig') as data_file:
                     xml_data_as_string = parse_taxonomic_csv_multimedia(submission_upload.submission, data_file)
-                atax_xml_file_type = file_key   #atax_xml_file_names_basis[2]
+                atax_xml_file_type = file_key
                 ind = 2
             case _:
                 logger.warning(
@@ -2711,15 +2708,6 @@ def atax_submission_validate_xml_upload_task(self, previous_task_result=None,
         # get the stored xml string back from auditabletextdata:
         text_to_validate=''
         if len(submission_upload.submission.auditabletextdata_set.filter(atax_file_name=upload_name)):
-            '''
-            auditable_xml_id = submission_upload.submission.auditabletextdata_set.filter(
-                atax_file_name=upload_name).first().pk
-            if auditable_xml_id is None:
-                logger.info(
-                    'tasks.py | atax_submission_validate_xml_upload_task | no  xml converted upload found | submission_id={0}'.format(
-                        submission_upload.submission.broker_submission_id)
-                )
-            '''
             upload_by_file__name = submission_upload.submission.auditabletextdata_set.filter(
                 atax_file_name=upload_name).first()
     elif is_combination:
