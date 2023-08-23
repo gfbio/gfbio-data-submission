@@ -256,12 +256,20 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(1, len(submission.submissionupload_set.all()))
         self.assertTrue(submission.submissionupload_set.first().meta_data)
 
-        #self.assertEqual(submission.target, response.data['target'])   #response upload target no longer used!
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn(b'broker_submission_id', response.content)
-        self.assertIn(b'"id"', response.content)
-        self.assertIn(b'user', response.content)
-        self.assertEqual(User.objects.first().username, response.data['user'])
+        self.assertEqual(2, len(submission.auditabletextdata_set.all()))
+
+        combis = submission.auditabletextdata_set.filter(name='specimen')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+        combis = submission.auditabletextdata_set.filter(name='combination')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(atax_xml_valid=True)
+        self.assertEqual(2,len(combis))
+
         self.assertIn(b'file', response.content)
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))
@@ -284,12 +292,17 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(1, len(submission.submissionupload_set.all()))
         self.assertFalse(submission.submissionupload_set.first().meta_data)
 
-        #self.assertEqual(submission.target, response.data['target'])   #response upload target no longer used!
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn(b'broker_submission_id', response.content)
-        self.assertIn(b'"id"', response.content)
-        self.assertIn(b'user', response.content)
-        self.assertEqual(User.objects.first().username, response.data['user'])
+        combis = submission.auditabletextdata_set.filter(name='specimen')
+        self.assertEqual(0,len(combis))
+
+        combis = submission.auditabletextdata_set.filter(name='measurement')
+        self.assertEqual(1,len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='combination')
+        self.assertEqual(0, len(combis))
+
         self.assertIn(b'file', response.content)
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))
