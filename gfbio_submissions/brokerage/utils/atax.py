@@ -446,6 +446,7 @@ class Ataxer(object):
 
     def finish_atax_xml(self, root):
 
+        '''
         try:
             xml_file_name = "primary_upload"
             xml_file_name = xml_file_name + '.xml'
@@ -458,6 +459,7 @@ class Ataxer(object):
                 f.close()
         except:
             pass
+        '''
 
         try:
             # unicode is important , we need a string to continue!
@@ -628,6 +630,7 @@ def update_specimen_with_measurements_abcd_xml(upload, name):
         res_after_insert = ET.tostring( tree_spec_root, encoding='unicode', method='xml')
 
         #test writing, remove:
+        '''
         try:
 
             xml_file_name = "additional_upload"
@@ -641,6 +644,7 @@ def update_specimen_with_measurements_abcd_xml(upload, name):
                 f.close()
         except:
             pass
+        '''
 
     return res_after_insert,  meas_keys_found
 
@@ -713,6 +717,7 @@ def update_specimen_with_multimedia_abcd_xml(upload, name):
         res_after_insert = ET.tostring(tree_spec_root, encoding='unicode', method='xml')
 
         # test writing, remove:
+        '''
         try:
 
             xml_file_name = "additional_upload"
@@ -726,5 +731,5 @@ def update_specimen_with_multimedia_abcd_xml(upload, name):
                 f.close()
         except:
             pass
-
+        '''
     return res_after_insert, multi_keys_found
