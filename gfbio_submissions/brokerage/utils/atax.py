@@ -615,6 +615,11 @@ def update_specimen_with_measurements_abcd_xml(upload, name):
         # insert  MeasurementOrFacts into specimen part:
         for unit_spec in tree_spec_root.findall(".//{http://www.tdwg.org/schemas/abcd/2.06}Unit"):
 
+            #  for removing MeasurementsOrFacts,for updates also:
+            elem_facts = unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}MeasurementsOrFacts")
+            if elem_facts is not None:
+                unit_spec.remove(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}MeasurementsOrFacts"))
+
             found,pos=find_node_in_root(unit_spec, 'Sex')
             unitidstr = str(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}UnitID").text)
 
@@ -700,6 +705,10 @@ def update_specimen_with_multimedia_abcd_xml(upload, name):
 
         # insert  MultimediaObjects into specimen part:
         for unit_spec in tree_spec_root.findall(".//{http://www.tdwg.org/schemas/abcd/2.06}Unit"):
+
+            elem_multis = unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}MultimediaObjects")
+            if elem_multis is not None:
+                unit_spec.remove(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}MultimediaObjects"))
 
             unitidstr = str(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}UnitID").text)
 

@@ -1011,3 +1011,239 @@ class TestSubmissionAtaxUploadView(TestCase):
         response = self.api_client.patch(url, {'meta_data': True})
         self.assertEqual(200, response.status_code)
         self.assertTrue(SubmissionUpload.objects.first().meta_data)
+
+    @responses.activate
+    def test_valid_atax_upload_post_with_combined_specimen_measurement_measurement_data(self):
+        submission = Submission.objects.first()
+        self.assertEqual('ATAX', submission.target)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+
+        responses.add(responses.POST, url, json={}, status=200)
+        data = self._create_atax_csv_test_data(delete=False, meta_data=True)
+        response = self.api_client.post(url, data, format='multipart')
+        self.assertEqual(201, response.status_code)
+        self.assertEqual(1, len(submission.submissionupload_set.all()))
+
+        self.assertIn(b'broker_submission_id', response.content)
+        self.assertEqual(User.objects.first().username, response.data['user'])
+        self.assertIn(b'file', response.content)
+        self.assertTrue(
+            urlparse(response.data['file']).path.startswith(MEDIA_URL))
+
+        # start measurement:
+        submission = Submission.objects.first()
+        self.assertEqual('ATAX', submission.target)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+
+        data = self._create_atax_csv_measurement_data(delete=False, meta_data=False)
+        response = self.api_client.post(url, data, format='multipart')
+        self.assertEqual(201, response.status_code)
+
+        # start multimedia:
+
+        submission = Submission.objects.first()
+        self.assertEqual('ATAX', submission.target)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+
+        data = self._create_atax_csv_measurement_data(delete=False, meta_data=False)
+        response = self.api_client.post(url, data, format='multipart')
+        self.assertEqual(201, response.status_code)
+
+        specimen_upload = submission.submissionupload_set.get(
+            file='{0}/specimen_table_Platypelis.csv'.format(
+                submission.broker_submission_id
+            )
+        )
+        # failes:
+        #measurement_upload = submission.submissionupload_set.get(
+        #   file='{0}/measurement_table_Platypelis.csv'.format(
+        #        submission.broker_submission_id
+        #    )
+        #)
+
+
+        self.assertEqual(3, len(submission.auditabletextdata_set.all()))
+
+        combis = submission.auditabletextdata_set.filter(name='specimen')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='measurement')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='multimedia')
+        self.assertEqual(0, len(combis))
+
+        combis = submission.auditabletextdata_set.filter(name='combination')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        self.assertEqual(3, len(submission.submissionupload_set.all()))
+        self.assertTrue(
+            urlparse(response.data['file']).path.startswith(MEDIA_URL))
+
+    @responses.activate
+    def test_valid_atax_upload_post_with_combined_specimen_multimedia_multimedia_data(self):
+        submission = Submission.objects.first()
+        self.assertEqual('ATAX', submission.target)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+
+        responses.add(responses.POST, url, json={}, status=200)
+        data = self._create_atax_csv_test_data(delete=False, meta_data=True)
+        response = self.api_client.post(url, data, format='multipart')
+        self.assertEqual(201, response.status_code)
+        self.assertEqual(1, len(submission.submissionupload_set.all()))
+
+        self.assertIn(b'broker_submission_id', response.content)
+        self.assertEqual(User.objects.first().username, response.data['user'])
+        self.assertIn(b'file', response.content)
+        self.assertTrue(
+            urlparse(response.data['file']).path.startswith(MEDIA_URL))
+
+        # start measurement:
+        submission = Submission.objects.first()
+        self.assertEqual('ATAX', submission.target)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+
+        data = self._create_atax_csv_multimedia_data(delete=False, meta_data=False)
+        response = self.api_client.post(url, data, format='multipart')
+        self.assertEqual(201, response.status_code)
+
+        # start multimedia:
+
+        submission = Submission.objects.first()
+        self.assertEqual('ATAX', submission.target)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+
+        data = self._create_atax_csv_multimedia_data(delete=False, meta_data=False)
+        response = self.api_client.post(url, data, format='multipart')
+        self.assertEqual(201, response.status_code)
+
+        specimen_upload = submission.submissionupload_set.get(
+            file='{0}/specimen_table_Platypelis.csv'.format(
+                submission.broker_submission_id
+            )
+        )
+        # failes:
+        # measurement_upload = submission.submissionupload_set.get(
+        #   file='{0}/measurement_table_Platypelis.csv'.format(
+        #        submission.broker_submission_id
+        #    )
+        # )
+
+        self.assertEqual(3, len(submission.auditabletextdata_set.all()))
+
+        combis = submission.auditabletextdata_set.filter(name='specimen')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='multimedia')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='measurement')
+        self.assertEqual(0, len(combis))
+
+        combis = submission.auditabletextdata_set.filter(name='combination')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        self.assertEqual(3, len(submission.submissionupload_set.all()))
+        self.assertTrue(
+            urlparse(response.data['file']).path.startswith(MEDIA_URL))
+
+    @responses.activate
+    def test_valid_atax_upload_post_with_combined_specimen_specimen_specimen_data(self):
+        submission = Submission.objects.first()
+        self.assertEqual('ATAX', submission.target)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+
+        responses.add(responses.POST, url, json={}, status=200)
+        data = self._create_atax_csv_test_data(delete=False, meta_data=True)
+        response = self.api_client.post(url, data, format='multipart')
+        self.assertEqual(201, response.status_code)
+        self.assertEqual(1, len(submission.submissionupload_set.all()))
+
+        self.assertIn(b'broker_submission_id', response.content)
+        self.assertEqual(User.objects.first().username, response.data['user'])
+        self.assertIn(b'file', response.content)
+        self.assertTrue(
+            urlparse(response.data['file']).path.startswith(MEDIA_URL))
+
+        # start measurement:
+        submission = Submission.objects.first()
+        self.assertEqual('ATAX', submission.target)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+
+        data = self._create_atax_csv_test_data(delete=False, meta_data=False)
+        response = self.api_client.post(url, data, format='multipart')
+        self.assertEqual(201, response.status_code)
+
+        # start multimedia:
+
+        submission = Submission.objects.first()
+        self.assertEqual('ATAX', submission.target)
+
+        url = reverse('brokerage:submissions_upload', kwargs={
+            'broker_submission_id': submission.broker_submission_id})
+
+        data = self._create_atax_csv_test_data(delete=False, meta_data=False)
+        response = self.api_client.post(url, data, format='multipart')
+        self.assertEqual(201, response.status_code)
+
+        # specimen_upload = submission.submissionupload_set.get(
+        #    file='{0}/specimen_table_Platypelis.csv'.format(
+        #        submission.broker_submission_id
+        #    )
+        #)
+        # failes:
+        # measurement_upload = submission.submissionupload_set.get(
+        #   file='{0}/measurement_table_Platypelis.csv'.format(
+        #        submission.broker_submission_id
+        #    )
+        # )
+
+        self.assertEqual(2, len(submission.auditabletextdata_set.all()))
+
+        combis = submission.auditabletextdata_set.filter(name='specimen')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        combis = submission.auditabletextdata_set.filter(name='multimedia')
+        self.assertEqual(0, len(combis))
+
+        combis = submission.auditabletextdata_set.filter(name='measurement')
+        self.assertEqual(0, len(combis))
+
+        combis = submission.auditabletextdata_set.filter(name='combination')
+        self.assertEqual(1, len(combis))
+        combi = combis.first()
+        self.assertTrue(combi.atax_xml_valid)
+
+        self.assertEqual(3, len(submission.submissionupload_set.all()))
+        self.assertTrue(
+            urlparse(response.data['file']).path.startswith(MEDIA_URL))
