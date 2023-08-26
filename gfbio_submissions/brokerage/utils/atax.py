@@ -706,9 +706,9 @@ def update_specimen_with_multimedia_abcd_xml(upload, name):
         # insert  MultimediaObjects into specimen part:
         for unit_spec in tree_spec_root.findall(".//{http://www.tdwg.org/schemas/abcd/2.06}Unit"):
 
-            elem_multis = unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}MultimediaObjects")
+            elem_multis = unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}MultiMediaObjects")
             if elem_multis is not None:
-                unit_spec.remove(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}MultimediaObjects"))
+                unit_spec.remove(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}MultiMediaObjects"))
 
             unitidstr = str(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}UnitID").text)
 
@@ -741,4 +741,5 @@ def update_specimen_with_multimedia_abcd_xml(upload, name):
         except:
             pass
         '''
+        
     return res_after_insert, multi_keys_found
