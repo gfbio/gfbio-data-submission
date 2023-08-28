@@ -202,7 +202,7 @@ class SubmissionUploadView(mixins.CreateModelMixin,
                            generics.GenericAPIView):
     queryset = SubmissionUpload.objects.all()
     serializer_class = SubmissionUploadSerializer
-    parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
+    parser_classes = (parsers.MultiPartParser, parsers.FormParser, )
     authentication_classes = (TokenAuthentication, BasicAuthentication)
 
     # TODO: add permission class that checks if access to associated

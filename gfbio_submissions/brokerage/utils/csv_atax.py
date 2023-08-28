@@ -13,6 +13,19 @@ specimen_core_fields = [
     'specimen_identifier',
 ]
 
+def is_float(string):
+    try:
+        float(string)
+        return True
+    except ValueError:
+        return False
+
+
+def xsplit(delimiters, string, maxsplit=0):
+    import re
+    regex_pattern = '|'.join(map(re.escape, delimiters))
+    return re.split(regex_pattern, string, maxsplit)
+
 # methods to add necessary abcd nodes:
 def add_unit( parent, ns):
 
@@ -58,7 +71,7 @@ def add_unit(parent, ns):
     unit = SubElement(parent, ns + "Unit")
     return unit
 
-# the mandatory and non mandatory csv fields from first Vences example, mapped to ABCD terms
+# the mandatory and non mandatory csv specimen fields from first Vences example, mapped to ABCD terms
 lookup_list = ['UnitID',
     'RecordBasis',
     'FullScientificNameString',
@@ -93,10 +106,18 @@ def add_necc_nodes(parent, ns, unid):
     sourceid = SubElement(parent, ns + "SourceID")
     sourceid.text = unid[0:2]  # 'Place here SourceID'
 
+def add_necc_nodes_measurements(parent, ns, unid):
+    # Following first nodes are necessary for abcd xml structure, here first with fictitious content:
+    sourceinstitutionid = SubElement(parent, ns + "SourceInstitutionID")
+    sourceinstitutionid.text = 'Place here SourceInstitutionID'
+    sourceid = SubElement(parent, ns + "SourceID")
+    sourceid.text = unid[0:2]  # 'Place here SourceID'
+
 def add_unit_id(parent, ns, unid):
     # UnitID is given as first element:
     unitid = SubElement(parent, ns + "UnitID")
     unitid.text = unid
+    return unitid
 
 def add_identifications(parent, ns, unid, csvdict):
     # first structure: Identifications, with with non-mandatory and mandatory fields:
@@ -190,10 +211,53 @@ def add_sex(parent, ns, csvdict):
         sex = SubElement(parent, ns + "Sex")
         sex.text = csvdict.get('Sex')[:1]
 
+# for measurements:
+def add_measurements_or_facts(parent, ns):
+    measurementsorfacts = SubElement(parent, ns + "MeasurementsOrFacts")
+    return measurementsorfacts
 
-# the units (lines of the csv file) are added one by one to the xml construct
+def add_measurement_or_fact(parent, ns, unid, csvdict):
+
+    known_fields = ['MeasuredBy','MeasurementDateTime', 'Method']   #, 'AppliesTo',]
+    # first structure: Identifications, with with non-mandatory and mandatory fields:
+
+    measurementorfact = SubElement(parent, ns + "MeasurementOrFact")
+    measurementorfactatomised = SubElement(measurementorfact, ns + "MeasurementOrFactAtomised")
+
+    if csvdict.get('MeasuredBy', None):
+        measuredby = SubElement(measurementorfactatomised, ns + "MeasuredBy")
+        measuredby.text = csvdict.get('MeasuredBy')
+    if csvdict.get('MeasurementDateTime', None):
+        measurementdatetime = SubElement(measurementorfactatomised, ns + "MeasurementDateTime")
+        measurementdatetime.text = csvdict.get('MeasurementDateTime')
+    if csvdict.get('Method', None):
+        method = SubElement(measurementorfactatomised, ns + "Method")
+        method.text = csvdict.get('Method')
+    # for key in csvdict.keys():
+    #if key not in known_fields and key == 'Parameter':
+    if csvdict.get('Parameter', None):
+        #   is already done: x=str(k).split("(",1)
+        parameter = SubElement(measurementorfactatomised, ns + 'Parameter')
+        parameter.text = csvdict.get('Parameter')
+    if csvdict.get('AppliesTo', None):
+        appliesto = SubElement(measurementorfactatomised, ns + 'AppliesTo')
+        appliesto.text = csvdict.get('AppliesTo')
+    if csvdict.get('LowerValue', None):
+        lowervalue = SubElement(measurementorfactatomised, ns + 'LowerValue')
+        lowervalue.text = csvdict.get('LowerValue')
+    if csvdict.get('UnitOfMeasurement', None):
+        unitofmeasurement = SubElement(measurementorfactatomised, ns + 'UnitOfMeasurement')
+        unitofmeasurement.text = csvdict.get('UnitOfMeasurement')
+    if csvdict.get('IsQuantitative', None):
+        isquantitative = SubElement(measurementorfactatomised, ns + 'IsQuantitative')
+        isquantitative.text = str(csvdict.get('IsQuantitative'))
+
+
+
+
+# the units (lines of the csv file) are added one by one to the xml construct to build the specimen xml
 # to have faster access to the data content, the specimen_attributes are restructured from a list to a dictionary
-# the lookup_list  is not used here, it contains the mapped specimen attributes in its order
+# the lookup_list  is not used here, it contains the mapped specimen attributes in its necessary order
 def add_unit_data(parent, ns, unid, csvdict):
 
     add_necc_nodes(parent, ns, unid)
@@ -206,22 +270,42 @@ def add_unit_data(parent, ns, unid, csvdict):
     add_sex(parent, ns, csvdict)
 
 
-def store_atax_data_as_auditable_text_data(submission, file_name, data):
+def add_unit_data_measurement(parent, ns, unid, csvdict):
 
-    filename = file_name
+    add_measurement_or_fact(parent, ns, unid, csvdict)
+    
+
+def store_atax_data_as_auditable_text_data(submission, file_name_basis, data, comment):
+
+    number_continuation = 0
     filecontent = data
+    real_filename = comment
+
+    atax_xml_file_names_basis = ['specimen', 'measurement', 'multimedia', 'combination', ]
+
+    #build collection from all auditable data stored until now:
+    atax_submission_upload, n1, n2, n3, n4 = AuditableTextData.objects.assemble_atax_submission_uploads(
+        submission=submission)
+    if file_name_basis in atax_xml_file_names_basis[0]: number_continuation = n1
+    elif file_name_basis in atax_xml_file_names_basis[1]: number_continuation = n2
+    elif file_name_basis in atax_xml_file_names_basis[2]: number_continuation = n3
+    elif file_name_basis in atax_xml_file_names_basis[3]: number_continuation = n4
+
+    filename = file_name_basis +"_"+str(number_continuation+1)+".xml"
     logger.info(
-    msg='store_atax_data_as_auditable_text_data create '
-        'AuditableTextData | submission_pk={0} filename={1}'
-        ''.format(submission.pk, filename)
+        msg='store_atax_data_as_auditable_text_data create '
+            'AuditableTextData | submission_pk={0} filename={1}'
+            ''.format(submission.pk, filename)
     )
+
     with transaction.atomic():
         # submission.auditabletextdata_set.all().delete()
         #textbytes = AuditableTextData.objects.create(
         AuditableTextData.objects.create(
             name=filename,
             submission=submission,
-            text_data=filecontent
+            text_data=filecontent,
+            comment=real_filename
         )
 
        #textbytes.save()
