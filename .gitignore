@@ -56,6 +56,9 @@ staticfiles/
 # Sphinx documentation
 docs/_build/
 
+# old documentation
+.docs/
+
 # PyBuilder
 target/
 
@@ -362,3 +365,4 @@ userinterface/layout_playground/css/project.css
 userinterface/layout_playground/css/project.min.css
 
 
+/.docs/*
