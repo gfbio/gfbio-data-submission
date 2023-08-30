@@ -98,7 +98,7 @@ def add_data_set(parent, ns):
     return dataset
 
 def add_necc_nodes(parent, ns, unid):
-    # Following first nodes are necessary for abcd xml structure, here first with fictitious content:
+    # Following first nodes are necessary for abcd xml structure, here first with placeholder content:
     unitguid = SubElement(parent, ns + "UnitGUID")
     unitguid.text = 'Place here UnitGUID if there'
     sourceinstitutionid = SubElement(parent, ns + "SourceInstitutionID")
@@ -107,7 +107,14 @@ def add_necc_nodes(parent, ns, unid):
     sourceid.text = unid[0:2]  # 'Place here SourceID'
 
 def add_necc_nodes_measurements(parent, ns, unid):
-    # Following first nodes are necessary for abcd xml structure, here first with fictitious content:
+    # Following first nodes are necessary for abcd xml structure, here first with placeholder content:
+    sourceinstitutionid = SubElement(parent, ns + "SourceInstitutionID")
+    sourceinstitutionid.text = 'Place here SourceInstitutionID'
+    sourceid = SubElement(parent, ns + "SourceID")
+    sourceid.text = unid[0:2]  # 'Place here SourceID'
+
+def add_necc_nodes_multimedia(parent, ns, unid):
+    # Following first nodes are necessary for abcd xml structure, here first with placeholder content:
     sourceinstitutionid = SubElement(parent, ns + "SourceInstitutionID")
     sourceinstitutionid.text = 'Place here SourceInstitutionID'
     sourceid = SubElement(parent, ns + "SourceID")
@@ -145,11 +152,11 @@ def add_identifications(parent, ns, unid, csvdict):
     scientificname = SubElement(taxonidentified, ns + "ScientificName")
     fullscientificnamestring1 = SubElement(scientificname, ns + "FullScientificNameString")
     fullscientificnamestring1.text = csvdict.get(
-        'FullScientificNameString')  # csvdict['FullScientificNameString']   #'Place here FullScientificNameString'
+        'FullScientificNameString')
 
 def add_record_basis(parent, ns, csvdict):# structure: RecordBasis, with with mandatory fields:
     recordbasis = SubElement(parent, ns + "RecordBasis")
-    recordbasis.text = csvdict.get('RecordBasis')   #csvdict['RecordBasis']   #''place here fixed vocabulary for RecordBasis ,PreservedSpecimen'
+    recordbasis.text = csvdict.get('RecordBasis')   #''place here fixed vocabulary for RecordBasis ,PreservedSpecimen'
 
 def add_specimen_unit(parent, ns, csvdict):
     # structure: SpecimenUnit, with with non-mandatory fields:
@@ -233,8 +240,7 @@ def add_measurement_or_fact(parent, ns, unid, csvdict):
     if csvdict.get('Method', None):
         method = SubElement(measurementorfactatomised, ns + "Method")
         method.text = csvdict.get('Method')
-    # for key in csvdict.keys():
-    #if key not in known_fields and key == 'Parameter':
+
     if csvdict.get('Parameter', None):
         #   is already done: x=str(k).split("(",1)
         parameter = SubElement(measurementorfactatomised, ns + 'Parameter')
@@ -253,7 +259,49 @@ def add_measurement_or_fact(parent, ns, unid, csvdict):
         isquantitative.text = str(csvdict.get('IsQuantitative'))
 
 
+def add_multimediaobjects(parent, ns):
+    multimediaobjects = SubElement(parent, ns + "MultiMediaObjects")
+    return multimediaobjects
 
+def add_multimediaobject(parent, ns, unid, csvdict):
+    multimediaobject = SubElement(parent, ns + "MultiMediaObject")
+
+
+    if csvdict.get('ID', None):
+        id = SubElement(multimediaobject, ns + "ID")
+        id.text = csvdict.get('ID')
+    if csvdict.get('Context', None):
+        context = SubElement(multimediaobject, ns + "Context")
+        context.text = csvdict.get('Context')
+    if csvdict.get('Format', None):
+        format = SubElement(multimediaobject, ns + "Format")
+        format.text = csvdict.get('Format')
+    if csvdict.get('Copyright', None) or csvdict.get('LicenseText', None):
+        ipr = SubElement(multimediaobject, ns + "IPR")
+
+        if csvdict.get('Copyright', None):
+            copyrights = SubElement(ipr, ns + "Copyrights")
+            copyright = SubElement(copyrights, ns + "Copyright", language="EN")
+            copyrighttext = SubElement(copyright, ns + "Text")
+            copyrighttext.text = csvdict.get('Copyright')
+        if csvdict.get('LicenseText', None):
+            licenses = SubElement(ipr, ns + "Licenses")
+            license = SubElement(licenses, ns + "License", language="EN")
+            licensetext = SubElement(license, ns + "Text")
+            licensetext.text = csvdict.get('LicenseText')
+            licenseuri = SubElement(license, ns + "URI")
+            licenseuri.text = "https://creativecommons.org/licenses/by-sa/4.0"
+        if csvdict.get('Disclaimer', None):
+            disclaimers = SubElement(ipr, ns + "Disclaimers")
+            disclaimer = SubElement(disclaimers, ns + "Disclaimer",  language="EN")
+            disclaimertext = SubElement(disclaimer, ns + "Text")
+            disclaimertext.text = csvdict.get('Disclaimer')
+
+    if csvdict.get('Creator', None):
+        creator = SubElement(multimediaobject, ns + "Creator")
+        creator.text = csvdict.get('Creator')
+
+    return multimediaobject
 
 # the units (lines of the csv file) are added one by one to the xml construct to build the specimen xml
 # to have faster access to the data content, the specimen_attributes are restructured from a list to a dictionary
@@ -275,37 +323,37 @@ def add_unit_data_measurement(parent, ns, unid, csvdict):
     add_measurement_or_fact(parent, ns, unid, csvdict)
     
 
-def store_atax_data_as_auditable_text_data(submission, file_name_basis, data, comment):
+def add_unit_data_multimedia(parent, ns, unid, csvdict):
 
-    number_continuation = 0
-    filecontent = data
-    real_filename = comment
+    add_multimediaobject(parent, ns, unid, csvdict)
 
-    atax_xml_file_names_basis = ['specimen', 'measurement', 'multimedia', 'combination', ]
 
-    #build collection from all auditable data stored until now:
-    atax_submission_upload, n1, n2, n3, n4 = AuditableTextData.objects.assemble_atax_submission_uploads(
-        submission=submission)
-    if file_name_basis in atax_xml_file_names_basis[0]: number_continuation = n1
-    elif file_name_basis in atax_xml_file_names_basis[1]: number_continuation = n2
-    elif file_name_basis in atax_xml_file_names_basis[2]: number_continuation = n3
-    elif file_name_basis in atax_xml_file_names_basis[3]: number_continuation = n4
+def store_atax_data_as_auditable_text_data(submission, data_type, data, comment, atax_file_name, atax_exp_index):
 
-    filename = file_name_basis +"_"+str(number_continuation+1)+".xml"
+    typename = data_type
+    xmlfilecontent = data
+    real_filename = atax_file_name
+
     logger.info(
         msg='store_atax_data_as_auditable_text_data create '
-            'AuditableTextData | submission_pk={0} filename={1}'
-            ''.format(submission.pk, filename)
+            'AuditableTextData | submission_pk={0} typename={1}'
+            ''.format(submission.pk, typename)
     )
 
     with transaction.atomic():
-        # submission.auditabletextdata_set.all().delete()
-        #textbytes = AuditableTextData.objects.create(
-        AuditableTextData.objects.create(
-            name=filename,
-            submission=submission,
-            text_data=filecontent,
-            comment=real_filename
-        )
 
-       #textbytes.save()
+        #textbytes = AuditableTextData.objects.create(
+        #AuditableTextData.objects.create(
+         #   name=filename,
+         #  submission=submission,
+         # text_data=filecontent,
+         #comment=real_filename
+         #)
+
+        updated_values = {'text_data': xmlfilecontent, 'comment': comment, 'atax_file_name': atax_file_name, 'atax_exp_index': atax_exp_index}
+
+        AuditableTextData.objects.update_or_create(
+            name=typename,
+            submission=submission,
+            defaults = updated_values
+        )

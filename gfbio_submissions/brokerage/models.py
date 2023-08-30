@@ -569,24 +569,25 @@ class SubmissionUpload(TimeStampedModel):
                 from .tasks import \
                     atax_submission_parse_csv_upload_to_xml_task, \
                     atax_submission_validate_xml_upload_task, \
-                    atax_submission_combine_xmls_to_one_structure_task, \
-                    atax_submission_validate_xml_combination_task
+                    atax_submission_combine_xmls_to_one_structure_task
 
-                #atax_direct = create_ataxer(self.submission)
                 chain = atax_submission_parse_csv_upload_to_xml_task.s(
                         submission_id=self.submission.pk,
                         submission_upload_id=self.pk).set(
                         countdown=SUBMISSION_RETRY_DELAY) \
                             | atax_submission_validate_xml_upload_task.s(
                         submission_id=self.submission.pk,
-                        submission_upload_id=self.pk).set(
+                        submission_upload_id=self.pk,
+                        is_combination=False).set(
                         countdown=SUBMISSION_RETRY_DELAY) \
                             | atax_submission_combine_xmls_to_one_structure_task.s(
                         submission_id=self.submission.pk,
                         submission_upload_id=self.pk).set(
                         countdown=SUBMISSION_RETRY_DELAY) \
-                            | atax_submission_validate_xml_combination_task.s(
-                        submission_id=self.submission.pk).set(
+                            | atax_submission_validate_xml_upload_task.s(
+                        submission_id=self.submission.pk,
+                        submission_upload_id=self.pk,
+                        is_combination=True).set(
                         countdown=SUBMISSION_RETRY_DELAY)
 
                 chain()
@@ -631,6 +632,26 @@ class AuditableTextData(TimeStampedModel):
         blank=True,
         help_text='Free text. Any comments or useful information regarding this object'
     )
+
+    atax_file_name = models.CharField(
+        blank=True,
+        max_length=255,
+        default='',
+        help_text='Name of submission upload file'
+    )
+
+    atax_xml_valid = models.BooleanField(
+        default=False,
+        help_text="Result of the validation of the xml structure against abcd xml schema",
+        verbose_name="validation status",
+    )
+
+    atax_exp_index = models.SmallIntegerField(
+        default=-1,
+        blank=True,
+        help_text='single uploads: exponents for powers of two, combination: sum of single upload powers of two'
+    )
+
 
     objects = AuditableTextDataManager()
 

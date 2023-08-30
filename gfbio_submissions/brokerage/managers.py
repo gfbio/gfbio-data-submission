@@ -480,39 +480,28 @@ class AuditableTextDataManager(models.Manager):
         else:
             return None
 
-
     def assemble_atax_submission_uploads(self, submission):
-        # atax_xml_file_names = ['specimen_1.xml', 'measurement_1.xml', 'multimedia','combination',]
-        atax_xml_file_names = ['specimen', 'measurement', 'multimedia', 'combination', ]
-        request_file_keys = ['specimen', 'measurement', 'multimedia', 'combination', ]
-        # just one hit on the database, then work on queryset
-        numb_spec = 0
-        numb_meas = 0
-        numb_multi = 0
-        numb_comb = 0
-        # atax_uploads = self.filter(submission=submission).filter(
-        #    name__in=atax_xml_file_names)
-        # ob_list = data.objects.filter(reduce(lambda x, y: x | y, [Q(name__contains=word) for word in list]))
-        # atax_uploads = self.filter(submission=submission).filter(name__in=atax_xml_file_names)
 
-        atax_uploads = self.filter(submission=submission).filter(
-            name__regex=r'(specimen|measurement|multimedia|combination)')
+        request_file_keys = ['specimen', 'measurement', 'multimedia', 'combination' ]
+
+        atax_upload = self.filter(submission=submission).filter(
+            name__in=request_file_keys)
+
         res = {}
         for r in request_file_keys:
-            obj_qs = atax_uploads.filter(name__contains=r)
+            obj_qs = atax_upload.filter(name__contains=r)
             if len(obj_qs):
                 obj = obj_qs.first()
                 res[r.upper()] = (
                     '{0}'.format(smart_str(obj.name)),
                     '{0}'.format(smart_str(obj.text_data)),
-                    '{0}'.format(smart_str(obj.comment)))
+                    '{0}'.format(smart_str(obj.comment)),
+                    '{0}'.format(smart_str(obj.atax_file_name)),
+                    '{0}'.format(smart_str(obj.atax_xml_valid)),
+                    '{0}'.format(smart_str(obj.atax_exp_index)))
 
-                if str((obj.name)) in atax_xml_file_names[0]: numb_spec = numb_spec + 1
-                if str((obj.name)) in atax_xml_file_names[1]: numb_meas = numb_meas + 1
-                if str((obj.name)) in atax_xml_file_names[2]: numb_multi = numb_multi + 1
-                if str((obj.name)) in atax_xml_file_names[3]: numb_comb = numb_comb + 1
-        return res, numb_spec, numb_meas, numb_multi, numb_comb
 
+        return res
 
 # TODO: add tests
 class SubmissionUploadManager(models.Manager):
