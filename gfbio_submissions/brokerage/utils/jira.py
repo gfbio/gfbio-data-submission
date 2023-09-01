@@ -218,6 +218,7 @@ class JiraClient(object):
                 'function_called': '{}'.format(self.add_attachment)}
         }
         return_value = None
+        print('FILENAME : ', file_name)
         try:
             if file_name:
                 attachement = self.jira.add_attachment(issue=self.issue.key,

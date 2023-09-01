@@ -83,7 +83,7 @@ class TestAttachToIssueTasks(TestHelpDeskTasksBase):
         self.assertFalse(result.get())
 
     @responses.activate
-    def test_attach_to_issue_task(self):
+    def test_attach_t o_issue_task(self):
         self._prepare_responses()
         submission = Submission.objects.first()
 
