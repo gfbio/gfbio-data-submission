@@ -1581,9 +1581,13 @@ def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
             jira_client = JiraClient(
                 resource=site_configuration.helpdesk_server,
             )
+            file_name = None
+            if submission_upload.file.name:
+                file_name = submission_upload.file.name
             attachment = jira_client.add_attachment(
                 key=reference.reference_key,
                 file=submission_upload.file,
+                file_name=file_name.replace('/', '_'),
             )
 
             jira_error_auto_retry(jira_client=jira_client, task=self,

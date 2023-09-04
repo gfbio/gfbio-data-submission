@@ -209,6 +209,7 @@ class JiraClient(object):
     # file-like, string-path, stringIO (requires filename)
     def add_attachment(self, key, file, file_name=None):
         self.get_issue(key)
+        return_value = None
         log_arguments = {
             'method': RequestLog.POST,
             'data': {'key': key, 'file': '{}'.format(file)},
@@ -217,16 +218,16 @@ class JiraClient(object):
             'request_details': {
                 'function_called': '{}'.format(self.add_attachment)}
         }
-        return_value = None
-        print('FILENAME : ', file_name)
+        if self.issue is None:
+            log_arguments['data']['ERROR'] = 'no issue found for key {0}'.format(key)
+            RequestLog.objects.create_jira_log(log_arguments)
+            return return_value
         try:
-            if file_name:
-                attachement = self.jira.add_attachment(issue=self.issue.key,
-                                                       attachment=file,
-                                                       filename=file_name)
-            else:
-                attachement = self.jira.add_attachment(issue=self.issue.key,
-                                                       attachment=file)
+            if file_name is None:
+                file_name = '{0}_fallback_filename'.format(self.issue.key)
+            attachement = self.jira.add_attachment(issue=self.issue.key,
+                                                   attachment=file,
+                                                   filename=file_name)
             log_arguments['response_content'] = attachement.raw
             return_value = attachement
         except JIRAError as e:

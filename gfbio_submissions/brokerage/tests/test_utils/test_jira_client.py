@@ -378,6 +378,47 @@ class TestJiraClient(TestCase):
         self.assertIsNone(jira_client.error)
 
     @responses.activate
+    def test_add_attachment_no_filename(self):
+        # self._add_create_ticket_responses(json_content=self.issue_json)
+        self._add_jira_field_response()
+        self._add_jira_issue_response(json_content=self.issue_json)
+        responses.add(responses.POST,
+                      '{0}{1}/{2}/{3}'.format(
+                          self.site_config.helpdesk_server.url,
+                          JIRA_ISSUE_URL,
+                          'SAND-1661',
+                          JIRA_ATTACHMENT_SUB_URL,
+                      ),
+                      json=_get_jira_attach_response(),
+                      status=200)
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+
+        attachment = StringIO()
+        attachment.write(':-)')
+        res = jira_client.add_attachment('SAND-1661', attachment)
+        attachment.close()
+        self.assertIsInstance(res, jira.resources.Attachment)
+        self.assertIsNone(jira_client.error)
+
+    @responses.activate
+    def test_add_attachment_no_issue(self):
+        responses.add(
+            responses.GET,
+            '{0}/rest/api/2/issue/SAND-1661'.format(
+                self.site_config.helpdesk_server.url),
+            status=404,
+            json={'errorMessages': ['Issue Does Not Exist'], 'errors': {}},
+        )
+        jira_client = JiraClient(resource=self.site_config.helpdesk_server)
+
+        attachment = StringIO()
+        attachment.write(':-)')
+        res = jira_client.add_attachment('SAND-1661', attachment)
+        attachment.close()
+        self.assertIsNone(res, jira.resources.Attachment)
+        self.assertIsNotNone(jira_client.error)
+
+    @responses.activate
     def test_add_attachment_client_error(self):
         self._add_jira_field_response()
         self._add_jira_issue_response(json_content=self.issue_json)
