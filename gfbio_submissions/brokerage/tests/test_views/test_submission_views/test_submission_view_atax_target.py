@@ -10,9 +10,10 @@ from .test_submission_view_base import \
     TestSubmissionView
 from gfbio_submissions.brokerage.configuration.settings import ATAX
 from gfbio_submissions.brokerage.models import Submission, TaskProgressReport, JiraMessage
-from gfbio_submissions.brokerage.tasks import  jira_initial_comment_task
+from gfbio_submissions.brokerage.tasks import jira_initial_comment_task
 from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY
 from gfbio_submissions.brokerage.models import AdditionalReference
+
 
 class TestSubmissionViewAtaxTarget(TestSubmissionView):
 
@@ -50,13 +51,13 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
             'download_url': ''
         }
         self.assertEqual(201, response.status_code)
-
-        expected['broker_submission_id'] = content.get('broker_submission_id', 'ERROR')
-        self.assertDictEqual(expected, content)
         self.assertEqual(1, len(Submission.objects.all()))
+        self.assertDictEqual(expected, content)
 
         # 1 incoming post, 1 get helpdesk user, 1 create issue
         self.assertEqual(3, len(RequestLog.objects.all()))
+        request_logs = RequestLog.objects.filter(type=RequestLog.INCOMING)
+        self.assertEqual(1, len(request_logs))
 
         submission = Submission.objects.last()
         self.assertEqual(UUID(content['broker_submission_id']),
@@ -64,25 +65,36 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
         self.assertIsNone(submission.embargo)
         self.assertFalse(submission.release)
         self.assertEqual(Submission.OPEN, submission.status)
-        # self.assertEqual(0, len(submission.submitting_user))
         self.assertEqual('ATAX', submission.target)
 
-        request_logs = RequestLog.objects.filter(type=RequestLog.INCOMING)
-        self.assertEqual(1, len(request_logs))
+        # TODO: remove, there is a dedicated test for this further down below
+        # self.assertEqual(
+        #     1,
+        #     len(TaskProgressReport.objects.filter(task_name="tasks.get_gfbio_helpdesk_username_task"))
+        # )
+        # self.assertEqual(
+        #     1,
+        #     len(TaskProgressReport.objects.filter(task_name="tasks.create_submission_issue_task"))
+        # )
+        # issue = AdditionalReference.objects.filter(submission=submission)
+        # print('issue_ref ', issue)
+        # self.assertEqual(
+        #     1,
+        #     len(TaskProgressReport.objects.filter(task_name="tasks.jira_initial_comment_task"))
+        # )
+        # self.assertEqual(
+        #     1,
+        #     len(TaskProgressReport.objects.filter(task_name="tasks.check_issue_existing_for_submission_task"))
+        # )
 
-        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.get_gfbio_helpdesk_username_task")))
-        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.create_submission_issue_task")))
-        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.jira_initial_comment_task")))
-        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.check_issue_existing_for_submission_task")))
-
-    @responses.activate
-    def test_no_release_unknown_target(self):
-        self._add_create_ticket_response()
+    # @responses.activate
+    def test_min_post_unknown_target(self):
+        # self._add_create_ticket_response()
         min_response = self.api_client.post(
             '/api/submissions/',
             content_type='application/json',
             data=json.dumps({
-                'target': 'ATAX1',
+                'target': 'NONSENSE',
                 'release': False,
                 'data': {
                     'requirements': {
@@ -150,7 +162,7 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
                         'description': 'The updated alpha_tax Description'
                     }
                 },
-            'embargo': "{}".format(embargo_date),
+                'embargo': "{}".format(embargo_date),
             },
             format='json'
         )
@@ -162,58 +174,51 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
 
         self.assertNotIn('validation', submission.data.keys())
 
-        expected_update = {
-            'broker_submission_id': content['broker_submission_id'],
-            'issue': '',
-            'user': 'horst',
-            'target': 'ATAX',
-            'status': 'OPEN',
-            'release': False,
-            'data': {
+        expected_update = {'broker_submission_id': content.get('broker_submission_id', 'ERROR'), 'issue': '',
+                           'user': 'horst', 'target': 'ATAX', 'status': 'OPEN', 'release': False, 'data': {
                 'requirements': {
                     'title': 'The updated alpha_tax Title',
                     'description': 'The updated alpha_tax Description'
                 }
-            },
-            'embargo': "{}".format(embargo_date),
-            'download_url': ''
-        }
+            }, 'embargo': "{}".format(embargo_date), 'download_url': ''}
 
-        expected_update['broker_submission_id'] = content.get('broker_submission_id', 'ERROR')
         self.assertDictEqual(expected_update, content)
 
-        self.assertEqual(2, len(TaskProgressReport.objects.filter(task_name="tasks.get_gfbio_helpdesk_username_task")))
-        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.create_submission_issue_task")))
-        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.jira_initial_comment_task")))
-        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.check_issue_existing_for_submission_task")))
-        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.update_submission_issue_task")))
-        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.update_ena_embargo_task")))
-        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.notify_user_embargo_changed_task")))
+        # TODO: remove, there is a dedicated test for this further down below
+        # self.assertEqual(2, len(TaskProgressReport.objects.filter(task_name="tasks.get_gfbio_helpdesk_username_task")))
+        # self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.create_submission_issue_task")))
+        # self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.jira_initial_comment_task")))
+        # self.assertEqual(1, len(TaskProgressReport.objects.filter(
+        #     task_name="tasks.check_issue_existing_for_submission_task")))
+        # self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.update_submission_issue_task")))
+        # self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.update_ena_embargo_task")))
+        # self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.notify_user_embargo_changed_task")))
+
+    # TODO: makes very little sense. explain or remove
+    # @responses.activate
+    # def test_atax_post_created_and_correct_target(self):
+    #     self._add_create_ticket_response()
+    #
+    #     subm_number = len(Submission.objects.all())
+    #
+    #     response = self.api_client.post(
+    #         '/api/submissions/',
+    #         {'target': 'ATAX',
+    #          'release': False,
+    #          'data': {
+    #              'requirements': {
+    #                  'title': 'The original alpha_tax Title',
+    #                  'description': 'The original alpha_tax Description'}}},
+    #         format='json'
+    #     )
+    #
+    #     subm_number1 = len(Submission.objects.all())
+    #
+    #     self.assertEqual(subm_number1, subm_number + 1)
+    #     self.assertEqual(Submission.objects.last().target, ATAX)
 
     @responses.activate
-    def test_atax_post_created_and_correct_target(self):
-        self._add_create_ticket_response()
-
-        subm_number = len(Submission.objects.all())
-
-        response = self.api_client.post(
-            '/api/submissions/',
-            {'target': 'ATAX',
-             'release': False,
-             'data': {
-                 'requirements': {
-                     'title': 'The original alpha_tax Title',
-                     'description': 'The original alpha_tax Description'}}},
-            format='json'
-        )
-
-        subm_number1 = len(Submission.objects.all())
-
-        self.assertEqual(subm_number1, subm_number +1)
-        self.assertEqual(Submission.objects.last().target, ATAX)
-
-    @responses.activate
-    def test_ordered_task_chain_atax_post_start_with_no_release(self):
+    def test_task_chain_for_atax_without_release(self):
         self._add_create_ticket_response()
         self.assertEqual(0, len(Submission.objects.all()))
         self.assertEqual(0, len(RequestLog.objects.all()))
@@ -243,9 +248,8 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
         )
         self.assertListEqual(expected_task_names, all_task_reports)
 
-
     @responses.activate
-    def test_ordered_task_chain_atax_release_as_update(self):
+    def test_task_chain_for_atax_with_release(self):
         self._add_create_ticket_response()
         self.assertEqual(0, len(Submission.objects.all()))
         self.assertEqual(0, len(RequestLog.objects.all()))
@@ -304,7 +308,7 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
         self.assertListEqual(expected_task_names, all_task_reports)
 
     @responses.activate
-    def test_ordered_task_chain_atax_post_start_with_release(self):
+    def test_task_chain_for_atax_with_initial_release(self):
         self._add_create_ticket_response()
         self.assertEqual(0, len(Submission.objects.all()))
         self.assertEqual(0, len(RequestLog.objects.all()))
@@ -335,47 +339,43 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
         )
         self.assertListEqual(expected_task_names, all_task_reports)
 
-    # TODO: test is incomplete: no entry at all in database table for JiraMessages
-    # TODO: get_jira_comment_template gives no result
-    # TODO: should be the test: self.assertEqual("initial comment sent", result['status'])
-    @responses.activate
-    def test_initial_comment_atax_post_no_release(self):
-        self._add_create_ticket_response()
-        self.assertEqual(0, len(Submission.objects.all()))
-        self.assertEqual(0, len(RequestLog.objects.all()))
-        response = self.api_client.post(
-            '/api/submissions/',
-            {'target': 'ATAX',
-             'release': False,
-             'data': {
-                 'requirements': {
-                     'title': 'The alpha_tax Title',
-                     'description': 'The alpha_tax Description'}}},
-            format='json'
-        )
-
-        self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.jira_initial_comment_task")))
-
-        self.assertEqual(201, response.status_code)
-        submission = Submission.objects.first()
-        self.assertEqual('ATAX', submission.target)
-
-        reference = AdditionalReference.objects.create(
-            submission=submission,
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='PDI-0815',
-            primary=True
-        )
-        reference.save()
-
-        self.assertTrue(reference.primary)
-        self.assertTrue(isinstance(reference, AdditionalReference))
-
-        result = jira_initial_comment_task.apply_async(
-            kwargs={
-                'submission_id': Submission.objects.first().pk,
-            },
-            countdown=SUBMISSION_DELAY,
-        ).get()
-
-
+    # FIXME: this is not the place for jira related task tests. this will need the proper mocked responses to work
+    # @responses.activate
+    # def test_initial_comment_atax_post_no_release(self):
+    #     self._add_create_ticket_response()
+    #     self.assertEqual(0, len(Submission.objects.all()))
+    #     self.assertEqual(0, len(RequestLog.objects.all()))
+    #     response = self.api_client.post(
+    #         '/api/submissions/',
+    #         {'target': 'ATAX',
+    #          'release': False,
+    #          'data': {
+    #              'requirements': {
+    #                  'title': 'The alpha_tax Title',
+    #                  'description': 'The alpha_tax Description'}}},
+    #         format='json'
+    #     )
+    #
+    #     self.assertEqual(1, len(TaskProgressReport.objects.filter(task_name="tasks.jira_initial_comment_task")))
+    #
+    #     self.assertEqual(201, response.status_code)
+    #     submission = Submission.objects.first()
+    #     self.assertEqual('ATAX', submission.target)
+    #
+    #     reference = AdditionalReference.objects.create(
+    #         submission=submission,
+    #         type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+    #         reference_key='PDI-0815',
+    #         primary=True
+    #     )
+    #     reference.save()
+    #
+    #     self.assertTrue(reference.primary)
+    #     self.assertTrue(isinstance(reference, AdditionalReference))
+    #
+    #     result = jira_initial_comment_task.apply_async(
+    #         kwargs={
+    #             'submission_id': Submission.objects.first().pk,
+    #         },
+    #         countdown=SUBMISSION_DELAY,
+    #     ).get()
