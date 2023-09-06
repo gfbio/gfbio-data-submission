@@ -138,9 +138,9 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
         self.assertEqual(UUID(expected['broker_submission_id']),
                          submission.broker_submission_id)
 
-    @responses.activate
+    # @responses.activate
     def test_min_post_without_target(self):
-        self._add_create_ticket_response()
+        # self._add_create_ticket_response()
         self.assertEqual(0, len(Submission.objects.all()))
         response = self.api_client.post(
             '/api/submissions/',

@@ -20,7 +20,6 @@ services:
       - ../.envs/.production/.django
       - ../.envs/.production/.postgres
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - gfbio-ISSUE_ID:/app/gfbio_submissions/media
     networks:
       - internalProxy
@@ -76,7 +75,6 @@ services:
     networks:
       - internal
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - gfbio-ISSUE_ID:/app/gfbio_submissions/media
     image: gfbio_submissions_production_celeryworker
     logging:
@@ -98,8 +96,6 @@ services:
       - ../.envs/.production/.postgres
     networks:
       - internal
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
     image: gfbio_submissions_production_celerybeat
     logging:
       driver: syslog
@@ -120,8 +116,6 @@ services:
       - ../.envs/.production/.postgres
     networks:
       - internal
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
     image: gfbio_submissions_production_flower
     logging:
       driver: syslog

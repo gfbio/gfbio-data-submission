@@ -27,7 +27,6 @@ services:
       - default
       - internalProxy
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - django_media:/app/gfbio_submissions/media
     command: /start
 

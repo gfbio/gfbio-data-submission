@@ -209,6 +209,7 @@ class JiraClient(object):
     # file-like, string-path, stringIO (requires filename)
     def add_attachment(self, key, file, file_name=None):
         self.get_issue(key)
+        return_value = None
         log_arguments = {
             'method': RequestLog.POST,
             'data': {'key': key, 'file': '{}'.format(file)},
@@ -217,17 +218,18 @@ class JiraClient(object):
             'request_details': {
                 'function_called': '{}'.format(self.add_attachment)}
         }
-        try:
-            if file_name:
-                attachement = self.jira.add_attachment(issue=self.issue.key,
-                                                       attachment=file,
-                                                       filename=file_name)
-            else:
-                attachement = self.jira.add_attachment(issue=self.issue.key,
-                                                       attachment=file)
-            log_arguments['response_content'] = attachement.raw
+        if self.issue is None:
+            log_arguments['data']['ERROR'] = 'no issue found for key {0}'.format(key)
             RequestLog.objects.create_jira_log(log_arguments)
-            return attachement
+            return return_value
+        try:
+            if file_name is None:
+                file_name = '{0}_fallback_filename'.format(self.issue.key)
+            attachement = self.jira.add_attachment(issue=self.issue.key,
+                                                   attachment=file,
+                                                   filename=file_name)
+            log_arguments['response_content'] = attachement.raw
+            return_value = attachement
         except JIRAError as e:
             logger.warning(
                 'JiraClient | add_attachment | JIRAError {0} | {1}'.format(e,
@@ -238,7 +240,8 @@ class JiraClient(object):
                 subject='JIRA - add attachment error',
                 message='Error: {}'.format(e)
             )
-            return None
+        RequestLog.objects.create_jira_log(log_arguments)
+        return return_value
 
     def delete_attachment(self, id):
         log_arguments = {
@@ -334,7 +337,7 @@ class JiraClient(object):
             if 'reporter' in error_messages.get('errors', {}).keys():
                 reporter_errors = error_messages.get('errors', {})
                 if 'The reporter specified is not a user' in reporter_errors.get(
-                        'reporter', ''):
+                    'reporter', ''):
                     default = {
                         'name': JIRA_FALLBACK_USERNAME,
                         'user_full_name': '',

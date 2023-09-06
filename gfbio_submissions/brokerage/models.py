@@ -13,7 +13,7 @@ from gfbio_submissions.brokerage.configuration.settings import GENERIC, \
 from gfbio_submissions.brokerage.managers import SubmissionUploadManager
 from gfbio_submissions.generic.fields import JsonDictField
 from .configuration.settings import ENA, ENA_PANGAEA, ATAX, \
-    SUBMISSION_UPLOAD_RETRY_DELAY, SUBMISSION_RETRY_DELAY, SUBMISSION_DELAY
+    SUBMISSION_UPLOAD_RETRY_DELAY, SUBMISSION_RETRY_DELAY
 from .managers import AuditableTextDataManager, SubmissionManager, \
     BrokerObjectManager, TaskProgressReportManager
 from .storage import OverwriteStorage
@@ -321,6 +321,7 @@ class BrokerObject(models.Model):
     # class Meta:
     #     unique_together = (('type', 'site', 'site_project_id', 'site_object_id'),)
 
+
 class PersistentIdentifier(TimeStampedModel):
     ARCHIVES = (
         ('ENA', 'ENA'),
@@ -572,41 +573,42 @@ class SubmissionUpload(TimeStampedModel):
                     atax_submission_combine_xmls_to_one_structure_task
 
                 chain = atax_submission_parse_csv_upload_to_xml_task.s(
-                        submission_id=self.submission.pk,
-                        submission_upload_id=self.pk).set(
-                        countdown=SUBMISSION_RETRY_DELAY) \
-                            | atax_submission_validate_xml_upload_task.s(
-                        submission_id=self.submission.pk,
-                        submission_upload_id=self.pk,
-                        is_combination=False).set(
-                        countdown=SUBMISSION_RETRY_DELAY) \
-                            | atax_submission_combine_xmls_to_one_structure_task.s(
-                        submission_id=self.submission.pk,
-                        submission_upload_id=self.pk).set(
-                        countdown=SUBMISSION_RETRY_DELAY) \
-                            | atax_submission_validate_xml_upload_task.s(
-                        submission_id=self.submission.pk,
-                        submission_upload_id=self.pk,
-                        is_combination=True).set(
-                        countdown=SUBMISSION_RETRY_DELAY)
+                    submission_id=self.submission.pk,
+                    submission_upload_id=self.pk).set(
+                    countdown=SUBMISSION_RETRY_DELAY) \
+                        | atax_submission_validate_xml_upload_task.s(
+                    submission_id=self.submission.pk,
+                    submission_upload_id=self.pk,
+                    is_combination=False).set(
+                    countdown=SUBMISSION_RETRY_DELAY) \
+                        | atax_submission_combine_xmls_to_one_structure_task.s(
+                    submission_id=self.submission.pk,
+                    submission_upload_id=self.pk).set(
+                    countdown=SUBMISSION_RETRY_DELAY) \
+                        | atax_submission_validate_xml_upload_task.s(
+                    submission_id=self.submission.pk,
+                    submission_upload_id=self.pk,
+                    is_combination=True).set(
+                    countdown=SUBMISSION_RETRY_DELAY)
 
                 chain()
 
     def __str__(self):
         return ' / '.join(reversed(self.file.name.split(os.sep)))
 
+
 # TODO: later: do a new type of pre_save action for Submission_Upload
 # @receiver(pre_save, sender=SubmissionUpload)
 # def schema_validation_atax_xml_file(sender, instance, *args, **kwargs):
-    #  new validation task
-    # or save result in auditable textdata of submission, if valid
-    #pass
+#  new validation task
+# or save result in auditable textdata of submission, if valid
+# pass
 
 # TODO: later: do a new type of post_save action for Submission_Upload
 # @receiver(post_save, sender=SubmissionUpload)
 # def sending_emails_to_curators_or_submitters(sender, instance, *args, **kwargs):
-    # maybe use this action for sending mails
-    # pass
+# maybe use this action for sending mails
+# pass
 
 
 # TODO: FK to submission, either keep this here and focus on xml for molecular,
@@ -651,7 +653,6 @@ class AuditableTextData(TimeStampedModel):
         blank=True,
         help_text='single uploads: exponents for powers of two, combination: sum of single upload powers of two'
     )
-
 
     objects = AuditableTextDataManager()
 
