@@ -3,11 +3,9 @@ import os
 import shutil
 from urllib.parse import urlparse
 from uuid import uuid4
-from unittest import skip
 
 import responses
 from django.contrib.auth.models import Permission
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
@@ -16,7 +14,7 @@ from rest_framework.test import APIClient
 
 from config.settings.base import MEDIA_URL, MEDIA_ROOT
 from gfbio_submissions.brokerage.configuration.settings import \
-    JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL, JIRA_ATTACHMENT_URL
+    JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL
 from gfbio_submissions.brokerage.models import Submission, \
     AdditionalReference, \
     TaskProgressReport, SubmissionUpload, BrokerObject
@@ -36,7 +34,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         serializer = SubmissionSerializer(data={
             'target': 'ATAX',
             'release': True,
-            'data':  _get_taxonomic_min_data()
+            'data': _get_taxonomic_min_data()
         })
         serializer.is_valid()
         submission = serializer.save(user=User.objects.first())
@@ -112,7 +110,7 @@ class TestSubmissionAtaxUploadView(TestCase):
 
     @classmethod
     def _open_atax_test_file(cls, path, delete=True,
-                          attach=False):
+                             attach=False):
         if delete:
             cls._delete_test_data()
         f = open(path, 'rb')
@@ -193,7 +191,6 @@ class TestSubmissionAtaxUploadView(TestCase):
             'attach_to_ticket': attach,
         }
 
-
     @staticmethod
     def _delete_test_data():
         SubmissionUpload.objects.all().delete()
@@ -237,7 +234,7 @@ class TestSubmissionAtaxUploadView(TestCase):
 
         return cls.api_client.post(url, data, format='multipart')
 
-    #start with unit tests:
+    # start with unit tests:
     @responses.activate
     def test_valid_atax_upload_post_with_taxonomic_specimen_data(self):
         submission = Submission.objects.first()
@@ -268,7 +265,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertTrue(combi.atax_xml_valid)
 
         combis = submission.auditabletextdata_set.filter(atax_xml_valid=True)
-        self.assertEqual(2,len(combis))
+        self.assertEqual(2, len(combis))
 
         self.assertIn(b'file', response.content)
         self.assertTrue(
@@ -293,10 +290,10 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertFalse(submission.submissionupload_set.first().meta_data)
 
         combis = submission.auditabletextdata_set.filter(name='specimen')
-        self.assertEqual(0,len(combis))
+        self.assertEqual(0, len(combis))
 
         combis = submission.auditabletextdata_set.filter(name='measurement')
-        self.assertEqual(1,len(combis))
+        self.assertEqual(1, len(combis))
         combi = combis.first()
         self.assertTrue(combi.atax_xml_valid)
 
@@ -481,7 +478,6 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))
 
-
     @responses.activate
     def test_valid_atax_upload_post_with_combined_measurement_specimen_multimedia_data(self):
         submission = Submission.objects.first()
@@ -529,8 +525,8 @@ class TestSubmissionAtaxUploadView(TestCase):
         )
         measurement_upload = submission.submissionupload_set.get(
             file='{0}/measurement_table_Platypelis.csv'.format(
-               submission.broker_submission_id
-           )
+                submission.broker_submission_id
+            )
         )
         multimedia_upload = submission.submissionupload_set.get(
             file='{0}/multimedia_table_Platypelis.csv'.format(
@@ -623,7 +619,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         multimedia_upload = submission.submissionupload_set.get(
             file='{0}/multimedia_table_Platypelis.csv'.format(
                 submission.broker_submission_id
-           )
+            )
         )
 
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
@@ -710,7 +706,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         )
         multimedia_upload = submission.submissionupload_set.get(
             file='{0}/multimedia_table_Platypelis.csv'.format(
-                 submission.broker_submission_id
+                submission.broker_submission_id
             )
         )
 
@@ -866,14 +862,13 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(submission.submissionupload_set.all()))
         self.assertTrue(submission.submissionupload_set.first().meta_data)
-        self.assertTrue(submission.status,Submission.ERROR)
+        self.assertTrue(submission.status, Submission.ERROR)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         self.assertIn(b'file', response.content)
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))
-
 
     def test_random_submission_no_upload(self):
         url = reverse(
@@ -907,7 +902,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertTrue(
             urlparse(response.data['file']).path.startswith(MEDIA_URL))
         # TODO: no task is triggered yet
-        self.assertEqual(len(TaskProgressReport.objects.all()), reports_len+4)
+        self.assertEqual(len(TaskProgressReport.objects.all()), reports_len + 4)
         self.assertGreater(len(SubmissionUpload.objects.all()), uploads_len)
 
     @responses.activate
@@ -933,7 +928,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(1, len(SubmissionUpload.objects.all()))
         fname = SubmissionUpload.objects.all().first().file.name
         self.assertIn('specimen_table_Platypelis', fname)
-        self.assertEqual(len(TaskProgressReport.objects.all()), reports_len+8)
+        self.assertEqual(len(TaskProgressReport.objects.all()), reports_len + 8)
 
     @responses.activate
     def test_atax_file_put_modified_content_with_task(self):
@@ -953,7 +948,7 @@ class TestSubmissionAtaxUploadView(TestCase):
                 'pk': content.get('id')
             })
         # update with other taxonomic test csv file with more gaps:
-        data = self._create_atax_csv_test_data(delete=False,invalid=True,attach=True)
+        data = self._create_atax_csv_test_data(delete=False, invalid=True, attach=True)
         self.api_client.put(url, data, format='multipart')
 
         self.assertEqual(1, len(submission.submissionupload_set.all()))
@@ -1061,12 +1056,11 @@ class TestSubmissionAtaxUploadView(TestCase):
             )
         )
         # failes:
-        #measurement_upload = submission.submissionupload_set.get(
+        # measurement_upload = submission.submissionupload_set.get(
         #   file='{0}/measurement_table_Platypelis.csv'.format(
         #        submission.broker_submission_id
         #    )
-        #)
-
+        # )
 
         self.assertEqual(3, len(submission.auditabletextdata_set.all()))
 
@@ -1218,7 +1212,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         #    file='{0}/specimen_table_Platypelis.csv'.format(
         #        submission.broker_submission_id
         #    )
-        #)
+        # )
         # failes:
         # measurement_upload = submission.submissionupload_set.get(
         #   file='{0}/measurement_table_Platypelis.csv'.format(

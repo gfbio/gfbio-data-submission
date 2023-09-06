@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 import logging
+import math as m
 import os
 import textwrap
 
@@ -30,9 +31,12 @@ from .exceptions import TransferServerError, TransferClientError
 from .models import BrokerObject, AuditableTextData, \
     AdditionalReference, TaskProgressReport, Submission
 from .models import SubmissionUpload, EnaReport
-from .utils.csv import check_for_molecular_content, parse_molecular_csv
 from .utils.atax import parse_taxonomic_csv_specimen, parse_taxonomic_csv_measurement, \
     parse_taxonomic_csv_multimedia, analyze_filename_and_type
+from .utils.atax import update_specimen_with_measurements_abcd_xml, \
+    update_specimen_with_multimedia_abcd_xml
+from .utils.csv import check_for_molecular_content, parse_molecular_csv
+from .utils.csv_atax import store_atax_data_as_auditable_text_data
 from .utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data, \
     send_submission_to_ena, parse_ena_submission_response, fetch_ena_report, \
     update_persistent_identifier_report_status, register_study_at_ena, \
@@ -53,10 +57,6 @@ from .utils.task_utils import jira_error_auto_retry, \
     send_data_to_ena_for_validation_or_test, get_jira_comment_template, \
     jira_comment_replace
 from ..generic.utils import logged_requests
-from .utils.csv_atax import store_atax_data_as_auditable_text_data
-from .utils.atax import update_specimen_with_measurements_abcd_xml, \
-    update_specimen_with_multimedia_abcd_xml
-import math as m
 
 logger = logging.getLogger(__name__)
 
@@ -154,7 +154,7 @@ def check_for_molecular_content_in_submission_task(self,
 
 # FIXME: redundant/duplicate code with trigger_submission_transfer_for_updates. Refactor !
 @app.task(base=SubmissionTask, bind=True,
-             name='tasks.trigger_submission_transfer', )
+          name='tasks.trigger_submission_transfer', )
 def trigger_submission_transfer(self, previous_task_result=None,
                                 submission_id=None):
     molecular_data_available = False
@@ -200,7 +200,7 @@ def trigger_submission_transfer(self, previous_task_result=None,
 
 
 @app.task(base=SubmissionTask, bind=True,
-             name='tasks.trigger_submission_transfer_for_updates', )
+          name='tasks.trigger_submission_transfer_for_updates', )
 def trigger_submission_transfer_for_updates(self, previous_task_result=None,
                                             broker_submission_id=None):
     molecular_data_available = False
@@ -356,10 +356,10 @@ def create_study_broker_objects_only_task(self, previous_task_result=None,
     name='tasks.create_broker_objects_from_submission_data_task',
 )
 def create_broker_objects_from_submission_data_task(
-        self,
-        previous_task_result=None,
-        submission_id=None,
-        use_submitted_submissions=False):
+    self,
+    previous_task_result=None,
+    submission_id=None,
+    use_submitted_submissions=False):
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
             'tasks.py | create_broker_objects_from_submission_data_task | '
@@ -1076,6 +1076,7 @@ def create_pangaea_issue_task(self, prev=None, submission_id=None):
     else:
         return TaskProgressReport.CANCELLED
 
+
 @app.task(
     base=SubmissionTask,
     bind=True,
@@ -1704,9 +1705,9 @@ def add_pangaea_doi_task(self, prev_task_result=None,
     retry_jitter=True
 )
 def add_pangaealink_to_submission_issue_task(
-        self,
-        prev=None,
-        submission_id=None):
+    self,
+    prev=None,
+    submission_id=None):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -2026,7 +2027,7 @@ def check_issue_existing_for_submission_task(self, prev=None,
         return TaskProgressReport.CANCELLED
 
     if len(submission.additionalreference_set.filter(
-            primary=True, type=AdditionalReference.GFBIO_HELPDESK_TICKET)) < 1:
+        primary=True, type=AdditionalReference.GFBIO_HELPDESK_TICKET)) < 1:
         logger.error(
             'tasks.py | check_issue_existing_for_submission_task | '
             'no helpdesk issue found for submission={0}  | '
@@ -2538,8 +2539,7 @@ def jira_initial_comment_task(self, prev=None, submission_id=None):
     retry_jitter=True
 )
 def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None,
-                                              submission_id=None,  submission_upload_id=None):
-
+                                                 submission_id=None, submission_upload_id=None):
     request_file_keys = [
         'specimen',
         'measurement',
@@ -2551,12 +2551,11 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
         'tasks.py | atax_submission_parse_csv_upload_to_xml_task | submission_id={}'.format(
             submission_id))
 
-
     report, created = TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
 
-    #is this necessary here?
+    # is this necessary here?
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
             'tasks.py | atax_submission_parse_csv_upload_to_xml_task | '
@@ -2566,8 +2565,7 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
                                               submission_id, submission_upload_id))
         return TaskProgressReport.CANCELLED
 
-
-    #submission_upload = submission.submissionupload_set.filter(pk=submission_upload_id).filter(submission.target=ATAX)  # .first()
+    # submission_upload = submission.submissionupload_set.filter(pk=submission_upload_id).filter(submission.target=ATAX)  # .first()
     if submission_upload_id:
         submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
             submission_upload_id)
@@ -2585,7 +2583,7 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
 
         errors = []
         file_mime = mimetypes.guess_type(submission_upload.file.path)
-        the_mimes = ('text/csv',)   # expand this by excel later on
+        the_mimes = ('text/csv',)  # expand this by excel later on
 
         if not file_mime[0] in the_mimes:
             logger.warning(
@@ -2597,10 +2595,10 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
     report.submission = submission_upload.submission
     report.save()
 
-    xml_data_as_string = ''
-    ind = -1
-    #differentiate between specimen and measurement and multimedia and combination csv file:
-    file_key = analyze_filename_and_type(os.path.basename(submission_upload.file.path),submission_upload.meta_data )
+    # xml_data_as_string = ''
+    # ind = -1
+    # differentiate between specimen and measurement and multimedia and combination csv file:
+    file_key = analyze_filename_and_type(os.path.basename(submission_upload.file.path), submission_upload.meta_data)
     if file_key in request_file_keys:
         match str(file_key):
             case 'specimen':
@@ -2630,23 +2628,23 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
                 return TaskProgressReport.CANCELLED
 
         # store xml data informations in auditabletextdata:
-        if xml_data_as_string and  len(xml_data_as_string) > 0:
+        if xml_data_as_string and len(xml_data_as_string) > 0:
             store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
-                        data_type=atax_xml_file_type,
-                        data=xml_data_as_string,
-                        comment='ABCD xml structure',
-                        atax_file_name = os.path.basename(submission_upload.file.path),
-                        atax_exp_index = ind)
+                                                   data_type=atax_xml_file_type,
+                                                   data=xml_data_as_string,
+                                                   comment='ABCD xml structure',
+                                                   atax_file_name=os.path.basename(submission_upload.file.path),
+                                                   atax_exp_index=ind)
             # store specimen additionally as combination
-            if atax_xml_file_type==request_file_keys[0]:
+            if atax_xml_file_type == request_file_keys[0]:
                 store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
-                        data_type=request_file_keys[3],
-                        data=xml_data_as_string,
-                        comment='ABCD xml structure',
-                        atax_file_name = os.path.basename(submission_upload.file.path),
-                        atax_exp_index = m.pow(2,ind))
+                                                       data_type=request_file_keys[3],
+                                                       data=xml_data_as_string,
+                                                       comment='ABCD xml structure',
+                                                       atax_file_name=os.path.basename(submission_upload.file.path),
+                                                       atax_exp_index=m.pow(2, ind))
 
-            return {'file_key': file_key}   #xml_data_as_string
+            return {'file_key': file_key}  # xml_data_as_string
 
         else:
             # no success while csv to xml  transformation:
@@ -2664,6 +2662,7 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
 
     return True
 
+
 @app.task(
     base=SubmissionTask,
     bind=True,
@@ -2676,9 +2675,8 @@ def atax_submission_parse_csv_upload_to_xml_task(self, previous_task_result=None
     retry_jitter=True
 )
 def atax_submission_validate_xml_upload_task(self, previous_task_result=None,
-                                              submission_id=None, submission_upload_id=None,
-                                              is_combination = False):
-
+                                             submission_id=None, submission_upload_id=None,
+                                             is_combination=False):
     report, created = TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
@@ -2695,7 +2693,8 @@ def atax_submission_validate_xml_upload_task(self, previous_task_result=None,
         submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
             submission_upload_id)
 
-    if submission_upload is None and is_combination==False:
+    # FIXME: logic ?
+    if submission_upload is None and is_combination == False:
         logger.error(
             'tasks.py | atax_submission_validate_xml_upload_task | '
             'no valid SubmissionUpload available | '
@@ -2710,7 +2709,7 @@ def atax_submission_validate_xml_upload_task(self, previous_task_result=None,
         upload_name = submission_upload.file.name.split('/')[-1:][0]
 
         # get the stored xml string back from auditabletextdata:
-        text_to_validate=''
+        text_to_validate = ''
         if len(submission_upload.submission.auditabletextdata_set.filter(atax_file_name=upload_name)):
             upload_by_file__name = submission_upload.submission.auditabletextdata_set.filter(
                 atax_file_name=upload_name).first()
@@ -2718,16 +2717,15 @@ def atax_submission_validate_xml_upload_task(self, previous_task_result=None,
         upload_by_file__name = submission_upload.submission.auditabletextdata_set.filter(
             name='combination').first()
 
-
     if upload_by_file__name is not None:
         text_to_validate = upload_by_file__name.text_data
 
-        is_val, errors=validate_atax_data_is_valid(
-            submission = submission_upload.submission,
+        is_val, errors = validate_atax_data_is_valid(
+            submission=submission_upload.submission,
             schema_file='ABCD_2.06.XSD',
             xml_string=text_to_validate  # string_abcd_xml_converted
         )
-        #if abcd xml not valid:
+        # if abcd xml not valid:
         if errors:
             messages = [e.message for e in errors]
             submission_upload.submission.data.update(
@@ -2744,10 +2742,10 @@ def atax_submission_validate_xml_upload_task(self, previous_task_result=None,
 
             # update field atax_xml_valid:
             if upload_by_file__name is not None:
-                upload_by_file__name.atax_xml_valid =True
+                upload_by_file__name.atax_xml_valid = True
                 upload_by_file__name.save()
 
-            return {'is_valid': upload_by_file__name.atax_xml_valid}   #text_to_validate
+            return {'is_valid': upload_by_file__name.atax_xml_valid}  # text_to_validate
 
     else:
         return True
@@ -2765,9 +2763,7 @@ def atax_submission_validate_xml_upload_task(self, previous_task_result=None,
     retry_jitter=True
 )
 def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_result=None,
-                                              submission_id=None, submission_upload_id=None):
-
-
+                                                       submission_id=None, submission_upload_id=None):
     report, created = TaskProgressReport.objects.create_initial_report(
         submission=None,
         task=self)
@@ -2796,7 +2792,7 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
 
     upload_name = submission_upload.file.name.split('/')[-1:][0]
 
-    text_to_validate=''
+    text_to_validate = ''
     # each upload belongs to exactly one category (file names different):
     # current upload:
     if len(submission_upload.submission.auditabletextdata_set.filter(atax_file_name=upload_name)):
@@ -2814,23 +2810,23 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
         combi_updated = False
         keys_found = []  # UnitIds of measurements or multimedias, found in specimen or combination for later tests!
 
-        #all uploads for submission:
+        # all uploads for submission:
         atax_submission_upload = AuditableTextData.objects.assemble_atax_submission_uploads(
             submission=submission_upload.submission)
         if atax_submission_upload == {}:
             return TaskProgressReport.CANCELLED
-        elif len(atax_submission_upload)<=1:
+        elif len(atax_submission_upload) <= 1:
             return {'upload length at all': str(len(atax_submission_upload))}
         else:
             #  integrate measurements /multimedia into specimen.xml:
-            if len(atax_submission_upload)>1 and 'COMBINATION' in atax_submission_upload.keys():
-                combi_name='combination'
+            if len(atax_submission_upload) > 1 and 'COMBINATION' in atax_submission_upload.keys():
+                combi_name = 'combination'
                 tuple = atax_submission_upload['COMBINATION']
                 ind = tuple[5]
                 add_int = 0
             # distinguish whether combination is already present or not:
             # put result into combination:
-            if upload_by_file_name.name =='measurement' and bool(combi_name):
+            if upload_by_file_name.name == 'measurement' and bool(combi_name):
                 specimen_abcd_updated, keys_found = update_specimen_with_measurements_abcd_xml(
                     upload=atax_submission_upload, name=combi_name)
                 add_ind = 1
@@ -2849,18 +2845,18 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
                         # store specimen plus measurements as combination:
                         if specimen_abcd_updated is not None and len(specimen_abcd_updated) > 0:
                             store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
-                                    data_type='combination',
-                                    data=specimen_abcd_updated,
-                                    comment='ABCD xml structure',
-                                    atax_file_name="ABCD specimen with integrated metadata",
-                                    atax_exp_index=int(ind)+int(m.pow(2,1)))
+                                                                   data_type='combination',
+                                                                   data=specimen_abcd_updated,
+                                                                   comment='ABCD xml structure',
+                                                                   atax_file_name="ABCD specimen with integrated metadata",
+                                                                   atax_exp_index=int(ind) + int(m.pow(2, 1)))
                             combi_updated = True
 
                 # are there multimedia data?
                 # refresh auditables
                 atax_submission_upload = AuditableTextData.objects.assemble_atax_submission_uploads(
                     submission=submission_upload.submission)
-                if len(atax_submission_upload)>1 and 'COMBINATION' in atax_submission_upload.keys():
+                if len(atax_submission_upload) > 1 and 'COMBINATION' in atax_submission_upload.keys():
                     combi_name = 'combination'
                     tuple = atax_submission_upload['COMBINATION']
                     ind = tuple[5]
@@ -2873,22 +2869,21 @@ def atax_submission_combine_xmls_to_one_structure_task(self, previous_task_resul
                             upload=atax_submission_upload, name=combi_name)  #
                         if specimen_abcd_updated is not None and len(specimen_abcd_updated) > 0:
                             store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
-                                    data_type='combination',
-                                    data=specimen_abcd_updated,
-                                    comment='ABCD xml structure',
-                                    atax_file_name="ABCD specimen with integrated meta data",
-                                    atax_exp_index = int(ind) + int(m.pow(2, 2)))
+                                                                   data_type='combination',
+                                                                   data=specimen_abcd_updated,
+                                                                   comment='ABCD xml structure',
+                                                                   atax_file_name="ABCD specimen with integrated meta data",
+                                                                   atax_exp_index=int(ind) + int(m.pow(2, 2)))
                             combi_updated = True
 
-
-            if combi_updated==False:
+            if combi_updated == False:
                 if specimen_abcd_updated is not None and len(specimen_abcd_updated) > 0:
                     store_atax_data_as_auditable_text_data(submission=submission_upload.submission,
-                                data_type='combination',
-                                data=specimen_abcd_updated,
-                                comment = 'ABCD xml structure',
-                                atax_file_name="ABCD specimen with integrated meta data",
-                                atax_exp_index= int(ind) + int(m.pow(2,int(add_ind))))
+                                                           data_type='combination',
+                                                           data=specimen_abcd_updated,
+                                                           comment='ABCD xml structure',
+                                                           atax_file_name="ABCD specimen with integrated meta data",
+                                                           atax_exp_index=int(ind) + int(m.pow(2, int(add_ind))))
                     combi_updated = True
 
             submission_upload.submission.save()

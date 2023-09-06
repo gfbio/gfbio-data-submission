@@ -537,6 +537,7 @@ class SubmissionUploadManager(models.Manager):
     def get_linked_atax_submission_upload(self, submission_upload_id):
         submission_upload = self.get_upload_with_related_submission(
             submission_upload_id)
+        # TODO: simplify to one expression. if needed at all ...
         if submission_upload is None:
             return None
         if submission_upload.submission.target != ATAX:
