@@ -103,31 +103,69 @@ class TestSubmissionServers(TestCase):
 
 class TestSubmissionServersForAtaxWorkflow(TestCase):
 
-    @skip('test against submissions.gfbio.dev')
+    # @classmethod
+    # def _create_atax_csv_test_data(cls, delete=True,  attach=False, meta_data=False):
+    #     file_name = 'csv_files/specimen_table_Platypelis.csv'
+    #
+    #     # if delete:
+    #     #     cls._delete_test_data()
+    #
+    #     csv_file = open(
+    #         os.path.join(_get_test_data_dir_path(), file_name),
+    #         'rb'
+    #     )
+    #     return {
+    #         'file': csv_file,
+    #         'meta_data': meta_data,
+    #         'attach_to_ticket': attach,
+    #     }
+
+    # @skip('test against submissions.gfbio.dev')
     def test_post_with_atax_target(self):
         # TOKEN for user marc6
+        # headers = {
+        #     'Authorization': 'Token x',
+        #     'Content-Type': 'application/json'
+        # }
+        # TOKEN for user marc
+        #
         headers = {
             'Authorization': 'Token x',
-            'Content-Type': 'application/json'
+            # 'Content-Type': 'application/json'
         }
 
         # --------------------------------------------------------------------------------
 
-        title = 'Test from local unit-test-environment {0}'.format(
-            time.strftime('%X %x %Z'))
-        data = {
-            'target': 'ATAX', 'release': False,
-            'data': {
-                'requirements': {
-                    'title': title,
-                    'description': 'A Description',
-                }
-            }
-        }
+        # title = 'Test from local unit-test-environment {0}'.format(
+        #     time.strftime('%X %x %Z'))
+        # data = {
+        #     'target': 'ATAX', 'release': True,
+        #     'data': {
+        #         'requirements': {
+        #             'title': title,
+        #             'description': 'A Description',
+        #         }
+        #     }
+        # }
+        #
+        # response = requests.post(
+        #     url='https://submissions.gfbio.dev/api/submissions/',
+        #     data=json.dumps(data),
+        #     headers=headers
+        # )
 
+        # --------------------------------------------------------------------------------
+
+        # data = self._create_atax_csv_test_data(meta_data=True)
+        # requests.post(test_url, files = {"form_field_name": test_file})
+        file_name = 'csv_files/specimen_table_Platypelis.csv'
+        csv_file = open(
+            os.path.join(_get_test_data_dir_path(), file_name),
+            'rb'
+        )
         response = requests.post(
-            url='https://submissions.gfbio.dev/api/submissions/',
-            data=json.dumps(data),
+            url='https://submissions.gfbio.dev/api/submissions/2ac5a6c4-e54c-4fd9-8440-9546f15673d1/upload/',
+            files={'file': csv_file},
             headers=headers
         )
 
