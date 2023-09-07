@@ -4,128 +4,103 @@ import os
 
 import responses
 
-from gfbio_submissions.brokerage.models import PersistentIdentifier, \
-    BrokerObject, EnaReport, TaskProgressReport
-from gfbio_submissions.brokerage.tasks import \
-    update_persistent_identifier_report_status_task, \
-    update_resolver_accessions_task, \
-    update_accession_objects_from_ena_report_task
-from gfbio_submissions.brokerage.tests.utils import \
-    _get_test_data_dir_path
-from gfbio_submissions.generic.models import SiteConfiguration
+from gfbio_submissions.brokerage.models import BrokerObject, EnaReport, PersistentIdentifier, TaskProgressReport
+from gfbio_submissions.brokerage.tasks import (
+    update_accession_objects_from_ena_report_task,
+    update_persistent_identifier_report_status_task,
+    update_resolver_accessions_task,
+)
+from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
+from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
 from gfbio_submissions.resolve.models import Accession
 from gfbio_submissions.users.models import User
+
 from .test_tasks_base import TestTasks
 
 
 class TestUpdateResolverAccessionsTask(TestTasks):
     def setUp(self):
-        with open(os.path.join(_get_test_data_dir_path(),
-                               'ena_reports_testdata.json'),
-                  'r') as file:
+        with open(os.path.join(_get_test_data_dir_path(), "ena_reports_testdata.json"), "r") as file:
             data = json.load(file)
         for report_type in EnaReport.REPORT_TYPES:
             key, val = report_type
-            EnaReport.objects.create(
-                report_type=key,
-                report_data=data[val]
-            )
+            EnaReport.objects.create(report_type=key, report_data=data[val])
 
     def test_update_success(self):
         self.assertEqual(0, len(Accession.objects.all()))
-        res = update_resolver_accessions_task.apply_async(
-            kwargs={
-            }
-        )
+        res = update_resolver_accessions_task.apply_async(kwargs={})
         self.assertTrue(res.successful())
         self.assertLess(0, len(Accession.objects.all()))
 
 
 class TestUpdatePersistentIdentifierReportStatusTask(TestTasks):
     def setUp(self):
-        with open(os.path.join(_get_test_data_dir_path(),
-                               'ena_reports_testdata.json'),
-                  'r') as file:
+        with open(os.path.join(_get_test_data_dir_path(), "ena_reports_testdata.json"), "r") as file:
             data = json.load(file)
         for report_type in EnaReport.REPORT_TYPES:
             key, val = report_type
-            EnaReport.objects.create(
-                report_type=key,
-                report_data=data[val]
-            )
+            EnaReport.objects.create(report_type=key, report_data=data[val])
 
     @classmethod
     def _add_persistent_identifier_test_data(cls):
-        user = User.objects.get(
-            username='user1'
-        )
+        user = User.objects.get(username="user1")
         broker_object = BrokerObject.objects.create(
-            type='study',
+            type="study",
             user=user,
             data={
-                'center_name': 'GFBIO',
-                'study_abstract': 'abstract',
-                'study_title': 'title',
-                'study_alias': 'alias',
-            }
+                "center_name": "GFBIO",
+                "study_abstract": "abstract",
+                "study_title": "title",
+                "study_alias": "alias",
+            },
         )
         PersistentIdentifier.objects.create(
-            archive='ENA',
-            pid_type='ACC',
+            archive="ENA",
+            pid_type="ACC",
             broker_object=broker_object,
-            pid='ERP0815',
-            outgoing_request_id='da76ebec-7cde-4f11-a7bd-35ef8ebe5b85'
+            pid="ERP0815",
+            outgoing_request_id="da76ebec-7cde-4f11-a7bd-35ef8ebe5b85",
         )
         PersistentIdentifier.objects.create(
-            archive='ENA',
-            pid_type='PRJ',
+            archive="ENA",
+            pid_type="PRJ",
             broker_object=broker_object,
-            pid='PRJEB0815',
-            outgoing_request_id='da76ebec-7cde-4f11-a7bd-35ef8ebe5b85'
+            pid="PRJEB0815",
+            outgoing_request_id="da76ebec-7cde-4f11-a7bd-35ef8ebe5b85",
         )
         PersistentIdentifier.objects.create(
-            archive='PAN',
-            pid_type='DOI',
+            archive="PAN",
+            pid_type="DOI",
             broker_object=broker_object,
-            pid='PAN007',
-            outgoing_request_id='7e76fdec-7cde-4f11-a7bd-35ef8fde5b85'
+            pid="PAN007",
+            outgoing_request_id="7e76fdec-7cde-4f11-a7bd-35ef8fde5b85",
         )
 
     def test_update_success(self):
         self._add_persistent_identifier_test_data()
-        res = update_persistent_identifier_report_status_task.apply_async(
-            kwargs={}
-        )
+        res = update_persistent_identifier_report_status_task.apply_async(kwargs={})
         self.assertTrue(res.successful())
 
 
 class TestUpdateAccessionsChain(TestTasks):
     def setUp(self):
-        with open(os.path.join(_get_test_data_dir_path(),
-                               'ena_reports_testdata.json'),
-                  'r') as file:
+        with open(os.path.join(_get_test_data_dir_path(), "ena_reports_testdata.json"), "r") as file:
             data = json.load(file)
         for report_type in EnaReport.REPORT_TYPES:
             key, val = report_type
-            EnaReport.objects.create(
-                report_type=key,
-                report_data=data[val]
-            )
+            EnaReport.objects.create(report_type=key, report_data=data[val])
 
     @classmethod
     def _add_report_responses(cls):
-        with open(os.path.join(_get_test_data_dir_path(),
-                               'ena_reports_testdata.json'),
-                  'r') as file:
+        with open(os.path.join(_get_test_data_dir_path(), "ena_reports_testdata.json"), "r") as file:
             data = json.load(file)
         for report_type in EnaReport.REPORT_TYPES:
             key, val = report_type
             responses.add(
                 responses.GET,
-                '{0}{1}?format=json'.format(
-                    cls.default_site_config.ena_report_server.url, val),
+                "{0}{1}?format=json".format(cls.default_site_config.ena_report_server.url, val),
                 status=200,
-                json=data[val]
+                json=data[val],
             )
 
     @classmethod
@@ -134,8 +109,7 @@ class TestUpdateAccessionsChain(TestTasks):
             key, val = report_type
             responses.add(
                 responses.GET,
-                '{0}{1}?format=json'.format(
-                    cls.default_site_config.ena_report_server.url, val),
+                "{0}{1}?format=json".format(cls.default_site_config.ena_report_server.url, val),
                 status=401,
             )
 
@@ -145,8 +119,7 @@ class TestUpdateAccessionsChain(TestTasks):
             key, val = report_type
             responses.add(
                 responses.GET,
-                '{0}{1}?format=json'.format(
-                    cls.default_site_config.ena_report_server.url, val),
+                "{0}{1}?format=json".format(cls.default_site_config.ena_report_server.url, val),
                 status=500,
             )
 
@@ -157,15 +130,14 @@ class TestUpdateAccessionsChain(TestTasks):
         tpr = TaskProgressReport.objects.all()
         self.assertEqual(4, len(tpr))
         expected_task_names = [
-            'tasks.fetch_ena_reports_task',
-            'tasks.update_resolver_accessions_task',
-            'tasks.update_persistent_identifier_report_status_task',
-            'tasks.update_accession_objects_from_ena_report_task',
+            "tasks.fetch_ena_reports_task",
+            "tasks.update_resolver_accessions_task",
+            "tasks.update_persistent_identifier_report_status_task",
+            "tasks.update_accession_objects_from_ena_report_task",
         ]
         for t in tpr:
             self.assertIn(t.task_name, expected_task_names)
-            self.assertNotEqual(TaskProgressReport.CANCELLED,
-                                t.task_return_value)
+            self.assertNotEqual(TaskProgressReport.CANCELLED, t.task_return_value)
 
     @responses.activate
     def test_update_accession_objects_failing_ena_report(self):
@@ -177,14 +149,14 @@ class TestUpdateAccessionsChain(TestTasks):
         tpr = TaskProgressReport.objects.all()
         self.assertEqual(4, len(tpr))
         expected_task_names = [
-            'tasks.fetch_ena_reports_task',
-            'tasks.update_resolver_accessions_task',
-            'tasks.update_persistent_identifier_report_status_task',
-            'tasks.update_accession_objects_from_ena_report_task',
+            "tasks.fetch_ena_reports_task",
+            "tasks.update_resolver_accessions_task",
+            "tasks.update_persistent_identifier_report_status_task",
+            "tasks.update_accession_objects_from_ena_report_task",
         ]
         for t in tpr:
             if t.task_name not in [
-                'tasks.update_accession_objects_from_ena_report_task', ]:
-                self.assertIn(TaskProgressReport.CANCELLED,
-                              t.task_return_value)
+                "tasks.update_accession_objects_from_ena_report_task",
+            ]:
+                self.assertIn(TaskProgressReport.CANCELLED, t.task_return_value)
             self.assertIn(t.task_name, expected_task_names)

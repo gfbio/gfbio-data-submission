@@ -4,54 +4,47 @@ from django.db.models import Q
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.configuration.settings import ENA
-from gfbio_submissions.brokerage.models import Submission, AdditionalReference, \
-    TaskProgressReport
-from gfbio_submissions.brokerage.tasks import \
-    check_for_submissions_without_helpdesk_issue_task, \
-    check_for_user_without_site_configuration_task
+from gfbio_submissions.brokerage.models import AdditionalReference, Submission, TaskProgressReport
+from gfbio_submissions.brokerage.tasks import (
+    check_for_submissions_without_helpdesk_issue_task,
+    check_for_user_without_site_configuration_task,
+)
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
-from gfbio_submissions.generic.models import ResourceCredential, \
-    SiteConfiguration
+from gfbio_submissions.generic.models.ResourceCredential import ResourceCredential
+from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
 from gfbio_submissions.users.models import User
 
 
 class TestCheckTasks(TestCase):
-
     @classmethod
     def setUpTestData(cls):
-        user1 = User.objects.create(
-            username='user1'
-        )
-        user2 = User.objects.create(
-            username='user2'
-        )
-        user3 = User.objects.create(
-            username='user3'
-        )
+        user1 = User.objects.create(username="user1")
+        user2 = User.objects.create(username="user2")
+        user3 = User.objects.create(username="user3")
 
         # submission with primary helpdesk ticket
         submission = Submission.objects.create(
             user=user1,
             status=Submission.OPEN,
             target=ENA,
-            data={'has': 'primary helpdeskticket and pangaea ticket'}
+            data={"has": "primary helpdeskticket and pangaea ticket"},
         )
         submission.additionalreference_set.create(
             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='HLP-01',
-            primary=True
+            reference_key="HLP-01",
+            primary=True,
         )
         submission.additionalreference_set.create(
             type=AdditionalReference.PANGAEA_JIRA_TICKET,
-            reference_key='PNG-0x',
-            primary=False
+            reference_key="PNG-0x",
+            primary=False,
         )
         # submission with no primary helpdesk ticket, but CANCELLED
         submission = Submission.objects.create(
             user=user1,
             status=Submission.CANCELLED,
             target=ENA,
-            data={'has': 'primary helpdeskticket and pangaea ticket'}
+            data={"has": "primary helpdeskticket and pangaea ticket"},
         )
 
         # submission with helpdesk ticket, which is not primary
@@ -59,12 +52,12 @@ class TestCheckTasks(TestCase):
             user=user2,
             status=Submission.OPEN,
             target=ENA,
-            data={'has': 'non-primary helpdeskticket and no pangaea ticket'}
+            data={"has": "non-primary helpdeskticket and no pangaea ticket"},
         )
         submission.additionalreference_set.create(
             type=AdditionalReference.GFBIO_HELPDESK_TICKET,
-            reference_key='HLP-02',
-            primary=False
+            reference_key="HLP-02",
+            primary=False,
         )
 
         # submission with primary ticket that is no of type helpdesk
@@ -72,12 +65,12 @@ class TestCheckTasks(TestCase):
             user=user1,
             status=Submission.OPEN,
             target=ENA,
-            data={'has': 'primary non-helpdesk ticket'}
+            data={"has": "primary non-helpdesk ticket"},
         )
         submission.additionalreference_set.create(
             type=AdditionalReference.PANGAEA_JIRA_TICKET,
-            reference_key='PNG-0x2',
-            primary=True
+            reference_key="PNG-0x2",
+            primary=True,
         )
 
         # submission with no tickets at all
@@ -85,13 +78,13 @@ class TestCheckTasks(TestCase):
             user=user2,
             status=Submission.OPEN,
             target=ENA,
-            data={'has': 'no tickets at all'}
+            data={"has": "no tickets at all"},
         )
 
         resource_cred = ResourceCredential.objects.create(
-            title='Resource Title',
-            url='https://www.example.com',
-            authentication_string='letMeIn'
+            title="Resource Title",
+            url="https://www.example.com",
+            authentication_string="letMeIn",
         )
 
         site_conf = SiteConfiguration.objects.create(
@@ -101,8 +94,8 @@ class TestCheckTasks(TestCase):
             pangaea_token_server=resource_cred,
             pangaea_jira_server=resource_cred,
             helpdesk_server=resource_cred,
-            comment='Default configuration',
-            contact='kevin@horstmeier.de'
+            comment="Default configuration",
+            contact="kevin@horstmeier.de",
         )
         user1.site_configuration = site_conf
         user1.is_user = True
@@ -128,8 +121,7 @@ class TestCheckTasks(TestCase):
         self.assertEqual(4, len(no_ticket_subs_1))
 
         no_ticket_subs_2 = Submission.objects.exclude(
-            Q(additionalreference__primary=True) & Q(
-                additionalreference__type='0')
+            Q(additionalreference__primary=True) & Q(additionalreference__type="0")
         )
         self.assertEqual(4, len(no_ticket_subs_2))
 

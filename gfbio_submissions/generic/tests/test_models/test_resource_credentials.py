@@ -2,16 +2,15 @@
 
 from django.test import TestCase
 
-from gfbio_submissions.generic.models import ResourceCredential
+from gfbio_submissions.generic.models.ResourceCredential import ResourceCredential
 
 
 class ResourceCredentialTest(TestCase):
-
     def setUp(self):
         ResourceCredential.objects.get_or_create(
-            title='Resource Title',
-            url='https://www.example.com',
-            authentication_string='letMeIn'
+            title="Resource Title",
+            url="https://www.example.com",
+            authentication_string="letMeIn",
         )
 
     def test_db(self):
@@ -20,7 +19,4 @@ class ResourceCredentialTest(TestCase):
 
     def test_str(self):
         resource_credentials = ResourceCredential.objects.all()
-        self.assertEqual(
-            'Resource Title',
-            resource_credentials.first().__str__()
-        )
+        self.assertEqual("Resource Title", resource_credentials.first().__str__())
