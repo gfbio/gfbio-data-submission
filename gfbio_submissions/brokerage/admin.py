@@ -495,7 +495,7 @@ class EnaReportAdmin(admin.ModelAdmin):
 
 class JiraMessageAdmin(admin.ModelAdmin):
     fields = ('name', 'message')
-    readonly_fields = ('name',)
+    # readonly_fields = ('name',)
     ordering = ('name',)
     list_filter = ('name',)
     search_fields = ['name', ]
