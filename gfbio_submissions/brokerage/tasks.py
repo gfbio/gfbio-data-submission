@@ -564,7 +564,6 @@ def update_ena_submission_data_task(self, previous_task_result=None,
                     'AuditableTextData returned more than one object while update_or_create | filename={0} | {1}'.format(
                         filename, ex)
                 )
-            finally:
                 return TaskProgressReport.CANCELLED
         return True
 
