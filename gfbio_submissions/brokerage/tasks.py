@@ -546,10 +546,26 @@ def update_ena_submission_data_task(self, previous_task_result=None,
     with transaction.atomic():
         for d in ena_submission_data:
             filename, filecontent = ena_submission_data[d]
-            obj, created = submission_upload.submission.auditabletextdata_set.update_or_create(
-                name=filename,
-                defaults={'text_data': filecontent}
+            logger.info(
+                'tasks.py | update_ena_submission_data_task | '
+                'iterate ena_submission_data to update_or_create AuditableTextData | filename={0} len filecontent={1}'.format(
+                    filename, len(filecontent))
             )
+            # TODO: while fixing DASS-1107: I decided to opt for try and catch plus log message. But a general change of
+            #   the workflow is suggested, e.g. delete the respective (or all) textdata and create a new one
+            try:
+                obj, created = submission_upload.submission.auditabletextdata_set.update_or_create(
+                    name=filename,
+                    defaults={'text_data': filecontent}
+                )
+            except AuditableTextData.MultipleObjectsReturned as ex:
+                logger.warning(
+                    'tasks.py | update_ena_submission_data_task | '
+                    'AuditableTextData returned more than one object while update_or_create | filename={0} | {1}'.format(
+                        filename, ex)
+                )
+            finally:
+                return TaskProgressReport.CANCELLED
         return True
 
 
