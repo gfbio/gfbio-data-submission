@@ -65,7 +65,7 @@ services:
   celeryworker:
     build:
       context: ../
-      dockerfile: ./compose/production/django/Dockerfile
+      dockerfile: ./cicd/Dockerfile
     depends_on:
       - postgres
       - redis
@@ -87,7 +87,7 @@ services:
   celerybeat:
     build:
       context: ../
-      dockerfile: ./compose/production/django/Dockerfile
+      dockerfile: ./cicd/Dockerfile
     depends_on:
       - postgres
       - redis
@@ -107,7 +107,7 @@ services:
   flower:
     build:
       context: ../
-      dockerfile: ./compose/production/django/Dockerfile
+      dockerfile: ./cicd/Dockerfile
     depends_on:
       - postgres
       - redis
