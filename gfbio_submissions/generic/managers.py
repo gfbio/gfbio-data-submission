@@ -7,11 +7,7 @@ from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 
 class SiteConfigurationManager(models.Manager):
     def get_hosting_site_configuration(self):
-        _, email = (
-            ADMINS[0]
-            if len(ADMINS)
-            else ("admin", "default@{0}.de".format(HOSTING_SITE))
-        )
+        _, email = ADMINS[0] if len(ADMINS) else ("admin", "default@{0}.de".format(HOSTING_SITE))
         obj, _ = self.get_or_create(
             title=HOSTING_SITE,
             defaults={
@@ -26,6 +22,8 @@ class SiteConfigurationManager(models.Manager):
 
 
 class RequestLogManager(models.Manager):
-    def create_jira_log(self, arguments={}):
+    def create_jira_log(self, arguments=None):
+        if arguments is None:
+            arguments = {}
         arguments["type"] = self.model.JIRA
         self.create(**arguments)

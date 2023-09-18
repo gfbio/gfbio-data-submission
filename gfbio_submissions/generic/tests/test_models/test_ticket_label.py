@@ -10,7 +10,7 @@ from gfbio_submissions.users.models import User
 class TicketLabelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        user = User.objects.create(username="user1")
+        User.objects.create(username="user1")
         resource_cred = ResourceCredential.objects.create(
             title="Resource Title",
             url="https://www.example.com",

@@ -103,5 +103,5 @@ class SiteConfigurationTest(TestCase):
         labels = site_config.get_ticket_labels(label_type=TicketLabel.PANGAEA_JIRA)
         self.assertEqual(2, len(labels))
         self.assertTrue(isinstance(labels, list))
-        for l in labels:
-            self.assertTrue(isinstance(l, str))
+        for label in labels:
+            self.assertTrue(isinstance(label, str))

@@ -47,9 +47,7 @@ class RequestLog(TimeStampedModel):
         default=INCOMING,
         help_text="We separate incoming and outgoing requests",
     )
-    method = models.IntegerField(
-        choices=METHOD_TYPES, default=NONE, help_text="Http method used, if available"
-    )
+    method = models.IntegerField(choices=METHOD_TYPES, default=NONE, help_text="Http method used, if available")
     url = models.TextField(help_text="Target url of this Request", blank=True)
     data = models.TextField(
         blank=True,
@@ -59,22 +57,19 @@ class RequestLog(TimeStampedModel):
     # TODO: is Textfield the rigth choice for file
     files = models.TextField(
         blank=True,
-        help_text="Log potential file-data. Explicitly introduced "
-        "to log requests-library file keyword",
+        help_text="Log potential file-data. Explicitly introduced to log requests-library file keyword",
     )
 
     json = JsonDictField(
         default=dict,
-        help_text="Log potential json-data. Explicitly introduced "
-        "to log requests-library json keyword",
+        help_text="Log potential json-data. Explicitly introduced to log requests-library json keyword",
     )
 
     # TODO: refactor too when changing ownership
     # TODO: keeping it for legacy data
     site_user = models.CharField(
         max_length=72,
-        help_text="A user of a site registered in our System. E.g. user=joe "
-        "(this value ...) at site=GFBio.org",
+        help_text="A user of a site registered in our System. E.g. user=joe (this value ...) at site=GFBio.org",
     )
     user = models.ForeignKey(
         AUTH_USER_MODEL,
@@ -91,21 +86,22 @@ class RequestLog(TimeStampedModel):
     response_status = models.IntegerField(
         null=True,
         blank=True,
-        help_text="The response-code we send if this is an incoming request. "
-        "Otherwise the status sent by request-target",
+        help_text=(
+            "The response-code we send if this is an incoming request. Otherwise the status sent by request-target"
+        ),
     )
     response_content = models.TextField(
         blank=True,
-        help_text="The content we send if this is an incoming request. "
-        "Otherwise the content sent by request-target",
+        help_text="The content we send if this is an incoming request. Otherwise the content sent by request-target",
     )
     triggered_by = models.ForeignKey(
         "self",
         null=True,
         blank=True,
-        help_text="This will be null for incoming requests Otherwise "
-        "(outgoing request) it will show the id of the incoming "
-        "request, that has triggered this request",
+        help_text=(
+            "This will be null for incoming requests Otherwise (outgoing request) it will show the id of the incoming "
+            "request, that has triggered this request"
+        ),
         on_delete=models.SET_NULL,
     )
     request_details = JsonDictField(

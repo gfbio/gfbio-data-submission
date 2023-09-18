@@ -3,7 +3,7 @@ import os
 from unittest import mock
 
 import environ
-from django.test import TestCase, override_settings
+from django.test import TestCase
 
 from config.settings.base import ADMINS, DJANGO_ADMINS
 
