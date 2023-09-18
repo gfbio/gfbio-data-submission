@@ -7,7 +7,9 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
 from config.settings.base import MEDIA_ROOT
-from gfbio_submissions.brokerage.models import Submission, SubmissionUpload
+from gfbio_submissions.brokerage.models.submission import Submission
+from gfbio_submissions.brokerage.models.submission_upload import SubmissionUpload
+# from gfbio_submissions.brokerage.models import Submission, SubmissionUpload
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.users.models import User
 

@@ -14,9 +14,15 @@ from django.utils.encoding import smart_str
 
 from gfbio_submissions.brokerage.configuration.settings import ENA, \
     SUBMISSION_DELAY
-from gfbio_submissions.brokerage.models import Submission, SubmissionUpload, \
-    BrokerObject, CenterName, PersistentIdentifier, AuditableTextData, \
-    TaskProgressReport
+from gfbio_submissions.brokerage.models.auditable_text_data import AuditableTextData
+from gfbio_submissions.brokerage.models.broker_object import BrokerObject
+from gfbio_submissions.brokerage.models.center_name import CenterName
+from gfbio_submissions.brokerage.models.persistent_identifier import PersistentIdentifier
+from gfbio_submissions.brokerage.models.submission import Submission
+from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
+# from gfbio_submissions.brokerage.models import Submission, SubmissionUpload, \
+#     BrokerObject, CenterName, PersistentIdentifier, AuditableTextData, \
+#     TaskProgressReport
 from gfbio_submissions.brokerage.tasks import \
     create_study_broker_objects_only_task, prepare_ena_study_xml_task, \
     register_study_at_ena_task, process_ena_response_task, \

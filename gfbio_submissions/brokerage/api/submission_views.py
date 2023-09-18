@@ -15,7 +15,9 @@ from gfbio_submissions.users.models import User
 from ..configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY, \
     SUBMISSION_DELAY, SUBMISSION_ISSUE_CHECK_DELAY
 from ..forms import SubmissionCommentForm
-from ..models import Submission, SubmissionUpload
+from ..models.submission import Submission
+from ..models.submission_upload import SubmissionUpload
+# from ..models import Submission, SubmissionUpload
 from ..permissions import IsOwnerOrReadOnly
 from ..serializers import SubmissionUploadListSerializer, \
     SubmissionDetailSerializer, SubmissionUploadSerializer
@@ -202,7 +204,7 @@ class SubmissionUploadView(mixins.CreateModelMixin,
                            generics.GenericAPIView):
     queryset = SubmissionUpload.objects.all()
     serializer_class = SubmissionUploadSerializer
-    parser_classes = (parsers.MultiPartParser, parsers.FormParser, )
+    parser_classes = (parsers.MultiPartParser, parsers.FormParser,)
     authentication_classes = (TokenAuthentication, BasicAuthentication)
 
     # TODO: add permission class that checks if access to associated
@@ -297,7 +299,7 @@ class SubmissionUploadDetailView(mixins.RetrieveModelMixin,
         broker_submission_id = kwargs.get('broker_submission_id', uuid4())
         instance = self.get_object()
         if instance.submission.broker_submission_id != UUID(
-                broker_submission_id):
+            broker_submission_id):
             response = Response({'submission': 'No link to this '
                                                'broker_submission_id '
                                                '{0}'.format(
@@ -375,7 +377,7 @@ class SubmissionUploadPatchView(mixins.UpdateModelMixin,
         broker_submission_id = kwargs.get('broker_submission_id', uuid4())
         instance = self.get_object()
         if instance.submission.broker_submission_id != UUID(
-                broker_submission_id):
+            broker_submission_id):
             response = Response({'submission': 'No link to this '
                                                'broker_submission_id '
                                                '{0}'.format(

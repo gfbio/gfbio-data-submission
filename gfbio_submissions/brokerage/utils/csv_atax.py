@@ -3,7 +3,9 @@ from xml.etree.ElementTree import SubElement
 
 from django.db import transaction
 
-from gfbio_submissions.brokerage.models import AuditableTextData
+from gfbio_submissions.brokerage.models.auditable_text_data import AuditableTextData
+
+# from gfbio_submissions.brokerage.models import AuditableTextData
 
 logger = logging.getLogger(__name__)
 

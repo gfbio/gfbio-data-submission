@@ -9,8 +9,8 @@ from celery import chain
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, JIRA_ATTACHMENT_SUB_URL, \
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE, SUBMISSION_DELAY
-from gfbio_submissions.brokerage.models import Submission, \
-    AuditableTextData, TaskProgressReport
+# from gfbio_submissions.brokerage.models import Submission, \
+#     AuditableTextData, TaskProgressReport
 from gfbio_submissions.brokerage.tasks import \
     create_submission_issue_task, \
     create_pangaea_issue_task, attach_to_pangaea_issue_task, \
@@ -22,6 +22,9 @@ from gfbio_submissions.brokerage.tests.utils import \
 from gfbio_submissions.generic.models import SiteConfiguration
 from gfbio_submissions.users.models import User
 from .test_tasks_base import TestTasks
+from ...models.auditable_text_data import AuditableTextData
+from ...models.submission import Submission
+from ...models.task_progress_report import TaskProgressReport
 
 
 class TestTaskChains(TestTasks):

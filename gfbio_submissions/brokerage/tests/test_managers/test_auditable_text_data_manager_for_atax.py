@@ -3,8 +3,12 @@
 from django.test import TestCase
 
 import os
-from gfbio_submissions.brokerage.models import Submission, AuditableTextData, \
-    BrokerObject
+
+from gfbio_submissions.brokerage.models.auditable_text_data import AuditableTextData
+from gfbio_submissions.brokerage.models.broker_object import BrokerObject
+from gfbio_submissions.brokerage.models.submission import Submission
+# from gfbio_submissions.brokerage.models import Submission, AuditableTextData, \
+#     BrokerObject
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 
 from gfbio_submissions.users.models import User

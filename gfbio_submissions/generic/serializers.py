@@ -11,10 +11,12 @@ from rest_framework import serializers
 
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, ENA, \
     ENA_PANGAEA, JIRA_FALLBACK_USERNAME, JIRA_FALLBACK_EMAIL
-from gfbio_submissions.brokerage.models import Submission, AdditionalReference
+from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
+from gfbio_submissions.brokerage.models.submission import Submission
+# from gfbio_submissions.brokerage.models import Submission, AdditionalReference
 from gfbio_submissions.brokerage.utils.schema_validation import validate_data
 from gfbio_submissions.users.models import User
-
+from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
 logger = logging.getLogger(__name__)
 
 
@@ -119,7 +121,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
             self.send_mail_to_admins(
                 reason='Submission update via Jira hook failed',
                 message='serializers.py | JiraHookRequestSerializer | '
-                        'unable to parse reporter | {0}'.format(e))                                
+                        'unable to parse reporter | {0}'.format(e))
 
     def update_submission_user(self):
         new_reporter = {
@@ -205,7 +207,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
                 message='Data provided by Jira hook is not valid.\n'
                         '{0}'.format({'issue': [e.message for
                            e in errors]}), add_submission_id=False, add_issue_key=False
-            )                                      
+            )
             raise serializers.ValidationError(
                 {'issue': [e.message for
                            e in errors]})
@@ -281,7 +283,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
         if submission:
             # TODO: this here is hint to evtl. move this serializer to brokerag app
             references = submission.additionalreference_set.filter(
-                type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+                type=GFBIO_HELPDESK_TICKET,
                 primary=True,
                 reference_key=self.issue_key
             )

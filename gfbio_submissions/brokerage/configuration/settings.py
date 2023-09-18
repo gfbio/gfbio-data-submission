@@ -4,6 +4,27 @@ from builtins import getattr
 
 settings = {}
 
+GFBIO_HELPDESK_TICKET = getattr(
+    settings,
+    'GFBIO_HELPDESK_TICKET',
+    '0'
+)
+
+PANGAEA_JIRA_TICKET = getattr(
+    settings,
+    'PANGAEA_JIRA_TICKET',
+    '1'
+)
+
+REFERENCE_TYPES = getattr(
+    settings,
+    'REFERENCE_TYPES',
+    (
+        (GFBIO_HELPDESK_TICKET, 'gfbio_helpdesk_ticket'),
+        (PANGAEA_JIRA_TICKET, 'pangaea_jira_ticket'),
+    )
+)
+
 # TODO: move this to admin-editable DB field, also go for templating (django/jinja2)
 APPROVAL_EMAIL_SUBJECT_TEMPLATE = getattr(
     settings,

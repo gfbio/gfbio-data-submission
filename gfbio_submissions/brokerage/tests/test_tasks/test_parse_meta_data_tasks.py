@@ -5,8 +5,8 @@ import shutil
 from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.configuration.settings import \
     SUBMISSION_DELAY
-from gfbio_submissions.brokerage.models import Submission, TaskProgressReport, \
-    SubmissionUpload
+# from gfbio_submissions.brokerage.models import Submission, TaskProgressReport, \
+#     SubmissionUpload
 from gfbio_submissions.brokerage.tasks import \
     create_broker_objects_from_submission_data_task, \
     clean_submission_for_update_task, parse_csv_to_update_clean_submission_task, \
@@ -16,6 +16,9 @@ from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
 from gfbio_submissions.users.models import User
 from .test_tasks_base import TestTasks
 from ..test_utils.test_csv_parsing import TestCSVParsing
+from ...models.submission import Submission
+from ...models.submission_upload import SubmissionUpload
+from ...models.task_progress_report import TaskProgressReport
 
 
 class TestParseMetaDataForUpdateTask(TestTasks):

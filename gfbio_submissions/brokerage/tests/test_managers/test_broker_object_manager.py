@@ -6,8 +6,11 @@ from unittest import skip
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models import Submission, BrokerObject, \
-    PersistentIdentifier
+from gfbio_submissions.brokerage.models.broker_object import BrokerObject
+from gfbio_submissions.brokerage.models.persistent_identifier import PersistentIdentifier
+from gfbio_submissions.brokerage.models.submission import Submission
+# from gfbio_submissions.brokerage.models import Submission, BrokerObject, \
+#     PersistentIdentifier
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer, \
     SubmissionDetailSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \

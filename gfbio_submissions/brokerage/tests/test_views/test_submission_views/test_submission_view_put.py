@@ -8,8 +8,12 @@ import responses
 
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL
-from gfbio_submissions.brokerage.models import Submission, \
-    TaskProgressReport, BrokerObject, PersistentIdentifier
+from gfbio_submissions.brokerage.models.broker_object import BrokerObject
+from gfbio_submissions.brokerage.models.persistent_identifier import PersistentIdentifier
+from gfbio_submissions.brokerage.models.submission import Submission
+from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
+# from gfbio_submissions.brokerage.models import Submission, \
+#     TaskProgressReport, BrokerObject, PersistentIdentifier
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_ena_release_xml_response
 from gfbio_submissions.generic.models import SiteConfiguration, RequestLog

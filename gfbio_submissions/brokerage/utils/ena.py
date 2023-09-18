@@ -25,8 +25,11 @@ from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_CENTER_NAME, \
     DEFAULT_ENA_BROKER_NAME, CHECKLIST_ACCESSION_MAPPING, \
     STATIC_SAMPLE_SCHEMA_LOCATION, SUBMISSION_DELAY
-from gfbio_submissions.brokerage.models import AuditableTextData, \
-    EnaReport, PersistentIdentifier
+from gfbio_submissions.brokerage.models.auditable_text_data import AuditableTextData
+from gfbio_submissions.brokerage.models.ena_report import EnaReport
+from gfbio_submissions.brokerage.models.persistent_identifier import PersistentIdentifier
+# from gfbio_submissions.brokerage.models import AuditableTextData, \
+#     EnaReport, PersistentIdentifier
 from gfbio_submissions.brokerage.utils.csv import \
     find_correct_platform_and_model
 from gfbio_submissions.generic.utils import logged_requests

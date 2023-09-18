@@ -4,8 +4,10 @@ import os
 from rest_framework import serializers
 
 from gfbio_submissions.users.models import User
-from .models import Submission, \
-    SubmissionUpload
+from .models.submission import Submission
+from .models.submission_upload import SubmissionUpload
+# from .models import Submission, \
+#     SubmissionUpload
 from .utils.schema_validation import \
     validate_data_full, validate_data_min, validate_contributors, validate_embargo
 
@@ -120,7 +122,6 @@ class SubmissionUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubmissionUpload
         fields = ('user', 'file', 'submission', 'attach_to_ticket', 'meta_data')
-
 
 
 class SubmissionUploadListSerializer(serializers.ModelSerializer):

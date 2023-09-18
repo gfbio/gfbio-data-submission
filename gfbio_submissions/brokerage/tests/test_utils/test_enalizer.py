@@ -8,8 +8,11 @@ from django.utils.encoding import smart_str
 
 from gfbio_submissions.brokerage.configuration.settings import \
     DEFAULT_ENA_CENTER_NAME
-from gfbio_submissions.brokerage.models import Submission, CenterName, \
-    BrokerObject
+from gfbio_submissions.brokerage.models.broker_object import BrokerObject
+from gfbio_submissions.brokerage.models.center_name import CenterName
+from gfbio_submissions.brokerage.models.submission import Submission
+# from gfbio_submissions.brokerage.models import Submission, CenterName, \
+#     BrokerObject
 from gfbio_submissions.brokerage.tests.test_models.test_submission import \
     SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \

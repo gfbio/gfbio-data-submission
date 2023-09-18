@@ -12,7 +12,9 @@ from rest_framework.test import APIRequestFactory, APIClient
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_USERNAME_URL_TEMPLATE, \
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE
-from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
+from gfbio_submissions.brokerage.models.submission import Submission
+from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
+# from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data
 from gfbio_submissions.generic.models import SiteConfiguration, \

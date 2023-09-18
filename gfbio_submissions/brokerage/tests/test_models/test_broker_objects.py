@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models import BrokerObject
+from gfbio_submissions.brokerage.models.broker_object import BrokerObject
+# from gfbio_submissions.brokerage.models import BrokerObject
 from gfbio_submissions.users.models import User
 
 

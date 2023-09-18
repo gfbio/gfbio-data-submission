@@ -13,8 +13,11 @@ from rest_framework.test import APIClient
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_USERNAME_URL_TEMPLATE, \
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE
-from gfbio_submissions.brokerage.models import AdditionalReference, \
-    SubmissionUpload, BrokerObject
+from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
+from gfbio_submissions.brokerage.models.broker_object import BrokerObject
+from gfbio_submissions.brokerage.models.submission_upload import SubmissionUpload
+# from gfbio_submissions.brokerage.models import AdditionalReference, \
+#     SubmissionUpload, BrokerObject
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path, \
     _get_ena_data, _get_ena_data_without_runs
@@ -24,7 +27,7 @@ from gfbio_submissions.brokerage.utils.gfbio import \
 from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential
 from gfbio_submissions.users.models import User
-
+from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
 
 class TestHelpDeskTicketMethods(TestCase):
 
@@ -72,7 +75,7 @@ class TestHelpDeskTicketMethods(TestCase):
 
         submission = cls._create_submission_via_serializer()
         submission.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+            type=GFBIO_HELPDESK_TICKET,
             reference_key='FAKE_KEY',
             primary=True
         )

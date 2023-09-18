@@ -6,7 +6,8 @@ from io import StringIO
 
 from django.conf import settings
 
-from gfbio_submissions.brokerage.models import AuditableTextData
+from gfbio_submissions.brokerage.models.auditable_text_data import AuditableTextData
+# from gfbio_submissions.brokerage.models import AuditableTextData
 from gfbio_submissions.generic.models import RequestLog
 
 

@@ -4,7 +4,9 @@ import responses
 from django.contrib.auth.models import Permission
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models import BrokerObject, AdditionalReference
+from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
+from gfbio_submissions.brokerage.models.broker_object import BrokerObject
+# from gfbio_submissions.brokerage.models import BrokerObject, AdditionalReference
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import \
     _get_pangaea_soap_response, _get_pangaea_ticket_response, \
@@ -14,6 +16,7 @@ from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential
 from gfbio_submissions.users.models import User
+from gfbio_submissions.brokerage.configuration.settings import PANGAEA_JIRA_TICKET, GFBIO_HELPDESK_TICKET
 
 
 class TestTasks(TestCase):
@@ -71,12 +74,12 @@ class TestTasks(TestCase):
 
         submission = cls._create_submission_via_serializer()
         submission.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+            type=GFBIO_HELPDESK_TICKET,
             reference_key='FAKE_KEY',
             primary=True
         )
         submission.additionalreference_set.create(
-            type=AdditionalReference.PANGAEA_JIRA_TICKET,
+            type=PANGAEA_JIRA_TICKET,
             reference_key='PANGAEA_FAKE_KEY',
             primary=True
         )

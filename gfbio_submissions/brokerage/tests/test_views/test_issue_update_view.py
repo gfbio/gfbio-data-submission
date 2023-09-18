@@ -11,8 +11,11 @@ from django.core import mail
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from gfbio_submissions.brokerage.models import Submission, AdditionalReference, \
-    BrokerObject
+from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
+from gfbio_submissions.brokerage.models.broker_object import BrokerObject
+from gfbio_submissions.brokerage.models.submission import Submission
+# from gfbio_submissions.brokerage.models import Submission, AdditionalReference, \
+#     BrokerObject
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_jira_hook_request_data, \
     _get_ena_data, _get_ena_data_without_runs
@@ -22,7 +25,7 @@ from gfbio_submissions.generic.models import RequestLog, ResourceCredential
 from gfbio_submissions.users.models import User
 from gfbio_submissions.generic.models import SiteConfiguration
 
-
+from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
 
 class TestJiraIssueUpdateView(APITestCase):
 
@@ -81,7 +84,7 @@ class TestJiraIssueUpdateView(APITestCase):
 
         AdditionalReference.objects.create(
             submission=submission,
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+            type=GFBIO_HELPDESK_TICKET,
             primary=True,
             reference_key='SAND-007'
         )

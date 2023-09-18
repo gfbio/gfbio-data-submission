@@ -13,7 +13,9 @@ from rest_framework.test import APIClient
 from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.configuration.settings import \
     GENERIC, ENA
-from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
+from gfbio_submissions.brokerage.models.submission import Submission
+from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
+# from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
 from gfbio_submissions.brokerage.tests.utils import \
     _get_submission_request_data, _get_submission_post_response
 from gfbio_submissions.users.models import User

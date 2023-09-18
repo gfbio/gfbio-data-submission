@@ -6,8 +6,8 @@ from django.test import override_settings
 
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, ENA_PANGAEA
-from gfbio_submissions.brokerage.models import Submission, \
-    TaskProgressReport, JiraMessage
+# from gfbio_submissions.brokerage.models import Submission, \
+#     TaskProgressReport, JiraMessage
 from gfbio_submissions.brokerage.tasks import create_submission_issue_task, \
     add_accession_to_submission_issue_task, \
     add_pangaealink_to_submission_issue_task, \
@@ -18,6 +18,9 @@ from gfbio_submissions.brokerage.tasks import create_submission_issue_task, \
 from gfbio_submissions.generic.models import SiteConfiguration
 from gfbio_submissions.users.models import User
 from .test_helpdesk_tasks_base import TestHelpDeskTasksBase
+from ...models.jira_message import JiraMessage
+from ...models.submission import Submission
+from ...models.task_progress_report import TaskProgressReport
 
 
 class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):

@@ -5,7 +5,9 @@ import requests
 import responses
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models import Submission, AdditionalReference
+from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
+from gfbio_submissions.brokerage.models.submission import Submission
+# from gfbio_submissions.brokerage.models import Submission, AdditionalReference
 from gfbio_submissions.brokerage.tests.utils import _get_pangaea_soap_body, \
     _get_pangaea_soap_response
 from gfbio_submissions.brokerage.utils.pangaea import \
@@ -15,6 +17,7 @@ from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential
 from gfbio_submissions.users.models import User
 
+from gfbio_submissions.brokerage.configuration.settings import PANGAEA_JIRA_TICKET, GFBIO_HELPDESK_TICKET
 
 class PangaeaTicketTest(TestCase):
 
@@ -41,7 +44,7 @@ class PangaeaTicketTest(TestCase):
         Submission.objects.create(user=None)
         AdditionalReference.objects.create(
             submission=submission,
-            type=AdditionalReference.PANGAEA_JIRA_TICKET,
+            type=PANGAEA_JIRA_TICKET,
             reference_key='PDI-0815',
             primary=True
         )
@@ -115,7 +118,7 @@ class PangaeaTicketTest(TestCase):
     def test_filter_for_submission_additional_reference(self):
         submissions_with_reference = Submission.objects.filter(
             status=Submission.OPEN).filter(
-            additionalreference__type=AdditionalReference.PANGAEA_JIRA_TICKET)
+            additionalreference__type=PANGAEA_JIRA_TICKET)
         all_submissions = Submission.objects.all()
 
         self.assertEqual(2, len(all_submissions))
@@ -129,7 +132,7 @@ class PangaeaTicketTest(TestCase):
             1,
             len(
                 submissions_with_reference.first().additionalreference_set.filter(
-                    type=AdditionalReference.PANGAEA_JIRA_TICKET)))
+                    type=PANGAEA_JIRA_TICKET)))
         ref = submissions_with_reference.first().additionalreference_set.filter(
-            type=AdditionalReference.PANGAEA_JIRA_TICKET).first()
+            type=PANGAEA_JIRA_TICKET).first()
         self.assertEqual('PDI-0815', ref.reference_key)

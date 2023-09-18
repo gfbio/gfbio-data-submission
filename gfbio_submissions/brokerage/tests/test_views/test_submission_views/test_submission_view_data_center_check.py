@@ -7,7 +7,9 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 
 from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.configuration.settings import GENERIC, ENA
-from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
+from gfbio_submissions.brokerage.models.submission import Submission
+from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
+# from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
 from gfbio_submissions.brokerage.tests.utils import \
     _get_test_data_dir_path
 from gfbio_submissions.users.models import User

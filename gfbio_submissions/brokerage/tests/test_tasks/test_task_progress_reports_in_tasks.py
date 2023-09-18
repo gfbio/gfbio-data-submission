@@ -4,13 +4,15 @@ from uuid import uuid4
 
 import responses
 
-from gfbio_submissions.brokerage.models import Submission, \
-    TaskProgressReport
+# from gfbio_submissions.brokerage.models import Submission, \
+#     TaskProgressReport
 from gfbio_submissions.brokerage.tasks import \
     create_broker_objects_from_submission_data_task, \
     add_accession_to_pangaea_issue_task
 from gfbio_submissions.generic.models import SiteConfiguration
 from .test_tasks_base import TestTasks
+from ...models.submission import Submission
+from ...models.task_progress_report import TaskProgressReport
 
 
 class TestTaskProgressReportInTasks(TestTasks):

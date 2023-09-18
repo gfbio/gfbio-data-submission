@@ -30,9 +30,16 @@ from .configuration.settings import ENA, ENA_PANGAEA, ATAX, PANGAEA_ISSUE_VIEW_U
 from .configuration.settings import SUBMISSION_MAX_RETRIES, \
     SUBMISSION_RETRY_DELAY
 from .exceptions import TransferServerError, TransferClientError
-from .models import BrokerObject, AuditableTextData, \
-    AdditionalReference, TaskProgressReport, Submission
-from .models import SubmissionUpload, EnaReport
+from .models.additional_reference import AdditionalReference
+from .models.auditable_text_data import AuditableTextData
+from .models.broker_object import BrokerObject
+from .models.ena_report import EnaReport
+from .models.submission import Submission
+from .models.submission_upload import SubmissionUpload
+from .models.task_progress_report import TaskProgressReport
+# from .models import BrokerObject, AuditableTextData, \
+#     AdditionalReference, TaskProgressReport, Submission
+# from .models import SubmissionUpload, EnaReport
 from .utils.atax import parse_taxonomic_csv_specimen, parse_taxonomic_csv_measurement, \
     parse_taxonomic_csv_multimedia, analyze_filename_and_type
 from .utils.atax import update_specimen_with_measurements_abcd_xml, \
@@ -59,6 +66,8 @@ from .utils.task_utils import jira_error_auto_retry, \
     send_data_to_ena_for_validation_or_test, get_jira_comment_template, \
     jira_comment_replace
 from ..generic.utils import logged_requests
+
+from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET, PANGAEA_JIRA_TICKET
 
 logger = logging.getLogger(__name__)
 
@@ -1088,7 +1097,7 @@ def create_pangaea_issue_task(self, prev=None, submission_id=None):
                           broker_submission_id=submission.broker_submission_id)
     if jira_client.issue:
         submission.additionalreference_set.create(
-            type=AdditionalReference.PANGAEA_JIRA_TICKET,
+            type=PANGAEA_JIRA_TICKET,
             reference_key=jira_client.issue.key,
             primary=True
         )
@@ -1189,7 +1198,7 @@ def check_for_pangaea_doi_task(self, resource_credential_id=None):
     # TODO: move this to top and check there are submissiont to fetch doi for, if not no request for login token is needed
     submissions = \
         Submission.objects.get_submitted_submissions_containing_reference(
-            reference_type=AdditionalReference.PANGAEA_JIRA_TICKET
+            reference_type=PANGAEA_JIRA_TICKET
         )
     logger.info(
         msg='check_for_pangaea_doi_task. pulling pangaea dois for {} '
@@ -1295,7 +1304,7 @@ def create_submission_issue_task(self, prev_task_result=None,
     # TODO: althouht filter for primary should deliver only on ticket, a dedicated manager method
     #   would be cleaner (no .first() on query set)
     # existing_tickets = submission.additionalreference_set.filter(
-    #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
+    #     Q(type=GFBIO_HELPDESK_TICKET) & Q(primary=True))
 
     jira_client = JiraClient(resource=site_configuration.helpdesk_server)
     jira_client.create_submission_issue(reporter=prev_task_result,
@@ -1306,7 +1315,7 @@ def create_submission_issue_task(self, prev_task_result=None,
                           broker_submission_id=submission.broker_submission_id)
     if jira_client.issue:
         submission.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+            type=GFBIO_HELPDESK_TICKET,
             reference_key=jira_client.issue.key,
             primary=True
         )
@@ -1392,7 +1401,7 @@ def add_accession_to_submission_issue_task(self, prev_task_result=None,
     # TODO: result is a list of GFbio helpdesk tickets wich are primary,
     #   tecnically len can only be 1, due to model.save ...
     # existing_tickets = submission.additionalreference_set.filter(
-    #     Q(type=AdditionalReference.GFBIO_HELPDESK_TICKET) & Q(primary=True))
+    #     Q(type=GFBIO_HELPDESK_TICKET) & Q(primary=True))
     reference = submission.get_primary_helpdesk_reference()
 
     submitter_name = 'Submitter'
@@ -2060,7 +2069,7 @@ def check_issue_existing_for_submission_task(self, prev=None,
         return TaskProgressReport.CANCELLED
 
     if len(submission.additionalreference_set.filter(
-        primary=True, type=AdditionalReference.GFBIO_HELPDESK_TICKET)) < 1:
+        primary=True, type=GFBIO_HELPDESK_TICKET)) < 1:
         logger.error(
             'tasks.py | check_issue_existing_for_submission_task | '
             'no helpdesk issue found for submission={0}  | '

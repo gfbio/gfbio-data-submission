@@ -4,8 +4,11 @@ from django.db.models import Q
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.configuration.settings import ENA
-from gfbio_submissions.brokerage.models import Submission, AdditionalReference, \
-    TaskProgressReport
+from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
+from gfbio_submissions.brokerage.models.submission import Submission
+from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
+# from gfbio_submissions.brokerage.models import Submission, AdditionalReference, \
+#     TaskProgressReport
 from gfbio_submissions.brokerage.tasks import \
     check_for_submissions_without_helpdesk_issue_task, \
     check_for_user_without_site_configuration_task
@@ -13,6 +16,7 @@ from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.generic.models import ResourceCredential, \
     SiteConfiguration
 from gfbio_submissions.users.models import User
+from gfbio_submissions.brokerage.configuration.settings import PANGAEA_JIRA_TICKET, GFBIO_HELPDESK_TICKET
 
 
 class TestCheckTasks(TestCase):
@@ -37,12 +41,12 @@ class TestCheckTasks(TestCase):
             data={'has': 'primary helpdeskticket and pangaea ticket'}
         )
         submission.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+            type=GFBIO_HELPDESK_TICKET,
             reference_key='HLP-01',
             primary=True
         )
         submission.additionalreference_set.create(
-            type=AdditionalReference.PANGAEA_JIRA_TICKET,
+            type=PANGAEA_JIRA_TICKET,
             reference_key='PNG-0x',
             primary=False
         )
@@ -62,7 +66,7 @@ class TestCheckTasks(TestCase):
             data={'has': 'non-primary helpdeskticket and no pangaea ticket'}
         )
         submission.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+            type=GFBIO_HELPDESK_TICKET,
             reference_key='HLP-02',
             primary=False
         )
@@ -75,7 +79,7 @@ class TestCheckTasks(TestCase):
             data={'has': 'primary non-helpdesk ticket'}
         )
         submission.additionalreference_set.create(
-            type=AdditionalReference.PANGAEA_JIRA_TICKET,
+            type=PANGAEA_JIRA_TICKET,
             reference_key='PNG-0x2',
             primary=True
         )
@@ -122,7 +126,7 @@ class TestCheckTasks(TestCase):
         no_ticket_subs_1 = Submission.objects.exclude(
             additionalreference__in=AdditionalReference.objects.filter(
                 primary=True,
-                type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+                type=GFBIO_HELPDESK_TICKET,
             )
         )
         self.assertEqual(4, len(no_ticket_subs_1))

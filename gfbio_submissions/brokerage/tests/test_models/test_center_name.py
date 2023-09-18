@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models import CenterName
+from gfbio_submissions.brokerage.models.center_name import CenterName
+
+
+# from gfbio_submissions.brokerage.models import CenterName
 
 
 class CenterNameTest(TestCase):

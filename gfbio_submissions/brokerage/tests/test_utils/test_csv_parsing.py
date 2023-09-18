@@ -11,8 +11,12 @@ from django.test import TestCase
 from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.configuration.settings import \
     GENERIC, ENA_PANGAEA, ENA
-from gfbio_submissions.brokerage.models import Submission, AdditionalReference, \
-    SubmissionUpload, BrokerObject
+from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
+from gfbio_submissions.brokerage.models.broker_object import BrokerObject
+from gfbio_submissions.brokerage.models.submission import Submission
+from gfbio_submissions.brokerage.models.submission_upload import SubmissionUpload
+# from gfbio_submissions.brokerage.models import Submission, AdditionalReference, \
+#     SubmissionUpload, BrokerObject
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
@@ -24,7 +28,7 @@ from gfbio_submissions.brokerage.utils.schema_validation import \
     validate_data_full
 from gfbio_submissions.users.models import User
 
-
+from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
 class TestCSVParsing(TestCase):
 
     @classmethod
@@ -77,7 +81,7 @@ class TestCSVParsing(TestCase):
         serializer.is_valid()
         submission = serializer.save(user=user)
         submission.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+            type=GFBIO_HELPDESK_TICKET,
             reference_key='FAKE_KEY',
             primary=True
         )

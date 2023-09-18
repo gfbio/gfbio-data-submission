@@ -10,12 +10,16 @@ from django.utils.encoding import smart_bytes
 
 from .configuration.settings import SUBMISSION_DELAY, \
     SUBMISSION_UPLOAD_RETRY_DELAY
-from .models import PersistentIdentifier, \
-    Submission, BrokerObject, AdditionalReference, TaskProgressReport, \
-    SubmissionUpload, \
-    AuditableTextData, \
-    JiraMessage, \
-    CenterName, EnaReport
+from .models.additional_reference import AdditionalReference
+from .models.auditable_text_data import AuditableTextData
+from .models.broker_object import BrokerObject
+from .models.center_name import CenterName
+from .models.ena_report import EnaReport
+from .models.jira_message import JiraMessage
+from .models.persistent_identifier import PersistentIdentifier
+from .models.submission import Submission
+from .models.submission_upload import SubmissionUpload
+from .models.task_progress_report import TaskProgressReport
 from .utils.ena import release_study_on_ena
 from .utils.submission_transfer import \
     SubmissionTransferHandler

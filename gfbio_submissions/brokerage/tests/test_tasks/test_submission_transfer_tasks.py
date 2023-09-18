@@ -4,9 +4,9 @@ import responses
 from celery import chain
 from django.test import override_settings
 
-from gfbio_submissions.brokerage.models import Submission, \
-    AuditableTextData, PersistentIdentifier, \
-    BrokerObject
+# from gfbio_submissions.brokerage.models import Submission, \
+#     AuditableTextData, PersistentIdentifier, \
+#     BrokerObject
 from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task, \
     transfer_data_to_ena_task, process_ena_response_task
 from gfbio_submissions.brokerage.tests.utils import \
@@ -14,6 +14,10 @@ from gfbio_submissions.brokerage.tests.utils import \
     _get_ena_error_xml_response
 from gfbio_submissions.generic.models import SiteConfiguration, RequestLog
 from .test_tasks_base import TestTasks
+from ...models.auditable_text_data import AuditableTextData
+from ...models.broker_object import BrokerObject
+from ...models.persistent_identifier import PersistentIdentifier
+from ...models.submission import Submission
 
 
 class TestSubmissionTransferTasks(TestTasks):

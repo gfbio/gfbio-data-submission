@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models import BrokerObject, \
-    PersistentIdentifier
+from gfbio_submissions.brokerage.models.broker_object import BrokerObject
+from gfbio_submissions.brokerage.models.persistent_identifier import PersistentIdentifier
+# from gfbio_submissions.brokerage.models import BrokerObject, \
+#     PersistentIdentifier
 from gfbio_submissions.users.models import User
 
 

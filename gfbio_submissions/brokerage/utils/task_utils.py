@@ -11,8 +11,13 @@ from gfbio_submissions.brokerage.configuration.settings import \
 from gfbio_submissions.brokerage.exceptions import TransferInternalError, \
     raise_response_exceptions, TransferClientError, raise_no_ticket_exception, \
     NoTicketAvailableError
-from gfbio_submissions.brokerage.models import TaskProgressReport, Submission, \
-    AuditableTextData, CenterName, JiraMessage
+from gfbio_submissions.brokerage.models.auditable_text_data import AuditableTextData
+from gfbio_submissions.brokerage.models.center_name import CenterName
+from gfbio_submissions.brokerage.models.jira_message import JiraMessage
+from gfbio_submissions.brokerage.models.submission import Submission
+from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
+# from gfbio_submissions.brokerage.models import TaskProgressReport, Submission, \
+#     AuditableTextData, CenterName, JiraMessage
 from gfbio_submissions.brokerage.utils.ena import send_submission_to_ena
 from gfbio_submissions.generic.models import ResourceCredential
 

@@ -6,7 +6,8 @@ import responses
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from gfbio_submissions.brokerage.models import Submission
+from gfbio_submissions.brokerage.models.submission import Submission
+# from gfbio_submissions.brokerage.models import Submission
 from gfbio_submissions.users.models import User
 from .test_submission_view_base import TestSubmissionView
 from ...test_models.test_submission import SubmissionTest

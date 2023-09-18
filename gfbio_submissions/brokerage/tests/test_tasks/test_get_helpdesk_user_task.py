@@ -7,7 +7,9 @@ from django.test import override_settings
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_USERNAME_URL_TEMPLATE, \
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE, JIRA_FALLBACK_USERNAME
-from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
+from gfbio_submissions.brokerage.models.submission import Submission
+from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
+# from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
 from gfbio_submissions.brokerage.tasks import \
     get_gfbio_helpdesk_username_task
 from gfbio_submissions.brokerage.tests.test_tasks.test_tasks_base import \

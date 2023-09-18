@@ -16,7 +16,9 @@ from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL, JIRA_ATTACHMENT_URL, GENERIC
-from gfbio_submissions.brokerage.models import Submission, AdditionalReference
+from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
+from gfbio_submissions.brokerage.models.submission import Submission
+# from gfbio_submissions.brokerage.models import Submission, AdditionalReference
 from gfbio_submissions.brokerage.tests.test_models.test_submission import \
     SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_pangaea_soap_response, \
@@ -28,7 +30,7 @@ from gfbio_submissions.brokerage.utils.jira import JiraClient
 from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential, RequestLog
 from gfbio_submissions.users.models import User
-
+from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
 
 class TestJiraClient(TestCase):
 
@@ -65,7 +67,7 @@ class TestJiraClient(TestCase):
         )
         submission = SubmissionTest._create_submission_via_serializer()
         submission.additionalreference_set.create(
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+            type=GFBIO_HELPDESK_TICKET,
             reference_key='SAND-1661',
             primary=True
         )

@@ -12,7 +12,8 @@ from rest_framework.test import APIRequestFactory, APIClient
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_USERNAME_URL_TEMPLATE, JIRA_ISSUE_URL, \
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE
-from gfbio_submissions.brokerage.models import SubmissionUpload
+from gfbio_submissions.brokerage.models.submission_upload import SubmissionUpload
+# from gfbio_submissions.brokerage.models import SubmissionUpload
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential

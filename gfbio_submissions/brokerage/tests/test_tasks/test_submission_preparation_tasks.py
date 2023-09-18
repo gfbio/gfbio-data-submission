@@ -2,13 +2,16 @@
 from pprint import pprint
 from unittest.mock import patch
 
-from gfbio_submissions.brokerage.models import Submission, BrokerObject, \
-    TaskProgressReport
+# from gfbio_submissions.brokerage.models import Submission, BrokerObject, \
+#     TaskProgressReport
 from gfbio_submissions.brokerage.tasks import \
     create_broker_objects_from_submission_data_task, \
     check_on_hold_status_task
 from gfbio_submissions.generic.models import SiteConfiguration
 from .test_tasks_base import TestTasks
+from ...models.broker_object import BrokerObject
+from ...models.submission import Submission
+from ...models.task_progress_report import TaskProgressReport
 
 
 class TestSubmissionPreparationTasks(TestTasks):

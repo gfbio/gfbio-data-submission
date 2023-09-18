@@ -5,10 +5,12 @@ from uuid import uuid4
 
 import responses
 
-from gfbio_submissions.brokerage.models import Submission, AdditionalReference
+from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
+from gfbio_submissions.brokerage.models.submission import Submission
+# from gfbio_submissions.brokerage.models import Submission, AdditionalReference
 from gfbio_submissions.users.models import User
 from .test_submission_view_base import TestSubmissionView
-
+from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
 
 # FIXME: duplicate of below ?
 class TestSubmissionViewGetDetailRequests(TestSubmissionView):
@@ -69,7 +71,7 @@ class TestSubmissionViewGetDetailRequests(TestSubmissionView):
 
         AdditionalReference.objects.create(
             submission=submission,
-            type=AdditionalReference.GFBIO_HELPDESK_TICKET,
+            type=GFBIO_HELPDESK_TICKET,
             primary=True,
             reference_key='SAND-0815',
         )

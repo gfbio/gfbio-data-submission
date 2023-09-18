@@ -13,7 +13,8 @@ from django.db import transaction
 from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY, \
     CSV_WRITER_QUOTING, SEPARATOR
 from gfbio_submissions.brokerage.forms import Gcdj2CsvForm
-from gfbio_submissions.brokerage.models import Submission
+from gfbio_submissions.brokerage.models.submission import Submission
+# from gfbio_submissions.brokerage.models import Submission
 from gfbio_submissions.brokerage.utils.gcdj_utils import flatten_dictionary
 from gfbio_submissions.generic.models import TicketLabel
 from gfbio_submissions.generic.utils import logged_requests
