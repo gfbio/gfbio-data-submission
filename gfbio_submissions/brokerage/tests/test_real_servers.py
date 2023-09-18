@@ -158,7 +158,9 @@ class TestSubmissionServersForAtaxWorkflow(TestCase):
 
         # data = self._create_atax_csv_test_data(meta_data=True)
         # requests.post(test_url, files = {"form_field_name": test_file})
-        file_name = 'csv_files/specimen_table_Platypelis.csv'
+        # file_name = 'csv_files/specimen_table_Platypelis.csv'
+        file_name = 'csv_files/specimen_table_Platypelis_with_error.csv'
+        # file_name = 'csv_files/measurement_table_Platypelis.csv'
         csv_file = open(
             os.path.join(_get_test_data_dir_path(), file_name),
             'rb'

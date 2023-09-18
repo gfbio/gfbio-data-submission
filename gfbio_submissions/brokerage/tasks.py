@@ -110,10 +110,7 @@ class SubmissionTask(celery.Task):
     #     super(SubmissionTask, self).__init__()
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
-        logger.info(
-            "tasks.py | SubmissionTask | on_retry | task_id={0} | "
-            "name={1}".format(task_id, self.name)
-        )
+        logger.info("tasks.py | SubmissionTask | on_retry | task_id={0} | " "name={1}".format(task_id, self.name))
         # TODO: capture this idea of reporting to sentry
         # sentrycli.captureException(exc)
         TaskProgressReport.objects.update_report_on_exception(
@@ -137,9 +134,7 @@ class SubmissionTask(celery.Task):
             "tasks.py | SubmissionTask | on_success | task_id={0} | "
             "name={1} | retval={2}".format(task_id, self.name, retval)
         )
-        TaskProgressReport.objects.update_report_on_success(
-            retval, task_id, args, kwargs, task_name=self.name
-        )
+        TaskProgressReport.objects.update_report_on_success(retval, task_id, args, kwargs, task_name=self.name)
         super(SubmissionTask, self).on_success(retval, task_id, args, kwargs)
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
@@ -148,12 +143,8 @@ class SubmissionTask(celery.Task):
             "name={1} | args={2} | kwargs={3} | einfo={4} | "
             "retval={5}".format(task_id, self.name, args, kwargs, einfo, retval)
         )
-        TaskProgressReport.objects.update_report_after_return(
-            status, task_id, task_name=self.name
-        )
-        super(SubmissionTask, self).after_return(
-            status, retval, task_id, args, kwargs, einfo
-        )
+        TaskProgressReport.objects.update_report_after_return(status, task_id, task_name=self.name)
+        super(SubmissionTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
 
 
 # common tasks -----------------------------------------------------------------
@@ -165,12 +156,9 @@ class SubmissionTask(celery.Task):
     bind=True,
     name="tasks.check_for_molecular_content_in_submission_task",
 )
-def check_for_molecular_content_in_submission_task(
-    self, previous_task_result=None, submission_id=None
-):
+def check_for_molecular_content_in_submission_task(self, previous_task_result=None, submission_id=None):
     logger.info(
-        msg="check_for_molecular_content_in_submission_task. get submission"
-        " with pk={}.".format(submission_id)
+        msg="check_for_molecular_content_in_submission_task. get submission" " with pk={}.".format(submission_id)
     )
 
     # TODO: needs only submission, not both.
@@ -184,9 +172,7 @@ def check_for_molecular_content_in_submission_task(
         "process submission={}.".format(submission.broker_submission_id)
     )
 
-    molecular_data_available, messages, check_performed = check_for_molecular_content(
-        submission
-    )
+    molecular_data_available, messages, check_performed = check_for_molecular_content(submission)
 
     logger.info(
         msg="check_for_molecular_content_in_submission_task. "
@@ -213,19 +199,11 @@ def trigger_submission_transfer(self, previous_task_result=None, submission_id=N
     messages = []
 
     if isinstance(previous_task_result, dict):
-        molecular_data_available = previous_task_result.get(
-            "molecular_data_available", False
-        )
-        check_performed = previous_task_result.get(
-            "molecular_data_check_performed", False
-        )
+        molecular_data_available = previous_task_result.get("molecular_data_available", False)
+        check_performed = previous_task_result.get("molecular_data_check_performed", False)
         messages = previous_task_result.get("messages", [])
 
-    logger.info(
-        msg="trigger_submission_transfer. get submission with pk={}.".format(
-            submission_id
-        )
-    )
+    logger.info(msg="trigger_submission_transfer. get submission with pk={}.".format(submission_id))
     if len(messages):
         logger.warning(
             "tasks.py | trigger_submission_transfer | "
@@ -257,19 +235,13 @@ def trigger_submission_transfer(self, previous_task_result=None, submission_id=N
     bind=True,
     name="tasks.trigger_submission_transfer_for_updates",
 )
-def trigger_submission_transfer_for_updates(
-    self, previous_task_result=None, broker_submission_id=None
-):
+def trigger_submission_transfer_for_updates(self, previous_task_result=None, broker_submission_id=None):
     molecular_data_available = False
     check_performed = False
     messages = []
     if isinstance(previous_task_result, dict):
-        molecular_data_available = previous_task_result.get(
-            "molecular_data_available", False
-        )
-        check_performed = previous_task_result.get(
-            "molecular_data_check_performed", False
-        )
+        molecular_data_available = previous_task_result.get("molecular_data_available", False)
+        check_performed = previous_task_result.get("molecular_data_check_performed", False)
         messages = previous_task_result.get("messages", [])
 
     logger.info(
@@ -277,9 +249,7 @@ def trigger_submission_transfer_for_updates(
             broker_submission_id
         )
     )
-    submission_id = Submission.objects.get_open_submission_id_for_bsi(
-        broker_submission_id=broker_submission_id
-    )
+    submission_id = Submission.objects.get_open_submission_id_for_bsi(broker_submission_id=broker_submission_id)
 
     if len(messages):
         logger.warning(
@@ -331,9 +301,7 @@ def check_on_hold_status_task(self, previous_task_result=None, submission_id=Non
                 site_configuration.release_submissions,
             )
         )
-        transfer_handler = SubmissionTransferHandler(
-            submission_id=submission.pk, target_archive=submission.target
-        )
+        transfer_handler = SubmissionTransferHandler(submission_id=submission.pk, target_archive=submission.target)
         transfer_handler.execute()
     else:
         if not submission.approval_notification_sent:
@@ -353,16 +321,12 @@ def check_on_hold_status_task(self, previous_task_result=None, submission_id=Non
                 subject=APPROVAL_EMAIL_SUBJECT_TEMPLATE.format(
                     HOST_URL_ROOT,
                     # site_configuration.site.username if site_configuration.site else site_configuration.title,
-                    submission.user.username
-                    if submission.user
-                    else site_configuration.title,
+                    submission.user.username if submission.user else site_configuration.title,
                     submission.broker_submission_id,
                 ),
                 message=APPROVAL_EMAIL_MESSAGE_TEMPLATE.format(
                     submission.broker_submission_id,
-                    "{0}{1}brokerage/submission/{2}/change/".format(
-                        HOST_URL_ROOT, ADMIN_URL, submission.pk
-                    ),
+                    "{0}{1}brokerage/submission/{2}/change/".format(HOST_URL_ROOT, ADMIN_URL, submission.pk),
                 ),
             )
             submission.approval_notification_sent = True
@@ -377,9 +341,7 @@ def check_on_hold_status_task(self, previous_task_result=None, submission_id=Non
     bind=True,
     name="tasks.create_study_broker_objects_only_task",
 )
-def create_study_broker_objects_only_task(
-    self, previous_task_result=None, submission_id=None
-):
+def create_study_broker_objects_only_task(self, previous_task_result=None, submission_id=None):
     # TODO: refactor to general method for all tasks where applicable
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
@@ -431,13 +393,9 @@ def create_broker_objects_from_submission_data_task(
         return TaskProgressReport.CANCELLED
 
     submission, site_configuration = (
-        get_submitted_submission_and_site_configuration(
-            submission_id=submission_id, task=self
-        )
+        get_submitted_submission_and_site_configuration(submission_id=submission_id, task=self)
         if use_submitted_submissions
-        else get_submission_and_site_configuration(
-            submission_id=submission_id, task=self, include_closed=True
-        )
+        else get_submission_and_site_configuration(submission_id=submission_id, task=self, include_closed=True)
     )
     logger.info(
         "tasks.py | create_broker_objects_from_submission_data_task | "
@@ -475,9 +433,7 @@ def create_broker_objects_from_submission_data_task(
     bind=True,
     name="tasks.delete_related_auditable_textdata_task",
 )
-def delete_related_auditable_textdata_task(
-    self, prev_task_result=None, submission_id=None
-):
+def delete_related_auditable_textdata_task(self, prev_task_result=None, submission_id=None):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
     )
@@ -515,9 +471,7 @@ def prepare_ena_study_xml_task(self, previous_task_result=None, submission_id=No
         study_pk = submission.auditabletextdata_set.filter(name="study.xml").first().pk
         logger.info(
             "tasks.py | prepare_ena_study_xml_task | "
-            " auditable textdata with name study.xml found | return pk={0}".format(
-                study_pk
-            )
+            " auditable textdata with name study.xml found | return pk={0}".format(study_pk)
         )
         # TODO: for now return XMLs primary key
         return study_pk
@@ -530,20 +484,14 @@ def prepare_ena_study_xml_task(self, previous_task_result=None, submission_id=No
         return TaskProgressReport.CANCELLED
     else:
         study_data = prepare_study_data_only(submission=submission)
-        study_text_data = store_single_data_item_as_auditable_text_data(
-            submission=submission, data=study_data
-        )
+        study_text_data = store_single_data_item_as_auditable_text_data(submission=submission, data=study_data)
         logger.info(
             "tasks.py | prepare_ena_study_xml_task | "
             " created auditable textdata with name study.xml | return pk={0}".format(
                 study_text_data.pk if study_text_data is not None else "invalid"
             )
         )
-        return (
-            TaskProgressReport.CANCELLED
-            if study_text_data is None
-            else study_text_data.pk
-        )
+        return TaskProgressReport.CANCELLED if study_text_data is None else study_text_data.pk
 
 
 @app.task(
@@ -562,9 +510,7 @@ def prepare_ena_submission_data_task(self, prev_task_result=None, submission_id=
         with transaction.atomic():
             submission.auditabletextdata_set.all().delete()
         ena_submission_data = prepare_ena_data(submission=submission)
-        store_ena_data_as_auditable_text_data(
-            submission=submission, data=ena_submission_data
-        )
+        store_ena_data_as_auditable_text_data(submission=submission, data=ena_submission_data)
         # TODO: this will become obsolete once, data is taken from AuditableTextData ....
         return ena_submission_data
     else:
@@ -581,22 +527,16 @@ def prepare_ena_submission_data_task(self, prev_task_result=None, submission_id=
     bind=True,
     name="tasks.update_ena_submission_data_task",
 )
-def update_ena_submission_data_task(
-    self, previous_task_result=None, submission_upload_id=None
-):
+def update_ena_submission_data_task(self, previous_task_result=None, submission_upload_id=None):
     # TODO: here it would be possible to get the related submission for the TaskReport
     TaskProgressReport.objects.create_initial_report(submission=None, task=self)
-    submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(
-        submission_upload_id
-    )
+    submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(submission_upload_id)
 
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
             "tasks.py | update_ena_submission_data_task | "
             "previous task reported={0} | "
-            "submission_upload_id={1}".format(
-                TaskProgressReport.CANCELLED, submission_upload_id
-            )
+            "submission_upload_id={1}".format(TaskProgressReport.CANCELLED, submission_upload_id)
         )
         return TaskProgressReport.CANCELLED
 
@@ -618,12 +558,26 @@ def update_ena_submission_data_task(
     with transaction.atomic():
         for d in ena_submission_data:
             filename, filecontent = ena_submission_data[d]
-            (
-                obj,
-                created,
-            ) = submission_upload.submission.auditabletextdata_set.update_or_create(
-                name=filename, defaults={"text_data": filecontent}
+            logger.info(
+                "tasks.py | update_ena_submission_data_task | "
+                "iterate ena_submission_data to update_or_create AuditableTextData | filename={0} len filecontent={1}".format(
+                    filename, len(filecontent)
+                )
             )
+            # TODO: while fixing DASS-1107: I decided to opt for try and catch plus log message. But a general change of
+            #   the workflow is suggested, e.g. delete the respective (or all) textdata and create a new one
+            try:
+                obj, created = submission_upload.submission.auditabletextdata_set.update_or_create(
+                    name=filename, defaults={"text_data": filecontent}
+                )
+            except AuditableTextData.MultipleObjectsReturned as ex:
+                logger.warning(
+                    "tasks.py | update_ena_submission_data_task | "
+                    "AuditableTextData returned more than one object while update_or_create | filename={0} | {1}".format(
+                        filename, ex
+                    )
+                )
+                return TaskProgressReport.CANCELLED
         return True
 
 
@@ -632,15 +586,9 @@ def update_ena_submission_data_task(
     bind=True,
     name="tasks.clean_submission_for_update_task",
 )
-def clean_submission_for_update_task(
-    self, previous_task_result=None, submission_upload_id=None
-):
-    report, created = TaskProgressReport.objects.create_initial_report(
-        submission=None, task=self
-    )
-    submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(
-        submission_upload_id
-    )
+def clean_submission_for_update_task(self, previous_task_result=None, submission_upload_id=None):
+    report, created = TaskProgressReport.objects.create_initial_report(submission=None, task=self)
+    submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(submission_upload_id)
 
     # TODO: add submission relation from submission_upload, relation
 
@@ -648,9 +596,7 @@ def clean_submission_for_update_task(
         logger.warning(
             "tasks.py | clean_submission_for_update_task | "
             "previous task reported={0} | "
-            "submission_upload_id={1}".format(
-                TaskProgressReport.CANCELLED, submission_upload_id
-            )
+            "submission_upload_id={1}".format(TaskProgressReport.CANCELLED, submission_upload_id)
         )
         return TaskProgressReport.CANCELLED
 
@@ -684,24 +630,16 @@ def clean_submission_for_update_task(
     bind=True,
     name="tasks.parse_csv_to_update_clean_submission_task",
 )
-def parse_csv_to_update_clean_submission_task(
-    self, previous_task_result=None, submission_upload_id=None
-):
+def parse_csv_to_update_clean_submission_task(self, previous_task_result=None, submission_upload_id=None):
     # TODO: here it would be possible to get the related submission for the TaskReport
-    report, created = TaskProgressReport.objects.create_initial_report(
-        submission=None, task=self
-    )
-    submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(
-        submission_upload_id
-    )
+    report, created = TaskProgressReport.objects.create_initial_report(submission=None, task=self)
+    submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(submission_upload_id)
 
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
             "tasks.py | parse_csv_to_update_clean_submission_task | "
             "previous task reported={0} | "
-            "submission_upload_id={1}".format(
-                TaskProgressReport.CANCELLED, submission_upload_id
-            )
+            "submission_upload_id={1}".format(TaskProgressReport.CANCELLED, submission_upload_id)
         )
         return TaskProgressReport.CANCELLED
 
@@ -720,9 +658,7 @@ def parse_csv_to_update_clean_submission_task(
             file,
         )
 
-    path = os.path.join(
-        os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json"
-    )
+    path = os.path.join(os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json")
 
     with transaction.atomic():
         submission_upload.submission.data["requirements"].update(molecular_requirements)
@@ -756,17 +692,13 @@ def parse_csv_to_update_clean_submission_task(
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def transfer_data_to_ena_task(
-    self, prepare_result=None, submission_id=None, action="ADD"
-):
+def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None, action="ADD"):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
     )
     if submission == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
-    ena_submission_data = AuditableTextData.objects.assemble_ena_submission_data(
-        submission=submission
-    )
+    ena_submission_data = AuditableTextData.objects.assemble_ena_submission_data(submission=submission)
     if ena_submission_data == {}:
         return TaskProgressReport.CANCELLED
     try:
@@ -832,15 +764,11 @@ def register_study_at_ena_task(
         )
         return TaskProgressReport.CANCELLED
 
-    primary_accession = BrokerObject.objects.get_study_primary_accession_number(
-        submission
-    )
+    primary_accession = BrokerObject.objects.get_study_primary_accession_number(submission)
     if primary_accession is not None:
         logger.info(
             "tasks.py | register_study_at_ena_task | "
-            " persistent_identifier={0} found | return pk={1}".format(
-                primary_accession, primary_accession.pk
-            )
+            " persistent_identifier={0} found | return pk={1}".format(primary_accession, primary_accession.pk)
         )
         return TaskProgressReport.CANCELLED
 
@@ -863,15 +791,11 @@ def register_study_at_ena_task(
         return TaskProgressReport.CANCELLED
     else:
         try:
-            response, request_id = register_study_at_ena(
-                submission=submission, study_text_data=study_text_data
-            )
+            response, request_id = register_study_at_ena(submission=submission, study_text_data=study_text_data)
             logger.info(
                 "tasks.py | register_study_at_ena_task | "
                 "register_study_at_ena executed | submission_id={0} "
-                "| response status_code={1}".format(
-                    submission.broker_submission_id, response.status_code
-                )
+                "| response status_code={1}".format(submission.broker_submission_id, response.status_code)
             )
             res = raise_transfer_server_exceptions(
                 response=response,
@@ -957,16 +881,12 @@ def submit_targeted_sequences_to_ena_task(
 
     logger.info(
         "tasks.py | submit_targeted_sequences_to_ena_task | "
-        "store_manifest_to_filesystem | submission={}".format(
-            submission.broker_submission_id
-        )
+        "store_manifest_to_filesystem | submission={}".format(submission.broker_submission_id)
     )
     store_manifest_to_filesystem(submission)
     logger.info(
         "tasks.py | submit_targeted_sequences_to_ena_task | "
-        "submit_targeted_sequences| submission={}".format(
-            submission.broker_submission_id
-        )
+        "submit_targeted_sequences| submission={}".format(submission.broker_submission_id)
     )
     success = submit_targeted_sequences(
         username=site_configuration.ena_server.username,
@@ -977,9 +897,7 @@ def submit_targeted_sequences_to_ena_task(
     )
     logger.info(
         "tasks.py | submit_targeted_sequences_to_ena_task | "
-        "done | return success={0} | submission={1}".format(
-            success, submission.broker_submission_id
-        )
+        "done | return success={0} | submission={1}".format(success, submission.broker_submission_id)
     )
     return success
 
@@ -1013,9 +931,7 @@ def process_targeted_sequence_results_task(
         return TaskProgressReport.CANCELLED
     logger.info(
         "tasks.py | process_targeted_sequence_results_task | "
-        "extract_accession_from_webin_report | broker_submission_id={}".format(
-            submission.broker_submission_id
-        )
+        "extract_accession_from_webin_report | broker_submission_id={}".format(submission.broker_submission_id)
     )
     accession = extract_accession_from_webin_report(submission.broker_submission_id)
     logger.info(
@@ -1074,16 +990,11 @@ def submit_to_ena_test_server_task(self, submission_id=None, action="ADD"):
     bind=True,
     name="tasks.process_ena_response_task",
 )
-def process_ena_response_task(
-    self, transfer_result=None, submission_id=None, close_submission_on_success=True
-):
+def process_ena_response_task(self, transfer_result=None, submission_id=None, close_submission_on_success=True):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
     )
-    if (
-        transfer_result == TaskProgressReport.CANCELLED
-        or submission == TaskProgressReport.CANCELLED
-    ):
+    if transfer_result == TaskProgressReport.CANCELLED or submission == TaskProgressReport.CANCELLED:
         logger.warning(
             "tasks.py | process_ena_response_task | "
             "transfer_result or submission unavailable | "
@@ -1103,9 +1014,7 @@ def process_ena_response_task(
         logger.warning(
             "tasks.py | process_ena_response_task | "
             "type error parsing transfer_result of previous task | "
-            "submission_id={0} | Error={1} | transfer_result={2}".format(
-                submission_id, te, transfer_result
-            )
+            "submission_id={0} | Error={1} | transfer_result={2}".format(submission_id, te, transfer_result)
         )
         return TaskProgressReport.CANCELLED
 
@@ -1155,9 +1064,7 @@ def create_pangaea_issue_task(self, prev=None, submission_id=None):
         resource=site_configuration.pangaea_jira_server,
         token_resource=site_configuration.pangaea_token_server,
     )
-    jira_client.create_pangaea_issue(
-        site_config=site_configuration, submission=submission
-    )
+    jira_client.create_pangaea_issue(site_config=site_configuration, submission=submission)
     jira_error_auto_retry(
         jira_client=jira_client,
         task=self,
@@ -1260,10 +1167,7 @@ def check_for_pangaea_doi_task(self, resource_credential_id=None):
     submissions = Submission.objects.get_submitted_submissions_containing_reference(
         reference_type=AdditionalReference.PANGAEA_JIRA_TICKET
     )
-    logger.info(
-        msg="check_for_pangaea_doi_task. pulling pangaea dois for {} "
-        "submissions".format(len(submissions))
-    )
+    logger.info(msg="check_for_pangaea_doi_task. pulling pangaea dois for {} " "submissions".format(len(submissions)))
     # TODO: in general suboptimal to fetch sc for every submission in set, but neeeded, reconsider to refactor
     #   schedule in database etc.
     for sub in submissions:
@@ -1292,9 +1196,7 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None, submission_id=
         submission_id=submission_id, task=self, include_closed=True
     )
     if submission == TaskProgressReport.CANCELLED:
-        logger.info(
-            "tasks.py | get_gfbio_helpdesk_username_task | return TaskProgressReport.CANCELLED"
-        )
+        logger.info("tasks.py | get_gfbio_helpdesk_username_task | return TaskProgressReport.CANCELLED")
         return TaskProgressReport.CANCELLED
 
     user_name = JIRA_FALLBACK_USERNAME
@@ -1312,9 +1214,7 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None, submission_id=
     result["email"] = user_email if len(user_email) else JIRA_FALLBACK_EMAIL
     result["full_name"] = user_full_name
 
-    response = get_gfbio_helpdesk_username(
-        user_name=user_name, email=user_email, fullname=user_full_name
-    )
+    response = get_gfbio_helpdesk_username(user_name=user_name, email=user_email, fullname=user_full_name)
     logger.info(
         "tasks.py | get_gfbio_helpdesk_username_task | response status={0} | content={1}".format(
             response.status_code, response.content
@@ -1331,9 +1231,7 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None, submission_id=
     if response.status_code == 200:
         result["jira_user_name"] = smart_str(response.content)
 
-    logger.info(
-        "tasks.py | get_gfbio_helpdesk_username_task |return={0}".format(result)
-    )
+    logger.info("tasks.py | get_gfbio_helpdesk_username_task |return={0}".format(result))
     return result
 
 
@@ -1424,9 +1322,7 @@ def update_submission_issue_task(self, prev_task_result=None, submission_id=None
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def add_accession_to_submission_issue_task(
-    self, prev_task_result=None, submission_id=None, target_archive=None
-):
+def add_accession_to_submission_issue_task(self, prev_task_result=None, submission_id=None, target_archive=None):
     if prev_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
             "tasks.py | add_accession_to_submission_issue_task | "
@@ -1496,9 +1392,7 @@ def add_accession_to_submission_issue_task(
                 primary_accession=study_pid.pid,
             )
             jira_client = JiraClient(resource=site_configuration.helpdesk_server)
-            jira_client.add_comment(
-                key_or_issue=reference.reference_key, text=comment, is_internal=False
-            )
+            jira_client.add_comment(key_or_issue=reference.reference_key, text=comment, is_internal=False)
             return jira_error_auto_retry(
                 jira_client=jira_client,
                 task=self,
@@ -1515,9 +1409,7 @@ def add_accession_to_submission_issue_task(
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def add_accession_link_to_submission_issue_task(
-    self, prev_task_result=None, submission_id=None, target_archive=None
-):
+def add_accession_link_to_submission_issue_task(self, prev_task_result=None, submission_id=None, target_archive=None):
     if prev_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
             "tasks.py | add_accession_link_to_submission_issue_task | "
@@ -1545,9 +1437,7 @@ def add_accession_link_to_submission_issue_task(
             )
 
             jira_client = JiraClient(resource=site_configuration.helpdesk_server)
-            jira_client.add_ena_study_link_to_issue(
-                reference.reference_key, study_pid.pid
-            )
+            jira_client.add_ena_study_link_to_issue(reference.reference_key, study_pid.pid)
             return jira_error_auto_retry(
                 jira_client=jira_client,
                 task=self,
@@ -1564,9 +1454,7 @@ def add_accession_link_to_submission_issue_task(
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def add_posted_comment_to_issue_task(
-    self, prev_task_result=None, submission_id=None, comment="", user_values={}
-):
+def add_posted_comment_to_issue_task(self, prev_task_result=None, submission_id=None, comment="", user_values={}):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
     )
@@ -1582,9 +1470,7 @@ def add_posted_comment_to_issue_task(
                 user_values.get("username", ""), user_values.get("email", ""), comment
             )
         jira_client = JiraClient(resource=site_configuration.helpdesk_server)
-        jira_client.add_comment(
-            key_or_issue=reference.reference_key, text=comment_text, is_internal=False
-        )
+        jira_client.add_comment(key_or_issue=reference.reference_key, text=comment_text, is_internal=False)
         return jira_error_auto_retry(
             jira_client=jira_client,
             task=self,
@@ -1592,8 +1478,7 @@ def add_posted_comment_to_issue_task(
         )
     else:
         logger.info(
-            msg="add_posted_comment_to_issue_task no tickets found. "
-            "submission_id={0} ".format(submission_id)
+            msg="add_posted_comment_to_issue_task no tickets found. " "submission_id={0} ".format(submission_id)
         )
 
         return retry_no_ticket_available_exception(
@@ -1644,15 +1529,9 @@ def attach_to_submission_issue_task(
     #  implemented
     if reference:
         submission_upload = (
-            submission.submissionupload_set.filter(attach_to_ticket=True)
-            .filter(pk=submission_upload_id)
-            .first()
+            submission.submissionupload_set.filter(attach_to_ticket=True).filter(pk=submission_upload_id).first()
         )
-        logger.info(
-            msg="attach_to_submission_issue_task | submission_upload={0}".format(
-                submission_upload
-            )
-        )
+        logger.info(msg="attach_to_submission_issue_task | submission_upload={0}".format(submission_upload))
         if submission_upload:
             do_attach = False
             if submission_upload.attachment_id is None:
@@ -1691,11 +1570,7 @@ def attach_to_submission_issue_task(
             submission_upload.modified_recently = False
             submission_upload.save(ignore_attach_to_ticket=True)
 
-            logger.info(
-                msg="attach_to_submission_issue_task | do_attach={0} | return {1}".format(
-                    do_attach, True
-                )
-            )
+            logger.info(msg="attach_to_submission_issue_task | do_attach={0} | return {1}".format(do_attach, True))
 
             return True
         else:
@@ -1728,9 +1603,7 @@ def attach_to_submission_issue_task(
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def delete_submission_issue_attachment_task(
-    self, kwargs=None, submission_id=None, attachment_id=None
-):
+def delete_submission_issue_attachment_task(self, kwargs=None, submission_id=None, attachment_id=None):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
     )
@@ -1764,9 +1637,7 @@ def delete_submission_issue_attachment_task(
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def add_pangaea_doi_task(
-    self, prev_task_result=None, pangaea_doi=None, submission_id=None
-):
+def add_pangaea_doi_task(self, prev_task_result=None, pangaea_doi=None, submission_id=None):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
     )
@@ -1780,9 +1651,7 @@ def add_pangaea_doi_task(
         )
         jira_client.add_comment(
             key_or_issue=reference.reference_key,
-            text="Pangaea DOI: {0}. broker_submission_id: {1}".format(
-                pangaea_doi, submission.broker_submission_id
-            ),
+            text="Pangaea DOI: {0}. broker_submission_id: {1}".format(pangaea_doi, submission.broker_submission_id),
             is_internal=False,
         )
         return jira_error_auto_retry(
@@ -1816,9 +1685,7 @@ def add_pangaealink_to_submission_issue_task(self, prev=None, submission_id=None
 
         jira_client.add_comment(
             key_or_issue=helpdesk_reference.reference_key,
-            text="[Pangaea Ticket {1}|{0}{1}]".format(
-                PANGAEA_ISSUE_VIEW_URL, pangaea_reference.reference_key
-            ),
+            text="[Pangaea Ticket {1}|{0}{1}]".format(PANGAEA_ISSUE_VIEW_URL, pangaea_reference.reference_key),
             is_internal=False,
         )
         return jira_error_auto_retry(
@@ -1846,11 +1713,7 @@ def fetch_ena_reports_task(self):
     logger.info(msg="tasks.py | fetch_ena_reports_task | start update")
     for report_type in EnaReport.REPORT_TYPES:
         type_key, type_name = report_type
-        logger.info(
-            msg="tasks.py | fetch_ena_reports_task | get report of type={0}".format(
-                type_name
-            )
-        )
+        logger.info(msg="tasks.py | fetch_ena_reports_task | get report of type={0}".format(type_name))
         try:
             response, request_id = fetch_ena_report(site_configuration, type_name)
             if response.ok:
@@ -1895,13 +1758,9 @@ def fetch_ena_reports_task(self):
 def update_resolver_accessions_task(self, previous_task_result=False):
     TaskProgressReport.objects.create_initial_report(submission=None, task=self)
     logger.info(
-        msg="tasks.py | update_resolver_accessions_task "
-        "| previous_task_result={0}".format(previous_task_result)
+        msg="tasks.py | update_resolver_accessions_task " "| previous_task_result={0}".format(previous_task_result)
     )
-    if (
-        previous_task_result == TaskProgressReport.CANCELLED
-        or previous_task_result is None
-    ):
+    if previous_task_result == TaskProgressReport.CANCELLED or previous_task_result is None:
         logger.info(
             msg="tasks.py | update_resolver_accessions_task "
             "| error(s) in previous tasks | return={0}".format(previous_task_result)
@@ -1914,10 +1773,7 @@ def update_resolver_accessions_task(self, previous_task_result=False):
         )
         return TaskProgressReport.CANCELLED, TaskProgressReport.CANCELLED
     success = update_resolver_accessions()
-    logger.info(
-        msg="tasks.py | update_resolver_accessions_task "
-        "| success={0}".format(success)
-    )
+    logger.info(msg="tasks.py | update_resolver_accessions_task " "| success={0}".format(success))
 
     return success, previous_task_result
 
@@ -1938,10 +1794,7 @@ def update_persistent_identifier_report_status_task(self, previous_task_result=N
         previous_task_status, fetch_report_status = previous_task_result
     except TypeError:
         pass
-    if (
-        fetch_report_status == TaskProgressReport.CANCELLED
-        or fetch_report_status is None
-    ):
+    if fetch_report_status == TaskProgressReport.CANCELLED or fetch_report_status is None:
         logger.info(
             msg="tasks.py | update_resolver_accessions_task "
             "| error(s) in previous tasks | return={0}".format(previous_task_result)
@@ -1954,10 +1807,7 @@ def update_persistent_identifier_report_status_task(self, previous_task_result=N
         )
         return TaskProgressReport.CANCELLED
     success = update_persistent_identifier_report_status()
-    logger.info(
-        msg="tasks.py | update_persistent_identifier_report_status_task "
-        "| success={0}".format(success)
-    )
+    logger.info(msg="tasks.py | update_persistent_identifier_report_status_task " "| success={0}".format(success))
 
     return success
 
@@ -1969,13 +1819,9 @@ def update_persistent_identifier_report_status_task(self, previous_task_result=N
 )
 def update_accession_objects_from_ena_report_task(self):
     TaskProgressReport.objects.create_initial_report(submission=None, task=self)
-    logger.info(
-        msg="tasks.py | update_accession_objects_from_ena_report_task " "| start update"
-    )
+    logger.info(msg="tasks.py | update_accession_objects_from_ena_report_task " "| start update")
     execute_update_accession_objects_chain(name_on_error=self.name)
-    logger.info(
-        msg="tasks.py | update_accession_objects_from_ena_report_task " "| finished"
-    )
+    logger.info(msg="tasks.py | update_accession_objects_from_ena_report_task " "| finished")
     return True
 
 
@@ -2005,10 +1851,7 @@ def notify_user_embargo_expiry_task(self):
             continue
         # only send notification for closed submissions with PID type PRJ
         # and when embargo date is not in the past
-        if (
-            submission.status != Submission.CLOSED
-            or submission.embargo < datetime.date.today()
-        ):
+        if submission.status != Submission.CLOSED or submission.embargo < datetime.date.today():
             continue
         # get study object
         study = submission.brokerobject_set.filter(type="study").first()
@@ -2017,15 +1860,10 @@ def notify_user_embargo_expiry_task(self):
             study_pid = study.persistentidentifier_set.filter(pid_type="PRJ").first()
             if study_pid:
                 # check if hold_date is withing 4 weeks
-                four_weeks_from_now = datetime.date.today() + datetime.timedelta(
-                    days=28
-                )
+                four_weeks_from_now = datetime.date.today() + datetime.timedelta(days=28)
                 should_notify = True
                 # check if user was already notified
-                if (
-                    study_pid.user_notified
-                    and study_pid.user_notified <= four_weeks_from_now
-                ):
+                if study_pid.user_notified and study_pid.user_notified <= four_weeks_from_now:
                     should_notify = False
                 if submission.embargo <= four_weeks_from_now and should_notify:
                     # send embargo notification comment to JIRA
@@ -2044,13 +1882,9 @@ def notify_user_embargo_expiry_task(self):
                     )
                     reference = submission.get_primary_helpdesk_reference()
 
-                    comment = jira_comment_replace(
-                        comment=comment, embargo=submission.embargo.isoformat()
-                    )
+                    comment = jira_comment_replace(comment=comment, embargo=submission.embargo.isoformat())
 
-                    jira_client = JiraClient(
-                        resource=site_configuration.helpdesk_server
-                    )
+                    jira_client = JiraClient(resource=site_configuration.helpdesk_server)
                     jira_client.add_comment(
                         key_or_issue=reference.reference_key,
                         text=comment,
@@ -2089,13 +1923,8 @@ def notify_user_embargo_expiry_task(self):
 )
 def check_for_submissions_without_helpdesk_issue_task(self):
     TaskProgressReport.objects.create_initial_report(submission=None, task=self)
-    logger.info(
-        msg="tasks.py |  check_for_submissions_without_helpdesk_issue_task |"
-        " start search"
-    )
-    submissions_without_issue = (
-        Submission.objects.get_submissions_without_primary_helpdesk_issue()
-    )
+    logger.info(msg="tasks.py |  check_for_submissions_without_helpdesk_issue_task |" " start search")
+    submissions_without_issue = Submission.objects.get_submissions_without_primary_helpdesk_issue()
     for sub in submissions_without_issue:
         logger.info(
             msg="tasks.py | check_for_submissions_without_helpdesk_issue_task "
@@ -2103,12 +1932,8 @@ def check_for_submissions_without_helpdesk_issue_task(self):
             "sending mail to admins".format(sub.broker_submission_id)
         )
         mail_admins(
-            subject=NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE.format(
-                sub.broker_submission_id
-            ),
-            message=NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE.format(
-                sub.broker_submission_id, sub.user.username
-            ),
+            subject=NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE.format(sub.broker_submission_id),
+            message=NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE.format(sub.broker_submission_id, sub.user.username),
         )
     return True
 
@@ -2119,10 +1944,7 @@ def check_for_submissions_without_helpdesk_issue_task(self):
     name="tasks.check_issue_existing_for_submission_task",
 )
 def check_issue_existing_for_submission_task(self, prev=None, submission_id=None):
-    logger.info(
-        "tasks.py | check_issue_existing_for_submission_task | "
-        "submission_id={0}".format(submission_id)
-    )
+    logger.info("tasks.py | check_issue_existing_for_submission_task | " "submission_id={0}".format(submission_id))
 
     submission, site_config = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
@@ -2131,11 +1953,7 @@ def check_issue_existing_for_submission_task(self, prev=None, submission_id=None
         return TaskProgressReport.CANCELLED
 
     if (
-        len(
-            submission.additionalreference_set.filter(
-                primary=True, type=AdditionalReference.GFBIO_HELPDESK_TICKET
-            )
-        )
+        len(submission.additionalreference_set.filter(primary=True, type=AdditionalReference.GFBIO_HELPDESK_TICKET))
         < 1
     ):
         logger.error(
@@ -2144,9 +1962,7 @@ def check_issue_existing_for_submission_task(self, prev=None, submission_id=None
             "submission_id={1}".format(submission.broker_submission_id, submission_id)
         )
         mail_admins(
-            subject=NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE.format(
-                submission.broker_submission_id
-            ),
+            subject=NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE.format(submission.broker_submission_id),
             message=NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE.format(
                 submission.broker_submission_id, submission.user.username
             ),
@@ -2163,9 +1979,7 @@ def check_issue_existing_for_submission_task(self, prev=None, submission_id=None
 )
 def check_for_user_without_site_configuration_task(self):
     TaskProgressReport.objects.create_initial_report(submission=None, task=self)
-    logger.info(
-        msg="tasks.py | check_for_user_without_site_configuration_task | start search"
-    )
+    logger.info(msg="tasks.py | check_for_user_without_site_configuration_task | start search")
     users_without_config = User.objects.filter(is_user=True, site_configuration=None)
     site_config = SiteConfiguration.objects.get_hosting_site_configuration()
     mail_content = "Users without site_configuration found:"
@@ -2178,17 +1992,11 @@ def check_for_user_without_site_configuration_task(self):
         )
         u.site_configuration = site_config
         u.save()
-        mail_content += "\nusername: {0}\temail: {1}\tpk: {2}".format(
-            u.username, u.email, u.pk
-        )
-    mail_content += "\nSite_configuration {0} was assigned automatically".format(
-        site_config.title
-    )
+        mail_content += "\nusername: {0}\temail: {1}\tpk: {2}".format(u.username, u.email, u.pk)
+    mail_content += "\nSite_configuration {0} was assigned automatically".format(site_config.title)
     if len(users_without_config):
         mail_admins(
-            subject=NO_SITE_CONFIG_EMAIL_SUBJECT_TEMPLATE.format(
-                len(users_without_config)
-            ),
+            subject=NO_SITE_CONFIG_EMAIL_SUBJECT_TEMPLATE.format(len(users_without_config)),
             message=mail_content,
         )
     return True
@@ -2214,10 +2022,7 @@ def notify_curators_on_embargo_ends_task(self):
             continue
         # only send notification for closed submissions with PID type PRJ
         # and when embargo date is not in the past
-        if (
-            submission.status != Submission.CLOSED
-            or submission.embargo < datetime.date.today()
-        ):
+        if submission.status != Submission.CLOSED or submission.embargo < datetime.date.today():
             continue
         # get study object
         study = submission.brokerobject_set.filter(type="study").first()
@@ -2230,9 +2035,7 @@ def notify_curators_on_embargo_ends_task(self):
                 if submission.embargo <= one_week_from_now:
                     # get jira link
                     if submission.get_primary_helpdesk_reference():
-                        jira_link = "{}{}".format(
-                            JIRA_TICKET_URL, submission.get_primary_helpdesk_reference()
-                        )
+                        jira_link = "{}{}".format(JIRA_TICKET_URL, submission.get_primary_helpdesk_reference())
                     else:
                         jira_link = "No ticket found"
 
@@ -2262,8 +2065,7 @@ def notify_curators_on_embargo_ends_task(self):
         from django.core.mail import send_mail
 
         send_mail(
-            subject="%s%s"
-            % (settings.EMAIL_SUBJECT_PREFIX, " Embargo expiry notification"),
+            subject="%s%s" % (settings.EMAIL_SUBJECT_PREFIX, " Embargo expiry notification"),
             message=message,
             from_email=settings.SERVER_EMAIL,
             recipient_list=curators_emails,
@@ -2288,11 +2090,7 @@ def notify_on_embargo_ended_task(self, submission_id=None):
     if not submission_id:
         return "submission_id not provided"
 
-    logger.info(
-        "tasks.py | notify_on_embargo_ended_task | submission_id={}".format(
-            submission_id
-        )
-    )
+    logger.info("tasks.py | notify_on_embargo_ended_task | submission_id={}".format(submission_id))
 
     submission, site_config = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
@@ -2311,14 +2109,10 @@ def notify_on_embargo_ended_task(self, submission_id=None):
             if not comment:
                 return TaskProgressReport.CANCELLED
 
-            comment = jira_comment_replace(
-                comment=comment, primary_accession=primary_accession.pid
-            )
+            comment = jira_comment_replace(comment=comment, primary_accession=primary_accession.pid)
 
             jira_client = JiraClient(resource=site_config.helpdesk_server)
-            jira_client.add_comment(
-                key_or_issue=reference.reference_key, text=comment, is_internal=False
-            )
+            jira_client.add_comment(key_or_issue=reference.reference_key, text=comment, is_internal=False)
 
             jira_error_auto_retry(
                 jira_client=jira_client,
@@ -2345,9 +2139,7 @@ def notify_on_embargo_ended_task(self, submission_id=None):
     name="tasks.update_ena_embargo_task",
 )
 def update_ena_embargo_task(self, prev=None, submission_id=None):
-    logger.info(
-        "tasks.py | update_ena_embargo_task | submission_id={0}".format(submission_id)
-    )
+    logger.info("tasks.py | update_ena_embargo_task | submission_id={0}".format(submission_id))
 
     submission, site_config = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
@@ -2362,11 +2154,7 @@ def update_ena_embargo_task(self, prev=None, submission_id=None):
 
     study_primary_accession = submission.brokerobject_set.filter(type="study").first()
     if study_primary_accession:
-        study_primary_accession = (
-            study_primary_accession.persistentidentifier_set.filter(
-                pid_type="PRJ"
-            ).first()
-        )
+        study_primary_accession = study_primary_accession.persistentidentifier_set.filter(pid_type="PRJ").first()
 
     if site_config is None or not site_config.ena_server:
         logger.warning(
@@ -2424,13 +2212,9 @@ def update_ena_embargo_task(self, prev=None, submission_id=None):
     else:
         logger.warning(
             "ena.py | update_ena_embargo_task | no primary accession no "
-            "found for study | submission_id={0}".format(
-                submission.broker_submission_id
-            )
+            "found for study | submission_id={0}".format(submission.broker_submission_id)
         )
-        return "no primary accession number found, submission={}".format(
-            submission.broker_submission_id
-        )
+        return "no primary accession number found, submission={}".format(submission.broker_submission_id)
 
 
 @app.task(
@@ -2443,11 +2227,7 @@ def update_ena_embargo_task(self, prev=None, submission_id=None):
     retry_jitter=True,
 )
 def notify_user_embargo_changed_task(self, prev=None, submission_id=None):
-    logger.info(
-        "tasks.py | notify_user_embargo_changed_task | submission_id={0}".format(
-            submission_id
-        )
-    )
+    logger.info("tasks.py | notify_user_embargo_changed_task | submission_id={0}".format(submission_id))
 
     submission, site_config = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
@@ -2465,23 +2245,17 @@ def notify_user_embargo_changed_task(self, prev=None, submission_id=None):
             if not comment:
                 return TaskProgressReport.CANCELLED
 
-            comment = jira_comment_replace(
-                comment=comment, embargo=submission.embargo.isoformat()
-            )
+            comment = jira_comment_replace(comment=comment, embargo=submission.embargo.isoformat())
 
             jira_client = JiraClient(resource=site_config.helpdesk_server)
-            jira_client.add_comment(
-                key_or_issue=reference.reference_key, text=comment, is_internal=False
-            )
+            jira_client.add_comment(key_or_issue=reference.reference_key, text=comment, is_internal=False)
             return jira_error_auto_retry(
                 jira_client=jira_client,
                 task=self,
                 broker_submission_id=submission.broker_submission_id,
             )
     else:
-        logger.info(
-            "tasks.py | notify_user_embargo_changed_task | no site_config for helpdesk_serever"
-        )
+        logger.info("tasks.py | notify_user_embargo_changed_task | no site_config for helpdesk_serever")
 
     return {
         "status": "error",
@@ -2500,11 +2274,7 @@ def notify_user_embargo_changed_task(self, prev=None, submission_id=None):
     retry_jitter=True,
 )
 def jira_cancel_issue_task(self, submission_id=None, admin=False):
-    logger.info(
-        "tasks.py | jira_cancel_issue_task | submission_id={} admin={}".format(
-            submission_id, admin
-        )
-    )
+    logger.info("tasks.py | jira_cancel_issue_task | submission_id={} admin={}".format(submission_id, admin))
     TaskProgressReport.objects.create_initial_report(submission=None, task=self)
 
     submission = Submission.objects.get(id=submission_id)
@@ -2543,14 +2313,10 @@ def jira_cancel_issue_task(self, submission_id=None, admin=False):
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def jira_transition_issue_task(
-    self, prev=None, submission_id=None, transition_id=871, resolution="Done"
-):
+def jira_transition_issue_task(self, prev=None, submission_id=None, transition_id=871, resolution="Done"):
     logger.info(
         "tasks.py | jira_transition_issue_task | "
-        "submission_id={} transition_id={} resolution={}".format(
-            submission_id, transition_id, resolution
-        )
+        "submission_id={} transition_id={} resolution={}".format(submission_id, transition_id, resolution)
     )
 
     if not submission_id:
@@ -2597,9 +2363,7 @@ def jira_transition_issue_task(
     retry_jitter=True,
 )
 def jira_initial_comment_task(self, prev=None, submission_id=None):
-    logger.info(
-        "tasks.py | jira_initial_comment_task | submission_id={}".format(submission_id)
-    )
+    logger.info("tasks.py | jira_initial_comment_task | submission_id={}".format(submission_id))
 
     submission, site_config = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=False
@@ -2631,9 +2395,7 @@ def jira_initial_comment_task(self, prev=None, submission_id=None):
             )
 
             jira_client = JiraClient(resource=site_config.helpdesk_server)
-            jira_client.add_comment(
-                key_or_issue=reference.reference_key, text=comment, is_internal=False
-            )
+            jira_client.add_comment(key_or_issue=reference.reference_key, text=comment, is_internal=False)
             jira_error_auto_retry(
                 jira_client=jira_client,
                 task=self,
@@ -2667,15 +2429,9 @@ def atax_submission_parse_csv_upload_to_xml_task(
 ):
     request_file_keys = ["specimen", "measurement", "multimedia", "combination"]
 
-    logger.info(
-        "tasks.py | atax_submission_parse_csv_upload_to_xml_task | submission_id={}".format(
-            submission_id
-        )
-    )
+    logger.info("tasks.py | atax_submission_parse_csv_upload_to_xml_task | submission_id={}".format(submission_id))
 
-    report, created = TaskProgressReport.objects.create_initial_report(
-        submission=None, task=self
-    )
+    report, created = TaskProgressReport.objects.create_initial_report(submission=None, task=self)
 
     # is this necessary here?
     if previous_task_result == TaskProgressReport.CANCELLED:
@@ -2683,17 +2439,13 @@ def atax_submission_parse_csv_upload_to_xml_task(
             "tasks.py | atax_submission_parse_csv_upload_to_xml_task | "
             "previous task reported={0} | "
             "submission_id={1} |"
-            "submission_upload_id={2}".format(
-                TaskProgressReport.CANCELLED, submission_id, submission_upload_id
-            )
+            "submission_upload_id={2}".format(TaskProgressReport.CANCELLED, submission_id, submission_upload_id)
         )
         return TaskProgressReport.CANCELLED
 
     # submission_upload = submission.submissionupload_set.filter(pk=submission_upload_id).filter(submission.target=ATAX)  # .first()
     if submission_upload_id:
-        submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
-            submission_upload_id
-        )
+        submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(submission_upload_id)
 
     if submission_upload is None:
         logger.error(
@@ -2725,46 +2477,30 @@ def atax_submission_parse_csv_upload_to_xml_task(
     # xml_data_as_string = ''
     # ind = -1
     # differentiate between specimen and measurement and multimedia and combination csv file:
-    file_key = analyze_filename_and_type(
-        os.path.basename(submission_upload.file.path), submission_upload.meta_data
-    )
+    file_key = analyze_filename_and_type(os.path.basename(submission_upload.file.path), submission_upload.meta_data)
     if file_key in request_file_keys:
         match str(file_key):
             case "specimen":
                 # create xml data as string:
-                with open(
-                    submission_upload.file.path, "r", encoding="utf-8-sig"
-                ) as data_file:
-                    xml_data_as_string = parse_taxonomic_csv_specimen(
-                        submission_upload.submission, data_file
-                    )
+                with open(submission_upload.file.path, "r", encoding="utf-8-sig") as data_file:
+                    xml_data_as_string = parse_taxonomic_csv_specimen(submission_upload.submission, data_file)
                 atax_xml_file_type = file_key
                 ind = 0
             case "measurement":
-                with open(
-                    submission_upload.file.path, "r", encoding="utf-8-sig"
-                ) as data_file:
-                    xml_data_as_string = parse_taxonomic_csv_measurement(
-                        submission_upload.submission, data_file
-                    )
+                with open(submission_upload.file.path, "r", encoding="utf-8-sig") as data_file:
+                    xml_data_as_string = parse_taxonomic_csv_measurement(submission_upload.submission, data_file)
                 atax_xml_file_type = file_key
                 ind = 1
             case "multimedia":
-                with open(
-                    submission_upload.file.path, "r", encoding="utf-8-sig"
-                ) as data_file:
-                    xml_data_as_string = parse_taxonomic_csv_multimedia(
-                        submission_upload.submission, data_file
-                    )
+                with open(submission_upload.file.path, "r", encoding="utf-8-sig") as data_file:
+                    xml_data_as_string = parse_taxonomic_csv_multimedia(submission_upload.submission, data_file)
                 atax_xml_file_type = file_key
                 ind = 2
             case _:
                 logger.warning(
                     "tasks.py | atax_submission_parse_csv_upload_to_xml | "
                     'SubmissionUpload file"{0}" has no expected basename | '
-                    "submission_id={1}".format(
-                        submission_upload.file.path, submission_id
-                    )
+                    "submission_id={1}".format(submission_upload.file.path, submission_id)
                 )
                 return TaskProgressReport.CANCELLED
 
@@ -2800,9 +2536,7 @@ def atax_submission_parse_csv_upload_to_xml_task(
             logger.info(
                 msg="atax_submission_parse_csv_upload_to_xml_task. no transformed xml upload data.  | "
                 " for {0},  return={1}  | "
-                "submission_id={2}".format(
-                    str(file_key), TaskProgressReport.CANCELLED, submission_id
-                )
+                "submission_id={2}".format(str(file_key), TaskProgressReport.CANCELLED, submission_id)
             )
             return TaskProgressReport.CANCELLED
 
@@ -2825,24 +2559,18 @@ def atax_submission_validate_xml_upload_task(
     submission_upload_id=None,
     is_combination=False,
 ):
-    report, created = TaskProgressReport.objects.create_initial_report(
-        submission=None, task=self
-    )
+    report, created = TaskProgressReport.objects.create_initial_report(submission=None, task=self)
 
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
             "tasks.py | atax_submission_validate_xml_upload_task | "
             "previous task reported={0} | "
-            "submission_upload_id={1}".format(
-                TaskProgressReport.CANCELLED, submission_upload_id
-            )
+            "submission_upload_id={1}".format(TaskProgressReport.CANCELLED, submission_upload_id)
         )
         return TaskProgressReport.CANCELLED
 
     if submission_upload_id:
-        submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
-            submission_upload_id
-        )
+        submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(submission_upload_id)
 
     # FIXME: logic ?
     if submission_upload is None and is_combination == False:
@@ -2862,22 +2590,12 @@ def atax_submission_validate_xml_upload_task(
 
         # get the stored xml string back from auditabletextdata:
         text_to_validate = ""
-        if len(
-            submission_upload.submission.auditabletextdata_set.filter(
+        if len(submission_upload.submission.auditabletextdata_set.filter(atax_file_name=upload_name)):
+            upload_by_file__name = submission_upload.submission.auditabletextdata_set.filter(
                 atax_file_name=upload_name
-            )
-        ):
-            upload_by_file__name = (
-                submission_upload.submission.auditabletextdata_set.filter(
-                    atax_file_name=upload_name
-                ).first()
-            )
-    elif is_combination:
-        upload_by_file__name = (
-            submission_upload.submission.auditabletextdata_set.filter(
-                name="combination"
             ).first()
-        )
+    elif is_combination:
+        upload_by_file__name = submission_upload.submission.auditabletextdata_set.filter(name="combination").first()
 
     if upload_by_file__name is not None:
         text_to_validate = upload_by_file__name.text_data
@@ -2924,24 +2642,18 @@ def atax_submission_validate_xml_upload_task(
 def atax_submission_combine_xmls_to_one_structure_task(
     self, previous_task_result=None, submission_id=None, submission_upload_id=None
 ):
-    report, created = TaskProgressReport.objects.create_initial_report(
-        submission=None, task=self
-    )
+    report, created = TaskProgressReport.objects.create_initial_report(submission=None, task=self)
 
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
             "tasks.py | atax_submission_combine_xmls_to_one_structure_task | "
             "previous task reported={0} | "
-            "submission_upload_id={1}".format(
-                TaskProgressReport.CANCELLED, submission_upload_id
-            )
+            "submission_upload_id={1}".format(TaskProgressReport.CANCELLED, submission_upload_id)
         )
         return TaskProgressReport.CANCELLED
 
     if submission_upload_id:
-        submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
-            submission_upload_id
-        )
+        submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(submission_upload_id)
 
     if submission_upload is None:
         logger.error(
@@ -2959,11 +2671,7 @@ def atax_submission_combine_xmls_to_one_structure_task(
     text_to_validate = ""
     # each upload belongs to exactly one category (file names different):
     # current upload:
-    if len(
-        submission_upload.submission.auditabletextdata_set.filter(
-            atax_file_name=upload_name
-        )
-    ):
+    if len(submission_upload.submission.auditabletextdata_set.filter(atax_file_name=upload_name)):
         upload_by_file_name = submission_upload.submission.auditabletextdata_set.filter(
             atax_file_name=upload_name
         ).first()
@@ -2978,15 +2686,11 @@ def atax_submission_combine_xmls_to_one_structure_task(
         specimen_abcd_updated = str()
         combi_name = str()
         combi_updated = False
-        keys_found = (
-            []
-        )  # UnitIds of measurements or multimedias, found in specimen or combination for later tests!
+        keys_found = []  # UnitIds of measurements or multimedias, found in specimen or combination for later tests!
 
         # all uploads for submission:
-        atax_submission_upload = (
-            AuditableTextData.objects.assemble_atax_submission_uploads(
-                submission=submission_upload.submission
-            )
+        atax_submission_upload = AuditableTextData.objects.assemble_atax_submission_uploads(
+            submission=submission_upload.submission
         )
         if atax_submission_upload == {}:
             return TaskProgressReport.CANCELLED
@@ -2994,10 +2698,7 @@ def atax_submission_combine_xmls_to_one_structure_task(
             return {"upload length at all": str(len(atax_submission_upload))}
         else:
             #  integrate measurements /multimedia into specimen.xml:
-            if (
-                len(atax_submission_upload) > 1
-                and "COMBINATION" in atax_submission_upload.keys()
-            ):
+            if len(atax_submission_upload) > 1 and "COMBINATION" in atax_submission_upload.keys():
                 combi_name = "combination"
                 tuple = atax_submission_upload["COMBINATION"]
                 ind = tuple[5]
@@ -3008,30 +2709,20 @@ def atax_submission_combine_xmls_to_one_structure_task(
                 (
                     specimen_abcd_updated,
                     keys_found,
-                ) = update_specimen_with_measurements_abcd_xml(
-                    upload=atax_submission_upload, name=combi_name
-                )
+                ) = update_specimen_with_measurements_abcd_xml(upload=atax_submission_upload, name=combi_name)
                 add_ind = 1
             elif upload_by_file_name.name == "multimedia" and bool(combi_name):
                 (
                     specimen_abcd_updated,
                     keys_found,
-                ) = update_specimen_with_multimedia_abcd_xml(
-                    upload=atax_submission_upload, name=combi_name
-                )
+                ) = update_specimen_with_multimedia_abcd_xml(upload=atax_submission_upload, name=combi_name)
                 add_ind = 2
             elif upload_by_file_name.name == "specimen":
                 # are there measurement data from earlier?
-                if len(
-                    submission_upload.submission.auditabletextdata_set.filter(
+                if len(submission_upload.submission.auditabletextdata_set.filter(name="measurement")):
+                    auditable_xml = submission_upload.submission.auditabletextdata_set.filter(
                         name="measurement"
-                    )
-                ):
-                    auditable_xml = (
-                        submission_upload.submission.auditabletextdata_set.filter(
-                            name="measurement"
-                        ).first()
-                    )
+                    ).first()
                     if auditable_xml is not None:
                         (
                             specimen_abcd_updated,
@@ -3040,10 +2731,7 @@ def atax_submission_combine_xmls_to_one_structure_task(
                             upload=atax_submission_upload, name="combination"
                         )
                         # store specimen plus measurements as combination:
-                        if (
-                            specimen_abcd_updated is not None
-                            and len(specimen_abcd_updated) > 0
-                        ):
+                        if specimen_abcd_updated is not None and len(specimen_abcd_updated) > 0:
                             store_atax_data_as_auditable_text_data(
                                 submission=submission_upload.submission,
                                 data_type="combination",
@@ -3056,29 +2744,18 @@ def atax_submission_combine_xmls_to_one_structure_task(
 
                 # are there multimedia data?
                 # refresh auditables
-                atax_submission_upload = (
-                    AuditableTextData.objects.assemble_atax_submission_uploads(
-                        submission=submission_upload.submission
-                    )
+                atax_submission_upload = AuditableTextData.objects.assemble_atax_submission_uploads(
+                    submission=submission_upload.submission
                 )
-                if (
-                    len(atax_submission_upload) > 1
-                    and "COMBINATION" in atax_submission_upload.keys()
-                ):
+                if len(atax_submission_upload) > 1 and "COMBINATION" in atax_submission_upload.keys():
                     combi_name = "combination"
                     tuple = atax_submission_upload["COMBINATION"]
                     ind = tuple[5]
 
-                if len(
-                    submission_upload.submission.auditabletextdata_set.filter(
+                if len(submission_upload.submission.auditabletextdata_set.filter(name="multimedia")):
+                    auditable_xml = submission_upload.submission.auditabletextdata_set.filter(
                         name="multimedia"
-                    )
-                ):
-                    auditable_xml = (
-                        submission_upload.submission.auditabletextdata_set.filter(
-                            name="multimedia"
-                        ).first()
-                    )
+                    ).first()
                     if auditable_xml is not None:
                         (
                             specimen_abcd_updated,
@@ -3086,10 +2763,7 @@ def atax_submission_combine_xmls_to_one_structure_task(
                         ) = update_specimen_with_multimedia_abcd_xml(
                             upload=atax_submission_upload, name=combi_name
                         )  #
-                        if (
-                            specimen_abcd_updated is not None
-                            and len(specimen_abcd_updated) > 0
-                        ):
+                        if specimen_abcd_updated is not None and len(specimen_abcd_updated) > 0:
                             store_atax_data_as_auditable_text_data(
                                 submission=submission_upload.submission,
                                 data_type="combination",
@@ -3134,9 +2808,7 @@ def prepare_ena_submission_data_task(self, prev_task_result=None, submission_id=
         with transaction.atomic():
             submission.auditabletextdata_set.all().delete()
         ena_submission_data = prepare_ena_data(submission=submission)
-        store_ena_data_as_auditable_text_data(
-            submission=submission, data=ena_submission_data
-        )
+        store_ena_data_as_auditable_text_data(submission=submission, data=ena_submission_data)
         # TODO: this will become obsolete once, data is taken from AuditableTextData ....
         return ena_submission_data
     else:
