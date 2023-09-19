@@ -376,7 +376,7 @@ class Enalizer(object):
                     str(data_dict.get('library_layout', {}).get(
                         'nominal_length', -1)))
                 logger.info('ena.py | create_library_layout | layout==PAIRED | layout_element={0} | '.format(
-                    layout_element)
+                    ET.tostring(layout_element))
                 )
 
     def create_targeted_loci(self, root, data_dict):
@@ -492,7 +492,7 @@ class Enalizer(object):
         self.create_library_layout(library_descriptor, library_descriptor_data)
 
         logger.info('ena.py | create_single_experiment_xml | library_descriptor={0} '.format(
-            library_descriptor)
+            ET.tostring(library_descriptor))
         )
 
         targeted_loci_dict = OrderedDict()  # {}
