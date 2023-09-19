@@ -670,11 +670,9 @@ def parse_csv_to_update_clean_submission_task(self, previous_task_result=None,
             submission_upload.submission.data.update(
                 {'validation': messages})
             report.task_exception_info = json.dumps({'validation': messages})
-
         report.save()
         submission_upload.submission.save()
         if not valid:
-            # TODO: update tpr with errors from validation
             return TaskProgressReport.CANCELLED
         else:
             return True

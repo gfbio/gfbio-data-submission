@@ -614,7 +614,6 @@ def store_single_data_item_as_auditable_text_data(submission, data):
 
 
 def prepare_ena_data(submission):
-    # outgoing_request_id = uuid.uuid4()
     enalizer = Enalizer(submission=submission,
                         alias_postfix=submission.broker_submission_id)
     return enalizer.prepare_submission_data(
