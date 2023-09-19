@@ -363,6 +363,9 @@ class Enalizer(object):
                 'layout_type', '').upper()
             layout_element = SubElement(library_layout, layout)
             if layout == 'PAIRED':
+                logger.info('ena.py | create_library_layout | layout==PAIRED | library_layout={0} | '.format(
+                    data_dict.get('library_layout', 'NO_LIBRARY_LAYOUT_FOUND'))
+                )
                 layout_element.set(
                     'NOMINAL_LENGTH',
                     str(data_dict.get('library_layout', {}).get(
