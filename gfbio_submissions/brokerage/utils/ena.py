@@ -366,6 +366,11 @@ class Enalizer(object):
                 logger.info('ena.py | create_library_layout | layout==PAIRED | library_layout={0} | '.format(
                     data_dict.get('library_layout', 'NO_LIBRARY_LAYOUT_FOUND'))
                 )
+                logger.info('ena.py | create_library_layout | layout==PAIRED | nominal_length={0} | '
+                            'nominal_length as str={1} '.format(
+                    data_dict.get('library_layout', {}).get('nominal_length', 'NO_NOMINAL_LENGTH_FOUND'),
+                    str(data_dict.get('library_layout', {}).get('nominal_length', 'NO_NOMINAL_LENGTH_FOUND')))
+                )
                 layout_element.set(
                     'NOMINAL_LENGTH',
                     str(data_dict.get('library_layout', {}).get(
@@ -489,7 +494,6 @@ class Enalizer(object):
         logger.info('ena.py | create_single_experiment_xml | library_descriptor={0} '.format(
             library_descriptor)
         )
-
 
         targeted_loci_dict = OrderedDict()  # {}
         targeted_loci_dict = self.translate_target_gene_insensitiv(sample_decriptor, targeted_loci_dict)
