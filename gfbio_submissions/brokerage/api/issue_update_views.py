@@ -20,13 +20,19 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         is_valid = serializer.is_valid()
 
+        logger.info('issue_update_views.py | JiraIssueUpdateView | create | request.GET {}'.format(request.GET))
+
         form = JiraIssueUpdateQueryForm(request.GET)
         form_is_valid = form.is_valid()
+        logger.info('issue_update_views.py | JiraIssueUpdateView | create | form_is_valid {}'.format(form_is_valid))
+        logger.info('issue_update_views.py | JiraIssueUpdateView | create | serializer_is_valid {}'.format(is_valid))
 
         details = {
             'serializer_errors': serializer.errors,
             'form_errors': form.errors.as_json()
         }
+
+        logger.info('issue_update_views.py | JiraIssueUpdateView | create | details {}'.format(details))
 
         RequestLog.objects.create(
             type=RequestLog.INCOMING,
