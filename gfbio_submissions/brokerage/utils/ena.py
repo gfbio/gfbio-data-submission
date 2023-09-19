@@ -370,6 +370,9 @@ class Enalizer(object):
                     'NOMINAL_LENGTH',
                     str(data_dict.get('library_layout', {}).get(
                         'nominal_length', -1)))
+                logger.info('ena.py | create_library_layout | layout==PAIRED | layout_element={0} | '.format(
+                    layout_element)
+                )
 
     def create_targeted_loci(self, root, data_dict):
         for locus_data in data_dict:
@@ -458,6 +461,7 @@ class Enalizer(object):
                                                            'experiment_alias')
         experiment.set('broker_name', DEFAULT_ENA_BROKER_NAME)
         experiment.set('center_name', self.center_name)
+
         self.create_subelement(experiment, 'title', data)
         self.create_subelement_with_attribute(experiment, 'study_ref',
                                               'refname', data)
@@ -481,6 +485,11 @@ class Enalizer(object):
             library_descriptor_data)
 
         self.create_library_layout(library_descriptor, library_descriptor_data)
+
+        logger.info('ena.py | create_single_experiment_xml | library_descriptor={0} '.format(
+            library_descriptor)
+        )
+
 
         targeted_loci_dict = OrderedDict()  # {}
         targeted_loci_dict = self.translate_target_gene_insensitiv(sample_decriptor, targeted_loci_dict)
