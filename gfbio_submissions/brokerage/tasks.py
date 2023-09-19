@@ -536,6 +536,10 @@ def update_ena_submission_data_task(self, previous_task_result=None,
             'submission_upload_id={0}'.format(submission_upload_id))
         return TaskProgressReport.CANCELLED
 
+    logger.info(
+        'tasks.py | update_ena_submission_data_task | '
+        ' submission_upload.submission.center_name={}'.format(submission_upload.submission.center_name))
+
     ena_submission_data = prepare_ena_data(
         submission=submission_upload.submission)
 

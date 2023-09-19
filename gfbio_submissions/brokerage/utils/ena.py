@@ -65,9 +65,15 @@ class Enalizer(object):
         self.run = runs
         self.runs_key = 'runs'
         self.embargo = submission.embargo
-        if submission.center_name is not None \
-            and submission.center_name.center_name != '':
-            self.center_name = submission.center_name.center_name
+        logger.info('ena.py | Enalizer __init__ | submission={0} | submission.centername={1}'.format(
+            submission.broker_submission_id, submission.center_name))
+        if submission.center_name is not None:
+            logger.info(
+                'ena.py | Enalizer __init__ | centername available | submission.centername.center_name={0} | '
+                'len(submission.center_name.center_name)={1}'.format(
+                    submission.center_name.center_name, len(submission.center_name.center_name)))
+            if submission.center_name.center_name != '':
+                self.center_name = submission.center_name.center_name
         else:
             self.center_name = DEFAULT_ENA_CENTER_NAME
 
