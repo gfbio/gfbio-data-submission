@@ -72,7 +72,7 @@ class Enalizer(object):
                 'ena.py | Enalizer __init__ | centername available | submission.centername.center_name={0} | '
                 'len(submission.center_name.center_name)={1}'.format(
                     submission.center_name.center_name, len(submission.center_name.center_name)))
-            if len(submission.center_name.center_nam) > 0:
+            if len(submission.center_name.center_name) > 0:
                 self.center_name = submission.center_name.center_name
                 logger.info(
                     'ena.py | Enalizer __init__ | centername > 0 | self.center_name={0} | '.format(
