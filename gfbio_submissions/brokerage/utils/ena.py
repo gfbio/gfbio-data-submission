@@ -467,8 +467,15 @@ class Enalizer(object):
                                                            'EXPERIMENT',
                                                            'alias', data,
                                                            'experiment_alias')
+        logger.info('ena.py | create_single_experiment_xml | self.center_name={0} '.format(
+            self.center_name)
+        )
         experiment.set('broker_name', DEFAULT_ENA_BROKER_NAME)
-        experiment.set('center_name', self.center_name)
+        experiment.attrib['center_name'] = self.center_name
+
+        logger.info('ena.py | create_single_experiment_xml | experiment after setting centername | {0} '.format(
+            ET.tostring(experiment))
+        )
 
         self.create_subelement(experiment, 'title', data)
         self.create_subelement_with_attribute(experiment, 'study_ref',
