@@ -429,7 +429,7 @@ def reparse_csv_metadata(modeladmin, request, queryset):
         clean_submission_for_update_task, \
         parse_csv_to_update_clean_submission_task, \
         create_broker_objects_from_submission_data_task, \
-        update_ena_submission_data_task
+        update_ena_submission_data_task, prepare_ena_submission_data_task
     for obj in queryset:
         submission_upload_id = obj.id
         rebuild_from_csv_metadata_chain = \
@@ -443,9 +443,10 @@ def reparse_csv_metadata(modeladmin, request, queryset):
                 submission_id=SubmissionUpload.objects.get_related_submission_id(
                     submission_upload_id), use_submitted_submissions=True
             ).set(countdown=SUBMISSION_DELAY) | \
-            update_ena_submission_data_task.s(
+            prepare_ena_submission_data_task.s(
                 submission_upload_id=submission_upload_id,
             ).set(countdown=SUBMISSION_DELAY)
+            # TODO: last task above was update_ena_submission_data_task, changed after errors with multiple textdatas
         rebuild_from_csv_metadata_chain()
 
 
