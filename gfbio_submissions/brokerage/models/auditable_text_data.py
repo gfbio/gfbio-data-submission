@@ -4,8 +4,9 @@ import uuid
 from django.db import models
 from model_utils.models import TimeStampedModel
 
-from gfbio_submissions.brokerage.managers import AuditableTextDataManager
+# from gfbio_submissions.brokerage.managers import AuditableTextDataManager
 from .submission import Submission
+from ..managers.auditable_text_data_manager import AuditableTextDataManager
 
 
 class AuditableTextData(TimeStampedModel):

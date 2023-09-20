@@ -3,9 +3,10 @@ import uuid
 from django.db import models
 
 from config.settings.base import AUTH_USER_MODEL
-from gfbio_submissions.brokerage.managers import BrokerObjectManager
+# from gfbio_submissions.brokerage.managers import BrokerObjectManager
 from gfbio_submissions.brokerage.models.submission import Submission
 from gfbio_submissions.generic.fields import JsonDictField
+from ..managers.broker_object_manager import BrokerObjectManager
 
 
 # -*- coding: utf-8 -*-

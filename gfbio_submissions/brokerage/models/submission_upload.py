@@ -7,10 +7,11 @@ from model_utils.models import TimeStampedModel
 from config.settings.base import AUTH_USER_MODEL
 from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, GENERIC, ATAX, \
     SUBMISSION_UPLOAD_RETRY_DELAY, SUBMISSION_DELAY
-from gfbio_submissions.brokerage.managers import SubmissionUploadManager
+# from gfbio_submissions.brokerage.managers import SubmissionUploadManager
 from .submission import Submission
 from gfbio_submissions.brokerage.storage import OverwriteStorage
 from gfbio_submissions.brokerage.utils.submission_tools import submission_upload_path, hash_file
+from ..managers.submission_upload_manager import SubmissionUploadManager
 
 
 class SubmissionUpload(TimeStampedModel):

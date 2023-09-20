@@ -4,8 +4,9 @@ import uuid
 from django.db import models
 from model_utils.models import TimeStampedModel
 
-from gfbio_submissions.brokerage.managers import TaskProgressReportManager
+# from gfbio_submissions.brokerage.managers import TaskProgressReportManager
 from .submission import Submission
+from ..managers.task_progress_report_manager import TaskProgressReportManager
 
 
 class TaskProgressReport(TimeStampedModel):

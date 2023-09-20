@@ -7,12 +7,13 @@ from model_utils.models import TimeStampedModel
 
 from config.settings.base import AUTH_USER_MODEL
 from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, GENERIC, ATAX
-from gfbio_submissions.brokerage.managers import SubmissionManager
+# from gfbio_submissions.brokerage.managers import SubmissionManager
 from gfbio_submissions.generic.fields import JsonDictField
 # from .additional_reference import AdditionalReference
 # from .additional_reference import AdditionalReference
 from .center_name import CenterName
 from ..configuration.settings import PANGAEA_JIRA_TICKET, GFBIO_HELPDESK_TICKET
+from ..managers.submission_manager import SubmissionManager
 
 
 class Submission(TimeStampedModel):
