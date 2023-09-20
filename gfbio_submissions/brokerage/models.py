@@ -635,6 +635,7 @@ class AuditableTextData(TimeStampedModel):
         help_text='Free text. Any comments or useful information regarding this object'
     )
 
+    # FIXME: move or delete
     atax_file_name = models.CharField(
         blank=True,
         max_length=255,
@@ -642,12 +643,14 @@ class AuditableTextData(TimeStampedModel):
         help_text='Name of submission upload file'
     )
 
+    # FIXME: move or delete
     atax_xml_valid = models.BooleanField(
         default=False,
         help_text="Result of the validation of the xml structure against abcd xml schema",
         verbose_name="validation status",
     )
 
+    # FIXME: move or delete
     atax_exp_index = models.SmallIntegerField(
         default=-1,
         blank=True,
