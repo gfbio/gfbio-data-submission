@@ -29,7 +29,7 @@ from .configuration.settings import ENA, ENA_PANGAEA, ATAX, PANGAEA_ISSUE_VIEW_U
     NO_SITE_CONFIG_EMAIL_SUBJECT_TEMPLATE
 from .configuration.settings import SUBMISSION_MAX_RETRIES, \
     SUBMISSION_RETRY_DELAY
-from .exceptions import TransferServerError, TransferClientError
+from .exceptions.transfer_exceptions import TransferServerError, TransferClientError
 from .models.additional_reference import AdditionalReference
 from .models.auditable_text_data import AuditableTextData
 from .models.broker_object import BrokerObject

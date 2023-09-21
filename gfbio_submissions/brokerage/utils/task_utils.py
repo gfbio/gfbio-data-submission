@@ -5,21 +5,21 @@ from django.core.mail import mail_admins
 from django.utils.encoding import smart_str
 from requests import Response
 
-from gfbio_submissions.brokerage.configuration.settings import \
-    TASK_FAIL_SUBJECT_TEMPLATE, TASK_FAIL_TEXT_TEMPLATE, SUBMISSION_MAX_RETRIES, \
-    SUBMISSION_UPLOAD_MAX_RETRIES, SUBMISSION_UPLOAD_RETRY_DELAY
-from gfbio_submissions.brokerage.exceptions import TransferInternalError, \
-    raise_response_exceptions, TransferClientError, raise_no_ticket_exception, \
-    NoTicketAvailableError
-from gfbio_submissions.brokerage.models.auditable_text_data import AuditableTextData
-from gfbio_submissions.brokerage.models.center_name import CenterName
-from gfbio_submissions.brokerage.models.jira_message import JiraMessage
-from gfbio_submissions.brokerage.models.submission import Submission
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
+from gfbio_submissions.generic.models import ResourceCredential
 # from gfbio_submissions.brokerage.models import TaskProgressReport, Submission, \
 #     AuditableTextData, CenterName, JiraMessage
-from gfbio_submissions.brokerage.utils.ena import send_submission_to_ena
-from gfbio_submissions.generic.models import ResourceCredential
+from .ena import send_submission_to_ena
+from ..configuration.settings import \
+    TASK_FAIL_SUBJECT_TEMPLATE, TASK_FAIL_TEXT_TEMPLATE, SUBMISSION_MAX_RETRIES, \
+    SUBMISSION_UPLOAD_MAX_RETRIES, SUBMISSION_UPLOAD_RETRY_DELAY
+from ..exceptions.transfer_exceptions import TransferInternalError, \
+    raise_response_exceptions, TransferClientError, raise_no_ticket_exception, \
+    NoTicketAvailableError
+from ..models.auditable_text_data import AuditableTextData
+from ..models.center_name import CenterName
+from ..models.jira_message import JiraMessage
+from ..models.submission import Submission
+from ..models.task_progress_report import TaskProgressReport
 
 logger = logging.getLogger(__name__)
 

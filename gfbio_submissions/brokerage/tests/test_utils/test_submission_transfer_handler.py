@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from pprint import pprint
 from unittest import skip
 
 import requests
@@ -9,9 +8,9 @@ from django.test import TestCase
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, \
     JIRA_ATTACHMENT_SUB_URL
-from gfbio_submissions.brokerage.exceptions import TransferClientError, \
+from gfbio_submissions.brokerage.configuration.settings import PANGAEA_JIRA_TICKET
+from gfbio_submissions.brokerage.exceptions.transfer_exceptions import TransferClientError, \
     raise_response_exceptions, TransferServerError
-from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
 from gfbio_submissions.brokerage.models.broker_object import BrokerObject
 from gfbio_submissions.brokerage.models.submission import Submission
 from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
@@ -29,7 +28,6 @@ from gfbio_submissions.brokerage.utils.task_utils import \
 from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential
 from gfbio_submissions.users.models import User
-from gfbio_submissions.brokerage.configuration.settings import PANGAEA_JIRA_TICKET, GFBIO_HELPDESK_TICKET
 
 
 class TestSubmissionTransferHandler(TestCase):
@@ -109,7 +107,7 @@ class TestSubmissionTransferHandler(TestCase):
           'so task.chain can proceed in a controlled way')
     def test_invalid_submission_id(self):
         with self.assertRaises(
-                SubmissionTransferHandler.TransferInternalError) as exc:
+            SubmissionTransferHandler.TransferInternalError) as exc:
             sub, conf = get_submission_and_site_configuration(
                 submission_id=99)
 
@@ -153,7 +151,7 @@ class TestSubmissionTransferHandler(TestCase):
         response.status_code = 401
         response._content = '{}'
         with self.assertRaises(
-                TransferClientError) as exc:
+            TransferClientError) as exc:
             raise_response_exceptions(response)
 
     def test_raise_500_exception(self):
@@ -161,7 +159,7 @@ class TestSubmissionTransferHandler(TestCase):
         response.status_code = 500
         response._content = '{}'
         with self.assertRaises(
-                TransferServerError) as exc:
+            TransferServerError) as exc:
             raise_response_exceptions(response)
 
     @responses.activate
