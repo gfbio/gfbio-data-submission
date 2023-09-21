@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.generic.serializers import JiraHookRequestSerializer
-from ..forms import JiraIssueUpdateQueryForm
+from ..forms.jira_issue_update_query_form import JiraIssueUpdateQueryForm
 from ..permissions import APIAllowedHosts
 
 logger = logging.getLogger(__name__)

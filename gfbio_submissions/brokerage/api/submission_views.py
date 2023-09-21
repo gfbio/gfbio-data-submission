@@ -14,7 +14,8 @@ from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.users.models import User
 from ..configuration.settings import SUBMISSION_UPLOAD_RETRY_DELAY, \
     SUBMISSION_DELAY, SUBMISSION_ISSUE_CHECK_DELAY
-from ..forms import SubmissionCommentForm
+from ..forms.submission_comment_form import SubmissionCommentForm
+# from ..forms import SubmissionCommentForm
 from ..models.submission import Submission
 from ..models.submission_upload import SubmissionUpload
 # from ..models import Submission, SubmissionUpload
