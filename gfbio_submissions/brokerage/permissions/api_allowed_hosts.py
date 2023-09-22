@@ -1,24 +1,8 @@
 # -*- coding: utf-8 -*-
-import logging
 import os
 
 from django.conf import settings
 from rest_framework import permissions
-logger = logging.getLogger(__name__)
-
-
-class IsOwnerOrReadOnly(permissions.BasePermission):
-
-    def has_object_permission(self, request, view, obj):
-        # Read permissions are allowed to any request,
-        # so we'll always allow GET, HEAD or OPTIONS requests.
-        if request.method in permissions.SAFE_METHODS:
-            return True
-
-        # TODO: mapping an IDM authenticated user to ob.property for
-        #   single user ownership
-        # Write permissions are only allowed to the owner.
-        return obj.user == request.user
 
 
 class APIAllowedHosts(permissions.BasePermission):
