@@ -188,6 +188,7 @@ platform_mappings = {
     'minion': 'MinION',
     'nextseq 500': 'NextSeq 500',
     'nextseq 550': 'NextSeq 550',
+    'nextseq 2000': 'NextSeq 2000',
     'pacbio rs': 'PacBio RS',
     'pacbio rs ii': 'PacBio RS II',
     'promethion': 'PromethION',
