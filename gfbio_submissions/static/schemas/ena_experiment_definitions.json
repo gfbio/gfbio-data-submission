@@ -32,6 +32,8 @@
             "Illumina NovaSeq 6000",
             "NextSeq 500",
             "NextSeq 550",
+            "NextSeq 1000",
+            "NextSeq 2000",
             "unspecified"
         ]
     },
@@ -45,13 +47,6 @@
     "abi_solid": {
         "type": "string",
         "enum": [
-            "AB SOLiD System",
-            "AB SOLiD System 2.0",
-            "AB SOLiD System 3.0",
-            "AB SOLiD 3 Plus System",
-            "AB SOLiD 4 System",
-            "AB SOLiD 4hq System",
-            "AB SOLiD PI System",
             "AB 5500 Genetic Analyzer",
             "AB 5500xl Genetic Analyzer",
             "AB 5500xl-W Genetic Analysis System",
@@ -61,7 +56,6 @@
     "complete_genomics": {
         "type": "string",
         "enum": [
-            "Complete Genomics",
             "unspecified"
         ]
     },
