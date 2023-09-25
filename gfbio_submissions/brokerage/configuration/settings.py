@@ -115,7 +115,7 @@ DEFAULT_ENA_BROKER_NAME = getattr(
 DEFAULT_ENA_CENTER_NAME = getattr(
     settings,
     'DEFAULT_ENA_CENTER_NAME',
-    ''
+    'no_valid_centername_available'
 )
 
 ENA_PANGAEA = getattr(
