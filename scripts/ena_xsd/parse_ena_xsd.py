@@ -105,7 +105,7 @@ def parse_for_strategy(file):
 def parse_for_source(file):
     library_source_json = OrderedDict([("type", "string"), ("enum", [])])
 
-    library_source_mappings = {}
+    # library_source_mappings = {}
 
     tree = ET.parse(file)
     root = tree.getroot()
@@ -116,12 +116,12 @@ def parse_for_source(file):
     for enums in library_source_enums:
         strategy = enums.attrib.get("value", "")
         library_source_json["enum"].append(strategy)
-        library_source_mappings[strategy.lower()] = strategy
+        # library_source_mappings[strategy.lower()] = strategy
 
     print("\n-----------------\tSOURCE\t------------------\n")
     print(json.dumps({"library_source": library_source_json}, indent=4))
     print("\n-----------------------------------\n")
-    pprint(library_source_mappings)
+    # pprint(library_source_mappings)
 
 
 def output_schema_and_mappings(experiment_xsd, common_xsd):
