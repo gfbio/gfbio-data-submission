@@ -26,12 +26,16 @@
             "Illumina HiSeq 2500",
             "Illumina HiSeq 3000",
             "Illumina HiSeq 4000",
+            "Illumina HiSeq X",
             "Illumina iSeq 100",
             "Illumina MiSeq",
             "Illumina MiniSeq",
+            "Illumina NovaSeq X",
             "Illumina NovaSeq 6000",
             "NextSeq 500",
             "NextSeq 550",
+            "NextSeq 1000",
+            "NextSeq 2000",
             "unspecified"
         ]
     },
@@ -68,7 +72,9 @@
     "bgiseq": {
         "type": "string",
         "enum": [
-            "BGISEQ-500"
+            "BGISEQ-50",
+            "BGISEQ-500",
+            "MGISEQ-2000RS"
         ]
     },
     "oxford_nanopore": {
@@ -83,10 +89,13 @@
     "pacbio_smrt": {
         "type": "string",
         "enum": [
+            "Onso",
             "PacBio RS",
             "PacBio RS II",
+            "Revio",
             "Sequel",
             "Sequel II",
+            "Sequel IIe",
             "unspecified"
         ]
     },
@@ -97,6 +106,10 @@
             "Ion Torrent Proton",
             "Ion Torrent S5",
             "Ion Torrent S5 XL",
+            "Ion Torrent Genexus",
+            "Ion GeneStudio S5",
+            "Ion GeneStudio S5 Prime",
+            "Ion GeneStudio S5 Plus",
             "unspecified"
         ]
     },
@@ -110,6 +123,30 @@
             "AB 3130xL Genetic Analyzer",
             "AB 3130 Genetic Analyzer",
             "AB 310 Genetic Analyzer",
+            "unspecified"
+        ]
+    },
+    "dnbseq": {
+        "type": "string",
+        "enum": [
+            "DNBSEQ-T7",
+            "DNBSEQ-G400",
+            "DNBSEQ-G50",
+            "DNBSEQ-G400 FAST",
+            "unspecified"
+        ]
+    },
+    "element": {
+        "type": "string",
+        "enum": [
+            "Element AVITI",
+            "unspecified"
+        ]
+    },
+    "ultima": {
+        "type": "string",
+        "enum": [
+            "UG 100",
             "unspecified"
         ]
     },
@@ -144,6 +181,15 @@
             },
             {
                 "$ref": "#/capillary"
+            },
+            {
+                "$ref": "#/dnbseq"
+            },
+            {
+                "$ref": "#/element"
+            },
+            {
+                "$ref": "#/ultima"
             }
         ]
     },
@@ -195,6 +241,7 @@
                     "WXS",
                     "RNA-Seq",
                     "ssRNA-seq",
+                    "snRNA-seq",
                     "miRNA-Seq",
                     "ncRNA-Seq",
                     "FL-cDNA",
@@ -226,6 +273,9 @@
                     "Targeted-Capture",
                     "Tethered Chromatin Conformation Capture",
                     "NOMe-Seq",
+                    "ChM-Seq",
+                    "GBS",
+                    "Ribo-Seq",
                     "OTHER"
                 ]
             },

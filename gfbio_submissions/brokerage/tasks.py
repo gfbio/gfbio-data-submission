@@ -548,6 +548,11 @@ def update_ena_submission_data_task(self, previous_task_result=None, submission_
         )
         return TaskProgressReport.CANCELLED
 
+    logger.info(
+        "tasks.py | update_ena_submission_data_task | "
+        " submission_upload.submission.center_name={}".format(submission_upload.submission.center_name)
+    )
+
     ena_submission_data = prepare_ena_data(submission=submission_upload.submission)
 
     logger.info(
@@ -673,11 +678,9 @@ def parse_csv_to_update_clean_submission_task(self, previous_task_result=None, s
             messages = [e.message for e in full_errors]
             submission_upload.submission.data.update({"validation": messages})
             report.task_exception_info = json.dumps({"validation": messages})
-
         report.save()
         submission_upload.submission.save()
         if not valid:
-            # TODO: update tpr with errors from validation
             return TaskProgressReport.CANCELLED
         else:
             return True
@@ -2792,29 +2795,35 @@ def atax_submission_combine_xmls_to_one_structure_task(
         return True
 
 
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.prepare_ena_submission_data_task",
-)
-def prepare_ena_submission_data_task(self, prev_task_result=None, submission_id=None):
-    submission, site_configuration = get_submission_and_site_configuration(
-        submission_id=submission_id, task=self, include_closed=True
-    )
-    if submission == TaskProgressReport.CANCELLED:
-        return TaskProgressReport.CANCELLED
-
-    if len(submission.brokerobject_set.all()) > 0:
-        with transaction.atomic():
-            submission.auditabletextdata_set.all().delete()
-        ena_submission_data = prepare_ena_data(submission=submission)
-        store_ena_data_as_auditable_text_data(submission=submission, data=ena_submission_data)
-        # TODO: this will become obsolete once, data is taken from AuditableTextData ....
-        return ena_submission_data
-    else:
-        logger.info(
-            msg="prepare_ena_submission_data_task. no brokerobjects. "
-            "return={0} "
-            "submission_id={1}".format(TaskProgressReport.CANCELLED, submission_id)
-        )
-        return TaskProgressReport.CANCELLED
+# FIXME: WTF, why is there a duplicate of a complete task ?
+# @app.task(
+#     base=SubmissionTask,
+#     bind=True,
+#     name='tasks.prepare_ena_submission_data_task',
+# )
+# def prepare_ena_submission_data_task(self, prev_task_result=None,
+#                                      submission_id=None):
+#     submission, site_configuration = get_submission_and_site_configuration(
+#         submission_id=submission_id,
+#         task=self,
+#         include_closed=True
+#     )
+#     if submission == TaskProgressReport.CANCELLED:
+#         return TaskProgressReport.CANCELLED
+#
+#     if len(submission.brokerobject_set.all()) > 0:
+#         with transaction.atomic():
+#             submission.auditabletextdata_set.all().delete()
+#         ena_submission_data = prepare_ena_data(submission=submission)
+#         store_ena_data_as_auditable_text_data(submission=submission,
+#                                               data=ena_submission_data)
+#         # TODO: this will become obsolete once, data is taken from AuditableTextData ....
+#         return ena_submission_data
+#     else:
+#         logger.info(
+#             msg='prepare_ena_submission_data_task. no brokerobjects. '
+#                 'return={0} '
+#                 'submission_id={1}'.format(TaskProgressReport.CANCELLED,
+#                                            submission_id)
+#         )
+#         return TaskProgressReport.CANCELLED

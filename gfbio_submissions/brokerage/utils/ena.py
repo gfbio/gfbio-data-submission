@@ -65,9 +65,18 @@ class Enalizer(object):
         self.run = runs
         self.runs_key = 'runs'
         self.embargo = submission.embargo
-        if submission.center_name is not None \
-            and submission.center_name.center_name != '':
-            self.center_name = submission.center_name.center_name
+        logger.info('ena.py | Enalizer __init__ | submission={0} | submission.centername={1}'.format(
+            submission.broker_submission_id, submission.center_name))
+        if submission.center_name is not None:
+            logger.info(
+                'ena.py | Enalizer __init__ | centername available | submission.centername.center_name={0} | '
+                'len(submission.center_name.center_name)={1}'.format(
+                    submission.center_name.center_name, len(submission.center_name.center_name)))
+            if len(submission.center_name.center_name) > 0:
+                self.center_name = submission.center_name.center_name
+                logger.info(
+                    'ena.py | Enalizer __init__ | centername > 0 | self.center_name={0} | '.format(
+                        self.center_name))
         else:
             self.center_name = DEFAULT_ENA_CENTER_NAME
 
@@ -357,10 +366,21 @@ class Enalizer(object):
                 'layout_type', '').upper()
             layout_element = SubElement(library_layout, layout)
             if layout == 'PAIRED':
+                logger.info('ena.py | create_library_layout | layout==PAIRED | library_layout={0} | '.format(
+                    data_dict.get('library_layout', 'NO_LIBRARY_LAYOUT_FOUND'))
+                )
+                logger.info('ena.py | create_library_layout | layout==PAIRED | nominal_length={0} | '
+                            'nominal_length as str={1} '.format(
+                    data_dict.get('library_layout', {}).get('nominal_length', 'NO_NOMINAL_LENGTH_FOUND'),
+                    str(data_dict.get('library_layout', {}).get('nominal_length', 'NO_NOMINAL_LENGTH_FOUND')))
+                )
                 layout_element.set(
                     'NOMINAL_LENGTH',
                     str(data_dict.get('library_layout', {}).get(
                         'nominal_length', -1)))
+                logger.info('ena.py | create_library_layout | layout==PAIRED | layout_element={0} | '.format(
+                    ET.tostring(layout_element))
+                )
 
     def create_targeted_loci(self, root, data_dict):
         for locus_data in data_dict:
@@ -447,8 +467,16 @@ class Enalizer(object):
                                                            'EXPERIMENT',
                                                            'alias', data,
                                                            'experiment_alias')
+        logger.info('ena.py | create_single_experiment_xml | self.center_name={0} '.format(
+            self.center_name)
+        )
         experiment.set('broker_name', DEFAULT_ENA_BROKER_NAME)
-        experiment.set('center_name', self.center_name)
+        experiment.attrib['center_name'] = self.center_name
+
+        logger.info('ena.py | create_single_experiment_xml | experiment after setting centername | {0} '.format(
+            ET.tostring(experiment))
+        )
+
         self.create_subelement(experiment, 'title', data)
         self.create_subelement_with_attribute(experiment, 'study_ref',
                                               'refname', data)
@@ -472,6 +500,10 @@ class Enalizer(object):
             library_descriptor_data)
 
         self.create_library_layout(library_descriptor, library_descriptor_data)
+
+        logger.info('ena.py | create_single_experiment_xml | library_descriptor={0} '.format(
+            ET.tostring(library_descriptor))
+        )
 
         targeted_loci_dict = OrderedDict()  # {}
         targeted_loci_dict = self.translate_target_gene_insensitiv(sample_decriptor, targeted_loci_dict)
@@ -614,7 +646,6 @@ def store_single_data_item_as_auditable_text_data(submission, data):
 
 
 def prepare_ena_data(submission):
-    # outgoing_request_id = uuid.uuid4()
     enalizer = Enalizer(submission=submission,
                         alias_postfix=submission.broker_submission_id)
     return enalizer.prepare_submission_data(
