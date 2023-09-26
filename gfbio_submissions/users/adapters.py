@@ -5,7 +5,7 @@ from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.conf import settings
 from django.http import HttpRequest
 
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 
 
 class AccountAdapter(DefaultAccountAdapter):

@@ -35,8 +35,8 @@ from gfbio_submissions.brokerage.tests.utils import (
     _get_jira_attach_response,
     _get_jira_issue_response,
 )
-from gfbio_submissions.generic.models.ResourceCredential import ResourceCredential
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
 
 
@@ -73,9 +73,7 @@ class TestSubmissionUploadView(TestCase):
             helpdesk_server=resource_cred,
             comment="Default configuration",
         )
-        user = User.objects.create_user(
-            username="horst", email="horst@horst.de", password="password"
-        )
+        user = User.objects.create_user(username="horst", email="horst@horst.de", password="password")
         permissions = Permission.objects.filter(
             content_type__app_label="brokerage", codename__endswith="submissionupload"
         )
@@ -87,9 +85,7 @@ class TestSubmissionUploadView(TestCase):
         client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
         cls.api_client = client
 
-        user = User.objects.create_user(
-            username="kevin", email="kevin@kevin.de", password="secret", is_staff=True
-        )
+        user = User.objects.create_user(username="kevin", email="kevin@kevin.de", password="secret", is_staff=True)
         token = Token.objects.create(user=user)
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
@@ -107,9 +103,7 @@ class TestSubmissionUploadView(TestCase):
     def tearDownClass(cls):
         super(TestSubmissionUploadView, cls).tearDownClass()
         [
-            shutil.rmtree(
-                path="{0}{1}{2}".format(MEDIA_ROOT, os.sep, o), ignore_errors=False
-            )
+            shutil.rmtree(path="{0}{1}{2}".format(MEDIA_ROOT, os.sep, o), ignore_errors=False)
             for o in os.listdir(MEDIA_ROOT)
         ]
 
@@ -131,9 +125,7 @@ class TestSubmissionUploadView(TestCase):
         SubmissionUpload.objects.all().delete()
 
     @classmethod
-    def _do_post_with_mocked_responses(
-        cls, file_name="test_primary_data_file_1111", attach=False
-    ):
+    def _do_post_with_mocked_responses(cls, file_name="test_primary_data_file_1111", attach=False):
         site_config = SiteConfiguration.objects.first()
         submission = Submission.objects.first()
         responses.add(
@@ -332,9 +324,7 @@ class TestSubmissionUploadView(TestCase):
     def test_list_uploads_queryset(self):
         submission = Submission.objects.first()
         submission_2 = Submission.objects.last()
-        self.assertNotEqual(
-            submission.broker_submission_id, submission_2.broker_submission_id
-        )
+        self.assertNotEqual(submission.broker_submission_id, submission_2.broker_submission_id)
 
         url = reverse(
             "brokerage:submissions_upload",
@@ -403,9 +393,7 @@ class TestSubmissionUploadView(TestCase):
         self.assertTrue("meta_data" in content[0].keys())
 
     def test_get_list_no_submission(self):
-        url = reverse(
-            "brokerage:submissions_uploads", kwargs={"broker_submission_id": uuid4()}
-        )
+        url = reverse("brokerage:submissions_uploads", kwargs={"broker_submission_id": uuid4()})
         response = self.api_client.get(url)
         self.assertEqual(200, response.status_code)
         content = json.loads(response.content.decode("utf-8"))
@@ -464,9 +452,7 @@ class TestSubmissionUploadView(TestCase):
     def test_delete_without_user(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
-        simple_file = SimpleUploadedFile(
-            "test_submission_upload.txt", b"these are the file contents!"
-        )
+        simple_file = SimpleUploadedFile("test_submission_upload.txt", b"these are the file contents!")
 
         upload = SubmissionUpload.objects.create(
             submission=submission,
@@ -480,9 +466,7 @@ class TestSubmissionUploadView(TestCase):
             "{0}/rest/api/2/field".format(site_config.helpdesk_server.url),
             status=200,
         )
-        url = "{0}{1}/{2}".format(
-            site_config.helpdesk_server.url, JIRA_ATTACHMENT_URL, upload.attachment_id
-        )
+        url = "{0}{1}/{2}".format(site_config.helpdesk_server.url, JIRA_ATTACHMENT_URL, upload.attachment_id)
         responses.add(responses.DELETE, url, body=b"", status=204)
 
         url = reverse(
@@ -549,9 +533,7 @@ class TestSubmissionUploadView(TestCase):
     def test_valid_file_put_no_task(self):
         submission = Submission.objects.first()
         reports_len = len(TaskProgressReport.objects.all())
-        response = self._do_post_with_mocked_responses(
-            file_name="test_primary_data_file_1111"
-        )
+        response = self._do_post_with_mocked_responses(file_name="test_primary_data_file_1111")
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(SubmissionUpload.objects.all()))
         fname = SubmissionUpload.objects.all().first().file.name
@@ -564,9 +546,7 @@ class TestSubmissionUploadView(TestCase):
                 "pk": content.get("id"),
             },
         )
-        data = self._create_test_data(
-            path="/tmp/test_primary_data_file_2222", delete=False
-        )
+        data = self._create_test_data(path="/tmp/test_primary_data_file_2222", delete=False)
         response = self.api_client.put(url, data, format="multipart")
         self.assertEqual(200, response.status_code)
         self.assertEqual(1, len(SubmissionUpload.objects.all()))
@@ -579,9 +559,7 @@ class TestSubmissionUploadView(TestCase):
         submission = Submission.objects.first()
         reports_len = len(TaskProgressReport.objects.all())
 
-        response = self._do_post_with_mocked_responses(
-            file_name="test_primary_data_file_1111"
-        )
+        response = self._do_post_with_mocked_responses(file_name="test_primary_data_file_1111")
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(SubmissionUpload.objects.all()))
         fname = SubmissionUpload.objects.all().first().file.name
@@ -609,9 +587,7 @@ class TestSubmissionUploadView(TestCase):
     @responses.activate
     def test_file_put_same_content_with_task(self):
         submission = Submission.objects.first()
-        response = self._do_post_with_mocked_responses(
-            file_name="test_primary_data_file_1111", attach=True
-        )
+        response = self._do_post_with_mocked_responses(file_name="test_primary_data_file_1111", attach=True)
 
         self.assertEqual(1, len(submission.submissionupload_set.all()))
         submission_upload = submission.submissionupload_set.first()
@@ -625,9 +601,7 @@ class TestSubmissionUploadView(TestCase):
                 "pk": content.get("id"),
             },
         )
-        data = self._create_test_data(
-            "/tmp/test_primary_data_file_1111", delete=False, attach=True
-        )
+        data = self._create_test_data("/tmp/test_primary_data_file_1111", delete=False, attach=True)
 
         self.api_client.put(url, data, format="multipart")
 
@@ -639,16 +613,12 @@ class TestSubmissionUploadView(TestCase):
         task_reports = TaskProgressReport.objects.all().order_by("created")
         self.assertEqual(2, len(task_reports))
         self.assertTrue(task_reports.first().task_return_value)
-        self.assertEqual(
-            TaskProgressReport.CANCELLED, task_reports.last().task_return_value
-        )
+        self.assertEqual(TaskProgressReport.CANCELLED, task_reports.last().task_return_value)
 
     @responses.activate
     def test_file_put_modified_content_with_task(self):
         submission = Submission.objects.first()
-        response = self._do_post_with_mocked_responses(
-            file_name="test_primary_data_file_1111", attach=True
-        )
+        response = self._do_post_with_mocked_responses(file_name="test_primary_data_file_1111", attach=True)
 
         self.assertEqual(1, len(submission.submissionupload_set.all()))
         submission_upload = submission.submissionupload_set.first()
@@ -684,9 +654,7 @@ class TestSubmissionUploadView(TestCase):
         #                  task_reports.last().task_return_value)
 
     def test_no_submission_upload(self):
-        url = reverse(
-            "brokerage:submissions_upload", kwargs={"broker_submission_id": uuid4()}
-        )
+        url = reverse("brokerage:submissions_upload", kwargs={"broker_submission_id": uuid4()})
         data = self._create_test_data("/tmp/test_primary_data_file")
         response = self.api_client.post(url, data, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

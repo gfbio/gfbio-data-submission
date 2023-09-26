@@ -9,8 +9,8 @@ import responses
 from gfbio_submissions.brokerage.configuration.settings import JIRA_ISSUE_URL
 from gfbio_submissions.brokerage.models import BrokerObject, PersistentIdentifier, Submission, TaskProgressReport
 from gfbio_submissions.brokerage.tests.utils import _get_ena_release_xml_response, _get_submission_request_data
-from gfbio_submissions.generic.models.RequestLog import RequestLog
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.request_log import RequestLog
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 
 from .test_submission_view_base import TestSubmissionView
 

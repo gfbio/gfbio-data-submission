@@ -7,8 +7,8 @@ from django.test import TestCase
 
 from gfbio_submissions.brokerage.utils import csv
 from gfbio_submissions.brokerage.utils.ena import download_submitted_run_files_to_string_io
-from gfbio_submissions.generic.models.ResourceCredential import ResourceCredential
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 
 
 class TestDownloadEnaReport(TestCase):

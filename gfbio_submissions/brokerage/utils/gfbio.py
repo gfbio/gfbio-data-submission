@@ -12,7 +12,7 @@ from gfbio_submissions.brokerage.configuration.settings import (
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE,
     JIRA_USERNAME_URL_TEMPLATE,
 )
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.generic.utils import logged_requests
 
 logger = logging.getLogger(__name__)

@@ -23,7 +23,7 @@ from gfbio_submissions.brokerage.tasks import (
     trigger_submission_transfer_for_updates,
 )
 from gfbio_submissions.brokerage.tests.utils import _get_jira_issue_response, _get_pangaea_attach_response
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
 
 from .test_tasks_base import TestTasks

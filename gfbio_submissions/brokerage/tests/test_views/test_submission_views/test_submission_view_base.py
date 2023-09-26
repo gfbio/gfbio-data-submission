@@ -16,8 +16,8 @@ from gfbio_submissions.brokerage.configuration.settings import (
 )
 from gfbio_submissions.brokerage.models import SubmissionUpload
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
-from gfbio_submissions.generic.models.ResourceCredential import ResourceCredential
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
 
 

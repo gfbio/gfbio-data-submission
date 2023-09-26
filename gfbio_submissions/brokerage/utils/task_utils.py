@@ -27,7 +27,7 @@ from gfbio_submissions.brokerage.models import (
     TaskProgressReport,
 )
 from gfbio_submissions.brokerage.utils.ena import send_submission_to_ena
-from gfbio_submissions.generic.models.ResourceCredential import ResourceCredential
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 
 logger = logging.getLogger(__name__)
 

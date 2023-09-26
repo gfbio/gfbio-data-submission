@@ -50,9 +50,9 @@ from gfbio_submissions.brokerage.utils.ena_cli import (
     submit_targeted_sequences,
 )
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
-from gfbio_submissions.generic.models.RequestLog import RequestLog
-from gfbio_submissions.generic.models.ResourceCredential import ResourceCredential
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.request_log import RequestLog
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.generic.utils import logged_requests
 from gfbio_submissions.users.models import User
 

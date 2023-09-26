@@ -3,7 +3,7 @@
 import responses
 
 from gfbio_submissions.brokerage.configuration.settings import JIRA_COMMENT_SUB_URL, JIRA_ISSUE_URL
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 
 from .test_tasks_base import TestTasks
 

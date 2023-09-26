@@ -11,7 +11,7 @@ from gfbio_submissions.brokerage.tasks import (
     update_resolver_accessions_task,
 )
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.resolve.models import Accession
 from gfbio_submissions.users.models import User
 

@@ -5,7 +5,7 @@ from uuid import UUID
 import responses
 
 from gfbio_submissions.brokerage.models import Submission
-from gfbio_submissions.generic.models.RequestLog import RequestLog
+from gfbio_submissions.generic.models.request_log import RequestLog
 
 from .test_submission_view_base import TestSubmissionView
 

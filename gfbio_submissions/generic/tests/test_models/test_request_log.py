@@ -7,9 +7,9 @@ from gfbio_submissions.brokerage.models import BrokerObject, Submission
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, _get_ena_data_without_runs, _get_ena_xml_response
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, send_submission_to_ena
-from gfbio_submissions.generic.models.RequestLog import RequestLog
-from gfbio_submissions.generic.models.ResourceCredential import ResourceCredential
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.request_log import RequestLog
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
 
 

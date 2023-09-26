@@ -17,7 +17,7 @@ from gfbio_submissions.brokerage.tasks import (
     notify_user_embargo_expiry_task,
     update_submission_issue_task,
 )
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
 
 from .test_helpdesk_tasks_base import TestHelpDeskTasksBase

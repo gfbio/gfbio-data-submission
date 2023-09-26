@@ -7,7 +7,7 @@ from io import StringIO
 from django.conf import settings
 
 from gfbio_submissions.brokerage.models import AuditableTextData
-from gfbio_submissions.generic.models.RequestLog import RequestLog
+from gfbio_submissions.generic.models.request_log import RequestLog
 
 
 def create_ena_manifest_text_data(submission):

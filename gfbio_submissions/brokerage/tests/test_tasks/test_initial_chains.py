@@ -16,8 +16,8 @@ from gfbio_submissions.brokerage.configuration.settings import (
 )
 from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
 from gfbio_submissions.brokerage.tests.utils import _get_submission_request_data
-from gfbio_submissions.generic.models.ResourceCredential import ResourceCredential
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
 
 
@@ -41,9 +41,7 @@ class TestInitialChainTasks(TestCase):
         cls.permissions = Permission.objects.filter(
             content_type__app_label="brokerage", codename__endswith="submission"
         )
-        user = User.objects.create_user(
-            username="horst", email="horst@horst.de", password="password"
-        )
+        user = User.objects.create_user(username="horst", email="horst@horst.de", password="password")
         user.user_permissions.add(*cls.permissions)
         user.site_configuration = cls.site_config
         user.save()
@@ -52,10 +50,7 @@ class TestInitialChainTasks(TestCase):
         cls.factory = APIRequestFactory()
 
         client = APIClient()
-        client.credentials(
-            HTTP_AUTHORIZATION="Basic "
-            + base64.b64encode(b"horst:password").decode("utf-8")
-        )
+        client.credentials(HTTP_AUTHORIZATION="Basic " + base64.b64encode(b"horst:password").decode("utf-8"))
         cls.api_client = client
 
     def _add_jira_client_responses(self):
@@ -171,9 +166,7 @@ class TestInitialChainTasks(TestCase):
         )
         self.assertEqual(201, max_response.status_code)
         content = json.loads(max_response.content)
-        sub = Submission.objects.get(
-            broker_submission_id=content.get("broker_submission_id")
-        )
+        sub = Submission.objects.get(broker_submission_id=content.get("broker_submission_id"))
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = [
             "tasks.get_gfbio_helpdesk_username_task",
@@ -187,9 +180,7 @@ class TestInitialChainTasks(TestCase):
             "tasks.update_helpdesk_ticket_task",
             "tasks.check_issue_existing_for_submission_task",
         ]
-        tprs = TaskProgressReport.objects.exclude(
-            task_name="tasks.update_helpdesk_ticket_task"
-        )
+        tprs = TaskProgressReport.objects.exclude(task_name="tasks.update_helpdesk_ticket_task")
         self.assertEqual(9, len(tprs))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)

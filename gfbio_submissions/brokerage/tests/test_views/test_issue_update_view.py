@@ -11,33 +11,25 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from gfbio_submissions.brokerage.models import (
-    AdditionalReference,
-    BrokerObject,
-    Submission,
-)
+from gfbio_submissions.brokerage.models import AdditionalReference, BrokerObject, Submission
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import (
     _get_ena_data,
     _get_ena_data_without_runs,
     _get_jira_hook_request_data,
 )
-from gfbio_submissions.brokerage.utils.task_utils import (
-    get_submission_and_site_configuration,
-)
+from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
-from gfbio_submissions.generic.models.RequestLog import RequestLog
-from gfbio_submissions.generic.models.ResourceCredential import ResourceCredential
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.request_log import RequestLog
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
 
 
 class TestJiraIssueUpdateView(APITestCase):
     # TODO: move to utils or similar ...
     @classmethod
-    def _create_submission_via_serializer(
-        cls, runs=False, username=None, create_broker_objects=True
-    ):
+    def _create_submission_via_serializer(cls, runs=False, username=None, create_broker_objects=True):
         serializer = SubmissionSerializer(
             data={
                 "target": "ENA",
@@ -75,13 +67,9 @@ class TestJiraIssueUpdateView(APITestCase):
         cls._create_user("horst", "horst@horst.de")
         cls._create_user("brokeragent", "brokeragent@gfbio.org")
 
-        submission = cls._create_submission_via_serializer(
-            username="horst", create_broker_objects=True
-        )
+        submission = cls._create_submission_via_serializer(username="horst", create_broker_objects=True)
 
-        submission.brokerobject_set.create(
-            type="study", user=submission.user, data={"data": True}
-        )
+        submission.brokerobject_set.create(type="study", user=submission.user, data={"data": True})
         studies = submission.brokerobject_set.filter(type="study")
         studies.first().persistentidentifier_set.create(
             archive="ENA", pid_type="PRJ", pid="PRJEB0815", status="PRIVATE"
@@ -113,9 +101,7 @@ class TestJiraIssueUpdateView(APITestCase):
 
     def test_jira_endpoint_status_400(self):
         self.assertEqual(0, len(RequestLog.objects.all()))
-        response = self.client.post(
-            self.url, {"foo", "bar"}, content_type="application/json"
-        )
+        response = self.client.post(self.url, {"foo", "bar"}, content_type="application/json")
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(0, len(RequestLog.objects.all()))
 
@@ -131,9 +117,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": one_year.for_json(),
-                        "customfield_10303": "{0}".format(
-                            submission.broker_submission_id
-                        ),
+                        "customfield_10303": "{0}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
                             "emailAddress": "repo@repo.de",
@@ -159,9 +143,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": one_year.for_json(),
-                        "customfield_10303": "{0}".format(
-                            submission.broker_submission_id
-                        ),
+                        "customfield_10303": "{0}".format(submission.broker_submission_id),
                     },
                 },
                 "changelog": {"items": [{}]},
@@ -201,11 +183,7 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(one_year.date(), submission.embargo)
 
         # change status to SUPPRESSED
-        study = (
-            submission.brokerobject_set.filter(type="study")
-            .first()
-            .persistentidentifier_set.first()
-        )
+        study = submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.first()
         study.status = "SUPPRESSED"
         study.save()
         submission.embargo = six_months.date()
@@ -257,11 +235,7 @@ class TestJiraIssueUpdateView(APITestCase):
         submission.save()
         self.assertEqual(six_months.date(), submission.embargo)
         # change status to SUPPRESSED
-        study = (
-            submission.brokerobject_set.filter(type="study")
-            .first()
-            .persistentidentifier_set.first()
-        )
+        study = submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.first()
         study.status = "PUBLIC"
         study.save()
         self.assertEqual("PUBLIC", study.status)
@@ -301,9 +275,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": one_year.for_json(),
-                        "customfield_10303": "{0}".format(
-                            submission.broker_submission_id
-                        ),
+                        "customfield_10303": "{0}".format(submission.broker_submission_id),
                     },
                 }
             },
@@ -328,9 +300,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": one_year.for_json(),
-                        "customfield_10303": "{0}".format(
-                            submission.broker_submission_id
-                        ),
+                        "customfield_10303": "{0}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
                             "emailAddress": "repo@repo.de",
@@ -351,16 +321,12 @@ class TestJiraIssueUpdateView(APITestCase):
         payload = json.loads(hook_content)
         payload["user"]["emailAddress"] = "horst@horst.de"
         payload["issue"]["key"] = "SAND-007"
-        payload["issue"]["fields"]["customfield_10303"] = "{}".format(
-            submission.broker_submission_id
-        )
+        payload["issue"]["fields"]["customfield_10303"] = "{}".format(submission.broker_submission_id)
 
         response = self.client.post(self.url, payload, format="json")
         print(response.content)
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-        self.assertEqual(
-            status.HTTP_201_CREATED, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_201_CREATED, RequestLog.objects.first().response_status)
         # TODO: check response content
 
     def test_real_world_request_no_changelog(self):
@@ -370,15 +336,11 @@ class TestJiraIssueUpdateView(APITestCase):
         payload = json.loads(hook_content)
         payload["user"]["emailAddress"] = "horst@horst.de"
         payload["issue"]["key"] = "SAND-007"
-        payload["issue"]["fields"]["customfield_10303"] = "{}".format(
-            submission.broker_submission_id
-        )
+        payload["issue"]["fields"]["customfield_10303"] = "{}".format(submission.broker_submission_id)
 
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-        self.assertEqual(
-            status.HTTP_201_CREATED, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_201_CREATED, RequestLog.objects.first().response_status)
         # TODO: check response content
 
     def test_no_issue_in_request(self):
@@ -386,9 +348,7 @@ class TestJiraIssueUpdateView(APITestCase):
         response = self.client.post(self.url, {"a": True}, format="json")
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual(
-            status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
 
     def test_error_in_issue(self):
         self.assertEqual(0, len(RequestLog.objects.all()))
@@ -405,9 +365,7 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertIn(b"fields", response.content)
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual(
-            status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
 
     def test_missing_fields(self):
         self.assertEqual(0, len(RequestLog.objects.all()))
@@ -424,9 +382,7 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertIn(b"'customfield_10200' is a required property", response.content)
         self.assertIn(b"'customfield_10303' is a required property", response.content)
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEqual(
-            status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
 
     def test_errors_in_field(self):
         self.assertEqual(0, len(RequestLog.objects.all()))
@@ -448,9 +404,7 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertIn(b"'customfield_10303' is a required property", response.content)
         self.assertIn(b"customfield_10200 : '' is too short", response.content)
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEqual(
-            status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             str(mail.outbox[0].body.strip()),
@@ -479,9 +433,7 @@ class TestJiraIssueUpdateView(APITestCase):
 
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertIn(b"customfield_10303 : '' does not match", response.content)
-        self.assertEqual(
-            status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
 
     def test_date_format_check(self):
         submission = Submission.objects.first()
@@ -494,9 +446,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": "2021-xxx-09",
-                        "customfield_10303": "{}".format(
-                            submission.broker_submission_id
-                        ),
+                        "customfield_10303": "{}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
                             "emailAddress": "repo@repo.de",
@@ -513,9 +463,7 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertIn(b"'customfield_10200': Could not match input", response.content)
 
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual(
-            status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
 
     def test_timestamp_date(self):
         submission = Submission.objects.first()
@@ -528,9 +476,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": "2025-03-09T00:00:00+00:00",
-                        "customfield_10303": "{}".format(
-                            submission.broker_submission_id
-                        ),
+                        "customfield_10303": "{}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
                             "emailAddress": "repo@repo.de",
@@ -543,9 +489,7 @@ class TestJiraIssueUpdateView(APITestCase):
         )
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual(
-            status.HTTP_201_CREATED, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_201_CREATED, RequestLog.objects.first().response_status)
 
     def test_jira_reporter_gfbio_unknown(self):
         submission = Submission.objects.first()
@@ -561,9 +505,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": "2025-03-09T00:00:00+00:00",
-                        "customfield_10303": "{}".format(
-                            submission.broker_submission_id
-                        ),
+                        "customfield_10303": "{}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
                             "emailAddress": "repo@repo.de",
@@ -577,9 +519,7 @@ class TestJiraIssueUpdateView(APITestCase):
 
         self.assertEqual(users_in_db + 1, len(User.objects.all()))
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual(
-            status.HTTP_201_CREATED, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_201_CREATED, RequestLog.objects.first().response_status)
         submission = Submission.objects.first()
         self.assertEqual(submission.user.username, "repo123_loginame")
         self.assertEqual(submission.user.email, "repo@repo.de")
@@ -600,9 +540,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": "2025-03-09T00:00:00+00:00",
-                        "customfield_10303": "{}".format(
-                            submission.broker_submission_id
-                        ),
+                        "customfield_10303": "{}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "brokeragent",
                             "emailAddress": "brokeragent@gfbio.org",
@@ -618,9 +556,7 @@ class TestJiraIssueUpdateView(APITestCase):
 
         self.assertEqual(users_in_db, len(User.objects.all()))
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual(
-            status.HTTP_201_CREATED, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_201_CREATED, RequestLog.objects.first().response_status)
         submission = Submission.objects.first()
         self.assertNotEqual(submission.user.email, user_mail)
         self.assertEqual(submission.user.email, "brokeragent@gfbio.org")
@@ -641,9 +577,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": "2025-03-09T00:00:00+00:00",
-                        "customfield_10303": "{}".format(
-                            submission.broker_submission_id
-                        ),
+                        "customfield_10303": "{}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "horst",
                             "emailAddress": "horst@horst.de",
@@ -657,9 +591,7 @@ class TestJiraIssueUpdateView(APITestCase):
 
         self.assertEqual(users_in_db, len(User.objects.all()))
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual(
-            status.HTTP_201_CREATED, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_201_CREATED, RequestLog.objects.first().response_status)
         submission = Submission.objects.first()
         self.assertEqual(submission.user.email, user_mail)
 
@@ -677,9 +609,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": "2025-03-09T00:00:00+00:00",
-                        "customfield_10303": "{}".format(
-                            submission.broker_submission_id
-                        ),
+                        "customfield_10303": "{}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
                             "emailAddress": "",
@@ -693,9 +623,7 @@ class TestJiraIssueUpdateView(APITestCase):
 
         self.assertEqual(users_in_db, len(User.objects.all()))
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual(
-            status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             str(mail.outbox[0].body.strip()),
@@ -715,9 +643,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": "2020-04-09T00:00:00+00:00",
-                        "customfield_10303": "{}".format(
-                            submission.broker_submission_id
-                        ),
+                        "customfield_10303": "{}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
                             "emailAddress": "repo@repo.de",
@@ -729,14 +655,10 @@ class TestJiraIssueUpdateView(APITestCase):
             format="json",
         )
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertIn(
-            b"'customfield_10200': embargo date in the past", response.content
-        )
+        self.assertIn(b"'customfield_10200': embargo date in the past", response.content)
 
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual(
-            status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
 
     def test_date_tomorrow(self):
         submission = Submission.objects.first()
@@ -750,9 +672,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": embargo_tomorrow,
-                        "customfield_10303": "{}".format(
-                            submission.broker_submission_id
-                        ),
+                        "customfield_10303": "{}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
                             "emailAddress": "repo@repo.de",
@@ -765,9 +685,7 @@ class TestJiraIssueUpdateView(APITestCase):
         )
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual(
-            status.HTTP_201_CREATED, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_201_CREATED, RequestLog.objects.first().response_status)
 
     def test_date_in_the_far_future(self):
         submission = Submission.objects.first()
@@ -780,9 +698,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": "2049-04-09T00:00:00+00:00",
-                        "customfield_10303": "{}".format(
-                            submission.broker_submission_id
-                        ),
+                        "customfield_10303": "{}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
                             "emailAddress": "repo@repo.de",
@@ -794,14 +710,10 @@ class TestJiraIssueUpdateView(APITestCase):
             format="json",
         )
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertIn(
-            b"'customfield_10200': embargo date too far in the future", response.content
-        )
+        self.assertIn(b"'customfield_10200': embargo date too far in the future", response.content)
 
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual(
-            status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
 
     def test_embargo_today(self):
         submission = Submission.objects.first()
@@ -814,9 +726,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": arrow.now().for_json(),
-                        "customfield_10303": "{}".format(
-                            submission.broker_submission_id
-                        ),
+                        "customfield_10303": "{}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
                             "emailAddress": "repo@repo.de",
@@ -828,21 +738,15 @@ class TestJiraIssueUpdateView(APITestCase):
             format="json",
         )
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertIn(
-            b"'customfield_10200': embargo date in the past", response.content
-        )
+        self.assertIn(b"'customfield_10200': embargo date in the past", response.content)
 
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual(
-            status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
 
     def test_embargo_is_identical(self):
         submission = Submission.objects.first()
         embargo_date = arrow.now().shift(days=14).format("YYYY-MM-DD")
-        embargo_date_hour_offset = (
-            arrow.now().shift(days=14, hours=1).format("YYYY-MM-DD")
-        )
+        embargo_date_hour_offset = arrow.now().shift(days=14, hours=1).format("YYYY-MM-DD")
         submission.embargo = embargo_date
         submission.save()
         self.assertEqual(0, len(RequestLog.objects.all()))
@@ -854,9 +758,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": embargo_date_hour_offset,
-                        "customfield_10303": "{}".format(
-                            submission.broker_submission_id
-                        ),
+                        "customfield_10303": "{}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
                             "emailAddress": "repo@repo.de",
@@ -882,9 +784,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": arrow.now().shift(years=1).for_json(),
-                        "customfield_10303": "{}".format(
-                            submission.broker_submission_id
-                        ),
+                        "customfield_10303": "{}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
                             "emailAddress": "repo@repo.de",
@@ -898,9 +798,7 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertIn(b"no related issue with key", response.content)
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual(
-            status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             str(mail.outbox[0].body.strip()),
@@ -923,9 +821,7 @@ class TestJiraIssueUpdateView(APITestCase):
                         "key": "SAND-007",
                         "fields": {
                             "customfield_10200": arrow.now().for_json(),
-                            "customfield_10303": "{}".format(
-                                submission.broker_submission_id
-                            ),
+                            "customfield_10303": "{}".format(submission.broker_submission_id),
                         },
                     },
                 },
@@ -936,9 +832,7 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertIn(b'{"user":["This field is required."]}', response.content)
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual(
-            status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
 
     def test_invalid_submission(self):
         submission = Submission.objects.first()
@@ -966,16 +860,12 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertIn(b"Submission matching query does not exist", response.content)
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual(
-            status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
 
     def test_invalid_ena_status(self):
         submission = Submission.objects.first()
         submission.brokerobject_set.all().delete()
-        submission.brokerobject_set.create(
-            type="study", user=submission.user, data={"data": True}
-        )
+        submission.brokerobject_set.create(type="study", user=submission.user, data={"data": True})
         studies = submission.brokerobject_set.filter(type="study")
         studies.first().persistentidentifier_set.create(
             archive="ENA", pid_type="PRJ", pid="PRJEB0815", status="NOT-PRIVATE"
@@ -989,9 +879,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": arrow.now().shift(years=1).for_json(),
-                        "customfield_10303": "{0}".format(
-                            submission.broker_submission_id
-                        ),
+                        "customfield_10303": "{0}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
                             "emailAddress": "repo@repo.de",
@@ -1006,9 +894,7 @@ class TestJiraIssueUpdateView(APITestCase):
 
         self.assertIn(b"status prevents update of submission", response.content)
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual(
-            status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
 
     def test_no_persistent_identifier_to_check_status(self):
         submission = Submission.objects.first()
@@ -1023,9 +909,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": arrow.now().shift(years=1).for_json(),
-                        "customfield_10303": "{0}".format(
-                            submission.broker_submission_id
-                        ),
+                        "customfield_10303": "{0}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
                             "emailAddress": "repo@repo.de",
@@ -1039,9 +923,7 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertIn(b"submission without a primary accession", response.content)
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual(
-            status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)
 
     def test_not_curator(self):
         submission = Submission.objects.first()
@@ -1054,9 +936,7 @@ class TestJiraIssueUpdateView(APITestCase):
                     "key": "SAND-007",
                     "fields": {
                         "customfield_10200": arrow.now().shift(years=1).for_json(),
-                        "customfield_10303": "{}".format(
-                            submission.broker_submission_id
-                        ),
+                        "customfield_10303": "{}".format(submission.broker_submission_id),
                         "reporter": {
                             "name": "repo123_loginame",
                             "emailAddress": "repo@repo.de",
@@ -1068,11 +948,7 @@ class TestJiraIssueUpdateView(APITestCase):
             format="json",
         )
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertIn(
-            b'{"issue":["\'user\': user is not in curators group"]}', response.content
-        )
+        self.assertIn(b'{"issue":["\'user\': user is not in curators group"]}', response.content)
 
         self.assertEqual(1, len(RequestLog.objects.all()))
-        self.assertEqual(
-            status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status
-        )
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, RequestLog.objects.first().response_status)

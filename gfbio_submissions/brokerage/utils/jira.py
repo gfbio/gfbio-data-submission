@@ -19,7 +19,7 @@ from gfbio_submissions.brokerage.configuration.settings import (
 from gfbio_submissions.brokerage.utils.gfbio import gfbio_prepare_create_helpdesk_payload
 from gfbio_submissions.brokerage.utils.pangaea import get_csv_from_samples, prepare_pangaea_issue_content
 
-from ...generic.models.RequestLog import RequestLog
+from ...generic.models.request_log import RequestLog
 from .pangaea import parse_pangaea_login_token_response, request_pangaea_login_token
 
 logger = logging.getLogger(__name__)

@@ -11,8 +11,8 @@ from gfbio_submissions.brokerage.tasks import (
     transfer_data_to_ena_task,
 )
 from gfbio_submissions.brokerage.tests.utils import _get_ena_error_xml_response, _get_ena_xml_response
-from gfbio_submissions.generic.models.RequestLog import RequestLog
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.request_log import RequestLog
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 
 from .test_tasks_base import TestTasks
 

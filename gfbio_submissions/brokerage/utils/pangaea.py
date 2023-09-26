@@ -14,7 +14,7 @@ from gfbio_submissions.brokerage.configuration.settings import CSV_WRITER_QUOTIN
 from gfbio_submissions.brokerage.forms import Gcdj2CsvForm
 from gfbio_submissions.brokerage.models import Submission
 from gfbio_submissions.brokerage.utils.gcdj_utils import flatten_dictionary
-from gfbio_submissions.generic.models.TicketLabel import TicketLabel
+from gfbio_submissions.generic.models.ticket_label import TicketLabel
 from gfbio_submissions.generic.utils import logged_requests
 
 logger = logging.getLogger(__name__)

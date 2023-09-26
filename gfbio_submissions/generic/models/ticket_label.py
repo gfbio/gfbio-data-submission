@@ -2,7 +2,7 @@ import logging
 
 from django.db import models
 
-from .SiteConfiguration import SiteConfiguration
+from .site_configuration import SiteConfiguration
 
 logger = logging.getLogger(__name__)
 

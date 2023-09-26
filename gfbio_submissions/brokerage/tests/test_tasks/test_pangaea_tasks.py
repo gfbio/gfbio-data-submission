@@ -22,8 +22,8 @@ from gfbio_submissions.brokerage.tests.utils import (
     _get_pangaea_soap_response,
     _get_pangaea_ticket_response,
 )
-from gfbio_submissions.generic.models.RequestLog import RequestLog
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.request_log import RequestLog
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 
 from .test_tasks_base import TestTasks
 

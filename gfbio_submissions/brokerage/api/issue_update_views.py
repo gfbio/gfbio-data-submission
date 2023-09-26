@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import generics, mixins, status
 from rest_framework.response import Response
 
-from gfbio_submissions.generic.models.RequestLog import RequestLog
+from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.generic.serializers import JiraHookRequestSerializer
 
 from ..forms import JiraIssueUpdateQueryForm
@@ -35,9 +35,7 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
             method=RequestLog.POST,
             url=reverse("brokerage:submissions_jira_update"),
             data=request.data,
-            response_status=status.HTTP_201_CREATED
-            if is_valid
-            else status.HTTP_400_BAD_REQUEST,
+            response_status=status.HTTP_201_CREATED if is_valid else status.HTTP_400_BAD_REQUEST,
             request_details=details,
         )
 
@@ -45,16 +43,12 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
 
         if not is_valid:
             # in case of JiraHookRequestSerializer  errors:
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST, headers=headers
-            )
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST, headers=headers)
 
         if not form_is_valid:
             # request came from blacklisted users
             # blacklist users: brokeragent
-            return Response(
-                form.errors, status=status.HTTP_400_BAD_REQUEST, headers=headers
-            )
+            return Response(form.errors, status=status.HTTP_400_BAD_REQUEST, headers=headers)
 
         obj = self.perform_create(serializer)
 

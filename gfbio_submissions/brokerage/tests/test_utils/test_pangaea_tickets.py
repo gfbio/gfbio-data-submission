@@ -12,8 +12,8 @@ from gfbio_submissions.brokerage.utils.pangaea import (
     parse_pangaea_login_token_response,
     request_pangaea_login_token,
 )
-from gfbio_submissions.generic.models.ResourceCredential import ResourceCredential
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
 
 

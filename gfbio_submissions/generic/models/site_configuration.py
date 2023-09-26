@@ -4,7 +4,7 @@ from django.db import models
 from model_utils.models import TimeStampedModel
 
 from ..managers import SiteConfigurationManager
-from .ResourceCredential import ResourceCredential
+from .resource_credential import ResourceCredential
 
 logger = logging.getLogger(__name__)
 

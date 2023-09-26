@@ -8,7 +8,7 @@ from rest_framework import generics, mixins, parsers, permissions, status
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.response import Response
 
-from gfbio_submissions.generic.models.RequestLog import RequestLog
+from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.users.models import User
 
 from ..configuration.settings import SUBMISSION_DELAY, SUBMISSION_ISSUE_CHECK_DELAY, SUBMISSION_UPLOAD_RETRY_DELAY

@@ -25,8 +25,8 @@ from gfbio_submissions.brokerage.tests.utils import (
 )
 from gfbio_submissions.brokerage.utils.submission_transfer import SubmissionTransferHandler
 from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration
-from gfbio_submissions.generic.models.ResourceCredential import ResourceCredential
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
 
 

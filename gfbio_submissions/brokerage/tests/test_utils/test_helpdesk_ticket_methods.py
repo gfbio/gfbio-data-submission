@@ -18,8 +18,8 @@ from gfbio_submissions.brokerage.models import AdditionalReference, BrokerObject
 from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, _get_ena_data_without_runs, _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.gfbio import get_gfbio_helpdesk_username, gfbio_prepare_create_helpdesk_payload
-from gfbio_submissions.generic.models.ResourceCredential import ResourceCredential
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
 
 

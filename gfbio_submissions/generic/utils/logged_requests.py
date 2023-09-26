@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import requests
 
-from ..models.RequestLog import RequestLog
+from ..models.request_log import RequestLog
 
 logger = logging.getLogger(__name__)
 

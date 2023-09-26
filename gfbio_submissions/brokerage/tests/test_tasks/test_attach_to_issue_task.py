@@ -12,7 +12,7 @@ from gfbio_submissions.brokerage.configuration.settings import (
 from gfbio_submissions.brokerage.models import Submission, SubmissionUpload, TaskProgressReport
 from gfbio_submissions.brokerage.tasks import attach_to_submission_issue_task, delete_submission_issue_attachment_task
 from gfbio_submissions.brokerage.tests.utils import _get_jira_attach_response
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
 
 from ..test_utils.test_csv_parsing import TestCSVParsing

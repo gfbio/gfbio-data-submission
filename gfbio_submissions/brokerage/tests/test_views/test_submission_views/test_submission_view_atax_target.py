@@ -8,7 +8,7 @@ import responses
 from gfbio_submissions.brokerage.configuration.settings import ATAX, SUBMISSION_DELAY
 from gfbio_submissions.brokerage.models import AdditionalReference, JiraMessage, Submission, TaskProgressReport
 from gfbio_submissions.brokerage.tasks import jira_initial_comment_task
-from gfbio_submissions.generic.models.RequestLog import RequestLog
+from gfbio_submissions.generic.models.request_log import RequestLog
 
 from .test_submission_view_base import TestSubmissionView
 

@@ -9,8 +9,8 @@ from django.test import override_settings
 from gfbio_submissions.brokerage.models import EnaReport, TaskProgressReport
 from gfbio_submissions.brokerage.tasks import fetch_ena_reports_task
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
-from gfbio_submissions.generic.models.RequestLog import RequestLog
-from gfbio_submissions.generic.models.ResourceCredential import ResourceCredential
+from gfbio_submissions.generic.models.request_log import RequestLog
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 
 from .test_tasks_base import TestTasks
 

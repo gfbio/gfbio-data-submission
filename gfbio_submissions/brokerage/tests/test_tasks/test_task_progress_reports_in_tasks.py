@@ -9,7 +9,7 @@ from gfbio_submissions.brokerage.tasks import (
     add_accession_to_pangaea_issue_task,
     create_broker_objects_from_submission_data_task,
 )
-from gfbio_submissions.generic.models.SiteConfiguration import SiteConfiguration
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 
 from .test_tasks_base import TestTasks
 

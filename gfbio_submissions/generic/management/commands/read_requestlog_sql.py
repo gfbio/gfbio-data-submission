@@ -3,7 +3,7 @@ import os
 
 from django.core.management.base import BaseCommand
 
-from gfbio_submissions.generic.models.RequestLog import RequestLog
+from gfbio_submissions.generic.models.request_log import RequestLog
 
 
 class Command(BaseCommand):
