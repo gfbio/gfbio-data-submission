@@ -1,5 +1,8 @@
 # GFBio Data Submission and Brokerage System
 
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8315892.svg)](https://doi.org/10.5281/zenodo.8315892)
+
 ## Description
 
 The system provides the central entry point for the submission services provided by GFBio e.V. for the long-term data
@@ -69,3 +72,7 @@ same folder with *manage.py*, you should be right.
 ## Contact Us
 
 Please email any questions and comments to our [Service Helpdesk](mailto:info@gfbio.org) (<info@gfbio.org>).
+
+- This work was supported by the German Research Foundation (DFG) within the project “Establishment of the National Research Data Infrastructure (NFDI)” in the consortium NFDI4Biodiversity (project number [442032008](https://gepris.dfg.de/gepris/projekt/442032008)).
+- This work was supported by the German Research Foundation (DFG) within the project "German Federation for Biological Data e.V.: Concept for a sustainable research data management of environmental data for Germany." (project number [408180549](https://gepris.dfg.de/gepris/projekt/408180549)).
+- This work was supported by the German Research Foundation (DFG) within the project "German Federation for the Curation of Biological Data (GFBio)" (project number [229241684]( https://gepris.dfg.de/gepris/projekt/229241684)).
