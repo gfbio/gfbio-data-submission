@@ -43,7 +43,7 @@ run unit tests:
 web_test_update:
   variables:
     PROJECT_NAME: "submissions"
-    COMPOSE_FILE: "web-test.yml"
+    COMPOSE_FILE: "cicd/production.yml"
   script:
     - ISSUE_ID=$(awk -F- '{print $2}' <<< ${CI_COMMIT_REF_NAME})
     - TEST_NAME=$ISSUE_ID-$PROJECT_NAME
