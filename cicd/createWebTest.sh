@@ -11,7 +11,7 @@ cd userinterface && npm i && npm run collect-ci
 cd ../
 nvm use default
 cp gfbio_submissions/templates/account/webtest_login.html gfbio_submissions/templates/account/login.html
-sed -i s/ISSUE_ID/$TEST_NAME/g web-test.yml
+sed -i s/ISSUE_ID/$TEST_NAME/g cicd/production.yml
 sed -i "s/VERSION =.*/VERSION ='$(git describe --tags | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')'/g" config/settings/base.py
 sed -i s/DJANGO_ALLOWED_HOSTS=.*/DJANGO_ALLOWED_HOSTS=\.test\.gfbio\.dev/g .envs/.production/.django
 sed -i s/HOST_URL_ROOT=.*/HOST_URL_ROOT=https:\/\/$TEST_NAME\.test\.gfbio\.dev/g .envs/.production/.django
