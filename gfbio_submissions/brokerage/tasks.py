@@ -4,6 +4,7 @@ import logging
 import math as m
 import os
 import textwrap
+import uuid
 
 import celery
 from celery.exceptions import SoftTimeLimitExceeded
@@ -14,6 +15,7 @@ from django.utils.encoding import smart_str
 from kombu.utils import json
 from pytz import timezone
 from requests import ConnectionError, Response
+from sentry_sdk import capture_message, push_scope
 
 from config.celery_app import app
 from config.settings.base import HOST_URL_ROOT, ADMIN_URL
@@ -1553,7 +1555,7 @@ def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
     logger.info(
         msg='attach_to_submission_issue_task. submission_id={0} | submission_upload_id={1}'
             ''.format(submission_id, submission_upload_id))
-
+    
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
@@ -1602,6 +1604,17 @@ def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
             file_name = None
             if submission_upload.file.name:
                 file_name = submission_upload.file.name
+            else:
+                file_name = str(submission_id) + "_" + str(submission_upload_id)
+                logger.warning(message = "empty file name occured for submission {submission_id} on upload {submission_upload_id}")
+
+                with push_scope() as scope:
+                    scope.set_tag("submission_id", submission_id)
+                    scope.set_tag("submission_upload_id", submission_upload_id)
+                    scope.set_tag("file_name", file_name)
+                    scope.level = 'warning'
+                    capture_message('empty file name occured')
+
             attachment = jira_client.add_attachment(
                 key=reference.reference_key,
                 file=submission_upload.file,
