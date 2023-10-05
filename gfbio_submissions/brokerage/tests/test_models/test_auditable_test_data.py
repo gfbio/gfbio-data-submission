@@ -3,8 +3,6 @@
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.admin import download_auditable_text_data
-# from gfbio_submissions.brokerage.models import Submission, AuditableTextData, \
-#     BrokerObject
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data
 from gfbio_submissions.users.models import User
@@ -12,7 +10,10 @@ from ..utils import _get_ena_data, _get_ena_data_without_runs
 from ...models.auditable_text_data import AuditableTextData
 from ...models.broker_object import BrokerObject
 from ...models.submission import Submission
-from ...serializers import SubmissionSerializer
+from ...serializers.submission_serializer import SubmissionSerializer
+
+
+# from ...serializers import SubmissionSerializer
 
 
 class TestAuditableTextData(TestCase):

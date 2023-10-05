@@ -3,12 +3,7 @@
 from django.db.models import Q
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.configuration.settings import ENA
-from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
-from gfbio_submissions.brokerage.models.submission import Submission
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-# from gfbio_submissions.brokerage.models import Submission, AdditionalReference, \
-#     TaskProgressReport
+from gfbio_submissions.brokerage.configuration.settings import PANGAEA_JIRA_TICKET, GFBIO_HELPDESK_TICKET
 from gfbio_submissions.brokerage.tasks import \
     check_for_submissions_without_helpdesk_issue_task, \
     check_for_user_without_site_configuration_task
@@ -16,7 +11,10 @@ from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.generic.models import ResourceCredential, \
     SiteConfiguration
 from gfbio_submissions.users.models import User
-from gfbio_submissions.brokerage.configuration.settings import PANGAEA_JIRA_TICKET, GFBIO_HELPDESK_TICKET
+from ...configuration.settings import ENA
+from ...models.additional_reference import AdditionalReference
+from ...models.submission import Submission
+from ...models.task_progress_report import TaskProgressReport
 
 
 class TestCheckTasks(TestCase):

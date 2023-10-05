@@ -3,14 +3,12 @@
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.admin import re_create_ena_xml, submit_to_ena_test, validate_against_ena
-from gfbio_submissions.brokerage.models.auditable_text_data import AuditableTextData
-from gfbio_submissions.brokerage.models.submission import Submission
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-# from gfbio_submissions.brokerage.models import Submission, AuditableTextData, \
-#     TaskProgressReport
 from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential
 from gfbio_submissions.users.models import User
+from ..models.auditable_text_data import AuditableTextData
+from ..models.submission import Submission
+from ..models.task_progress_report import TaskProgressReport
 
 
 class TestSubmissionAdmin(TestCase):
@@ -66,7 +64,8 @@ class TestSubmissionAdmin(TestCase):
     def test_submit_to_ena_test(self):
         submit_to_ena_test(None, None, Submission.objects.all())
 
-        self.assertEqual('No resource credentials found for ENA-Testserver', TaskProgressReport.objects.first().task_return_value)
+        self.assertEqual('No resource credentials found for ENA-Testserver',
+                         TaskProgressReport.objects.first().task_return_value)
         self.assertEqual('SUCCESS', TaskProgressReport.objects.first().status)
         self.assertEqual('tasks.submit_to_ena_test_server_task',
                          TaskProgressReport.objects.first().task_name)

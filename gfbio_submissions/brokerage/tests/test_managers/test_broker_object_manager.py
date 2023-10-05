@@ -1,21 +1,18 @@
 # -*- coding: utf-8 -*-
-import json
 import os
 from collections import defaultdict
 from unittest import skip
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models.broker_object import BrokerObject
-from gfbio_submissions.brokerage.models.persistent_identifier import PersistentIdentifier
-from gfbio_submissions.brokerage.models.submission import Submission
-# from gfbio_submissions.brokerage.models import Submission, BrokerObject, \
-#     PersistentIdentifier
-from gfbio_submissions.brokerage.serializers import SubmissionSerializer, \
-    SubmissionDetailSerializer
+from gfbio_submissions.brokerage.serializers.submission_detail_serializer import SubmissionDetailSerializer
+from gfbio_submissions.brokerage.serializers.submission_serializer import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
     _get_parsed_ena_response, _get_test_data_dir_path
 from gfbio_submissions.users.models import User
+from ...models.broker_object import BrokerObject
+from ...models.persistent_identifier import PersistentIdentifier
+from ...models.submission import Submission
 
 
 class TestBrokerObjectManager(TestCase):
@@ -434,8 +431,8 @@ class TestBrokerObjectManager(TestCase):
         self._create_multiple_broker_objects()
         study = BrokerObject.objects.filter(type='study').first()
         with open(os.path.join(
-                _get_test_data_dir_path(),
-                'submitted_run_files.txt'), 'r') as data:
+            _get_test_data_dir_path(),
+            'submitted_run_files.txt'), 'r') as data:
             BrokerObject.objects.add_downloaded_pids_to_existing_broker_objects(
                 study_pid='ERP019479',
                 decompressed_file=data

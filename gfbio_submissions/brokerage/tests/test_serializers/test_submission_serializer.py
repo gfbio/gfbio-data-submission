@@ -3,7 +3,8 @@ import datetime
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.serializers import SubmissionSerializer, SubmissionDetailSerializer
+from ...serializers.submission_detail_serializer import SubmissionDetailSerializer
+from ...serializers.submission_serializer import SubmissionSerializer
 
 
 class SubmissionSerializerTest(TestCase):

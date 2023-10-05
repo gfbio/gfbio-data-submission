@@ -3,13 +3,12 @@ import json
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models.broker_object import BrokerObject
-from gfbio_submissions.brokerage.models.submission import Submission
-# from gfbio_submissions.brokerage.models import Submission, BrokerObject
-from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
     _get_ena_data_without_runs
 from gfbio_submissions.users.models import User
+from ..models.broker_object import BrokerObject
+from ..models.submission import Submission
+from ..serializers.submission_serializer import SubmissionSerializer
 
 
 class JsonDictFieldTest(TestCase):

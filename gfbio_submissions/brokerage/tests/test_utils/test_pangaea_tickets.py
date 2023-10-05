@@ -5,9 +5,7 @@ import requests
 import responses
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
-from gfbio_submissions.brokerage.models.submission import Submission
-# from gfbio_submissions.brokerage.models import Submission, AdditionalReference
+from gfbio_submissions.brokerage.configuration.settings import PANGAEA_JIRA_TICKET
 from gfbio_submissions.brokerage.tests.utils import _get_pangaea_soap_body, \
     _get_pangaea_soap_response
 from gfbio_submissions.brokerage.utils.pangaea import \
@@ -16,8 +14,9 @@ from gfbio_submissions.brokerage.utils.pangaea import \
 from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential
 from gfbio_submissions.users.models import User
+from ...models.additional_reference import AdditionalReference
+from ...models.submission import Submission
 
-from gfbio_submissions.brokerage.configuration.settings import PANGAEA_JIRA_TICKET, GFBIO_HELPDESK_TICKET
 
 class PangaeaTicketTest(TestCase):
 

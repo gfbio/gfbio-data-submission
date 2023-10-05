@@ -4,10 +4,6 @@ import responses
 from django.contrib.auth.models import Permission
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
-from gfbio_submissions.brokerage.models.broker_object import BrokerObject
-# from gfbio_submissions.brokerage.models import BrokerObject, AdditionalReference
-from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import \
     _get_pangaea_soap_response, _get_pangaea_ticket_response, \
     _get_jira_issue_response, _get_ena_data, \
@@ -16,7 +12,9 @@ from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential
 from gfbio_submissions.users.models import User
-from gfbio_submissions.brokerage.configuration.settings import PANGAEA_JIRA_TICKET, GFBIO_HELPDESK_TICKET
+from ...configuration.settings import PANGAEA_JIRA_TICKET, GFBIO_HELPDESK_TICKET
+from ...models.broker_object import BrokerObject
+from ...serializers.submission_serializer import SubmissionSerializer
 
 
 class TestTasks(TestCase):

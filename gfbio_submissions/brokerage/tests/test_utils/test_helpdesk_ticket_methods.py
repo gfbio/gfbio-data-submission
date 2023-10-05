@@ -10,15 +10,6 @@ from django.test import TestCase
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from gfbio_submissions.brokerage.configuration.settings import \
-    JIRA_USERNAME_URL_TEMPLATE, \
-    JIRA_USERNAME_URL_FULLNAME_TEMPLATE
-from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
-from gfbio_submissions.brokerage.models.broker_object import BrokerObject
-from gfbio_submissions.brokerage.models.submission_upload import SubmissionUpload
-# from gfbio_submissions.brokerage.models import AdditionalReference, \
-#     SubmissionUpload, BrokerObject
-from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path, \
     _get_ena_data, _get_ena_data_without_runs
 from gfbio_submissions.brokerage.utils.gfbio import \
@@ -27,7 +18,14 @@ from gfbio_submissions.brokerage.utils.gfbio import \
 from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential
 from gfbio_submissions.users.models import User
-from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
+from ...configuration.settings import GFBIO_HELPDESK_TICKET
+from ...configuration.settings import \
+    JIRA_USERNAME_URL_TEMPLATE, \
+    JIRA_USERNAME_URL_FULLNAME_TEMPLATE
+from ...models.broker_object import BrokerObject
+from ...models.submission_upload import SubmissionUpload
+from ...serializers.submission_serializer import SubmissionSerializer
+
 
 class TestHelpDeskTicketMethods(TestCase):
 
@@ -98,8 +96,8 @@ class TestHelpDeskTicketMethods(TestCase):
 
     def test_prepare_helpdesk_payload(self):
         with open(os.path.join(
-                _get_test_data_dir_path(),
-                'generic_data.json'), 'r') as data_file:
+            _get_test_data_dir_path(),
+            'generic_data.json'), 'r') as data_file:
             data = json.load(data_file)
         serializer = SubmissionSerializer(data={
             'target': 'GENERIC',
@@ -154,8 +152,8 @@ class TestHelpDeskTicketMethods(TestCase):
 
     def test_ipk_datacenter_assignee(self):
         with open(os.path.join(
-                _get_test_data_dir_path(),
-                'generic_data.json'), 'r') as data_file:
+            _get_test_data_dir_path(),
+            'generic_data.json'), 'r') as data_file:
             data = json.load(data_file)
             data['requirements'][
                 'data_center'] = 'IPK - Leibniz Institute of Plant Genetics and Crop Plant Research'
@@ -176,8 +174,8 @@ class TestHelpDeskTicketMethods(TestCase):
     @skip('metadata_schema is no longer used. compare GFBIO-2742')
     def test_prepare_helpdesk_payload_metadataschema_is_none(self):
         with open(os.path.join(
-                _get_test_data_dir_path(),
-                'generic_data.json'), 'r') as data_file:
+            _get_test_data_dir_path(),
+            'generic_data.json'), 'r') as data_file:
             data = json.load(data_file)
         data['requirements'].pop('data_center')
         data['requirements']['metadata_schema'] = 'None'

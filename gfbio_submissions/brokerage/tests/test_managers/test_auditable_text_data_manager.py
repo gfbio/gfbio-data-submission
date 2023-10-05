@@ -2,17 +2,15 @@
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models.auditable_text_data import AuditableTextData
-from gfbio_submissions.brokerage.models.broker_object import BrokerObject
-from gfbio_submissions.brokerage.models.submission import Submission
-# from gfbio_submissions.brokerage.models import Submission, AuditableTextData, \
-#     BrokerObject
-from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
     _get_ena_data_without_runs
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, \
     store_ena_data_as_auditable_text_data
 from gfbio_submissions.users.models import User
+from ...models.auditable_text_data import AuditableTextData
+from ...models.broker_object import BrokerObject
+from ...models.submission import Submission
+from ...serializers.submission_serializer import SubmissionSerializer
 
 
 class TestAuditableTextDataManager(TestCase):

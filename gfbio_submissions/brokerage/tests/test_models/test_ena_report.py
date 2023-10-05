@@ -5,18 +5,16 @@ from datetime import datetime
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models.broker_object import BrokerObject
-from gfbio_submissions.brokerage.models.ena_report import EnaReport
-from gfbio_submissions.brokerage.models.persistent_identifier import PersistentIdentifier
-from gfbio_submissions.brokerage.models.submission import Submission
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-# from gfbio_submissions.brokerage.models import EnaReport, BrokerObject, \
-#     PersistentIdentifier, Submission, TaskProgressReport
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.ena import \
     update_persistent_identifier_report_status, update_resolver_accessions
 from gfbio_submissions.resolve.models import Accession
 from gfbio_submissions.users.models import User
+from ...models.broker_object import BrokerObject
+from ...models.ena_report import EnaReport
+from ...models.persistent_identifier import PersistentIdentifier
+from ...models.submission import Submission
+from ...models.task_progress_report import TaskProgressReport
 
 
 class TestEnaReport(TestCase):

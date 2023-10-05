@@ -4,12 +4,10 @@ from unittest.mock import patch
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models.broker_object import BrokerObject
-from gfbio_submissions.brokerage.models.center_name import CenterName
-from gfbio_submissions.brokerage.models.submission import Submission
-# from gfbio_submissions.brokerage.models import BrokerObject, Submission, \
-#     CenterName
-from gfbio_submissions.brokerage.serializers import SubmissionSerializer
+from ...models.broker_object import BrokerObject
+from ...models.center_name import CenterName
+from ...models.submission import Submission
+from ...serializers.submission_serializer import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
     _get_ena_data_without_runs
 from gfbio_submissions.users.models import User

@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models.submission import Submission
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-# from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
 from gfbio_submissions.users.models import User
+from ...models.submission import Submission
+from ...models.task_progress_report import TaskProgressReport
 
 
 class TestTaskProgressReport(TestCase):

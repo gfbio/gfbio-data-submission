@@ -12,17 +12,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils.encoding import smart_str
 
-from gfbio_submissions.brokerage.configuration.settings import ENA, \
-    SUBMISSION_DELAY
-from gfbio_submissions.brokerage.models.auditable_text_data import AuditableTextData
-from gfbio_submissions.brokerage.models.broker_object import BrokerObject
-from gfbio_submissions.brokerage.models.center_name import CenterName
-from gfbio_submissions.brokerage.models.persistent_identifier import PersistentIdentifier
-from gfbio_submissions.brokerage.models.submission import Submission
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-# from gfbio_submissions.brokerage.models import Submission, SubmissionUpload, \
-#     BrokerObject, CenterName, PersistentIdentifier, AuditableTextData, \
-#     TaskProgressReport
 from gfbio_submissions.brokerage.tasks import \
     create_study_broker_objects_only_task, prepare_ena_study_xml_task, \
     register_study_at_ena_task, process_ena_response_task, \
@@ -42,6 +31,14 @@ from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential, RequestLog
 from gfbio_submissions.generic.utils import logged_requests
 from gfbio_submissions.users.models import User
+from ..configuration.settings import ENA, \
+    SUBMISSION_DELAY
+from ..models.auditable_text_data import AuditableTextData
+from ..models.broker_object import BrokerObject
+from ..models.center_name import CenterName
+from ..models.persistent_identifier import PersistentIdentifier
+from ..models.submission import Submission
+from ..models.task_progress_report import TaskProgressReport
 
 
 class TestTargetedSequencePreparationTasks(TestCase):
@@ -336,9 +333,9 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
                                                  submission.broker_submission_id))
 
         with open(os.path.join(
-                _get_test_data_dir_path(),
-                'tsv_files/valid_template_example.tsv.gz'),
-                'br') as gz_file:
+            _get_test_data_dir_path(),
+            'tsv_files/valid_template_example.tsv.gz'),
+            'br') as gz_file:
             f = File(gz_file)
             f.name = 'valid_template_example.tsv.gz'
             submission.submissionupload_set.create(
@@ -401,9 +398,9 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
             pid=accession_no
         )
         with open(os.path.join(
-                _get_test_data_dir_path(),
-                'tsv_files/valid_template_example.tsv.gz'),
-                'br') as gz_file:
+            _get_test_data_dir_path(),
+            'tsv_files/valid_template_example.tsv.gz'),
+            'br') as gz_file:
             f = File(gz_file)
             f.name = 'valid_template_example.tsv.gz'
             submission.submissionupload_set.create(

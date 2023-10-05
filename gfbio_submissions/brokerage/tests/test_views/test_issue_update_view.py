@@ -6,26 +6,21 @@ import arrow
 import requests
 import responses
 from django.contrib.auth.models import Group
-from django.urls import reverse
 from django.core import mail
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
-from gfbio_submissions.brokerage.models.broker_object import BrokerObject
-from gfbio_submissions.brokerage.models.submission import Submission
-# from gfbio_submissions.brokerage.models import Submission, AdditionalReference, \
-#     BrokerObject
-from gfbio_submissions.brokerage.serializers import SubmissionSerializer
+from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
 from gfbio_submissions.brokerage.tests.utils import _get_jira_hook_request_data, \
     _get_ena_data, _get_ena_data_without_runs
-from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration
-from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
-from gfbio_submissions.generic.models import RequestLog, ResourceCredential
+from gfbio_submissions.generic.models import RequestLog
 from gfbio_submissions.users.models import User
-from gfbio_submissions.generic.models import SiteConfiguration
+from ...models.additional_reference import AdditionalReference
+from ...models.broker_object import BrokerObject
+from ...models.submission import Submission
+from ...serializers.submission_serializer import SubmissionSerializer
 
-from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
 
 class TestJiraIssueUpdateView(APITestCase):
 
@@ -193,9 +188,9 @@ class TestJiraIssueUpdateView(APITestCase):
                     "customfield_10303": "{0}".format(
                         submission.broker_submission_id),
                     "reporter": {
-                            "name": "repo123_loginame",
-                            "emailAddress": "repo@repo.de",
-                        },
+                        "name": "repo123_loginame",
+                        "emailAddress": "repo@repo.de",
+                    },
                 }
             },
             "changelog": {
@@ -488,7 +483,7 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(str(mail.outbox[0].body.strip()),
                          'Data provided by Jira hook is not valid.\n{\'issue\': ["customfield_10200 : \'\' is too short", '
                          '"fields : \'customfield_10303\' is a required property", "fields : \'reporter\' is a required property"]}'
-        )
+                         )
 
     def test_broker_submission_id_field_error(self):
         self.assertEqual(0, len(RequestLog.objects.all()))
@@ -625,9 +620,9 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(users_in_db + 1, len(User.objects.all()))
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_201_CREATED,
-                        RequestLog.objects.first().response_status)
+                         RequestLog.objects.first().response_status)
         submission = Submission.objects.first()
-        self.assertEqual(submission.user.username,'repo123_loginame')
+        self.assertEqual(submission.user.username, 'repo123_loginame')
         self.assertEqual(submission.user.email, 'repo@repo.de')
 
     def test_jira_reporter_gfbio_known(self):
@@ -672,7 +667,7 @@ class TestJiraIssueUpdateView(APITestCase):
                          RequestLog.objects.first().response_status)
         submission = Submission.objects.first()
         self.assertNotEqual(submission.user.email, user_mail)
-        self.assertEqual(submission.user.email,'brokeragent@gfbio.org')
+        self.assertEqual(submission.user.email, 'brokeragent@gfbio.org')
 
     def test_jira_reporter_gfbio_same(self):
         submission = Submission.objects.first()
@@ -713,7 +708,7 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(status.HTTP_201_CREATED,
                          RequestLog.objects.first().response_status)
         submission = Submission.objects.first()
-        self.assertEqual(submission.user.email,user_mail)
+        self.assertEqual(submission.user.email, user_mail)
 
     def test_jira_reporter_gfbio_mail_empty(self):
         submission = Submission.objects.first()
@@ -752,9 +747,10 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST,
                          RequestLog.objects.first().response_status)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(str(mail.outbox[0].body.strip()), "WARNING: JIRA hook requested an user update, but reporter\'s Jira emailAddress is empty!\n"
-                "Submission ID: {0}\n"
-                "Issue Key: SAND-007".format(submission.broker_submission_id))
+        self.assertEqual(str(mail.outbox[0].body.strip()),
+                         "WARNING: JIRA hook requested an user update, but reporter\'s Jira emailAddress is empty!\n"
+                         "Submission ID: {0}\n"
+                         "Issue Key: SAND-007".format(submission.broker_submission_id))
 
     def test_date_in_the_past(self):
         submission = Submission.objects.first()
@@ -977,9 +973,9 @@ class TestJiraIssueUpdateView(APITestCase):
                          RequestLog.objects.first().response_status)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(str(mail.outbox[0].body.strip()), 'WARNING: JIRA hook requested an Embargo Date update, '
-                'but issue could not be found for the submission\n'
-                        'Submission ID: {0}\n'
-                        'Issue Key: SAND-007'.format(
+                                                           'but issue could not be found for the submission\n'
+                                                           'Submission ID: {0}\n'
+                                                           'Issue Key: SAND-007'.format(
             submission.broker_submission_id))
 
     def test_missing_user_reference(self):
@@ -1142,7 +1138,6 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST,
                          RequestLog.objects.first().response_status)
 
-
     def test_not_curator(self):
         submission = Submission.objects.first()
         self.assertEqual(0, len(RequestLog.objects.all()))
@@ -1179,4 +1174,3 @@ class TestJiraIssueUpdateView(APITestCase):
         self.assertEqual(1, len(RequestLog.objects.all()))
         self.assertEqual(status.HTTP_400_BAD_REQUEST,
                          RequestLog.objects.first().response_status)
-

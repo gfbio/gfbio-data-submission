@@ -2,9 +2,8 @@
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models.submission import Submission
-# from gfbio_submissions.brokerage.models import Submission
 from gfbio_submissions.users.models import User
+from ...models.submission import Submission
 
 
 class SubmissionManagerTest(TestCase):

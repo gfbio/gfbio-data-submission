@@ -2,11 +2,11 @@
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
-from gfbio_submissions.brokerage.models.submission import Submission
-# from gfbio_submissions.brokerage.models import Submission, AdditionalReference
 from gfbio_submissions.users.models import User
-from gfbio_submissions.brokerage.configuration.settings import PANGAEA_JIRA_TICKET, GFBIO_HELPDESK_TICKET
+from ...configuration.settings import PANGAEA_JIRA_TICKET, GFBIO_HELPDESK_TICKET
+from ...models.additional_reference import AdditionalReference
+from ...models.submission import Submission
+
 
 class AdditionalReferenceTest(TestCase):
 

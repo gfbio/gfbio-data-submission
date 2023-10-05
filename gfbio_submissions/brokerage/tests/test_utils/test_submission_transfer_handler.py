@@ -5,18 +5,9 @@ import requests
 import responses
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.configuration.settings import \
-    JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, \
-    JIRA_ATTACHMENT_SUB_URL
 from gfbio_submissions.brokerage.configuration.settings import PANGAEA_JIRA_TICKET
 from gfbio_submissions.brokerage.exceptions.transfer_exceptions import TransferClientError, \
     raise_response_exceptions, TransferServerError
-from gfbio_submissions.brokerage.models.broker_object import BrokerObject
-from gfbio_submissions.brokerage.models.submission import Submission
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-# from gfbio_submissions.brokerage.models import Submission, AdditionalReference, \
-#     TaskProgressReport, BrokerObject
-from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
     _get_pangaea_soap_response, \
     _get_pangaea_attach_response, _get_pangaea_comment_response, \
@@ -28,6 +19,13 @@ from gfbio_submissions.brokerage.utils.task_utils import \
 from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential
 from gfbio_submissions.users.models import User
+from ...configuration.settings import \
+    JIRA_ISSUE_URL, JIRA_COMMENT_SUB_URL, \
+    JIRA_ATTACHMENT_SUB_URL
+from ...models.broker_object import BrokerObject
+from ...models.submission import Submission
+from ...models.task_progress_report import TaskProgressReport
+from ...serializers.submission_serializer import SubmissionSerializer
 
 
 class TestSubmissionTransferHandler(TestCase):

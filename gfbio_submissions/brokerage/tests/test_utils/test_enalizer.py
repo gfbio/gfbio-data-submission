@@ -6,13 +6,6 @@ import responses
 from django.test import TestCase
 from django.utils.encoding import smart_str
 
-from gfbio_submissions.brokerage.configuration.settings import \
-    DEFAULT_ENA_CENTER_NAME
-from gfbio_submissions.brokerage.models.broker_object import BrokerObject
-from gfbio_submissions.brokerage.models.center_name import CenterName
-from gfbio_submissions.brokerage.models.submission import Submission
-# from gfbio_submissions.brokerage.models import Submission, CenterName, \
-#     BrokerObject
 from gfbio_submissions.brokerage.tests.test_models.test_submission import \
     SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import _get_ena_xml_response, \
@@ -24,6 +17,11 @@ from gfbio_submissions.brokerage.utils.ena import Enalizer, prepare_ena_data, \
 from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential, RequestLog
 from gfbio_submissions.users.models import User
+from ...configuration.settings import \
+    DEFAULT_ENA_CENTER_NAME
+from ...models.broker_object import BrokerObject
+from ...models.center_name import CenterName
+from ...models.submission import Submission
 
 
 class TestEnalizer(TestCase):

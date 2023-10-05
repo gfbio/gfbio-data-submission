@@ -11,13 +11,7 @@ from django.test import TestCase
 from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.configuration.settings import \
     GENERIC, ENA_PANGAEA, ENA
-from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
-from gfbio_submissions.brokerage.models.broker_object import BrokerObject
-from gfbio_submissions.brokerage.models.submission import Submission
-from gfbio_submissions.brokerage.models.submission_upload import SubmissionUpload
-# from gfbio_submissions.brokerage.models import Submission, AdditionalReference, \
-#     SubmissionUpload, BrokerObject
-from gfbio_submissions.brokerage.serializers import SubmissionSerializer
+from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.csv import parse_molecular_csv, \
     check_for_molecular_content, extract_sample, check_csv_file_rule, \
@@ -27,8 +21,12 @@ from gfbio_submissions.brokerage.utils.ena import \
 from gfbio_submissions.brokerage.utils.schema_validation import \
     validate_data_full
 from gfbio_submissions.users.models import User
+from ...models.broker_object import BrokerObject
+from ...models.submission import Submission
+from ...models.submission_upload import SubmissionUpload
+from ...serializers.submission_serializer import SubmissionSerializer
 
-from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
+
 class TestCSVParsing(TestCase):
 
     @classmethod
