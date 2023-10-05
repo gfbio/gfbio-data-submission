@@ -20,8 +20,11 @@ from ..models.submission import Submission
 from ..models.submission_upload import SubmissionUpload
 # from ..models import Submission, SubmissionUpload
 from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
-from ..serializers import SubmissionUploadListSerializer, \
-    SubmissionDetailSerializer, SubmissionUploadSerializer
+from ..serializers.submission_detail_serializer import SubmissionDetailSerializer
+from ..serializers.submission_upload_list_serializer import SubmissionUploadListSerializer
+from ..serializers.submission_upload_serializer import SubmissionUploadSerializer
+# from ..serializers import SubmissionUploadListSerializer, \
+#     SubmissionDetailSerializer, SubmissionUploadSerializer
 from ..utils.submission_tools import get_embargo_from_request
 from ..utils.task_utils import jira_cancel_issue
 
