@@ -10,9 +10,9 @@ import dpath.util as dpath
 from django.utils.encoding import smart_str
 from shortid import ShortId
 
-from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA, ENA, \
+from ..configuration.settings import ENA_PANGAEA, ENA, \
     SUBMISSION_MIN_COLS
-from gfbio_submissions.brokerage.utils.schema_validation import \
+from ..utils.schema_validation import \
     validate_data_full
 
 logger = logging.getLogger(__name__)

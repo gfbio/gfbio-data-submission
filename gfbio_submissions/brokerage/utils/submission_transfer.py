@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from gfbio_submissions.brokerage.configuration.settings import \
+from ..configuration.settings import \
     SUBMISSION_DELAY, ENA, ENA_PANGAEA
 
 logger = logging.getLogger(__name__)
@@ -22,16 +22,16 @@ class SubmissionTransferHandler(object):
 
     def pre_process_molecular_data_chain(self):
 
-        from gfbio_submissions.brokerage.tasks import \
+        from ..tasks import \
             create_broker_objects_from_submission_data_task, \
             prepare_ena_submission_data_task
 
         return create_broker_objects_from_submission_data_task.s(
             submission_id=self.submission_id).set(
             countdown=SUBMISSION_DELAY) \
-               | prepare_ena_submission_data_task.s(
-            submission_id=self.submission_id).set(
-            countdown=SUBMISSION_DELAY)
+            | prepare_ena_submission_data_task.s(
+                submission_id=self.submission_id).set(
+                countdown=SUBMISSION_DELAY)
 
     def initiate_submission_process(self, release=False, update=False):
 
@@ -39,7 +39,7 @@ class SubmissionTransferHandler(object):
             'SubmissionTransferHandler. initiate_submission_process. '
             'submission_id={0} target_archive={1}'.format(self.submission_id,
                                                           self.target_archive))
-        from gfbio_submissions.brokerage.tasks import \
+        from ..tasks import \
             check_on_hold_status_task
 
         logger.info(
@@ -53,7 +53,7 @@ class SubmissionTransferHandler(object):
                 submission_id=self.submission_id).set(
                 countdown=SUBMISSION_DELAY)
             if self.target_archive == ENA \
-                    or self.target_archive == ENA_PANGAEA:
+                or self.target_archive == ENA_PANGAEA:
 
                 logger.info(
                     'SubmissionTransferHandler. target_archive={0} trigger '
@@ -63,7 +63,7 @@ class SubmissionTransferHandler(object):
                 )
 
                 if not self.molecular_data_check_performed or (
-                        self.molecular_data_check_performed and self.molecular_data_found):
+                    self.molecular_data_check_performed and self.molecular_data_found):
                     chain = chain | self.pre_process_molecular_data_chain()
 
         elif not update and release:
@@ -71,9 +71,9 @@ class SubmissionTransferHandler(object):
                 submission_id=self.submission_id).set(
                 countdown=SUBMISSION_DELAY)
             if self.target_archive == ENA \
-                    or self.target_archive == ENA_PANGAEA:
+                or self.target_archive == ENA_PANGAEA:
                 if not self.molecular_data_check_performed or (
-                        self.molecular_data_check_performed and self.molecular_data_found):
+                    self.molecular_data_check_performed and self.molecular_data_found):
                     chain = chain | self.pre_process_molecular_data_chain()
         else:
             return None
@@ -86,7 +86,7 @@ class SubmissionTransferHandler(object):
             'SubmissionTransferHandler. execute_submission_to_ena. target_archive={}'.format(
                 self.target_archive))
 
-        from gfbio_submissions.brokerage.tasks import \
+        from ..tasks import \
             transfer_data_to_ena_task, process_ena_response_task, \
             add_accession_to_submission_issue_task, \
             add_accession_link_to_submission_issue_task
@@ -109,7 +109,7 @@ class SubmissionTransferHandler(object):
             'SubmissionTransferHandler. execute_submission_to_ena_and_pangaea. target_archive='.format(
                 self.target_archive))
 
-        from gfbio_submissions.brokerage.tasks import \
+        from ..tasks import \
             transfer_data_to_ena_task, process_ena_response_task, \
             add_accession_to_submission_issue_task, \
             create_pangaea_issue_task, \

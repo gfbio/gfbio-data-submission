@@ -5,7 +5,7 @@ from urllib.parse import quote
 
 from django.conf import settings
 
-from gfbio_submissions.brokerage.configuration.settings import \
+from ..configuration.settings import \
     GFBIO_LICENSE_MAPPINGS, \
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE, \
     JIRA_USERNAME_URL_TEMPLATE, \

@@ -310,7 +310,7 @@ def jira_error_auto_retry(jira_client, task, broker_submission_id,
 
 
 def jira_cancel_issue(submission_id=None, admin=False):
-    from gfbio_submissions.brokerage.tasks import \
+    from ..tasks import \
         jira_cancel_issue_task
     jira_cancel_issue_task.apply_async(
         kwargs={

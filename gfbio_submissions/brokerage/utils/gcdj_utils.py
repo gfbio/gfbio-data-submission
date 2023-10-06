@@ -8,7 +8,7 @@ from decimal import Decimal, InvalidOperation
 import dpath
 from jsonschema import Draft4Validator
 
-from gfbio_submissions.brokerage.configuration.settings import BASIC_TYPE, \
+from ..configuration.settings import BASIC_TYPE, \
     SEPARATOR, CSV_READER_QUOTING, \
     DRAFT04_VALIDATORS
 

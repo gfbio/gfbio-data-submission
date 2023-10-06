@@ -9,13 +9,13 @@ from django.conf import settings
 from django.forms import ValidationError
 from jsonschema.validators import Draft3Validator, Draft4Validator
 
-from gfbio_submissions.brokerage.configuration.settings import \
+from ..configuration.settings import \
     STATIC_ENA_REQUIREMENTS_LOCATION, STATIC_MIN_REQUIREMENTS_LOCATION, ENA, \
     ENA_PANGAEA, STATIC_SAMPLE_SCHEMA_LOCATION, \
     STATIC_STUDY_SCHEMA_LOCATION, STATIC_EXPERIMENT_SCHEMA_LOCATION, \
     STATIC_RUN_SCHEMA_LOCATION, GENERIC, STATIC_GENERIC_REQUIREMENTS_LOCATION, \
     ATAX, STATIC_ATAX_REQUIREMENTS_LOCATION
-from gfbio_submissions.brokerage.utils.atax import create_ataxer
+from ..utils.atax import create_ataxer
 
 logger = logging.getLogger(__name__)
 

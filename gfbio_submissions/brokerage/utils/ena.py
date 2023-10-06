@@ -995,9 +995,9 @@ def update_persistent_identifier_report_status():
                                 '| submission: {}'.format(vid,
                                                           submission.broker_submission_id))
 
-                            from gfbio_submissions.brokerage.configuration.settings import \
+                            from ..configuration.settings import \
                                 SUBMISSION_DELAY
-                            from gfbio_submissions.brokerage.tasks import \
+                            from ..tasks import \
                                 notify_on_embargo_ended_task, \
                                 jira_transition_issue_task
                             chain = notify_on_embargo_ended_task.s(
@@ -1036,7 +1036,7 @@ def update_persistent_identifier_report_status():
 
 
 def execute_update_accession_objects_chain(name_on_error=''):
-    from gfbio_submissions.brokerage.tasks import \
+    from ..tasks import \
         fetch_ena_reports_task, \
         update_persistent_identifier_report_status_task, \
         update_resolver_accessions_task

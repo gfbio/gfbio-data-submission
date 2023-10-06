@@ -7,19 +7,18 @@ from json import JSONDecodeError
 from django.core.mail import mail_admins
 from django.db import transaction
 from jira import JIRA, JIRAError
-from jira.resources import ServiceDesk
 from requests import ConnectionError
 from rest_framework import status
 
-from gfbio_submissions.brokerage.configuration.settings import \
-    PANGAEA_ISSUE_DOI_FIELD_NAME, JIRA_FALLBACK_USERNAME, \
-    ENA_STUDY_URL_PREFIX
-from gfbio_submissions.brokerage.utils.gfbio import \
-    gfbio_prepare_create_helpdesk_payload
-from gfbio_submissions.brokerage.utils.pangaea import \
-    prepare_pangaea_issue_content, get_csv_from_samples
 from .pangaea import request_pangaea_login_token, \
     parse_pangaea_login_token_response
+from ..configuration.settings import \
+    PANGAEA_ISSUE_DOI_FIELD_NAME, JIRA_FALLBACK_USERNAME, \
+    ENA_STUDY_URL_PREFIX
+from ..utils.gfbio import \
+    gfbio_prepare_create_helpdesk_payload
+from ..utils.pangaea import \
+    prepare_pangaea_issue_content, get_csv_from_samples
 from ...generic.models import RequestLog
 
 logger = logging.getLogger(__name__)

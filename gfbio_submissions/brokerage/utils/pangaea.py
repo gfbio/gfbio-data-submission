@@ -142,7 +142,7 @@ def pull_pangaea_dois(submission, jira_client):
             logger.info(
                 msg='pull_pangaea_dois. add comment with pangea doi '
                     'to helpdeskticket. submission_id={}'.format(submission.pk))
-            from gfbio_submissions.brokerage.tasks import \
+            from ..tasks import \
                 add_pangaea_doi_task
 
             add_pangaea_doi_task.apply_async(
