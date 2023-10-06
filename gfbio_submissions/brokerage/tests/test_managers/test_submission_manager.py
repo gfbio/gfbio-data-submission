@@ -7,29 +7,28 @@ from ...models.submission import Submission
 
 
 class SubmissionManagerTest(TestCase):
-
     # TODO: redundant, move to utils or similar
     @classmethod
     def setUpTestData(cls):
-        user = User.objects.create(
-            username='user1'
-        )
+        user = User.objects.create(username="user1")
         Submission.objects.create(user=user)
         Submission.objects.create(user=user)
         cls.broker_submission_id = Submission.objects.first().broker_submission_id
 
     def test_get_submission_instance(self):
         broker_submission_ids = Submission.objects.all().values_list(
-            'broker_submission_id')
+            "broker_submission_id"
+        )
         submission = Submission.objects.get_submission_instance(
-            self.broker_submission_id)
+            self.broker_submission_id
+        )
         self.assertIn((submission.broker_submission_id,), broker_submission_ids)
 
         submission = Submission.objects.get_submission_instance(
-            '4cffff16-cfff-4dff-baff-ffff9d5e4fff')
+            "4cffff16-cfff-4dff-baff-ffff9d5e4fff"
+        )
         self.assertIsInstance(submission, Submission)
-        self.assertNotIn((submission.broker_submission_id,),
-                         broker_submission_ids)
+        self.assertNotIn((submission.broker_submission_id,), broker_submission_ids)
 
     def test_get_submission_for_task(self):
         submission = Submission()
@@ -66,8 +65,7 @@ class SubmissionManagerTest(TestCase):
         database_id = submission.pk
 
         self.assertEqual(Submission.SUBMITTED, submission.status)
-        obj = Submission.objects.get_submitted_and_error_submissions(
-            database_id)
+        obj = Submission.objects.get_submitted_and_error_submissions(database_id)
         self.assertEqual(submission.pk, obj.pk)
         submission.status = Submission.CLOSED
         submission.save()
@@ -83,8 +81,7 @@ class SubmissionManagerTest(TestCase):
         database_id = submission.pk
 
         self.assertEqual(Submission.ERROR, submission.status)
-        obj = Submission.objects.get_submitted_and_error_submissions(
-            database_id)
+        obj = Submission.objects.get_submitted_and_error_submissions(database_id)
         self.assertEqual(submission.pk, obj.pk)
         submission.status = Submission.CLOSED
         submission.save()
@@ -94,7 +91,9 @@ class SubmissionManagerTest(TestCase):
 
     def test_get_submissions_without_primary_helpdesk_issue(self):
         submissions = Submission.objects.all()
-        no_issue_submissions = Submission.objects.get_submissions_without_primary_helpdesk_issue()
+        no_issue_submissions = (
+            Submission.objects.get_submissions_without_primary_helpdesk_issue()
+        )
         self.assertEqual(len(submissions), len(no_issue_submissions))
 
 
@@ -102,28 +101,28 @@ class TestSubmissionManagerSubmittingUser(TestCase):
     @classmethod
     def setUpTestData(cls):
         user = User.objects.create(
-            username='user1',
+            username="user1",
             is_site=True,
             is_user=False,
         )
         user_2 = User.objects.create(
-            username='user2',
+            username="user2",
             is_site=False,
             is_user=True,
         )
         user_3 = User.objects.create(
-            username='user3',
-            is_site=False,
-            is_user=True,
-            email='user3@user3.com'
+            username="user3", is_site=False, is_user=True, email="user3@user3.com"
         )
         Submission.objects.create(user=user)
         Submission.objects.create(
-            user=user_2, )
+            user=user_2,
+        )
         Submission.objects.create(
-            user=user_2, )
+            user=user_2,
+        )
         Submission.objects.create(
-            user=user_3, )
+            user=user_3,
+        )
 
     def test_db_content(self):
         self.assertEqual(4, len(Submission.objects.all()))

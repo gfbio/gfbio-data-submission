@@ -4,15 +4,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0047_auto_20210121_1255'),
+        ("brokerage", "0047_auto_20210121_1255"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='jiramessage',
-            name='message',
-            field=models.TextField(help_text="{submitter} - will be replaced with 'Submitter' or user's name if found<br />{title} - will be replaced with submission's title<br />{id} - will be replaced with submission's id<br />{primary_accession} - replaced with primary accession number<br />{reference} - will be replaced with jira's ticket reference<br />{embargo} -  will be replaced with the embargo date"),
+            model_name="jiramessage",
+            name="message",
+            field=models.TextField(
+                help_text="{submitter} - will be replaced with 'Submitter' or user's name if found<br />{title} - will be replaced with submission's title<br />{id} - will be replaced with submission's id<br />{primary_accession} - replaced with primary accession number<br />{reference} - will be replaced with jira's ticket reference<br />{embargo} -  will be replaced with the embargo date"
+            ),
         ),
     ]

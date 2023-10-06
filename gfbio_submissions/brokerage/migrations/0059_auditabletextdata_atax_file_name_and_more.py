@@ -4,20 +4,28 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0058_remove_submissionupload_target'),
+        ("brokerage", "0058_remove_submissionupload_target"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='auditabletextdata',
-            name='atax_file_name',
-            field=models.CharField(blank=True, default='', help_text='Name of submission upload file', max_length=255),
+            model_name="auditabletextdata",
+            name="atax_file_name",
+            field=models.CharField(
+                blank=True,
+                default="",
+                help_text="Name of submission upload file",
+                max_length=255,
+            ),
         ),
         migrations.AddField(
-            model_name='auditabletextdata',
-            name='atax_xml_valid',
-            field=models.BooleanField(default=False, help_text='Result of the validation of the xml structure against abcd xml schema', verbose_name='validation status'),
+            model_name="auditabletextdata",
+            name="atax_xml_valid",
+            field=models.BooleanField(
+                default=False,
+                help_text="Result of the validation of the xml structure against abcd xml schema",
+                verbose_name="validation status",
+            ),
         ),
     ]

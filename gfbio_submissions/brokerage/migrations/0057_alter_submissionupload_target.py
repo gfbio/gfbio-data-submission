@@ -4,15 +4,25 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0056_submissionupload_target'),
+        ("brokerage", "0056_submissionupload_target"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='submissionupload',
-            name='target',
-            field=models.CharField(blank=True, choices=[('ENA', 'ENA'), ('ENA_PANGAEA', 'ENA_PANGAEA'), ('GENERIC', 'GENERIC'), ('ATAX', 'ATAX')], default='', help_text='optional: field for transferring the submission target to this SubmissionUpload', max_length=16),
+            model_name="submissionupload",
+            name="target",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("ENA", "ENA"),
+                    ("ENA_PANGAEA", "ENA_PANGAEA"),
+                    ("GENERIC", "GENERIC"),
+                    ("ATAX", "ATAX"),
+                ],
+                default="",
+                help_text="optional: field for transferring the submission target to this SubmissionUpload",
+                max_length=16,
+            ),
         ),
     ]

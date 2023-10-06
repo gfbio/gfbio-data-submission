@@ -6,23 +6,20 @@ from ...models.broker_object import BrokerObject
 
 
 class BrokerObjectTest(TestCase):
-
     @classmethod
     def setUpTestData(cls):
-        user = User.objects.create(
-            username='user1'
-        )
+        user = User.objects.create(username="user1")
         BrokerObject.objects.create(
-            type='study',
+            type="study",
             user=user,
             data={
-                'center_name': 'GFBIO',
+                "center_name": "GFBIO",
                 # 'study_type': 'Metagenomics',
-                'study_abstract': 'abstract',
-                'study_title': 'title',
-                'study_alias': 'alias',
-                'site_object_id': 'from_data_01'
-            }
+                "study_abstract": "abstract",
+                "study_title": "title",
+                "study_alias": "alias",
+                "site_object_id": "from_data_01",
+            },
         )
 
     def test_db_object(self):
@@ -34,5 +31,6 @@ class BrokerObjectTest(TestCase):
 
     def test_str(self):
         broker_object = BrokerObject.objects.first()
-        self.assertEqual('study_{0}'.format(broker_object.object_id),
-                         broker_object.__str__())
+        self.assertEqual(
+            "study_{0}".format(broker_object.object_id), broker_object.__str__()
+        )

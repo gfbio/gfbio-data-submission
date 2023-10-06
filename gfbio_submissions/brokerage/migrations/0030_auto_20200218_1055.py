@@ -4,22 +4,21 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0029_auto_20200218_1044'),
+        ("brokerage", "0029_auto_20200218_1044"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='brokerobject',
-            name='site_object_id',
+            model_name="brokerobject",
+            name="site_object_id",
         ),
         migrations.RemoveField(
-            model_name='brokerobject',
-            name='site_project_id',
+            model_name="brokerobject",
+            name="site_project_id",
         ),
         migrations.RemoveField(
-            model_name='submission',
-            name='site_project_id',
+            model_name="submission",
+            name="site_project_id",
         ),
     ]

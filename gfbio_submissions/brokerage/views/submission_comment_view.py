@@ -18,9 +18,8 @@ from ..serializers.submission_detail_serializer import SubmissionDetailSerialize
 
 class SubmissionCommentView(generics.GenericAPIView):
     authentication_classes = (TokenAuthentication, BasicAuthentication)
-    permission_classes = (permissions.IsAuthenticated,
-                          IsOwnerOrReadOnly)
-    lookup_field = 'broker_submission_id'
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
+    lookup_field = "broker_submission_id"
     queryset = Submission.objects.all()
     serializer_class = SubmissionDetailSerializer
 
@@ -30,36 +29,34 @@ class SubmissionCommentView(generics.GenericAPIView):
             submission_values = Submission.objects.get_submission_values(
                 broker_submission_id=broker_submission_id
             )
-            user_values = User.get_user_values_safe(
-                user_id=submission_values['user']
-            )
-            from ..tasks import \
-                add_posted_comment_to_issue_task
+            user_values = User.get_user_values_safe(user_id=submission_values["user"])
+            from ..tasks import add_posted_comment_to_issue_task
+
             add_posted_comment_to_issue_task.apply_async(
                 kwargs={
-                    'submission_id': '{0}'.format(submission_values['pk']),
-                    'comment': comment,
-                    'user_values': user_values,
+                    "submission_id": "{0}".format(submission_values["pk"]),
+                    "comment": comment,
+                    "user_values": user_values,
                 },
-                countdown=SUBMISSION_UPLOAD_RETRY_DELAY
+                countdown=SUBMISSION_UPLOAD_RETRY_DELAY,
             )
-            return Response(
-                {'comment': comment},
-                status=status.HTTP_201_CREATED
-            )
+            return Response({"comment": comment}, status=status.HTTP_201_CREATED)
         except Submission.DoesNotExist as e:
             return Response(
-                {'submission': 'No submission for this '
-                               'broker_submission_id: {0}'.format(
-                    broker_submission_id)},
-                status=status.HTTP_404_NOT_FOUND)
+                {
+                    "submission": "No submission for this "
+                    "broker_submission_id: {0}".format(broker_submission_id)
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
     def post(self, request, *args, **kwargs):
         form = SubmissionCommentForm(request.POST)
         if form.is_valid():
-            broker_submission_id = kwargs.get('broker_submission_id', uuid4())
-            response = self._process_post_comment(broker_submission_id,
-                                                  form.cleaned_data['comment'])
+            broker_submission_id = kwargs.get("broker_submission_id", uuid4())
+            response = self._process_post_comment(
+                broker_submission_id, form.cleaned_data["comment"]
+            )
         else:
             response = Response(
                 json.loads(form.errors.as_json()),
@@ -68,7 +65,7 @@ class SubmissionCommentView(generics.GenericAPIView):
         with transaction.atomic():
             RequestLog.objects.create(
                 type=RequestLog.INCOMING,
-                url='brokerage:submission_comment',
+                url="brokerage:submission_comment",
                 method=RequestLog.POST,
                 response_content=response.data,
                 response_status=response.status_code,

@@ -6,20 +6,27 @@ import model_utils.fields
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0018_auto_20200115_1049'),
+        ("brokerage", "0018_auto_20200115_1049"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='requestlog',
-            name='created',
-            field=model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created'),
+            model_name="requestlog",
+            name="created",
+            field=model_utils.fields.AutoCreatedField(
+                default=django.utils.timezone.now,
+                editable=False,
+                verbose_name="created",
+            ),
         ),
         migrations.AddField(
-            model_name='requestlog',
-            name='modified',
-            field=model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified'),
+            model_name="requestlog",
+            name="modified",
+            field=model_utils.fields.AutoLastModifiedField(
+                default=django.utils.timezone.now,
+                editable=False,
+                verbose_name="modified",
+            ),
         ),
     ]

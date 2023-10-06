@@ -5,15 +5,21 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0024_enareport'),
+        ("brokerage", "0024_enareport"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='siteconfiguration',
-            name='ena_report_server',
-            field=models.ForeignKey(blank=True, help_text='Select which server and/or account this configuration should use to obtain reports via ENA services.', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='SiteConfiguration.ena_report_server+', to='brokerage.ResourceCredential'),
+            model_name="siteconfiguration",
+            name="ena_report_server",
+            field=models.ForeignKey(
+                blank=True,
+                help_text="Select which server and/or account this configuration should use to obtain reports via ENA services.",
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="SiteConfiguration.ena_report_server+",
+                to="brokerage.ResourceCredential",
+            ),
         ),
     ]

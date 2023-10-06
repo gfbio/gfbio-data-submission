@@ -4,11 +4,9 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0038_delete_requestlog'),
-        ('brokerage', '0036_persistentidentifier_hold_date'),
+        ("brokerage", "0038_delete_requestlog"),
+        ("brokerage", "0036_persistentidentifier_hold_date"),
     ]
 
-    operations = [
-    ]
+    operations = []

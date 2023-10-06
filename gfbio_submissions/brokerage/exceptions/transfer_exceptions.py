@@ -41,18 +41,15 @@ def raise_response_exceptions(response):
     error = None
     if not response.ok:
         if 400 <= response.status_code < 500:
-            error = TransferClientError(
-                response.status_code,
-                response.content
-            )
+            error = TransferClientError(response.status_code, response.content)
         elif 500 <= response.status_code < 600:
             error = TransferServerError(response.status_code)
         else:
             error = TransferUnknownError(response.status_code)
         if error:
             logger.error(
-                msg='SubmissionTransferError: '
-                    'Aborted with status_code {0} '
-                    'due to error {1}'.format(response.status_code,
-                                              error))
+                msg="SubmissionTransferError: "
+                "Aborted with status_code {0} "
+                "due to error {1}".format(response.status_code, error)
+            )
             raise error

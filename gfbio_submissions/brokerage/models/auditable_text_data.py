@@ -16,25 +16,25 @@ class AuditableTextData(TimeStampedModel):
         Submission,
         null=False,
         blank=False,
-        help_text='Associated Submission for this object',
-        on_delete=models.CASCADE
+        help_text="Associated Submission for this object",
+        on_delete=models.CASCADE,
     )
     text_data = models.TextField(
-        default='',
+        default="",
         blank=True,
-        help_text='Main content of this object. E.g. xml, json or any other text-based data.'
+        help_text="Main content of this object. E.g. xml, json or any other text-based data.",
     )
     comment = models.TextField(
-        default='',
+        default="",
         blank=True,
-        help_text='Free text. Any comments or useful information regarding this object'
+        help_text="Free text. Any comments or useful information regarding this object",
     )
 
     atax_file_name = models.CharField(
         blank=True,
         max_length=255,
-        default='',
-        help_text='Name of submission upload file'
+        default="",
+        help_text="Name of submission upload file",
     )
 
     atax_xml_valid = models.BooleanField(
@@ -46,7 +46,7 @@ class AuditableTextData(TimeStampedModel):
     atax_exp_index = models.SmallIntegerField(
         default=-1,
         blank=True,
-        help_text='single uploads: exponents for powers of two, combination: sum of single upload powers of two'
+        help_text="single uploads: exponents for powers of two, combination: sum of single upload powers of two",
     )
 
     objects = AuditableTextDataManager()
@@ -82,4 +82,4 @@ class AuditableTextData(TimeStampedModel):
         # index.commit(msg)
 
     def __str__(self):
-        return 'AuditableTextData_{0}'.format(self.data_id)
+        return "AuditableTextData_{0}".format(self.data_id)

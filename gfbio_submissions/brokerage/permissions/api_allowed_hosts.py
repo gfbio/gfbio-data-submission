@@ -13,10 +13,9 @@ class APIAllowedHosts(permissions.BasePermission):
     # recursive method to get all IP addresses from domain name
     def get_ip_from_domain(self, domain_name):
         # FIXME: I do not like this
-        stream = os.popen('dig +short {}'.format(domain_name))
+        stream = os.popen("dig +short {}".format(domain_name))
         results = []
-        domain_records_list = stream.read().split(
-            '\n')  # list of CNAME and A records
+        domain_records_list = stream.read().split("\n")  # list of CNAME and A records
         for record in domain_records_list:
             record = record.lower()
             if len(record) > 0:  # ignore empty values that come after split \n
@@ -38,9 +37,10 @@ class APIAllowedHosts(permissions.BasePermission):
         remote_addr = None
         if "HTTP_X_REAL_IP" in request.META:
             remote_addr = request.META[
-                'HTTP_X_REAL_IP']  # traefik reverse proxy header for staging and live systems
+                "HTTP_X_REAL_IP"
+            ]  # traefik reverse proxy header for staging and live systems
         else:
-            remote_addr = request.META['REMOTE_ADDR']  # for local purposes
+            remote_addr = request.META["REMOTE_ADDR"]  # for local purposes
         if remote_addr:
             for valid_ip in allowed_ip_list:
                 if remote_addr == valid_ip or remote_addr.startswith(valid_ip):

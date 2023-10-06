@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("brokerage", "0060_auditabletextdata_atax_exp_index"),
     ]

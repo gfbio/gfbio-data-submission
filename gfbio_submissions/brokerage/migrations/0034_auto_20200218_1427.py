@@ -6,20 +6,26 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('brokerage', '0033_remove_submissionupload_user'),
+        ("brokerage", "0033_remove_submissionupload_user"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='submissionupload',
-            name='site',
+            model_name="submissionupload",
+            name="site",
         ),
         migrations.AddField(
-            model_name='submissionupload',
-            name='user',
-            field=models.ForeignKey(blank=True, help_text='Owner of this SubmissionUpload. Same as related submission.user', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='user_uploads', to=settings.AUTH_USER_MODEL),
+            model_name="submissionupload",
+            name="user",
+            field=models.ForeignKey(
+                blank=True,
+                help_text="Owner of this SubmissionUpload. Same as related submission.user",
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="user_uploads",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

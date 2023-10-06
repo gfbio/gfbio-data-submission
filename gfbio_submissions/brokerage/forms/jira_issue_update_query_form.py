@@ -9,10 +9,10 @@ class JiraIssueUpdateQueryForm(forms.Form):
     user_key = forms.CharField(required=False)
 
     def clean_user_id(self):
-        user_id = self.cleaned_data['user_id']
-        if user_id.count('brokeragent'):
+        user_id = self.cleaned_data["user_id"]
+        if user_id.count("brokeragent"):
             raise ValidationError(
-                _('%(value)s is blacklisted'),
-                params={'value': user_id},
+                _("%(value)s is blacklisted"),
+                params={"value": user_id},
             )
         return user_id

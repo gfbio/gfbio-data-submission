@@ -13,54 +13,56 @@ from .views.submissions_view import SubmissionsView
 
 app_name = "brokerage"
 urlpatterns = [
+    re_path(route=r"submissions/$", view=SubmissionsView.as_view(), name="submissions"),
     re_path(
-        route=r'submissions/$',
-        view=SubmissionsView.as_view(),
-        name='submissions'
-    ),
-    re_path(
-        route=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/$',
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/$",
         view=SubmissionDetailView.as_view(),
-        name='submissions_detail'
+        name="submissions_detail",
     ),
     re_path(
-        route=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/$',
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/$",
         view=SubmissionUploadView.as_view(),
-        name='submissions_upload'
+        name="submissions_upload",
     ),
     re_path(
-        route=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/$',
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/$",
         view=SubmissionUploadListView.as_view(),
-        name='submissions_uploads'
+        name="submissions_uploads",
     ),
     re_path(
-        route=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/(?P<pk>[0-9]+)$',
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/(?P<pk>[0-9]+)$",
         view=SubmissionUploadDetailView.as_view(),
-        name='submissions_upload_detail'
+        name="submissions_upload_detail",
     ),
     re_path(
-        route=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/patch/(?P<pk>[0-9]+)/$',
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/upload/patch/(?P<pk>[0-9]+)/$",
         view=SubmissionUploadPatchView.as_view(),
-        name='submissions_upload_patch'
+        name="submissions_upload_patch",
     ),
-
     re_path(
-        route=r'submissions/(?P<broker_submission_id>[0-9a-z-]+)/comment/$',
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/comment/$",
         view=SubmissionCommentView.as_view(),
-        name='submission_comment'
+        name="submission_comment",
     ),
     re_path(
-        route=r'submissions/jira/update(/)?$',
+        route=r"submissions/jira/update(/)?$",
         view=JiraIssueUpdateView.as_view(),
-        name='submissions_jira_update'
+        name="submissions_jira_update",
     ),
-    re_path(r'molecular/$', TemplateView.as_view(
-        template_name='pages/api_molecular.html',
-        extra_context={'schema_url': 'generic:brokerage_schema_molecular'}
-    ), name='api_molecular_documentation'),
-    re_path('', TemplateView.as_view(
-        template_name='pages/api.html',
-        extra_context={'schema_url': 'generic:brokerage_schema'}
-    ), name='api_documentation'),
-
+    re_path(
+        r"molecular/$",
+        TemplateView.as_view(
+            template_name="pages/api_molecular.html",
+            extra_context={"schema_url": "generic:brokerage_schema_molecular"},
+        ),
+        name="api_molecular_documentation",
+    ),
+    re_path(
+        "",
+        TemplateView.as_view(
+            template_name="pages/api.html",
+            extra_context={"schema_url": "generic:brokerage_schema"},
+        ),
+        name="api_documentation",
+    ),
 ]

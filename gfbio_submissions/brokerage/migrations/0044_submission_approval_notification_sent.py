@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0043_persistentidentifier_user_notified_released'),
+        ("brokerage", "0043_persistentidentifier_user_notified_released"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='submission',
-            name='approval_notification_sent',
+            model_name="submission",
+            name="approval_notification_sent",
             field=models.BooleanField(default=False),
         ),
     ]
