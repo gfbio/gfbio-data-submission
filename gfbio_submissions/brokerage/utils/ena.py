@@ -21,19 +21,17 @@ from django.utils.encoding import smart_str
 from jsonschema import Draft3Validator
 from pytz import timezone
 
-from gfbio_submissions.brokerage.configuration.settings import \
+from gfbio_submissions.generic.utils import logged_requests
+from gfbio_submissions.resolve.models import Accession
+from ..configuration.settings import \
     DEFAULT_ENA_CENTER_NAME, \
     DEFAULT_ENA_BROKER_NAME, CHECKLIST_ACCESSION_MAPPING, \
     STATIC_SAMPLE_SCHEMA_LOCATION, SUBMISSION_DELAY
-from gfbio_submissions.brokerage.models.auditable_text_data import AuditableTextData
-from gfbio_submissions.brokerage.models.ena_report import EnaReport
-from gfbio_submissions.brokerage.models.persistent_identifier import PersistentIdentifier
-# from gfbio_submissions.brokerage.models import AuditableTextData, \
-#     EnaReport, PersistentIdentifier
-from gfbio_submissions.brokerage.utils.csv import \
+from ..models.auditable_text_data import AuditableTextData
+from ..models.ena_report import EnaReport
+from ..models.persistent_identifier import PersistentIdentifier
+from ..utils.csv import \
     find_correct_platform_and_model
-from gfbio_submissions.generic.utils import logged_requests
-from gfbio_submissions.resolve.models import Accession
 
 logger = logging.getLogger(__name__)
 dicttoxml.LOG.setLevel(logging.ERROR)

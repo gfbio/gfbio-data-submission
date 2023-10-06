@@ -16,23 +16,20 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from config.settings.base import MEDIA_URL, MEDIA_ROOT
+from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
 from gfbio_submissions.brokerage.configuration.settings import \
     JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL, JIRA_ATTACHMENT_URL
-from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
-from gfbio_submissions.brokerage.models.broker_object import BrokerObject
-from gfbio_submissions.brokerage.models.submission import Submission
-from gfbio_submissions.brokerage.models.submission_upload import SubmissionUpload
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-# from gfbio_submissions.brokerage.models import Submission, \
-#     AdditionalReference, \
-#     TaskProgressReport, SubmissionUpload, BrokerObject
-from gfbio_submissions.brokerage.serializers import SubmissionSerializer
+from ...serializers.submission_serializer import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_jira_attach_response, \
     _get_jira_issue_response, _get_ena_data_without_runs, _get_ena_data
 from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential
 from gfbio_submissions.users.models import User
-from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
+from ...models.broker_object import BrokerObject
+from ...models.submission import Submission
+from ...models.submission_upload import SubmissionUpload
+from ...models.task_progress_report import TaskProgressReport
+
 
 class TestSubmissionUploadView(TestCase):
 

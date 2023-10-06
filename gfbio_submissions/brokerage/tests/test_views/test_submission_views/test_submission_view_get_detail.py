@@ -5,12 +5,12 @@ from uuid import uuid4
 
 import responses
 
-from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
-from gfbio_submissions.brokerage.models.submission import Submission
-# from gfbio_submissions.brokerage.models import Submission, AdditionalReference
 from gfbio_submissions.users.models import User
 from .test_submission_view_base import TestSubmissionView
-from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
+from ....configuration.settings import GFBIO_HELPDESK_TICKET
+from ....models.additional_reference import AdditionalReference
+from ....models.submission import Submission
+
 
 # FIXME: duplicate of below ?
 class TestSubmissionViewGetDetailRequests(TestSubmissionView):

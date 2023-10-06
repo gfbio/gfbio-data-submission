@@ -6,9 +6,8 @@ from io import StringIO
 
 from django.conf import settings
 
-from gfbio_submissions.brokerage.models.auditable_text_data import AuditableTextData
-# from gfbio_submissions.brokerage.models import AuditableTextData
 from gfbio_submissions.generic.models import RequestLog
+from ..models.auditable_text_data import AuditableTextData
 
 
 def create_ena_manifest_text_data(submission):
@@ -56,19 +55,19 @@ def store_manifest_to_filesystem(submission):
         submission)
     if manifest_text_data:
         with open('{0}{1}{2}'.format(
-                submission_folder,
-                os.sep,
-                manifest_text_data.name), 'w') as output:
+            submission_folder,
+            os.sep,
+            manifest_text_data.name), 'w') as output:
             output.write(manifest_text_data.text_data)
 
 
 def submit_targeted_sequences(
-        username,
-        password,
-        submission,
-        center_name='GFBIO',
-        test=True,
-        validate=True):
+    username,
+    password,
+    submission,
+    center_name='GFBIO',
+    test=True,
+    validate=True):
     submission_folder = os.path.join(settings.MEDIA_ROOT,
                                      str(submission.broker_submission_id))
     manifest_path = os.path.join(submission_folder, 'MANIFEST')

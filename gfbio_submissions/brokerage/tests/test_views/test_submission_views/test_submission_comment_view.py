@@ -11,18 +11,16 @@ from django.test import TestCase
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from gfbio_submissions.brokerage.models.additional_reference import AdditionalReference
-from gfbio_submissions.brokerage.models.broker_object import BrokerObject
-from gfbio_submissions.brokerage.models.submission import Submission
-# from gfbio_submissions.brokerage.models import BrokerObject, \
-#     AdditionalReference, Submission
-from gfbio_submissions.brokerage.serializers import SubmissionSerializer
 from gfbio_submissions.brokerage.tests.utils import _get_ena_data, \
     _get_ena_data_without_runs, _get_pangaea_comment_response
 from gfbio_submissions.generic.models import SiteConfiguration, \
     ResourceCredential
 from gfbio_submissions.users.models import User
-from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
+from ....configuration.settings import GFBIO_HELPDESK_TICKET
+from ....models.broker_object import BrokerObject
+from ....models.submission import Submission
+from ....serializers.submission_serializer import SubmissionSerializer
+
 
 class TestSubmissionCommentView(TestCase):
 

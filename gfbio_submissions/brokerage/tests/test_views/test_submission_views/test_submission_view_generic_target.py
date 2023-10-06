@@ -4,11 +4,10 @@ from uuid import UUID
 
 import responses
 
-from gfbio_submissions.brokerage.models.submission import Submission
-# from gfbio_submissions.brokerage.models import Submission
 from gfbio_submissions.generic.models import RequestLog
 from .test_submission_view_base import \
     TestSubmissionView
+from ....models.submission import Submission
 
 
 class TestSubmissionViewGenericTarget(TestSubmissionView):

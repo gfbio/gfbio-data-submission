@@ -5,16 +5,12 @@ from uuid import UUID
 
 import responses
 
-from gfbio_submissions.brokerage.configuration.settings import ATAX
-from gfbio_submissions.brokerage.models.submission import Submission
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
 from gfbio_submissions.generic.models import RequestLog
 from .test_submission_view_base import \
     TestSubmissionView
-
-
-# from gfbio_submissions.brokerage.models import Submission, TaskProgressReport, JiraMessage
-# from gfbio_submissions.brokerage.models import AdditionalReference
+from ....configuration.settings import ATAX
+from ....models.submission import Submission
+from ....models.task_progress_report import TaskProgressReport
 
 
 class TestSubmissionViewAtaxTarget(TestSubmissionView):

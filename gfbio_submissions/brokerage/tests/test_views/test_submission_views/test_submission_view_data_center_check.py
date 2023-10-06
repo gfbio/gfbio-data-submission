@@ -6,15 +6,14 @@ import responses
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from config.settings.base import MEDIA_ROOT
-from gfbio_submissions.brokerage.configuration.settings import GENERIC, ENA
-from gfbio_submissions.brokerage.models.submission import Submission
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-# from gfbio_submissions.brokerage.models import Submission, TaskProgressReport
 from gfbio_submissions.brokerage.tests.utils import \
     _get_test_data_dir_path
 from gfbio_submissions.users.models import User
 from .test_submission_view_base import \
     TestSubmissionView
+from ....configuration.settings import GENERIC, ENA
+from ....models.submission import Submission
+from ....models.task_progress_report import TaskProgressReport
 
 
 class TestSubmissionViewDataCenterCheck(TestSubmissionView):
@@ -51,7 +50,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             'tasks.check_on_hold_status_task',
             'tasks.check_issue_existing_for_submission_task', ]
         for t in TaskProgressReport.objects.filter(
-                submission=submission).order_by('created'):
+            submission=submission).order_by('created'):
             self.assertIn(t.task_name, expected_tasks)
 
     @responses.activate
@@ -116,7 +115,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             'tasks.prepare_ena_submission_data_task',
             'tasks.check_issue_existing_for_submission_task', ]
         for t in TaskProgressReport.objects.filter(
-                submission=submission).order_by('created'):
+            submission=submission).order_by('created'):
             self.assertIn(t.task_name, expected_tasks)
 
     @responses.activate
@@ -181,7 +180,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             'tasks.check_issue_existing_for_submission_task',
         ]
         for t in TaskProgressReport.objects.filter(
-                submission=submission).order_by('created'):
+            submission=submission).order_by('created'):
             self.assertIn(t.task_name, expected_tasks)
 
     @responses.activate
@@ -239,5 +238,5 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             'tasks.check_issue_existing_for_submission_task',
         ]
         for t in TaskProgressReport.objects.filter(
-                submission=submission).order_by('created'):
+            submission=submission).order_by('created'):
             self.assertIn(t.task_name, expected_tasks)

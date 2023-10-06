@@ -6,8 +6,6 @@ from django.utils.encoding import smart_str
 from requests import Response
 
 from gfbio_submissions.generic.models import ResourceCredential
-# from gfbio_submissions.brokerage.models import TaskProgressReport, Submission, \
-#     AuditableTextData, CenterName, JiraMessage
 from .ena import send_submission_to_ena
 from ..configuration.settings import \
     TASK_FAIL_SUBJECT_TEMPLATE, TASK_FAIL_TEXT_TEMPLATE, SUBMISSION_MAX_RETRIES, \
