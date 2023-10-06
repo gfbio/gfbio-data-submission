@@ -2,7 +2,7 @@
 from django.urls import re_path
 from django.views.generic import TemplateView
 
-from .api import submission_views as views, issue_update_views
+from .views import submission_views as views, issue_update_views
 
 app_name = "brokerage"
 urlpatterns = [
