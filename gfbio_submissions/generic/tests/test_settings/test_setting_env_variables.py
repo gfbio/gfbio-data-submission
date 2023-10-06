@@ -12,7 +12,6 @@ env = environ.Env()
 
 
 class EnvVariablesDefaultsTest(TestCase):
-
     def test_django_admins_default(self):
         admins = DJANGO_ADMINS
         self.assertTrue(type(admins) == list)
@@ -23,36 +22,39 @@ class EnvVariablesDefaultsTest(TestCase):
     def test_default_admins(self):
         admins = ADMINS
         self.assertListEqual(
-            [('Marc Weber', 'mweber@gfbio.org'),
-             ('Ivaylo Kostadinov', 'ikostadi@gfbio.org'),
-             ('Deniss Marinuks', 'd.marinuks@jacobs-university.de')],
-            admins
+            [
+                ("Marc Weber", "mweber@gfbio.org"),
+                ("Ivaylo Kostadinov", "ikostadi@gfbio.org"),
+                ("Deniss Marinuks", "d.marinuks@jacobs-university.de"),
+            ],
+            admins,
         )
 
 
 class EnvVariablesTest(TestCase):
-
-    @mock.patch.dict(os.environ, {"DJANGO_ADMINS": 'John Doe:jdoe@it.de'})
+    @mock.patch.dict(os.environ, {"DJANGO_ADMINS": "John Doe:jdoe@it.de"})
     def test_django_admins_from_env(self):
-        admins = env.list('DJANGO_ADMINS')
+        admins = env.list("DJANGO_ADMINS")
         print(admins)
 
-    @mock.patch.dict(os.environ, {"DJANGO_ADMINS": 'John Doe:jdoe@it.de'})
+    @mock.patch.dict(os.environ, {"DJANGO_ADMINS": "John Doe:jdoe@it.de"})
     def test_admin_from_env(self):
-        admins = env.list('DJANGO_ADMINS')
+        admins = env.list("DJANGO_ADMINS")
         admins = [
-            ("""{}""".format(x.split(':')[0]), "{}".format(x.split(':')[1]))
+            ("""{}""".format(x.split(":")[0]), "{}".format(x.split(":")[1]))
             for x in admins
         ]
-        self.assertListEqual([('John Doe', 'jdoe@it.de')], admins)
+        self.assertListEqual([("John Doe", "jdoe@it.de")], admins)
 
-    @mock.patch.dict(os.environ, {
-        "DJANGO_ADMINS": 'John Doe:jdoe@it.de,Joe Plumber:jp@pl.com'})
+    @mock.patch.dict(
+        os.environ, {"DJANGO_ADMINS": "John Doe:jdoe@it.de,Joe Plumber:jp@pl.com"}
+    )
     def test_admins_from_env(self):
-        admins = env.list('DJANGO_ADMINS')
+        admins = env.list("DJANGO_ADMINS")
         admins = [
-            ("""{}""".format(x.split(':')[0]), "{}".format(x.split(':')[1]))
+            ("""{}""".format(x.split(":")[0]), "{}".format(x.split(":")[1]))
             for x in admins
         ]
         self.assertListEqual(
-            [('John Doe', 'jdoe@it.de'), ('Joe Plumber', 'jp@pl.com')], admins)
+            [("John Doe", "jdoe@it.de"), ("Joe Plumber", "jp@pl.com")], admins
+        )
