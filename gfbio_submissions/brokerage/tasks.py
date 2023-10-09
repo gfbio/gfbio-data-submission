@@ -661,6 +661,9 @@ def parse_csv_to_update_clean_submission_task(self, previous_task_result=None,
         os.getcwd(),
         'gfbio_submissions/brokerage/schemas/ena_requirements.json')
 
+    # TODO: this sequence of commands may cause confusion:
+    #   compare: https://submissions.gfbio.org/OySnzAz9uKJsDiZAR60G9B7mg27Xg3Kb/brokerage/taskprogressreport/f33faeb3-6cb0-4937-ad1d-72a34937b70f/change/?_changelist_filters=created__day%3D9%26created__month%3D10%26created__year%3D2023
+    #   here the task returned true albeit the validation failed and  no changes where saved (atomic)
     with transaction.atomic():
         submission_upload.submission.data['requirements'].update(
             molecular_requirements)
@@ -1555,7 +1558,7 @@ def attach_to_submission_issue_task(self, kwargs=None, submission_id=None,
     logger.info(
         msg='attach_to_submission_issue_task. submission_id={0} | submission_upload_id={1}'
             ''.format(submission_id, submission_upload_id))
-    
+
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id,
         task=self,
