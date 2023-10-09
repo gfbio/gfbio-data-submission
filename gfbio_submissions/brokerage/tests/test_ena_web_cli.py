@@ -12,7 +12,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils.encoding import smart_str
 
-from gfbio_submissions.brokerage.tasks import (
+from ..tasks import (
     create_study_broker_objects_only_task,
     prepare_ena_study_xml_task,
     register_study_at_ena_task,

@@ -5,18 +5,18 @@ import math as m
 import os
 import textwrap
 
-import celery
-from celery.exceptions import SoftTimeLimitExceeded
 from django.core.mail import mail_admins
 from django.db import transaction
-from django.db.utils import IntegrityError
 from django.utils.encoding import smart_str
 from kombu.utils import json
 from pytz import timezone
 from requests import ConnectionError, Response
 
 from config.celery_app import app
-from config.settings.base import HOST_URL_ROOT, ADMIN_URL
+from gfbio_submissions.brokerage.configuration.settings import (
+    GFBIO_HELPDESK_TICKET,
+    PANGAEA_JIRA_TICKET,
+)
 from gfbio_submissions.generic.models import SiteConfiguration, RequestLog
 from gfbio_submissions.users.models import User
 from .configuration.settings import (
@@ -27,25 +27,19 @@ from .configuration.settings import (
     SUBMISSION_COMMENT_TEMPLATE,
     JIRA_FALLBACK_USERNAME,
     JIRA_FALLBACK_EMAIL,
-    APPROVAL_EMAIL_SUBJECT_TEMPLATE,
-    APPROVAL_EMAIL_MESSAGE_TEMPLATE,
     NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE,
     NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE,
     NO_SITE_CONFIG_EMAIL_SUBJECT_TEMPLATE,
 )
 from .configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
 from .exceptions.transfer_exceptions import TransferServerError, TransferClientError
-from .models.additional_reference import AdditionalReference
 from .models.auditable_text_data import AuditableTextData
 from .models.broker_object import BrokerObject
 from .models.ena_report import EnaReport
 from .models.submission import Submission
 from .models.submission_upload import SubmissionUpload
 from .models.task_progress_report import TaskProgressReport
-
-# from .models import BrokerObject, AuditableTextData, \
-#     AdditionalReference, TaskProgressReport, Submission
-# from .models import SubmissionUpload, EnaReport
+from .tasks.submission_task import SubmissionTask
 from .utils.atax import (
     parse_taxonomic_csv_specimen,
     parse_taxonomic_csv_measurement,
@@ -56,18 +50,14 @@ from .utils.atax import (
     update_specimen_with_measurements_abcd_xml,
     update_specimen_with_multimedia_abcd_xml,
 )
-from .utils.csv import check_for_molecular_content, parse_molecular_csv
 from .utils.csv_atax import store_atax_data_as_auditable_text_data
 from .utils.ena import (
     prepare_ena_data,
     store_ena_data_as_auditable_text_data,
-    send_submission_to_ena,
     parse_ena_submission_response,
     fetch_ena_report,
     update_persistent_identifier_report_status,
     register_study_at_ena,
-    prepare_study_data_only,
-    store_single_data_item_as_auditable_text_data,
     update_resolver_accessions,
     execute_update_accession_objects_chain,
 )
@@ -80,746 +70,37 @@ from .utils.ena_cli import (
 from .utils.gfbio import get_gfbio_helpdesk_username
 from .utils.jira import JiraClient
 from .utils.pangaea import pull_pangaea_dois
-from .utils.schema_validation import validate_data_full, validate_atax_data_is_valid
-from .utils.submission_transfer import SubmissionTransferHandler
+from .utils.schema_validation import validate_atax_data_is_valid
 from .utils.task_utils import (
     jira_error_auto_retry,
     get_submission_and_site_configuration,
     raise_transfer_server_exceptions,
     retry_no_ticket_available_exception,
-    get_submitted_submission_and_site_configuration,
     send_data_to_ena_for_validation_or_test,
     get_jira_comment_template,
     jira_comment_replace,
 )
 from ..generic.utils import logged_requests
 
-from gfbio_submissions.brokerage.configuration.settings import (
-    GFBIO_HELPDESK_TICKET,
-    PANGAEA_JIRA_TICKET,
-)
-
 logger = logging.getLogger(__name__)
-
-
-# abstract base class for tasks ------------------------------------------------
-
-
-class SubmissionTask(celery.Task):
-    abstract = True
-
-    # TODO: consider a report for every def here OR refactor taskreport to
-    #  keep track in one report. Keep in mind to resume chains from a certain
-    #  point, add a DB clean up task to remove from database
-    # @abstractmethod
-    # def __init__(self):
-    #     super(SubmissionTask, self).__init__()
-
-    def on_retry(self, exc, task_id, args, kwargs, einfo):
-        logger.info(
-            "tasks.py | SubmissionTask | on_retry | task_id={0} | "
-            "name={1}".format(task_id, self.name)
-        )
-        # TODO: capture this idea of reporting to sentry
-        # sentrycli.captureException(exc)
-        TaskProgressReport.objects.update_report_on_exception(
-            "RETRY", exc, task_id, args, kwargs, einfo, task_name=self.name
-        )
-        super(SubmissionTask, self).on_retry(exc, task_id, args, kwargs, einfo)
-
-    def on_failure(self, exc, task_id, args, kwargs, einfo):
-        logger.info(
-            "tasks.py | SubmissionTask | on_failure | task_id={0} | "
-            "name={1}| args={2} | kwargs={3} | einfo={4} | "
-            "".format(task_id, self.name, args, kwargs, einfo)
-        )
-        TaskProgressReport.objects.update_report_on_exception(
-            "FAILURE", exc, task_id, args, kwargs, einfo, task_name=self.name
-        )
-        super(SubmissionTask, self).on_failure(exc, task_id, args, kwargs, einfo)
-
-    def on_success(self, retval, task_id, args, kwargs):
-        logger.info(
-            "tasks.py | SubmissionTask | on_success | task_id={0} | "
-            "name={1} | retval={2}".format(task_id, self.name, retval)
-        )
-        TaskProgressReport.objects.update_report_on_success(
-            retval, task_id, args, kwargs, task_name=self.name
-        )
-        super(SubmissionTask, self).on_success(retval, task_id, args, kwargs)
-
-    def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        logger.info(
-            "tasks.py | SubmissionTask | after_return | task_id={0} | "
-            "name={1} | args={2} | kwargs={3} | einfo={4} | "
-            "retval={5}".format(task_id, self.name, args, kwargs, einfo, retval)
-        )
-        TaskProgressReport.objects.update_report_after_return(
-            status, task_id, task_name=self.name
-        )
-        super(SubmissionTask, self).after_return(
-            status, retval, task_id, args, kwargs, einfo
-        )
 
 
 # common tasks -----------------------------------------------------------------
 
 
 # TODO: re-consider if needed when workflow is clear
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.check_for_molecular_content_in_submission_task",
-)
-def check_for_molecular_content_in_submission_task(
-    self, previous_task_result=None, submission_id=None
-):
-    logger.info(
-        msg="check_for_molecular_content_in_submission_task. get submission"
-        " with pk={}.".format(submission_id)
-    )
-
-    # TODO: needs only submission, not both.
-    submission, site_configuration = get_submission_and_site_configuration(
-        submission_id=submission_id, task=self, include_closed=True
-    )
-    if submission == TaskProgressReport.CANCELLED:
-        return TaskProgressReport.CANCELLED
-    logger.info(
-        msg="check_for_molecular_content_in_submission_task. "
-        "process submission={}.".format(submission.broker_submission_id)
-    )
-
-    molecular_data_available, messages, check_performed = check_for_molecular_content(
-        submission
-    )
-
-    logger.info(
-        msg="check_for_molecular_content_in_submission_task. "
-        "valid molecular data available={0}"
-        "".format(molecular_data_available)
-    )
-
-    return {
-        "molecular_data_available": molecular_data_available,
-        "messages": messages,
-        "molecular_data_check_performed": check_performed,
-    }
 
 
-# FIXME: redundant/duplicate code with trigger_submission_transfer_for_updates. Refactor !
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.trigger_submission_transfer",
-)
-def trigger_submission_transfer(self, previous_task_result=None, submission_id=None):
-    molecular_data_available = False
-    check_performed = False
-    messages = []
-
-    if isinstance(previous_task_result, dict):
-        molecular_data_available = previous_task_result.get(
-            "molecular_data_available", False
-        )
-        check_performed = previous_task_result.get(
-            "molecular_data_check_performed", False
-        )
-        messages = previous_task_result.get("messages", [])
-
-    logger.info(
-        msg="trigger_submission_transfer. get submission with pk={}.".format(
-            submission_id
-        )
-    )
-    if len(messages):
-        logger.warning(
-            "tasks.py | trigger_submission_transfer | "
-            "previous task reported error messages={0} | "
-            "submission_id={1}".format(messages, submission_id)
-        )
-        return TaskProgressReport.CANCELLED
-    # TODO: needs only submission, not both.
-    submission, site_configuration = get_submission_and_site_configuration(
-        submission_id=submission_id, task=self, include_closed=True
-    )
-
-    if submission == TaskProgressReport.CANCELLED:
-        return TaskProgressReport.CANCELLED
-
-    transfer_handler = SubmissionTransferHandler(
-        submission_id=submission.pk,
-        target_archive=submission.target,
-        molecular_data_found=molecular_data_available,
-        molecular_data_check_performed=check_performed,
-    )
-    transfer_handler.initiate_submission_process(
-        release=submission.release,
-    )
-
-
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.trigger_submission_transfer_for_updates",
-)
-def trigger_submission_transfer_for_updates(
-    self, previous_task_result=None, broker_submission_id=None
-):
-    molecular_data_available = False
-    check_performed = False
-    messages = []
-    if isinstance(previous_task_result, dict):
-        molecular_data_available = previous_task_result.get(
-            "molecular_data_available", False
-        )
-        check_performed = previous_task_result.get(
-            "molecular_data_check_performed", False
-        )
-        messages = previous_task_result.get("messages", [])
-
-    logger.info(
-        msg="trigger_submission_transfer_for_updates. get submission_id with broker_submission_id={}.".format(
-            broker_submission_id
-        )
-    )
-    submission_id = Submission.objects.get_open_submission_id_for_bsi(
-        broker_submission_id=broker_submission_id
-    )
-
-    if len(messages):
-        logger.warning(
-            "tasks.py | trigger_submission_transfer | "
-            "previous task reported error messages={0} | "
-            "submission_id={1}".format(messages, submission_id)
-        )
-    # TODO: needs only submission, not both.
-    submission, site_configuration = get_submission_and_site_configuration(
-        submission_id=submission_id, task=self, include_closed=True
-    )
-    if submission == TaskProgressReport.CANCELLED:
-        return TaskProgressReport.CANCELLED
-
-    transfer_handler = SubmissionTransferHandler(
-        submission_id=submission.pk,
-        target_archive=submission.target,
-        molecular_data_found=molecular_data_available,
-        molecular_data_check_performed=check_performed,
-    )
-    transfer_handler.initiate_submission_process(
-        release=submission.release,
-        update=True,
-    )
 
 
 # TODO: on_hold check is in this form obsolete, if target is ENA etc
 #   submission to ena is triggered without prior creation of BOs and XML
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.check_on_hold_status_task",
-)
-def check_on_hold_status_task(self, previous_task_result=None, submission_id=None):
-    submission, site_configuration = get_submission_and_site_configuration(
-        submission_id=submission_id, task=self, include_closed=True
-    )
-    if submission == TaskProgressReport.CANCELLED:
-        return TaskProgressReport.CANCELLED
-
-    if site_configuration.release_submissions:
-        logger.info(
-            msg="check_on_hold_status_task. submission pk={0}. "
-            "site_config pk={1}. site_configuration.release_submissions"
-            "={2}. execute submission."
-            "".format(
-                submission_id,
-                site_configuration.pk,
-                site_configuration.release_submissions,
-            )
-        )
-        transfer_handler = SubmissionTransferHandler(
-            submission_id=submission.pk, target_archive=submission.target
-        )
-        transfer_handler.execute()
-    else:
-        if not submission.approval_notification_sent:
-            # email admins, then do smth. to trigger chain once ok
-            logger.info(
-                msg="check_on_hold_status_task. submission pk={0}. "
-                "site_config pk={1}. site_configuration.release_submissions"
-                "={2}. send mail to admins."
-                "".format(
-                    submission_id,
-                    site_configuration.pk,
-                    site_configuration.release_submissions,
-                )
-            )
-            # TODO: refactor to method in task_utils, and use templates/constants
-            mail_admins(
-                subject=APPROVAL_EMAIL_SUBJECT_TEMPLATE.format(
-                    HOST_URL_ROOT,
-                    # site_configuration.site.username if site_configuration.site else site_configuration.title,
-                    submission.user.username
-                    if submission.user
-                    else site_configuration.title,
-                    submission.broker_submission_id,
-                ),
-                message=APPROVAL_EMAIL_MESSAGE_TEMPLATE.format(
-                    submission.broker_submission_id,
-                    "{0}{1}brokerage/submission/{2}/change/".format(
-                        HOST_URL_ROOT, ADMIN_URL, submission.pk
-                    ),
-                ),
-            )
-            submission.approval_notification_sent = True
-            submission.save()
 
 
 # NEW PREP WORKFLOW BO CREATION AND SOID CREATION ------------------------------
 
 
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.create_study_broker_objects_only_task",
-)
-def create_study_broker_objects_only_task(
-    self, previous_task_result=None, submission_id=None
-):
-    # TODO: refactor to general method for all tasks where applicable
-    if previous_task_result == TaskProgressReport.CANCELLED:
-        logger.warning(
-            "tasks.py | create_study_broker_objects_only_task | "
-            "previous task reported={0} | "
-            "submission_id={1}".format(TaskProgressReport.CANCELLED, submission_id)
-        )
-        return TaskProgressReport.CANCELLED
-    submission, site_configuration = get_submission_and_site_configuration(
-        submission_id=submission_id, task=self, include_closed=True
-    )
-    if submission == TaskProgressReport.CANCELLED:
-        logger.warning(
-            "tasks.py | create_study_broker_objects_only_task | "
-            " do nothing because submission={0}".format(TaskProgressReport.CANCELLED)
-        )
-        return TaskProgressReport.CANCELLED
-    if len(submission.brokerobject_set.filter(type="study")):
-        study_pk = submission.brokerobject_set.filter(type="study").first().pk
-        logger.info(
-            "tasks.py | create_study_broker_objects_only_task | "
-            " broker object of type study found | return pk={0}".format(study_pk)
-        )
-        # TODO: for now return study BOs primary key
-        return study_pk
-    else:
-        study = BrokerObject.objects.add_study_only(submission=submission)
-        logger.info(
-            "tasks.py | create_study_broker_objects_only_task | "
-            " created broker object of type study | return pk={0}".format(study.pk)
-        )
-        return study.pk
-
-
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.create_broker_objects_from_submission_data_task",
-)
-def create_broker_objects_from_submission_data_task(
-    self, previous_task_result=None, submission_id=None, use_submitted_submissions=False
-):
-    if previous_task_result == TaskProgressReport.CANCELLED:
-        logger.warning(
-            "tasks.py | create_broker_objects_from_submission_data_task | "
-            "previous task reported={0} | "
-            "submission_id={1}".format(TaskProgressReport.CANCELLED, submission_id)
-        )
-        return TaskProgressReport.CANCELLED
-
-    submission, site_configuration = (
-        get_submitted_submission_and_site_configuration(
-            submission_id=submission_id, task=self
-        )
-        if use_submitted_submissions
-        else get_submission_and_site_configuration(
-            submission_id=submission_id, task=self, include_closed=True
-        )
-    )
-    logger.info(
-        "tasks.py | create_broker_objects_from_submission_data_task | "
-        "submission={0} | site_configuration={1}".format(submission, site_configuration)
-    )
-    if submission == TaskProgressReport.CANCELLED:
-        logger.warning(
-            "tasks.py | create_broker_objects_from_submission_data_task | "
-            " do nothing because submission={0}".format(TaskProgressReport.CANCELLED)
-        )
-        return TaskProgressReport.CANCELLED
-
-    try:
-        logger.info(
-            "tasks.py | create_broker_objects_from_submission_data_task "
-            "| try delete broker objects and create new ones "
-            "from submission data"
-        )
-        with transaction.atomic():
-            submission.brokerobject_set.all().delete()
-            BrokerObject.objects.add_submission_data(submission)
-            return True
-    except IntegrityError as e:
-        logger.error(
-            'create_broker_objects_from_submission_data_task IntegrityError in "create_broker_objects_from'
-            '_submission_data_task": {}'.format(e)
-        )
-
-
 # ENA submission transfer tasks ------------------------------------------------
-
-
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.delete_related_auditable_textdata_task",
-)
-def delete_related_auditable_textdata_task(
-    self, prev_task_result=None, submission_id=None
-):
-    submission, site_configuration = get_submission_and_site_configuration(
-        submission_id=submission_id, task=self, include_closed=True
-    )
-    if submission == TaskProgressReport.CANCELLED:
-        return TaskProgressReport.CANCELLED
-    with transaction.atomic():
-        submission.auditabletextdata_set.all().delete()
-
-
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.prepare_ena_study_xml_task",
-)
-def prepare_ena_study_xml_task(self, previous_task_result=None, submission_id=None):
-    submission, site_configuration = get_submission_and_site_configuration(
-        submission_id=submission_id, task=self, include_closed=True
-    )
-    # TODO: refactor to general method for all tasks where applicable
-    if previous_task_result == TaskProgressReport.CANCELLED:
-        logger.warning(
-            "tasks.py | prepare_ena_study_xml_task | "
-            "previous task reported={0} | "
-            "submission_id={1}".format(TaskProgressReport.CANCELLED, submission_id)
-        )
-        return TaskProgressReport.CANCELLED
-    if submission == TaskProgressReport.CANCELLED:
-        logger.warning(
-            "tasks.py | prepare_ena_study_xml_task | "
-            " do nothing because submission={0}".format(TaskProgressReport.CANCELLED)
-        )
-        return TaskProgressReport.CANCELLED
-
-    if len(submission.auditabletextdata_set.filter(name="study.xml")):
-        study_pk = submission.auditabletextdata_set.filter(name="study.xml").first().pk
-        logger.info(
-            "tasks.py | prepare_ena_study_xml_task | "
-            " auditable textdata with name study.xml found | return pk={0}".format(
-                study_pk
-            )
-        )
-        # TODO: for now return XMLs primary key
-        return study_pk
-    elif not len(submission.brokerobject_set.filter(type="study")):
-        logger.warning(
-            "tasks.py | prepare_ena_study_xml_task | "
-            " do nothing because submission={0} has no broker object "
-            "of type study".format(TaskProgressReport.CANCELLED)
-        )
-        return TaskProgressReport.CANCELLED
-    else:
-        study_data = prepare_study_data_only(submission=submission)
-        study_text_data = store_single_data_item_as_auditable_text_data(
-            submission=submission, data=study_data
-        )
-        logger.info(
-            "tasks.py | prepare_ena_study_xml_task | "
-            " created auditable textdata with name study.xml | return pk={0}".format(
-                study_text_data.pk if study_text_data is not None else "invalid"
-            )
-        )
-        return (
-            TaskProgressReport.CANCELLED
-            if study_text_data is None
-            else study_text_data.pk
-        )
-
-
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.prepare_ena_submission_data_task",
-)
-def prepare_ena_submission_data_task(self, prev_task_result=None, submission_id=None):
-    submission, site_configuration = get_submission_and_site_configuration(
-        submission_id=submission_id, task=self, include_closed=True
-    )
-    if submission == TaskProgressReport.CANCELLED:
-        return TaskProgressReport.CANCELLED
-
-    if len(submission.brokerobject_set.all()) > 0:
-        with transaction.atomic():
-            submission.auditabletextdata_set.all().delete()
-        ena_submission_data = prepare_ena_data(submission=submission)
-        store_ena_data_as_auditable_text_data(
-            submission=submission, data=ena_submission_data
-        )
-        # TODO: this will become obsolete once, data is taken from AuditableTextData ....
-        return ena_submission_data
-    else:
-        logger.info(
-            msg="prepare_ena_submission_data_task. no brokerobjects. "
-            "return={0} "
-            "submission_id={1}".format(TaskProgressReport.CANCELLED, submission_id)
-        )
-        return TaskProgressReport.CANCELLED
-
-
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.update_ena_submission_data_task",
-)
-def update_ena_submission_data_task(
-    self, previous_task_result=None, submission_upload_id=None
-):
-    # TODO: here it would be possible to get the related submission for the TaskReport
-    TaskProgressReport.objects.create_initial_report(submission=None, task=self)
-    submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(
-        submission_upload_id
-    )
-
-    if previous_task_result == TaskProgressReport.CANCELLED:
-        logger.warning(
-            "tasks.py | update_ena_submission_data_task | "
-            "previous task reported={0} | "
-            "submission_upload_id={1}".format(
-                TaskProgressReport.CANCELLED, submission_upload_id
-            )
-        )
-        return TaskProgressReport.CANCELLED
-
-    if submission_upload is None:
-        logger.error(
-            "tasks.py | update_ena_submission_data_task | "
-            "no valid SubmissionUpload available | "
-            "submission_upload_id={0}".format(submission_upload_id)
-        )
-        return TaskProgressReport.CANCELLED
-
-    ena_submission_data = prepare_ena_data(submission=submission_upload.submission)
-
-    logger.info(
-        "tasks.py | update_ena_submission_data_task | "
-        "update AuditableTextData related to submission={0} "
-        "".format(submission_upload.submission.broker_submission_id)
-    )
-    with transaction.atomic():
-        for d in ena_submission_data:
-            filename, filecontent = ena_submission_data[d]
-            logger.info(
-                "tasks.py | update_ena_submission_data_task | "
-                "iterate ena_submission_data to update_or_create AuditableTextData | filename={0} len filecontent={1}".format(
-                    filename, len(filecontent)
-                )
-            )
-            # TODO: while fixing DASS-1107: I decided to opt for try and catch plus log message. But a general change of
-            #   the workflow is suggested, e.g. delete the respective (or all) textdata and create a new one
-            try:
-                (
-                    obj,
-                    created,
-                ) = submission_upload.submission.auditabletextdata_set.update_or_create(
-                    name=filename, defaults={"text_data": filecontent}
-                )
-            except AuditableTextData.MultipleObjectsReturned as ex:
-                logger.warning(
-                    "tasks.py | update_ena_submission_data_task | "
-                    "AuditableTextData returned more than one object while update_or_create | filename={0} | {1}".format(
-                        filename, ex
-                    )
-                )
-                return TaskProgressReport.CANCELLED
-        return True
-
-
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.clean_submission_for_update_task",
-)
-def clean_submission_for_update_task(
-    self, previous_task_result=None, submission_upload_id=None
-):
-    report, created = TaskProgressReport.objects.create_initial_report(
-        submission=None, task=self
-    )
-    submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(
-        submission_upload_id
-    )
-
-    # TODO: add submission relation from submission_upload, relation
-
-    if previous_task_result == TaskProgressReport.CANCELLED:
-        logger.warning(
-            "tasks.py | clean_submission_for_update_task | "
-            "previous task reported={0} | "
-            "submission_upload_id={1}".format(
-                TaskProgressReport.CANCELLED, submission_upload_id
-            )
-        )
-        return TaskProgressReport.CANCELLED
-
-    if submission_upload is None:
-        logger.error(
-            "tasks.py | clean_submission_for_update_task | "
-            "no valid SubmissionUpload available | "
-            "submission_upload_id={0}".format(submission_upload_id)
-        )
-        return TaskProgressReport.CANCELLED
-
-    report.submission = submission_upload.submission
-    report.save()
-
-    data = submission_upload.submission.data
-    molecular_requirements_keys = ["samples", "experiments"]  # 'study_type',
-
-    if "validation" in data.keys():
-        data.pop("validation")
-    for k in molecular_requirements_keys:
-        if k in data.get("requirements", {}).keys():
-            data.get("requirements", {}).pop(k)
-
-    with transaction.atomic():
-        submission_upload.submission.save()
-    return True
-
-
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.parse_csv_to_update_clean_submission_task",
-)
-def parse_csv_to_update_clean_submission_task(
-    self, previous_task_result=None, submission_upload_id=None
-):
-    # TODO: here it would be possible to get the related submission for the TaskReport
-    report, created = TaskProgressReport.objects.create_initial_report(
-        submission=None, task=self
-    )
-    submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(
-        submission_upload_id
-    )
-
-    if previous_task_result == TaskProgressReport.CANCELLED:
-        logger.warning(
-            "tasks.py | parse_csv_to_update_clean_submission_task | "
-            "previous task reported={0} | "
-            "submission_upload_id={1}".format(
-                TaskProgressReport.CANCELLED, submission_upload_id
-            )
-        )
-        return TaskProgressReport.CANCELLED
-
-    if submission_upload is None:
-        logger.error(
-            "tasks.py | parse_csv_to_update_clean_submission_task | "
-            "no valid SubmissionUpload available | "
-            "submission_upload_id={0}".format(submission_upload_id)
-        )
-        return TaskProgressReport.CANCELLED
-
-    report.submission = submission_upload.submission
-
-    with open(submission_upload.file.path, "r") as file:
-        molecular_requirements = parse_molecular_csv(
-            file,
-        )
-
-    path = os.path.join(
-        os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json"
-    )
-
-    with transaction.atomic():
-        submission_upload.submission.data["requirements"].update(molecular_requirements)
-
-        valid, full_errors = validate_data_full(
-            data=submission_upload.submission.data,
-            target=ENA_PANGAEA,
-            schema_location=path,
-        )
-
-        if not valid:
-            messages = [e.message for e in full_errors]
-            submission_upload.submission.data.update({"validation": messages})
-            report.task_exception_info = json.dumps({"validation": messages})
-
-        report.save()
-        submission_upload.submission.save()
-        if not valid:
-            # TODO: update tpr with errors from validation
-            return TaskProgressReport.CANCELLED
-        else:
-            return True
-
-
-@app.task(
-    base=SubmissionTask,
-    bind=True,
-    name="tasks.transfer_data_to_ena_task",
-    autoretry_for=(TransferServerError, TransferClientError),
-    retry_kwargs={"max_retries": SUBMISSION_MAX_RETRIES},
-    retry_backoff=SUBMISSION_RETRY_DELAY,
-    retry_jitter=True,
-)
-def transfer_data_to_ena_task(
-    self, prepare_result=None, submission_id=None, action="ADD"
-):
-    submission, site_configuration = get_submission_and_site_configuration(
-        submission_id=submission_id, task=self, include_closed=True
-    )
-    if submission == TaskProgressReport.CANCELLED:
-        return TaskProgressReport.CANCELLED
-    ena_submission_data = AuditableTextData.objects.assemble_ena_submission_data(
-        submission=submission
-    )
-    if ena_submission_data == {}:
-        return TaskProgressReport.CANCELLED
-    try:
-        response, request_id = send_submission_to_ena(
-            submission, site_configuration.ena_server, ena_submission_data, action
-        )
-        res = raise_transfer_server_exceptions(
-            response=response,
-            task=self,
-            broker_submission_id=submission.broker_submission_id,
-            max_retries=SUBMISSION_MAX_RETRIES,
-        )
-    except SoftTimeLimitExceeded as se:
-        logger.error(
-            "tasks.py | transfer_data_to_ena_task | "
-            "SoftTimeLimitExceeded | "
-            "submission_id={0} | error={1}".format(submission_id, se)
-        )
-        response = Response()
-    except ConnectionError as e:
-        logger.error(
-            msg="tasks.py | transfer_data_to_ena_task | connection_error "
-            "{}.url={} title={}".format(
-                e,
-                site_configuration.ena_server.url,
-                site_configuration.ena_server.title,
-            )
-        )
-        response = Response()
-    return str(request_id), response.status_code, smart_str(response.content)
 
 
 @app.task(
@@ -1148,7 +429,7 @@ def process_ena_response_task(
         submission.save()
         logger.info(
             msg="process_ena_response_task. ena reported error(s) "
-            "for submisison={}. refer to RequestLog={}".format(
+                "for submisison={}. refer to RequestLog={}".format(
                 submission.broker_submission_id, outgoing_request.request_id
             )
         )
@@ -1224,7 +505,7 @@ def add_accession_to_pangaea_issue_task(self, kwargs=None, submission_id=None):
             jira_client.add_comment(
                 key_or_issue=ticket_key,
                 text="ENA Accession No. of study {}. broker_submission_id: "
-                "{0}. {1}".format(study_pid.pid, submission.broker_submission_id),
+                     "{0}. {1}".format(study_pid.pid, submission.broker_submission_id),
                 is_internal=False,
             )
 
@@ -1283,7 +564,7 @@ def check_for_pangaea_doi_task(self, resource_credential_id=None):
     )
     logger.info(
         msg="check_for_pangaea_doi_task. pulling pangaea dois for {} "
-        "submissions".format(len(submissions))
+            "submissions".format(len(submissions))
     )
     # TODO: in general suboptimal to fetch sc for every submission in set, but neeeded, reconsider to refactor
     #   schedule in database etc.
@@ -1614,7 +895,7 @@ def add_posted_comment_to_issue_task(
     else:
         logger.info(
             msg="add_posted_comment_to_issue_task no tickets found. "
-            "submission_id={0} ".format(submission_id)
+                "submission_id={0} ".format(submission_id)
         )
 
         return retry_no_ticket_available_exception(
@@ -1642,7 +923,7 @@ def attach_to_submission_issue_task(
 ):
     logger.info(
         msg="attach_to_submission_issue_task. submission_id={0} | submission_upload_id={1}"
-        "".format(submission_id, submission_upload_id)
+            "".format(submission_id, submission_upload_id)
     )
 
     submission, site_configuration = get_submission_and_site_configuration(
@@ -1651,8 +932,8 @@ def attach_to_submission_issue_task(
     if submission == TaskProgressReport.CANCELLED:
         logger.info(
             msg="attach_to_submission_issue_task no Submission"
-            " found. return {2}. | submission_id={0} | submission_upload_id={1}"
-            "".format(submission_id, submission_upload_id, TaskProgressReport.CANCELLED)
+                " found. return {2}. | submission_id={0} | submission_upload_id={1}"
+                "".format(submission_id, submission_upload_id, TaskProgressReport.CANCELLED)
         )
         return TaskProgressReport.CANCELLED
 
@@ -1722,15 +1003,15 @@ def attach_to_submission_issue_task(
         else:
             logger.info(
                 msg="attach_to_submission_issue_task no SubmissionUpload"
-                " found. submission_id={0} | submission_upload_id={1}"
-                "".format(submission_id, submission_upload_id)
+                    " found. submission_id={0} | submission_upload_id={1}"
+                    "".format(submission_id, submission_upload_id)
             )
             return False
     else:
         logger.info(
             msg="attach_to_submission_issue_task no tickets found. "
-            "submission_id={0} | submission_upload_id={1}"
-            "".format(submission_id, submission_upload_id)
+                "submission_id={0} | submission_upload_id={1}"
+                "".format(submission_id, submission_upload_id)
         )
 
         return retry_no_ticket_available_exception(
@@ -1893,12 +1174,12 @@ def fetch_ena_reports_task(self):
                 )
                 logger.info(
                     msg="tasks.py | fetch_ena_reports_task | "
-                    "raise_transfer_server_exceptions result={0}".format(result)
+                        "raise_transfer_server_exceptions result={0}".format(result)
                 )
         except ConnectionError as e:
             logger.error(
                 msg="tasks.py | fetch_ena_reports_task | url={1} title={2} "
-                "| connection_error {0}".format(
+                    "| connection_error {0}".format(
                     e,
                     site_configuration.ena_report_server.url,
                     site_configuration.ena_report_server.title,
@@ -1917,7 +1198,7 @@ def update_resolver_accessions_task(self, previous_task_result=False):
     TaskProgressReport.objects.create_initial_report(submission=None, task=self)
     logger.info(
         msg="tasks.py | update_resolver_accessions_task "
-        "| previous_task_result={0}".format(previous_task_result)
+            "| previous_task_result={0}".format(previous_task_result)
     )
     if (
         previous_task_result == TaskProgressReport.CANCELLED
@@ -1925,19 +1206,19 @@ def update_resolver_accessions_task(self, previous_task_result=False):
     ):
         logger.info(
             msg="tasks.py | update_resolver_accessions_task "
-            "| error(s) in previous tasks | return={0}".format(previous_task_result)
+                "| error(s) in previous tasks | return={0}".format(previous_task_result)
         )
         mail_admins(
             subject='Failing update caused by error in "tasks.fetch_ena_reports_task"',
             message='Due to an error in "tasks.fetch_ena_reports_task" the execution'
-            "of {} was stopped.\nWARNING: Resolver tables are not "
-            "updated properly !".format(self.name),
+                    "of {} was stopped.\nWARNING: Resolver tables are not "
+                    "updated properly !".format(self.name),
         )
         return TaskProgressReport.CANCELLED, TaskProgressReport.CANCELLED
     success = update_resolver_accessions()
     logger.info(
         msg="tasks.py | update_resolver_accessions_task "
-        "| success={0}".format(success)
+            "| success={0}".format(success)
     )
 
     return success, previous_task_result
@@ -1952,7 +1233,7 @@ def update_persistent_identifier_report_status_task(self, previous_task_result=N
     TaskProgressReport.objects.create_initial_report(submission=None, task=self)
     logger.info(
         msg="tasks.py | update_persistent_identifier_report_status_task "
-        "| previous_task_result={0}".format(previous_task_result)
+            "| previous_task_result={0}".format(previous_task_result)
     )
     fetch_report_status = False
     try:
@@ -1965,19 +1246,19 @@ def update_persistent_identifier_report_status_task(self, previous_task_result=N
     ):
         logger.info(
             msg="tasks.py | update_resolver_accessions_task "
-            "| error(s) in previous tasks | return={0}".format(previous_task_result)
+                "| error(s) in previous tasks | return={0}".format(previous_task_result)
         )
         mail_admins(
             subject='Failing update caused by error in "tasks.fetch_ena_reports_task"',
             message='Due to an error in "tasks.fetch_ena_reports_task" the execution'
-            "of {} was stopped.\nWARNING: Persistent Identifier tables are not "
-            "updated properly !".format(self.name),
+                    "of {} was stopped.\nWARNING: Persistent Identifier tables are not "
+                    "updated properly !".format(self.name),
         )
         return TaskProgressReport.CANCELLED
     success = update_persistent_identifier_report_status()
     logger.info(
         msg="tasks.py | update_persistent_identifier_report_status_task "
-        "| success={0}".format(success)
+            "| success={0}".format(success)
     )
 
     return success
@@ -2112,7 +1393,7 @@ def check_for_submissions_without_helpdesk_issue_task(self):
     TaskProgressReport.objects.create_initial_report(submission=None, task=self)
     logger.info(
         msg="tasks.py |  check_for_submissions_without_helpdesk_issue_task |"
-        " start search"
+            " start search"
     )
     submissions_without_issue = (
         Submission.objects.get_submissions_without_primary_helpdesk_issue()
@@ -2120,8 +1401,8 @@ def check_for_submissions_without_helpdesk_issue_task(self):
     for sub in submissions_without_issue:
         logger.info(
             msg="tasks.py | check_for_submissions_without_helpdesk_issue_task "
-            "| no helpdesk issue for submission {} | "
-            "sending mail to admins".format(sub.broker_submission_id)
+                "| no helpdesk issue for submission {} | "
+                "sending mail to admins".format(sub.broker_submission_id)
         )
         mail_admins(
             subject=NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE.format(
@@ -2193,9 +1474,9 @@ def check_for_user_without_site_configuration_task(self):
     for u in users_without_config:
         logger.info(
             msg="tasks.py | check_for_user_without_site_configuration_task | "
-            "found user {0} without site_configuration | "
-            "assign site_configuration"
-            " {1}".format(u.username, site_config.title)
+                "found user {0} without site_configuration | "
+                "assign site_configuration"
+                " {1}".format(u.username, site_config.title)
         )
         u.site_configuration = site_config
         u.save()
@@ -2283,7 +1564,7 @@ def notify_curators_on_embargo_ends_task(self):
 
         send_mail(
             subject="%s%s"
-            % (settings.EMAIL_SUBJECT_PREFIX, " Embargo expiry notification"),
+                    % (settings.EMAIL_SUBJECT_PREFIX, " Embargo expiry notification"),
             message=message,
             from_email=settings.SERVER_EMAIL,
             recipient_list=curators_emails,
@@ -2376,7 +1657,7 @@ def update_ena_embargo_task(self, prev=None, submission_id=None):
         mail_admins(
             subject="update_ena_embargo_task failed",
             message="Failed to get submission and site_config for the task.\n"
-            "Submission_id: {0}".format(submission_id),
+                    "Submission_id: {0}".format(submission_id),
         )
         return TaskProgressReport.CANCELLED
 
@@ -2819,8 +2100,8 @@ def atax_submission_parse_csv_upload_to_xml_task(
 
             logger.info(
                 msg="atax_submission_parse_csv_upload_to_xml_task. no transformed xml upload data.  | "
-                " for {0},  return={1}  | "
-                "submission_id={2}".format(
+                    " for {0},  return={1}  | "
+                    "submission_id={2}".format(
                     str(file_key), TaskProgressReport.CANCELLED, submission_id
                 )
             )
@@ -3162,7 +2443,7 @@ def prepare_ena_submission_data_task(self, prev_task_result=None, submission_id=
     else:
         logger.info(
             msg="prepare_ena_submission_data_task. no brokerobjects. "
-            "return={0} "
-            "submission_id={1}".format(TaskProgressReport.CANCELLED, submission_id)
+                "return={0} "
+                "submission_id={1}".format(TaskProgressReport.CANCELLED, submission_id)
         )
         return TaskProgressReport.CANCELLED
