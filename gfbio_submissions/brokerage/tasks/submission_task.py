@@ -3,7 +3,7 @@ import logging
 
 import celery
 
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
+from ..models.task_progress_report import TaskProgressReport
 
 logger = logging.getLogger(__name__)
 
