@@ -1,14 +1,24 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from config.celery_app import app
-from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY, \
-    SUBMISSION_COMMENT_TEMPLATE
-from gfbio_submissions.brokerage.exceptions.transfer_exceptions import TransferServerError, TransferClientError
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks import logger
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.jira import JiraClient
-from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration, jira_error_auto_retry, \
-    retry_no_ticket_available_exception
+from ...configuration.settings import (
+    SUBMISSION_MAX_RETRIES,
+    SUBMISSION_RETRY_DELAY,
+    SUBMISSION_COMMENT_TEMPLATE,
+)
+from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
+from ...models.task_progress_report import TaskProgressReport
+
+logger = logging.getLogger(__name__)
+
+from ...tasks.submission_task import SubmissionTask
+from ...utils.jira import JiraClient
+from ...utils.task_utils import (
+    get_submission_and_site_configuration,
+    jira_error_auto_retry,
+    retry_no_ticket_available_exception,
+)
 
 
 @app.task(
@@ -49,7 +59,7 @@ def add_posted_comment_to_issue_task(
     else:
         logger.info(
             msg="add_posted_comment_to_issue_task no tickets found. "
-                "submission_id={0} ".format(submission_id)
+            "submission_id={0} ".format(submission_id)
         )
 
         return retry_no_ticket_available_exception(

@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from config.celery_app import app
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks import logger
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.ena import execute_update_accession_objects_chain
+from ...models.task_progress_report import TaskProgressReport
+from ...tasks.submission_task import SubmissionTask
+from ...utils.ena import execute_update_accession_objects_chain
+
+logger = logging.getLogger(__name__)
 
 
 @app.task(

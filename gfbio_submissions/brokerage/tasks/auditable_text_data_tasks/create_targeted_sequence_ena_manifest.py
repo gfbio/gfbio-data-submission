@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from config.celery_app import app
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks import logger
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.ena_cli import create_ena_manifest_text_data
-from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration
+from ...models.task_progress_report import TaskProgressReport
+from ...tasks.submission_task import SubmissionTask
+from ...utils.ena_cli import create_ena_manifest_text_data
+from ...utils.task_utils import get_submission_and_site_configuration
+
+logger = logging.getLogger(__name__)
 
 
 @app.task(

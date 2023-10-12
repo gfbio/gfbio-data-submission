@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from config.celery_app import app
-from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
-from gfbio_submissions.brokerage.exceptions.transfer_exceptions import TransferServerError, TransferClientError
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.task_utils import send_data_to_ena_for_validation_or_test
+from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
+from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
+from ...tasks.submission_task import SubmissionTask
+from ...utils.task_utils import send_data_to_ena_for_validation_or_test
 
 
 @app.task(

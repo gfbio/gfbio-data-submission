@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+
+import logging
+
 from django.core.mail import mail_admins
 
 from config.celery_app import app
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks import logger
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.ena import update_persistent_identifier_report_status
+from ...models.task_progress_report import TaskProgressReport
+from ...tasks.submission_task import SubmissionTask
+from ...utils.ena import update_persistent_identifier_report_status
+
+logger = logging.getLogger(__name__)
 
 
 @app.task(
@@ -17,7 +21,7 @@ def update_persistent_identifier_report_status_task(self, previous_task_result=N
     TaskProgressReport.objects.create_initial_report(submission=None, task=self)
     logger.info(
         msg="tasks.py | update_persistent_identifier_report_status_task "
-            "| previous_task_result={0}".format(previous_task_result)
+        "| previous_task_result={0}".format(previous_task_result)
     )
     fetch_report_status = False
     try:
@@ -30,19 +34,19 @@ def update_persistent_identifier_report_status_task(self, previous_task_result=N
     ):
         logger.info(
             msg="tasks.py | update_resolver_accessions_task "
-                "| error(s) in previous tasks | return={0}".format(previous_task_result)
+            "| error(s) in previous tasks | return={0}".format(previous_task_result)
         )
         mail_admins(
             subject='Failing update caused by error in "tasks.fetch_ena_reports_task"',
             message='Due to an error in "tasks.fetch_ena_reports_task" the execution'
-                    "of {} was stopped.\nWARNING: Persistent Identifier tables are not "
-                    "updated properly !".format(self.name),
+            "of {} was stopped.\nWARNING: Persistent Identifier tables are not "
+            "updated properly !".format(self.name),
         )
         return TaskProgressReport.CANCELLED
     success = update_persistent_identifier_report_status()
     logger.info(
         msg="tasks.py | update_persistent_identifier_report_status_task "
-            "| success={0}".format(success)
+        "| success={0}".format(success)
     )
 
     return success

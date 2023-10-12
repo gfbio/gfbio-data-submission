@@ -1,18 +1,24 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from billiard.exceptions import SoftTimeLimitExceeded
 from django.utils.encoding import smart_str
 from requests import Response, ConnectionError
 
 from config.celery_app import app
-from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
-from gfbio_submissions.brokerage.exceptions.transfer_exceptions import TransferServerError, TransferClientError
-from gfbio_submissions.brokerage.models.auditable_text_data import AuditableTextData
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks import logger
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.ena import send_submission_to_ena
-from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration, \
-    raise_transfer_server_exceptions
+from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
+from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
+from ...models.auditable_text_data import AuditableTextData
+from ...models.task_progress_report import TaskProgressReport
+
+logger = logging.getLogger(__name__)
+
+from ...tasks.submission_task import SubmissionTask
+from ...utils.ena import send_submission_to_ena
+from ...utils.task_utils import (
+    get_submission_and_site_configuration,
+    raise_transfer_server_exceptions,
+)
 
 
 @app.task(
@@ -57,7 +63,7 @@ def transfer_data_to_ena_task(
     except ConnectionError as e:
         logger.error(
             msg="tasks.py | transfer_data_to_ena_task | connection_error "
-                "{}.url={} title={}".format(
+            "{}.url={} title={}".format(
                 e,
                 site_configuration.ena_server.url,
                 site_configuration.ena_server.title,

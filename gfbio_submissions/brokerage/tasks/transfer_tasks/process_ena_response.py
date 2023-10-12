@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from config.celery_app import app
-from gfbio_submissions.brokerage.models.broker_object import BrokerObject
-from gfbio_submissions.brokerage.models.submission import Submission
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks import logger
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.ena import parse_ena_submission_response
-from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration
+from ...models.broker_object import BrokerObject
+from ...models.submission import Submission
+from ...models.task_progress_report import TaskProgressReport
+
+logger = logging.getLogger(__name__)
+
+from ...tasks.submission_task import SubmissionTask
+from ...utils.ena import parse_ena_submission_response
+from ...utils.task_utils import get_submission_and_site_configuration
 from gfbio_submissions.generic.models import RequestLog
 
 
@@ -66,7 +70,7 @@ def process_ena_response_task(
         submission.save()
         logger.info(
             msg="process_ena_response_task. ena reported error(s) "
-                "for submisison={}. refer to RequestLog={}".format(
+            "for submisison={}. refer to RequestLog={}".format(
                 submission.broker_submission_id, outgoing_request.request_id
             )
         )

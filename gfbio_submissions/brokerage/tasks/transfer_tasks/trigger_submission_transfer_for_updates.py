@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from config.celery_app import app
-from gfbio_submissions.brokerage.models.submission import Submission
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks import logger
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.submission_transfer import SubmissionTransferHandler
-from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration
+from ...models.submission import Submission
+from ...models.task_progress_report import TaskProgressReport
+
+logger = logging.getLogger(__name__)
+
+from ...tasks.submission_task import SubmissionTask
+from ...utils.submission_transfer import SubmissionTransferHandler
+from ...utils.task_utils import get_submission_and_site_configuration
 
 # FIXME: redundant/duplicate code with trigger_submission_transfer_for_updates. Refactor !
+
 
 @app.task(
     base=SubmissionTask,

@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from config.celery_app import app
-from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
-from gfbio_submissions.brokerage.exceptions.transfer_exceptions import TransferServerError, TransferClientError
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks import logger
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.jira import JiraClient
-from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration, jira_error_auto_retry, \
-    retry_no_ticket_available_exception
+from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
+from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
+from ...models.task_progress_report import TaskProgressReport
+
+logger = logging.getLogger(__name__)
+
+from ...tasks.submission_task import SubmissionTask
+from ...utils.jira import JiraClient
+from ...utils.task_utils import (
+    get_submission_and_site_configuration,
+    jira_error_auto_retry,
+    retry_no_ticket_available_exception,
+)
 
 
 @app.task(
@@ -27,7 +34,7 @@ def attach_to_submission_issue_task(
 ):
     logger.info(
         msg="attach_to_submission_issue_task. submission_id={0} | submission_upload_id={1}"
-            "".format(submission_id, submission_upload_id)
+        "".format(submission_id, submission_upload_id)
     )
 
     submission, site_configuration = get_submission_and_site_configuration(
@@ -36,8 +43,8 @@ def attach_to_submission_issue_task(
     if submission == TaskProgressReport.CANCELLED:
         logger.info(
             msg="attach_to_submission_issue_task no Submission"
-                " found. return {2}. | submission_id={0} | submission_upload_id={1}"
-                "".format(submission_id, submission_upload_id, TaskProgressReport.CANCELLED)
+            " found. return {2}. | submission_id={0} | submission_upload_id={1}"
+            "".format(submission_id, submission_upload_id, TaskProgressReport.CANCELLED)
         )
         return TaskProgressReport.CANCELLED
 
@@ -107,15 +114,15 @@ def attach_to_submission_issue_task(
         else:
             logger.info(
                 msg="attach_to_submission_issue_task no SubmissionUpload"
-                    " found. submission_id={0} | submission_upload_id={1}"
-                    "".format(submission_id, submission_upload_id)
+                " found. submission_id={0} | submission_upload_id={1}"
+                "".format(submission_id, submission_upload_id)
             )
             return False
     else:
         logger.info(
             msg="attach_to_submission_issue_task no tickets found. "
-                "submission_id={0} | submission_upload_id={1}"
-                "".format(submission_id, submission_upload_id)
+            "submission_id={0} | submission_upload_id={1}"
+            "".format(submission_id, submission_upload_id)
         )
 
         return retry_no_ticket_available_exception(

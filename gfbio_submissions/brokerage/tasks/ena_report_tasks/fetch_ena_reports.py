@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from kombu.utils import json
 from requests import ConnectionError
 
 from config.celery_app import app
-from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
-from gfbio_submissions.brokerage.exceptions.transfer_exceptions import TransferServerError, TransferClientError
-from gfbio_submissions.brokerage.models.ena_report import EnaReport
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks import logger
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.ena import fetch_ena_report
-from gfbio_submissions.brokerage.utils.task_utils import raise_transfer_server_exceptions
 from gfbio_submissions.generic.models import SiteConfiguration
+from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
+from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
+from ...models.ena_report import EnaReport
+from ...models.task_progress_report import TaskProgressReport
+from ...tasks.submission_task import SubmissionTask
+from ...utils.ena import fetch_ena_report
+from ...utils.task_utils import raise_transfer_server_exceptions
+
+logger = logging.getLogger(__name__)
 
 
 @app.task(
@@ -58,12 +61,12 @@ def fetch_ena_reports_task(self):
                 )
                 logger.info(
                     msg="tasks.py | fetch_ena_reports_task | "
-                        "raise_transfer_server_exceptions result={0}".format(result)
+                    "raise_transfer_server_exceptions result={0}".format(result)
                 )
         except ConnectionError as e:
             logger.error(
                 msg="tasks.py | fetch_ena_reports_task | url={1} title={2} "
-                    "| connection_error {0}".format(
+                "| connection_error {0}".format(
                     e,
                     site_configuration.ena_report_server.url,
                     site_configuration.ena_report_server.title,

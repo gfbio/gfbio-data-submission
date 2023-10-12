@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from kombu.utils import json
 
 from config.celery_app import app
-from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
-from gfbio_submissions.brokerage.exceptions.transfer_exceptions import TransferServerError, TransferClientError
-from gfbio_submissions.brokerage.models.submission import Submission
-from gfbio_submissions.brokerage.models.submission_upload import SubmissionUpload
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks import logger
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.schema_validation import validate_atax_data_is_valid
+from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
+from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
+from ...models.submission import Submission
+from ...models.submission_upload import SubmissionUpload
+from ...models.task_progress_report import TaskProgressReport
+from ...tasks.submission_task import SubmissionTask
+from ...utils.schema_validation import validate_atax_data_is_valid
+
+logger = logging.getLogger(__name__)
 
 
 @app.task(

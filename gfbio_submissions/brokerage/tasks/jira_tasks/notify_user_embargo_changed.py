@@ -7,8 +7,12 @@ from ...exceptions.transfer_exceptions import TransferServerError, TransferClien
 from ...models.task_progress_report import TaskProgressReport
 from ...tasks.submission_task import SubmissionTask
 from ...utils.jira import JiraClient
-from ...utils.task_utils import get_submission_and_site_configuration, \
-    get_jira_comment_template, jira_comment_replace, jira_error_auto_retry
+from ...utils.task_utils import (
+    get_submission_and_site_configuration,
+    get_jira_comment_template,
+    jira_comment_replace,
+    jira_error_auto_retry,
+)
 
 logger = logging.getLogger(__name__)
 

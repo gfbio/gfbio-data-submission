@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 import datetime
+import logging
 import textwrap
 
 from django.core.mail import mail_admins
 from pytz import timezone
 
 from config.celery_app import app
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks import logger
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration
+from ...models.task_progress_report import TaskProgressReport
+
+logger = logging.getLogger(__name__)
+
+from ...tasks.submission_task import SubmissionTask
+from ...utils.task_utils import get_submission_and_site_configuration
 from gfbio_submissions.generic.utils import logged_requests
 
 
@@ -30,7 +33,7 @@ def update_ena_embargo_task(self, prev=None, submission_id=None):
         mail_admins(
             subject="update_ena_embargo_task failed",
             message="Failed to get submission and site_config for the task.\n"
-                    "Submission_id: {0}".format(submission_id),
+            "Submission_id: {0}".format(submission_id),
         )
         return TaskProgressReport.CANCELLED
 

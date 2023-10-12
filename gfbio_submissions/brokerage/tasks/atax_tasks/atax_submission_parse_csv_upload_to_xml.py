@@ -1,18 +1,24 @@
 # -*- coding: utf-8 -*-
+import logging
 import math as m
 import os
 
 from config.celery_app import app
-from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
-from gfbio_submissions.brokerage.exceptions.transfer_exceptions import TransferServerError, TransferClientError
-from gfbio_submissions.brokerage.models.submission import Submission
-from gfbio_submissions.brokerage.models.submission_upload import SubmissionUpload
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks import logger
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.atax import analyze_filename_and_type, parse_taxonomic_csv_specimen, \
-    parse_taxonomic_csv_measurement, parse_taxonomic_csv_multimedia
-from gfbio_submissions.brokerage.utils.csv_atax import store_atax_data_as_auditable_text_data
+from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
+from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
+from ...models.submission import Submission
+from ...models.submission_upload import SubmissionUpload
+from ...models.task_progress_report import TaskProgressReport
+from ...tasks.submission_task import SubmissionTask
+from ...utils.atax import (
+    analyze_filename_and_type,
+    parse_taxonomic_csv_specimen,
+    parse_taxonomic_csv_measurement,
+    parse_taxonomic_csv_multimedia,
+)
+from ...utils.csv_atax import store_atax_data_as_auditable_text_data
+
+logger = logging.getLogger(__name__)
 
 
 @app.task(
@@ -161,8 +167,8 @@ def atax_submission_parse_csv_upload_to_xml_task(
 
             logger.info(
                 msg="atax_submission_parse_csv_upload_to_xml_task. no transformed xml upload data.  | "
-                    " for {0},  return={1}  | "
-                    "submission_id={2}".format(
+                " for {0},  return={1}  | "
+                "submission_id={2}".format(
                     str(file_key), TaskProgressReport.CANCELLED, submission_id
                 )
             )

@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from config.celery_app import app
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks import logger
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.submission_transfer import SubmissionTransferHandler
-from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration
+from ...models.task_progress_report import TaskProgressReport
+
+logger = logging.getLogger(__name__)
+
+from ...tasks.submission_task import SubmissionTask
+from ...utils.submission_transfer import SubmissionTransferHandler
+from ...utils.task_utils import get_submission_and_site_configuration
 
 
 @app.task(
@@ -12,7 +16,9 @@ from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site
     bind=True,
     name="tasks.trigger_submission_transfer",
 )
-def trigger_submission_transfer_task(self, previous_task_result=None, submission_id=None):
+def trigger_submission_transfer_task(
+    self, previous_task_result=None, submission_id=None
+):
     molecular_data_available = False
     check_performed = False
     messages = []

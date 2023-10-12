@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from config.celery_app import app
-from gfbio_submissions.brokerage.configuration.settings import PANGAEA_JIRA_TICKET
-from gfbio_submissions.brokerage.models.submission import Submission
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks import logger
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.jira import JiraClient
-from gfbio_submissions.brokerage.utils.pangaea import pull_pangaea_dois
+from ...configuration.settings import PANGAEA_JIRA_TICKET
+from ...models.submission import Submission
+from ...models.task_progress_report import TaskProgressReport
+
+logger = logging.getLogger(__name__)
+
+from ...tasks.submission_task import SubmissionTask
+from ...utils.jira import JiraClient
+from ...utils.pangaea import pull_pangaea_dois
 from gfbio_submissions.generic.models import SiteConfiguration
 
 
@@ -23,7 +27,7 @@ def check_for_pangaea_doi_task(self, resource_credential_id=None):
     )
     logger.info(
         msg="check_for_pangaea_doi_task. pulling pangaea dois for {} "
-            "submissions".format(len(submissions))
+        "submissions".format(len(submissions))
     )
     # TODO: in general suboptimal to fetch sc for every submission in set, but neeeded, reconsider to refactor
     #   schedule in database etc.

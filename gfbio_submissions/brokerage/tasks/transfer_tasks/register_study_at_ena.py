@@ -1,17 +1,23 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from django.utils.encoding import smart_str
 from requests import ConnectionError, Response
 
 from config.celery_app import app
-from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
-from gfbio_submissions.brokerage.exceptions.transfer_exceptions import TransferServerError, TransferClientError
-from gfbio_submissions.brokerage.models.broker_object import BrokerObject
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks import logger
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.ena import register_study_at_ena
-from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration, \
-    raise_transfer_server_exceptions
+from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
+from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
+from ...models.broker_object import BrokerObject
+from ...models.task_progress_report import TaskProgressReport
+
+logger = logging.getLogger(__name__)
+
+from ...tasks.submission_task import SubmissionTask
+from ...utils.ena import register_study_at_ena
+from ...utils.task_utils import (
+    get_submission_and_site_configuration,
+    raise_transfer_server_exceptions,
+)
 
 
 @app.task(

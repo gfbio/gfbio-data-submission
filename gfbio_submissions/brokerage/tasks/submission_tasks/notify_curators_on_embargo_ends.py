@@ -2,10 +2,10 @@
 import datetime
 
 from config.celery_app import app
-from gfbio_submissions.brokerage.models.submission import Submission
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
 from gfbio_submissions.users.models import User
+from ...models.submission import Submission
+from ...models.task_progress_report import TaskProgressReport
+from ...tasks.submission_task import SubmissionTask
 
 
 @app.task(
@@ -76,7 +76,7 @@ def notify_curators_on_embargo_ends_task(self):
 
         send_mail(
             subject="%s%s"
-                    % (settings.EMAIL_SUBJECT_PREFIX, " Embargo expiry notification"),
+            % (settings.EMAIL_SUBJECT_PREFIX, " Embargo expiry notification"),
             message=message,
             from_email=settings.SERVER_EMAIL,
             recipient_list=curators_emails,

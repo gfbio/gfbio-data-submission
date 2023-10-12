@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from django.db import transaction
 
 from config.celery_app import app
-from gfbio_submissions.brokerage.models.submission_upload import SubmissionUpload
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks import logger
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
+from ...models.submission_upload import SubmissionUpload
+from ...models.task_progress_report import TaskProgressReport
+
+logger = logging.getLogger(__name__)
+
+from ...tasks.submission_task import SubmissionTask
 
 
 @app.task(

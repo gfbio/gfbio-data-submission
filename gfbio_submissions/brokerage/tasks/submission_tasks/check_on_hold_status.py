@@ -1,15 +1,21 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from django.core.mail import mail_admins
 
 from config.celery_app import app
 from config.settings.base import HOST_URL_ROOT, ADMIN_URL
-from gfbio_submissions.brokerage.configuration.settings import APPROVAL_EMAIL_SUBJECT_TEMPLATE, \
-    APPROVAL_EMAIL_MESSAGE_TEMPLATE
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks import logger
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.submission_transfer import SubmissionTransferHandler
-from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration
+from ...configuration.settings import (
+    APPROVAL_EMAIL_SUBJECT_TEMPLATE,
+    APPROVAL_EMAIL_MESSAGE_TEMPLATE,
+)
+from ...models.task_progress_report import TaskProgressReport
+
+logger = logging.getLogger(__name__)
+
+from ...tasks.submission_task import SubmissionTask
+from ...utils.submission_transfer import SubmissionTransferHandler
+from ...utils.task_utils import get_submission_and_site_configuration
 
 
 @app.task(
@@ -27,9 +33,9 @@ def check_on_hold_status_task(self, previous_task_result=None, submission_id=Non
     if site_configuration.release_submissions:
         logger.info(
             msg="check_on_hold_status_task. submission pk={0}. "
-                "site_config pk={1}. site_configuration.release_submissions"
-                "={2}. execute submission."
-                "".format(
+            "site_config pk={1}. site_configuration.release_submissions"
+            "={2}. execute submission."
+            "".format(
                 submission_id,
                 site_configuration.pk,
                 site_configuration.release_submissions,
@@ -44,9 +50,9 @@ def check_on_hold_status_task(self, previous_task_result=None, submission_id=Non
             # email admins, then do smth. to trigger chain once ok
             logger.info(
                 msg="check_on_hold_status_task. submission pk={0}. "
-                    "site_config pk={1}. site_configuration.release_submissions"
-                    "={2}. send mail to admins."
-                    "".format(
+                "site_config pk={1}. site_configuration.release_submissions"
+                "={2}. send mail to admins."
+                "".format(
                     submission_id,
                     site_configuration.pk,
                     site_configuration.release_submissions,

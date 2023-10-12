@@ -2,15 +2,19 @@
 import datetime
 
 from config.celery_app import app
-from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
-from gfbio_submissions.brokerage.exceptions.transfer_exceptions import TransferServerError, TransferClientError
-from gfbio_submissions.brokerage.models.submission import Submission
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.jira import JiraClient
-from gfbio_submissions.brokerage.utils.task_utils import get_jira_comment_template, \
-    get_submission_and_site_configuration, jira_comment_replace, jira_error_auto_retry
 from gfbio_submissions.generic.models import SiteConfiguration
+from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
+from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
+from ...models.submission import Submission
+from ...models.task_progress_report import TaskProgressReport
+from ...tasks.submission_task import SubmissionTask
+from ...utils.jira import JiraClient
+from ...utils.task_utils import (
+    get_jira_comment_template,
+    get_submission_and_site_configuration,
+    jira_comment_replace,
+    jira_error_auto_retry,
+)
 
 
 @app.task(

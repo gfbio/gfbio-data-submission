@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 from config.celery_app import app
-from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
-from gfbio_submissions.brokerage.exceptions.transfer_exceptions import TransferServerError, TransferClientError
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.jira import JiraClient
-from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration, jira_error_auto_retry
+from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
+from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
+from ...models.task_progress_report import TaskProgressReport
+from ...tasks.submission_task import SubmissionTask
+from ...utils.jira import JiraClient
+from ...utils.task_utils import (
+    get_submission_and_site_configuration,
+    jira_error_auto_retry,
+)
 
 
 @app.task(
@@ -35,7 +38,7 @@ def add_accession_to_pangaea_issue_task(self, kwargs=None, submission_id=None):
             jira_client.add_comment(
                 key_or_issue=ticket_key,
                 text="ENA Accession No. of study {}. broker_submission_id: "
-                     "{0}. {1}".format(study_pid.pid, submission.broker_submission_id),
+                "{0}. {1}".format(study_pid.pid, submission.broker_submission_id),
                 is_internal=False,
             )
 

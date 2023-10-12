@@ -2,9 +2,9 @@
 from django.db import transaction
 
 from config.celery_app import app
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration
+from ...models.task_progress_report import TaskProgressReport
+from ...tasks.submission_task import SubmissionTask
+from ...utils.task_utils import get_submission_and_site_configuration
 
 
 @app.task(

@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from django.core.mail import mail_admins
 
 from config.celery_app import app
-from gfbio_submissions.brokerage.configuration.settings import NO_SITE_CONFIG_EMAIL_SUBJECT_TEMPLATE
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks import logger
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
+from ...configuration.settings import NO_SITE_CONFIG_EMAIL_SUBJECT_TEMPLATE
+from ...models.task_progress_report import TaskProgressReport
+
+logger = logging.getLogger(__name__)
+
+from ...tasks.submission_task import SubmissionTask
 from gfbio_submissions.generic.models import SiteConfiguration
 from gfbio_submissions.users.models import User
 
@@ -26,9 +30,9 @@ def check_for_user_without_site_configuration_task(self):
     for u in users_without_config:
         logger.info(
             msg="tasks.py | check_for_user_without_site_configuration_task | "
-                "found user {0} without site_configuration | "
-                "assign site_configuration"
-                " {1}".format(u.username, site_config.title)
+            "found user {0} without site_configuration | "
+            "assign site_configuration"
+            " {1}".format(u.username, site_config.title)
         )
         u.site_configuration = site_config
         u.save()

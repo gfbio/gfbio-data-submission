@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from django.core.mail import mail_admins
 
 from config.celery_app import app
-from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET, \
-    NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE, NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE
-from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
-from gfbio_submissions.brokerage.tasks import logger
-from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
-from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration
+from ...configuration.settings import (
+    GFBIO_HELPDESK_TICKET,
+    NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE,
+    NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE,
+)
+from ...models.task_progress_report import TaskProgressReport
+
+logger = logging.getLogger(__name__)
+
+from ...tasks.submission_task import SubmissionTask
+from ...utils.task_utils import get_submission_and_site_configuration
 
 
 @app.task(
