@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import mixins, generics, status
 from rest_framework.response import Response
 
-from gfbio_submissions.generic.models import RequestLog
+from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.generic.serializers import JiraHookRequestSerializer
 from ..forms.jira_issue_update_query_form import JiraIssueUpdateQueryForm
 from ..permissions.api_allowed_hosts import APIAllowedHosts

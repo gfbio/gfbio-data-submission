@@ -4,11 +4,9 @@ from django.test import TestCase
 
 from config.settings.base import ADMINS
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
-from gfbio_submissions.generic.models import (
-    SiteConfiguration,
-    ResourceCredential,
-    TicketLabel,
-)
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
+from gfbio_submissions.generic.models.ticket_label import TicketLabel
 from gfbio_submissions.users.models import User
 
 
@@ -41,15 +39,9 @@ class SiteConfigurationTest(TestCase):
             comment="Default configuration",
         )
         User.objects.create(username="user1", site_configuration=site_conf)
-        TicketLabel.objects.create(
-            site_configuration=site_conf, label_type="P", label="label_1"
-        )
-        TicketLabel.objects.create(
-            site_configuration=site_conf, label_type="G", label="label_2"
-        )
-        TicketLabel.objects.create(
-            site_configuration=site_conf, label_type="P", label="label_3"
-        )
+        TicketLabel.objects.create(site_configuration=site_conf, label_type="P", label="label_1")
+        TicketLabel.objects.create(site_configuration=site_conf, label_type="G", label="label_2")
+        TicketLabel.objects.create(site_configuration=site_conf, label_type="P", label="label_3")
 
     def test_db(self):
         site_configurations = SiteConfiguration.objects.all()
@@ -69,11 +61,7 @@ class SiteConfigurationTest(TestCase):
         self.assertEqual("Title", site_config.__str__())
 
     def test_get_hosting_site_configuration_fallback(self):
-        admin, email = (
-            ADMINS[0]
-            if len(ADMINS)
-            else ("admin", "default@{0}.de".format(HOSTING_SITE))
-        )
+        admin, email = ADMINS[0] if len(ADMINS) else ("admin", "default@{0}.de".format(HOSTING_SITE))
         site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()
         self.assertEqual(HOSTING_SITE, site_configuration.title)
         self.assertEqual(email, site_configuration.contact)
@@ -115,5 +103,5 @@ class SiteConfigurationTest(TestCase):
         labels = site_config.get_ticket_labels(label_type=TicketLabel.PANGAEA_JIRA)
         self.assertEqual(2, len(labels))
         self.assertTrue(isinstance(labels, list))
-        for l in labels:
-            self.assertTrue(isinstance(l, str))
+        for label in labels:
+            self.assertTrue(isinstance(label, str))

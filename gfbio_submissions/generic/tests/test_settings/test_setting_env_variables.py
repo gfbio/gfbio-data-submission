@@ -2,11 +2,10 @@
 import os
 from unittest import mock
 
-from django.test import TestCase, override_settings
-
-from config.settings.base import DJANGO_ADMINS, ADMINS
-
 import environ
+from django.test import TestCase
+
+from config.settings.base import ADMINS, DJANGO_ADMINS
 
 env = environ.Env()
 
@@ -40,21 +39,11 @@ class EnvVariablesTest(TestCase):
     @mock.patch.dict(os.environ, {"DJANGO_ADMINS": "John Doe:jdoe@it.de"})
     def test_admin_from_env(self):
         admins = env.list("DJANGO_ADMINS")
-        admins = [
-            ("""{}""".format(x.split(":")[0]), "{}".format(x.split(":")[1]))
-            for x in admins
-        ]
+        admins = [("""{}""".format(x.split(":")[0]), "{}".format(x.split(":")[1])) for x in admins]
         self.assertListEqual([("John Doe", "jdoe@it.de")], admins)
 
-    @mock.patch.dict(
-        os.environ, {"DJANGO_ADMINS": "John Doe:jdoe@it.de,Joe Plumber:jp@pl.com"}
-    )
+    @mock.patch.dict(os.environ, {"DJANGO_ADMINS": "John Doe:jdoe@it.de,Joe Plumber:jp@pl.com"})
     def test_admins_from_env(self):
         admins = env.list("DJANGO_ADMINS")
-        admins = [
-            ("""{}""".format(x.split(":")[0]), "{}".format(x.split(":")[1]))
-            for x in admins
-        ]
-        self.assertListEqual(
-            [("John Doe", "jdoe@it.de"), ("Joe Plumber", "jp@pl.com")], admins
-        )
+        admins = [("""{}""".format(x.split(":")[0]), "{}".format(x.split(":")[1])) for x in admins]
+        self.assertListEqual([("John Doe", "jdoe@it.de"), ("Joe Plumber", "jp@pl.com")], admins)

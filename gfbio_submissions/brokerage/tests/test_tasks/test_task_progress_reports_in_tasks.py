@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import responses
 
-from gfbio_submissions.generic.models import SiteConfiguration
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from .test_tasks_base import TestTasks
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport

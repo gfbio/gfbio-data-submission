@@ -18,11 +18,10 @@ from gfbio_submissions.brokerage.utils.ena import (
     send_submission_to_ena,
     release_study_on_ena,
 )
-from gfbio_submissions.generic.models import (
-    SiteConfiguration,
-    ResourceCredential,
-    RequestLog,
-)
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.request_log import RequestLog
+
 from gfbio_submissions.users.models import User
 from ...configuration.settings import DEFAULT_ENA_CENTER_NAME
 from ...models.broker_object import BrokerObject

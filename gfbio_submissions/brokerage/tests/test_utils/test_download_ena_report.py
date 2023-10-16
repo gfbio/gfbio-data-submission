@@ -9,7 +9,8 @@ from gfbio_submissions.brokerage.utils import csv
 from gfbio_submissions.brokerage.utils.ena import (
     download_submitted_run_files_to_string_io,
 )
-from gfbio_submissions.generic.models import SiteConfiguration, ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 
 
 class TestDownloadEnaReport(TestCase):

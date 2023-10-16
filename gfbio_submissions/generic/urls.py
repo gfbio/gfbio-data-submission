@@ -11,11 +11,7 @@ urlpatterns = [
         view=views.BrokerageValidationSchemaView.as_view(),
         name="brokerage_validation",
     ),
-    re_path(
-        route=r"schema/brokerage_api/$",
-        view=views.BrokerageAPISchemaView.as_view(),
-        name="brokerage_schema",
-    ),
+    re_path(route=r"schema/brokerage_api/$", view=views.BrokerageAPISchemaView.as_view(), name="brokerage_schema"),
     re_path(
         route=r"schema/brokerage_api_molecular/$",
         view=views.BrokerageMolecularAPISchemaView.as_view(),

@@ -6,21 +6,15 @@ from io import StringIO
 
 from django.conf import settings
 
-from gfbio_submissions.generic.models import RequestLog
-from ..models.auditable_text_data import AuditableTextData
+from gfbio_submissions.brokerage.models.auditable_text_data import AuditableTextData
+from gfbio_submissions.generic.models.request_log import RequestLog
 
 
 def create_ena_manifest_text_data(submission):
     try:
         study_bo = submission.brokerobject_set.filter(type="study").first()
-        study_pid = (
-            study_bo.persistentidentifier_set.filter(archive="ENA")
-            .filter(pid_type="PRJ")
-            .first()
-        )
-        upload = submission.submissionupload_set.filter(
-            file__endswith=".tsv.gz"
-        ).first()
+        study_pid = study_bo.persistentidentifier_set.filter(archive="ENA").filter(pid_type="PRJ").first()
+        upload = submission.submissionupload_set.filter(file__endswith=".tsv.gz").first()
     except AttributeError as ae:
         upload = None
         study_pid = None
@@ -33,16 +27,12 @@ def create_ena_manifest_text_data(submission):
 
     writer.writerow(("STUDY", study_pid.pid if study_pid else "*"))
     if study_bo and submission:
-        writer.writerow(
-            ("NAME", "{}:{}".format(study_bo.pk, submission.broker_submission_id))
-        )
+        writer.writerow(("NAME", "{}:{}".format(study_bo.pk, submission.broker_submission_id)))
     else:
         writer.writerow(("NAME", "*:*"))
     writer.writerow(("TAB", tab_file_path))
     writer.writerow(("AUTHORS", "Weber M., Kostadinov I.;"))
-    writer.writerow(
-        ("ADDRESS", "University of Bremen, Leobener Str. 5, 28359 Bremen, Germany")
-    )
+    writer.writerow(("ADDRESS", "University of Bremen, Leobener Str. 5, 28359 Bremen, Germany"))
     text_data, created = submission.auditabletextdata_set.update_or_create(
         name="MANIFEST",
         defaults={
@@ -55,23 +45,15 @@ def create_ena_manifest_text_data(submission):
 
 
 def store_manifest_to_filesystem(submission):
-    submission_folder = os.path.join(
-        settings.MEDIA_ROOT, str(submission.broker_submission_id)
-    )
+    submission_folder = os.path.join(settings.MEDIA_ROOT, str(submission.broker_submission_id))
     manifest_text_data = AuditableTextData.objects.get_ena_manifest_file(submission)
     if manifest_text_data:
-        with open(
-            "{0}{1}{2}".format(submission_folder, os.sep, manifest_text_data.name), "w"
-        ) as output:
+        with open("{0}{1}{2}".format(submission_folder, os.sep, manifest_text_data.name), "w") as output:
             output.write(manifest_text_data.text_data)
 
 
-def submit_targeted_sequences(
-    username, password, submission, center_name="GFBIO", test=True, validate=True
-):
-    submission_folder = os.path.join(
-        settings.MEDIA_ROOT, str(submission.broker_submission_id)
-    )
+def submit_targeted_sequences(username, password, submission, center_name="GFBIO", test=True, validate=True):
+    submission_folder = os.path.join(settings.MEDIA_ROOT, str(submission.broker_submission_id))
     manifest_path = os.path.join(submission_folder, "MANIFEST")
 
     command = [

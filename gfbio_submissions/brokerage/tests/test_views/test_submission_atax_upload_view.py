@@ -24,7 +24,8 @@ from gfbio_submissions.brokerage.tests.utils import (
     _get_taxonomic_min_data,
     _get_test_data_dir_path,
 )
-from gfbio_submissions.generic.models import SiteConfiguration, ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.users.models import User
 from ...models.broker_object import BrokerObject
 from ...models.submission import Submission

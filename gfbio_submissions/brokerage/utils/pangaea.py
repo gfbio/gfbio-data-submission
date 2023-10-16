@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from django.db import transaction
 
-from gfbio_submissions.generic.models import TicketLabel
+from gfbio_submissions.generic.models.ticket_label import TicketLabel
 from gfbio_submissions.generic.utils import logged_requests
 from ..configuration.settings import SUBMISSION_DELAY, CSV_WRITER_QUOTING, SEPARATOR
 from ..models.submission import Submission

@@ -12,7 +12,8 @@ from gfbio_submissions.brokerage.tests.utils import (
     _get_ena_data_without_runs,
 )
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
-from gfbio_submissions.generic.models import SiteConfiguration, ResourceCredential
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
 from ...configuration.settings import PANGAEA_JIRA_TICKET, GFBIO_HELPDESK_TICKET
 from ...models.broker_object import BrokerObject

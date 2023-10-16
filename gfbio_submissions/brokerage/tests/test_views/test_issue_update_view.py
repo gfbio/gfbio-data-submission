@@ -17,7 +17,7 @@ from gfbio_submissions.brokerage.tests.utils import (
     _get_ena_data,
     _get_ena_data_without_runs,
 )
-from gfbio_submissions.generic.models import RequestLog
+from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.users.models import User
 from ...models.additional_reference import AdditionalReference
 from ...models.broker_object import BrokerObject

@@ -15,7 +15,8 @@ from gfbio_submissions.brokerage.tests.utils import (
     _get_pangaea_comment_response,
     _get_pangaea_ticket_response,
 )
-from gfbio_submissions.generic.models import SiteConfiguration, RequestLog
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
+from gfbio_submissions.generic.models.request_log import RequestLog
 from .test_tasks_base import TestTasks
 from ...models.persistent_identifier import PersistentIdentifier
 from ...models.submission import Submission

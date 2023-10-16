@@ -31,11 +31,9 @@ from gfbio_submissions.brokerage.utils.ena_cli import (
     store_manifest_to_filesystem,
 )
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
-from gfbio_submissions.generic.models import (
-    SiteConfiguration,
-    ResourceCredential,
-    RequestLog,
-)
+from gfbio_submissions.generic.models.request_log import RequestLog
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.generic.utils import logged_requests
 from gfbio_submissions.users.models import User
 from ..configuration.settings import ENA, SUBMISSION_DELAY
@@ -843,7 +841,6 @@ class TestCLI(TestCase):
         from ..tasks.transfer_tasks.process_ena_response import process_ena_response_task
         from ..tasks.transfer_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
         from ..tasks.transfer_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
-
 
         submission_chain = (
             register_study_at_ena_task.s(submission_id=submission.pk).set(

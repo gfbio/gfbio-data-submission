@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 from ...tasks.submission_task import SubmissionTask
 from ...utils.ena import parse_ena_submission_response
 from ...utils.task_utils import get_submission_and_site_configuration
-from gfbio_submissions.generic.models import RequestLog
+from gfbio_submissions.generic.models.request_log import RequestLog
 
 
 @app.task(

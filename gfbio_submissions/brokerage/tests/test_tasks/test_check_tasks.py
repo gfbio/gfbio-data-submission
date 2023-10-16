@@ -8,7 +8,8 @@ from gfbio_submissions.brokerage.configuration.settings import (
     GFBIO_HELPDESK_TICKET,
 )
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
-from gfbio_submissions.generic.models import ResourceCredential, SiteConfiguration
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
 from ...configuration.settings import ENA
 from ...models.additional_reference import AdditionalReference

@@ -26,7 +26,8 @@ from gfbio_submissions.brokerage.utils.submission_transfer import (
 from gfbio_submissions.brokerage.utils.task_utils import (
     get_submission_and_site_configuration,
 )
-from gfbio_submissions.generic.models import SiteConfiguration, ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.users.models import User
 from ...configuration.settings import (
     JIRA_ISSUE_URL,

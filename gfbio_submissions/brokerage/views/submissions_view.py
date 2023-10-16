@@ -4,7 +4,7 @@ from django.urls import reverse
 from rest_framework import mixins, generics, permissions, status
 from rest_framework.authentication import TokenAuthentication, BasicAuthentication
 
-from gfbio_submissions.generic.models import RequestLog
+from gfbio_submissions.generic.models.request_log import RequestLog
 from ..configuration.settings import SUBMISSION_DELAY, SUBMISSION_ISSUE_CHECK_DELAY
 from ..models.submission import Submission
 from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly

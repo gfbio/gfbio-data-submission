@@ -3,7 +3,10 @@
 
 from django.contrib import admin
 
-from .models import TicketLabel, ResourceCredential, SiteConfiguration, RequestLog
+from .models.request_log import RequestLog
+from .models.resource_credential import ResourceCredential
+from .models.site_configuration import SiteConfiguration
+from .models.ticket_label import TicketLabel
 
 
 class RequestLogAdmin(admin.ModelAdmin):

@@ -17,7 +17,7 @@ from gfbio_submissions.brokerage.tests.utils import (
     _get_pangaea_attach_response,
     _get_jira_issue_response,
 )
-from gfbio_submissions.generic.models import SiteConfiguration
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from .test_tasks_base import TestTasks
 from ...models.auditable_text_data import AuditableTextData
 from ...models.submission import Submission

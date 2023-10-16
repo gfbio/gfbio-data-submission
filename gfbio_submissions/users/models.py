@@ -1,11 +1,11 @@
 from django.contrib.auth.models import AbstractUser
-from django.db import models, IntegrityError
-from django.db.models import CharField, BooleanField
+from django.db import IntegrityError, models
+from django.db.models import BooleanField, CharField
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from model_utils.models import TimeStampedModel
 
-from gfbio_submissions.generic.models import SiteConfiguration
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.managers import CustomUserManager
 
 
@@ -26,22 +26,22 @@ class User(AbstractUser):
         SiteConfiguration,
         null=True,
         blank=True,
-        related_name='configuration_users',
-        on_delete=models.SET_NULL)
+        related_name="configuration_users",
+        on_delete=models.SET_NULL,
+    )
 
     objects = CustomUserManager()
 
     def get_absolute_url(self):
         return reverse("users:detail", kwargs={"username": self.username})
 
-    def update_or_create_external_user_id(self, external_id, provider,
-                                          resolver_url=''):
+    def update_or_create_external_user_id(self, external_id, provider, resolver_url=""):
         default_vals = {
-            'external_id': external_id,
-            'provider': provider,
+            "external_id": external_id,
+            "provider": provider,
         }
         if len(resolver_url):
-            default_vals['resolver_url'] = resolver_url
+            default_vals["resolver_url"] = resolver_url
         try:
             return self.externaluserid_set.update_or_create(
                 external_id=external_id,
@@ -54,8 +54,7 @@ class User(AbstractUser):
     @classmethod
     def get_user_values_safe(cls, user_id):
         user_values = {}
-        user_set = cls.objects.filter(
-            pk=user_id).values('email', 'username')
+        user_set = cls.objects.filter(pk=user_id).values("email", "username")
         if len(user_set) == 1:
             user_values = user_set[0]
         return user_values
@@ -64,27 +63,24 @@ class User(AbstractUser):
 class ExternalUserId(TimeStampedModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     external_id = CharField(
-        null=False, blank=False, max_length=32,
-        help_text=_('Not Required. 32 characters or fewer. Has to be unique '
-                    'if not Null.'),
-    )
-    provider = CharField(
+        null=False,
+        blank=False,
         max_length=32,
-        help_text=_('Name of provider of this external id')
+        help_text=_("Not Required. 32 characters or fewer. Has to be unique if not Null."),
     )
+    provider = CharField(max_length=32, help_text=_("Name of provider of this external id"))
     resolver_url = models.URLField(
-        null=True, blank=True, max_length=64,
-        help_text=_('An URL to resolve the value of "external_id"')
+        null=True,
+        blank=True,
+        max_length=64,
+        help_text=_('An URL to resolve the value of "external_id"'),
     )
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['external_id', 'provider'],
-                                    name='unique_id_for_provider'),
-            models.UniqueConstraint(fields=['user', 'provider'],
-                                    name='unique_id_for_user'),
-
+            models.UniqueConstraint(fields=["external_id", "provider"], name="unique_id_for_provider"),
+            models.UniqueConstraint(fields=["user", "provider"], name="unique_id_for_user"),
         ]
 
     def __str__(self):
-        return '{}_{}'.format(self.user.username, self.provider)
+        return "{}_{}".format(self.user.username, self.provider)

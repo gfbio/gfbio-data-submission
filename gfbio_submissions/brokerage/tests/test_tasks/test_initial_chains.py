@@ -10,7 +10,8 @@ from django.test import TestCase
 from rest_framework.test import APIRequestFactory, APIClient
 
 from gfbio_submissions.brokerage.tests.utils import _get_submission_request_data
-from gfbio_submissions.generic.models import SiteConfiguration, ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.users.models import User
 from ...configuration.settings import (
     JIRA_ISSUE_URL,

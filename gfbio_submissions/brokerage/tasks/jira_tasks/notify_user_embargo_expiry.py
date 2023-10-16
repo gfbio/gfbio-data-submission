@@ -2,7 +2,7 @@
 import datetime
 
 from config.celery_app import app
-from gfbio_submissions.generic.models import SiteConfiguration
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
 from ...exceptions.transfer_exceptions import TransferServerError, TransferClientError
 from ...models.submission import Submission

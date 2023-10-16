@@ -10,7 +10,7 @@ from ...models.task_progress_report import TaskProgressReport
 logger = logging.getLogger(__name__)
 
 from ...tasks.submission_task import SubmissionTask
-from gfbio_submissions.generic.models import SiteConfiguration
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
 
 

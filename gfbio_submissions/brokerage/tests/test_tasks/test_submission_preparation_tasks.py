@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from unittest.mock import patch
 
-from gfbio_submissions.generic.models import SiteConfiguration
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from .test_tasks_base import TestTasks
 from ...models.broker_object import BrokerObject
 from ...models.submission import Submission

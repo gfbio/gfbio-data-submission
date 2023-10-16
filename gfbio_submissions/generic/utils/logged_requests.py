@@ -4,20 +4,12 @@ from uuid import uuid4
 
 import requests
 
-from ..models import RequestLog
+from ..models.request_log import RequestLog
 
 logger = logging.getLogger(__name__)
 
 
-def post(
-    url,
-    data=None,
-    json=None,
-    submission=None,
-    return_log_id=False,
-    request_id=uuid4(),
-    **kwargs
-):
+def post(url, data=None, json=None, submission=None, return_log_id=False, request_id=uuid4(), **kwargs):
     if len(RequestLog.objects.filter(request_id=request_id)) > 0:
         logger.info(
             "logged_requests.py | post | UUID={0} already exists | submission={1}".format(

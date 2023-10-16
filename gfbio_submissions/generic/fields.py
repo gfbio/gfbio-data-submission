@@ -4,8 +4,8 @@ from collections import OrderedDict
 
 import six
 from django import forms
-from django.db.models import JSONField
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db.models import JSONField
 
 
 # adapted from: https://github.com/yjmade/django-pgjsonb/blob/master/django_pgjsonb/fields.py
@@ -27,9 +27,7 @@ class JsonDictField(JSONField):
         db_index_options = kwargs.pop("db_index_options", {})
         if db_index:
             self.db_index_options = (
-                db_index_options
-                if isinstance(db_index_options, (list, tuple))
-                else [db_index_options]
+                db_index_options if isinstance(db_index_options, (list, tuple)) else [db_index_options]
             )
 
             kwargs["db_index"] = False  # to supress the system default create_index_sql
@@ -60,8 +58,6 @@ class OrderedJsonFormField(forms.CharField):
     empty_values = [None, ""]
 
     def __init__(self, *args, **kwargs):
-        # if 'widget' not in kwargs:
-        #     kwargs['widget'] = JSONWidget
         super(OrderedJsonFormField, self).__init__(*args, **kwargs)
 
     def to_python(self, value):
@@ -80,6 +76,4 @@ class OrderedJsonFormField(forms.CharField):
     def validate(self, value):
         # This is required in older django versions.
         if value in self.empty_values and self.required:
-            raise forms.ValidationError(
-                self.error_messages["required"], code="required"
-            )
+            raise forms.ValidationError(self.error_messages["required"], code="required")

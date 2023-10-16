@@ -15,7 +15,7 @@ from gfbio_submissions.brokerage.configuration.settings import (
     JIRA_ATTACHMENT_SUB_URL,
 )
 from gfbio_submissions.brokerage.utils.pangaea import get_pangaea_login_token
-from gfbio_submissions.generic.models import ResourceCredential
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 
 
 class TestGFBioJiraApi(TestCase):

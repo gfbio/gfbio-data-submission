@@ -5,14 +5,14 @@ from urllib.parse import quote
 
 from django.conf import settings
 
-from ..configuration.settings import (
+from gfbio_submissions.brokerage.configuration.settings import (
     GFBIO_LICENSE_MAPPINGS,
+    JIRA_FALLBACK_EMAIL,
+    JIRA_FALLBACK_USERNAME,
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE,
     JIRA_USERNAME_URL_TEMPLATE,
-    JIRA_FALLBACK_USERNAME,
-    JIRA_FALLBACK_EMAIL,
 )
-from gfbio_submissions.generic.models import SiteConfiguration
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.generic.utils import logged_requests
 
 logger = logging.getLogger(__name__)
@@ -21,9 +21,7 @@ logger = logging.getLogger(__name__)
 def get_gfbio_helpdesk_username(user_name, email, fullname=""):
     url = JIRA_USERNAME_URL_TEMPLATE.format(user_name, email)
     if len(fullname):
-        url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
-            user_name, email, quote(fullname)
-        )
+        url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(user_name, email, quote(fullname))
     return logged_requests.get(
         url=url,
         auth=(
@@ -33,9 +31,7 @@ def get_gfbio_helpdesk_username(user_name, email, fullname=""):
     )
 
 
-def gfbio_prepare_create_helpdesk_payload(
-    site_config, submission, reporter={}, prepare_for_update=False
-):
+def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}, prepare_for_update=False):
     requirements = submission.data.get("requirements", {})
     if reporter is None:
         reporter = {
@@ -82,11 +78,7 @@ def gfbio_prepare_create_helpdesk_payload(
     #     requirements.get('data_center', ''),
     #     GFBIO_REQUEST_TYPE_MAPPINGS.get('default', '')
     # )
-    jira_request_target = (
-        "molecular"
-        if requirements.get("data_center", "").startswith("ENA")
-        else "generic"
-    )
+    jira_request_target = "molecular" if requirements.get("data_center", "").startswith("ENA") else "generic"
 
     jira_request_type = "sand/{0}-data".format(jira_request_target)
     if site_config.jira_project_key == SiteConfiguration.DSUB:
@@ -104,9 +96,7 @@ def gfbio_prepare_create_helpdesk_payload(
         "reporter": {"name": reporter.get("jira_user_name", site_config.contact)},
         "customfield_10200": "{0}".format(submission.embargo.isoformat())
         if submission.embargo is not None
-        else "{0}".format(
-            (datetime.date.today() + datetime.timedelta(days=365)).isoformat()
-        ),
+        else "{0}".format((datetime.date.today() + datetime.timedelta(days=365)).isoformat()),
         "customfield_10201": requirements.get("title", ""),
         "customfield_10208": requirements.get("description", ""),
         "customfield_10303": "{0}".format(submission.broker_submission_id),
@@ -116,13 +106,9 @@ def gfbio_prepare_create_helpdesk_payload(
         "customfield_10313": ", ".join(requirements.get("categories", [])),
         "customfield_10205": authors_text,
         "customfield_10307": "; ".join(requirements.get("related_publications", [])),
-        "customfield_10216": [
-            {"value": l} for l in requirements.get("legal_requirements", [])
-        ],
+        "customfield_10216": [{"value": l} for l in requirements.get("legal_requirements", [])],
         "customfield_10314": requirements.get("project_id", ""),
-        "customfield_10202": GFBIO_LICENSE_MAPPINGS.get(
-            requirements.get("license", "Other License")
-        ),
+        "customfield_10202": GFBIO_LICENSE_MAPPINGS.get(requirements.get("license", "Other License")),
         "customfield_10600": requirements.get("download_url", ""),
     }
 

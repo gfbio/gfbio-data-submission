@@ -9,7 +9,7 @@ from gfbio_submissions.brokerage.configuration.settings import (
     JIRA_COMMENT_SUB_URL,
     ENA_PANGAEA,
 )
-from gfbio_submissions.generic.models import SiteConfiguration
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
 from .test_helpdesk_tasks_base import TestHelpDeskTasksBase
 from ...models.jira_message import JiraMessage

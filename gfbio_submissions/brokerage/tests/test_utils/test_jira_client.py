@@ -27,7 +27,8 @@ from gfbio_submissions.brokerage.utils.gfbio import (
     gfbio_prepare_create_helpdesk_payload,
 )
 from gfbio_submissions.brokerage.utils.jira import JiraClient
-from gfbio_submissions.generic.models import SiteConfiguration, ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.users.models import User
 from ...configuration.settings import GFBIO_HELPDESK_TICKET
 from ...configuration.settings import (

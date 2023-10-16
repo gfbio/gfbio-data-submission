@@ -18,7 +18,7 @@ from ..configuration.settings import (
 )
 from ..utils.gfbio import gfbio_prepare_create_helpdesk_payload
 from ..utils.pangaea import prepare_pangaea_issue_content, get_csv_from_samples
-from ...generic.models import RequestLog
+from ...generic.models.request_log import RequestLog
 
 logger = logging.getLogger(__name__)
 

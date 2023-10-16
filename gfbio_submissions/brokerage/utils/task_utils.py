@@ -5,7 +5,7 @@ from django.core.mail import mail_admins
 from django.utils.encoding import smart_str
 from requests import Response
 
-from gfbio_submissions.generic.models import ResourceCredential
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from .ena import send_submission_to_ena
 from ..configuration.settings import (
     TASK_FAIL_SUBJECT_TEMPLATE,

@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 from ...tasks.submission_task import SubmissionTask
 from ...utils.jira import JiraClient
 from ...utils.pangaea import pull_pangaea_dois
-from gfbio_submissions.generic.models import SiteConfiguration
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 
 
 @app.task(

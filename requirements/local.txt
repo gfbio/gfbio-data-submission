@@ -20,10 +20,11 @@ sphinx-autobuild==2021.3.14 # https://github.com/GaretJax/sphinx-autobuild
 
 # Code quality
 # ------------------------------------------------------------------------------
-flake8==6.0.0  # https://github.com/PyCQA/flake8
-flake8-isort==5.0.3  # https://github.com/gforcada/flake8-isort
-coverage==6.5.0  # https://github.com/nedbat/coveragepy
-black==22.12.0  # https://github.com/psf/black
+flake8==6.1.0  # https://github.com/PyCQA/flake8
+flake8-isort==6.0.0  # https://github.com/gforcada/flake8-isort
+coverage==7.3.0  # https://github.com/nedbat/coveragepy
+black==23.7.0  # https://github.com/psf/black
+djlint==1.32.1  # https://github.com/Riverside-Healthcare/djLint
 pylint-django==2.5.3  # https://github.com/PyCQA/pylint-django
 pylint-celery==0.3  # https://github.com/PyCQA/pylint-celery
 pre-commit==2.20.0  # https://github.com/pre-commit/pre-commit
