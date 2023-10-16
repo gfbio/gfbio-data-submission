@@ -46,16 +46,12 @@ class TestGFBioJiraApi(TestCase):
     def test_comment_existing_ticket(self):
         ticket_key = "SAND-1535"
         ticket_action = "comment"
-        url = "{0}{1}/{2}/{3}".format(
-            self.base_url, JIRA_ISSUE_URL, ticket_key, ticket_action
-        )
+        url = "{0}{1}/{2}/{3}".format(self.base_url, JIRA_ISSUE_URL, ticket_key, ticket_action)
         response = requests.post(
             url=url,
             auth=("brokeragent", ""),
             headers={"Content-Type": "application/json"},
-            data=json.dumps(
-                {"body": "programmatic update of ticket {}".format(ticket_key)}
-            ),
+            data=json.dumps({"body": "programmatic update of ticket {}".format(ticket_key)}),
         )
         # 201
         # b'{"self":"https://helpdesk.gfbio.org/rest/api/2/issue/16029/comment/21606","id":"21606","author":{"self":"https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent","name":"brokeragent","key":"brokeragent@gfbio.org","emailAddress":"brokeragent@gfbio.org","avatarUrls":{"48x48":"https://helpdesk.gfbio.org/secure/useravatar?ownerId=brokeragent%40gfbio.org&avatarId=11100","24x24":"https://helpdesk.gfbio.org/secure/useravatar?size=small&ownerId=brokeragent%40gfbio.org&avatarId=11100","16x16":"https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&ownerId=brokeragent%40gfbio.org&avatarId=11100","32x32":"https://helpdesk.gfbio.org/secure/useravatar?size=medium&ownerId=brokeragent%40gfbio.org&avatarId=11100"},"displayName":"Broker Agent","active":true,"timeZone":"Europe/Berlin"},"body":"programmatic update of ticket SAND-1535","updateAuthor":{"self":"https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent","name":"brokeragent","key":"brokeragent@gfbio.org","emailAddress":"brokeragent@gfbio.org","avatarUrls":{"48x48":"https://helpdesk.gfbio.org/secure/useravatar?ownerId=brokeragent%40gfbio.org&avatarId=11100","24x24":"https://helpdesk.gfbio.org/secure/useravatar?size=small&ownerId=brokeragent%40gfbio.org&avatarId=11100","16x16":"https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&ownerId=brokeragent%40gfbio.org&avatarId=11100","32x32":"https://helpdesk.gfbio.org/secure/useravatar?size=medium&ownerId=brokeragent%40gfbio.org&avatarId=11100"},"displayName":"Broker Agent","active":true,"timeZone":"Europe/Berlin"},"created":"2019-09-17T13:46:17.002+0000","updated":"2019-09-17T13:46:17.002+0000"}'
@@ -64,9 +60,7 @@ class TestGFBioJiraApi(TestCase):
     def test_get_comments(self):
         ticket_key = "SAND-1535"
         ticket_action = "comment"
-        url = "{0}{1}/{2}/{3}".format(
-            self.base_url, JIRA_ISSUE_URL, ticket_key, ticket_action
-        )
+        url = "{0}{1}/{2}/{3}".format(self.base_url, JIRA_ISSUE_URL, ticket_key, ticket_action)
         response = requests.get(
             url=url,
             auth=("brokeragent", ""),
@@ -119,13 +113,9 @@ class TestGFBioJiraApi(TestCase):
             ticket_key,
             JIRA_ATTACHMENT_SUB_URL,
         )
-        headers = CaseInsensitiveDict(
-            {"content-type": None, "X-Atlassian-Token": "nocheck"}
-        )
+        headers = CaseInsensitiveDict({"content-type": None, "X-Atlassian-Token": "nocheck"})
 
-        data = TestHelpDeskTicketMethods._create_test_data(
-            "/tmp/test_primary_data_file"
-        )
+        data = TestHelpDeskTicketMethods._create_test_data("/tmp/test_primary_data_file")
         # files = {'file': file}
         # files = {'file': open(file, 'rb')}
         response = requests.post(
@@ -416,9 +406,7 @@ class TestGFBioJiraApi(TestCase):
             "reporter": {"name": "maweber@mpi-bremen.de"},
             "assignee": {"name": "maweber@mpi-bremen.de"},  # or data center
             "customfield_10010": "sand/molecular-data",
-            "customfield_10200": "{0}".format(
-                (datetime.date.today() + datetime.timedelta(days=365)).isoformat()
-            ),
+            "customfield_10200": "{0}".format((datetime.date.today() + datetime.timedelta(days=365)).isoformat()),
             "customfield_10201": "requirements title",
             "customfield_10208": "requirements description",
             "customfield_10303": "7fafa310-6031-4e41-987b-271d89916eb2",
@@ -430,9 +418,7 @@ class TestGFBioJiraApi(TestCase):
             "customfield_10313": ", ".join(["Algae & Protists", "Microbiology"]),
             "customfield_10205": "first_name,last_name;email",
             "customfield_10307": "; ".join(["publication 1234"]),
-            "customfield_10216": [
-                {"value": l} for l in ["Sensitive Personal Information", "Uncertain"]
-            ],
+            "customfield_10216": [{"value": l} for l in ["Sensitive Personal Information", "Uncertain"]],
             "customfield_10314": "potential project id",
             "customfield_10202": {
                 "self": "https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10500",

@@ -16,11 +16,7 @@ logger = logging.getLogger(__name__)
 )
 def update_accession_objects_from_ena_report_task(self):
     TaskProgressReport.objects.create_initial_report(submission=None, task=self)
-    logger.info(
-        msg="tasks.py | update_accession_objects_from_ena_report_task " "| start update"
-    )
+    logger.info(msg="tasks.py | update_accession_objects_from_ena_report_task " "| start update")
     execute_update_accession_objects_chain(name_on_error=self.name)
-    logger.info(
-        msg="tasks.py | update_accession_objects_from_ena_report_task " "| finished"
-    )
+    logger.info(msg="tasks.py | update_accession_objects_from_ena_report_task " "| finished")
     return True

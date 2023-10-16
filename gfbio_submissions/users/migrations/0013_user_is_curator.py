@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('users', '0012_auto_20200327_0833'),
+        ("users", "0012_auto_20200327_0833"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='is_curator',
+            model_name="user",
+            name="is_curator",
             field=models.BooleanField(default=False),
         ),
     ]

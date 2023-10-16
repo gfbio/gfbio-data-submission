@@ -40,9 +40,7 @@ def get_type_with_title(title="", type=BASIC_TYPE):
 
 
 # TODO: deal with subproperties, e.g. method above
-def get_type_with_properties(
-    properties_to_add={}, json_type=BASIC_TYPE, omit_type=False
-):
+def get_type_with_properties(properties_to_add={}, json_type=BASIC_TYPE, omit_type=False):
     t = copy.copy(json_type)
     res = t
     if omit_type:
@@ -53,22 +51,14 @@ def get_type_with_properties(
 
 
 def clean_key(key):
-    return (
-        key.replace("(", "")
-        .replace(")", "")
-        .replace(" ", "_")
-        .replace("/", "_")
-        .lower()
-    )
+    return key.replace("(", "").replace(")", "").replace(" ", "_").replace("/", "_").lower()
 
 
 def get_json_template(schema_dict):
     res = {}
     for k in schema_dict["properties"].keys():
         if "properties" in schema_dict["properties"][k].keys():
-            res[k] = {
-                pk: "*" for pk in schema_dict["properties"][k]["properties"].keys()
-            }
+            res[k] = {pk: "*" for pk in schema_dict["properties"][k]["properties"].keys()}
         else:
             res[k] = "*"
 
@@ -80,9 +70,7 @@ def validate_gcdjson(schema, json_data):
     validator = Draft4Validator(s)
     # TODO: add key for form access to constants --> gcdjson
     return [
-        "Field '{0}' contains errors: {1}".format(
-            error.relative_path.pop(), error.message.replace("u'", "'")
-        )
+        "Field '{0}' contains errors: {1}".format(error.relative_path.pop(), error.message.replace("u'", "'"))
         if len(error.relative_path) > 0
         else "{0}".format(error.message.replace("u'", "'"))
         for error in validator.iter_errors(json_data.get("gcdjson", ""))
@@ -103,10 +91,7 @@ def add_widget_sub_properties(package_properties):
 
 
 def flatten_key_with_array_value(key, array_value, separator="_"):
-    return [
-        ("{0}{1}{2}".format(key, separator, i), array_value[i])
-        for i in range(0, len(array_value))
-    ]
+    return [("{0}{1}{2}".format(key, separator, i), array_value[i]) for i in range(0, len(array_value))]
 
 
 # TODO: used by pangaea utils to add gcdj information to samples
@@ -143,9 +128,7 @@ def extract_number_types(value):
 
 
 def convert_csv(input_buffer):
-    reader = csv.reader(
-        input_buffer, delimiter=",", quotechar='"', quoting=CSV_READER_QUOTING
-    )
+    reader = csv.reader(input_buffer, delimiter=",", quotechar='"', quoting=CSV_READER_QUOTING)
     try:
         field_names = reader.next()
         values = reader.next()
@@ -156,9 +139,7 @@ def convert_csv(input_buffer):
         input_buffer.close()
         return {"Error": e.message}
     except StopIteration as e:
-        return {
-            "Error": "two lines are needed, one containing fieldnames, another containing values"
-        }
+        return {"Error": "two lines are needed, one containing fieldnames, another containing values"}
     else:
         input_buffer.close()
         if len(field_names) != len(values):
@@ -172,13 +153,9 @@ def convert_csv(input_buffer):
         for i in range(0, len(field_names)):
             splitted_field_names = field_names[i].split(SEPARATOR)
             if splitted_field_names[-1].isdigit():
-                array_props.append(
-                    (field_names[i].rstrip(splitted_field_names[-1]), values[i])
-                )
+                array_props.append((field_names[i].rstrip(splitted_field_names[-1]), values[i]))
             else:
-                dpath.util.new(
-                    result, field_names[i], value=values[i], separator=SEPARATOR
-                )
+                dpath.util.new(result, field_names[i], value=values[i], separator=SEPARATOR)
         d = collections.defaultdict(list)
         for k, v in array_props:
             d[k.rstrip(SEPARATOR)].append(v)
@@ -202,8 +179,7 @@ def find_values_for_key(obj, key, result=[]):
 def connect_schema_with_data(definitions, schema):
     schema["definitions"] = definitions.get("definitions", {})
     definition_includes = {
-        "incl_{}".format(d): {"$ref": "#/definitions/{0}".format(d)}
-        for d in definitions.get("definitions", {})
+        "incl_{}".format(d): {"$ref": "#/definitions/{0}".format(d)} for d in definitions.get("definitions", {})
     }
     schema["properties"].update(definition_includes)
     data = {"incl_{}".format(d): 1 for d in definitions.get("definitions", {})}
@@ -212,20 +188,12 @@ def connect_schema_with_data(definitions, schema):
 
 def get_schema_check_warnings(schema, definitions):
     schema_warnings = {
-        prop: [
-            '"{0}" is no json-schema attribute'.format(c)
-            for c in content.keys()
-            if c not in DRAFT04_VALIDATORS
-        ]
+        prop: ['"{0}" is no json-schema attribute'.format(c) for c in content.keys() if c not in DRAFT04_VALIDATORS]
         for prop, content in schema.get("properties").iteritems()
         if isinstance(content, dict)
     }
     definition_warnings = {
-        d: [
-            '"{0}" is no json-schema attribute'.format(c)
-            for c in content.keys()
-            if c not in DRAFT04_VALIDATORS
-        ]
+        d: ['"{0}" is no json-schema attribute'.format(c) for c in content.keys() if c not in DRAFT04_VALIDATORS]
         for d, content in definitions.get("definitions").iteritems()
     }
     return definition_warnings, schema_warnings

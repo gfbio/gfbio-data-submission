@@ -73,9 +73,7 @@ class TestEnalizer(TestCase):
         submission = Submission.objects.first()
         enalizer = Enalizer(submission=submission, alias_postfix="test")
         self.assertEqual(DEFAULT_ENA_CENTER_NAME, enalizer.center_name)
-        center_name, created = CenterName.objects.get_or_create(
-            center_name="CustomCenter"
-        )
+        center_name, created = CenterName.objects.get_or_create(center_name="CustomCenter")
         submission.center_name = center_name
         submission.save()
         enalizer_2 = Enalizer(submission=submission, alias_postfix="test")
@@ -102,9 +100,7 @@ class TestEnalizer(TestCase):
 
     def test_study_xml_center_name(self):
         submission = Submission.objects.first()
-        center_name, created = CenterName.objects.get_or_create(
-            center_name="CustomCenter"
-        )
+        center_name, created = CenterName.objects.get_or_create(center_name="CustomCenter")
         submission.center_name = center_name
         submission.save()
         ena = Enalizer(submission, "test-enalizer-study")
@@ -148,9 +144,7 @@ class TestEnalizer(TestCase):
 
     def test_sample_xml_center_name(self):
         submission = Submission.objects.first()
-        center_name, created = CenterName.objects.get_or_create(
-            center_name="CustomCenter"
-        )
+        center_name, created = CenterName.objects.get_or_create(center_name="CustomCenter")
         submission.center_name = center_name
         submission.save()
         enalizer = Enalizer(submission, "test-enalizer-sample")
@@ -165,17 +159,11 @@ class TestEnalizer(TestCase):
         data = enalizer.prepare_submission_data()
         k, sample_xml = data.get("SAMPLE")
         self.assertIn(
-            "<SAMPLE_ATTRIBUTE>"
-            "<TAG>ENA-CHECKLIST</TAG>"
-            "<VALUE>ERC000024</VALUE>"
-            "</SAMPLE_ATTRIBUTE>",
+            "<SAMPLE_ATTRIBUTE>" "<TAG>ENA-CHECKLIST</TAG>" "<VALUE>ERC000024</VALUE>" "</SAMPLE_ATTRIBUTE>",
             sample_xml,
         )
         self.assertIn(
-            "<SAMPLE_ATTRIBUTE>"
-            "<TAG>ENA-CHECKLIST</TAG>"
-            "<VALUE>ERC000023</VALUE>"
-            "</SAMPLE_ATTRIBUTE>",
+            "<SAMPLE_ATTRIBUTE>" "<TAG>ENA-CHECKLIST</TAG>" "<VALUE>ERC000023</VALUE>" "</SAMPLE_ATTRIBUTE>",
             sample_xml,
         )
 
@@ -200,9 +188,7 @@ class TestEnalizer(TestCase):
         data = enalizer.prepare_submission_data()
         k, sample_xml = data.get("SAMPLE")
         self.assertNotIn("<TAG>water environmental package</TAG>", sample_xml)
-        self.assertNotIn(
-            "<TAG>wastewater sludge environmental package</TAG>", sample_xml
-        )
+        self.assertNotIn("<TAG>wastewater sludge environmental package</TAG>", sample_xml)
 
     def test_sample_xml_checklist_mapping_wrong_package(self):
         submission = Submission.objects.last()
@@ -218,9 +204,7 @@ class TestEnalizer(TestCase):
         k, sample_xml = data.get("SAMPLE")
         self.assertEqual(
             2,
-            sample_xml.count(
-                "<SAMPLE_ATTRIBUTE><TAG>submitted to insdc</TAG><VALUE>true</VALUE>"
-            ),
+            sample_xml.count("<SAMPLE_ATTRIBUTE><TAG>submitted to insdc</TAG><VALUE>true</VALUE>"),
         )
 
     def test_experiment_xml(self):
@@ -292,9 +276,7 @@ class TestEnalizer(TestCase):
 
     def test_experiment_xml_center_name(self):
         submission = Submission.objects.last()
-        center_name, created = CenterName.objects.get_or_create(
-            center_name="CustomCenter"
-        )
+        center_name, created = CenterName.objects.get_or_create(center_name="CustomCenter")
         submission.center_name = center_name
         submission.save()
         enalizer = Enalizer(submission, "test-enalizer-sample")
@@ -331,24 +313,12 @@ class TestEnalizer(TestCase):
             "illumina NextSeq 500",
             find_correct_platform_and_model("Illumina Nextseq 500"),
         )
-        self.assertEqual(
-            "illumina unspecified", find_correct_platform_and_model("Illumina")
-        )
-        self.assertEqual(
-            "illumina Illumina MiSeq", find_correct_platform_and_model("Illumina MiSeq")
-        )
-        self.assertEqual(
-            "oxford_nanopore MinION", find_correct_platform_and_model("MinION")
-        )
-        self.assertEqual(
-            "pacbio_smrt Sequel", find_correct_platform_and_model("Sequel")
-        )
-        self.assertEqual(
-            "pacbio_smrt Sequel", find_correct_platform_and_model("pacbio Sequel")
-        )
-        self.assertEqual(
-            "pacbio_smrt unspecified", find_correct_platform_and_model("PacBio")
-        )
+        self.assertEqual("illumina unspecified", find_correct_platform_and_model("Illumina"))
+        self.assertEqual("illumina Illumina MiSeq", find_correct_platform_and_model("Illumina MiSeq"))
+        self.assertEqual("oxford_nanopore MinION", find_correct_platform_and_model("MinION"))
+        self.assertEqual("pacbio_smrt Sequel", find_correct_platform_and_model("Sequel"))
+        self.assertEqual("pacbio_smrt Sequel", find_correct_platform_and_model("pacbio Sequel"))
+        self.assertEqual("pacbio_smrt unspecified", find_correct_platform_and_model("PacBio"))
         self.assertEqual(
             "oxford_nanopore unspecified",
             find_correct_platform_and_model("Oxford Nanopore"),
@@ -444,9 +414,7 @@ class TestEnalizer(TestCase):
     def test_submission_data_content(self):
         submission = Submission.objects.first()
         enalizer = Enalizer(submission, "test-enalizer-experiment")
-        ena_submission_data = enalizer.prepare_submission_data(
-            broker_submission_id=submission.broker_submission_id
-        )
+        ena_submission_data = enalizer.prepare_submission_data(broker_submission_id=submission.broker_submission_id)
         self.assertListEqual(
             sorted(["RUN", "SAMPLE", "STUDY", "EXPERIMENT"]),
             sorted(list(ena_submission_data.keys())),
@@ -457,9 +425,7 @@ class TestEnalizer(TestCase):
         submission = Submission.objects.first()
         enalizer = Enalizer(submission, "test-enalizer-experiment")
         test_id = uuid4()
-        submission_xml = enalizer.prepare_submission_xml_for_sending(
-            action="ADD", outgoing_request_id=test_id
-        )
+        submission_xml = enalizer.prepare_submission_xml_for_sending(action="ADD", outgoing_request_id=test_id)
         k, v = submission_xml
         self.assertEqual("submission.xml", k)
         self.assertIn('alias="{0}"'.format(test_id), v)
@@ -514,17 +480,13 @@ class TestEnalizer(TestCase):
 
     def test_prepare_ena_data_add(self):
         submission = Submission.objects.first()
-        enalizer = Enalizer(
-            submission=submission, alias_postfix=submission.broker_submission_id
-        )
+        enalizer = Enalizer(submission=submission, alias_postfix=submission.broker_submission_id)
         file_name, xml = enalizer.prepare_submission_xml_for_sending(action="ADD")
         self.assertIn("<ADD", xml)
 
     def test_prepare_ena_data_validate(self):
         submission = Submission.objects.first()
-        enalizer = Enalizer(
-            submission=submission, alias_postfix=submission.broker_submission_id
-        )
+        enalizer = Enalizer(submission=submission, alias_postfix=submission.broker_submission_id)
         file_name, xml = enalizer.prepare_submission_xml_for_sending()
         self.assertIn("<VALIDATE", xml)
 
@@ -532,9 +494,7 @@ class TestEnalizer(TestCase):
         submission = Submission.objects.first()
         submission.embargo = datetime(2020, 1, 10).date()
         submission.save()
-        enalizer = Enalizer(
-            submission=submission, alias_postfix=submission.broker_submission_id
-        )
+        enalizer = Enalizer(submission=submission, alias_postfix=submission.broker_submission_id)
         file_name, xml = enalizer.prepare_submission_xml_for_sending()
         self.assertIn("2020-01-10", xml)
 
@@ -560,9 +520,7 @@ class TestEnalizer(TestCase):
         self.assertEqual(1, len(RequestLog.objects.all()))
         request_log = RequestLog.objects.first()
         self.assertEqual(200, request_log.response_status)
-        self.assertTrue(
-            'accession "PRJEB0815" is set to public' in request_log.response_content
-        )
+        self.assertTrue('accession "PRJEB0815" is set to public' in request_log.response_content)
 
     def test_release_study_on_ena_no_accession_no(self):
         submission = Submission.objects.first()

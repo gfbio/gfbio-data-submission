@@ -36,9 +36,7 @@ class APIAllowedHosts(permissions.BasePermission):
         allowed_ip_list = list(set(allowed_ip_list))
         remote_addr = None
         if "HTTP_X_REAL_IP" in request.META:
-            remote_addr = request.META[
-                "HTTP_X_REAL_IP"
-            ]  # traefik reverse proxy header for staging and live systems
+            remote_addr = request.META["HTTP_X_REAL_IP"]  # traefik reverse proxy header for staging and live systems
         else:
             remote_addr = request.META["REMOTE_ADDR"]  # for local purposes
         if remote_addr:

@@ -13,9 +13,7 @@ class TestSubmissionViewDeleteRequests(TestSubmissionView):
         self._post_submission()
         submission = Submission.objects.first()
         self.assertEqual(1, len(Submission.objects.all()))
-        self.api_client.delete(
-            "/api/submissions/{0}/".format(submission.broker_submission_id)
-        )
+        self.api_client.delete("/api/submissions/{0}/".format(submission.broker_submission_id))
         self.assertEqual(1, len(Submission.objects.all()))
 
     @responses.activate
@@ -23,9 +21,7 @@ class TestSubmissionViewDeleteRequests(TestSubmissionView):
         self._add_create_ticket_response()
         self._post_submission()
         submission = Submission.objects.first()
-        response = self.api_client.delete(
-            "/api/submissions/{0}/".format(submission.broker_submission_id)
-        )
+        response = self.api_client.delete("/api/submissions/{0}/".format(submission.broker_submission_id))
         self.assertEqual(204, response.status_code)
         self.assertEqual(0, len(response.content))
 
@@ -35,8 +31,6 @@ class TestSubmissionViewDeleteRequests(TestSubmissionView):
         self._post_submission()
         submission = Submission.objects.first()
         self.assertEqual(Submission.OPEN, submission.status)
-        self.api_client.delete(
-            "/api/submissions/{0}/".format(submission.broker_submission_id)
-        )
+        self.api_client.delete("/api/submissions/{0}/".format(submission.broker_submission_id))
         submission = Submission.objects.first()
         self.assertEqual(Submission.CANCELLED, submission.status)

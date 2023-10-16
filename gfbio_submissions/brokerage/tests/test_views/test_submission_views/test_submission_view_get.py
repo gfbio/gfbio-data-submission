@@ -32,26 +32,14 @@ class TestSubmissionViewGetRequests(TestSubmissionView):
         user.save()
         # 5 admin admin@admin.de None None  | site:  False  | user:  True  | staff:  True  | super:  True
 
-        SubmissionTest._create_submission_via_serializer(
-            username="horst", create_broker_objects=False
-        )
-        SubmissionTest._create_submission_via_serializer(
-            username="horst", create_broker_objects=False
-        )
-        SubmissionTest._create_submission_via_serializer(
-            username="horst", create_broker_objects=False
-        )
+        SubmissionTest._create_submission_via_serializer(username="horst", create_broker_objects=False)
+        SubmissionTest._create_submission_via_serializer(username="horst", create_broker_objects=False)
+        SubmissionTest._create_submission_via_serializer(username="horst", create_broker_objects=False)
 
-        SubmissionTest._create_submission_via_serializer(
-            username="kevin", create_broker_objects=False
-        )
-        SubmissionTest._create_submission_via_serializer(
-            username="kevin", create_broker_objects=False
-        )
+        SubmissionTest._create_submission_via_serializer(username="kevin", create_broker_objects=False)
+        SubmissionTest._create_submission_via_serializer(username="kevin", create_broker_objects=False)
 
-        SubmissionTest._create_submission_via_serializer(
-            username="regular_user_2", create_broker_objects=False
-        )
+        SubmissionTest._create_submission_via_serializer(username="regular_user_2", create_broker_objects=False)
 
     def test_submissions_get_request(self):
         response = self.client.get("/api/submissions/")
@@ -65,10 +53,7 @@ class TestSubmissionViewGetRequests(TestSubmissionView):
 
     def test_invalid_basic_auth(self):
         client = APIClient()
-        client.credentials(
-            HTTP_AUTHORIZATION="Basic "
-            + base64.b64encode(b"user:invalidpassword").decode("utf-8")
-        )
+        client.credentials(HTTP_AUTHORIZATION="Basic " + base64.b64encode(b"user:invalidpassword").decode("utf-8"))
         response = client.get("/api/submissions/")
         self.assertEqual(401, response.status_code)
 
@@ -149,9 +134,7 @@ class TestSubmissionViewGetRequests(TestSubmissionView):
 
         self.assertFalse(user.has_perm("brokerage.add_submission"))
 
-        SubmissionTest._create_submission_via_serializer(
-            username="new_user", create_broker_objects=False
-        )
+        SubmissionTest._create_submission_via_serializer(username="new_user", create_broker_objects=False)
 
         token, created = Token.objects.get_or_create(user_id=user.id)
         client = APIClient()

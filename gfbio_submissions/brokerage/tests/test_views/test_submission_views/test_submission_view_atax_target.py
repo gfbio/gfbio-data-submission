@@ -60,9 +60,7 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
         self.assertEqual(1, len(request_logs))
 
         submission = Submission.objects.last()
-        self.assertEqual(
-            UUID(content["broker_submission_id"]), submission.broker_submission_id
-        )
+        self.assertEqual(UUID(content["broker_submission_id"]), submission.broker_submission_id)
         self.assertIsNone(submission.embargo)
         self.assertFalse(submission.release)
         self.assertEqual(Submission.OPEN, submission.status)
@@ -263,11 +261,7 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
             "tasks.check_issue_existing_for_submission_task",
         ]
 
-        all_task_reports = list(
-            TaskProgressReport.objects.values_list("task_name", flat=True).order_by(
-                "created"
-            )
-        )
+        all_task_reports = list(TaskProgressReport.objects.values_list("task_name", flat=True).order_by("created"))
         self.assertListEqual(expected_task_names, all_task_reports)
 
     @responses.activate
@@ -327,11 +321,7 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
             "tasks.check_on_hold_status_task",
         ]
 
-        all_task_reports = list(
-            TaskProgressReport.objects.values_list("task_name", flat=True).order_by(
-                "created"
-            )
-        )
+        all_task_reports = list(TaskProgressReport.objects.values_list("task_name", flat=True).order_by("created"))
         self.assertListEqual(expected_task_names, all_task_reports)
 
     @responses.activate
@@ -364,11 +354,7 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
             "tasks.check_issue_existing_for_submission_task",
         ]
 
-        all_task_reports = list(
-            TaskProgressReport.objects.values_list("task_name", flat=True).order_by(
-                "created"
-            )
-        )
+        all_task_reports = list(TaskProgressReport.objects.values_list("task_name", flat=True).order_by("created"))
         self.assertListEqual(expected_task_names, all_task_reports)
 
     # FIXME: this is not the place for jira related task tests. this will need the proper mocked responses to work

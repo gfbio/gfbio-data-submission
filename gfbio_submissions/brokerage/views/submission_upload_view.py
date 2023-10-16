@@ -36,11 +36,7 @@ class SubmissionUploadView(mixins.CreateModelMixin, generics.GenericAPIView):
             sub = Submission.objects.get(broker_submission_id=broker_submission_id)
         except Submission.DoesNotExist as e:
             response = Response(
-                {
-                    "submission": "No submission for this "
-                    "broker_submission_id:"
-                    " {0}".format(broker_submission_id)
-                },
+                {"submission": "No submission for this " "broker_submission_id:" " {0}".format(broker_submission_id)},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -66,9 +62,7 @@ class SubmissionUploadView(mixins.CreateModelMixin, generics.GenericAPIView):
         data_content["id"] = obj.pk
         data_content["broker_submission_id"] = sub.broker_submission_id
 
-        response = Response(
-            data_content, status=status.HTTP_201_CREATED, headers=headers
-        )
+        response = Response(data_content, status=status.HTTP_201_CREATED, headers=headers)
 
         with transaction.atomic():
             RequestLog.objects.create(

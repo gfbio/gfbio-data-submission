@@ -22,24 +22,16 @@ from ...utils.schema_validation import validate_data_full
     bind=True,
     name="tasks.parse_csv_to_update_clean_submission_task",
 )
-def parse_csv_to_update_clean_submission_task(
-    self, previous_task_result=None, submission_upload_id=None
-):
+def parse_csv_to_update_clean_submission_task(self, previous_task_result=None, submission_upload_id=None):
     # TODO: here it would be possible to get the related submission for the TaskReport
-    report, created = TaskProgressReport.objects.create_initial_report(
-        submission=None, task=self
-    )
-    submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(
-        submission_upload_id
-    )
+    report, created = TaskProgressReport.objects.create_initial_report(submission=None, task=self)
+    submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(submission_upload_id)
 
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
             "tasks.py | parse_csv_to_update_clean_submission_task | "
             "previous task reported={0} | "
-            "submission_upload_id={1}".format(
-                TaskProgressReport.CANCELLED, submission_upload_id
-            )
+            "submission_upload_id={1}".format(TaskProgressReport.CANCELLED, submission_upload_id)
         )
         return TaskProgressReport.CANCELLED
 
@@ -58,9 +50,7 @@ def parse_csv_to_update_clean_submission_task(
             file,
         )
 
-    path = os.path.join(
-        os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json"
-    )
+    path = os.path.join(os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json")
 
     with transaction.atomic():
         submission_upload.submission.data["requirements"].update(molecular_requirements)

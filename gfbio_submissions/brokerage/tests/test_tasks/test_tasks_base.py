@@ -61,9 +61,7 @@ class TestTasks(TestCase):
             helpdesk_server=resource_cred,
             comment="Default configuration 2",
         )
-        permissions = Permission.objects.filter(
-            content_type__app_label="brokerage", name__endswith="upload"
-        )
+        permissions = Permission.objects.filter(content_type__app_label="brokerage", name__endswith="upload")
         user = User.objects.create(username="user1")
         user.update_or_create_external_user_id("0815", "goe_id")
         user.name = "Kevin Horstmeier"
@@ -73,9 +71,7 @@ class TestTasks(TestCase):
         user.user_permissions.add(*permissions)
 
         submission = cls._create_submission_via_serializer()
-        submission.additionalreference_set.create(
-            type=GFBIO_HELPDESK_TICKET, reference_key="FAKE_KEY", primary=True
-        )
+        submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="FAKE_KEY", primary=True)
         submission.additionalreference_set.create(
             type=PANGAEA_JIRA_TICKET, reference_key="PANGAEA_FAKE_KEY", primary=True
         )
@@ -106,8 +102,6 @@ class TestTasks(TestCase):
         )
         responses.add(
             responses.GET,
-            "{0}/rest/api/2/field".format(
-                self.default_site_config.pangaea_jira_server.url
-            ),
+            "{0}/rest/api/2/field".format(self.default_site_config.pangaea_jira_server.url),
             status=200,
         )

@@ -19,9 +19,7 @@ class TaskProgressReport(TimeStampedModel):
         help_text="Submission this Task is working on",
         on_delete=models.SET_NULL,
     )
-    task_name = models.CharField(
-        max_length=128, help_text="Name of Task, as registered in celery"
-    )
+    task_name = models.CharField(max_length=128, help_text="Name of Task, as registered in celery")
     task_id = models.UUIDField(
         default=uuid.uuid4,
         primary_key=True,
@@ -29,9 +27,7 @@ class TaskProgressReport(TimeStampedModel):
         "provided via the Task itself, but "
         "defaults to randon uuid",
     )
-    status = models.CharField(
-        max_length=16, default=RUNNING, help_text="Current State of Task"
-    )
+    status = models.CharField(max_length=16, default=RUNNING, help_text="Current State of Task")
 
     task_return_value = models.TextField(default="")
     task_exception = models.TextField(default="")

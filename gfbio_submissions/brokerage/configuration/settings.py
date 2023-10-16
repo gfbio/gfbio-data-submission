@@ -91,9 +91,7 @@ DRAFT04_VALIDATORS = getattr(
 
 ENA = getattr(settings, "ENA", "ENA")
 
-ENA_STUDY_URL_PREFIX = getattr(
-    settings, "ENA_STUDY_URL_PREFIX", "http://www.ebi.ac.uk/ena/browser/view/"
-)
+ENA_STUDY_URL_PREFIX = getattr(settings, "ENA_STUDY_URL_PREFIX", "http://www.ebi.ac.uk/ena/browser/view/")
 
 DEFAULT_ENA_BROKER_NAME = getattr(settings, "DEFAULT_ENA_BROKER_NAME", "GFBIO")
 
@@ -111,9 +109,7 @@ JIRA_FALLBACK_USERNAME = getattr(settings, "JIRA_FALLBACK_USERNAME", "brokeragen
 # https://helpdesk.gfbio.org/secure/ViewProfile.jspa?name=brokeragent
 JIRA_FALLBACK_EMAIL = getattr(settings, "JIRA_FALLBACK_EMAIL", "brokeragent@gfbio.org")
 
-JIRA_TICKET_URL = getattr(
-    settings, "JIRA_TICKET_URL", "https://helpdesk.gfbio.org/browse/"
-)
+JIRA_TICKET_URL = getattr(settings, "JIRA_TICKET_URL", "https://helpdesk.gfbio.org/browse/")
 
 JIRA_ISSUE_URL = getattr(settings, "JIRA_ISSUE_URL", "/rest/api/2/issue")
 
@@ -383,19 +379,14 @@ NO_HELPDESK_ISSUE_EMAIL_SUBJECT_TEMPLATE = getattr(
 NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE = getattr(
     settings,
     "NO_HELPDESK_ISSUEE_EMAIL_MESSAGE_TEMPLATE",
-    "There is no primary helpdesk issue available for\nsubmission: {0}"
-    "\nof user: {1}",
+    "There is no primary helpdesk issue available for\nsubmission: {0}" "\nof user: {1}",
 )
 
 PANGAEA = getattr(settings, "PANGAEA", "PANGAEA")
 
-PANGAEA_ISSUE_VIEW_URL = getattr(
-    settings, "PANGAEA_ISSUE_VIEW_URL", "https://issues.pangaea.de/browse/"
-)
+PANGAEA_ISSUE_VIEW_URL = getattr(settings, "PANGAEA_ISSUE_VIEW_URL", "https://issues.pangaea.de/browse/")
 
-PANGAEA_ISSUE_DOI_FIELD_NAME = getattr(
-    settings, "PANGAEA_ISSUE_DOI_FIELD_NAME", "customfield_10520"
-)
+PANGAEA_ISSUE_DOI_FIELD_NAME = getattr(settings, "PANGAEA_ISSUE_DOI_FIELD_NAME", "customfield_10520")
 
 SUBMISSION_UPLOAD_RETRY_DELAY = getattr(
     settings,
@@ -437,21 +428,13 @@ SUBMISSION_ISSUE_CHECK_DELAY = getattr(
     10800,
 )
 
-STATIC_SAMPLE_SCHEMA_LOCATION = getattr(
-    settings, "STATIC_SAMPLE_SCHEMA_LOCATION", "schemas/sample.json"
-)
+STATIC_SAMPLE_SCHEMA_LOCATION = getattr(settings, "STATIC_SAMPLE_SCHEMA_LOCATION", "schemas/sample.json")
 
-STATIC_STUDY_SCHEMA_LOCATION = getattr(
-    settings, "STATIC_STUDY_SCHEMA_LOCATION", "schemas/study.json"
-)
+STATIC_STUDY_SCHEMA_LOCATION = getattr(settings, "STATIC_STUDY_SCHEMA_LOCATION", "schemas/study.json")
 
-STATIC_EXPERIMENT_SCHEMA_LOCATION = getattr(
-    settings, "STATIC_EXPERIMENT_SCHEMA_LOCATION", "schemas/experiment.json"
-)
+STATIC_EXPERIMENT_SCHEMA_LOCATION = getattr(settings, "STATIC_EXPERIMENT_SCHEMA_LOCATION", "schemas/experiment.json")
 
-STATIC_RUN_SCHEMA_LOCATION = getattr(
-    settings, "STATIC_RUN_SCHEMA_LOCATION", "schemas/run.json"
-)
+STATIC_RUN_SCHEMA_LOCATION = getattr(settings, "STATIC_RUN_SCHEMA_LOCATION", "schemas/run.json")
 
 STATIC_MIN_REQUIREMENTS_LOCATION = getattr(
     settings, "STATIC_MIN_REQUIREMENTS_LOCATION", "schemas/minimal_requirements.json"
@@ -471,18 +454,10 @@ STATIC_ATAX_REQUIREMENTS_LOCATION = getattr(
     settings, "STATIC_ATAX_REQUIREMENTS_LOCATION", "schemas/atax_requirements.json"
 )
 
-SUBMISSION_MIN_COLS = getattr(
-    settings, "SUBMISSION_MIN_COLS", ["sample_title", "sample_description"]
-)
+SUBMISSION_MIN_COLS = getattr(settings, "SUBMISSION_MIN_COLS", ["sample_title", "sample_description"])
 
-TASK_FAIL_SUBJECT_TEMPLATE = getattr(
-    settings, "TASK_FAIL_SUBJECT_TEMPLATE", 'Task "{0}" failed. {1}'
-)
+TASK_FAIL_SUBJECT_TEMPLATE = getattr(settings, "TASK_FAIL_SUBJECT_TEMPLATE", 'Task "{0}" failed. {1}')
 
-TASK_FAIL_TEXT_TEMPLATE = getattr(
-    settings, "TASK_FAIL_TEXT_TEMPLATE", 'Task "{0}" failed after {1} retries. {2}'
-)
+TASK_FAIL_TEXT_TEMPLATE = getattr(settings, "TASK_FAIL_TEXT_TEMPLATE", 'Task "{0}" failed after {1} retries. {2}')
 
-SUBMISSION_COMMENT_TEMPLATE = getattr(
-    settings, "SUBMISSION_COMMENT_TEMPLATE", "{0} ({1}) commented:\n{2}"
-)
+SUBMISSION_COMMENT_TEMPLATE = getattr(settings, "SUBMISSION_COMMENT_TEMPLATE", "{0} ({1}) commented:\n{2}")

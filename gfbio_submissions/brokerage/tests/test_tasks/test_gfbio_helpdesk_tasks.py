@@ -64,9 +64,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
         self.assertTrue(result.successful())
 
-    @override_settings(
-        CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False
-    )
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False)
     @responses.activate
     def test_tpr_task_server_fail(self):
         self._add_server_fail_responses()
@@ -81,9 +79,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         self.assertTrue(result.successful())
 
     @responses.activate
-    @override_settings(
-        CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False
-    )
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False)
     def test_tpr_add_pangaea_link_server_error(self):
         submission = Submission.objects.first()
         responses.add(
@@ -106,9 +102,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         self.assertEqual(1, len(TaskProgressReport.objects.all()))
         tpr = TaskProgressReport.objects.first()
         self.assertEqual("SUCCESS", tpr.status)
-        self.assertEqual(
-            "tasks.add_pangaealink_to_submission_issue_task", tpr.task_name
-        )
+        self.assertEqual("tasks.add_pangaealink_to_submission_issue_task", tpr.task_name)
         self.assertEqual(TaskProgressReport.CANCELLED, tpr.task_return_value)
 
     @responses.activate
@@ -132,9 +126,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
             }
         )
         tpr = TaskProgressReport.objects.first()
-        self.assertEqual(
-            "tasks.add_pangaealink_to_submission_issue_task", tpr.task_name
-        )
+        self.assertEqual("tasks.add_pangaealink_to_submission_issue_task", tpr.task_name)
         self.assertEqual(TaskProgressReport.CANCELLED, tpr.task_return_value)
         self.assertTrue(result.successful())
 
@@ -231,9 +223,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
             }
         )
         self.assertTrue(result.successful())
-        tprs = TaskProgressReport.objects.exclude(
-            task_name="tasks.update_helpdesk_ticket_task"
-        )
+        tprs = TaskProgressReport.objects.exclude(task_name="tasks.update_helpdesk_ticket_task")
         self.assertEqual(1, len(tprs))
         self.assertEqual(1, len(submission.additionalreference_set.all()))
 
@@ -330,9 +320,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
             type="study",
             user=User.objects.first(),
         )
-        submission.brokerobject_set.filter(
-            type="study"
-        ).first().persistentidentifier_set.create(
+        submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.create(
             archive="ENA", pid_type="PRJ", pid="PRJE0815"
         )
         result = add_accession_to_submission_issue_task.apply_async(
@@ -352,21 +340,15 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         self._add_success_responses()
         responses.add(
             responses.GET,
-            "{0}/rest/applinks/latest/listApplicationlinks".format(
-                site_config.helpdesk_server.url
-            ),
+            "{0}/rest/applinks/latest/listApplicationlinks".format(site_config.helpdesk_server.url),
             status=200,
         )
         responses.add(
             responses.POST,
-            "{0}/rest/api/2/issue/FAKE_KEY/remotelink".format(
-                site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/FAKE_KEY/remotelink".format(site_config.helpdesk_server.url),
             json={
                 "id": 10000,
-                "self": "{0}/rest/api/2/issue/SAND-1661/remotelink/10000".format(
-                    site_config.helpdesk_server.url
-                ),
+                "self": "{0}/rest/api/2/issue/SAND-1661/remotelink/10000".format(site_config.helpdesk_server.url),
             },
             status=200,
         )
@@ -375,9 +357,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
             type="study",
             user=User.objects.first(),
         )
-        submission.brokerobject_set.filter(
-            type="study"
-        ).first().persistentidentifier_set.create(
+        submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.create(
             archive="ENA", pid_type="PRJ", pid="PRJE0815"
         )
         result = add_accession_link_to_submission_issue_task.apply_async(
@@ -417,9 +397,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
 
     # FIXME: what about retries ? are they executed ?
     @responses.activate
-    @override_settings(
-        CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False
-    )
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False)
     def test_add_pangaealink_to_helpdesk_ticket_task_server_error(self):
         submission = Submission.objects.first()
         url = self._add_comment_reponses()
@@ -456,9 +434,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
 
     # FIXME: what about retries ? are they executed ?
     @responses.activate
-    @override_settings(
-        CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False
-    )
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False)
     def add_posted_comment_to_issue_task_server_error(self):
         submission = Submission.objects.first()
         url = self._add_comment_reponses()
@@ -491,9 +467,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         )
         self.assertTrue(result.successful())
 
-    @override_settings(
-        CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False
-    )
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False)
     @responses.activate
     def test_create_submission_issue_task_server_error(self):
         submission = Submission.objects.last()
@@ -519,9 +493,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
 
     # FIXME: what about retries ? are they executed ?
     @responses.activate
-    @override_settings(
-        CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False
-    )
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False)
     def add_posted_comment_to_issue_task_server_error(self):
         submission = Submission.objects.first()
         url = self._add_comment_reponses()
@@ -549,11 +521,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         self.assertTrue(result.get())
         self.assertEqual(
             1,
-            len(
-                submission.taskprogressreport_set.filter(
-                    task_name="tasks.update_submission_issue_task"
-                )
-            ),
+            len(submission.taskprogressreport_set.filter(task_name="tasks.update_submission_issue_task")),
         )
 
     @responses.activate
@@ -572,16 +540,12 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
             }
         )
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())
-        tpr = submission.taskprogressreport_set.filter(
-            task_name="tasks.update_submission_issue_task"
-        )
+        tpr = submission.taskprogressreport_set.filter(task_name="tasks.update_submission_issue_task")
         self.assertEqual(1, len(tpr))
         self.assertEqual(TaskProgressReport.CANCELLED, tpr.first().task_return_value)
 
     @responses.activate
-    @override_settings(
-        CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False
-    )
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False)
     def test_update_submission_issue_task_server_error(self):
         submission = Submission.objects.last()
         self._add_success_responses()
@@ -596,9 +560,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
                 "submission_id": submission.id,
             }
         )
-        tpr = submission.taskprogressreport_set.filter(
-            task_name="tasks.update_submission_issue_task"
-        )
+        tpr = submission.taskprogressreport_set.filter(task_name="tasks.update_submission_issue_task")
         self.assertEqual(1, len(tpr))
         self.assertEqual(TaskProgressReport.CANCELLED, tpr.first().task_return_value)
         self.assertEqual("502", tpr.first().task_exception)
@@ -610,9 +572,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         submission.embargo = today
         submission.status = Submission.CLOSED
         submission.save()
-        submission.brokerobject_set.filter(
-            type="study"
-        ).first().persistentidentifier_set.create(
+        submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.create(
             archive="ENA", pid_type="PRJ", pid="PRJE0815"
         )
 
@@ -620,12 +580,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         responses.add(responses.POST, url, json={"bla": "blubb"}, status=200)
 
         notify_user_embargo_expiry_task()
-        pid = (
-            submission.brokerobject_set.filter(type="study")
-            .first()
-            .persistentidentifier_set.filter()
-            .first()
-        )
+        pid = submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.filter().first()
 
         self.assertEqual(today.isoformat(), pid.user_notified.isoformat())
 
@@ -636,9 +591,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         submission.embargo = future_date
         submission.status = Submission.CLOSED
         submission.save()
-        submission.brokerobject_set.filter(
-            type="study"
-        ).first().persistentidentifier_set.create(
+        submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.create(
             archive="ENA", pid_type="PRJ", pid="PRJE0815"
         )
 
@@ -646,12 +599,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         responses.add(responses.POST, url, json={"bla": "blubb"}, status=200)
 
         notify_user_embargo_expiry_task()
-        pid = (
-            submission.brokerobject_set.filter(type="study")
-            .first()
-            .persistentidentifier_set.filter()
-            .first()
-        )
+        pid = submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.filter().first()
 
         self.assertEqual(pid.user_notified, None)
 
@@ -662,9 +610,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         submission.embargo = date
         submission.status = Submission.CLOSED
         submission.save()
-        submission.brokerobject_set.filter(
-            type="study"
-        ).first().persistentidentifier_set.create(
+        submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.create(
             archive="ENA", pid_type="PRJ", pid="PRJE0815"
         )
 
@@ -672,38 +618,22 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         responses.add(responses.POST, url, json={"bla": "blubb"}, status=200)
 
         notify_user_embargo_expiry_task()
-        pid = (
-            submission.brokerobject_set.filter(type="study")
-            .first()
-            .persistentidentifier_set.filter()
-            .first()
-        )
+        pid = submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.filter().first()
 
-        self.assertEqual(
-            datetime.date.today().isoformat(), pid.user_notified.isoformat()
-        )
+        self.assertEqual(datetime.date.today().isoformat(), pid.user_notified.isoformat())
 
         r = notify_user_embargo_expiry_task()
-        pid = (
-            submission.brokerobject_set.filter(type="study")
-            .first()
-            .persistentidentifier_set.filter()
-            .first()
-        )
+        pid = submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.filter().first()
 
         self.assertIn("No notifications to send", r)
-        self.assertEqual(
-            datetime.date.today().isoformat(), pid.user_notified.isoformat()
-        )
+        self.assertEqual(datetime.date.today().isoformat(), pid.user_notified.isoformat())
 
     @responses.activate
     def test_notify_user_date_is_null(self):
         submission = Submission.objects.first()
         submission.embargo = None
         submission.save()
-        submission.brokerobject_set.filter(
-            type="study"
-        ).first().persistentidentifier_set.create(
+        submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.create(
             archive="ENA", pid_type="PRJ", pid="PRJE0815"
         )
 
@@ -711,12 +641,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         responses.add(responses.POST, url, json={"bla": "blubb"}, status=200)
 
         r = notify_user_embargo_expiry_task()
-        pid = (
-            submission.brokerobject_set.filter(type="study")
-            .first()
-            .persistentidentifier_set.filter()
-            .first()
-        )
+        pid = submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.filter().first()
 
         self.assertIn("No notifications to send", r)
 

@@ -71,10 +71,7 @@ class TestSubmissionView(TestCase):
         # token = Token.objects.create(user=user)
         # client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
         # Basic auth for horst
-        client.credentials(
-            HTTP_AUTHORIZATION="Basic "
-            + base64.b64encode(b"horst:password").decode("utf-8")
-        )
+        client.credentials(HTTP_AUTHORIZATION="Basic " + base64.b64encode(b"horst:password").decode("utf-8"))
         cls.api_client = client
 
         user = User.objects.create_user(
@@ -117,23 +114,16 @@ class TestSubmissionView(TestCase):
         regular_user.site_configuration = cls.site_config
         regular_user.save()
 
-        User.objects.create_superuser(
-            username="admin", email="admin@admin.de", password="psst"
-        )
+        User.objects.create_superuser(username="admin", email="admin@admin.de", password="psst")
 
         cls.factory = APIRequestFactory()
 
         other_client = APIClient()
-        other_client.credentials(
-            HTTP_AUTHORIZATION="Basic "
-            + base64.b64encode(b"kevin:secret").decode("utf-8")
-        )
+        other_client.credentials(HTTP_AUTHORIZATION="Basic " + base64.b64encode(b"kevin:secret").decode("utf-8"))
         cls.other_api_client = other_client
 
     @staticmethod
-    def _add_gfbio_helpdesk_user_service_response(
-        user_name="regular_user", email="re@gu.la"
-    ):
+    def _add_gfbio_helpdesk_user_service_response(user_name="regular_user", email="re@gu.la"):
         url = JIRA_USERNAME_URL_TEMPLATE.format(
             user_name,
             email,
@@ -147,12 +137,8 @@ class TestSubmissionView(TestCase):
         responses.add(responses.GET, url, body=b"deleteMe", status=200)
 
     def _add_create_ticket_response(self):
-        self._add_gfbio_helpdesk_user_service_response(
-            user_name="horst", email="horst@horst.de"
-        )
-        self._add_gfbio_helpdesk_user_service_response(
-            user_name="kevin", email="kevin@kevin.de"
-        )
+        self._add_gfbio_helpdesk_user_service_response(user_name="horst", email="horst@horst.de")
+        self._add_gfbio_helpdesk_user_service_response(user_name="kevin", email="kevin@kevin.de")
         self._add_jira_client_responses()
         responses.add(
             responses.POST,
@@ -169,9 +155,7 @@ class TestSubmissionView(TestCase):
         )
 
     def _add_update_ticket_response(self):
-        url = "{0}{1}/{2}".format(
-            self.site_config.helpdesk_server.url, JIRA_ISSUE_URL, "no_key_available"
-        )
+        url = "{0}{1}/{2}".format(self.site_config.helpdesk_server.url, JIRA_ISSUE_URL, "no_key_available")
         responses.add(responses.PUT, url, body="", status=204)
 
     def _post_submission(self):
@@ -180,9 +164,7 @@ class TestSubmissionView(TestCase):
             {
                 "target": "ENA",
                 "release": False,
-                "data": {
-                    "requirements": {"title": "A Title", "description": "A Description"}
-                },
+                "data": {"requirements": {"title": "A Title", "description": "A Description"}},
             },
             format="json",
         )
@@ -195,20 +177,14 @@ class TestSubmissionView(TestCase):
                 "release": False,
                 # TODO: remove after site/user refactorings are done
                 # 'submitting_user': '{}'.format(submitting_user),
-                "data": {
-                    "requirements": {"title": "A Title", "description": "A Description"}
-                },
+                "data": {"requirements": {"title": "A Title", "description": "A Description"}},
             },
             format="json",
         )
 
     @classmethod
     def _create_test_meta_data(cls, delete=True, invalid=False, update=False):
-        file_name = (
-            "csv_files/invalid_molecular_metadata.csv"
-            if invalid
-            else "csv_files/molecular_metadata.csv"
-        )
+        file_name = "csv_files/invalid_molecular_metadata.csv" if invalid else "csv_files/molecular_metadata.csv"
         if update:
             file_name = "csv_files/molecular_metadata_for_update.csv"
 

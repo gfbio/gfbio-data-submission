@@ -34,9 +34,7 @@ class BrokerObject(models.Model):
     objects = BrokerObjectManager()
 
     def append_pid_for_pangea_doi(self, doi):
-        return self.persistentidentifier_set.create(
-            archive="PAN", pid_type="DOI", pid=doi
-        )
+        return self.persistentidentifier_set.create(archive="PAN", pid_type="DOI", pid=doi)
 
     def get_or_create_ena_pid(self, entity_pid, request_id):
         return self.persistentidentifier_set.get_or_create(

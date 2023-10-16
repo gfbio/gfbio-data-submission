@@ -27,7 +27,9 @@ from ...tasks.jira_tasks.create_pangaea_issue import create_pangaea_issue_task
 from ...tasks.jira_tasks.create_submission_issue import create_submission_issue_task
 from ...tasks.jira_tasks.get_gfbio_helpdesk_username import get_gfbio_helpdesk_username_task
 from ...tasks.transfer_tasks.trigger_submission_transfer import trigger_submission_transfer_task
-from ...tasks.transfer_tasks.trigger_submission_transfer_for_updates import trigger_submission_transfer_for_updates_task
+from ...tasks.transfer_tasks.trigger_submission_transfer_for_updates import (
+    trigger_submission_transfer_for_updates_task,
+)
 
 
 class TestTaskChains(TestTasks):
@@ -53,9 +55,7 @@ class TestTaskChains(TestTasks):
         #                     'lastname': 'Weber'})
 
         # get_gfbio_helpdesk_username_task responses ---------------------------
-        url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
-            "0815", "khors@me.de", quote("Kevin Horstmeier")
-        )
+        url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format("0815", "khors@me.de", quote("Kevin Horstmeier"))
         responses.add(responses.GET, url, body=b"0815", status=200)
 
         # create_submission_issue_task resonses --------------------------------
@@ -82,9 +82,7 @@ class TestTaskChains(TestTasks):
 
         chain = get_gfbio_helpdesk_username_task.s(submission_id=submission.id).set(
             countdown=SUBMISSION_DELAY
-        ) | create_submission_issue_task.s(submission_id=submission.id).set(
-            countdown=SUBMISSION_DELAY
-        )
+        ) | create_submission_issue_task.s(submission_id=submission.id).set(countdown=SUBMISSION_DELAY)
         chain()
         expected_tasks = [
             "tasks.create_submission_issue_task",
@@ -218,9 +216,7 @@ class TestTaskChains(TestTasks):
         #                     'fullname': 'Marc Weber',
         #                     'screenname': 'maweber', 'userid': 16250,
         #                     'lastname': 'Weber'})
-        url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
-            "0815", "khors@me.de", "Kevin Horstmeier"
-        )
+        url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format("0815", "khors@me.de", "Kevin Horstmeier")
         responses.add(responses.GET, url, body=b"deleteMe", status=200)
         responses.add(
             responses.GET,

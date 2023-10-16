@@ -29,9 +29,7 @@ logger = logging.getLogger(__name__)
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def add_accession_link_to_submission_issue_task(
-    self, prev_task_result=None, submission_id=None, target_archive=None
-):
+def add_accession_link_to_submission_issue_task(self, prev_task_result=None, submission_id=None, target_archive=None):
     if prev_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
             "tasks.py | add_accession_link_to_submission_issue_task | "
@@ -59,9 +57,7 @@ def add_accession_link_to_submission_issue_task(
             )
 
             jira_client = JiraClient(resource=site_configuration.helpdesk_server)
-            jira_client.add_ena_study_link_to_issue(
-                reference.reference_key, study_pid.pid
-            )
+            jira_client.add_ena_study_link_to_issue(reference.reference_key, study_pid.pid)
             return jira_error_auto_retry(
                 jira_client=jira_client,
                 task=self,

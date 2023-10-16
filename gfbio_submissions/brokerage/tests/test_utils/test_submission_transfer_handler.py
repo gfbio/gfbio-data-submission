@@ -82,15 +82,11 @@ class TestSubmissionTransferHandler(TestCase):
         cls.non_config_user = User.objects.create(username="no-conf", email="no@co.nf")
 
         submission = cls._create_submission_via_serializer()
-        submission.additionalreference_set.create(
-            type=PANGAEA_JIRA_TICKET, reference_key="FAKE_KEY", primary=True
-        )
+        submission.additionalreference_set.create(type=PANGAEA_JIRA_TICKET, reference_key="FAKE_KEY", primary=True)
 
     def test_instance(self):
         submission = Submission.objects.first()
-        transfer_handler = SubmissionTransferHandler(
-            submission_id=submission.pk, target_archive="ENA"
-        )
+        transfer_handler = SubmissionTransferHandler(submission_id=submission.pk, target_archive="ENA")
         self.assertIsInstance(transfer_handler, SubmissionTransferHandler)
         self.assertEqual(submission.pk, transfer_handler.submission_id)
         self.assertEqual("ENA", transfer_handler.target_archive)
@@ -108,8 +104,7 @@ class TestSubmissionTransferHandler(TestCase):
         self.assertIsInstance(conf, SiteConfiguration)
 
     @skip(
-        "currently this method is not supposed to rise an exception, "
-        "so task.chain can proceed in a controlled way"
+        "currently this method is not supposed to rise an exception, " "so task.chain can proceed in a controlled way"
     )
     def test_invalid_submission_id(self):
         with self.assertRaises(SubmissionTransferHandler.TransferInternalError) as exc:
@@ -180,17 +175,11 @@ class TestSubmissionTransferHandler(TestCase):
             JIRA_COMMENT_SUB_URL,
         )
         responses.add(responses.POST, url, json={"bla": "blubb"}, status=200)
-        sth = SubmissionTransferHandler(
-            submission_id=submission.pk, target_archive="ENA"
-        )
-        tprs = TaskProgressReport.objects.exclude(
-            task_name="tasks.update_helpdesk_ticket_task"
-        )
+        sth = SubmissionTransferHandler(submission_id=submission.pk, target_archive="ENA")
+        tprs = TaskProgressReport.objects.exclude(task_name="tasks.update_helpdesk_ticket_task")
         self.assertEqual(0, len(tprs))
         sth.execute_submission_to_ena()
-        tprs = TaskProgressReport.objects.exclude(
-            task_name="tasks.update_helpdesk_ticket_task"
-        )
+        tprs = TaskProgressReport.objects.exclude(task_name="tasks.update_helpdesk_ticket_task")
         self.assertLess(0, len(tprs))
 
     @responses.activate
@@ -248,15 +237,11 @@ class TestSubmissionTransferHandler(TestCase):
         )
         responses.add(
             responses.POST,
-            "{0}/{1}/comment".format(
-                site_config.pangaea_jira_server.url, "PANGAEA_FAKE_KEY"
-            ),
+            "{0}/{1}/comment".format(site_config.pangaea_jira_server.url, "PANGAEA_FAKE_KEY"),
             json=_get_pangaea_comment_response(),
             status=200,
         )
-        sth = SubmissionTransferHandler(
-            submission_id=submission.pk, target_archive="ENA_PANGAEA"
-        )
+        sth = SubmissionTransferHandler(submission_id=submission.pk, target_archive="ENA_PANGAEA")
         sth.execute_submission_to_ena_and_pangaea()
         # self.assertLess(0, len(TaskProgressReport.objects.all()))
         task_reports = TaskProgressReport.objects.all()

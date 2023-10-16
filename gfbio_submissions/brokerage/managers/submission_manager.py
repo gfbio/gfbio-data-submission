@@ -19,47 +19,32 @@ class SubmissionManager(models.Manager):
 
     def get_submitted_submissions_containing_reference(self, reference_type):
         return self.filter(status=self.model.SUBMITTED).filter(
-            Q(additionalreference__type=reference_type)
-            & Q(additionalreference__primary=True)
+            Q(additionalreference__type=reference_type) & Q(additionalreference__primary=True)
         )
 
     def get_open_submission(self, obj_id=None):
         # includes OPEN, SUBMITTED
         return self.get(
             Q(pk=obj_id),
-            (
-                ~Q(status=self.model.CLOSED)
-                & ~Q(status=self.model.ERROR)
-                & ~Q(status=self.model.CANCELLED)
-            ),
+            (~Q(status=self.model.CLOSED) & ~Q(status=self.model.ERROR) & ~Q(status=self.model.CANCELLED)),
         )
 
     def get_submitted_and_error_submissions(self, obj_id=None):
         # includes ERROR, SUBMITTED
         return self.get(
             Q(pk=obj_id),
-            (
-                ~Q(status=self.model.CLOSED)
-                & ~Q(status=self.model.OPEN)
-                & ~Q(status=self.model.CANCELLED)
-            ),
+            (~Q(status=self.model.CLOSED) & ~Q(status=self.model.OPEN) & ~Q(status=self.model.CANCELLED)),
         )
 
     def get_non_error_submission(self, obj_id=None):
         # includes OPEN, SUBMITTED, CLOSED
-        return self.get(
-            Q(pk=obj_id), ~Q(status=self.model.ERROR), ~Q(status=self.model.CANCELLED)
-        )
+        return self.get(Q(pk=obj_id), ~Q(status=self.model.ERROR), ~Q(status=self.model.CANCELLED))
 
     def get_open_submission_id_for_bsi(self, broker_submission_id=None):
         try:
             submission = self.get(
                 Q(broker_submission_id=broker_submission_id),
-                (
-                    ~Q(status=self.model.CLOSED)
-                    & ~Q(status=self.model.ERROR)
-                    & ~Q(status=self.model.CANCELLED)
-                ),
+                (~Q(status=self.model.CLOSED) & ~Q(status=self.model.ERROR) & ~Q(status=self.model.CANCELLED)),
             )
             return submission.id
         except self.model.DoesNotExist:
@@ -80,8 +65,6 @@ class SubmissionManager(models.Manager):
         ).get(broker_submission_id=broker_submission_id)
 
     def get_submissions_without_primary_helpdesk_issue(self):
-        return self.exclude(
-            Q(status=self.model.CANCELLED) | Q(status=self.model.CLOSED)
-        ).exclude(
+        return self.exclude(Q(status=self.model.CANCELLED) | Q(status=self.model.CLOSED)).exclude(
             Q(additionalreference__primary=True) & Q(additionalreference__type="0")
         )

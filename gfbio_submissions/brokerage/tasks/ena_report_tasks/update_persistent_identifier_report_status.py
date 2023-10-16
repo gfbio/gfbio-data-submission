@@ -28,10 +28,7 @@ def update_persistent_identifier_report_status_task(self, previous_task_result=N
         previous_task_status, fetch_report_status = previous_task_result
     except TypeError:
         pass
-    if (
-        fetch_report_status == TaskProgressReport.CANCELLED
-        or fetch_report_status is None
-    ):
+    if fetch_report_status == TaskProgressReport.CANCELLED or fetch_report_status is None:
         logger.info(
             msg="tasks.py | update_resolver_accessions_task "
             "| error(s) in previous tasks | return={0}".format(previous_task_result)
@@ -44,9 +41,6 @@ def update_persistent_identifier_report_status_task(self, previous_task_result=N
         )
         return TaskProgressReport.CANCELLED
     success = update_persistent_identifier_report_status()
-    logger.info(
-        msg="tasks.py | update_persistent_identifier_report_status_task "
-        "| success={0}".format(success)
-    )
+    logger.info(msg="tasks.py | update_persistent_identifier_report_status_task " "| success={0}".format(success))
 
     return success

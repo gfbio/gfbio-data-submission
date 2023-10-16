@@ -27,9 +27,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
     def tearDownClass(cls):
         super(TestSubmissionViewFullPosts, cls).tearDownClass()
         [
-            shutil.rmtree(
-                path="{0}{1}{2}".format(MEDIA_ROOT, os.sep, o), ignore_errors=False
-            )
+            shutil.rmtree(path="{0}{1}{2}".format(MEDIA_ROOT, os.sep, o), ignore_errors=False)
             for o in os.listdir(MEDIA_ROOT)
         ]
 
@@ -42,9 +40,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             {
                 "target": "ENA",
                 "release": True,
-                "data": {
-                    "requirements": {"title": "A Title", "description": "A Description"}
-                },
+                "data": {"requirements": {"title": "A Title", "description": "A Description"}},
             },
             format="json",
         )
@@ -75,18 +71,14 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertNotIn("download_url", content["data"]["requirements"].keys())
         self.assertEqual(1, len(Submission.objects.all()))
         submission = Submission.objects.first()
-        self.assertEqual(
-            UUID(expected["broker_submission_id"]), submission.broker_submission_id
-        )
+        self.assertEqual(UUID(expected["broker_submission_id"]), submission.broker_submission_id)
         self.assertEqual(Submission.SUBMITTED, content.get("status", "NOPE"))
         self.assertEqual("", submission.download_url)
 
     @responses.activate
     def test_valid_max_post_of_fresh_user(self):
         self._add_create_ticket_response()
-        self._add_gfbio_helpdesk_user_service_response(
-            user_name="new_user", email="new@user.de"
-        )
+        self._add_gfbio_helpdesk_user_service_response(user_name="new_user", email="new@user.de")
         self.assertEqual(0, len(Submission.objects.all()))
 
         user = User.objects.create_user(
@@ -132,9 +124,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             {
                 "target": "GENERIC",
                 "release": True,
-                "data": {
-                    "requirements": {"title": "A Title", "description": "A Description"}
-                },
+                "data": {"requirements": {"title": "A Title", "description": "A Description"}},
             },
             format="json",
         )
@@ -227,11 +217,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             "tasks.create_broker_objects_from_submission_data_task",
             "tasks.prepare_ena_submission_data_task",
         ]
-        all_task_reports = list(
-            TaskProgressReport.objects.values_list("task_name", flat=True).order_by(
-                "created"
-            )
-        )
+        all_task_reports = list(TaskProgressReport.objects.values_list("task_name", flat=True).order_by("created"))
         self.assertListEqual(expected_task_names, all_task_reports)
 
         self.assertEqual(1, len(submission.brokerobject_set.filter(type="study")))
@@ -247,9 +233,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertIn("files", experiment.data.keys())
 
         submission_text_data = list(
-            submission.auditabletextdata_set.values_list("name", flat=True).order_by(
-                "created"
-            )
+            submission.auditabletextdata_set.values_list("name", flat=True).order_by("created")
         )
         expected_text_data_names = [
             "study.xml",
@@ -314,9 +298,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             file="{0}/molecular_metadata.csv".format(submission.broker_submission_id)
         )
         update_upload = submission.submissionupload_set.get(
-            file="{0}/molecular_metadata_for_update.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/molecular_metadata_for_update.csv".format(submission.broker_submission_id)
         )
         original_upload.meta_data = False
         original_upload.save()
@@ -441,11 +423,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             "tasks.create_broker_objects_from_submission_data_task",
             "tasks.prepare_ena_submission_data_task",
         ]
-        all_task_reports = list(
-            TaskProgressReport.objects.values_list("task_name", flat=True).order_by(
-                "created"
-            )
-        )
+        all_task_reports = list(TaskProgressReport.objects.values_list("task_name", flat=True).order_by("created"))
         self.assertListEqual(expected_task_names, all_task_reports)
 
         # self.assertEqual(0, len(submission.brokerobject_set.all()))

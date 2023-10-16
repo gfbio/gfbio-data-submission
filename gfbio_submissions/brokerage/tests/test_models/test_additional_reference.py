@@ -39,9 +39,7 @@ class AdditionalReferenceTest(TestCase):
         )
 
     def test_instance(self):
-        reference = AdditionalReference(
-            type=PANGAEA_JIRA_TICKET, submission=Submission.objects.first()
-        )
+        reference = AdditionalReference(type=PANGAEA_JIRA_TICKET, submission=Submission.objects.first())
         reference.save()
         self.assertFalse(reference.primary)
         self.assertTrue(isinstance(reference, AdditionalReference))
@@ -57,18 +55,14 @@ class AdditionalReferenceTest(TestCase):
             else:
                 self.assertFalse(ref.primary)
 
-        pangeae_references = submission.additionalreference_set.filter(
-            type=PANGAEA_JIRA_TICKET
-        )
+        pangeae_references = submission.additionalreference_set.filter(type=PANGAEA_JIRA_TICKET)
         self.assertEqual(2, len(pangeae_references))
         ref = pangeae_references.first()
         ref.primary = True
         ref.save()
         reference_changed = ref.reference_key
 
-        pangeae_references = submission.additionalreference_set.filter(
-            type=PANGAEA_JIRA_TICKET
-        )
+        pangeae_references = submission.additionalreference_set.filter(type=PANGAEA_JIRA_TICKET)
         primary_references = pangeae_references.filter(primary=True)
         self.assertEqual(1, len(primary_references))
         self.assertEqual(reference_changed, primary_references.first().reference_key)
@@ -81,9 +75,7 @@ class AdditionalReferenceTest(TestCase):
         ref.primary = True
         ref.save()
 
-        pangeae_references = submission.additionalreference_set.filter(
-            type=PANGAEA_JIRA_TICKET
-        )
+        pangeae_references = submission.additionalreference_set.filter(type=PANGAEA_JIRA_TICKET)
         primary_references = pangeae_references.filter(primary=True)
         self.assertEqual(1, len(primary_references))
         self.assertEqual(reference_changed, primary_references.first().reference_key)

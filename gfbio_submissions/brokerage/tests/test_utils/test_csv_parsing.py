@@ -31,19 +31,13 @@ from ...serializers.submission_serializer import SubmissionSerializer
 
 class TestCSVParsing(TestCase):
     @classmethod
-    def create_csv_submission_upload(
-        cls, submission, user, file_sub_path="csv_files/molecular_metadata.csv"
-    ):
-        with open(
-            os.path.join(_get_test_data_dir_path(), file_sub_path), "rb"
-        ) as data_file:
+    def create_csv_submission_upload(cls, submission, user, file_sub_path="csv_files/molecular_metadata.csv"):
+        with open(os.path.join(_get_test_data_dir_path(), file_sub_path), "rb") as data_file:
             return SubmissionUpload.objects.create(
                 submission=submission,
                 user=user,
                 meta_data=True,
-                file=SimpleUploadedFile(
-                    "csv_files/upload_molecular_metadata.csv", data_file.read()
-                ),
+                file=SimpleUploadedFile("csv_files/upload_molecular_metadata.csv", data_file.read()),
             )
 
     @classmethod
@@ -62,12 +56,8 @@ class TestCSVParsing(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        user = User.objects.create_user(
-            username="horst", email="horst@horst.de", password="password"
-        )
-        permissions = Permission.objects.filter(
-            content_type__app_label="brokerage", codename__endswith="upload"
-        )
+        user = User.objects.create_user(username="horst", email="horst@horst.de", password="password")
+        permissions = Permission.objects.filter(content_type__app_label="brokerage", codename__endswith="upload")
         user.user_permissions.add(*permissions)
         serializer = SubmissionSerializer(
             data={
@@ -84,9 +74,7 @@ class TestCSVParsing(TestCase):
         )
         serializer.is_valid()
         submission = serializer.save(user=user)
-        submission.additionalreference_set.create(
-            type=GFBIO_HELPDESK_TICKET, reference_key="FAKE_KEY", primary=True
-        )
+        submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="FAKE_KEY", primary=True)
         cls.create_csv_submission_upload(submission, user)
         cls.expected_parse_result = {
             "experiments": [
@@ -211,15 +199,9 @@ class TestCSVParsing(TestCase):
                                 ("value", "A description, with " "commmas, ..."),
                             ]
                         ),
-                        OrderedDict(
-                            [("tag", "investigation type"), ("value", "mimarks-survey")]
-                        ),
-                        OrderedDict(
-                            [("tag", "environmental package"), ("value", "sediment")]
-                        ),
-                        OrderedDict(
-                            [("tag", "collection date"), ("value", "2015-07-26")]
-                        ),
+                        OrderedDict([("tag", "investigation type"), ("value", "mimarks-survey")]),
+                        OrderedDict([("tag", "environmental package"), ("value", "sediment")]),
+                        OrderedDict([("tag", "collection date"), ("value", "2015-07-26")]),
                         OrderedDict(
                             [
                                 ("tag", "geographic location " "(latitude)"),
@@ -292,15 +274,9 @@ class TestCSVParsing(TestCase):
                         #               'sample_description'),
                         #              ('value',
                         #               '')]),
-                        OrderedDict(
-                            [("tag", "investigation type"), ("value", "mimarks-survey")]
-                        ),
-                        OrderedDict(
-                            [("tag", "environmental package"), ("value", "sediment")]
-                        ),
-                        OrderedDict(
-                            [("tag", "collection date"), ("value", "2015-07-26")]
-                        ),
+                        OrderedDict([("tag", "investigation type"), ("value", "mimarks-survey")]),
+                        OrderedDict([("tag", "environmental package"), ("value", "sediment")]),
+                        OrderedDict([("tag", "collection date"), ("value", "2015-07-26")]),
                         OrderedDict(
                             [
                                 ("tag", "geographic location " "(latitude)"),
@@ -374,15 +350,9 @@ class TestCSVParsing(TestCase):
                                 ("value", "A description, with " "commmas, ..."),
                             ]
                         ),
-                        OrderedDict(
-                            [("tag", "investigation type"), ("value", "mimarks-survey")]
-                        ),
-                        OrderedDict(
-                            [("tag", "environmental package"), ("value", "sediment")]
-                        ),
-                        OrderedDict(
-                            [("tag", "collection date"), ("value", "2015-07-26")]
-                        ),
+                        OrderedDict([("tag", "investigation type"), ("value", "mimarks-survey")]),
+                        OrderedDict([("tag", "environmental package"), ("value", "sediment")]),
+                        OrderedDict([("tag", "collection date"), ("value", "2015-07-26")]),
                         OrderedDict(
                             [
                                 ("tag", "geographic location " "(latitude)"),
@@ -456,15 +426,9 @@ class TestCSVParsing(TestCase):
                                 ("value", "A description, with " "commmas, ..."),
                             ]
                         ),
-                        OrderedDict(
-                            [("tag", "investigation type"), ("value", "mimarks-survey")]
-                        ),
-                        OrderedDict(
-                            [("tag", "environmental package"), ("value", "sediment")]
-                        ),
-                        OrderedDict(
-                            [("tag", "collection date"), ("value", "2015-07-26")]
-                        ),
+                        OrderedDict([("tag", "investigation type"), ("value", "mimarks-survey")]),
+                        OrderedDict([("tag", "environmental package"), ("value", "sediment")]),
+                        OrderedDict([("tag", "collection date"), ("value", "2015-07-26")]),
                         OrderedDict(
                             [
                                 ("tag", "geographic location " "(latitude)"),
@@ -538,15 +502,9 @@ class TestCSVParsing(TestCase):
                                 ("value", "A description, with " "commmas, ..."),
                             ]
                         ),
-                        OrderedDict(
-                            [("tag", "investigation type"), ("value", "mimarks-survey")]
-                        ),
-                        OrderedDict(
-                            [("tag", "environmental package"), ("value", "sediment")]
-                        ),
-                        OrderedDict(
-                            [("tag", "collection date"), ("value", "2015-07-26")]
-                        ),
+                        OrderedDict([("tag", "investigation type"), ("value", "mimarks-survey")]),
+                        OrderedDict([("tag", "environmental package"), ("value", "sediment")]),
+                        OrderedDict([("tag", "collection date"), ("value", "2015-07-26")]),
                         OrderedDict(
                             [
                                 ("tag", "geographic location " "(latitude)"),
@@ -620,9 +578,7 @@ class TestCSVParsing(TestCase):
     def tearDownClass(cls):
         super(TestCSVParsing, cls).tearDownClass()
         [
-            shutil.rmtree(
-                path="{0}{1}{2}".format(MEDIA_ROOT, os.sep, o), ignore_errors=False
-            )
+            shutil.rmtree(path="{0}{1}{2}".format(MEDIA_ROOT, os.sep, o), ignore_errors=False)
             for o in os.listdir(MEDIA_ROOT)
         ]
 
@@ -702,9 +658,7 @@ class TestCSVParsing(TestCase):
                         ("value", "Sediment community in station S3"),
                     ]
                 ),
-                OrderedDict(
-                    [("tag", "investigation type"), ("value", "mimarks-survey")]
-                ),
+                OrderedDict([("tag", "investigation type"), ("value", "mimarks-survey")]),
                 OrderedDict([("tag", "environmental package"), ("value", "sediment")]),
                 OrderedDict([("tag", "collection date"), ("value", "2016-06-25")]),
                 OrderedDict(
@@ -741,15 +695,9 @@ class TestCSVParsing(TestCase):
                         ("value", "Arctic Ocean: Greenland Sea"),
                     ]
                 ),
-                OrderedDict(
-                    [("tag", "environment (biome)"), ("value", "ENVO:00000426")]
-                ),
-                OrderedDict(
-                    [("tag", "environment (material)"), ("value", "ENVO:00002113")]
-                ),
-                OrderedDict(
-                    [("tag", "environment (feature)"), ("value", "ENVO:01000007")]
-                ),
+                OrderedDict([("tag", "environment (biome)"), ("value", "ENVO:00000426")]),
+                OrderedDict([("tag", "environment (material)"), ("value", "ENVO:00002113")]),
+                OrderedDict([("tag", "environment (feature)"), ("value", "ENVO:01000007")]),
             ],
         }
         sample = extract_sample(row=row, field_names=field_names, sample_id=sample_id)
@@ -865,9 +813,7 @@ class TestCSVParsing(TestCase):
                 # OrderedDict(
                 #     [('tag', 'environment (biome)'),
                 #      ('value', 'ENVO:00000426')]),
-                OrderedDict(
-                    [("tag", "environment (material)"), ("value", "ENVO:00002113")]
-                ),
+                OrderedDict([("tag", "environment (material)"), ("value", "ENVO:00002113")]),
                 # OrderedDict(
                 #     [('tag', 'environment (feature)'),
                 #      ('value', 'ENVO:01000007')])
@@ -912,9 +858,7 @@ class TestCSVParsing(TestCase):
                 self.assertIn("samples", requirements_keys)
 
                 for x in range(0, len(requirements["samples"])):
-                    for s in requirements.get("samples", [{}])[x].get(
-                        "sample_attributes", []
-                    ):
+                    for s in requirements.get("samples", [{}])[x].get("sample_attributes", []):
                         tag = s.get("tag")
                         if "environmental package" in tag:
                             env_pack = s.get("value")
@@ -959,9 +903,7 @@ class TestCSVParsing(TestCase):
 
         submission = Submission.objects.first()
         submission.data.get("requirements", {}).update(requirements)
-        path = os.path.join(
-            os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json"
-        )
+        path = os.path.join(os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json")
         valid, full_errors = validate_data_full(
             data=submission.data,
             target=ENA_PANGAEA,
@@ -1007,9 +949,7 @@ class TestCSVParsing(TestCase):
 
         submission = Submission.objects.first()
         submission.data.get("requirements", {}).update(requirements)
-        path = os.path.join(
-            os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json"
-        )
+        path = os.path.join(os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json")
         valid, full_errors = validate_data_full(
             data=submission.data,
             target=ENA_PANGAEA,
@@ -1055,9 +995,7 @@ class TestCSVParsing(TestCase):
 
         submission = Submission.objects.first()
         submission.data.get("requirements", {}).update(requirements)
-        path = os.path.join(
-            os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json"
-        )
+        path = os.path.join(os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json")
         valid, full_errors = validate_data_full(
             data=submission.data,
             target=ENA_PANGAEA,
@@ -1112,9 +1050,7 @@ class TestCSVParsing(TestCase):
 
     def test_parse_semi_no_quoting(self):
         with open(
-            os.path.join(
-                _get_test_data_dir_path(), "csv_files/mol_5_items_semi_no_quoting.csv"
-            ),
+            os.path.join(_get_test_data_dir_path(), "csv_files/mol_5_items_semi_no_quoting.csv"),
             "r",
         ) as data_file:
             requirements = parse_molecular_csv(data_file)
@@ -1154,13 +1090,9 @@ class TestCSVParsing(TestCase):
         submission.submissionupload_set.all().delete()
         submission.save()
 
-        self.create_csv_submission_upload(
-            submission, User.objects.first(), "csv_files/SO45_missing_mixs_values.csv"
-        )
+        self.create_csv_submission_upload(submission, User.objects.first(), "csv_files/SO45_missing_mixs_values.csv")
 
-        is_mol_content, errors, check_performed = check_for_molecular_content(
-            submission
-        )
+        is_mol_content, errors, check_performed = check_for_molecular_content(submission)
         self.assertTrue(is_mol_content)
 
         BrokerObject.objects.add_submission_data(submission)
@@ -1180,13 +1112,9 @@ class TestCSVParsing(TestCase):
         submission.submissionupload_set.all().delete()
         submission.save()
 
-        self.create_csv_submission_upload(
-            submission, User.objects.first(), "csv_files/SO45_mod.csv"
-        )
+        self.create_csv_submission_upload(submission, User.objects.first(), "csv_files/SO45_mod.csv")
 
-        is_mol_content, errors, check_performed = check_for_molecular_content(
-            submission
-        )
+        is_mol_content, errors, check_performed = check_for_molecular_content(submission)
         self.assertTrue(is_mol_content)
 
         BrokerObject.objects.add_submission_data(submission)
@@ -1199,9 +1127,7 @@ class TestCSVParsing(TestCase):
         )
 
         file_name, file_content = ena_submission_data["EXPERIMENT"]
-        self.assertEqual(
-            4, file_content.count("<LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>")
-        )
+        self.assertEqual(4, file_content.count("<LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>"))
         self.assertNotIn("<LIBRARY_LAYOUT><PAIRED", file_content)
 
     def test_check_for_mol_content_case_sensitivity(self):
@@ -1209,12 +1135,8 @@ class TestCSVParsing(TestCase):
         submission.submissionupload_set.all().delete()
         submission.save()
 
-        self.create_csv_submission_upload(
-            submission, User.objects.first(), "csv_files/SO45_mixed_cases.csv"
-        )
-        is_mol_content, errors, check_performed = check_for_molecular_content(
-            submission
-        )
+        self.create_csv_submission_upload(submission, User.objects.first(), "csv_files/SO45_mixed_cases.csv")
+        is_mol_content, errors, check_performed = check_for_molecular_content(submission)
         self.assertTrue(is_mol_content)
         self.assertListEqual([], errors)
 
@@ -1222,13 +1144,9 @@ class TestCSVParsing(TestCase):
         submission = Submission.objects.first()
         submission.submissionupload_set.all().delete()
         submission.save()
-        self.create_csv_submission_upload(
-            submission, User.objects.first(), "csv_files/dsub-269_template.csv"
-        )
+        self.create_csv_submission_upload(submission, User.objects.first(), "csv_files/dsub-269_template.csv")
 
-        is_mol_content, errors, check_performed = check_for_molecular_content(
-            submission
-        )
+        is_mol_content, errors, check_performed = check_for_molecular_content(submission)
         self.assertTrue(is_mol_content)
         BrokerObject.objects.add_submission_data(submission)
         self.assertEqual(25, len(BrokerObject.objects.filter(type="experiment")))
@@ -1260,9 +1178,7 @@ class TestCSVParsing(TestCase):
         self.assertNotIn("samples", submission.data["requirements"].keys())
         self.assertNotIn("experiments", submission.data["requirements"].keys())
 
-        is_mol_content, errors, check_performed = check_for_molecular_content(
-            submission
-        )
+        is_mol_content, errors, check_performed = check_for_molecular_content(submission)
 
         self.assertTrue(is_mol_content)
         self.assertListEqual([], errors)
@@ -1273,27 +1189,19 @@ class TestCSVParsing(TestCase):
 
     def test_check_content_on_submission_with_molecular_data(self):
         submission = Submission.objects.first()
-        is_mol_content, errors, check_performed = check_for_molecular_content(
-            submission
-        )
+        is_mol_content, errors, check_performed = check_for_molecular_content(submission)
         submission = Submission.objects.first()
         self.assertTrue(is_mol_content)
         self.assertTrue(check_performed)
         self.assertIn("samples", submission.data["requirements"].keys())
         self.assertIn("experiments", submission.data["requirements"].keys())
 
-        previous_length = len(
-            submission.data.get("requirements", {}).get("experiments", [])
-        )
-        is_mol_content, errors, check_performed = check_for_molecular_content(
-            submission
-        )
+        previous_length = len(submission.data.get("requirements", {}).get("experiments", []))
+        is_mol_content, errors, check_performed = check_for_molecular_content(submission)
         self.assertTrue(is_mol_content)
         self.assertTrue(check_performed)
         submission = Submission.objects.first()
-        current_length = len(
-            submission.data.get("requirements", {}).get("experiments", [])
-        )
+        current_length = len(submission.data.get("requirements", {}).get("experiments", []))
 
         self.assertEqual(previous_length, current_length)
 
@@ -1312,12 +1220,8 @@ class TestCSVParsing(TestCase):
         submission.submissionupload_set.all().delete()
         submission.save()
 
-        self.create_csv_submission_upload(
-            submission, User.objects.first(), "csv_files/Data_submission_SAGs.csv"
-        )
-        is_mol_content, errors, check_performed = check_for_molecular_content(
-            submission
-        )
+        self.create_csv_submission_upload(submission, User.objects.first(), "csv_files/Data_submission_SAGs.csv")
+        is_mol_content, errors, check_performed = check_for_molecular_content(submission)
         self.assertTrue(is_mol_content)
         samples = submission.data.get("requirements", {}).get("samples", [])
         self.assertEqual(1, len(samples))
@@ -1326,36 +1230,24 @@ class TestCSVParsing(TestCase):
 
     def test_check_minimum_header_cols(self):
         submission = Submission.objects.first()
-        self.assertEqual(
-            1, len(submission.submissionupload_set.filter(file__endswith=".csv"))
-        )
+        self.assertEqual(1, len(submission.submissionupload_set.filter(file__endswith=".csv")))
         self.assertTrue(
-            check_minimum_header_cols(
-                submission.submissionupload_set.filter(file__endswith=".csv").first()
-            )
+            check_minimum_header_cols(submission.submissionupload_set.filter(file__endswith=".csv").first())
         )
 
     def test_check_minimum_header_cols_fail(self):
         submission = Submission.objects.first()
         submission.submissionupload_set.all().delete()
-        SimpleUploadedFile(
-            "test_submission_upload.tsv", b"these\tare\tthe\tfile\tcontents"
-        )
+        SimpleUploadedFile("test_submission_upload.tsv", b"these\tare\tthe\tfile\tcontents")
         SubmissionUpload.objects.create(
             submission=submission,
             user=submission.user,
             meta_data=True,
-            file=SimpleUploadedFile(
-                "test_submission_upload.csv", b"sample_title;NO_DESCR;the;file;contents"
-            ),
+            file=SimpleUploadedFile("test_submission_upload.csv", b"sample_title;NO_DESCR;the;file;contents"),
         )
-        self.assertEqual(
-            1, len(submission.submissionupload_set.filter(file__endswith=".csv"))
-        )
+        self.assertEqual(1, len(submission.submissionupload_set.filter(file__endswith=".csv")))
         self.assertFalse(
-            check_minimum_header_cols(
-                submission.submissionupload_set.filter(file__endswith=".csv").first()
-            )
+            check_minimum_header_cols(submission.submissionupload_set.filter(file__endswith=".csv").first())
         )
 
     def test_check_metadata_rule(self):
@@ -1368,13 +1260,9 @@ class TestCSVParsing(TestCase):
             submission=submission,
             user=submission.user,
             meta_data=True,
-            file=SimpleUploadedFile(
-                "test_submission_upload.csv", b"sample_title;NO_DESCR;the;file;contents"
-            ),
+            file=SimpleUploadedFile("test_submission_upload.csv", b"sample_title;NO_DESCR;the;file;contents"),
         )
-        self.assertEqual(
-            2, len(submission.submissionupload_set.filter(file__endswith=".csv"))
-        )
+        self.assertEqual(2, len(submission.submissionupload_set.filter(file__endswith=".csv")))
         self.assertFalse(check_metadata_rule(submission))
 
     def test_check_csv_file_rule(self):
@@ -1390,13 +1278,9 @@ class TestCSVParsing(TestCase):
             submission=submission,
             user=submission.user,
             meta_data=False,
-            file=SimpleUploadedFile(
-                "test_submission_upload.csv", b"sample_title;NO_DESCR;the;file;contents"
-            ),
+            file=SimpleUploadedFile("test_submission_upload.csv", b"sample_title;NO_DESCR;the;file;contents"),
         )
-        self.assertEqual(
-            2, len(submission.submissionupload_set.filter(file__endswith=".csv"))
-        )
+        self.assertEqual(2, len(submission.submissionupload_set.filter(file__endswith=".csv")))
         self.assertTrue(check_csv_file_rule(submission))
 
     # # TODO: remove ?

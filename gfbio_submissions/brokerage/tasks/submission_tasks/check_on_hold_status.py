@@ -41,9 +41,7 @@ def check_on_hold_status_task(self, previous_task_result=None, submission_id=Non
                 site_configuration.release_submissions,
             )
         )
-        transfer_handler = SubmissionTransferHandler(
-            submission_id=submission.pk, target_archive=submission.target
-        )
+        transfer_handler = SubmissionTransferHandler(submission_id=submission.pk, target_archive=submission.target)
         transfer_handler.execute()
     else:
         if not submission.approval_notification_sent:
@@ -63,16 +61,12 @@ def check_on_hold_status_task(self, previous_task_result=None, submission_id=Non
                 subject=APPROVAL_EMAIL_SUBJECT_TEMPLATE.format(
                     HOST_URL_ROOT,
                     # site_configuration.site.username if site_configuration.site else site_configuration.title,
-                    submission.user.username
-                    if submission.user
-                    else site_configuration.title,
+                    submission.user.username if submission.user else site_configuration.title,
                     submission.broker_submission_id,
                 ),
                 message=APPROVAL_EMAIL_MESSAGE_TEMPLATE.format(
                     submission.broker_submission_id,
-                    "{0}{1}brokerage/submission/{2}/change/".format(
-                        HOST_URL_ROOT, ADMIN_URL, submission.pk
-                    ),
+                    "{0}{1}brokerage/submission/{2}/change/".format(HOST_URL_ROOT, ADMIN_URL, submission.pk),
                 ),
             )
             submission.approval_notification_sent = True

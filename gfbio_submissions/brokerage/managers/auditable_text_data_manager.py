@@ -41,9 +41,7 @@ class AuditableTextDataManager(models.Manager):
     def assemble_atax_submission_uploads(self, submission):
         request_file_keys = ["specimen", "measurement", "multimedia", "combination"]
 
-        atax_upload = self.filter(submission=submission).filter(
-            name__in=request_file_keys
-        )
+        atax_upload = self.filter(submission=submission).filter(name__in=request_file_keys)
 
         res = {}
         for r in request_file_keys:

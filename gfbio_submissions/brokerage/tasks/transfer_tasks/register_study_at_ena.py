@@ -53,15 +53,11 @@ def register_study_at_ena_task(
         )
         return TaskProgressReport.CANCELLED
 
-    primary_accession = BrokerObject.objects.get_study_primary_accession_number(
-        submission
-    )
+    primary_accession = BrokerObject.objects.get_study_primary_accession_number(submission)
     if primary_accession is not None:
         logger.info(
             "tasks.py | register_study_at_ena_task | "
-            " persistent_identifier={0} found | return pk={1}".format(
-                primary_accession, primary_accession.pk
-            )
+            " persistent_identifier={0} found | return pk={1}".format(primary_accession, primary_accession.pk)
         )
         return TaskProgressReport.CANCELLED
 
@@ -84,15 +80,11 @@ def register_study_at_ena_task(
         return TaskProgressReport.CANCELLED
     else:
         try:
-            response, request_id = register_study_at_ena(
-                submission=submission, study_text_data=study_text_data
-            )
+            response, request_id = register_study_at_ena(submission=submission, study_text_data=study_text_data)
             logger.info(
                 "tasks.py | register_study_at_ena_task | "
                 "register_study_at_ena executed | submission_id={0} "
-                "| response status_code={1}".format(
-                    submission.broker_submission_id, response.status_code
-                )
+                "| response status_code={1}".format(submission.broker_submission_id, response.status_code)
             )
             res = raise_transfer_server_exceptions(
                 response=response,

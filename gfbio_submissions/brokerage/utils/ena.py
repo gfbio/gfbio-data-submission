@@ -56,9 +56,7 @@ locus_attribute_mappings = {
 #  ENALIZER  xml for ena -------------------------------------------------------
 class Enalizer(object):
     def __init__(self, submission, alias_postfix=uuid.uuid4()):
-        study, samples, experiments, runs = submission.get_json_with_aliases(
-            alias_postfix=alias_postfix
-        )
+        study, samples, experiments, runs = submission.get_json_with_aliases(alias_postfix=alias_postfix)
         self.study_alias = study.pop("study_alias", "")
         self.study = study
         self.sample = samples
@@ -69,10 +67,7 @@ class Enalizer(object):
         self.run = runs
         self.runs_key = "runs"
         self.embargo = submission.embargo
-        if (
-            submission.center_name is not None
-            and submission.center_name.center_name != ""
-        ):
+        if submission.center_name is not None and submission.center_name.center_name != "":
             self.center_name = submission.center_name.center_name
         else:
             self.center_name = DEFAULT_ENA_CENTER_NAME
@@ -81,10 +76,7 @@ class Enalizer(object):
         if isinstance(dictionary, list):
             return [self._upper_case_dictionary(v) for v in dictionary]
         elif isinstance(dictionary, dict):
-            return dict(
-                (k.upper(), self._upper_case_dictionary(v))
-                for k, v in dictionary.items()
-            )
+            return dict((k.upper(), self._upper_case_dictionary(v)) for k, v in dictionary.items())
         else:
             return dictionary
 
@@ -92,10 +84,7 @@ class Enalizer(object):
         if isinstance(dictionary, list):
             return [self._upper_case_ordered_dictionary(v) for v in dictionary]
         elif isinstance(dictionary, OrderedDict) or isinstance(dictionary, dict):
-            return OrderedDict(
-                (k.upper(), self._upper_case_ordered_dictionary(v))
-                for k, v in dictionary.items()
-            )
+            return OrderedDict((k.upper(), self._upper_case_ordered_dictionary(v)) for k, v in dictionary.items())
         else:
             return dictionary
 
@@ -119,10 +108,7 @@ class Enalizer(object):
             result = {}
         for key, value in d.items():
             if isinstance(value, dict):
-                value1 = {
-                    ".".join([key, key_in_value]): value[key_in_value]
-                    for key_in_value in value
-                }
+                value1 = {".".join([key, key_in_value]): value[key_in_value] for key_in_value in value}
                 self.flatten_dict(value1, result)
             elif isinstance(value, (list, tuple)):
                 for indexB, element in enumerate(value):
@@ -131,9 +117,7 @@ class Enalizer(object):
                         index = 0
                         for key_in_element in element:
                             # newkey = ".".join([key, keyIn])
-                            value1[".".join([key, key_in_element])] = value[indexB][
-                                key_in_element
-                            ]
+                            value1[".".join([key, key_in_element])] = value[indexB][key_in_element]
                             index += 1
                         for keyA in value1:
                             # self.flatten_dict(value1, result)
@@ -144,20 +128,12 @@ class Enalizer(object):
                 result[key] = value
         return result
 
-    def create_submission_xml(
-        self, action="VALIDATE", hold_date=None, outgoing_request_id="add_outgoing_id"
-    ):
-        logger.info(
-            msg="Enalizer create_submission_xml. action={} hold_date={}".format(
-                action, hold_date
-            )
-        )
+    def create_submission_xml(self, action="VALIDATE", hold_date=None, outgoing_request_id="add_outgoing_id"):
+        logger.info(msg="Enalizer create_submission_xml. action={} hold_date={}".format(action, hold_date))
         actions = "<ACTION><{}/></ACTION>".format(action)
         if not hold_date:
             # today + 1 year
-            hold_date = "{0}".format(
-                (datetime.date.today() + datetime.timedelta(days=365)).isoformat()
-            )
+            hold_date = "{0}".format((datetime.date.today() + datetime.timedelta(days=365)).isoformat())
         else:
             hold_date = hold_date.isoformat()
         return textwrap.dedent(
@@ -194,9 +170,7 @@ class Enalizer(object):
 
         study_dict = self._capitalize_dictionary(study_dict)
 
-        study_xml = dicttoxml.dicttoxml(
-            study_dict, custom_root="STUDY_SET", attr_type=False
-        )
+        study_xml = dicttoxml.dicttoxml(study_dict, custom_root="STUDY_SET", attr_type=False)
 
         # TODO: candidate for refactoring to generic method, params could be find_element and replacement
         root = ET.fromstring(study_xml)
@@ -223,9 +197,7 @@ class Enalizer(object):
         renamed_additional_checklist_value = ""
         for s in sample_attributes:
             if s.get("tag", "no_tag_found") == "environmental package":
-                renamed_additional_checklist_tag = "{0} {1}".format(
-                    s.get("value", "NO_VAL"), "environmental package"
-                )
+                renamed_additional_checklist_tag = "{0} {1}".format(s.get("value", "NO_VAL"), "environmental package")
                 renamed_additional_checklist_value = s.get("value", "NO_VAL")
                 break
         for s in sample_attributes:
@@ -257,9 +229,7 @@ class Enalizer(object):
         for sample in sample_attributes:
             if sample["tag"] in lower_case_cols:
                 sample["value"] = sample["value"].lower()
-        sample_attributes.append(
-            OrderedDict([("tag", "submitted to insdc"), ("value", "true")])
-        )
+        sample_attributes.append(OrderedDict([("tag", "submitted to insdc"), ("value", "true")]))
         sample_alias = s.get("sample_alias", "NO_SAMPLE_ALIAS")
         if sample_alias in sample_descriptor_platform_mappings.keys():
             sample_attributes.append(
@@ -313,27 +283,18 @@ class Enalizer(object):
                     ]
                 )
             else:
-                s["sample_attributes"] = [
-                    OrderedDict(("tag", k), ("value", v))
-                    for k, v in flattened_gcdj.items()
-                ]
+                s["sample_attributes"] = [OrderedDict(("tag", k), ("value", v)) for k, v in flattened_gcdj.items()]
             s.pop("gcdjson_key", "")
 
         # TODO / FIXME: how deal with sample_alias ?
         samples = []
         index_for_sample = 0
         for s in self.sample:
-            samples.append(
-                self.convert_sample(
-                    s, index_for_sample, sample_descriptor_platform_mappings
-                )
-            )
+            samples.append(self.convert_sample(s, index_for_sample, sample_descriptor_platform_mappings))
             index_for_sample += 1
 
         samples = self._capitalize_ordered_dictionary(samples)
-        sample_xml = dicttoxml.dicttoxml(
-            samples, custom_root="SAMPLE_SET", attr_type=False
-        )
+        sample_xml = dicttoxml.dicttoxml(samples, custom_root="SAMPLE_SET", attr_type=False)
         root = ET.fromstring(sample_xml)
         for item in root.findall("./item"):
             item.tag = "SAMPLE"
@@ -360,9 +321,7 @@ class Enalizer(object):
         [self.create_subelement(root, name, data_dict) for name in element_names]
 
     @staticmethod
-    def create_subelement_with_attribute(
-        root, element_name, attrib_name, data_dict, data_key=None
-    ):
+    def create_subelement_with_attribute(root, element_name, attrib_name, data_dict, data_key=None):
         if data_key:
             return SubElement(
                 root,
@@ -436,9 +395,7 @@ class Enalizer(object):
                     root,
                     "LOCUS",
                     {
-                        "locus_name": data_dict.get("targeted_loci", {}).get(
-                            "locus_name", ""
-                        ),
+                        "locus_name": data_dict.get("targeted_loci", {}).get("locus_name", ""),
                     },
                 )
 
@@ -454,9 +411,7 @@ class Enalizer(object):
 
     def create_attributes(self, root, data_dict, attribute_prefix=""):
         for attribute in data_dict:
-            experiment_attribute = SubElement(
-                root, "{}_ATTRIBUTE".format(attribute_prefix).upper()
-            )
+            experiment_attribute = SubElement(root, "{}_ATTRIBUTE".format(attribute_prefix).upper())
             self.create_subelement(experiment_attribute, "tag", attribute)
             if "value" in attribute.keys():
                 self.create_subelement(experiment_attribute, "value", attribute)
@@ -469,19 +424,13 @@ class Enalizer(object):
             if sample_alias in sample_descriptor:
                 if "sample_attributes" in s.keys():
                     for m in range(len(s.get("sample_attributes", []))):
-                        if (
-                            str(s.get("sample_attributes", [])[m]["tag"]).lower()
-                            == "target gene"
-                        ):
+                        if str(s.get("sample_attributes", [])[m]["tag"]).lower() == "target gene":
                             gene_loc = s.get("sample_attributes", [])[m]["value"]
                             if len(gene_loc):
-                                mapped_locus = locus_attribute_mappings.get(
-                                    gene_loc.lower()
-                                )
+                                mapped_locus = locus_attribute_mappings.get(gene_loc.lower())
                                 if mapped_locus is not None:
                                     targeted_loci_dict["targeted_loci"] = dict(
-                                        targeted_loci_dict,
-                                        **OrderedDict([("locus_name", mapped_locus)])
+                                        targeted_loci_dict, **OrderedDict([("locus_name", mapped_locus)])
                                     )
                                 else:
                                     targeted_loci_dict["targeted_loci"] = dict(
@@ -491,16 +440,14 @@ class Enalizer(object):
                                                 ("locus_name", "other"),
                                                 ("description", str(gene_loc)),
                                             ]
-                                        )
+                                        ),
                                     )
                             del s.get("sample_attributes", [])[m]
                             break
                 break
         return targeted_loci_dict
 
-    def create_single_experiment_xml(
-        self, experiment_set, data, sample_descriptor_platform_mappings
-    ):
+    def create_single_experiment_xml(self, experiment_set, data, sample_descriptor_platform_mappings):
         experiment = self.create_subelement_with_attribute(
             experiment_set, "EXPERIMENT", "alias", data, "experiment_alias"
         )
@@ -516,9 +463,7 @@ class Enalizer(object):
             self.create_subelement(design, "design_description", design_data)
         else:
             SubElement(design, "DESIGN_DESCRIPTION")
-        self.create_subelement_with_attribute(
-            design, "sample_descriptor", "refname", design_data
-        )
+        self.create_subelement_with_attribute(design, "sample_descriptor", "refname", design_data)
 
         library_descriptor_data = design_data.get("library_descriptor", {})
         library_descriptor = SubElement(design, "LIBRARY_DESCRIPTOR")
@@ -531,22 +476,14 @@ class Enalizer(object):
         self.create_library_layout(library_descriptor, library_descriptor_data)
 
         targeted_loci_dict = OrderedDict()  # {}
-        targeted_loci_dict = self.translate_target_gene_insensitiv(
-            sample_decriptor, targeted_loci_dict
-        )
+        targeted_loci_dict = self.translate_target_gene_insensitiv(sample_decriptor, targeted_loci_dict)
 
         if len(targeted_loci_dict) > 0:
             targeted_loci = SubElement(library_descriptor, "TARGETED_LOCI")
-            self.create_targeted_loci_without_probe_set(
-                targeted_loci, targeted_loci_dict
-            )
+            self.create_targeted_loci_without_probe_set(targeted_loci, targeted_loci_dict)
 
-        self.create_subelement(
-            library_descriptor, "pooling_strategy", library_descriptor_data
-        )
-        self.create_subelement(
-            library_descriptor, "library_construction_protocol", library_descriptor_data
-        )
+        self.create_subelement(library_descriptor, "pooling_strategy", library_descriptor_data)
+        self.create_subelement(library_descriptor, "library_construction_protocol", library_descriptor_data)
 
         platform_data = data.get("platform", {})
         if len(platform_data) > 0:
@@ -557,9 +494,7 @@ class Enalizer(object):
         experiment_attributes_data = data.get("experiment_attributes", {})
         if len(experiment_attributes_data) > 0:
             experiment_attributes = SubElement(experiment, "EXPERIMENT_ATTRIBUTES")
-            self.create_attributes(
-                experiment_attributes, experiment_attributes_data, "experiment"
-            )
+            self.create_attributes(experiment_attributes, experiment_attributes_data, "experiment")
 
         experiment_files = data.get("files", {})
         if len(experiment_files):
@@ -570,16 +505,10 @@ class Enalizer(object):
         experiment_set = Element("EXPERIMENT_SET")
         sample_descriptor_platform_mappings = {}
         for experiment in self.experiment:
-            self.create_single_experiment_xml(
-                experiment_set, experiment, sample_descriptor_platform_mappings
-            )
-        return sample_descriptor_platform_mappings, ET.tostring(
-            experiment_set, encoding="utf-8", method="xml"
-        )
+            self.create_single_experiment_xml(experiment_set, experiment, sample_descriptor_platform_mappings)
+        return sample_descriptor_platform_mappings, ET.tostring(experiment_set, encoding="utf-8", method="xml")
 
-    def create_run_data_block(
-        self, file_attributes, run, run_root, broker_submission_id=None
-    ):
+    def create_run_data_block(self, file_attributes, run, run_root, broker_submission_id=None):
         if "data_block" in run.keys():
             data_block = SubElement(run_root, "DATA_BLOCK")
 
@@ -589,9 +518,7 @@ class Enalizer(object):
 
                 for attrib in file_attributes:
                     if attrib == "filename" and broker_submission_id:
-                        file[attrib] = "{0}/{1}".format(
-                            broker_submission_id, file[attrib]
-                        )
+                        file[attrib] = "{0}/{1}".format(broker_submission_id, file[attrib])
                     file_element.set(attrib, file.get(attrib, "no_attribute_found"))
             return data_block
         else:
@@ -610,17 +537,11 @@ class Enalizer(object):
         ]
         for r in self.run:
             # center=wenn gfbio center vom user | broker_name="Wir als GFBio" siehe brokeraccount   | (optional) run_center=wer hat sequenziert, registriert bei ena ?
-            run = self.create_subelement_with_attribute(
-                run_set, "RUN", "alias", r, "run_alias"
-            )
+            run = self.create_subelement_with_attribute(run_set, "RUN", "alias", r, "run_alias")
             run.set("center_name", self.center_name)
             run.set("broker_name", DEFAULT_ENA_BROKER_NAME)
-            experiment_ref = self.create_subelement_with_attribute(
-                run, "experiment_ref", "refname", r
-            )
-            data_block = self.create_run_data_block(
-                file_attributes, r, run, broker_submission_id
-            )
+            experiment_ref = self.create_subelement_with_attribute(run, "experiment_ref", "refname", r)
+            data_block = self.create_run_data_block(file_attributes, r, run, broker_submission_id)
 
             run_attributes_data = r.get("run_attributes", [])
             if len(run_attributes_data) > 0:
@@ -630,18 +551,12 @@ class Enalizer(object):
         return ET.tostring(run_set, encoding="utf-8", method="xml")
 
     def prepare_submission_data(self, broker_submission_id=None):
-        logger.info(
-            msg="Enalizer prepare_submission_data. broker_submission_id=".format(
-                broker_submission_id
-            )
-        )
+        logger.info(msg="Enalizer prepare_submission_data. broker_submission_id=".format(broker_submission_id))
         (
             sample_descriptor_platform_mappings,
             experiment_xml,
         ) = self.create_experiment_xml()
-        sample_xml = self.create_sample_xml(
-            sample_descriptor_platform_mappings=sample_descriptor_platform_mappings
-        )
+        sample_xml = self.create_sample_xml(sample_descriptor_platform_mappings=sample_descriptor_platform_mappings)
         if len(self.run):
             return {
                 "STUDY": ("study.xml", smart_str(self.create_study_xml())),
@@ -649,9 +564,7 @@ class Enalizer(object):
                 "EXPERIMENT": ("experiment.xml", smart_str(experiment_xml)),
                 "RUN": (
                     "run.xml",
-                    smart_str(
-                        self.create_run_xml(broker_submission_id=broker_submission_id)
-                    ),
+                    smart_str(self.create_run_xml(broker_submission_id=broker_submission_id)),
                 ),
             }
         else:
@@ -661,9 +574,7 @@ class Enalizer(object):
                 "EXPERIMENT": ("experiment.xml", smart_str(experiment_xml)),
             }
 
-    def prepare_submission_xml_for_sending(
-        self, action="VALIDATE", outgoing_request_id=None
-    ):
+    def prepare_submission_xml_for_sending(self, action="VALIDATE", outgoing_request_id=None):
         return (
             "submission.xml",
             smart_str(
@@ -680,29 +591,21 @@ class Enalizer(object):
 
 
 def prepare_study_data_only(submission):
-    enalizer = Enalizer(
-        submission=submission, alias_postfix=submission.broker_submission_id
-    )
+    enalizer = Enalizer(submission=submission, alias_postfix=submission.broker_submission_id)
     return ("study.xml", smart_str(enalizer.create_study_xml()))
 
 
 def store_single_data_item_as_auditable_text_data(submission, data):
     file_name, file_content = data
     with transaction.atomic():
-        text_data = submission.auditabletextdata_set.create(
-            name=file_name, text_data=file_content
-        )
+        text_data = submission.auditabletextdata_set.create(name=file_name, text_data=file_content)
         return text_data
 
 
 def prepare_ena_data(submission):
     # outgoing_request_id = uuid.uuid4()
-    enalizer = Enalizer(
-        submission=submission, alias_postfix=submission.broker_submission_id
-    )
-    return enalizer.prepare_submission_data(
-        broker_submission_id=submission.broker_submission_id
-    )
+    enalizer = Enalizer(submission=submission, alias_postfix=submission.broker_submission_id)
+    return enalizer.prepare_submission_data(broker_submission_id=submission.broker_submission_id)
 
 
 def store_ena_data_as_auditable_text_data(submission, data):
@@ -714,15 +617,11 @@ def store_ena_data_as_auditable_text_data(submission, data):
             "".format(submission.pk, filename)
         )
         with transaction.atomic():
-            AuditableTextData.objects.create(
-                name=filename, submission=submission, text_data=filecontent
-            )
+            AuditableTextData.objects.create(name=filename, submission=submission, text_data=filecontent)
 
 
 # https://github.com/enasequence/schema/blob/master/src/main/resources/uk/ac/ebi/ena/sra/schema/SRA.study.xsd
-def send_submission_to_ena(
-    submission, archive_access, ena_submission_data, action="ADD"
-):
+def send_submission_to_ena(submission, archive_access, ena_submission_data, action="ADD"):
     logger.info(
         msg="send_submission_to_ena submission_pk={} archive_access_pk={} method=POST".format(
             submission.pk, archive_access.pk
@@ -734,9 +633,7 @@ def send_submission_to_ena(
 
     outgoing_request_id = uuid.uuid4()
     # TODO: this needs refactoring, maybe static method for submission.xml thus the DB is not hit by constructor
-    enalizer = Enalizer(
-        submission=submission, alias_postfix=submission.broker_submission_id
-    )
+    enalizer = Enalizer(submission=submission, alias_postfix=submission.broker_submission_id)
     ena_submission_data["SUBMISSION"] = enalizer.prepare_submission_xml_for_sending(
         action=action,
         outgoing_request_id=outgoing_request_id,
@@ -770,9 +667,7 @@ def register_study_at_ena(submission, study_text_data):
         )
     }
 
-    enalizer = Enalizer(
-        submission=submission, alias_postfix=submission.broker_submission_id
-    )
+    enalizer = Enalizer(submission=submission, alias_postfix=submission.broker_submission_id)
     outgoing_request_id = uuid4()
     request_data["SUBMISSION"] = enalizer.prepare_submission_xml_for_sending(
         action="ADD",
@@ -854,9 +749,7 @@ def release_study_on_ena(submission):
     else:
         logger.warning(
             "ena.py | release_study_on_ena | no primary accession no "
-            "found for study | submission_id={0}".format(
-                submission.broker_submission_id
-            )
+            "found for study | submission_id={0}".format(submission.broker_submission_id)
         )
         return None
 
@@ -900,9 +793,7 @@ def parse_ena_submission_response(response_content=""):
 
 def validate_sample_data(json_data):
     try:
-        with open(
-            os.path.join(settings.STATIC_ROOT, STATIC_SAMPLE_SCHEMA_LOCATION)
-        ) as schema_file:
+        with open(os.path.join(settings.STATIC_ROOT, STATIC_SAMPLE_SCHEMA_LOCATION)) as schema_file:
             schema = json.load(schema_file)
     except IOError as e:
         return e
@@ -931,9 +822,7 @@ def download_submitted_run_files_to_string_io(site_config, decompressed_io):
 
     compressed_file = io.StringIO()
 
-    transmission_report.append(
-        ftp.retrbinary("RETR submitted_run_files.txt.gz", compressed_file.write)
-    )
+    transmission_report.append(ftp.retrbinary("RETR submitted_run_files.txt.gz", compressed_file.write))
     transmission_report.append(ftp.quit())
 
     compressed_file.seek(0)
@@ -944,9 +833,7 @@ def download_submitted_run_files_to_string_io(site_config, decompressed_io):
 
 # https://www.ebi.ac.uk/ena/submit/report/swagger-ui.html
 def fetch_ena_report(site_configuration, report_type):
-    url = "{0}{1}?format=json".format(
-        site_configuration.ena_report_server.url, report_type
-    )
+    url = "{0}{1}?format=json".format(site_configuration.ena_report_server.url, report_type)
     return logged_requests.get(
         url=url,
         return_log_id=True,
@@ -986,26 +873,17 @@ def update_resolver_accessions():
         report_key, report_name = report_type
         reports = EnaReport.objects.filter(report_type=report_key)
         if len(reports) == 1:
-            logger.info(
-                "ena.py | update_resolver_accessions "
-                "| process report of type={0}".format(report_name)
-            )
+            logger.info("ena.py | update_resolver_accessions " "| process report of type={0}".format(report_name))
             for report in reports.first().report_data:
                 report_dict = report.get("report", {})
                 status = report_dict.get("releaseStatus")
-                Accession.objects.create_or_delete(
-                    identifier=report_dict.get("id"), release_status=status
-                )
-                Accession.objects.create_or_delete(
-                    identifier=report_dict.get("secondaryId"), release_status=status
-                )
+                Accession.objects.create_or_delete(identifier=report_dict.get("id"), release_status=status)
+                Accession.objects.create_or_delete(identifier=report_dict.get("secondaryId"), release_status=status)
             return True
         else:
             logger.warning(
                 "ena.py | update_resolver_accessions "
-                "| found {0} occurences for report of type={1} found".format(
-                    len(reports), report_name
-                )
+                "| found {0} occurences for report of type={1} found".format(len(reports), report_name)
             )
             return False
 
@@ -1030,9 +908,7 @@ def update_persistent_identifier_report_status():
                     # holdDate from ENA report 2022-03-10T17:17:04
                     # https://www.journaldev.com/23365/python-string-to-datetime-strptime
                     ena_hold_date_format = "%Y-%m-%dT%X"
-                    hold_date_time = datetime.datetime.strptime(
-                        hold_date, ena_hold_date_format
-                    ).date()
+                    hold_date_time = datetime.datetime.strptime(hold_date, ena_hold_date_format).date()
                 ids_to_use = []
                 if pri_id:
                     ids_to_use.append(pri_id)
@@ -1041,15 +917,11 @@ def update_persistent_identifier_report_status():
 
                 for vid in ids_to_use:
                     if status and len(PersistentIdentifier.objects.filter(pid=vid)) > 0:
-                        pid = PersistentIdentifier.objects.filter(
-                            pid=vid, pid_type="PRJ"
-                        ).first()
+                        pid = PersistentIdentifier.objects.filter(pid=vid, pid_type="PRJ").first()
                         if not pid:
                             logger.info(
                                 "ena.py | update_persistent_identifier_report_status "
-                                "| PersistentIdentifier {} with type PRJ not found".format(
-                                    vid
-                                )
+                                "| PersistentIdentifier {} with type PRJ not found".format(vid)
                             )
                         elif pid.status != "PUBLIC" and status == "PUBLIC":
                             # notify reporter and close the issue
@@ -1058,9 +930,7 @@ def update_persistent_identifier_report_status():
                                 "ena.py | update_persistent_identifier_report_status "
                                 "| executing notify_on_embargo_ended_task and jira_transition_issue_task "
                                 "| PersistentIdentifier: {} "
-                                "| submission: {}".format(
-                                    vid, submission.broker_submission_id
-                                )
+                                "| submission: {}".format(vid, submission.broker_submission_id)
                             )
 
                             from ..configuration.settings import SUBMISSION_DELAY
@@ -1071,13 +941,9 @@ def update_persistent_identifier_report_status():
                                 jira_transition_issue_task,
                             )
 
-                            chain = notify_on_embargo_ended_task.s(
-                                submission_id=submission.pk
-                            ).set(
+                            chain = notify_on_embargo_ended_task.s(submission_id=submission.pk).set(
                                 countdown=SUBMISSION_DELAY
-                            ) | jira_transition_issue_task.s(
-                                submission_id=submission.pk
-                            ).set(
+                            ) | jira_transition_issue_task.s(submission_id=submission.pk).set(
                                 ountdown=SUBMISSION_DELAY
                             )
                             chain()
@@ -1088,9 +954,7 @@ def update_persistent_identifier_report_status():
                         elif pid:
                             date_to_use = pid.hold_date
 
-                        PersistentIdentifier.objects.filter(pid=vid).update(
-                            status=status, hold_date=date_to_use
-                        )
+                        PersistentIdentifier.objects.filter(pid=vid).update(status=status, hold_date=date_to_use)
 
                         if hold_date:
                             update_embargo_date_in_submissions(
@@ -1105,9 +969,7 @@ def update_persistent_identifier_report_status():
         else:
             logger.warning(
                 "ena.py | update_persistent_identifier_report_status "
-                "| found {0} occurences for report of type={1} found".format(
-                    len(reports), report_name
-                )
+                "| found {0} occurences for report of type={1} found".format(len(reports), report_name)
             )
             return False
     return True
@@ -1125,7 +987,5 @@ def execute_update_accession_objects_chain(name_on_error=""):
     (
         fetch_ena_reports_task.s().set(countdown=SUBMISSION_DELAY)
         | update_resolver_accessions_task.s().set(countdown=SUBMISSION_DELAY)
-        | update_persistent_identifier_report_status_task.s().set(
-            countdown=SUBMISSION_DELAY
-        )
+        | update_persistent_identifier_report_status_task.s().set(countdown=SUBMISSION_DELAY)
     )()

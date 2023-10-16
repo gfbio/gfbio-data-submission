@@ -6,8 +6,9 @@ from .test_tasks_base import TestTasks
 from ...models.broker_object import BrokerObject
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
-from ...tasks.broker_object_tasks.create_broker_objects_from_submission_data import \
-    create_broker_objects_from_submission_data_task
+from ...tasks.broker_object_tasks.create_broker_objects_from_submission_data import (
+    create_broker_objects_from_submission_data_task,
+)
 from ...tasks.submission_tasks.check_on_hold_status import check_on_hold_status_task
 
 
@@ -29,9 +30,7 @@ class TestSubmissionPreparationTasks(TestTasks):
 
     def test_check_on_hold_status_task(self):
         self.assertFalse(Submission.objects.first().approval_notification_sent)
-        result = check_on_hold_status_task.apply_async(
-            kwargs={"submission_id": Submission.objects.first().id}
-        )
+        result = check_on_hold_status_task.apply_async(kwargs={"submission_id": Submission.objects.first().id})
         self.assertTrue(result.successful())
         self.assertTrue(Submission.objects.first().approval_notification_sent)
 

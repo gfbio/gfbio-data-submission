@@ -86,9 +86,7 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
         self.assertEqual(3, len(RequestLog.objects.all()))
 
         submission = Submission.objects.last()
-        self.assertEqual(
-            UUID(content["broker_submission_id"]), submission.broker_submission_id
-        )
+        self.assertEqual(UUID(content["broker_submission_id"]), submission.broker_submission_id)
         self.assertIsNone(submission.embargo)
         self.assertFalse(submission.release)
         self.assertEqual(Submission.OPEN, submission.status)

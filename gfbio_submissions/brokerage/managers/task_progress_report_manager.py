@@ -30,9 +30,7 @@ class TaskProgressReportManager(models.Manager):
         return report, created
 
     @transaction.atomic()
-    def update_report_on_success(
-        self, retval, task_id, args, kwargs, task_name="no_name_provided"
-    ):
+    def update_report_on_success(self, retval, task_id, args, kwargs, task_name="no_name_provided"):
         report, created = self.update_or_create(
             task_id=task_id,
             defaults={
@@ -47,9 +45,7 @@ class TaskProgressReportManager(models.Manager):
         return report, created
 
     @transaction.atomic()
-    def update_report_on_exception(
-        self, status, exc, task_id, args, kwargs, einfo, task_name="no_name_provided"
-    ):
+    def update_report_on_exception(self, status, exc, task_id, args, kwargs, einfo, task_name="no_name_provided"):
         report, created = self.update_or_create(
             task_id=task_id,
             defaults={

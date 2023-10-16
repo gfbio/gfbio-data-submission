@@ -21,9 +21,7 @@ from gfbio_submissions.users.models import User
 )
 def check_for_user_without_site_configuration_task(self):
     TaskProgressReport.objects.create_initial_report(submission=None, task=self)
-    logger.info(
-        msg="tasks.py | check_for_user_without_site_configuration_task | start search"
-    )
+    logger.info(msg="tasks.py | check_for_user_without_site_configuration_task | start search")
     users_without_config = User.objects.filter(is_user=True, site_configuration=None)
     site_config = SiteConfiguration.objects.get_hosting_site_configuration()
     mail_content = "Users without site_configuration found:"
@@ -36,17 +34,11 @@ def check_for_user_without_site_configuration_task(self):
         )
         u.site_configuration = site_config
         u.save()
-        mail_content += "\nusername: {0}\temail: {1}\tpk: {2}".format(
-            u.username, u.email, u.pk
-        )
-    mail_content += "\nSite_configuration {0} was assigned automatically".format(
-        site_config.title
-    )
+        mail_content += "\nusername: {0}\temail: {1}\tpk: {2}".format(u.username, u.email, u.pk)
+    mail_content += "\nSite_configuration {0} was assigned automatically".format(site_config.title)
     if len(users_without_config):
         mail_admins(
-            subject=NO_SITE_CONFIG_EMAIL_SUBJECT_TEMPLATE.format(
-                len(users_without_config)
-            ),
+            subject=NO_SITE_CONFIG_EMAIL_SUBJECT_TEMPLATE.format(len(users_without_config)),
             message=mail_content,
         )
     return True

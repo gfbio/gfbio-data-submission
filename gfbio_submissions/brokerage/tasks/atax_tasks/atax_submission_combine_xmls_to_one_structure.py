@@ -30,24 +30,18 @@ logger = logging.getLogger(__name__)
 def atax_submission_combine_xmls_to_one_structure_task(
     self, previous_task_result=None, submission_id=None, submission_upload_id=None
 ):
-    report, created = TaskProgressReport.objects.create_initial_report(
-        submission=None, task=self
-    )
+    report, created = TaskProgressReport.objects.create_initial_report(submission=None, task=self)
 
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
             "tasks.py | atax_submission_combine_xmls_to_one_structure_task | "
             "previous task reported={0} | "
-            "submission_upload_id={1}".format(
-                TaskProgressReport.CANCELLED, submission_upload_id
-            )
+            "submission_upload_id={1}".format(TaskProgressReport.CANCELLED, submission_upload_id)
         )
         return TaskProgressReport.CANCELLED
 
     if submission_upload_id:
-        submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
-            submission_upload_id
-        )
+        submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(submission_upload_id)
 
     if submission_upload is None:
         logger.error(
@@ -65,11 +59,7 @@ def atax_submission_combine_xmls_to_one_structure_task(
     text_to_validate = ""
     # each upload belongs to exactly one category (file names different):
     # current upload:
-    if len(
-        submission_upload.submission.auditabletextdata_set.filter(
-            atax_file_name=upload_name
-        )
-    ):
+    if len(submission_upload.submission.auditabletextdata_set.filter(atax_file_name=upload_name)):
         upload_by_file_name = submission_upload.submission.auditabletextdata_set.filter(
             atax_file_name=upload_name
         ).first()
@@ -84,15 +74,11 @@ def atax_submission_combine_xmls_to_one_structure_task(
         specimen_abcd_updated = str()
         combi_name = str()
         combi_updated = False
-        keys_found = (
-            []
-        )  # UnitIds of measurements or multimedias, found in specimen or combination for later tests!
+        keys_found = []  # UnitIds of measurements or multimedias, found in specimen or combination for later tests!
 
         # all uploads for submission:
-        atax_submission_upload = (
-            AuditableTextData.objects.assemble_atax_submission_uploads(
-                submission=submission_upload.submission
-            )
+        atax_submission_upload = AuditableTextData.objects.assemble_atax_submission_uploads(
+            submission=submission_upload.submission
         )
         if atax_submission_upload == {}:
             return TaskProgressReport.CANCELLED
@@ -100,10 +86,7 @@ def atax_submission_combine_xmls_to_one_structure_task(
             return {"upload length at all": str(len(atax_submission_upload))}
         else:
             #  integrate measurements /multimedia into specimen.xml:
-            if (
-                len(atax_submission_upload) > 1
-                and "COMBINATION" in atax_submission_upload.keys()
-            ):
+            if len(atax_submission_upload) > 1 and "COMBINATION" in atax_submission_upload.keys():
                 combi_name = "combination"
                 tuple = atax_submission_upload["COMBINATION"]
                 ind = tuple[5]
@@ -114,30 +97,20 @@ def atax_submission_combine_xmls_to_one_structure_task(
                 (
                     specimen_abcd_updated,
                     keys_found,
-                ) = update_specimen_with_measurements_abcd_xml(
-                    upload=atax_submission_upload, name=combi_name
-                )
+                ) = update_specimen_with_measurements_abcd_xml(upload=atax_submission_upload, name=combi_name)
                 add_ind = 1
             elif upload_by_file_name.name == "multimedia" and bool(combi_name):
                 (
                     specimen_abcd_updated,
                     keys_found,
-                ) = update_specimen_with_multimedia_abcd_xml(
-                    upload=atax_submission_upload, name=combi_name
-                )
+                ) = update_specimen_with_multimedia_abcd_xml(upload=atax_submission_upload, name=combi_name)
                 add_ind = 2
             elif upload_by_file_name.name == "specimen":
                 # are there measurement data from earlier?
-                if len(
-                    submission_upload.submission.auditabletextdata_set.filter(
+                if len(submission_upload.submission.auditabletextdata_set.filter(name="measurement")):
+                    auditable_xml = submission_upload.submission.auditabletextdata_set.filter(
                         name="measurement"
-                    )
-                ):
-                    auditable_xml = (
-                        submission_upload.submission.auditabletextdata_set.filter(
-                            name="measurement"
-                        ).first()
-                    )
+                    ).first()
                     if auditable_xml is not None:
                         (
                             specimen_abcd_updated,
@@ -146,10 +119,7 @@ def atax_submission_combine_xmls_to_one_structure_task(
                             upload=atax_submission_upload, name="combination"
                         )
                         # store specimen plus measurements as combination:
-                        if (
-                            specimen_abcd_updated is not None
-                            and len(specimen_abcd_updated) > 0
-                        ):
+                        if specimen_abcd_updated is not None and len(specimen_abcd_updated) > 0:
                             store_atax_data_as_auditable_text_data(
                                 submission=submission_upload.submission,
                                 data_type="combination",
@@ -162,29 +132,18 @@ def atax_submission_combine_xmls_to_one_structure_task(
 
                 # are there multimedia data?
                 # refresh auditables
-                atax_submission_upload = (
-                    AuditableTextData.objects.assemble_atax_submission_uploads(
-                        submission=submission_upload.submission
-                    )
+                atax_submission_upload = AuditableTextData.objects.assemble_atax_submission_uploads(
+                    submission=submission_upload.submission
                 )
-                if (
-                    len(atax_submission_upload) > 1
-                    and "COMBINATION" in atax_submission_upload.keys()
-                ):
+                if len(atax_submission_upload) > 1 and "COMBINATION" in atax_submission_upload.keys():
                     combi_name = "combination"
                     tuple = atax_submission_upload["COMBINATION"]
                     ind = tuple[5]
 
-                if len(
-                    submission_upload.submission.auditabletextdata_set.filter(
+                if len(submission_upload.submission.auditabletextdata_set.filter(name="multimedia")):
+                    auditable_xml = submission_upload.submission.auditabletextdata_set.filter(
                         name="multimedia"
-                    )
-                ):
-                    auditable_xml = (
-                        submission_upload.submission.auditabletextdata_set.filter(
-                            name="multimedia"
-                        ).first()
-                    )
+                    ).first()
                     if auditable_xml is not None:
                         (
                             specimen_abcd_updated,
@@ -192,10 +151,7 @@ def atax_submission_combine_xmls_to_one_structure_task(
                         ) = update_specimen_with_multimedia_abcd_xml(
                             upload=atax_submission_upload, name=combi_name
                         )  #
-                        if (
-                            specimen_abcd_updated is not None
-                            and len(specimen_abcd_updated) > 0
-                        ):
+                        if specimen_abcd_updated is not None and len(specimen_abcd_updated) > 0:
                             store_atax_data_as_auditable_text_data(
                                 submission=submission_upload.submission,
                                 data_type="combination",

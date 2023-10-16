@@ -27,10 +27,7 @@ def notify_curators_on_embargo_ends_task(self):
             continue
         # only send notification for closed submissions with PID type PRJ
         # and when embargo date is not in the past
-        if (
-            submission.status != Submission.CLOSED
-            or submission.embargo < datetime.date.today()
-        ):
+        if submission.status != Submission.CLOSED or submission.embargo < datetime.date.today():
             continue
         # get study object
         study = submission.brokerobject_set.filter(type="study").first()
@@ -43,9 +40,7 @@ def notify_curators_on_embargo_ends_task(self):
                 if submission.embargo <= one_week_from_now:
                     # get jira link
                     if submission.get_primary_helpdesk_reference():
-                        jira_link = "{}{}".format(
-                            JIRA_TICKET_URL, submission.get_primary_helpdesk_reference()
-                        )
+                        jira_link = "{}{}".format(JIRA_TICKET_URL, submission.get_primary_helpdesk_reference())
                     else:
                         jira_link = "No ticket found"
 
@@ -75,8 +70,7 @@ def notify_curators_on_embargo_ends_task(self):
         from django.core.mail import send_mail
 
         send_mail(
-            subject="%s%s"
-            % (settings.EMAIL_SUBJECT_PREFIX, " Embargo expiry notification"),
+            subject="%s%s" % (settings.EMAIL_SUBJECT_PREFIX, " Embargo expiry notification"),
             message=message,
             from_email=settings.SERVER_EMAIL,
             recipient_list=curators_emails,

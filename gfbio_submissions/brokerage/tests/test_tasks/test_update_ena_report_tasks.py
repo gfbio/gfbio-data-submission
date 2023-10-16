@@ -13,18 +13,18 @@ from ...models.broker_object import BrokerObject
 from ...models.ena_report import EnaReport
 from ...models.persistent_identifier import PersistentIdentifier
 from ...models.task_progress_report import TaskProgressReport
-from ...tasks.ena_report_tasks.update_accession_objects_from_ena_report import \
-    update_accession_objects_from_ena_report_task
-from ...tasks.ena_report_tasks.update_persistent_identifier_report_status import \
-    update_persistent_identifier_report_status_task
+from ...tasks.ena_report_tasks.update_accession_objects_from_ena_report import (
+    update_accession_objects_from_ena_report_task,
+)
+from ...tasks.ena_report_tasks.update_persistent_identifier_report_status import (
+    update_persistent_identifier_report_status_task,
+)
 from ...tasks.ena_report_tasks.update_resolver_accessions import update_resolver_accessions_task
 
 
 class TestUpdateResolverAccessionsTask(TestTasks):
     def setUp(self):
-        with open(
-            os.path.join(_get_test_data_dir_path(), "ena_reports_testdata.json"), "r"
-        ) as file:
+        with open(os.path.join(_get_test_data_dir_path(), "ena_reports_testdata.json"), "r") as file:
             data = json.load(file)
         for report_type in EnaReport.REPORT_TYPES:
             key, val = report_type
@@ -39,9 +39,7 @@ class TestUpdateResolverAccessionsTask(TestTasks):
 
 class TestUpdatePersistentIdentifierReportStatusTask(TestTasks):
     def setUp(self):
-        with open(
-            os.path.join(_get_test_data_dir_path(), "ena_reports_testdata.json"), "r"
-        ) as file:
+        with open(os.path.join(_get_test_data_dir_path(), "ena_reports_testdata.json"), "r") as file:
             data = json.load(file)
         for report_type in EnaReport.REPORT_TYPES:
             key, val = report_type
@@ -90,9 +88,7 @@ class TestUpdatePersistentIdentifierReportStatusTask(TestTasks):
 
 class TestUpdateAccessionsChain(TestTasks):
     def setUp(self):
-        with open(
-            os.path.join(_get_test_data_dir_path(), "ena_reports_testdata.json"), "r"
-        ) as file:
+        with open(os.path.join(_get_test_data_dir_path(), "ena_reports_testdata.json"), "r") as file:
             data = json.load(file)
         for report_type in EnaReport.REPORT_TYPES:
             key, val = report_type
@@ -100,17 +96,13 @@ class TestUpdateAccessionsChain(TestTasks):
 
     @classmethod
     def _add_report_responses(cls):
-        with open(
-            os.path.join(_get_test_data_dir_path(), "ena_reports_testdata.json"), "r"
-        ) as file:
+        with open(os.path.join(_get_test_data_dir_path(), "ena_reports_testdata.json"), "r") as file:
             data = json.load(file)
         for report_type in EnaReport.REPORT_TYPES:
             key, val = report_type
             responses.add(
                 responses.GET,
-                "{0}{1}?format=json".format(
-                    cls.default_site_config.ena_report_server.url, val
-                ),
+                "{0}{1}?format=json".format(cls.default_site_config.ena_report_server.url, val),
                 status=200,
                 json=data[val],
             )
@@ -121,9 +113,7 @@ class TestUpdateAccessionsChain(TestTasks):
             key, val = report_type
             responses.add(
                 responses.GET,
-                "{0}{1}?format=json".format(
-                    cls.default_site_config.ena_report_server.url, val
-                ),
+                "{0}{1}?format=json".format(cls.default_site_config.ena_report_server.url, val),
                 status=401,
             )
 
@@ -133,9 +123,7 @@ class TestUpdateAccessionsChain(TestTasks):
             key, val = report_type
             responses.add(
                 responses.GET,
-                "{0}{1}?format=json".format(
-                    cls.default_site_config.ena_report_server.url, val
-                ),
+                "{0}{1}?format=json".format(cls.default_site_config.ena_report_server.url, val),
                 status=500,
             )
 

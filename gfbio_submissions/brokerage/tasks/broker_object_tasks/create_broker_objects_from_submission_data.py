@@ -32,13 +32,9 @@ def create_broker_objects_from_submission_data_task(
         return TaskProgressReport.CANCELLED
 
     submission, site_configuration = (
-        get_submitted_submission_and_site_configuration(
-            submission_id=submission_id, task=self
-        )
+        get_submitted_submission_and_site_configuration(submission_id=submission_id, task=self)
         if use_submitted_submissions
-        else get_submission_and_site_configuration(
-            submission_id=submission_id, task=self, include_closed=True
-        )
+        else get_submission_and_site_configuration(submission_id=submission_id, task=self, include_closed=True)
     )
     logger.info(
         "tasks.py | create_broker_objects_from_submission_data_task | "

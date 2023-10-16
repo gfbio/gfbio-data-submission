@@ -26,9 +26,7 @@ class TestSubmissionTransferTasks(TestTasks):
         submission = Submission.objects.first()
         text_data = AuditableTextData.objects.all()
         self.assertEqual(0, len(text_data))
-        result = prepare_ena_submission_data_task.apply_async(
-            kwargs={"submission_id": submission.pk}
-        )
+        result = prepare_ena_submission_data_task.apply_async(kwargs={"submission_id": submission.pk})
         self.assertTrue(result.successful())
         ret_val = result.get()
         self.assertTrue(isinstance(ret_val, dict))
@@ -98,9 +96,7 @@ class TestSubmissionTransferTasks(TestTasks):
         self.assertTrue(isinstance(ret_val, tuple))
 
     @responses.activate
-    @override_settings(
-        CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False
-    )
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False)
     def test_transfer_to_ena_task_server_error(self):
         submission = Submission.objects.first()
         conf = SiteConfiguration.objects.first()
@@ -111,11 +107,7 @@ class TestSubmissionTransferTasks(TestTasks):
         ).apply()
         self.assertEqual(
             "SUCCESS",
-            submission.taskprogressreport_set.filter(
-                task_name="tasks.transfer_data_to_ena_task"
-            )
-            .first()
-            .status,
+            submission.taskprogressreport_set.filter(task_name="tasks.transfer_data_to_ena_task").first().status,
         )
 
     # TODO: add test where nonsense content is returned like '' or {}

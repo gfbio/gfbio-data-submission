@@ -40,9 +40,7 @@ def process_targeted_sequence_results_task(
         return TaskProgressReport.CANCELLED
     logger.info(
         "tasks.py | process_targeted_sequence_results_task | "
-        "extract_accession_from_webin_report | broker_submission_id={}".format(
-            submission.broker_submission_id
-        )
+        "extract_accession_from_webin_report | broker_submission_id={}".format(submission.broker_submission_id)
     )
     accession = extract_accession_from_webin_report(submission.broker_submission_id)
     logger.info(

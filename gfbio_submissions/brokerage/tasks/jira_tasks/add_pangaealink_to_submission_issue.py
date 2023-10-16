@@ -39,9 +39,7 @@ def add_pangaealink_to_submission_issue_task(self, prev=None, submission_id=None
 
         jira_client.add_comment(
             key_or_issue=helpdesk_reference.reference_key,
-            text="[Pangaea Ticket {1}|{0}{1}]".format(
-                PANGAEA_ISSUE_VIEW_URL, pangaea_reference.reference_key
-            ),
+            text="[Pangaea Ticket {1}|{0}{1}]".format(PANGAEA_ISSUE_VIEW_URL, pangaea_reference.reference_key),
             is_internal=False,
         )
         return jira_error_auto_retry(

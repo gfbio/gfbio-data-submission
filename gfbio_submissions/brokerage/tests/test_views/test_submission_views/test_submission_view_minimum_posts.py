@@ -24,9 +24,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
 
     def test_invalid_min_post(self):
         self.assertEqual(0, len(Submission.objects.all()))
-        response = self.api_client.post(
-            "/api/submissions/", {"target": "ENA", "data": {}}, format="json"
-        )
+        response = self.api_client.post("/api/submissions/", {"target": "ENA", "data": {}}, format="json")
         self.assertEqual(400, response.status_code)
         keys = json.loads(response.content.decode("utf-8")).keys()
         self.assertIn("optional_validation", keys)
@@ -83,9 +81,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             "/api/submissions/",
             {
                 "target": "ENA",
-                "data": {
-                    "requirements": {"title": "A Title", "description": "A Description"}
-                },
+                "data": {"requirements": {"title": "A Title", "description": "A Description"}},
             },
             format="json",
         )
@@ -114,9 +110,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
         self.assertEqual(3, len(RequestLog.objects.all()))
         submission = Submission.objects.last()
 
-        self.assertEqual(
-            UUID(content["broker_submission_id"]), submission.broker_submission_id
-        )
+        self.assertEqual(UUID(content["broker_submission_id"]), submission.broker_submission_id)
         self.assertIsNone(submission.embargo)
         self.assertFalse(submission.release)
         self.assertEqual(Submission.OPEN, submission.status)
@@ -152,9 +146,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
         self.assertDictEqual(expected, content)
         self.assertEqual(1, len(Submission.objects.all()))
         submission = Submission.objects.last()
-        self.assertEqual(
-            UUID(expected["broker_submission_id"]), submission.broker_submission_id
-        )
+        self.assertEqual(UUID(expected["broker_submission_id"]), submission.broker_submission_id)
 
     # @responses.activate
     def test_min_post_without_target(self):
@@ -165,9 +157,7 @@ class TestSubmissionViewMinimumPosts(TestSubmissionView):
             {
                 "release": False,
                 "target": "nonsense",
-                "data": {
-                    "requirements": {"title": "A Title", "description": "A Description"}
-                },
+                "data": {"requirements": {"title": "A Title", "description": "A Description"}},
             },
             format="json",
         )

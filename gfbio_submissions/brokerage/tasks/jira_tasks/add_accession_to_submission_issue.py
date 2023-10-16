@@ -33,9 +33,7 @@ from gfbio_submissions.users.models import User
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def add_accession_to_submission_issue_task(
-    self, prev_task_result=None, submission_id=None, target_archive=None
-):
+def add_accession_to_submission_issue_task(self, prev_task_result=None, submission_id=None, target_archive=None):
     if prev_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
             "tasks.py | add_accession_to_submission_issue_task | "
@@ -105,9 +103,7 @@ def add_accession_to_submission_issue_task(
                 primary_accession=study_pid.pid,
             )
             jira_client = JiraClient(resource=site_configuration.helpdesk_server)
-            jira_client.add_comment(
-                key_or_issue=reference.reference_key, text=comment, is_internal=False
-            )
+            jira_client.add_comment(key_or_issue=reference.reference_key, text=comment, is_internal=False)
             return jira_error_auto_retry(
                 jira_client=jira_client,
                 task=self,

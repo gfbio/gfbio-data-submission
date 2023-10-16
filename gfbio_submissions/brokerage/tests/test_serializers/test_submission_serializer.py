@@ -9,9 +9,7 @@ from ...serializers.submission_serializer import SubmissionSerializer
 
 class SubmissionSerializerTest(TestCase):
     def test_empty_generic_submission(self):
-        serializer = SubmissionSerializer(
-            data={"target": "GENERIC", "release": True, "data": {}}
-        )
+        serializer = SubmissionSerializer(data={"target": "GENERIC", "release": True, "data": {}})
         valid = serializer.is_valid()
         self.assertFalse(valid)
 
@@ -138,9 +136,7 @@ class SubmissionSerializerTest(TestCase):
             }
         )
         valid = serializer.is_valid()
-        self.assertIn(
-            "latest possible date is 2 years from today", serializer.errors["data"][0]
-        )
+        self.assertIn("latest possible date is 2 years from today", serializer.errors["data"][0])
         self.assertFalse(valid)
 
     def test_correct_embargo(self):

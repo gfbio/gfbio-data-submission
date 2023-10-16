@@ -27,11 +27,7 @@ logger = logging.getLogger(__name__)
     retry_jitter=True,
 )
 def notify_user_embargo_changed_task(self, prev=None, submission_id=None):
-    logger.info(
-        "tasks.py | notify_user_embargo_changed_task | submission_id={0}".format(
-            submission_id
-        )
-    )
+    logger.info("tasks.py | notify_user_embargo_changed_task | submission_id={0}".format(submission_id))
 
     submission, site_config = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
@@ -49,23 +45,17 @@ def notify_user_embargo_changed_task(self, prev=None, submission_id=None):
             if not comment:
                 return TaskProgressReport.CANCELLED
 
-            comment = jira_comment_replace(
-                comment=comment, embargo=submission.embargo.isoformat()
-            )
+            comment = jira_comment_replace(comment=comment, embargo=submission.embargo.isoformat())
 
             jira_client = JiraClient(resource=site_config.helpdesk_server)
-            jira_client.add_comment(
-                key_or_issue=reference.reference_key, text=comment, is_internal=False
-            )
+            jira_client.add_comment(key_or_issue=reference.reference_key, text=comment, is_internal=False)
             return jira_error_auto_retry(
                 jira_client=jira_client,
                 task=self,
                 broker_submission_id=submission.broker_submission_id,
             )
     else:
-        logger.info(
-            "tasks.py | notify_user_embargo_changed_task | no site_config for helpdesk_serever"
-        )
+        logger.info("tasks.py | notify_user_embargo_changed_task | no site_config for helpdesk_serever")
 
     return {
         "status": "error",

@@ -16,27 +16,17 @@ from ...utils.task_utils import get_submission_and_site_configuration
     bind=True,
     name="tasks.trigger_submission_transfer",
 )
-def trigger_submission_transfer_task(
-    self, previous_task_result=None, submission_id=None
-):
+def trigger_submission_transfer_task(self, previous_task_result=None, submission_id=None):
     molecular_data_available = False
     check_performed = False
     messages = []
 
     if isinstance(previous_task_result, dict):
-        molecular_data_available = previous_task_result.get(
-            "molecular_data_available", False
-        )
-        check_performed = previous_task_result.get(
-            "molecular_data_check_performed", False
-        )
+        molecular_data_available = previous_task_result.get("molecular_data_available", False)
+        check_performed = previous_task_result.get("molecular_data_check_performed", False)
         messages = previous_task_result.get("messages", [])
 
-    logger.info(
-        msg="trigger_submission_transfer. get submission with pk={}.".format(
-            submission_id
-        )
-    )
+    logger.info(msg="trigger_submission_transfer. get submission with pk={}.".format(submission_id))
     if len(messages):
         logger.warning(
             "tasks.py | trigger_submission_transfer | "

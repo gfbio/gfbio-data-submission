@@ -23,11 +23,7 @@ logger = logging.getLogger(__name__)
     retry_jitter=True,
 )
 def jira_cancel_issue_task(self, submission_id=None, admin=False):
-    logger.info(
-        "tasks.py | jira_cancel_issue_task | submission_id={} admin={}".format(
-            submission_id, admin
-        )
-    )
+    logger.info("tasks.py | jira_cancel_issue_task | submission_id={} admin={}".format(submission_id, admin))
     TaskProgressReport.objects.create_initial_report(submission=None, task=self)
 
     submission = Submission.objects.get(id=submission_id)

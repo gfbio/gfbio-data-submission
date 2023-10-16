@@ -79,9 +79,7 @@ def continue_release_submissions(modeladmin, request, queryset):
     for obj in queryset:
         # TODO: retrieving submission via manager is unneccessary, remove but test
         submission = Submission.objects.get(pk=obj.pk)
-        transfer_handler = SubmissionTransferHandler(
-            submission_id=submission.pk, target_archive=submission.target
-        )
+        transfer_handler = SubmissionTransferHandler(submission_id=submission.pk, target_archive=submission.target)
         transfer_handler.execute()
 
 
@@ -108,18 +106,15 @@ cancel_selected_submissions.short_description = "Cancel selected submissions"
 
 
 def create_broker_objects_and_ena_xml(modeladmin, request, queryset):
-    from .tasks.broker_object_tasks.create_broker_objects_from_submission_data import create_broker_objects_from_submission_data_task
+    from .tasks.broker_object_tasks.create_broker_objects_from_submission_data import (
+        create_broker_objects_from_submission_data_task,
+    )
     from .tasks.auditable_text_data_tasks.prepare_ena_submission_data import prepare_ena_submission_data_task
 
-
     for obj in queryset:
-        chain = create_broker_objects_from_submission_data_task.s(
-            submission_id=obj.pk
-        ).set(countdown=SUBMISSION_DELAY) | prepare_ena_submission_data_task.s(
-            submission_id=obj.pk
-        ).set(
+        chain = create_broker_objects_from_submission_data_task.s(submission_id=obj.pk).set(
             countdown=SUBMISSION_DELAY
-        )
+        ) | prepare_ena_submission_data_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
         chain()
 
 
@@ -144,9 +139,9 @@ re_create_ena_xml.short_description = "Re-Create XML (ENA)"
 
 def delete_broker_objects_and_ena_xml(modeladmin, request, queryset):
     for obj in queryset.exclude(status=Submission.CLOSED):
-        broker_objects_with_pids = obj.brokerobject_set.annotate(
-            pid_count=Count("persistentidentifier")
-        ).filter(pid_count__gte=1)
+        broker_objects_with_pids = obj.brokerobject_set.annotate(pid_count=Count("persistentidentifier")).filter(
+            pid_count__gte=1
+        )
         if len(broker_objects_with_pids) == 0:
             obj.auditabletextdata_set.all().delete()
             obj.brokerobject_set.all().delete()
@@ -182,9 +177,7 @@ def validate_against_ena(modeladmin, request, queryset):
     from .tasks.transfer_tasks.validate_against_ena import validate_against_ena_task
 
     for obj in queryset:
-        validate_against_ena_task.apply_async(
-            kwargs={"submission_id": obj.pk}, countdown=SUBMISSION_DELAY
-        )
+        validate_against_ena_task.apply_async(kwargs={"submission_id": obj.pk}, countdown=SUBMISSION_DELAY)
 
 
 validate_against_ena.short_description = "Validate against ENA production server"
@@ -229,9 +222,7 @@ def modify_ena_objects_with_current_xml(modeladmin, request, queryset):
         )
 
 
-modify_ena_objects_with_current_xml.short_description = (
-    "Modify ENA objects with curent XML"
-)
+modify_ena_objects_with_current_xml.short_description = "Modify ENA objects with curent XML"
 
 
 def perform_targeted_sequence_submission(modeladmin, request, queryset):
@@ -247,34 +238,22 @@ def perform_targeted_sequence_submission(modeladmin, request, queryset):
 
     for obj in queryset:
         chain = (
-            create_study_broker_objects_only_task.s(submission_id=obj.pk).set(
+            create_study_broker_objects_only_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
+            | prepare_ena_study_xml_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
+            | register_study_at_ena_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
+            | process_ena_response_task.s(submission_id=obj.pk, close_submission_on_success=False).set(
                 countdown=SUBMISSION_DELAY
             )
-            | prepare_ena_study_xml_task.s(submission_id=obj.pk).set(
+            | create_targeted_sequence_ena_manifest_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
+            | submit_targeted_sequences_to_ena_task.s(submission_id=obj.pk, do_test=False, do_validate=False).set(
                 countdown=SUBMISSION_DELAY
             )
-            | register_study_at_ena_task.s(submission_id=obj.pk).set(
-                countdown=SUBMISSION_DELAY
-            )
-            | process_ena_response_task.s(
-                submission_id=obj.pk, close_submission_on_success=False
-            ).set(countdown=SUBMISSION_DELAY)
-            | create_targeted_sequence_ena_manifest_task.s(submission_id=obj.pk).set(
-                countdown=SUBMISSION_DELAY
-            )
-            | submit_targeted_sequences_to_ena_task.s(
-                submission_id=obj.pk, do_test=False, do_validate=False
-            ).set(countdown=SUBMISSION_DELAY)
-            | process_targeted_sequence_results_task.s(submission_id=obj.pk).set(
-                countdown=SUBMISSION_DELAY
-            )
+            | process_targeted_sequence_results_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
         )
         chain()
 
 
-perform_targeted_sequence_submission.short_description = (
-    "Perform Targeted Sequence Submission"
-)
+perform_targeted_sequence_submission.short_description = "Perform Targeted Sequence Submission"
 
 
 def register_study_at_ena(modeladmin, request, queryset):
@@ -287,18 +266,12 @@ def register_study_at_ena(modeladmin, request, queryset):
 
     for obj in queryset:
         chain = (
-            create_study_broker_objects_only_task.s(submission_id=obj.pk).set(
+            create_study_broker_objects_only_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
+            | prepare_ena_study_xml_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
+            | register_study_at_ena_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
+            | process_ena_response_task.s(submission_id=obj.pk, close_submission_on_success=False).set(
                 countdown=SUBMISSION_DELAY
             )
-            | prepare_ena_study_xml_task.s(submission_id=obj.pk).set(
-                countdown=SUBMISSION_DELAY
-            )
-            | register_study_at_ena_task.s(submission_id=obj.pk).set(
-                countdown=SUBMISSION_DELAY
-            )
-            | process_ena_response_task.s(
-                submission_id=obj.pk, close_submission_on_success=False
-            ).set(countdown=SUBMISSION_DELAY)
         )
         chain()
 
@@ -327,13 +300,9 @@ def submit_manifest_to_ena(modeladmin, request, queryset):
     )
 
     for obj in queryset:
-        chain = submit_targeted_sequences_to_ena_task.s(
-            submission_id=obj.pk, do_test=False, do_validate=False
-        ).set(countdown=SUBMISSION_DELAY) | process_targeted_sequence_results_task.s(
-            submission_id=obj.pk
-        ).set(
+        chain = submit_targeted_sequences_to_ena_task.s(submission_id=obj.pk, do_test=False, do_validate=False).set(
             countdown=SUBMISSION_DELAY
-        )
+        ) | process_targeted_sequence_results_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
         chain()
 
 
@@ -347,13 +316,9 @@ def validate_manifest_at_ena(modeladmin, request, queryset):
     )
 
     for obj in queryset:
-        chain = submit_targeted_sequences_to_ena_task.s(
-            submission_id=obj.pk, do_test=False, do_validate=True
-        ).set(countdown=SUBMISSION_DELAY) | process_targeted_sequence_results_task.s(
-            submission_id=obj.pk
-        ).set(
+        chain = submit_targeted_sequences_to_ena_task.s(submission_id=obj.pk, do_test=False, do_validate=True).set(
             countdown=SUBMISSION_DELAY
-        )
+        ) | process_targeted_sequence_results_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
         chain()
 
 
@@ -370,20 +335,12 @@ def create_helpdesk_issue_manually(modeladmin, request, queryset):
 
     for obj in queryset:
         chain = (
-            get_gfbio_helpdesk_username_task.s(submission_id=obj.pk).set(
-                countdown=SUBMISSION_DELAY
-            )
-            | create_submission_issue_task.s(submission_id=obj.pk).set(
-                countdown=SUBMISSION_DELAY
-            )
-            | jira_initial_comment_task.s(submission_id=obj.pk).set(
-                countdown=SUBMISSION_DELAY
-            )
+            get_gfbio_helpdesk_username_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
+            | create_submission_issue_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
+            | jira_initial_comment_task.s(submission_id=obj.pk).set(countdown=SUBMISSION_DELAY)
         )
         chain()
-        related_uploads = SubmissionUpload.objects.filter(
-            submission=obj, attach_to_ticket=True
-        )
+        related_uploads = SubmissionUpload.objects.filter(submission=obj, attach_to_ticket=True)
         for upload in related_uploads:
             attach_to_submission_issue_task.apply_async(
                 kwargs={
@@ -449,12 +406,7 @@ class SubmissionAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         # FIXME: this is not good and needs refactoring asap !
         old_sub = Submission.objects.filter(id=obj.pk).first()
-        if (
-            old_sub
-            and change
-            and old_sub.status != obj.status
-            and obj.status == Submission.CANCELLED
-        ):
+        if old_sub and change and old_sub.status != obj.status and obj.status == Submission.CANCELLED:
             jira_cancel_issue(submission_id=obj.pk, admin=True)
         super(SubmissionAdmin, self).save_model(request, obj, form, change)
 
@@ -473,10 +425,13 @@ class PrimaryDataFileAdmin(admin.ModelAdmin):
 
 def reparse_csv_metadata(modeladmin, request, queryset):
     from .tasks.submission_upload_tasks.clean_submission_for_update import clean_submission_for_update_task
-    from .tasks.submission_upload_tasks.parse_csv_to_update_clean_submission import parse_csv_to_update_clean_submission_task
-    from .tasks.broker_object_tasks.create_broker_objects_from_submission_data import create_broker_objects_from_submission_data_task
+    from .tasks.submission_upload_tasks.parse_csv_to_update_clean_submission import (
+        parse_csv_to_update_clean_submission_task,
+    )
+    from .tasks.broker_object_tasks.create_broker_objects_from_submission_data import (
+        create_broker_objects_from_submission_data_task,
+    )
     from .tasks.auditable_text_data_tasks.update_ena_submission_data import update_ena_submission_data_task
-
 
     for obj in queryset:
         submission_upload_id = obj.id
@@ -488,9 +443,7 @@ def reparse_csv_metadata(modeladmin, request, queryset):
                 submission_upload_id=submission_upload_id,
             ).set(countdown=SUBMISSION_DELAY)
             | create_broker_objects_from_submission_data_task.s(
-                submission_id=SubmissionUpload.objects.get_related_submission_id(
-                    submission_upload_id
-                ),
+                submission_id=SubmissionUpload.objects.get_related_submission_id(submission_upload_id),
                 use_submitted_submissions=True,
             ).set(countdown=SUBMISSION_DELAY)
             | update_ena_submission_data_task.s(
@@ -507,15 +460,11 @@ def download_submission_upload_file(modeladmin, request, queryset):
     for obj in queryset:
         f = obj.file
         response = HttpResponse(f.read(), content_type="application/force-download")
-        response["Content-Disposition"] = (
-            "attachment; filename=%s" % f.name.split("/")[-1:][0]
-        )
+        response["Content-Disposition"] = "attachment; filename=%s" % f.name.split("/")[-1:][0]
         return response
 
 
-download_submission_upload_file.short_description = (
-    "Download the file of the selected SubmissionUpload."
-)
+download_submission_upload_file.short_description = "Download the file of the selected SubmissionUpload."
 
 
 class SubmissionUploadAdmin(admin.ModelAdmin):

@@ -8,25 +8,22 @@ from gfbio_submissions.generic.models.site_configuration import SiteConfiguratio
 from .test_tasks_base import TestTasks
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
-from ...tasks.broker_object_tasks.create_broker_objects_from_submission_data import \
-    create_broker_objects_from_submission_data_task
+from ...tasks.broker_object_tasks.create_broker_objects_from_submission_data import (
+    create_broker_objects_from_submission_data_task,
+)
 from ...tasks.jira_tasks.add_accession_to_pangaea_issue import add_accession_to_pangaea_issue_task
 
 
 class TestTaskProgressReportInTasks(TestTasks):
     @staticmethod
     def _run_task(submission_id=1):
-        create_broker_objects_from_submission_data_task.apply_async(
-            kwargs={"submission_id": submission_id}
-        )
+        create_broker_objects_from_submission_data_task.apply_async(kwargs={"submission_id": submission_id})
 
     @responses.activate
     def test_create_with_retry_task(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
-        submission.brokerobject_set.filter(
-            type="study"
-        ).first().persistentidentifier_set.create(
+        submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.create(
             archive="ENA",
             pid_type="PRJ",
             pid="PRJEB20411",
@@ -34,14 +31,10 @@ class TestTaskProgressReportInTasks(TestTasks):
         )
         responses.add(
             responses.POST,
-            "{0}/{1}/comment".format(
-                site_config.pangaea_jira_server.url, "PANGAEA_FAKE_KEY"
-            ),
+            "{0}/{1}/comment".format(site_config.pangaea_jira_server.url, "PANGAEA_FAKE_KEY"),
             status=500,
         )
-        tprs = TaskProgressReport.objects.exclude(
-            task_name="tasks.update_helpdesk_ticket_task"
-        )
+        tprs = TaskProgressReport.objects.exclude(task_name="tasks.update_helpdesk_ticket_task")
         self.assertEqual(0, len(tprs))
         add_accession_to_pangaea_issue_task.apply_async(
             kwargs={
@@ -54,13 +47,9 @@ class TestTaskProgressReportInTasks(TestTasks):
             }
         )
 
-        tprs = TaskProgressReport.objects.exclude(
-            task_name="tasks.update_helpdesk_ticket_task"
-        )
+        tprs = TaskProgressReport.objects.exclude(task_name="tasks.update_helpdesk_ticket_task")
         self.assertEqual(1, len(tprs))
-        reports = TaskProgressReport.objects.exclude(
-            task_name="tasks.update_helpdesk_ticket_task"
-        )
+        reports = TaskProgressReport.objects.exclude(task_name="tasks.update_helpdesk_ticket_task")
         report = reports.last()
 
         reps = TaskProgressReport.objects.all()
@@ -75,19 +64,13 @@ class TestTaskProgressReportInTasks(TestTasks):
 
         self.assertEqual(1, len(task_reports))
         report = TaskProgressReport.objects.first()
-        self.assertEqual(
-            "tasks.create_broker_objects_from_submission_data_task", report.task_name
-        )
+        self.assertEqual("tasks.create_broker_objects_from_submission_data_task", report.task_name)
 
     def test_task_report_update_after_return(self):
         self._run_task(submission_id=Submission.objects.first().pk)
-        tprs = TaskProgressReport.objects.exclude(
-            task_name="tasks.update_helpdesk_ticket_task"
-        )
+        tprs = TaskProgressReport.objects.exclude(task_name="tasks.update_helpdesk_ticket_task")
         self.assertEqual(1, len(tprs))
-        tpr = TaskProgressReport.objects.exclude(
-            task_name="tasks.update_helpdesk_ticket_task"
-        ).first()
+        tpr = TaskProgressReport.objects.exclude(task_name="tasks.update_helpdesk_ticket_task").first()
         self.assertEqual("SUCCESS", tpr.status)
         self.assertNotEqual("", tpr.task_kwargs)
 
@@ -102,12 +85,8 @@ class TestTaskProgressReportInTasks(TestTasks):
 
     def test_task_report_update_on_wrong_submission(self):
         self._run_task(submission_id=1111)
-        tprs = TaskProgressReport.objects.exclude(
-            task_name="tasks.update_helpdesk_ticket_task"
-        )
+        tprs = TaskProgressReport.objects.exclude(task_name="tasks.update_helpdesk_ticket_task")
         self.assertEqual(1, len(tprs))
-        tpr = TaskProgressReport.objects.exclude(
-            task_name="tasks.update_helpdesk_ticket_task"
-        ).first()
+        tpr = TaskProgressReport.objects.exclude(task_name="tasks.update_helpdesk_ticket_task").first()
         self.assertEqual("SUCCESS", tpr.status)
         self.assertEqual("CANCELLED", tpr.task_return_value)

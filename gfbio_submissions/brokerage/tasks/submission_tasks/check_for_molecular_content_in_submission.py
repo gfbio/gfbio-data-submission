@@ -16,12 +16,9 @@ from ...utils.task_utils import get_submission_and_site_configuration
     bind=True,
     name="tasks.check_for_molecular_content_in_submission_task",
 )
-def check_for_molecular_content_in_submission_task(
-    self, previous_task_result=None, submission_id=None
-):
+def check_for_molecular_content_in_submission_task(self, previous_task_result=None, submission_id=None):
     logger.info(
-        msg="check_for_molecular_content_in_submission_task. get submission"
-        " with pk={}.".format(submission_id)
+        msg="check_for_molecular_content_in_submission_task. get submission" " with pk={}.".format(submission_id)
     )
 
     # TODO: needs only submission, not both.
@@ -35,9 +32,7 @@ def check_for_molecular_content_in_submission_task(
         "process submission={}.".format(submission.broker_submission_id)
     )
 
-    molecular_data_available, messages, check_performed = check_for_molecular_content(
-        submission
-    )
+    molecular_data_available, messages, check_performed = check_for_molecular_content(submission)
 
     logger.info(
         msg="check_for_molecular_content_in_submission_task. "

@@ -22,12 +22,8 @@ from ...serializers.submission_serializer import SubmissionSerializer
 class TestAuditableTextDataManagerForAtax(TestCase):
     # TODO: move to utils or similar ...
     @classmethod
-    def _create_submission_via_serializer(
-        cls, runs=False, username=None, create_broker_objects=True
-    ):
-        serializer = SubmissionSerializer(
-            data={"target": "ATAX", "release": True, "data": _get_taxonomic_min_data()}
-        )
+    def _create_submission_via_serializer(cls, runs=False, username=None, create_broker_objects=True):
+        serializer = SubmissionSerializer(data={"target": "ATAX", "release": True, "data": _get_taxonomic_min_data()})
         serializer.is_valid()
 
         user = User.objects.get(username=username) if username else User.objects.first()
@@ -38,9 +34,7 @@ class TestAuditableTextDataManagerForAtax(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        User.objects.create_user(
-            username="horst", email="horst@horst.de", password="password"
-        )
+        User.objects.create_user(username="horst", email="horst@horst.de", password="password")
         cls._create_submission_via_serializer()
 
     @classmethod
@@ -93,18 +87,14 @@ class TestAuditableTextDataManagerForAtax(TestCase):
             1,
         )
 
-        platypelis_xml = submission.auditabletextdata_set.filter(
-            atax_file_name="specimen_reference_Platypelis.xml"
-        )
+        platypelis_xml = submission.auditabletextdata_set.filter(atax_file_name="specimen_reference_Platypelis.xml")
 
         platypelis1_xml = submission.auditabletextdata_set.filter(name="specimen")
 
         self.assertEqual(1, len(platypelis1_xml))
         self.assertEqual(1, len(platypelis_xml))
         platypelis_xml = platypelis_xml.first()
-        self.assertIn(
-            "<abcd:UnitID>ZSM 5652/2012</abcd:UnitID>", platypelis_xml.text_data
-        )
+        self.assertIn("<abcd:UnitID>ZSM 5652/2012</abcd:UnitID>", platypelis_xml.text_data)
         self.assertIn(
             "<abcd:FullScientificNameString>Platypelis laetus</abcd:FullScientificNameString>",
             platypelis_xml.text_data,

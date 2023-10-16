@@ -41,9 +41,7 @@ def prepare_ena_study_xml_task(self, previous_task_result=None, submission_id=No
         study_pk = submission.auditabletextdata_set.filter(name="study.xml").first().pk
         logger.info(
             "tasks.py | prepare_ena_study_xml_task | "
-            " auditable textdata with name study.xml found | return pk={0}".format(
-                study_pk
-            )
+            " auditable textdata with name study.xml found | return pk={0}".format(study_pk)
         )
         # TODO: for now return XMLs primary key
         return study_pk
@@ -56,17 +54,11 @@ def prepare_ena_study_xml_task(self, previous_task_result=None, submission_id=No
         return TaskProgressReport.CANCELLED
     else:
         study_data = prepare_study_data_only(submission=submission)
-        study_text_data = store_single_data_item_as_auditable_text_data(
-            submission=submission, data=study_data
-        )
+        study_text_data = store_single_data_item_as_auditable_text_data(submission=submission, data=study_data)
         logger.info(
             "tasks.py | prepare_ena_study_xml_task | "
             " created auditable textdata with name study.xml | return pk={0}".format(
                 study_text_data.pk if study_text_data is not None else "invalid"
             )
         )
-        return (
-            TaskProgressReport.CANCELLED
-            if study_text_data is None
-            else study_text_data.pk
-        )
+        return TaskProgressReport.CANCELLED if study_text_data is None else study_text_data.pk

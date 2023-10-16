@@ -9,9 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class BrokerObjectManager(models.Manager):
-    def add_downloaded_pids_to_existing_broker_objects(
-        self, study_pid, decompressed_file
-    ):
+    def add_downloaded_pids_to_existing_broker_objects(self, study_pid, decompressed_file):
         entities_to_check = [
             "STUDY",
             "EXPERIMENT",
@@ -26,12 +24,8 @@ class BrokerObjectManager(models.Manager):
                 for entity in entities_to_check:
                     report = {}
                     entity_id = row.get("{0}_ID".format(entity), False)
-                    entity_submitter_id = row.get(
-                        "{0}_SUBMITTER_ID".format(entity), False
-                    )
-                    report["action"] = "Checking {0} {1} {2}".format(
-                        entity, entity_id, entity_submitter_id
-                    )
+                    entity_submitter_id = row.get("{0}_SUBMITTER_ID".format(entity), False)
+                    report["action"] = "Checking {0} {1} {2}".format(entity, entity_id, entity_submitter_id)
 
                     broker_agent_ids = entity_submitter_id.split(":")
                     if len(broker_agent_ids) == 2:
@@ -40,20 +34,10 @@ class BrokerObjectManager(models.Manager):
                         try:
                             broker_object = self.get(pk=broker_object_pk)
                             report["found"] = "Brokerobject: {0}".format(broker_object)
-                            pid, created = broker_object.get_or_create_ena_pid(
-                                entity_id, request_id
-                            )
-                            report["result"] = (
-                                "Persistent identifier: "
-                                "{0} created: "
-                                "{1}".format(pid.pid, created)
-                            )
+                            pid, created = broker_object.get_or_create_ena_pid(entity_id, request_id)
+                            report["result"] = "Persistent identifier: " "{0} created: " "{1}".format(pid.pid, created)
                         except self.model.DoesNotExist:
-                            report[
-                                "found"
-                            ] = "No broker object with id/pk: " "{0}".format(
-                                broker_object_pk
-                            )
+                            report["found"] = "No broker object with id/pk: " "{0}".format(broker_object_pk)
                     reports.append(report)
         return reports
 
@@ -61,31 +45,23 @@ class BrokerObjectManager(models.Manager):
     def process_experiment_file_block(experiment_data):
         files = [
             {
-                "filename": experiment_data["files"].get(
-                    "forward_read_file_name", "no_forward_file"
-                ),
+                "filename": experiment_data["files"].get("forward_read_file_name", "no_forward_file"),
                 "filetype": "fastq",  # FIXME: hardcoded this
             }
         ]
         if "reverse_read_file_name" in experiment_data["files"]:
             files.append(
                 {
-                    "filename": experiment_data["files"].get(
-                        "reverse_read_file_name", "no_forward_file"
-                    ),
+                    "filename": experiment_data["files"].get("reverse_read_file_name", "no_forward_file"),
                     "filetype": "fastq",  # FIXME: hardcoded this
                 }
             )
         if "forward_read_file_checksum" in experiment_data["files"]:
             files[0]["checksum_method"] = "MD5"  # FIXME: hardcoded this
-            files[0]["checksum"] = experiment_data["files"][
-                "forward_read_file_checksum"
-            ]
+            files[0]["checksum"] = experiment_data["files"]["forward_read_file_checksum"]
         if "reverse_read_file_checksum" in experiment_data["files"]:
             files[1]["checksum_method"] = "MD5"  # FIXME: hardcoded this
-            files[1]["checksum"] = experiment_data["files"][
-                "reverse_read_file_checksum"
-            ]
+            files[1]["checksum"] = experiment_data["files"]["reverse_read_file_checksum"]
         data = {
             "experiment_ref": experiment_data.get("experiment_alias"),
             "data_block": {"files": files},
@@ -229,10 +205,7 @@ class BrokerObjectManager(models.Manager):
                 "of pid_type={}".format(alias[0], archive, pid_type)
             )
             return None
-        logger.info(
-            msg="append_persistent_identifier to pk={} of "
-            "type={}.".format(broker_obj.id, broker_obj.type)
-        )
+        logger.info(msg="append_persistent_identifier to pk={} of " "type={}.".format(broker_obj.id, broker_obj.type))
         return broker_obj.persistentidentifier_set.create(
             archive=archive,
             pid_type=pid_type,
@@ -241,39 +214,24 @@ class BrokerObjectManager(models.Manager):
         )
 
     def append_persistent_identifiers(self, results, archive, pid_type, alias=None):
-        return [
-            self.append_persistent_identifier(r, archive, pid_type, alias)
-            for r in results
-        ]
+        return [self.append_persistent_identifier(r, archive, pid_type, alias) for r in results]
 
     def append_pids_from_ena_response(self, parsed_response):
         study = parsed_response.get("study", {})
         pids = [self.append_persistent_identifier(study, "ENA", "ACC")]
         for e in study.get("ext_ids", []):
             pids.append(
-                self.append_persistent_identifier(
-                    e, "ENA", "PRJ", alias=study.get("alias", "-1:-1").split(":")
-                )
+                self.append_persistent_identifier(e, "ENA", "PRJ", alias=study.get("alias", "-1:-1").split(":"))
             )
 
         for s in parsed_response.get("samples", []):
             pids.append(self.append_persistent_identifier(s, "ENA", "ACC"))
             for e in s.get("ext_ids", []):
                 pids.append(
-                    self.append_persistent_identifier(
-                        e, "ENA", "BSA", alias=s.get("alias", "-1:-1").split(":")
-                    )
+                    self.append_persistent_identifier(e, "ENA", "BSA", alias=s.get("alias", "-1:-1").split(":"))
                 )
-        pids.extend(
-            self.append_persistent_identifiers(
-                parsed_response.get("experiments", []), "ENA", "ACC"
-            )
-        )
-        pids.extend(
-            self.append_persistent_identifiers(
-                parsed_response.get("runs", []), "ENA", "ACC"
-            )
-        )
+        pids.extend(self.append_persistent_identifiers(parsed_response.get("experiments", []), "ENA", "ACC"))
+        pids.extend(self.append_persistent_identifiers(parsed_response.get("runs", []), "ENA", "ACC"))
         return pids
 
     def get_study_primary_accession_number(self, submission):
@@ -281,6 +239,4 @@ class BrokerObjectManager(models.Manager):
         if not study:
             return None
         else:
-            return study.persistentidentifier_set.filter(
-                archive="ENA", pid_type="PRJ"
-            ).first()
+            return study.persistentidentifier_set.filter(archive="ENA", pid_type="PRJ").first()

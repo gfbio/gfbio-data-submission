@@ -22,9 +22,7 @@ from gfbio_submissions.generic.utils import logged_requests
     name="tasks.update_ena_embargo_task",
 )
 def update_ena_embargo_task(self, prev=None, submission_id=None):
-    logger.info(
-        "tasks.py | update_ena_embargo_task | submission_id={0}".format(submission_id)
-    )
+    logger.info("tasks.py | update_ena_embargo_task | submission_id={0}".format(submission_id))
 
     submission, site_config = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
@@ -39,11 +37,7 @@ def update_ena_embargo_task(self, prev=None, submission_id=None):
 
     study_primary_accession = submission.brokerobject_set.filter(type="study").first()
     if study_primary_accession:
-        study_primary_accession = (
-            study_primary_accession.persistentidentifier_set.filter(
-                pid_type="PRJ"
-            ).first()
-        )
+        study_primary_accession = study_primary_accession.persistentidentifier_set.filter(pid_type="PRJ").first()
 
     if site_config is None or not site_config.ena_server:
         logger.warning(
@@ -101,10 +95,6 @@ def update_ena_embargo_task(self, prev=None, submission_id=None):
     else:
         logger.warning(
             "ena.py | update_ena_embargo_task | no primary accession no "
-            "found for study | submission_id={0}".format(
-                submission.broker_submission_id
-            )
+            "found for study | submission_id={0}".format(submission.broker_submission_id)
         )
-        return "no primary accession number found, submission={}".format(
-            submission.broker_submission_id
-        )
+        return "no primary accession number found, submission={}".format(submission.broker_submission_id)

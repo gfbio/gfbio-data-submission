@@ -12,9 +12,7 @@ class TestSubmissionViewSimple(TestSubmissionView):
         self._add_create_ticket_response()
         self._post_submission()
         submission = Submission.objects.first()
-        response = self.api_client.delete(
-            "/api/submissions/{0}/".format(submission.broker_submission_id)
-        )
+        response = self.api_client.delete("/api/submissions/{0}/".format(submission.broker_submission_id))
         self.assertEqual(204, response.status_code)
         self.assertEqual(1, len(Submission.objects.all()))
         submission = Submission.objects.first()

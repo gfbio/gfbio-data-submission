@@ -5,16 +5,15 @@ import gfbio_submissions.users.managers
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('users', '0007_auto_20200213_1945'),
+        ("users", "0007_auto_20200213_1945"),
     ]
 
     operations = [
         migrations.AlterModelManagers(
-            name='user',
+            name="user",
             managers=[
-                ('objects', gfbio_submissions.users.managers.CustomUserManager()),
+                ("objects", gfbio_submissions.users.managers.CustomUserManager()),
             ],
         ),
     ]

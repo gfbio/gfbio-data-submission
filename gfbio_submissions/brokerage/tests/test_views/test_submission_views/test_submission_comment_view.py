@@ -58,12 +58,8 @@ class TestSubmissionCommentView(TestCase):
             helpdesk_server=resource_cred,
             comment="Default configuration",
         )
-        user = User.objects.create_user(
-            username="horst", email="horst@horst.de", password="password"
-        )
-        permissions = Permission.objects.filter(
-            content_type__app_label="brokerage", codename__endswith="submission"
-        )
+        user = User.objects.create_user(username="horst", email="horst@horst.de", password="password")
+        permissions = Permission.objects.filter(content_type__app_label="brokerage", codename__endswith="submission")
         user.user_permissions.add(*permissions)
         user.site_configuration = cls.site_config
         user.save()
@@ -73,16 +69,12 @@ class TestSubmissionCommentView(TestCase):
         cls.api_client = client
 
         submission = cls._create_submission_via_serializer()
-        submission.additionalreference_set.create(
-            type=GFBIO_HELPDESK_TICKET, reference_key="SAND-1661", primary=True
-        )
+        submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="SAND-1661", primary=True)
         cls._create_submission_via_serializer()
 
     def test_get(self):
         submission = Submission.objects.first()
-        response = self.api_client.get(
-            "/api/submissions/{0}/comment/".format(submission.broker_submission_id)
-        )
+        response = self.api_client.get("/api/submissions/{0}/comment/".format(submission.broker_submission_id))
         self.assertEqual(405, response.status_code)
 
     @responses.activate
@@ -94,9 +86,7 @@ class TestSubmissionCommentView(TestCase):
         )
         responses.add(
             responses.POST,
-            "{0}/rest/api/2/issue/SAND-1661/comment".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-1661/comment".format(self.site_config.helpdesk_server.url),
             json=_get_pangaea_comment_response(),
             status=200,
         )
@@ -110,10 +100,7 @@ class TestSubmissionCommentView(TestCase):
 
     def test_invalid_credentials_post(self):
         client = APIClient()
-        client.credentials(
-            HTTP_AUTHORIZATION="Basic "
-            + base64.b64encode(b"horst:wrong").decode("utf-8")
-        )
+        client.credentials(HTTP_AUTHORIZATION="Basic " + base64.b64encode(b"horst:wrong").decode("utf-8"))
         submission = Submission.objects.first()
         response = client.post(
             "/api/submissions/{0}/comment/".format(submission.broker_submission_id),
@@ -123,15 +110,11 @@ class TestSubmissionCommentView(TestCase):
 
     def test_empty_post(self):
         submission = Submission.objects.first()
-        response = self.api_client.post(
-            "/api/submissions/{0}/comment/".format(submission.broker_submission_id), {}
-        )
+        response = self.api_client.post("/api/submissions/{0}/comment/".format(submission.broker_submission_id), {})
         self.assertEqual(400, response.status_code)
         self.assertIn("comment", json.loads(response.content).keys())
 
     def test_post_unknown_broker_submission_id(self):
-        response = self.api_client.post(
-            "/api/submissions/{0}/comment/".format(uuid4()), {"comment": "a comment"}
-        )
+        response = self.api_client.post("/api/submissions/{0}/comment/".format(uuid4()), {"comment": "a comment"})
         self.assertEqual(404, response.status_code)
         self.assertIn("submission", json.loads(response.content).keys())

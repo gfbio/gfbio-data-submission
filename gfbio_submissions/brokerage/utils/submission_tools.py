@@ -4,9 +4,7 @@ import os
 
 
 def submission_upload_path(instance, filename):
-    return "{0}{1}{2}".format(
-        instance.submission.broker_submission_id, os.path.sep, filename
-    )
+    return "{0}{1}{2}".format(instance.submission.broker_submission_id, os.path.sep, filename)
 
 
 def hash_file(file_field):
@@ -21,9 +19,7 @@ def hash_file(file_field):
 # TODO: needs clean/fresh migration history. intial 001 migration expects this
 #  for primary data model
 def submission_primary_data_file_upload_path(instance, filename):
-    return "{0}{1}primary_data_files{1}{2}".format(
-        instance.submission.broker_submission_id, os.path.sep, filename
-    )
+    return "{0}{1}primary_data_files{1}{2}".format(instance.submission.broker_submission_id, os.path.sep, filename)
 
 
 def get_embargo_from_request(request):
@@ -34,9 +30,7 @@ def get_embargo_from_request(request):
     if request.data and "embargo" in request.data:
         try:
             embargo_date_format = "%Y-%m-%d"
-            new_embargo = datetime.datetime.strptime(
-                request.data["embargo"], embargo_date_format
-            ).date()
+            new_embargo = datetime.datetime.strptime(request.data["embargo"], embargo_date_format).date()
         except ValueError:
             new_embargo = None
     return new_embargo

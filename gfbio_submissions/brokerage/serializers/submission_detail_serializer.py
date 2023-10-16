@@ -35,14 +35,10 @@ class SubmissionDetailSerializer(SubmissionSerializer):
         else:
             valid, errors = validate_data_min(data.get("data", {}))
             target = data.get("target", "NO_TARGET_PROVIDED")
-            full_valid, full_errors = validate_data_full(
-                data=data.get("data", {}), target=target
-            )
+            full_valid, full_errors = validate_data_full(data=data.get("data", {}), target=target)
             if not valid:
                 error_messages = [e.message for e in errors]
-                optional_validation_messages = list(
-                    set([e.message for e in full_errors]) - set(error_messages)
-                )
+                optional_validation_messages = list(set([e.message for e in full_errors]) - set(error_messages))
                 raise serializers.ValidationError(
                     {
                         "data": error_messages,
@@ -50,7 +46,5 @@ class SubmissionDetailSerializer(SubmissionSerializer):
                     }
                 )
             if not full_valid:
-                data["data"].update(
-                    {"optional_validation": [e.message for e in full_errors]}
-                )
+                data["data"].update({"optional_validation": [e.message for e in full_errors]})
         return data

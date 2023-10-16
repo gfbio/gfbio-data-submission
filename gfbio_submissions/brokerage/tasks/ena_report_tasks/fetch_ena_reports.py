@@ -35,11 +35,7 @@ def fetch_ena_reports_task(self):
     logger.info(msg="tasks.py | fetch_ena_reports_task | start update")
     for report_type in EnaReport.REPORT_TYPES:
         type_key, type_name = report_type
-        logger.info(
-            msg="tasks.py | fetch_ena_reports_task | get report of type={0}".format(
-                type_name
-            )
-        )
+        logger.info(msg="tasks.py | fetch_ena_reports_task | get report of type={0}".format(type_name))
         try:
             response, request_id = fetch_ena_report(site_configuration, type_name)
             if response.ok:

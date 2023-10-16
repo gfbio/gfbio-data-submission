@@ -40,10 +40,7 @@ class SubmissionDetailView(
         new_embargo = get_embargo_from_request(request)
 
         # TODO: 06.06.2019 allow edit of submissions with status SUBMITTED ...
-        if (
-            instance.status == Submission.OPEN
-            or instance.status == Submission.SUBMITTED
-        ):
+        if instance.status == Submission.OPEN or instance.status == Submission.SUBMITTED:
             response = self.update(request, *args, **kwargs)
 
             # FIXME: updates to submission download url are not covered here
@@ -68,29 +65,19 @@ class SubmissionDetailView(
                 notify_user_embargo_changed_task,
             )
 
-            update_chain = get_gfbio_helpdesk_username_task.s(
-                submission_id=instance.pk
-            ).set(countdown=SUBMISSION_DELAY) | update_submission_issue_task.s(
-                submission_id=instance.pk
-            ).set(
+            update_chain = get_gfbio_helpdesk_username_task.s(submission_id=instance.pk).set(
                 countdown=SUBMISSION_DELAY
-            )
+            ) | update_submission_issue_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
 
             if new_embargo and instance.embargo != new_embargo:
                 update_chain = (
                     update_chain
-                    | update_ena_embargo_task.s(submission_id=instance.pk).set(
-                        countdown=SUBMISSION_DELAY
-                    )
-                    | notify_user_embargo_changed_task.s(submission_id=instance.pk).set(
-                        countdown=SUBMISSION_DELAY
-                    )
+                    | update_ena_embargo_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+                    | notify_user_embargo_changed_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
                 )
             update_chain()
 
-            chain = check_for_molecular_content_in_submission_task.s(
-                submission_id=instance.pk
-            ).set(
+            chain = check_for_molecular_content_in_submission_task.s(submission_id=instance.pk).set(
                 countdown=SUBMISSION_DELAY
             ) | trigger_submission_transfer_for_updates_task.s(
                 broker_submission_id="{0}".format(instance.broker_submission_id)
@@ -99,9 +86,7 @@ class SubmissionDetailView(
             )
             chain()
         elif instance.status == Submission.CLOSED and new_embargo:
-            response = Response(
-                data={"message": "Embargo updated"}, status=status.HTTP_200_OK
-            )
+            response = Response(data={"message": "Embargo updated"}, status=status.HTTP_200_OK)
             # check for ena embargo update
             if instance.embargo != new_embargo:
                 instance.embargo = new_embargo
@@ -115,18 +100,10 @@ class SubmissionDetailView(
                 )
 
                 update_chain = (
-                    get_gfbio_helpdesk_username_task.s(submission_id=instance.pk).set(
-                        countdown=SUBMISSION_DELAY
-                    )
-                    | update_submission_issue_task.s(submission_id=instance.pk).set(
-                        countdown=SUBMISSION_DELAY
-                    )
-                    | update_ena_embargo_task.s(submission_id=instance.pk).set(
-                        countdown=SUBMISSION_DELAY
-                    )
-                    | notify_user_embargo_changed_task.s(submission_id=instance.pk).set(
-                        countdown=SUBMISSION_DELAY
-                    )
+                    get_gfbio_helpdesk_username_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+                    | update_submission_issue_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+                    | update_ena_embargo_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
+                    | notify_user_embargo_changed_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
                 )
                 update_chain()
         else:

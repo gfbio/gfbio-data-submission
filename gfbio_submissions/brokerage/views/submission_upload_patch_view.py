@@ -28,11 +28,7 @@ class SubmissionUploadPatchView(mixins.UpdateModelMixin, generics.GenericAPIView
         instance = self.get_object()
         if instance.submission.broker_submission_id != UUID(broker_submission_id):
             response = Response(
-                {
-                    "submission": "No link to this "
-                    "broker_submission_id "
-                    "{0}".format(broker_submission_id)
-                },
+                {"submission": "No link to this " "broker_submission_id " "{0}".format(broker_submission_id)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
             with transaction.atomic():
@@ -50,11 +46,7 @@ class SubmissionUploadPatchView(mixins.UpdateModelMixin, generics.GenericAPIView
             Submission.objects.get(broker_submission_id=broker_submission_id)
         except Submission.DoesNotExist as e:
             response = Response(
-                {
-                    "submission": "No submission for this "
-                    "broker_submission_id "
-                    "{0}".format(broker_submission_id)
-                },
+                {"submission": "No submission for this " "broker_submission_id " "{0}".format(broker_submission_id)},
                 status=status.HTTP_404_NOT_FOUND,
             )
             with transaction.atomic():

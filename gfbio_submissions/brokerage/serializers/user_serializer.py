@@ -6,9 +6,7 @@ from gfbio_submissions.users.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
-    submission = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Submission.objects.all()
-    )
+    submission = serializers.PrimaryKeyRelatedField(many=True, queryset=Submission.objects.all())
 
     class Meta:
         model = User

@@ -39,16 +39,12 @@ def submit_targeted_sequences_to_ena_task(
 
     logger.info(
         "tasks.py | submit_targeted_sequences_to_ena_task | "
-        "store_manifest_to_filesystem | submission={}".format(
-            submission.broker_submission_id
-        )
+        "store_manifest_to_filesystem | submission={}".format(submission.broker_submission_id)
     )
     store_manifest_to_filesystem(submission)
     logger.info(
         "tasks.py | submit_targeted_sequences_to_ena_task | "
-        "submit_targeted_sequences| submission={}".format(
-            submission.broker_submission_id
-        )
+        "submit_targeted_sequences| submission={}".format(submission.broker_submission_id)
     )
     success = submit_targeted_sequences(
         username=site_configuration.ena_server.username,
@@ -59,8 +55,6 @@ def submit_targeted_sequences_to_ena_task(
     )
     logger.info(
         "tasks.py | submit_targeted_sequences_to_ena_task | "
-        "done | return success={0} | submission={1}".format(
-            success, submission.broker_submission_id
-        )
+        "done | return success={0} | submission={1}".format(success, submission.broker_submission_id)
     )
     return success

@@ -38,9 +38,7 @@ class TestSubmissionAtaxUploadView(TestCase):
     # TODO: move to utils or similar ...
     @classmethod
     def _create_submission_via_serializer(cls):
-        serializer = SubmissionSerializer(
-            data={"target": "ATAX", "release": True, "data": _get_taxonomic_min_data()}
-        )
+        serializer = SubmissionSerializer(data={"target": "ATAX", "release": True, "data": _get_taxonomic_min_data()})
         serializer.is_valid()
         submission = serializer.save(user=User.objects.first())
         BrokerObject.objects.add_submission_data(submission)
@@ -63,9 +61,7 @@ class TestSubmissionAtaxUploadView(TestCase):
             helpdesk_server=resource_cred,
             comment="Default configuration",
         )
-        user = User.objects.create_user(
-            username="horst", email="hans@hans.de", password="password321"
-        )
+        user = User.objects.create_user(username="horst", email="hans@hans.de", password="password321")
         permissions = Permission.objects.filter(
             content_type__app_label="brokerage", codename__endswith="submissionupload"
         )
@@ -77,27 +73,21 @@ class TestSubmissionAtaxUploadView(TestCase):
         client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
         cls.api_client = client
 
-        user = User.objects.create_user(
-            username="kevin", email="kevin@kevin.de", password="secret", is_staff=True
-        )
+        user = User.objects.create_user(username="kevin", email="kevin@kevin.de", password="secret", is_staff=True)
         token = Token.objects.create(user=user)
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
         cls.other_api_client = client
 
         submission = cls._create_submission_via_serializer()
-        submission.additionalreference_set.create(
-            type=GFBIO_HELPDESK_TICKET, reference_key="FAKE_KEY", primary=True
-        )
+        submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="FAKE_KEY", primary=True)
         cls._create_submission_via_serializer()
 
     @classmethod
     def tearDownClass(cls):
         super(TestSubmissionAtaxUploadView, cls).tearDownClass()
         [
-            shutil.rmtree(
-                path="{0}{1}{2}".format(MEDIA_ROOT, os.sep, o), ignore_errors=False
-            )
+            shutil.rmtree(path="{0}{1}{2}".format(MEDIA_ROOT, os.sep, o), ignore_errors=False)
             for o in os.listdir(MEDIA_ROOT)
         ]
 
@@ -125,9 +115,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         }
 
     @classmethod
-    def _create_atax_csv_test_data(
-        cls, delete=True, invalid=False, update=False, attach=False, meta_data=False
-    ):
+    def _create_atax_csv_test_data(cls, delete=True, invalid=False, update=False, attach=False, meta_data=False):
         file_name = (
             "csv_files/specimen_table_Platypelis_with_error.csv"
             if invalid
@@ -167,9 +155,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         }
 
     @classmethod
-    def _create_atax_csv_multimedia_data(
-        cls, delete=True, invalid=False, update=False, attach=False, meta_data=False
-    ):
+    def _create_atax_csv_multimedia_data(cls, delete=True, invalid=False, update=False, attach=False, meta_data=False):
         file_name = (
             "csv_files/multimedia_table_Platypelis_with_error.csv"
             if invalid
@@ -188,9 +174,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         }
 
     @classmethod
-    def _create_atax_multimedia_data(
-        cls, delete=True, invalid=False, update=False, attach=False, meta_data=False
-    ):
+    def _create_atax_multimedia_data(cls, delete=True, invalid=False, update=False, attach=False, meta_data=False):
         file_name = "jpg_files/Holotype_FGZC3761.jpg"
         if update:
             file_name = "jpg_files/Holotype_FGZC3761.jpg"
@@ -209,9 +193,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         SubmissionUpload.objects.all().delete()
 
     @classmethod
-    def _do_post_with_mocked_responses(
-        cls, file_name="test_primary_data_file_1111", attach=False
-    ):
+    def _do_post_with_mocked_responses(cls, file_name="test_primary_data_file_1111", attach=False):
         site_config = SiteConfiguration.objects.first()
         submission = Submission.objects.first()
         responses.add(
@@ -370,19 +352,13 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(201, response.status_code)
 
         specimen_upload = submission.submissionupload_set.get(
-            file="{0}/specimen_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/specimen_table_Platypelis.csv".format(submission.broker_submission_id)
         )
         measurement_upload = submission.submissionupload_set.get(
-            file="{0}/measurement_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/measurement_table_Platypelis.csv".format(submission.broker_submission_id)
         )
         multimedia_upload = submission.submissionupload_set.get(
-            file="{0}/multimedia_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/multimedia_table_Platypelis.csv".format(submission.broker_submission_id)
         )
 
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
@@ -462,19 +438,13 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(3, len(submission.submissionupload_set.all()))
 
         specimen_upload = submission.submissionupload_set.get(
-            file="{0}/specimen_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/specimen_table_Platypelis.csv".format(submission.broker_submission_id)
         )
         measurement_upload = submission.submissionupload_set.get(
-            file="{0}/measurement_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/measurement_table_Platypelis.csv".format(submission.broker_submission_id)
         )
         multimedia_upload = submission.submissionupload_set.get(
-            file="{0}/multimedia_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/multimedia_table_Platypelis.csv".format(submission.broker_submission_id)
         )
 
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
@@ -553,19 +523,13 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(3, len(submission.submissionupload_set.all()))
 
         specimen_upload = submission.submissionupload_set.get(
-            file="{0}/specimen_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/specimen_table_Platypelis.csv".format(submission.broker_submission_id)
         )
         measurement_upload = submission.submissionupload_set.get(
-            file="{0}/measurement_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/measurement_table_Platypelis.csv".format(submission.broker_submission_id)
         )
         multimedia_upload = submission.submissionupload_set.get(
-            file="{0}/multimedia_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/multimedia_table_Platypelis.csv".format(submission.broker_submission_id)
         )
 
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
@@ -647,19 +611,13 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(201, response.status_code)
 
         specimen_upload = submission.submissionupload_set.get(
-            file="{0}/specimen_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/specimen_table_Platypelis.csv".format(submission.broker_submission_id)
         )
         measurement_upload = submission.submissionupload_set.get(
-            file="{0}/measurement_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/measurement_table_Platypelis.csv".format(submission.broker_submission_id)
         )
         multimedia_upload = submission.submissionupload_set.get(
-            file="{0}/multimedia_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/multimedia_table_Platypelis.csv".format(submission.broker_submission_id)
         )
 
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
@@ -740,19 +698,13 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(201, response.status_code)
 
         specimen_upload = submission.submissionupload_set.get(
-            file="{0}/specimen_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/specimen_table_Platypelis.csv".format(submission.broker_submission_id)
         )
         measurement_upload = submission.submissionupload_set.get(
-            file="{0}/measurement_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/measurement_table_Platypelis.csv".format(submission.broker_submission_id)
         )
         multimedia_upload = submission.submissionupload_set.get(
-            file="{0}/multimedia_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/multimedia_table_Platypelis.csv".format(submission.broker_submission_id)
         )
 
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
@@ -832,19 +784,13 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(3, len(submission.submissionupload_set.all()))
 
         specimen_upload = submission.submissionupload_set.get(
-            file="{0}/specimen_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/specimen_table_Platypelis.csv".format(submission.broker_submission_id)
         )
         measurement_upload = submission.submissionupload_set.get(
-            file="{0}/measurement_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/measurement_table_Platypelis.csv".format(submission.broker_submission_id)
         )
         multimedia_upload = submission.submissionupload_set.get(
-            file="{0}/multimedia_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/multimedia_table_Platypelis.csv".format(submission.broker_submission_id)
         )
 
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
@@ -923,9 +869,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertTrue(urlparse(response.data["file"]).path.startswith(MEDIA_URL))
 
     def test_random_submission_no_upload(self):
-        url = reverse(
-            "brokerage:submissions_upload", kwargs={"broker_submission_id": uuid4()}
-        )
+        url = reverse("brokerage:submissions_upload", kwargs={"broker_submission_id": uuid4()})
         data = self._create_atax_csv_test_data()
         response = self.api_client.post(url, data, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -960,9 +904,7 @@ class TestSubmissionAtaxUploadView(TestCase):
     def test_valid_atax_file_put_no_task(self):
         submission = Submission.objects.first()
         reports_len = len(TaskProgressReport.objects.all())
-        response = self._do_post_with_mocked_responses(
-            file_name="test_primary_data_file_1111"
-        )
+        response = self._do_post_with_mocked_responses(file_name="test_primary_data_file_1111")
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(SubmissionUpload.objects.all()))
         fname = SubmissionUpload.objects.all().first().file.name
@@ -986,9 +928,7 @@ class TestSubmissionAtaxUploadView(TestCase):
     @responses.activate
     def test_atax_file_put_modified_content_with_task(self):
         submission = Submission.objects.first()
-        response = self._do_post_with_mocked_responses(
-            file_name="specimen_table_Platypelis", attach=True
-        )
+        response = self._do_post_with_mocked_responses(file_name="specimen_table_Platypelis", attach=True)
 
         self.assertEqual(1, len(submission.submissionupload_set.all()))
         submission_upload = submission.submissionupload_set.first()
@@ -1114,9 +1054,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(201, response.status_code)
 
         specimen_upload = submission.submissionupload_set.get(
-            file="{0}/specimen_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/specimen_table_Platypelis.csv".format(submission.broker_submission_id)
         )
         # failes:
         # measurement_upload = submission.submissionupload_set.get(
@@ -1199,9 +1137,7 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(201, response.status_code)
 
         specimen_upload = submission.submissionupload_set.get(
-            file="{0}/specimen_table_Platypelis.csv".format(
-                submission.broker_submission_id
-            )
+            file="{0}/specimen_table_Platypelis.csv".format(submission.broker_submission_id)
         )
         # failes:
         # measurement_upload = submission.submissionupload_set.get(

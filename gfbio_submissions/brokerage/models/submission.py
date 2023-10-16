@@ -129,9 +129,7 @@ class Submission(TimeStampedModel):
             broker_objects = self.brokerobject_set.filter(type="study")
             data = []
             for broker_object in broker_objects:
-                for (
-                    persistentidentifier_object
-                ) in broker_object.persistentidentifier_set.filter(pid_type="PRJ"):
+                for persistentidentifier_object in broker_object.persistentidentifier_set.filter(pid_type="PRJ"):
                     data.append(
                         {
                             "pid": persistentidentifier_object.pid,
@@ -146,9 +144,7 @@ class Submission(TimeStampedModel):
     def get_json_with_aliases(self, alias_postfix):
         new_study_alias, study = self.set_study_alias(alias_postfix)
         sample_aliases, samples = self.set_sample_aliases(alias_postfix)
-        experiment_aliases, experiments = self.set_experiment_aliases(
-            alias_postfix, new_study_alias, sample_aliases
-        )
+        experiment_aliases, experiments = self.set_experiment_aliases(alias_postfix, new_study_alias, sample_aliases)
         runs = self.set_run_aliases(alias_postfix, experiment_aliases)
 
         return (
@@ -163,9 +159,7 @@ class Submission(TimeStampedModel):
         runs = self.brokerobject_set.filter(type="run")
         for r in runs:
             if "experiment_ref" in r.data.keys():
-                r.data["experiment_ref"] = experiment_aliases.get(
-                    r.data["experiment_ref"], "no_sample_descriptor"
-                )
+                r.data["experiment_ref"] = experiment_aliases.get(r.data["experiment_ref"], "no_sample_descriptor")
                 r.data["run_alias"] = "{0}:{1}".format(r.id, alias_postfix)
         return runs
 
@@ -181,16 +175,12 @@ class Submission(TimeStampedModel):
     def set_experiment_aliases(self, alias_postfix, new_study_alias, sample_aliases):
         experiments = self.brokerobject_set.filter(type="experiment")
         experiment_aliases = {
-            e.data.get("experiment_alias", "no_experiment_alias"): "{0}:{1}".format(
-                e.id, alias_postfix
-            )
+            e.data.get("experiment_alias", "no_experiment_alias"): "{0}:{1}".format(e.id, alias_postfix)
             for e in experiments
         }
         for e in experiments:
             if "experiment_alias" in e.data.keys():
-                e.data["experiment_alias"] = experiment_aliases.get(
-                    e.data["experiment_alias"], "no_experiment_alias"
-                )
+                e.data["experiment_alias"] = experiment_aliases.get(e.data["experiment_alias"], "no_experiment_alias")
                 e.data["study_ref"] = new_study_alias
                 e.data["design"]["sample_descriptor"] = sample_aliases.get(
                     e.data["design"]["sample_descriptor"], "no_sample_descriptor"
@@ -202,16 +192,11 @@ class Submission(TimeStampedModel):
     def set_sample_aliases(self, alias_postfix):
         samples = self.brokerobject_set.filter(type="sample")
         sample_aliases = {
-            s.data.get("sample_alias", "no_sample_alias"): "{0}:{1}".format(
-                s.id, alias_postfix
-            )
-            for s in samples
+            s.data.get("sample_alias", "no_sample_alias"): "{0}:{1}".format(s.id, alias_postfix) for s in samples
         }
         for s in samples:
             if "sample_alias" in s.data.keys():
-                s.data["sample_alias"] = sample_aliases.get(
-                    s.data["sample_alias"], "no_sample_alias"
-                )
+                s.data["sample_alias"] = sample_aliases.get(s.data["sample_alias"], "no_sample_alias")
 
         return sample_aliases, samples
 
@@ -221,17 +206,11 @@ class Submission(TimeStampedModel):
 
     # TODO: refactor/move: too specific (molecular submission)
     def get_sample_json(self):
-        return {
-            "samples": [s.data for s in self.brokerobject_set.filter(type="sample")]
-        }
+        return {"samples": [s.data for s in self.brokerobject_set.filter(type="sample")]}
 
     # TODO: refactor/move: too specific (molecular submission)
     def get_experiment_json(self):
-        return {
-            "experiments": [
-                s.data for s in self.brokerobject_set.filter(type="experiment")
-            ]
-        }
+        return {"experiments": [s.data for s in self.brokerobject_set.filter(type="experiment")]}
 
     # TODO: refactor/move: too specific (molecular submission)
     def get_run_json(self):
@@ -239,14 +218,10 @@ class Submission(TimeStampedModel):
 
     # TODO: check if filter for primary makes sense. will deliver only on per submission
     def get_primary_pangaea_references(self):
-        return self.additionalreference_set.filter(
-            Q(type=PANGAEA_JIRA_TICKET) & Q(primary=True)
-        )
+        return self.additionalreference_set.filter(Q(type=PANGAEA_JIRA_TICKET) & Q(primary=True))
 
     def get_primary_reference(self, reference_type):
-        issues = self.additionalreference_set.filter(
-            Q(type=reference_type) & Q(primary=True)
-        )
+        issues = self.additionalreference_set.filter(Q(type=reference_type) & Q(primary=True))
         if len(issues):
             return issues.first()
         else:

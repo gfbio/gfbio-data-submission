@@ -32,11 +32,7 @@ def notify_on_embargo_ended_task(self, submission_id=None):
     if not submission_id:
         return "submission_id not provided"
 
-    logger.info(
-        "tasks.py | notify_on_embargo_ended_task | submission_id={}".format(
-            submission_id
-        )
-    )
+    logger.info("tasks.py | notify_on_embargo_ended_task | submission_id={}".format(submission_id))
 
     submission, site_config = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
@@ -55,14 +51,10 @@ def notify_on_embargo_ended_task(self, submission_id=None):
             if not comment:
                 return TaskProgressReport.CANCELLED
 
-            comment = jira_comment_replace(
-                comment=comment, primary_accession=primary_accession.pid
-            )
+            comment = jira_comment_replace(comment=comment, primary_accession=primary_accession.pid)
 
             jira_client = JiraClient(resource=site_config.helpdesk_server)
-            jira_client.add_comment(
-                key_or_issue=reference.reference_key, text=comment, is_internal=False
-            )
+            jira_client.add_comment(key_or_issue=reference.reference_key, text=comment, is_internal=False)
 
             jira_error_auto_retry(
                 jira_client=jira_client,

@@ -76,8 +76,7 @@ class SubmissionUpload(TimeStampedModel):
 
     modified_recently = models.BooleanField(
         default=False,
-        help_text='Checked automatically if "file" has been updated and '
-        "its content/md5_checksum has changed",
+        help_text='Checked automatically if "file" has been updated and ' "its content/md5_checksum has changed",
     )
 
     attachment_id = models.IntegerField(
@@ -98,9 +97,7 @@ class SubmissionUpload(TimeStampedModel):
         help_text="The actual file uploaded.",
     )
 
-    md5_checksum = models.CharField(
-        blank=True, max_length=32, default="", help_text='MD5 checksum of "file"'
-    )
+    md5_checksum = models.CharField(blank=True, max_length=32, default="", help_text='MD5 checksum of "file"')
 
     objects = SubmissionUploadManager()
 

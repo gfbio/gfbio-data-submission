@@ -37,9 +37,7 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None, submission_id=
         submission_id=submission_id, task=self, include_closed=True
     )
     if submission == TaskProgressReport.CANCELLED:
-        logger.info(
-            "tasks.py | get_gfbio_helpdesk_username_task | return TaskProgressReport.CANCELLED"
-        )
+        logger.info("tasks.py | get_gfbio_helpdesk_username_task | return TaskProgressReport.CANCELLED")
         return TaskProgressReport.CANCELLED
 
     user_name = JIRA_FALLBACK_USERNAME
@@ -57,9 +55,7 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None, submission_id=
     result["email"] = user_email if len(user_email) else JIRA_FALLBACK_EMAIL
     result["full_name"] = user_full_name
 
-    response = get_gfbio_helpdesk_username(
-        user_name=user_name, email=user_email, fullname=user_full_name
-    )
+    response = get_gfbio_helpdesk_username(user_name=user_name, email=user_email, fullname=user_full_name)
     logger.info(
         "tasks.py | get_gfbio_helpdesk_username_task | response status={0} | content={1}".format(
             response.status_code, response.content
@@ -76,7 +72,5 @@ def get_gfbio_helpdesk_username_task(self, prev_task_result=None, submission_id=
     if response.status_code == 200:
         result["jira_user_name"] = smart_str(response.content)
 
-    logger.info(
-        "tasks.py | get_gfbio_helpdesk_username_task |return={0}".format(result)
-    )
+    logger.info("tasks.py | get_gfbio_helpdesk_username_task |return={0}".format(result))
     return result

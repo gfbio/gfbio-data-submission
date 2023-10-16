@@ -19,16 +19,11 @@ from gfbio_submissions.generic.models.request_log import RequestLog
     bind=True,
     name="tasks.process_ena_response_task",
 )
-def process_ena_response_task(
-    self, transfer_result=None, submission_id=None, close_submission_on_success=True
-):
+def process_ena_response_task(self, transfer_result=None, submission_id=None, close_submission_on_success=True):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
     )
-    if (
-        transfer_result == TaskProgressReport.CANCELLED
-        or submission == TaskProgressReport.CANCELLED
-    ):
+    if transfer_result == TaskProgressReport.CANCELLED or submission == TaskProgressReport.CANCELLED:
         logger.warning(
             "tasks.py | process_ena_response_task | "
             "transfer_result or submission unavailable | "
@@ -48,9 +43,7 @@ def process_ena_response_task(
         logger.warning(
             "tasks.py | process_ena_response_task | "
             "type error parsing transfer_result of previous task | "
-            "submission_id={0} | Error={1} | transfer_result={2}".format(
-                submission_id, te, transfer_result
-            )
+            "submission_id={0} | Error={1} | transfer_result={2}".format(submission_id, te, transfer_result)
         )
         return TaskProgressReport.CANCELLED
 

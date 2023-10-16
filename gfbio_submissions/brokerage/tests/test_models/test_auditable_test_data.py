@@ -36,9 +36,7 @@ class TestAuditableTextData(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        User.objects.create_user(
-            username="horst", email="horst@horst.de", password="password"
-        )
+        User.objects.create_user(username="horst", email="horst@horst.de", password="password")
         cls._create_submission_via_serializer()
 
     def test_instance(self):
@@ -55,9 +53,7 @@ class TestAuditableTextData(TestCase):
         store_ena_data_as_auditable_text_data(submission, data)
         all_text_data = AuditableTextData.objects.all()
         self.assertEqual(4, len(all_text_data))
-        text_data_for_submission = AuditableTextData.objects.filter(
-            submission=submission
-        )
+        text_data_for_submission = AuditableTextData.objects.filter(submission=submission)
         self.assertEqual(4, len(text_data_for_submission))
 
     def test_admin_download(self):
@@ -68,8 +64,6 @@ class TestAuditableTextData(TestCase):
         response = download_auditable_text_data(
             None,
             None,
-            Submission.objects.filter(
-                broker_submission_id=submission.broker_submission_id
-            ),
+            Submission.objects.filter(broker_submission_id=submission.broker_submission_id),
         )
         self.assertEqual(200, response.status_code)

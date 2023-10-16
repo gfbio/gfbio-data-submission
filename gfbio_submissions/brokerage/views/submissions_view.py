@@ -11,9 +11,7 @@ from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_detail_serializer import SubmissionDetailSerializer
 
 
-class SubmissionsView(
-    mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView
-):
+class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
     queryset = Submission.objects.all()
     serializer_class = SubmissionDetailSerializer
     authentication_classes = (TokenAuthentication, BasicAuthentication)
@@ -52,21 +50,13 @@ class SubmissionsView(
         )
 
         chain = (
-            get_gfbio_helpdesk_username_task.s(submission_id=submission.pk).set(
+            get_gfbio_helpdesk_username_task.s(submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
+            | create_submission_issue_task.s(submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
+            | jira_initial_comment_task.s(submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
+            | check_for_molecular_content_in_submission_task.s(submission_id=submission.pk).set(
                 countdown=SUBMISSION_DELAY
             )
-            | create_submission_issue_task.s(submission_id=submission.pk).set(
-                countdown=SUBMISSION_DELAY
-            )
-            | jira_initial_comment_task.s(submission_id=submission.pk).set(
-                countdown=SUBMISSION_DELAY
-            )
-            | check_for_molecular_content_in_submission_task.s(
-                submission_id=submission.pk
-            ).set(countdown=SUBMISSION_DELAY)
-            | trigger_submission_transfer_task.s(submission_id=submission.pk).set(
-                countdown=SUBMISSION_DELAY
-            )
+            | trigger_submission_transfer_task.s(submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
         )
 
         chain()

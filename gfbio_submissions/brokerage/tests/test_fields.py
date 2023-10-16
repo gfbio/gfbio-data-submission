@@ -55,9 +55,7 @@ class JsonDictFieldTest(TestCase):
         submission = Submission.objects.first()
         qs = Submission.objects.filter(data__requirements__title="Test Data Submission")
         self.assertEqual(1, len(qs))
-        self.assertEqual(
-            submission.broker_submission_id, qs.first().broker_submission_id
-        )
+        self.assertEqual(submission.broker_submission_id, qs.first().broker_submission_id)
         qs = Submission.objects.filter(data__requirements__has_key="custom_key")
         self.assertEqual(0, len(qs))
         submission.data["requirements"]["custom_key"] = True

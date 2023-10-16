@@ -21,9 +21,7 @@ from ...models.task_progress_report import TaskProgressReport
 
 class TestEnaReport(TestCase):
     def setUp(self):
-        with open(
-            os.path.join(_get_test_data_dir_path(), "ena_reports_testdata.json"), "r"
-        ) as file:
+        with open(os.path.join(_get_test_data_dir_path(), "ena_reports_testdata.json"), "r") as file:
             data = json.load(file)
         for report_type in EnaReport.REPORT_TYPES:
             key, val = report_type
@@ -33,11 +31,7 @@ class TestEnaReport(TestCase):
         self.assertEqual(4, len(EnaReport.objects.all()))
         self.assertEqual(
             6,
-            len(
-                EnaReport.objects.filter(report_type=EnaReport.STUDY)
-                .first()
-                .report_data
-            ),
+            len(EnaReport.objects.filter(report_type=EnaReport.STUDY).first().report_data),
         )
 
     def test_create_instance(self):
@@ -115,11 +109,7 @@ class TestEnaReport(TestCase):
 
         self.assertEqual(
             1,
-            len(
-                EnaReport.objects.filter(report_type=EnaReport.STUDY).filter(
-                    report_data__1__report__holdDate=None
-                )
-            ),
+            len(EnaReport.objects.filter(report_type=EnaReport.STUDY).filter(report_data__1__report__holdDate=None)),
         )
 
         # Works even when searching for part of desired json data
@@ -149,22 +139,14 @@ class TestEnaReport(TestCase):
         self.assertEqual(6, len(Accession.objects.all()))
 
         study_report = EnaReport.objects.get(report_type=EnaReport.STUDY)
-        self.assertFalse(
-            Accession.objects.filter(identifier="ERP119242").first() is None
-        )
-        self.assertFalse(
-            Accession.objects.filter(identifier="PRJEB36096").first() is None
-        )
+        self.assertFalse(Accession.objects.filter(identifier="ERP119242").first() is None)
+        self.assertFalse(Accession.objects.filter(identifier="PRJEB36096").first() is None)
         study_report.report_data[0]["report"]["releaseStatus"] = "PUBLIC"
         study_report.save()
         success = update_resolver_accessions()
         self.assertEqual(4, len(Accession.objects.all()))
-        self.assertTrue(
-            Accession.objects.filter(identifier="ERP119242").first() is None
-        )
-        self.assertTrue(
-            Accession.objects.filter(identifier="PRJEB36096").first() is None
-        )
+        self.assertTrue(Accession.objects.filter(identifier="ERP119242").first() is None)
+        self.assertTrue(Accession.objects.filter(identifier="PRJEB36096").first() is None)
 
     def test_parsing_for_ena_status(self):
         user = User.objects.create(username="user1")
@@ -218,9 +200,7 @@ class TestEnaReport(TestCase):
         success = update_persistent_identifier_report_status()
         self.assertTrue(success)
 
-        self.assertEqual(
-            datetime(2021, 1, 7).date(), Submission.objects.first().embargo
-        )
+        self.assertEqual(datetime(2021, 1, 7).date(), Submission.objects.first().embargo)
 
         identifiers = PersistentIdentifier.objects.all().exclude(pid_type="DOI")
         self.assertEqual(2, len(identifiers))
@@ -270,35 +250,19 @@ class TestEnaReport(TestCase):
         )
         self.assertEqual(
             1,
-            len(
-                TaskProgressReport.objects.filter(
-                    task_name="tasks.notify_on_embargo_ended_task"
-                )
-            ),
+            len(TaskProgressReport.objects.filter(task_name="tasks.notify_on_embargo_ended_task")),
         )
         self.assertEqual(
             1,
-            len(
-                TaskProgressReport.objects.filter(
-                    task_name="tasks.jira_transition_issue_task"
-                )
-            ),
+            len(TaskProgressReport.objects.filter(task_name="tasks.jira_transition_issue_task")),
         )
 
         success = update_persistent_identifier_report_status()
         self.assertEqual(
             1,
-            len(
-                TaskProgressReport.objects.filter(
-                    task_name="tasks.notify_on_embargo_ended_task"
-                )
-            ),
+            len(TaskProgressReport.objects.filter(task_name="tasks.notify_on_embargo_ended_task")),
         )
         self.assertEqual(
             1,
-            len(
-                TaskProgressReport.objects.filter(
-                    task_name="tasks.jira_transition_issue_task"
-                )
-            ),
+            len(TaskProgressReport.objects.filter(task_name="tasks.jira_transition_issue_task")),
         )

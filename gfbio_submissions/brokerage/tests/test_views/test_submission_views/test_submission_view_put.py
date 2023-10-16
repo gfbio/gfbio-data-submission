@@ -53,9 +53,7 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
         self._post_submission()
         ticket_key = "FAKE-101"
         site_config = SiteConfiguration.objects.first()
-        url = "{0}{1}/{2}".format(
-            site_config.helpdesk_server.url, JIRA_ISSUE_URL, ticket_key
-        )
+        url = "{0}{1}/{2}".format(site_config.helpdesk_server.url, JIRA_ISSUE_URL, ticket_key)
         responses.add(responses.PUT, url, body="", status=204)
         submission = Submission.objects.first()
 
@@ -66,9 +64,7 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
         primary_ref.save()
         submission.embargo = datetime.date.today() + datetime.timedelta(days=365)
         submission.save()
-        update_tasks = TaskProgressReport.objects.filter(
-            task_name="tasks.update_helpdesk_ticket_task"
-        )
+        update_tasks = TaskProgressReport.objects.filter(task_name="tasks.update_helpdesk_ticket_task")
         self.assertEqual(1, len(update_tasks))
 
     @responses.activate
@@ -166,9 +162,7 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
             format="json",
         )
         self.assertEqual(400, response.status_code)
-        self.assertIn(
-            "'samples' is a required property", response.content.decode("utf-8")
-        )
+        self.assertIn("'samples' is a required property", response.content.decode("utf-8"))
         self.assertFalse("optional_validation" in response.content.decode("utf-8"))
         submission = Submission.objects.first()
         self.assertEqual(Submission.OPEN, submission.status)

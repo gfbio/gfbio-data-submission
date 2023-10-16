@@ -32,9 +32,7 @@ class JiraClient(object):
         if token_resource is None:
             self.jira = self._get_connection()
         else:
-            self.jira = self._get_connection(
-                options={"cookies": self._get_pangaea_token()}
-            )
+            self.jira = self._get_connection(options={"cookies": self._get_pangaea_token()})
         self.issue = None
         self.comment = None
         self.error = None
@@ -59,9 +57,7 @@ class JiraClient(object):
                     "request_details": {"error": "{}".format(ce)},
                 }
             )
-            logger.error(
-                "JiraClient | _get_connection | ConnectionError | {0}".format(ce)
-            )
+            logger.error("JiraClient | _get_connection | ConnectionError | {0}".format(ce))
         except JIRAError as je:
             RequestLog.objects.create_jira_log(
                 {
@@ -92,13 +88,9 @@ class JiraClient(object):
             self.error = None
             log_arguments["response_content"] = self.issue.raw
         except JIRAError as e:
-            logger.warning(
-                "JiraClient | create_issue | JIRAError {0} | {1}".format(e, e.text)
-            )
+            logger.warning("JiraClient | create_issue | JIRAError {0} | {1}".format(e, e.text))
             log_arguments["request_details"]["error"] = "{}".format(e)
-            mail_admins(
-                subject="JIRA - create issue error", message="Error: {}".format(e)
-            )
+            mail_admins(subject="JIRA - create issue error", message="Error: {}".format(e))
             self.issue = None
             self.error = e
 
@@ -116,9 +108,7 @@ class JiraClient(object):
             log_arguments["response_content"] = self.issue.raw
             self.error = None
         except JIRAError as e:
-            logger.warning(
-                "JiraClient | get_issue | JIRAError {0} | {1}".format(e, e.text)
-            )
+            logger.warning("JiraClient | get_issue | JIRAError {0} | {1}".format(e, e.text))
             log_arguments["request_details"]["error"] = "{}".format(e)
             self.issue = None
             self.error = e
@@ -139,9 +129,7 @@ class JiraClient(object):
         except JIRAError as e:
             self.error = e
             log_arguments["request_details"]["error"] = "{}".format(e)
-            mail_admins(
-                subject="JIRA - update issue error", message="Error: {}".format(e)
-            )
+            mail_admins(subject="JIRA - update issue error", message="Error: {}".format(e))
         RequestLog.objects.create_jira_log(log_arguments)
 
     # https://jira.readthedocs.io/en/master/examples.html#comments
@@ -157,20 +145,14 @@ class JiraClient(object):
             "request_details": {"function_called": "{}".format(self.add_comment)},
         }
         try:
-            self.comment = self.jira.add_comment(
-                key_or_issue, text, is_internal=is_internal
-            )
+            self.comment = self.jira.add_comment(key_or_issue, text, is_internal=is_internal)
             log_arguments["response_content"] = self.comment.raw
             self.error = None
         except JIRAError as e:
-            logger.warning(
-                "JiraClient | add_comment | JIRAError {0} | {1}".format(e, e.text)
-            )
+            logger.warning("JiraClient | add_comment | JIRAError {0} | {1}".format(e, e.text))
             self.comment = None
             self.error = e
-            mail_admins(
-                subject="JIRA - add comment error", message="Error: {}".format(e)
-            )
+            mail_admins(subject="JIRA - add comment error", message="Error: {}".format(e))
             log_arguments["request_details"]["error"] = "{}".format(e)
         RequestLog.objects.create_jira_log(log_arguments)
 
@@ -187,10 +169,7 @@ class JiraClient(object):
             log_arguments["response_content"] = comments
             return comments
         except JIRAError as e:
-            logger.warning(
-                "JiraClient | get_comments | key={0} | JIRAError {1} | "
-                "{2}".format(key, e, e.text)
-            )
+            logger.warning("JiraClient | get_comments | key={0} | JIRAError {1} | " "{2}".format(key, e, e.text))
             self.error = e
             log_arguments["request_details"]["error"] = "{}".format(e)
             return None
@@ -214,20 +193,14 @@ class JiraClient(object):
         try:
             if file_name is None:
                 file_name = "{0}_fallback_filename".format(self.issue.key)
-            attachement = self.jira.add_attachment(
-                issue=self.issue.key, attachment=file, filename=file_name
-            )
+            attachement = self.jira.add_attachment(issue=self.issue.key, attachment=file, filename=file_name)
             log_arguments["response_content"] = attachement.raw
             return_value = attachement
         except JIRAError as e:
-            logger.warning(
-                "JiraClient | add_attachment | JIRAError {0} | {1}".format(e, e.text)
-            )
+            logger.warning("JiraClient | add_attachment | JIRAError {0} | {1}".format(e, e.text))
             self.error = e
             log_arguments["request_details"]["error"] = "{}".format(e)
-            mail_admins(
-                subject="JIRA - add attachment error", message="Error: {}".format(e)
-            )
+            mail_admins(subject="JIRA - add attachment error", message="Error: {}".format(e))
         RequestLog.objects.create_jira_log(log_arguments)
         return return_value
 
@@ -244,13 +217,9 @@ class JiraClient(object):
             log_arguments["response_status"] = response.status_code
             self.error = None
         except JIRAError as e:
-            logger.warning(
-                "JiraClient | delete_attachment | JIRAError {0} | {1}".format(e, e.text)
-            )
+            logger.warning("JiraClient | delete_attachment | JIRAError {0} | {1}".format(e, e.text))
             log_arguments["request_details"]["error"] = "{}".format(e)
-            mail_admins(
-                subject="JIRA - delete attachment error", message="Error: {}".format(e)
-            )
+            mail_admins(subject="JIRA - delete attachment error", message="Error: {}".format(e))
             self.error = e
         RequestLog.objects.create_jira_log(log_arguments)
 
@@ -262,20 +231,14 @@ class JiraClient(object):
             "request_details": {"function_called": "{}".format(self.add_remote_link)},
         }
         try:
-            remote_link = self.jira.add_remote_link(
-                key_or_issue, {"url": url, "title": title}
-            )
+            remote_link = self.jira.add_remote_link(key_or_issue, {"url": url, "title": title})
             log_arguments["response_content"] = remote_link.raw
             self.error = None
         except JIRAError as e:
-            logger.warning(
-                "JiraClient | add_remote_link | JIRAError {0} | {1}".format(e, e.text)
-            )
+            logger.warning("JiraClient | add_remote_link | JIRAError {0} | {1}".format(e, e.text))
             self.error = e
             log_arguments["request_details"]["error"] = "{}".format(e)
-            mail_admins(
-                subject="JIRA - add remote link error", message="Error: {}".format(e)
-            )
+            mail_admins(subject="JIRA - add remote link error", message="Error: {}".format(e))
         RequestLog.objects.create_jira_log(log_arguments)
 
     # specialized methods ------------------------------------------------------
@@ -316,9 +279,7 @@ class JiraClient(object):
             # deal with jira unknown reporter
             if "reporter" in error_messages.get("errors", {}).keys():
                 reporter_errors = error_messages.get("errors", {})
-                if "The reporter specified is not a user" in reporter_errors.get(
-                    "reporter", ""
-                ):
+                if "The reporter specified is not a user" in reporter_errors.get("reporter", ""):
                     default = {
                         "name": JIRA_FALLBACK_USERNAME,
                         "user_full_name": "",
@@ -331,11 +292,7 @@ class JiraClient(object):
                     )
 
     def create_pangaea_issue(self, site_config, submission):
-        self.create_issue(
-            fields=prepare_pangaea_issue_content(
-                site_configuration=site_config, submission=submission
-            )
-        )
+        self.create_issue(fields=prepare_pangaea_issue_content(site_configuration=site_config, submission=submission))
 
     def attach_to_pangaea_issue(self, key, submission):
         attachment = StringIO()
@@ -353,16 +310,10 @@ class JiraClient(object):
     def get_doi_from_pangaea_issue(self, key):
         logger.info("JiraClient | get_doi_from_pangaea_issue | key {0} ".format(key))
         self.get_issue(key=key)
-        logger.info(
-            "JiraClient | get_doi_from_pangaea_issue | issue {0} ".format(self.issue)
-        )
+        logger.info("JiraClient | get_doi_from_pangaea_issue | issue {0} ".format(self.issue))
         if PANGAEA_ISSUE_DOI_FIELD_NAME in self.issue.raw["fields"].keys():
             field_value = self.issue.raw["fields"][PANGAEA_ISSUE_DOI_FIELD_NAME]
-            logger.info(
-                "JiraClient | get_doi_from_pangaea_issue | field_value={0}".format(
-                    field_value
-                )
-            )
+            logger.info("JiraClient | get_doi_from_pangaea_issue | field_value={0}".format(field_value))
             if field_value is not None and "doi" in field_value:
                 return field_value
         return None
@@ -373,9 +324,7 @@ class JiraClient(object):
             RequestLog.objects.create(
                 type=RequestLog.OUTGOING,
                 method=RequestLog.GET,
-                url="https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions".format(
-                    issue
-                ),
+                url="https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions".format(issue),
                 user=submission.user,
                 submission_id=submission.broker_submission_id,
                 response_content=transitions,
@@ -389,17 +338,11 @@ class JiraClient(object):
                 cancel_transition_id = t["id"]
                 break
 
-        logger.info(
-            "JiraClient | cancel_issue | key {} | transition_id {} ".format(
-                issue, cancel_transition_id
-            )
-        )
+        logger.info("JiraClient | cancel_issue | key {} | transition_id {} ".format(issue, cancel_transition_id))
 
         if cancel_transition_id != "0":
             try:
-                resolution_name = (
-                    "Cancelled by submitter" if not admin else "Incomplete"
-                )
+                resolution_name = "Cancelled by submitter" if not admin else "Incomplete"
                 response = self.jira.transition_issue(
                     issue,
                     cancel_transition_id,
@@ -408,17 +351,13 @@ class JiraClient(object):
             except JIRAError as e:
                 response = e
                 logger.info("JiraClient | cancel_issue | Error {}".format(e))
-                mail_admins(
-                    subject="JIRA - cancel issue error", message="Error: {}".format(e)
-                )
+                mail_admins(subject="JIRA - cancel issue error", message="Error: {}".format(e))
 
             with transaction.atomic():
                 RequestLog.objects.create(
                     type=RequestLog.OUTGOING,
                     method=RequestLog.POST,
-                    url="https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions".format(
-                        issue
-                    ),
+                    url="https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions".format(issue),
                     user=submission.user,
                     submission_id=submission.broker_submission_id,
                     response_content=response,
@@ -434,9 +373,7 @@ class JiraClient(object):
             RequestLog.objects.create(
                 type=RequestLog.OUTGOING,
                 method=RequestLog.GET,
-                url="https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions".format(
-                    issue
-                ),
+                url="https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions".format(issue),
                 user=submission.user,
                 submission_id=submission.broker_submission_id,
                 response_content=transitions,
@@ -452,17 +389,13 @@ class JiraClient(object):
         except JIRAError as e:
             response = e
             logger.info("JiraClient | transition_issue | Error {}".format(e))
-            mail_admins(
-                subject="JIRA - issue transition error", message="Error: {}".format(e)
-            )
+            mail_admins(subject="JIRA - issue transition error", message="Error: {}".format(e))
 
         with transaction.atomic():
             RequestLog.objects.create(
                 type=RequestLog.OUTGOING,
                 method=RequestLog.POST,
-                url="https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions".format(
-                    issue
-                ),
+                url="https://helpdesk.gfbio.org/rest/api/2/issue/{}/transitions".format(issue),
                 user=submission.user,
                 submission_id=submission.broker_submission_id,
                 response_content=response,

@@ -114,9 +114,7 @@ class Ataxer(object):
         self.atax_submission = submission
 
         #  determine the path for the ABCD validation schema file
-        self.path_xsd = os.path.join(
-            os.getcwd(), "gfbio_submissions/brokerage/schemas/ABCD_2.06.XSD"
-        )
+        self.path_xsd = os.path.join(os.getcwd(), "gfbio_submissions/brokerage/schemas/ABCD_2.06.XSD")
 
         global global_schema
         if not global_schema:
@@ -128,7 +126,9 @@ class Ataxer(object):
         # namespaces:
         self.xsi = "http://www.w3.org/2001/XMLSchema-instance"
         self.abcd = "http://www.tdwg.org/schemas/abcd/2.06"
-        self.schemaLocation = " http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"
+        self.schemaLocation = (
+            " http://www.tdwg.org/schemas/abcd/2.06 http://www.bgbm.org/TDWG/CODATA/Schema/ABCD_2.06/ABCD_2.06.XSD"
+        )
 
         self.ns = {"xsi": self.xsi, "abcd": self.abcd}  # namespaces
         ET.register_namespace("abcd", "http://www.tdwg.org/schemas/abcd/2.06")
@@ -208,11 +208,7 @@ class Ataxer(object):
                 v = self.map_fields_measurement(v, abcd_dict)
             if k in abcd_dict.keys():
                 if k in time_keys3:
-                    if (
-                        len(v)
-                        and v.strip().lower() not in unknowns
-                        and crea_date == True
-                    ):
+                    if len(v) and v.strip().lower() not in unknowns and crea_date == True:
                         year = str(v)
                         if time:
                             dtobj = datetime.datetime(
@@ -222,16 +218,10 @@ class Ataxer(object):
                                 int(time.hour),
                                 int(time.minute),
                             )
-                            dtstr = dtobj.strftime(
-                                "%Y-%m-%dT%H:%M:%S"
-                            )  # should be a string
+                            dtstr = dtobj.strftime("%Y-%m-%dT%H:%M:%S")  # should be a string
                         else:
-                            dtobj = datetime.datetime(
-                                int(year), int(month), int(day), 0, 0
-                            )
-                            dtstr = dtobj.strftime(
-                                "%Y-%m-%dT%H:%M:%S"
-                            )  # should be a string
+                            dtobj = datetime.datetime(int(year), int(month), int(day), 0, 0)
+                            dtstr = dtobj.strftime("%Y-%m-%dT%H:%M:%S")  # should be a string
                         result_dict["MeasurementDateTime"] = dtstr
                     else:
                         crea_date = False
@@ -247,18 +237,12 @@ class Ataxer(object):
                         crea_date = False
                 elif k in time_keys0:
                     if len(v) and v.strip().lower() not in unknowns:
-                        time = datetime.datetime.strptime(
-                            v, "%H:%M"
-                        )  # time.hour, time.minut
+                        time = datetime.datetime.strptime(v, "%H:%M")  # time.hour, time.minut
                     else:
                         time = None
 
                 k = str(abcd_dict[k])  # key is changed
-            if (
-                (time_mapped.count(str(k)) == 0)
-                and len(v)
-                and v.strip().lower() not in unknowns
-            ):
+            if (time_mapped.count(str(k)) == 0) and len(v) and v.strip().lower() not in unknowns:
                 result_dict[k] = v
         return result_dict
 
@@ -274,11 +258,7 @@ class Ataxer(object):
         return result_dict
 
     def create_atax_submission_base_xml(self):
-        logger.info(
-            msg="Ataxer create_submission_xml. currentdate={}".format(
-                datetime.date.today().isoformat()
-            )
-        )
+        logger.info(msg="Ataxer create_submission_xml. currentdate={}".format(datetime.date.today().isoformat()))
 
         dataset = add_data_set(self.root, self.abcdns)
 
@@ -447,13 +427,9 @@ class Ataxer(object):
                         if single_dict.get("UnitID", None):
                             unit = add_unit(units, self.abcdns)
 
-                            add_necc_nodes_measurements(
-                                unit, self.abcdns, single_dict.get("UnitID")
-                            )
+                            add_necc_nodes_measurements(unit, self.abcdns, single_dict.get("UnitID"))
                             add_unit_id(unit, self.abcdns, single_dict.get("UnitID"))
-                            measurementsorfacts = add_measurements_or_facts(
-                                unit, self.abcdns
-                            )
+                            measurementsorfacts = add_measurements_or_facts(unit, self.abcdns)
                             facts_node = True
                     else:
                         if facts_node:
@@ -475,13 +451,9 @@ class Ataxer(object):
                     add_necc_nodes_multimedia(unit, self.abcdns, item.get("UnitID"))
                     add_unit_id(unit, self.abcdns, item.get("UnitID"))
                     multimediaobjects = add_multimediaobjects(unit, self.abcdns)
-                    add_multimediaobject(
-                        multimediaobjects, self.abcdns, item.get("UnitID"), item
-                    )
+                    add_multimediaobject(multimediaobjects, self.abcdns, item.get("UnitID"), item)
                 else:
-                    add_multimediaobject(
-                        multimediaobjects, self.abcdns, item.get("UnitID"), item
-                    )
+                    add_multimediaobject(multimediaobjects, self.abcdns, item.get("UnitID"), item)
 
                 prev_UnitID = curr_UnitID
 
@@ -628,27 +600,19 @@ def update_specimen_with_measurements_abcd_xml(upload, name):
 
             # measurement
             # units node is there max 1x:
-            collection1 = tree_meas_root.findall(
-                ".//{http://www.tdwg.org/schemas/abcd/2.06}Units"
-            )  # list of elements
+            collection1 = tree_meas_root.findall(".//{http://www.tdwg.org/schemas/abcd/2.06}Units")  # list of elements
 
-            collection1_string = ET.tostring(
-                collection1[0], encoding="unicode", method="xml"
-            )
+            collection1_string = ET.tostring(collection1[0], encoding="unicode", method="xml")
             units_root = ET.fromstring(collection1_string)
             # this should work with whole tree_meas_root too instead of subelement units_root!
-            collection = units_root.findall(
-                ".//{http://www.tdwg.org/schemas/abcd/2.06}Unit"
-            )  # list of elements
+            collection = units_root.findall(".//{http://www.tdwg.org/schemas/abcd/2.06}Unit")  # list of elements
 
             # create dictionary for UnitID, MeasurementOrFacts  xml string
             for unit in collection:
                 unit_string = ET.tostring(unit, encoding="unicode", method="xml")
                 unit_root = ET.fromstring(unit_string)
 
-                unitid = unit_root.find(
-                    ".//{http://www.tdwg.org/schemas/abcd/2.06}UnitID"
-                )  # Element
+                unitid = unit_root.find(".//{http://www.tdwg.org/schemas/abcd/2.06}UnitID")  # Element
                 measorfacts = unit_root.find(
                     ".//{http://www.tdwg.org/schemas/abcd/2.06}MeasurementsOrFacts"
                 )  # Element
@@ -656,24 +620,14 @@ def update_specimen_with_measurements_abcd_xml(upload, name):
                 result[unitid_content] = measorfacts
 
         # insert  MeasurementOrFacts into specimen part:
-        for unit_spec in tree_spec_root.findall(
-            ".//{http://www.tdwg.org/schemas/abcd/2.06}Unit"
-        ):
+        for unit_spec in tree_spec_root.findall(".//{http://www.tdwg.org/schemas/abcd/2.06}Unit"):
             #  for removing MeasurementsOrFacts,for updates also:
-            elem_facts = unit_spec.find(
-                ".//{http://www.tdwg.org/schemas/abcd/2.06}MeasurementsOrFacts"
-            )
+            elem_facts = unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}MeasurementsOrFacts")
             if elem_facts is not None:
-                unit_spec.remove(
-                    unit_spec.find(
-                        ".//{http://www.tdwg.org/schemas/abcd/2.06}MeasurementsOrFacts"
-                    )
-                )
+                unit_spec.remove(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}MeasurementsOrFacts"))
 
             found, pos = find_node_in_root(unit_spec, "Sex")
-            unitidstr = str(
-                unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}UnitID").text
-            )
+            unitidstr = str(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}UnitID").text)
 
             if unitidstr in result.keys():
                 # as return value only:
@@ -738,50 +692,30 @@ def update_specimen_with_multimedia_abcd_xml(upload, name):
             multi_keys_found = []
 
             # units is there max 1x:
-            units_collection = tree_mult_root.findall(
-                ".//{http://www.tdwg.org/schemas/abcd/2.06}Units"
-            )
+            units_collection = tree_mult_root.findall(".//{http://www.tdwg.org/schemas/abcd/2.06}Units")
 
-            units_collection_string = ET.tostring(
-                units_collection[0], encoding="unicode", method="xml"
-            )
+            units_collection_string = ET.tostring(units_collection[0], encoding="unicode", method="xml")
             units_root = ET.fromstring(units_collection_string)
 
-            unit_collection = units_root.findall(
-                ".//{http://www.tdwg.org/schemas/abcd/2.06}Unit"
-            )  # list of elements
+            unit_collection = units_root.findall(".//{http://www.tdwg.org/schemas/abcd/2.06}Unit")  # list of elements
 
             # create dictionary for UnitID, MultimediaObjects  xml string
             for unit in unit_collection:
                 unit_string = ET.tostring(unit, encoding="unicode", method="xml")
                 unit_root = ET.fromstring(unit_string)
 
-                unitid = unit_root.find(
-                    ".//{http://www.tdwg.org/schemas/abcd/2.06}UnitID"
-                )  # Element
-                multis = unit_root.find(
-                    ".//{http://www.tdwg.org/schemas/abcd/2.06}MultiMediaObjects"
-                )  # Element
+                unitid = unit_root.find(".//{http://www.tdwg.org/schemas/abcd/2.06}UnitID")  # Element
+                multis = unit_root.find(".//{http://www.tdwg.org/schemas/abcd/2.06}MultiMediaObjects")  # Element
                 unitid_content = unitid.text
                 result[unitid_content] = multis
 
         # insert  MultimediaObjects into specimen part:
-        for unit_spec in tree_spec_root.findall(
-            ".//{http://www.tdwg.org/schemas/abcd/2.06}Unit"
-        ):
-            elem_multis = unit_spec.find(
-                ".//{http://www.tdwg.org/schemas/abcd/2.06}MultiMediaObjects"
-            )
+        for unit_spec in tree_spec_root.findall(".//{http://www.tdwg.org/schemas/abcd/2.06}Unit"):
+            elem_multis = unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}MultiMediaObjects")
             if elem_multis is not None:
-                unit_spec.remove(
-                    unit_spec.find(
-                        ".//{http://www.tdwg.org/schemas/abcd/2.06}MultiMediaObjects"
-                    )
-                )
+                unit_spec.remove(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}MultiMediaObjects"))
 
-            unitidstr = str(
-                unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}UnitID").text
-            )
+            unitidstr = str(unit_spec.find(".//{http://www.tdwg.org/schemas/abcd/2.06}UnitID").text)
 
             found, pos = find_node_in_root(unit_spec, "Gathering")
 

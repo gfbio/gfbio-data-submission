@@ -15,9 +15,12 @@ from ...configuration.settings import ENA
 from ...models.additional_reference import AdditionalReference
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
-from ...tasks.submission_tasks.check_for_submission_without_helpdesk_issue import \
-    check_for_submissions_without_helpdesk_issue_task
-from ...tasks.user_tasks.check_for_user_without_site_configuration import check_for_user_without_site_configuration_task
+from ...tasks.submission_tasks.check_for_submission_without_helpdesk_issue import (
+    check_for_submissions_without_helpdesk_issue_task,
+)
+from ...tasks.user_tasks.check_for_user_without_site_configuration import (
+    check_for_user_without_site_configuration_task,
+)
 
 
 class TestCheckTasks(TestCase):
@@ -34,12 +37,8 @@ class TestCheckTasks(TestCase):
             target=ENA,
             data={"has": "primary helpdeskticket and pangaea ticket"},
         )
-        submission.additionalreference_set.create(
-            type=GFBIO_HELPDESK_TICKET, reference_key="HLP-01", primary=True
-        )
-        submission.additionalreference_set.create(
-            type=PANGAEA_JIRA_TICKET, reference_key="PNG-0x", primary=False
-        )
+        submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="HLP-01", primary=True)
+        submission.additionalreference_set.create(type=PANGAEA_JIRA_TICKET, reference_key="PNG-0x", primary=False)
         # submission with no primary helpdesk ticket, but CANCELLED
         submission = Submission.objects.create(
             user=user1,
@@ -55,9 +54,7 @@ class TestCheckTasks(TestCase):
             target=ENA,
             data={"has": "non-primary helpdeskticket and no pangaea ticket"},
         )
-        submission.additionalreference_set.create(
-            type=GFBIO_HELPDESK_TICKET, reference_key="HLP-02", primary=False
-        )
+        submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="HLP-02", primary=False)
 
         # submission with primary ticket that is no of type helpdesk
         submission = Submission.objects.create(
@@ -66,9 +63,7 @@ class TestCheckTasks(TestCase):
             target=ENA,
             data={"has": "primary non-helpdesk ticket"},
         )
-        submission.additionalreference_set.create(
-            type=PANGAEA_JIRA_TICKET, reference_key="PNG-0x2", primary=True
-        )
+        submission.additionalreference_set.create(type=PANGAEA_JIRA_TICKET, reference_key="PNG-0x2", primary=True)
 
         # submission with no tickets at all
         submission = Submission.objects.create(
@@ -122,9 +117,7 @@ class TestCheckTasks(TestCase):
         )
         self.assertEqual(4, len(no_ticket_subs_2))
 
-        no_ticket_subs_3 = (
-            Submission.objects.get_submissions_without_primary_helpdesk_issue()
-        )
+        no_ticket_subs_3 = Submission.objects.get_submissions_without_primary_helpdesk_issue()
         self.assertEqual(3, len(no_ticket_subs_3))
 
     def test_check_for_submissions_without_helpdesk_issue_task(self):

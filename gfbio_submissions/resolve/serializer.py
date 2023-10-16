@@ -9,7 +9,4 @@ from gfbio_submissions.brokerage.models import PersistentIdentifier
 class PersistentIdentifierResolveSerializer(serializers.ModelSerializer):
     class Meta:
         model = PersistentIdentifier
-        fields = (
-            'pid',
-            'status'
-        )
+        fields = ("pid", "status")

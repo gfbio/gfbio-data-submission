@@ -8,22 +8,13 @@ from gfbio_submissions.users.models import User
 
 
 class Command(BaseCommand):
-    help = (
-        "shows total numbers of submissions vs. "
-        "submissions with sites gfbio-xxx & local"
-    )
+    help = "shows total numbers of submissions vs. " "submissions with sites gfbio-xxx & local"
 
     def handle(self, *args, **kwargs):
-        gfbio_related_submissions = Submission.objects.filter(
-            site__username__contains="gfbio"
-        )
+        gfbio_related_submissions = Submission.objects.filter(site__username__contains="gfbio")
         print("\n****************\tgfbio_related_submissions\t**************")
-        old_gfbio_portal, created = User.objects.get_or_create(
-            username="old_gfbio_portal"
-        )
-        print(
-            '\tcreated user "old_gfbio_portal" ', created, " pk: ", old_gfbio_portal.pk
-        )
+        old_gfbio_portal, created = User.objects.get_or_create(username="old_gfbio_portal")
+        print('\tcreated user "old_gfbio_portal" ', created, " pk: ", old_gfbio_portal.pk)
         print("\n\tpk:\tuser:")
 
         for submission in gfbio_related_submissions:

@@ -89,9 +89,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "url",
-                    models.TextField(
-                        blank=True, help_text="Target url of this Request"
-                    ),
+                    models.TextField(blank=True, help_text="Target url of this Request"),
                 ),
                 (
                     "data",

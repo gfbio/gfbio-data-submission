@@ -24,14 +24,10 @@ logger = logging.getLogger(__name__)
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def jira_transition_issue_task(
-    self, prev=None, submission_id=None, transition_id=871, resolution="Done"
-):
+def jira_transition_issue_task(self, prev=None, submission_id=None, transition_id=871, resolution="Done"):
     logger.info(
         "tasks.py | jira_transition_issue_task | "
-        "submission_id={} transition_id={} resolution={}".format(
-            submission_id, transition_id, resolution
-        )
+        "submission_id={} transition_id={} resolution={}".format(submission_id, transition_id, resolution)
     )
 
     if not submission_id:

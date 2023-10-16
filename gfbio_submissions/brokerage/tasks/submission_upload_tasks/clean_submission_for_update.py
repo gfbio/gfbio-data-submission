@@ -17,15 +17,9 @@ from ...tasks.submission_task import SubmissionTask
     bind=True,
     name="tasks.clean_submission_for_update_task",
 )
-def clean_submission_for_update_task(
-    self, previous_task_result=None, submission_upload_id=None
-):
-    report, created = TaskProgressReport.objects.create_initial_report(
-        submission=None, task=self
-    )
-    submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(
-        submission_upload_id
-    )
+def clean_submission_for_update_task(self, previous_task_result=None, submission_upload_id=None):
+    report, created = TaskProgressReport.objects.create_initial_report(submission=None, task=self)
+    submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(submission_upload_id)
 
     # TODO: add submission relation from submission_upload, relation
 
@@ -33,9 +27,7 @@ def clean_submission_for_update_task(
         logger.warning(
             "tasks.py | clean_submission_for_update_task | "
             "previous task reported={0} | "
-            "submission_upload_id={1}".format(
-                TaskProgressReport.CANCELLED, submission_upload_id
-            )
+            "submission_upload_id={1}".format(TaskProgressReport.CANCELLED, submission_upload_id)
         )
         return TaskProgressReport.CANCELLED
 

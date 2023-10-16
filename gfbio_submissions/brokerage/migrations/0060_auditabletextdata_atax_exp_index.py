@@ -12,8 +12,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="auditabletextdata",
             name="atax_exp_index",
-            field=models.SmallIntegerField(
-                blank=True, default=-1, help_text="exponent for powers of two"
-            ),
+            field=models.SmallIntegerField(blank=True, default=-1, help_text="exponent for powers of two"),
         ),
     ]

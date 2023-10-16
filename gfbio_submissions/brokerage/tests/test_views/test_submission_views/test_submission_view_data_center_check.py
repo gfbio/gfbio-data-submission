@@ -19,9 +19,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
     def tearDownClass(cls):
         super(TestSubmissionViewDataCenterCheck, cls).tearDownClass()
         [
-            shutil.rmtree(
-                path="{0}{1}{2}".format(MEDIA_ROOT, os.sep, o), ignore_errors=False
-            )
+            shutil.rmtree(path="{0}{1}{2}".format(MEDIA_ROOT, os.sep, o), ignore_errors=False)
             for o in os.listdir(MEDIA_ROOT)
         ]
 
@@ -56,9 +54,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             "tasks.check_on_hold_status_task",
             "tasks.check_issue_existing_for_submission_task",
         ]
-        for t in TaskProgressReport.objects.filter(submission=submission).order_by(
-            "created"
-        ):
+        for t in TaskProgressReport.objects.filter(submission=submission).order_by("created"):
             self.assertIn(t.task_name, expected_tasks)
 
     @responses.activate
@@ -87,9 +83,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             os.path.join(_get_test_data_dir_path(), "csv_files/molecular_metadata.csv"),
             "rb",
         ) as csv_file:
-            uploaded_file = SimpleUploadedFile(
-                name="molecular.csv", content_type="text/csv", content=csv_file.read()
-            )
+            uploaded_file = SimpleUploadedFile(name="molecular.csv", content_type="text/csv", content=csv_file.read())
 
         submission.submissionupload_set.create(
             submission=submission,
@@ -131,9 +125,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             "tasks.prepare_ena_submission_data_task",
             "tasks.check_issue_existing_for_submission_task",
         ]
-        for t in TaskProgressReport.objects.filter(submission=submission).order_by(
-            "created"
-        ):
+        for t in TaskProgressReport.objects.filter(submission=submission).order_by("created"):
             self.assertIn(t.task_name, expected_tasks)
 
     @responses.activate
@@ -158,12 +150,8 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         self.assertEqual(201, response.status_code)
         submission = Submission.objects.first()
         self.assertEqual(GENERIC, submission.target)
-        with open(
-            os.path.join(_get_test_data_dir_path(), "ena_data.json"), "rb"
-        ) as csv_file:
-            uploaded_file = SimpleUploadedFile(
-                name="molecular.csv", content_type="text/json", content=csv_file.read()
-            )
+        with open(os.path.join(_get_test_data_dir_path(), "ena_data.json"), "rb") as csv_file:
+            uploaded_file = SimpleUploadedFile(name="molecular.csv", content_type="text/json", content=csv_file.read())
 
         submission.submissionupload_set.create(
             submission=submission,
@@ -205,9 +193,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             "tasks.check_on_hold_status_task",
             "tasks.check_issue_existing_for_submission_task",
         ]
-        for t in TaskProgressReport.objects.filter(submission=submission).order_by(
-            "created"
-        ):
+        for t in TaskProgressReport.objects.filter(submission=submission).order_by("created"):
             self.assertIn(t.task_name, expected_tasks)
 
     @responses.activate
@@ -273,7 +259,5 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             "tasks.check_on_hold_status_task",
             "tasks.check_issue_existing_for_submission_task",
         ]
-        for t in TaskProgressReport.objects.filter(submission=submission).order_by(
-            "created"
-        ):
+        for t in TaskProgressReport.objects.filter(submission=submission).order_by("created"):
             self.assertIn(t.task_name, expected_tasks)

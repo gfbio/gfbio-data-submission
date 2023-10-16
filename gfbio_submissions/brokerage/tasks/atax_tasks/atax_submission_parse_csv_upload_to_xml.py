@@ -35,15 +35,9 @@ def atax_submission_parse_csv_upload_to_xml_task(
 ):
     request_file_keys = ["specimen", "measurement", "multimedia", "combination"]
 
-    logger.info(
-        "tasks.py | atax_submission_parse_csv_upload_to_xml_task | submission_id={}".format(
-            submission_id
-        )
-    )
+    logger.info("tasks.py | atax_submission_parse_csv_upload_to_xml_task | submission_id={}".format(submission_id))
 
-    report, created = TaskProgressReport.objects.create_initial_report(
-        submission=None, task=self
-    )
+    report, created = TaskProgressReport.objects.create_initial_report(submission=None, task=self)
 
     # is this necessary here?
     if previous_task_result == TaskProgressReport.CANCELLED:
@@ -51,17 +45,13 @@ def atax_submission_parse_csv_upload_to_xml_task(
             "tasks.py | atax_submission_parse_csv_upload_to_xml_task | "
             "previous task reported={0} | "
             "submission_id={1} |"
-            "submission_upload_id={2}".format(
-                TaskProgressReport.CANCELLED, submission_id, submission_upload_id
-            )
+            "submission_upload_id={2}".format(TaskProgressReport.CANCELLED, submission_id, submission_upload_id)
         )
         return TaskProgressReport.CANCELLED
 
     # submission_upload = submission.submissionupload_set.filter(pk=submission_upload_id).filter(submission.target=ATAX)  # .first()
     if submission_upload_id:
-        submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
-            submission_upload_id
-        )
+        submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(submission_upload_id)
 
     if submission_upload is None:
         logger.error(
@@ -93,46 +83,30 @@ def atax_submission_parse_csv_upload_to_xml_task(
     # xml_data_as_string = ''
     # ind = -1
     # differentiate between specimen and measurement and multimedia and combination csv file:
-    file_key = analyze_filename_and_type(
-        os.path.basename(submission_upload.file.path), submission_upload.meta_data
-    )
+    file_key = analyze_filename_and_type(os.path.basename(submission_upload.file.path), submission_upload.meta_data)
     if file_key in request_file_keys:
         match str(file_key):
             case "specimen":
                 # create xml data as string:
-                with open(
-                    submission_upload.file.path, "r", encoding="utf-8-sig"
-                ) as data_file:
-                    xml_data_as_string = parse_taxonomic_csv_specimen(
-                        submission_upload.submission, data_file
-                    )
+                with open(submission_upload.file.path, "r", encoding="utf-8-sig") as data_file:
+                    xml_data_as_string = parse_taxonomic_csv_specimen(submission_upload.submission, data_file)
                 atax_xml_file_type = file_key
                 ind = 0
             case "measurement":
-                with open(
-                    submission_upload.file.path, "r", encoding="utf-8-sig"
-                ) as data_file:
-                    xml_data_as_string = parse_taxonomic_csv_measurement(
-                        submission_upload.submission, data_file
-                    )
+                with open(submission_upload.file.path, "r", encoding="utf-8-sig") as data_file:
+                    xml_data_as_string = parse_taxonomic_csv_measurement(submission_upload.submission, data_file)
                 atax_xml_file_type = file_key
                 ind = 1
             case "multimedia":
-                with open(
-                    submission_upload.file.path, "r", encoding="utf-8-sig"
-                ) as data_file:
-                    xml_data_as_string = parse_taxonomic_csv_multimedia(
-                        submission_upload.submission, data_file
-                    )
+                with open(submission_upload.file.path, "r", encoding="utf-8-sig") as data_file:
+                    xml_data_as_string = parse_taxonomic_csv_multimedia(submission_upload.submission, data_file)
                 atax_xml_file_type = file_key
                 ind = 2
             case _:
                 logger.warning(
                     "tasks.py | atax_submission_parse_csv_upload_to_xml | "
                     'SubmissionUpload file"{0}" has no expected basename | '
-                    "submission_id={1}".format(
-                        submission_upload.file.path, submission_id
-                    )
+                    "submission_id={1}".format(submission_upload.file.path, submission_id)
                 )
                 return TaskProgressReport.CANCELLED
 
@@ -168,9 +142,7 @@ def atax_submission_parse_csv_upload_to_xml_task(
             logger.info(
                 msg="atax_submission_parse_csv_upload_to_xml_task. no transformed xml upload data.  | "
                 " for {0},  return={1}  | "
-                "submission_id={2}".format(
-                    str(file_key), TaskProgressReport.CANCELLED, submission_id
-                )
+                "submission_id={2}".format(str(file_key), TaskProgressReport.CANCELLED, submission_id)
             )
             return TaskProgressReport.CANCELLED
 

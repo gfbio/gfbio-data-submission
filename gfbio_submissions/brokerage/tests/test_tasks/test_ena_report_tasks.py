@@ -24,17 +24,13 @@ class TestEnaReportTasks(TestTasks):
 
     @classmethod
     def _add_report_responses(cls):
-        with open(
-            os.path.join(_get_test_data_dir_path(), "ena_reports_testdata.json"), "r"
-        ) as file:
+        with open(os.path.join(_get_test_data_dir_path(), "ena_reports_testdata.json"), "r") as file:
             data = json.load(file)
         for report_type in EnaReport.REPORT_TYPES:
             key, val = report_type
             responses.add(
                 responses.GET,
-                "{0}{1}?format=json".format(
-                    cls.default_site_config.ena_report_server.url, val
-                ),
+                "{0}{1}?format=json".format(cls.default_site_config.ena_report_server.url, val),
                 status=200,
                 json=data[val],
             )
@@ -45,9 +41,7 @@ class TestEnaReportTasks(TestTasks):
             key, val = report_type
             responses.add(
                 responses.GET,
-                "{0}{1}?format=json".format(
-                    cls.default_site_config.ena_report_server.url, val
-                ),
+                "{0}{1}?format=json".format(cls.default_site_config.ena_report_server.url, val),
                 status=401,
             )
 
@@ -57,9 +51,7 @@ class TestEnaReportTasks(TestTasks):
             key, val = report_type
             responses.add(
                 responses.GET,
-                "{0}{1}?format=json".format(
-                    cls.default_site_config.ena_report_server.url, val
-                ),
+                "{0}{1}?format=json".format(cls.default_site_config.ena_report_server.url, val),
                 status=500,
             )
 
@@ -101,9 +93,7 @@ class TestEnaReportTasks(TestTasks):
         self.assertEqual(len(EnaReport.REPORT_TYPES), len(RequestLog.objects.all()))
 
     @responses.activate
-    @override_settings(
-        CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False
-    )
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False)
     def test_get_ena_reports_task_server_error(self):
         self._add_server_error_responses()
         self.assertEqual(0, len(EnaReport.objects.all()))

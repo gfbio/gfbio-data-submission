@@ -19,19 +19,13 @@ from ...utils.task_utils import get_submission_and_site_configuration
     bind=True,
     name="tasks.trigger_submission_transfer_for_updates",
 )
-def trigger_submission_transfer_for_updates_task(
-    self, previous_task_result=None, broker_submission_id=None
-):
+def trigger_submission_transfer_for_updates_task(self, previous_task_result=None, broker_submission_id=None):
     molecular_data_available = False
     check_performed = False
     messages = []
     if isinstance(previous_task_result, dict):
-        molecular_data_available = previous_task_result.get(
-            "molecular_data_available", False
-        )
-        check_performed = previous_task_result.get(
-            "molecular_data_check_performed", False
-        )
+        molecular_data_available = previous_task_result.get("molecular_data_available", False)
+        check_performed = previous_task_result.get("molecular_data_check_performed", False)
         messages = previous_task_result.get("messages", [])
 
     logger.info(
@@ -39,9 +33,7 @@ def trigger_submission_transfer_for_updates_task(
             broker_submission_id
         )
     )
-    submission_id = Submission.objects.get_open_submission_id_for_bsi(
-        broker_submission_id=broker_submission_id
-    )
+    submission_id = Submission.objects.get_open_submission_id_for_bsi(broker_submission_id=broker_submission_id)
 
     if len(messages):
         logger.warning(

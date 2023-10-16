@@ -143,18 +143,14 @@ def add_identifications(parent, ns, unid, csvdict):
         csvdict.get("HigherTaxonName", None) and csvdict.get("HigherTaxonRank", None)
     ):
         highertaxa = SubElement(taxonidentified, ns + "HigherTaxa")
-        if csvdict.get("HigherTaxonName", None) and csvdict.get(
-            "HigherTaxonRank", None
-        ):
+        if csvdict.get("HigherTaxonName", None) and csvdict.get("HigherTaxonRank", None):
             highertaxon1 = SubElement(highertaxa, ns + "HigherTaxon")
             if csvdict.get("HigherTaxonName", None):
                 highertaxonname = SubElement(highertaxon1, ns + "HigherTaxonName")
                 highertaxonname.text = csvdict.get("HigherTaxonName")
             if csvdict.get("HigherTaxonRank", None):
                 highertaxonrank = SubElement(highertaxon1, ns + "HigherTaxonRank")
-                highertaxonrank.text = (
-                    "familia"  # csvdict.get('HigherTaxonRank') is not given correct
-                )
+                highertaxonrank.text = "familia"  # csvdict.get('HigherTaxonRank') is not given correct
         if csvdict.get("HigherClassification", None):
             highertaxon2 = SubElement(highertaxa, ns + "HigherTaxon")
             highertaxonname = SubElement(highertaxon2, ns + "HigherTaxonName")
@@ -162,52 +158,32 @@ def add_identifications(parent, ns, unid, csvdict):
             highertaxonrank = SubElement(highertaxon2, ns + "HigherTaxonRank")
             highertaxonrank.text = "regnum"
     scientificname = SubElement(taxonidentified, ns + "ScientificName")
-    fullscientificnamestring1 = SubElement(
-        scientificname, ns + "FullScientificNameString"
-    )
+    fullscientificnamestring1 = SubElement(scientificname, ns + "FullScientificNameString")
     fullscientificnamestring1.text = csvdict.get("FullScientificNameString")
 
 
-def add_record_basis(
-    parent, ns, csvdict
-):  # structure: RecordBasis, with with mandatory fields:
+def add_record_basis(parent, ns, csvdict):  # structure: RecordBasis, with with mandatory fields:
     recordbasis = SubElement(parent, ns + "RecordBasis")
-    recordbasis.text = csvdict.get(
-        "RecordBasis"
-    )  # ''place here fixed vocabulary for RecordBasis ,PreservedSpecimen'
+    recordbasis.text = csvdict.get("RecordBasis")  # ''place here fixed vocabulary for RecordBasis ,PreservedSpecimen'
 
 
 def add_specimen_unit(parent, ns, csvdict):
     # structure: SpecimenUnit, with with non-mandatory fields:
-    if (
-        csvdict.get("PhysicalObjectID", None)
-        or csvdict.get("TypifiedName", None)
-        or csvdict.get("TypeStatus", None)
-    ):
+    if csvdict.get("PhysicalObjectID", None) or csvdict.get("TypifiedName", None) or csvdict.get("TypeStatus", None):
         specimenunit = SubElement(parent, ns + "SpecimenUnit")
         if csvdict.get("PhysicalObjectID", None):
             accessions = SubElement(specimenunit, ns + "Accessions")
             accessionnumber = SubElement(accessions, ns + "AccessionNumber")
-            accessionnumber.text = csvdict.get(
-                "PhysicalObjectID"
-            )  # Phacidium congener Ces.
+            accessionnumber.text = csvdict.get("PhysicalObjectID")  # Phacidium congener Ces.
         if csvdict.get("TypifiedName", None) or csvdict.get("TypeStatus", None):
-            nomenclaturaltypedesignations = SubElement(
-                specimenunit, ns + "NomenclaturalTypeDesignations"
-            )
+            nomenclaturaltypedesignations = SubElement(specimenunit, ns + "NomenclaturalTypeDesignations")
             nomenclaturaltypedesignation = SubElement(
                 nomenclaturaltypedesignations, ns + "NomenclaturalTypeDesignation"
             )
             if csvdict.get("TypifiedName", None):
-                typifiedname = SubElement(
-                    nomenclaturaltypedesignation, ns + "TypifiedName"
-                )
-                fullscientificnamestring2 = SubElement(
-                    typifiedname, ns + "FullScientificNameString"
-                )
-                fullscientificnamestring2.text = csvdict.get(
-                    "TypifiedName"
-                )  # Phacidium congener Ces.
+                typifiedname = SubElement(nomenclaturaltypedesignation, ns + "TypifiedName")
+                fullscientificnamestring2 = SubElement(typifiedname, ns + "FullScientificNameString")
+                fullscientificnamestring2.text = csvdict.get("TypifiedName")  # Phacidium congener Ces.
             if csvdict.get("TypeStatus", None):
                 typestatus = SubElement(nomenclaturaltypedesignation, ns + "TypeStatus")
                 typestatus.text = csvdict.get("TypeStatus")
@@ -267,17 +243,13 @@ def add_measurement_or_fact(parent, ns, unid, csvdict):
     # first structure: Identifications, with with non-mandatory and mandatory fields:
 
     measurementorfact = SubElement(parent, ns + "MeasurementOrFact")
-    measurementorfactatomised = SubElement(
-        measurementorfact, ns + "MeasurementOrFactAtomised"
-    )
+    measurementorfactatomised = SubElement(measurementorfact, ns + "MeasurementOrFactAtomised")
 
     if csvdict.get("MeasuredBy", None):
         measuredby = SubElement(measurementorfactatomised, ns + "MeasuredBy")
         measuredby.text = csvdict.get("MeasuredBy")
     if csvdict.get("MeasurementDateTime", None):
-        measurementdatetime = SubElement(
-            measurementorfactatomised, ns + "MeasurementDateTime"
-        )
+        measurementdatetime = SubElement(measurementorfactatomised, ns + "MeasurementDateTime")
         measurementdatetime.text = csvdict.get("MeasurementDateTime")
     if csvdict.get("Method", None):
         method = SubElement(measurementorfactatomised, ns + "Method")
@@ -294,9 +266,7 @@ def add_measurement_or_fact(parent, ns, unid, csvdict):
         lowervalue = SubElement(measurementorfactatomised, ns + "LowerValue")
         lowervalue.text = csvdict.get("LowerValue")
     if csvdict.get("UnitOfMeasurement", None):
-        unitofmeasurement = SubElement(
-            measurementorfactatomised, ns + "UnitOfMeasurement"
-        )
+        unitofmeasurement = SubElement(measurementorfactatomised, ns + "UnitOfMeasurement")
         unitofmeasurement.text = csvdict.get("UnitOfMeasurement")
     if csvdict.get("IsQuantitative", None):
         isquantitative = SubElement(measurementorfactatomised, ns + "IsQuantitative")
@@ -355,9 +325,7 @@ def add_unit_data(parent, ns, unid, csvdict):
     add_necc_nodes(parent, ns, unid)
     add_unit_id(parent, ns, unid)
     add_identifications(parent, ns, unid, csvdict)
-    add_record_basis(
-        parent, ns, csvdict
-    )  # structure: RecordBasis, with with mandatory fields:
+    add_record_basis(parent, ns, csvdict)  # structure: RecordBasis, with with mandatory fields:
     add_specimen_unit(parent, ns, csvdict)
     add_gathering(parent, ns, csvdict)
     add_collectors_field_number(parent, ns, csvdict)
@@ -372,9 +340,7 @@ def add_unit_data_multimedia(parent, ns, unid, csvdict):
     add_multimediaobject(parent, ns, unid, csvdict)
 
 
-def store_atax_data_as_auditable_text_data(
-    submission, data_type, data, comment, atax_file_name, atax_exp_index
-):
+def store_atax_data_as_auditable_text_data(submission, data_type, data, comment, atax_file_name, atax_exp_index):
     typename = data_type
     xmlfilecontent = data
     # real_filename = atax_file_name
@@ -401,6 +367,4 @@ def store_atax_data_as_auditable_text_data(
             "atax_exp_index": atax_exp_index,
         }
 
-        AuditableTextData.objects.update_or_create(
-            name=typename, submission=submission, defaults=updated_values
-        )
+        AuditableTextData.objects.update_or_create(name=typename, submission=submission, defaults=updated_values)

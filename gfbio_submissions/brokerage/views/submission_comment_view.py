@@ -26,9 +26,7 @@ class SubmissionCommentView(generics.GenericAPIView):
     @staticmethod
     def _process_post_comment(broker_submission_id, comment):
         try:
-            submission_values = Submission.objects.get_submission_values(
-                broker_submission_id=broker_submission_id
-            )
+            submission_values = Submission.objects.get_submission_values(broker_submission_id=broker_submission_id)
             user_values = User.get_user_values_safe(user_id=submission_values["user"])
             from ..tasks.jira_tasks.add_posted_comment_to_issue import (
                 add_posted_comment_to_issue_task,
@@ -45,10 +43,7 @@ class SubmissionCommentView(generics.GenericAPIView):
             return Response({"comment": comment}, status=status.HTTP_201_CREATED)
         except Submission.DoesNotExist as e:
             return Response(
-                {
-                    "submission": "No submission for this "
-                    "broker_submission_id: {0}".format(broker_submission_id)
-                },
+                {"submission": "No submission for this " "broker_submission_id: {0}".format(broker_submission_id)},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -56,9 +51,7 @@ class SubmissionCommentView(generics.GenericAPIView):
         form = SubmissionCommentForm(request.POST)
         if form.is_valid():
             broker_submission_id = kwargs.get("broker_submission_id", uuid4())
-            response = self._process_post_comment(
-                broker_submission_id, form.cleaned_data["comment"]
-            )
+            response = self._process_post_comment(broker_submission_id, form.cleaned_data["comment"])
         else:
             response = Response(
                 json.loads(form.errors.as_json()),

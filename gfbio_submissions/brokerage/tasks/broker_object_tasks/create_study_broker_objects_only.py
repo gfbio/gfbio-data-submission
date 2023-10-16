@@ -15,9 +15,7 @@ logger = logging.getLogger(__name__)
     bind=True,
     name="tasks.create_study_broker_objects_only_task",
 )
-def create_study_broker_objects_only_task(
-    self, previous_task_result=None, submission_id=None
-):
+def create_study_broker_objects_only_task(self, previous_task_result=None, submission_id=None):
     # TODO: refactor to general method for all tasks where applicable
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(

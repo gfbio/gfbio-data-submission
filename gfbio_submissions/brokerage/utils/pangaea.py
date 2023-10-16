@@ -37,9 +37,7 @@ def request_pangaea_login_token(resource_credential):
             resource_credential.username, resource_credential.password
         )
     )
-    return logged_requests.post(
-        url=resource_credential.url, data=body, headers=headers, request_id=uuid4()
-    )
+    return logged_requests.post(url=resource_credential.url, data=body, headers=headers, request_id=uuid4())
 
 
 def parse_pangaea_login_token_response(soap_response):
@@ -48,16 +46,12 @@ def parse_pangaea_login_token_response(soap_response):
         loginReturn_element = root.findall(".//loginReturn").pop()
         return loginReturn_element.text
     except ET.ParseError as e:
-        logger.error(
-            "ParseError. parse_pangaea_login_token_response. " "Error: {}".format(e)
-        )
+        logger.error("ParseError. parse_pangaea_login_token_response. " "Error: {}".format(e))
         return ""
 
 
 def get_pangaea_login_token(archive_access):
-    return parse_pangaea_login_token_response(
-        request_pangaea_login_token(resource_credential=archive_access)
-    )
+    return parse_pangaea_login_token_response(request_pangaea_login_token(resource_credential=archive_access))
 
 
 # TODO: is checklist/package mandatory in schema now ???
@@ -71,9 +65,7 @@ def get_csv_from_sample(sample_data={}):
         # )
         csv_form = Gcdj2CsvForm({"gcdjson": json.dumps(sample_data.get("gcdjson"))})
         csv_form.is_valid()
-        flat_json_dict = flatten_dictionary(
-            dictionary=csv_form.cleaned_data, separator=SEPARATOR
-        )
+        flat_json_dict = flatten_dictionary(dictionary=csv_form.cleaned_data, separator=SEPARATOR)
         return True, flat_json_dict
     else:
         return False, {}
@@ -82,18 +74,14 @@ def get_csv_from_sample(sample_data={}):
 def get_csv_from_samples(submission):
     samples = submission.brokerobject_set.filter(type="sample")
     output = io.StringIO()
-    writer = csv.writer(
-        output, delimiter=str(","), quotechar=str('"'), quoting=CSV_WRITER_QUOTING
-    )
+    writer = csv.writer(output, delimiter=str(","), quotechar=str('"'), quoting=CSV_WRITER_QUOTING)
     for s in samples:
         contains_csv, csv_data = get_csv_from_sample(s.data)
         if contains_csv:
             writer.writerow(csv_data.keys())
             writer.writerow(csv_data.values())
 
-    csv_from_samples = (
-        output.getvalue().replace("True", "true").replace("False", "false")
-    )
+    csv_from_samples = output.getvalue().replace("True", "true").replace("False", "false")
     output.close()
     return csv_from_samples
 
@@ -110,9 +98,7 @@ def prepare_pangaea_issue_content(site_configuration, submission):
         },
         "description": submission.data.get("requirements", {}).get("description", ""),
         "summary": "Automated request by GFBio BrokerAgent",
-        "labels": site_configuration.get_ticket_labels(
-            label_type=TicketLabel.PANGAEA_JIRA
-        ),
+        "labels": site_configuration.get_ticket_labels(label_type=TicketLabel.PANGAEA_JIRA),
     }
     return data
 
@@ -122,13 +108,9 @@ def pull_pangaea_dois(submission, jira_client):
     for p in references:
         doi = jira_client.get_doi_from_pangaea_issue(p.reference_key)
         if doi:
-            study_broker_object = submission.brokerobject_set.filter(
-                type="study"
-            ).first()
+            study_broker_object = submission.brokerobject_set.filter(type="study").first()
             with transaction.atomic():
-                persistent_identifier = study_broker_object.append_pid_for_pangea_doi(
-                    doi=doi
-                )
+                persistent_identifier = study_broker_object.append_pid_for_pangea_doi(doi=doi)
                 submission.status = Submission.CLOSED
                 submission.save()
                 logger.info(

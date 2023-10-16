@@ -30,9 +30,7 @@ from ...utils.task_utils import (
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def add_posted_comment_to_issue_task(
-    self, prev_task_result=None, submission_id=None, comment="", user_values={}
-):
+def add_posted_comment_to_issue_task(self, prev_task_result=None, submission_id=None, comment="", user_values={}):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
     )
@@ -48,9 +46,7 @@ def add_posted_comment_to_issue_task(
                 user_values.get("username", ""), user_values.get("email", ""), comment
             )
         jira_client = JiraClient(resource=site_configuration.helpdesk_server)
-        jira_client.add_comment(
-            key_or_issue=reference.reference_key, text=comment_text, is_internal=False
-        )
+        jira_client.add_comment(key_or_issue=reference.reference_key, text=comment_text, is_internal=False)
         return jira_error_auto_retry(
             jira_client=jira_client,
             task=self,
@@ -58,8 +54,7 @@ def add_posted_comment_to_issue_task(
         )
     else:
         logger.info(
-            msg="add_posted_comment_to_issue_task no tickets found. "
-            "submission_id={0} ".format(submission_id)
+            msg="add_posted_comment_to_issue_task no tickets found. " "submission_id={0} ".format(submission_id)
         )
 
         return retry_no_ticket_available_exception(

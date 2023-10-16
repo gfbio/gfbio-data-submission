@@ -43,12 +43,8 @@ from ...models.submission import Submission
 class TestJiraClient(TestCase):
     @classmethod
     def setUpTestData(cls):
-        user = User.objects.create_user(
-            username="horst", email="horst@horst.de", password="password"
-        )
-        permissions = Permission.objects.filter(
-            content_type__app_label="brokerage", codename__endswith="upload"
-        )
+        user = User.objects.create_user(username="horst", email="horst@horst.de", password="password")
+        permissions = Permission.objects.filter(content_type__app_label="brokerage", codename__endswith="upload")
         user.user_permissions.add(*permissions)
         token = Token.objects.create(user=user)
         client = APIClient()
@@ -74,9 +70,7 @@ class TestJiraClient(TestCase):
             contact="kevin@horstmeier.de",
         )
         submission = SubmissionTest._create_submission_via_serializer()
-        submission.additionalreference_set.create(
-            type=GFBIO_HELPDESK_TICKET, reference_key="SAND-1661", primary=True
-        )
+        submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="SAND-1661", primary=True)
         cls.issue_json = _get_jira_issue_response()
         cls.pangaea_issue_json = _get_pangaea_ticket_response()
         cls.minimal_issue_fields = {
@@ -97,9 +91,7 @@ class TestJiraClient(TestCase):
     def _add_jira_issue_response(self, status_code=200, json_content={}):
         responses.add(
             responses.GET,
-            "{0}/rest/api/2/issue/SAND-1661".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-1661".format(self.site_config.helpdesk_server.url),
             status=status_code,
             json=json_content,
         )
@@ -130,9 +122,7 @@ class TestJiraClient(TestCase):
             status=200,
             json=self.issue_json,
         )
-        self._add_jira_issue_response(
-            status_code=status_code, json_content=json_content
-        )
+        self._add_jira_issue_response(status_code=status_code, json_content=json_content)
 
     def _add_default_pangaea_responses(self):
         responses.add(
@@ -184,9 +174,7 @@ class TestJiraClient(TestCase):
 
     @responses.activate
     def test_create_issue_client_error(self):
-        self._add_create_ticket_responses(
-            status_code=400, json_content={"error": "client"}
-        )
+        self._add_create_ticket_responses(status_code=400, json_content={"error": "client"})
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         jira_client.create_issue(fields=self.minimal_issue_fields)
         self.assertIsNotNone(jira_client.error)
@@ -194,9 +182,7 @@ class TestJiraClient(TestCase):
 
     @responses.activate
     def test_create_issue_server_error(self):
-        self._add_create_ticket_responses(
-            status_code=500, json_content={"error": "server"}
-        )
+        self._add_create_ticket_responses(status_code=500, json_content={"error": "server"})
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         jira_client.create_issue(fields=self.minimal_issue_fields)
         self.assertIsNotNone(jira_client.error)
@@ -217,9 +203,7 @@ class TestJiraClient(TestCase):
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         responses.add(
             responses.GET,
-            "{0}/rest/api/2/issue/SAND-xxx".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-xxx".format(self.site_config.helpdesk_server.url),
             status=404,
             json={"errorMessages": ["Issue Does Not Exist"], "errors": {}},
         )
@@ -233,9 +217,7 @@ class TestJiraClient(TestCase):
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         responses.add(
             responses.GET,
-            "{0}/rest/api/2/issue/SAND-xxx".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-xxx".format(self.site_config.helpdesk_server.url),
             status=500,
         )
         jira_client.get_issue("SAND-xxx")
@@ -246,9 +228,7 @@ class TestJiraClient(TestCase):
     def test_update_issue(self):
         self._add_jira_field_response()
         self._add_jira_issue_response(json_content=self.issue_json)
-        url = "{0}/rest/api/2/issue/16814?notifyUsers=false".format(
-            self.site_config.helpdesk_server.url
-        )
+        url = "{0}/rest/api/2/issue/16814?notifyUsers=false".format(self.site_config.helpdesk_server.url)
         responses.add(responses.PUT, url, body="", status=204)
         self._add_jira_id_response(json_content=self.issue_json)
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
@@ -262,9 +242,7 @@ class TestJiraClient(TestCase):
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         responses.add(
             responses.POST,
-            "{0}/rest/api/2/issue/SAND-1661/comment".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-1661/comment".format(self.site_config.helpdesk_server.url),
             json=_get_pangaea_comment_response(),
             status=200,
         )
@@ -278,9 +256,7 @@ class TestJiraClient(TestCase):
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         responses.add(
             responses.POST,
-            "{0}/rest/api/2/issue/SAND-1661/comment".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-1661/comment".format(self.site_config.helpdesk_server.url),
             json={"errorMessages": ["Issue Does Not Exist"], "errors": {}},
             status=400,
         )
@@ -294,9 +270,7 @@ class TestJiraClient(TestCase):
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         responses.add(
             responses.POST,
-            "{0}/rest/api/2/issue/SAND-1661/comment".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-1661/comment".format(self.site_config.helpdesk_server.url),
             status=503,
         )
         jira_client.add_comment("SAND-1661", "Bla")
@@ -309,17 +283,13 @@ class TestJiraClient(TestCase):
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         responses.add(
             responses.POST,
-            "{0}/rest/api/2/issue/SAND-1661/comment".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-1661/comment".format(self.site_config.helpdesk_server.url),
             json=_get_pangaea_comment_response(),
             status=200,
         )
         responses.add(
             responses.GET,
-            "{0}/rest/api/2/issue/SAND-1661/comment".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-1661/comment".format(self.site_config.helpdesk_server.url),
             json=_get_request_comment_response(),
             status=200,
         )
@@ -335,17 +305,13 @@ class TestJiraClient(TestCase):
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         responses.add(
             responses.POST,
-            "{0}/rest/api/2/issue/SAND-1661/comment".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-1661/comment".format(self.site_config.helpdesk_server.url),
             json=_get_pangaea_comment_response(),
             status=200,
         )
         responses.add(
             responses.GET,
-            "{0}/rest/api/2/issue/SAND-1661/comment".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-1661/comment".format(self.site_config.helpdesk_server.url),
             status=400,
         )
         jira_client.add_comment("SAND-1661", "Bla")
@@ -358,17 +324,13 @@ class TestJiraClient(TestCase):
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         responses.add(
             responses.POST,
-            "{0}/rest/api/2/issue/SAND-1661/comment".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-1661/comment".format(self.site_config.helpdesk_server.url),
             json=_get_pangaea_comment_response(),
             status=200,
         )
         responses.add(
             responses.GET,
-            "{0}/rest/api/2/issue/SAND-1661/comment".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-1661/comment".format(self.site_config.helpdesk_server.url),
             status=502,
         )
         jira_client.add_comment("SAND-1661", "Bla")
@@ -429,9 +391,7 @@ class TestJiraClient(TestCase):
     def test_add_attachment_no_issue(self):
         responses.add(
             responses.GET,
-            "{0}/rest/api/2/issue/SAND-1661".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-1661".format(self.site_config.helpdesk_server.url),
             status=404,
             json={"errorMessages": ["Issue Does Not Exist"], "errors": {}},
         )
@@ -494,9 +454,7 @@ class TestJiraClient(TestCase):
     def test_delete_attachment(self):
         self._add_jira_field_response()
         self._add_jira_issue_response(json_content=self.issue_json)
-        url = "{0}{1}/{2}".format(
-            self.site_config.helpdesk_server.url, JIRA_ATTACHMENT_URL, "1"
-        )
+        url = "{0}{1}/{2}".format(self.site_config.helpdesk_server.url, JIRA_ATTACHMENT_URL, "1")
         responses.add(responses.DELETE, url, body=b"", status=204)
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         jira_client.delete_attachment("1")
@@ -506,9 +464,7 @@ class TestJiraClient(TestCase):
     def test_delete_attachment_client_error(self):
         self._add_jira_field_response()
         self._add_jira_issue_response(json_content=self.issue_json)
-        url = "{0}{1}/{2}".format(
-            self.site_config.helpdesk_server.url, JIRA_ATTACHMENT_URL, "1"
-        )
+        url = "{0}{1}/{2}".format(self.site_config.helpdesk_server.url, JIRA_ATTACHMENT_URL, "1")
         responses.add(responses.DELETE, url, body=b"", status=403)
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         jira_client.delete_attachment("1")
@@ -518,9 +474,7 @@ class TestJiraClient(TestCase):
     def test_delete_attachment_server_error(self):
         self._add_jira_field_response()
         self._add_jira_issue_response(json_content=self.issue_json)
-        url = "{0}{1}/{2}".format(
-            self.site_config.helpdesk_server.url, JIRA_ATTACHMENT_URL, "1"
-        )
+        url = "{0}{1}/{2}".format(self.site_config.helpdesk_server.url, JIRA_ATTACHMENT_URL, "1")
         responses.add(responses.DELETE, url, body=b"", status=504)
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         jira_client.delete_attachment("1")
@@ -532,27 +486,19 @@ class TestJiraClient(TestCase):
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         responses.add(
             responses.GET,
-            "{0}/rest/applinks/latest/listApplicationlinks".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/applinks/latest/listApplicationlinks".format(self.site_config.helpdesk_server.url),
             status=200,
         )
         responses.add(
             responses.POST,
-            "{0}/rest/api/2/issue/SAND-1661/remotelink".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-1661/remotelink".format(self.site_config.helpdesk_server.url),
             json={
                 "id": 10000,
-                "self": "{0}/rest/api/2/issue/SAND-1661/remotelink/10000".format(
-                    self.site_config.helpdesk_server.url
-                ),
+                "self": "{0}/rest/api/2/issue/SAND-1661/remotelink/10000".format(self.site_config.helpdesk_server.url),
             },
             status=200,
         )
-        jira_client.add_remote_link(
-            "SAND-1661", url="http://www.google.de", title="Google"
-        )
+        jira_client.add_remote_link("SAND-1661", url="http://www.google.de", title="Google")
         self.assertIsNone(jira_client.error)
 
     @responses.activate
@@ -561,27 +507,19 @@ class TestJiraClient(TestCase):
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         responses.add(
             responses.GET,
-            "{0}/rest/applinks/latest/listApplicationlinks".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/applinks/latest/listApplicationlinks".format(self.site_config.helpdesk_server.url),
             status=200,
         )
         responses.add(
             responses.POST,
-            "{0}/rest/api/2/issue/SAND-1661/remotelink".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-1661/remotelink".format(self.site_config.helpdesk_server.url),
             json={
                 "id": 10000,
-                "self": "{0}/rest/api/2/issue/SAND-1661/remotelink/10000".format(
-                    self.site_config.helpdesk_server.url
-                ),
+                "self": "{0}/rest/api/2/issue/SAND-1661/remotelink/10000".format(self.site_config.helpdesk_server.url),
             },
             status=200,
         )
-        jira_client.add_ena_study_link_to_issue(
-            "SAND-1661", accession_number="PRJE0815"
-        )
+        jira_client.add_ena_study_link_to_issue("SAND-1661", accession_number="PRJE0815")
         self.assertIsNone(jira_client.error)
 
     @responses.activate
@@ -590,22 +528,16 @@ class TestJiraClient(TestCase):
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         responses.add(
             responses.GET,
-            "{0}/rest/applinks/latest/listApplicationlinks".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/applinks/latest/listApplicationlinks".format(self.site_config.helpdesk_server.url),
             status=200,
         )
         responses.add(
             responses.POST,
-            "{0}/rest/api/2/issue/SAND-1661/remotelink".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-1661/remotelink".format(self.site_config.helpdesk_server.url),
             json={},
             status=403,
         )
-        jira_client.add_remote_link(
-            "SAND-1661", url="http://www.google.de", title="Google"
-        )
+        jira_client.add_remote_link("SAND-1661", url="http://www.google.de", title="Google")
         self.assertIsNotNone(jira_client.error)
 
     @responses.activate
@@ -614,22 +546,16 @@ class TestJiraClient(TestCase):
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         responses.add(
             responses.GET,
-            "{0}/rest/applinks/latest/listApplicationlinks".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/applinks/latest/listApplicationlinks".format(self.site_config.helpdesk_server.url),
             status=200,
         )
         responses.add(
             responses.POST,
-            "{0}/rest/api/2/issue/SAND-1661/remotelink".format(
-                self.site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-1661/remotelink".format(self.site_config.helpdesk_server.url),
             json={},
             status=500,
         )
-        jira_client.add_remote_link(
-            "SAND-1661", url="http://www.google.de", title="Google"
-        )
+        jira_client.add_remote_link("SAND-1661", url="http://www.google.de", title="Google")
         self.assertIsNotNone(jira_client.error)
 
     @responses.activate
@@ -721,9 +647,7 @@ class TestJiraClient(TestCase):
             token_resource=self.site_config.pangaea_token_server,
         )
 
-        jira_client.create_pangaea_issue(
-            site_config=self.site_config, submission=Submission.objects.first()
-        )
+        jira_client.create_pangaea_issue(site_config=self.site_config, submission=Submission.objects.first())
         self.assertIsNone(jira_client.error)
         self.assertIsNotNone(jira_client.issue)
 
@@ -762,9 +686,7 @@ class TestJiraClient(TestCase):
         )
         attachment = StringIO()
         attachment.write(":-)")
-        jira_client.attach_to_pangaea_issue(
-            "PDI-12428", submission=Submission.objects.first()
-        )
+        jira_client.attach_to_pangaea_issue("PDI-12428", submission=Submission.objects.first())
         attachment.close()
 
     @responses.activate
@@ -854,9 +776,7 @@ class TestJiraClient(TestCase):
             "reporter": {"name": "maweber@mpi-bremen.de"},
             "assignee": {"name": "maweber@mpi-bremen.de"},  # or data center
             "customfield_10010": "sand/molecular-data",
-            "customfield_10200": "{0}".format(
-                (datetime.date.today() + datetime.timedelta(days=365)).isoformat()
-            ),
+            "customfield_10200": "{0}".format((datetime.date.today() + datetime.timedelta(days=365)).isoformat()),
             "customfield_10201": "requirements title",
             "customfield_10208": "requirements description",
             "customfield_10303": "7fafa310-6031-4e41-987b-271d89916eb2",
@@ -868,9 +788,7 @@ class TestJiraClient(TestCase):
             "customfield_10313": ", ".join(["Algae & Protists", "Microbiology"]),
             "customfield_10205": "first_name,last_name;email",
             "customfield_10307": "; ".join(["publication 1234"]),
-            "customfield_10216": [
-                {"value": l} for l in ["Sensitive Personal Information", "Uncertain"]
-            ],
+            "customfield_10216": [{"value": l} for l in ["Sensitive Personal Information", "Uncertain"]],
             "customfield_10314": "potential project id",
             "customfield_10202": {
                 "self": "https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10500",
@@ -953,12 +871,8 @@ class TestJiraClient(TestCase):
             },
         )
         client = JiraClient(resource=jira_resource)
-        data = gfbio_prepare_create_helpdesk_payload(
-            site_config=site_config, submission=submission
-        )
-        client.create_submission_issue(
-            site_config=site_config, submission=submission, reporter={}
-        )
+        data = gfbio_prepare_create_helpdesk_payload(site_config=site_config, submission=submission)
+        client.create_submission_issue(site_config=site_config, submission=submission, reporter={})
 
     @skip("Test against helpdesk server")
     def test_jira_client_get_issue(self):

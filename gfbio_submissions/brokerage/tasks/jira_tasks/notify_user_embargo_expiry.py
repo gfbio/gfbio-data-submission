@@ -42,10 +42,7 @@ def notify_user_embargo_expiry_task(self):
             continue
         # only send notification for closed submissions with PID type PRJ
         # and when embargo date is not in the past
-        if (
-            submission.status != Submission.CLOSED
-            or submission.embargo < datetime.date.today()
-        ):
+        if submission.status != Submission.CLOSED or submission.embargo < datetime.date.today():
             continue
         # get study object
         study = submission.brokerobject_set.filter(type="study").first()
@@ -54,15 +51,10 @@ def notify_user_embargo_expiry_task(self):
             study_pid = study.persistentidentifier_set.filter(pid_type="PRJ").first()
             if study_pid:
                 # check if hold_date is withing 4 weeks
-                four_weeks_from_now = datetime.date.today() + datetime.timedelta(
-                    days=28
-                )
+                four_weeks_from_now = datetime.date.today() + datetime.timedelta(days=28)
                 should_notify = True
                 # check if user was already notified
-                if (
-                    study_pid.user_notified
-                    and study_pid.user_notified <= four_weeks_from_now
-                ):
+                if study_pid.user_notified and study_pid.user_notified <= four_weeks_from_now:
                     should_notify = False
                 if submission.embargo <= four_weeks_from_now and should_notify:
                     # send embargo notification comment to JIRA
@@ -81,13 +73,9 @@ def notify_user_embargo_expiry_task(self):
                     )
                     reference = submission.get_primary_helpdesk_reference()
 
-                    comment = jira_comment_replace(
-                        comment=comment, embargo=submission.embargo.isoformat()
-                    )
+                    comment = jira_comment_replace(comment=comment, embargo=submission.embargo.isoformat())
 
-                    jira_client = JiraClient(
-                        resource=site_configuration.helpdesk_server
-                    )
+                    jira_client = JiraClient(resource=site_configuration.helpdesk_server)
                     jira_client.add_comment(
                         key_or_issue=reference.reference_key,
                         text=comment,

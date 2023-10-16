@@ -7,9 +7,7 @@ from ..configuration.settings import REFERENCE_TYPES, GFBIO_HELPDESK_TICKET
 
 class AdditionalReference(models.Model):
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
-    type = models.CharField(
-        max_length=1, choices=REFERENCE_TYPES, default=GFBIO_HELPDESK_TICKET
-    )
+    type = models.CharField(max_length=1, choices=REFERENCE_TYPES, default=GFBIO_HELPDESK_TICKET)
     primary = models.BooleanField(
         default=False,
         help_text="Only primary tickets are updated. Once set all primary "

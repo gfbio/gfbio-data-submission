@@ -12,8 +12,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="submissionupload",
             name="md5_checksum",
-            field=models.CharField(
-                default="", help_text='MD5 checksum of "file"', max_length=32
-            ),
+            field=models.CharField(default="", help_text='MD5 checksum of "file"', max_length=32),
         ),
     ]

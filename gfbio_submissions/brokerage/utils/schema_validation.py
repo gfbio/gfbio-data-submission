@@ -53,14 +53,11 @@ def collect_validation_errors(data, validator):
 
 def collect_validation_xml_errors(data, validator):
     return [
-        ValidationError("error : {}".format(error.message.replace("u'", "'")))
-        for error in validator.iter_errors(data)
+        ValidationError("error : {}".format(error.message.replace("u'", "'"))) for error in validator.iter_errors(data)
     ]
 
 
-def validate_data(
-    data={}, schema_file=None, schema_string="{}", use_draft04_validator=False
-):
+def validate_data(data={}, schema_file=None, schema_string="{}", use_draft04_validator=False):
     if schema_file:
         with open(schema_file, "r") as schema:
             schema = json.load(schema)
@@ -85,9 +82,7 @@ def validate_study(data):
 def validate_experiment(data):
     return validate_data(
         data=data,
-        schema_file=os.path.join(
-            settings.STATIC_ROOT, STATIC_EXPERIMENT_SCHEMA_LOCATION
-        ),
+        schema_file=os.path.join(settings.STATIC_ROOT, STATIC_EXPERIMENT_SCHEMA_LOCATION),
     )
 
 
@@ -108,9 +103,7 @@ def validate_run(data):
 
 
 def validate_gcdj(sample, schema):
-    gcdj_valid, gcdj_errors = validate_data(
-        data=sample["gcdjson"], schema_string=schema, use_draft04_validator=True
-    )
+    gcdj_valid, gcdj_errors = validate_data(data=sample["gcdjson"], schema_string=schema, use_draft04_validator=True)
     return gcdj_errors
 
 
@@ -148,28 +141,19 @@ def validate_ena_relations(data):
     errors = []
     study_alias = data.get("requirements", {}).get("study_alias", None)
 
-    sample_aliases = [
-        s.get("sample_alias", "")
-        for s in data.get("requirements", {}).get("samples", [])
-    ]
+    sample_aliases = [s.get("sample_alias", "") for s in data.get("requirements", {}).get("samples", [])]
 
-    experiment_aliases = [
-        e.get("experiment_alias", "")
-        for e in data.get("requirements", {}).get("experiments", [])
-    ]
+    experiment_aliases = [e.get("experiment_alias", "") for e in data.get("requirements", {}).get("experiments", [])]
 
     experiment_sample_descriptors = [
-        e.get("design", {}).get("sample_descriptor", "")
-        for e in data.get("requirements", {}).get("experiments", [])
+        e.get("design", {}).get("sample_descriptor", "") for e in data.get("requirements", {}).get("experiments", [])
     ]
 
     # experiment_study_refs = [e.get('study_ref', '') for e in
     #                          data.get('requirements', {}).get('experiments',
     #                                                           [])]
 
-    run_experiment_refs = [
-        r.get("experiment_ref") for r in data.get("requirements", {}).get("runs", [])
-    ]
+    run_experiment_refs = [r.get("experiment_ref") for r in data.get("requirements", {}).get("runs", [])]
 
     for e in experiment_sample_descriptors:
         if e not in sample_aliases:
@@ -229,12 +213,8 @@ def validate_atax_data_is_valid(submission=None, schema_file=None, xml_string=No
 # FIXME: since id determins root for looking up included files
 def validate_data_full(data, target, schema_location=None):
     if schema_location is None:
-        schema_location = os.path.join(
-            settings.STATIC_ROOT, TARGET_SCHEMA_MAPPINGS[target]
-        )
-    valid, errors = validate_data(
-        data=data, schema_file=schema_location, use_draft04_validator=True
-    )
+        schema_location = os.path.join(settings.STATIC_ROOT, TARGET_SCHEMA_MAPPINGS[target])
+    valid, errors = validate_data(data=data, schema_file=schema_location, use_draft04_validator=True)
     if valid and (target == ENA or target == ENA_PANGAEA):
         errors = validate_ena_relations(data)
         if len(errors):
@@ -245,9 +225,7 @@ def validate_data_full(data, target, schema_location=None):
 def validate_data_min(data):
     return validate_data(
         data=data,
-        schema_file=os.path.join(
-            settings.STATIC_ROOT, STATIC_MIN_REQUIREMENTS_LOCATION
-        ),
+        schema_file=os.path.join(settings.STATIC_ROOT, STATIC_MIN_REQUIREMENTS_LOCATION),
         use_draft04_validator=True,
     )
 

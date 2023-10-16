@@ -18,8 +18,7 @@ from ...models.submission import Submission
 from ...models.submission_upload import SubmissionUpload
 from ...models.task_progress_report import TaskProgressReport
 from ...tasks.jira_tasks.attach_to_submission_issue import attach_to_submission_issue_task
-from ...tasks.jira_tasks.delete_submission_issue_attachment import \
-    delete_submission_issue_attachment_task
+from ...tasks.jira_tasks.delete_submission_issue_attachment import delete_submission_issue_attachment_task
 
 
 class TestAttachToIssueTasks(TestHelpDeskTasksBase):
@@ -109,9 +108,7 @@ class TestAttachToIssueTasks(TestHelpDeskTasksBase):
         self.assertEqual(3, len(all_uploads))
 
         for i in range(0, len(all_uploads)):
-            self.assertEqual(
-                "3bc38ceb0c2dd4571737fb5e6ed22a62", all_uploads[i].md5_checksum
-            )
+            self.assertEqual("3bc38ceb0c2dd4571737fb5e6ed22a62", all_uploads[i].md5_checksum)
             result = attach_to_submission_issue_task.apply_async(
                 kwargs={
                     "submission_id": submission.pk,
@@ -182,9 +179,7 @@ class TestAttachToIssueTasks(TestHelpDeskTasksBase):
 
     # TODO: take this mock concept for testing retry, and add more tests for
     #  other tasks with retry policy(s)
-    @override_settings(
-        CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False
-    )
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False)
     @patch("gfbio_submissions.brokerage.utils.task_utils.send_task_fail_mail")
     def test_attach_submission_upload_without_ticket(self, mock):
         submission = Submission.objects.last()

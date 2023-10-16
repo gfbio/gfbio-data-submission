@@ -64,12 +64,8 @@ class TestHelpDeskTicketMethods(TestCase):
             comment="Default configuration",
             contact="kevin@horstmeier.de",
         )
-        user = User.objects.create_user(
-            username="horst", email="horst@horst.de", password="password"
-        )
-        permissions = Permission.objects.filter(
-            content_type__app_label="brokerage", codename__endswith="upload"
-        )
+        user = User.objects.create_user(username="horst", email="horst@horst.de", password="password")
+        permissions = Permission.objects.filter(content_type__app_label="brokerage", codename__endswith="upload")
         user.user_permissions.add(*permissions)
         user.site_configuration = site_conf
         user.save()
@@ -79,9 +75,7 @@ class TestHelpDeskTicketMethods(TestCase):
         cls.api_client = client
 
         submission = cls._create_submission_via_serializer()
-        submission.additionalreference_set.create(
-            type=GFBIO_HELPDESK_TICKET, reference_key="FAKE_KEY", primary=True
-        )
+        submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="FAKE_KEY", primary=True)
 
     @classmethod
     def _create_test_data(cls, path, delete=True):
@@ -100,92 +94,62 @@ class TestHelpDeskTicketMethods(TestCase):
         SubmissionUpload.objects.all().delete()
 
     def test_prepare_helpdesk_payload(self):
-        with open(
-            os.path.join(_get_test_data_dir_path(), "generic_data.json"), "r"
-        ) as data_file:
+        with open(os.path.join(_get_test_data_dir_path(), "generic_data.json"), "r") as data_file:
             data = json.load(data_file)
-        serializer = SubmissionSerializer(
-            data={"target": "GENERIC", "release": True, "data": data}
-        )
+        serializer = SubmissionSerializer(data={"target": "GENERIC", "release": True, "data": data})
         serializer.is_valid()
         submission = serializer.save(user=User.objects.first())
         site_config = SiteConfiguration.objects.first()
-        payload = gfbio_prepare_create_helpdesk_payload(
-            site_config=site_config, submission=submission
-        )
+        payload = gfbio_prepare_create_helpdesk_payload(site_config=site_config, submission=submission)
         self.assertNotIn("assignee", payload.keys())
         self.assertEqual("sand/molecular-data", payload["customfield_10010"])
         # self.assertEqual('MIxS',
         #                  payload['customfield_10229'][0]['value'])
 
         data["requirements"].pop("data_center")
-        serializer = SubmissionSerializer(
-            data={"target": "GENERIC", "release": True, "data": data}
-        )
+        serializer = SubmissionSerializer(data={"target": "GENERIC", "release": True, "data": data})
         serializer.is_valid()
         submission = serializer.save(user=User.objects.first())
         site_config = SiteConfiguration.objects.first()
-        payload = gfbio_prepare_create_helpdesk_payload(
-            site_config=site_config, submission=submission
-        )
+        payload = gfbio_prepare_create_helpdesk_payload(site_config=site_config, submission=submission)
         self.assertNotIn("assignee", payload.keys())
         self.assertEqual("sand/generic-data", payload["customfield_10010"])
 
         # self.assertEqual('other',
         #                  payload['customfield_10229'][0]['value'])
 
-        data["requirements"][
-            "data_center"
-        ] = "GFBio Data Centers - our curators will suggest the appropriate one(s)"
-        serializer = SubmissionSerializer(
-            data={"target": "GENERIC", "release": True, "data": data}
-        )
+        data["requirements"]["data_center"] = "GFBio Data Centers - our curators will suggest the appropriate one(s)"
+        serializer = SubmissionSerializer(data={"target": "GENERIC", "release": True, "data": data})
         serializer.is_valid()
         submission = serializer.save(user=User.objects.first())
         site_config = SiteConfiguration.objects.first()
-        payload = gfbio_prepare_create_helpdesk_payload(
-            site_config=site_config, submission=submission
-        )
+        payload = gfbio_prepare_create_helpdesk_payload(site_config=site_config, submission=submission)
         self.assertNotIn("assignee", payload.keys())
 
     def test_ipk_datacenter_assignee(self):
-        with open(
-            os.path.join(_get_test_data_dir_path(), "generic_data.json"), "r"
-        ) as data_file:
+        with open(os.path.join(_get_test_data_dir_path(), "generic_data.json"), "r") as data_file:
             data = json.load(data_file)
-            data["requirements"][
-                "data_center"
-            ] = "IPK - Leibniz Institute of Plant Genetics and Crop Plant Research"
+            data["requirements"]["data_center"] = "IPK - Leibniz Institute of Plant Genetics and Crop Plant Research"
 
-        serializer = SubmissionSerializer(
-            data={"target": "GENERIC", "release": True, "data": data}
-        )
+        serializer = SubmissionSerializer(data={"target": "GENERIC", "release": True, "data": data})
         serializer.is_valid()
         submission = serializer.save(user=User.objects.first())
         site_config = SiteConfiguration.objects.first()
-        payload = gfbio_prepare_create_helpdesk_payload(
-            site_config=site_config, submission=submission
-        )
+        payload = gfbio_prepare_create_helpdesk_payload(site_config=site_config, submission=submission)
         self.assertNotIn("assignee", payload.keys())
 
     @skip("metadata_schema is no longer used. compare GFBIO-2742")
     def test_prepare_helpdesk_payload_metadataschema_is_none(self):
-        with open(
-            os.path.join(_get_test_data_dir_path(), "generic_data.json"), "r"
-        ) as data_file:
+        with open(os.path.join(_get_test_data_dir_path(), "generic_data.json"), "r") as data_file:
             data = json.load(data_file)
         data["requirements"].pop("data_center")
         data["requirements"]["metadata_schema"] = "None"
 
-        serializer = SubmissionSerializer(
-            data={"target": "GENERIC", "release": True, "data": data}
-        )
+        serializer = SubmissionSerializer(data={"target": "GENERIC", "release": True, "data": data})
         serializer.is_valid()
         submission = serializer.save(user=User.objects.first())
         site_config = SiteConfiguration.objects.first()
-        payload = gfbio_prepare_create_helpdesk_payload(
-            site_config=site_config, submission=submission
-        )
+        payload = gfbio_prepare_create_helpdesk_payload(site_config=site_config, submission=submission)
         self.assertEqual("other", payload["customfield_10229"][0]["value"])
 
     @responses.activate
@@ -204,12 +168,8 @@ class TestHelpDeskTicketMethods(TestCase):
 
     @responses.activate
     def test_get_gfbio_helpdesk_username_with_fullname(self):
-        url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format(
-            "deleteMe", "delete@me.de", "Delete me if you want"
-        )
+        url = JIRA_USERNAME_URL_FULLNAME_TEMPLATE.format("deleteMe", "delete@me.de", "Delete me if you want")
         responses.add(responses.GET, url, body=b"deleteMe", status=200)
-        response = get_gfbio_helpdesk_username(
-            "deleteMe", "delete@me.de", "Delete me if you want"
-        )
+        response = get_gfbio_helpdesk_username("deleteMe", "delete@me.de", "Delete me if you want")
         self.assertEqual(200, response.status_code)
         self.assertEqual(b"deleteMe", response.content)

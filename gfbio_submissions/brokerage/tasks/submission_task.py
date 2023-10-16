@@ -20,10 +20,7 @@ class SubmissionTask(celery.Task):
     #     super(SubmissionTask, self).__init__()
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
-        logger.info(
-            "tasks.py | SubmissionTask | on_retry | task_id={0} | "
-            "name={1}".format(task_id, self.name)
-        )
+        logger.info("tasks.py | SubmissionTask | on_retry | task_id={0} | " "name={1}".format(task_id, self.name))
         # TODO: capture this idea of reporting to sentry
         # sentrycli.captureException(exc)
         TaskProgressReport.objects.update_report_on_exception(
@@ -47,9 +44,7 @@ class SubmissionTask(celery.Task):
             "tasks.py | SubmissionTask | on_success | task_id={0} | "
             "name={1} | retval={2}".format(task_id, self.name, retval)
         )
-        TaskProgressReport.objects.update_report_on_success(
-            retval, task_id, args, kwargs, task_name=self.name
-        )
+        TaskProgressReport.objects.update_report_on_success(retval, task_id, args, kwargs, task_name=self.name)
         super(SubmissionTask, self).on_success(retval, task_id, args, kwargs)
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
@@ -58,9 +53,5 @@ class SubmissionTask(celery.Task):
             "name={1} | args={2} | kwargs={3} | einfo={4} | "
             "retval={5}".format(task_id, self.name, args, kwargs, einfo, retval)
         )
-        TaskProgressReport.objects.update_report_after_return(
-            status, task_id, task_name=self.name
-        )
-        super(SubmissionTask, self).after_return(
-            status, retval, task_id, args, kwargs, einfo
-        )
+        TaskProgressReport.objects.update_report_after_return(status, task_id, task_name=self.name)
+        super(SubmissionTask, self).after_return(status, retval, task_id, args, kwargs, einfo)

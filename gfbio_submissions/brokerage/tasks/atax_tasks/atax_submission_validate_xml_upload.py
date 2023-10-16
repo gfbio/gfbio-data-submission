@@ -31,24 +31,18 @@ def atax_submission_validate_xml_upload_task(
     submission_upload_id=None,
     is_combination=False,
 ):
-    report, created = TaskProgressReport.objects.create_initial_report(
-        submission=None, task=self
-    )
+    report, created = TaskProgressReport.objects.create_initial_report(submission=None, task=self)
 
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
             "tasks.py | atax_submission_validate_xml_upload_task | "
             "previous task reported={0} | "
-            "submission_upload_id={1}".format(
-                TaskProgressReport.CANCELLED, submission_upload_id
-            )
+            "submission_upload_id={1}".format(TaskProgressReport.CANCELLED, submission_upload_id)
         )
         return TaskProgressReport.CANCELLED
 
     if submission_upload_id:
-        submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(
-            submission_upload_id
-        )
+        submission_upload = SubmissionUpload.objects.get_linked_atax_submission_upload(submission_upload_id)
 
     # FIXME: logic ?
     if submission_upload is None and is_combination == False:
@@ -68,22 +62,12 @@ def atax_submission_validate_xml_upload_task(
 
         # get the stored xml string back from auditabletextdata:
         text_to_validate = ""
-        if len(
-            submission_upload.submission.auditabletextdata_set.filter(
+        if len(submission_upload.submission.auditabletextdata_set.filter(atax_file_name=upload_name)):
+            upload_by_file__name = submission_upload.submission.auditabletextdata_set.filter(
                 atax_file_name=upload_name
-            )
-        ):
-            upload_by_file__name = (
-                submission_upload.submission.auditabletextdata_set.filter(
-                    atax_file_name=upload_name
-                ).first()
-            )
-    elif is_combination:
-        upload_by_file__name = (
-            submission_upload.submission.auditabletextdata_set.filter(
-                name="combination"
             ).first()
-        )
+    elif is_combination:
+        upload_by_file__name = submission_upload.submission.auditabletextdata_set.filter(name="combination").first()
 
     if upload_by_file__name is not None:
         text_to_validate = upload_by_file__name.text_data

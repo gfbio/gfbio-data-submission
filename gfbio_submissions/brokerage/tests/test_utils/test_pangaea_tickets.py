@@ -54,9 +54,7 @@ class PangaeaTicketTest(TestCase):
         resource_credential = ResourceCredential.objects.first()
         headers = {"Accept": "text/xml", "SOAPAction": "login"}
         body = _get_pangaea_soap_body()
-        response = requests.post(
-            url=resource_credential.url, data=body, headers=headers
-        )
+        response = requests.post(url=resource_credential.url, data=body, headers=headers)
 
     @skip("request to PANGAEA server")
     def test_request_pangaea_login_token(self):
@@ -64,8 +62,7 @@ class PangaeaTicketTest(TestCase):
         response = request_pangaea_login_token(resource_credential=resource_credential)
         self.assertTrue(200, response.status_code)
         self.assertIn(
-            'xmlns:ns1="urn:java:de.pangaea.login.PanLogin">'
-            '<loginReturn xsi:type="xsd:string">',
+            'xmlns:ns1="urn:java:de.pangaea.login.PanLogin">' '<loginReturn xsi:type="xsd:string">',
             response.content,
         )
 
@@ -111,27 +108,17 @@ class PangaeaTicketTest(TestCase):
         self.assertTrue(expected_token, get_pangaea_login_token(resource_credential))
 
     def test_filter_for_submission_additional_reference(self):
-        submissions_with_reference = Submission.objects.filter(
-            status=Submission.OPEN
-        ).filter(additionalreference__type=PANGAEA_JIRA_TICKET)
+        submissions_with_reference = Submission.objects.filter(status=Submission.OPEN).filter(
+            additionalreference__type=PANGAEA_JIRA_TICKET
+        )
         all_submissions = Submission.objects.all()
 
         self.assertEqual(2, len(all_submissions))
         self.assertEqual(1, len(submissions_with_reference))
-        self.assertEqual(
-            1, len(submissions_with_reference.first().additionalreference_set.all())
-        )
+        self.assertEqual(1, len(submissions_with_reference.first().additionalreference_set.all()))
         self.assertEqual(
             1,
-            len(
-                submissions_with_reference.first().additionalreference_set.filter(
-                    type=PANGAEA_JIRA_TICKET
-                )
-            ),
+            len(submissions_with_reference.first().additionalreference_set.filter(type=PANGAEA_JIRA_TICKET)),
         )
-        ref = (
-            submissions_with_reference.first()
-            .additionalreference_set.filter(type=PANGAEA_JIRA_TICKET)
-            .first()
-        )
+        ref = submissions_with_reference.first().additionalreference_set.filter(type=PANGAEA_JIRA_TICKET).first()
         self.assertEqual("PDI-0815", ref.reference_key)

@@ -46,13 +46,9 @@ def _safe_get_submission(submission_id, include_closed):
 def _safe_get_submitted_submission(submission_id):
     submission = None
     try:
-        submission = Submission.objects.get_submitted_and_error_submissions(
-            submission_id
-        )
+        submission = Submission.objects.get_submitted_and_error_submissions(submission_id)
     except Submission.DoesNotExist as e:
-        logger.warning(
-            "task_utils.py | _safe_get_submitted_submission | error {0}".format(e)
-        )
+        logger.warning("task_utils.py | _safe_get_submitted_submission | error {0}".format(e))
     return submission
 
 
@@ -97,18 +93,14 @@ def _get_submitted_submission_and_site_configuration(submission_id, task):
                 )
             )
         if task:
-            TaskProgressReport.objects.create_initial_report(
-                submission=submission, task=task
-            )
+            TaskProgressReport.objects.create_initial_report(submission=submission, task=task)
         return submission, site_config
     except TransferInternalError as e:
         logger.warning(
             "task_utils.py | _get_submitted_submission_and_site_configuration "
             "| task={0} "
             "| submission pk={1} | return={2} | "
-            "TransferInternalError={3}".format(
-                task.name, submission_id, (TaskProgressReport.CANCELLED, None), e
-            )
+            "TransferInternalError={3}".format(task.name, submission_id, (TaskProgressReport.CANCELLED, None), e)
         )
         return TaskProgressReport.CANCELLED, None
 
@@ -121,9 +113,7 @@ def _get_submission_and_site_configuration(submission_id, task, include_closed):
             logger.warning(
                 "task_utils.py | _get_submission_and_site_configuration | "
                 "raise TransferInternalError | no submission for pk={0} |"
-                " include_closed={1} | task={2}".format(
-                    submission_id, include_closed, task.name
-                )
+                " include_closed={1} | task={2}".format(submission_id, include_closed, task.name)
             )
             raise TransferInternalError(
                 "SubmissionTransferHandler | get_submission_and_site_configuration | "
@@ -137,9 +127,7 @@ def _get_submission_and_site_configuration(submission_id, task, include_closed):
             logger.warning(
                 "task_utils.py | _get_submission_and_site_configuration | "
                 "raise TransferInternalError | no site_config for submission "
-                "with pk={0} | include_closed={1} | task={2}".format(
-                    submission_id, include_closed, task.name
-                )
+                "with pk={0} | include_closed={1} | task={2}".format(submission_id, include_closed, task.name)
             )
             raise TransferInternalError(
                 "SubmissionTransferHandler | get_submission_and_site_configuration | "
@@ -164,9 +152,7 @@ def _get_submission_and_site_configuration(submission_id, task, include_closed):
     #   but in the last months some of the newer tasks are not Calling this method
     if task:
         TaskProgressReport.objects.create_initial_report(
-            submission=None
-            if submission == TaskProgressReport.CANCELLED
-            else submission,
+            submission=None if submission == TaskProgressReport.CANCELLED else submission,
             task=task,
         )
     return submission, site_config
@@ -205,16 +191,12 @@ def get_submission_and_site_configuration(submission_id, task, include_closed):
         "".format(submission_id, task.name, include_closed)
     )
     try:
-        return _get_submission_and_site_configuration(
-            submission_id, task, include_closed
-        )
+        return _get_submission_and_site_configuration(submission_id, task, include_closed)
     except TransferInternalError as ce:
         logger.warning(
             "task_utils.py | get_submission_and_site_configuration | task={0} "
             "| submission pk={1} | include_closed={2} | will "
-            "send_task_fail_mail TransferInternalError={3}".format(
-                task.name, submission_id, include_closed, ce
-            )
+            "send_task_fail_mail TransferInternalError={3}".format(task.name, submission_id, include_closed, ce)
         )
         return send_task_fail_mail("*", task), None
 
@@ -232,22 +214,16 @@ def get_submitted_submission_and_site_configuration(submission_id, task):
             "task_utils.py | get_submitted_submission_and_site_configuration "
             "| task={0} "
             "| submission pk={1} |  will "
-            "send_task_fail_mail TransferInternalError={2}".format(
-                task.name, submission_id, ce
-            )
+            "send_task_fail_mail TransferInternalError={2}".format(task.name, submission_id, ce)
         )
         return send_task_fail_mail("*", task), None
 
 
-def raise_transfer_server_exceptions(
-    response, task, max_retries, broker_submission_id=None
-):
+def raise_transfer_server_exceptions(response, task, max_retries, broker_submission_id=None):
     logger.info(
         "task_utils.py | raise_transfer_server_exceptions | "
         "resonse.status_code={0} | broker_submission_id={1} | "
-        "task={2} | retries={3}".format(
-            response.status_code, broker_submission_id, task, task.request.retries
-        )
+        "task={2} | retries={3}".format(response.status_code, broker_submission_id, task, task.request.retries)
     )
     if task.request.retries >= max_retries:
         logger.info(
@@ -255,9 +231,7 @@ def raise_transfer_server_exceptions(
             "task.request.retries={0} >= max_retries={1} | "
             "send_task_fail_mail".format(task.request.retries, max_retries)
         )
-        return send_task_fail_mail(
-            broker_submission_id, task, "Maximum number of retries exceeded"
-        )
+        return send_task_fail_mail(broker_submission_id, task, "Maximum number of retries exceeded")
     else:
         try:
             logger.info(
@@ -273,9 +247,7 @@ def raise_transfer_server_exceptions(
                 "send_task_fail_mail | task={0} | response={1} | "
                 "error={2}".format(task, response, ce)
             )
-            return send_task_fail_mail(
-                broker_submission_id, task, "Client error:\n{0}".format(ce)
-            )
+            return send_task_fail_mail(broker_submission_id, task, "Client error:\n{0}".format(ce))
 
 
 def retry_no_ticket_available_exception(task, broker_submission_id, number_of_tickets):
@@ -286,9 +258,7 @@ def retry_no_ticket_available_exception(task, broker_submission_id, number_of_ti
             logger.info(
                 "task_utils.py | retry_no_ticket_available_exception | "
                 "task.request.retries={0} >= max_retries={1} | "
-                "send_task_fail_mail".format(
-                    task.request.retries, SUBMISSION_UPLOAD_MAX_RETRIES
-                )
+                "send_task_fail_mail".format(task.request.retries, SUBMISSION_UPLOAD_MAX_RETRIES)
             )
             return send_task_fail_mail(broker_submission_id, task)
         else:
@@ -303,9 +273,7 @@ def retry_no_ticket_available_exception(task, broker_submission_id, number_of_ti
             )
 
 
-def jira_error_auto_retry(
-    jira_client, task, broker_submission_id, max_retries=SUBMISSION_MAX_RETRIES
-):
+def jira_error_auto_retry(jira_client, task, broker_submission_id, max_retries=SUBMISSION_MAX_RETRIES):
     logger.info(
         "task_utils.py | jira_error_auto_retry | "
         "broker_submission_id={0} | task={1} | max_retries={2}"
@@ -332,18 +300,14 @@ def jira_cancel_issue(submission_id=None, admin=False):
     )
 
 
-def request_error_auto_retry(
-    response, task, broker_submission_id, max_retries=SUBMISSION_MAX_RETRIES
-):
+def request_error_auto_retry(response, task, broker_submission_id, max_retries=SUBMISSION_MAX_RETRIES):
     logger.info(
         "task_utils.py | request_error_auto_retry | "
         "broker_submission_id={0} | task={1} | max_retries={2}"
         "".format(broker_submission_id, task.name, max_retries)
     )
     if response.status_code and response.status_code >= 400:
-        return raise_transfer_server_exceptions(
-            response, task, broker_submission_id, max_retries
-        )
+        return raise_transfer_server_exceptions(response, task, broker_submission_id, max_retries)
     return True
 
 
@@ -368,9 +332,7 @@ def send_data_to_ena_for_validation_or_test(task, submission_id, action):
         return "No resource credentials found for {}".format(request_server)
 
     # check for XML files
-    ena_submission_data = AuditableTextData.objects.assemble_ena_submission_data(
-        submission=submission
-    )
+    ena_submission_data = AuditableTextData.objects.assemble_ena_submission_data(submission=submission)
     if ena_submission_data == {}:
         return "No XML files found"
 
@@ -389,11 +351,7 @@ def send_data_to_ena_for_validation_or_test(task, submission_id, action):
             max_retries=SUBMISSION_MAX_RETRIES,
         )
     except ConnectionError as e:
-        logger.error(
-            msg="connection_error {}.url={} title={}".format(
-                e, resource_cred.url, resource_cred.title
-            )
-        )
+        logger.error(msg="connection_error {}.url={} title={}".format(e, resource_cred.url, resource_cred.title))
         response = Response()
     return str(request_id), response.status_code, smart_str(response.content)
 
@@ -403,8 +361,7 @@ def get_jira_comment_template(template_name, task_name):
     if not template:
         mail_admins(
             subject='Failed to send JIRA Comment"',
-            message="Template {} not found in the database, "
-            'task: "{}".'.format(template_name, task_name),
+            message="Template {} not found in the database, " 'task: "{}".'.format(template_name, task_name),
         )
         return None
     return template.message

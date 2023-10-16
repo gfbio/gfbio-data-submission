@@ -23,6 +23,4 @@ class SubmissionUploadListView(generics.ListAPIView):
 
     def get_queryset(self):
         broker_submission_id = self.kwargs.get("broker_submission_id", uuid4())
-        return SubmissionUpload.objects.filter(
-            submission__broker_submission_id=broker_submission_id
-        )
+        return SubmissionUpload.objects.filter(submission__broker_submission_id=broker_submission_id)

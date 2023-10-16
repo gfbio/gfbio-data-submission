@@ -18,11 +18,7 @@ class SiteConfigurationManager(models.Manager):
 
     # TODO: add tests
     def get_hosting_site_configuration(self):
-        admin, email = (
-            ADMINS[0]
-            if len(ADMINS)
-            else ("admin", "default@{0}.de".format(HOSTING_SITE))
-        )
+        admin, email = ADMINS[0] if len(ADMINS) else ("admin", "default@{0}.de".format(HOSTING_SITE))
         obj, created = self.get_or_create(
             title=HOSTING_SITE,
             defaults={

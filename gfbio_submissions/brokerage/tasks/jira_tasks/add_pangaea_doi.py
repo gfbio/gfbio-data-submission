@@ -20,9 +20,7 @@ from ...utils.task_utils import (
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def add_pangaea_doi_task(
-    self, prev_task_result=None, pangaea_doi=None, submission_id=None
-):
+def add_pangaea_doi_task(self, prev_task_result=None, pangaea_doi=None, submission_id=None):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
     )
@@ -36,9 +34,7 @@ def add_pangaea_doi_task(
         )
         jira_client.add_comment(
             key_or_issue=reference.reference_key,
-            text="Pangaea DOI: {0}. broker_submission_id: {1}".format(
-                pangaea_doi, submission.broker_submission_id
-            ),
+            text="Pangaea DOI: {0}. broker_submission_id: {1}".format(pangaea_doi, submission.broker_submission_id),
             is_internal=False,
         )
         return jira_error_auto_retry(

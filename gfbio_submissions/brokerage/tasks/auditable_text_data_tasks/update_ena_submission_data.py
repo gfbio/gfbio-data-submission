@@ -18,22 +18,16 @@ logger = logging.getLogger(__name__)
     bind=True,
     name="tasks.update_ena_submission_data_task",
 )
-def update_ena_submission_data_task(
-    self, previous_task_result=None, submission_upload_id=None
-):
+def update_ena_submission_data_task(self, previous_task_result=None, submission_upload_id=None):
     # TODO: here it would be possible to get the related submission for the TaskReport
     TaskProgressReport.objects.create_initial_report(submission=None, task=self)
-    submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(
-        submission_upload_id
-    )
+    submission_upload = SubmissionUpload.objects.get_linked_molecular_submission_upload(submission_upload_id)
 
     if previous_task_result == TaskProgressReport.CANCELLED:
         logger.warning(
             "tasks.py | update_ena_submission_data_task | "
             "previous task reported={0} | "
-            "submission_upload_id={1}".format(
-                TaskProgressReport.CANCELLED, submission_upload_id
-            )
+            "submission_upload_id={1}".format(TaskProgressReport.CANCELLED, submission_upload_id)
         )
         return TaskProgressReport.CANCELLED
 

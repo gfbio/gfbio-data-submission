@@ -43,8 +43,9 @@ from ..models.center_name import CenterName
 from ..models.persistent_identifier import PersistentIdentifier
 from ..models.submission import Submission
 from ..models.task_progress_report import TaskProgressReport
-from ..tasks.auditable_text_data_tasks.create_targeted_sequence_ena_manifest import \
-    create_targeted_sequence_ena_manifest_task
+from ..tasks.auditable_text_data_tasks.create_targeted_sequence_ena_manifest import (
+    create_targeted_sequence_ena_manifest_task,
+)
 from ..tasks.auditable_text_data_tasks.prepare_ena_study_xml import prepare_ena_study_xml_task
 from ..tasks.broker_object_tasks.create_study_broker_objects_only import create_study_broker_objects_only_task
 from ..tasks.transfer_tasks.process_ena_response import process_ena_response_task
@@ -177,9 +178,7 @@ class TestTargetedSequencePreparationTasks(TestCase):
 
     def test_prepare_ena_study_xml_task_existing_study_xml(self):
         submission = Submission.objects.first()
-        study_xml = submission.auditabletextdata_set.create(
-            name="study.xml", text_data="<STUDY></STUDY>"
-        )
+        study_xml = submission.auditabletextdata_set.create(name="study.xml", text_data="<STUDY></STUDY>")
         result = prepare_ena_study_xml_task.apply_async(
             kwargs={
                 "submission_id": submission.pk,
@@ -204,9 +203,7 @@ class TestTargetedSequencePreparationTasks(TestCase):
     def test_register_study_at_ena_task_existing_pid(self):
         submission = Submission.objects.first()
         study_bo = BrokerObject.objects.add_study_only(submission)
-        pid = study_bo.persistentidentifier_set.create(
-            archive="ENA", pid_type="PRJ", pid="PRJ007"
-        )
+        pid = study_bo.persistentidentifier_set.create(archive="ENA", pid_type="PRJ", pid="PRJ007")
         result = register_study_at_ena_task.apply_async(
             kwargs={
                 "submission_id": submission.pk,
@@ -233,9 +230,7 @@ class TestTargetedSequencePreparationTasks(TestCase):
 
     def test_register_study_at_ena_task_no_study_brokerobject(self):
         submission = Submission.objects.first()
-        study_xml = submission.auditabletextdata_set.create(
-            name="study.xml", text_data="<STUDY></STUDY>"
-        )
+        study_xml = submission.auditabletextdata_set.create(name="study.xml", text_data="<STUDY></STUDY>")
         result = register_study_at_ena_task.apply_async(
             kwargs={
                 "submission_id": submission.pk,
@@ -251,9 +246,7 @@ class TestTargetedSequencePreparationTasks(TestCase):
     def test_register_study_at_ena_task(self):
         submission = Submission.objects.first()
         study_bo = BrokerObject.objects.add_study_only(submission)
-        study_xml = submission.auditabletextdata_set.create(
-            name="study.xml", text_data="<STUDY></STUDY>"
-        )
+        study_xml = submission.auditabletextdata_set.create(name="study.xml", text_data="<STUDY></STUDY>")
         responses.add(
             responses.POST,
             submission.user.site_configuration.ena_server.url,
@@ -284,9 +277,7 @@ class TestTargetedSequencePreparationTasks(TestCase):
         submission = Submission.objects.first()
         study_bo = BrokerObject.objects.add_study_only(submission)
         print("STUDY BO pk ", study_bo.pk)
-        study_xml = submission.auditabletextdata_set.create(
-            name="study.xml", text_data="<STUDY></STUDY>"
-        )
+        study_xml = submission.auditabletextdata_set.create(name="study.xml", text_data="<STUDY></STUDY>")
         responses.add(
             responses.POST,
             submission.user.site_configuration.ena_server.url,
@@ -295,9 +286,7 @@ class TestTargetedSequencePreparationTasks(TestCase):
         )
         register_chain = register_study_at_ena_task.s(submission_id=submission.pk).set(
             countdown=SUBMISSION_DELAY
-        ) | process_ena_response_task.s(
-            submission_id=submission.pk, close_submission_on_success=False
-        ).set(
+        ) | process_ena_response_task.s(submission_id=submission.pk, close_submission_on_success=False).set(
             countdown=SUBMISSION_DELAY
         )
         register_chain()
@@ -329,23 +318,15 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         submission = Submission.objects.first()
         cls.study_bo = BrokerObject.objects.add_study_only(submission)
         study_data = prepare_study_data_only(submission=submission)
-        cls.study_text_data = store_single_data_item_as_auditable_text_data(
-            submission=submission, data=study_data
-        )
+        cls.study_text_data = store_single_data_item_as_auditable_text_data(submission=submission, data=study_data)
 
-        parsed = parse_ena_submission_response(
-            _get_ena_register_study_response(cls.study_bo.pk)
-        )
+        parsed = parse_ena_submission_response(_get_ena_register_study_response(cls.study_bo.pk))
         BrokerObject.objects.append_pids_from_ena_response(parsed)
 
-        cls.submission_folder = os.path.join(
-            settings.MEDIA_ROOT, str(submission.broker_submission_id)
-        )
+        cls.submission_folder = os.path.join(settings.MEDIA_ROOT, str(submission.broker_submission_id))
 
         with open(
-            os.path.join(
-                _get_test_data_dir_path(), "tsv_files/valid_template_example.tsv.gz"
-            ),
+            os.path.join(_get_test_data_dir_path(), "tsv_files/valid_template_example.tsv.gz"),
             "br",
         ) as gz_file:
             f = File(gz_file)
@@ -370,30 +351,22 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
                 }
             },
         )
-        submission.user.site_configuration = (
-            TestTargetedSequencePreparationTasks.site_config
-        )
+        submission.user.site_configuration = TestTargetedSequencePreparationTasks.site_config
         submission.user.save()
         study = BrokerObject.objects.add_study_only(submission=submission)
         study_data = prepare_study_data_only(submission=submission)
-        study_text_data = store_single_data_item_as_auditable_text_data(
-            submission=submission, data=study_data
-        )
+        study_text_data = store_single_data_item_as_auditable_text_data(submission=submission, data=study_data)
         # TODO: works when credentials are set properly
         register_chain = register_study_at_ena_task.s(submission_id=submission.pk).set(
             countdown=SUBMISSION_DELAY
-        ) | process_ena_response_task.s(
-            submission_id=submission.pk, close_submission_on_success=False
-        ).set(
+        ) | process_ena_response_task.s(submission_id=submission.pk, close_submission_on_success=False).set(
             countdown=SUBMISSION_DELAY
         )
         register_chain()
         return study
 
     @classmethod
-    def _prepare_objects_for_registered_study(
-        cls, broker_submission_id, accession_no, do_store=True
-    ):
+    def _prepare_objects_for_registered_study(cls, broker_submission_id, accession_no, do_store=True):
         submission = Submission.objects.create(
             broker_submission_id=UUID(broker_submission_id),
             user=TestTargetedSequencePreparationTasks.user,
@@ -408,13 +381,9 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
             },
         )
         study = BrokerObject.objects.add_study_only(submission=submission)
-        study.persistentidentifier_set.create(
-            pid_type="PRJ", archive="ENA", pid=accession_no
-        )
+        study.persistentidentifier_set.create(pid_type="PRJ", archive="ENA", pid=accession_no)
         with open(
-            os.path.join(
-                _get_test_data_dir_path(), "tsv_files/valid_template_example.tsv.gz"
-            ),
+            os.path.join(_get_test_data_dir_path(), "tsv_files/valid_template_example.tsv.gz"),
             "br",
         ) as gz_file:
             f = File(gz_file)
@@ -459,9 +428,7 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         # 13.06.2020  Testing started at 12:44 ...
         # bsi: 7159acef-51a1-4378-9716-78f4495f0db4
         # study main PRJ: PRJEB39350
-        submission = self._prepare_objects_for_registered_study(
-            "7159acef-51a1-4378-9716-78f4495f0db4", "PRJEB39350"
-        )
+        submission = self._prepare_objects_for_registered_study("7159acef-51a1-4378-9716-78f4495f0db4", "PRJEB39350")
         # ----------------------------------------------
 
         submit_targeted_sequences(
@@ -487,9 +454,7 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         # 13.06.2020  Testing started at 12:44 ...
         # bsi: 7159acef-51a1-4378-9716-78f4495f0db4
         # study main PRJ: PRJEB39350
-        submission = self._prepare_objects_for_registered_study(
-            "7159acef-51a1-4378-9716-78f4495f0db4", "PRJEB39350"
-        )
+        submission = self._prepare_objects_for_registered_study("7159acef-51a1-4378-9716-78f4495f0db4", "PRJEB39350")
         # ----------------------------------------------
 
         submit_targeted_sequences(
@@ -581,9 +546,7 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         submission = self._prepare_objects_for_registered_study(
             "47e651ca-876d-42f7-b3d2-8015b51996f1", "PRJEB39475", do_store=False
         )
-        result = process_targeted_sequence_results_task.apply_async(
-            kwargs={"submission_id": submission.pk}
-        )
+        result = process_targeted_sequence_results_task.apply_async(kwargs={"submission_id": submission.pk})
 
         res = result.get()
         self.assertTrue(res)
@@ -642,14 +605,10 @@ class TestCLI(TestCase):
             data=_get_ena_data(),
         )
 
-        submission_folder = os.path.join(
-            settings.MEDIA_ROOT, str(submission.broker_submission_id)
-        )
+        submission_folder = os.path.join(settings.MEDIA_ROOT, str(submission.broker_submission_id))
         upload_path = os.path.join(submission_folder, "test_submission_upload.tsv")
 
-        simple_file = SimpleUploadedFile(
-            "test_submission_upload.tsv", b"these\tare\tthe\tfile\tcontents"
-        )
+        simple_file = SimpleUploadedFile("test_submission_upload.tsv", b"these\tare\tthe\tfile\tcontents")
 
         upload = SubmissionUpload.objects.create(
             submission=submission,
@@ -692,14 +651,10 @@ class TestCLI(TestCase):
         ena_submission_data = prepare_ena_data(submission=submission)
         # create AuditableTextData from all filename, filecontent tuples in
         #   ena_submission_data
-        store_ena_data_as_auditable_text_data(
-            submission=submission, data=ena_submission_data
-        )
+        store_ena_data_as_auditable_text_data(submission=submission, data=ena_submission_data)
 
         # basically assemble_ena_submission_data in task
-        study_text_data = submission.auditabletextdata_set.filter(
-            name="study.xml"
-        ).first()
+        study_text_data = submission.auditabletextdata_set.filter(name="study.xml").first()
         # print(study_text_data)
         request_data = {
             "STUDY": (
@@ -709,9 +664,7 @@ class TestCLI(TestCase):
         }
 
         # like in send_submission_to_ena
-        enalizer = Enalizer(
-            submission=submission, alias_postfix=submission.broker_submission_id
-        )
+        enalizer = Enalizer(submission=submission, alias_postfix=submission.broker_submission_id)
         outgoing_request_id = uuid4()
         request_data["SUBMISSION"] = enalizer.prepare_submission_xml_for_sending(
             action="ADD",
@@ -792,9 +745,7 @@ class TestCLI(TestCase):
 
         # OUTPUT dir -> where output from cli should go
         # output = io.StringIO()
-        submission_folder = os.path.join(
-            settings.MEDIA_ROOT, str(submission.broker_submission_id)
-        )
+        submission_folder = os.path.join(settings.MEDIA_ROOT, str(submission.broker_submission_id))
         # with open() as output:
         #     writer = csv.writer(output, delimiter=str('\t'))
         #     writer.writerow(('STUDY', study_pid.pid))
@@ -826,9 +777,7 @@ class TestCLI(TestCase):
         # precondition is:
         BrokerObject.objects.add_submission_data(submission)
         ena_submission_data = prepare_ena_data(submission=submission)
-        store_ena_data_as_auditable_text_data(
-            submission=submission, data=ena_submission_data
-        )
+        store_ena_data_as_auditable_text_data(submission=submission, data=ena_submission_data)
         # -------------------------------------------------------------
 
         responses.add(
@@ -843,18 +792,12 @@ class TestCLI(TestCase):
         from ..tasks.transfer_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
 
         submission_chain = (
-            register_study_at_ena_task.s(submission_id=submission.pk).set(
+            register_study_at_ena_task.s(submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
+            | process_ena_response_task.s(submission_id=submission.pk, close_submission_on_success=False).set(
                 countdown=SUBMISSION_DELAY
             )
-            | process_ena_response_task.s(
-            submission_id=submission.pk, close_submission_on_success=False
-        ).set(countdown=SUBMISSION_DELAY)
-            | submit_targeted_sequences_to_ena_task.s(submission_id=submission.pk).set(
-            countdown=SUBMISSION_DELAY
-        )
-            | process_targeted_sequence_results_task.s(submission_id=submission.pk).set(
-            countdown=SUBMISSION_DELAY
-        )
+            | submit_targeted_sequences_to_ena_task.s(submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
+            | process_targeted_sequence_results_task.s(submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
         )
 
         submission_chain()

@@ -20,9 +20,7 @@ from ...utils.task_utils import (
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def delete_submission_issue_attachment_task(
-    self, kwargs=None, submission_id=None, attachment_id=None
-):
+def delete_submission_issue_attachment_task(self, kwargs=None, submission_id=None, attachment_id=None):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
     )

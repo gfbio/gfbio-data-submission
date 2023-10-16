@@ -22,13 +22,8 @@ from gfbio_submissions.generic.models.site_configuration import SiteConfiguratio
 def check_for_pangaea_doi_task(self, resource_credential_id=None):
     TaskProgressReport.objects.create_initial_report(submission=None, task=self)
     # TODO: move this to top and check there are submissiont to fetch doi for, if not no request for login token is needed
-    submissions = Submission.objects.get_submitted_submissions_containing_reference(
-        reference_type=PANGAEA_JIRA_TICKET
-    )
-    logger.info(
-        msg="check_for_pangaea_doi_task. pulling pangaea dois for {} "
-        "submissions".format(len(submissions))
-    )
+    submissions = Submission.objects.get_submitted_submissions_containing_reference(reference_type=PANGAEA_JIRA_TICKET)
+    logger.info(msg="check_for_pangaea_doi_task. pulling pangaea dois for {} " "submissions".format(len(submissions)))
     # TODO: in general suboptimal to fetch sc for every submission in set, but neeeded, reconsider to refactor
     #   schedule in database etc.
     for sub in submissions:

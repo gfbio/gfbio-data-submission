@@ -35,9 +35,7 @@ def create_pangaea_issue_task(self, prev=None, submission_id=None):
         resource=site_configuration.pangaea_jira_server,
         token_resource=site_configuration.pangaea_token_server,
     )
-    jira_client.create_pangaea_issue(
-        site_config=site_configuration, submission=submission
-    )
+    jira_client.create_pangaea_issue(site_config=site_configuration, submission=submission)
     jira_error_auto_retry(
         jira_client=jira_client,
         task=self,

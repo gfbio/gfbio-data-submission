@@ -73,9 +73,7 @@ class TestPangaeaTasks(TestTasks):
             json={},
             status=400,
         )
-        result = create_pangaea_issue_task.apply_async(
-            kwargs={"submission_id": submission.pk}
-        )
+        result = create_pangaea_issue_task.apply_async(kwargs={"submission_id": submission.pk})
         self.assertTrue(result.successful())
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())
         additional_references = submission.additionalreference_set.all()
@@ -86,9 +84,7 @@ class TestPangaeaTasks(TestTasks):
         # self.assertEqual('https://issues.pangaea.de/rest/api/2/issue/',
         #                  request_logs.first().url)
 
-    @override_settings(
-        CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False
-    )
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False)
     @responses.activate
     def test_create_pangaea_issue_task_server_error(self):
         submission = Submission.objects.first()
@@ -176,9 +172,7 @@ class TestPangaeaTasks(TestTasks):
         )
         responses.add(
             responses.POST,
-            "{0}/rest/api/2/issue/PDI-12428/attachments".format(
-                site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/PDI-12428/attachments".format(site_config.helpdesk_server.url),
             json={"mocked_400": True},
             status=400,
         )
@@ -199,9 +193,7 @@ class TestPangaeaTasks(TestTasks):
         #                                 'PANGAEA_FAKE_KEY'),
         #     request_logs.first().url)
 
-    @override_settings(
-        CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False
-    )
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False)
     @responses.activate
     def test_attach_to_pangaea_issue_task_server_error(self):
         submission = Submission.objects.first()
@@ -216,9 +208,7 @@ class TestPangaeaTasks(TestTasks):
         )
         responses.add(
             responses.POST,
-            "{0}/rest/api/2/issue/PDI-12428/attachments".format(
-                site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/PDI-12428/attachments".format(site_config.helpdesk_server.url),
             json={"mocked_500": True},
             status=500,
         )
@@ -242,9 +232,7 @@ class TestPangaeaTasks(TestTasks):
     def test_add_accession_to_pangaea_issue_task_success(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
-        submission.brokerobject_set.filter(
-            type="study"
-        ).first().persistentidentifier_set.create(
+        submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.create(
             archive="ENA",
             pid_type="PRJ",
             pid="PRJEB20411",
@@ -254,9 +242,7 @@ class TestPangaeaTasks(TestTasks):
         self.assertEqual(0, len(request_logs))
         responses.add(
             responses.POST,
-            "{0}/{1}/comment".format(
-                site_config.pangaea_jira_server, "PANGAEA_FAKE_KEY"
-            ),
+            "{0}/{1}/comment".format(site_config.pangaea_jira_server, "PANGAEA_FAKE_KEY"),
             json=_get_pangaea_comment_response(),
             status=200,
         )
@@ -281,9 +267,7 @@ class TestPangaeaTasks(TestTasks):
     def test_add_accession_to_pangaea_issue_task_client_error(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
-        submission.brokerobject_set.filter(
-            type="study"
-        ).first().persistentidentifier_set.create(
+        submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.create(
             archive="ENA",
             pid_type="PRJ",
             pid="PRJEB20411",
@@ -293,9 +277,7 @@ class TestPangaeaTasks(TestTasks):
         self.assertEqual(0, len(request_logs))
         responses.add(
             responses.POST,
-            "{0}/{1}/comment".format(
-                site_config.pangaea_jira_server.url, "PANGAEA_FAKE_KEY"
-            ),
+            "{0}/{1}/comment".format(site_config.pangaea_jira_server.url, "PANGAEA_FAKE_KEY"),
             status=400,
         )
         result = add_accession_to_pangaea_issue_task.apply_async(
@@ -321,9 +303,7 @@ class TestPangaeaTasks(TestTasks):
     def test_add_accession_to_pangaea_issue_task_server_error(self):
         submission = Submission.objects.first()
         site_config = SiteConfiguration.objects.first()
-        submission.brokerobject_set.filter(
-            type="study"
-        ).first().persistentidentifier_set.create(
+        submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.create(
             archive="ENA",
             pid_type="PRJ",
             pid="PRJEB20411",
@@ -333,9 +313,7 @@ class TestPangaeaTasks(TestTasks):
         self.assertEqual(0, len(request_logs))
         responses.add(
             responses.POST,
-            "{0}/{1}/comment".format(
-                site_config.pangaea_jira_server.url, "PANGAEA_FAKE_KEY"
-            ),
+            "{0}/{1}/comment".format(site_config.pangaea_jira_server.url, "PANGAEA_FAKE_KEY"),
             status=500,
         )
         result = add_accession_to_pangaea_issue_task.apply_async(

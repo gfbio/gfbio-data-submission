@@ -31,6 +31,4 @@ class BrokerObjectTest(TestCase):
 
     def test_str(self):
         broker_object = BrokerObject.objects.first()
-        self.assertEqual(
-            "study_{0}".format(broker_object.object_id), broker_object.__str__()
-        )
+        self.assertEqual("study_{0}".format(broker_object.object_id), broker_object.__str__())

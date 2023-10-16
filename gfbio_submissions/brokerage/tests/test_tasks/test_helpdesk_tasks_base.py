@@ -20,17 +20,13 @@ class TestHelpDeskTasksBase(TestTasks):
         )
         responses.add(
             responses.POST,
-            "{0}{1}".format(
-                cls.default_site_config.helpdesk_server.url, JIRA_ISSUE_URL
-            ),
+            "{0}{1}".format(cls.default_site_config.helpdesk_server.url, JIRA_ISSUE_URL),
             json=cls.issue_json,
             status=200,
         )
         responses.add(
             responses.GET,
-            "{0}/rest/api/2/issue/SAND-1661".format(
-                cls.default_site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-1661".format(cls.default_site_config.helpdesk_server.url),
             json=cls.issue_json,
         )
 
@@ -43,9 +39,7 @@ class TestHelpDeskTasksBase(TestTasks):
         )
         responses.add(
             responses.POST,
-            "{0}{1}".format(
-                cls.default_site_config.helpdesk_server.url, JIRA_ISSUE_URL
-            ),
+            "{0}{1}".format(cls.default_site_config.helpdesk_server.url, JIRA_ISSUE_URL),
             json={},
             status=400,
         )
@@ -59,9 +53,7 @@ class TestHelpDeskTasksBase(TestTasks):
         )
         responses.add(
             responses.POST,
-            "{0}{1}".format(
-                cls.default_site_config.helpdesk_server.url, JIRA_ISSUE_URL
-            ),
+            "{0}{1}".format(cls.default_site_config.helpdesk_server.url, JIRA_ISSUE_URL),
             json={},
             status=500,
         )
@@ -90,20 +82,14 @@ class TestHelpDeskTasksBase(TestTasks):
         )
         responses.add(
             responses.GET,
-            "{0}/rest/api/2/issue/SAND-1661".format(
-                cls.default_site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/SAND-1661".format(cls.default_site_config.helpdesk_server.url),
             json=cls.issue_json,
         )
-        url = "{0}/rest/api/2/issue/16814".format(
-            cls.default_site_config.helpdesk_server.url
-        )
+        url = "{0}/rest/api/2/issue/16814".format(cls.default_site_config.helpdesk_server.url)
         responses.add(responses.PUT, url, body="", status=put_status_code)
         responses.add(
             responses.GET,
-            "{0}/rest/api/2/issue/16814".format(
-                cls.default_site_config.helpdesk_server.url
-            ),
+            "{0}/rest/api/2/issue/16814".format(cls.default_site_config.helpdesk_server.url),
             status=200,
             json=cls.issue_json,
         )

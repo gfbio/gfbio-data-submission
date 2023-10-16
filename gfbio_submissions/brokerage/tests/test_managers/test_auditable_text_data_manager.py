@@ -20,9 +20,7 @@ from ...serializers.submission_serializer import SubmissionSerializer
 class TestAuditableTextDataManager(TestCase):
     # TODO: move to utils or similar ...
     @classmethod
-    def _create_submission_via_serializer(
-        cls, runs=False, username=None, create_broker_objects=True
-    ):
+    def _create_submission_via_serializer(cls, runs=False, username=None, create_broker_objects=True):
         serializer = SubmissionSerializer(
             data={
                 "target": "ENA",
@@ -39,9 +37,7 @@ class TestAuditableTextDataManager(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        User.objects.create_user(
-            username="horst", email="horst@horst.de", password="password"
-        )
+        User.objects.create_user(username="horst", email="horst@horst.de", password="password")
         cls._create_submission_via_serializer()
         cls._create_submission_via_serializer()
 
@@ -49,9 +45,7 @@ class TestAuditableTextDataManager(TestCase):
         submission = Submission.objects.first()
         data = prepare_ena_data(submission)
         store_ena_data_as_auditable_text_data(submission, data)
-        res = AuditableTextData.objects.assemble_ena_submission_data(
-            submission=submission
-        )
+        res = AuditableTextData.objects.assemble_ena_submission_data(submission=submission)
         request_file_keys = ["SAMPLE", "STUDY", "EXPERIMENT", "RUN"]
         self.assertEqual(sorted(request_file_keys), sorted(list(res.keys())))
 
@@ -63,9 +57,7 @@ class TestAuditableTextDataManager(TestCase):
         self.assertEqual(0, len(AuditableTextData.objects.all()))
         store_ena_data_as_auditable_text_data(submission, data)
         self.assertEqual(2, len(AuditableTextData.objects.all()))
-        res = AuditableTextData.objects.assemble_ena_submission_data(
-            submission=submission
-        )
+        res = AuditableTextData.objects.assemble_ena_submission_data(submission=submission)
         request_file_keys = [
             "SAMPLE",
             "STUDY",
@@ -78,17 +70,13 @@ class TestAuditableTextDataManager(TestCase):
         self.assertEqual(0, len(AuditableTextData.objects.all()))
         store_ena_data_as_auditable_text_data(submission, data)
         self.assertEqual(4, len(AuditableTextData.objects.all()))
-        self.assertEqual(
-            4, len(AuditableTextData.objects.filter(submission=submission))
-        )
+        self.assertEqual(4, len(AuditableTextData.objects.filter(submission=submission)))
 
         submission_2 = Submission.objects.last()
         data = prepare_ena_data(submission_2)
         store_ena_data_as_auditable_text_data(submission_2, data)
         self.assertEqual(8, len(AuditableTextData.objects.all()))
-        self.assertEqual(
-            4, len(AuditableTextData.objects.filter(submission=submission_2))
-        )
+        self.assertEqual(4, len(AuditableTextData.objects.filter(submission=submission_2)))
 
     def test_manager_invalid_submission(self):
         submission = Submission.objects.first()
@@ -96,14 +84,8 @@ class TestAuditableTextDataManager(TestCase):
         self.assertEqual(0, len(AuditableTextData.objects.all()))
         store_ena_data_as_auditable_text_data(submission, data)
         self.assertEqual(4, len(AuditableTextData.objects.all()))
-        self.assertEqual(
-            4, len(AuditableTextData.objects.filter(submission=submission))
-        )
+        self.assertEqual(4, len(AuditableTextData.objects.filter(submission=submission)))
         submission_2 = Submission.objects.last()
-        self.assertEqual(
-            0, len(AuditableTextData.objects.filter(submission=submission_2))
-        )
-        res = AuditableTextData.objects.assemble_ena_submission_data(
-            submission=submission_2
-        )
+        self.assertEqual(0, len(AuditableTextData.objects.filter(submission=submission_2)))
+        res = AuditableTextData.objects.assemble_ena_submission_data(submission=submission_2)
         self.assertDictEqual({}, res)

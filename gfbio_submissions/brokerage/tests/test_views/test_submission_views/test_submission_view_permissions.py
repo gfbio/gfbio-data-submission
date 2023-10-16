@@ -30,72 +30,49 @@ class TestSubmissionViewPermissions(TestSubmissionView):
 
     def test_invalid_basic_auth(self):
         client = APIClient()
-        client.credentials(
-            HTTP_AUTHORIZATION="Basic "
-            + base64.b64encode(b"horst:wrong").decode("utf-8")
-        )
+        client.credentials(HTTP_AUTHORIZATION="Basic " + base64.b64encode(b"horst:wrong").decode("utf-8"))
         response = client.post("/api/submissions/", {"some": "data"}, format="json")
         self.assertEqual(401, response.status_code)
 
     def test_detail_invalid_basic_auth(self):
         client = APIClient()
-        client.credentials(
-            HTTP_AUTHORIZATION="Basic "
-            + base64.b64encode(b"horst:wrong").decode("utf-8")
-        )
+        client.credentials(HTTP_AUTHORIZATION="Basic " + base64.b64encode(b"horst:wrong").decode("utf-8"))
         response = client.get("/api/submissions/{0}/".format(uuid4()))
         self.assertEqual(401, response.status_code)
 
     def test_valid_basic_auth(self):
         client = APIClient()
-        client.credentials(
-            HTTP_AUTHORIZATION="Basic "
-            + base64.b64encode(b"horst:password").decode("utf-8")
-        )
+        client.credentials(HTTP_AUTHORIZATION="Basic " + base64.b64encode(b"horst:password").decode("utf-8"))
         response = client.post("/api/submissions/", {"some": "data"}, format="json")
         self.assertNotEqual(401, response.status_code)
         self.assertEqual(400, response.status_code)
 
     def test_super_user(self):
         client = APIClient()
-        client.credentials(
-            HTTP_AUTHORIZATION="Basic "
-            + base64.b64encode(b"admin:psst").decode("utf-8")
-        )
+        client.credentials(HTTP_AUTHORIZATION="Basic " + base64.b64encode(b"admin:psst").decode("utf-8"))
         response = client.post("/api/submissions/", {"some": "data"}, format="json")
         self.assertNotEqual(401, response.status_code)
         self.assertEqual(400, response.status_code)
 
     def test_staff_user(self):
         client = APIClient()
-        client.credentials(
-            HTTP_AUTHORIZATION="Basic "
-            + base64.b64encode(b"kevin:secret").decode("utf-8")
-        )
+        client.credentials(HTTP_AUTHORIZATION="Basic " + base64.b64encode(b"kevin:secret").decode("utf-8"))
         response = client.post("/api/submissions/", {"some": "data"}, format="json")
         self.assertNotEqual(401, response.status_code)
         self.assertEqual(400, response.status_code)
 
     def test_active_user(self):
         client = APIClient()
-        client.credentials(
-            HTTP_AUTHORIZATION="Basic "
-            + base64.b64encode(b"horst:password").decode("utf-8")
-        )
+        client.credentials(HTTP_AUTHORIZATION="Basic " + base64.b64encode(b"horst:password").decode("utf-8"))
         response = client.post("/api/submissions/", {"some": "data"}, format="json")
         self.assertNotEqual(401, response.status_code)
         self.assertEqual(400, response.status_code)
 
     def test_inactive_user(self):
-        user = User.objects.create_user(
-            username="inactive", email="in@acitve.de", password="nope", is_active=False
-        )
+        user = User.objects.create_user(username="inactive", email="in@acitve.de", password="nope", is_active=False)
         user.user_permissions.add(*self.permissions)
         client = APIClient()
-        client.credentials(
-            HTTP_AUTHORIZATION="Basic "
-            + base64.b64encode(b"inactive:nope").decode("utf-8")
-        )
+        client.credentials(HTTP_AUTHORIZATION="Basic " + base64.b64encode(b"inactive:nope").decode("utf-8"))
         response = client.post("/api/submissions/")
         self.assertEqual(401, response.status_code)
 
@@ -103,10 +80,7 @@ class TestSubmissionViewPermissions(TestSubmissionView):
     def test_active_user_without_permissions(self):
         User.objects.create_user(username="noperm", email="no@perm.de", password="nope")
         client = APIClient()
-        client.credentials(
-            HTTP_AUTHORIZATION="Basic "
-            + base64.b64encode(b"noperm:nope").decode("utf-8")
-        )
+        client.credentials(HTTP_AUTHORIZATION="Basic " + base64.b64encode(b"noperm:nope").decode("utf-8"))
         response = client.post("/api/submissions/", {}, format="json")
         self.assertEqual(403, response.status_code)
 

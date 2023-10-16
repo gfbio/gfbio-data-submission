@@ -28,9 +28,7 @@ def prepare_ena_submission_data_task(self, prev_task_result=None, submission_id=
         with transaction.atomic():
             submission.auditabletextdata_set.all().delete()
         ena_submission_data = prepare_ena_data(submission=submission)
-        store_ena_data_as_auditable_text_data(
-            submission=submission, data=ena_submission_data
-        )
+        store_ena_data_as_auditable_text_data(submission=submission, data=ena_submission_data)
         # TODO: this will become obsolete once, data is taken from AuditableTextData ....
         return ena_submission_data
     else:

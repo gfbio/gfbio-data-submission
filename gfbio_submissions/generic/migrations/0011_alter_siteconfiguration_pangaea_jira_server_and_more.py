@@ -5,7 +5,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("generic", "0010_alter_resourcecredential_id_and_more"),
     ]

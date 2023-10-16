@@ -57,15 +57,9 @@ def attach_to_submission_issue_task(
     #  implemented
     if reference:
         submission_upload = (
-            submission.submissionupload_set.filter(attach_to_ticket=True)
-            .filter(pk=submission_upload_id)
-            .first()
+            submission.submissionupload_set.filter(attach_to_ticket=True).filter(pk=submission_upload_id).first()
         )
-        logger.info(
-            msg="attach_to_submission_issue_task | submission_upload={0}".format(
-                submission_upload
-            )
-        )
+        logger.info(msg="attach_to_submission_issue_task | submission_upload={0}".format(submission_upload))
         if submission_upload:
             do_attach = False
             if submission_upload.attachment_id is None:
@@ -104,11 +98,7 @@ def attach_to_submission_issue_task(
             submission_upload.modified_recently = False
             submission_upload.save(ignore_attach_to_ticket=True)
 
-            logger.info(
-                msg="attach_to_submission_issue_task | do_attach={0} | return {1}".format(
-                    do_attach, True
-                )
-            )
+            logger.info(msg="attach_to_submission_issue_task | do_attach={0} | return {1}".format(do_attach, True))
 
             return True
         else:

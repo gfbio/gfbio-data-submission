@@ -23,17 +23,13 @@ class TestSubmissionUpload(TestCase):
     def tearDownClass(cls):
         super(TestSubmissionUpload, cls).tearDownClass()
         [
-            shutil.rmtree(
-                path="{0}{1}{2}".format(MEDIA_ROOT, os.sep, o), ignore_errors=False
-            )
+            shutil.rmtree(path="{0}{1}{2}".format(MEDIA_ROOT, os.sep, o), ignore_errors=False)
             for o in os.listdir(MEDIA_ROOT)
         ]
 
     @classmethod
     def _create_submission_upload(cls, size=0):
-        simple_file = SimpleUploadedFile(
-            "test_submission_upload.txt", b"these are the file contents!"
-        )
+        simple_file = SimpleUploadedFile("test_submission_upload.txt", b"these are the file contents!")
         return SubmissionUpload.objects.create(
             submission=Submission.objects.first(),
             user=User.objects.first(),
@@ -54,9 +50,7 @@ class TestSubmissionUpload(TestCase):
 
     def test_md5_checksum(self):
         submission_upload = self._create_submission_upload()
-        self.assertEqual(
-            "e3cb20d82bf3ecc6957b89907e409370", submission_upload.md5_checksum
-        )
+        self.assertEqual("e3cb20d82bf3ecc6957b89907e409370", submission_upload.md5_checksum)
 
     @skip("creates a huge file under media/<bsi>/....txt")
     def test_huge_file_md5(self):
@@ -70,12 +64,8 @@ class TestSubmissionUpload(TestCase):
         # sys	0m4,519s
 
         # MD5 took  5.114250603999608  seconds
-        with open(
-            os.path.join(_get_test_data_dir_path(), "generated.txt"), "rb"
-        ) as data_file:
-            simple_file = SimpleUploadedFile(
-                "test_submission_upload.txt", data_file.read()
-            )
+        with open(os.path.join(_get_test_data_dir_path(), "generated.txt"), "rb") as data_file:
+            simple_file = SimpleUploadedFile("test_submission_upload.txt", data_file.read())
             SubmissionUpload.objects.create(
                 submission=Submission.objects.first(),
                 user=User.objects.first(),
@@ -87,9 +77,7 @@ class TestSubmissionUpload(TestCase):
         SubmissionUpload.objects.create(
             submission=Submission.objects.first(),
             user=User.objects.first(),
-            file=SimpleUploadedFile(
-                "test_submission_upload.txt", b"these are the file contents!"
-            ),
+            file=SimpleUploadedFile("test_submission_upload.txt", b"these are the file contents!"),
         )
         SubmissionUpload.objects.create(
             submission=Submission.objects.first(),

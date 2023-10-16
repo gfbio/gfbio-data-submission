@@ -33,9 +33,7 @@ logger = logging.getLogger(__name__)
     retry_jitter=True,
 )
 def jira_initial_comment_task(self, prev=None, submission_id=None):
-    logger.info(
-        "tasks.py | jira_initial_comment_task | submission_id={}".format(submission_id)
-    )
+    logger.info("tasks.py | jira_initial_comment_task | submission_id={}".format(submission_id))
 
     submission, site_config = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=False
@@ -67,9 +65,7 @@ def jira_initial_comment_task(self, prev=None, submission_id=None):
             )
 
             jira_client = JiraClient(resource=site_config.helpdesk_server)
-            jira_client.add_comment(
-                key_or_issue=reference.reference_key, text=comment, is_internal=False
-            )
+            jira_client.add_comment(key_or_issue=reference.reference_key, text=comment, is_internal=False)
             jira_error_auto_retry(
                 jira_client=jira_client,
                 task=self,

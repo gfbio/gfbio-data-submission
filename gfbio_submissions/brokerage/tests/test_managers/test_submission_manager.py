@@ -16,17 +16,11 @@ class SubmissionManagerTest(TestCase):
         cls.broker_submission_id = Submission.objects.first().broker_submission_id
 
     def test_get_submission_instance(self):
-        broker_submission_ids = Submission.objects.all().values_list(
-            "broker_submission_id"
-        )
-        submission = Submission.objects.get_submission_instance(
-            self.broker_submission_id
-        )
+        broker_submission_ids = Submission.objects.all().values_list("broker_submission_id")
+        submission = Submission.objects.get_submission_instance(self.broker_submission_id)
         self.assertIn((submission.broker_submission_id,), broker_submission_ids)
 
-        submission = Submission.objects.get_submission_instance(
-            "4cffff16-cfff-4dff-baff-ffff9d5e4fff"
-        )
+        submission = Submission.objects.get_submission_instance("4cffff16-cfff-4dff-baff-ffff9d5e4fff")
         self.assertIsInstance(submission, Submission)
         self.assertNotIn((submission.broker_submission_id,), broker_submission_ids)
 
@@ -91,9 +85,7 @@ class SubmissionManagerTest(TestCase):
 
     def test_get_submissions_without_primary_helpdesk_issue(self):
         submissions = Submission.objects.all()
-        no_issue_submissions = (
-            Submission.objects.get_submissions_without_primary_helpdesk_issue()
-        )
+        no_issue_submissions = Submission.objects.get_submissions_without_primary_helpdesk_issue()
         self.assertEqual(len(submissions), len(no_issue_submissions))
 
 
@@ -110,9 +102,7 @@ class TestSubmissionManagerSubmittingUser(TestCase):
             is_site=False,
             is_user=True,
         )
-        user_3 = User.objects.create(
-            username="user3", is_site=False, is_user=True, email="user3@user3.com"
-        )
+        user_3 = User.objects.create(username="user3", is_site=False, is_user=True, email="user3@user3.com")
         Submission.objects.create(user=user)
         Submission.objects.create(
             user=user_2,

@@ -30,17 +30,13 @@ from ...utils.task_utils import (
     retry_backoff=SUBMISSION_RETRY_DELAY,
     retry_jitter=True,
 )
-def transfer_data_to_ena_task(
-    self, prepare_result=None, submission_id=None, action="ADD"
-):
+def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None, action="ADD"):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
     )
     if submission == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
-    ena_submission_data = AuditableTextData.objects.assemble_ena_submission_data(
-        submission=submission
-    )
+    ena_submission_data = AuditableTextData.objects.assemble_ena_submission_data(submission=submission)
     if ena_submission_data == {}:
         return TaskProgressReport.CANCELLED
     try:

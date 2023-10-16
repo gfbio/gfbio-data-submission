@@ -69,8 +69,7 @@ library_selection_mappings = {
     "hybrid selection": "Hybrid Selection",
     "inverse rrna": "Inverse rRNA",
     "inverse rrna selection": "Inverse rRNA selection",
-    "mbd2 protein methyl-cpg binding domain": "MBD2 protein methyl-CpG binding "
-    "domain",
+    "mbd2 protein methyl-cpg binding domain": "MBD2 protein methyl-CpG binding " "domain",
     "mda": "MDA",
     "mf": "MF",
     "mnase": "MNase",
@@ -122,8 +121,7 @@ library_strategy_mappings = {
     "ssrna-seq": "ssRNA-seq",
     "synthetic-long-read": "Synthetic-Long-Read",
     "targeted-capture": "Targeted-Capture",
-    "tethered chromatin conformation capture": "Tethered Chromatin Conformation "
-    "Capture",
+    "tethered chromatin conformation capture": "Tethered Chromatin Conformation " "Capture",
     "tn-seq": "Tn-Seq",
     "validation": "VALIDATION",
     "wcs": "WCS",
@@ -205,26 +203,14 @@ def extract_sample(row, field_names, sample_id):
 
     sample_attributes = []
     for o in field_names:
-        if (
-            o not in core_fields
-            and len(row[o])
-            and row[o] not in attribute_value_blacklist
-        ):
+        if o not in core_fields and len(row[o]) and row[o] not in attribute_value_blacklist:
             if o in unit_mapping_keys:
-                sample_attributes.append(
-                    OrderedDict(
-                        [("tag", o), ("value", row[o]), ("units", unit_mapping[o])]
-                    )
-                )
+                sample_attributes.append(OrderedDict([("tag", o), ("value", row[o]), ("units", unit_mapping[o])]))
             else:
                 if str(o).lower() == "environmental package":
-                    sample_attributes.append(
-                        OrderedDict([("tag", o), ("value", row[o].lower())])
-                    )
+                    sample_attributes.append(OrderedDict([("tag", o), ("value", row[o].lower())]))
                 else:
-                    sample_attributes.append(
-                        OrderedDict([("tag", o), ("value", row[o])])
-                    )
+                    sample_attributes.append(OrderedDict([("tag", o), ("value", row[o])]))
 
     try:
         taxon_id = int(row.get("taxon_id", "-1"))
@@ -300,9 +286,7 @@ def find_correct_platform_and_model(platform_value):
 
             # partial match
             partial_instrument = (
-                "unspecified"
-                if len(platform_value_fixed.split()) == 1
-                else platform_value_fixed.split()[1:]
+                "unspecified" if len(platform_value_fixed.split()) == 1 else platform_value_fixed.split()[1:]
             )
             if partial_instrument != "unspecified":
                 partial_instrument = " ".join(partial_instrument)
@@ -311,9 +295,7 @@ def find_correct_platform_and_model(platform_value):
                 partial_platform_match.append({platform: ""})
                 for instrument in instruments:
                     if partial_instrument == instrument.lower():
-                        partial_platform_match[len(partial_platform_match) - 1][
-                            platform
-                        ] = instrument
+                        partial_platform_match[len(partial_platform_match) - 1][platform] = instrument
 
             # combined value match
             if combined_platform_value == platform.lower():
@@ -321,9 +303,7 @@ def find_correct_platform_and_model(platform_value):
 
     if len(matched_platforms_value_as_instrument) == 1:
         platform_key = list(matched_platforms_value_as_instrument[0].keys())[0]
-        return (
-            platform_key + " " + matched_platforms_value_as_instrument[0][platform_key]
-        )
+        return platform_key + " " + matched_platforms_value_as_instrument[0][platform_key]
     elif len(matched_platforms_value_as_platform) == 1:
         # check if unspecified value is allowed
         if "unspecified" in json_dict[matched_platforms_value_as_platform[0]]["enum"]:
@@ -333,10 +313,7 @@ def find_correct_platform_and_model(platform_value):
     elif len(combined_vlaue_match) == 1:
         platform_key = list(combined_vlaue_match[0].keys())[0]
         # check if unspecified value is allowed
-        if (
-            combined_vlaue_match[0][platform_key] == "unspecified"
-            and "unspecified" in json_dict[platform_key]["enum"]
-        ):
+        if combined_vlaue_match[0][platform_key] == "unspecified" and "unspecified" in json_dict[platform_key]["enum"]:
             return platform_key + " unspecified"
         else:
             return platform_key + " " + combined_vlaue_match[0][platform_key]
@@ -360,9 +337,7 @@ def extract_experiment(experiment_id, row, sample_id):
         nominal_length = int(row.get("nominal_length", "-1"))
     except ValueError as e:
         nominal_length = -1
-    fixed_platform_value = find_correct_platform_and_model(
-        row.get("sequencing_platform", "")
-    )
+    fixed_platform_value = find_correct_platform_and_model(row.get("sequencing_platform", ""))
     experiment = {
         "experiment_alias": experiment_id,
         "platform": " ".join(fixed_platform_value.split()[1:]),
@@ -474,9 +449,7 @@ def parse_molecular_csv(csv_file):
 
                 experiment = extract_experiment(experiment_id, row, sample_id)
             else:
-                experiment = extract_experiment(
-                    experiment_id, row, sample_ids[sample_titles.index(title)]
-                )
+                experiment = extract_experiment(experiment_id, row, sample_ids[sample_titles.index(title)])
 
             molecular_requirements["experiments"].append(experiment)
     return molecular_requirements
@@ -524,9 +497,7 @@ def check_for_molecular_content(submission):
     logger.info(
         msg="check_for_molecular_content | "
         "process submission={0} | target={1} | release={2}"
-        "".format(
-            submission.broker_submission_id, submission.target, submission.release
-        )
+        "".format(submission.broker_submission_id, submission.target, submission.release)
     )
 
     status = False
@@ -538,16 +509,12 @@ def check_for_molecular_content(submission):
         status = True
         check_performed = True
         submission.target = ENA
-        submission.data.get("requirements", {})[
-            "data_center"
-        ] = "ENA – European Nucleotide Archive"
+        submission.data.get("requirements", {})["data_center"] = "ENA – European Nucleotide Archive"
         submission.save()
         logger.info(
             msg="check_for_molecular_content  | check_csv_file_rule=True | "
             "return status={0} messages={1} "
-            "molecular_data_check_performed={2}".format(
-                status, messages, check_performed
-            )
+            "molecular_data_check_performed={2}".format(status, messages, check_performed)
         )
 
     # FIXME: this is redundant to method above
@@ -555,21 +522,15 @@ def check_for_molecular_content(submission):
         status = True
         check_performed = True
         submission.target = ENA
-        submission.data.get("requirements", {})[
-            "data_center"
-        ] = "ENA – European Nucleotide Archive"
+        submission.data.get("requirements", {})["data_center"] = "ENA – European Nucleotide Archive"
         submission.save()
         logger.info(
             msg="check_for_molecular_content  | check_metadata_rule=True | "
             "return status={0} messages={1} "
-            "molecular_data_check_performed={2}".format(
-                status, messages, check_performed
-            )
+            "molecular_data_check_performed={2}".format(status, messages, check_performed)
         )
 
-    if submission.release and submission.data.get("requirements", {}).get(
-        "data_center", ""
-    ).count("ENA"):
+    if submission.release and submission.data.get("requirements", {}).get("data_center", "").count("ENA"):
         check_performed = True
         submission.target = ENA
         submission.save()
@@ -583,9 +544,7 @@ def check_for_molecular_content(submission):
                 "invalid no. of meta_data_files, {0} | return=False"
                 "".format(no_of_meta_data_files)
             )
-            messages = [
-                "invalid no. of meta_data_files, " "{0}".format(no_of_meta_data_files)
-            ]
+            messages = ["invalid no. of meta_data_files, " "{0}".format(no_of_meta_data_files)]
             return status, messages, check_performed
 
         meta_data_file = meta_data_files.first()
@@ -594,32 +553,23 @@ def check_for_molecular_content(submission):
                 file,
             )
         submission.data.get("requirements", {}).update(molecular_requirements)
-        path = os.path.join(
-            os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json"
-        )
+        path = os.path.join(os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json")
         valid, full_errors = validate_data_full(
             data=submission.data,
             target=ENA_PANGAEA,
             schema_location=path,
         )
         if valid:
-            logger.info(
-                msg="check_for_molecular_content | valid data from csv |" " return=True"
-            )
+            logger.info(msg="check_for_molecular_content | valid data from csv |" " return=True")
             status = True
         else:
             messages = [e.message for e in full_errors]
             submission.data.update({"validation": messages})
-            logger.info(
-                msg="check_for_molecular_content  | invalid data from csv |"
-                " return=False"
-            )
+            logger.info(msg="check_for_molecular_content  | invalid data from csv |" " return=False")
 
         submission.save()
         logger.info(
             msg="check_for_molecular_content  | finished | return status={0} "
-            "messages={1} molecular_data_check_performed={2}".format(
-                status, messages, check_performed
-            )
+            "messages={1} molecular_data_check_performed={2}".format(status, messages, check_performed)
         )
     return status, messages, check_performed

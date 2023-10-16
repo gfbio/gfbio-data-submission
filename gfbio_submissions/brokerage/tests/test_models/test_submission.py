@@ -18,9 +18,7 @@ from gfbio_submissions.users.models import User
 class SubmissionTest(TestCase):
     # TODO: move to utils or similar ...
     @classmethod
-    def _create_submission_via_serializer(
-        cls, runs=False, username=None, create_broker_objects=True
-    ):
+    def _create_submission_via_serializer(cls, runs=False, username=None, create_broker_objects=True):
         serializer = SubmissionSerializer(
             data={
                 "target": "ENA",
@@ -126,15 +124,11 @@ class SubmissionTest(TestCase):
     def test_get_json_with_aliases_with_file_in_experiment(self):
         submission = self._create_submission_via_serializer()
         request_id_fake = uuid.UUID("71d59109-695d-4172-a8be-df6fb3283857")
-        study, samples, experiments, runs = submission.get_json_with_aliases(
-            alias_postfix=request_id_fake
-        )
+        study, samples, experiments, runs = submission.get_json_with_aliases(alias_postfix=request_id_fake)
         study_alias = study.get("study_alias", None)
         sample_aliases = [s.get("sample_alias", "") for s in samples]
         experiment_aliases = [e.get("experiment_alias", "") for e in experiments]
-        experiment_sample_descriptors = [
-            e.get("design", {}).get("sample_descriptor", "") for e in experiments
-        ]
+        experiment_sample_descriptors = [e.get("design", {}).get("sample_descriptor", "") for e in experiments]
         experiment_study_refs = [e.get("study_ref", "") for e in experiments]
         run_experiment_refs = [r.get("experiment_ref") for r in runs]
 
@@ -150,35 +144,23 @@ class SubmissionTest(TestCase):
     def test_get_json_with_aliases_with_additional_files_in_experiment(self):
         submission = self._create_submission_via_serializer(runs=True)
         request_id_fake = uuid.UUID("71d59109-695d-4172-a8be-df6fb3283857")
-        study, samples, experiments, runs = submission.get_json_with_aliases(
-            alias_postfix=request_id_fake
-        )
+        study, samples, experiments, runs = submission.get_json_with_aliases(alias_postfix=request_id_fake)
 
         # TODO: expected db content regarding brokerobjects. for debugging.
         # 1 study
         self.assertEqual(
             1,
-            len(
-                BrokerObject.objects.filter(submissions=submission).filter(type="study")
-            ),
+            len(BrokerObject.objects.filter(submissions=submission).filter(type="study")),
         )
         # 5 samples -> compare json.samples
         self.assertEqual(
             5,
-            len(
-                BrokerObject.objects.filter(submissions=submission).filter(
-                    type="sample"
-                )
-            ),
+            len(BrokerObject.objects.filter(submissions=submission).filter(type="sample")),
         )
         # 5 experiments -> compare json.experiments
         self.assertEqual(
             5,
-            len(
-                BrokerObject.objects.filter(submissions=submission).filter(
-                    type="experiment"
-                )
-            ),
+            len(BrokerObject.objects.filter(submissions=submission).filter(type="experiment")),
         )
         # 6 runs ->  2 runs in json run block (1 file each) plus 4 (of 5)
         # experiments contain files block (2 files each)
@@ -190,9 +172,7 @@ class SubmissionTest(TestCase):
         study_alias = study.get("study_alias", None)
         sample_aliases = [s.get("sample_alias", "") for s in samples]
         experiment_aliases = [e.get("experiment_alias", "") for e in experiments]
-        experiment_sample_descriptors = [
-            e.get("design", {}).get("sample_descriptor", "") for e in experiments
-        ]
+        experiment_sample_descriptors = [e.get("design", {}).get("sample_descriptor", "") for e in experiments]
         experiment_study_refs = [e.get("study_ref", "") for e in experiments]
         run_experiment_refs = [r.get("experiment_ref") for r in runs]
 

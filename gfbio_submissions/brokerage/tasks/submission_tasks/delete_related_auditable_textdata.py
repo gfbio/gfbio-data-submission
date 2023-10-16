@@ -12,9 +12,7 @@ from ...utils.task_utils import get_submission_and_site_configuration
     bind=True,
     name="tasks.delete_related_auditable_textdata_task",
 )
-def delete_related_auditable_textdata_task(
-    self, prev_task_result=None, submission_id=None
-):
+def delete_related_auditable_textdata_task(self, prev_task_result=None, submission_id=None):
     submission, site_configuration = get_submission_and_site_configuration(
         submission_id=submission_id, task=self, include_closed=True
     )

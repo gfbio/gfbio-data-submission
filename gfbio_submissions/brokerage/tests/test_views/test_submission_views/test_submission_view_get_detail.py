@@ -16,9 +16,7 @@ from ....models.submission import Submission
 class TestSubmissionViewGetDetailRequests(TestSubmissionView):
     @responses.activate
     def _prepare_submissions_for_various_users(self):
-        self._add_gfbio_helpdesk_user_service_response(
-            user_name="regular_user_2", email="re2@gu.la"
-        )
+        self._add_gfbio_helpdesk_user_service_response(user_name="regular_user_2", email="re2@gu.la")
         self._add_create_ticket_response()
         regular_user = User.objects.get(username="regular_user")
         self._post_submission_with_submitting_user(regular_user.id)
@@ -32,9 +30,7 @@ class TestSubmissionViewGetDetailRequests(TestSubmissionView):
         self._add_create_ticket_response()
         self._post_submission()
         submission = Submission.objects.first()
-        response = self.api_client.get(
-            "/api/submissions/{0}/".format(submission.broker_submission_id)
-        )
+        response = self.api_client.get("/api/submissions/{0}/".format(submission.broker_submission_id))
         content = json.loads(response.content.decode("utf-8"))
         self.assertEqual(200, response.status_code)
         self.assertTrue(isinstance(content, dict))
@@ -49,14 +45,10 @@ class TestSubmissionViewGetDetailRequests(TestSubmissionView):
             type="study",
             user=User.objects.first(),
         )
-        submission.brokerobject_set.filter(
-            type="study"
-        ).first().persistentidentifier_set.create(
+        submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.create(
             archive="ENA", pid_type="PRJ", pid="PRJE0815"
         )
-        response = self.api_client.get(
-            "/api/submissions/{0}/".format(submission.broker_submission_id)
-        )
+        response = self.api_client.get("/api/submissions/{0}/".format(submission.broker_submission_id))
         content = json.loads(response.content.decode("utf-8"))
         self.assertEqual(content["accession_id"][0]["pid"], "PRJE0815")
         self.assertEqual(200, response.status_code)
@@ -76,9 +68,7 @@ class TestSubmissionViewGetDetailRequests(TestSubmissionView):
             reference_key="SAND-0815",
         )
 
-        response = self.api_client.get(
-            "/api/submissions/{0}/".format(submission.broker_submission_id)
-        )
+        response = self.api_client.get("/api/submissions/{0}/".format(submission.broker_submission_id))
         content = json.loads(response.content.decode("utf-8"))
         self.assertEqual(200, response.status_code)
         self.assertIn("issue", content)
