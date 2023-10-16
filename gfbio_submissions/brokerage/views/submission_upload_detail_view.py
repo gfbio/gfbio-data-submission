@@ -89,7 +89,9 @@ class SubmissionUploadDetailView(
 
     def delete(self, request, *args, **kwargs):
         obj = self.get_object()
-        from ..tasks import delete_submission_issue_attachment_task
+        from ..tasks.jira_tasks.delete_submission_issue_attachment import (
+            delete_submission_issue_attachment_task,
+        )
 
         delete_submission_issue_attachment_task.apply_async(
             kwargs={

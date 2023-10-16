@@ -322,7 +322,7 @@ def jira_error_auto_retry(
 
 
 def jira_cancel_issue(submission_id=None, admin=False):
-    from ..tasks import jira_cancel_issue_task
+    from ..tasks.jira_tasks.jira_cancel_issue import jira_cancel_issue_task
 
     jira_cancel_issue_task.apply_async(
         kwargs={

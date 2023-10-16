@@ -8,8 +8,7 @@ from django.db.models import Count
 from django.http import HttpResponse
 from django.utils.encoding import smart_bytes
 
-from .configuration.settings import SUBMISSION_DELAY, \
-    SUBMISSION_UPLOAD_RETRY_DELAY
+from .configuration.settings import SUBMISSION_DELAY, SUBMISSION_UPLOAD_RETRY_DELAY
 from .models.additional_reference import AdditionalReference
 from .models.auditable_text_data import AuditableTextData
 from .models.broker_object import BrokerObject
@@ -21,8 +20,7 @@ from .models.submission import Submission
 from .models.submission_upload import SubmissionUpload
 from .models.task_progress_report import TaskProgressReport
 from .utils.ena import release_study_on_ena
-from .utils.submission_transfer import \
-    SubmissionTransferHandler
+from .utils.submission_transfer import SubmissionTransferHandler
 from .utils.task_utils import jira_cancel_issue
 
 
@@ -110,10 +108,9 @@ cancel_selected_submissions.short_description = "Cancel selected submissions"
 
 
 def create_broker_objects_and_ena_xml(modeladmin, request, queryset):
-    from gfbio_submissions.brokerage.tasks import (
-        create_broker_objects_from_submission_data_task,
-        prepare_ena_submission_data_task,
-    )
+    from .tasks.broker_object_tasks.create_broker_objects_from_submission_data import create_broker_objects_from_submission_data_task
+    from .tasks.auditable_text_data_tasks.prepare_ena_submission_data import prepare_ena_submission_data_task
+
 
     for obj in queryset:
         chain = create_broker_objects_from_submission_data_task.s(
@@ -130,7 +127,7 @@ create_broker_objects_and_ena_xml.short_description = "Create BrokerObjects & XM
 
 
 def re_create_ena_xml(model_admin, request, queryset):
-    from gfbio_submissions.brokerage.tasks import prepare_ena_submission_data_task
+    from .tasks.auditable_text_data_tasks.prepare_ena_submission_data import prepare_ena_submission_data_task
 
     for obj in queryset:
         obj.auditabletextdata_set.all().delete()
@@ -182,7 +179,7 @@ download_auditable_text_data.short_description = "Download XMLs"
 
 
 def validate_against_ena(modeladmin, request, queryset):
-    from gfbio_submissions.brokerage.tasks import validate_against_ena_task
+    from .tasks.transfer_tasks.validate_against_ena import validate_against_ena_task
 
     for obj in queryset:
         validate_against_ena_task.apply_async(
@@ -194,7 +191,7 @@ validate_against_ena.short_description = "Validate against ENA production server
 
 
 def submit_to_ena_test(modeladmin, request, queryset):
-    from gfbio_submissions.brokerage.tasks import submit_to_ena_test_server_task
+    from .tasks.transfer_tasks.submit_to_ena_test_server import submit_to_ena_test_server_task
 
     for obj in queryset:
         submit_to_ena_test_server_task.apply_async(
@@ -223,7 +220,7 @@ perform_assembly_submission.short_description = "Perform Assembly Submission"
 
 
 def modify_ena_objects_with_current_xml(modeladmin, request, queryset):
-    from gfbio_submissions.brokerage.tasks import transfer_data_to_ena_task
+    from .tasks.transfer_tasks.transfer_data_to_ena import transfer_data_to_ena_task
 
     for obj in queryset:
         transfer_data_to_ena_task.apply_async(
@@ -475,12 +472,11 @@ class PrimaryDataFileAdmin(admin.ModelAdmin):
 
 
 def reparse_csv_metadata(modeladmin, request, queryset):
-    from gfbio_submissions.brokerage.tasks import (
-        clean_submission_for_update_task,
-        parse_csv_to_update_clean_submission_task,
-        create_broker_objects_from_submission_data_task,
-        update_ena_submission_data_task,
-    )
+    from .tasks.submission_upload_tasks.clean_submission_for_update import clean_submission_for_update_task
+    from .tasks.submission_upload_tasks.parse_csv_to_update_clean_submission import parse_csv_to_update_clean_submission_task
+    from .tasks.broker_object_tasks.create_broker_objects_from_submission_data import create_broker_objects_from_submission_data_task
+    from .tasks.auditable_text_data_tasks.update_ena_submission_data import update_ena_submission_data_task
+
 
     for obj in queryset:
         submission_upload_id = obj.id

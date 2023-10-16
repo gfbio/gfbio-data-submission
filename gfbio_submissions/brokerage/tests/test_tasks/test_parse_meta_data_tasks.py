@@ -4,15 +4,6 @@ import shutil
 
 from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY
-
-# from gfbio_submissions.brokerage.models import Submission, TaskProgressReport, \
-#     SubmissionUpload
-from gfbio_submissions.brokerage.tasks import (
-    create_broker_objects_from_submission_data_task,
-    clean_submission_for_update_task,
-    parse_csv_to_update_clean_submission_task,
-    update_ena_submission_data_task,
-)
 from gfbio_submissions.brokerage.utils.ena import (
     prepare_ena_data,
     store_ena_data_as_auditable_text_data,
@@ -23,6 +14,12 @@ from ..test_utils.test_csv_parsing import TestCSVParsing
 from ...models.submission import Submission
 from ...models.submission_upload import SubmissionUpload
 from ...models.task_progress_report import TaskProgressReport
+from ...tasks.auditable_text_data_tasks.update_ena_submission_data import update_ena_submission_data_task
+from ...tasks.broker_object_tasks.create_broker_objects_from_submission_data import \
+    create_broker_objects_from_submission_data_task
+from ...tasks.submission_upload_tasks.clean_submission_for_update import clean_submission_for_update_task
+from ...tasks.submission_upload_tasks.parse_csv_to_update_clean_submission import \
+    parse_csv_to_update_clean_submission_task
 
 
 class TestParseMetaDataForUpdateTask(TestTasks):
@@ -79,16 +76,16 @@ class TestParseMetaDataForUpdateTask(TestTasks):
                 submission_upload_id=submission_upload.id,
             ).set(countdown=SUBMISSION_DELAY)
             | parse_csv_to_update_clean_submission_task.s(
-                submission_upload_id=submission_upload.id,
-            ).set(countdown=SUBMISSION_DELAY)
+            submission_upload_id=submission_upload.id,
+        ).set(countdown=SUBMISSION_DELAY)
             | create_broker_objects_from_submission_data_task.s(
-                submission_id=SubmissionUpload.objects.get_related_submission_id(
-                    submission_upload.id
-                )
-            ).set(countdown=SUBMISSION_DELAY)
+            submission_id=SubmissionUpload.objects.get_related_submission_id(
+                submission_upload.id
+            )
+        ).set(countdown=SUBMISSION_DELAY)
             | update_ena_submission_data_task.s(
-                submission_upload_id=submission_upload.id,
-            ).set(countdown=SUBMISSION_DELAY)
+            submission_upload_id=submission_upload.id,
+        ).set(countdown=SUBMISSION_DELAY)
         )
 
         reparse_chain()

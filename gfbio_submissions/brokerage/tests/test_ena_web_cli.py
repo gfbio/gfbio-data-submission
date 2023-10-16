@@ -12,15 +12,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils.encoding import smart_str
 
-from ..tasks import (
-    create_study_broker_objects_only_task,
-    prepare_ena_study_xml_task,
-    register_study_at_ena_task,
-    process_ena_response_task,
-    create_targeted_sequence_ena_manifest_task,
-    submit_targeted_sequences_to_ena_task,
-    process_targeted_sequence_results_task,
-)
 from gfbio_submissions.brokerage.tests.utils import (
     _get_ena_data,
     _get_ena_register_study_response,
@@ -54,6 +45,14 @@ from ..models.center_name import CenterName
 from ..models.persistent_identifier import PersistentIdentifier
 from ..models.submission import Submission
 from ..models.task_progress_report import TaskProgressReport
+from ..tasks.auditable_text_data_tasks.create_targeted_sequence_ena_manifest import \
+    create_targeted_sequence_ena_manifest_task
+from ..tasks.auditable_text_data_tasks.prepare_ena_study_xml import prepare_ena_study_xml_task
+from ..tasks.broker_object_tasks.create_study_broker_objects_only import create_study_broker_objects_only_task
+from ..tasks.transfer_tasks.process_ena_response import process_ena_response_task
+from ..tasks.transfer_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
+from ..tasks.transfer_tasks.register_study_at_ena import register_study_at_ena_task
+from ..tasks.transfer_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
 
 
 class TestTargetedSequencePreparationTasks(TestCase):
@@ -840,26 +839,25 @@ class TestCLI(TestCase):
             body=_get_ena_register_study_response(),
             status=200,
         )
-        from gfbio_submissions.brokerage.tasks import (
-            register_study_at_ena_task,
-            process_ena_response_task,
-            submit_targeted_sequences_to_ena_task,
-            process_targeted_sequence_results_task,
-        )
+        from ..tasks.transfer_tasks.register_study_at_ena import register_study_at_ena_task
+        from ..tasks.transfer_tasks.process_ena_response import process_ena_response_task
+        from ..tasks.transfer_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
+        from ..tasks.transfer_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
+
 
         submission_chain = (
             register_study_at_ena_task.s(submission_id=submission.pk).set(
                 countdown=SUBMISSION_DELAY
             )
             | process_ena_response_task.s(
-                submission_id=submission.pk, close_submission_on_success=False
-            ).set(countdown=SUBMISSION_DELAY)
+            submission_id=submission.pk, close_submission_on_success=False
+        ).set(countdown=SUBMISSION_DELAY)
             | submit_targeted_sequences_to_ena_task.s(submission_id=submission.pk).set(
-                countdown=SUBMISSION_DELAY
-            )
+            countdown=SUBMISSION_DELAY
+        )
             | process_targeted_sequence_results_task.s(submission_id=submission.pk).set(
-                countdown=SUBMISSION_DELAY
-            )
+            countdown=SUBMISSION_DELAY
+        )
         )
 
         submission_chain()

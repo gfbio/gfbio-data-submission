@@ -96,7 +96,7 @@ class TestSubmissionTransferHandler(TestCase):
 
     def test_get_submission_and_siteconfig_for_task(self):
         submission = Submission.objects.first()
-        from gfbio_submissions.brokerage.tasks import create_submission_issue_task
+        from ...tasks.jira_tasks.create_submission_issue import create_submission_issue_task
 
         sub, conf = get_submission_and_site_configuration(
             submission_id=submission.pk,
@@ -115,7 +115,7 @@ class TestSubmissionTransferHandler(TestCase):
             sub, conf = get_submission_and_site_configuration(submission_id=99)
 
     def test_no_site_config(self):
-        from gfbio_submissions.brokerage.tasks import create_submission_issue_task
+        from ...tasks.jira_tasks.create_submission_issue import create_submission_issue_task
 
         submission = Submission.objects.last()
         submission.user = self.non_config_user
@@ -132,7 +132,7 @@ class TestSubmissionTransferHandler(TestCase):
         self.assertIsNone(conf)
 
     def test_no_site_config_without_default(self):
-        from gfbio_submissions.brokerage.tasks import create_submission_issue_task
+        from ...tasks.jira_tasks.create_submission_issue import create_submission_issue_task
 
         site_config = SiteConfiguration.objects.last()
         site_config.delete()

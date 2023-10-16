@@ -49,12 +49,22 @@ class SubmissionDetailView(
             # FIXME: updates to submission download url are not covered here
             # affected_submissions = instance.submission_set.filter(broker_submission_id=instance.broker_submission_id)
 
-            from ..tasks import (
+            from ..tasks.submission_tasks.check_for_molecular_content_in_submission import (
                 check_for_molecular_content_in_submission_task,
-                trigger_submission_transfer_for_updates,
+            )
+            from ..tasks.transfer_tasks.trigger_submission_transfer_for_updates import (
+                trigger_submission_transfer_for_updates_task,
+            )
+            from ..tasks.jira_tasks.update_submission_issue import (
                 update_submission_issue_task,
+            )
+            from ..tasks.jira_tasks.get_gfbio_helpdesk_username import (
                 get_gfbio_helpdesk_username_task,
+            )
+            from ..tasks.transfer_tasks.update_ena_embargo import (
                 update_ena_embargo_task,
+            )
+            from ..tasks.jira_tasks.notify_user_embargo_changed import (
                 notify_user_embargo_changed_task,
             )
 
@@ -82,7 +92,7 @@ class SubmissionDetailView(
                 submission_id=instance.pk
             ).set(
                 countdown=SUBMISSION_DELAY
-            ) | trigger_submission_transfer_for_updates.s(
+            ) | trigger_submission_transfer_for_updates_task.s(
                 broker_submission_id="{0}".format(instance.broker_submission_id)
             ).set(
                 countdown=SUBMISSION_DELAY

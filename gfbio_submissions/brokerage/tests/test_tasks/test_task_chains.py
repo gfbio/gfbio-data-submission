@@ -13,27 +13,21 @@ from gfbio_submissions.brokerage.configuration.settings import (
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE,
     SUBMISSION_DELAY,
 )
-
-# from gfbio_submissions.brokerage.models import Submission, \
-#     AuditableTextData, TaskProgressReport
-from gfbio_submissions.brokerage.tasks import (
-    create_submission_issue_task,
-    create_pangaea_issue_task,
-    attach_to_pangaea_issue_task,
-    trigger_submission_transfer,
-    get_gfbio_helpdesk_username_task,
-    trigger_submission_transfer_for_updates,
-)
 from gfbio_submissions.brokerage.tests.utils import (
     _get_pangaea_attach_response,
     _get_jira_issue_response,
 )
 from gfbio_submissions.generic.models import SiteConfiguration
-from gfbio_submissions.users.models import User
 from .test_tasks_base import TestTasks
 from ...models.auditable_text_data import AuditableTextData
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
+from ...tasks.jira_tasks.attach_to_pangaea_issue import attach_to_pangaea_issue_task
+from ...tasks.jira_tasks.create_pangaea_issue import create_pangaea_issue_task
+from ...tasks.jira_tasks.create_submission_issue import create_submission_issue_task
+from ...tasks.jira_tasks.get_gfbio_helpdesk_username import get_gfbio_helpdesk_username_task
+from ...tasks.transfer_tasks.trigger_submission_transfer import trigger_submission_transfer_task
+from ...tasks.transfer_tasks.trigger_submission_transfer_for_updates import trigger_submission_transfer_for_updates_task
 
 
 class TestTaskChains(TestTasks):
@@ -149,7 +143,7 @@ class TestTaskChains(TestTasks):
             "messages": [],
             "molecular_data_check_performed": True,
         }
-        result = trigger_submission_transfer.apply(
+        result = trigger_submission_transfer_task.apply(
             kwargs={
                 "previous_task_result": prev_task_result,
                 "submission_id": submission.pk,
@@ -164,7 +158,7 @@ class TestTaskChains(TestTasks):
             "messages": ["invalid no. of meta_data_files, 8"],
             "molecular_data_check_performed": True,
         }
-        result = trigger_submission_transfer.apply(
+        result = trigger_submission_transfer_task.apply(
             kwargs={
                 "previous_task_result": prev_task_result,
                 "submission_id": submission.pk,
@@ -179,7 +173,7 @@ class TestTaskChains(TestTasks):
             "messages": [],
             "molecular_data_check_performed": True,
         }
-        result = trigger_submission_transfer_for_updates.apply(
+        result = trigger_submission_transfer_for_updates_task.apply(
             kwargs={
                 "previous_task_result": prev_task_result,
                 "broker_submission_id": "{}".format(submission.broker_submission_id),
@@ -194,7 +188,7 @@ class TestTaskChains(TestTasks):
             "messages": ["invalid no. of meta_data_files, 8"],
             "molecular_data_check_performed": True,
         }
-        result = trigger_submission_transfer_for_updates.apply(
+        result = trigger_submission_transfer_for_updates_task.apply(
             kwargs={
                 "previous_task_result": prev_task_result,
                 "broker_submission_id": submission.pk,
@@ -252,6 +246,6 @@ class TestTaskChains(TestTasks):
             status=200,
         )
 
-        trigger_submission_transfer(submission_id=submission.id)
+        trigger_submission_transfer_task(submission_id=submission.id)
 
         self.assertLess(len_auditable_data, len(AuditableTextData.objects.all()))

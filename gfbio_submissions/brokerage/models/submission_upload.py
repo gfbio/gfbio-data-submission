@@ -117,7 +117,9 @@ class SubmissionUpload(TimeStampedModel):
         super(SubmissionUpload, self).save(*args, **kwargs)
 
         if self.attach_to_ticket and not ignore_attach_to_ticket:
-            from ..tasks import attach_to_submission_issue_task
+            from ..tasks.jira_tasks.attach_to_submission_issue import (
+                attach_to_submission_issue_task,
+            )
 
             attach_to_submission_issue_task.apply_async(
                 kwargs={
@@ -129,9 +131,13 @@ class SubmissionUpload(TimeStampedModel):
 
         if self.submission is not None:
             if self.submission.target == ATAX:
-                from ..tasks import (
+                from ..tasks.atax_tasks.atax_submission_parse_csv_upload_to_xml import (
                     atax_submission_parse_csv_upload_to_xml_task,
+                )
+                from ..tasks.atax_tasks.atax_submission_validate_xml_upload import (
                     atax_submission_validate_xml_upload_task,
+                )
+                from ..tasks.atax_tasks.atax_submission_combine_xmls_to_one_structure import (
                     atax_submission_combine_xmls_to_one_structure_task,
                 )
 

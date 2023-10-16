@@ -144,7 +144,7 @@ def pull_pangaea_dois(submission, jira_client):
                 msg="pull_pangaea_dois. add comment with pangea doi "
                 "to helpdeskticket. submission_id={}".format(submission.pk)
             )
-            from ..tasks import add_pangaea_doi_task
+            from ..tasks.jira_tasks.add_pangaea_doi import add_pangaea_doi_task
 
             add_pangaea_doi_task.apply_async(
                 kwargs={

@@ -30,7 +30,9 @@ class SubmissionCommentView(generics.GenericAPIView):
                 broker_submission_id=broker_submission_id
             )
             user_values = User.get_user_values_safe(user_id=submission_values["user"])
-            from ..tasks import add_posted_comment_to_issue_task
+            from ..tasks.jira_tasks.add_posted_comment_to_issue import (
+                add_posted_comment_to_issue_task,
+            )
 
             add_posted_comment_to_issue_task.apply_async(
                 kwargs={

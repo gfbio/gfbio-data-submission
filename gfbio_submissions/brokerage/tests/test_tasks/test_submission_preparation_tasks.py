@@ -1,18 +1,14 @@
 # -*- coding: utf-8 -*-
-from pprint import pprint
 from unittest.mock import patch
 
-# from gfbio_submissions.brokerage.models import Submission, BrokerObject, \
-#     TaskProgressReport
-from gfbio_submissions.brokerage.tasks import (
-    create_broker_objects_from_submission_data_task,
-    check_on_hold_status_task,
-)
 from gfbio_submissions.generic.models import SiteConfiguration
 from .test_tasks_base import TestTasks
 from ...models.broker_object import BrokerObject
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
+from ...tasks.broker_object_tasks.create_broker_objects_from_submission_data import \
+    create_broker_objects_from_submission_data_task
+from ...tasks.submission_tasks.check_on_hold_status import check_on_hold_status_task
 
 
 class TestSubmissionPreparationTasks(TestTasks):
@@ -39,7 +35,7 @@ class TestSubmissionPreparationTasks(TestTasks):
         self.assertTrue(result.successful())
         self.assertTrue(Submission.objects.first().approval_notification_sent)
 
-    @patch("gfbio_submissions.brokerage.tasks.logger")
+    @patch("gfbio_submissions.brokerage.tasks.submission_tasks.check_on_hold_status.logger")
     def test_check_on_hold_proceed_without_email(self, mock_logger):
         submission = Submission.objects.first()
         conf = SiteConfiguration.objects.first()

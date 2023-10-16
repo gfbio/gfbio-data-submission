@@ -1064,8 +1064,10 @@ def update_persistent_identifier_report_status():
                             )
 
                             from ..configuration.settings import SUBMISSION_DELAY
-                            from ..tasks import (
+                            from ..tasks.jira_tasks.notify_on_embargo_ended import (
                                 notify_on_embargo_ended_task,
+                            )
+                            from ..tasks.jira_tasks.jira_transition_issue import (
                                 jira_transition_issue_task,
                             )
 
@@ -1112,9 +1114,11 @@ def update_persistent_identifier_report_status():
 
 
 def execute_update_accession_objects_chain(name_on_error=""):
-    from ..tasks import (
-        fetch_ena_reports_task,
+    from ..tasks.ena_report_tasks.fetch_ena_reports import fetch_ena_reports_task
+    from ..tasks.ena_report_tasks.update_persistent_identifier_report_status import (
         update_persistent_identifier_report_status_task,
+    )
+    from ..tasks.ena_report_tasks.update_resolver_accessions import (
         update_resolver_accessions_task,
     )
 

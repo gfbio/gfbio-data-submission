@@ -34,12 +34,20 @@ class SubmissionsView(
                 response_status=status.HTTP_201_CREATED,
             )
 
-        from ..tasks import (
+        from ..tasks.jira_tasks.get_gfbio_helpdesk_username import (
             get_gfbio_helpdesk_username_task,
+        )
+        from ..tasks.jira_tasks.create_submission_issue import (
             create_submission_issue_task,
-            jira_initial_comment_task,
+        )
+        from ..tasks.jira_tasks.jira_initial_comment import jira_initial_comment_task
+        from ..tasks.submission_tasks.check_for_molecular_content_in_submission import (
             check_for_molecular_content_in_submission_task,
-            trigger_submission_transfer,
+        )
+        from ..tasks.transfer_tasks.trigger_submission_transfer import (
+            trigger_submission_transfer_task,
+        )
+        from ..tasks.submission_tasks.check_issue_existing_for_submission import (
             check_issue_existing_for_submission_task,
         )
 
@@ -56,7 +64,7 @@ class SubmissionsView(
             | check_for_molecular_content_in_submission_task.s(
                 submission_id=submission.pk
             ).set(countdown=SUBMISSION_DELAY)
-            | trigger_submission_transfer.s(submission_id=submission.pk).set(
+            | trigger_submission_transfer_task.s(submission_id=submission.pk).set(
                 countdown=SUBMISSION_DELAY
             )
         )

@@ -121,7 +121,7 @@ class JiraHookRequestSerializer(serializers.Serializer):
             "updating user | {0}".format(updating_user)
         )
         # update ena
-        from gfbio_submissions.brokerage.tasks import update_ena_embargo_task
+        from gfbio_submissions.brokerage.tasks.transfer_tasks.update_ena_embargo import update_ena_embargo_task
 
         update_ena_embargo_task.apply_async(
             kwargs={

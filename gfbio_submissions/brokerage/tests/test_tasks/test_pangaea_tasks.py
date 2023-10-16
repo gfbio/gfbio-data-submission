@@ -9,15 +9,6 @@ from gfbio_submissions.brokerage.configuration.settings import (
     JIRA_COMMENT_SUB_URL,
     JIRA_ATTACHMENT_SUB_URL,
 )
-
-# from gfbio_submissions.brokerage.models import Submission, \
-#     PersistentIdentifier, TaskProgressReport
-from gfbio_submissions.brokerage.tasks import (
-    create_pangaea_issue_task,
-    attach_to_pangaea_issue_task,
-    add_accession_to_pangaea_issue_task,
-    check_for_pangaea_doi_task,
-)
 from gfbio_submissions.brokerage.tests.utils import (
     _get_pangaea_soap_response,
     _get_pangaea_attach_response,
@@ -29,6 +20,10 @@ from .test_tasks_base import TestTasks
 from ...models.persistent_identifier import PersistentIdentifier
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
+from ...tasks.jira_tasks.add_accession_to_pangaea_issue import add_accession_to_pangaea_issue_task
+from ...tasks.jira_tasks.attach_to_pangaea_issue import attach_to_pangaea_issue_task
+from ...tasks.jira_tasks.check_for_pangaea_doi import check_for_pangaea_doi_task
+from ...tasks.jira_tasks.create_pangaea_issue import create_pangaea_issue_task
 
 
 class TestPangaeaTasks(TestTasks):

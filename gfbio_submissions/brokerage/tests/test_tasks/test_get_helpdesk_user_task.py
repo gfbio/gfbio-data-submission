@@ -4,7 +4,7 @@ from urllib.parse import quote
 import responses
 from django.test import override_settings
 
-from gfbio_submissions.brokerage.tasks import get_gfbio_helpdesk_username_task
+from ...tasks.jira_tasks.get_gfbio_helpdesk_username import get_gfbio_helpdesk_username_task
 from gfbio_submissions.brokerage.tests.test_tasks.test_tasks_base import TestTasks
 from gfbio_submissions.users.models import User
 from ...configuration.settings import (
@@ -93,7 +93,7 @@ class TestGetHelpDeskUserTask(TestTasks):
             "{'jira_user_name': '"
             + submission.user.externaluserid_set.first().external_id
             + "', "
-            "'email': '" + submission.user.email + "', 'full_name': ''}"
+              "'email': '" + submission.user.email + "', 'full_name': ''}"
         )
         self.assertEqual(
             expected_value, TaskProgressReport.objects.first().task_return_value
@@ -161,7 +161,7 @@ class TestGetHelpDeskUserTask(TestTasks):
             "{'jira_user_name': '"
             + JIRA_FALLBACK_USERNAME
             + "', 'email': 'khors@me.de', "
-            "'full_name': 'Kevin Horstmeier'}"
+              "'full_name': 'Kevin Horstmeier'}"
         )
         self.assertEqual(
             expected_value, TaskProgressReport.objects.first().task_return_value
@@ -190,6 +190,6 @@ class TestGetHelpDeskUserTask(TestTasks):
             "{'jira_user_name': '"
             + JIRA_FALLBACK_USERNAME
             + "', 'email': 'khors@me.de', "
-            "'full_name': 'Kevin Horstmeier'}"
+              "'full_name': 'Kevin Horstmeier'}"
         )
         self.assertEqual(expected_value, tpr.task_return_value)

@@ -20,8 +20,10 @@ class SubmissionTransferHandler(object):
         self.molecular_data_check_performed = molecular_data_check_performed
 
     def pre_process_molecular_data_chain(self):
-        from ..tasks import (
+        from ..tasks.broker_object_tasks.create_broker_objects_from_submission_data import (
             create_broker_objects_from_submission_data_task,
+        )
+        from ..tasks.auditable_text_data_tasks.prepare_ena_submission_data import (
             prepare_ena_submission_data_task,
         )
 
@@ -40,7 +42,9 @@ class SubmissionTransferHandler(object):
                 self.submission_id, self.target_archive
             )
         )
-        from ..tasks import check_on_hold_status_task
+        from ..tasks.submission_tasks.check_on_hold_status import (
+            check_on_hold_status_task,
+        )
 
         logger.info(
             "SubmissionTransferHandler. update={0} release={1}"
@@ -85,10 +89,16 @@ class SubmissionTransferHandler(object):
             )
         )
 
-        from ..tasks import (
+        from ..tasks.transfer_tasks.transfer_data_to_ena import (
             transfer_data_to_ena_task,
+        )
+        from ..tasks.transfer_tasks.process_ena_response import (
             process_ena_response_task,
+        )
+        from ..tasks.jira_tasks.add_accession_to_submission_issue import (
             add_accession_to_submission_issue_task,
+        )
+        from ..tasks.jira_tasks.add_accession_link_to_submission_issue import (
             add_accession_link_to_submission_issue_task,
         )
 
@@ -115,14 +125,26 @@ class SubmissionTransferHandler(object):
             )
         )
 
-        from ..tasks import (
+        from ..tasks.transfer_tasks.transfer_data_to_ena import (
             transfer_data_to_ena_task,
+        )
+        from ..tasks.transfer_tasks.process_ena_response import (
             process_ena_response_task,
+        )
+        from ..tasks.jira_tasks.add_accession_to_submission_issue import (
             add_accession_to_submission_issue_task,
-            create_pangaea_issue_task,
+        )
+        from ..tasks.jira_tasks.create_pangaea_issue import create_pangaea_issue_task
+        from ..tasks.jira_tasks.attach_to_pangaea_issue import (
             attach_to_pangaea_issue_task,
+        )
+        from ..tasks.jira_tasks.add_accession_to_pangaea_issue import (
             add_accession_to_pangaea_issue_task,
+        )
+        from ..tasks.jira_tasks.add_pangaealink_to_submission_issue import (
             add_pangaealink_to_submission_issue_task,
+        )
+        from ..tasks.jira_tasks.add_accession_link_to_submission_issue import (
             add_accession_link_to_submission_issue_task,
         )
 

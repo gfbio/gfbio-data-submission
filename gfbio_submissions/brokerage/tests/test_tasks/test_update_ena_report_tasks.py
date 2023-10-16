@@ -4,13 +4,6 @@ import os
 
 import responses
 
-# from gfbio_submissions.brokerage.models import PersistentIdentifier, \
-#     BrokerObject, EnaReport, TaskProgressReport
-from gfbio_submissions.brokerage.tasks import (
-    update_persistent_identifier_report_status_task,
-    update_resolver_accessions_task,
-    update_accession_objects_from_ena_report_task,
-)
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.generic.models import SiteConfiguration
 from gfbio_submissions.resolve.models import Accession
@@ -20,6 +13,11 @@ from ...models.broker_object import BrokerObject
 from ...models.ena_report import EnaReport
 from ...models.persistent_identifier import PersistentIdentifier
 from ...models.task_progress_report import TaskProgressReport
+from ...tasks.ena_report_tasks.update_accession_objects_from_ena_report import \
+    update_accession_objects_from_ena_report_task
+from ...tasks.ena_report_tasks.update_persistent_identifier_report_status import \
+    update_persistent_identifier_report_status_task
+from ...tasks.ena_report_tasks.update_resolver_accessions import update_resolver_accessions_task
 
 
 class TestUpdateResolverAccessionsTask(TestTasks):
