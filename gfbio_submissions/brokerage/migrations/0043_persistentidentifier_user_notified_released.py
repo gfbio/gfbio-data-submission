@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0042_auto_20200721_1410'),
+        ("brokerage", "0042_auto_20200721_1410"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='persistentidentifier',
-            name='user_notified_released',
+            model_name="persistentidentifier",
+            name="user_notified_released",
             field=models.DateField(blank=True, null=True),
         ),
     ]

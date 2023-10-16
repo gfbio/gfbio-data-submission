@@ -4,40 +4,41 @@ from uuid import UUID
 
 import responses
 
-from gfbio_submissions.brokerage.models import Submission
 from gfbio_submissions.generic.models import RequestLog
-from .test_submission_view_base import \
-    TestSubmissionView
+from .test_submission_view_base import TestSubmissionView
+from ....models.submission import Submission
 
 
 class TestSubmissionViewGenericTarget(TestSubmissionView):
-
     def test_post_empty_generic(self):
         response = self.api_client.post(
-            '/api/submissions/',
-            {'target': 'GENERIC', 'release': False, 'data': {}},
-            format='json'
+            "/api/submissions/",
+            {"target": "GENERIC", "release": False, "data": {}},
+            format="json",
         )
         self.assertEqual(400, response.status_code)
-        keys = json.loads(response.content.decode('utf-8')).keys()
-        self.assertIn('optional_validation', keys)
-        self.assertIn('data', keys)
+        keys = json.loads(response.content.decode("utf-8")).keys()
+        self.assertIn("optional_validation", keys)
+        self.assertIn("data", keys)
         self.assertEqual(0, len(Submission.objects.all()))
 
     def test_schema_error_min_post(self):
         self.assertEqual(0, len(Submission.objects.all()))
-        response = self.api_client.post('/api/submissions/',
-                                        {'target': 'GENERIC',
-                                         'data': {'requirements': {}}},
-                                        format='json'
-                                        )
-        content = json.loads(response.content.decode('utf-8'))
+        response = self.api_client.post(
+            "/api/submissions/",
+            {"target": "GENERIC", "data": {"requirements": {}}},
+            format="json",
+        )
+        content = json.loads(response.content.decode("utf-8"))
         self.assertEqual(400, response.status_code)
-        self.assertIn('data', content.keys())
+        self.assertIn("data", content.keys())
         self.assertListEqual(
-            ["requirements : 'title' is a required property",
-             "requirements : 'description' is a required property"],
-            content['data'])
+            [
+                "requirements : 'title' is a required property",
+                "requirements : 'description' is a required property",
+            ],
+            content["data"],
+        )
         self.assertEqual(0, len(Submission.objects.all()))
 
     @responses.activate
@@ -46,31 +47,36 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
         self.assertEqual(0, len(Submission.objects.all()))
         self.assertEqual(0, len(RequestLog.objects.all()))
         response = self.api_client.post(
-            '/api/submissions/',
-            {'target': 'GENERIC', 'data': {
-                'requirements': {
-                    'title': 'A Generic Title',
-                    'description': 'A Generic Description'}}},
-            format='json'
+            "/api/submissions/",
+            {
+                "target": "GENERIC",
+                "data": {
+                    "requirements": {
+                        "title": "A Generic Title",
+                        "description": "A Generic Description",
+                    }
+                },
+            },
+            format="json",
         )
-        content = json.loads(response.content.decode('utf-8'))
+        content = json.loads(response.content.decode("utf-8"))
         # No 'optional_validation' since all generic special fields
         # are non-mandatory
         expected = {
-            'embargo': None,
-            'download_url': '',
-            'status': 'OPEN',
-            'release': False,
-            'broker_submission_id': content['broker_submission_id'],
-            'issue': '',
-            'target': 'GENERIC',
-            'user': 'horst',
-            'data': {
-                'requirements': {
-                    'description': 'A Generic Description',
-                    'title': 'A Generic Title'
+            "embargo": None,
+            "download_url": "",
+            "status": "OPEN",
+            "release": False,
+            "broker_submission_id": content["broker_submission_id"],
+            "issue": "",
+            "target": "GENERIC",
+            "user": "horst",
+            "data": {
+                "requirements": {
+                    "description": "A Generic Description",
+                    "title": "A Generic Title",
                 }
-            }
+            },
         }
         self.assertEqual(201, response.status_code)
         self.assertDictEqual(expected, content)
@@ -80,13 +86,14 @@ class TestSubmissionViewGenericTarget(TestSubmissionView):
         self.assertEqual(3, len(RequestLog.objects.all()))
 
         submission = Submission.objects.last()
-        self.assertEqual(UUID(content['broker_submission_id']),
-                         submission.broker_submission_id)
+        self.assertEqual(
+            UUID(content["broker_submission_id"]), submission.broker_submission_id
+        )
         self.assertIsNone(submission.embargo)
         self.assertFalse(submission.release)
         self.assertEqual(Submission.OPEN, submission.status)
         # self.assertEqual(0, len(submission.submitting_user))
-        self.assertEqual('GENERIC', submission.target)
+        self.assertEqual("GENERIC", submission.target)
 
         request_logs = RequestLog.objects.filter(type=RequestLog.INCOMING)
         self.assertEqual(1, len(request_logs))

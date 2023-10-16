@@ -6,16 +6,21 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('generic', '0002_auto_20200320_1435'),
+        ("generic", "0002_auto_20200320_1435"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='requestlog',
-            name='user',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='user_requestlogs', to=settings.AUTH_USER_MODEL),
+            model_name="requestlog",
+            name="user",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="user_requestlogs",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

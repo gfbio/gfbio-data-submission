@@ -7,23 +7,56 @@ import model_utils.fields
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0023_auto_20200115_1058'),
+        ("brokerage", "0023_auto_20200115_1058"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='EnaReport',
+            name="EnaReport",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
-                ('report_type', models.CharField(choices=[('STU', 'studies'), ('SAM', 'samples'), ('EXP', 'experiments'), ('RUN', 'runs')], default='STU', max_length=3)),
-                ('report_data', django.contrib.postgres.fields.jsonb.JSONField()),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "created",
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now,
+                        editable=False,
+                        verbose_name="created",
+                    ),
+                ),
+                (
+                    "modified",
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now,
+                        editable=False,
+                        verbose_name="modified",
+                    ),
+                ),
+                (
+                    "report_type",
+                    models.CharField(
+                        choices=[
+                            ("STU", "studies"),
+                            ("SAM", "samples"),
+                            ("EXP", "experiments"),
+                            ("RUN", "runs"),
+                        ],
+                        default="STU",
+                        max_length=3,
+                    ),
+                ),
+                ("report_data", django.contrib.postgres.fields.jsonb.JSONField()),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
     ]

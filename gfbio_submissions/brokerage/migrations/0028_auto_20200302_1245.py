@@ -5,15 +5,19 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0027_auto_20200302_0959'),
+        ("brokerage", "0027_auto_20200302_0959"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='submission',
-            name='center_name',
-            field=models.ForeignKey(help_text='NOTE: When changing the center_name you will have to manually create new XML to get XML containing the updated center_name. Do so by trigger the "Re-Create XML (ENA)" admin action.', null=True, on_delete=django.db.models.deletion.SET_NULL, to='brokerage.CenterName'),
+            model_name="submission",
+            name="center_name",
+            field=models.ForeignKey(
+                help_text='NOTE: When changing the center_name you will have to manually create new XML to get XML containing the updated center_name. Do so by trigger the "Re-Create XML (ENA)" admin action.',
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="brokerage.CenterName",
+            ),
         ),
     ]

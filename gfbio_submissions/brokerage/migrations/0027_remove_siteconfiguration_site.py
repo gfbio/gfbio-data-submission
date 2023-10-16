@@ -4,14 +4,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0026_persistentidentifier_status'),
+        ("brokerage", "0026_persistentidentifier_status"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='siteconfiguration',
-            name='site',
+            model_name="siteconfiguration",
+            name="site",
         ),
     ]

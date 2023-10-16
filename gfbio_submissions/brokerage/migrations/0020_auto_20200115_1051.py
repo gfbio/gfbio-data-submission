@@ -4,18 +4,17 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0019_auto_20200115_1049'),
+        ("brokerage", "0019_auto_20200115_1049"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='taskprogressreport',
-            name='changed',
+            model_name="taskprogressreport",
+            name="changed",
         ),
         migrations.RemoveField(
-            model_name='taskprogressreport',
-            name='created',
+            model_name="taskprogressreport",
+            name="created",
         ),
     ]

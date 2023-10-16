@@ -2,8 +2,4 @@
 
 settings = {}
 
-HOSTING_SITE = getattr(
-    settings,
-    'HOSTING_SITE',
-    'local-site'
-)
+HOSTING_SITE = getattr(settings, "HOSTING_SITE", "local-site")

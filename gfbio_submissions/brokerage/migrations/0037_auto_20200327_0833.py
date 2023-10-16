@@ -4,24 +4,23 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('users', '0012_auto_20200327_0833'),
-        ('brokerage', '0036_auto_20200320_1217'),
+        ("users", "0012_auto_20200327_0833"),
+        ("brokerage", "0036_auto_20200320_1217"),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name='ResourceCredential',
+            name="ResourceCredential",
         ),
         migrations.RemoveField(
-            model_name='ticketlabel',
-            name='site_configuration',
+            model_name="ticketlabel",
+            name="site_configuration",
         ),
         migrations.DeleteModel(
-            name='SiteConfiguration',
+            name="SiteConfiguration",
         ),
         migrations.DeleteModel(
-            name='TicketLabel',
+            name="TicketLabel",
         ),
     ]

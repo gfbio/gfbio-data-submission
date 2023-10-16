@@ -6,15 +6,20 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0007_auto_20191023_0749'),
+        ("brokerage", "0007_auto_20191023_0749"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='submission',
-            name='user',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='user_submissions', to=settings.AUTH_USER_MODEL),
+            model_name="submission",
+            name="user",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="user_submissions",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

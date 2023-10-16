@@ -6,16 +6,19 @@ from django.test import TestCase
 
 
 class JSONSchemaContentTest(TestCase):
-
     @classmethod
     def _get_static_schema_dir_path(cls):
-        return '{0}{1}gfbio_submissions{1}static{1}schemas'.format(
-            os.getcwd(), os.sep, )
+        return "{0}{1}gfbio_submissions{1}static{1}schemas".format(
+            os.getcwd(),
+            os.sep,
+        )
 
     @classmethod
     def _get_brokerage_schema_dir_path(cls):
-        return '{0}{1}gfbio_submissions{1}brokerage{1}schemas'.format(
-            os.getcwd(), os.sep, )
+        return "{0}{1}gfbio_submissions{1}brokerage{1}schemas".format(
+            os.getcwd(),
+            os.sep,
+        )
 
     def test_file_names_matching(self):
         static_path = self._get_static_schema_dir_path()
@@ -26,8 +29,8 @@ class JSONSchemaContentTest(TestCase):
         static_path = self._get_static_schema_dir_path()
         app_path = self._get_brokerage_schema_dir_path()
         for f in os.listdir(static_path):
-            static_f_path = '{0}{1}{2}'.format(static_path, os.sep, f)
-            app_f_path = '{0}{1}{2}'.format(app_path, os.sep, f)
+            static_f_path = "{0}{1}{2}".format(static_path, os.sep, f)
+            app_f_path = "{0}{1}{2}".format(app_path, os.sep, f)
             self.assertTrue(os.path.exists(app_f_path))
             self.assertTrue(os.path.exists(static_f_path))
             # exclude XSD schemas:
@@ -35,14 +38,14 @@ class JSONSchemaContentTest(TestCase):
             xml_file_ext1 = (os.path.splitext(xml_file_name1))[1]
             xml_file_name2 = os.path.basename(static_f_path)
             xml_file_ext2 = (os.path.splitext(xml_file_name2))[1]
-            if xml_file_ext1 == '.XSD' or xml_file_ext2 == '.XSD':
+            if xml_file_ext1 == ".XSD" or xml_file_ext2 == ".XSD":
                 continue
-            with open(static_f_path, 'r') as schema_a:
-                with open(app_f_path, 'r') as schema_b:
+            with open(static_f_path, "r") as schema_a:
+                with open(app_f_path, "r") as schema_b:
                     schema_a_dict = json.load(schema_a)
                     schema_b_dict = json.load(schema_b)
-                    if 'id' in schema_a_dict.keys():
-                        schema_a_dict.pop('id')
-                    if 'id' in schema_b_dict.keys():
-                        schema_b_dict.pop('id')
+                    if "id" in schema_a_dict.keys():
+                        schema_a_dict.pop("id")
+                    if "id" in schema_b_dict.keys():
+                        schema_b_dict.pop("id")
                     self.assertDictEqual(schema_a_dict, schema_b_dict)
