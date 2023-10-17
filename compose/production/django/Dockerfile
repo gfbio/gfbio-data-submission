@@ -36,11 +36,8 @@ ENV BUILD_ENV ${BUILD_ENVIRONMENT}
 
 WORKDIR ${APP_HOME}
 
-ARG USER_ID=998
-ARG GROUP_ID=997
-
-RUN addgroup --system --gid $GROUP_ID django \
-  && adduser --system --uid $USER_ID --ingroup django django
+RUN addgroup --system django \
+  && adduser --system --ingroup django django
 
 #RUN apt-get update \
 #  # dependencies for building Python packages
