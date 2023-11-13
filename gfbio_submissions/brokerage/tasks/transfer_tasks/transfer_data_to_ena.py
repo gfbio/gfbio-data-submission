@@ -39,6 +39,7 @@ def transfer_data_to_ena_task(self, prepare_result=None, submission_id=None, act
     ena_submission_data = AuditableTextData.objects.assemble_ena_submission_data(submission=submission)
     if ena_submission_data == {}:
         return TaskProgressReport.CANCELLED
+    request_id = ''
     try:
         response, request_id = send_submission_to_ena(
             submission, site_configuration.ena_server, ena_submission_data, action
