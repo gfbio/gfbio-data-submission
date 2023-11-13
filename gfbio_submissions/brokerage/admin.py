@@ -226,13 +226,13 @@ modify_ena_objects_with_current_xml.short_description = "Modify ENA objects with
 
 
 def perform_targeted_sequence_submission(modeladmin, request, queryset):
-    from tasks.broker_object_tasks.create_study_broker_objects_only import create_study_broker_objects_only_task
-    from tasks.auditable_text_data_tasks.prepare_ena_study_xml import prepare_ena_study_xml_task
-    from tasks.transfer_tasks.register_study_at_ena import  register_study_at_ena_task
-    from tasks.transfer_tasks.process_ena_response import process_ena_response_task
-    from tasks.auditable_text_data_tasks.create_targeted_sequence_ena_manifest import create_targeted_sequence_ena_manifest_task
-    from tasks.transfer_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
-    from tasks.transfer_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
+    from .tasks.broker_object_tasks.create_study_broker_objects_only import create_study_broker_objects_only_task
+    from .tasks.auditable_text_data_tasks.prepare_ena_study_xml import prepare_ena_study_xml_task
+    from .tasks.transfer_tasks.register_study_at_ena import  register_study_at_ena_task
+    from .tasks.transfer_tasks.process_ena_response import process_ena_response_task
+    from .tasks.auditable_text_data_tasks.create_targeted_sequence_ena_manifest import create_targeted_sequence_ena_manifest_task
+    from .tasks.transfer_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
+    from .tasks.transfer_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
 
     for obj in queryset:
         chain = (
@@ -255,10 +255,10 @@ perform_targeted_sequence_submission.short_description = "Perform Targeted Seque
 
 
 def register_study_at_ena(modeladmin, request, queryset):
-    from tasks.broker_object_tasks.create_study_broker_objects_only import create_study_broker_objects_only_task
-    from tasks.auditable_text_data_tasks.prepare_ena_study_xml import prepare_ena_study_xml_task
-    from tasks.transfer_tasks.register_study_at_ena import register_study_at_ena_task
-    from tasks.transfer_tasks.process_ena_response import process_ena_response_task
+    from .tasks.broker_object_tasks.create_study_broker_objects_only import create_study_broker_objects_only_task
+    from .tasks.auditable_text_data_tasks.prepare_ena_study_xml import prepare_ena_study_xml_task
+    from .tasks.transfer_tasks.register_study_at_ena import register_study_at_ena_task
+    from .tasks.transfer_tasks.process_ena_response import process_ena_response_task
 
     for obj in queryset:
         chain = (
@@ -276,7 +276,7 @@ register_study_at_ena.short_description = "Register Study at ENA"
 
 
 def prepare_manifest(modeladmin, request, queryset):
-    from tasks.auditable_text_data_tasks.create_targeted_sequence_ena_manifest import create_targeted_sequence_ena_manifest_task
+    from .tasks.auditable_text_data_tasks.create_targeted_sequence_ena_manifest import create_targeted_sequence_ena_manifest_task
 
     for obj in queryset:
         create_targeted_sequence_ena_manifest_task.apply_async(
@@ -290,8 +290,8 @@ prepare_manifest.short_description = "Prepare MANIFEST file"
 
 
 def submit_manifest_to_ena(modeladmin, request, queryset):
-    from tasks.transfer_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
-    from tasks.transfer_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
+    from .tasks.transfer_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
+    from .tasks.transfer_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
 
     for obj in queryset:
         chain = submit_targeted_sequences_to_ena_task.s(submission_id=obj.pk, do_test=False, do_validate=False).set(
@@ -304,8 +304,8 @@ submit_manifest_to_ena.short_description = "Submit MANIFEST file to ENA"
 
 
 def validate_manifest_at_ena(modeladmin, request, queryset):
-    from tasks.transfer_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
-    from tasks.transfer_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
+    from .tasks.transfer_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
+    from .tasks.transfer_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
 
     for obj in queryset:
         chain = submit_targeted_sequences_to_ena_task.s(submission_id=obj.pk, do_test=False, do_validate=True).set(
@@ -318,10 +318,10 @@ validate_manifest_at_ena.short_description = "Validate MANIFEST file at ENA"
 
 
 def create_helpdesk_issue_manually(modeladmin, request, queryset):
-    from tasks.jira_tasks.create_submission_issue import create_submission_issue_task
-    from tasks.jira_tasks.get_gfbio_helpdesk_username import get_gfbio_helpdesk_username_task
-    from tasks.jira_tasks.attach_to_submission_issue import attach_to_submission_issue_task
-    from tasks.jira_tasks.jira_initial_comment import jira_initial_comment_task
+    from .tasks.jira_tasks.create_submission_issue import create_submission_issue_task
+    from .tasks.jira_tasks.get_gfbio_helpdesk_username import get_gfbio_helpdesk_username_task
+    from .tasks.jira_tasks.attach_to_submission_issue import attach_to_submission_issue_task
+    from .tasks.jira_tasks.jira_initial_comment import jira_initial_comment_task
 
     for obj in queryset:
         chain = (
