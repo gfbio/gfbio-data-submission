@@ -66,7 +66,7 @@ app.autodiscover_tasks(
         'gfbio_submissions.brokerage.tasks.transfer_tasks.submit_targeted_sequence_to_ena',
         'gfbio_submissions.brokerage.tasks.broker_object_tasks.create_broker_objects_from_submission_data',
         'gfbio_submissions.brokerage.tasks.broker_object_tasks.create_study_broker_objects_onl',
-        'gfbio_submissions.brokerage.tasks.user_tasks.check_for_user_without_site_configuration_tasks',
+        'gfbio_submissions.brokerage.tasks.user_tasks.check_for_user_without_site_configuration',
         'gfbio_submissions.brokerage.tasks.submission_tasks.delete_related_auditable_textdata',
         'gfbio_submissions.brokerage.tasks.submission_tasks.check_for_molecular_content_in_submission',
         'gfbio_submissions.brokerage.tasks.submission_tasks.notify_curators_on_embargo_ends',
