@@ -4,9 +4,12 @@ include:
       - ".create_merge_request_v3.yml"
       - ".tag_release.yml"
       - ".web_test_v2.yml"
+      - ".hotfix_workflow.yml"
 
 stages:
+  - check_issue_type
   - create_merge_request
+  - create_hotfix_merge_request
   - unit_tests
   - web_test_check
   - web_test_update
@@ -71,7 +74,7 @@ update staging:
 
 tag_release_check:
   variables:
-    MAIN_BRANCH_NAME: "master"
+    MAIN_BRANCH_NAME: "production"
   tags:
     - development-denbi
 
