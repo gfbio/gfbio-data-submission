@@ -8,54 +8,29 @@ from django.test import TestCase
 from gfbio_submissions.brokerage.configuration.settings import PANGAEA_JIRA_TICKET
 from gfbio_submissions.brokerage.exceptions.transfer_exceptions import (
     TransferClientError,
-    raise_response_exceptions,
     TransferServerError,
+    raise_response_exceptions,
 )
 from gfbio_submissions.brokerage.tests.utils import (
+    _create_submission_via_serializer,
     _get_ena_xml_response,
-    _get_pangaea_soap_response,
     _get_pangaea_attach_response,
     _get_pangaea_comment_response,
+    _get_pangaea_soap_response,
     _get_pangaea_ticket_response,
-    _get_ena_data,
-    _get_ena_data_without_runs,
 )
-from gfbio_submissions.brokerage.utils.submission_transfer import (
-    SubmissionTransferHandler,
-)
-from gfbio_submissions.brokerage.utils.task_utils import (
-    get_submission_and_site_configuration,
-)
-from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
+from gfbio_submissions.brokerage.utils.submission_transfer import SubmissionTransferHandler
+from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
-from ...configuration.settings import (
-    JIRA_ISSUE_URL,
-    JIRA_COMMENT_SUB_URL,
-    JIRA_ATTACHMENT_SUB_URL,
-)
-from ...models.broker_object import BrokerObject
+
+from ...configuration.settings import JIRA_ATTACHMENT_SUB_URL, JIRA_COMMENT_SUB_URL, JIRA_ISSUE_URL
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
-from ...serializers.submission_serializer import SubmissionSerializer
 
 
 class TestSubmissionTransferHandler(TestCase):
-    # TODO: move to utils or similar ...
-    @classmethod
-    def _create_submission_via_serializer(cls, runs=False):
-        serializer = SubmissionSerializer(
-            data={
-                "target": "ENA",
-                "release": True,
-                "data": _get_ena_data() if runs else _get_ena_data_without_runs(),
-            }
-        )
-        serializer.is_valid()
-        submission = serializer.save(user=User.objects.first())
-        BrokerObject.objects.add_submission_data(submission)
-        return submission
-
     @classmethod
     def setUpTestData(cls):
         resource_cred = ResourceCredential.objects.create(
@@ -81,7 +56,7 @@ class TestSubmissionTransferHandler(TestCase):
 
         cls.non_config_user = User.objects.create(username="no-conf", email="no@co.nf")
 
-        submission = cls._create_submission_via_serializer()
+        submission = _create_submission_via_serializer()
         submission.additionalreference_set.create(type=PANGAEA_JIRA_TICKET, reference_key="FAKE_KEY", primary=True)
 
     def test_instance(self):

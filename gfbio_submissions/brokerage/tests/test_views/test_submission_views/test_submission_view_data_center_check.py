@@ -8,10 +8,11 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.users.models import User
-from .test_submission_view_base import TestSubmissionView
-from ....configuration.settings import GENERIC, ENA
+
+from ....configuration.settings import ENA, GENERIC
 from ....models.submission import Submission
 from ....models.task_progress_report import TaskProgressReport
+from .test_submission_view_base import TestSubmissionView
 
 
 class TestSubmissionViewDataCenterCheck(TestSubmissionView):

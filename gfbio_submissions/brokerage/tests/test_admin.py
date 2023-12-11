@@ -2,14 +2,11 @@
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.admin import (
-    re_create_ena_xml,
-    submit_to_ena_test,
-    validate_against_ena,
-)
-from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
+from gfbio_submissions.brokerage.admin import re_create_ena_xml, submit_to_ena_test, validate_against_ena
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
+
 from ..models.auditable_text_data import AuditableTextData
 from ..models.submission import Submission
 from ..models.task_progress_report import TaskProgressReport

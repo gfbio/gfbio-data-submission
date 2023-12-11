@@ -2,8 +2,8 @@
 
 import responses
 
-from .test_submission_view_base import TestSubmissionView
 from ....models.submission import Submission
+from .test_submission_view_base import TestSubmissionView
 
 
 class TestSubmissionViewSimple(TestSubmissionView):

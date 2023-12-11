@@ -9,6 +9,7 @@ from django.test import TestCase
 from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.users.models import User
+
 from ...models.submission import Submission
 from ...models.submission_upload import SubmissionUpload
 

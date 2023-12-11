@@ -5,18 +5,11 @@ from unittest import skip
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.serializers.submission_detail_serializer import (
-    SubmissionDetailSerializer,
-)
-from gfbio_submissions.brokerage.serializers.submission_serializer import (
-    SubmissionSerializer,
-)
-from gfbio_submissions.brokerage.tests.utils import (
-    _get_ena_data,
-    _get_parsed_ena_response,
-    _get_test_data_dir_path,
-)
+from gfbio_submissions.brokerage.serializers.submission_detail_serializer import SubmissionDetailSerializer
+from gfbio_submissions.brokerage.serializers.submission_serializer import SubmissionSerializer
+from gfbio_submissions.brokerage.tests.utils import _get_ena_data, _get_parsed_ena_response, _get_test_data_dir_path
 from gfbio_submissions.users.models import User
+
 from ...models.broker_object import BrokerObject
 from ...models.persistent_identifier import PersistentIdentifier
 from ...models.submission import Submission

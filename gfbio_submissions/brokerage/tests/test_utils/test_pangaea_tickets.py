@@ -6,18 +6,16 @@ import responses
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.configuration.settings import PANGAEA_JIRA_TICKET
-from gfbio_submissions.brokerage.tests.utils import (
-    _get_pangaea_soap_body,
-    _get_pangaea_soap_response,
-)
+from gfbio_submissions.brokerage.tests.utils import _get_pangaea_soap_body, _get_pangaea_soap_response
 from gfbio_submissions.brokerage.utils.pangaea import (
-    request_pangaea_login_token,
-    parse_pangaea_login_token_response,
     get_pangaea_login_token,
+    parse_pangaea_login_token_response,
+    request_pangaea_login_token,
 )
-from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
+
 from ...models.additional_reference import AdditionalReference
 from ...models.submission import Submission
 

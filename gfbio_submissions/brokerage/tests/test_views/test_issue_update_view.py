@@ -12,37 +12,15 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
-from gfbio_submissions.brokerage.tests.utils import (
-    _get_jira_hook_request_data,
-    _get_ena_data,
-    _get_ena_data_without_runs,
-)
+from gfbio_submissions.brokerage.tests.utils import _create_submission_via_serializer, _get_jira_hook_request_data
 from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.users.models import User
+
 from ...models.additional_reference import AdditionalReference
-from ...models.broker_object import BrokerObject
 from ...models.submission import Submission
-from ...serializers.submission_serializer import SubmissionSerializer
 
 
 class TestJiraIssueUpdateView(APITestCase):
-    # TODO: move to utils or similar ...
-    @classmethod
-    def _create_submission_via_serializer(cls, runs=False, username=None, create_broker_objects=True):
-        serializer = SubmissionSerializer(
-            data={
-                "target": "ENA",
-                "release": True,
-                "data": _get_ena_data() if runs else _get_ena_data_without_runs(),
-            }
-        )
-        serializer.is_valid()
-        user = User.objects.get(username=username) if username else User.objects.first()
-        submission = serializer.save(user=user)
-        if create_broker_objects:
-            BrokerObject.objects.add_submission_data(submission)
-        return submission
-
     @staticmethod
     def _create_user(username, email):
         user = User.objects.create_user(
@@ -66,7 +44,7 @@ class TestJiraIssueUpdateView(APITestCase):
         cls._create_user("horst", "horst@horst.de")
         cls._create_user("brokeragent", "brokeragent@gfbio.org")
 
-        submission = cls._create_submission_via_serializer(username="horst", create_broker_objects=True)
+        submission = _create_submission_via_serializer(username="horst")
 
         submission.brokerobject_set.create(type="study", user=submission.user, data={"data": True})
         studies = submission.brokerobject_set.filter(type="study")

@@ -10,10 +10,7 @@ from jira import JIRA, JIRAError
 from requests import ConnectionError
 from requests.structures import CaseInsensitiveDict
 
-from gfbio_submissions.brokerage.configuration.settings import (
-    JIRA_ISSUE_URL,
-    JIRA_ATTACHMENT_SUB_URL,
-)
+from gfbio_submissions.brokerage.configuration.settings import JIRA_ATTACHMENT_SUB_URL, JIRA_ISSUE_URL
 from gfbio_submissions.brokerage.utils.pangaea import get_pangaea_login_token
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 

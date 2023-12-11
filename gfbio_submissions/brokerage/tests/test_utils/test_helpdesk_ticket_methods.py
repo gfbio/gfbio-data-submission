@@ -10,44 +10,22 @@ from django.test import TestCase
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from gfbio_submissions.brokerage.tests.utils import (
-    _get_test_data_dir_path,
-    _get_ena_data,
-    _get_ena_data_without_runs,
-)
-from gfbio_submissions.brokerage.utils.gfbio import (
-    gfbio_prepare_create_helpdesk_payload,
-    get_gfbio_helpdesk_username,
-)
-from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
+from gfbio_submissions.brokerage.tests.utils import _create_submission_via_serializer, _get_test_data_dir_path
+from gfbio_submissions.brokerage.utils.gfbio import get_gfbio_helpdesk_username, gfbio_prepare_create_helpdesk_payload
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
-from ...configuration.settings import GFBIO_HELPDESK_TICKET
+
 from ...configuration.settings import (
-    JIRA_USERNAME_URL_TEMPLATE,
+    GFBIO_HELPDESK_TICKET,
     JIRA_USERNAME_URL_FULLNAME_TEMPLATE,
+    JIRA_USERNAME_URL_TEMPLATE,
 )
-from ...models.broker_object import BrokerObject
 from ...models.submission_upload import SubmissionUpload
 from ...serializers.submission_serializer import SubmissionSerializer
 
 
 class TestHelpDeskTicketMethods(TestCase):
-    # TODO: move to utils or similar ...
-    @classmethod
-    def _create_submission_via_serializer(cls, runs=False):
-        serializer = SubmissionSerializer(
-            data={
-                "target": "ENA",
-                "release": True,
-                "data": _get_ena_data() if runs else _get_ena_data_without_runs(),
-            }
-        )
-        serializer.is_valid()
-        submission = serializer.save(user=User.objects.first())
-        BrokerObject.objects.add_submission_data(submission)
-        return submission
-
     @classmethod
     def setUpTestData(cls):
         resource_cred = ResourceCredential.objects.create(
@@ -74,7 +52,7 @@ class TestHelpDeskTicketMethods(TestCase):
         client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
         cls.api_client = client
 
-        submission = cls._create_submission_via_serializer()
+        submission = _create_submission_via_serializer()
         submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="FAKE_KEY", primary=True)
 
     @classmethod

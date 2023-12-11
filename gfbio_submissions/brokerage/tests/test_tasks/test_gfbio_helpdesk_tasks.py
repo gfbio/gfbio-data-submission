@@ -4,14 +4,10 @@ import datetime
 import responses
 from django.test import override_settings
 
-from gfbio_submissions.brokerage.configuration.settings import (
-    JIRA_ISSUE_URL,
-    JIRA_COMMENT_SUB_URL,
-    ENA_PANGAEA,
-)
+from gfbio_submissions.brokerage.configuration.settings import ENA_PANGAEA, JIRA_COMMENT_SUB_URL, JIRA_ISSUE_URL
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
-from .test_helpdesk_tasks_base import TestHelpDeskTasksBase
+
 from ...models.jira_message import JiraMessage
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
@@ -24,6 +20,7 @@ from ...tasks.jira_tasks.jira_initial_comment import jira_initial_comment_task
 from ...tasks.jira_tasks.notify_user_embargo_expiry import notify_user_embargo_expiry_task
 from ...tasks.jira_tasks.update_submission_issue import update_submission_issue_task
 from ...tasks.submission_tasks.check_issue_existing_for_submission import check_issue_existing_for_submission_task
+from .test_helpdesk_tasks_base import TestHelpDeskTasksBase
 
 
 class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):

@@ -6,10 +6,11 @@ from uuid import UUID
 import responses
 
 from gfbio_submissions.generic.models.request_log import RequestLog
-from .test_submission_view_base import TestSubmissionView
+
 from ....configuration.settings import ATAX
 from ....models.submission import Submission
 from ....models.task_progress_report import TaskProgressReport
+from .test_submission_view_base import TestSubmissionView
 
 
 class TestSubmissionViewAtaxTarget(TestSubmissionView):

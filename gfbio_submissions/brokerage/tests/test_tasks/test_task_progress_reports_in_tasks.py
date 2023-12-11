@@ -5,13 +5,14 @@ from uuid import uuid4
 import responses
 
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
-from .test_tasks_base import TestTasks
+
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
 from ...tasks.broker_object_tasks.create_broker_objects_from_submission_data import (
     create_broker_objects_from_submission_data_task,
 )
 from ...tasks.jira_tasks.add_accession_to_pangaea_issue import add_accession_to_pangaea_issue_task
+from .test_tasks_base import TestTasks
 
 
 class TestTaskProgressReportInTasks(TestTasks):

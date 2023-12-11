@@ -13,29 +13,28 @@ from jira.resources import Attachment
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from gfbio_submissions.brokerage.tests.test_models.test_submission import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import (
-    _get_pangaea_soap_response,
+    _create_submission_via_serializer,
+    _get_jira_attach_response,
+    _get_jira_issue_response,
     _get_pangaea_attach_response,
     _get_pangaea_comment_response,
+    _get_pangaea_soap_response,
     _get_pangaea_ticket_response,
-    _get_jira_issue_response,
-    _get_jira_attach_response,
     _get_request_comment_response,
 )
-from gfbio_submissions.brokerage.utils.gfbio import (
-    gfbio_prepare_create_helpdesk_payload,
-)
+from gfbio_submissions.brokerage.utils.gfbio import gfbio_prepare_create_helpdesk_payload
 from gfbio_submissions.brokerage.utils.jira import JiraClient
-from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
-from ...configuration.settings import GFBIO_HELPDESK_TICKET
+
 from ...configuration.settings import (
-    JIRA_ISSUE_URL,
+    GENERIC,
+    GFBIO_HELPDESK_TICKET,
     JIRA_ATTACHMENT_SUB_URL,
     JIRA_ATTACHMENT_URL,
-    GENERIC,
+    JIRA_ISSUE_URL,
 )
 from ...models.submission import Submission
 
@@ -69,7 +68,7 @@ class TestJiraClient(TestCase):
             comment="Default configuration",
             contact="kevin@horstmeier.de",
         )
-        submission = SubmissionTest._create_submission_via_serializer()
+        submission = _create_submission_via_serializer()
         submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="SAND-1661", primary=True)
         cls.issue_json = _get_jira_issue_response()
         cls.pangaea_issue_json = _get_pangaea_ticket_response()

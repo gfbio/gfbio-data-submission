@@ -8,7 +8,7 @@ from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.resolve.models import Accession
 from gfbio_submissions.users.models import User
-from .test_tasks_base import TestTasks
+
 from ...models.broker_object import BrokerObject
 from ...models.ena_report import EnaReport
 from ...models.persistent_identifier import PersistentIdentifier
@@ -20,6 +20,7 @@ from ...tasks.ena_report_tasks.update_persistent_identifier_report_status import
     update_persistent_identifier_report_status_task,
 )
 from ...tasks.ena_report_tasks.update_resolver_accessions import update_resolver_accessions_task
+from .test_tasks_base import TestTasks
 
 
 class TestUpdateResolverAccessionsTask(TestTasks):

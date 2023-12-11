@@ -3,10 +3,7 @@ import json
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.forms.submission_comment_form import (
-    SubmissionCommentForm,
-)
-
+from gfbio_submissions.brokerage.forms.submission_comment_form import SubmissionCommentForm
 
 # from gfbio_submissions.brokerage.forms import SubmissionCommentForm
 

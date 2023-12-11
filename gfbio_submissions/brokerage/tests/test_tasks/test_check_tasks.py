@@ -3,14 +3,12 @@
 from django.db.models import Q
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.configuration.settings import (
-    PANGAEA_JIRA_TICKET,
-    GFBIO_HELPDESK_TICKET,
-)
+from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET, PANGAEA_JIRA_TICKET
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
+
 from ...configuration.settings import ENA
 from ...models.additional_reference import AdditionalReference
 from ...models.submission import Submission

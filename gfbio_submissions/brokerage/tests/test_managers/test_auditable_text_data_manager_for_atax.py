@@ -5,37 +5,19 @@ import xml.etree.ElementTree as ET
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.tests.utils import (
-    _get_taxonomic_min_data,
-    _get_test_data_dir_path,
-)
-from gfbio_submissions.brokerage.utils.csv_atax import (
-    store_atax_data_as_auditable_text_data,
-)
+from gfbio_submissions.brokerage.tests.utils import _create_submission_via_serializer, _get_test_data_dir_path
+from gfbio_submissions.brokerage.utils.csv_atax import store_atax_data_as_auditable_text_data
 from gfbio_submissions.users.models import User
+
 from ...models.auditable_text_data import AuditableTextData
-from ...models.broker_object import BrokerObject
 from ...models.submission import Submission
-from ...serializers.submission_serializer import SubmissionSerializer
 
 
 class TestAuditableTextDataManagerForAtax(TestCase):
-    # TODO: move to utils or similar ...
-    @classmethod
-    def _create_submission_via_serializer(cls, runs=False, username=None, create_broker_objects=True):
-        serializer = SubmissionSerializer(data={"target": "ATAX", "release": True, "data": _get_taxonomic_min_data()})
-        serializer.is_valid()
-
-        user = User.objects.get(username=username) if username else User.objects.first()
-        submission = serializer.save(user=user)
-        if create_broker_objects:
-            BrokerObject.objects.add_submission_data(submission)
-        return submission
-
     @classmethod
     def setUpTestData(cls):
         User.objects.create_user(username="horst", email="horst@horst.de", password="password")
-        cls._create_submission_via_serializer()
+        _create_submission_via_serializer()
 
     @classmethod
     def _create_atax_text_test_data(cls, invalid=False):

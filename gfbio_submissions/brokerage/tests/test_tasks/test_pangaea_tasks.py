@@ -5,19 +5,19 @@ import responses
 from django.test import override_settings
 
 from gfbio_submissions.brokerage.configuration.settings import (
-    JIRA_ISSUE_URL,
-    JIRA_COMMENT_SUB_URL,
     JIRA_ATTACHMENT_SUB_URL,
+    JIRA_COMMENT_SUB_URL,
+    JIRA_ISSUE_URL,
 )
 from gfbio_submissions.brokerage.tests.utils import (
-    _get_pangaea_soap_response,
     _get_pangaea_attach_response,
     _get_pangaea_comment_response,
+    _get_pangaea_soap_response,
     _get_pangaea_ticket_response,
 )
-from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.generic.models.request_log import RequestLog
-from .test_tasks_base import TestTasks
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
+
 from ...models.persistent_identifier import PersistentIdentifier
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
@@ -25,6 +25,7 @@ from ...tasks.jira_tasks.add_accession_to_pangaea_issue import add_accession_to_
 from ...tasks.jira_tasks.attach_to_pangaea_issue import attach_to_pangaea_issue_task
 from ...tasks.jira_tasks.check_for_pangaea_doi import check_for_pangaea_doi_task
 from ...tasks.jira_tasks.create_pangaea_issue import create_pangaea_issue_task
+from .test_tasks_base import TestTasks
 
 
 class TestPangaeaTasks(TestTasks):

@@ -6,18 +6,16 @@ from unittest import skip
 
 import responses
 
-from gfbio_submissions.brokerage.tests.utils import (
-    _get_submission_request_data,
-    _get_ena_release_xml_response,
-)
-from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
+from gfbio_submissions.brokerage.tests.utils import _get_ena_release_xml_response, _get_submission_request_data
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
-from .test_submission_view_base import TestSubmissionView
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
+
 from ....configuration.settings import JIRA_ISSUE_URL
 from ....models.broker_object import BrokerObject
 from ....models.persistent_identifier import PersistentIdentifier
 from ....models.submission import Submission
 from ....models.task_progress_report import TaskProgressReport
+from .test_submission_view_base import TestSubmissionView
 
 
 class TestSubmissionViewPutRequests(TestSubmissionView):

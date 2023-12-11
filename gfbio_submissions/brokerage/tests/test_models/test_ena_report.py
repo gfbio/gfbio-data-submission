@@ -12,6 +12,7 @@ from gfbio_submissions.brokerage.utils.ena import (
 )
 from gfbio_submissions.resolve.models import Accession
 from gfbio_submissions.users.models import User
+
 from ...models.broker_object import BrokerObject
 from ...models.ena_report import EnaReport
 from ...models.persistent_identifier import PersistentIdentifier

@@ -9,20 +9,20 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
 from config.settings.base import MEDIA_ROOT
-from gfbio_submissions.brokerage.configuration.settings import GENERIC, ENA_PANGAEA, ENA
-from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
+from gfbio_submissions.brokerage.configuration.settings import ENA, ENA_PANGAEA, GENERIC, GFBIO_HELPDESK_TICKET
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.csv import (
-    parse_molecular_csv,
-    check_for_molecular_content,
-    extract_sample,
     check_csv_file_rule,
+    check_for_molecular_content,
     check_metadata_rule,
     check_minimum_header_cols,
+    extract_sample,
+    parse_molecular_csv,
 )
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data
 from gfbio_submissions.brokerage.utils.schema_validation import validate_data_full
 from gfbio_submissions.users.models import User
+
 from ...models.broker_object import BrokerObject
 from ...models.submission import Submission
 from ...models.submission_upload import SubmissionUpload

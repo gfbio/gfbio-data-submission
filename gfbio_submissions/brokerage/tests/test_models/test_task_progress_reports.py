@@ -2,6 +2,7 @@
 from django.test import TestCase
 
 from gfbio_submissions.users.models import User
+
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
 

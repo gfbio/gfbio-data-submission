@@ -3,7 +3,7 @@ import gzip
 import os
 from pprint import pprint
 from unittest import skip
-from uuid import uuid4, UUID
+from uuid import UUID, uuid4
 
 import responses
 from django.conf import settings
@@ -18,17 +18,17 @@ from gfbio_submissions.brokerage.tests.utils import (
     _get_test_data_dir_path,
 )
 from gfbio_submissions.brokerage.utils.ena import (
-    prepare_ena_data,
-    store_ena_data_as_auditable_text_data,
     Enalizer,
     parse_ena_submission_response,
+    prepare_ena_data,
     prepare_study_data_only,
+    store_ena_data_as_auditable_text_data,
     store_single_data_item_as_auditable_text_data,
 )
 from gfbio_submissions.brokerage.utils.ena_cli import (
-    submit_targeted_sequences,
     create_ena_manifest_text_data,
     store_manifest_to_filesystem,
+    submit_targeted_sequences,
 )
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.generic.models.request_log import RequestLog
@@ -36,6 +36,7 @@ from gfbio_submissions.generic.models.resource_credential import ResourceCredent
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.generic.utils import logged_requests
 from gfbio_submissions.users.models import User
+
 from ..configuration.settings import ENA, SUBMISSION_DELAY
 from ..models.auditable_text_data import AuditableTextData
 from ..models.broker_object import BrokerObject
@@ -786,10 +787,10 @@ class TestCLI(TestCase):
             body=_get_ena_register_study_response(),
             status=200,
         )
-        from ..tasks.transfer_tasks.register_study_at_ena import register_study_at_ena_task
         from ..tasks.transfer_tasks.process_ena_response import process_ena_response_task
-        from ..tasks.transfer_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
         from ..tasks.transfer_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
+        from ..tasks.transfer_tasks.register_study_at_ena import register_study_at_ena_task
+        from ..tasks.transfer_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
 
         submission_chain = (
             register_study_at_ena_task.s(submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
