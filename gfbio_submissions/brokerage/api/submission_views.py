@@ -22,6 +22,9 @@ from ..serializers import SubmissionUploadListSerializer, \
 from ..utils.submission_tools import get_embargo_from_request
 from ..utils.task_utils import jira_cancel_issue
 
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse, OpenApiRequest
+
 
 class SubmissionsView(mixins.ListModelMixin,
                       mixins.CreateModelMixin,
@@ -78,9 +81,36 @@ class SubmissionsView(mixins.ListModelMixin,
         return Submission.objects.filter(user=user).order_by('-modified')
 
     # http://www.django-rest-framework.org/api-guide/filtering/
+
+    @extend_schema(
+        operation_id="list submissions",
+        description="List all submissions you have permission to access.",
+        responses={
+            200: OpenApiResponse(
+                response=SubmissionDetailSerializer(many=True),
+                description="List of all submissions you are permitted to access."
+            )
+        }
+    )
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
+    @extend_schema(
+        operation_id="create submission",
+        description="Create a new Submission. Below you find a list of required (and non-required) fields needed to create a new submission.</br><ul><li>In its simplest form you would only need to choose target='GENERIC' and provide a title and an abstract to your submission, and thus start the whole submission process when posting this data.</li><li>One way to submit molecular data would be to follow the same principle, and to additionally upload a CSV file containing the needed meta-data. To perform the upload refer to the <a href='#operation/create%20submission%20upload'>'create submission upload'</a> documentation below.</br>Additional information and the template can be found here:<ul><li><a href='https://gitlab-pe.gwdg.de/gfbio/molecular-submission-templates/-/blob/master/full_template.csv'>Molecular CSV Template</a></li><li><a href='xxx'>WIKI ?</a></li></ul></li><li>It is also possible to submit molecular data without uploading a template, by directly providing all meta-data as json also using this endpoint.</br>For dedicated information on this, please refer to:<ul><li><a href='/api/molecular/'>Submit molecular data in pure JSON</a></li></ul></li></ul>",
+        request=OpenApiRequest(
+            request=SubmissionDetailSerializer(many=False)
+        ),
+        responses={
+            201: OpenApiResponse(
+                description="Submission response",
+                response=SubmissionDetailSerializer(many=False)
+            ),
+            400: OpenApiResponse(
+                description="Validation error",
+            )
+        }
+    )
     def post(self, request, *args, **kwargs):
         # TODO: is this still needed ? user is not used
         # user = User.objects.get(username=request.user)
@@ -102,11 +132,55 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    @extend_schema(
+        operation_id="update submission",
+        description="Updates an existing Submission",
+        parameters=[
+            OpenApiParameter(
+                name="broker_submission_id",
+                description="Unique submission ID of submission to update (A UUID specified by RFC4122).",
+                location="path",
+                required=True,
+                type=OpenApiTypes.UUID
+            )
+        ],
+        responses={
+            200: OpenApiResponse(
+                description="requested submission",
+                response=SubmissionDetailSerializer()
+            )
+        }
+    )
     def get(self, request, *args, **kwargs):
         response = self.retrieve(request, *args, **kwargs)
         response.data['accession_id'] = self.get_object().get_accession_id()
         return response
 
+    @extend_schema(
+        operation_id="get submission by submission ID",
+        description="Returns a single submission, identified by a unique submission ID (broker_submission_id)",
+        parameters=[
+            OpenApiParameter(
+                name="broker_submission_id",
+                description="Unique submission ID of submission to retrieve (A UUID specified by RFC4122).",
+                location="path",
+                required=True,
+                type=OpenApiTypes.UUID
+            )
+        ],
+        request=OpenApiRequest(
+            request=SubmissionDetailSerializer(many=False)
+        ),
+        responses={
+            200: OpenApiResponse(
+                description="Updated submission",
+                response=SubmissionDetailSerializer()
+            ),
+            400: OpenApiResponse(
+                description="Validation error"
+            )
+        }
+    )
     def put(self, request, *args, **kwargs):
         instance = self.get_object()
         new_embargo = get_embargo_from_request(request)
@@ -190,6 +264,24 @@ class SubmissionDetailView(mixins.RetrieveModelMixin,
             )
         return response
 
+    @extend_schema(
+        operation_id="cancel submission",
+        description="Cancels a Submission",
+        parameters=[
+            OpenApiParameter(
+                name="broker_submission_id",
+                description="Unique submission ID of submission to delete (A UUID specified by RFC4122).",
+                location="path",
+                required=True,
+                type=OpenApiTypes.UUID
+            )
+        ],
+        responses={
+            204: OpenApiResponse(
+                description="Submission successfully cancelled"
+            )
+        }
+    )
     def delete(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.status = Submission.CANCELLED
