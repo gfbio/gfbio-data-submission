@@ -4,14 +4,13 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('users', '0017_auto_20210420_1433'),
+        ("users", "0017_auto_20210420_1433"),
     ]
 
     operations = [
         migrations.AddConstraint(
-            model_name='externaluserid',
-            constraint=models.UniqueConstraint(fields=('user', 'provider'), name='unique_id_for_user'),
+            model_name="externaluserid",
+            constraint=models.UniqueConstraint(fields=("user", "provider"), name="unique_id_for_user"),
         ),
     ]

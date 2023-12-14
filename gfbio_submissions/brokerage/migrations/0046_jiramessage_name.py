@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0045_jiramessage'),
+        ("brokerage", "0045_jiramessage"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='jiramessage',
-            name='name',
-            field=models.CharField(default='', max_length=128),
+            model_name="jiramessage",
+            name="name",
+            field=models.CharField(default="", max_length=128),
         ),
     ]

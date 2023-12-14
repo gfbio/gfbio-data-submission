@@ -35,17 +35,13 @@ class UserCreationForm(forms.UserCreationForm):
 class AgreeTosSocialSignupForm(SignupForm):
     agree_terms = form.BooleanField(
         required=True,
-        label=mark_safe(
-            'Yes, I accept the <a href="https://www.gfbio.org/terms-of-use">'
-            'GFBio Terms of Use</a>'
-        )
+        label=mark_safe('Yes, I accept the <a href="https://www.gfbio.org/terms-of-use">' "GFBio Terms of Use</a>"),
     )
     agree_privacy = form.BooleanField(
         required=True,
         label=mark_safe(
-            'Yes, I accept the <a href="https://www.gfbio.org/privacy-policy">'
-            'GFBio Privacy Policy</a>'
-        )
+            'Yes, I accept the <a href="https://www.gfbio.org/privacy-policy">' "GFBio Privacy Policy</a>"
+        ),
     )
 
     def save(self, request):
@@ -54,8 +50,8 @@ class AgreeTosSocialSignupForm(SignupForm):
         user = super(AgreeTosSocialSignupForm, self).save(request)
 
         # Add your own processing here.
-        user.agreed_to_terms = self.cleaned_data.get('agree_terms')
-        user.agreed_to_privacy = self.cleaned_data.get('agree_privacy')
+        user.agreed_to_terms = self.cleaned_data.get("agree_terms")
+        user.agreed_to_privacy = self.cleaned_data.get("agree_privacy")
 
         # FIXME: check if redundant to more recent fix of issue #569
         # user.site_configuration = SiteConfiguration.objects.get_hosting_site_configuration()

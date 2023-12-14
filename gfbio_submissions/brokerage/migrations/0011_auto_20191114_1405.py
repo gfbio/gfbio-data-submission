@@ -4,18 +4,17 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0010_delete_primarydatafile'),
+        ("brokerage", "0010_delete_primarydatafile"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='siteconfiguration',
-            name='gfbio_server',
+            model_name="siteconfiguration",
+            name="gfbio_server",
         ),
         migrations.RemoveField(
-            model_name='siteconfiguration',
-            name='use_gfbio_services',
+            model_name="siteconfiguration",
+            name="use_gfbio_services",
         ),
     ]

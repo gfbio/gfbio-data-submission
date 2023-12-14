@@ -4,10 +4,13 @@ include:
       - ".create_merge_request_v3.yml"
       - ".tag_release.yml"
       - ".web_test_v2.yml"
+      - ".hotfix_workflow.yml"
 
 stages:
-  - unit_tests
+  - check_issue_type
   - create_merge_request
+  - create_hotfix_merge_request
+  - unit_tests
   - web_test_check
   - web_test_update
   - web_test_stop
@@ -15,58 +18,63 @@ stages:
   - tag_release_check
   - tag_release
 
-run_unit_tests:
-  stage: unit_tests
-  script:
-    - rm -r .envs && cp -r /home/gitlab-runner/.gfbio_envs/ .envs
-    - docker-compose -f local.yml build
-    - CURRENT_UID=$(id -u):$(id -g) docker stack deploy -c cicd/local.yml ${CI_COMMIT_REF_NAME}-tests
-    - while [[ $(docker ps -a | grep ${CI_COMMIT_REF_NAME}-tests_django | grep Exited | wc -l) == 0 ]]; do sleep 1; done
-    - docker logs $(docker ps -a | grep -oP "$CI_COMMIT_REF_NAME"-tests_django.+\s?)
-    - if [[ $(docker logs $(docker ps -a | grep -oP "$CI_COMMIT_REF_NAME"-tests_django.+\s?) --tail 2 2>&1 | grep FAILED | wc -l) == 1 ]]; then docker stack rm ${CI_COMMIT_REF_NAME}-tests && exit 1; fi
-    - docker stack rm ${CI_COMMIT_REF_NAME}-tests
-  environment:
-    name: review/$CI_COMMIT_REF_NAME
-  rules:
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+-/'
-    - if: '$CI_COMMIT_BRANCH =~ /^\w+-\d+/'
-  tags:
-    - dev-denbi
-
 create_merge_request:
   variables:
     PROJECT_NAME: "submissions"
   tags:
     - dev-denbi
 
+run unit tests:
+  stage: unit_tests
+  rules:
+    - if: $CI_COMMIT_BRANCH
+  script:
+    - docker compose -f local.yml build
+    - CURRENT_UID=$(id -u):$(id -g) docker stack deploy -c cicd/local.yml ${CI_COMMIT_REF_NAME}-tests
+    - while [[ $(docker ps -a | grep ${CI_COMMIT_REF_NAME}-tests_django | grep Exited | wc -l) == 0 ]]; do sleep 1; done
+    - docker logs $(docker ps -a | grep -oP "$CI_COMMIT_REF_NAME"-tests_django.+\s?)
+    - if [[ $(docker logs $(docker ps -a | grep -oP "$CI_COMMIT_REF_NAME"-tests_django.+\s?) --tail 2 2>&1 | grep FAILED | wc -l) == 1 ]]; then docker stack rm ${CI_COMMIT_REF_NAME}-tests && exit 1; fi
+    - docker stack rm ${CI_COMMIT_REF_NAME}-tests
+  after_script:
+    - docker compose -f cicd/local.yml run --rm django rm -r staticfiles
+    - docker compose -f cicd/local.yml down
+  environment:
+    name: review/$CI_COMMIT_REF_NAME
+  tags:
+    - dev-denbi
+
 web_test_update:
   variables:
     PROJECT_NAME: "submissions"
+    COMPOSE_FILE: "cicd/production.yml"
   script:
     - ISSUE_ID=$(awk -F- '{print $2}' <<< ${CI_COMMIT_REF_NAME})
     - TEST_NAME=$ISSUE_ID-$PROJECT_NAME
-    - TEST_NAME=${TEST_NAME} ADMIN_NICKNAME=${ADMIN_NICKNAME} ADMIN_EMAIL=${ADMIN_EMAIL} ADMIN_PASSWORD=${ADMIN_PASSWORD} ./cicd/createWebTest.sh
+    - TEST_NAME=${TEST_NAME} ADMIN_URL=${ADMIN_URL} ./cicd/createWebTest.sh
+    - docker compose -f $COMPOSE_FILE build
+    - ./web_test_deploy.sh
 
 web_test_stop:
   variables:
     MAIN_BRANCH_NAME: "master"
     PROJECT_NAME: "submissions"
 
-update_staging:
+update staging:
   stage: update_staging
+  needs: ["run unit tests"]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   script:
     - ./cicd/updateStaging.sh
   environment:
     name: staging
     url: https://submissions.gfbio.dev/
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
   tags:
     - staging-denbi
 
 tag_release_check:
   variables:
-    MAIN_BRANCH_NAME: "master"
+    MAIN_BRANCH_NAME: "production"
   tags:
     - development-denbi
 

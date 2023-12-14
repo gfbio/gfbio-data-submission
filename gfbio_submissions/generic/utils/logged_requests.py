@@ -4,21 +4,21 @@ from uuid import uuid4
 
 import requests
 
-from ..models import RequestLog
+from ..models.request_log import RequestLog
 
 logger = logging.getLogger(__name__)
 
 
-def post(url, data=None, json=None, submission=None, return_log_id=False,
-         request_id=uuid4(),
-         **kwargs):
+def post(url, data=None, json=None, submission=None, return_log_id=False, request_id=uuid4(), **kwargs):
     if len(RequestLog.objects.filter(request_id=request_id)) > 0:
         logger.info(
-            'logged_requests.py | post | UUID={0} already exists | submission={1}'.format(
-                request_id, submission.broker_submission_id))
+            "logged_requests.py | post | UUID={0} already exists | submission={1}".format(
+                request_id, submission.broker_submission_id
+            )
+        )
         request_id = uuid4()
 
-    data = data or ''
+    data = data or ""
     log = RequestLog.objects.create(
         type=RequestLog.OUTGOING,
         method=RequestLog.POST,
@@ -27,9 +27,7 @@ def post(url, data=None, json=None, submission=None, return_log_id=False,
         data=data,
         user=submission.user if submission else None,
         submission_id=submission.broker_submission_id if submission else None,
-        request_details={
-            'initial_report': True
-        }
+        request_details={"initial_report": True},
     )
 
     response = requests.post(
@@ -39,13 +37,15 @@ def post(url, data=None, json=None, submission=None, return_log_id=False,
         **kwargs,
     )
     incoming = None
-    files = kwargs.get('files', '')
+    files = kwargs.get("files", "")
     json = json or {}
     if submission:
         try:
-            incoming = RequestLog.objects.filter(
-                submission_id=submission.broker_submission_id).filter(
-                type=RequestLog.INCOMING).latest('created')
+            incoming = (
+                RequestLog.objects.filter(submission_id=submission.broker_submission_id)
+                .filter(type=RequestLog.INCOMING)
+                .latest("created")
+            )
         except RequestLog.DoesNotExist:
             pass
 
@@ -57,9 +57,9 @@ def post(url, data=None, json=None, submission=None, return_log_id=False,
         response_content=response.content,
         triggered_by=incoming,
         request_details={
-            'initial_report': False,
-            'response_headers': str(response.headers or '')
-        }
+            "initial_report": False,
+            "response_headers": str(response.headers or ""),
+        },
     )
     if return_log_id:
         return response, log.request_id
@@ -84,9 +84,7 @@ def get(url, params=None, submission=None, return_log_id=False, **kwargs):
         submission_id=submission_id,
         response_status=response.status_code,
         response_content=response.content,
-        request_details={
-            'response_headers': str(response.headers or '')
-        }
+        request_details={"response_headers": str(response.headers or "")},
     )
     if return_log_id:
         return response, log.request_id

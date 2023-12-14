@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0035_merge_20200303_2135'),
+        ("brokerage", "0035_merge_20200303_2135"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='persistentidentifier',
-            name='hold_date',
+            model_name="persistentidentifier",
+            name="hold_date",
             field=models.DateField(blank=True, null=True),
         ),
     ]

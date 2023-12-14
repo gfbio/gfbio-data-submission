@@ -4,15 +4,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0046_jiramessage_name'),
+        ("brokerage", "0046_jiramessage_name"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='jiramessage',
-            name='message',
-            field=models.TextField(help_text="{submitter_name} - will be replaced with submitter's name <br />{primary_accession} - replaced with primary accession number"),
+            model_name="jiramessage",
+            name="message",
+            field=models.TextField(
+                help_text="{submitter_name} - will be replaced with submitter's name <br />{primary_accession} - replaced with primary accession number"
+            ),
         ),
     ]

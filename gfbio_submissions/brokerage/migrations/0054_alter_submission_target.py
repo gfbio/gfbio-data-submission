@@ -4,15 +4,21 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0053_alter_submission_target'),
+        ("brokerage", "0053_alter_submission_target"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='submission',
-            name='target',
-            field=models.CharField(choices=[('ENA', 'ENA'), ('ENA_PANGAEA', 'ENA_PANGAEA'), ('GENERIC', 'GENERIC')], max_length=16),
+            model_name="submission",
+            name="target",
+            field=models.CharField(
+                choices=[
+                    ("ENA", "ENA"),
+                    ("ENA_PANGAEA", "ENA_PANGAEA"),
+                    ("GENERIC", "GENERIC"),
+                ],
+                max_length=16,
+            ),
         ),
     ]

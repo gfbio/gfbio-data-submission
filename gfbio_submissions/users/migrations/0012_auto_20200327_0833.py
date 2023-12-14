@@ -5,16 +5,21 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('generic', '0001_initial'),
-        ('users', '0011_auto_20200217_1004'),
+        ("generic", "0001_initial"),
+        ("users", "0011_auto_20200217_1004"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='site_configuration',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='configuration_users', to='generic.SiteConfiguration'),
+            model_name="user",
+            name="site_configuration",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="configuration_users",
+                to="generic.SiteConfiguration",
+            ),
         ),
     ]

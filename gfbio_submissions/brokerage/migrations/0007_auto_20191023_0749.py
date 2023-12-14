@@ -6,20 +6,27 @@ import model_utils.fields
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0006_auto_20191023_0749'),
+        ("brokerage", "0006_auto_20191023_0749"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='submission',
-            name='created',
-            field=model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created'),
+            model_name="submission",
+            name="created",
+            field=model_utils.fields.AutoCreatedField(
+                default=django.utils.timezone.now,
+                editable=False,
+                verbose_name="created",
+            ),
         ),
         migrations.AddField(
-            model_name='submission',
-            name='modified',
-            field=model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified'),
+            model_name="submission",
+            name="modified",
+            field=model_utils.fields.AutoLastModifiedField(
+                default=django.utils.timezone.now,
+                editable=False,
+                verbose_name="modified",
+            ),
         ),
     ]

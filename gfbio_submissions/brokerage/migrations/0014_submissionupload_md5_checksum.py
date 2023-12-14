@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0013_auto_20191128_1333'),
+        ("brokerage", "0013_auto_20191128_1333"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='submissionupload',
-            name='md5_checksum',
-            field=models.CharField(default='', help_text='MD5 checksum of "file"', max_length=32),
+            model_name="submissionupload",
+            name="md5_checksum",
+            field=models.CharField(default="", help_text='MD5 checksum of "file"', max_length=32),
         ),
     ]

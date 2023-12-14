@@ -4,15 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('generic', '0005_auto_20200518_1405'),
+        ("generic", "0005_auto_20200518_1405"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='requestlog',
-            name='method',
-            field=models.IntegerField(choices=[(0, 'not available'), (1, 'POST'), (2, 'GET'), (3, 'PUT'), (4, 'PATCH')], default=0, help_text='Http method used, if available'),
+            model_name="requestlog",
+            name="method",
+            field=models.IntegerField(
+                choices=[
+                    (0, "not available"),
+                    (1, "POST"),
+                    (2, "GET"),
+                    (3, "PUT"),
+                    (4, "PATCH"),
+                ],
+                default=0,
+                help_text="Http method used, if available",
+            ),
         ),
     ]

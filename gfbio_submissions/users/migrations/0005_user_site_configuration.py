@@ -5,16 +5,21 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0027_remove_siteconfiguration_site'),
-        ('users', '0004_auto_20191001_1328'),
+        ("brokerage", "0027_remove_siteconfiguration_site"),
+        ("users", "0004_auto_20191001_1328"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='site_configuration',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='siteconfiguration', to='brokerage.SiteConfiguration'),
+            model_name="user",
+            name="site_configuration",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="siteconfiguration",
+                to="brokerage.SiteConfiguration",
+            ),
         ),
     ]

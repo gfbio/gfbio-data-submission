@@ -10,129 +10,117 @@ from jira import JIRA, JIRAError
 from requests import ConnectionError
 from requests.structures import CaseInsensitiveDict
 
-from gfbio_submissions.brokerage.configuration.settings import \
-    JIRA_ISSUE_URL, JIRA_ATTACHMENT_SUB_URL
-from gfbio_submissions.brokerage.utils.pangaea import \
-    get_pangaea_login_token
-from gfbio_submissions.generic.models import ResourceCredential
+from gfbio_submissions.brokerage.configuration.settings import (
+    JIRA_ISSUE_URL,
+    JIRA_ATTACHMENT_SUB_URL,
+)
+from gfbio_submissions.brokerage.utils.pangaea import get_pangaea_login_token
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 
 
 class TestGFBioJiraApi(TestCase):
-    base_url = 'http://helpdesk.gfbio.org'
+    base_url = "http://helpdesk.gfbio.org"
 
-    @skip('Test against helpdesk server')
+    @skip("Test against helpdesk server")
     def test_create_request(self):
-        url = 'http://helpdesk.gfbio.org{0}'.format(JIRA_ISSUE_URL)
+        url = "http://helpdesk.gfbio.org{0}".format(JIRA_ISSUE_URL)
         response = requests.post(
             url=url,
-            auth=('brokeragent', ''),
-            headers={
-                'Content-Type': 'application/json'
-            },
-            data=json.dumps({
-                'fields': {
-                    'project': {
-                        'key': 'SAND'
-                    },
-                    'summary': 'Testing REST API programmatic',
-                    'description': 'Generating JIRA issues via django unit-test.',
-                    'issuetype': {
-                        'name': 'IT Help'
-                    },
-                    'reporter': {
-                        'name': 'testuser1'
-                    },
-                    'customfield_10010': 'sand/data-submission'
+            auth=("brokeragent", ""),
+            headers={"Content-Type": "application/json"},
+            data=json.dumps(
+                {
+                    "fields": {
+                        "project": {"key": "SAND"},
+                        "summary": "Testing REST API programmatic",
+                        "description": "Generating JIRA issues via django unit-test.",
+                        "issuetype": {"name": "IT Help"},
+                        "reporter": {"name": "testuser1"},
+                        "customfield_10010": "sand/data-submission",
+                    }
                 }
-            })
+            ),
         )
 
-    @skip('Test against helpdesk server')
+    @skip("Test against helpdesk server")
     def test_comment_existing_ticket(self):
-        ticket_key = 'SAND-1535'
-        ticket_action = 'comment'
-        url = '{0}{1}/{2}/{3}'.format(self.base_url, JIRA_ISSUE_URL,
-                                      ticket_key, ticket_action)
+        ticket_key = "SAND-1535"
+        ticket_action = "comment"
+        url = "{0}{1}/{2}/{3}".format(self.base_url, JIRA_ISSUE_URL, ticket_key, ticket_action)
         response = requests.post(
             url=url,
-            auth=('brokeragent', ''),
-            headers={
-                'Content-Type': 'application/json'
-            },
-            data=json.dumps({
-                'body': 'programmatic update of ticket {}'.format(ticket_key)
-            })
+            auth=("brokeragent", ""),
+            headers={"Content-Type": "application/json"},
+            data=json.dumps({"body": "programmatic update of ticket {}".format(ticket_key)}),
         )
         # 201
         # b'{"self":"https://helpdesk.gfbio.org/rest/api/2/issue/16029/comment/21606","id":"21606","author":{"self":"https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent","name":"brokeragent","key":"brokeragent@gfbio.org","emailAddress":"brokeragent@gfbio.org","avatarUrls":{"48x48":"https://helpdesk.gfbio.org/secure/useravatar?ownerId=brokeragent%40gfbio.org&avatarId=11100","24x24":"https://helpdesk.gfbio.org/secure/useravatar?size=small&ownerId=brokeragent%40gfbio.org&avatarId=11100","16x16":"https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&ownerId=brokeragent%40gfbio.org&avatarId=11100","32x32":"https://helpdesk.gfbio.org/secure/useravatar?size=medium&ownerId=brokeragent%40gfbio.org&avatarId=11100"},"displayName":"Broker Agent","active":true,"timeZone":"Europe/Berlin"},"body":"programmatic update of ticket SAND-1535","updateAuthor":{"self":"https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent","name":"brokeragent","key":"brokeragent@gfbio.org","emailAddress":"brokeragent@gfbio.org","avatarUrls":{"48x48":"https://helpdesk.gfbio.org/secure/useravatar?ownerId=brokeragent%40gfbio.org&avatarId=11100","24x24":"https://helpdesk.gfbio.org/secure/useravatar?size=small&ownerId=brokeragent%40gfbio.org&avatarId=11100","16x16":"https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&ownerId=brokeragent%40gfbio.org&avatarId=11100","32x32":"https://helpdesk.gfbio.org/secure/useravatar?size=medium&ownerId=brokeragent%40gfbio.org&avatarId=11100"},"displayName":"Broker Agent","active":true,"timeZone":"Europe/Berlin"},"created":"2019-09-17T13:46:17.002+0000","updated":"2019-09-17T13:46:17.002+0000"}'
 
-    @skip('Test against helpdesk server')
+    @skip("Test against helpdesk server")
     def test_get_comments(self):
-        ticket_key = 'SAND-1535'
-        ticket_action = 'comment'
-        url = '{0}{1}/{2}/{3}'.format(self.base_url, JIRA_ISSUE_URL,
-                                      ticket_key, ticket_action)
+        ticket_key = "SAND-1535"
+        ticket_action = "comment"
+        url = "{0}{1}/{2}/{3}".format(self.base_url, JIRA_ISSUE_URL, ticket_key, ticket_action)
         response = requests.get(
             url=url,
-            auth=('brokeragent', ''),
-            headers={
-                'Content-Type': 'application/json'
-            }
+            auth=("brokeragent", ""),
+            headers={"Content-Type": "application/json"},
         )
         # 200
         # b'{"startAt":0,"maxResults":1048576,"total":1,"comments":[{"self":"https://helpdesk.gfbio.org/rest/api/2/issue/16029/comment/21606","id":"21606","author":{"self":"https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent","name":"brokeragent","key":"brokeragent@gfbio.org","emailAddress":"brokeragent@gfbio.org","avatarUrls":{"48x48":"https://helpdesk.gfbio.org/secure/useravatar?ownerId=brokeragent%40gfbio.org&avatarId=11100","24x24":"https://helpdesk.gfbio.org/secure/useravatar?size=small&ownerId=brokeragent%40gfbio.org&avatarId=11100","16x16":"https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&ownerId=brokeragent%40gfbio.org&avatarId=11100","32x32":"https://helpdesk.gfbio.org/secure/useravatar?size=medium&ownerId=brokeragent%40gfbio.org&avatarId=11100"},"displayName":"Broker Agent","active":true,"timeZone":"Europe/Berlin"},"body":"programmatic update of ticket SAND-1535","updateAuthor":{"self":"https://helpdesk.gfbio.org/rest/api/2/user?username=brokeragent","name":"brokeragent","key":"brokeragent@gfbio.org","emailAddress":"brokeragent@gfbio.org","avatarUrls":{"48x48":"https://helpdesk.gfbio.org/secure/useravatar?ownerId=brokeragent%40gfbio.org&avatarId=11100","24x24":"https://helpdesk.gfbio.org/secure/useravatar?size=small&ownerId=brokeragent%40gfbio.org&avatarId=11100","16x16":"https://helpdesk.gfbio.org/secure/useravatar?size=xsmall&ownerId=brokeragent%40gfbio.org&avatarId=11100","32x32":"https://helpdesk.gfbio.org/secure/useravatar?size=medium&ownerId=brokeragent%40gfbio.org&avatarId=11100"},"displayName":"Broker Agent","active":true,"timeZone":"Europe/Berlin"},"created":"2019-09-17T13:46:17.002+0000","updated":"2019-09-17T13:46:17.002+0000"}]}'
 
-    @skip('Test against helpdesk server')
+    @skip("Test against helpdesk server")
     def test_get_and_update_existing_ticket(self):
         # was generic submission, done via gfbio-portal
-        ticket_key = 'SAND-1535'
-        url = '{0}{1}/{2}'.format(self.base_url, JIRA_ISSUE_URL,
-                                  ticket_key, )
+        ticket_key = "SAND-1535"
+        url = "{0}{1}/{2}".format(
+            self.base_url,
+            JIRA_ISSUE_URL,
+            ticket_key,
+        )
         response = requests.get(
             url=url,
-            auth=('brokeragent', ''),
+            auth=("brokeragent", ""),
         )
         response = requests.put(
             url=url,
-            auth=('brokeragent', ''),
-            headers={
-                'Content-Type': 'application/json'
-            },
-            data=json.dumps({
-                'fields': {
-                    # single value/string
-                    'customfield_10205': 'New Name Marc Weber, Alfred E. Neumann',
-                    # array of values/strings
-                    'customfield_10216': [
-                        {'value': 'Uncertain'},
-                        {'value': 'Nagoya Protocol'},
-                        {'value': 'Sensitive Personal Information'},
-                    ]
+            auth=("brokeragent", ""),
+            headers={"Content-Type": "application/json"},
+            data=json.dumps(
+                {
+                    "fields": {
+                        # single value/string
+                        "customfield_10205": "New Name Marc Weber, Alfred E. Neumann",
+                        # array of values/strings
+                        "customfield_10216": [
+                            {"value": "Uncertain"},
+                            {"value": "Nagoya Protocol"},
+                            {"value": "Sensitive Personal Information"},
+                        ],
+                    }
                 }
-            })
+            ),
         )
         # self.assertEqual(204, response.status_code)
         # self.assertEqual(0, len(response.content))
 
-    @skip('Test against helpdesk server')
+    @skip("Test against helpdesk server")
     def test_add_attachment(self):
-        ticket_key = 'SAND-1535'
-        url = '{0}{1}/{2}/{3}'.format(
+        ticket_key = "SAND-1535"
+        url = "{0}{1}/{2}/{3}".format(
             self.base_url,
             JIRA_ISSUE_URL,
             ticket_key,
             JIRA_ATTACHMENT_SUB_URL,
         )
-        headers = CaseInsensitiveDict({'content-type': None,
-                                       'X-Atlassian-Token': 'nocheck'})
+        headers = CaseInsensitiveDict({"content-type": None, "X-Atlassian-Token": "nocheck"})
 
-        data = TestHelpDeskTicketMethods._create_test_data(
-            '/tmp/test_primary_data_file')
+        data = TestHelpDeskTicketMethods._create_test_data("/tmp/test_primary_data_file")
         # files = {'file': file}
         # files = {'file': open(file, 'rb')}
         response = requests.post(
             url=url,
-            auth=('brokeragent', ''),
+            auth=("brokeragent", ""),
             headers=headers,
             files=data,
         )
@@ -155,7 +143,7 @@ class TestGFBioJiraApi(TestCase):
         # "content":"https://helpdesk.gfbio.org/secure/attachment/
         # 13820/test_primary_data_file"}]'
 
-    @skip('Test against helpdesk server')
+    @skip("Test against helpdesk server")
     def test_delete_attachment(self):
         # ticket_key = 'SAND-1535'
         # testing get ticket -> WORKS
@@ -199,66 +187,73 @@ class TestGFBioJiraApi(TestCase):
         # File1.forward.fastq.gz"}'
 
         # testing delete -> WORKS
-        url = '{0}{1}/{2}'.format(self.base_url, '/rest/api/2/attachment',
-                                  '13791', )
+        url = "{0}{1}/{2}".format(
+            self.base_url,
+            "/rest/api/2/attachment",
+            "13791",
+        )
         response = requests.delete(
             url=url,
-            auth=('brokeragent', ''),
-            headers={
-                'Content-Type': 'application/json'
-            },
+            auth=("brokeragent", ""),
+            headers={"Content-Type": "application/json"},
         )
         # http://helpdesk.gfbio.org/rest/api/2/attachment/13791
         # 204
         # b''
 
-    @skip('Test against helpdesk server')
+    @skip("Test against helpdesk server")
     def test_update_ticket_with_siteconfig(self):
-
         # WORKS:
-        ticket_key = 'SAND-1539'
-        url = '{0}{1}/{2}'.format(self.base_url, JIRA_ISSUE_URL,
-                                  ticket_key, )
+        ticket_key = "SAND-1539"
+        url = "{0}{1}/{2}".format(
+            self.base_url,
+            JIRA_ISSUE_URL,
+            ticket_key,
+        )
         response = requests.put(
             url=url,
-            auth=('brokeragent', ''),
-            headers={
-                'Content-Type': 'application/json'
-            },
-            data=json.dumps({
-                # 'fields': {
-                #     'customfield_10205': 'Kevin Horsmeier',
-                #     'customfield_10216': [
-                #         {'value': 'Uncertain'},
-                #     ]
-                # }
-                'fields': {
-                    # 'customfield_10010': 'sand/generic-data',
-                    'customfield_10202': {
-                        'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10805',
-                        'value': 'CC BY-NC-ND 4.0', 'id': '10805'},
-                    'issuetype': {'name': 'Data Submission'},
-                    'customfield_10307': 'pub1',
-                    'description': 'remote debug 4',
-                    'customfield_10208': 'remote debug 4',
-                    'customfield_10311': '',
-                    'customfield_10303': '7e6fa310-6031-4e41-987b-271d89916eb2',
-                    'customfield_10205': ',;', 'customfield_10216': [
-                        {'value': 'Sensitive Personal Information'},
-                        {'value': 'Uncertain'}],
-                    'summary': 'remote debug 4 EDIT TITLE AGAIN Part 2 "Retur...',
-                    # 'reporter': {
-                    #     'name': 'No valid user, name or email available'},
-                    'customfield_10313': 'Algae & Protists, Zoology, Geoscience, Microbiology',
-                    'project': {'key': 'SAND'},
-                    'customfield_10200': '2020-01-24',
-                    'customfield_10314': '',
-                    'customfield_10308': ['LABEL1', 'label2'],
-                    'customfield_10600': '',
-                    'customfield_10229': [{'value': 'Dublin Core'}],
-                    'customfield_10201': 'remote debug 4 EDIT TITLE AGAIN Part 2 "Return of the edit"'
+            auth=("brokeragent", ""),
+            headers={"Content-Type": "application/json"},
+            data=json.dumps(
+                {
+                    # 'fields': {
+                    #     'customfield_10205': 'Kevin Horsmeier',
+                    #     'customfield_10216': [
+                    #         {'value': 'Uncertain'},
+                    #     ]
+                    # }
+                    "fields": {
+                        # 'customfield_10010': 'sand/generic-data',
+                        "customfield_10202": {
+                            "self": "https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10805",
+                            "value": "CC BY-NC-ND 4.0",
+                            "id": "10805",
+                        },
+                        "issuetype": {"name": "Data Submission"},
+                        "customfield_10307": "pub1",
+                        "description": "remote debug 4",
+                        "customfield_10208": "remote debug 4",
+                        "customfield_10311": "",
+                        "customfield_10303": "7e6fa310-6031-4e41-987b-271d89916eb2",
+                        "customfield_10205": ",;",
+                        "customfield_10216": [
+                            {"value": "Sensitive Personal Information"},
+                            {"value": "Uncertain"},
+                        ],
+                        "summary": 'remote debug 4 EDIT TITLE AGAIN Part 2 "Retur...',
+                        # 'reporter': {
+                        #     'name': 'No valid user, name or email available'},
+                        "customfield_10313": "Algae & Protists, Zoology, Geoscience, Microbiology",
+                        "project": {"key": "SAND"},
+                        "customfield_10200": "2020-01-24",
+                        "customfield_10314": "",
+                        "customfield_10308": ["LABEL1", "label2"],
+                        "customfield_10600": "",
+                        "customfield_10229": [{"value": "Dublin Core"}],
+                        "customfield_10201": 'remote debug 4 EDIT TITLE AGAIN Part 2 "Return of the edit"',
+                    }
                 }
-            })
+            ),
         )
         # ######################################
 
@@ -280,7 +275,7 @@ class TestGFBioJiraApi(TestCase):
         #                                         'description': 'A new summary was added. AGAIN'})
         pass
 
-    @skip('Test against helpdesk server')
+    @skip("Test against helpdesk server")
     @responses.activate
     def test_python_jira_500(self):
         # jira-python fires multiple requests to respective jira servers
@@ -289,54 +284,61 @@ class TestGFBioJiraApi(TestCase):
         # if mocked request does not match url python-jiras own retry policy will apply
         # e.g. get_server_info=True. Then exception is thrown
 
-        responses.add(responses.GET,
-                      'http://helpdesk.gfbio.org/rest/api/2/field',
-                      json={'server_error': 'mocked'}, status=500)
+        responses.add(
+            responses.GET,
+            "http://helpdesk.gfbio.org/rest/api/2/field",
+            json={"server_error": "mocked"},
+            status=500,
+        )
 
-        options = {
-            'server': 'http://helpdesk.gfbio.org/'
-        }
+        options = {"server": "http://helpdesk.gfbio.org/"}
 
         # alternativ
         # jira = JIRA(server='http://helpdesk.gfbio.org/',
         #             basic_auth=('brokeragent', ''))
 
         try:
-            jira = JIRA(options=options,
-                        basic_auth=('brokeragent', ''),
-                        max_retries=1, get_server_info=True)
+            jira = JIRA(
+                options=options,
+                basic_auth=("brokeragent", ""),
+                max_retries=1,
+                get_server_info=True,
+            )
         except ConnectionError as ex:
-            print('GENERIC EXCEPTION ', ex)
+            print("GENERIC EXCEPTION ", ex)
             print(ex.__dict__)
             print(ex.request.__dict__)
         except JIRAError as e:
             print(e.__dict__)
-            print('status_code ', e.status_code)
-            print('text ', e.text)
-            print('response ', e.response)
-            print('response. status_code ', e.response.status_code)
+            print("status_code ", e.status_code)
+            print("text ", e.text)
+            print("response ", e.response)
+            print("response. status_code ", e.response.status_code)
 
-    @skip('Test against helpdesk server')
+    @skip("Test against helpdesk server")
     @responses.activate
     def test_python_jira_400(self):
-
-        responses.add(responses.GET,
-                      'http://helpdesk.gfbio.org/rest/api/2/field',
-                      json={'client_error': 'mocked'}, status=400)
-        options = {
-            'server': 'http://helpdesk.gfbio.org/'
-        }
+        responses.add(
+            responses.GET,
+            "http://helpdesk.gfbio.org/rest/api/2/field",
+            json={"client_error": "mocked"},
+            status=400,
+        )
+        options = {"server": "http://helpdesk.gfbio.org/"}
 
         # alternativ
         # jira = JIRA(server='http://helpdesk.gfbio.org/',
         #             basic_auth=('brokeragent', ''))
 
         try:
-            jira = JIRA(options=options,
-                        basic_auth=('brokeragent', ''),
-                        max_retries=1, get_server_info=False)
+            jira = JIRA(
+                options=options,
+                basic_auth=("brokeragent", ""),
+                max_retries=1,
+                get_server_info=False,
+            )
         except JIRAError as e:
-            print('JIRA ERROR ', e)
+            print("JIRA ERROR ", e)
         # issues = jira.search_issues('assignee="Marc Weber"')
         # issue = jira.issue('SAND-1539')
 
@@ -364,77 +366,67 @@ class TestGFBioJiraApi(TestCase):
         #     print('response ', e.response)
         #     print('response. status_code ', e.response.status_code)
 
-    @skip('Test against pangaea servers')
+    @skip("Test against pangaea servers")
     def test_pangaea_jira(self):
         rc = ResourceCredential.objects.create(
-            title='t',
-            url='https://ws.pangaea.de/ws/services/PanLogin',
-            authentication_string='-',
-            username='gfbio-broker',
-            password='',
-            comment='-'
+            title="t",
+            url="https://ws.pangaea.de/ws/services/PanLogin",
+            authentication_string="-",
+            username="gfbio-broker",
+            password="",
+            comment="-",
         )
         login_token = get_pangaea_login_token(rc)
         cookies = dict(PanLoginID=login_token)
-        print('COOKIES ', cookies)
+        print("COOKIES ", cookies)
 
         options = {
-            'server': 'https://issues.pangaea.de',
-            'cookies': cookies,
+            "server": "https://issues.pangaea.de",
+            "cookies": cookies,
         }
         jira = JIRA(options)
         print(jira)
-        print('projects', jira.projects)
+        print("projects", jira.projects)
         # PDI-21091
         issues = jira.search_issues('assignee="brokeragent"')
-        print('issues ', issues)
-        issue = jira.issue('PDI-21091')
-        print('issue ', issue.fields.summary)
+        print("issues ", issues)
+        issue = jira.issue("PDI-21091")
+        print("issue ", issue.fields.summary)
 
-    @skip('Test against helpdesk server')
+    @skip("Test against helpdesk server")
     def test_python_jira_create(self):
-        jira = JIRA(server='http://helpdesk.gfbio.org/',
-                    basic_auth=('brokeragent', ''))
+        jira = JIRA(server="http://helpdesk.gfbio.org/", basic_auth=("brokeragent", ""))
 
         # almost analog to gfbio_prepare_create_helpdesk_payload(...)
         issue_dict = {
-            'project': {'key': 'SAND'},
-            'summary': 'New issue from jira-python',
-            'description': 'Look into this one',
-            'issuetype': {
-                'name': 'Data Submission'
-            },
-            'reporter': {
-                'name': 'maweber@mpi-bremen.de'
-            },
-            'assignee': {
-                'name': 'maweber@mpi-bremen.de'  # or data center
-            },
-            'customfield_10010': 'sand/molecular-data',
-            'customfield_10200': '{0}'.format(
-                (datetime.date.today() + datetime.timedelta(
-                    days=365)).isoformat()),
-            'customfield_10201': 'requirements title',
-            'customfield_10208': 'requirements description',
-            'customfield_10303': '7fafa310-6031-4e41-987b-271d89916eb2',
+            "project": {"key": "SAND"},
+            "summary": "New issue from jira-python",
+            "description": "Look into this one",
+            "issuetype": {"name": "Data Submission"},
+            "reporter": {"name": "maweber@mpi-bremen.de"},
+            "assignee": {"name": "maweber@mpi-bremen.de"},  # or data center
+            "customfield_10010": "sand/molecular-data",
+            "customfield_10200": "{0}".format((datetime.date.today() + datetime.timedelta(days=365)).isoformat()),
+            "customfield_10201": "requirements title",
+            "customfield_10208": "requirements description",
+            "customfield_10303": "7fafa310-6031-4e41-987b-271d89916eb2",
             # 'customfield_10311': requirements.get('data_collection_time', ''),
-            'customfield_10308': ['LABEL1', 'label2', ],
-            'customfield_10313': ', '.join(
-                ['Algae & Protists', 'Microbiology']),
-            'customfield_10205': 'first_name,last_name;email',
-            'customfield_10307': '; '.join(['publication 1234']),
-            'customfield_10216': [{'value': l} for l in
-                                  ['Sensitive Personal Information',
-                                   'Uncertain']],
-            'customfield_10314': 'potential project id',
-            'customfield_10202': {
-                'self': 'https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10500',
-                'value': 'other',
-                'id': '10500'
+            "customfield_10308": [
+                "LABEL1",
+                "label2",
+            ],
+            "customfield_10313": ", ".join(["Algae & Protists", "Microbiology"]),
+            "customfield_10205": "first_name,last_name;email",
+            "customfield_10307": "; ".join(["publication 1234"]),
+            "customfield_10216": [{"value": l} for l in ["Sensitive Personal Information", "Uncertain"]],
+            "customfield_10314": "potential project id",
+            "customfield_10202": {
+                "self": "https://helpdesk.gfbio.org/rest/api/2/customFieldOption/10500",
+                "value": "other",
+                "id": "10500",
             },
-            'customfield_10600': 'http://www.downloadurl.com',
-            'customfield_10229': [{'value': 'other'}],
-
+            "customfield_10600": "http://www.downloadurl.com",
+            "customfield_10229": [{"value": "other"}],
         }
         try:
             new_issue = jira.create_issue(fields=issue_dict)
@@ -455,11 +447,10 @@ class TestGFBioJiraApi(TestCase):
         #     issuetype={'name': 'Bug'}
         # )
 
-    @skip('Test against helpdesk server')
+    @skip("Test against helpdesk server")
     def test_python_jira_update(self):
-        jira = JIRA(server='http://helpdesk.gfbio.org/',
-                    basic_auth=('brokeragent', ''))
-        issue = jira.issue('SAND-1543')
+        jira = JIRA(server="http://helpdesk.gfbio.org/", basic_auth=("brokeragent", ""))
+        issue = jira.issue("SAND-1543")
         print(issue)
         # comments = jira.comments(issue)
         # issue.update(summary='new summary', description='A new summary was added')
@@ -469,5 +460,7 @@ class TestGFBioJiraApi(TestCase):
         # jira.exceptions.JIRAError: JiraError HTTP 403 url: https://helpdesk.gfbio.org/rest/api/2/issue/16035?notifyUsers=false
         # 	text: To discard the user notification either admin or project admin permissions are required.
 
-        res = issue.update(notify=True, fields={'summary': 'new summary',
-                                                'description': 'A new summary was added'})
+        res = issue.update(
+            notify=True,
+            fields={"summary": "new summary", "description": "A new summary was added"},
+        )
