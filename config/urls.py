@@ -1,11 +1,13 @@
+import re
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from django.urls import include, path
-from django.urls import re_path
+from django.urls import include, path, re_path
 from django.views import defaults as default_views
 from django.views.generic import TemplateView, RedirectView
+from django.views.static import serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.authtoken.views import obtain_auth_token
 
@@ -36,7 +38,13 @@ urlpatterns = [
     re_path(r'favicon\.ico$', RedirectView.as_view(url='/static/images/favicon.ico')),
     re_path(r'sw\.js$', RedirectView.as_view(url='/static/js/sw.js')),
 
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+urlpatterns += [
+    re_path(
+        r"^%s(?P<path>.*)$" % re.escape(settings.MEDIA_URL.lstrip("/")), serve, kwargs={"document_root": settings.MEDIA_ROOT}
+    ),
+]
 
 if settings.DEBUG:
     # Static file serving when using Gunicorn + Uvicorn for local web socket development

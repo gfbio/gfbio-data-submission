@@ -160,6 +160,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.common.BrokenLinkEmailsMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "gfbio_submissions.utils.middleware.RestrictedMediaMiddleware",
 ]
 
 # STATIC
