@@ -3,9 +3,7 @@ from django.db import transaction
 from django.urls import reverse
 from rest_framework import mixins, generics, permissions, status
 from rest_framework.authentication import TokenAuthentication, BasicAuthentication
-
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse, OpenApiRequest
+from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiRequest
 
 from gfbio_submissions.generic.models.request_log import RequestLog
 from ..configuration.settings import SUBMISSION_DELAY, SUBMISSION_ISSUE_CHECK_DELAY

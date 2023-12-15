@@ -6,7 +6,7 @@ from rest_framework.authentication import TokenAuthentication, BasicAuthenticati
 from rest_framework.response import Response
 
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse, OpenApiRequest
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiRequest
 
 from gfbio_submissions.generic.models.request_log import RequestLog
 from ..configuration.settings import SUBMISSION_DELAY
@@ -34,12 +34,12 @@ class SubmissionDetailView(
         serializer.save(user=self.request.user)
 
     @extend_schema(
-        operation_id="update submission",
-        description="Updates an existing Submission",
+        operation_id="get submission by id",
+        description="Retrieve the Submission with the given submission_id",
         parameters=[
             OpenApiParameter(
                 name="broker_submission_id",
-                description="Unique submission ID of submission to update (A UUID specified by RFC4122).",
+                description="Unique submission ID of submission to retrieve (A UUID specified by RFC4122).",
                 location="path",
                 required=True,
                 type=OpenApiTypes.UUID
@@ -58,12 +58,12 @@ class SubmissionDetailView(
         return response
 
     @extend_schema(
-        operation_id="get submission by submission ID",
-        description="Returns a single submission, identified by a unique submission ID (broker_submission_id)",
+        operation_id="update submission",
+        description="Updates the referenced submission.",
         parameters=[
             OpenApiParameter(
                 name="broker_submission_id",
-                description="Unique submission ID of submission to retrieve (A UUID specified by RFC4122).",
+                description="Unique submission ID of submission to update (A UUID specified by RFC4122).",
                 location="path",
                 required=True,
                 type=OpenApiTypes.UUID
