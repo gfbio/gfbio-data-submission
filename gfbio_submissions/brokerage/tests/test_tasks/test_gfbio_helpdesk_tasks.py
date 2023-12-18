@@ -488,6 +488,18 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         self.assertTrue(result.successful())
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())
 
+    # FIXME: what about retries ? are they executed ?
+    @responses.activate
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False)
+    def add_posted_comment_to_issue_task_server_error_2(self):
+        submission = Submission.objects.first()
+        url = self._add_comment_reponses()
+        responses.add(responses.POST, url, status=500, json={"bla": "blubb"})
+        result = add_posted_comment_to_issue_task.apply(
+            kwargs={"submission_id": submission.pk, "comment": "a comment"}
+        )
+        self.assertFalse(result.successful())
+
     @responses.activate
     def test_update_submission_issue_task_success(self):
         submission = Submission.objects.last()
