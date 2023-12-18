@@ -3,36 +3,17 @@ import json
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.tests.utils import (
-    _get_ena_data,
-    _get_ena_data_without_runs,
-)
+from gfbio_submissions.brokerage.tests.utils import _create_submission_via_serializer
 from gfbio_submissions.users.models import User
-from ..models.broker_object import BrokerObject
+
 from ..models.submission import Submission
-from ..serializers.submission_serializer import SubmissionSerializer
 
 
 class JsonDictFieldTest(TestCase):
-    # TODO: move to utils or similar ...
-    @classmethod
-    def _create_submission_via_serializer(cls, runs=False):
-        serializer = SubmissionSerializer(
-            data={
-                "target": "ENA",
-                "release": True,
-                "data": _get_ena_data() if runs else _get_ena_data_without_runs(),
-            }
-        )
-        serializer.is_valid()
-        submission = serializer.save(user=User.objects.first())
-        BrokerObject.objects.add_submission_data(submission)
-        return submission
-
     @classmethod
     def setUpTestData(cls):
         User.objects.create(username="user1")
-        cls._create_submission_via_serializer(runs=True)
+        _create_submission_via_serializer(runs=True)
 
     def test_submission_data_escape_situation(self):
         submission = Submission.objects.first()

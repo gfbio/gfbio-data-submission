@@ -5,37 +5,20 @@ from django.contrib.auth.models import Permission
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.tests.utils import (
+    _create_submission_via_serializer,
+    _get_jira_issue_response,
     _get_pangaea_soap_response,
     _get_pangaea_ticket_response,
-    _get_jira_issue_response,
-    _get_ena_data,
-    _get_ena_data_without_runs,
 )
 from gfbio_submissions.generic.configuration.settings import HOSTING_SITE
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
-from ...configuration.settings import PANGAEA_JIRA_TICKET, GFBIO_HELPDESK_TICKET
-from ...models.broker_object import BrokerObject
-from ...serializers.submission_serializer import SubmissionSerializer
+
+from ...configuration.settings import GFBIO_HELPDESK_TICKET, PANGAEA_JIRA_TICKET
 
 
 class TestTasks(TestCase):
-    # TODO: move to utils or similar ...
-    @classmethod
-    def _create_submission_via_serializer(cls, runs=False):
-        serializer = SubmissionSerializer(
-            data={
-                "target": "ENA",
-                "release": True,
-                "data": _get_ena_data() if runs else _get_ena_data_without_runs(),
-            }
-        )
-        serializer.is_valid()
-        submission = serializer.save(user=User.objects.first())
-        BrokerObject.objects.add_submission_data(submission)
-        return submission
-
     @classmethod
     def setUpTestData(cls):
         resource_cred = ResourceCredential.objects.create(
@@ -70,13 +53,13 @@ class TestTasks(TestCase):
         user.save()
         user.user_permissions.add(*permissions)
 
-        submission = cls._create_submission_via_serializer()
+        submission = _create_submission_via_serializer()
         submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="FAKE_KEY", primary=True)
         submission.additionalreference_set.create(
             type=PANGAEA_JIRA_TICKET, reference_key="PANGAEA_FAKE_KEY", primary=True
         )
 
-        submission = cls._create_submission_via_serializer()
+        submission = _create_submission_via_serializer()
         # submission.submitting_user = '16250'
         # submission.save()
 

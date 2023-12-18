@@ -2,6 +2,7 @@
 from django.test import TestCase
 
 from gfbio_submissions.users.models import User
+
 from ...models.broker_object import BrokerObject
 
 

@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
-from .test_tasks_base import TestTasks
+
 from ...models.broker_object import BrokerObject
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
@@ -10,6 +10,7 @@ from ...tasks.broker_object_tasks.create_broker_objects_from_submission_data imp
     create_broker_objects_from_submission_data_task,
 )
 from ...tasks.submission_tasks.check_on_hold_status import check_on_hold_status_task
+from .test_tasks_base import TestTasks
 
 
 class TestSubmissionPreparationTasks(TestTasks):

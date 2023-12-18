@@ -11,15 +11,13 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from config.settings.base import MEDIA_ROOT
-from gfbio_submissions.brokerage.tests.utils import (
-    _get_submission_request_data,
-    _get_submission_post_response,
-)
+from gfbio_submissions.brokerage.tests.utils import _get_submission_post_response, _get_submission_request_data
 from gfbio_submissions.users.models import User
-from .test_submission_view_base import TestSubmissionView
-from ....configuration.settings import GENERIC, ENA
+
+from ....configuration.settings import ENA, GENERIC
 from ....models.submission import Submission
 from ....models.task_progress_report import TaskProgressReport
+from .test_submission_view_base import TestSubmissionView
 
 
 class TestSubmissionViewFullPosts(TestSubmissionView):

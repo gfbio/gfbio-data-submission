@@ -4,16 +4,17 @@ from urllib.parse import quote
 import responses
 from django.test import override_settings
 
-from ...tasks.jira_tasks.get_gfbio_helpdesk_username import get_gfbio_helpdesk_username_task
 from gfbio_submissions.brokerage.tests.test_tasks.test_tasks_base import TestTasks
 from gfbio_submissions.users.models import User
+
 from ...configuration.settings import (
-    JIRA_USERNAME_URL_TEMPLATE,
-    JIRA_USERNAME_URL_FULLNAME_TEMPLATE,
     JIRA_FALLBACK_USERNAME,
+    JIRA_USERNAME_URL_FULLNAME_TEMPLATE,
+    JIRA_USERNAME_URL_TEMPLATE,
 )
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
+from ...tasks.jira_tasks.get_gfbio_helpdesk_username import get_gfbio_helpdesk_username_task
 
 
 class TestGetHelpDeskUserTask(TestTasks):

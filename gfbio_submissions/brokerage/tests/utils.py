@@ -4,6 +4,10 @@ import os
 import textwrap
 import xml.etree.ElementTree as ET
 
+from gfbio_submissions.brokerage.models.broker_object import BrokerObject
+from gfbio_submissions.brokerage.serializers.submission_serializer import SubmissionSerializer
+from gfbio_submissions.users.models import User
+
 
 def _get_test_data_dir_path():
     return "{0}{1}gfbio_submissions{1}brokerage{1}tests{1}test_data".format(
@@ -119,3 +123,28 @@ def _get_jira_hook_request_data(no_changelog=False):
 def _get_taxonomic_min_data():
     with open(os.path.join(_get_test_data_dir_path(), "taxonomic_min_data.json"), "r") as data_file:
         return json.load(data_file)
+
+
+def _create_submission_via_serializer(runs=False, username=None, create_broker_objects=True, atax=False):
+    if atax:
+        serializer = SubmissionSerializer(
+            data={
+                "target": "ATAX",
+                "release": True,
+                "data": _get_taxonomic_min_data(),
+            }
+        )
+    else:
+        serializer = SubmissionSerializer(
+            data={
+                "target": "ENA",
+                "release": True,
+                "data": _get_ena_data() if runs else _get_ena_data_without_runs(),
+            }
+        )
+    serializer.is_valid()
+    user = User.objects.get(username=username) if username else User.objects.first()
+    submission = serializer.save(user=user)
+    if create_broker_objects:
+        BrokerObject.objects.add_submission_data(submission)
+    return submission

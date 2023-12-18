@@ -2,44 +2,20 @@
 
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.tests.utils import (
-    _get_ena_data,
-    _get_ena_data_without_runs,
-)
-from gfbio_submissions.brokerage.utils.ena import (
-    prepare_ena_data,
-    store_ena_data_as_auditable_text_data,
-)
+from gfbio_submissions.brokerage.tests.utils import _create_submission_via_serializer
+from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data
 from gfbio_submissions.users.models import User
+
 from ...models.auditable_text_data import AuditableTextData
-from ...models.broker_object import BrokerObject
 from ...models.submission import Submission
-from ...serializers.submission_serializer import SubmissionSerializer
 
 
 class TestAuditableTextDataManager(TestCase):
-    # TODO: move to utils or similar ...
-    @classmethod
-    def _create_submission_via_serializer(cls, runs=False, username=None, create_broker_objects=True):
-        serializer = SubmissionSerializer(
-            data={
-                "target": "ENA",
-                "release": True,
-                "data": _get_ena_data() if runs else _get_ena_data_without_runs(),
-            }
-        )
-        serializer.is_valid()
-        user = User.objects.get(username=username) if username else User.objects.first()
-        submission = serializer.save(user=user)
-        if create_broker_objects:
-            BrokerObject.objects.add_submission_data(submission)
-        return submission
-
     @classmethod
     def setUpTestData(cls):
         User.objects.create_user(username="horst", email="horst@horst.de", password="password")
-        cls._create_submission_via_serializer()
-        cls._create_submission_via_serializer()
+        _create_submission_via_serializer()
+        _create_submission_via_serializer()
 
     def test_manager_assemble_ena_submission_data(self):
         submission = Submission.objects.first()

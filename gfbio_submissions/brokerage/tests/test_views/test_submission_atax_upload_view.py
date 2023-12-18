@@ -12,38 +12,28 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from config.settings.base import MEDIA_URL, MEDIA_ROOT
-from gfbio_submissions.brokerage.configuration.settings import GFBIO_HELPDESK_TICKET
+from config.settings.base import MEDIA_ROOT, MEDIA_URL
 from gfbio_submissions.brokerage.configuration.settings import (
-    JIRA_ISSUE_URL,
+    GFBIO_HELPDESK_TICKET,
     JIRA_ATTACHMENT_SUB_URL,
+    JIRA_ISSUE_URL,
 )
 from gfbio_submissions.brokerage.tests.utils import (
+    _create_submission_via_serializer,
     _get_jira_attach_response,
     _get_jira_issue_response,
-    _get_taxonomic_min_data,
     _get_test_data_dir_path,
 )
-from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
-from ...models.broker_object import BrokerObject
+
 from ...models.submission import Submission
 from ...models.submission_upload import SubmissionUpload
 from ...models.task_progress_report import TaskProgressReport
-from ...serializers.submission_serializer import SubmissionSerializer
 
 
 class TestSubmissionAtaxUploadView(TestCase):
-    # TODO: move to utils or similar ...
-    @classmethod
-    def _create_submission_via_serializer(cls):
-        serializer = SubmissionSerializer(data={"target": "ATAX", "release": True, "data": _get_taxonomic_min_data()})
-        serializer.is_valid()
-        submission = serializer.save(user=User.objects.first())
-        BrokerObject.objects.add_submission_data(submission)
-        return submission
-
     @classmethod
     def setUpTestData(cls):
         resource_cred = ResourceCredential.objects.create(
@@ -79,9 +69,9 @@ class TestSubmissionAtaxUploadView(TestCase):
         client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
         cls.other_api_client = client
 
-        submission = cls._create_submission_via_serializer()
+        submission = _create_submission_via_serializer(atax=True)
         submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="FAKE_KEY", primary=True)
-        cls._create_submission_via_serializer()
+        _create_submission_via_serializer(atax=True)
 
     @classmethod
     def tearDownClass(cls):

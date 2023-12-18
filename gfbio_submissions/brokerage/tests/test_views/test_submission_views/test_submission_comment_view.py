@@ -11,36 +11,16 @@ from django.test import TestCase
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from gfbio_submissions.brokerage.tests.utils import (
-    _get_ena_data,
-    _get_ena_data_without_runs,
-    _get_pangaea_comment_response,
-)
-from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
+from gfbio_submissions.brokerage.tests.utils import _create_submission_via_serializer, _get_pangaea_comment_response
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
+
 from ....configuration.settings import GFBIO_HELPDESK_TICKET
-from ....models.broker_object import BrokerObject
 from ....models.submission import Submission
-from ....serializers.submission_serializer import SubmissionSerializer
 
 
 class TestSubmissionCommentView(TestCase):
-    # TODO: move to utils or similar ...
-    @classmethod
-    def _create_submission_via_serializer(cls, runs=False):
-        serializer = SubmissionSerializer(
-            data={
-                "target": "ENA",
-                "release": True,
-                "data": _get_ena_data() if runs else _get_ena_data_without_runs(),
-            }
-        )
-        serializer.is_valid()
-        submission = serializer.save(user=User.objects.first())
-        BrokerObject.objects.add_submission_data(submission)
-        return submission
-
     @classmethod
     def setUpTestData(cls):
         resource_cred = ResourceCredential.objects.create(
@@ -68,9 +48,9 @@ class TestSubmissionCommentView(TestCase):
         client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
         cls.api_client = client
 
-        submission = cls._create_submission_via_serializer()
+        submission = _create_submission_via_serializer()
         submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="SAND-1661", primary=True)
-        cls._create_submission_via_serializer()
+        _create_submission_via_serializer()
 
     def test_get(self):
         submission = Submission.objects.first()

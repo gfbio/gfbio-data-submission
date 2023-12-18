@@ -6,23 +6,23 @@ import responses
 from django.test import TestCase
 from django.utils.encoding import smart_str
 
-from gfbio_submissions.brokerage.tests.test_models.test_submission import SubmissionTest
 from gfbio_submissions.brokerage.tests.utils import (
-    _get_ena_xml_response,
+    _create_submission_via_serializer,
     _get_ena_release_xml_response,
+    _get_ena_xml_response,
 )
 from gfbio_submissions.brokerage.utils.csv import find_correct_platform_and_model
 from gfbio_submissions.brokerage.utils.ena import (
     Enalizer,
     prepare_ena_data,
-    send_submission_to_ena,
     release_study_on_ena,
+    send_submission_to_ena,
 )
-from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
-from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.generic.models.request_log import RequestLog
-
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
+
 from ...configuration.settings import DEFAULT_ENA_CENTER_NAME
 from ...models.broker_object import BrokerObject
 from ...models.center_name import CenterName
@@ -49,8 +49,8 @@ class TestEnalizer(TestCase):
         user = User.objects.create(username="user1")
         user.site_configuration = site_config
         user.save()
-        SubmissionTest._create_submission_via_serializer()
-        SubmissionTest._create_submission_via_serializer(runs=True)
+        _create_submission_via_serializer()
+        _create_submission_via_serializer(runs=True)
 
     def tearDown(self):
         Submission.objects.all().delete()

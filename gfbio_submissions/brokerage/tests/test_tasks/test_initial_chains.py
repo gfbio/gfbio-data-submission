@@ -7,17 +7,14 @@ from urllib.parse import quote
 import responses
 from django.contrib.auth.models import Permission
 from django.test import TestCase
-from rest_framework.test import APIRequestFactory, APIClient
+from rest_framework.test import APIClient, APIRequestFactory
 
 from gfbio_submissions.brokerage.tests.utils import _get_submission_request_data
-from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
-from ...configuration.settings import (
-    JIRA_ISSUE_URL,
-    JIRA_USERNAME_URL_TEMPLATE,
-    JIRA_USERNAME_URL_FULLNAME_TEMPLATE,
-)
+
+from ...configuration.settings import JIRA_ISSUE_URL, JIRA_USERNAME_URL_FULLNAME_TEMPLATE, JIRA_USERNAME_URL_TEMPLATE
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
 

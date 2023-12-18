@@ -4,13 +4,9 @@ import shutil
 
 from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.configuration.settings import SUBMISSION_DELAY
-from gfbio_submissions.brokerage.utils.ena import (
-    prepare_ena_data,
-    store_ena_data_as_auditable_text_data,
-)
+from gfbio_submissions.brokerage.utils.ena import prepare_ena_data, store_ena_data_as_auditable_text_data
 from gfbio_submissions.users.models import User
-from .test_tasks_base import TestTasks
-from ..test_utils.test_csv_parsing import TestCSVParsing
+
 from ...models.submission import Submission
 from ...models.submission_upload import SubmissionUpload
 from ...models.task_progress_report import TaskProgressReport
@@ -22,6 +18,8 @@ from ...tasks.submission_upload_tasks.clean_submission_for_update import clean_s
 from ...tasks.submission_upload_tasks.parse_csv_to_update_clean_submission import (
     parse_csv_to_update_clean_submission_task,
 )
+from ..test_utils.test_csv_parsing import TestCSVParsing
+from .test_tasks_base import TestTasks
 
 
 class TestParseMetaDataForUpdateTask(TestTasks):

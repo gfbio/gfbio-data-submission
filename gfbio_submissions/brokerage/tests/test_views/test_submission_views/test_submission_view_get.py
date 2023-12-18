@@ -7,9 +7,10 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from gfbio_submissions.users.models import User
-from .test_submission_view_base import TestSubmissionView
-from ...test_models.test_submission import SubmissionTest
+
 from ....models.submission import Submission
+from ...utils import _create_submission_via_serializer
+from .test_submission_view_base import TestSubmissionView
 
 
 class TestSubmissionViewGetRequests(TestSubmissionView):
@@ -32,14 +33,14 @@ class TestSubmissionViewGetRequests(TestSubmissionView):
         user.save()
         # 5 admin admin@admin.de None None  | site:  False  | user:  True  | staff:  True  | super:  True
 
-        SubmissionTest._create_submission_via_serializer(username="horst", create_broker_objects=False)
-        SubmissionTest._create_submission_via_serializer(username="horst", create_broker_objects=False)
-        SubmissionTest._create_submission_via_serializer(username="horst", create_broker_objects=False)
+        _create_submission_via_serializer(username="horst", create_broker_objects=False)
+        _create_submission_via_serializer(username="horst", create_broker_objects=False)
+        _create_submission_via_serializer(username="horst", create_broker_objects=False)
 
-        SubmissionTest._create_submission_via_serializer(username="kevin", create_broker_objects=False)
-        SubmissionTest._create_submission_via_serializer(username="kevin", create_broker_objects=False)
+        _create_submission_via_serializer(username="kevin", create_broker_objects=False)
+        _create_submission_via_serializer(username="kevin", create_broker_objects=False)
 
-        SubmissionTest._create_submission_via_serializer(username="regular_user_2", create_broker_objects=False)
+        _create_submission_via_serializer(username="regular_user_2", create_broker_objects=False)
 
     def test_submissions_get_request(self):
         response = self.client.get("/api/submissions/")
@@ -134,7 +135,7 @@ class TestSubmissionViewGetRequests(TestSubmissionView):
 
         self.assertFalse(user.has_perm("brokerage.add_submission"))
 
-        SubmissionTest._create_submission_via_serializer(username="new_user", create_broker_objects=False)
+        _create_submission_via_serializer(username="new_user", create_broker_objects=False)
 
         token, created = Token.objects.get_or_create(user_id=user.id)
         client = APIClient()
