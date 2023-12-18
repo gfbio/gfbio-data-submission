@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import json
+# import json
 from urllib.parse import quote
 
 import responses
@@ -40,7 +40,7 @@ class TestTaskChains(TestTasks):
         site_config = SiteConfiguration.objects.first()
 
         # get_user_email_task responses ----------------------------------------
-        data = json.dumps({"userid": 23})
+        # data = json.dumps({"userid": 23})
         # url = '{0}/api/jsonws/' \
         #       'GFBioProject-portlet.userextension/get-user-by-id/' \
         #       'request-json/{1}'.format(site_config.gfbio_server.url,
@@ -202,7 +202,7 @@ class TestTaskChains(TestTasks):
 
         len_auditable_data = len(AuditableTextData.objects.all())
 
-        data = json.dumps({"userid": 23})
+        # data = json.dumps({"userid": 23})
         # url = '{0}/api/jsonws/' \
         #       'GFBioProject-portlet.userextension/get-user-by-id/' \
         #       'request-json/{1}'.format(site_config.gfbio_server.url,

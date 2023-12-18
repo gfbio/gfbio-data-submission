@@ -174,7 +174,7 @@ class TestJiraIssueUpdateView(APITestCase):
 
     @skip("request to real server")
     def test_real_call_to_development_server(self):
-        one_year = arrow.now().shift(years=1)
+        # one_year = arrow.now().shift(years=1)
         # allowany:
         #   400: b'{"issue":["\'user\': user is not in curators group"]}'
         # --> add to curators group
@@ -196,7 +196,7 @@ class TestJiraIssueUpdateView(APITestCase):
             "changelog": {"items": [{}]},
         }
 
-        response = requests.post(
+        requests.post(
             url="https://c103-171.cloud.gwdg.de/api/submissions/jira/update/"
             "?user_id=marcw@nord-com.net&user_key=marcw@nord-com.net",
             # WORKs WITHOUT AUTH
@@ -474,7 +474,7 @@ class TestJiraIssueUpdateView(APITestCase):
         # number of all users at the start:
         users_in_db = len(User.objects.all())
 
-        response = self.client.post(
+        self.client.post(
             self.url,
             {
                 "user": {"emailAddress": "horst@horst.de"},
@@ -546,7 +546,7 @@ class TestJiraIssueUpdateView(APITestCase):
         # number of all users at the start:
         users_in_db = len(User.objects.all())
 
-        response = self.client.post(
+        self.client.post(
             self.url,
             {
                 "user": {"emailAddress": "horst@horst.de"},
@@ -578,7 +578,7 @@ class TestJiraIssueUpdateView(APITestCase):
         # number of all users at the start:
         users_in_db = len(User.objects.all())
 
-        response = self.client.post(
+        self.client.post(
             self.url,
             {
                 "user": {"emailAddress": "horst@horst.de"},

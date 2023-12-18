@@ -91,7 +91,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
             JIRA_COMMENT_SUB_URL,
         )
         responses.add(responses.POST, url, status=500, json={"bla": "blubb"})
-        result = add_pangaealink_to_submission_issue_task.apply(
+        add_pangaealink_to_submission_issue_task.apply(
             kwargs={
                 "submission_id": submission.pk,
             }
@@ -147,7 +147,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
             JIRA_COMMENT_SUB_URL,
         )
         responses.add(responses.POST, url, status=400, json={"bla": "blubb"})
-        result = add_pangaealink_to_submission_issue_task.apply_async(
+        add_pangaealink_to_submission_issue_task.apply_async(
             kwargs={
                 "submission_id": submission.pk + 22,
             }
@@ -488,18 +488,6 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         self.assertTrue(result.successful())
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())
 
-    # FIXME: what about retries ? are they executed ?
-    @responses.activate
-    @override_settings(CELERY_TASK_ALWAYS_EAGER=False, CELERY_TASK_EAGER_PROPAGATES=False)
-    def add_posted_comment_to_issue_task_server_error(self):
-        submission = Submission.objects.first()
-        url = self._add_comment_reponses()
-        responses.add(responses.POST, url, status=500, json={"bla": "blubb"})
-        result = add_posted_comment_to_issue_task.apply(
-            kwargs={"submission_id": submission.pk, "comment": "a comment"}
-        )
-        self.assertFalse(result.successful())
-
     @responses.activate
     def test_update_submission_issue_task_success(self):
         submission = Submission.objects.last()
@@ -552,7 +540,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
                 "submission_id": submission.id,
             }
         )
-        result = update_submission_issue_task.apply(
+        update_submission_issue_task.apply(
             kwargs={
                 "submission_id": submission.id,
             }
@@ -638,7 +626,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         responses.add(responses.POST, url, json={"bla": "blubb"}, status=200)
 
         r = notify_user_embargo_expiry_task()
-        pid = submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.filter().first()
+        submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.filter().first()
 
         self.assertIn("No notifications to send", r)
 

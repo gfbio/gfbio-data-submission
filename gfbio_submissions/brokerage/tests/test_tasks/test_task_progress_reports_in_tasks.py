@@ -53,7 +53,6 @@ class TestTaskProgressReportInTasks(TestTasks):
         reports = TaskProgressReport.objects.exclude(task_name="tasks.update_helpdesk_ticket_task")
         report = reports.last()
 
-        reps = TaskProgressReport.objects.all()
         self.assertEqual("SUCCESS", report.status)
 
     def test_task_report_creation(self):

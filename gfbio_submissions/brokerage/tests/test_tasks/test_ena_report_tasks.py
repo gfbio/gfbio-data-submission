@@ -7,12 +7,13 @@ import responses
 from django.test import override_settings
 
 from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
-from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.generic.models.request_log import RequestLog
-from .test_tasks_base import TestTasks
+from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+
 from ...models.ena_report import EnaReport
 from ...models.task_progress_report import TaskProgressReport
 from ...tasks.ena_report_tasks.fetch_ena_reports import fetch_ena_reports_task
+from .test_tasks_base import TestTasks
 
 
 class TestEnaReportTasks(TestTasks):

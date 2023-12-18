@@ -53,7 +53,6 @@ class TestPangaeaTasks(TestTasks):
                 "submission_id": submission.pk,
             }
         )
-        res = result.get()
         self.assertTrue(result.successful())
         additional_references = submission.additionalreference_set.all()
         self.assertEqual(3, len(additional_references))
