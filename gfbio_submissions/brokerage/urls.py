@@ -61,8 +61,17 @@ urlpatterns = [
         "",
         TemplateView.as_view(
             template_name="pages/api.html",
-            extra_context={"schema_url": "generic:brokerage_schema"},
+            extra_context={"schema_url": "api-schema"},
         ),
         name="api_documentation",
     ),
+    re_path(r'molecular/$', TemplateView.as_view(
+        template_name='pages/api_molecular.html',
+        extra_context={'schema_url': 'generic:brokerage_schema_molecular'}
+    ), name='api_molecular_documentation'),
+    re_path('', TemplateView.as_view(
+        template_name='pages/api.html',
+        extra_context={'schema_url': 'api-schema'}
+    ), name='api_documentation'),
+
 ]

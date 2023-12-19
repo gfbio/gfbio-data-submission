@@ -2,6 +2,7 @@
 from django.urls import reverse
 from rest_framework import mixins, generics, status
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiRequest
 
 from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.generic.serializers import JiraHookRequestSerializer
@@ -50,6 +51,21 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
         data_content = dict(serializer.data)
         return Response(data_content, status=status.HTTP_201_CREATED, headers=headers)
 
+    @extend_schema(
+        operation_id="jira issue update",
+        description="Endpoint for hook to handle updates in the corresponding jira issues of submissions.",
+        request=OpenApiRequest(
+            request=JiraHookRequestSerializer(many=False)
+        ),
+        responses={
+            201: OpenApiResponse(
+                description="Update from jira successful"
+            ),
+            400: OpenApiResponse(
+                description="Validation error",
+            )
+        }
+    )
     def post(self, request, *args, **kwargs):
         response = self.create(request, *args, **kwargs)
         return response

@@ -3,9 +3,12 @@ import json
 from uuid import uuid4
 
 from django.db import transaction
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, serializers
 from rest_framework.authentication import TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse, OpenApiRequest, inline_serializer
+
 
 from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.users.models import User
@@ -47,6 +50,46 @@ class SubmissionCommentView(generics.GenericAPIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+    @extend_schema(
+        operation_id="add comment to submission",
+        description="Adds a comment to the referenced submission.",
+        request=OpenApiRequest(
+            request=inline_serializer(
+                name="Comment-model",
+                fields={
+                    "comment": serializers.CharField(),
+                }
+            ),
+        ),
+        examples=[
+            OpenApiExample(
+                "Nice comment",
+                value={
+                    "comment": "Thank you for doing what you doing!"
+                }
+            )
+        ],
+        parameters=[
+            OpenApiParameter(
+                name="broker_submission_id",
+                description="Unique submission ID of submission to retrieve (A UUID specified by RFC4122).",
+                location="path",
+                required=True,
+                type=OpenApiTypes.UUID
+            )
+        ],
+        responses={
+            201: OpenApiResponse(
+                description="Comment successfull created",
+            ),
+            400: OpenApiResponse(
+                description="Validation error",
+            ),
+            404: OpenApiResponse(
+                description="Submission not found",
+            )
+        }
+    )
     def post(self, request, *args, **kwargs):
         form = SubmissionCommentForm(request.POST)
         if form.is_valid():

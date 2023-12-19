@@ -6,6 +6,9 @@ from rest_framework import mixins, generics, parsers, permissions, status
 from rest_framework.authentication import TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
 
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
+
 from gfbio_submissions.generic.models.request_log import RequestLog
 from ..models.submission import Submission
 from ..models.submission_upload import SubmissionUpload
@@ -76,5 +79,27 @@ class SubmissionUploadView(mixins.CreateModelMixin, generics.GenericAPIView):
             )
         return response
 
+    @extend_schema(
+        operation_id="create submission upload",
+        description="Upload a file associated to an existing submission",
+        parameters=[
+            OpenApiParameter(
+                name="broker_submission_id",
+                description="Unique submission ID of submission to upload a file to (A UUID specified by RFC4122).",
+                location="path",
+                required=True,
+                type=OpenApiTypes.UUID
+            )
+        ],
+        responses={
+            201: OpenApiResponse(
+                description="Submission upload successfull",
+                response=SubmissionUploadSerializer(many=False)
+            ),
+            400: OpenApiResponse(
+                description="Validation error",
+            )
+        }
+    )
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)

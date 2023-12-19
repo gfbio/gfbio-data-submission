@@ -5,6 +5,9 @@ from rest_framework import mixins, generics, permissions, status
 from rest_framework.authentication import TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
 
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiRequest
+
 from gfbio_submissions.generic.models.request_log import RequestLog
 from ..configuration.settings import SUBMISSION_DELAY
 from ..models.submission import Submission
@@ -30,11 +33,55 @@ class SubmissionDetailView(
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    @extend_schema(
+        operation_id="get submission by id",
+        description="Retrieve the Submission with the given submission_id",
+        parameters=[
+            OpenApiParameter(
+                name="broker_submission_id",
+                description="Unique submission ID of submission to retrieve (A UUID specified by RFC4122).",
+                location="path",
+                required=True,
+                type=OpenApiTypes.UUID
+            )
+        ],
+        responses={
+            200: OpenApiResponse(
+                description="requested submission",
+                response=SubmissionDetailSerializer()
+            )
+        }
+    )
     def get(self, request, *args, **kwargs):
         response = self.retrieve(request, *args, **kwargs)
         response.data["accession_id"] = self.get_object().get_accession_id()
         return response
 
+    @extend_schema(
+        operation_id="update submission",
+        description="Updates the referenced submission.",
+        parameters=[
+            OpenApiParameter(
+                name="broker_submission_id",
+                description="Unique submission ID of submission to update (A UUID specified by RFC4122).",
+                location="path",
+                required=True,
+                type=OpenApiTypes.UUID
+            )
+        ],
+        request=OpenApiRequest(
+            request=SubmissionDetailSerializer(many=False)
+        ),
+        responses={
+            200: OpenApiResponse(
+                description="Updated submission",
+                response=SubmissionDetailSerializer()
+            ),
+            400: OpenApiResponse(
+                description="Validation error"
+            )
+        }
+    )
     def put(self, request, *args, **kwargs):
         instance = self.get_object()
         new_embargo = get_embargo_from_request(request)
@@ -128,6 +175,24 @@ class SubmissionDetailView(
             )
         return response
 
+    @extend_schema(
+        operation_id="cancel submission",
+        description="Cancels a Submission",
+        parameters=[
+            OpenApiParameter(
+                name="broker_submission_id",
+                description="Unique submission ID of submission to delete (A UUID specified by RFC4122).",
+                location="path",
+                required=True,
+                type=OpenApiTypes.UUID
+            )
+        ],
+        responses={
+            204: OpenApiResponse(
+                description="Submission successfully cancelled"
+            )
+        }
+    )
     def delete(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.status = Submission.CANCELLED
