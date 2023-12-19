@@ -5,14 +5,12 @@
  */
 import { fromJS, List } from 'immutable';
 import {
-  ADD_CONTRIBUTOR,
   ADD_DATASET_LABEL,
   ADD_FILE_UPLOAD,
   ADD_RELATED_PUBLICATION,
   CHANGE_CURRENT_DATASET_LABEL,
   CHANGE_CURRENT_RELATED_PUBLICATION,
   CHANGE_LICENSE,
-  CHANGE_META_DATA_SCHEMA,
   CLOSE_EMBARGO_DIALOG,
   CLOSE_SAVE_SUCCESS,
   CLOSE_SUBMIT_SUCCESS,
@@ -25,7 +23,6 @@ import {
   FETCH_SUBMISSION,
   FETCH_SUBMISSION_ERROR,
   FETCH_SUBMISSION_SUCCESS,
-  REMOVE_CONTRIBUTOR,
   REMOVE_DATASET_LABEL,
   REMOVE_FILE_UPLOAD,
   REMOVE_RELATED_PUBLICATION,
@@ -35,6 +32,7 @@ import {
   SAVE_FORM_SUCCESS,
   SET_CONTRIBUTORS,
   SET_EMBARGO_DATE,
+  SET_FORM_CHANGED,
   SET_METADATA_INDEX,
   SET_METADATA_ON_SERVER,
   SET_METADATA_ON_SERVER_ERROR,
@@ -45,7 +43,6 @@ import {
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
   SUBMIT_FORM_SUCCESS,
-  UPDATE_CONTRIBUTOR,
   UPDATE_SUBMISSION,
   UPDATE_SUBMISSION_ERROR,
   UPDATE_SUBMISSION_SUCCESS,
@@ -56,6 +53,8 @@ import {
   UPLOAD_FILES,
   UPLOAD_FILES_ERROR,
   UPLOAD_FILES_SUCCESS,
+  CLOSE_ERROR_MESSAGE,
+  SET_LOADING,
 } from './constants';
 import {
   markMetaDataInScheduledUploads,
@@ -71,6 +70,7 @@ if (window.props !== undefined) {
 
 
 function getInitialContributors(backendParameters) {
+  return fromJS([]);
   let realName = backendParameters.userRealName || '';
   let nameSplit = realName.split(' ');
   let firstName, lastName = '';
@@ -95,6 +95,7 @@ function getInitialContributors(backendParameters) {
 const initialContributors = getInitialContributors(backendParameters);
 
 export const initialState = fromJS({
+  loading: false, // show spinner while getting submission
   license: 'CC BY 4.0',
   // metaDataSchema: 'None',
   reduxFormForm: {},
@@ -106,8 +107,11 @@ export const initialState = fromJS({
   showUpdateSuccess: false,
 
   showSaveSuccess: false,
+  submitError: false,
+  submissionErrors: [],
 
   embargoDate: new Date().setFullYear(new Date().getFullYear() + 1),
+  formChanged: false,
 
   // TODO: replace. development default of 2
   // userId: backendParameters.userId || 1,
@@ -151,6 +155,8 @@ export const initialState = fromJS({
 
 function submissionFormReducer(state = initialState, action) {
   switch (action.type) {
+    case SET_LOADING:
+      return state.set('loading', action.value);
     case CHANGE_LICENSE:
       return state.set('license', action.license);
     // case CHANGE_META_DATA_SCHEMA:
@@ -170,6 +176,10 @@ function submissionFormReducer(state = initialState, action) {
         .set('saveInProgress', false);
     case CLOSE_SAVE_SUCCESS:
       return state;
+    case CLOSE_ERROR_MESSAGE:
+      return state
+        .set('submitError', false)
+        .set('submissionErrors', []);
     case CLOSE_SUBMIT_SUCCESS:
       return state
         .set('showUpdateSuccess', false)
@@ -181,6 +191,7 @@ function submissionFormReducer(state = initialState, action) {
     case SUBMIT_FORM:
       return state
         .set('promptOnLeave', false)
+        .set('formChanged', false)
         .set('reduxFormForm', action.form);
     case SUBMIT_FORM_START:
       return state.set('submitInProgress', true);
@@ -196,7 +207,14 @@ function submissionFormReducer(state = initialState, action) {
     case SUBMIT_FORM_ERROR:
       return state
         .set('metaDataIndex', '')
-        .set('submitInProgress', false);
+        .set('submitInProgress', false)
+        .set('submitError', true)
+        .set(
+          'submissionErrors',
+          action.errorResponse?.response?.data?.data || [
+            'Server error, please try again later.',
+          ],
+        );
     case SHOW_EMBARGO_DIALOG:
       return state
         .set('showEmbargoDialog', true);
@@ -204,7 +222,10 @@ function submissionFormReducer(state = initialState, action) {
       return state
         .set('showEmbargoDialog', false);
     case SET_EMBARGO_DATE:
-      return state.set('embargoDate', action.date);
+      return state
+        .set('embargoDate', action.date);
+    case SET_FORM_CHANGED:
+      return state.set('formChanged', action.changed);
     case CHANGE_CURRENT_RELATED_PUBLICATION:
       return state
         .set('currentRelatedPublication', action.value);
@@ -279,17 +300,7 @@ function submissionFormReducer(state = initialState, action) {
     case DELETE_FILE_ERROR:
       return state;
     case SET_CONTRIBUTORS:
-      return state
-        .set('contributors', action.contributors);
-    case ADD_CONTRIBUTOR:
-      return state
-        .update('contributors', (contributors) => contributors.push(action.contributor));
-    case UPDATE_CONTRIBUTOR:
-      return state
-        .update('contributors', (contributors) => contributors.splice(action.index, 1, action.contributor));
-    case REMOVE_CONTRIBUTOR:
-      return state
-        .update('contributors', (contributors) => contributors.splice(action.index, 1));
+      return state.set('contributors', action.contributors);
     case FETCH_SUBMISSION:
       // TODO: set prop to inidcate loading -> loading gif
       return state.set('requestBrokerSubmissionId', action.brokerSubmissionId);
@@ -298,7 +309,8 @@ function submissionFormReducer(state = initialState, action) {
       // TODO: refactor to some sort of getter with checks
       return setStateFormValues(state, action).set('promptOnLeave', true)
         .set('showUpdateSuccess', false)
-        .set('showSubmitSuccess', false);
+        .set('showSubmitSuccess', false)
+        .set('loading', false);
     case FETCH_SUBMISSION_ERROR:
       return state;
     case FETCH_FILE_UPLOADS_SUCCESS:
@@ -335,7 +347,15 @@ function submissionFormReducer(state = initialState, action) {
         .set('updateWithRelease', false);
     case UPDATE_SUBMISSION_ERROR:
       return state
-        .set('updateWithRelease', action.release);
+        .set('updateWithRelease', action.release)
+        .set('submitInProgress', false)
+        .set('submitError', true)
+        .set(
+          'submissionErrors',
+          action.errorResponse?.response?.data?.data || [
+            'Server error, please try again later.',
+          ],
+        );
     case SET_METADATA_INDEX:
       let newMetaDataIndex = '';
       newMetaDataIndex = markMetaDataInScheduledUploads(state, action.metaDataIndex);

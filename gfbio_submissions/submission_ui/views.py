@@ -1,38 +1,27 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import redirect
 from django.views.generic import TemplateView
 from rest_framework.authtoken.models import Token
 
 logger = logging.getLogger(__name__)
 
 
-# FIXME: artefact of old server. As long as react widget is active on
-#   gfbio.org, the csv template has to be hosted under
-#   https://c103-171.cloud.gwdg.de/ui/molecular/full_template.csv
-# class CsvTemplateDownloadView(View):
-#     def get(self, request):
-#         try:
-#             csv_content = open(
-#                 os.path.join(settings.STATIC_ROOT, CSV_TEMPLATE_STATIC_PATH),
-#                 'r').read()
-#         except IOError as e:
-#             csv_content = 'oops, an internal error occured ...'
-#         response = HttpResponse(content_type='text/csv')
-#         # TODO: compare or consider this
-#         # response = HttpResponse(content_type='application/octet-stream')
-#         response[
-#             'Content-Disposition'] = 'attachment; filename="full_template.csv"'
-#         response.write(csv_content)
-#         return response
+class HomeView(TemplateView):
+    template_name = "pages/home.html"
+
+    def get(self, request, *args, **kwargs):
+        if self.request.user.is_authenticated:
+            return redirect("/ui/submission/list")
+        return super().get(request, *args, **kwargs)
 
 
 class SubmissionFrontendView(LoginRequiredMixin, TemplateView):
-    template_name = 'submission_ui/submission.html'
+    template_name = "submission_ui/submission.html"
 
     def get_context_data(self, *args, **kwargs):
-        context = super(
-            SubmissionFrontendView, self).get_context_data(*args, **kwargs)
+        context = super(SubmissionFrontendView, self).get_context_data(*args, **kwargs)
 
         user = self.request.user
         user_name = user.get_username()
@@ -40,11 +29,11 @@ class SubmissionFrontendView(LoginRequiredMixin, TemplateView):
 
         token, created = Token.objects.get_or_create(user_id=user.id)
 
-        context['parameters'] = {
-            'userName': user_name,
-            'userRealName': user.name,  # if user.name != '' else user_name,
-            'userEmail': user_email,
-            'userId': user.id,
-            'token': str(token),
+        context["parameters"] = {
+            "userName": user_name,
+            "userRealName": user.name,
+            "userEmail": user_email,
+            "userId": user.id,
+            "token": str(token),
         }
         return context

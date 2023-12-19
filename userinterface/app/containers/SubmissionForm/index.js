@@ -13,46 +13,56 @@ import { compose } from 'redux';
 import injectSaga from 'utils/injectSaga';
 import injectReducer from 'utils/injectReducer';
 import FormWrapper from 'components/FormWrapper';
+import Collapse from 'react-bootstrap/Collapse';
+import Button from 'react-bootstrap/Button';
+import PulseLoader from 'react-spinners/PulseLoader';
 import reducer from './reducer';
 import saga from './saga';
-import { fetchSubmission, resetForm, submitForm } from './actions';
+import {
+  fetchSubmission,
+  resetForm,
+  submitForm,
+  closeSubmitError,
+  setLoading,
+} from './actions';
 import {
   makeSelectBrokerSubmissionId,
   makeSelectAccessionId,
-  makeSelectFormWrapper, makeSelectGeneralError,
+  makeSelectFormWrapper,
+  makeSelectGeneralError,
   makeSelectInitialValues,
   makeSelectPromptOnLeave,
   makeSelectSaveInProgress,
   makeSelectShowSaveSuccess,
+  makeSelectSubmitError,
+  makeSelectSubmissionErrors,
   makeSelectSubmission,
   makeSelectSubmitInProgress,
+  makeSelectLoading,
 } from './selectors';
-import Collapse from 'react-bootstrap/Collapse';
+import { forEach } from 'react-bootstrap/utils/ElementChildren';
 
 /* eslint-disable react/prefer-stateless-function */
 export class SubmissionForm extends React.Component {
-
   componentDidMount() {
     const { brokerSubmissionId } = this.props.match.params;
     if (brokerSubmissionId !== undefined) {
+      this.props.setLoading(true);
       this.props.fetchSubmission(brokerSubmissionId);
     }
   }
 
-  getProfile = () => {
-    return {
-      ui_settings: {
-        minimal: {
-          visible: true,
-          default: {
-            title: 'profile-title',
-            description: 'profile-description',
-          },
+  getProfile = () => ({
+    ui_settings: {
+      minimal: {
+        visible: true,
+        default: {
+          title: 'profile-title',
+          description: 'profile-description',
         },
       },
-    };
-  };
-
+    },
+  });
 
   // renderNavigationPrompt = () => {
   //   return (
@@ -116,37 +126,61 @@ export class SubmissionForm extends React.Component {
 
   render() {
 
-    console.info('RENDER SUBMISSIONFORM');
-    console.info(this.props);
-
-    if (this.props.brokerSubmissionId !== '' && this.props.match.path === '/form') {
+    if (
+      this.props.brokerSubmissionId !== '' &&
+      this.props.match.path === '/form'
+    ) {
       this.props.resetForm();
     }
 
     // TODO: add action for saga to fetch that removes this after a few seconds
     const saveMessage = (
-      <Collapse
-        in={this.props.showSaveSuccess}
-      >
+      <Collapse in={this.props.showSaveSuccess}>
         <div className="gray-background">
-
           <div className="col-12">
             <header className="header save-header">
               <h2 className="section-title">
-                <i className="fa fa-check" aria-hidden="true"></i>
+                <i className="fa fa-check" aria-hidden="true"/>
                 Save successful
               </h2>
             </header>
-            <p className="save-text">
-              All changes have been saved.
-            </p>
-            {/*<Button variant="secondary"*/}
-            {/*        className="btn-sm btn-green-inverted"*/}
-            {/*        onClick={this.props.closeSaveSuccess}>*/}
-            {/*  Close*/}
-            {/*</Button>*/}
+            <p className="save-text">All changes have been saved.</p>
+            {/* <Button variant="secondary" */}
+            {/*        className="btn-sm btn-green-inverted" */}
+            {/*        onClick={this.props.closeSaveSuccess}> */}
+            {/*  Close */}
+            {/* </Button> */}
           </div>
-
+        </div>
+      </Collapse>
+    );
+    const submissionErrors = () => {
+      const errors = [];
+      this.props.submissionErrors.forEach(e => {
+        errors.push(e);
+        errors.push(<br/>);
+      });
+      return errors;
+    };
+    const errorMessage = (
+      <Collapse in={this.props.submitError}>
+        <div className="gray-background">
+          <div className="col-12">
+            <header className="header error-header">
+              <h2 className="section-title">
+                <i className="fa fa-times" aria-hidden="true"/>
+                Please correct the errors below
+              </h2>
+            </header>
+            <p className="save-text">{submissionErrors()}</p>
+            <Button
+              variant="secondary"
+              className="btn-sm btn-green-inverted"
+              onClick={this.props.closeSubmitError}
+            >
+              Close
+            </Button>
+          </div>
         </div>
       </Collapse>
     );
@@ -160,7 +194,7 @@ export class SubmissionForm extends React.Component {
     if (this.props.submission && this.props.submission.issue) {
       issue = this.props.submission.issue;
     }
-    return (
+    return !this.props.isLoading ? (
       <div className="submission-form-wrapper">
         <FormWrapper
           onSubmit={this.props.handleSubmit}
@@ -173,10 +207,18 @@ export class SubmissionForm extends React.Component {
           promptOnLeave={this.props.promptOnLeave}
           generalError={this.props.generalError}
           saveSuccessMessage={saveMessage}
+          submitErrorMessage={errorMessage}
           brokerSubmissionId={this.props.brokerSubmissionId}
           accessionId={this.props.accessionId}
+          isClosed={this.props.submission.status === 'CLOSED'}
           issue={issue}
         />
+      </div>
+    ) : (
+      <div className="row">
+        <div className="col spinner">
+          <PulseLoader/>
+        </div>
       </div>
     );
   }
@@ -194,7 +236,12 @@ SubmissionForm.propTypes = {
   resetForm: PropTypes.func,
   promptOnLeave: PropTypes.bool,
   showSaveSuccess: PropTypes.bool,
+  submitError: PropTypes.bool,
+  submissionErrors: PropTypes.array,
   generalError: PropTypes.bool,
+  closeSubmitError: PropTypes.func,
+  isLoading: PropTypes.bool,
+  setLoading: PropTypes.func,
 };
 
 const mapStateToProps = createStructuredSelector({
@@ -207,14 +254,20 @@ const mapStateToProps = createStructuredSelector({
   accessionId: makeSelectAccessionId(),
   promptOnLeave: makeSelectPromptOnLeave(),
   showSaveSuccess: makeSelectShowSaveSuccess(),
+  submitError: makeSelectSubmitError(),
+  submissionErrors: makeSelectSubmissionErrors(),
   generalError: makeSelectGeneralError(),
+  isLoading: makeSelectLoading(),
 });
 
 function mapDispatchToProps(dispatch) {
   return {
     handleSubmit: form => dispatch(submitForm(form)),
-    fetchSubmission: brokerSubmissionId => dispatch(fetchSubmission(brokerSubmissionId)),
-    resetForm: () => (dispatch(resetForm())),
+    fetchSubmission: brokerSubmissionId =>
+      dispatch(fetchSubmission(brokerSubmissionId)),
+    resetForm: () => dispatch(resetForm()),
+    setLoading: value => dispatch(setLoading(value)),
+    closeSubmitError: () => dispatch(closeSubmitError()),
   };
 }
 

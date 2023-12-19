@@ -7,6 +7,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { createStructuredSelector } from 'reselect';
+import { connect } from 'react-redux';
+import { compose } from 'redux';
 import {
   makeSelectCurrentLabel,
   makeSelectDatasetLabels,
@@ -16,38 +18,60 @@ import {
   changeCurrentLabel,
   removeDatsetLabel,
 } from '../../containers/SubmissionForm/actions';
-import { connect } from 'react-redux';
-import { compose } from 'redux';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
 class DatasetLabelForm extends React.PureComponent {
-
-  handleChange = (e) => {
+  handleChange = e => {
     this.props.handleChange(e.target.value);
   };
 
   render() {
-    // console.log('DatasetLabelForm render');
-    // console.log(this.props);
-    // console.log('----------------------');
-    // console.log(this.state);
-    // console.log('---------------------------------');
-    const labelList = this.props.dataset_labels.map((label, index) => {
+    // Deal with legacy submissions where no datasetlabels were existing
+    let datasetLabels = [];
+    if (this.props.dataset_labels !== undefined) {
+      datasetLabels = this.props.dataset_labels;
+    }
+    const labelList = datasetLabels.map((label, index) => {
       if (label !== '') {
-        return <li key={index}
-                   className="list-group-item d-flex justify-content-between align-items-center publication">
-          <span><i className="fa fa-tags pub" /> {label} </span>
-          <button className="btn btn-remove" onClick={(e) => {
-            e.preventDefault();
-            this.props.handleRemove(index);
-          }}>
-            <i className="fa fa-times" />
+        let liClassNames =
+          'list-group-item d-flex justify-content-between align-items-center publication';
+        if (this.props.readOnly) {
+          liClassNames += ' disabled';
+        }
+        const removeButton = this.props.readOnly ? (
+          ''
+        ) : (
+          <button
+            className="btn btn-remove"
+            onClick={e => {
+              e.preventDefault();
+              this.props.handleRemove(index);
+            }}
+          >
+            <i className="fa fa-times"/>
             Remove
           </button>
-        </li>;
+        );
+
+        return (
+          <li
+            key={index}
+            className={liClassNames}
+          >
+            <span>
+              <i className="fa fa-tags pub"/> {label}{' '}
+            </span>
+            {removeButton}
+          </li>
+        );
       }
     });
+
+    let linkClasses = 'btn btn-secondary btn-block btn-light-blue-inverted';
+    if (this.props.readOnly) {
+      linkClasses += ' disabled';
+    }
 
     return (
       <div>
@@ -55,27 +79,26 @@ class DatasetLabelForm extends React.PureComponent {
           <h2 className="section-title">Labels</h2>
           <p className="section-subtitle">(optional)</p>
         </header>
-        <ul className="list-group list-group-flush">
-          {labelList}
-        </ul>
+        <ul className="list-group list-group-flush">{labelList}</ul>
         <div className="form-row">
           <div className="form-group col-md-10">
-            <input className="form-control" type="text"
-                   id="relatedPublication"
-                   value={this.props.currentLabel}
-                   placeholder="Add Labels to your Dataset"
-                   onChange={this.handleChange}
+            <input
+              className="form-control"
+              type="text"
+              id="dataSetLabel"
+              value={this.props.currentLabel}
+              placeholder="Add Labels to your Dataset"
+              onChange={this.handleChange}
+              disabled={this.props.readOnly}
             />
           </div>
           <div className="form-group col-md-2">
             <a
-              className="btn btn-secondary btn-block
-              btn-light-blue-inverted"
+              className={linkClasses}
               onClick={e => {
                 e.preventDefault();
                 this.props.handleAdd(this.props.currentLabel);
               }}
-
             >
               Add
             </a>
@@ -92,6 +115,7 @@ DatasetLabelForm.propTypes = {
   handleAdd: PropTypes.func,
   handleRemove: PropTypes.func,
   handleChange: PropTypes.func,
+  readOnly: PropTypes.bool,
 };
 
 const mapStateToProps = createStructuredSelector({

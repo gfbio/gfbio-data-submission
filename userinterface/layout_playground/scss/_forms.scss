@@ -105,6 +105,34 @@ h1.current-location {
   }
 }
 
+.btn-red-inverted {
+  border-color: darken($error-red, .2);
+  background-color: $white;
+  color: $error-red !important;
+
+  &:hover, &:not(:disabled):not(.disabled):active,
+  &:not(:disabled):not(.disabled).active {
+    &:focus {
+      box-shadow: none;
+    }
+
+    border-color: darken($error-red, .2);
+    background-color: $error-red;
+    color: $white !important;
+    box-shadow: none;
+  }
+
+  &:focus {
+    box-shadow: none;
+  }
+
+  &:hover {
+    background-color: $error-red;
+    color: $white !important;
+  }
+}
+
+
 
 // works on btn-secondary
 // TODO: refactor to generic class, light-blue button
@@ -649,22 +677,13 @@ section.sub-navi {
 
 /* end sticky sidebar */
 
-.tooltip [class$="inner"] {
-  font-size: .8rem;
-  font-weight: 300;
-  background-color: $white;
-  border: 1px solid $gray-dark-2;
-  color: $gray-dark-2;
-  //border: 1px solid background-color;
-}
-
-.tooltip [class$="arrow"] {
-  //border-color: lime;
-  //border-top: 5px solid background-color !important;
-  &:before {
-    border-right-color: $gray-dark-2 !important;
-  }
-}
+//.tooltip [class$="arrow"] {
+//  //border-color: lime;
+//  //border-top: 5px solid background-color !important;
+//  &:before {
+//    border-right-color: $gray-dark-2 !important;
+//  }
+//}
 
 /*
 
@@ -741,7 +760,7 @@ form.pagewide-form {
   }
 
   .form-header-top {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
   }
 
   .form-header {
@@ -777,6 +796,17 @@ form.pagewide-form {
     }
   }
 
+  .error-header {
+    .section-title {
+      font-size: 1.2rem !important;
+    }
+
+    i {
+      padding: 0 .5rem 0 .5rem;
+      color: $error-red;
+    }
+  }
+
   .save-text {
     padding: .75rem 1.25rem;
     font-size: .9rem;
@@ -803,6 +833,71 @@ form.pagewide-form {
       outline-color: $gfbio-green-0-7;
     }
 
+  }
+
+  #multiselectContainerReact {
+    input {
+      &:focus {
+        border-color: transparent !important;
+        box-shadow: none;
+        outline-color: transparent !important;
+      }
+
+    }
+    span[class^="chip"] {
+      background: $gfbio-light-blue;
+    }
+  }
+
+
+  .contributor-draggable-btn {
+    margin: 0 0 0 30px;
+    text-align: left;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 125px;
+    white-space: nowrap;
+    padding-left: 0;
+    padding-top: 6px;
+  }
+
+  .droppable-contributors {
+    border: 1px solid #dfdfdf;
+    border-radius: 5px;
+    min-height: 100%;
+    padding: 10px;
+    max-height: 120px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .add-contributor-col {
+    border: 1px solid #dfdfdf;
+    border-radius: 5px;
+    min-height: 100%;
+    padding: 10px;
+    margin-left: -6px;
+    flex: 0 0 74% !important;
+    max-width: 74% !important;
+  }
+
+  .add-contributor-col .card-body {
+    border: none;
+    padding: 10px;
+  }
+
+  .add-contributor-div {
+    display: flex;
+    justify-content: center;
+    height: 100%;
+  }
+
+  .show-contributors-btn {
+    padding-top: 4px;
+  }
+
+  .m-bt-0 {
+    margin-bottom: 0;
   }
 
   option {
@@ -1149,9 +1244,6 @@ form.pagewide-form {
 
   // works on btn-primary
   .btn-contributor {
-    //border-color: darken($gfbio-green, .2);
-    //background-color: $gfbio-green;
-    //color: $white !important;
     color: $gfbio-light-blue;
     background-color: $white;
     border: none;
@@ -1323,41 +1415,6 @@ form.pagewide-form {
     }
   }
 
-  /*
-    embargo date styles
-
-
-    .btn-contributor {
-    //border-color: darken($gfbio-green, .2);
-    //background-color: $gfbio-green;
-    //color: $white !important;
-    color: $gfbio-light-blue;
-    background-color: $white;
-    border: none;
-
-    &:focus {
-      box-shadow: none;
-    }
-
-    &:hover, &:not(:disabled):not(.disabled):active,
-    &:not(:disabled):not(.disabled).active {
-      &:focus {
-        box-shadow: none;
-      }
-
-      color: $contrast-1;
-      background-color: $white;
-      border: none;
-      box-shadow: none;
-    }
-
-    i {
-      padding-right: .5rem;
-    }
-
-  }
-
-  */
   // btn-link overwrite
   // TODO: make generic as other button classes
   .btn-link-light-blue {

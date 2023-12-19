@@ -6,15 +6,17 @@ import gfbio_submissions.brokerage.utils.submission_tools
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0014_submissionupload_md5_checksum'),
+        ("brokerage", "0014_submissionupload_md5_checksum"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='submissionupload',
-            name='file',
-            field=models.FileField(storage=gfbio_submissions.brokerage.storage.OverwriteStorage(), upload_to=gfbio_submissions.brokerage.utils.submission_tools.submission_upload_path),
+            model_name="submissionupload",
+            name="file",
+            field=models.FileField(
+                storage=gfbio_submissions.brokerage.storage.OverwriteStorage(),
+                upload_to=gfbio_submissions.brokerage.utils.submission_tools.submission_upload_path,
+            ),
         ),
     ]

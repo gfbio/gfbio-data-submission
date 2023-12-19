@@ -18,9 +18,12 @@ export const SUBMIT_FORM_ACTIVE = 'app/SubmissionForm/SUBMIT_FORM_ACTIVE';
 export const SUBMIT_FORM_SUCCESS = 'app/SubmissionForm/SUBMIT_FORM_SUCCESS';
 export const SUBMIT_FORM_ERROR = 'app/SubmissionForm/SUBMIT_FORM_ERROR';
 
+export const SET_LOADING = 'app/SubmissionForm/SET_LOADING ';
+
 export const SHOW_EMBARGO_DIALOG = 'app/SubmissionForm/SHOW_EMBARGO_DIALOG';
 export const CLOSE_EMBARGO_DIALOG = 'app/SubmissionForm/CLOSE_EMBARGO_DIALOG';
 export const SET_EMBARGO_DATE = 'app/SubmissionForm/SET_EMBARGO_DATE';
+export const SET_FORM_CHANGED = 'app/SubmissionForm/SET_FORM_CHANGED';
 
 export const ADD_RELATED_PUBLICATION = 'app/SubmissionForm/ADD_RELATED_PUBLICATION';
 export const REMOVE_RELATED_PUBLICATION = 'app/SubmissionForm/REMOVE_RELATED_PUBLICATION';
@@ -46,9 +49,6 @@ export const DELETE_FILE_ERROR = 'app/SubmissionForm/DELETE_FILE_ERROR';
 export const DELETE_FILE_SUCCESS = 'app/SubmissionForm/DELETE_FILE_SUCCESS';
 
 export const SET_CONTRIBUTORS = 'app/SubmissionForm/SET_CONTRIBUTORS';
-export const ADD_CONTRIBUTOR = 'app/SubmissionForm/ADD_CONTRIBUTOR';
-export const UPDATE_CONTRIBUTOR = 'app/SubmissionForm/UPDATE_CONTRIBUTOR';
-export const REMOVE_CONTRIBUTOR = 'app/SubmissionForm/REMOVE_CONTRIBUTOR';
 
 export const FETCH_SUBMISSION = 'app/SubmissionForm/FETCH_SUBMISSION';
 export const FETCH_SUBMISSION_SUCCESS = 'app/SubmissionForm/FETCH_SUBMISSION_SUCCESS';
@@ -58,6 +58,7 @@ export const RESET_FORM = 'app/SubmissionForm/RESET_FORM';
 
 export const CLOSE_SUBMIT_SUCCESS = 'app/SubmissionForm/CLOSE_SUBMIT_SUCCESS';
 export const CLOSE_SAVE_SUCCESS = 'app/SubmissionForm/CLOSE_SAVE_SUCCESS';
+export const CLOSE_ERROR_MESSAGE = 'app/SubmissionForm/CLOSE_ERROR_MESSAGE';
 
 export const UPDATE_SUBMISSION = 'app/SubmissionForm/UPDATE_SUBMISSION';
 export const UPDATE_SUBMISSION_SUCCESS = 'app/SubmissionForm/UPDATE_SUBMISSION_SUCCESS';

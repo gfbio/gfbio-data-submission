@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Weber"
+  given-names: "Marc"
+  orcid: "https://orcid.org/0000-0003-0694-5817"
+- family-names: "Kostadinov"
+  given-names: "Ivaylo"
+  orcid: "https://orcid.org/0000-0003-4476-6764"
+- family-names: "Marinuks"
+  given-names: "Deniss"
+  orcid: "https://orcid.org/0000-0003-2350-0449"
+- family-names: "Jimena"
+  given-names: "Linares"
+  orcid: "https://orcid.org/0000-0003-3847-2663"
+title: "GFBio Data Submission and Brokerage System"
+abstract: "The system provides the central entry point for the submission services provided by GFBio e.V. for the long-term data archival and publication of biodiversity, ecology and environmental science data. Users can submit their data to one or more of the GFBio data centers. Submissions can be performed either via a web-based user interface or over a REST API, where the latter is suitable for high-throughput programmatic submissions. The system requires a working connection to an JIRA Service Management (server/data center) instance, since all communication with the users is organised via JIRA issues."
+type: software
+doi: 10.5281/zenodo.8315892
+keywords:
+  - Research Software
+  - Research Data Management
+  - Biodiversity
+  - Ecology
+  - GFBio
+license: MIT

@@ -11,7 +11,7 @@
                 "sample_attributes": [
                     {
                         "tag": "investigation type",
-                        "value": "mimarks-survey"
+                        "value": "MIMARKS-survey"
                     },
                     {
                         "tag": "environmental package",

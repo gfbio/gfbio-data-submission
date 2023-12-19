@@ -12,7 +12,7 @@
                 "sample_attributes": [
                     {
                         "tag": "investigation type",
-                        "value": "mimarks-survey"
+                        "value": "MIMARKS-survey"
                     },
                     {
                         "tag": "environmental package",
@@ -21,6 +21,10 @@
                     {
                         "tag": "collection date",
                         "value": "2014-11"
+                    },
+                    {
+                        "tag": "TARGet gene",
+                        "value": "18S rRNA for fish"
                     }
                 ]
             },
@@ -28,13 +32,25 @@
                 "taxon_id": 1081887,
                 "description": "Escherichia coli 09BKT078844, ...",
                 "sample_alias": "sample_j09gp7eb",
-                "sample_title": "Sample No. 2"
+                "sample_title": "Sample No. 2",
+                "sample_attributes": [
+                    {
+                        "tag": "target gene",
+                        "value": "28S"
+                    }
+                ]
             },
             {
                 "taxon_id": 2056630,
                 "description": "Candidatus Korarchaeota archaeon, ..",
                 "sample_alias": "sample_j09gp7ed",
-                "sample_title": "Sample No. 3"
+                "sample_title": "Sample No. 3",
+                 "sample_attributes": [
+                    {
+                        "tag": "target gene",
+                        "value": "iTS1-5.8S-ITs2"
+                    }
+                ]
             },
             {
                 "taxon_id": 1126011,
@@ -46,7 +62,13 @@
                 "taxon_id": 224325,
                 "description": "Archaeoglobus fulgidus DSM 4304, lorem ipsum.",
                 "sample_alias": "sample_j09gp7eh",
-                "sample_title": "Sample No. 5"
+                "sample_title": "Sample No. 5",
+                "sample_attributes": [
+                    {
+                        "tag": "target gene",
+                        "value": "16S rRNA"
+                    }
+                ]
             }
         ],
         "experiments": [

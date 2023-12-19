@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { Field } from 'redux-form/lib/immutable';
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -24,6 +24,7 @@ class CommentForm extends React.PureComponent {
             className="form-control"
             component="textarea"
             rows="7"
+            disabled={this.props.readOnly}
             placeholder="Enter a comment"
           />
         </div>
@@ -32,6 +33,8 @@ class CommentForm extends React.PureComponent {
   }
 }
 
-CommentForm.propTypes = {};
+CommentForm.propTypes = {
+  readOnly: PropTypes.bool,
+};
 
 export default CommentForm;

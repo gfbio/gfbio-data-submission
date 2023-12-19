@@ -1,0 +1,7 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=gfbio_submissions
+POSTGRES_USER=akUsfXheORQFVJjmQhhIIpiYVnMyUFMW
+POSTGRES_PASSWORD=5sjFNBelQNBy0kpF3JBtmklL9MbQnLfJvCXB4bXN8LpyFuGQnUcC4BjunVMi0XQo

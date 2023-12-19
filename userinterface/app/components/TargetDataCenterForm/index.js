@@ -15,6 +15,7 @@ class TargetDataCenterForm extends React.PureComponent {
     'GFBio Data Centers - our curators will suggest the appropriate one(s)',
     'ENA – European Nucleotide Archive',
     'PANGAEA – Data Publisher for Earth & Environmental Science',
+    'IPK - Leibniz Institute of Plant Genetics and Crop Plant Research',
     'BGBM – Botanic Garden and Botanical Museum Berlin, Freie Universität Berlin',
     'DSMZ – Leibniz Institute DSMZ – German Collection of Microorganisms and Cell Cultures, Braunschweig',
     'MfN – Leibniz Institute for Research on Evolution and Biodiversity, Berlin',
@@ -30,7 +31,7 @@ class TargetDataCenterForm extends React.PureComponent {
 
   renderDataCenterSelector = ({ input, meta: { touched, error } }) => (
     <div className="form-group">
-      <select className="form-control" {...input}>
+      <select className="form-control" disabled={this.props.readOnly} {...input}>
         {this.dataCenterOptions}
       </select>
       {touched && error && <span>{error}</span>}
@@ -46,7 +47,7 @@ class TargetDataCenterForm extends React.PureComponent {
           <h2 className="section-title">Target Datacenter</h2>
           <p className="section-subtitle">(optional)</p>
         </header>
-        <Field name="data_center" component={this.renderDataCenterSelector} />
+        <Field name="data_center" component={this.renderDataCenterSelector} props={{ disabled: this.props.readOnly}}/>
       </div>
     );
   }

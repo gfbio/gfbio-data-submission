@@ -1,0 +1,266 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "GFBio Submission API",
+        "description": "A service to use the GFBio Data Submission Service programmatically provided by the GFBio Consortium.</br>This page here is only a part of the general documentation, which can be found here: <a href='/api/'>GFBio Submission API</a>",
+        "termsOfService": "https://www.gfbio.org/legal-notice",
+        "contact": {
+            "name": "GFBio Helpdesk",
+            "email": "info@gfbio.org",
+            "url": "https://submissions.gfbio.org/"
+        }
+    },
+    "servers": [
+        {
+            "url": "https://submissions.gfbio.org/api"
+        }
+    ],
+    "paths": {
+        "/submissions/": {
+            "post": {
+                "description": "Create a new Submission. Here you find the documentation of the extended schema, used to submit molecular data.",
+                "operationId": "create submission",
+                "requestBody": {
+                    "description": "Data to submit",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MolecularSubmission"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Submission response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MolecularSubmission"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Submission": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "target": {
+                                "type": "string",
+                                "enum": [
+                                    "ENA",
+                                    "ENA_PANGAEA",
+                                    "GENERIC"
+                                ]
+                            },
+                            "embargo": {
+                                "type": "string",
+                                "format": "date"
+                            }
+                        },
+                        "required": [
+                            "target"
+                        ]
+                    },
+                    {
+                        "$ref": "common_requirements_definitions.json#/minimal_requirements"
+                    }
+                ]
+            },
+            "SubmissionUpload": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "broker_submission_id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "user": {
+                                "type": "string"
+                            },
+                            "file": {
+                                "type": "string"
+                            },
+                            "attach_to_ticket": {
+                                "type": "bool"
+                            },
+                            "meta_data": {
+                                "type": "bool"
+                            }
+                        }
+                    }
+                ]
+            },
+            "SubmissionUploadListItem": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "pk": {
+                                "type": "string"
+                            },
+                            "submission": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "user": {
+                                "type": "string"
+                            },
+                            "file": {
+                                "type": "string"
+                            },
+                            "file_name": {
+                                "type": "string"
+                            },
+                            "file_size": {
+                                "type": "number"
+                            },
+                            "attach_to_ticket": {
+                                "type": "bool"
+                            },
+                            "meta_data": {
+                                "type": "bool"
+                            }
+                        }
+                    }
+                ]
+            },
+            "MolecularSubmission": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "target": {
+                                "type": "string",
+                                "enum": [
+                                    "ENA",
+                                    "ENA_PANGAEA",
+                                    "GENERIC"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "target"
+                        ]
+                    },
+                    {
+                        "$ref": "common_requirements_definitions.json#/minimal_requirements"
+                    },
+                    {
+                        "$ref": "ena_study_definitions.json#/study"
+                    },
+                    {
+                        "$ref": "ena_sample_definitions.json#/sample_array"
+                    },
+                    {
+                        "$ref": "ena_experiment_definitions.json#/experiment_array"
+                    },
+                    {
+                        "$ref": "ena_run_definitions.json#/run_array"
+                    },
+                    {
+                        "$ref": "technical_content_definitions.json#/technical_requirements"
+                    }
+                ]
+            },
+            "ValidationError": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "type": "validationError"
+                        }
+                    },
+                    "optional_validation": {
+                        "type": "array",
+                        "items": {
+                            "type": "validationError"
+                        }
+                    }
+                },
+                "required": [
+                    "code",
+                    "message"
+                ]
+            },
+            "Comment": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "comment": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "comment"
+                        ]
+                    }
+                ]
+            },
+            "JiraHookBody": {
+                "allOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "issue": {
+                                "type": "string",
+                                "format": "json"
+                            },
+                            "changelog": {
+                                "type": "string",
+                                "format": "json"
+                            },
+                            "broker_submission_id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "issue_key": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ]
+            },
+            "Error": {
+                "type": "object",
+                "required": [
+                    "code",
+                    "message"
+                ],
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}

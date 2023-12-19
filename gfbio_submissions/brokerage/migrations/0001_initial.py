@@ -4,14 +4,13 @@ from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
-import gfbio_submissions.brokerage.fields
+import gfbio_submissions.generic.fields
 import gfbio_submissions.brokerage.utils.submission_tools
 import model_utils.fields
 import uuid
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -20,196 +19,806 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='BrokerObject',
+            name="BrokerObject",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('type', models.CharField(choices=[('study', 'study'), ('sample', 'sample'), ('experiment', 'experiment'), ('run', 'run'), ('submission', 'submission')], max_length=12)),
-                ('site_project_id', models.CharField(blank=True, default='', max_length=128)),
-                ('site_object_id', models.CharField(blank=True, default='', max_length=128)),
-                ('data', gfbio_submissions.brokerage.fields.JsonDictField(default=dict)),
-                ('site', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[
+                            ("study", "study"),
+                            ("sample", "sample"),
+                            ("experiment", "experiment"),
+                            ("run", "run"),
+                            ("submission", "submission"),
+                        ],
+                        max_length=12,
+                    ),
+                ),
+                (
+                    "site_project_id",
+                    models.CharField(blank=True, default="", max_length=128),
+                ),
+                (
+                    "site_object_id",
+                    models.CharField(blank=True, default="", max_length=128),
+                ),
+                ("data", gfbio_submissions.generic.fields.JsonDictField(default=dict)),
+                (
+                    "site",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='CenterName',
+            name="CenterName",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('center_name', models.CharField(default='', max_length=128)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("center_name", models.CharField(default="", max_length=128)),
             ],
         ),
         migrations.CreateModel(
-            name='ResourceCredential',
+            name="ResourceCredential",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.SlugField(help_text='Enter a descriptive title for this instance', max_length=128)),
-                ('url', models.CharField(help_text='Url to which requests will be sent to', max_length=256)),
-                ('authentication_string', models.CharField(blank=True, default='', help_text='In cases where an archive demands some sort of pre-build authentication string or sentence, it is entered here. E.g. ENAs authentication', max_length=128)),
-                ('username', models.CharField(default='', help_text='In case of username/password authentication fill this field', max_length=72)),
-                ('password', models.CharField(default='', help_text='In case of username/password authentication fill this field', max_length=72)),
-                ('comment', models.TextField(blank=True, default='', help_text='Enter a description or helpful text here')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "title",
+                    models.SlugField(
+                        help_text="Enter a descriptive title for this instance",
+                        max_length=128,
+                    ),
+                ),
+                (
+                    "url",
+                    models.CharField(
+                        help_text="Url to which requests will be sent to",
+                        max_length=256,
+                    ),
+                ),
+                (
+                    "authentication_string",
+                    models.CharField(
+                        blank=True,
+                        default="",
+                        help_text="In cases where an archive demands some sort of pre-build authentication string or sentence, it is entered here. E.g. ENAs authentication",
+                        max_length=128,
+                    ),
+                ),
+                (
+                    "username",
+                    models.CharField(
+                        default="",
+                        help_text="In case of username/password authentication fill this field",
+                        max_length=72,
+                    ),
+                ),
+                (
+                    "password",
+                    models.CharField(
+                        default="",
+                        help_text="In case of username/password authentication fill this field",
+                        max_length=72,
+                    ),
+                ),
+                (
+                    "comment",
+                    models.TextField(
+                        blank=True,
+                        default="",
+                        help_text="Enter a description or helpful text here",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='SiteConfiguration',
+            name="SiteConfiguration",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.SlugField(help_text='Enter a descriptive title for this instance.', max_length=128, unique=True)),
-                ('contact', models.EmailField(default='maweber@mpi-bremen.de', help_text='Main contact to address in case of something. This will, in any case, serve as a fallback when no other person can be determined.', max_length=254)),
-                ('release_submissions', models.BooleanField(default=False, help_text='If this field is unchecked (default), all submission requests by this site have to be manually approved by staff members. If checked all submissions will be automatically send to the respective archives.')),
-                ('use_gfbio_services', models.BooleanField(default=False, help_text='If checked additional gfbio-related services will be used during a submission. E.g. trying to get a User from the gfbio.org database and set its email as reporter-email in GFBio helpdesk.')),
-                ('jira_project_key', models.CharField(choices=[('SAND', 'SAND'), ('DSUB', 'DSUB')], default='SAND', max_length=4)),
-                ('comment', models.TextField(default='', help_text='Enter a description or helpful text here.')),
-                ('ena_ftp', models.ForeignKey(blank=True, help_text='Select which server and/or account this configuration should use to connect to access ENA FTP-server.', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='SiteConfiguration.ena_ftp+', to='brokerage.ResourceCredential')),
-                ('ena_server', models.ForeignKey(help_text='Select which server and/or account this configuration should use to connect to ENA.', on_delete=django.db.models.deletion.PROTECT, related_name='SiteConfiguration.ena_server+', to='brokerage.ResourceCredential')),
-                ('gfbio_server', models.ForeignKey(blank=True, help_text='Select which server and/or account this configuration should use to connect to the GFBio portal database for accessing submission-registry, research_object, and so on.', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='SiteConfiguration.gfbio_server+', to='brokerage.ResourceCredential')),
-                ('helpdesk_server', models.ForeignKey(help_text='Select which server and/or account this configuration should use to connect to a JIRA based helpdesk system. In 99 % of all cases this means the GFBio JIRA helpdesk.', on_delete=django.db.models.deletion.PROTECT, related_name='SiteConfiguration.helpdesk_server+', to='brokerage.ResourceCredential')),
-                ('pangaea_server', models.ForeignKey(help_text='Select which server and/or account this configuration should use to connect to Pangaea.', on_delete=django.db.models.deletion.PROTECT, related_name='SiteConfiguration.pangaea_server+', to='brokerage.ResourceCredential')),
-                ('site', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='siteconfiguration', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "title",
+                    models.SlugField(
+                        help_text="Enter a descriptive title for this instance.",
+                        max_length=128,
+                        unique=True,
+                    ),
+                ),
+                (
+                    "contact",
+                    models.EmailField(
+                        default="maweber@mpi-bremen.de",
+                        help_text="Main contact to address in case of something. This will, in any case, serve as a fallback when no other person can be determined.",
+                        max_length=254,
+                    ),
+                ),
+                (
+                    "release_submissions",
+                    models.BooleanField(
+                        default=False,
+                        help_text="If this field is unchecked (default), all submission requests by this site have to be manually approved by staff members. If checked all submissions will be automatically send to the respective archives.",
+                    ),
+                ),
+                (
+                    "use_gfbio_services",
+                    models.BooleanField(
+                        default=False,
+                        help_text="If checked additional gfbio-related services will be used during a submission. E.g. trying to get a User from the gfbio.org database and set its email as reporter-email in GFBio helpdesk.",
+                    ),
+                ),
+                (
+                    "jira_project_key",
+                    models.CharField(
+                        choices=[("SAND", "SAND"), ("DSUB", "DSUB")],
+                        default="SAND",
+                        max_length=4,
+                    ),
+                ),
+                (
+                    "comment",
+                    models.TextField(
+                        default="",
+                        help_text="Enter a description or helpful text here.",
+                    ),
+                ),
+                (
+                    "ena_ftp",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="Select which server and/or account this configuration should use to connect to access ENA FTP-server.",
+                        null=True,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="SiteConfiguration.ena_ftp+",
+                        to="brokerage.ResourceCredential",
+                    ),
+                ),
+                (
+                    "ena_server",
+                    models.ForeignKey(
+                        help_text="Select which server and/or account this configuration should use to connect to ENA.",
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="SiteConfiguration.ena_server+",
+                        to="brokerage.ResourceCredential",
+                    ),
+                ),
+                (
+                    "gfbio_server",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="Select which server and/or account this configuration should use to connect to the GFBio portal database for accessing submission-registry, research_object, and so on.",
+                        null=True,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="SiteConfiguration.gfbio_server+",
+                        to="brokerage.ResourceCredential",
+                    ),
+                ),
+                (
+                    "helpdesk_server",
+                    models.ForeignKey(
+                        help_text="Select which server and/or account this configuration should use to connect to a JIRA based helpdesk system. In 99 % of all cases this means the GFBio JIRA helpdesk.",
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="SiteConfiguration.helpdesk_server+",
+                        to="brokerage.ResourceCredential",
+                    ),
+                ),
+                (
+                    "pangaea_server",
+                    models.ForeignKey(
+                        help_text="Select which server and/or account this configuration should use to connect to Pangaea.",
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="SiteConfiguration.pangaea_server+",
+                        to="brokerage.ResourceCredential",
+                    ),
+                ),
+                (
+                    "site",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="siteconfiguration",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Submission',
+            name="Submission",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('broker_submission_id', models.UUIDField(default=uuid.uuid4)),
-                ('site_project_id', models.CharField(blank=True, default='', max_length=128)),
-                ('target', models.CharField(choices=[('ENA', 'ENA'), ('ENA_PANGAEA', 'ENA_PANGAEA'), ('GENERIC', 'GENERIC')], max_length=16)),
-                ('submitting_user', models.CharField(blank=True, default='', help_text='Identifier of submitting user. May vary for different sites, e.g. user-id from database, uniquq login-name, etc..', max_length=72, null=True)),
-                ('submitting_user_common_information', models.TextField(blank=True, default='', help_text='General information regarding the submitting user in free-text form, e.g. full name and/or email-address, ORCID, etc.. . Will be used to fill Helpdesk/Jira fields that ask for this kind of verbose information', null=True)),
-                ('status', models.CharField(choices=[('OPEN', 'OPEN'), ('SUBMITTED', 'SUBMITTED'), ('CANCELLED', 'CANCELLED'), ('ERROR', 'ERROR'), ('CLOSED', 'CLOSED')], default='OPEN', max_length=10)),
-                ('release', models.BooleanField(default=False)),
-                ('download_url', models.URLField(blank=True, default='')),
-                ('data', gfbio_submissions.brokerage.fields.JsonDictField(default=dict)),
-                ('embargo', models.DateField(blank=True, null=True)),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('changed', models.DateTimeField(auto_now=True)),
-                ('center_name', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='brokerage.CenterName')),
-                ('site', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='submission', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("broker_submission_id", models.UUIDField(default=uuid.uuid4)),
+                (
+                    "site_project_id",
+                    models.CharField(blank=True, default="", max_length=128),
+                ),
+                (
+                    "target",
+                    models.CharField(
+                        choices=[
+                            ("ENA", "ENA"),
+                            ("ENA_PANGAEA", "ENA_PANGAEA"),
+                            ("GENERIC", "GENERIC"),
+                        ],
+                        max_length=16,
+                    ),
+                ),
+                (
+                    "submitting_user",
+                    models.CharField(
+                        blank=True,
+                        default="",
+                        help_text="Identifier of submitting user. May vary for different sites, e.g. user-id from database, uniquq login-name, etc..",
+                        max_length=72,
+                        null=True,
+                    ),
+                ),
+                (
+                    "submitting_user_common_information",
+                    models.TextField(
+                        blank=True,
+                        default="",
+                        help_text="General information regarding the submitting user in free-text form, e.g. full name and/or email-address, ORCID, etc.. . Will be used to fill Helpdesk/Jira fields that ask for this kind of verbose information",
+                        null=True,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("OPEN", "OPEN"),
+                            ("SUBMITTED", "SUBMITTED"),
+                            ("CANCELLED", "CANCELLED"),
+                            ("ERROR", "ERROR"),
+                            ("CLOSED", "CLOSED"),
+                        ],
+                        default="OPEN",
+                        max_length=10,
+                    ),
+                ),
+                ("release", models.BooleanField(default=False)),
+                ("download_url", models.URLField(blank=True, default="")),
+                ("data", gfbio_submissions.generic.fields.JsonDictField(default=dict)),
+                ("embargo", models.DateField(blank=True, null=True)),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("changed", models.DateTimeField(auto_now=True)),
+                (
+                    "center_name",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="brokerage.CenterName",
+                    ),
+                ),
+                (
+                    "site",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="submission",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='TicketLabel',
+            name="TicketLabel",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('label_type', models.CharField(choices=[('P', 'Pangaea JIRA'), ('G', 'GFBio-Helpdesk JIRA')], max_length=1)),
-                ('label', models.CharField(default='', max_length=256)),
-                ('site_configuration', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='brokerage.SiteConfiguration')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "label_type",
+                    models.CharField(
+                        choices=[("P", "Pangaea JIRA"), ("G", "GFBio-Helpdesk JIRA")],
+                        max_length=1,
+                    ),
+                ),
+                ("label", models.CharField(default="", max_length=256)),
+                (
+                    "site_configuration",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="brokerage.SiteConfiguration",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='TaskProgressReport',
+            name="TaskProgressReport",
             fields=[
-                ('task_name', models.CharField(help_text='Name of Task, as registered in celery', max_length=128)),
-                ('task_id', models.UUIDField(default=uuid.uuid4, help_text='UUID identifying this task. Will be provided via the Task itself, but defaults to randon uuid', primary_key=True, serialize=False)),
-                ('status', models.CharField(default='RUNNING', help_text='Current State of Task', max_length=16)),
-                ('task_return_value', models.TextField(default='')),
-                ('task_exception', models.TextField(default='')),
-                ('task_exception_info', models.TextField(default='')),
-                ('task_args', models.TextField(default='')),
-                ('task_kwargs', models.TextField(default='')),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('changed', models.DateTimeField(auto_now=True)),
-                ('submission', models.ForeignKey(blank=True, help_text='Submission this Task is working on', null=True, on_delete=django.db.models.deletion.SET_NULL, to='brokerage.Submission')),
+                (
+                    "task_name",
+                    models.CharField(
+                        help_text="Name of Task, as registered in celery",
+                        max_length=128,
+                    ),
+                ),
+                (
+                    "task_id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        help_text="UUID identifying this task. Will be provided via the Task itself, but defaults to randon uuid",
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        default="RUNNING",
+                        help_text="Current State of Task",
+                        max_length=16,
+                    ),
+                ),
+                ("task_return_value", models.TextField(default="")),
+                ("task_exception", models.TextField(default="")),
+                ("task_exception_info", models.TextField(default="")),
+                ("task_args", models.TextField(default="")),
+                ("task_kwargs", models.TextField(default="")),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("changed", models.DateTimeField(auto_now=True)),
+                (
+                    "submission",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="Submission this Task is working on",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="brokerage.Submission",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='SubmissionUpload',
+            name="SubmissionUpload",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
-                ('attach_to_ticket', models.BooleanField(default=False, help_text='When checked, thus having True as value, every uploaded file will be attached to the main helpdesk ticketassociated with "submission".')),
-                ('attachment_id', models.IntegerField(blank=True, help_text='If file is attached to a ticket, it might be useful to store the primary identifier of the attachment. Needed e.g. for removing an attachment from a ticket.', null=True)),
-                ('meta_data', models.BooleanField(default=False, help_text='A True/checked value means that this file contains meta-data.')),
-                ('file', models.FileField(help_text='The actual file uploaded.', upload_to=gfbio_submissions.brokerage.utils.submission_tools.submission_upload_path)),
-                ('site', models.ForeignKey(blank=True, help_text='Related "Site". E.g. gfbio-portal or silva.', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='site_upload', to=settings.AUTH_USER_MODEL)),
-                ('submission', models.ForeignKey(blank=True, help_text='Submission associated with this Upload.', null=True, on_delete=django.db.models.deletion.CASCADE, to='brokerage.Submission')),
-                ('user', models.ForeignKey(blank=True, help_text='Related "User". E.g. a real person that uses the submission frontend', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='user_upload', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "created",
+                    model_utils.fields.AutoCreatedField(
+                        default=django.utils.timezone.now,
+                        editable=False,
+                        verbose_name="created",
+                    ),
+                ),
+                (
+                    "modified",
+                    model_utils.fields.AutoLastModifiedField(
+                        default=django.utils.timezone.now,
+                        editable=False,
+                        verbose_name="modified",
+                    ),
+                ),
+                (
+                    "attach_to_ticket",
+                    models.BooleanField(
+                        default=False,
+                        help_text='When checked, thus having True as value, every uploaded file will be attached to the main helpdesk ticketassociated with "submission".',
+                    ),
+                ),
+                (
+                    "attachment_id",
+                    models.IntegerField(
+                        blank=True,
+                        help_text="If file is attached to a ticket, it might be useful to store the primary identifier of the attachment. Needed e.g. for removing an attachment from a ticket.",
+                        null=True,
+                    ),
+                ),
+                (
+                    "meta_data",
+                    models.BooleanField(
+                        default=False,
+                        help_text="A True/checked value means that this file contains meta-data.",
+                    ),
+                ),
+                (
+                    "file",
+                    models.FileField(
+                        help_text="The actual file uploaded.",
+                        upload_to=gfbio_submissions.brokerage.utils.submission_tools.submission_upload_path,
+                    ),
+                ),
+                (
+                    "site",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text='Related "Site". E.g. gfbio-portal or silva.',
+                        null=True,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="site_upload",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "submission",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="Submission associated with this Upload.",
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="brokerage.Submission",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text='Related "User". E.g. a real person that uses the submission frontend',
+                        null=True,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="user_upload",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='SubmissionFileUpload',
+            name="SubmissionFileUpload",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('file', models.FileField(upload_to=gfbio_submissions.brokerage.utils.submission_tools.submission_upload_path)),
-                ('migrated', models.BooleanField(default=False)),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('changed', models.DateTimeField(auto_now=True)),
-                ('site', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='submissionupload', to=settings.AUTH_USER_MODEL)),
-                ('submission', models.ForeignKey(blank=True, help_text='Submission this File belongs to.', null=True, on_delete=django.db.models.deletion.CASCADE, to='brokerage.Submission')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "file",
+                    models.FileField(
+                        upload_to=gfbio_submissions.brokerage.utils.submission_tools.submission_upload_path
+                    ),
+                ),
+                ("migrated", models.BooleanField(default=False)),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("changed", models.DateTimeField(auto_now=True)),
+                (
+                    "site",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="submissionupload",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "submission",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="Submission this File belongs to.",
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="brokerage.Submission",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='RequestLog',
+            name="RequestLog",
             fields=[
-                ('request_id', models.UUIDField(default=uuid.uuid4, help_text='Primary-key for RequestLog entries', primary_key=True, serialize=False)),
-                ('type', models.CharField(choices=[('0', 'incoming'), ('1', 'outgoing')], default='0', help_text='We separate incoming and outgoing requests', max_length=1)),
-                ('url', models.TextField(blank=True, help_text='Target url of this Request')),
-                ('data', models.TextField(blank=True, help_text='Any kind of payload that comes with with this request (if available)')),
-                ('site_user', models.CharField(help_text='A user of a site registered in our System. E.g. user=joe (this value ...) at site=GFBio.org', max_length=72)),
-                ('submission_id', models.UUIDField(blank=True, help_text='The submission this request is associated with', null=True)),
-                ('response_status', models.IntegerField(blank=True, help_text='The response-code we send if this is an incoming request. Otherwise the status sent by request-target', null=True)),
-                ('response_content', models.TextField(blank=True, help_text='The content we send if this is an incoming request. Otherwise the content sent by request-target')),
-                ('request_details', gfbio_submissions.brokerage.fields.JsonDictField(default=dict, help_text='This may contain meta-information regarding this request')),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('changed', models.DateTimeField(auto_now=True)),
-                ('triggered_by', models.ForeignKey(blank=True, help_text='This will be null for incoming requests Otherwise (outgoing request) it will show the id of the incoming request, that has triggered this request', null=True, on_delete=django.db.models.deletion.SET_NULL, to='brokerage.RequestLog')),
+                (
+                    "request_id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        help_text="Primary-key for RequestLog entries",
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[("0", "incoming"), ("1", "outgoing")],
+                        default="0",
+                        help_text="We separate incoming and outgoing requests",
+                        max_length=1,
+                    ),
+                ),
+                (
+                    "url",
+                    models.TextField(blank=True, help_text="Target url of this Request"),
+                ),
+                (
+                    "data",
+                    models.TextField(
+                        blank=True,
+                        help_text="Any kind of payload that comes with with this request (if available)",
+                    ),
+                ),
+                (
+                    "site_user",
+                    models.CharField(
+                        help_text="A user of a site registered in our System. E.g. user=joe (this value ...) at site=GFBio.org",
+                        max_length=72,
+                    ),
+                ),
+                (
+                    "submission_id",
+                    models.UUIDField(
+                        blank=True,
+                        help_text="The submission this request is associated with",
+                        null=True,
+                    ),
+                ),
+                (
+                    "response_status",
+                    models.IntegerField(
+                        blank=True,
+                        help_text="The response-code we send if this is an incoming request. Otherwise the status sent by request-target",
+                        null=True,
+                    ),
+                ),
+                (
+                    "response_content",
+                    models.TextField(
+                        blank=True,
+                        help_text="The content we send if this is an incoming request. Otherwise the content sent by request-target",
+                    ),
+                ),
+                (
+                    "request_details",
+                    gfbio_submissions.generic.fields.JsonDictField(
+                        default=dict,
+                        help_text="This may contain meta-information regarding this request",
+                    ),
+                ),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("changed", models.DateTimeField(auto_now=True)),
+                (
+                    "triggered_by",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="This will be null for incoming requests Otherwise (outgoing request) it will show the id of the incoming request, that has triggered this request",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="brokerage.RequestLog",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='PrimaryDataFile',
+            name="PrimaryDataFile",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('data_file', models.FileField(help_text='A file containing primary submission data, like a filled csv-template, contextual data, etc .. . Or any other file which contains general submission data, but should not be treated as payload (e.g. sequence files, audio, images, ...)', upload_to=gfbio_submissions.brokerage.utils.submission_tools.submission_primary_data_file_upload_path)),
-                ('comment', models.TextField(blank=True, default='', help_text='Any comments or useful information regarding this file')),
-                ('migrated', models.BooleanField(default=False)),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('changed', models.DateTimeField(auto_now=True)),
-                ('site', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='primarydatafile', to=settings.AUTH_USER_MODEL)),
-                ('submission', models.ForeignKey(help_text='Associated Submission for this File', on_delete=django.db.models.deletion.CASCADE, to='brokerage.Submission')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "data_file",
+                    models.FileField(
+                        help_text="A file containing primary submission data, like a filled csv-template, contextual data, etc .. . Or any other file which contains general submission data, but should not be treated as payload (e.g. sequence files, audio, images, ...)",
+                        upload_to=gfbio_submissions.brokerage.utils.submission_tools.submission_primary_data_file_upload_path,
+                    ),
+                ),
+                (
+                    "comment",
+                    models.TextField(
+                        blank=True,
+                        default="",
+                        help_text="Any comments or useful information regarding this file",
+                    ),
+                ),
+                ("migrated", models.BooleanField(default=False)),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("changed", models.DateTimeField(auto_now=True)),
+                (
+                    "site",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="primarydatafile",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "submission",
+                    models.ForeignKey(
+                        help_text="Associated Submission for this File",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="brokerage.Submission",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='PersistentIdentifier',
+            name="PersistentIdentifier",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('archive', models.CharField(choices=[('ENA', 'ENA'), ('PAN', 'Pangea')], default='ENA', max_length=3)),
-                ('pid_type', models.CharField(choices=[('ACC', 'ENA Accession Number'), ('PRJ', 'ENA BioProject ID (primary Accession Number)'), ('DOI', 'Pangea Doi'), ('BSA', 'Biosample'), ('LBL', 'Generic Label')], default='ACC', max_length=3)),
-                ('pid', models.CharField(default='', max_length=256)),
-                ('resolver_url', models.URLField(blank=True, default='', max_length=256)),
-                ('outgoing_request_id', models.UUIDField(blank=True, null=True)),
-                ('broker_object', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='brokerage.BrokerObject')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "archive",
+                    models.CharField(
+                        choices=[("ENA", "ENA"), ("PAN", "Pangea")],
+                        default="ENA",
+                        max_length=3,
+                    ),
+                ),
+                (
+                    "pid_type",
+                    models.CharField(
+                        choices=[
+                            ("ACC", "ENA Accession Number"),
+                            ("PRJ", "ENA BioProject ID (primary Accession Number)"),
+                            ("DOI", "Pangea Doi"),
+                            ("BSA", "Biosample"),
+                            ("LBL", "Generic Label"),
+                        ],
+                        default="ACC",
+                        max_length=3,
+                    ),
+                ),
+                ("pid", models.CharField(default="", max_length=256)),
+                (
+                    "resolver_url",
+                    models.URLField(blank=True, default="", max_length=256),
+                ),
+                ("outgoing_request_id", models.UUIDField(blank=True, null=True)),
+                (
+                    "broker_object",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="brokerage.BrokerObject",
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='brokerobject',
-            name='submissions',
-            field=models.ManyToManyField(to='brokerage.Submission'),
+            model_name="brokerobject",
+            name="submissions",
+            field=models.ManyToManyField(to="brokerage.Submission"),
         ),
         migrations.CreateModel(
-            name='AuditableTextData',
+            name="AuditableTextData",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('data_id', models.UUIDField(default=uuid.uuid4)),
-                ('name', models.CharField(max_length=128)),
-                ('text_data', models.TextField(blank=True, default='', help_text='Main content of this object. E.g. xml, json or any other text-based data.')),
-                ('comment', models.TextField(blank=True, default='', help_text='Free text. Any comments or useful information regarding this object')),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('changed', models.DateTimeField(auto_now=True)),
-                ('submission', models.ForeignKey(help_text='Associated Submission for this object', on_delete=django.db.models.deletion.CASCADE, to='brokerage.Submission')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("data_id", models.UUIDField(default=uuid.uuid4)),
+                ("name", models.CharField(max_length=128)),
+                (
+                    "text_data",
+                    models.TextField(
+                        blank=True,
+                        default="",
+                        help_text="Main content of this object. E.g. xml, json or any other text-based data.",
+                    ),
+                ),
+                (
+                    "comment",
+                    models.TextField(
+                        blank=True,
+                        default="",
+                        help_text="Free text. Any comments or useful information regarding this object",
+                    ),
+                ),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("changed", models.DateTimeField(auto_now=True)),
+                (
+                    "submission",
+                    models.ForeignKey(
+                        help_text="Associated Submission for this object",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="brokerage.Submission",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='AdditionalReference',
+            name="AdditionalReference",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('type', models.CharField(choices=[('0', 'gfbio_helpdesk_ticket'), ('1', 'pangaea_jira_ticket')], default='0', max_length=1)),
-                ('primary', models.BooleanField(default=False, help_text='Only primary tickets are updated. Once set all primary fields of other AdditionalReferences of this type and with this relation are set to False')),
-                ('reference_key', models.CharField(blank=True, default='', max_length=128)),
-                ('submission', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='brokerage.Submission')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[
+                            ("0", "gfbio_helpdesk_ticket"),
+                            ("1", "pangaea_jira_ticket"),
+                        ],
+                        default="0",
+                        max_length=1,
+                    ),
+                ),
+                (
+                    "primary",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Only primary tickets are updated. Once set all primary fields of other AdditionalReferences of this type and with this relation are set to False",
+                    ),
+                ),
+                (
+                    "reference_key",
+                    models.CharField(blank=True, default="", max_length=128),
+                ),
+                (
+                    "submission",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="brokerage.Submission",
+                    ),
+                ),
             ],
         ),
     ]

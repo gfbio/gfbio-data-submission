@@ -5,20 +5,33 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0027_remove_siteconfiguration_site'),
+        ("brokerage", "0027_remove_siteconfiguration_site"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='siteconfiguration',
-            name='ena_server',
-            field=models.ForeignKey(blank=True, help_text='Select which server and/or account this configuration should use to connect to ENA.', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='SiteConfiguration.ena_server+', to='brokerage.ResourceCredential'),
+            model_name="siteconfiguration",
+            name="ena_server",
+            field=models.ForeignKey(
+                blank=True,
+                help_text="Select which server and/or account this configuration should use to connect to ENA.",
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="SiteConfiguration.ena_server+",
+                to="brokerage.ResourceCredential",
+            ),
         ),
         migrations.AlterField(
-            model_name='siteconfiguration',
-            name='helpdesk_server',
-            field=models.ForeignKey(blank=True, help_text='Select which server and/or account this configuration should use to connect to a JIRA based helpdesk system. In 99 % of all cases this means the GFBio JIRA helpdesk.', null=True, on_delete=django.db.models.deletion.PROTECT, related_name='SiteConfiguration.helpdesk_server+', to='brokerage.ResourceCredential'),
+            model_name="siteconfiguration",
+            name="helpdesk_server",
+            field=models.ForeignKey(
+                blank=True,
+                help_text="Select which server and/or account this configuration should use to connect to a JIRA based helpdesk system. In 99 % of all cases this means the GFBio JIRA helpdesk.",
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="SiteConfiguration.helpdesk_server+",
+                to="brokerage.ResourceCredential",
+            ),
         ),
     ]

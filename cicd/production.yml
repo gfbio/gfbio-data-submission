@@ -1,0 +1,131 @@
+version: "3.7"
+
+volumes:
+  gfbio-ISSUE_ID:
+    external: true
+
+services:
+  django: &django
+    build:
+      context: ../
+      dockerfile: ./cicd/Dockerfile
+      args:
+        GROUP_ID: 997
+        USER_ID: 998
+    image: gfbio_submissions_production_django
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ../.envs/.production/.django
+      - ../.envs/.production/.postgres
+    volumes:
+      - gfbio-ISSUE_ID:/app/gfbio_submissions/media
+    networks:
+      - internalProxy
+      - internal
+    logging:
+      driver: syslog
+      options:
+        tag: "GFBio-django"
+    deploy:
+      mode: global
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.ISSUE_ID.rule=Host(`ISSUE_ID.test.gfbio.dev`)
+      - traefik.http.routers.ISSUE_ID.entrypoints=web
+      - traefik.http.middlewares.ISSUE_ID_headers.headers.hostsproxyheaders=X-CSRFToken
+      - traefik.http.services.ISSUE_ID.loadbalancer.server.port=5000
+    command: >
+      /bin/sh -c "python /app/manage.py collectstatic --noinput
+      && python /app/manage.py migrate
+      && echo 'from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser(\"$ADMIN_NICKNAME\", \"$ADMIN_EMAIL\", \"$ADMIN_PASSWORD\")' | python /app/manage.py shell
+      && python /app/manage.py loaddata /app/cicd/test_data.json
+      && python /app/manage.py loaddata /app/gfbio_submissions/fixtures/jira_messages.json
+      && /usr/local/bin/gunicorn config.wsgi --bind 0.0.0.0:5000 --chdir=/app"
+
+  postgres:
+    build:
+      context: ../
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: gfbio_submissions_production_postgres
+    networks:
+      - internal
+    restart: always
+    env_file:
+      - ../.envs/.production/.postgres
+
+  redis:
+    image: redis:5.0
+    restart: always
+    networks:
+      - internal
+
+  celeryworker:
+    build:
+      context: ../
+      dockerfile: ./cicd/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ../.envs/.production/.django
+      - ../.envs/.production/.postgres
+    networks:
+      - internal
+    volumes:
+      - gfbio-ISSUE_ID:/app/gfbio_submissions/media
+    image: gfbio_submissions_production_celeryworker
+    logging:
+      driver: syslog
+      options:
+        tag: "GFBio-celery-worker"
+    command: /start-celeryworker
+    restart: always
+
+  celerybeat:
+    build:
+      context: ../
+      dockerfile: ./cicd/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ../.envs/.production/.django
+      - ../.envs/.production/.postgres
+    networks:
+      - internal
+    image: gfbio_submissions_production_celerybeat
+    logging:
+      driver: syslog
+      options:
+        tag: "GFBio-celery-beat"
+    command: /start-celerybeat
+    restart: always
+
+  flower:
+    build:
+      context: ../
+      dockerfile: ./cicd/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ../.envs/.production/.django
+      - ../.envs/.production/.postgres
+    networks:
+      - internal
+    image: gfbio_submissions_production_flower
+    logging:
+      driver: syslog
+      options:
+        tag: "GFBio-flower"
+    restart: always
+    command: /start-flower
+
+networks:
+  internalProxy:
+    external:
+      name: internalProxy
+  internal:

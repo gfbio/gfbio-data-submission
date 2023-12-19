@@ -39,6 +39,11 @@ const makeSelectContactForm = () =>
 const makeSelectSubmissionForm = () =>
   createSelector(selectSubmissionFormDomain, substate => substate.toJS());
 
+const makeSelectLoading = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('loading'),
+  );
+
 const makeSelectLicense = () =>
   createSelector(selectSubmissionFormDomain, substate =>
     substate.get('license'),
@@ -69,15 +74,18 @@ const makeSelectEmbargoDate = () =>
     substate.get('embargoDate'),
   );
 
+const makeSelectFormChanged = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('formChanged'),
+  );
+
 const makeSelectInitialValues = () =>
   createSelector(selectSubmissionFormDomain, substate =>
     substate.get('initialValues'),
   );
 
 const makeSelectToken = () =>
-  createSelector(selectSubmissionFormDomain, substate =>
-    substate.get('token'),
-  );
+  createSelector(selectSubmissionFormDomain, substate => substate.get('token'));
 
 const makeSelectUserId = () =>
   createSelector(selectSubmissionFormDomain, substate =>
@@ -154,6 +162,15 @@ const makeSelectShowSaveSuccess = () =>
     substate.get('showSaveSuccess'),
   );
 
+const makeSelectSubmitError = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('submitError'),
+  );
+
+const makeSelectSubmissionErrors = () =>
+  createSelector(selectSubmissionFormDomain, substate =>
+    substate.get('submissionErrors'),
+  );
 
 const makeSelectUpdateWithRelease = () =>
   createSelector(selectSubmissionFormDomain, substate =>
@@ -221,4 +238,8 @@ export {
   makeSelectShowEmbargoDialog,
   makeSelectGeneralError,
   makeSelectFileUploadsFromServer,
+  makeSelectSubmitError,
+  makeSelectSubmissionErrors,
+  makeSelectFormChanged,
+  makeSelectLoading,
 };

@@ -5,7 +5,6 @@
  */
 
 import {
-  ADD_CONTRIBUTOR,
   ADD_DATASET_LABEL,
   ADD_FILE_UPLOAD,
   ADD_RELATED_PUBLICATION,
@@ -27,7 +26,6 @@ import {
   FETCH_SUBMISSION_SUCCESS,
   POST_COMMENT_ERROR,
   POST_COMMENT_SUCCUESS,
-  REMOVE_CONTRIBUTOR,
   REMOVE_DATASET_LABEL,
   REMOVE_FILE_UPLOAD,
   REMOVE_RELATED_PUBLICATION,
@@ -48,7 +46,6 @@ import {
   SUBMIT_FORM_ERROR,
   SUBMIT_FORM_START,
   SUBMIT_FORM_SUCCESS,
-  UPDATE_CONTRIBUTOR,
   UPDATE_SUBMISSION,
   UPDATE_SUBMISSION_ERROR,
   UPDATE_SUBMISSION_SUCCESS,
@@ -57,6 +54,9 @@ import {
   UPLOAD_FILE_PROGRESS,
   UPLOAD_FILE_SUCCESS,
   UPLOAD_FILES_SUCCESS,
+  CLOSE_ERROR_MESSAGE,
+  SET_FORM_CHANGED,
+  SET_LOADING,
 } from './constants';
 
 export function changeLicense(license) {
@@ -130,6 +130,13 @@ export function setEmbargoDate(date) {
   return {
     type: SET_EMBARGO_DATE,
     date,
+  };
+}
+
+export function setFormChanged(changed) {
+  return {
+    type: SET_FORM_CHANGED,
+    changed,
   };
 }
 
@@ -245,35 +252,12 @@ export function setContributors(contributors) {
   };
 }
 
-export function addContributor(contributor) {
-  return {
-    type: ADD_CONTRIBUTOR,
-    contributor,
-  };
-}
-
-export function updateContributor(contributor, index) {
-  return {
-    type: UPDATE_CONTRIBUTOR,
-    contributor,
-    index,
-  };
-}
-
-export function removeContributor(index) {
-  return {
-    type: REMOVE_CONTRIBUTOR,
-    index,
-  };
-}
-
 export function fetchSubmission(brokerSubmissionId) {
   return {
     type: FETCH_SUBMISSION,
     brokerSubmissionId,
   };
 }
-
 
 export function fetchSubmissionSuccess(response) {
   return {
@@ -298,6 +282,12 @@ export function closeSubmitSuccess() {
 export function closeSaveSuccess() {
   return {
     type: CLOSE_SAVE_SUCCESS,
+  };
+}
+
+export function closeSubmitError() {
+  return {
+    type: CLOSE_ERROR_MESSAGE,
   };
 }
 
@@ -442,4 +432,9 @@ export function postCommentError(error) {
   };
 }
 
-
+export function setLoading(value) {
+  return {
+    type: SET_LOADING,
+    value,
+  };
+}

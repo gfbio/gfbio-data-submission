@@ -24,17 +24,41 @@
 
                 <p class="text-center">
                     {% blocktrans with provider_name=account.get_provider.name site_name=site.name %}
-                        You are about to use your {{ provider_name }} account to
+                        You are about to use your <b>{{ provider_name }}</b>
+                        account to
                         login
                         to
-                        {{ site_name }}. As a final step, please complete the
-                        following
-                        form:{% endblocktrans %}</p>
+                        <b>{{ site_name }}</b>. Please provide the following information to complete the process.
+                    {% endblocktrans %}</p>
 
                 <form class="login" id="signup_form" method="post"
                       action="{% url 'socialaccount_signup' %}">
+
                     {% csrf_token %}
-                    {{ form|crispy }}
+
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            {{ form.email|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            {{ form.username|as_crispy_field }}
+                        </div>
+                    </div>
+
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6 mb-0">
+                            {{ form.agree_terms|as_crispy_field }}
+                        </div>
+                        <div class="form-group col-md-6 mb-0">
+                            {{ form.agree_privacy|as_crispy_field }}
+                        </div>
+                    </div>
+
+
                     {% if redirect_field_value %}
                         <input type="hidden" name="{{ redirect_field_name }}"
                                value="{{ redirect_field_value }}"/>
@@ -44,6 +68,8 @@
                     </button>
 
                 </form>
+
+
             </div>
         </div>
     </div>

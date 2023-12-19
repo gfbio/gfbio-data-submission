@@ -15,6 +15,19 @@ Submission services provided by GFBio
 :License: MIT
 
 
+Description
+-----------
+
+Submission services provided by GFBio e.V. and long-term data archival & publication services
+for Biodiversity, Ecology & Environmental Science.
+This service enables the users to submit their data for long-term storage in dedicated archives like
+ENA or PANGAEA and others, without the need of performing single submissions to each of these archives
+and repositories respectively. Submission can be performed by either using web-based user-interface or a
+REST API, where the latter is suitable for high-throughput programmatic submissions.
+
+Developer Guide
+===============
+
 
 Settings
 --------

@@ -1,0 +1,40 @@
+{
+  "creators": [
+    {
+      "orcid": "0000-0003-0694-5817",
+      "affiliation": "GFBio - German Federation for Biological Data e.V.",
+      "name": "Weber, Marc"
+    },
+    {
+      "orcid": "0000-0003-4476-6764",
+      "affiliation": "GFBio - German Federation for Biological Data e.V.",
+      "name": "Kostadinov, Ivaylo"
+    },
+    {
+      "orcid": "0000-0003-2350-0449",
+      "affiliation": "Constructor University Bremen gGmbH",
+      "name": "Marinuks, Deniss"
+    },
+    {
+      "orcid": "0000-0003-3847-2663",
+      "affiliation": "GFBio - German Federation for Biological Data e.V.",
+      "name": "Linares, Jimena"
+    }
+  ],
+  "license": "MIT",
+  "title": "GFBio Data Submission and Brokerage System",
+  "description": "The system provides the central entry point for the submission services provided by GFBio e.V. for the long-term data archival and publication of biodiversity, ecology and environmental science data. Users can submit their data to one or more of the GFBio data centers. Submissions can be performed either via a web-based user interface or over a REST API, where the latter is suitable for high-throughput programmatic submissions.   The system requires a working connection to an JIRA Service Management (server/data center) instance, since all communication with the users is organised via JIRA issues.",
+  "keywords": [
+    "Research Software",
+    "Research Data Management",
+    "Biodiversity",
+    "Ecology",
+    "GFBio"
+  ],
+  "communities": [
+    {
+      "identifier": "gfbio"
+    }
+  ],
+"notes": "This work was supported by the German Research Foundation (DFG) within the project “Establishment of the National Research Data Infrastructure (NFDI)” in the consortium NFDI4Biodiversity (project number <a href=\"https://gepris.dfg.de/gepris/projekt/442032008\">442032008</a>).<br/>This work was supported by the German Research Foundation (DFG) within the project \"German Federation for Biological Data e.V.: Concept for a sustainable research data management of environmental data for Germany.\" (project number <a href=\"https://gepris.dfg.de/gepris/projekt/408180549\">408180549</a>).<br/>This work was supported by the German Research Foundation (DFG) within the project \"German Federation for the Curation of Biological Data (GFBio)\" (project number <a href=\"https://gepris.dfg.de/gepris/projekt/229241684\">229241684</a>)."
+}

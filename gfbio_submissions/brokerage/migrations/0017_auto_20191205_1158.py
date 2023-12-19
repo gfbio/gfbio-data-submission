@@ -4,20 +4,25 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0016_auto_20191203_2237'),
+        ("brokerage", "0016_auto_20191203_2237"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='submissionupload',
-            name='modified_recently',
-            field=models.BooleanField(default=False, help_text='Checked automatically if "file" has been updated and its content/md5_checksum has changed'),
+            model_name="submissionupload",
+            name="modified_recently",
+            field=models.BooleanField(
+                default=False,
+                help_text='Checked automatically if "file" has been updated and its content/md5_checksum has changed',
+            ),
         ),
         migrations.AlterField(
-            model_name='submissionupload',
-            name='attach_to_ticket',
-            field=models.BooleanField(default=False, help_text='If checked, thus having True as value, every uploaded file will be attached to the main helpdesk ticketassociated with "submission".'),
+            model_name="submissionupload",
+            name="attach_to_ticket",
+            field=models.BooleanField(
+                default=False,
+                help_text='If checked, thus having True as value, every uploaded file will be attached to the main helpdesk ticketassociated with "submission".',
+            ),
         ),
     ]

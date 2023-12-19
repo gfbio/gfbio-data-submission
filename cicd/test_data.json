@@ -1,0 +1,283 @@
+[
+  {
+    "model": "generic.resourcecredential",
+    "pk": 1,
+    "fields": {
+      "created": "2020-03-27T13:41:34.236Z",
+      "modified": "2020-03-27T13:41:34.236Z",
+      "title": "GFBio-JIRA",
+      "url": "https://helpdesk.gfbio.org",
+      "authentication_string": "",
+      "username": "brokeragent",
+      "password": "puN;7_k[-\"_,ZiJi",
+      "comment": "Access GFBio JIRA Helpdesk"
+    }
+  },
+  {
+    "model": "generic.siteconfiguration",
+    "pk": 1,
+    "fields": {
+      "created": "2020-03-27T13:42:15.329Z",
+      "modified": "2020-03-27T13:42:15.329Z",
+      "title": "local-site",
+      "contact": "brokeragent@gfbio.org",
+      "release_submissions": false,
+      "ena_server": null,
+      "ena_report_server": null,
+      "ena_ftp": null,
+      "pangaea_token_server": null,
+      "pangaea_jira_server": null,
+      "helpdesk_server": 1,
+      "jira_project_key": "SAND",
+      "comment": "Default configuration for sites without proper SiteConfig"
+    }
+  },
+  {
+    "model": "brokerage.submission",
+    "pk": 1,
+    "fields": {
+      "created": "2020-04-14T07:09:45.646Z",
+      "modified": "2020-04-14T09:06:31.859Z",
+      "broker_submission_id": "35f203bb-4cae-476f-bfd6-466eb1d66e38",
+      "user": 1,
+      "target": "GENERIC",
+      "status": "SUBMITTED",
+      "release": false,
+      "download_url": "",
+      "center_name": null,
+      "data": {
+        "requirements": {
+          "title": "PRIVATE PID",
+          "license": "CC BY 4.0",
+          "categories": [],
+          "description": "some description here",
+          "contributors": [],
+          "dataset_labels": [],
+          "legal_requirements": [],
+          "related_publications": []
+        }
+      },
+      "embargo": "EMDATE"
+    }
+  },
+  {
+    "model": "brokerage.submission",
+    "pk": 2,
+    "fields": {
+      "created": "2020-04-14T10:01:12.709Z",
+      "modified": "2020-04-14T10:01:12.709Z",
+      "broker_submission_id": "307af995-4823-4b24-8c8d-7caed4362b06",
+      "user": 1,
+      "target": "GENERIC",
+      "status": "SUBMITTED",
+      "release": true,
+      "download_url": "",
+      "center_name": null,
+      "data": {
+        "requirements": {
+          "title": "PUBLIC PID",
+          "license": "CC BY 4.0",
+          "categories": [],
+          "description": "some description here",
+          "contributors": [],
+          "dataset_labels": [],
+          "legal_requirements": [],
+          "related_publications": []
+        }
+      },
+      "embargo": "EMDATE"
+    }
+  },
+  {
+    "model": "brokerage.submission",
+    "pk": 3,
+    "fields": {
+      "created": "2020-04-14T10:01:58.950Z",
+      "modified": "2020-04-14T10:01:58.950Z",
+      "broker_submission_id": "6cb6a6b8-b292-4989-abfb-a35f8da506b4",
+      "user": 1,
+      "target": "GENERIC",
+      "status": "SUBMITTED",
+      "release": true,
+      "download_url": "",
+      "center_name": null,
+      "data": {
+        "requirements": {
+          "title": "WITHOUT PID",
+          "license": "CC BY 4.0",
+          "categories": [],
+          "description": "some description",
+          "contributors": [],
+          "dataset_labels": [],
+          "legal_requirements": [],
+          "related_publications": []
+        }
+      },
+      "embargo": "EMDATE"
+    }
+  },
+  {
+    "model": "brokerage.submission",
+    "pk": 4,
+    "fields": {
+      "created": "2020-04-14T10:01:58.950Z",
+      "modified": "2020-04-14T10:01:58.950Z",
+      "broker_submission_id": "37257d5a-9dee-44d3-bac2-6a97411d1987",
+      "user": 1,
+      "target": "GENERIC",
+      "status": "SUBMITTED",
+      "release": true,
+      "download_url": "",
+      "center_name": null,
+      "data": {
+        "requirements": {
+          "title": "CONTRIBUTORS TEST",
+          "license": "CC BY 4.0",
+          "categories": [],
+          "description": "some description",
+          "contributors": [
+            {
+              "lastName": "Bar",
+              "firstName": "Foo",
+              "contribution": "Author/Creator,Data Owner",
+              "emailAddress": "foo@bar.de",
+              "position": 1
+            },
+            {
+              "lastName": "Max",
+              "firstName": "Mustermann",
+              "contribution": "Principal Investigator,Data Curator",
+              "emailAddress": "mm@mm.de",
+              "position": 2
+            }
+          ],
+          "dataset_labels": [],
+          "legal_requirements": [],
+          "related_publications": []
+        }
+      },
+      "embargo": "EMDATE"
+    }
+  },
+  {
+    "model": "brokerage.submission",
+    "pk": 5,
+    "fields": {
+      "created": "2020-05-14T14:01:31.495Z",
+      "modified": "2020-06-09T07:36:01.247Z",
+      "broker_submission_id": "1d266829-6246-4d43-bf2f-1856053f629c",
+      "user": 1,
+      "target": "GENERIC",
+      "status": "CLOSED",
+      "release": true,
+      "download_url": "",
+      "center_name": null,
+      "data": {
+        "requirements": {
+          "title": "CLOSED SUBMISSION",
+          "license": "CC BY 4.0",
+          "categories": ["Bacteriology or Virology", "Microbiology"],
+          "description": "Testing closed submission functions",
+          "contributors": [
+            {
+              "lastName": "bar",
+              "position": 1,
+              "firstName": "foo",
+              "contribution": "Author/Creator,Data Owner Contact",
+              "emailAddress": "asd@asd.de"
+            }
+          ],
+          "dataset_labels": ["foo"],
+          "legal_requirements": [],
+          "related_publications": ["public"]
+        }
+      },
+      "embargo": "2021-05-17"
+    }
+  },
+  {
+    "model": "brokerage.brokerobject",
+    "pk": 1,
+    "fields": {
+      "type": "study",
+      "user": 1,
+      "object_id": "123",
+      "data": {
+        "test": "test"
+      },
+      "submissions": [1]
+    }
+  },
+  {
+    "model": "brokerage.brokerobject",
+    "pk": 2,
+    "fields": {
+      "type": "study",
+      "user": 1,
+      "object_id": "321",
+      "data": {
+        "test": "test"
+      },
+      "submissions": [2]
+    }
+  },
+  {
+    "model": "brokerage.persistentidentifier",
+    "pk": 1,
+    "fields": {
+      "created": "2020-04-14T10:00:43.381Z",
+      "modified": "2020-04-14T10:00:43.381Z",
+      "archive": "ENA",
+      "pid_type": "PRJ",
+      "pid": "987-654-321",
+      "status": "PRIVATE",
+      "hold_date": null,
+      "resolver_url": "",
+      "broker_object": 1,
+      "outgoing_request_id": null
+    }
+  },
+  {
+    "model": "brokerage.persistentidentifier",
+    "pk": 2,
+    "fields": {
+      "created": "2020-04-14T10:01:36.660Z",
+      "modified": "2020-04-14T10:01:36.660Z",
+      "archive": "ENA",
+      "pid_type": "PRJ",
+      "pid": "123-456-789",
+      "status": "PUBLIC",
+      "hold_date": null,
+      "resolver_url": "",
+      "broker_object": 2,
+      "outgoing_request_id": null
+    }
+  },
+  {
+    "model": "generic.ticketlabel",
+    "pk": 1,
+    "fields": { "site_configuration": 1, "label_type": "G", "label": "TEST" }
+  },
+  {
+    "model": "users.user",
+    "pk": 2,
+    "fields": {
+      "password": "argon2$argon2i$v=19$m=512,t=2,p=2$aUh3OUpPTXF0MEg2$+vAp6xCQESmg8tButquwIg",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "testuser",
+      "first_name": "Max",
+      "last_name": "Mustermann",
+      "email": "max@muster.de",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2020-04-22T13:50:16Z",
+      "is_site": false,
+      "is_user": true,
+      "name": "Mustermann",
+      "site_configuration": 1,
+      "groups": [],
+      "user_permissions": []
+    }
+  }
+]

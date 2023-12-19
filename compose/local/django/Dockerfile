@@ -1,21 +1,72 @@
-FROM python:3.6-alpine
+ARG PYTHON_VERSION=3.10-slim-bullseye
+
+# define an alias for the specfic python version used in this file.
+FROM python:${PYTHON_VERSION} as python
+
+# Python build stage
+FROM python as python-build-stage
+
+ARG BUILD_ENVIRONMENT=local
+
+# Install apt packages
+RUN apt-get update && apt-get install --no-install-recommends -y \
+  # dependencies for building Python packages
+  build-essential \
+  # psycopg2 dependencies
+  libpq-dev
+
+# Requirements are installed here to ensure they will be cached.
+COPY ./requirements .
+
+# Create Python Dependency and Sub-Dependency Wheels.
+RUN pip wheel --wheel-dir /usr/src/app/wheels  \
+  -r ${BUILD_ENVIRONMENT}.txt
+
+
+# Python 'run' stage
+FROM python as python-run-stage
+
+ARG BUILD_ENVIRONMENT=local
+ARG APP_HOME=/app
 
 ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV BUILD_ENV ${BUILD_ENVIRONMENT}
 
-RUN apk update \
+WORKDIR ${APP_HOME}
+
+# java need this to be created
+RUN mkdir -p /usr/share/man/man1
+
+
+# Install required system dependencies
+RUN apt-get update && apt-get install --no-install-recommends -y \
   # psycopg2 dependencies
-  && apk add --virtual build-deps gcc python3-dev musl-dev \
-  && apk add postgresql-dev \
-  # Pillow dependencies
-  && apk add jpeg-dev zlib-dev freetype-dev lcms2-dev openjpeg-dev tiff-dev tk-dev tcl-dev \
-  # CFFI dependencies
-  && apk add libffi-dev py-cffi \
+  libpq-dev \
   # Translations dependencies
-  && apk add gettext \
-  # https://docs.djangoproject.com/en/dev/ref/django-admin/#dbshell
-  && apk add postgresql-client \
-  # borkerage git dependencies
-  && apk add git
+  gettext \
+  # cleaning up unused files
+  && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+  && rm -rf /var/lib/apt/lists/*
+
+# All absolute dir copies ignore workdir instruction. All relative dir copies are wrt to the workdir instruction
+# copy python dependency wheels from python-build-stage
+COPY --from=python-build-stage /usr/src/app/wheels  /wheels/
+
+
+# use wheels to install python dependencies
+RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
+	&& rm -rf /wheels/
+
+
+# Java
+COPY ./compose/local/django/install_java8_jre.sh /
+RUN chmod +x /install_java8_jre.sh
+RUN sed -i 's/\r$//g' /install_java8_jre.sh
+RUN /install_java8_jre.sh
+
+ENV JAVA_HOME=/opt/java/openjdk \
+      PATH="/opt/java/openjdk/bin:$PATH"
 
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements /requirements
@@ -41,6 +92,9 @@ COPY ./compose/local/django/celery/flower/start /start-flower
 RUN sed -i 's/\r$//g' /start-flower
 RUN chmod +x /start-flower
 
-WORKDIR /app
+COPY ./ena_webin_cli /ena_webin_cli
+
+# copy application code to WORKDIR
+COPY . ${APP_HOME}
 
 ENTRYPOINT ["/entrypoint"]

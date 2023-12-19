@@ -6,15 +6,19 @@ import gfbio_submissions.brokerage.utils.submission_tools
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0026_persistentidentifier_status'),
+        ("brokerage", "0026_persistentidentifier_status"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='submissionupload',
-            name='file',
-            field=models.FileField(help_text='The actual file uploaded.', max_length=220, storage=gfbio_submissions.brokerage.storage.OverwriteStorage(), upload_to=gfbio_submissions.brokerage.utils.submission_tools.submission_upload_path),
+            model_name="submissionupload",
+            name="file",
+            field=models.FileField(
+                help_text="The actual file uploaded.",
+                max_length=220,
+                storage=gfbio_submissions.brokerage.storage.OverwriteStorage(),
+                upload_to=gfbio_submissions.brokerage.utils.submission_tools.submission_upload_path,
+            ),
         ),
     ]

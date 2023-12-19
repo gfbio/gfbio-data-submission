@@ -6,25 +6,38 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('brokerage', '0028_auto_20200213_1945'),
+        ("brokerage", "0028_auto_20200213_1945"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='brokerobject',
-            old_name='site',
-            new_name='user',
+            model_name="brokerobject",
+            old_name="site",
+            new_name="user",
         ),
         migrations.AlterField(
-            model_name='submissionupload',
-            name='site',
-            field=models.ForeignKey(blank=True, help_text='Related "Site". E.g. gfbio-portal or silva.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='site_upload', to=settings.AUTH_USER_MODEL),
+            model_name="submissionupload",
+            name="site",
+            field=models.ForeignKey(
+                blank=True,
+                help_text='Related "Site". E.g. gfbio-portal or silva.',
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="site_upload",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterField(
-            model_name='submissionupload',
-            name='user',
-            field=models.ForeignKey(blank=True, help_text='Related "User". E.g. a real person that uses the submission frontend', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='user_upload', to=settings.AUTH_USER_MODEL),
+            model_name="submissionupload",
+            name="user",
+            field=models.ForeignKey(
+                blank=True,
+                help_text='Related "User". E.g. a real person that uses the submission frontend',
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="user_upload",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]
