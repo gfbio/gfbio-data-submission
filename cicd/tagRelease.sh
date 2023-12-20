@@ -6,10 +6,10 @@
 # get commit SHA
 COMMIT_SHA=`git rev-parse HEAD`
 
-# check if commit belongs only to master
-IS_MASTER=$(PRIVATE_TOKEN=${PRIVATE_TOKEN} COMMIT_SHA=${COMMIT_SHA} CI_PROJECT_ID=${CI_PROJECT_ID} ./cicd/tagMasterCheck.py)
+# check if commit belongs to production
+IS_PRODUCTION=$(PRIVATE_TOKEN=${PRIVATE_TOKEN} COMMIT_SHA=${COMMIT_SHA} CI_PROJECT_ID=${CI_PROJECT_ID} ./cicd/tagProductionBranchCheck.py)
 
-if [ ${IS_MASTER} -eq "1" ]; then
+if [ ${IS_PRODUCTION} -eq "1" ]; then
   # build
   rsync -a /home/gitlab-runner/.envs .
   cd userinterface && npm i && npm run collect-ci
@@ -27,5 +27,5 @@ if [ ${IS_MASTER} -eq "1" ]; then
   exit 0
 fi
 
-echo $IS_MASTER
+echo $IS_PRODUCTION
 
