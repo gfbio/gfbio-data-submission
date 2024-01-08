@@ -3,97 +3,97 @@
 
 {% block content-wrapper %}
 
-    <header class="masthead text-center text-white d-flex">
-        <div class="container my-auto">
+  <header class="masthead text-center text-white d-flex">
+    <div class="container my-auto">
 
-            <div class="row">
+      <div class="row">
 
-                <div class="col-lg-10 mx-auto">
-                    <div class="row">
-                        <div class="col-sm-4 align-self-center p-0">
-                            <!-- TODO: add PNG fallback for older browsers. https://toddmotto.com/mastering-svg-use-for-a-retina-web-fallbacks-with-png-script/ -->
-                            <a href="https://www.gfbio.org">
-                                <img class=""
-                                        {#                                                                     src="{% static 'images/gfbio_logo_landing.svg' %}"#}
-                                     src="{% static 'images/gfbio_logo_claim_landing.svg' %}"
-                                     alt="GFBio">
-                            </a>
-                        </div>
-                        <div class="col-sm-8 align-self-center">
-
-                            <h1 class="text-center main">
-                                Data Submissions
-                            </h1>
-
-                            <h3 class="text-center m-0">
-                                Long-term data archival & publication
-                                services for Biodiversity, Ecology &
-                                Environmental Science
-                                {#                                Data submission & publishing services for#}
-                                {#                                Biodiversity, Ecology & Environmental Studies#}
-                            </h3>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-10 mx-auto mt-5">
-                    <form>
-                        <div class="form-row">
-                            <div class="form-group col-md-12 col-sm-12">
-                                <a href="/ui/submission/form/"
-                                   class="btn btn-block btn-secondary btn-landing-search">
-                                    Submit your Data !
-                                    {#                                    Start your submission. now !#}
-                                </a>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="col-lg-4 mx-auto">
-                    <p class="landing-page-caption">Already using our service ?
-                        <a href="/accounts/login/">Sign In</a></p>
-                </div>
-
-                {#  TODO: for notification use banner below  #}
-                                <div class="alert alert-success" role="alert">
-                                    <h4 class="alert-heading">
-                                        <i class="fa fa-lg fa-tree"
-                                           aria-hidden="true"></i>&nbsp;&nbsp;
-                                        Reduced service from 2023-12-20 to 2024-01-08&nbsp;&nbsp;
-                                        <i class="fa fa-lg fa-tree"
-                                           aria-hidden="true"></i>
-                                    </h4>
-                                    <p>
-                                        Please note: Requests that reach our #GFBioHelpdesk,
-                                        #GFBioDMPT and #GFBioSubmission Service between
-                                        2023-12-20 and 2024-01-08 will experience a delayed
-                                        response due to reduced staff capacities over the
-                                        holidays. We wish you all the best for 2024!
-
-                                    </p>
-                                </div>
-                {#  ---------------------------------------  #}
-
+        <div class="col-lg-10 mx-auto">
+          <div class="row">
+            <div class="col-sm-4 align-self-center p-0">
+              <!-- TODO: add PNG fallback for older browsers. https://toddmotto.com/mastering-svg-use-for-a-retina-web-fallbacks-with-png-script/ -->
+              <a href="https://www.gfbio.org">
+                <img class=""
+                  {#                                                                     src="{% static 'images/gfbio_logo_landing.svg' %}"#}
+                     src="{% static 'images/gfbio_logo_claim_landing.svg' %}"
+                     alt="GFBio">
+              </a>
             </div>
+            <div class="col-sm-8 align-self-center">
 
-            {#            <div class="row">#}
-            {#            <span style="position: absolute; bottom: 2rem; left: 2rem;" class="">#}
-            {#                <a href="/accounts/login/">#}
-            {#                    <img height="21" class=""#}
-            {#                         src="{% static 'images/dfg_logo_blue_w600.png' %}">#}
-            {#                </a>#}
-            {#            </span>#}
-            {#            </div>#}
-            <div class="dfg_logo_container fixed-bottom">
-                <a href="https://www.dfg.de/">
-                    <img class=""
-                         src="{% static 'images/dfg_logo_black_w750.png' %}"
-                         alt="Deutsche Forschungsgemeinschaft">
-                </a>
+              <h1 class="text-center main">
+                Data Submissions
+              </h1>
+
+              <h3 class="text-center m-0">
+                Long-term data archival & publication
+                services for Biodiversity, Ecology &
+                Environmental Science
+                {#                                Data submission & publishing services for#}
+                {#                                Biodiversity, Ecology & Environmental Studies#}
+              </h3>
             </div>
+          </div>
         </div>
 
-    </header>
+        <div class="col-lg-10 mx-auto mt-5">
+          <form>
+            <div class="form-row">
+              <div class="form-group col-md-12 col-sm-12">
+                <a href="/ui/submission/form/"
+                   class="btn btn-block btn-secondary btn-landing-search">
+                  Submit your Data !
+                  {#                                    Start your submission. now !#}
+                </a>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="col-lg-4 mx-auto">
+          <p class="landing-page-caption">Already using our service ?
+            <a href="/accounts/login/">Sign In</a></p>
+        </div>
+
+        {#  TODO: for notification use banner below  #}
+        {#                                <div class="alert alert-success" role="alert">#}
+        {#                                    <h4 class="alert-heading">#}
+        {#                                        <i class="fa fa-lg fa-tree"#}
+        {#                                           aria-hidden="true"></i>&nbsp;&nbsp;#}
+        {#                                        Reduced service from 2023-12-20 to 2024-01-08&nbsp;&nbsp;#}
+        {#                                        <i class="fa fa-lg fa-tree"#}
+        {#                                           aria-hidden="true"></i>#}
+        {#                                    </h4>#}
+        {#                                    <p>#}
+        {#                                        Please note: Requests that reach our #GFBioHelpdesk,#}
+        {#                                        #GFBioDMPT and #GFBioSubmission Service between#}
+        {#                                        2023-12-20 and 2024-01-08 will experience a delayed#}
+        {#                                        response due to reduced staff capacities over the#}
+        {#                                        holidays. We wish you all the best for 2024!#}
+        {##}
+        {#                                    </p>#}
+        {#                                </div>#}
+        {#  ---------------------------------------  #}
+
+      </div>
+
+      {#            <div class="row">#}
+      {#            <span style="position: absolute; bottom: 2rem; left: 2rem;" class="">#}
+      {#                <a href="/accounts/login/">#}
+      {#                    <img height="21" class=""#}
+      {#                         src="{% static 'images/dfg_logo_blue_w600.png' %}">#}
+      {#                </a>#}
+      {#            </span>#}
+      {#            </div>#}
+      <div class="dfg_logo_container fixed-bottom">
+        <a href="https://www.dfg.de/">
+          <img class=""
+               src="{% static 'images/dfg_logo_black_w750.png' %}"
+               alt="Deutsche Forschungsgemeinschaft">
+        </a>
+      </div>
+    </div>
+
+  </header>
 
 {% endblock content-wrapper %}
 
