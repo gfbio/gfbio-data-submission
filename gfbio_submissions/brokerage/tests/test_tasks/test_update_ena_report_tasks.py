@@ -131,7 +131,7 @@ class TestUpdateAccessionsChain(TestTasks):
     @responses.activate
     def test_update_accession_objects_from_ena_report(self):
         self._add_report_responses()
-        result = update_accession_objects_from_ena_report_task.apply_async()
+        update_accession_objects_from_ena_report_task.apply_async()
         tpr = TaskProgressReport.objects.all()
         self.assertEqual(4, len(tpr))
         expected_task_names = [

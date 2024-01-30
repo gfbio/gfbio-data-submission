@@ -248,7 +248,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self._add_create_ticket_response()
         self._add_update_ticket_response()
         title = "A Title for meta-data in GENERIC"
-        response = self.api_client.post(
+        self.api_client.post(
             "/api/submissions/",
             {
                 "target": "GENERIC",
@@ -270,8 +270,8 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         )
         responses.add(responses.POST, url, json={}, status=200)
         data = self._create_test_meta_data()
-        response = self.api_client.post(url, data, format="multipart")
-        response = self.api_client.put(
+        self.api_client.post(url, data, format="multipart")
+        self.api_client.put(
             "/api/submissions/{0}/".format(submission.broker_submission_id),
             {
                 "target": "GENERIC",
@@ -290,7 +290,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(ENA, submission.target)
 
         data = self._create_test_meta_data(delete=False, update=True)
-        response = self.api_client.post(url, data, format="multipart")
+        self.api_client.post(url, data, format="multipart")
         self.assertEqual(2, len(submission.submissionupload_set.all()))
         original_upload = submission.submissionupload_set.get(
             file="{0}/molecular_metadata.csv".format(submission.broker_submission_id)
@@ -306,7 +306,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(10, len(submission.brokerobject_set.all()))
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
 
-        response = self.api_client.put(
+        self.api_client.put(
             "/api/submissions/{0}/".format(submission.broker_submission_id),
             {
                 "target": "GENERIC",
@@ -329,8 +329,8 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
 
         data = self._create_test_meta_data(delete=True, invalid=True)
-        response = self.api_client.post(url, data, format="multipart")
-        response = self.api_client.put(
+        self.api_client.post(url, data, format="multipart")
+        self.api_client.put(
             "/api/submissions/{0}/".format(submission.broker_submission_id),
             {
                 "target": "GENERIC",

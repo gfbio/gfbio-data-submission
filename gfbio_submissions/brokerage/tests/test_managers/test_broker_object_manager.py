@@ -250,7 +250,7 @@ class TestBrokerObjectManager(TestCase):
     def test_double_add_empty_site_object_id(self):
         submission = Submission.objects.first()
         user = User.objects.first()
-        obj = BrokerObject.objects.add_entity(
+        BrokerObject.objects.add_entity(
             submission=submission,
             entity_type="study",
             user=user,
@@ -265,7 +265,7 @@ class TestBrokerObjectManager(TestCase):
         )
         broker_objects = BrokerObject.objects.all()
         self.assertEqual(1, len(broker_objects))
-        obj = BrokerObject.objects.add_entity(
+        BrokerObject.objects.add_entity(
             submission=submission,
             entity_type="study",
             user=user,

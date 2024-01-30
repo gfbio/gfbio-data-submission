@@ -11,6 +11,7 @@ from requests import ConnectionError
 from requests.structures import CaseInsensitiveDict
 
 from gfbio_submissions.brokerage.configuration.settings import JIRA_ATTACHMENT_SUB_URL, JIRA_ISSUE_URL
+from gfbio_submissions.brokerage.tests.test_utils.test_helpdesk_ticket_methods import TestHelpDeskTicketMethods
 from gfbio_submissions.brokerage.utils.pangaea import get_pangaea_login_token
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 
@@ -21,7 +22,7 @@ class TestGFBioJiraApi(TestCase):
     @skip("Test against helpdesk server")
     def test_create_request(self):
         url = "http://helpdesk.gfbio.org{0}".format(JIRA_ISSUE_URL)
-        response = requests.post(
+        requests.post(
             url=url,
             auth=("brokeragent", ""),
             headers={"Content-Type": "application/json"},
@@ -44,7 +45,7 @@ class TestGFBioJiraApi(TestCase):
         ticket_key = "SAND-1535"
         ticket_action = "comment"
         url = "{0}{1}/{2}/{3}".format(self.base_url, JIRA_ISSUE_URL, ticket_key, ticket_action)
-        response = requests.post(
+        requests.post(
             url=url,
             auth=("brokeragent", ""),
             headers={"Content-Type": "application/json"},
@@ -58,7 +59,7 @@ class TestGFBioJiraApi(TestCase):
         ticket_key = "SAND-1535"
         ticket_action = "comment"
         url = "{0}{1}/{2}/{3}".format(self.base_url, JIRA_ISSUE_URL, ticket_key, ticket_action)
-        response = requests.get(
+        requests.get(
             url=url,
             auth=("brokeragent", ""),
             headers={"Content-Type": "application/json"},
@@ -75,11 +76,11 @@ class TestGFBioJiraApi(TestCase):
             JIRA_ISSUE_URL,
             ticket_key,
         )
-        response = requests.get(
+        requests.get(
             url=url,
             auth=("brokeragent", ""),
         )
-        response = requests.put(
+        requests.put(
             url=url,
             auth=("brokeragent", ""),
             headers={"Content-Type": "application/json"},
@@ -115,7 +116,7 @@ class TestGFBioJiraApi(TestCase):
         data = TestHelpDeskTicketMethods._create_test_data("/tmp/test_primary_data_file")
         # files = {'file': file}
         # files = {'file': open(file, 'rb')}
-        response = requests.post(
+        requests.post(
             url=url,
             auth=("brokeragent", ""),
             headers=headers,
@@ -189,7 +190,7 @@ class TestGFBioJiraApi(TestCase):
             "/rest/api/2/attachment",
             "13791",
         )
-        response = requests.delete(
+        requests.delete(
             url=url,
             auth=("brokeragent", ""),
             headers={"Content-Type": "application/json"},
@@ -207,7 +208,7 @@ class TestGFBioJiraApi(TestCase):
             JIRA_ISSUE_URL,
             ticket_key,
         )
-        response = requests.put(
+        requests.put(
             url=url,
             auth=("brokeragent", ""),
             headers={"Content-Type": "application/json"},

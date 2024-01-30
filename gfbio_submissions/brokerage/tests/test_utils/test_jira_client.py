@@ -9,7 +9,6 @@ import requests
 import responses
 from django.contrib.auth.models import Permission
 from django.test import TestCase
-from jira.resources import Attachment
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
@@ -314,7 +313,7 @@ class TestJiraClient(TestCase):
             status=400,
         )
         jira_client.add_comment("SAND-1661", "Bla")
-        comments = jira_client.get_comments(key="SAND-1661")
+        jira_client.get_comments(key="SAND-1661")
         self.assertIsNotNone(jira_client.error)
 
     @responses.activate
@@ -333,7 +332,7 @@ class TestJiraClient(TestCase):
             status=502,
         )
         jira_client.add_comment("SAND-1661", "Bla")
-        comments = jira_client.get_comments(key="SAND-1661")
+        jira_client.get_comments(key="SAND-1661")
         self.assertIsNotNone(jira_client.error)
 
     @responses.activate
@@ -522,7 +521,7 @@ class TestJiraClient(TestCase):
         self.assertIsNone(jira_client.error)
 
     @responses.activate
-    def test_add_comment_client_error(self):
+    def test_add_comment_client_error_2(self):
         self._add_create_ticket_responses(json_content=self.issue_json)
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         responses.add(
@@ -540,7 +539,7 @@ class TestJiraClient(TestCase):
         self.assertIsNotNone(jira_client.error)
 
     @responses.activate
-    def test_add_comment_server_error(self):
+    def test_add_comment_server_error_2(self):
         self._add_create_ticket_responses(json_content=self.issue_json)
         jira_client = JiraClient(resource=self.site_config.helpdesk_server)
         responses.add(

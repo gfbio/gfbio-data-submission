@@ -238,7 +238,7 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
         self._add_create_ticket_response()
         self.assertEqual(0, len(Submission.objects.all()))
         self.assertEqual(0, len(RequestLog.objects.all()))
-        response = self.api_client.post(
+        self.api_client.post(
             "/api/submissions/",
             {
                 "target": "ATAX",
@@ -330,7 +330,7 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
         self._add_create_ticket_response()
         self.assertEqual(0, len(Submission.objects.all()))
         self.assertEqual(0, len(RequestLog.objects.all()))
-        response = self.api_client.post(
+        self.api_client.post(
             "/api/submissions/",
             {
                 "target": "ATAX",

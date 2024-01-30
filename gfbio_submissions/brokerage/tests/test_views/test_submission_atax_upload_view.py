@@ -341,16 +341,6 @@ class TestSubmissionAtaxUploadView(TestCase):
         response = self.api_client.post(url, data, format="multipart")
         self.assertEqual(201, response.status_code)
 
-        specimen_upload = submission.submissionupload_set.get(
-            file="{0}/specimen_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
-        measurement_upload = submission.submissionupload_set.get(
-            file="{0}/measurement_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
-        multimedia_upload = submission.submissionupload_set.get(
-            file="{0}/multimedia_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
-
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
 
         combis = submission.auditabletextdata_set.filter(name="specimen")
@@ -427,16 +417,6 @@ class TestSubmissionAtaxUploadView(TestCase):
         self.assertEqual(201, response.status_code)
         self.assertEqual(3, len(submission.submissionupload_set.all()))
 
-        specimen_upload = submission.submissionupload_set.get(
-            file="{0}/specimen_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
-        measurement_upload = submission.submissionupload_set.get(
-            file="{0}/measurement_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
-        multimedia_upload = submission.submissionupload_set.get(
-            file="{0}/multimedia_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
-
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
 
         combis = submission.auditabletextdata_set.filter(name="specimen")
@@ -511,16 +491,6 @@ class TestSubmissionAtaxUploadView(TestCase):
         response = self.api_client.post(url, data, format="multipart")
         self.assertEqual(201, response.status_code)
         self.assertEqual(3, len(submission.submissionupload_set.all()))
-
-        specimen_upload = submission.submissionupload_set.get(
-            file="{0}/specimen_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
-        measurement_upload = submission.submissionupload_set.get(
-            file="{0}/measurement_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
-        multimedia_upload = submission.submissionupload_set.get(
-            file="{0}/multimedia_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
 
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
         combis = submission.auditabletextdata_set.filter(name="specimen")
@@ -600,16 +570,6 @@ class TestSubmissionAtaxUploadView(TestCase):
         response = self.api_client.post(url, data, format="multipart")
         self.assertEqual(201, response.status_code)
 
-        specimen_upload = submission.submissionupload_set.get(
-            file="{0}/specimen_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
-        measurement_upload = submission.submissionupload_set.get(
-            file="{0}/measurement_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
-        multimedia_upload = submission.submissionupload_set.get(
-            file="{0}/multimedia_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
-
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
         combis = submission.auditabletextdata_set.filter(name="specimen")
         self.assertEqual(1, len(combis))
@@ -687,16 +647,6 @@ class TestSubmissionAtaxUploadView(TestCase):
         response = self.api_client.post(url, data, format="multipart")
         self.assertEqual(201, response.status_code)
 
-        specimen_upload = submission.submissionupload_set.get(
-            file="{0}/specimen_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
-        measurement_upload = submission.submissionupload_set.get(
-            file="{0}/measurement_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
-        multimedia_upload = submission.submissionupload_set.get(
-            file="{0}/multimedia_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
-
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
         combis = submission.auditabletextdata_set.filter(name="specimen")
         self.assertEqual(1, len(combis))
@@ -772,16 +722,6 @@ class TestSubmissionAtaxUploadView(TestCase):
         response = self.api_client.post(url, data, format="multipart")
         self.assertEqual(201, response.status_code)
         self.assertEqual(3, len(submission.submissionupload_set.all()))
-
-        specimen_upload = submission.submissionupload_set.get(
-            file="{0}/specimen_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
-        measurement_upload = submission.submissionupload_set.get(
-            file="{0}/measurement_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
-        multimedia_upload = submission.submissionupload_set.get(
-            file="{0}/multimedia_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
 
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
         combis = submission.auditabletextdata_set.filter(name="specimen")
@@ -1043,9 +983,6 @@ class TestSubmissionAtaxUploadView(TestCase):
         response = self.api_client.post(url, data, format="multipart")
         self.assertEqual(201, response.status_code)
 
-        specimen_upload = submission.submissionupload_set.get(
-            file="{0}/specimen_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
         # failes:
         # measurement_upload = submission.submissionupload_set.get(
         #   file='{0}/measurement_table_Platypelis.csv'.format(
@@ -1126,9 +1063,6 @@ class TestSubmissionAtaxUploadView(TestCase):
         response = self.api_client.post(url, data, format="multipart")
         self.assertEqual(201, response.status_code)
 
-        specimen_upload = submission.submissionupload_set.get(
-            file="{0}/specimen_table_Platypelis.csv".format(submission.broker_submission_id)
-        )
         # failes:
         # measurement_upload = submission.submissionupload_set.get(
         #   file='{0}/measurement_table_Platypelis.csv'.format(

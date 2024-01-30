@@ -164,7 +164,7 @@ class TestInitialChainTasks(TestCase):
         )
         self.assertEqual(201, max_response.status_code)
         content = json.loads(max_response.content)
-        sub = Submission.objects.get(broker_submission_id=content.get("broker_submission_id"))
+        Submission.objects.get(broker_submission_id=content.get("broker_submission_id"))
         task_reports = TaskProgressReport.objects.all()
         expected_tasknames = [
             "tasks.get_gfbio_helpdesk_username_task",

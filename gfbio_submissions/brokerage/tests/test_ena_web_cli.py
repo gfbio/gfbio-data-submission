@@ -12,6 +12,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils.encoding import smart_str
 
+from gfbio_submissions.brokerage.models.submission_upload import SubmissionUpload
 from gfbio_submissions.brokerage.tests.utils import (
     _get_ena_data,
     _get_ena_register_study_response,
@@ -90,7 +91,7 @@ class TestTargetedSequencePreparationTasks(TestCase):
         cls.user = user
         center = CenterName.objects.create(center_name="test-center")
         cls.center = center
-        min_submission = Submission.objects.create(
+        Submission.objects.create(
             broker_submission_id=UUID("4e5c7fb2-fb9f-447f-92db-33a5f99cba8e"),
             user=user,
             center_name=center,
@@ -204,7 +205,7 @@ class TestTargetedSequencePreparationTasks(TestCase):
     def test_register_study_at_ena_task_existing_pid(self):
         submission = Submission.objects.first()
         study_bo = BrokerObject.objects.add_study_only(submission)
-        pid = study_bo.persistentidentifier_set.create(archive="ENA", pid_type="PRJ", pid="PRJ007")
+        study_bo.persistentidentifier_set.create(archive="ENA", pid_type="PRJ", pid="PRJ007")
         result = register_study_at_ena_task.apply_async(
             kwargs={
                 "submission_id": submission.pk,
@@ -231,7 +232,7 @@ class TestTargetedSequencePreparationTasks(TestCase):
 
     def test_register_study_at_ena_task_no_study_brokerobject(self):
         submission = Submission.objects.first()
-        study_xml = submission.auditabletextdata_set.create(name="study.xml", text_data="<STUDY></STUDY>")
+        submission.auditabletextdata_set.create(name="study.xml", text_data="<STUDY></STUDY>")
         result = register_study_at_ena_task.apply_async(
             kwargs={
                 "submission_id": submission.pk,
@@ -246,8 +247,8 @@ class TestTargetedSequencePreparationTasks(TestCase):
     @responses.activate
     def test_register_study_at_ena_task(self):
         submission = Submission.objects.first()
-        study_bo = BrokerObject.objects.add_study_only(submission)
-        study_xml = submission.auditabletextdata_set.create(name="study.xml", text_data="<STUDY></STUDY>")
+        BrokerObject.objects.add_study_only(submission)
+        submission.auditabletextdata_set.create(name="study.xml", text_data="<STUDY></STUDY>")
         responses.add(
             responses.POST,
             submission.user.site_configuration.ena_server.url,
@@ -278,7 +279,7 @@ class TestTargetedSequencePreparationTasks(TestCase):
         submission = Submission.objects.first()
         study_bo = BrokerObject.objects.add_study_only(submission)
         print("STUDY BO pk ", study_bo.pk)
-        study_xml = submission.auditabletextdata_set.create(name="study.xml", text_data="<STUDY></STUDY>")
+        submission.auditabletextdata_set.create(name="study.xml", text_data="<STUDY></STUDY>")
         responses.add(
             responses.POST,
             submission.user.site_configuration.ena_server.url,
@@ -356,7 +357,7 @@ class TestTargetedSequenceSubmissionTasks(TestCase):
         submission.user.save()
         study = BrokerObject.objects.add_study_only(submission=submission)
         study_data = prepare_study_data_only(submission=submission)
-        study_text_data = store_single_data_item_as_auditable_text_data(submission=submission, data=study_data)
+        store_single_data_item_as_auditable_text_data(submission=submission, data=study_data)
         # TODO: works when credentials are set properly
         register_chain = register_study_at_ena_task.s(submission_id=submission.pk).set(
             countdown=SUBMISSION_DELAY
@@ -746,7 +747,7 @@ class TestCLI(TestCase):
 
         # OUTPUT dir -> where output from cli should go
         # output = io.StringIO()
-        submission_folder = os.path.join(settings.MEDIA_ROOT, str(submission.broker_submission_id))
+        # submission_folder = os.path.join(settings.MEDIA_ROOT, str(submission.broker_submission_id))
         # with open() as output:
         #     writer = csv.writer(output, delimiter=str('\t'))
         #     writer.writerow(('STUDY', study_pid.pid))

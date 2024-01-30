@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-import pprint
 import time
-from pprint import pp, pprint
+from pprint import pprint
 from unittest import skip
 
 import requests
@@ -26,7 +25,7 @@ class TestSubmissionServers(TestCase):
                 }
             },
         }
-        response = requests.post(
+        requests.post(
             url="https://c103-171.cloud.gwdg.de/api/submissions/",
             data=json.dumps(data),
             headers={"Authorization": "Token a---", "Content-Type": "application/json"},

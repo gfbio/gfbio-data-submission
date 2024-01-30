@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
-import xml.dom.minidom
+
+# import xml.dom.minidom
 from collections import OrderedDict
 
 from django.contrib.auth.models import Permission
@@ -582,9 +583,6 @@ class TestCSVParsing(TestCase):
             for o in os.listdir(MEDIA_ROOT)
         ]
 
-    def test_setUp_result(self):
-        sub = Submission.objects.first()
-
     def test_extract_sample(self):
         row = OrderedDict(
             [
@@ -873,14 +871,13 @@ class TestCSVParsing(TestCase):
             "r",
         ) as data_file:
             requirements = parse_molecular_csv(data_file)
-        requirements_keys = requirements.keys()
         self.assertEqual(
             "Sample No. 1",
             requirements.get("samples", [{}])[0].get("sample_title", "no value"),
         )
         taxon_id = requirements.get("samples", [{}])[0].get("taxon_id", "no value")
         self.assertEqual(1234, taxon_id)
-        self.assertTrue(type(taxon_id) == int)
+        self.assertTrue(isinstance(taxon_id, int))
         self.assertEqual(
             "A description, with commmas, ...",
             requirements.get("samples", [{}])[0].get("sample_description", "no value"),
@@ -926,7 +923,7 @@ class TestCSVParsing(TestCase):
         )
         taxon_id = requirements.get("samples", [{}])[0].get("taxon_id", "no value")
         self.assertEqual(1234, taxon_id)
-        self.assertTrue(type(taxon_id) == int)
+        self.assertTrue(isinstance(taxon_id, int))
         self.assertEqual(
             "A description, with commmas, ...",
             requirements.get("samples", [{}])[0].get("sample_description", "no value"),
@@ -972,7 +969,7 @@ class TestCSVParsing(TestCase):
         )
         taxon_id = requirements.get("samples", [{}])[0].get("taxon_id", "no value")
         self.assertEqual(1234, taxon_id)
-        self.assertTrue(type(taxon_id) == int)
+        self.assertTrue(isinstance(taxon_id, int))
         self.assertEqual(
             "A description, with commmas, ...",
             requirements.get("samples", [{}])[0].get("sample_description", "no value"),
@@ -1103,9 +1100,7 @@ class TestCSVParsing(TestCase):
         # Mixs parameter without unitmapping
         self.assertNotIn("geographic location (country and/or sea)", sxml)
 
-        fname, sxml = ena_submission_data["EXPERIMENT"]
-        dom = xml.dom.minidom.parseString(sxml)
-        pretty = dom.toprettyxml()
+        _, sxml = ena_submission_data["EXPERIMENT"]
 
     def test_parse_to_xml_real_world_single_layout(self):
         submission = Submission.objects.first()
@@ -1215,7 +1210,7 @@ class TestCSVParsing(TestCase):
                 "csv_files/mol_5_items_semi_double_quoting.csv",
             ),
             "r",
-        ) as data_file:
+        ):
             submission = Submission.objects.first()
         submission.submissionupload_set.all().delete()
         submission.save()

@@ -136,7 +136,7 @@ class TestEnaReport(TestCase):
         self.assertEqual(0, len(Accession.objects.filter(identifier="PRJEB36xxx")))
 
     def test_accession_update_to_public(self):
-        success = update_resolver_accessions()
+        update_resolver_accessions()
         self.assertEqual(6, len(Accession.objects.all()))
 
         study_report = EnaReport.objects.get(report_type=EnaReport.STUDY)
@@ -144,7 +144,7 @@ class TestEnaReport(TestCase):
         self.assertFalse(Accession.objects.filter(identifier="PRJEB36096").first() is None)
         study_report.report_data[0]["report"]["releaseStatus"] = "PUBLIC"
         study_report.save()
-        success = update_resolver_accessions()
+        update_resolver_accessions()
         self.assertEqual(4, len(Accession.objects.all()))
         self.assertTrue(Accession.objects.filter(identifier="ERP119242").first() is None)
         self.assertTrue(Accession.objects.filter(identifier="PRJEB36096").first() is None)

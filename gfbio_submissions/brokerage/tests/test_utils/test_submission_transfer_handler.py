@@ -82,7 +82,7 @@ class TestSubmissionTransferHandler(TestCase):
         "currently this method is not supposed to rise an exception, " "so task.chain can proceed in a controlled way"
     )
     def test_invalid_submission_id(self):
-        with self.assertRaises(SubmissionTransferHandler.TransferInternalError) as exc:
+        with self.assertRaises(SubmissionTransferHandler.TransferInternalError):
             sub, conf = get_submission_and_site_configuration(submission_id=99)
 
     def test_no_site_config(self):
@@ -123,14 +123,14 @@ class TestSubmissionTransferHandler(TestCase):
         response = requests.models.Response()
         response.status_code = 401
         response._content = "{}"
-        with self.assertRaises(TransferClientError) as exc:
+        with self.assertRaises(TransferClientError):
             raise_response_exceptions(response)
 
     def test_raise_500_exception(self):
         response = requests.models.Response()
         response.status_code = 500
         response._content = "{}"
-        with self.assertRaises(TransferServerError) as exc:
+        with self.assertRaises(TransferServerError):
             raise_response_exceptions(response)
 
     @responses.activate
