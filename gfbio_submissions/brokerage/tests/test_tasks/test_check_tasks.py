@@ -26,7 +26,7 @@ class TestCheckTasks(TestCase):
     def setUpTestData(cls):
         user1 = User.objects.create(username="user1")
         user2 = User.objects.create(username="user2")
-        user3 = User.objects.create(username="user3")
+        User.objects.create(username="user3")
 
         # submission with primary helpdesk ticket
         submission = Submission.objects.create(

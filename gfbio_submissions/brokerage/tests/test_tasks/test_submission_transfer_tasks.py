@@ -6,7 +6,6 @@ from django.test import override_settings
 
 from gfbio_submissions.brokerage.tests.utils import _get_ena_error_xml_response, _get_ena_xml_response
 from gfbio_submissions.generic.models.request_log import RequestLog
-from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 
 from ...models.auditable_text_data import AuditableTextData
@@ -99,7 +98,7 @@ class TestSubmissionTransferTasks(TestTasks):
         submission = Submission.objects.first()
         conf = SiteConfiguration.objects.first()
         responses.add(responses.POST, conf.ena_server.url, status=500, body="{}")
-        result = chain(
+        chain(
             prepare_ena_submission_data_task.s(submission_id=submission.pk),
             transfer_data_to_ena_task.s(submission_id=submission.pk),
         ).apply()

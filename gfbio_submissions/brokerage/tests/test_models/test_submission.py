@@ -118,10 +118,10 @@ class SubmissionTest(TestCase):
 
         for e in experiment_sample_descriptors:
             self.assertIn(e, sample_aliases)
-            self.assertTrue(2, len(e.split(":")))
+            self.assertEqual(2, len(e.split(":")))
         for e in experiment_study_refs:
             self.assertEqual(e, study_alias)
-            self.assertTrue(2, len(e.split(":")))
+            self.assertEqual(2, len(e.split(":")))
         self.assertEqual(1, len(experiment_aliases))
         self.assertEqual(1, len(run_experiment_refs))
 
@@ -162,15 +162,15 @@ class SubmissionTest(TestCase):
 
         for e in experiment_sample_descriptors:
             self.assertIn(e, sample_aliases)
-            self.assertTrue(2, len(e.split(":")))
+            self.assertEqual(2, len(e.split(":")))
         for e in experiment_study_refs:
             self.assertEqual(e, study_alias)
-            self.assertTrue(2, len(e.split(":")))
+            self.assertEqual(2, len(e.split(":")))
         self.assertEqual(5, len(experiment_aliases))
         self.assertEqual(6, len(run_experiment_refs))
         for r in run_experiment_refs:
             self.assertIn(r, experiment_aliases)
-            self.assertTrue(2, len(r.split(":")))
+            self.assertEqual(2, len(r.split(":")))
 
     def test_queuing_of_closed_submissions(self):
         with patch(

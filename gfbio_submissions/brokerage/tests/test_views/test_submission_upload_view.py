@@ -322,9 +322,9 @@ class TestSubmissionUploadView(TestCase):
         self.api_client.post(url_2, data_2, format="multipart")
 
         submission = Submission.objects.first()
-        self.assertTrue(1, len(submission.submissionupload_set.all()))
+        self.assertEqual(1, len(submission.submissionupload_set.all()))
         submission_2 = Submission.objects.last()
-        self.assertTrue(1, len(submission_2.submissionupload_set.all()))
+        self.assertEqual(1, len(submission_2.submissionupload_set.all()))
 
         url = reverse(
             "brokerage:submissions_uploads",

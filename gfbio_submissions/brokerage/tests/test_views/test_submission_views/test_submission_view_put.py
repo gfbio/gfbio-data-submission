@@ -7,7 +7,7 @@ from unittest import skip
 import responses
 
 from gfbio_submissions.brokerage.tests.utils import _get_ena_release_xml_response, _get_submission_request_data
-from gfbio_submissions.generic.models.resource_credential import ResourceCredential
+from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 
 from ....configuration.settings import JIRA_ISSUE_URL
@@ -201,7 +201,7 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
             format="json",
         )
         # TODO: 06.06.2019 allow edit of submissions with status SUBMITTED ...
-        self.assertTrue(200, response.status_code)
+        self.assertEqual(200, response.status_code)
         # self.assertTrue(400, response.status_code)
         # content = response.content.decode('utf-8')
         # self.assertIn('"status":"SUBMITTED"', content)
@@ -227,7 +227,7 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
             {"target": "ENA", "release": False, "data": _get_submission_request_data()},
             format="json",
         )
-        self.assertTrue(400, response.status_code)
+        self.assertEqual(400, response.status_code)
         content = response.content.decode("utf-8")
         self.assertIn('"status":"CANCELLED"', content)
         self.assertIn(
@@ -249,7 +249,7 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
             {"target": "ENA", "release": False, "data": _get_submission_request_data()},
             format="json",
         )
-        self.assertTrue(400, response.status_code)
+        self.assertEqual(400, response.status_code)
         content = response.content.decode("utf-8")
         self.assertIn('"status":"ERROR"', content)
         self.assertIn(
@@ -272,7 +272,7 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
             {"target": "ENA", "release": False, "data": _get_submission_request_data()},
             format="json",
         )
-        self.assertTrue(400, response.status_code)
+        self.assertEqual(400, response.status_code)
         content = response.content.decode("utf-8")
         self.assertIn('"status":"CLOSED"', content)
         self.assertIn('"error":"no modifications allowed with current status"', content)
@@ -320,7 +320,7 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
 
         RequestLog.objects.all().delete()
         embargo_date = datetime.date.today() + datetime.timedelta(days=365)
-        response = self.api_client.put(
+        self.api_client.put(
             "/api/submissions/{0}/".format(submission.broker_submission_id),
             {
                 "target": "ENA",
@@ -347,7 +347,7 @@ class TestSubmissionViewPutRequests(TestSubmissionView):
         submission.status = Submission.CLOSED
         submission.save()
 
-        response = self.api_client.put(
+        self.api_client.put(
             "/api/submissions/{0}/".format(submission.broker_submission_id),
             {
                 "target": "ENA",

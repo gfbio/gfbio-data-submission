@@ -3,6 +3,7 @@
 from django.test import TestCase
 
 from gfbio_submissions.users.models import User
+
 from ...models.submission import Submission
 
 
@@ -36,19 +37,19 @@ class SubmissionManagerTest(TestCase):
         submission.status = Submission.CLOSED
         submission.save()
 
-        with self.assertRaises(Submission.DoesNotExist) as exc:
+        with self.assertRaises(Submission.DoesNotExist):
             Submission.objects.get_open_submission(database_id)
 
         submission = Submission.objects.get(pk=database_id)
         submission.status = Submission.ERROR
         submission.save()
-        with self.assertRaises(Submission.DoesNotExist) as exc:
+        with self.assertRaises(Submission.DoesNotExist):
             Submission.objects.get_open_submission(database_id)
 
         submission = Submission.objects.get(pk=database_id)
         submission.status = Submission.OPEN
         submission.save()
-        with self.assertRaises(Submission.DoesNotExist) as exc:
+        with self.assertRaises(Submission.DoesNotExist):
             Submission.objects.get_open_submission(database_id + 12)
 
     def test_get_submitted_submissions(self):
@@ -64,7 +65,7 @@ class SubmissionManagerTest(TestCase):
         submission.status = Submission.CLOSED
         submission.save()
 
-        with self.assertRaises(Submission.DoesNotExist) as exc:
+        with self.assertRaises(Submission.DoesNotExist):
             Submission.objects.get_submitted_and_error_submissions(database_id)
 
     def test_get_error_submissions(self):
@@ -80,7 +81,7 @@ class SubmissionManagerTest(TestCase):
         submission.status = Submission.CLOSED
         submission.save()
 
-        with self.assertRaises(Submission.DoesNotExist) as exc:
+        with self.assertRaises(Submission.DoesNotExist):
             Submission.objects.get_submitted_and_error_submissions(database_id)
 
     def test_get_submissions_without_primary_helpdesk_issue(self):
