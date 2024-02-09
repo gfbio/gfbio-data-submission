@@ -150,6 +150,38 @@
             "unspecified"
         ]
     },
+    "vela_diagnostics": {
+        "type": "string",
+        "enum": [
+            "Sentosa SQ301",
+            "unspecified"
+        ]
+    },
+    "genapsys": {
+        "type": "string",
+        "enum": [
+            "GENIUS",
+            "Genapsys Sequencer",
+            "GS111",
+            "unspecified"
+        ]
+    },
+    "genemind": {
+        "type": "string",
+        "enum": [
+            "GenoCare 1600",
+            "GenoLab M",
+            "FASTASeq 300",
+            "unspecified"
+        ]
+    },
+    "tapestri": {
+        "type": "string",
+        "enum": [
+            "Tapestri",
+            "unspecified"
+        ]
+    },
     "platform": {
         "oneOf": [
             {
@@ -190,6 +222,18 @@
             },
             {
                 "$ref": "#/ultima"
+            },
+            {
+                "$ref": "#/vela_diagnostics"
+            },
+            {
+                "$ref": "#/genapsys"
+            },
+            {
+                "$ref": "#/genemind"
+            },
+            {
+                "$ref": "#/tapestri"
             }
         ]
     },

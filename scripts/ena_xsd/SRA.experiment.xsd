@@ -11,7 +11,7 @@
   -->
 
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:com="SRA.common">
-    <xs:import schemaLocation="SRA.common.xsd" namespace="SRA.common"/>
+  <xs:import schemaLocation="SRA.common.xsd" namespace="SRA.common"/>
 
   <!-- STRING ENUMERATIONS BEGIN -->
   <xs:simpleType name="typeLibraryStrategy">
