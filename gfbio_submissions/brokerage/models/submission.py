@@ -12,12 +12,7 @@ from gfbio_submissions.brokerage.configuration.settings import (
     GENERIC,
     ATAX,
 )
-
-# from gfbio_submissions.brokerage.managers import SubmissionManager
 from gfbio_submissions.generic.fields import JsonDictField
-
-# from .additional_reference import AdditionalReference
-# from .additional_reference import AdditionalReference
 from .center_name import CenterName
 from ..configuration.settings import PANGAEA_JIRA_TICKET, GFBIO_HELPDESK_TICKET
 from ..managers.submission_manager import SubmissionManager
@@ -46,17 +41,6 @@ class Submission(TimeStampedModel):
     )
 
     broker_submission_id = models.UUIDField(primary_key=False, default=uuid.uuid4)
-
-    # TODO: remove after refactoring user-site-relations are done
-    # TODO: be careful with existing submissions using this field.
-    #  maybe check if user field is used by submission, then first remove user
-    #  then rename site to user in 2 migration steps
-    # site = models.ForeignKey(
-    #     AUTH_USER_MODEL,
-    #     null=True,
-    #     blank=True,
-    #     related_name='site_submissions',
-    #     on_delete=models.SET_NULL)
     user = models.ForeignKey(
         AUTH_USER_MODEL,
         null=True,
@@ -64,29 +48,7 @@ class Submission(TimeStampedModel):
         related_name="user_submissions",
         on_delete=models.SET_NULL,
     )
-
     target = models.CharField(max_length=16, choices=TARGETS)
-
-    # TODO: investigate where this field is used
-    # TODO: adapt to new situation of local users (sso, social, django user)
-    #  and external (site only)  BE CAREFUL ! LEGACY DATA !
-    # submitting_user = models.CharField(max_length=72, default='', blank=True,
-    #                                    null=True,
-    #                                    help_text=
-    #                                    'Identifier of submitting user. May '
-    #                                    'vary for different sites, e.g. user-id'
-    #                                    ' from database, uniquq login-name, '
-    #                                    'etc..')
-    # TODO: remove in Submission ownership refactoring. BE CAREFUL ! LEGACY DATA !
-    # submitting_user_common_information = models.TextField(
-    #     default='',
-    #     blank=True,
-    #     null=True,
-    #     help_text='General information regarding the submitting user in '
-    #               'free-text form, e.g. full name and/or email-address, ORCID,'
-    #               ' etc.. . Will be used to fill Helpdesk/Jira fields that ask'
-    #               ' for this kind of verbose information'
-    # )
     status = models.CharField(choices=STATUSES, max_length=10, default=OPEN)
     release = models.BooleanField(default=False)
     approval_notification_sent = models.BooleanField(default=False)
@@ -99,11 +61,10 @@ class Submission(TimeStampedModel):
         null=True,
         on_delete=models.SET_NULL,
         help_text="NOTE: When changing the center_name you will have to "
-        "manually create new XML to get XML containing the "
-        "updated center_name. Do so by trigger the "
-        '"Re-Create XML (ENA)" admin action.',
+                  "manually create new XML to get XML containing the "
+                  "updated center_name. Do so by trigger the "
+                  '"Re-Create XML (ENA)" admin action.',
     )
-
     data = JsonDictField(default=dict)
     # default to today + 1 year
     # FIXME: setting default dynamically causes new migrations. without migrations default is last date plus 1 year
