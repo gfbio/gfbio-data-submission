@@ -3,7 +3,6 @@ import datetime
 import json
 import logging
 import os
-import xml.etree.ElementTree as ET
 
 from django.conf import settings
 from django.forms import ValidationError
@@ -23,7 +22,8 @@ from ..configuration.settings import (
     ATAX,
     STATIC_ATAX_REQUIREMENTS_LOCATION,
 )
-from ..utils.atax import create_ataxer
+
+# from ..utils.atax import create_ataxer
 
 logger = logging.getLogger(__name__)
 
@@ -185,23 +185,23 @@ def validate_ena_relations(data):
     return errors
 
 
-def validate_atax_data_is_valid(submission=None, schema_file=None, xml_string=None):
-    xml_string_valid = False
-    # create ataxer
-    ataxer = create_ataxer(submission)
-    schema = ataxer.schema
-
-    # path = os.path.join(settings.STATIC_ROOT, 'schemas', schema_file)
-    # schema = xmlschema.XMLSchema(path)
-
-    if xml_string:
-        root = ET.fromstring(xml_string)
-        tree = ET.ElementTree(ET.fromstring(xml_string))
-
-        xml_string_valid = schema.is_valid(tree)
-        errors = [] if xml_string_valid else collect_validation_xml_errors(tree, schema)
-
-        return xml_string_valid, errors
+# def validate_atax_data_is_valid(submission=None, schema_file=None, xml_string=None):
+#     xml_string_valid = False
+#     # create ataxer
+#     ataxer = create_ataxer(submission)
+#     schema = ataxer.schema
+#
+#     # path = os.path.join(settings.STATIC_ROOT, 'schemas', schema_file)
+#     # schema = xmlschema.XMLSchema(path)
+#
+#     if xml_string:
+#         root = ET.fromstring(xml_string)
+#         tree = ET.ElementTree(ET.fromstring(xml_string))
+#
+#         xml_string_valid = schema.is_valid(tree)
+#         errors = [] if xml_string_valid else collect_validation_xml_errors(tree, schema)
+#
+#         return xml_string_valid, errors
 
 
 # TODO: remove draft03 stuff completly or invert logic and make draft04 default
