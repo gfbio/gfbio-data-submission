@@ -155,12 +155,12 @@ class TestSubmissionView(TestCase):
         url = "{0}{1}/{2}".format(self.site_config.helpdesk_server.url, JIRA_ISSUE_URL, "no_key_available")
         responses.add(responses.PUT, url, body="", status=204)
 
-    def _post_submission(self):
+    def _post_submission(self, target="ENA", release=False):
         return self.api_client.post(
             "/api/submissions/",
             {
-                "target": "ENA",
-                "release": False,
+                "target": target,
+                "release": release,
                 "data": {"requirements": {"title": "A Title", "description": "A Description"}},
             },
             format="json",

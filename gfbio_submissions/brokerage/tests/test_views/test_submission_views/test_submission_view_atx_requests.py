@@ -91,6 +91,59 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
         self.assertEqual(Submission.SUBMITTED, submission.status)
         self.assertEqual("ATAX", submission.target)
 
+    @responses.activate
+    def test_put_atx_target(self):
+        self._add_create_ticket_response()
+        self._add_update_ticket_response()
+        self._post_submission(target="ATAX", release=False)
+        submission = Submission.objects.first()
+        response = self.api_client.put(
+            "/api/submissions/{0}/".format(submission.broker_submission_id),
+            {
+                "target": "ATAX",
+                "release": False,
+                "data": {
+                    "requirements": {
+                        "title": "A Title Update",
+                        "description": "A Description Update",
+                    }
+                },
+            },
+            format="json",
+        )
+        content = json.loads(response.content)
+        self.assertEqual(200, response.status_code)
+        self.assertIn("Update", content["data"]["requirements"]["title"])
+        self.assertIn("Update", content["data"]["requirements"]["description"])
+        self.assertEqual(1, len(Submission.objects.all()))
+
+    @responses.activate
+    def test_put_atx_target_status_submitted(self):
+        self._add_create_ticket_response()
+        self._add_update_ticket_response()
+        self._post_submission(target="ATAX", release=True)
+        submission = Submission.objects.first()
+        self.assertEqual(Submission.SUBMITTED, submission.status)
+
+        response = self.api_client.put(
+            "/api/submissions/{0}/".format(submission.broker_submission_id),
+            {
+                "target": "ATAX",
+                "release": True,
+                "data": {
+                    "requirements": {
+                        "title": "A Title Update",
+                        "description": "A Description Update",
+                    }
+                },
+            },
+            format="json",
+        )
+        content = json.loads(response.content)
+        # FIXME clarify statuses, since 06.06.2019 edit on SUBMITTED Submission allowed (why ?)
+        self.assertEqual(200, response.status_code)
+
+
     # @responses.activate
     # def test_min_post_unknown_target(self):
     #     # self._add_create_ticket_response()
