@@ -111,6 +111,7 @@ class Submission(TimeStampedModel):
 
     objects = SubmissionManager()
 
+    # TODO: move to util class or manager, if target not ENA related skip any query process
     # get first PRJ object
     def get_primary_accession(self):
         try:
@@ -123,6 +124,7 @@ class Submission(TimeStampedModel):
         except IndexError:
             return None
 
+    # TODO: move to util class or manager, compare TODO above
     # for frontend
     def get_accession_id(self):
         try:
