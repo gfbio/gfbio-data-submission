@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import json
-from pprint import pprint
 from uuid import UUID
 
 import responses
@@ -84,12 +83,37 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
             format="json",
         )
         content = json.loads(response.content)
-        pprint(content)
         self.assertEqual(201, response.status_code)
         submission = Submission.objects.last()
         self.assertEqual(UUID(content["broker_submission_id"]), submission.broker_submission_id)
         self.assertEqual(Submission.SUBMITTED, submission.status)
         self.assertEqual("ATAX", submission.target)
+
+    @responses.activate
+    def test_valid_atx_target_post_extra_data(self):
+        self._add_create_ticket_response()
+        self.assertEqual(0, len(Submission.objects.all()))
+        self.assertEqual(0, len(RequestLog.objects.all()))
+        response = self.api_client.post(
+            "/api/submissions/",
+            {
+                "target": "ATAX",
+                "release": True,
+                "data": {
+                    "requirements": {
+                        "title": "The Title",
+                        "description": "The Description",
+                        "extra": "this is not capture by json schema"
+                    }
+                },
+            },
+            format="json",
+        )
+        content = json.loads(response.content)
+        self.assertEqual(201, response.status_code)
+        submission = Submission.objects.last()
+        self.assertEqual(UUID(content["broker_submission_id"]), submission.broker_submission_id)
+        self.assertIn("extra", submission.data["requirements"].keys())
 
     @responses.activate
     def test_put_atx_target(self):
@@ -118,6 +142,32 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
         self.assertEqual(1, len(Submission.objects.all()))
 
     @responses.activate
+    def test_put_extra_data_atx_target(self):
+        self._add_create_ticket_response()
+        self._add_update_ticket_response()
+        self._post_submission(target="ATAX", release=False)
+        submission = Submission.objects.first()
+        response = self.api_client.put(
+            "/api/submissions/{0}/".format(submission.broker_submission_id),
+            {
+                "target": "ATAX",
+                "release": False,
+                "data": {
+                    "requirements": {
+                        "title": "A Title Update",
+                        "description": "A Description Update",
+                        "extra": "this is not capture by json schema"
+                    }
+                },
+            },
+            format="json",
+        )
+        submission = Submission.objects.first()
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(1, len(Submission.objects.all()))
+        self.assertIn("extra", submission.data["requirements"].keys())
+
+    @responses.activate
     def test_put_atx_target_status_submitted(self):
         self._add_create_ticket_response()
         self._add_update_ticket_response()
@@ -139,7 +189,6 @@ class TestSubmissionViewAtaxTarget(TestSubmissionView):
             },
             format="json",
         )
-        content = json.loads(response.content)
         # FIXME clarify statuses, since 06.06.2019 edit on SUBMITTED Submission allowed (why ?)
         self.assertEqual(200, response.status_code)
 
