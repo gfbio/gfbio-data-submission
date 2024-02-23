@@ -138,13 +138,10 @@ class SubmissionDetailView(
             if instance.embargo != new_embargo:
                 instance.embargo = new_embargo
                 instance.save()
-                # update helpdesk
-                from ..tasks import (
-                    update_submission_issue_task,
-                    get_gfbio_helpdesk_username_task,
-                    update_ena_embargo_task,
-                    notify_user_embargo_changed_task,
-                )
+                from ..tasks.jira_tasks.update_submission_issue import update_submission_issue_task
+                from ..tasks.jira_tasks.get_gfbio_helpdesk_username import get_gfbio_helpdesk_username_task
+                from ..tasks.transfer_tasks.update_ena_embargo import update_ena_embargo_task
+                from ..tasks.jira_tasks.notify_user_embargo_changed import notify_user_embargo_changed_task
 
                 update_chain = (
                     get_gfbio_helpdesk_username_task.s(submission_id=instance.pk).set(countdown=SUBMISSION_DELAY)
