@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 import datetime
 
+from django.conf import settings
+
 from config.celery_app import app
 from gfbio_submissions.users.models import User
+from ...configuration.settings import JIRA_TICKET_URL
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
 from ...tasks.submission_task import SubmissionTask
@@ -14,9 +17,6 @@ from ...tasks.submission_task import SubmissionTask
     name="tasks.notify_curators_on_embargo_ends_task",
 )
 def notify_curators_on_embargo_ends_task(self):
-    from django.conf import settings
-    from .configuration.settings import JIRA_TICKET_URL
-
     TaskProgressReport.objects.create_initial_report(submission=None, task=self)
 
     results = []
