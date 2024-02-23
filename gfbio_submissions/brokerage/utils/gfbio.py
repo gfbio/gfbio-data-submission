@@ -65,6 +65,7 @@ def gfbio_prepare_create_helpdesk_payload(site_config, submission, reporter={}, 
         )
         authors_text += contributor if len(contributor.strip()) else ""
 
+    # TODO: add a non-empty default to prevent jira errors
     summary = requirements.get("title", "")
     # as requested in: GFBIO-2679 & DEVOPS-3
     # if len(summary) >= 45:

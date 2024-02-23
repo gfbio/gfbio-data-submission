@@ -10,7 +10,7 @@ from ...models.submission import Submission
 from ...models.submission_upload import SubmissionUpload
 from ...models.task_progress_report import TaskProgressReport
 from ...tasks.submission_task import SubmissionTask
-from ...utils.schema_validation import validate_atax_data_is_valid
+# from ...utils.schema_validation import validate_atax_data_is_valid
 
 logger = logging.getLogger(__name__)
 

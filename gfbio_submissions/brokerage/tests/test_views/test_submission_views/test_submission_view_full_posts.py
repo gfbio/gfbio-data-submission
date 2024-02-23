@@ -13,11 +13,10 @@ from rest_framework.test import APIClient
 from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.tests.utils import _get_submission_post_response, _get_submission_request_data
 from gfbio_submissions.users.models import User
-
+from .test_submission_view_base import TestSubmissionView
 from ....configuration.settings import ENA, GENERIC
 from ....models.submission import Submission
 from ....models.task_progress_report import TaskProgressReport
-from .test_submission_view_base import TestSubmissionView
 
 
 class TestSubmissionViewFullPosts(TestSubmissionView):
@@ -128,16 +127,8 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         )
         self.assertEqual(201, response.status_code)
         content = json.loads(response.content.decode("utf-8"))
-        # expected = _get_submission_post_response()
-        # expected['embargo'] = '{0}'.format(
-        #     datetime.date.today() + datetime.timedelta(days=365))
-        # expected['broker_submission_id'] = content['broker_submission_id']
-        # self.assertDictEqual(expected, content)
-        # self.assertNotIn('download_url', content['data']['requirements'].keys())
         self.assertEqual(1, len(Submission.objects.all()))
         submission = Submission.objects.first()
-        # self.assertEqual(UUID(expected['broker_submission_id']),
-        #                  submission.broker_submission_id)
         self.assertEqual(Submission.SUBMITTED, content.get("status", "NOPE"))
         self.assertEqual("", submission.download_url)
 
@@ -454,24 +445,6 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(1, len(Submission.objects.all()))
         submission = Submission.objects.first()
         self.assertEqual(url, submission.download_url)
-
-        # FIXME: Why extra PUT in this POST test ? Regression Test ?
-        # response = self.client.put(
-        #     '/api/submissions/{0}/'.format(
-        #         sub.broker_submission_id),
-        #     content_type='application/json',
-        #     data=json.dumps({
-        #         'target': 'ENA',
-        #         'data': new_data_copy,
-        #         'download_url': '{0}/{1}'.format(url, 'download'),
-        #     }), **VALID_USER)
-        # self.assertEqual(200, response.status_code)
-        # self.assertEqual(7, len(Submission.objects.all()))
-        # sub = Submission.objects.last()
-        # self.assertEqual('{0}/{1}'.format(url, 'download'),
-        #                  sub.download_url)
-
-    # TODO: test valid max post with embargo value in data
 
     def test_valid_max_post_with_invalid_min_data(self):
         self.assertEqual(0, len(Submission.objects.all()))
