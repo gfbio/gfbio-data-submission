@@ -73,8 +73,8 @@ app.autodiscover_tasks(
         'gfbio_submissions.brokerage.tasks.submission_tasks.check_for_submission_without_helpdesk_issue',
         'gfbio_submissions.brokerage.tasks.submission_tasks.check_issue_existing_for_submission',
         'gfbio_submissions.brokerage.tasks.submission_tasks.check_on_hold_status',
-        'gfbio_submissions.brokerage.tasks.atax_tasks.atax_submission_validate_xml_upload',
-        'gfbio_submissions.brokerage.tasks.atax_tasks.atax_submission_parse_csv_upload_to_xml',
-        'gfbio_submissions.brokerage.tasks.atax_tasks.atax_submission_combine_xmls_to_one_structure',
+        # 'gfbio_submissions.brokerage.tasks.atax_tasks.atax_submission_validate_xml_upload',
+        # 'gfbio_submissions.brokerage.tasks.atax_tasks.atax_submission_parse_csv_upload_to_xml',
+        # 'gfbio_submissions.brokerage.tasks.atax_tasks.atax_submission_combine_xmls_to_one_structure',
     ]
 )
