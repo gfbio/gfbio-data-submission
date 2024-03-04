@@ -5,4 +5,8 @@ from model_utils.models import TimeStampedModel
 
 
 class FieldType(TimeStampedModel):
-    type = models.CharField(max_length=32, blank=False, null=False)
+    # TODO: unique constaint ?
+    type = models.SlugField(max_length=32, blank=False, null=False)
+
+    def __str__(self):
+        return "{}_field_type".format(self.type)
