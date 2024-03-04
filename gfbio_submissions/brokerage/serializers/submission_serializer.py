@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
+from rest_framework import serializers
 
 from ..models.submission import Submission
 from ..utils.schema_validation import validate_data_full, validate_data_min
 
 
 @extend_schema_serializer(
-    examples = [
-         OpenApiExample(
+    examples=[
+        OpenApiExample(
             'Valid Submission',
             summary='Submission in requests',
             value={
@@ -61,7 +61,7 @@ from ..utils.schema_validation import validate_data_full, validate_data_min
             },
             request_only=True,
         ),
-         OpenApiExample(
+        OpenApiExample(
             'Valid Existing Submission',
             summary='Submission in requests',
             value={
@@ -106,12 +106,11 @@ from ..utils.schema_validation import validate_data_full, validate_data_min
                 "download_url": "https://www.example.de/study",
                 "accession_id": []
             },
-            response_only=True, # signal that example only applies to requests
+            response_only=True,  # signal that example only applies to requests
         ),
     ]
 )
 class SubmissionSerializer(serializers.ModelSerializer):
-    # site = serializers.ReadOnlyField(source='site.username')
     user = serializers.ReadOnlyField(source="user.username")
     broker_submission_id = serializers.UUIDField(required=False)
     download_url = serializers.URLField(required=False)
@@ -143,9 +142,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
         fields = (
             "broker_submission_id",
             "issue",
-            # 'site',
             "user",
-            # 'submitting_user',
             "target",
             "status",
             "release",
