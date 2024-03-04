@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from rest_framework import serializers
 
-from ..models.submission import Submission
 from .submission_serializer import SubmissionSerializer
+from ..models.submission import Submission
 from ..utils.schema_validation import (
     validate_contributors,
     validate_embargo,
@@ -13,20 +13,23 @@ from ..utils.schema_validation import (
 
 class SubmissionDetailSerializer(SubmissionSerializer):
     def validate(self, data):
+        target = data.get("target", "NO_TARGET_PROVIDED")
         # check contributors
         if data.get("data", {}):
+            # FIXME: this is VERY molecular/submission-ui specific and should not be validated on this general level
+            #    if needed anywayy , this should be done via JsonSchema or with dedicated code elsewhere
             valid, error = validate_contributors(data=data.get("data", {}))
             if not valid:
                 raise serializers.ValidationError({"data": error})
 
         # check embargo
         if data.get("embargo", None):
+            # FIXME: similar to problem with contributors, this should be done different/elsewhere
             valid, error = validate_embargo(data.get("embargo", None))
             if not valid:
                 raise serializers.ValidationError({"data": error})
 
         if data.get("release", False):
-            target = data.get("target", "NO_TARGET_PROVIDED")
             valid, errors = validate_data_full(data=data.get("data", {}), target=target)
             if not valid:
                 raise serializers.ValidationError({"data": [e.message for e in errors]})
@@ -34,7 +37,6 @@ class SubmissionDetailSerializer(SubmissionSerializer):
                 data["status"] = Submission.SUBMITTED
         else:
             valid, errors = validate_data_min(data.get("data", {}))
-            target = data.get("target", "NO_TARGET_PROVIDED")
             full_valid, full_errors = validate_data_full(data=data.get("data", {}), target=target)
             if not valid:
                 error_messages = [e.message for e in errors]
