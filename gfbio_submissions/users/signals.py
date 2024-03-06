@@ -10,9 +10,9 @@ def handle_user_login(sender, user, request, **kwargs):
     messages.info(
         request,
         mark_safe(
-            "The submission service is currently unavailable for submissions involving molecular data. "
+            "2024-03-06: The submission service is currently unavailable for submissions involving molecular data. "
             "This includes creating new molecular submissions, setting or modifying embargo dates of brokered "
-            "molecular submissions, and working on processing and running molecular submissions. <br /><br />"
+            "molecular submissions, and working on processing molecular submissions. <br /><br />"
             "We apologize for any inconvenience and are working to have the service running soon."
         ),
     )
