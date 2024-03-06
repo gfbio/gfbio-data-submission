@@ -15,7 +15,7 @@ class TestProfileSerializer(TestCase):
         TestProfile.setUpTestData()
         cls.profile = Profile.objects.create(name="profile-1")
         for f in Field.objects.all():
-            profile.fields.add(f)
+            cls.profile.fields.add(f)
 
     # TODO: may remove later
     def test_db_content(self):
@@ -24,5 +24,9 @@ class TestProfileSerializer(TestCase):
 
     def test_serializer(self):
         # https://www.django-rest-framework.org/api-guide/relations/#writable-nested-serializers
-        serializer = ProfileSerializer(data=cls.profile)
+        serializer = ProfileSerializer(data=self.profile)
+        valid = serializer.is_valid()
+        print(valid)
+        print(serializer.errors)
+
 

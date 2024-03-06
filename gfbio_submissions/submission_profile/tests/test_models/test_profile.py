@@ -13,9 +13,10 @@ class TestProfile(TestCase):
         field_type_1 = FieldType.objects.create(type="input-text")
         field_type_2 = FieldType.objects.create(type="select")
 
-        cls.field_1 = Field.objects.create(title="a text input", field_type=field_type_1)
-        cls.field_2 = Field.objects.create(title="a select field", field_type=field_type_2)
-        cls.field_3 = Field.objects.create(title="another text input", field_type=field_type_1)
+        cls.field_1 = Field.objects.create(title="a text input", description="Lorem ipsum", field_type=field_type_1)
+        cls.field_2 = Field.objects.create(title="a select field", description="Dolor sit", field_type=field_type_2)
+        cls.field_3 = Field.objects.create(title="another text input", description="Amet consectetur",
+                                           field_type=field_type_1)
 
     def test_simple_instance_creation(self):
         obj = Profile.objects.create(name="profile-1")

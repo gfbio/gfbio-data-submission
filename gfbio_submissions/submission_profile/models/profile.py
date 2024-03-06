@@ -7,7 +7,7 @@ from ...brokerage.models.submission import Submission
 
 
 class Profile(TimeStampedModel):
-    name = models.SlugField(max_length=32)
+    name = models.SlugField(max_length=16, unique=True)
 
     fields = models.ManyToManyField(Field)
     target = models.CharField(max_length=16, choices=Submission.TARGETS, default=GENERIC)
