@@ -51,7 +51,7 @@ app.autodiscover_tasks(
         'gfbio_submissions.brokerage.tasks.jira_tasks.delete_submission_issue_attachment',
         'gfbio_submissions.brokerage.tasks.jira_tasks.jira_initial_comment',
         'gfbio_submissions.brokerage.tasks.jira_tasks.create_pangaea_issue',
-        'gfbio_submissions.brokerage.tasks.jira_tasks.notify_user_embargo_expir',
+        'gfbio_submissions.brokerage.tasks.jira_tasks.notify_user_embargo_expiry',
         'gfbio_submissions.brokerage.tasks.submission_upload_tasks.clean_submission_for_update',
         'gfbio_submissions.brokerage.tasks.submission_upload_tasks.parse_csv_to_update_clean_submission',
         'gfbio_submissions.brokerage.tasks.transfer_tasks.validate_against_ena',

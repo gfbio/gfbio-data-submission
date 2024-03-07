@@ -576,7 +576,11 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         url = self._add_comment_reponses()
         responses.add(responses.POST, url, json={"bla": "blubb"}, status=200)
 
-        notify_user_embargo_expiry_task()
+        # notify_user_embargo_expiry_task()
+        notify_user_embargo_expiry_task.apply(
+            kwargs={
+            }
+        )
         pid = submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.filter().first()
 
         self.assertEqual(today.isoformat(), pid.user_notified.isoformat())
@@ -637,6 +641,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         url = self._add_comment_reponses()
         responses.add(responses.POST, url, json={"bla": "blubb"}, status=200)
 
+        # FIXME: not correct way to test a tasks, use apply  or similar
         r = notify_user_embargo_expiry_task()
         submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.filter().first()
 
