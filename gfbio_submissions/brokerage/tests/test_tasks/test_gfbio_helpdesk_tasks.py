@@ -642,7 +642,7 @@ class TestGFBioHelpDeskTasks(TestHelpDeskTasksBase):
         responses.add(responses.POST, url, json={"bla": "blubb"}, status=200)
 
         # FIXME: not correct way to test a tasks, use apply  or similar
-        r = notify_user_embargo_expiry_task.
+        r = notify_user_embargo_expiry_task()
         submission.brokerobject_set.filter(type="study").first().persistentidentifier_set.filter().first()
 
         self.assertIn("No notifications to send", r)
