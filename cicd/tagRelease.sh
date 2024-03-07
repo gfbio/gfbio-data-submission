@@ -19,6 +19,7 @@ if [ ${IS_PRODUCTION} -eq "1" ]; then
   nvm use 8
   cd userinterface && npm i && npm run collect-ci
   cd ../
+  nvm use default
   sed -i "s/VERSION =.*/VERSION ='$(git describe --tags | egrep -o '[0-9]+\.[0-9]+\.[0-9]+')'/g" config/settings/base.py
   docker-compose -f production.yml build
 
