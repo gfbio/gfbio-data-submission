@@ -10,10 +10,16 @@ COMMIT_SHA=`git rev-parse HEAD`
 IS_PRODUCTION=$(PRIVATE_TOKEN=${PRIVATE_TOKEN} COMMIT_SHA=${COMMIT_SHA} CI_PROJECT_ID=${CI_PROJECT_ID} ./cicd/tagProductionBranchCheck.py)
 
 if [ ${IS_PRODUCTION} -eq "1" ]; then
+  # load nvm
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
   # build
   rsync -a /home/gitlab-runner/.envs .
+  nvm use 8
   cd userinterface && npm i && npm run collect-ci
   cd ../
+  nvm use default
   sed -i "s/VERSION =.*/VERSION ='$(git describe --tags | egrep -o '[0-9]+\.[0-9]+\.[0-9]+')'/g" config/settings/base.py
   docker-compose -f production.yml build
 
