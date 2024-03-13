@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from django.urls import reverse
 from rest_framework import mixins, generics, status
 from rest_framework.response import Response
@@ -9,6 +11,8 @@ from gfbio_submissions.generic.serializers import JiraHookRequestSerializer
 from ..forms.jira_issue_update_query_form import JiraIssueUpdateQueryForm
 from ..permissions.api_allowed_hosts import APIAllowedHosts
 
+
+logger = logging.getLogger(__name__)
 
 class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
     permission_classes = (APIAllowedHosts,)
@@ -39,11 +43,19 @@ class JiraIssueUpdateView(mixins.CreateModelMixin, generics.GenericAPIView):
 
         if not is_valid:
             # in case of JiraHookRequestSerializer  errors:
+            logger.warn(
+                "JiraIssueUpdateView | not is_valid | errors={0} | "
+                "".format(serializer.errors)
+            )
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST, headers=headers)
 
         if not form_is_valid:
             # request came from blacklisted users
             # blacklist users: brokeragent
+            logger.warn(
+                "JiraIssueUpdateView | not form_is_valid | errors={0} | "
+                "".format(form.errors)
+            )
             return Response(form.errors, status=status.HTTP_400_BAD_REQUEST, headers=headers)
 
         obj = self.perform_create(serializer)
