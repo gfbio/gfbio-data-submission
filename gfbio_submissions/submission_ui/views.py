@@ -1,7 +1,9 @@
 import logging
 
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
+from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView
 from rest_framework.authtoken.models import Token
 
@@ -27,7 +29,17 @@ class SubmissionFrontendView(LoginRequiredMixin, TemplateView):
         user_name = user.get_username()
         user_email = user.email
 
-        token, created = Token.objects.get_or_create(user_id=user.id)
+        token, _ = Token.objects.get_or_create(user_id=user.id)
+
+        messages.info(
+            self.request,
+            mark_safe(
+                "2024-03-06: The submission service is currently unavailable for submissions involving molecular "
+                "data. This includes creating new molecular submissions, setting or modifying embargo dates of "
+                "brokered molecular submissions, and working on processing molecular submissions. <br /><br />"
+                "We apologize for any inconvenience and are working to have the service running soon."
+            ),
+        )
 
         context["parameters"] = {
             "userName": user_name,
