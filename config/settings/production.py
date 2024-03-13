@@ -205,8 +205,11 @@ SPECTACULAR_SETTINGS["SERVERS"] = [  # noqa F405
 # REST API Permissions
 # ------------------------------------------------------------------------------
 REST_SAFE_DOMAINS = [
-    'helpdesk.gfbio.org',
+#    'helpdesk.gfbio.org',
     'issues.pangaea.de',
+]
+REST_SAFE_LIST_IPS += [
+    '134.176.27.225', # external-ip of live-jumpserver for ticket-updates by submission-system
 ]
 
 # CORS Settings
