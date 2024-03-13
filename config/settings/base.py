@@ -93,6 +93,7 @@ LOCAL_APPS = [
     "gfbio_submissions.brokerage.apps.BrokerageConfig",
     "gfbio_submissions.generic.apps.GenericConfig",
     "gfbio_submissions.resolve.apps.ResolveConfig",
+    "gfbio_submissions.submission_profile.apps.SubmissionProfileConfig",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
