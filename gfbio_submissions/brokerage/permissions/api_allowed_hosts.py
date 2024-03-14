@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
+import logging
 
 from django.conf import settings
 from rest_framework import permissions
+
+logger = logging.getLogger(__name__)
 
 
 class APIAllowedHosts(permissions.BasePermission):
@@ -43,5 +46,10 @@ class APIAllowedHosts(permissions.BasePermission):
             for valid_ip in allowed_ip_list:
                 if remote_addr == valid_ip or remote_addr.startswith(valid_ip):
                     return True
+                
+        logger.warn(
+            "APIAllowedHosts | Invalid remote address | Failed attempt by {0} | "
+            "".format(remote_addr)
+        )
 
         return False
