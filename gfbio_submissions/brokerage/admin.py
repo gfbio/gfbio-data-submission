@@ -20,7 +20,7 @@ from .models.submission import Submission
 from .models.submission_upload import SubmissionUpload
 from .models.task_progress_report import TaskProgressReport
 from .utils.ena import release_study_on_ena
-from .utils.submission_transfer import SubmissionTransferHandler
+from .utils.submission_process import SubmissionProcessHandler
 from .utils.task_utils import jira_cancel_issue
 
 
@@ -79,8 +79,8 @@ def continue_release_submissions(modeladmin, request, queryset):
     for obj in queryset:
         # TODO: retrieving submission via manager is unneccessary, remove but test
         submission = Submission.objects.get(pk=obj.pk)
-        transfer_handler = SubmissionTransferHandler(submission_id=submission.pk, target_archive=submission.target)
-        transfer_handler.execute()
+        process_handler = SubmissionProcessHandler(submission_id=submission.pk, target_archive=submission.target)
+        process_handler.execute()
 
 
 continue_release_submissions.short_description = "Continue submission of selected Items"
@@ -174,7 +174,7 @@ download_auditable_text_data.short_description = "Download XMLs"
 
 
 def validate_against_ena(modeladmin, request, queryset):
-    from .tasks.transfer_tasks.validate_against_ena import validate_against_ena_task
+    from .tasks.process_tasks.validate_against_ena import validate_against_ena_task
 
     for obj in queryset:
         validate_against_ena_task.apply_async(kwargs={"submission_id": obj.pk}, countdown=SUBMISSION_DELAY)
@@ -184,7 +184,7 @@ validate_against_ena.short_description = "Validate against ENA production server
 
 
 def submit_to_ena_test(modeladmin, request, queryset):
-    from .tasks.transfer_tasks.submit_to_ena_test_server import submit_to_ena_test_server_task
+    from .tasks.process_tasks.submit_to_ena_test_server import submit_to_ena_test_server_task
 
     for obj in queryset:
         submit_to_ena_test_server_task.apply_async(
@@ -213,7 +213,7 @@ perform_assembly_submission.short_description = "Perform Assembly Submission"
 
 
 def modify_ena_objects_with_current_xml(modeladmin, request, queryset):
-    from .tasks.transfer_tasks.transfer_data_to_ena import transfer_data_to_ena_task
+    from .tasks.process_tasks.transfer_data_to_ena import transfer_data_to_ena_task
 
     for obj in queryset:
         transfer_data_to_ena_task.apply_async(
@@ -228,11 +228,11 @@ modify_ena_objects_with_current_xml.short_description = "Modify ENA objects with
 def perform_targeted_sequence_submission(modeladmin, request, queryset):
     from .tasks.broker_object_tasks.create_study_broker_objects_only import create_study_broker_objects_only_task
     from .tasks.auditable_text_data_tasks.prepare_ena_study_xml import prepare_ena_study_xml_task
-    from .tasks.transfer_tasks.register_study_at_ena import  register_study_at_ena_task
-    from .tasks.transfer_tasks.process_ena_response import process_ena_response_task
+    from .tasks.process_tasks.register_study_at_ena import  register_study_at_ena_task
+    from .tasks.process_tasks.process_ena_response import process_ena_response_task
     from .tasks.auditable_text_data_tasks.create_targeted_sequence_ena_manifest import create_targeted_sequence_ena_manifest_task
-    from .tasks.transfer_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
-    from .tasks.transfer_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
+    from .tasks.process_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
+    from .tasks.process_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
 
     for obj in queryset:
         chain = (
@@ -257,8 +257,8 @@ perform_targeted_sequence_submission.short_description = "Perform Targeted Seque
 def register_study_at_ena(modeladmin, request, queryset):
     from .tasks.broker_object_tasks.create_study_broker_objects_only import create_study_broker_objects_only_task
     from .tasks.auditable_text_data_tasks.prepare_ena_study_xml import prepare_ena_study_xml_task
-    from .tasks.transfer_tasks.register_study_at_ena import register_study_at_ena_task
-    from .tasks.transfer_tasks.process_ena_response import process_ena_response_task
+    from .tasks.process_tasks.register_study_at_ena import register_study_at_ena_task
+    from .tasks.process_tasks.process_ena_response import process_ena_response_task
 
     for obj in queryset:
         chain = (
@@ -290,8 +290,8 @@ prepare_manifest.short_description = "Prepare MANIFEST file"
 
 
 def submit_manifest_to_ena(modeladmin, request, queryset):
-    from .tasks.transfer_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
-    from .tasks.transfer_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
+    from .tasks.process_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
+    from .tasks.process_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
 
     for obj in queryset:
         chain = submit_targeted_sequences_to_ena_task.s(submission_id=obj.pk, do_test=False, do_validate=False).set(
@@ -304,8 +304,8 @@ submit_manifest_to_ena.short_description = "Submit MANIFEST file to ENA"
 
 
 def validate_manifest_at_ena(modeladmin, request, queryset):
-    from .tasks.transfer_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
-    from .tasks.transfer_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
+    from .tasks.process_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
+    from .tasks.process_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
 
     for obj in queryset:
         chain = submit_targeted_sequences_to_ena_task.s(submission_id=obj.pk, do_test=False, do_validate=True).set(

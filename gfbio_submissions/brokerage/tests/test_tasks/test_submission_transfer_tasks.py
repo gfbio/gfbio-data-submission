@@ -13,8 +13,8 @@ from ...models.broker_object import BrokerObject
 from ...models.persistent_identifier import PersistentIdentifier
 from ...models.submission import Submission
 from ...tasks.auditable_text_data_tasks.prepare_ena_submission_data import prepare_ena_submission_data_task
-from ...tasks.transfer_tasks.process_ena_response import process_ena_response_task
-from ...tasks.transfer_tasks.transfer_data_to_ena import transfer_data_to_ena_task
+from ...tasks.process_tasks.process_ena_response import process_ena_response_task
+from ...tasks.process_tasks.transfer_data_to_ena import transfer_data_to_ena_task
 from .test_tasks_base import TestTasks
 
 

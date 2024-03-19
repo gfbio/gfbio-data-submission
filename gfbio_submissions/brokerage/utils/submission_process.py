@@ -6,7 +6,7 @@ from ..configuration.settings import SUBMISSION_DELAY, ENA, ENA_PANGAEA
 logger = logging.getLogger(__name__)
 
 
-class SubmissionTransferHandler(object):
+class SubmissionProcessHandler(object):
     def __init__(
         self,
         submission_id,
@@ -30,6 +30,10 @@ class SubmissionTransferHandler(object):
         return create_broker_objects_from_submission_data_task.s(submission_id=self.submission_id).set(
             countdown=SUBMISSION_DELAY
         ) | prepare_ena_submission_data_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
+
+
+    def process_alpha_taxonomic_data_chain(self):
+        pass
 
     def initiate_submission_process(self, release=False, update=False):
         logger.info(
@@ -74,10 +78,10 @@ class SubmissionTransferHandler(object):
             "SubmissionTransferHandler. execute_submission_to_ena. target_archive={}".format(self.target_archive)
         )
 
-        from ..tasks.transfer_tasks.transfer_data_to_ena import (
+        from ..tasks.process_tasks.transfer_data_to_ena import (
             transfer_data_to_ena_task,
         )
-        from ..tasks.transfer_tasks.process_ena_response import (
+        from ..tasks.process_tasks.process_ena_response import (
             process_ena_response_task,
         )
         from ..tasks.jira_tasks.add_accession_to_submission_issue import (
@@ -106,10 +110,10 @@ class SubmissionTransferHandler(object):
             )
         )
 
-        from ..tasks.transfer_tasks.transfer_data_to_ena import (
+        from ..tasks.process_tasks.transfer_data_to_ena import (
             transfer_data_to_ena_task,
         )
-        from ..tasks.transfer_tasks.process_ena_response import (
+        from ..tasks.process_tasks.process_ena_response import (
             process_ena_response_task,
         )
         from ..tasks.jira_tasks.add_accession_to_submission_issue import (

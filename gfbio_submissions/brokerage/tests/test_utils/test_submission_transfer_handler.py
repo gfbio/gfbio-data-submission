@@ -19,12 +19,11 @@ from gfbio_submissions.brokerage.tests.utils import (
     _get_pangaea_soap_response,
     _get_pangaea_ticket_response,
 )
-from gfbio_submissions.brokerage.utils.submission_transfer import SubmissionTransferHandler
+from gfbio_submissions.brokerage.utils.submission_process import SubmissionProcessHandler
 from gfbio_submissions.brokerage.utils.task_utils import get_submission_and_site_configuration
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
-
 from ...configuration.settings import JIRA_ATTACHMENT_SUB_URL, JIRA_COMMENT_SUB_URL, JIRA_ISSUE_URL
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
@@ -61,10 +60,10 @@ class TestSubmissionTransferHandler(TestCase):
 
     def test_instance(self):
         submission = Submission.objects.first()
-        transfer_handler = SubmissionTransferHandler(submission_id=submission.pk, target_archive="ENA")
-        self.assertIsInstance(transfer_handler, SubmissionTransferHandler)
-        self.assertEqual(submission.pk, transfer_handler.submission_id)
-        self.assertEqual("ENA", transfer_handler.target_archive)
+        process_handler = SubmissionProcessHandler(submission_id=submission.pk, target_archive="ENA")
+        self.assertIsInstance(process_handler, SubmissionProcessHandler)
+        self.assertEqual(submission.pk, process_handler.submission_id)
+        self.assertEqual("ENA", process_handler.target_archive)
 
     def test_get_submission_and_siteconfig_for_task(self):
         submission = Submission.objects.first()
@@ -82,7 +81,7 @@ class TestSubmissionTransferHandler(TestCase):
         "currently this method is not supposed to rise an exception, " "so task.chain can proceed in a controlled way"
     )
     def test_invalid_submission_id(self):
-        with self.assertRaises(SubmissionTransferHandler.TransferInternalError):
+        with self.assertRaises(SubmissionProcessHandler.TransferInternalError):
             sub, conf = get_submission_and_site_configuration(submission_id=99)
 
     def test_no_site_config(self):
@@ -150,10 +149,10 @@ class TestSubmissionTransferHandler(TestCase):
             JIRA_COMMENT_SUB_URL,
         )
         responses.add(responses.POST, url, json={"bla": "blubb"}, status=200)
-        sth = SubmissionTransferHandler(submission_id=submission.pk, target_archive="ENA")
+        sph = SubmissionProcessHandler(submission_id=submission.pk, target_archive="ENA")
         tprs = TaskProgressReport.objects.exclude(task_name="tasks.update_helpdesk_ticket_task")
         self.assertEqual(0, len(tprs))
-        sth.execute_submission_to_ena()
+        sph.execute_submission_to_ena()
         tprs = TaskProgressReport.objects.exclude(task_name="tasks.update_helpdesk_ticket_task")
         self.assertLess(0, len(tprs))
 
@@ -216,8 +215,8 @@ class TestSubmissionTransferHandler(TestCase):
             json=_get_pangaea_comment_response(),
             status=200,
         )
-        sth = SubmissionTransferHandler(submission_id=submission.pk, target_archive="ENA_PANGAEA")
-        sth.execute_submission_to_ena_and_pangaea()
+        sph = SubmissionProcessHandler(submission_id=submission.pk, target_archive="ENA_PANGAEA")
+        sph.execute_submission_to_ena_and_pangaea()
         # self.assertLess(0, len(TaskProgressReport.objects.all()))
         task_reports = TaskProgressReport.objects.all()
 

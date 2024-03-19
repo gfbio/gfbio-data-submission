@@ -48,7 +48,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         self.assertEqual(ENA, submission.target)
         expected_tasks = [
             "tasks.check_for_molecular_content_in_submission_task",
-            "tasks.trigger_submission_transfer",
+            "tasks.trigger_submission_process",
             "tasks.get_gfbio_helpdesk_username_task",
             "tasks.create_submission_issue_task",
             "tasks.jira_initial_comment_task",
@@ -114,14 +114,14 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         self.assertEqual(ENA, submission.target)
         expected_tasks = [
             "tasks.check_for_molecular_content_in_submission_task",
-            "tasks.trigger_submission_transfer",
+            "tasks.trigger_submission_process",
             "tasks.check_on_hold_status_task",
             "tasks.get_gfbio_helpdesk_username_task",
             "tasks.create_submission_issue_task",
             "tasks.jira_initial_comment_task",
             "tasks.update_submission_issue_task",
             "tasks.update_helpdesk_ticket_task",  # x2
-            "tasks.trigger_submission_transfer_for_updates",
+            "tasks.trigger_submission_process_for_updates",
             "tasks.create_broker_objects_from_submission_data_task",
             "tasks.prepare_ena_submission_data_task",
             "tasks.check_issue_existing_for_submission_task",
@@ -182,7 +182,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
         self.assertEqual(ENA, submission.target)
         expected_tasks = [
             "tasks.check_for_molecular_content_in_submission_task",
-            "tasks.trigger_submission_transfer",
+            "tasks.trigger_submission_process",
             "tasks.create_broker_objects_from_submission_data_task",
             "tasks.prepare_ena_submission_data_task",
             "tasks.get_gfbio_helpdesk_username_task",
@@ -190,7 +190,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             "tasks.jira_initial_comment_task",
             "tasks.update_submission_issue_task",
             "tasks.update_helpdesk_ticket_task",
-            "tasks.trigger_submission_transfer_for_updates",
+            "tasks.trigger_submission_process_for_updates",
             "tasks.check_on_hold_status_task",
             "tasks.check_issue_existing_for_submission_task",
         ]
@@ -250,13 +250,13 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             "tasks.check_for_molecular_content_in_submission_task",
             "tasks.create_broker_objects_from_submission_data_task",
             "tasks.prepare_ena_submission_data_task",
-            "tasks.trigger_submission_transfer",
+            "tasks.trigger_submission_process",
             "tasks.get_gfbio_helpdesk_username_task",
             "tasks.create_submission_issue_task",
             "tasks.jira_initial_comment_task",
             "tasks.update_submission_issue_task",
             "tasks.update_helpdesk_ticket_task",
-            "tasks.trigger_submission_transfer_for_updates",
+            "tasks.trigger_submission_process_for_updates",
             "tasks.check_on_hold_status_task",
             "tasks.check_issue_existing_for_submission_task",
         ]

@@ -8,18 +8,18 @@ from ...models.task_progress_report import TaskProgressReport
 logger = logging.getLogger(__name__)
 
 from ...tasks.submission_task import SubmissionTask
-from ...utils.submission_transfer import SubmissionTransferHandler
+from ...utils.submission_process import SubmissionProcessHandler
 from ...utils.task_utils import get_submission_and_site_configuration
 
-# FIXME: redundant/duplicate code with trigger_submission_transfer_for_updates. Refactor !
+# FIXME: redundant/duplicate code with trigger_submission_process_for_updates. Refactor !
 
 
 @app.task(
     base=SubmissionTask,
     bind=True,
-    name="tasks.trigger_submission_transfer_for_updates",
+    name="tasks.trigger_submission_process_for_updates",
 )
-def trigger_submission_transfer_for_updates_task(self, previous_task_result=None, broker_submission_id=None):
+def trigger_submission_process_for_updates_task(self, previous_task_result=None, broker_submission_id=None):
     molecular_data_available = False
     check_performed = False
     messages = []
@@ -29,7 +29,7 @@ def trigger_submission_transfer_for_updates_task(self, previous_task_result=None
         messages = previous_task_result.get("messages", [])
 
     logger.info(
-        msg="trigger_submission_transfer_for_updates. get submission_id with broker_submission_id={}.".format(
+        msg="trigger_submission_process_for_updates. get submission_id with broker_submission_id={}.".format(
             broker_submission_id
         )
     )
@@ -37,7 +37,7 @@ def trigger_submission_transfer_for_updates_task(self, previous_task_result=None
 
     if len(messages):
         logger.warning(
-            "tasks.py | trigger_submission_transfer | "
+            "tasks.py | trigger_submission_process | "
             "previous task reported error messages={0} | "
             "submission_id={1}".format(messages, submission_id)
         )
@@ -48,13 +48,13 @@ def trigger_submission_transfer_for_updates_task(self, previous_task_result=None
     if submission == TaskProgressReport.CANCELLED:
         return TaskProgressReport.CANCELLED
 
-    transfer_handler = SubmissionTransferHandler(
+    process_handler = SubmissionProcessHandler(
         submission_id=submission.pk,
         target_archive=submission.target,
         molecular_data_found=molecular_data_available,
         molecular_data_check_performed=check_performed,
     )
-    transfer_handler.initiate_submission_process(
+    process_handler.initiate_submission_process(
         release=submission.release,
         update=True,
     )
