@@ -8,14 +8,22 @@ from gfbio_submissions.brokerage.tests.utils import (
     _create_submission_via_serializer, _get_test_data_dir_path,
 )
 from gfbio_submissions.users.models import User
+from ...configuration.settings import GENERIC
 from ...models.auditable_text_data import AuditableTextData
 from ...models.submission import Submission
 from ...models.submission_upload import SubmissionUpload
 from ...models.task_progress_report import TaskProgressReport
 from ...tasks.atax_tasks.parse_atax_uploads import parse_atax_uploads_task
+from ...tasks.atax_tasks.validate_merged_atax_data import validate_merged_atax_data_task
 
 
 class TestAtaxSubmissionTasks(TestCase):
+
+    def _create_unreleased_submission(self):
+        submission = _create_submission_via_serializer(username=self.user.name, create_broker_objects=False, atax=True)
+        submission.release = False
+        submission.save()
+        return submission
 
     @classmethod
     def create_csv_submission_upload(cls, submission, user, name="csv_files/upload_alphataxonomic_data.csv",
@@ -62,12 +70,60 @@ class TestAtaxSubmissionTasks(TestCase):
         self.assertTrue(res)
         text_data = AuditableTextData.objects.all()
         self.assertEqual(len(text_data), len(submission.auditabletextdata_set.all()))
+        for a in submission.auditabletextdata_set.all():
+            print(a.text_data)
+
+    def test_validate_merged_atax_data_task(self):
+        submission = Submission.objects.first()
+        parse_atax_uploads_task.apply_async(
+            kwargs={"submission_id": submission.pk}
+        )
+        result = validate_merged_atax_data_task.apply_async(
+            kwargs={"submission_id": submission.pk}
+        )
+        self.assertTrue(result.successful())
+        res = result.get()
+        self.assertTrue(res)
+        # text_data = AuditableTextData.objects.all()
+        # self.assertEqual(len(text_data), len(submission.auditabletextdata_set.all()))
+
 
     def test_parse_uploads_task_for_unreleased_submission(self):
-        submission = _create_submission_via_serializer(username=self.user.name, create_broker_objects=False, atax=True)
-        submission.release = False
+        submission = self._create_unreleased_submission()
+        result = parse_atax_uploads_task.apply_async(
+            kwargs={"submission_id": submission.pk}
+        )
+        self.assertTrue(result.successful())
+        res = result.get()
+        self.assertEqual(TaskProgressReport.CANCELLED, res)
+
+    def test_parse_uploads_task_for_non_atx_submission(self):
+        submission = self._create_unreleased_submission()
+        submission.release = True
+        submission.target = GENERIC
         submission.save()
         result = parse_atax_uploads_task.apply_async(
+            kwargs={"submission_id": submission.pk}
+        )
+        self.assertTrue(result.successful())
+        res = result.get()
+        self.assertEqual(TaskProgressReport.CANCELLED, res)
+
+    def test_validate_merged_data_task_for_unreleased_submission(self):
+        submission = self._create_unreleased_submission()
+        result = validate_merged_atax_data_task.apply_async(
+            kwargs={"submission_id": submission.pk}
+        )
+        self.assertTrue(result.successful())
+        res = result.get()
+        self.assertEqual(TaskProgressReport.CANCELLED, res)
+
+    def test_validate_merged_data_task_for_non_atx_submission(self):
+        submission = self._create_unreleased_submission()
+        submission.release = True
+        submission.target = GENERIC
+        submission.save()
+        result = validate_merged_atax_data_task.apply_async(
             kwargs={"submission_id": submission.pk}
         )
         self.assertTrue(result.successful())

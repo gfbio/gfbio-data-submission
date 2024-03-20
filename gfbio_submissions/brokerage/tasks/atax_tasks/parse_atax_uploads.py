@@ -8,6 +8,7 @@ from django.db import transaction
 from django.utils.encoding import smart_str
 
 from config.celery_app import app
+from ...configuration.settings import ATAX
 from ...models.auditable_text_data import AuditableTextData
 from ...models.task_progress_report import TaskProgressReport
 from ...tasks.submission_task import SubmissionTask
@@ -56,6 +57,15 @@ def dumb_bruteforce_csv_to_xml(file_path):
         return xml_string
 
 
+# TODO: remove and replace with proper atx specific csv to xml metho
+def store_atx_xml_to_auditable_text_data(submission):
+    for upload in submission.submissionupload_set.all():
+        xml_string = dumb_bruteforce_csv_to_xml(upload.file.path)
+        dom = xml.dom.minidom.parseString(xml_string)
+        with transaction.atomic():
+            AuditableTextData.objects.create(name=upload.file.name, submission=submission, text_data=dom.toprettyxml())
+
+
 @app.task(
     base=SubmissionTask,
     bind=True,
@@ -77,19 +87,14 @@ def parse_atax_uploads_task(
 
     submission = get_submission(submission_id=submission_id, task=self, include_closed=True)
 
-    if not submission.release:
+    if not submission.release or submission.target != ATAX:
         logger.warning(
             "parse_atax_uploads.py | parse_atax_uploads_task | "
-            "trying to parse files of unreleased submission | release={0} | "
-            "submission_id={1}".format(submission.release, submission.id)
+            "trying to parse files of unreleased submission OR wrong target | release={0} | target={1}"
+            "submission_id={2}".format(submission.release, submission.target, submission.id)
         )
         return TaskProgressReport.CANCELLED
 
-    for upload in submission.submissionupload_set.all():
-        # TODO: remove and replace with proper atx specific csv to xml method
-        xml_string = dumb_bruteforce_csv_to_xml(upload.file.path)
-        dom = xml.dom.minidom.parseString(xml_string)
-        with transaction.atomic():
-            AuditableTextData.objects.create(name=upload.file.name, submission=submission, text_data=dom.toprettyxml())
+    store_atx_xml_to_auditable_text_data(submission)
 
     return True
