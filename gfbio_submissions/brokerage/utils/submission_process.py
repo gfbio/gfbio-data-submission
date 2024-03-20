@@ -33,6 +33,7 @@ class SubmissionProcessHandler(object):
 
 
     def process_alpha_taxonomic_data_chain(self):
+        # TODO: add call for alpha_taxonomic chains here, analog to building molecular chain
         pass
 
     def initiate_submission_process(self, release=False, update=False):

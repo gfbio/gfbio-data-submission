@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
+import os
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.tests.utils import (
-    _create_submission_via_serializer,
+    _create_submission_via_serializer, _get_test_data_dir_path,
 )
 from gfbio_submissions.users.models import User
 from ...models import submission
@@ -15,6 +16,16 @@ from ...tasks.atax_tasks.parse_atax_uploads import parse_atax_uploads_task
 
 
 class TestAtaxSubmissionTasks(TestCase):
+
+    @classmethod
+    def create_csv_submission_upload(cls, submission, user, file_sub_path="csv_files/specimen_table_Platypelis.csv"):
+        with open(os.path.join(_get_test_data_dir_path(), file_sub_path), "rb") as data_file:
+            return SubmissionUpload.objects.create(
+                submission=submission,
+                user=user,
+                meta_data=True,
+                file=SimpleUploadedFile("csv_files/upload_alphataxonomic_data.csv", data_file.read()),
+            )
     @classmethod
     def setUpTestData(cls):
         # TODO: add realword  taxonomics csv data here
@@ -28,20 +39,23 @@ class TestAtaxSubmissionTasks(TestCase):
             user=cls.user,
             file=simple_file,
         )
-        simple_file = SimpleUploadedFile("test_upload_2.csv", b"these are the file contents!")
-        SubmissionUpload.objects.create(
-            submission=submission,
-            user=cls.user,
-            file=simple_file,
-        )
-        simple_file = SimpleUploadedFile("test_upload_3.csv", b"these are the file contents!")
-        SubmissionUpload.objects.create(
-            submission=submission,
-            user=cls.user,
-            file=simple_file,
-        )
+        # simple_file = SimpleUploadedFile("test_upload_2.csv", b"these are the file contents!")
+        # SubmissionUpload.objects.create(
+        #     submission=submission,
+        #     user=cls.user,
+        #     file=simple_file,
+        # )
+        # simple_file = SimpleUploadedFile("test_upload_3.csv", b"these are the file contents!")
+        # SubmissionUpload.objects.create(
+        #     submission=submission,
+        #     user=cls.user,
+        #     file=simple_file,
+        # )
+        cls.create_csv_submission_upload(submission=submission, user=cls.user)
+        cls.create_csv_submission_upload(submission=submission, user=cls.user, file_sub_path="csv_files/specimen_table_Platypelis_with_error.csv")
 
     def test_db_content(self):
+        self.assertEqual(1, len(Submission.objects.all()))
         submission = Submission.objects.first()
         self.assertEqual("user1", submission.user.username)
         uploads = submission.submissionupload_set.all()
