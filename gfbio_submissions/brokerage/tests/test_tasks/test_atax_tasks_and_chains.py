@@ -8,7 +8,7 @@ from gfbio_submissions.brokerage.tests.utils import (
     _create_submission_via_serializer, _get_test_data_dir_path,
 )
 from gfbio_submissions.users.models import User
-from ...models import submission
+from ...models.auditable_text_data import AuditableTextData
 from ...models.submission import Submission
 from ...models.submission_upload import SubmissionUpload
 from ...models.task_progress_report import TaskProgressReport
@@ -18,17 +18,18 @@ from ...tasks.atax_tasks.parse_atax_uploads import parse_atax_uploads_task
 class TestAtaxSubmissionTasks(TestCase):
 
     @classmethod
-    def create_csv_submission_upload(cls, submission, user, file_sub_path="csv_files/specimen_table_Platypelis.csv"):
+    def create_csv_submission_upload(cls, submission, user, name="csv_files/upload_alphataxonomic_data.csv",
+                                     file_sub_path="csv_files/specimen_table_Platypelis.csv"):
         with open(os.path.join(_get_test_data_dir_path(), file_sub_path), "rb") as data_file:
             return SubmissionUpload.objects.create(
                 submission=submission,
                 user=user,
                 meta_data=True,
-                file=SimpleUploadedFile("csv_files/upload_alphataxonomic_data.csv", data_file.read()),
+                file=SimpleUploadedFile(name, data_file.read()),
             )
+
     @classmethod
     def setUpTestData(cls):
-        # TODO: add realword  taxonomics csv data here
         cls.user = User.objects.create(username="user1")
         submission = _create_submission_via_serializer(username=cls.user.name, create_broker_objects=False, atax=True)
         submission.release = True
@@ -39,20 +40,10 @@ class TestAtaxSubmissionTasks(TestCase):
             user=cls.user,
             file=simple_file,
         )
-        # simple_file = SimpleUploadedFile("test_upload_2.csv", b"these are the file contents!")
-        # SubmissionUpload.objects.create(
-        #     submission=submission,
-        #     user=cls.user,
-        #     file=simple_file,
-        # )
-        # simple_file = SimpleUploadedFile("test_upload_3.csv", b"these are the file contents!")
-        # SubmissionUpload.objects.create(
-        #     submission=submission,
-        #     user=cls.user,
-        #     file=simple_file,
-        # )
         cls.create_csv_submission_upload(submission=submission, user=cls.user)
-        cls.create_csv_submission_upload(submission=submission, user=cls.user, file_sub_path="csv_files/specimen_table_Platypelis_with_error.csv")
+        cls.create_csv_submission_upload(submission=submission, name="csv_files/upload_alphataxonomic_data_error.csv",
+                                         user=cls.user,
+                                         file_sub_path="csv_files/specimen_table_Platypelis_with_error.csv")
 
     def test_db_content(self):
         self.assertEqual(1, len(Submission.objects.all()))
@@ -68,7 +59,9 @@ class TestAtaxSubmissionTasks(TestCase):
         )
         self.assertTrue(result.successful())
         res = result.get()
-        print(res)
+        self.assertTrue(res)
+        text_data = AuditableTextData.objects.all()
+        self.assertEqual(len(text_data), len(submission.auditabletextdata_set.all()))
 
     def test_parse_uploads_task_for_unreleased_submission(self):
         submission = _create_submission_via_serializer(username=self.user.name, create_broker_objects=False, atax=True)

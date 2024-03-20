@@ -1,24 +1,26 @@
 # -*- coding: utf-8 -*-
 import csv
 import logging
-import unicodedata
-import xml.etree.ElementTree as ET
 import xml.dom.minidom
+import xml.etree.ElementTree as ET
+
+from django.db import transaction
 from django.utils.encoding import smart_str
 
 from config.celery_app import app
+from ...models.auditable_text_data import AuditableTextData
 from ...models.task_progress_report import TaskProgressReport
 from ...tasks.submission_task import SubmissionTask
 from ...utils.task_utils import get_submission
 
 logger = logging.getLogger(__name__)
 
+
 # TODO: this is just a placeholder to get some sort of xml from the test-data.
 #  REMOVE once a proper parsing has been added
 def dumb_bruteforce_csv_to_xml(file_path):
     with open(file_path, 'rt') as upload_file:
         header = upload_file.readline()
-        print(header)
         dialect = csv.Sniffer().sniff(smart_str(header))
         upload_file.seek(0)
         delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ","
@@ -53,6 +55,7 @@ def dumb_bruteforce_csv_to_xml(file_path):
         # xml_string = unicodedata.normalize('NFKD', ET.tostring(xml_root, encoding="unicode", method="xml")).encode('ascii', 'ignore')
         return xml_string
 
+
 @app.task(
     base=SubmissionTask,
     bind=True,
@@ -82,22 +85,11 @@ def parse_atax_uploads_task(
         )
         return TaskProgressReport.CANCELLED
 
-    # ----- TODO ---- move to module(s)
-
     for upload in submission.submissionupload_set.all():
-        print('\n', upload, ' --------------------------------------------')
+        # TODO: remove and replace with proper atx specific csv to xml method
         xml_string = dumb_bruteforce_csv_to_xml(upload.file.path)
+        dom = xml.dom.minidom.parseString(xml_string)
+        with transaction.atomic():
+            AuditableTextData.objects.create(name=upload.file.name, submission=submission, text_data=dom.toprettyxml())
 
-    # ----- TODO ---- END move to module(s)
-
-    # DONE - TODO: submission has to be released=True
-    # DONE (more would be better) - TODO: extend testdata to real taxonimics csvs (test_data ? new examples from miguel ?)
-    # TODO: iterate all uploads associated to this submission
-    # TODO: content of every file has to be parsed to XML
-    # TODO: store content in AuditableTextData associated to submission
-    # TODO: return taskresult suitble to be use in atax chain
-    # TODO: add new tasks to celery app list for (auto)discover
-    return True, submission.broker_submission_id
-
-
-
+    return True
