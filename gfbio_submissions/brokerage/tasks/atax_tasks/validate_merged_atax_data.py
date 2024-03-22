@@ -73,4 +73,4 @@ def validate_merged_atax_data_task(self,
     # TODO: add to workflow in SubmissionProcessHandler
     # tODO: then close ticket sofar
 
-    return True
+    return valid, errors

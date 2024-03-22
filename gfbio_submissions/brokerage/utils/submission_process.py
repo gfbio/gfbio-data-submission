@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from ..configuration.settings import SUBMISSION_DELAY, ENA, ENA_PANGAEA
+from ..configuration.settings import SUBMISSION_DELAY, ENA, ENA_PANGAEA, ATAX
+from ..tasks.atax_tasks.parse_atax_uploads import parse_atax_uploads_task
+from ..tasks.atax_tasks.validate_merged_atax_data import validate_merged_atax_data_task
 
 logger = logging.getLogger(__name__)
 
@@ -31,10 +33,33 @@ class SubmissionProcessHandler(object):
             countdown=SUBMISSION_DELAY
         ) | prepare_ena_submission_data_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
 
+    def add_molecular_data_tasks_to_chain(self, chain, release, update):
+        if update and release:
+            logger.info(
+                "SubmissionTransferHandler. target_archive={0} trigger "
+                "create_broker_objects_from_submission_data_task and "
+                "prepare_ena_submission_data_task"
+                "".format(self.target_archive)
+            )
 
-    def process_alpha_taxonomic_data_chain(self):
-        # TODO: add call for alpha_taxonomic chains here, analog to building molecular chain
-        pass
+            if not self.molecular_data_check_performed or (
+                self.molecular_data_check_performed and self.molecular_data_found
+            ):
+                chain = chain | self.pre_process_molecular_data_chain()
+
+        elif not update and release:
+            if not self.molecular_data_check_performed or (
+                self.molecular_data_check_performed and self.molecular_data_found
+            ):
+                chain = chain | self.pre_process_molecular_data_chain()
+        return chain
+
+    def add_alpha_taxonomic_data_tasks_to_chain(self, chain):
+        return chain | parse_atax_uploads_task.s(submission_id=self.submission_id).set(
+            countdown=SUBMISSION_DELAY
+        ) | validate_merged_atax_data_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
+
+
 
     def initiate_submission_process(self, release=False, update=False):
         logger.info(
@@ -47,31 +72,26 @@ class SubmissionProcessHandler(object):
 
         logger.info("SubmissionTransferHandler. update={0} release={1}" "".format(update, release))
 
-        if update and release:
-            chain = check_on_hold_status_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
-            if self.target_archive == ENA or self.target_archive == ENA_PANGAEA:
-                logger.info(
-                    "SubmissionTransferHandler. target_archive={0} trigger "
-                    "create_broker_objects_from_submission_data_task and "
-                    "prepare_ena_submission_data_task"
-                    "".format(self.target_archive)
-                )
+        chain = check_on_hold_status_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
 
-                if not self.molecular_data_check_performed or (
-                    self.molecular_data_check_performed and self.molecular_data_found
-                ):
-                    chain = chain | self.pre_process_molecular_data_chain()
-
-        elif not update and release:
-            chain = check_on_hold_status_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
-            if self.target_archive == ENA or self.target_archive == ENA_PANGAEA:
-                if not self.molecular_data_check_performed or (
-                    self.molecular_data_check_performed and self.molecular_data_found
-                ):
-                    chain = chain | self.pre_process_molecular_data_chain()
-        else:
-            return None
+        if self.target_archive == ENA or self.target_archive == ENA_PANGAEA:
+            logger.info(
+                "SubmissionTransferHandler. target_archive={0} | "
+                "add_molecular_data_tasks_to_chain ".format(self.target_archive)
+            )
+            chain = self.add_molecular_data_tasks_to_chain(chain, release, update)
+        elif self.target_archive == ATAX:
+            logger.info(
+                "SubmissionTransferHandler. target_archive={0} | "
+                "add_alpha_taxonomic_data_tasks_to_chain ".format(self.target_archive)
+            )
+            chain = self.add_alpha_taxonomic_data_tasks_to_chain(chain)
+        logger.info(
+            "SubmissionTransferHandler. target_archive={0} | "
+            "execute chain() ".format(self.target_archive)
+        )
         chain()
+
 
     # TODO: SUBMISSION_DELAY also in site_config (inclundung delay and max retries) ?
     def execute_submission_to_ena(self):
