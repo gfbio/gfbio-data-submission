@@ -29,7 +29,6 @@ class SubmissionFrontendView(LoginRequiredMixin, TemplateView):
 
         token, _ = Token.objects.get_or_create(user_id=user.id)
 
-
         context["parameters"] = {
             "userName": user_name,
             "userRealName": user.name,
