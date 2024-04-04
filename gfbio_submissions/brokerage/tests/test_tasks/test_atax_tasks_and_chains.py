@@ -82,11 +82,9 @@ class TestAtaxSubmissionTasks(TestCase):
             kwargs={"submission_id": submission.pk}
         )
         self.assertTrue(result.successful())
-        res = result.get()
-        self.assertTrue(res)
-        # text_data = AuditableTextData.objects.all()
-        # self.assertEqual(len(text_data), len(submission.auditabletextdata_set.all()))
-
+        valid, errors = result.get()
+        self.assertFalse(valid)
+        self.assertIsInstance(errors, list)
 
     def test_parse_uploads_task_for_unreleased_submission(self):
         submission = self._create_unreleased_submission()
