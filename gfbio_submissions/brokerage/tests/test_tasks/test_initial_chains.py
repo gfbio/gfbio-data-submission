@@ -107,8 +107,9 @@ class TestInitialChainTasks(TestCase):
             "tasks.check_for_molecular_content_in_submission_task",
             "tasks.trigger_submission_process",
             "tasks.check_issue_existing_for_submission_task",
+            "tasks.check_on_hold_status_task",
         ]
-        self.assertEqual(6, len(task_reports))
+        self.assertEqual(7, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -142,8 +143,9 @@ class TestInitialChainTasks(TestCase):
             "tasks.check_for_molecular_content_in_submission_task",
             "tasks.trigger_submission_process",
             "tasks.check_issue_existing_for_submission_task",
+            "tasks.check_on_hold_status_task",
         ]
-        self.assertEqual(6, len(task_reports))
+        self.assertEqual(7, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -209,8 +211,9 @@ class TestInitialChainTasks(TestCase):
             "tasks.check_for_molecular_content_in_submission_task",
             "tasks.trigger_submission_process",
             "tasks.check_issue_existing_for_submission_task",
+            "tasks.check_on_hold_status_task"
         ]
-        self.assertEqual(6, len(task_reports))
+        self.assertEqual(7, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -262,9 +265,11 @@ class TestInitialChainTasks(TestCase):
             "tasks.trigger_submission_process_for_updates",
             "tasks.update_helpdesk_ticket_task",
             "tasks.check_issue_existing_for_submission_task",
+            "tasks.check_on_hold_status_task",
         ]
-        self.assertEqual(10, len(task_reports))
+        self.assertEqual(12, len(task_reports))
         for t in task_reports:
+            # print(t.task_name)
             self.assertIn(t.task_name, expected_tasknames)
 
     @responses.activate
