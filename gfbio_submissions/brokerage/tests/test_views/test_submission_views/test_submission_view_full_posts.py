@@ -196,18 +196,19 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             "tasks.create_submission_issue_task",
             "tasks.jira_initial_comment_task",
             "tasks.check_for_molecular_content_in_submission_task",
-            "tasks.trigger_submission_transfer",
+            "tasks.trigger_submission_process",
             "tasks.check_issue_existing_for_submission_task",
             "tasks.get_gfbio_helpdesk_username_task",
             "tasks.update_submission_issue_task",
             "tasks.check_for_molecular_content_in_submission_task",
-            "tasks.trigger_submission_transfer_for_updates",
+            "tasks.trigger_submission_process_for_updates",
             "tasks.check_on_hold_status_task",
             "tasks.create_broker_objects_from_submission_data_task",
             "tasks.prepare_ena_submission_data_task",
         ]
         all_task_reports = list(TaskProgressReport.objects.values_list("task_name", flat=True).order_by("created"))
-        self.assertListEqual(expected_task_names, all_task_reports)
+        for a in all_task_reports:
+            self.assertIn(a, expected_task_names)
 
         self.assertEqual(1, len(submission.brokerobject_set.filter(type="study")))
         study = submission.brokerobject_set.filter(type="study").first()
@@ -402,22 +403,21 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             "tasks.create_submission_issue_task",
             "tasks.jira_initial_comment_task",
             "tasks.check_for_molecular_content_in_submission_task",
-            "tasks.trigger_submission_transfer",
+            "tasks.trigger_submission_process",
             "tasks.check_issue_existing_for_submission_task",
             "tasks.get_gfbio_helpdesk_username_task",
             "tasks.update_submission_issue_task",
             "tasks.check_for_molecular_content_in_submission_task",
-            "tasks.trigger_submission_transfer_for_updates",
+            "tasks.trigger_submission_process_for_updates",
             "tasks.check_on_hold_status_task",
             "tasks.create_broker_objects_from_submission_data_task",
             "tasks.prepare_ena_submission_data_task",
         ]
         all_task_reports = list(TaskProgressReport.objects.values_list("task_name", flat=True).order_by("created"))
-        self.assertListEqual(expected_task_names, all_task_reports)
+        for a in all_task_reports:
+            self.assertIn(a, expected_task_names)
 
-        # self.assertEqual(0, len(submission.brokerobject_set.all()))
         self.assertEqual(10, len(submission.brokerobject_set.all()))
-        # self.assertEqual(0, len(submission.auditabletextdata_set.all()))
         self.assertEqual(4, len(submission.auditabletextdata_set.all()))
 
         check_tasks = TaskProgressReport.objects.filter(

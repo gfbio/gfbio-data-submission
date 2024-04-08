@@ -13,6 +13,7 @@ from gfbio_submissions.brokerage.tests.utils import _get_submission_request_data
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
+from .test_atax_tasks_and_chains import TestAtaxSubmissionTasks
 
 from ...configuration.settings import JIRA_ISSUE_URL, JIRA_USERNAME_URL_FULLNAME_TEMPLATE, JIRA_USERNAME_URL_TEMPLATE
 from ...models.submission import Submission
@@ -104,10 +105,11 @@ class TestInitialChainTasks(TestCase):
             "tasks.create_submission_issue_task",
             "tasks.jira_initial_comment_task",
             "tasks.check_for_molecular_content_in_submission_task",
-            "tasks.trigger_submission_transfer",
+            "tasks.trigger_submission_process",
             "tasks.check_issue_existing_for_submission_task",
+            "tasks.check_on_hold_status_task",
         ]
-        self.assertEqual(6, len(task_reports))
+        self.assertEqual(7, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -139,10 +141,11 @@ class TestInitialChainTasks(TestCase):
             "tasks.create_submission_issue_task",
             "tasks.jira_initial_comment_task",
             "tasks.check_for_molecular_content_in_submission_task",
-            "tasks.trigger_submission_transfer",
+            "tasks.trigger_submission_process",
             "tasks.check_issue_existing_for_submission_task",
+            "tasks.check_on_hold_status_task",
         ]
-        self.assertEqual(6, len(task_reports))
+        self.assertEqual(7, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -171,7 +174,7 @@ class TestInitialChainTasks(TestCase):
             "tasks.create_submission_issue_task",
             "tasks.jira_initial_comment_task",
             "tasks.check_for_molecular_content_in_submission_task",
-            "tasks.trigger_submission_transfer",
+            "tasks.trigger_submission_process",
             "tasks.create_broker_objects_from_submission_data_task",
             "tasks.prepare_ena_submission_data_task",
             "tasks.check_on_hold_status_task",
@@ -206,10 +209,11 @@ class TestInitialChainTasks(TestCase):
             "tasks.create_submission_issue_task",
             "tasks.jira_initial_comment_task",
             "tasks.check_for_molecular_content_in_submission_task",
-            "tasks.trigger_submission_transfer",
+            "tasks.trigger_submission_process",
             "tasks.check_issue_existing_for_submission_task",
+            "tasks.check_on_hold_status_task"
         ]
-        self.assertEqual(6, len(task_reports))
+        self.assertEqual(7, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -256,12 +260,56 @@ class TestInitialChainTasks(TestCase):
             "tasks.create_submission_issue_task",
             "tasks.jira_initial_comment_task",
             "tasks.update_submission_issue_task",
-            "tasks.trigger_submission_transfer",
+            "tasks.trigger_submission_process",
             "tasks.check_for_molecular_content_in_submission_task",
-            "tasks.trigger_submission_transfer_for_updates",
+            "tasks.trigger_submission_process_for_updates",
             "tasks.update_helpdesk_ticket_task",
             "tasks.check_issue_existing_for_submission_task",
+            "tasks.check_on_hold_status_task",
         ]
-        self.assertEqual(10, len(task_reports))
+        self.assertEqual(12, len(task_reports))
+        for t in task_reports:
+            # print(t.task_name)
+            self.assertIn(t.task_name, expected_tasknames)
+
+    @responses.activate
+    def test_atx_post_with_release_initial_chain(self):
+        self._add_create_ticket_response()
+        task_reports = TaskProgressReport.objects.all()
+        self.assertEqual(0, len(task_reports))
+        max_response = self.api_client.post(
+            "/api/submissions/",
+            content_type="application/json",
+            data=json.dumps(
+                {
+                    "target": "ATAX",
+                    "release": True,
+                    "data": {
+                        "requirements": {
+                            "title": "A Title",
+                            "description": "A Description",
+                        }
+                    },
+                }
+            ),
+        )
+        self.assertEqual(201, max_response.status_code)
+        content = json.loads(max_response.content)
+        submission = Submission.objects.get(broker_submission_id=content.get("broker_submission_id"))
+        TestAtaxSubmissionTasks.create_csv_submission_upload(submission=submission, user=submission.user)
+
+        task_reports = TaskProgressReport.objects.all()
+        expected_tasknames = [
+            "tasks.get_gfbio_helpdesk_username_task",
+            "tasks.create_submission_issue_task",
+            "tasks.jira_initial_comment_task",
+            "tasks.check_for_molecular_content_in_submission_task",
+            "tasks.trigger_submission_process",
+            "tasks.check_on_hold_status_task",
+            "tasks.check_issue_existing_for_submission_task",
+            "tasks.parse_atax_uploads_task",
+            "tasks.validate_merged_atax_data_task"
+        ]
+        self.assertEqual(9, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)

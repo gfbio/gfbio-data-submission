@@ -6,10 +6,6 @@ from model_utils.models import TimeStampedModel
 
 from config.settings.base import AUTH_USER_MODEL
 from gfbio_submissions.brokerage.configuration.settings import (
-    ENA,
-    ENA_PANGAEA,
-    GENERIC,
-    ATAX,
     SUBMISSION_UPLOAD_RETRY_DELAY,
 )
 from gfbio_submissions.brokerage.storage import OverwriteStorage
@@ -22,12 +18,12 @@ from ..managers.submission_upload_manager import SubmissionUploadManager
 
 
 class SubmissionUpload(TimeStampedModel):
-    TARGETS = (
-        (ENA, ENA),
-        (ENA_PANGAEA, ENA_PANGAEA),
-        (GENERIC, GENERIC),
-        (ATAX, ATAX),
-    )
+    # TARGETS = (
+    #     (ENA, ENA),
+    #     (ENA_PANGAEA, ENA_PANGAEA),
+    #     (GENERIC, GENERIC),
+    #     (ATAX, ATAX),
+    # )
 
     submission = models.ForeignKey(
         Submission,
