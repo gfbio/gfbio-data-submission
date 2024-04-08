@@ -14,3 +14,4 @@ class TestSubmissionReport(TestCase):
         submission = _create_submission_via_serializer()
         report = SubmissionReport.objects.create(submission=submission, report="Test Report",
                                                  report_category=SubmissionReport.ERROR)
+        self.assertEqual(SubmissionReport.ERROR, report.report_category)
