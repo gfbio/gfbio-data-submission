@@ -158,6 +158,45 @@ def _get_submission_and_site_configuration(submission_id, task, include_closed):
     return submission, site_config
 
 
+def _get_submission(submission_id, task, include_closed):
+    try:
+        submission = _safe_get_submission(submission_id, include_closed)
+        if submission is None:
+            logger.warning(
+                "task_utils.py | _get_submission | "
+                "raise TransferInternalError | no submission for pk={0} |"
+                " include_closed={1} | task={2}".format(submission_id, include_closed, task.name)
+            )
+            raise TransferInternalError(
+                "SubmissionTransferHandler | _get_submission | "
+                "no Submission available for submission pk={0}. include_closed={1}".format(
+                    submission_id,
+                    include_closed,
+                )
+            )
+    except TransferInternalError as e:
+        logger.warning(
+            "task_utils.py | _get_submission_and_site_configuration | task={0} "
+            "| submission pk={0} | include_closed={1} | return={2} | "
+            "TransferInternalError={3}".format(
+                task.name,
+                submission_id,
+                include_closed,
+                (TaskProgressReport.CANCELLED, None),
+                e,
+            )
+        )
+        submission = TaskProgressReport.CANCELLED
+    # TODO: this may have to move elsewhere since TaskReport need to be created in everytask
+    #   but in the last months some of the newer tasks are not Calling this method
+    if task:
+        TaskProgressReport.objects.create_initial_report(
+            submission=None if submission == TaskProgressReport.CANCELLED else submission,
+            task=task,
+        )
+    return submission
+
+
 def send_task_fail_mail(broker_submission_id, task, additional_text=""):
     logger.info(
         "task_utils.py | send_task_fail_mail | "
@@ -195,6 +234,23 @@ def get_submission_and_site_configuration(submission_id, task, include_closed):
     except TransferInternalError as ce:
         logger.warning(
             "task_utils.py | get_submission_and_site_configuration | task={0} "
+            "| submission pk={1} | include_closed={2} | will "
+            "send_task_fail_mail TransferInternalError={3}".format(task.name, submission_id, include_closed, ce)
+        )
+        return send_task_fail_mail("*", task), None
+
+
+def get_submission(submission_id, task, include_closed):
+    logger.info(
+        "task_utils.py | get_submission | "
+        " submission_id={0} | task={1} | include_closed={2}"
+        "".format(submission_id, task.name, include_closed)
+    )
+    try:
+        return _get_submission(submission_id, task, include_closed)
+    except TransferInternalError as ce:
+        logger.warning(
+            "task_utils.py | get_submission | task={0} "
             "| submission pk={1} | include_closed={2} | will "
             "send_task_fail_mail TransferInternalError={3}".format(task.name, submission_id, include_closed, ce)
         )
