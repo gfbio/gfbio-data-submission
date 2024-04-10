@@ -32,7 +32,7 @@ run unit tests:
     PROJECT_NAME: "submissions"
   script:
     - ISSUE_ID=$(awk -F - '{print $2}' <<< ${CI_COMMIT_REF_NAME})
-    - if [ -z $ISSUE_ID ]; then DOCKER_NAME=$PROJECT_NAME-${CI_COMMIT_REF_NAME}; else DOCKER_NAME=$PROJECT_NAME-$ISSUE_ID; fi
+    - if [ -z $ISSUE_ID ]; then DOCKER_NAME=$PROJECT_NAME-${CI_COMMIT_REF_NAME}; else DOCKER_NAME=$ISSUE_ID-$PROJECT_NAME; fi
     - docker compose -f local.yml build
     - CURRENT_UID=$(id -u):$(id -g) docker stack deploy -c cicd/local.yml $DOCKER_NAME-tests
     - while [[ $(docker ps -a | grep $DOCKER_NAME-tests_django | grep Exited | wc -l) == 0 ]]; do sleep 1; done
