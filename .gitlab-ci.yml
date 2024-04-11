@@ -31,22 +31,15 @@ run unit tests:
   variables:
     PROJECT_NAME: "submissions"
   script:
-    - ISSUE_ID=$(awk -F - '{print $2}' <<< ${CI_COMMIT_REF_NAME})
-    - SHORT_SHA="${CI_COMMIT_SHA:0:7}"
+    - SHORT_REF_NAME="${CI_COMMIT_REF_NAME:0:9}"
     - ISSUE_ID=$(awk -F - '{print $2}' <<< "$CI_COMMIT_REF_NAME")
-    - if [[ -z "$ISSUE_ID" ]]; then DOCKER_NAME="$PROJECT_NAME-$SHORT_SHA"; else DOCKER_NAME="$ISSUE_ID-$PROJECT_NAME"; fi
+    - if [[ -z "$ISSUE_ID" ]]; then DOCKER_NAME="$PROJECT_NAME-$SHORT_REF_NAME"; else DOCKER_NAME="$ISSUE_ID-$PROJECT_NAME"; fi
     - docker compose -f local.yml build
     - CURRENT_UID="$(id -u):$(id -g)" docker stack deploy -c cicd/local.yml "$DOCKER_NAME-tests"
     - while [[ $(docker ps -a | grep "$DOCKER_NAME-tests_django" | grep -c Exited) == 0 ]]; do sleep 1; done
     - docker logs "$(docker ps -a | grep -oP "$DOCKER_NAME-tests_django.+\s?")"
     - if [[ $(docker logs "$(docker ps -a | grep -oP "$DOCKER_NAME-tests_django.+\s?")" --tail 2 2>&1 | grep -c FAILED) == 1 ]]; then docker stack rm "$DOCKER_NAME-tests" && exit 1; fi
     - docker stack rm "$DOCKER_NAME-tests"
-    - docker compose -f local.yml build
-    - CURRENT_UID=$(id -u):$(id -g) docker stack deploy -c cicd/local.yml $DOCKER_NAME-tests
-    - while [[ $(docker ps -a | grep $DOCKER_NAME-tests_django | grep Exited | wc -l) == 0 ]]; do sleep 1; done
-    - docker logs $(docker ps -a | grep -oP "$DOCKER_NAME"-tests_django.+\s?)
-    - if [[ $(docker logs $(docker ps -a | grep -oP "$DOCKER_NAME"-tests_django.+\s?) --tail 2 2>&1 | grep FAILED | wc -l) == 1 ]]; then docker stack rm $DOCKER_NAME-tests && exit 1; fi
-    - docker stack rm $DOCKER_NAME-tests
   after_script:
     - docker compose -f cicd/local.yml run --rm django rm -r staticfiles
     - docker compose -f cicd/local.yml down
