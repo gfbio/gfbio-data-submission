@@ -66,7 +66,7 @@ class TestSubmissionReportView(TestCase):
         self.assertEqual(2, len(content))
 
     def test_get_reports(self):
-        submission = Submission.objects.get(pk=1)
+        submission = Submission.objects.first()
         url = '/api/submissions/{}/reports/'.format(submission.broker_submission_id)
         response = self.api_client.get(url)
         content = json.loads(response.content)
