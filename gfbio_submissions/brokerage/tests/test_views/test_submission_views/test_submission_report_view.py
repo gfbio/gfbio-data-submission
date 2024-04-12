@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import json
-from pprint import pp
 
 from django.test import TestCase
 from rest_framework.authtoken.models import Token
@@ -41,10 +40,7 @@ class TestSubmissionReportView(TestCase):
     def test_no_credentials(self):
         submission = Submission.objects.last()
         url = '/api/submissions/{}/reports/'.format(submission.broker_submission_id)
-        print(url)
         response = self.client.get(url)
-        print(response.status_code)
-        print(response.content)
         self.assertEqual(HTTP_401_UNAUTHORIZED, response.status_code)
 
     def test_invalid_credentials(self):
@@ -52,10 +48,7 @@ class TestSubmissionReportView(TestCase):
         client.credentials(HTTP_AUTHORIZATION="Token 0815kjbdfljhbdsf")
         submission = Submission.objects.last()
         url = '/api/submissions/{}/reports/'.format(submission.broker_submission_id)
-        print(url)
         response = client.get(url)
-        print(response.status_code)
-        print(response.content)
         self.assertEqual(HTTP_401_UNAUTHORIZED, response.status_code)
 
     def test_ownership(self):
@@ -75,11 +68,7 @@ class TestSubmissionReportView(TestCase):
     def test_get_reports(self):
         submission = Submission.objects.get(pk=1)
         url = '/api/submissions/{}/reports/'.format(submission.broker_submission_id)
-        print(url)
         response = self.api_client.get(url)
-        print(response.status_code)
-        print(response.content)
         content = json.loads(response.content)
-        pp(content)
         self.assertEqual(200, response.status_code)
         self.assertEqual(2, len(content))
