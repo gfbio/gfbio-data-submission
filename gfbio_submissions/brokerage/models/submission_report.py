@@ -2,7 +2,7 @@
 
 from django.db import models
 from model_utils.models import TimeStampedModel
-
+from config.settings.base import AUTH_USER_MODEL
 from .submission import Submission
 
 # TODO: an error occurs for models added after the refactorings to file-per-model:

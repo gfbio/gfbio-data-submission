@@ -5,9 +5,8 @@ from rest_framework import serializers
 
 from ..models.submission_report import SubmissionReport
 
-class SubmissionReportSerializer(serializers.ModelSerializer):
 
+class SubmissionReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubmissionReport
-        fields = '__all__'
-
+        fields = ['id', 'report', 'report_category', 'created', 'modified', ]
