@@ -9,6 +9,7 @@ from gfbio_submissions.brokerage.tests.utils import (
 )
 from gfbio_submissions.users.models import User
 from ...configuration.settings import GENERIC
+from ...models import SubmissionReport
 from ...models.auditable_text_data import AuditableTextData
 from ...models.submission import Submission
 from ...models.submission_upload import SubmissionUpload
@@ -85,6 +86,8 @@ class TestAtaxSubmissionTasks(TestCase):
         valid, errors = result.get()
         self.assertFalse(valid)
         self.assertIsInstance(errors, list)
+        reports = SubmissionReport.objects.all()
+        self.assertEqual(len(errors), len(reports))
 
     def test_parse_uploads_task_for_unreleased_submission(self):
         submission = self._create_unreleased_submission()
