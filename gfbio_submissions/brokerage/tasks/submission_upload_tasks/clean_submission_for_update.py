@@ -43,7 +43,7 @@ def clean_submission_for_update_task(self, previous_task_result=None, submission
     report.save()
 
     data = submission_upload.submission.data
-    molecular_requirements_keys = ["samples", "experiments"]  # 'study_type',
+    molecular_requirements_keys = ["samples", "experiments", "runs"]  # 'study_type',
 
     if "validation" in data.keys():
         data.pop("validation")
