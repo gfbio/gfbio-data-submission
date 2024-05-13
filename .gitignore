@@ -181,8 +181,10 @@ typings/
 **/.idea/**/modules.xml
 **/.idea/**/vcs.xml
 **/.idea/**/userinterface.iml
+**/.idea/**/profile-userinterface.iml
 
 userinterface/.idea/workspace.xml
+profile-userinterface/.idea/workspace.xml
 
 # Sensitive or high-churn files:
 .idea/**/dataSources/
