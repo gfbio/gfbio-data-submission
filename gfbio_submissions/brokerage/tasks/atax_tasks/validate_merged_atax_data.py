@@ -52,6 +52,7 @@ def validate_merged_atax_data_task(self,
 
     merged_xml = get_merged_text_data(submission)
 
+    # TODO: move schema file name to setting constant
     valid, errors = validate_atax_data(
         schema_file_name="ABCD_2.06.XSD",
         xml_string=merged_xml,
