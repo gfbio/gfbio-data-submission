@@ -73,3 +73,6 @@ CELERY_TASK_ALWAYS_EAGER = True
 # ------------------------------------------------------------------------------
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+
+# https://docs.djangoproject.com/en/4.2/ref/settings/#secure-cross-origin-opener-policy
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None

@@ -6,6 +6,18 @@
 - npm run dev
 - npm run build
 
+### steps to integrate in django view
+
+- pwd -> submission.gfbio.org/profile-userinterface
+- npm run build
+- cp from dist/assets all to static js/submission-profile-ui
+- todo: deal with dynamic names of assets
+- adapt javascript block in template
+- change build path in vite config
+- now a submission-profile-ui is build output
+- this dir can be directyl copied to static/js/
+- styles may be a problem due to usage of mantine
+
 ### initial setup history
 
 - npm install
