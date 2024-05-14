@@ -11,6 +11,15 @@ function App() {
     return (
         <MantineProvider>
             <>
+                <div className="row">
+                    <h3>test for simple & direct usage of boostrap classes</h3>
+                    <div className="col-6">
+                        <p>col 1</p>
+                    </div>
+                    <div className="col-6">
+                        <p>col 2</p>
+                    </div>
+                </div>
                 <div>
                     <a href="https://vitejs.dev" target="_blank">
                         <img src={viteLogo} className="logo" alt="Vite logo"/>
