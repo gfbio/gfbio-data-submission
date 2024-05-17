@@ -9,6 +9,12 @@ rm -r .envs && cp -r /home/gitlab-runner/.gfbio_envs/ .envs
 nvm use 8
 cd userinterface && npm i && npm run collect-ci
 cd ../
+
+# new profile-userinterface commands so far
+# TODO: add a dedicated script or wrap commands in package.json once it is confirmed that this here is woring
+cd profile-userinterface && npm i && npm run build && mv dist/submission-profile-ui/index*.js dist/submission-profile-ui/index.js && mv dist/submission-profile-ui/index*.css dist/submission-profile-ui/index.css && cp -r dist/submission-profile-ui/ ../gfbio_submissions/static/js
+cd ../
+
 nvm use default
 cp gfbio_submissions/templates/account/webtest_login.html gfbio_submissions/templates/account/login.html
 sed -i s/ISSUE_ID/$TEST_NAME/g cicd/production.yml
