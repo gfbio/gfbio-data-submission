@@ -10,6 +10,7 @@ from .views.submission_upload_list_view import SubmissionUploadListView
 from .views.submission_upload_patch_view import SubmissionUploadPatchView
 from .views.submission_upload_view import SubmissionUploadView
 from .views.submissions_view import SubmissionsView
+from .views.submission_report_view import SubmissionReportView
 
 app_name = "brokerage"
 urlpatterns = [
@@ -42,6 +43,11 @@ urlpatterns = [
     re_path(
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/comment/$",
         view=SubmissionCommentView.as_view(),
+        name="submission_comment",
+    ),
+    re_path(
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/reports/$",
+        view=SubmissionReportView.as_view(),
         name="submission_comment",
     ),
     re_path(

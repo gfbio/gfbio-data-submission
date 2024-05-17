@@ -3,6 +3,7 @@ import logging
 
 from config.celery_app import app
 from ...configuration.settings import ATAX
+from ...models import SubmissionReport
 from ...models.task_progress_report import TaskProgressReport
 from ...tasks.submission_task import SubmissionTask
 from ...utils.schema_validation import validate_atax_data
@@ -51,9 +52,16 @@ def validate_merged_atax_data_task(self,
 
     merged_xml = get_merged_text_data(submission)
 
+    # TODO: move schema file name to setting constant
     valid, errors = validate_atax_data(
         schema_file_name="ABCD_2.06.XSD",
         xml_string=merged_xml,
     )
-
+    if len(errors):
+        for error in errors:
+            SubmissionReport.objects.create(
+                submission=submission,
+                report_category=SubmissionReport.ERROR,
+                report='{} {}'.format(error.message, error.reason),
+            )
     return valid, errors

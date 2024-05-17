@@ -52,6 +52,10 @@
         <link href="{% static 'css/project.css' %}" rel="stylesheet">
 
 
+        {% block extra_css %}
+        {% endblock extra_css %}
+
+
     {% endblock %}
     
     {% if prod_env %}
@@ -458,4 +462,4 @@
 {% endblock javascript %}
 </body>
 </html>
- 
+

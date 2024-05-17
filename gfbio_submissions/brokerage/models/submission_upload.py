@@ -18,13 +18,6 @@ from ..managers.submission_upload_manager import SubmissionUploadManager
 
 
 class SubmissionUpload(TimeStampedModel):
-    # TARGETS = (
-    #     (ENA, ENA),
-    #     (ENA_PANGAEA, ENA_PANGAEA),
-    #     (GENERIC, GENERIC),
-    #     (ATAX, ATAX),
-    # )
-
     submission = models.ForeignKey(
         Submission,
         null=True,
