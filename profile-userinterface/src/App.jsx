@@ -1,6 +1,6 @@
 import {useState} from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import reactLogo from './static/react.svg'
+import viteLogo from './static/vite.svg'
 import './App.css'
 import '@mantine/core/styles.css';
 import {Button, MantineProvider} from '@mantine/core';
@@ -11,6 +11,15 @@ function App() {
     return (
         <MantineProvider>
             <>
+                <div className="row">
+                    <h3>test for simple & direct usage of boostrap classes</h3>
+                    <div className="col-6">
+                        <p>col 1</p>
+                    </div>
+                    <div className="col-6">
+                        <p>col 2</p>
+                    </div>
+                </div>
                 <div>
                     <a href="https://vitejs.dev" target="_blank">
                         <img src={viteLogo} className="logo" alt="Vite logo"/>
