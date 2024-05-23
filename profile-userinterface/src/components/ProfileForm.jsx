@@ -30,7 +30,7 @@ const ProfileForm = () => {
 
     const initialData = {fields: []}
 
-    const {data, isLoading, error} = useFetch(url, initialData);
+    const {data, isLoading, error} = useFetch(localhost, initialData);
 
     return (
         <div>
