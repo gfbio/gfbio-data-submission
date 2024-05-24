@@ -25,4 +25,4 @@ class Field(TimeStampedModel):
 
     # TODO: unique enough ?
     def field_id(self):
-        return "{}-{}".format(self.pk, self.field_type.type)
+        return self.__str__()
