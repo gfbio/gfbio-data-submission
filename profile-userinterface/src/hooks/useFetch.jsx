@@ -14,7 +14,7 @@ const useFetch = (url) => {
                     throw new Error('Network response was not ok');
                 }
                 const json = await response.json();
-                console.log('after await: ', json);
+                // console.log('after await: ', json);
                 setData(json);
             } catch (error) {
                 setError(error);

@@ -1,9 +1,9 @@
 import React from 'react';
-import { Textarea } from '@mantine/core';
+import {Textarea} from '@mantine/core';
 import PropTypes from "prop-types";
-// const TextField = (title, descr, initialValue) => {
-const TextField = (props) => {
-    const {title, description, placeholder} = props;
+
+const TextArea = (props) => {
+    const {title, description, form, field_id, placeholder} = props;
     return (
         <Textarea
             label={title}
@@ -11,18 +11,22 @@ const TextField = (props) => {
             placeholder={placeholder}
             autosize
             minRows={2}
+            key={form.key(field_id)}
+            {...form.getInputProps(field_id)}
         />
     );
 }
 
-TextField.defaultProps = {
-    placeholder: "PLACEH...",
+TextArea.defaultProps = {
+    placeholder: "",
 }
 
-TextField.propTypes = {
+TextArea.propTypes = {
     title: PropTypes.string.isRequired,
     description: PropTypes.string.isRequired,
+    form: PropTypes.object.isRequired,
+    field_id: PropTypes.string.isRequired,
     placeholder: PropTypes.string,
 }
 
-export default TextField;
+export default TextArea;

@@ -31,7 +31,7 @@ const ProfileFormWrapper = () => {
 
     const {data, isLoading, error} = useFetch(localhost);
 
-    console.log('loading: ', isLoading, ' | data: ', data);
+    // console.log('loading: ', isLoading, ' | data: ', data);
 
     return (
         <div>
