@@ -15,7 +15,7 @@ const Profile = ({data}) => {
                         <h5>TITLE: {field.title}</h5>
                         <h5>DESC: {field.description}</h5>
                         <h5>ID: {field.field_id}</h5>
-                        <FormField field_type={field.field_type}></FormField>
+                        <FormField field={field}></FormField>
                     </div>
                 ))}
             </div>
