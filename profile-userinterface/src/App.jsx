@@ -1,7 +1,7 @@
 import './App.css'
 import '@mantine/core/styles.css';
 import {MantineProvider} from '@mantine/core';
-import ProfileForm from './components/ProfileForm';
+import ProfileFormWrapper from './components/ProfileFormWrapper.jsx';
 
 function App() {
     // const [count, setCount] = useState(0)
@@ -9,7 +9,7 @@ function App() {
     return (
         <MantineProvider>
             <>
-                <ProfileForm></ProfileForm>
+                <ProfileFormWrapper></ProfileFormWrapper>
                 {/*<div className="row">*/}
                 {/*    <h3>test for simple & direct usage of boostrap classes</h3>*/}
                 {/*    <div className="col-6">*/}

@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import TextField from "./input_fields/TextField.jsx";
 import {TextInput} from "@mantine/core";
+import TextArea from "./input_fields/TextArea.jsx";
 
 const FormField = (field) => {
     // const type = field.field_type.type;
@@ -10,15 +11,9 @@ const FormField = (field) => {
 
     switch (f.field_type.type) {
         case 'text-field':
-            // return <TextInput
-            //     label={f.title}
-            //     description={f.description}
-            //     placeholder={"initialValue"}
-            // />
             return <TextField title={f.title} description={f.description}></TextField>;
-        // return <p>TEXT_FIELD</p>
         case 'text-area':
-            return <p>TEXT_AREA</p>;
+            return <TextArea title={f.title} description={f.description}></TextArea>
         default:
             return <p>TEXTFIELD (default)</p>;
 
