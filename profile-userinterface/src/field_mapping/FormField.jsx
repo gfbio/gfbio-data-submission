@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import TextField from "./input_fields/TextField.jsx";
 import TextArea from "./input_fields/TextArea.jsx";
+import DropzoneUpload from "./input_fields/DropzoneUpload.jsx";
 
 const FormField = ({field, form}) => {
     // const type = field.field_type.type;
@@ -20,6 +21,8 @@ const FormField = ({field, form}) => {
             return <TextField {...fieldParameters}></TextField>;
         case 'text-area':
             return <TextArea {...fieldParameters}></TextArea>
+        case 'file-upload':
+            return <DropzoneUpload {...fieldParameters}></DropzoneUpload>
         default:
             return <TextField {...fieldParameters}></TextField>;
 
