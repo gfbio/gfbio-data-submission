@@ -18,19 +18,9 @@ services:
     volumes:
       - .:/app:z
       - django_media:/app/gfbio_submissions/media
-# FIXME: get this back once pyCharm update has fixed issue with remote interpreter or different IDE used
-#    env_file:
-#      - ./.envs/.local/.django
-#      - ./.envs/.local/.postgres
-    environment:
-      - USE_DOCKER=yes
-      - IPYTHONDIR=/app/.ipython
-      - REDIS_URL=redis://redis:6379/0
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_DB=gfbio_submissions
-      - POSTGRES_USER=akUsfXheORQFVJjmQhhIIpiYVnMyUFMW
-      - POSTGRES_PASSWORD=5sjFNBelQNBy0kpF3JBtmklL9MbQnLfJvCXB4bXN8LpyFuGQnUcC4BjunVMi0XQo
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgres
     ports:
       - "8000:8000"
     command: /start

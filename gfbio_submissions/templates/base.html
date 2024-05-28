@@ -52,7 +52,27 @@
         <link href="{% static 'css/project.css' %}" rel="stylesheet">
 
 
+        {% block extra_css %}
+        {% endblock extra_css %}
+
+
     {% endblock %}
+    
+    {% if prod_env %}
+        <!-- Google Analytics -->
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-F96NGEWFKC"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+
+            function gtag() {
+                dataLayer.push(arguments);
+            }
+
+            gtag('js', new Date());
+            gtag('config', 'G-F96NGEWFKC', {anonymize_ip: true});
+        </script>
+    {% endif %}
 
 </head>
 
@@ -442,4 +462,4 @@
 {% endblock javascript %}
 </body>
 </html>
- 
+
