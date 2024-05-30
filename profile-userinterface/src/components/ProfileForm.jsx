@@ -5,13 +5,15 @@ import {useForm} from '@mantine/form';
 import FormField from "../field_mapping/FormField.jsx";
 
 const ProfileForm = ({data}) => {
-
+    console.log('ProfileForm');
     const form = useForm({
         mode: 'uncontrolled',
         name: 'profile-form',
         initialValues: {
             // email: '',
             // termsOfService: false,
+            files: []
+            // files: File[],
         },
         // onValuesChange: (values) => {
         //     window.localStorage.setItem('profile-form', JSON.stringify(values));
@@ -21,7 +23,7 @@ const ProfileForm = ({data}) => {
         // },
     });
 
-    form.setInitialValues({email: 'bla@bla.com',})
+    // form.setInitialValues({email: 'bla@bla.com',})
 
     return (
         <form onSubmit={form.onSubmit((values) => console.log(values))}>

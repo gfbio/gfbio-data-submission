@@ -6,7 +6,7 @@ import DropzoneUpload from "./input_fields/DropzoneUpload.jsx";
 
 const FormField = ({field, form}) => {
     // const type = field.field_type.type;
-    // console.log('############# Formfield f: ', field);
+    console.log('############# Formfield f: ');
 
     const fieldParameters = {
         title: field.title,
@@ -22,6 +22,7 @@ const FormField = ({field, form}) => {
         case 'text-area':
             return <TextArea {...fieldParameters}></TextArea>
         case 'file-upload':
+            // TODO: Work in progress...
             return <DropzoneUpload {...fieldParameters}></DropzoneUpload>
         default:
             return <TextField {...fieldParameters}></TextField>;
