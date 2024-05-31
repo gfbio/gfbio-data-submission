@@ -11,8 +11,9 @@ class FieldSerializer(serializers.ModelSerializer):
     class Meta:
         model = Field
         fields = (
+            "field_name",
+            "field_type",
             "title",
             "description",
-            "field_type",
             "field_id",
         )
