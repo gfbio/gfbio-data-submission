@@ -93,7 +93,10 @@ class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.G
         description="Create a new Submission. Below you find a list of required (and non-required) fields needed to create a new submission.</br><ul><li>In its simplest form you would only need to choose target='GENERIC' and provide a title and an abstract to your submission, and thus start the whole submission process when posting this data.</li><li>One way to submit molecular data would be to follow the same principle, and to additionally upload a CSV file containing the needed meta-data. To perform the upload refer to the <a href='#operation/create%20submission%20upload'>'create submission upload'</a> documentation below.</br>Additional information and the template can be found here:<ul><li><a href='https://gitlab-pe.gwdg.de/gfbio/molecular-submission-templates/-/blob/master/full_template.csv'>Molecular CSV Template</a></li><li><a href='xxx'>WIKI ?</a></li></ul></li><li>It is also possible to submit molecular data without uploading a template, by directly providing all meta-data as json also using this endpoint.</br>For dedicated information on this, please refer to:<ul><li><a href='/api/molecular/'>Submit molecular data in pure JSON</a></li></ul></li></ul>",
         request=OpenApiRequest(request=SubmissionDetailSerializer(many=False)),
         responses={
-            201: OpenApiResponse(description="Submission response", response=SubmissionDetailSerializer(many=False)),
+            201: OpenApiResponse(
+                description="Submission response",
+                response=SubmissionDetailSerializer(many=False),
+            ),
             400: OpenApiResponse(
                 description="Validation error",
             ),
