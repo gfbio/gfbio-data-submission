@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 from django.db import transaction
 from django.urls import reverse
-from rest_framework import mixins, generics, permissions, status
-from rest_framework.authentication import TokenAuthentication, BasicAuthentication
-from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiRequest
+from drf_spectacular.utils import OpenApiRequest, OpenApiResponse, extend_schema
+from rest_framework import generics, mixins, permissions, status
+from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 
 from gfbio_submissions.generic.models.request_log import RequestLog
+
 from ..configuration.settings import SUBMISSION_DELAY, SUBMISSION_ISSUE_CHECK_DELAY
 from ..models.submission import Submission
 from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
@@ -33,19 +34,15 @@ class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.G
                 response_status=status.HTTP_201_CREATED,
             )
 
-        from ..tasks.jira_tasks.get_gfbio_helpdesk_username import (
-            get_gfbio_helpdesk_username_task,
-        )
-        from ..tasks.jira_tasks.create_submission_issue import (
-            create_submission_issue_task,
-        )
+        from ..tasks.jira_tasks.create_submission_issue import create_submission_issue_task
+        from ..tasks.jira_tasks.get_gfbio_helpdesk_username import get_gfbio_helpdesk_username_task
         from ..tasks.jira_tasks.jira_initial_comment import jira_initial_comment_task
+        from ..tasks.process_tasks.trigger_submission_process import trigger_submission_process_task
         from ..tasks.submission_tasks.check_for_molecular_content_in_submission import (
             check_for_molecular_content_in_submission_task,
         )
-        from ..tasks.process_tasks.trigger_submission_process import (
-            trigger_submission_process_task,
-        )
+
+        # from ..tasks.submission_tasks.check_for_submittable_data import check_for_submittable_data_task
         from ..tasks.submission_tasks.check_issue_existing_for_submission import (
             check_issue_existing_for_submission_task,
         )
@@ -59,6 +56,7 @@ class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.G
             | check_for_molecular_content_in_submission_task.s(submission_id=submission.pk).set(
                 countdown=SUBMISSION_DELAY
             )
+            # | check_for_submittable_data_task.s(submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
             | trigger_submission_process_task.s(submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
         )
 
@@ -83,9 +81,9 @@ class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.G
         responses={
             200: OpenApiResponse(
                 response=SubmissionDetailSerializer(many=True),
-                description="List of all submissions you are permitted to access."
+                description="List of all submissions you are permitted to access.",
             )
-        }
+        },
     )
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -93,18 +91,13 @@ class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.G
     @extend_schema(
         operation_id="create submission",
         description="Create a new Submission. Below you find a list of required (and non-required) fields needed to create a new submission.</br><ul><li>In its simplest form you would only need to choose target='GENERIC' and provide a title and an abstract to your submission, and thus start the whole submission process when posting this data.</li><li>One way to submit molecular data would be to follow the same principle, and to additionally upload a CSV file containing the needed meta-data. To perform the upload refer to the <a href='#operation/create%20submission%20upload'>'create submission upload'</a> documentation below.</br>Additional information and the template can be found here:<ul><li><a href='https://gitlab-pe.gwdg.de/gfbio/molecular-submission-templates/-/blob/master/full_template.csv'>Molecular CSV Template</a></li><li><a href='xxx'>WIKI ?</a></li></ul></li><li>It is also possible to submit molecular data without uploading a template, by directly providing all meta-data as json also using this endpoint.</br>For dedicated information on this, please refer to:<ul><li><a href='/api/molecular/'>Submit molecular data in pure JSON</a></li></ul></li></ul>",
-        request=OpenApiRequest(
-            request=SubmissionDetailSerializer(many=False)
-        ),
+        request=OpenApiRequest(request=SubmissionDetailSerializer(many=False)),
         responses={
-            201: OpenApiResponse(
-                description="Submission response",
-                response=SubmissionDetailSerializer(many=False)
-            ),
+            201: OpenApiResponse(description="Submission response", response=SubmissionDetailSerializer(many=False)),
             400: OpenApiResponse(
                 description="Validation error",
-            )
-        }
+            ),
+        },
     )
     def post(self, request, *args, **kwargs):
         # TODO: is this still needed ? user is not used

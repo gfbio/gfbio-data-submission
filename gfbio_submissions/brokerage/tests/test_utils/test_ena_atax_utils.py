@@ -50,9 +50,9 @@ class TestEnaAtaxUtils(TestCase):
         self.assertEqual(result["submittable"], "true")
 
     # test query ena function with submission target atx
-    def test_query_ena_submission_target_atx(self):
+    def test_query_ena_submission_target_atax(self):
         scientific_name = "Leptonycteris nivalis"
-        result = query_ena(scientific_name, "atx")
+        result = query_ena(scientific_name, "atax")
 
         self.assertIsNotNone(result)
         self.assertEqual(result["scientificName"], scientific_name)

@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-import _csv
 import csv
 import json
 import logging
 import os
 from collections import OrderedDict
 
+import _csv
 import dpath.util as dpath
 from django.utils.encoding import smart_str
 from shortid import ShortId
 
-from ..configuration.settings import ENA_PANGAEA, ENA, SUBMISSION_MIN_COLS
+from ..configuration.settings import ENA, ENA_PANGAEA, SUBMISSION_MIN_COLS
 from ..utils.schema_validation import validate_data_full
 
 logger = logging.getLogger(__name__)
@@ -603,4 +603,18 @@ def check_for_molecular_content(submission):
             msg="check_for_molecular_content  | finished | return status={0} "
             "messages={1} molecular_data_check_performed={2}".format(status, messages, check_performed)
         )
+    return status, messages, check_performed
+
+
+def check_for_submittable_data(submission):
+    logger.info(
+        msg="check_for_submittable_data | "
+        "process submission={0} | target={1} | release={2}"
+        "".format(submission.broker_submission_id, submission.target, submission.release)
+    )
+
+    status = False
+    messages = []
+    check_performed = False
+
     return status, messages, check_performed
