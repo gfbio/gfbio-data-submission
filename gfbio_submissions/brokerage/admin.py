@@ -11,6 +11,7 @@ from django.utils.encoding import smart_bytes
 from .configuration.settings import SUBMISSION_DELAY, SUBMISSION_UPLOAD_RETRY_DELAY
 from .models.additional_reference import AdditionalReference
 from .models.auditable_text_data import AuditableTextData
+from .models.abcd_conversion_result import AbcdConversionResult
 from .models.broker_object import BrokerObject
 from .models.center_name import CenterName
 from .models.ena_report import EnaReport
@@ -344,6 +345,44 @@ def create_helpdesk_issue_manually(modeladmin, request, queryset):
 create_helpdesk_issue_manually.short_description = "Create helpdesk issue manually"
 
 
+def combine_csvs_to_abcd(modeladmin, request, queryset):
+    from .tasks.atax_tasks.atax_run_combination_task import atax_run_combination_task
+
+    obj = queryset[0]
+    chain = (
+        atax_run_combination_task.s(submission_id=obj.pk).set(
+            countdown=SUBMISSION_DELAY
+        )
+    )
+
+    chain()
+        
+combine_csvs_to_abcd.short_description = "Combine CSV-Files to ABCD-File"
+
+def atax_validate(modeladmin, request, queryset):
+    from .tasks.atax_tasks.atax_submission_validate_xml_upload import atax_submission_validate_auditable_atax_xml_task
+
+    for obj in queryset:
+        chain = (
+            atax_submission_validate_auditable_atax_xml_task.s(
+                auditable_id = obj.pk
+            ).set(countdown=SUBMISSION_DELAY)
+        )
+
+        chain()
+
+    
+
+
+atax_validate.short_description = "ATAX validate"
+
+
+class AuditableTextDataAdmin(admin.ModelAdmin):
+    actions = [
+        atax_validate
+    ]
+
+
 class AuditableTextDataInlineAdmin(admin.StackedInline):
     model = AuditableTextData
 
@@ -387,6 +426,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         prepare_manifest,
         validate_manifest_at_ena,
         submit_manifest_to_ena,
+        combine_csvs_to_abcd,
     ]
     readonly_fields = (
         "created",
@@ -498,6 +538,10 @@ class JiraMessageAdmin(admin.ModelAdmin):
     list_display = ("name", "modified")
 
 
+class AbcdConversionResultAdmin(admin.ModelAdmin):
+    pass
+
+
 admin.site.register(Submission, SubmissionAdmin)
 admin.site.register(BrokerObject, BrokerObjectAdmin)
 admin.site.register(PersistentIdentifier, PersistentIdentifierAdmin)
@@ -506,9 +550,11 @@ admin.site.register(TaskProgressReport, TaskProgressReportAdmin)
 
 admin.site.register(SubmissionUpload, SubmissionUploadAdmin)
 
-admin.site.register(AuditableTextData)
+admin.site.register(AuditableTextData, AuditableTextDataAdmin)
 admin.site.register(CenterName)
 
 admin.site.register(EnaReport, EnaReportAdmin)
 
 admin.site.register(JiraMessage, JiraMessageAdmin)
+
+admin.site.register(AbcdConversionResult, AbcdConversionResultAdmin)
