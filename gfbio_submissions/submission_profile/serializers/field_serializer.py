@@ -15,5 +15,8 @@ class FieldSerializer(serializers.ModelSerializer):
             "field_type",
             "title",
             "description",
+            "mandatory",
+            "visible",
+            "default",
             "field_id",
         )
