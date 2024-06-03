@@ -1,7 +1,7 @@
 import React from 'react';
 import {TextInput} from '@mantine/core';
 import PropTypes from "prop-types";
-// const TextField = (title, descr, initialValue) => {
+
 const TextField = (props) => {
     const {title, description, form, field_id, placeholder} = props;
     // console.log('TextField props: ', props);
@@ -13,6 +13,8 @@ const TextField = (props) => {
             description={description}
             placeholder={placeholder}
             key={form.key(field_id)}
+            // TODO: has to be based on field property "mandatory"
+            required={true}
             {...form.getInputProps(field_id)}
         />
     );
