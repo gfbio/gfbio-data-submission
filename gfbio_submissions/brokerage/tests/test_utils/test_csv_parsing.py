@@ -15,6 +15,7 @@ from gfbio_submissions.brokerage.tests.utils import _get_test_data_dir_path
 from gfbio_submissions.brokerage.utils.csv import (
     check_csv_file_rule,
     check_for_molecular_content,
+    check_for_submittable_data,
     check_metadata_rule,
     check_minimum_header_cols,
     extract_sample,
@@ -1331,3 +1332,28 @@ class TestCSVParsing(TestCase):
     #     #     print(delimiter)
     #     #
     #     # TODO: defaults to ; ok ! split to delim and do list comparision. done ...
+
+    # test check for submittable data
+    def test_check_for_submittable_data(self):
+        submission = Submission.objects.first()
+        submission.submissionupload_set.all().delete()
+        submission.target = ENA
+        submission.save()
+
+        self.create_csv_submission_upload(submission, User.objects.first(), "csv_files/dsub-269_template.csv")
+        status, messages, check_performed = check_for_submittable_data(submission)
+        self.assertTrue(status)
+        self.assertEqual([], messages)
+        self.assertTrue(check_performed)
+
+    def test_check_for_submittable_data_fail(self):
+        submission = Submission.objects.first()
+        submission.submissionupload_set.all().delete()
+        submission.target = ENA
+        submission.save()
+
+        self.create_csv_submission_upload(submission, User.objects.first(), "csv_files/molecular_metadata.csv")
+        status, messages, check_performed = check_for_submittable_data(submission)
+        self.assertFalse(status)
+        self.assertEqual(["Data with taxon_id 1234 is not submittable"], messages)
+        self.assertTrue(check_performed)

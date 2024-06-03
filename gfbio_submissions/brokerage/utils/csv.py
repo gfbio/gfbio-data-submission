@@ -10,6 +10,8 @@ import dpath.util as dpath
 from django.utils.encoding import smart_str
 from shortid import ShortId
 
+from gfbio_submissions.brokerage.utils.new_ena_atax_utils import query_ena
+
 from ..configuration.settings import ENA, ENA_PANGAEA, SUBMISSION_MIN_COLS
 from ..utils.schema_validation import validate_data_full
 
@@ -591,12 +593,12 @@ def check_for_molecular_content(submission):
             schema_location=path,
         )
         if valid:
-            logger.info(msg="check_for_molecular_content | valid data from csv |" " return=True")
+            logger.info(msg="check_for_molecular_content | valid data from csv | return=True")
             status = True
         else:
             messages = [e.message for e in full_errors]
             submission.data.update({"validation": messages})
-            logger.info(msg="check_for_molecular_content  | invalid data from csv |" " return=False")
+            logger.info(msg="check_for_molecular_content  | invalid data from csv | return=False")
 
         submission.save()
         logger.info(
@@ -606,6 +608,19 @@ def check_for_molecular_content(submission):
     return status, messages, check_performed
 
 
+# parse meta data file for unique tax ids
+def parse_meta_data_for_unique_tax_ids(file):
+    tax_ids = set()
+    dialect = csv.Sniffer().sniff(file.read(20))
+    file.seek(0)
+    csv_reader = csv.DictReader(file, dialect=dialect)
+    for row in csv_reader:
+        tax_id = row.get("taxon_id", "")
+        if tax_id:
+            tax_ids.add(tax_id)
+    return tax_ids
+
+
 def check_for_submittable_data(submission):
     logger.info(
         msg="check_for_submittable_data | "
@@ -613,8 +628,20 @@ def check_for_submittable_data(submission):
         "".format(submission.broker_submission_id, submission.target, submission.release)
     )
 
-    status = False
+    status = True
     messages = []
     check_performed = False
+
+    meta_data_files = submission.submissionupload_set.filter(meta_data=True)
+    meta_data_file = meta_data_files.first()
+    if submission.target == ENA:
+        with open(meta_data_file.file.path, "r", newline="") as file:
+            data_to_check = parse_meta_data_for_unique_tax_ids(file)
+        for data in data_to_check:
+            ena_response = query_ena(data, "ena")
+            if not ena_response:
+                messages.append("Data with taxon_id {0} is not submittable".format(data))
+                status = False
+    check_performed = True
 
     return status, messages, check_performed

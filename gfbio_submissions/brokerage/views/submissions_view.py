@@ -41,8 +41,6 @@ class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.G
         from ..tasks.submission_tasks.check_for_molecular_content_in_submission import (
             check_for_molecular_content_in_submission_task,
         )
-
-        # from ..tasks.submission_tasks.check_for_submittable_data import check_for_submittable_data_task
         from ..tasks.submission_tasks.check_issue_existing_for_submission import (
             check_issue_existing_for_submission_task,
         )
@@ -56,7 +54,6 @@ class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.G
             | check_for_molecular_content_in_submission_task.s(submission_id=submission.pk).set(
                 countdown=SUBMISSION_DELAY
             )
-            # | check_for_submittable_data_task.s(submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
             | trigger_submission_process_task.s(submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
         )
 
