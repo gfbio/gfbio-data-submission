@@ -21,7 +21,7 @@ class Field(TimeStampedModel):
     comment = models.TextField(default="", blank=True,
                                help_text="Comment text describing the field. This is optional. "
                                          "The information provided here WILL NOT BE SHOWN IN THE FORM")
-    # TODO: tests/serializer auf neue Felder anpassen
+    # DONE-TODO: tests/serializer auf neue Felder anpassen
     # TODO: test for inherited profiles
     # TODO: test for all field (inherited of inherited)
     # DONE-TODO: mandatory, visible, defaults
