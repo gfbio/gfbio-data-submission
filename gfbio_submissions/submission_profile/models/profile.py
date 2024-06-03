@@ -20,6 +20,9 @@ class Profile(TimeStampedModel):
     # TODO: global actions, buttons or similar
     # TODO: global design ?
 
+
+    # TODO: validator for unique-in-profile field_name (or mapping_to)
+    #   https://docs.djangoproject.com/en/4.2/ref/validators/
     def __str__(self):
         return "{}_{}".format(self.pk, self.name)
 
