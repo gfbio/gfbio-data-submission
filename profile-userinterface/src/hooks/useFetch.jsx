@@ -9,12 +9,12 @@ const useFetch = (url) => {
         const fetchData = async () => {
             setLoading(true);
             try {
+                // TODO: use axios instead ? will be installed for POST anyways
                 const response = await fetch(url);
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
                 const json = await response.json();
-                // console.log('after await: ', json);
                 setData(json);
             } catch (error) {
                 setError(error);
