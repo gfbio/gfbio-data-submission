@@ -1,4 +1,5 @@
 import axios from "axios";
+import {SUBMISSIONS_API} from "../settings.jsx";
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
@@ -21,7 +22,7 @@ const postSubmission = async (token, target, data) => {
     //  no cross origin errors
     // const url = '/api/submissions/';
     // TODO: this works also locally thanks to CORS config in local.py
-    const url = 'http://0.0.0.0:8000/api/submissions/';
+    const url = SUBMISSIONS_API;
     const config = {
         headers: {
             'Authorization': 'Token ' + token,

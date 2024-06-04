@@ -9,7 +9,9 @@
 {% block content %}
 
   <h1>Profile Frontend</h1>
-
+   <script>
+        window.props = {{ parameters|safe }};
+    </script>
   <div id="root"></div>
 
 {% endblock content %}

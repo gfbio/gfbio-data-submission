@@ -3,18 +3,19 @@ import withLoading from '../hocs/withLoading';
 import withErrorHandling from '../hocs/withErrorHandling';
 import useFetch from '../hooks/useFetch';
 import ProfileForm from './ProfileForm.jsx';
+import {PROFILE_URL} from "../settings.jsx";
 
 const ProfileWithLoading = withLoading(ProfileForm);
 const ProfileWithErrorHandling = withErrorHandling(ProfileWithLoading);
 
 const ProfileFormWrapper = () => {
 
+    // TODO: add check and warning if necessary parmaters like token are not available
+    // console.log('PROPS ', window.props);
+
     // TODO: for "npm run dev"-development cool, cors exception here, means safety
     //  added to local.py settings CORS_URLS_REGEX = r"^/profile/profile/.*$"
-    const url = '/profile/profile/generic/';
-    const localhost = 'http://0.0.0.0:8000/profile/profile/generic/'
-
-    const {data, isLoading, error} = useFetch(localhost);
+    const {data, isLoading, error} = useFetch(PROFILE_URL);
 
     // console.log('loading: ', isLoading, ' | data: ', data);
 

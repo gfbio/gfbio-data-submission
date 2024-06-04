@@ -50,7 +50,9 @@ class Field(TimeStampedModel):
     #   --> UserProfile model, über url anfragen bzw. in view nach user schauen ?
     #   - wie basis auswählen ?
     #   - wie felder auswählen ?
-    #
+    # TODO: how to add field-level validation (e.g. min length decsription) to frontend ?
+    #   - in frontend per field-widget (current ui has this) ?
+    #   - add this to backend to be changable dynamically ?
 
     def __str__(self):
         return "{}_{}".format(self.field_name, self.pk)

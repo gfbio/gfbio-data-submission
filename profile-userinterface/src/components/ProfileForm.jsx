@@ -29,7 +29,9 @@ const ProfileForm = ({data}) => {
 
     const handleSubmit = (values) => {
         setProcessing(true);
-        console.log(values);
+        console.log('handle submit | Values: ', values);
+        console.log('handle submit | window props: ', window.props);
+        // TODO: fixed token value for local testing only
         postSubmission('66b66251e245103c249141d00df43d163cdebb80', data.target, values)
             .then((result) => {
                 console.log('DATA ', result);
