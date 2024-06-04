@@ -4,8 +4,6 @@ import PropTypes from "prop-types";
 
 const TextField = (props) => {
     const {title, description, form, field_id, placeholder} = props;
-    // console.log('TextField props: ', props);
-    // console.log('TextField title: ', title);
 
     return (
         <TextInput

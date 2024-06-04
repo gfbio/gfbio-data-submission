@@ -17,8 +17,6 @@ const ProfileFormWrapper = () => {
     //  added to local.py settings CORS_URLS_REGEX = r"^/profile/profile/.*$"
     const {data, isLoading, error} = useFetch(PROFILE_URL);
 
-    // console.log('loading: ', isLoading, ' | data: ', data);
-
     return (
         <div>
             <h1>ProfileForm</h1>

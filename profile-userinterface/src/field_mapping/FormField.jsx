@@ -2,11 +2,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import TextField from "./input_fields/TextField.jsx";
 import TextArea from "./input_fields/TextArea.jsx";
-import DropzoneUpload from "./input_fields/DropzoneUpload.jsx";
 
 const FormField = ({field, form}) => {
-    // const type = field.field_type.type;
-    console.log('############# Formfield f: ');
 
     const fieldParameters = {
         title: field.title,
@@ -14,16 +11,15 @@ const FormField = ({field, form}) => {
         field_id: field.field_id,
         form: form,
     }
-    // console.log('FORMFIELD fieldparameters ', fieldParameters);
 
     switch (field.field_type.type) {
         case 'text-field':
             return <TextField {...fieldParameters}></TextField>;
         case 'text-area':
             return <TextArea {...fieldParameters}></TextArea>
-        case 'file-upload':
-            // TODO: Work in progress...
-            return <DropzoneUpload {...fieldParameters}></DropzoneUpload>
+        // case 'file-upload':
+        //     // TODO: Work in progress...
+        //     return <DropzoneUpload {...fieldParameters}></DropzoneUpload>
         default:
             return <TextField {...fieldParameters}></TextField>;
 

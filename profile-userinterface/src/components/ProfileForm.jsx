@@ -10,7 +10,6 @@ const ProfileForm = ({data}) => {
 
     const [isProcessing, setProcessing] = useState(false);
 
-    // console.log('ProfileForm');
     const form = useForm({
         mode: 'uncontrolled',
         name: 'profile-form',
