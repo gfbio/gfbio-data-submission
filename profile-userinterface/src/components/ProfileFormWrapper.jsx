@@ -11,7 +11,7 @@ const ProfileWithErrorHandling = withErrorHandling(ProfileWithLoading);
 const ProfileFormWrapper = () => {
 
     // TODO: add check and warning if necessary parmaters like token are not available
-    console.log('PROPS ', window.props);
+    // console.log('PROPS ', window.props);
     let profileName = 'generic';
     if (window.props !== undefined) {
         profileName = window.props.profile_name || 'generic';
