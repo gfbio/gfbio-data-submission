@@ -11,11 +11,17 @@ const ProfileWithErrorHandling = withErrorHandling(ProfileWithLoading);
 const ProfileFormWrapper = () => {
 
     // TODO: add check and warning if necessary parmaters like token are not available
-    // console.log('PROPS ', window.props);
+    console.log('PROPS ', window.props);
+    let profileName = 'generic';
+    if (window.props !== undefined) {
+        profileName = window.props.profile_name || 'generic';
+    }
+
+
 
     // TODO: for "npm run dev"-development cool, cors exception here, means safety
     //  added to local.py settings CORS_URLS_REGEX = r"^/profile/profile/.*$"
-    const {data, isLoading, error} = useFetch(PROFILE_URL);
+    const {data, isLoading, error} = useFetch(PROFILE_URL+profileName);
 
     return (
         <div>
