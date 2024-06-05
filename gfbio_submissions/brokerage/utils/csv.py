@@ -4,7 +4,6 @@ import json
 import logging
 import os
 from collections import OrderedDict
-from curses import meta
 
 import _csv
 import dpath.util as dpath
