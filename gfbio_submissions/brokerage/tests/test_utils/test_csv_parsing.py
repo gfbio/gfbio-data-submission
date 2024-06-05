@@ -1359,17 +1359,19 @@ class TestCSVParsing(TestCase):
         self.assertEqual(["Data with taxon_id 1234 is not submittable"], messages)
         self.assertTrue(check_performed)
 
-    # test check for submittable atax data
-    def test_check_for_submittable_atax_data(self):
+    # test check for submittable atax data valid
+    def test_check_for_submittable_atax_data_valid(self):
         submission = Submission.objects.first()
         submission.submissionupload_set.all().delete()
         submission.target = ATAX
         submission.save()
 
-        self.create_csv_submission_upload(submission, User.objects.first(), "csv_files/specimen_table_Platypelis.csv")
+        self.create_csv_submission_upload(
+            submission, User.objects.first(), "csv_files/specimen_table_Platypelis_valid.csv"
+        )
         status, messages, check_performed = check_for_submittable_data(submission)
-        self.assertFalse(status)
-        self.assertEqual(["Data with scientific_name Platypelis sp. Ca12 is not submittable"], messages)
+        self.assertTrue(status)
+        self.assertEqual([], messages)
         self.assertTrue(check_performed)
 
     # test check for submittable atax data fail
@@ -1387,7 +1389,6 @@ class TestCSVParsing(TestCase):
         self.assertEqual(
             [
                 "Data with scientific_name Platypelis tsaratananaensissis is not submittable",
-                "Data with scientific_name Platypelis sp. Ca12 is not submittable",
             ],
             messages,
         )
