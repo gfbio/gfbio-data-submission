@@ -30,6 +30,11 @@
 
         ./local_build_and_copy_to_static.sh
 
+## Known Issues:
+
+1. If there is no proper site-configuration, the initial tasks will cause an 500 error when trying to send data to JIRA
+   this is ok since we don't want actuall issues when testing, this needs to be solved in the submission view code.
+   Workaround can be to add a fake site-config or to temporarily put the task chain in comments.
 
 ---------------------------------------------------------------------------------
 
