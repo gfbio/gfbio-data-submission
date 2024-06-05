@@ -20,6 +20,8 @@ const ProfileForm = ({data}) => {
         //     window.localStorage.setItem('profile-form', JSON.stringify(values));
         // },
         // TODO: validation based on field_name -> where to dynamically address this ?
+        //      -> process and display validation from server ? this way the ui would be in sync without the need of
+        //          further implementation on this, since validation is part of the JsonSchema in the backend.
         // validate: {
         //     generic_title_1: (value) =>
         //         value.length < 2 ? 'Title is too short' : null,

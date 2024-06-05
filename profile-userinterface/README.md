@@ -1,4 +1,44 @@
-# DaSS installation,history and notes
+# DEVELOPMENT NOTES:
+
+## Installation of npm packages
+
+1. execute  (in submissions-root/profile-userinterface/)
+
+        npm install
+
+## Develop locally with hot-reloading
+
+1. set valid settings for access to server & api
+
+        (...)  /profile-userinterface/settings.jsx
+
+2. start local django devlopment server (in submissions root directory)
+
+        docker compose -f local.yml up
+3. start local vite server for access to js-app-root (in submissions-root/profile-userinterface/)
+
+        npm run dev
+
+## Develop locally in the context of django views
+
+1. set valid settings for access to server & api (any value should work here)
+2. start local django devlopment server (in submissions root directory)
+
+        docker compose -f local.yml up
+3. everytime modifications to the react app has been made, you need to build & copy to djangos staticfile directory by
+   excuting this script (in submissions-root/profile-userinterface/)
+
+        ./local_build_and_copy_to_static.sh
+
+## Known Issues:
+
+1. If there is no proper site-configuration, the initial tasks will cause an 500 error when trying to send data to JIRA
+   this is ok since we don't want actuall issues when testing, this needs to be solved in the submission view code.
+   Workaround can be to add a fake site-config or to temporarily put the task chain in comments.
+
+---------------------------------------------------------------------------------
+
+# Installation,history and notes
 
 ### confirmed to work locally
 
