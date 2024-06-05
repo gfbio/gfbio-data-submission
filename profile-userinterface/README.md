@@ -1,4 +1,39 @@
-# DaSS installation,history and notes
+# DEVELOPMENT NOTES:
+
+## Installation of npm packages
+
+1. execute  (in submissions-root/profile-userinterface/)
+
+        npm install
+
+## Develop locally with hot-reloading
+
+1. set valid settings for access to server & api
+
+        (...)  /profile-userinterface/settings.jsx
+
+2. start local django devlopment server (in submissions root directory)
+
+        docker compose -f local.yml up
+3. start local vite server for access to js-app-root (in submissions-root/profile-userinterface/)
+
+        npm run dev
+
+## Develop locally in the context of django views
+
+1. set valid settings for access to server & api (any value should work here)
+2. start local django devlopment server (in submissions root directory)
+
+        docker compose -f local.yml up
+3. everytime modifications to the react app has been made, you need to build & copy to djangos staticfile directory by
+   excuting this script (in submissions-root/profile-userinterface/)
+
+        ./local_build_and_copy_to_static.sh
+
+
+---------------------------------------------------------------------------------
+
+# Installation,history and notes
 
 ### confirmed to work locally
 
