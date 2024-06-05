@@ -4,6 +4,7 @@ import json
 import logging
 import os
 from collections import OrderedDict
+from curses import meta
 
 import _csv
 import dpath.util as dpath
@@ -12,7 +13,7 @@ from shortid import ShortId
 
 from gfbio_submissions.brokerage.utils.new_ena_atax_utils import query_ena
 
-from ..configuration.settings import ENA, ENA_PANGAEA, SUBMISSION_MIN_COLS
+from ..configuration.settings import ATAX, ENA, ENA_PANGAEA, SUBMISSION_MIN_COLS
 from ..utils.schema_validation import validate_data_full
 
 logger = logging.getLogger(__name__)
@@ -621,7 +622,70 @@ def parse_meta_data_for_unique_tax_ids(file):
     return tax_ids
 
 
+# parse meta data file for unique scientific names
+def parse_meta_data_for_unique_scientific_names(file):
+    scientific_names = set()
+    dialect = csv.Sniffer().sniff(file.read(20))
+    delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ","
+    file.seek(0)
+    csv_reader = csv.DictReader(file, dialect=dialect, delimiter=delimiter, quoting=csv.QUOTE_ALL)
+    csv_reader.fieldnames = [field.strip().lower() for field in csv_reader.fieldnames]
+    for row in csv_reader:
+        scientific_name = row.get("scientific name", "")
+        if scientific_name:
+            scientific_names.add(scientific_name)
+    return scientific_names
+
+
+def parse_meta_data(meta_data_file, target, messages):
+    with open(meta_data_file.file.path, "r", encoding="utf-8-sig", newline="") as file:
+        status = True
+        if target == "ena":
+            data_to_check = parse_meta_data_for_unique_tax_ids(file)
+            if not data_to_check:
+                messages.append("No taxon_id found in the meta data file")
+                return False
+        elif target == "atax":
+            data_to_check = parse_meta_data_for_unique_scientific_names(file)
+            if not data_to_check:
+                messages.append("No scientific_name found in the meta data file")
+                return False
+        for data in data_to_check:
+            ena_response = query_ena(data, target)
+            if ena_response is None:
+                if target == "ena":
+                    messages.append("Data with taxon_id {0} is not submittable".format(data))
+                elif target == "atax":
+                    messages.append("Data with scientific_name {0} is not submittable".format(data))
+                status = False
+        return status
+
+
+# search for specimen meta data for ATAX submission
+def search_for_specimen_meta_data(meta_data_files):
+    specimen_cols = ["specimen identifier", "basis of record", "scientific name"]
+    for meta_data_file in meta_data_files:
+        with open(meta_data_file.file.path, "r", encoding="utf-8-sig", newline="") as file:
+            line = file.readline()
+            dialect = csv.Sniffer().sniff(smart_str(line))
+            delimiter = dialect.delimiter if dialect.delimiter in [",", ";", "\t"] else ";"
+            splitted = line.replace('"', "").lower().split(delimiter)
+            if all(col in splitted for col in specimen_cols):
+                return meta_data_file
+    return None
+
+
 def check_for_submittable_data(submission):
+    """Check if the data in the submission meta file is submittable
+
+    Args:
+        submission: The submission object
+
+    Returns:
+        status: True if the data is submittable, False otherwise
+        messages: A list of error messages
+        check_performed: True if the check was performed, False otherwise
+    """
     logger.info(
         msg="check_for_submittable_data | "
         "process submission={0} | target={1} | release={2}"
@@ -633,15 +697,16 @@ def check_for_submittable_data(submission):
     check_performed = False
 
     meta_data_files = submission.submissionupload_set.filter(meta_data=True)
-    meta_data_file = meta_data_files.first()
     if submission.target == ENA:
-        with open(meta_data_file.file.path, "r", newline="") as file:
-            data_to_check = parse_meta_data_for_unique_tax_ids(file)
-        for data in data_to_check:
-            ena_response = query_ena(data, "ena")
-            if not ena_response:
-                messages.append("Data with taxon_id {0} is not submittable".format(data))
-                status = False
+        meta_data_file = meta_data_files.first()
+        status = parse_meta_data(meta_data_file, "ena", messages)
+    elif submission.target == ATAX:
+        correct_meta_data_file = search_for_specimen_meta_data(meta_data_files)
+        if correct_meta_data_file:
+            status = parse_meta_data(correct_meta_data_file, "atax", messages)
+        else:
+            messages.append("No specimen file found")
+            status = False
     check_performed = True
 
     return status, messages, check_performed
