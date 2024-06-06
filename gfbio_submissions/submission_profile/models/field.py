@@ -55,7 +55,7 @@ class Field(TimeStampedModel):
     #   - add this to backend to be changable dynamically ?
 
     def __str__(self):
-        return "{}_{}".format(self.field_name, self.pk)
+        return self.field_name
 
     # TODO: unique enough ?
     def field_id(self):
