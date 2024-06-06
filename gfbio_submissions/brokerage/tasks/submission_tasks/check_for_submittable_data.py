@@ -32,6 +32,8 @@ def check_for_submittable_data_task(self, previous_task_result=None, submission_
             report=error_str,
             report_category=SubmissionReport.ERROR,
         )
+        submission.status = submission.ERROR
+        submission.save()
 
     return {
         "data_is_submittable": data_is_submittable,
