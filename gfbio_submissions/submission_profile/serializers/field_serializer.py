@@ -7,6 +7,7 @@ from ..models.field import Field
 
 class FieldSerializer(serializers.ModelSerializer):
     field_type = FieldTypeSerializer(read_only=True)
+    options = serializers.StringRelatedField(many=True)
 
     class Meta:
         model = Field
@@ -18,5 +19,6 @@ class FieldSerializer(serializers.ModelSerializer):
             "mandatory",
             "visible",
             "default",
+            "options",
             "field_id",
         )

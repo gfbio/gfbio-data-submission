@@ -29,7 +29,7 @@ const DropzoneUpload = (props) => {
             <CloseButton
                 size="xs"
                 onClick={() => {
-                    console.log('remove ', index, ' file ', file);
+                    // console.log('remove ', index, ' file ', file);
                     // form.setFieldValue(
                     //     'files',
                     //     form.values.files.filter((_, i) => i !== index)
@@ -44,9 +44,9 @@ const DropzoneUpload = (props) => {
         </Text>
     ));
 
-    console.log('DropzoneUpload | localselectedFiles ', localSelectedFiles);
-    console.log('DropzoneUpload | selectedFiles ', selectedFiles);
-    console.log('DropzoneUpload | form files ', form.values.files);
+    // console.log('DropzoneUpload | localselectedFiles ', localSelectedFiles);
+    // console.log('DropzoneUpload | selectedFiles ', selectedFiles);
+    // console.log('DropzoneUpload | form files ', form.values.files);
 
 
     return (
@@ -60,7 +60,7 @@ const DropzoneUpload = (props) => {
                 // onDrop={(files) => form.setFieldValue('files', files)}
 
                 onDrop={(files) => {
-                    console.log('ONDROP ', files);
+                    // console.log('ONDROP ', files);
                     // TODO: add to selected files here, in this construct the Drptone is not
                     //  re-rendering the form siince it is passed as a pop
                     form.setFieldValue('files', files);

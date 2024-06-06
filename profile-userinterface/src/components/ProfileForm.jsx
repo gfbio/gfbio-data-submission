@@ -31,15 +31,15 @@ const ProfileForm = ({data}) => {
     const handleSubmit = (values) => {
         setProcessing(true);
         console.log('handle submit | Values: ', values);
-        console.log('handle submit | window props: ', window.props);
+        // console.log('handle submit | window props: ', window.props);
         // TODO: fixed token value for local testing only
-        postSubmission('66b66251e245103c249141d00df43d163cdebb80', data.target, values)
-            .then((result) => {
-                console.log('DATA ', result);
-            })
-            .finally(() => {
-                setProcessing(false);
-            });
+        // postSubmission('66b66251e245103c249141d00df43d163cdebb80', data.target, values)
+        //     .then((result) => {
+        //         console.log('DATA ', result);
+        //     })
+        //     .finally(() => {
+        //         setProcessing(false);
+        //     });
     };
 
     // form.setInitialValues({email: 'bla@bla.com',})
@@ -63,9 +63,9 @@ const ProfileForm = ({data}) => {
 
     return (
         <form onSubmit={form.onSubmit(handleSubmit)}>
-            <h2>processing: {"" + isProcessing}</h2>
-            <h3>Name: {data.name}</h3>
-            <h3>Target: {data.target}</h3>
+            <p>processing: {"" + isProcessing}</p>
+            {/*<h3>Name: {data.name}</h3>*/}
+            {/*<h3>Target: {data.target}</h3>*/}
             {data.fields.map((field, index) => (
                 <FormField key={index} field={field} form={form}></FormField>
             ))}
