@@ -24,7 +24,7 @@ class Profile(TimeStampedModel):
     # TODO: validator for unique-in-profile field_name (or mapping_to)
     #   https://docs.djangoproject.com/en/4.2/ref/validators/
     def __str__(self):
-        return "{}_{}".format(self.pk, self.name)
+        return self.name
 
     def all_fields(self):
         if self.inherit_fields_from is None:
