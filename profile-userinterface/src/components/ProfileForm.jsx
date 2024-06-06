@@ -40,6 +40,7 @@ const ProfileForm = ({data}) => {
         //     .finally(() => {
         //         setProcessing(false);
         //     });
+        setProcessing(false);
     };
 
     // form.setInitialValues({email: 'bla@bla.com',})
