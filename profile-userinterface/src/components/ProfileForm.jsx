@@ -63,9 +63,9 @@ const ProfileForm = ({data}) => {
 
     return (
         <form onSubmit={form.onSubmit(handleSubmit)}>
-            <h2>processing: {"" + isProcessing}</h2>
-            <h3>Name: {data.name}</h3>
-            <h3>Target: {data.target}</h3>
+            <p>processing: {"" + isProcessing}</p>
+            {/*<h3>Name: {data.name}</h3>*/}
+            {/*<h3>Target: {data.target}</h3>*/}
             {data.fields.map((field, index) => (
                 <FormField key={index} field={field} form={form}></FormField>
             ))}
