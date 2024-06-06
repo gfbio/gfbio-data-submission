@@ -71,8 +71,9 @@ CELERY_TASK_ALWAYS_EAGER = True
 
 # CORS Settings
 # ------------------------------------------------------------------------------
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_URLS_REGEX = r'^.*$'
 
 # https://docs.djangoproject.com/en/4.2/ref/settings/#secure-cross-origin-opener-policy
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
