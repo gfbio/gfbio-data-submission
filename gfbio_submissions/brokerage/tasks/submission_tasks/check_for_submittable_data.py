@@ -1,6 +1,7 @@
 import logging
 
 from config.celery_app import app
+from gfbio_submissions.brokerage.models.submission_report import SubmissionReport
 from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
 from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
 from gfbio_submissions.brokerage.utils.csv import check_for_submittable_data
@@ -21,6 +22,16 @@ def check_for_submittable_data_task(self, previous_task_result=None, submission_
     data_is_submittable, messages, check_performed = check_for_submittable_data(submission)
 
     logger.info(msg="check_for_submittable_data_task. data is submittable={0}".format(data_is_submittable))
+
+    if messages:
+        error_str = ""
+        for message in messages:
+            error_str += message + ", "
+        SubmissionReport.objects.create(
+            submission=submission,
+            report=error_str,
+            report_category=SubmissionReport.ERROR,
+        )
 
     return {
         "data_is_submittable": data_is_submittable,
