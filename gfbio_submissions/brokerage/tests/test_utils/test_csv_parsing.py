@@ -1356,7 +1356,7 @@ class TestCSVParsing(TestCase):
         self.create_csv_submission_upload(submission, User.objects.first(), "csv_files/molecular_metadata.csv")
         status, messages, check_performed = check_for_submittable_data(submission)
         self.assertFalse(status)
-        self.assertEqual(["Data with taxon_id 1234 is not submittable"], messages)
+        self.assertEqual(["Data with the following taxon ids is not submittable:", "1234"], messages)
         self.assertTrue(check_performed)
 
     # test check for submittable atax data valid
@@ -1388,7 +1388,8 @@ class TestCSVParsing(TestCase):
         self.assertFalse(status)
         self.assertEqual(
             [
-                "Data with scientific_name Platypelis tsaratananaensissis is not submittable",
+                "Data with the following scientific names is not submittable:",
+                "Platypelis tsaratananaensissis",
             ],
             messages,
         )

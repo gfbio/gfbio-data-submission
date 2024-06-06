@@ -1,6 +1,7 @@
 from django.test import TestCase
 
-from gfbio_submissions.brokerage.utils.new_ena_atax_utils import (
+from gfbio_submissions.brokerage.configuration.settings import ATAX, ENA
+from gfbio_submissions.brokerage.utils.ena_taxon_queries import (
     query_ena,
     query_ena_for_scientific_name,
     query_ena_for_taxid,
@@ -43,7 +44,7 @@ class TestEnaAtaxUtils(TestCase):
     # test query ena function with submission target ena
     def test_query_ena_submission_target_ena(self):
         taxid = "59456"
-        result = query_ena(taxid, "ena")
+        result = query_ena(taxid, ENA)
 
         self.assertIsNotNone(result)
         self.assertEqual(result["taxId"], taxid)
@@ -52,7 +53,7 @@ class TestEnaAtaxUtils(TestCase):
     # test query ena function with submission target atx
     def test_query_ena_submission_target_atax(self):
         scientific_name = "Leptonycteris nivalis"
-        result = query_ena(scientific_name, "atax")
+        result = query_ena(scientific_name, ATAX)
 
         self.assertIsNotNone(result)
         self.assertEqual(result["scientificName"], scientific_name)

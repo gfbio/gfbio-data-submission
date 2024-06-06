@@ -10,7 +10,7 @@ import dpath.util as dpath
 from django.utils.encoding import smart_str
 from shortid import ShortId
 
-from gfbio_submissions.brokerage.utils.new_ena_atax_utils import query_ena
+from gfbio_submissions.brokerage.utils.ena_taxon_queries import query_ena
 
 from ..configuration.settings import ATAX, ENA, ENA_PANGAEA, SUBMISSION_MIN_COLS
 from ..utils.schema_validation import validate_data_full
@@ -639,12 +639,12 @@ def parse_meta_data_for_unique_scientific_names(file):
 def parse_meta_data(meta_data_file, target, messages):
     with open(meta_data_file.file.path, "r", encoding="utf-8-sig", newline="") as file:
         status = True
-        if target == "ena":
+        if target == ENA:
             data_to_check = parse_meta_data_for_unique_tax_ids(file)
             if not data_to_check:
                 messages.append("No taxon_id found in the meta data file")
                 return False
-        elif target == "atax":
+        elif target == ATAX:
             data_to_check = parse_meta_data_for_unique_scientific_names(file)
             if not data_to_check:
                 messages.append("No scientific_name found in the meta data file")
@@ -652,10 +652,11 @@ def parse_meta_data(meta_data_file, target, messages):
         for data in data_to_check:
             ena_response = query_ena(data, target)
             if ena_response is None:
-                if target == "ena":
-                    messages.append("Data with taxon_id {0} is not submittable".format(data))
-                elif target == "atax":
-                    messages.append("Data with scientific_name {0} is not submittable".format(data))
+                if target == ENA and not messages:
+                    messages.append("Data with the following taxon ids is not submittable:")
+                elif target == ATAX and not messages:
+                    messages.append("Data with the following scientific names is not submittable:")
+                messages.append(data)
                 status = False
         return status
 
@@ -698,11 +699,11 @@ def check_for_submittable_data(submission):
     meta_data_files = submission.submissionupload_set.filter(meta_data=True)
     if submission.target == ENA:
         meta_data_file = meta_data_files.first()
-        status = parse_meta_data(meta_data_file, "ena", messages)
+        status = parse_meta_data(meta_data_file, ENA, messages)
     elif submission.target == ATAX:
         correct_meta_data_file = search_for_specimen_meta_data(meta_data_files)
         if correct_meta_data_file:
-            status = parse_meta_data(correct_meta_data_file, "atax", messages)
+            status = parse_meta_data(correct_meta_data_file, ATAX, messages)
         else:
             messages.append("No specimen file found")
             status = False
