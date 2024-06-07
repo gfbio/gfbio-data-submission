@@ -6,8 +6,10 @@ import FormField from "../field_mapping/FormField.jsx";
 import postSubmission from "../api/postSubmission.jsx";
 
 
-const ProfileForm = ({data}) => {
+const ProfileForm = (props) => {
 
+    console.log('PROFILE_FORM ', props);
+    const {data, brokerSubmissionId} = props;
     const [isProcessing, setProcessing] = useState(false);
 
     const form = useForm({
