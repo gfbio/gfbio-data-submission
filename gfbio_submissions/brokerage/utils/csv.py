@@ -697,6 +697,9 @@ def check_for_submittable_data(submission):
     check_performed = False
 
     meta_data_files = submission.submissionupload_set.filter(meta_data=True)
+    if not meta_data_files:
+        check_performed = True
+        return status, messages, check_performed
     if submission.target == ENA:
         meta_data_file = meta_data_files.first()
         status = parse_meta_data(meta_data_file, ENA, messages)

@@ -1,6 +1,7 @@
 import logging
 
 from config.celery_app import app
+from gfbio_submissions.brokerage.models.submission import Submission
 from gfbio_submissions.brokerage.models.submission_report import SubmissionReport
 from gfbio_submissions.brokerage.models.task_progress_report import TaskProgressReport
 from gfbio_submissions.brokerage.tasks.submission_task import SubmissionTask
@@ -32,7 +33,7 @@ def check_for_submittable_data_task(self, previous_task_result=None, submission_
             report=error_str,
             report_category=SubmissionReport.ERROR,
         )
-        submission.status = submission.ERROR
+        submission.status = Submission.ERROR
         submission.save()
 
     return {
