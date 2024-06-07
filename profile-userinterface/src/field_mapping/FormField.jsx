@@ -4,6 +4,7 @@ import TextField from "./input_fields/TextField.jsx";
 import TextArea from "./input_fields/TextArea.jsx";
 import DropzoneUpload from "./input_fields/DropzoneUpload.jsx";
 import SelectField from "./input_fields/SelectField.jsx";
+import InfoBox from "./input_fields/InfoBox.jsx";
 
 const FormField = ({field, form}) => {
 
@@ -31,6 +32,8 @@ const FormField = ({field, form}) => {
         case 'file-upload':
             // TODO: Work in progress...
             return <DropzoneUpload {...fieldParameters}></DropzoneUpload>
+        case 'info-box':
+            return <InfoBox {...fieldParameters}></InfoBox>
         default:
             return <TextField {...fieldParameters}></TextField>;
 
