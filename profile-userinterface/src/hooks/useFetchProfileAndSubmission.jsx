@@ -15,6 +15,9 @@ const useFetchProfileAndSubmission = (profileName, brokerSubmissionId) => {
     if (window.props !== undefined) {
         profileName = window.props.token || 'no-token-found';
     }
+    if (brokerSubmissionId === undefined){
+        localStorage.setItem('submission', JSON.stringify({}));
+    }
 
     const config = {
         headers: {
@@ -58,6 +61,7 @@ const useFetchProfileAndSubmission = (profileName, brokerSubmissionId) => {
                 await axios
                     .get(SUBMISSIONS_API + brokerSubmissionId + '/', config)
                     .then((response) => {
+                            localStorage.setItem('submission', JSON.stringify(response.data));
                             setData2(response.data);
                         }
                     )
