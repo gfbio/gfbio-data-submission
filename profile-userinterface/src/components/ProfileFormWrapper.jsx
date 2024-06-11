@@ -25,7 +25,7 @@ const ProfileFormWrapper = () => {
 
     return (
         <div>
-            <h1>ProfileForm</h1>
+            {/*<h1>ProfileForm</h1>*/}
             <ProfileWithErrorHandling data={data} isLoading={isLoading} error={error}/>
         </div>
     );

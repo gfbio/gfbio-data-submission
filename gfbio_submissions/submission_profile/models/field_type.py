@@ -12,4 +12,4 @@ class FieldType(TimeStampedModel):
                                                                   "WILL NOT BE SHOWN OR USED IN THE FORM.")
 
     def __str__(self):
-        return "{}_{}".format(self.type, self.pk)
+        return self.type
