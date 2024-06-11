@@ -8,7 +8,7 @@ from ...serializers.field_serializer import FieldSerializer
 class TestFieldSerializer(TestCase):
 
     def test_serializer(self):
-        serializer = FieldSerializer(data={"title": "Title", "description": "Description ...", "field_name": "text"})
+        serializer = FieldSerializer(
+            data={"title": "Title", "description": "Description ...", "field_name": "text", "options": []})
         valid = serializer.is_valid()
-        print(serializer.errors)
         self.assertTrue(valid)
