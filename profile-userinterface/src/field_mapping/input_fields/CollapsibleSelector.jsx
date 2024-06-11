@@ -20,7 +20,7 @@ const CollapsibleSelector = (props) => {
             <div className='container'>
                 <div className='multi-select-row row btn-style' onClick={toggle}>
                     <p className='col my-2 row-title'><i class="fa fa-balance-scale mr-2"></i>{value}</p>
-                    <p className='clickable-text col-auto text-right my-2'>Change</p>
+                    <p className='clickable-text col-auto text-right my-2'>change</p>
                 </div>
             </div>
 
@@ -61,7 +61,7 @@ const CollapsibleSelector = (props) => {
                                                     </div>
                                                 </Modal>
                                                 <div className='col-auto clickable-text' onClick={open_dialog}>
-                                                    <p className='text-right my-2'>Details</p>
+                                                    <p className='text-right my-2'>details</p>
                                                 </div>
                                             </>
                                         )
