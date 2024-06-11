@@ -4,6 +4,7 @@ import TextField from "./input_fields/TextField.jsx";
 import TextArea from "./input_fields/TextArea.jsx";
 import DropzoneUpload from "./input_fields/DropzoneUpload.jsx";
 import SelectField from "./input_fields/SelectField.jsx";
+import CollapsibleSelector from "./input_fields/CollapsibleSelector.jsx"
 
 const FormField = ({field, form}) => {
 
@@ -31,6 +32,8 @@ const FormField = ({field, form}) => {
         case 'file-upload':
             // TODO: Work in progress...
             return <DropzoneUpload {...fieldParameters}></DropzoneUpload>
+        case 'collapsible-selector':
+            return <CollapsibleSelector {...fieldParameters}></CollapsibleSelector>
         default:
             return <TextField {...fieldParameters}></TextField>;
 
