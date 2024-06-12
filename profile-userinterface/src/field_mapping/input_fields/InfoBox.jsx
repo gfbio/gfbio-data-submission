@@ -102,11 +102,11 @@ const InfoBox = (props) => {
 
     return (
         <div className="">
-            <header className="header header-left form-header-top">
-                <h2 className="section-title">{title}</h2>
-                <p className="section-subtitle"/>
+            <header className="">
+                <h2 className="">{title}</h2>
+                <p className=""/>
             </header>
-            <div className="submission-info">
+            <div className="">
                 <ul className="list-group list-group-flush">
                     {infoItems()}
                 </ul>

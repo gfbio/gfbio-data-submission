@@ -1,16 +1,29 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Button, Group, Modal} from '@mantine/core';
 import {useDisclosure} from '@mantine/hooks';
 import {DatePicker} from '@mantine/dates';
+import PropTypes from "prop-types";
+import SelectField from "./SelectField.jsx";
 
 const EmbargoDate = (props) => {
     const {title, description, form, options, field_id} = props;
-    const [opened, {open, close}] = useDisclosure(false);
-    let today = new Date();
-    today.setFullYear(today.getFullYear() + 1);
-    console.log('today +one year ', today);
-    const [embargoDate, setEmbargoDate] = useState(today);
+
+    const today = new Date();
+    const initialDate = new Date();
+    initialDate.setFullYear(today.getFullYear() + 1);
+
+    const [embargoDate, setEmbargoDate] = useState(initialDate);
     const [tmpEmbargoDate, setTempEmbargoDate] = useState(embargoDate);
+
+    const [opened, {open, close}] = useDisclosure(false);
+
+    // TODO: since embargo is not send as part of the "requirements" field in the submission request,
+    //  but is send as a dedicated field to the submission (serializer). I decided to store this in localstorage
+    //  for now, to keep the logic of getting form values for the "requirements" field separated.
+    useEffect(() => {
+        localStorage.setItem('embargo', embargoDate.toISOString().split('T')[0]);
+    }, [embargoDate]);
+    // }
 
     // TODO: add logic for:
     //  Do not show button if at least one PID has status PUBLIC
@@ -26,9 +39,9 @@ const EmbargoDate = (props) => {
     }
 
     const addMonthsToInitialEmbargoDate = (months) => {
-        console.log('addMonthsToEmbargoDate ', months);
-        today.setMonth(embargoDate.getMonth() + months);
-        setEmbargoDate(today);
+        const tmp = new Date(today);
+        tmp.setMonth(today.getMonth() + months);
+        setEmbargoDate(tmp);
     }
 
     const formattedEmbargoDate = () => {
@@ -42,7 +55,7 @@ const EmbargoDate = (props) => {
     return (
         <div>
             <header className="">
-                <h2 className="">Embargo Date</h2>
+                <h2 className="">{title}</h2>
                 <h4>{formattedEmbargoDate()}</h4>
                 {showEmbargoButton()}
             </header>
@@ -90,6 +103,19 @@ const EmbargoDate = (props) => {
         </div>
     );
 
+}
+
+EmbargoDate.defaultProps = {
+    // default: "",
+}
+
+EmbargoDate.propTypes = {
+    title: PropTypes.string.isRequired,
+    description: PropTypes.string,
+    form: PropTypes.object.isRequired,
+    field_id: PropTypes.string.isRequired,
+    // default: PropTypes.string,
+    options: PropTypes.array,
 }
 
 export default EmbargoDate;

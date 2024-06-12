@@ -9,10 +9,6 @@ import EmbargoDate from "./input_fields/EmbargoDate.jsx";
 
 const FormField = ({field, form}) => {
 
-    // console.log('FormField: ');
-    // console.log('\t', field);
-    // console.log('-----------------------\n');
-
     const fieldParameters = {
         title: field.title,
         description: field.description,
