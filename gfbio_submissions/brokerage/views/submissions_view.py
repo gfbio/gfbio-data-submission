@@ -43,13 +43,15 @@ class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.G
         from ..tasks.submission_tasks.check_for_molecular_content_in_submission import (
             check_for_molecular_content_in_submission_task,
         )
-        from ..tasks.transfer_tasks.trigger_submission_transfer import (
-            trigger_submission_transfer_task,
+        from ..tasks.process_tasks.trigger_submission_process import (
+            trigger_submission_process_task,
         )
         from ..tasks.submission_tasks.check_issue_existing_for_submission import (
             check_issue_existing_for_submission_task,
         )
 
+        # FIXME: check_for_molecular_content_in_submission_task has to be done elsewhere, this breaks the general
+        #   workflow, OR add a general test stage where checks of GENERIC submissions for different content flavours are made
         chain = (
             get_gfbio_helpdesk_username_task.s(submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
             | create_submission_issue_task.s(submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
@@ -57,7 +59,7 @@ class SubmissionsView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.G
             | check_for_molecular_content_in_submission_task.s(submission_id=submission.pk).set(
                 countdown=SUBMISSION_DELAY
             )
-            | trigger_submission_transfer_task.s(submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
+            | trigger_submission_process_task.s(submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)
         )
 
         chain()

@@ -85,8 +85,6 @@ class BrokerObjectManager(models.Manager):
             type=entity_type,
             user=user,
             object_id=object_id,
-            # site_project_id=site_project_id,
-            # site_object_id=site_object_id,
             defaults={"data": json_data},
         )
         # TODO: this was the fallback site_object_id to ensure the this
@@ -163,16 +161,10 @@ class BrokerObjectManager(models.Manager):
                 submission=submission,
                 entity_type="experiment",
                 user=submission.user,
-                # site_project_id=submission.site_project_id,
-                # site_object_id=experiment.get(
-                #     'site_object_id', ''),
                 json_data=experiment,
             )
-            # data['requirements']['experiments'][i][
-            #     'site_object_id'] = obj.site_object_id
             self.add_file_entities(experiment_broker_object=obj, submission=submission)
 
-        # for run in data['requirements'].get('runs', []):
         if "runs" in data["requirements"].keys():
             for i in range(0, len(data["requirements"]["runs"])):
                 run = data["requirements"]["runs"][i]
@@ -180,13 +172,8 @@ class BrokerObjectManager(models.Manager):
                     submission=submission,
                     entity_type="run",
                     user=submission.user,
-                    # site_project_id=submission.site_project_id,
-                    # site_object_id=run.get('site_object_id',
-                    #                        ''),
                     json_data=run,
                 )
-                # data['requirements']['runs'][i][
-                #     'site_object_id'] = obj.site_object_id
 
         submission.data = data
         submission.save()
@@ -201,8 +188,8 @@ class BrokerObjectManager(models.Manager):
         except self.model.DoesNotExist:
             logger.error(
                 msg="BrokerObject with id={} does not exist. "
-                "Failed to append_persistent_identifier for archive={} "
-                "of pid_type={}".format(alias[0], archive, pid_type)
+                    "Failed to append_persistent_identifier for archive={} "
+                    "of pid_type={}".format(alias[0], archive, pid_type)
             )
             return None
         logger.info(msg="append_persistent_identifier to pk={} of " "type={}.".format(broker_obj.id, broker_obj.type))

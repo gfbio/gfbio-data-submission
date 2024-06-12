@@ -14,7 +14,7 @@ from ...models.task_progress_report import TaskProgressReport
 logger = logging.getLogger(__name__)
 
 from ...tasks.submission_task import SubmissionTask
-from ...utils.submission_transfer import SubmissionTransferHandler
+from ...utils.submission_process import SubmissionProcessHandler
 from ...utils.task_utils import get_submission_and_site_configuration
 
 
@@ -33,24 +33,24 @@ def check_on_hold_status_task(self, previous_task_result=None, submission_id=Non
     if site_configuration.release_submissions:
         logger.info(
             msg="check_on_hold_status_task. submission pk={0}. "
-            "site_config pk={1}. site_configuration.release_submissions"
-            "={2}. execute submission."
-            "".format(
+                "site_config pk={1}. site_configuration.release_submissions"
+                "={2}. execute submission."
+                "".format(
                 submission_id,
                 site_configuration.pk,
                 site_configuration.release_submissions,
             )
         )
-        transfer_handler = SubmissionTransferHandler(submission_id=submission.pk, target_archive=submission.target)
-        transfer_handler.execute()
+        process_handler = SubmissionProcessHandler(submission_id=submission.pk, target_archive=submission.target)
+        process_handler.execute()
     else:
         if not submission.approval_notification_sent:
             # email admins, then do smth. to trigger chain once ok
             logger.info(
                 msg="check_on_hold_status_task. submission pk={0}. "
-                "site_config pk={1}. site_configuration.release_submissions"
-                "={2}. send mail to admins."
-                "".format(
+                    "site_config pk={1}. site_configuration.release_submissions"
+                    "={2}. send mail to admins."
+                    "".format(
                     submission_id,
                     site_configuration.pk,
                     site_configuration.release_submissions,

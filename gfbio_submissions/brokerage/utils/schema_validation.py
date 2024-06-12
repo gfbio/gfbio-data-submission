@@ -4,6 +4,9 @@ import json
 import logging
 import os
 
+import xml.etree.ElementTree as ET
+
+import xmlschema
 from django.conf import settings
 from django.forms import ValidationError
 from jsonschema.validators import Draft3Validator, Draft4Validator
@@ -48,12 +51,6 @@ def collect_validation_errors(data, validator):
             )
         )
         for error in validator.iter_errors(data)
-    ]
-
-
-def collect_validation_xml_errors(data, validator):
-    return [
-        ValidationError("error : {}".format(error.message.replace("u'", "'"))) for error in validator.iter_errors(data)
     ]
 
 
@@ -185,25 +182,6 @@ def validate_ena_relations(data):
     return errors
 
 
-# def validate_atax_data_is_valid(submission=None, schema_file=None, xml_string=None):
-#     xml_string_valid = False
-#     # create ataxer
-#     ataxer = create_ataxer(submission)
-#     schema = ataxer.schema
-#
-#     # path = os.path.join(settings.STATIC_ROOT, 'schemas', schema_file)
-#     # schema = xmlschema.XMLSchema(path)
-#
-#     if xml_string:
-#         root = ET.fromstring(xml_string)
-#         tree = ET.ElementTree(ET.fromstring(xml_string))
-#
-#         xml_string_valid = schema.is_valid(tree)
-#         errors = [] if xml_string_valid else collect_validation_xml_errors(tree, schema)
-#
-#         return xml_string_valid, errors
-
-
 # TODO: remove draft03 stuff completly or invert logic and make draft04 default
 
 
@@ -258,3 +236,22 @@ def validate_embargo(embargo):
         return False, "Embargo : latest possible date is 2 years from today"
 
     return True, ""
+
+
+# def collect_validation_xml_errors(data, validator):
+#     return [
+#         ValidationError("error : {}".format(error.message.replace("u'", "'"))) for error in
+#         validator.iter_errors(data)
+#     ]
+
+
+def validate_atax_data(schema_file_name, xml_string):
+    path = os.path.join(settings.STATIC_ROOT, 'schemas', schema_file_name)
+    schema = xmlschema.XMLSchema(path)
+
+    tree = ET.ElementTree(ET.fromstring(xml_string))
+    valid = schema.is_valid(tree)
+    # errors = [] if valid else collect_validation_xml_errors(tree, schema)
+    errors = [] if valid else [error for error in schema.iter_errors(tree)]
+
+    return valid, errors

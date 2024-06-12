@@ -50,10 +50,10 @@ from ..tasks.auditable_text_data_tasks.create_targeted_sequence_ena_manifest imp
 )
 from ..tasks.auditable_text_data_tasks.prepare_ena_study_xml import prepare_ena_study_xml_task
 from ..tasks.broker_object_tasks.create_study_broker_objects_only import create_study_broker_objects_only_task
-from ..tasks.transfer_tasks.process_ena_response import process_ena_response_task
-from ..tasks.transfer_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
-from ..tasks.transfer_tasks.register_study_at_ena import register_study_at_ena_task
-from ..tasks.transfer_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
+from ..tasks.process_tasks.process_ena_response import process_ena_response_task
+from ..tasks.process_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
+from ..tasks.process_tasks.register_study_at_ena import register_study_at_ena_task
+from ..tasks.process_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
 
 
 class TestTargetedSequencePreparationTasks(TestCase):
@@ -788,10 +788,10 @@ class TestCLI(TestCase):
             body=_get_ena_register_study_response(),
             status=200,
         )
-        from ..tasks.transfer_tasks.process_ena_response import process_ena_response_task
-        from ..tasks.transfer_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
-        from ..tasks.transfer_tasks.register_study_at_ena import register_study_at_ena_task
-        from ..tasks.transfer_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
+        from ..tasks.process_tasks.process_ena_response import process_ena_response_task
+        from ..tasks.process_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
+        from ..tasks.process_tasks.register_study_at_ena import register_study_at_ena_task
+        from ..tasks.process_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
 
         submission_chain = (
             register_study_at_ena_task.s(submission_id=submission.pk).set(countdown=SUBMISSION_DELAY)

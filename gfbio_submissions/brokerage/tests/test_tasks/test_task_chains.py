@@ -23,9 +23,9 @@ from ...tasks.jira_tasks.attach_to_pangaea_issue import attach_to_pangaea_issue_
 from ...tasks.jira_tasks.create_pangaea_issue import create_pangaea_issue_task
 from ...tasks.jira_tasks.create_submission_issue import create_submission_issue_task
 from ...tasks.jira_tasks.get_gfbio_helpdesk_username import get_gfbio_helpdesk_username_task
-from ...tasks.transfer_tasks.trigger_submission_transfer import trigger_submission_transfer_task
-from ...tasks.transfer_tasks.trigger_submission_transfer_for_updates import (
-    trigger_submission_transfer_for_updates_task,
+from ...tasks.process_tasks.trigger_submission_process import trigger_submission_process_task
+from ...tasks.process_tasks.trigger_submission_process_for_updates import (
+    trigger_submission_process_for_updates_task,
 )
 from .test_tasks_base import TestTasks
 
@@ -132,14 +132,14 @@ class TestTaskChains(TestTasks):
         )()
         self.assertTrue(result.successful())
 
-    def test_trigger_submission_transfer_no_errors_from_previous_task(self):
+    def test_trigger_submission_process_no_errors_from_previous_task(self):
         submission = Submission.objects.first()
         prev_task_result = {
             "molecular_data_available": True,
             "messages": [],
             "molecular_data_check_performed": True,
         }
-        result = trigger_submission_transfer_task.apply(
+        result = trigger_submission_process_task.apply(
             kwargs={
                 "previous_task_result": prev_task_result,
                 "submission_id": submission.pk,
@@ -147,14 +147,14 @@ class TestTaskChains(TestTasks):
         )
         self.assertNotEqual(TaskProgressReport.CANCELLED, result.get())
 
-    def test_trigger_submission_transfer_errors_from_previous_task(self):
+    def test_trigger_submission_process_errors_from_previous_task(self):
         submission = Submission.objects.first()
         prev_task_result = {
             "molecular_data_available": True,
             "messages": ["invalid no. of meta_data_files, 8"],
             "molecular_data_check_performed": True,
         }
-        result = trigger_submission_transfer_task.apply(
+        result = trigger_submission_process_task.apply(
             kwargs={
                 "previous_task_result": prev_task_result,
                 "submission_id": submission.pk,
@@ -162,14 +162,14 @@ class TestTaskChains(TestTasks):
         )
         self.assertEqual(TaskProgressReport.CANCELLED, result.get())
 
-    def test_trigger_submission_transfer_for_updates_no_errors_from_previous_task(self):
+    def test_trigger_submission_process_for_updates_no_errors_from_previous_task(self):
         submission = Submission.objects.first()
         prev_task_result = {
             "molecular_data_available": True,
             "messages": [],
             "molecular_data_check_performed": True,
         }
-        result = trigger_submission_transfer_for_updates_task.apply(
+        result = trigger_submission_process_for_updates_task.apply(
             kwargs={
                 "previous_task_result": prev_task_result,
                 "broker_submission_id": "{}".format(submission.broker_submission_id),
@@ -177,14 +177,14 @@ class TestTaskChains(TestTasks):
         )
         self.assertNotEqual(TaskProgressReport.CANCELLED, result.get())
 
-    def test_trigger_submission_transfer_for_updates_errors_from_previous_task(self):
+    def test_trigger_submission_process_for_updates_errors_from_previous_task(self):
         submission = Submission.objects.first()
         prev_task_result = {
             "molecular_data_available": True,
             "messages": ["invalid no. of meta_data_files, 8"],
             "molecular_data_check_performed": True,
         }
-        result = trigger_submission_transfer_for_updates_task.apply(
+        result = trigger_submission_process_for_updates_task.apply(
             kwargs={
                 "previous_task_result": prev_task_result,
                 "broker_submission_id": submission.pk,
@@ -240,6 +240,6 @@ class TestTaskChains(TestTasks):
             status=200,
         )
 
-        trigger_submission_transfer_task(submission_id=submission.id)
+        trigger_submission_process_task(submission_id=submission.id)
 
         self.assertLess(len_auditable_data, len(AuditableTextData.objects.all()))

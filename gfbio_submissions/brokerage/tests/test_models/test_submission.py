@@ -174,7 +174,7 @@ class SubmissionTest(TestCase):
 
     def test_queuing_of_closed_submissions(self):
         with patch(
-            "gfbio_submissions.brokerage.tasks.transfer_tasks.trigger_submission_transfer.trigger_submission_transfer_task.apply_async"
+            "gfbio_submissions.brokerage.tasks.process_tasks.trigger_submission_process.trigger_submission_process_task.apply_async"
         ) as trigger_mock:
             sub = Submission()
             sub.user = User.objects.first()

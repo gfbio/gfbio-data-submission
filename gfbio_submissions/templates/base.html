@@ -2,159 +2,180 @@
 <!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
 
-    <title>{% block title %}GFBio Submissions{% endblock title %}</title>
+  <title>{% block title %}GFBio Submissions{% endblock title %}</title>
 
-    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}"/>
+  <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}"/>
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <meta name="description" content="GFBio Submissions">
-    <meta name="author" content="Marc Weber">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+  <meta name="description" content="GFBio Submissions">
+  <meta name="author" content="Marc Weber">
 
-    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
-    <!--[if lt IE 9]>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
-    <![endif]-->
+  <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+  <!--[if lt IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+  <![endif]-->
 
-    {% block css %}
+  {% block css %}
 
-        <!-- Latest compiled and minified Bootstrap 4 beta CSS -->
-        <link rel="stylesheet"
-              href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
-              integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
-              crossorigin="anonymous">
-
-
-        <!-- Your stuff: Third-party CSS libraries go here -->
-        <!-- Icons -->
-        <link rel="stylesheet"
-              href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
-              integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"
-              crossorigin="anonymous">
-
-        <!-- TODO: consider https://github.com/linea-io/linea-scss -->
-        {#        <link href="{% static 'vendor/linea_icons/_basic/_ICONFONT/styles.css' %}"#}
-        {#              rel="stylesheet" type="text/css">#}
-
-        <!-- TODO: consider https://github.com/aastrong/themify-icons.scss -->
-        <link href="{% static 'vendor/themify-icons/themify-icons.css' %}"
-              rel="stylesheet"
-              type="text/css">
-
-        <link href="https://unpkg.com/ionicons@4.2.2/dist/css/ionicons.min.css"
-              rel="stylesheet">
-
-        <!-- This file stores project-specific CSS -->
-
-        <link href="{% static 'css/project.css' %}" rel="stylesheet">
+    <!-- Latest compiled and minified Bootstrap 4 beta CSS -->
+    {#        <link rel="stylesheet"#}
+    {#              href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"#}
+    {#              integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"#}
+    {#              crossorigin="anonymous">#}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+          integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
 
 
-    {% endblock %}
+
+    <!-- Your stuff: Third-party CSS libraries go here -->
+    <!-- Icons -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+          integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"
+          crossorigin="anonymous">
+
+    <!-- TODO: consider https://github.com/linea-io/linea-scss -->
+    {#        <link href="{% static 'vendor/linea_icons/_basic/_ICONFONT/styles.css' %}"#}
+    {#              rel="stylesheet" type="text/css">#}
+
+    <!-- TODO: consider https://github.com/aastrong/themify-icons.scss -->
+    <link href="{% static 'vendor/themify-icons/themify-icons.css' %}"
+          rel="stylesheet"
+          type="text/css">
+
+    <link href="https://unpkg.com/ionicons@4.2.2/dist/css/ionicons.min.css"
+          rel="stylesheet">
+
+    <!-- This file stores project-specific CSS -->
+
+    <link href="{% static 'css/project.css' %}" rel="stylesheet">
+
+    {% block extra_css %}
+    {% endblock extra_css %}
+  {% endblock %}
+
+  {% if prod_env %}
+    <!-- Google Analytics -->
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-F96NGEWFKC"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+
+
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+
+      gtag('js', new Date());
+      gtag('config', 'G-F96NGEWFKC', {anonymize_ip: true});
+    </script>
+  {% endif %}
 
 </head>
 
 <body>
 
 {% block navigation %}
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light fixed-top"
-            {# TODO: check if there is a more elegant way to differ navi ids #}
-            {% block navigation-id %}
-         id="mainNav"
-            {% endblock navigation-id %}
-    >
-        <div class="container-fluid">
-            {# TODO: keep optional js-scroll-trigger in mind, for now it is not used  #}
-            {#            <a class="navbar-brand" href="{% url 'home' %}">#}
-            {#                GFBio#}
-            {#                <small>Submissions</small>#}
-            {#            </a>#}
-            {#            <a href="https://www.dfg.de/">#}
-            {#                <img height="30" class=""#}
-            {#                     src="{% static 'images/dfg_logo_black_w750.png' %}"#}
-            {#                     alt="Deutsche Forschungsgemeinschaft">#}
-            {#            </a>#}
-            <button class="navbar-toggler navbar-toggler-right" type="button"
-                    data-toggle="collapse" data-target="#navbarResponsive"
-                    aria-controls="navbarResponsive" aria-expanded="false"
-                    aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarResponsive">
-                <ul class="navbar-nav ml-auto">
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-light fixed-top"
+    {# TODO: check if there is a more elegant way to differ navi ids #}
+    {% block navigation-id %}
+       id="mainNav"
+    {% endblock navigation-id %}
+  >
+    <div class="container-fluid">
+      {# TODO: keep optional js-scroll-trigger in mind, for now it is not used  #}
+      {#            <a class="navbar-brand" href="{% url 'home' %}">#}
+      {#                GFBio#}
+      {#                <small>Submissions</small>#}
+      {#            </a>#}
+      {#            <a href="https://www.dfg.de/">#}
+      {#                <img height="30" class=""#}
+      {#                     src="{% static 'images/dfg_logo_black_w750.png' %}"#}
+      {#                     alt="Deutsche Forschungsgemeinschaft">#}
+      {#            </a>#}
+      <button class="navbar-toggler navbar-toggler-right" type="button"
+              data-toggle="collapse" data-target="#navbarResponsive"
+              aria-controls="navbarResponsive" aria-expanded="false"
+              aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarResponsive">
+        <ul class="navbar-nav ml-auto">
 
-                    {#                    <li class="nav-item"#}
-                    {#                        style="padding-top: 0.5rem; margin-right: 1rem;">#}
-                    {#                        <a href="https://www.dfg.de/">#}
-                    {#                            <img height="24" class=""#}
-                    {#                                 src="{% static 'images/dfg_logo_black_w600.png' %}"#}
-                    {#                                 alt="Deutsche Forschungsgemeinschaft">#}
-                    {#                        </a>#}
-                    {#                    </li>#}
+          {#                    <li class="nav-item"#}
+          {#                        style="padding-top: 0.5rem; margin-right: 1rem;">#}
+          {#                        <a href="https://www.dfg.de/">#}
+          {#                            <img height="24" class=""#}
+          {#                                 src="{% static 'images/dfg_logo_black_w600.png' %}"#}
+          {#                                 alt="Deutsche Forschungsgemeinschaft">#}
+          {#                        </a>#}
+          {#                    </li>#}
 
-                    {#                                        <li class="nav-item">#}
-                    {#                                            <a class="nav-link "#}
-                    {#                                               href="{% url 'home' %}">Home</a>#}
-                    {#                                        </li>#}
-                    {##}
-                    {#                    <li class="nav-item">#}
-                    {#                        <a class="nav-link "#}
-                    {#                           href="{% url 'about' %}">About</a>#}
-                    {#                    </li>#}
-                    {##}
-                    {#                    <li class="nav-item dropdown">#}
-                    {#                        <a class="nav-link has-dropdown" data-toggle="dropdown"#}
-                    {#                           href="#" role="button" aria-haspopup="true"#}
-                    {#                           aria-expanded="false">Dropdown</a>#}
-                    {#                        <div class="dropdown-menu">#}
-                    {#                            <a class="dropdown-item" href="#">Action</a>#}
-                    {#                            <a class="dropdown-item" href="#">Another action</a>#}
-                    {#                            <a class="dropdown-item" href="#">Something else#}
-                    {#                                here</a>#}
-                    {#                            <div class="dropdown-divider"></div>#}
-                    {#                            <a class="dropdown-item" href="#">Separated link</a>#}
-                    {#                        </div>#}
-                    {#                    </li>#}
-
-
-                    {% if request.user.is_authenticated %}
+          {#                                        <li class="nav-item">#}
+          {#                                            <a class="nav-link "#}
+          {#                                               href="{% url 'home' %}">Home</a>#}
+          {#                                        </li>#}
+          {##}
+          {#                    <li class="nav-item">#}
+          {#                        <a class="nav-link "#}
+          {#                           href="{% url 'about' %}">About</a>#}
+          {#                    </li>#}
+          {##}
+          {#                    <li class="nav-item dropdown">#}
+          {#                        <a class="nav-link has-dropdown" data-toggle="dropdown"#}
+          {#                           href="#" role="button" aria-haspopup="true"#}
+          {#                           aria-expanded="false">Dropdown</a>#}
+          {#                        <div class="dropdown-menu">#}
+          {#                            <a class="dropdown-item" href="#">Action</a>#}
+          {#                            <a class="dropdown-item" href="#">Another action</a>#}
+          {#                            <a class="dropdown-item" href="#">Something else#}
+          {#                                here</a>#}
+          {#                            <div class="dropdown-divider"></div>#}
+          {#                            <a class="dropdown-item" href="#">Separated link</a>#}
+          {#                        </div>#}
+          {#                    </li>#}
 
 
-                        <li class="nav-item dropdown">
-                            <a class="nav-link has-dropdown"
-                               data-toggle="dropdown"
-                               href="#" role="button" aria-haspopup="true"
-                               aria-expanded="false">
-                                {% if request.user.name != '' %}
-                                    {{ request.user.name }}
-                                {% else %}
-                                    {{ request.user.username }}
-                                {% endif %}
-                            </a>
-                            <div class="dropdown-menu">
-                                {#                                URL provided by django-allauth/account/urls.py#}
-                                {#                                <a class="dropdown-item"#}
-                                {#                                   href="{% url 'users:detail' request.user.username %}">My#}
-                                {#                                    Profile</a>#}
-                                {#                                <a class="dropdown-item" href="#">Support</a>#}
-                                {#                                <a class="dropdown-item" href="#">Settings</a>#}
-                                {#                                <div class="dropdown-divider"></div>#}
-                                {# URL provided by django-allauth/account/urls.py #}
-                                <a class="dropdown-item user-signout"
-                                   href="{% url 'account_logout' %}">Sign
-                                    Out</a>
-                            </div>
-                        </li>
-                        {% comment %}<li class="nav-item">
+          {% if request.user.is_authenticated %}
+
+
+            <li class="nav-item dropdown">
+              <a class="nav-link has-dropdown"
+                 data-toggle="dropdown"
+                 href="#" role="button" aria-haspopup="true"
+                 aria-expanded="false">
+                {% if request.user.name != '' %}
+                  {{ request.user.name }}
+                {% else %}
+                  {{ request.user.username }}
+                {% endif %}
+              </a>
+              <div class="dropdown-menu">
+                {#                                URL provided by django-allauth/account/urls.py#}
+                {#                                <a class="dropdown-item"#}
+                {#                                   href="{% url 'users:detail' request.user.username %}">My#}
+                {#                                    Profile</a>#}
+                {#                                <a class="dropdown-item" href="#">Support</a>#}
+                {#                                <a class="dropdown-item" href="#">Settings</a>#}
+                {#                                <div class="dropdown-divider"></div>#}
+                {# URL provided by django-allauth/account/urls.py #}
+                <a class="dropdown-item user-signout"
+                   href="{% url 'account_logout' %}">Sign
+                  Out</a>
+              </div>
+            </li>
+            {% comment %}<li class="nav-item">
                         {# URL provided by django-allauth/account/urls.py #}
                         <a class="nav-link user-profile"
                            href="{% url 'users:detail' request.user.username %}">{% trans "My Profile" %}</a>
                     </li>{% endcomment %}
 
-                        {% comment %}<li class="nav-item">
+            {% comment %}<li class="nav-item">
                         {# URL provided by django-allauth/account/urls.py #}
                         <a class="nav-link btn btn-secondary btn-sm sign-out"
                            href="{% url 'account_logout' %}">
@@ -162,35 +183,35 @@
                         </a>
                     </li>{% endcomment %}
 
-                        {% comment %}<li class="nav-item">
+            {% comment %}<li class="nav-item">
                         <a class="nav-link " href="{% url 'account_logout' %}">Sign
                             Out</a>
                     </li>{% endcomment %}
 
-                    {% else %}
-                        <li class="nav-item">
-                            {# URL provided by django-allauth/account/urls.py #}
-                            <a class="nav-link btn btn-secondary btn-sm sign-up"
-                                    {#                               href="{% url 'account_signup' %}"#}
-                               href="https://sso.gfbio.org/simplesaml/module.php/accountui/register.php"
-                            >
-                                Sign Up
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            {# URL provided by django-allauth/account/urls.py #}
-                            <a class="nav-link btn btn-secondary btn-sm sign-in"
-                               href="{% url 'account_login' %}">
-                                Sign In
-                            </a>
-                        </li>
-                    {% endif %}
+          {% else %}
+            <li class="nav-item">
+              {# URL provided by django-allauth/account/urls.py #}
+              <a class="nav-link btn btn-secondary btn-sm sign-up"
+                {#                               href="{% url 'account_signup' %}"#}
+                 href="https://sso.gfbio.org/simplesaml/module.php/accountui/register.php"
+              >
+                Sign Up
+              </a>
+            </li>
+            <li class="nav-item">
+              {# URL provided by django-allauth/account/urls.py #}
+              <a class="nav-link btn btn-secondary btn-sm sign-in"
+                 href="{% url 'account_login' %}">
+                Sign In
+              </a>
+            </li>
+          {% endif %}
 
 
-                </ul>
-            </div>
-        </div>
-    </nav>
+        </ul>
+      </div>
+    </div>
+  </nav>
 {% endblock navigation %}
 
 {% comment %}<div class="m-b-1">
@@ -243,59 +264,59 @@
 
 {% block content-wrapper %}
 
-    {% block page-title %}
+  {% block page-title %}
 
-        {#        <section class="page-title bg-secondary">#}
-        {#            <div class="container">#}
-        {#                <div class="row">#}
-        {#                    <div class="col-md-6">#}
-        {#                        <h3 class="uppercase">#}
-        {#                            <i class="ti-pencil-alt"></i> Form Inputs</h3>#}
-        {#                    </div>#}
-        {#                </div>#}
-        {#                <!--end of row-->#}
-        {#            </div>#}
-        {#            <!--end of container-->#}
-        {#        </section>#}
+    {#        <section class="page-title bg-secondary">#}
+    {#            <div class="container">#}
+    {#                <div class="row">#}
+    {#                    <div class="col-md-6">#}
+    {#                        <h3 class="uppercase">#}
+    {#                            <i class="ti-pencil-alt"></i> Form Inputs</h3>#}
+    {#                    </div>#}
+    {#                </div>#}
+    {#                <!--end of row-->#}
+    {#            </div>#}
+    {#            <!--end of container-->#}
+    {#        </section>#}
 
-    {% endblock page-title %}
+  {% endblock page-title %}
 
-    {% block section %}
+  {% block section %}
 
-        <section id="mainSection">
-            <div class="container">
-                {# TODO: replace for clickable/removable messages OR remove completely  #}
-                {#  If you don’t want to use messages, you can remove 'django.contrib.messages' from your INSTALLED_APPS, the MessageMiddleware line from MIDDLEWARE, and the messages context processor from TEMPLATES. #}
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show">
-                            {{ message }}
-                            <button type="button" class="close"
-                                    data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
+    <section id="mainSection">
+      <div class="container">
+        {# TODO: replace for clickable/removable messages OR remove completely  #}
+        {#  If you don’t want to use messages, you can remove 'django.contrib.messages' from your INSTALLED_APPS, the MessageMiddleware line from MIDDLEWARE, and the messages context processor from TEMPLATES. #}
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show">
+              {{ message }}
+              <button type="button" class="close"
+                      data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+          {% endfor %}
+        {% endif %}
 
-                {% block content %}
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <p>Use this document as a way to quick start any new
-                                project.</p>
-                        </div>
-                    </div> <!-- /row -->
-                    <div class="row">
-                        <div class="col">
-                            <div style="height: 2000px;">Spacer. height 2000px
-                            </div>
-                        </div>
-                    </div>
-                {% endblock content %}
+        {% block content %}
+          <div class="row">
+            <div class="col-lg-12">
+              <p>Use this document as a way to quick start any new
+                project.</p>
+            </div>
+          </div> <!-- /row -->
+          <div class="row">
+            <div class="col">
+              <div style="height: 2000px;">Spacer. height 2000px
+              </div>
+            </div>
+          </div>
+        {% endblock content %}
 
-            </div> <!-- /container -->
-        </section>
-    {% endblock section %}
+      </div> <!-- /container -->
+    </section>
+  {% endblock section %}
 
 {% endblock content-wrapper %}
 
@@ -316,95 +337,95 @@
 
 {% block footer %}
 
-    <footer>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-3 col-sm-6">
+  <footer>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-3 col-sm-6">
 
-                    <a href="https://www.gfbio.org/">
-                        <img src="{% static 'images/gfbio_logo.grey.svg' %}"
-                             alt="German Federation for Biological Data">
-                    </a>
+          <a href="https://www.gfbio.org/">
+            <img src="{% static 'images/gfbio_logo.grey.svg' %}"
+                 alt="German Federation for Biological Data">
+          </a>
 
 
-                </div>
-                <div class="col-md-3 col-sm-6">
-                    <h6>GFBio</h6>
-                    <hr>
-                    <ul class="list-unstyled">
-                        <li>
-                            <a href="https://www.gfbio.org/">GFBio Project</a>
-                        </li>
-                        <li>
-                            <a href="https://www.gfbio.org/gfbio_ev">GFBio
-                                e.V.</a>
-                        </li>
-
-                        <li>
-                            <a href="https://www.gfbio.org/legal-notice">Legal
-                                Notice</a>
-                        </li>
-                        <li>
-                            <a href="https://www.gfbio.org/privacy-policy">Privacy
-                                Policy</a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="col-md-3 col-sm-6">
-                    <h6>Services</h6>
-                    <hr>
-                    <ul class="list-unstyled">
-                        <li>
-                            <a href="https://www.gfbio.org/search">
-                                <i class="ti-search icon"></i>
-                                Find
-                                Data</a>
-                        </li>
-                        <li>
-                            <a href="https://submissions.gfbio.org/">
-                                <i class="ti-upload icon"></i>
-                                Submit
-                                Data</a>
-                        </li>
-                        <li>
-                            <a href="https://www.gfbio.org/plan">
-                                <i class="ti-check-box icon"></i>
-                                Data Management Plan
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="col-md-3 col-sm-6">
-                    <h6>Get in touch</h6>
-                    <hr>
-                    <ul class="list-unstyled">
-                        <li>
-                            <a href="https://twitter.com/GFBio_Project">
-                                <i class="ti-twitter-alt icon"></i>
-                                Twitter
-                            </a>
-                        </li>
-                        <li>
-                            <a href="mailto:info@gfbio.org">
-                                <i class="ti-email icon"></i>
-                                Email
-                                us
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-sm-12 text-right">
-                    <a href="https://www.dfg.de/">
-                        <img height="24"
-                             src="{% static 'images/dfg_logo_grey_w750.png' %}"
-                             alt="Deutsche Forschungsgemeinschaft">
-                    </a>
-                </div>
-            </div>
         </div>
-    </footer>
+        <div class="col-md-3 col-sm-6">
+          <h6>GFBio</h6>
+          <hr>
+          <ul class="list-unstyled">
+            <li>
+              <a href="https://www.gfbio.org/">GFBio Project</a>
+            </li>
+            <li>
+              <a href="https://www.gfbio.org/gfbio_ev">GFBio
+                e.V.</a>
+            </li>
+
+            <li>
+              <a href="https://www.gfbio.org/legal-notice">Legal
+                Notice</a>
+            </li>
+            <li>
+              <a href="https://www.gfbio.org/privacy-policy">Privacy
+                Policy</a>
+            </li>
+          </ul>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <h6>Services</h6>
+          <hr>
+          <ul class="list-unstyled">
+            <li>
+              <a href="https://www.gfbio.org/search">
+                <i class="ti-search icon"></i>
+                Find
+                Data</a>
+            </li>
+            <li>
+              <a href="https://submissions.gfbio.org/">
+                <i class="ti-upload icon"></i>
+                Submit
+                Data</a>
+            </li>
+            <li>
+              <a href="https://www.gfbio.org/plan">
+                <i class="ti-check-box icon"></i>
+                Data Management Plan
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <h6>Get in touch</h6>
+          <hr>
+          <ul class="list-unstyled">
+            <li>
+              <a href="https://twitter.com/GFBio_Project">
+                <i class="ti-twitter-alt icon"></i>
+                Twitter
+              </a>
+            </li>
+            <li>
+              <a href="mailto:info@gfbio.org">
+                <i class="ti-email icon"></i>
+                Email
+                us
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-12 text-right">
+          <a href="https://www.dfg.de/">
+            <img height="24"
+                 src="{% static 'images/dfg_logo_grey_w750.png' %}"
+                 alt="Deutsche Forschungsgemeinschaft">
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
 
 {% endblock footer %}
 
@@ -415,31 +436,38 @@
 <!-- Placed at the end of the document so the pages load faster -->
 {% block javascript %}
 
-    <!-- Required by Bootstrap v4 beta -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-            crossorigin="anonymous"></script>
-    <script
-            src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
-            integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
-            crossorigin="anonymous"></script>
-    <script
-            src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
-            integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
-            crossorigin="anonymous"></script>
+  <!-- Required by Bootstrap v4 beta -->
+  {#  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"#}
+  {#          integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"#}
+  {#          crossorigin="anonymous"></script>#}
+  {#  <script#}
+  {#    src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"#}
+  {#    integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"#}
+  {#    crossorigin="anonymous"></script>#}
+  {#  <script#}
+  {#    src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"#}
+  {#    integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"#}
+  {#    crossorigin="anonymous"></script>#}
 
-    <!-- Your stuff: Third-party javascript libraries go here -->
-    {% block thirdPartyJavaScript %}
-        {#        <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>#}
-        {#        <script src="{% static 'vendor/scrollreveal/scrollreveal.min.js' %}"></script>#}
-        {#        <script src="{% static 'vendor/magnific-popup/jquery.magnific-popup.min.js' %}"></script>#}
-    {% endblock thirdPartyJavaScript %}
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
+          integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+          crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct"
+          crossorigin="anonymous"></script>
 
-    <!-- place project specific Javascript in this file -->
-    <script src="{% static 'js/project.js' %}"></script>
+  <!-- Your stuff: Third-party javascript libraries go here -->
+  {% block thirdPartyJavaScript %}
+    {#        <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>#}
+    {#        <script src="{% static 'vendor/scrollreveal/scrollreveal.min.js' %}"></script>#}
+    {#        <script src="{% static 'vendor/magnific-popup/jquery.magnific-popup.min.js' %}"></script>#}
+  {% endblock thirdPartyJavaScript %}
+
+  <!-- place project specific Javascript in this file -->
+  <script src="{% static 'js/project.js' %}"></script>
 
 
 {% endblock javascript %}
 </body>
 </html>
- 
+

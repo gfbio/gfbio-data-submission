@@ -8,7 +8,7 @@ import environ
 
 # VERSION NUMBER
 # ------------------------------------------------------------------------------#
-VERSION = '1.106.5'
+VERSION = "1.106.5"
 
 ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 # gfbio_submissions/
@@ -110,7 +110,7 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
     # "mozilla_django_oidc.auth.OIDCAuthenticationBackend",
-    "gfbio_submissions.authentication.auth_backends.GFBioAuthenticationBackend"
+    "gfbio_submissions.authentication.auth_backends.GFBioAuthenticationBackend",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-user-model
 AUTH_USER_MODEL = "users.User"
@@ -132,25 +132,17 @@ PASSWORD_HASHERS = [
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 # MIDDLEWARE
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#middleware
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -188,8 +180,8 @@ MEDIA_URL = "/media/"
 # UPLOAD LIMITS
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#file-upload-max-memory-size
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760 # 5242880
-                                       # 9069953
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 5242880
+# 9069953
 
 # TEMPLATES
 # ------------------------------------------------------------------------------
@@ -215,6 +207,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "gfbio_submissions.utils.context_processors.settings_context",
                 "gfbio_submissions.users.context_processors.allauth_settings",
+                "gfbio_submissions.submission_ui.context_processors.prod_env",
             ],
         },
     }
@@ -245,17 +238,11 @@ X_FRAME_OPTIONS = "DENY"
 # EMAIL
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
-EMAIL_BACKEND = env(
-    "DJANGO_EMAIL_BACKEND",
-    default="django.core.mail.backends.smtp.EmailBackend"
-)
+EMAIL_BACKEND = env("DJANGO_EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-timeout
 EMAIL_TIMEOUT = 5
 
-HOST_URL_ROOT = env(
-    "HOST_URL_ROOT",
-    default="https://submissions.gfbio.org/"
-)
+HOST_URL_ROOT = env("HOST_URL_ROOT", default="https://submissions.gfbio.org/")
 
 # ADMIN
 # ------------------------------------------------------------------------------
@@ -264,15 +251,15 @@ HOST_URL_ROOT = env(
 ADMIN_URL = env("DJANGO_ADMIN_URL", default="admin/")
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#admins
-DJANGO_ADMINS = env.list('DJANGO_ADMINS', default=[
-    "Marc Weber:mweber@gfbio.org",
-    "Ivaylo Kostadinov:ikostadi@gfbio.org",
-    "Deniss Marinuks:d.marinuks@jacobs-university.de",
-])
-ADMINS = [
-    ("""{}""".format(x.split(':')[0]), "{}".format(x.split(':')[1]))
-    for x in DJANGO_ADMINS
-]
+DJANGO_ADMINS = env.list(
+    "DJANGO_ADMINS",
+    default=[
+        "Marc Weber:mweber@gfbio.org",
+        "Ivaylo Kostadinov:ikostadi@gfbio.org",
+        "Deniss Marinuks:d.marinuks@jacobs-university.de",
+    ],
+)
+ADMINS = [("""{}""".format(x.split(":")[0]), "{}".format(x.split(":")[1])) for x in DJANGO_ADMINS]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#managers
 MANAGERS = ADMINS
@@ -286,10 +273,7 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "verbose": {
-            "format": "%(levelname)s %(asctime)s %(module)s "
-                      "%(process)d %(thread)d %(message)s"
-        }
+        "verbose": {"format": "%(levelname)s %(asctime)s %(module)s " "%(process)d %(thread)d %(message)s"}
     },
     "handlers": {
         "console": {
@@ -347,8 +331,7 @@ ACCOUNT_EMAIL_VERIFICATION = "optional"
 ACCOUNT_ADAPTER = "gfbio_submissions.users.adapters.AccountAdapter"
 
 # ACCOUNT_SIGNUP_FORM_CLASS = "gfbio_submissions.users.forms.AgreeTosSocialSignupForm"
-SOCIALACCOUNT_FORMS = {
-    'signup': 'gfbio_submissions.users.forms.AgreeTosSocialSignupForm'}
+SOCIALACCOUNT_FORMS = {"signup": "gfbio_submissions.users.forms.AgreeTosSocialSignupForm"}
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 SOCIALACCOUNT_ADAPTER = "gfbio_submissions.users.adapters.SocialAccountAdapter"
 
@@ -360,15 +343,11 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",
     ),
-    "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.IsAuthenticated",),
-
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     # "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.coreapi.AutoSchema",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
-# django-cors-headers - https://github.com/adamchainz/django-cors-headers#setup
-CORS_URLS_REGEX = r"^/api/.*$"
 
 # By Default swagger ui is available only to admin user(s). You can change permission classes to change that
 # See more configuration options at https://drf-spectacular.readthedocs.io/en/latest/settings.html#settings
@@ -377,17 +356,21 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Documentation of API endpoints of submission.gfbio.org",
     "VERSION": "1.0.0",
     "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
-    'PREPROCESSING_HOOKS': ["config.settings.base.whitelist_api_endpoints_preprocessing_hook_func"],
+    "PREPROCESSING_HOOKS": ["config.settings.base.whitelist_api_endpoints_preprocessing_hook_func"],
 }
 
 # Your stuff...
 # ------------------------------------------------------------------------------
 
+# django-cors-headers - https://github.com/adamchainz/django-cors-headers#setup
+# FIXME: can this be a list of strings ?
+# CORS_URLS_REGEX = r"^/api/.*$"
+CORS_URLS_REGEX = r'^.*$'
+
 # OpenIDConnect SETTINGS
 # ------------------------------------------------------------------------------
 OIDC_RP_CLIENT_ID = env("OIDC_RP_CLIENT_ID", default="no_oidc_cl_id")
-OIDC_RP_CLIENT_SECRET = env("OIDC_RP_CLIENT_SECRET",
-                            default="no_oidc_cl_secret")
+OIDC_RP_CLIENT_SECRET = env("OIDC_RP_CLIENT_SECRET", default="no_oidc_cl_secret")
 
 OIDC_RP_SIGN_ALGO = env("OIDC_RP_SIGN_ALGO", default="HS256")
 OIDC_OP_JWKS_ENDPOINT = env("OIDC_OP_JWKS_ENDPOINT", default="no_jwks_url")
@@ -409,18 +392,16 @@ LOGOUT_REDIRECT_URL = "/"
 
 # GFBio Helpdesk Shadow-Account Service
 # ------------------------------------------------------------------------------
-JIRA_ACCOUNT_SERVICE_USER = env("JIRA_ACCOUNT_SERVICE_USER",
-                                default="no_account_service_user")
-JIRA_ACCOUNT_SERVICE_PASSWORD = env("JIRA_ACCOUNT_SERVICE_PASSWORD",
-                                    default="no_account_service_password")
+JIRA_ACCOUNT_SERVICE_USER = env("JIRA_ACCOUNT_SERVICE_USER", default="no_account_service_user")
+JIRA_ACCOUNT_SERVICE_PASSWORD = env("JIRA_ACCOUNT_SERVICE_PASSWORD", default="no_account_service_password")
 
 # REST API Permissions
 # ------------------------------------------------------------------------------
 REST_SAFE_LIST_IPS = [
-    '127.0.0.1',
-    '[::1]',
-    '172.',  # docker local network /8
-    '10.',  # docker swarm network /8
+    "127.0.0.1",
+    "[::1]",
+    "172.",  # docker local network /8
+    "10.",  # docker swarm network /8
 ]
 REST_SAFE_DOMAINS = []
 
@@ -428,10 +409,12 @@ REST_SAFE_DOMAINS = []
 def whitelist_api_endpoints_preprocessing_hook(endpoints):
     # your modifications to the list of operations that are exposed in the schema
     visibleEndpoints = []
-    for (path, path_regex, method, callback) in endpoints:
+    for path, path_regex, method, callback in endpoints:
         if path.startswith("/api/submissions/"):
             visibleEndpoints.append((path, path_regex, method, callback))
     return visibleEndpoints
 
 
 whitelist_api_endpoints_preprocessing_hook_func = whitelist_api_endpoints_preprocessing_hook
+
+IS_PROD_ENV = env.bool("IS_PROD_ENV", False)
