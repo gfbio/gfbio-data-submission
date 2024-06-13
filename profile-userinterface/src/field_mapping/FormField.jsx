@@ -6,6 +6,8 @@ import DropzoneUpload from "./input_fields/DropzoneUpload.jsx";
 import SelectField from "./input_fields/SelectField.jsx";
 import CollapsibleSelector from "./input_fields/CollapsibleSelector.jsx"
 import InfoBox from "./input_fields/InfoBox.jsx";
+import MultiSelectCheckboxes from "./input_fields/MultiSelectCheckboxes.jsx";
+import MultiSelectDropdown from "./input_fields/MultiSelectDropdown.jsx";
 
 const FormField = ({field, form}) => {
 
@@ -37,6 +39,10 @@ const FormField = ({field, form}) => {
             return <CollapsibleSelector {...fieldParameters}></CollapsibleSelector>
         case 'info-box':
             return <InfoBox {...fieldParameters}></InfoBox>
+        case 'multiselect-checkboxes':
+            return <MultiSelectCheckboxes {...fieldParameters}></MultiSelectCheckboxes>;
+        case 'multiselect-dropdown':
+            return <MultiSelectDropdown {...fieldParameters}></MultiSelectDropdown>;
         default:
             return <TextField {...fieldParameters}></TextField>;
 
