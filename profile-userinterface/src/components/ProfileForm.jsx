@@ -6,8 +6,8 @@ import FormField from "../field_mapping/FormField.jsx";
 import postSubmission from "../api/postSubmission.jsx";
 
 
-const ProfileForm = ({data}) => {
-
+const ProfileForm = (props) => {
+    const {profileData, submissionData, isLoading, profileError, SubmissionError} = props;
     const [isProcessing, setProcessing] = useState(false);
 
     const form = useForm({
@@ -65,9 +65,7 @@ const ProfileForm = ({data}) => {
     return (
         <form onSubmit={form.onSubmit(handleSubmit)}>
             <p>processing: {"" + isProcessing}</p>
-            {/*<h3>Name: {data.name}</h3>*/}
-            {/*<h3>Target: {data.target}</h3>*/}
-            {data.fields.map((field, index) => (
+            {profileData.fields.map((field, index) => (
                 <FormField key={index} field={field} form={form}></FormField>
             ))}
             <Group justify="flex-end" mt="md">
@@ -78,7 +76,7 @@ const ProfileForm = ({data}) => {
 };
 
 ProfileForm.propTypes = {
-    data: PropTypes.object.isRequired
+    profileData: PropTypes.object.isRequired
 }
 
 export default ProfileForm;

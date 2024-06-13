@@ -2,14 +2,19 @@ import './App.css'
 import '@mantine/core/styles.css';
 import {MantineProvider} from '@mantine/core';
 import ProfileFormWrapper from './components/ProfileFormWrapper.jsx';
+import {Route, Routes} from "react-router-dom";
 
 function App() {
     // const [count, setCount] = useState(0)
 
     return (
         <MantineProvider>
-            <>
-                <ProfileFormWrapper></ProfileFormWrapper>
+            <Routes>
+                <Route path="/" element={<ProfileFormWrapper/>}/>
+                <Route path='/:brokerSubmissionId' element={<ProfileFormWrapper/>} />
+
+                {/*<ProfileFormWrapper></ProfileFormWrapper>*/}
+
                 {/*<div className="row">*/}
                 {/*    <h3>test for simple & direct usage of boostrap classes</h3>*/}
                 {/*    <div className="col-6">*/}
@@ -40,7 +45,9 @@ function App() {
                 {/*<p className="read-the-docs">*/}
                 {/*    Click on the Vite and React logos to learn more*/}
                 {/*</p>*/}
-            </>
+
+
+            </Routes>
         </MantineProvider>
     )
 }

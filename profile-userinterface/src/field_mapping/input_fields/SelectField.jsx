@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Select} from '@mantine/core';
 import PropTypes from "prop-types";
 
@@ -12,8 +12,11 @@ const SelectField = (props) => {
 
     // setting inital values, so that there is always a value for the field in the form
     //  even if nothing is actively selected (e.g. GFBio-Datacenter...).
-    const [value, setValue] = useState(mapped_options.at(0));
-    form.setFieldValue(field_id, value);
+    const [value, setValue] = useState(options.at(0));
+
+    useEffect(() => {
+        form.setFieldValue(field_id, value);
+    }, []);
 
     //TODO: this could be used for any field that deals with options
     const handleChange = (option) => {
