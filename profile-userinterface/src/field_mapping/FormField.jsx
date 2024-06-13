@@ -4,6 +4,7 @@ import CollapsibleSelector from "./input_fields/CollapsibleSelector.jsx";
 import DropzoneUpload from "./input_fields/DropzoneUpload.jsx";
 import EmbargoDate from "./input_fields/EmbargoDate.jsx";
 import InfoBox from "./input_fields/InfoBox.jsx";
+import MetadataTemplate from "./input_fields/MetadataTemplate.jsx";
 import SelectField from "./input_fields/SelectField.jsx";
 import TextArea from "./input_fields/TextArea.jsx";
 import TextField from "./input_fields/TextField.jsx";
@@ -35,6 +36,8 @@ const FormField = ({ field, form }) => {
       return <EmbargoDate {...fieldParameters}></EmbargoDate>;
     case "collapsible-selector":
       return <CollapsibleSelector {...fieldParameters}></CollapsibleSelector>;
+    case "metadata-template":
+      return <MetadataTemplate {...fieldParameters}></MetadataTemplate>;
     default:
       return <TextField {...fieldParameters}></TextField>;
   }
