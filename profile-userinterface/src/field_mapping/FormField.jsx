@@ -9,6 +9,7 @@ import MetadataTemplate from "./input_fields/MetadataTemplate.jsx";
 import MultiSelectCheckboxes from "./input_fields/MultiSelectCheckboxes.jsx";
 import MultiSelectDropdown from "./input_fields/MultiSelectDropdown.jsx";
 import SelectField from "./input_fields/SelectField.jsx";
+import TagsInputField from "./input_fields/TagsInputField.jsx";
 import TextArea from "./input_fields/TextArea.jsx";
 import TextField from "./input_fields/TextField.jsx";
 
@@ -49,6 +50,8 @@ const FormField = ({ field, form }) => {
       return <EmbargoDate {...fieldParameters}></EmbargoDate>;
     case "data-url-field":
       return <DataUrlField {...fieldParameters}></DataUrlField>;
+    case "tags-input":
+      return <TagsInputField {...fieldParameters}></TagsInputField>;
     default:
       return <TextField {...fieldParameters}></TextField>;
   }
