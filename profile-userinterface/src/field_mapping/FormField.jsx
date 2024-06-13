@@ -8,12 +8,9 @@ import CollapsibleSelector from "./input_fields/CollapsibleSelector.jsx"
 import InfoBox from "./input_fields/InfoBox.jsx";
 import MultiSelectCheckboxes from "./input_fields/MultiSelectCheckboxes.jsx";
 import MultiSelectDropdown from "./input_fields/MultiSelectDropdown.jsx";
+import EmbargoDate from "./input_fields/EmbargoDate.jsx";
 
 const FormField = ({field, form}) => {
-
-    // console.log('FormField: ');
-    // console.log('\t', field);
-    // console.log('-----------------------\n');
 
     const fieldParameters = {
         title: field.title,
@@ -43,6 +40,8 @@ const FormField = ({field, form}) => {
             return <MultiSelectCheckboxes {...fieldParameters}></MultiSelectCheckboxes>;
         case 'multiselect-dropdown':
             return <MultiSelectDropdown {...fieldParameters}></MultiSelectDropdown>;
+        case 'embargo-date-picker':
+            return <EmbargoDate {...fieldParameters}></EmbargoDate>
         default:
             return <TextField {...fieldParameters}></TextField>;
 

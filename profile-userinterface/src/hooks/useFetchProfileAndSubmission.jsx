@@ -11,9 +11,10 @@ const useFetchProfileAndSubmission = (profileName, brokerSubmissionId) => {
     const [error2, setError2] = useState(null);
 
     // TODO: local testing, remove, add global testing solution
-    let token = '66b66251e245103c249141d00df43d163cdebb80';
+    // let token = '66b66251e245103c249141d00df43d163cdebb80';
+    let token = '';
     if (window.props !== undefined) {
-        profileName = window.props.token || 'no-token-found';
+        token = window.props.token || 'no-token-found';
     }
     if (brokerSubmissionId === undefined){
         localStorage.setItem('submission', JSON.stringify({}));
