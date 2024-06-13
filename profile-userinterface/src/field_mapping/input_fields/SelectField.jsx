@@ -5,12 +5,14 @@ import PropTypes from "prop-types";
 const SelectField = (props) => {
     const {title, description, form, options, field_id} = props;
 
+    const mapped_options = options.map(opt => opt.option)
+
     // TODO: add parameter to be able to switch between this and empty values if select is
     //  initally empty (or has placeholder)
 
     // setting inital values, so that there is always a value for the field in the form
     //  even if nothing is actively selected (e.g. GFBio-Datacenter...).
-    const [value, setValue] = useState(options.at(0));
+    const [value, setValue] = useState(mapped_options.at(0));
     form.setFieldValue(field_id, value);
 
     //TODO: this could be used for any field that deals with options
@@ -24,8 +26,8 @@ const SelectField = (props) => {
             label={title}
             description={description}
             // placeholder={default}
-            data={options}
-            defaultValue={options.at(0)}
+            data={mapped_options}
+            defaultValue={mapped_options.at(0)}
             onChange={(_value, option) => handleChange(option)}
             searchable
         />
