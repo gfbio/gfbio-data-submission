@@ -1,33 +1,33 @@
-import React from 'react';
-import {TextInput} from '@mantine/core';
+import { TextInput } from "@mantine/core";
 import PropTypes from "prop-types";
+import React from "react";
 
 const TextField = (props) => {
-    const {title, description, form, field_id, placeholder} = props;
+  const { title, description, mandatory, form, field_id, placeholder } = props;
 
-    return (
-        <TextInput
-            label={title}
-            description={description}
-            placeholder={placeholder}
-            key={form.key(field_id)}
-            // TODO: has to be based on field property "mandatory"
-            required={true}
-            {...form.getInputProps(field_id)}
-        />
-    );
-}
+  return (
+    <TextInput
+      label={title}
+      description={description}
+      placeholder={placeholder}
+      key={form.key(field_id)}
+      required={mandatory}
+      {...form.getInputProps(field_id)}
+    />
+  );
+};
 
 TextField.defaultProps = {
-    placeholder: "",
-}
+  placeholder: "",
+};
 
 TextField.propTypes = {
-    title: PropTypes.string.isRequired,
-    description: PropTypes.string.isRequired,
-    form: PropTypes.object.isRequired,
-    field_id: PropTypes.string.isRequired,
-    placeholder: PropTypes.string,
-}
+  title: PropTypes.string.isRequired,
+  description: PropTypes.string.isRequired,
+  mandatory: PropTypes.bool.isRequired,
+  form: PropTypes.object.isRequired,
+  field_id: PropTypes.string.isRequired,
+  placeholder: PropTypes.string,
+};
 
 export default TextField;
