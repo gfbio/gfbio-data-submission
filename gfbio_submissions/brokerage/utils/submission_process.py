@@ -2,8 +2,7 @@
 import logging
 
 from ..configuration.settings import SUBMISSION_DELAY, ENA, ENA_PANGAEA, ATAX
-from ..tasks.atax_tasks.parse_atax_uploads import parse_atax_uploads_task
-from ..tasks.atax_tasks.validate_merged_atax_data import validate_merged_atax_data_task
+from ..tasks.atax_tasks.atax_run_combination_task import atax_run_combination_task
 
 logger = logging.getLogger(__name__)
 
@@ -55,9 +54,9 @@ class SubmissionProcessHandler(object):
         return chain
 
     def add_alpha_taxonomic_data_tasks_to_chain(self, chain):
-        return chain | parse_atax_uploads_task.s(submission_id=self.submission_id).set(
+        return chain | atax_run_combination_task.s(submission_id=self.submission_id).set(
             countdown=SUBMISSION_DELAY
-        ) | validate_merged_atax_data_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
+        )
 
 
 

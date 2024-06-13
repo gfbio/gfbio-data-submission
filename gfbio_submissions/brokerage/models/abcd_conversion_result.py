@@ -36,5 +36,5 @@ class AbcdConversionResult(TimeStampedModel):
     )
 
     def __str__(self):
-        return "abcd_conversion_{0}: {1}".format(self.data_id, self.created)
+        return "{0}_{1}: {2}".format(self.submission, self.created, self.data_id)
     

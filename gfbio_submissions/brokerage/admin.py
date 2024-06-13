@@ -539,7 +539,23 @@ class JiraMessageAdmin(admin.ModelAdmin):
 
 
 class AbcdConversionResultAdmin(admin.ModelAdmin):
-    pass
+    date_hierarchy = "created"  # date drill down
+    ordering = ("-modified",)  # ordering in list display
+    list_display = (
+        "data_id",
+        "submission",
+        "created",
+        "atax_xml_valid"
+    )
+    list_filter = (
+        "submission",
+        "created",
+        "atax_xml_valid",
+    )
+    search_fields = ["submission__id", "submission__broker_submission_id"]
+    readonly_fields = (
+        "created",
+    )
 
 
 admin.site.register(Submission, SubmissionAdmin)

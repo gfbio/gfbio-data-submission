@@ -9,7 +9,7 @@ import uuid
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("brokerage", "0061_alter_auditabletextdata_atax_exp_index"),
+        ("brokerage", "0065_remove_submissionreport_user"),
     ]
 
     operations = [
