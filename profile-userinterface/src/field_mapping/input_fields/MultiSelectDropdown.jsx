@@ -1,4 +1,4 @@
-import {React, useState} from 'react';
+import {React, useEffect} from 'react';
 import {MultiSelect} from '@mantine/core';
 import PropTypes from "prop-types";
 
@@ -11,7 +11,7 @@ const MultiSelectDropdown = (props) => {
     const handleChange = (value) => {
         setValue(value);
     }
-    const data = options.map(opt => { return {label: opt, value: opt};});
+    const data = options.map(opt => { return {label: opt.option, value: opt.option};});
 
     return (
         <div>

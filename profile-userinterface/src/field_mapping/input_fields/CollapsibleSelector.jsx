@@ -39,7 +39,7 @@ const CollapsibleSelector = (props) => {
                                             <>
                                                 <Modal opened={dialog_opened} onClose={close_dialog} title={opt.option} centered size="auto">
                                                     <div className='modal-dialog-body'>
-                                                        { opt.description && ( <Text>{opt.description}</Text> ) }
+                                                        { opt.description && ( <Text className='use-line-breaks'>{opt.description}</Text> ) }
                                                     </div>
                                                     <div className='modal-dialog-footer container p-0'>
                                                         {

@@ -1,11 +1,14 @@
-import {React, useState} from 'react';
+import {React, useEffect} from 'react';
 import {Checkbox} from '@mantine/core';
 import PropTypes from "prop-types";
 
 const MultiSelectCheckboxes = (props) => {
     const {title, description, form, options, field_id, default_value} = props;
-    const initial_value = default_value ? default_value.split(",") : []
-    form.setFieldValue(field_id, initial_value);
+    useEffect(() => {
+        const initial_value = default_value ? default_value.split(",") : []
+        form.setFieldValue(field_id, initial_value);
+    }, []);
+    const mapped_options = options.map(opt => opt.option);
 
     return (
         <div>
@@ -15,9 +18,9 @@ const MultiSelectCheckboxes = (props) => {
                 key={form.key(field_id)}
                 {...form.getInputProps(field_id)}
             >
-                {options.map(function(opt){
+                {mapped_options.map(function(opt){
                     return (
-                        <Checkbox 
+                        <Checkbox
                             value={opt}
                             label={opt}
                         />
