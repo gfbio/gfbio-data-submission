@@ -35,11 +35,20 @@ def atax_run_combination_task(
     )
     submission = Submission.objects.get(pk=submission_id)
     submission_upload_files = SubmissionUpload.objects.filter(submission_id=submission_id) #.values_list("file", flat=True)
+
+    spec_file = submission_upload_files.filter(file__icontains="specimen").first()
+    measurements_file = submission_upload_files.filter(file__icontains="measurement").first()
+    multimedia_file = submission_upload_files.filter(file__icontains="multimedia").first()
     
-    first = submission_upload_files.first()
-    spec_file = submission_upload_files.filter(file__icontains="specimen").first().file.path
-    measurements_file = submission_upload_files.filter(file__icontains="measurement").first().file.path
-    multimedia_file = submission_upload_files.filter(file__icontains="multimedia").first().file.path
+    if not spec_file or not measurements_file or not multimedia_file:
+        AbcdConversionResult.objects.create(
+            submission = submission,
+            atax_xml_valid = False,
+            xml = "",
+            errors = "No files found.",
+            logs = "",
+        )
+        return False
     
     handlings = handlers.InOutHandler()
     handlings.dataProvider = DataFromSubmissionProvider(submission)
@@ -48,11 +57,9 @@ def atax_run_combination_task(
     handlings.logHandler = ToFieldOutputter()
     handlings.singleFileHandler = ToFieldOutputter()
 
-    #result = AbcdConversionResult()
-    #result.submission = submission
     atax_xml_valid = False
     try:
-        xml = abcd_conversion.convert_csv_to_abcd(spec_file, measurements_file, multimedia_file, handlings)
+        xml = abcd_conversion.convert_csv_to_abcd(spec_file.file.path, measurements_file.file.path, multimedia_file.file.path, handlings)
         atax_xml_valid = True if xml else False
 
         AbcdConversionResult.objects.create(

@@ -307,9 +307,8 @@ class TestInitialChainTasks(TestCase):
             "tasks.trigger_submission_process",
             "tasks.check_on_hold_status_task",
             "tasks.check_issue_existing_for_submission_task",
-            "tasks.parse_atax_uploads_task",
-            "tasks.validate_merged_atax_data_task"
+            "tasks.atax_run_combination_task"
         ]
-        self.assertEqual(9, len(task_reports))
+        self.assertEqual(8, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
