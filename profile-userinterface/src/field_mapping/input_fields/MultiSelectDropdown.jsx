@@ -4,19 +4,23 @@ import PropTypes from "prop-types";
 
 const MultiSelectDropdown = (props) => {
     const {title, description, form, options, field_id, default_value} = props;
-    const initial_value = default_value ? default_value.split(",") : []
-    const [value, setValue] = useState(initial_value);
-    form.setFieldValue(field_id, value);
+    // TODO: setting the default-value this way leads to infinite reloads, especially when multiple elements do it that way
+    // const initial_value = default_value ? default_value.split(",") : []
+    //const [value, setValue] = useState(initial_value);
+    //form.setFieldValue(field_id, value);
+    const mapped_options = options.map(opt => opt.option);
+    console.log(field_id);
 
-    const handleChange = (value) => {
-        setValue(value);
+    const handleChange = (val) => {
+        //setValue(val);
+        form.setFieldValue(field_id, val);
     }
-    const data = options.map(opt => { return {label: opt, value: opt};});
+    const data = mapped_options.map(opt => { return {label: opt, value: opt};});
 
     return (
         <div>
             <MultiSelect
-                defaultValue={initial_value}
+                /*defaultValue={initial_value}*/
                 data={data}
                 label={title}
                 description={description}
