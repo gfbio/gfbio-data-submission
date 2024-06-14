@@ -6,8 +6,8 @@ import FormField from "../field_mapping/FormField.jsx";
 import postSubmission from "../api/postSubmission.jsx";
 
 
-const ProfileForm = ({data}) => {
-
+const ProfileForm = (props) => {
+    const {profileData, submissionData, isLoading, profileError, SubmissionError} = props;
     const [isProcessing, setProcessing] = useState(false);
 
     const form = useForm({
@@ -30,44 +30,24 @@ const ProfileForm = ({data}) => {
 
     const handleSubmit = (values) => {
         setProcessing(true);
-        console.log('handle submit | Values: ', values);
-        // console.log('handle submit | window props: ', window.props);
         // TODO: fixed token value for local testing only
-        // postSubmission('66b66251e245103c249141d00df43d163cdebb80', data.target, values)
-        //     .then((result) => {
-        //         console.log('DATA ', result);
-        //     })
-        //     .finally(() => {
-        //         setProcessing(false);
-        //     });
-        setProcessing(false);
+        postSubmission(
+            profileData.target,
+            localStorage.getItem('embargo'),
+            values)
+            .then((result) => {
+                console.log('DATA ', result);
+            })
+            .finally(() => {
+                setProcessing(false);
+            });
+        // setProcessing(false);
     };
-
-    // form.setInitialValues({email: 'bla@bla.com',})
-    // <form
-    //     onSubmit={form.onSubmit(
-    //         (values, event) => {
-    //             console.log(
-    //                 values, // <- form.getValues() at the moment of submit
-    //                 event // <- form element submit event
-    //             );
-    //         },
-    //         (validationErrors, values, event) => {
-    //             console.log(
-    //                 validationErrors, // <- form.errors at the moment of submit
-    //                 values, // <- form.getValues() at the moment of submit
-    //                 event // <- form element submit event
-    //             );
-    //         }
-    //     )}
-    // >
 
     return (
         <form onSubmit={form.onSubmit(handleSubmit)}>
             <p>processing: {"" + isProcessing}</p>
-            {/*<h3>Name: {data.name}</h3>*/}
-            {/*<h3>Target: {data.target}</h3>*/}
-            {data.fields.map((field, index) => (
+            {profileData.fields.map((field, index) => (
                 <FormField key={index} field={field} form={form}></FormField>
             ))}
             <Group justify="flex-end" mt="md">
@@ -78,7 +58,7 @@ const ProfileForm = ({data}) => {
 };
 
 ProfileForm.propTypes = {
-    data: PropTypes.object.isRequired
+    profileData: PropTypes.object.isRequired
 }
 
 export default ProfileForm;

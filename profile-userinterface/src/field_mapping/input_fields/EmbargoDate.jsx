@@ -1,0 +1,121 @@
+import React, {useEffect, useState} from 'react';
+import {Button, Group, Modal} from '@mantine/core';
+import {useDisclosure} from '@mantine/hooks';
+import {DatePicker} from '@mantine/dates';
+import PropTypes from "prop-types";
+import SelectField from "./SelectField.jsx";
+
+const EmbargoDate = (props) => {
+    const {title, description, form, options, field_id} = props;
+
+    const today = new Date();
+    const initialDate = new Date();
+    initialDate.setFullYear(today.getFullYear() + 1);
+
+    const [embargoDate, setEmbargoDate] = useState(initialDate);
+    const [tmpEmbargoDate, setTempEmbargoDate] = useState(embargoDate);
+
+    const [opened, {open, close}] = useDisclosure(false);
+
+    // TODO: since embargo is not send as part of the "requirements" field in the submission request,
+    //  but is send as a dedicated field to the submission (serializer). I decided to store this in localstorage
+    //  for now, to keep the logic of getting form values for the "requirements" field separated.
+    useEffect(() => {
+        localStorage.setItem('embargo', embargoDate.toISOString().split('T')[0]);
+    }, [embargoDate]);
+    // }
+
+    // TODO: add logic for:
+    //  Do not show button if at least one PID has status PUBLIC
+    //  if at least 1 PID has status PUBLIC do not show button
+    const showEmbargoButton = () => {
+        return (
+            <Group>
+                <Button onClick={open} variant="default">
+                    Change embargo date
+                </Button>
+            </Group>
+        );
+    }
+
+    const addMonthsToInitialEmbargoDate = (months) => {
+        const tmp = new Date(today);
+        tmp.setMonth(today.getMonth() + months);
+        setEmbargoDate(tmp);
+    }
+
+    const formattedEmbargoDate = () => {
+        return (
+            embargoDate.getDate().toString() + ' ' +
+            embargoDate.toLocaleString('default', {month: 'long'}) + ' ' +
+            embargoDate.getFullYear().toString()
+        );
+    }
+
+    return (
+        <div>
+            <header className="">
+                <h2 className="">{title}</h2>
+                <h4>{formattedEmbargoDate()}</h4>
+                {showEmbargoButton()}
+            </header>
+            <Modal opened={opened} onClose={close} title="Select embargo date" centered>
+                <Group justify="center">
+                    <Button variant="default" onClick={() => {
+                        addMonthsToInitialEmbargoDate(6)
+                    }}>
+                        6 months
+                    </Button>
+                    <Button variant="default" onClick={() => {
+                        addMonthsToInitialEmbargoDate(12)
+                    }}>
+                        12 months
+                    </Button>
+                    <Button variant="default" onClick={() => {
+                        addMonthsToInitialEmbargoDate(18)
+                    }}>
+                        18 months
+                    </Button>
+                </Group>
+                <Group justify="center">
+                    <p>New Embargo: <b>{formattedEmbargoDate()}</b></p>
+                </Group>
+                <Group justify="center">
+                    <DatePicker defaultDate={today} value={embargoDate} onChange={setEmbargoDate}/>
+                </Group>
+                <Group justify="center">
+                    <Button variant="default" onClick={() => {
+                        setTempEmbargoDate(embargoDate);
+                        close();
+                    }}>
+                        Accept
+                    </Button>
+                    <Button variant="default" onClick={() => {
+                        setEmbargoDate(tmpEmbargoDate);
+                        close();
+                    }}>
+                        Cancel
+                    </Button>
+                </Group>
+
+            </Modal>
+
+        </div>
+    );
+
+}
+
+EmbargoDate.defaultProps = {
+    // default: "",
+}
+
+EmbargoDate.propTypes = {
+    title: PropTypes.string.isRequired,
+    description: PropTypes.string,
+    form: PropTypes.object.isRequired,
+    field_id: PropTypes.string.isRequired,
+    // default: PropTypes.string,
+    options: PropTypes.array,
+}
+
+export default EmbargoDate;

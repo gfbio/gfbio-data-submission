@@ -1,22 +1,24 @@
 import axios from "axios";
 import {SUBMISSIONS_API} from "../settings.jsx";
 
-const delay = ms => new Promise(res => setTimeout(res, ms));
 
 // TODO: work in progress.
-const postSubmission = async (token, target, data) => {
+const postSubmission = async (target, embargo, data) => {
     let result = {}
     const requestData = {
         target: target,
+        embargo: embargo,
         data: {
             requirements: data,
         },
     }
 
-    // TODO: remove, just for testing
-    await delay(2000);
-    console.log("Waited 2s");
-
+    // TODO: local testing, remove, add global testing solution
+    // let token = '66b66251e245103c249141d00df43d163cdebb80';
+    let token = '';
+    if (window.props !== undefined) {
+        token = window.props.token || 'no-token-found';
+    }
     // TODO: this url works when build and copied to django, when proper token is provided
     //  everything works, currently the validation fails because details like target are missing
     //  no cross origin errors
@@ -35,14 +37,12 @@ const postSubmission = async (token, target, data) => {
             }
         )
         .catch((error) => {
-                // setError(error);
                 console.log('Error: ', error);
+                // setError(error);
             }
         )
         .finally(() => {
-                // setLoading(false);
                 console.log('finally .....');
-                // setProcessing(false)
             }
         )
     return result;
