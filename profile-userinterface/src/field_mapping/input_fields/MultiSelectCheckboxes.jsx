@@ -1,12 +1,13 @@
-import {React, useState} from 'react';
+import {React, useEffect} from 'react';
 import {Checkbox} from '@mantine/core';
 import PropTypes from "prop-types";
 
 const MultiSelectCheckboxes = (props) => {
     const {title, description, form, options, field_id, default_value} = props;
-    // TODO: setting the default-value this way leads to infinite reloads, especially when multiple elements do it that way
-    //const initial_value = default_value ? default_value.split(",") : []
-    //form.setFieldValue(field_id, initial_value);
+    useEffect(() => {
+        const initial_value = default_value ? default_value.split(",") : []
+        form.setFieldValue(field_id, initial_value);
+    }, []);
     const mapped_options = options.map(opt => opt.option);
 
     return (
