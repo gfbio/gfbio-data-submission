@@ -4,6 +4,7 @@ import CollapsibleSelector from "./input_fields/CollapsibleSelector.jsx";
 import DropzoneUpload from "./input_fields/DropzoneUpload.jsx";
 import EmbargoDate from "./input_fields/EmbargoDate.jsx";
 import InfoBox from "./input_fields/InfoBox.jsx";
+import MetadataTemplate from "./input_fields/MetadataTemplate.jsx";
 import MultiSelectCheckboxes from "./input_fields/MultiSelectCheckboxes.jsx";
 import MultiSelectDropdown from "./input_fields/MultiSelectDropdown.jsx";
 import SelectField from "./input_fields/SelectField.jsx";
@@ -33,6 +34,8 @@ const FormField = ({ field, form }) => {
       return <DropzoneUpload {...fieldParameters}></DropzoneUpload>;
     case "collapsible-selector":
       return <CollapsibleSelector {...fieldParameters}></CollapsibleSelector>;
+    case "metadata-template":
+      return <MetadataTemplate {...fieldParameters}></MetadataTemplate>;
     case "info-box":
       return <InfoBox {...fieldParameters}></InfoBox>;
     case "multiselect-checkboxes":
