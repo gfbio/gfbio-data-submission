@@ -47,9 +47,17 @@ const ProfileForm = (props) => {
         );
         let field_id = field.field_id;
         let value = values[field_id];
-        return {
-          [field_id]: isValidUrl(value) ? null : "Please enter a valid URL",
-        };
+        console.log("VALUE ", value);
+        if (
+          field.mandatory === "true" ||
+          (value !== undefined && value !== "")
+        ) {
+          return {
+            [field_id]: isValidUrl(value) ? null : "Please enter a valid URL",
+          };
+        } else {
+          return null;
+        }
       }
     },
   });
