@@ -1,7 +1,6 @@
 import PropTypes from "prop-types";
 import React from "react";
 import CollapsibleSelector from "./input_fields/CollapsibleSelector.jsx";
-import DataUrlField from "./input_fields/DataUrlField.jsx";
 import DropzoneUpload from "./input_fields/DropzoneUpload.jsx";
 import EmbargoDate from "./input_fields/EmbargoDate.jsx";
 import InfoBox from "./input_fields/InfoBox.jsx";
@@ -44,8 +43,6 @@ const FormField = ({ field, form }) => {
       return <MultiSelectDropdown {...fieldParameters}></MultiSelectDropdown>;
     case "embargo-date-picker":
       return <EmbargoDate {...fieldParameters}></EmbargoDate>;
-    case "data-url-field":
-      return <DataUrlField {...fieldParameters}></DataUrlField>;
     default:
       return <TextField {...fieldParameters}></TextField>;
   }
