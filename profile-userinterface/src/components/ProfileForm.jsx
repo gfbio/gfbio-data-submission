@@ -47,7 +47,6 @@ const ProfileForm = (props) => {
         );
         let field_id = field.field_id;
         let value = values[field_id];
-        console.log("VALUE ", value);
         if (
           field.mandatory === "true" ||
           (value !== undefined && value !== "")
