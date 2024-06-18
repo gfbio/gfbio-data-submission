@@ -93,7 +93,7 @@ class SubmissionProcessHandler(object):
             )
             chain = self.add_alpha_taxonomic_data_tasks_to_chain(chain)
 
-        # chain = self.add_submittable_data_check_task_to_chain(chain)
+        chain = self.add_submittable_data_check_task_to_chain(chain)
 
         logger.info("SubmissionTransferHandler. target_archive={0} | " "execute chain() ".format(self.target_archive))
         chain()
