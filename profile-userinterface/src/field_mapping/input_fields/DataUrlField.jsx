@@ -1,19 +1,13 @@
 import { TextInput } from "@mantine/core";
 import { useField } from "@mantine/form";
 import PropTypes from "prop-types";
-import React, { useEffect, useState } from "react";
+import React from "react";
 
 const DataUrlField = (props) => {
   const { title, description, mandatory, form, field_id, placeholder } = props;
 
   // Regular expression to validate URL
   const urlRegex = /^(ftp|http|https):\/\/[^ "]+$/;
-
-  const [value, setValue] = useState();
-
-  useEffect(() => {
-    form.setFieldValue(field_id, value);
-  });
 
   const field = useField({
     initialValue: "",
@@ -22,7 +16,11 @@ const DataUrlField = (props) => {
       if (mandatory && value === "") {
         return "This field is required";
       } else if (value !== "" && !urlRegex.test(value)) {
+        form.setFieldError(field_id, "Please enter a valid URL");
         return "Please enter a valid URL";
+      } else {
+        form.setFieldValue(field_id, value);
+        return null;
       }
     },
   });
@@ -34,8 +32,6 @@ const DataUrlField = (props) => {
       placeholder={placeholder}
       key={form.key(field_id)}
       required={mandatory}
-      value={value}
-      onChange={(event) => setValue(event.currentTarget.value)}
       {...field.getInputProps()}
     />
   );
