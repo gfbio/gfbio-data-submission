@@ -5,7 +5,7 @@ const InfoBox = (props) => {
 
     const infoItems = () => {
         const submission = JSON.parse(localStorage.getItem('submission'));
-        const brokerSubmissionId = submission.broker_submission_id || ''
+        const brokerSubmissionId = submission.broker_submission_id || '1'
 
         const items = [];
         let key = 0;
@@ -18,18 +18,19 @@ const InfoBox = (props) => {
             items.push(
                 <li key={key} className="list-group-item">
                     <a>
-                        <i className="" aria-hidden="true"/>
+                        <i className="fa fa-bookmark-o pr-2" aria-hidden="true"/>
                         Submission Id: <br/>
-                        <div className="">{brokerSubmissionId}</div>
+                        <div className="data-field">{brokerSubmissionId}</div>
                     </a>
                 </li>
             );
             key++;
         }
+        submission.accessionId = [{status: "blubb", pid: 123}, {status: "blubb 2", pid: 1234}];
         if (submission.accessionId && submission.accessionId.length > 0) {
             items.push(
-                <div>
-                    <i className="" aria-hidden="true"/>
+                <div className="info-box-header">
+                    <i className="fa fa-archive pr-2" aria-hidden="true"/>
                     ENA Accession:
                     <br/>
                 </div>,
@@ -37,7 +38,7 @@ const InfoBox = (props) => {
             submission.accessionId.forEach(accession => {
                     items.push(
                         <li key={key} className="list-group-item">
-                            <a>
+                            <div className="data-field">
                                 <div className="">
                                     <span style={{fontWeight: 600}}>ID</span>: {accession.pid}
                                 </div>
@@ -45,13 +46,14 @@ const InfoBox = (props) => {
                                     <span style={{fontWeight: 600}}>Status</span>:{' '}
                                     {accession.status}
                                 </div>
-                            </a>
+                            </div>
                         </li>
                     );
                     key++;
                 }
             );
         }
+        submission.issue = "Hello World!";
         if (submission.issue && submission.issue.length > 0) {
             items.push(
                 <li key={key} className="list-group-item">
@@ -61,23 +63,23 @@ const InfoBox = (props) => {
                         className="external"
                         href={JIRA_ROOT + submission.issue}
                     >
-                        <i className="" aria-hidden="true"/>
+                        <i className="fa fa-tags pr-2" aria-hidden="true"/>
                         Ticket:
                         <br/>
-                        <div className="">{submission.issue}</div>
+                        <div className="data-field">{submission.issue}</div>
                     </a>
                 </li>
             );
             key++;
         }
 
-        if (submission.readOnly) {
+        if (true || submission.readOnly) {
             items.push(
                 <li key={key} className="list-group-item">
                     <a>
-                        <i className="" aria-hidden="true"/>
+                        <i className="fa fa-info-circle pr-2" aria-hidden="true" />
                         Status: <br/>
-                        <div className="">
+                        <div className="data-field">
                             Your data was already archived and only the embargo date can be
                             changed. If you need to make other changes, please contact our team
                             by replying to the corresponding Helpdesk ticket.
@@ -91,7 +93,7 @@ const InfoBox = (props) => {
         items.push(
             <li key={key} className="list-group-item">
                 <a href={mailToLink} className="external">
-                    <i className="" aria-hidden="true"/>
+                    <i className="fa fa-comments pr-2" aria-hidden="true"/>
                     Do you need Help ?
                 </a>
             </li>,
@@ -101,9 +103,9 @@ const InfoBox = (props) => {
     };
 
     return (
-        <div className="">
+        <div className="info-box">
             <header className="">
-                <h2 className="">{title}</h2>
+                <h2 className="ommit-optional">{title}</h2>
                 <p className=""/>
             </header>
             <div className="">

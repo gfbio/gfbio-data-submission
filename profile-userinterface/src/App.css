@@ -89,3 +89,155 @@
     }
   }
 }
+
+.submission-form {
+  .mantine-Input-input {
+    --input-placeholder-color: #666 !important;
+  }
+  .mantine-Select-wrapper input {
+    --input-color: #666 !important;
+  }
+
+  font-family: "Open Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+
+  h1, h2, label.mantine-InputWrapper-label {
+    color: #495057;
+  }
+
+  h3, h4, .info-box, span.mantine-InputWrapper-required {
+    color: #666;
+  }
+
+  h1, h2, label.mantine-InputWrapper-label {
+    font-size: 1.5rem !important;
+    font-weight: 400 !important;
+    border-bottom: 1px #d3d3d3 solid;
+    width: 100%;
+    line-height: 1.2;
+    padding-top: 2rem;
+    margin-bottom: 1.4rem;
+    padding-bottom: 0.5rem;
+
+    span.mantine-InputWrapper-required {
+      color: white;
+      display: inline-block;
+      font-size: 0;
+    }
+
+    &:not(.ommit-optional):not(:has(span.mantine-InputWrapper-required))::after {
+      content: "(optional)";
+      display: inline;
+      font-size: .85rem;
+      margin-left: 0.85rem;
+    }
+  }
+
+  .info-box .list-group-flush {
+    border: 1px lightgray solid;
+    border-radius: 5px;
+
+    > li.list-group-item {
+      border: none;
+    }
+
+    .info-box-header {
+      padding: 0.75rem 1.25rem 0 1.25rem
+    }
+
+    .data-field {
+      margin-left: 0.6rem;
+      padding-left: 1rem;
+      border-left: 2px solid #d3d3d3;
+      font-size: .7rem;
+    }
+  }
+
+  a, button.link-style {
+    color: #3cace4;
+
+    &:hover {
+      color: #ff8362;
+      text-decoration: unset;
+    }
+  }
+
+  button.link-style {
+    border: none !important;
+    font-weight: 400;
+    background: none !important;
+    padding: 0 0.5rem;
+    font-size: 1rem;
+
+    i.icon {
+      font-size: 1.5rem;
+    }
+  }
+}
+
+.mantine-Modal-root {
+  font-family: "Open Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+  color: #495057;
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 300;
+  }
+
+  .mantine-Modal-overlay {
+    background-color: #fff;
+    opacity: 0.666 !important;
+  }
+
+  .mantine-Modal-content {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+
+    header {
+      border-bottom: 1px solid #ccc;
+    }
+  }
+
+  button.button-inverted {
+    border: 1px solid;
+    font-weight: 400;
+
+    &:not(:hover) {
+      background: none !important;
+    }
+    
+    &:hover {
+      color: white !important;
+    }
+
+    &.blue-button {
+      border-color: #3cace4;
+      color: #3cace4;
+      background-color: #3cace4;
+    }
+
+    &.red-button {
+      border-color: #dc3444;
+      color: #dc3444;
+      background-color: #dc3444;
+    }
+
+    &.green-button {
+      border-color: #80b148;
+      color: #80b148;
+      background-color: #80b148;
+
+    }
+  }
+
+  .mantine-DatePicker-levelsGroup .mantine-DatePicker-day {
+    &:hover {
+      background-color: #80b148 !important;
+      color: white;
+    }
+
+    &[data-selected="true"] {
+      background-color: #3cace4 !important;
+      color: white;
+    }
+  }
+}

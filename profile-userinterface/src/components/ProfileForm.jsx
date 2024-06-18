@@ -45,7 +45,7 @@ const ProfileForm = (props) => {
     };
 
     return (
-        <form onSubmit={form.onSubmit(handleSubmit)}>
+        <form onSubmit={form.onSubmit(handleSubmit)} className='submission-form'>
             <p>processing: {"" + isProcessing}</p>
             {profileData.fields.map((field, index) => (
                 <FormField key={index} field={field} form={form}></FormField>

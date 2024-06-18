@@ -3,15 +3,17 @@ import {Textarea} from '@mantine/core';
 import PropTypes from "prop-types";
 
 const TextArea = (props) => {
-    const {title, description, form, field_id, placeholder} = props;
+    const {title, description, form, field_id, placeholder, mandatory} = props;
     return (
         <Textarea
             label={title}
             description={description}
             placeholder={placeholder}
             autosize
+            resize='vertical'
             minRows={2}
             key={form.key(field_id)}
+            required={mandatory}
             {...form.getInputProps(field_id)}
         />
     );
