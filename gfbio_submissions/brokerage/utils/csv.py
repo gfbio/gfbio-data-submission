@@ -636,9 +636,25 @@ def parse_meta_data_for_unique_scientific_names(file):
     return scientific_names
 
 
+def check_meta_data(data_to_check, target, messages):
+    status = True
+    for data in data_to_check:
+        ena_response = query_ena(data, target)
+        if ena_response is None:
+            if target == ENA and not messages:
+                messages.append("Data with the following taxon ids is not submittable:")
+            elif target == ATAX and not messages:
+                messages.append("Data with the following scientific names is not submittable:")
+            messages.append(data)
+            status = False
+    return status
+
+
 def parse_meta_data(meta_data_file, target, messages):
+    if not meta_data_file.file.name.endswith(".csv"):
+        messages.append("Invalid file format. Meta data file must be in CSV format.")
+        return False
     with open(meta_data_file.file.path, "r", encoding="utf-8-sig", newline="") as file:
-        status = True
         if target == ENA:
             data_to_check = parse_meta_data_for_unique_tax_ids(file)
             if not data_to_check:
@@ -649,15 +665,7 @@ def parse_meta_data(meta_data_file, target, messages):
             if not data_to_check:
                 messages.append("No scientific_name found in the meta data file")
                 return False
-        for data in data_to_check:
-            ena_response = query_ena(data, target)
-            if ena_response is None:
-                if target == ENA and not messages:
-                    messages.append("Data with the following taxon ids is not submittable:")
-                elif target == ATAX and not messages:
-                    messages.append("Data with the following scientific names is not submittable:")
-                messages.append(data)
-                status = False
+        status = check_meta_data(data_to_check, target, messages)
         return status
 
 
