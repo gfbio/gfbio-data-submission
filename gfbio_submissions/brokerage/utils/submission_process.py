@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-from calendar import c
 
 from gfbio_submissions.brokerage.tasks.submission_tasks.check_for_submittable_data import (
     check_for_submittable_data_task,
@@ -125,7 +124,7 @@ class SubmissionProcessHandler(object):
 
     def execute_submission_to_ena_and_pangaea(self):
         logger.info(
-            "SubmissionTransferHandler. execute_submission_to_ena_and_pangaea. target_archive=".format(
+            "SubmissionTransferHandler. execute_submission_to_ena_and_pangaea. target_archive={0}".format(
                 self.target_archive
             )
         )
