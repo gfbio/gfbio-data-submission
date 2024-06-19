@@ -26,9 +26,26 @@ class TestField(TestCase):
         self.assertEqual("field 2", obj_2.title)
         self.assertEqual(obj_1.field_type, obj_2.field_type)
 
+    def test_mandatory_field(self):
+        obj = Field.objects.create(title="a title for a field", description="a text", field_type=self.field_type)
+        self.assertFalse(obj.mandatory)
+        obj.mandatory = True
+        obj.save()
+        self.assertTrue(obj.mandatory)
+
+    def test_visible_field(self):
+        obj = Field.objects.create(title="a title for a field", description="a text", field_type=self.field_type)
+        self.assertTrue(obj.visible)
+        obj.visible = False
+        self.assertFalse(obj.visible)
+
+    def test_default_value(self):
+        obj = Field.objects.create(title="a title for a field", description="a text", field_type=self.field_type)
+        self.assertEqual("", obj.default)
+
     # TODO: adapt test
     @skip("refactored field id")
-    def test_uniqe_id(self):
+    def test_unique_id(self):
         obj_1 = Field.objects.create(title="field 1", description="", field_type=self.field_type)
         obj_2 = Field.objects.create(title="field 1", description="", field_type=self.field_type)
         self.assertNotEqual(obj_1.field_id(), obj_2.field_id())
