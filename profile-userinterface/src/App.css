@@ -201,6 +201,10 @@
       background-color: white;
     }
   }
+
+  .use-line-breaks {
+    white-space: pre-wrap;
+  }
 }
 
 .mantine-Modal-root {
