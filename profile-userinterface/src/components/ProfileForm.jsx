@@ -50,8 +50,8 @@ const ProfileForm = (props) => {
             {profileData.fields.map((field, index) => (
                 <FormField key={index} field={field} form={form}></FormField>
             ))}
-            <Group justify="flex-end" mt="md">
-                <Button type="submit">Submit</Button>
+            <Group mt="md" className='mt-5'>
+                <Button className='submission-button' type="submit"><i class="fa fa-play mr-3"></i> Create Submission</Button>
             </Group>
         </form>
     );

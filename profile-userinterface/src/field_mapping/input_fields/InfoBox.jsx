@@ -5,7 +5,7 @@ const InfoBox = (props) => {
 
     const infoItems = () => {
         const submission = JSON.parse(localStorage.getItem('submission'));
-        const brokerSubmissionId = submission.broker_submission_id || '1'
+        const brokerSubmissionId = submission.broker_submission_id || ''
 
         const items = [];
         let key = 0;
@@ -26,7 +26,6 @@ const InfoBox = (props) => {
             );
             key++;
         }
-        submission.accessionId = [{status: "blubb", pid: 123}, {status: "blubb 2", pid: 1234}];
         if (submission.accessionId && submission.accessionId.length > 0) {
             items.push(
                 <div className="info-box-header">
@@ -53,7 +52,6 @@ const InfoBox = (props) => {
                 }
             );
         }
-        submission.issue = "Hello World!";
         if (submission.issue && submission.issue.length > 0) {
             items.push(
                 <li key={key} className="list-group-item">
@@ -73,7 +71,7 @@ const InfoBox = (props) => {
             key++;
         }
 
-        if (true || submission.readOnly) {
+        if (submission.readOnly) {
             items.push(
                 <li key={key} className="list-group-item">
                     <a>
