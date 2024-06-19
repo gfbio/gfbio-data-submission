@@ -25,6 +25,8 @@ class Field(TimeStampedModel):
                                             "selecting between fields. e.g. 'generic_title' or 'molecular_embargo_date'")
     field_type = models.ForeignKey(FieldType, on_delete=models.CASCADE)
 
+    system_wide_mandatory = models.BooleanField(default=False)
+
     title = models.CharField(max_length=64, blank=False, null=False,
                              help_text="Title of the field, as displayed in the rendered Form")
     description = models.TextField(default="", blank=True,

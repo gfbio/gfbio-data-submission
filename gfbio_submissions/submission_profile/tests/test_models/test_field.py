@@ -43,6 +43,10 @@ class TestField(TestCase):
         obj = Field.objects.create(title="a title for a field", description="a text", field_type=self.field_type)
         self.assertEqual("", obj.default)
 
+    def test_system_wide_mandatory_field(self):
+        obj = Field.objects.create(title="a title for a field", description="a text", field_type=self.field_type)
+        self.assertFalse(obj.system_wide_mandatory)
+
     # TODO: adapt test
     @skip("refactored field id")
     def test_unique_id(self):
