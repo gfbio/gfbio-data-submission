@@ -1,12 +1,12 @@
-import { TextInput } from "@mantine/core";
+import { TagsInput } from "@mantine/core";
 import PropTypes from "prop-types";
 import React from "react";
 
-const TextField = (props) => {
+const TagsInputField = (props) => {
   const { title, description, mandatory, form, field_id, placeholder } = props;
 
   return (
-    <TextInput
+    <TagsInput
       label={title}
       description={description}
       placeholder={placeholder}
@@ -17,11 +17,11 @@ const TextField = (props) => {
   );
 };
 
-TextField.defaultProps = {
+TagsInputField.defaultProps = {
   placeholder: "",
 };
 
-TextField.propTypes = {
+TagsInputField.propTypes = {
   title: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,
   mandatory: PropTypes.bool.isRequired,
@@ -30,4 +30,4 @@ TextField.propTypes = {
   placeholder: PropTypes.string,
 };
 
-export default TextField;
+export default TagsInputField;
