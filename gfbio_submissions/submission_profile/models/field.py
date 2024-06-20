@@ -39,6 +39,7 @@ class Field(TimeStampedModel):
     comment = models.TextField(default="", blank=True,
                                help_text="Comment text describing the field. This is optional. "
                                          "The information provided here WILL NOT BE SHOWN IN THE FORM")
+
     # TODO: test for inherited profiles
     # TODO: test for all field (inherited of inherited)
     # TODO: json import
@@ -53,19 +54,14 @@ class Field(TimeStampedModel):
     #   - add this to backend to be changable dynamically ?
 
     def save(self, *args, **kwargs):
-        # print("Field save()")
         super(Field, self).save(*args, **kwargs)
         if self.system_wide_mandatory:
             self.mandatory = True
-            # print(self.field_name, ' all fields with swm ', Field.objects.filter(system_wide_mandatory=True))
-            # print(self.profile_set.all())
+            # prevent cyclic import error
             from .profile import Profile
-            # print(Profile.objects.all())
             for profile in Profile.objects.all():
                 for s in Field.objects.filter(system_wide_mandatory=True):
-                    # print('\tadd to ', profile, ' field ', s)
                     profile.fields.add(s)
-            # print("Field save(), done with update")
 
     def __str__(self):
         return self.field_name

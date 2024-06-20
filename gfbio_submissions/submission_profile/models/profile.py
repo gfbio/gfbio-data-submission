@@ -13,21 +13,12 @@ class Profile(TimeStampedModel):
     fields = models.ManyToManyField(Field, blank=True)
     inherit_fields_from = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL)
 
-    # TODO Brainstorming inclue system wide mandatories:
-    #   a profile must contain all system wide fields
-    #   options:
-    #       add in create method
-    #       -> add in save method
-    #   what if a Field becomes a system wide mandatory after a profile has been created ?
-    #       trigger an update of all existing profiles in Field. save() ?
-
     # TODO: workflow field, sub models like preferences, chain of tasks etc.
     # TODO: owner ?
     # TODO: language ? or in preferences
     # TODO: general structure like, grid, menues, footer, general texts or descriptions
     # TODO: global actions, buttons or similar
     # TODO: global design ?
-
 
     # TODO: validator for unique-in-profile field_name (or mapping_to)
     #   https://docs.djangoproject.com/en/4.2/ref/validators/
