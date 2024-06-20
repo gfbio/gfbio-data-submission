@@ -10,6 +10,8 @@ class Profile(TimeStampedModel):
     name = models.SlugField(max_length=16, unique=True)
     target = models.CharField(max_length=16, choices=Submission.TARGETS, default=GENERIC)
 
+    system_wide_profile = models.BooleanField(default=False)
+
     fields = models.ManyToManyField(Field, blank=True)
     inherit_fields_from = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL)
 
