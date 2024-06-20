@@ -39,12 +39,8 @@ class Field(TimeStampedModel):
     comment = models.TextField(default="", blank=True,
                                help_text="Comment text describing the field. This is optional. "
                                          "The information provided here WILL NOT BE SHOWN IN THE FORM")
-    # DONE-TODO: tests/serializer auf neue Felder anpassen
     # TODO: test for inherited profiles
     # TODO: test for all field (inherited of inherited)
-    # DONE-TODO: mandatory, visible, defaults
-    # TODO: profile als Get parameter (ivo)
-    # DONE-TODO: inherit profile fields from other profiles
     # TODO: json import
     # FIXME: initiale Idee war json file als profil config, und nutzer profile in datenbank
     #   TODO: Begründung für Entscheidung gegen File (bzw. json field).
@@ -55,6 +51,21 @@ class Field(TimeStampedModel):
     # TODO: how to add field-level validation (e.g. min length decsription) to frontend ?
     #   - in frontend per field-widget (current ui has this) ?
     #   - add this to backend to be changable dynamically ?
+
+    def save(self, *args, **kwargs):
+        # print("Field save()")
+        super(Field, self).save(*args, **kwargs)
+        if self.system_wide_mandatory:
+            self.mandatory = True
+            # print(self.field_name, ' all fields with swm ', Field.objects.filter(system_wide_mandatory=True))
+            # print(self.profile_set.all())
+            from .profile import Profile
+            # print(Profile.objects.all())
+            for profile in Profile.objects.all():
+                for s in Field.objects.filter(system_wide_mandatory=True):
+                    # print('\tadd to ', profile, ' field ', s)
+                    profile.fields.add(s)
+            # print("Field save(), done with update")
 
     def __str__(self):
         return self.field_name
