@@ -1,7 +1,6 @@
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
   /*text-align: center;*/
 }
 
@@ -101,11 +100,11 @@
 
   font-family: "Open Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
 
-  h1, h2, .mantine-InputWrapper-label, .mantine-Pill-root, input, textarea {
+  h1, h2, .mantine-InputWrapper-label, .mantine-Pill-root, input, textarea, .mantine-Dropzone-inner {
     color: #495057;
   }
 
-  h3, h4, .info-box, span.mantine-InputWrapper-required {
+  h3, h4, .info-box, span.mantine-InputWrapper-required, .uploaded-files, .mantine-Checkbox-label {
     color: #666;
   }
 
@@ -225,6 +224,7 @@
 
         label {
           padding-right:1rem;
+          font-size: 1rem;
         }
       }
     }
@@ -232,6 +232,15 @@
 
   .mantine-MultiSelect-input, .mantine-TagsInput-input {
     padding-top: 0.55rem;
+  }
+
+  .mantine-Dropzone-inner {
+    border: 1px #d3d3d3 solid;
+    border-radius: 5px;
+  }
+
+  .green-text {
+    color: #80b148;
   }
 }
 
