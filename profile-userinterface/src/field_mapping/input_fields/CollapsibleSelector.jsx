@@ -6,7 +6,6 @@ import PropTypes from "prop-types";
 const CollapsibleSelector = (props) => {
     const {title, description, form, options, default_value, field_id,} = props;
 
-    console.log(options);
     var default_opt = default_value ? options.map(o => o.option).filter(o => o == default_value) : null
     const [value, setValue] = useState(default_opt ? default_opt[0] : options[0].option);
     form.setFieldValue(field_id, value);
@@ -28,7 +27,6 @@ const CollapsibleSelector = (props) => {
                 {
                     options.map(
                         opt => {
-                            console.log(opt)
                             const [dialog_opened, { open: open_dialog, close: close_dialog }] = useDisclosure(false);
                             const choose_option = function() { setValue(opt.option); };
                             return (
@@ -39,7 +37,7 @@ const CollapsibleSelector = (props) => {
                                             <>
                                                 <Modal opened={dialog_opened} onClose={close_dialog} title={opt.option} centered size="auto">
                                                     <div className='modal-dialog-body'>
-                                                        { opt.description && ( <Text>{opt.description}</Text> ) }
+                                                        { opt.description && ( <Text className='use-line-breaks'>{opt.description}</Text> ) }
                                                     </div>
                                                     <div className='modal-dialog-footer container p-0'>
                                                         {

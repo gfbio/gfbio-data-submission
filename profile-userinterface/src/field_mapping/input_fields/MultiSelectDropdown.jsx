@@ -1,17 +1,18 @@
-import {React, useState} from 'react';
+import {React, useEffect} from 'react';
 import {MultiSelect} from '@mantine/core';
 import PropTypes from "prop-types";
 
 const MultiSelectDropdown = (props) => {
     const {title, description, form, options, field_id, default_value} = props;
     const initial_value = default_value ? default_value.split(",") : []
-    const [value, setValue] = useState(initial_value);
-    form.setFieldValue(field_id, value);
+    useEffect(() => {
+        form.setFieldValue(field_id, initial_value);
+    }, []);
 
-    const handleChange = (value) => {
-        setValue(value);
+    const handleChange = (val) => {
+        form.setFieldValue(field_id, val);
     }
-    const data = options.map(opt => { return {label: opt, value: opt};});
+    const data = options.map(opt => { return {label: opt.option, value: opt.option};});
 
     return (
         <div>
