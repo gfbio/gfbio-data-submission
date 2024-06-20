@@ -101,7 +101,7 @@
 
   font-family: "Open Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
 
-  h1, h2, label.mantine-InputWrapper-label, .mantine-Pill-root, input, textarea {
+  h1, h2, .mantine-InputWrapper-label, .mantine-Pill-root, input, textarea {
     color: #495057;
   }
 
@@ -109,7 +109,7 @@
     color: #666;
   }
 
-  h1, h2, label.mantine-InputWrapper-label {
+  h1, h2, .mantine-InputWrapper-label {
     font-size: 1.5rem !important;
     font-weight: 400 !important;
     border-bottom: 1px #d3d3d3 solid;
@@ -204,6 +204,34 @@
 
   .use-line-breaks {
     white-space: pre-wrap;
+  }
+
+  .mantine-CheckboxGroup-root {
+    .mantine-CheckboxGroup-description {
+      padding-bottom: .5rem;
+    }
+
+    [role="group"] {
+      display: flex;
+      flex-flow: row wrap;
+      justify-content: space-between;
+
+      .mantine-Checkbox-root {
+        line-break: anywhere;
+
+        input {
+          --checkbox-color: #80b148;
+        }
+
+        label {
+          padding-right:1rem;
+        }
+      }
+    }
+  }
+
+  .mantine-MultiSelect-input, .mantine-TagsInput-input {
+    padding-top: 0.55rem;
   }
 }
 

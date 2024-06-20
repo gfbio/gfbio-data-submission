@@ -18,6 +18,7 @@ class FieldSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "mandatory",
+            "placeholder",
             "visible",
             "default",
             "options",
