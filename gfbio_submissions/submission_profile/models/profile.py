@@ -1,16 +1,25 @@
 from django.db import models
 from model_utils.models import TimeStampedModel
 
+from config.settings.base import AUTH_USER_MODEL
 from ..models.field import Field
 from ...brokerage.configuration.settings import GENERIC
 from ...brokerage.models.submission import Submission
 
 
 class Profile(TimeStampedModel):
-    name = models.SlugField(max_length=16, unique=True)
+    name = models.SlugField(max_length=128, unique=True)
     target = models.CharField(max_length=16, choices=Submission.TARGETS, default=GENERIC)
 
     system_wide_profile = models.BooleanField(default=False)
+
+    user = models.ForeignKey(
+        AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name="user_profiles",
+        on_delete=models.CASCADE,
+    )
 
     fields = models.ManyToManyField(Field, blank=True)
     inherit_fields_from = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL)
@@ -21,6 +30,9 @@ class Profile(TimeStampedModel):
     # TODO: general structure like, grid, menues, footer, general texts or descriptions
     # TODO: global actions, buttons or similar
     # TODO: global design ?
+
+    # TODO Brainstorming DASS-1942:
+    #   - at start of feature, nobody can create or mod profile, except via admin
 
     # TODO: validator for unique-in-profile field_name (or mapping_to)
     #   https://docs.djangoproject.com/en/4.2/ref/validators/

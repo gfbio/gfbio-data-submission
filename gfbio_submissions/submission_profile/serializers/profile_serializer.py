@@ -6,14 +6,12 @@ from ..models.profile import Profile
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    fields = FieldSerializer(many=True, read_only=True)
     form_fields = FieldSerializer(many=True, read_only=True)
 
     class Meta:
         model = Profile
         fields = (
             "name",
-            "fields",
             "form_fields",
             "target",
         )

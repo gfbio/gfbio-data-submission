@@ -8,7 +8,7 @@ class ProfileFrontendView(TemplateView):
     def get_context_data(self, *args, **kwargs):
         context = super(ProfileFrontendView, self).get_context_data(*args, **kwargs)
 
-        print('KWARGS ', self.kwargs)
+        # print('KWARGS ', self.kwargs)
 
         user = self.request.user
         # user_name = user.get_username()

@@ -43,11 +43,11 @@ const ProfileForm = (props) => {
             });
         // setProcessing(false);
     };
-
+    console.log('FORM FIELDS ', profileData.form_fields);
     return (
         <form onSubmit={form.onSubmit(handleSubmit)}>
             <p>processing: {"" + isProcessing}</p>
-            {profileData.fields.map((field, index) => (
+            {profileData.form_fields.map((field, index) => (
                 <FormField key={index} field={field} form={form}></FormField>
             ))}
             <Group justify="flex-end" mt="md">
