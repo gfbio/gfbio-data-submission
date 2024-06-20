@@ -4,11 +4,7 @@ import PropTypes from "prop-types";
 import React, { useState } from "react";
 import postSubmission from "../api/postSubmission.jsx";
 import FormField from "../field_mapping/FormField.jsx";
-
-const isValidUrl = (url) => {
-  const urlRegex = /^(ftp|http|https):\/\/[^ "]+$/;
-  return urlRegex.test(url);
-};
+import validateDataUrlField from "../utils/DataUrlValidation.jsx";
 
 const ProfileForm = (props) => {
   const {
@@ -42,21 +38,7 @@ const ProfileForm = (props) => {
         (field) => field.field_type.type
       );
       if (field_types.includes("data-url-field")) {
-        let field = profileData.fields.find(
-          ({ field_type }) => field_type.type === "data-url-field"
-        );
-        let field_id = field.field_id;
-        let value = values[field_id];
-        if (
-          field.mandatory === "true" ||
-          (value !== undefined && value !== "")
-        ) {
-          return {
-            [field_id]: isValidUrl(value) ? null : "Please enter a valid URL",
-          };
-        } else {
-          return null;
-        }
+        return validateDataUrlField(values, profileData);
       }
     },
   });
