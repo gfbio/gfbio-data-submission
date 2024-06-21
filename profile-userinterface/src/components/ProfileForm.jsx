@@ -1,20 +1,14 @@
-import { Button, Group } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import React, {useState} from 'react';
 import PropTypes from "prop-types";
-import React, { useState } from "react";
-import postSubmission from "../api/postSubmission.jsx";
+import {Button, Group} from '@mantine/core';
+import {useForm} from '@mantine/form';
 import FormField from "../field_mapping/FormField.jsx";
-import validateDataUrlField from "../utils/DataUrlValidation.jsx";
+import postSubmission from "../api/postSubmission.jsx";
+
 
 const ProfileForm = (props) => {
-  const {
-    profileData,
-    submissionData,
-    isLoading,
-    profileError,
-    SubmissionError,
-  } = props;
-  const [isProcessing, setProcessing] = useState(false);
+    const {profileData, submissionData, isLoading, profileError, SubmissionError} = props;
+    const [isProcessing, setProcessing] = useState(false);
 
   const form = useForm({
     mode: "uncontrolled",
@@ -43,30 +37,33 @@ const ProfileForm = (props) => {
     },
   });
 
-  const handleSubmit = (values) => {
-    setProcessing(true);
-    // TODO: fixed token value for local testing only
-    postSubmission(profileData.target, localStorage.getItem("embargo"), values)
-      .then((result) => {
-        console.log("DATA ", result);
-      })
-      .finally(() => {
-        setProcessing(false);
-      });
-    // setProcessing(false);
-  };
-
-  return (
-    <form onSubmit={form.onSubmit(handleSubmit)}>
-      <p>processing: {"" + isProcessing}</p>
-      {profileData.fields.map((field, index) => (
-        <FormField key={index} field={field} form={form}></FormField>
-      ))}
-      <Group justify="flex-end" mt="md">
-        <Button type="submit">Submit</Button>
-      </Group>
-    </form>
-  );
+    const handleSubmit = (values) => {
+        setProcessing(true);
+        // TODO: fixed token value for local testing only
+        postSubmission(
+            profileData.target,
+            localStorage.getItem('embargo'),
+            values)
+            .then((result) => {
+                console.log('DATA ', result);
+            })
+            .finally(() => {
+                setProcessing(false);
+            });
+        // setProcessing(false);
+    };
+    console.log('FORM FIELDS ', profileData.form_fields);
+    return (
+        <form onSubmit={form.onSubmit(handleSubmit)}>
+            <p>processing: {"" + isProcessing}</p>
+            {profileData.form_fields.map((field, index) => (
+                <FormField key={index} field={field} form={form}></FormField>
+            ))}
+            <Group justify="flex-end" mt="md">
+                <Button type="submit">Submit</Button>
+            </Group>
+        </form>
+    );
 };
 
 ProfileForm.propTypes = {

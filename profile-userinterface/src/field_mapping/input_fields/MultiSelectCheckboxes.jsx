@@ -20,7 +20,7 @@ const MultiSelectCheckboxes = (props) => {
             >
                 {mapped_options.map(function(opt){
                     return (
-                        <Checkbox 
+                        <Checkbox
                             value={opt}
                             label={opt}
                         />

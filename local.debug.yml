@@ -23,7 +23,8 @@ services:
       - ./.envs/.local/.postgres
     ports:
       - "8000:8000"
-    command: /start
+      - "5678:5678"
+    command: /start_debug
 
   postgres:
     build:
