@@ -2,41 +2,94 @@
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
-  text-align: center;
+  /*text-align: center;*/
 }
 
-.logo {
-  height: 12em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
+/*.logo {*/
+/*  height: 12em;*/
+/*  padding: 1.5em;*/
+/*  will-change: filter;*/
+/*  transition: filter 300ms;*/
+/*}*/
+/*.logo:hover {*/
+/*  filter: drop-shadow(0 0 2em #646cffaa);*/
+/*}*/
+/*.logo.react:hover {*/
+/*  filter: drop-shadow(0 0 2em #61dafbaa);*/
+/*}*/
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+/*@keyframes logo-spin {*/
+/*  from {*/
+/*    transform: rotate(0deg);*/
+/*  }*/
+/*  to {*/
+/*    transform: rotate(360deg);*/
+/*  }*/
+/*}*/
+
+/*@media (prefers-reduced-motion: no-preference) {*/
+/*  a:nth-of-type(2) .logo {*/
+/*    animation: logo-spin infinite 20s linear;*/
+/*  }*/
+/*}*/
+
+/*.card {*/
+/*  padding: 2em;*/
+/*}*/
+
+/*.read-the-docs {*/
+/*  color: #888;*/
+/*}*/
+
+.collapsible-selector-container {
+  .btn-style {
+    &:hover {
+      background-color: white;
+    }
+
+    cursor: pointer;
+    border: 1px #ced4da solid;
+    background-color: #f8f8f8;
+    border-radius: 0.5rem;
   }
-  to {
-    transform: rotate(360deg);
+
+  .clickable-text {
+    &:hover {
+      color: #3cace4;
+    }
+
+    cursor: pointer;
+  }
+  
+  .clickable-row {
+    &:hover {
+      background-color: #f8f8f8;
+    }
+
+    cursor: pointer;
+    border-bottom: 1px #ced4da solid;
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+.mantine-Modal-root {
+
+  section {
+    padding: 0 !important;
+  }
+
+  .modal-dialog-body {
+    min-height: 4lh;
+  }
+
+  .modal-dialog-footer {
+    .btn {
+      height: 2rem;
+      margin-bottom: 0.25rem;
+      margin-top: 0.25rem;
+    }
   }
 }
 
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+.use-line-breaks {
+  white-space: pre-wrap;
 }
