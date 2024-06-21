@@ -27,19 +27,34 @@ class TestProfileDetailView(TestCase):
             email="horst@horst.de",
             password="password",
         )
+
+        user_2 = User.objects.create_user(
+            username="kevin",
+            email="kevin@kevin.de",
+            password="password",
+        )
+
         profile = Profile.objects.create(name="user-profile-1", target="GENERIC", user=cls.user)
         for f in Field.objects.all():
             profile.fields.add(f)
 
         # TODO: will change due to removin user on system wide profile
-        profile = Profile.objects.create(name="user-system-profile-1", target="GENERIC", user=cls.user, system_wide_profile=True)
+        profile = Profile.objects.create(name="user-system-profile-1", target="GENERIC", user=cls.user,
+                                         system_wide_profile=True)
         for f in Field.objects.all():
             profile.fields.add(f)
 
+        profile = Profile.objects.create(name="system-profile-x", target="GENERIC", system_wide_profile=True)
+        for f in Field.objects.all():
+            profile.fields.add(f)
 
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION="Basic " + base64.b64encode(b"horst:password").decode("utf-8"))
         cls.api_client = client
+
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION="Basic " + base64.b64encode(b"kevin:password").decode("utf-8"))
+        cls.api_client_2 = client
 
     def test_get_existing_profile(self):
         response = self.client.get("/profile/profile/generic/")
@@ -70,6 +85,22 @@ class TestProfileDetailView(TestCase):
         response = self.client.get("/profile/profile/foobar/")
         self.assertEqual(404, response.status_code)
 
+    def test_get_user_profile_without_credentials(self):
+        response = self.client.get("/profile/profile/user-profile-1/")
+        self.assertEqual(401, response.status_code)
+
+    def test_get_other_users_profile(self):
+        response = self.api_client_2.get("/profile/profile/user-profile-1/")
+        self.assertEqual(403, response.status_code)
+
+    def test_get_system_profile_without_credentials(self):
+        response = self.client.get("/profile/profile/system-profile-x/")
+        self.assertEqual(200, response.status_code)
+
+    def test_get_system_profile_with_credentials(self):
+        response = self.api_client.get("/profile/profile/system-profile-x/")
+        self.assertEqual(200, response.status_code)
+
     def test_post_profile_root(self):
         response = self.client.post("/profile/profile/", {})
         self.assertEqual(404, response.status_code)
@@ -93,8 +124,6 @@ class TestProfileDetailView(TestCase):
         }, format="json")
         content = json.loads(response.content)
         pprint(content)
-        # was: self.assertEqual(405, response.status_code)
-        # now -> no permission on this (valid) profile with valid credentials:
         self.assertEqual(403, response.status_code)
 
     def test_put_on_user_owned_profile(self):
@@ -104,10 +133,17 @@ class TestProfileDetailView(TestCase):
 
         }, format="json")
         content = json.loads(response.content)
-        print(response.status_code)
-        pprint(content)
         self.assertEqual(200, response.status_code)
         self.assertEqual("ENA", content.get("target", "no-target"))
+
+    def test_put_with_system_wide_prefix(self):
+        response = self.api_client.put("/profile/profile/user-profile-1/", {
+            "name": "systemuser-profile-1",
+
+        }, format="json")
+        content = json.loads(response.content)
+        self.assertEqual(400, response.status_code)
+        self.assertEqual(["Profile names are not allowed to beging with system"], content.get("name", "no-name"))
 
     # TODO: will add code that sets user to none once system_wide_profile is set to true
     def test_put_on_user_owned_system_profile(self):
@@ -122,10 +158,6 @@ class TestProfileDetailView(TestCase):
 
         }, format="json")
         content = json.loads(response.content)
-        print(response.status_code)
-        pprint(content)
         self.assertEqual(403, response.status_code)
         profile = Profile.objects.get(name="user-system-profile-1")
         self.assertEqual("GENERIC", profile.target)
-        # self.assertEqual(200, response.status_code)
-        # self.assertEqual("ENA", content.get("target", "no-target"))

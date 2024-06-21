@@ -6,7 +6,8 @@ class IsOwnerAndNonSystemWide(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         # Read permissions are allowed to any request,
         # so we'll always allow GET, HEAD or OPTIONS requests.
-        if request.method in permissions.SAFE_METHODS:
+        # but only if obj is not owned by a user
+        if request.method in permissions.SAFE_METHODS and obj.user is None:
             return True
 
         # Write permissions are only allowed to the owner and if the

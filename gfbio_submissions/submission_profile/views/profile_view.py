@@ -12,5 +12,5 @@ class ProfileDetailView(RetrieveAPIView, UpdateAPIView):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     authentication_classes = (TokenAuthentication, BasicAuthentication)
-    permission_classes = (permissions.IsAuthenticated, IsOwnerAndNonSystemWide)
+    permission_classes = (IsOwnerAndNonSystemWide, )
     lookup_field = "name"
