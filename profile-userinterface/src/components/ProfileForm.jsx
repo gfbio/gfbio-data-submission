@@ -5,9 +5,16 @@ import { useForm } from "@mantine/form";
 import FormField from "../field_mapping/FormField.jsx";
 import postSubmission from "../api/postSubmission.jsx";
 import createUploadFileChannel from "../api/createUploadFileChannel.jsx";
+import validateDataUrlField from "../utils/DataUrlValidation.jsx";
 
 const ProfileForm = (props) => {
-  const {profileData, submissionData, isLoading, profileError, SubmissionError} = props;
+  const {
+    profileData,
+    submissionData,
+    isLoading,
+    profileError,
+    SubmissionError,
+  } = props;
   const [isProcessing, setProcessing] = useState(false);
   const [files, setFiles] = useState([]);
   const [uploadLimitExceeded, setUploadLimitExceeded] = useState(false);
@@ -30,8 +37,8 @@ const ProfileForm = (props) => {
     //         value.length < 2 ? 'Title is too short' : null,
     // },
     validate: (values) => {
-      let field_types = profileData.fields.map(
-        (field) => field.field_type.type
+      let field_types = profileData.form_fields.map(
+        (field) => field.field_type.type,
       );
       if (field_types.includes("data-url-field")) {
         return validateDataUrlField(values, profileData);
@@ -101,11 +108,11 @@ const ProfileForm = (props) => {
     }
     // setProcessing(false);
   };
-  console.log('FORM FIELDS ', profileData.form_fields);
+  console.log("FORM FIELDS ", profileData.form_fields);
   return (
     <form onSubmit={form.onSubmit(handleSubmit)}>
       <p>processing: {"" + isProcessing}</p>
-      {profileData.fields.map((field, index) => (
+      {profileData.form_fields.map((field, index) => (
         <FormField
           key={index}
           field={field}
