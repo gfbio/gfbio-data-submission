@@ -19,6 +19,13 @@ class TestField(TestCase):
         self.assertGreater(len(obj.title), 0)
         self.assertGreater(len(obj.description), 0)
 
+    def test_creation_with_system_wide_mandatory(self):
+        obj = Field.objects.create(field_name="mandatory", title="a title for a field", description="a text",
+                                   system_wide_mandatory=True, field_type=self.field_type)
+        self.assertTrue(obj.system_wide_mandatory)
+        self.assertTrue(obj.mandatory)
+        self.assertEqual(0, len(obj.profile_set.all()))
+
     def test_multiple_relations(self):
         obj_1 = Field.objects.create(title="field 1", description="", field_type=self.field_type)
         obj_2 = Field.objects.create(title="field 2", description="", field_type=self.field_type)
@@ -42,6 +49,19 @@ class TestField(TestCase):
     def test_default_value(self):
         obj = Field.objects.create(title="a title for a field", description="a text", field_type=self.field_type)
         self.assertEqual("", obj.default)
+
+    def test_system_wide_mandatory_field(self):
+        obj = Field.objects.create(title="a title for a field", description="a text", field_type=self.field_type)
+        self.assertFalse(obj.system_wide_mandatory)
+
+    def test_system_wide_mandatory_set(self):
+        obj = Field.objects.create(title="a title for a field", description="a text", field_type=self.field_type)
+        self.assertFalse(obj.system_wide_mandatory)
+        self.assertFalse(obj.mandatory)
+        obj.system_wide_mandatory = True
+        obj.save()
+        self.assertTrue(obj.system_wide_mandatory)
+        self.assertTrue(obj.mandatory)
 
     # TODO: adapt test
     @skip("refactored field id")
