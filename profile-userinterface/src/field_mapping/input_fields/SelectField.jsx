@@ -10,13 +10,13 @@ const SelectField = (props) => {
   // TODO: add parameter to be able to switch between this and empty values if select is
   //  initally empty (or has placeholder)
 
-  // setting inital values, so that there is always a value for the field in the form
-  //  even if nothing is actively selected (e.g. GFBio-Datacenter...).
-  const [value, setValue] = useState(options.at(0));
+    // setting inital values, so that there is always a value for the field in the form
+    //  even if nothing is actively selected (e.g. GFBio-Datacenter...).
+    const [value, setValue] = useState(options.at(0));
 
-  useEffect(() => {
-    form.setFieldValue(field_id, value);
-  }, []);
+    useEffect(() => {
+        form.setFieldValue(field_id, value);
+    }, []);
 
   //TODO: this could be used for any field that deals with options
   const handleChange = (option) => {
