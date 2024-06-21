@@ -13,10 +13,11 @@ from rest_framework.test import APIClient
 from config.settings.base import MEDIA_ROOT
 from gfbio_submissions.brokerage.tests.utils import _get_submission_post_response, _get_submission_request_data
 from gfbio_submissions.users.models import User
-from .test_submission_view_base import TestSubmissionView
+
 from ....configuration.settings import ENA, GENERIC
 from ....models.submission import Submission
 from ....models.task_progress_report import TaskProgressReport
+from .test_submission_view_base import TestSubmissionView
 
 
 class TestSubmissionViewFullPosts(TestSubmissionView):
@@ -171,6 +172,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(1, len(submission.submissionupload_set.all()))
         self.assertTrue(submission.submissionupload_set.first().meta_data)
 
+        self._create_ena_taxa_query_response()
         response = self.api_client.put(
             "/api/submissions/{0}/".format(submission.broker_submission_id),
             {
@@ -205,6 +207,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             "tasks.check_on_hold_status_task",
             "tasks.create_broker_objects_from_submission_data_task",
             "tasks.prepare_ena_submission_data_task",
+            "tasks.check_for_submittable_data_task",
         ]
         all_task_reports = list(TaskProgressReport.objects.values_list("task_name", flat=True).order_by("created"))
         for a in all_task_reports:
@@ -262,6 +265,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         )
         responses.add(responses.POST, url, json={}, status=200)
         data = self._create_test_meta_data()
+        self._create_ena_taxa_query_response()
         self.api_client.post(url, data, format="multipart")
         self.api_client.put(
             "/api/submissions/{0}/".format(submission.broker_submission_id),
@@ -376,6 +380,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, len(submission.submissionupload_set.all()))
         self.assertTrue(submission.submissionupload_set.first().meta_data)
+        self._create_ena_taxa_query_response()
 
         response = self.api_client.put(
             "/api/submissions/{0}/".format(submission.broker_submission_id),
@@ -412,6 +417,7 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
             "tasks.check_on_hold_status_task",
             "tasks.create_broker_objects_from_submission_data_task",
             "tasks.prepare_ena_submission_data_task",
+            "tasks.check_for_submittable_data_task",
         ]
         all_task_reports = list(TaskProgressReport.objects.values_list("task_name", flat=True).order_by("created"))
         for a in all_task_reports:

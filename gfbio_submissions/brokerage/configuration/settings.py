@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from _csv import QUOTE_NONNUMERIC, QUOTE_NONE
 from builtins import getattr
+
+from _csv import QUOTE_NONE, QUOTE_NONNUMERIC
 
 settings = {}
 
@@ -92,6 +93,8 @@ DRAFT04_VALIDATORS = getattr(
 ENA = getattr(settings, "ENA", "ENA")
 
 ENA_STUDY_URL_PREFIX = getattr(settings, "ENA_STUDY_URL_PREFIX", "http://www.ebi.ac.uk/ena/browser/view/")
+
+ENA_TAXONOMY_URL_PREFIX = getattr(settings, "ENA_TAXONOMY_URL_PREFIX", "https://www.ebi.ac.uk/ena/taxonomy/rest/")
 
 DEFAULT_ENA_BROKER_NAME = getattr(settings, "DEFAULT_ENA_BROKER_NAME", "GFBIO")
 

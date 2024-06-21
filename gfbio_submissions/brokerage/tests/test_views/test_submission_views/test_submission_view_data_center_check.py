@@ -94,6 +94,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             file=uploaded_file,
         )
         self.assertEqual(1, len(submission.submissionupload_set.filter(meta_data=True)))
+        self._create_ena_taxa_query_response()
         response = self.api_client.put(
             "/api/submissions/{0}/".format(submission.broker_submission_id),
             {
@@ -125,6 +126,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             "tasks.create_broker_objects_from_submission_data_task",
             "tasks.prepare_ena_submission_data_task",
             "tasks.check_issue_existing_for_submission_task",
+            "tasks.check_for_submittable_data_task",
         ]
         for t in TaskProgressReport.objects.filter(submission=submission).order_by("created"):
             self.assertIn(t.task_name, expected_tasks)
@@ -193,6 +195,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             "tasks.trigger_submission_process_for_updates",
             "tasks.check_on_hold_status_task",
             "tasks.check_issue_existing_for_submission_task",
+            "tasks.check_for_submittable_data_task",
         ]
         for t in TaskProgressReport.objects.filter(submission=submission).order_by("created"):
             self.assertIn(t.task_name, expected_tasks)
@@ -259,6 +262,7 @@ class TestSubmissionViewDataCenterCheck(TestSubmissionView):
             "tasks.trigger_submission_process_for_updates",
             "tasks.check_on_hold_status_task",
             "tasks.check_issue_existing_for_submission_task",
+            "tasks.check_for_submittable_data_task",
         ]
         for t in TaskProgressReport.objects.filter(submission=submission).order_by("created"):
             self.assertIn(t.task_name, expected_tasks)
