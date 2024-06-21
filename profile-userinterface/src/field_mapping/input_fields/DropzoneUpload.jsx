@@ -82,7 +82,7 @@ const DropzoneUpload = (props) => {
                 // onReject={() => form.setFieldError('files', 'Select images only')}
             >
                 <Center h={120}>
-                    <Dropzone.Idle>{ placeholder ? (<>{placeholder}</>) : (<>Drop files here</>) }</Dropzone.Idle>
+                    <Dropzone.Idle className="p-3">{ placeholder ? (<>{placeholder}</>) : (<>Drop files here</>) }</Dropzone.Idle>
                     <Dropzone.Accept>Drop files here</Dropzone.Accept>
                     <Dropzone.Reject>Files are invalid</Dropzone.Reject>
                 </Center>

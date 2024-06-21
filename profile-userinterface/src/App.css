@@ -92,10 +92,30 @@
 .submission-form {
   .mantine-Input-input {
     --input-placeholder-color: #666 !important;
-    --input-bd-focus: #3cace4 !important;
+    --input-bd-focus: #a6c97e !important;
   }
-  .mantine-Select-wrapper input {
-    --input-color: #666 !important;
+
+  .mantine-Input-input:focus, .mantine-Input-input[data-expanded], .mantine-Input-input:has([data-expanded])  {
+    -webkit-box-shadow: 0 0 0 .2rem rgba(129,178,72,.3);
+    box-shadow: 0 0 0 .2rem rgba(129,178,72,.3);
+  }
+
+  .mantine-Select-wrapper {
+      input {
+      --input-color: #666 !important;
+    }
+  }
+
+  div.mantine-Select-section, div.mantine-MultiSelect-section{
+    font: normal normal normal 14px/1 FontAwesome;
+
+    svg {
+      display: none;
+    }
+
+    &:before {
+      content: "\f078";
+    }
   }
 
   font-family: "Open Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
