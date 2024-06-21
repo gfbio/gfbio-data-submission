@@ -14,7 +14,13 @@ from gfbio_submissions.generic.models.resource_credential import ResourceCredent
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
 
-from ....configuration.settings import JIRA_ISSUE_URL, JIRA_USERNAME_URL_FULLNAME_TEMPLATE, JIRA_USERNAME_URL_TEMPLATE
+from ....configuration.settings import (
+    ENA,
+    ENA_TAXONOMY_URL_PREFIX,
+    JIRA_ISSUE_URL,
+    JIRA_USERNAME_URL_FULLNAME_TEMPLATE,
+    JIRA_USERNAME_URL_TEMPLATE,
+)
 from ....models.submission_upload import SubmissionUpload
 
 
@@ -214,3 +220,15 @@ class TestSubmissionView(TestCase):
             "file": csv_file,
             "meta_data": True,
         }
+
+    def _create_ena_taxa_query_response(self, target=ENA, data="1234", submittable="true"):
+        if target == ENA:
+            url = ENA_TAXONOMY_URL_PREFIX + "tax-id/" + data
+        else:
+            url = ENA_TAXONOMY_URL_PREFIX + "scientific-name/" + data
+        responses.add(
+            responses.GET,
+            url,
+            json={"submittable": submittable},
+            status=200,
+        )
