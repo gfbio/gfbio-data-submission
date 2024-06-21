@@ -8,6 +8,10 @@ from django.db.models import Count
 from django.http import HttpResponse
 from django.utils.encoding import smart_bytes
 
+from gfbio_submissions.brokerage.tasks.submission_tasks.check_for_submittable_data import (
+    check_for_submittable_data_task,
+)
+
 from .configuration.settings import SUBMISSION_DELAY, SUBMISSION_UPLOAD_RETRY_DELAY
 from .models.additional_reference import AdditionalReference
 from .models.auditable_text_data import AuditableTextData
@@ -106,10 +110,10 @@ cancel_selected_submissions.short_description = "Cancel selected submissions"
 
 
 def create_broker_objects_and_ena_xml(modeladmin, request, queryset):
+    from .tasks.auditable_text_data_tasks.prepare_ena_submission_data import prepare_ena_submission_data_task
     from .tasks.broker_object_tasks.create_broker_objects_from_submission_data import (
         create_broker_objects_from_submission_data_task,
     )
-    from .tasks.auditable_text_data_tasks.prepare_ena_submission_data import prepare_ena_submission_data_task
 
     for obj in queryset:
         chain = create_broker_objects_from_submission_data_task.s(submission_id=obj.pk).set(
@@ -226,13 +230,15 @@ modify_ena_objects_with_current_xml.short_description = "Modify ENA objects with
 
 
 def perform_targeted_sequence_submission(modeladmin, request, queryset):
-    from .tasks.broker_object_tasks.create_study_broker_objects_only import create_study_broker_objects_only_task
+    from .tasks.auditable_text_data_tasks.create_targeted_sequence_ena_manifest import (
+        create_targeted_sequence_ena_manifest_task,
+    )
     from .tasks.auditable_text_data_tasks.prepare_ena_study_xml import prepare_ena_study_xml_task
-    from .tasks.process_tasks.register_study_at_ena import  register_study_at_ena_task
+    from .tasks.broker_object_tasks.create_study_broker_objects_only import create_study_broker_objects_only_task
     from .tasks.process_tasks.process_ena_response import process_ena_response_task
-    from .tasks.auditable_text_data_tasks.create_targeted_sequence_ena_manifest import create_targeted_sequence_ena_manifest_task
-    from .tasks.process_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
     from .tasks.process_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
+    from .tasks.process_tasks.register_study_at_ena import register_study_at_ena_task
+    from .tasks.process_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
 
     for obj in queryset:
         chain = (
@@ -255,10 +261,10 @@ perform_targeted_sequence_submission.short_description = "Perform Targeted Seque
 
 
 def register_study_at_ena(modeladmin, request, queryset):
-    from .tasks.broker_object_tasks.create_study_broker_objects_only import create_study_broker_objects_only_task
     from .tasks.auditable_text_data_tasks.prepare_ena_study_xml import prepare_ena_study_xml_task
-    from .tasks.process_tasks.register_study_at_ena import register_study_at_ena_task
+    from .tasks.broker_object_tasks.create_study_broker_objects_only import create_study_broker_objects_only_task
     from .tasks.process_tasks.process_ena_response import process_ena_response_task
+    from .tasks.process_tasks.register_study_at_ena import register_study_at_ena_task
 
     for obj in queryset:
         chain = (
@@ -276,7 +282,9 @@ register_study_at_ena.short_description = "Register Study at ENA"
 
 
 def prepare_manifest(modeladmin, request, queryset):
-    from .tasks.auditable_text_data_tasks.create_targeted_sequence_ena_manifest import create_targeted_sequence_ena_manifest_task
+    from .tasks.auditable_text_data_tasks.create_targeted_sequence_ena_manifest import (
+        create_targeted_sequence_ena_manifest_task,
+    )
 
     for obj in queryset:
         create_targeted_sequence_ena_manifest_task.apply_async(
@@ -290,8 +298,8 @@ prepare_manifest.short_description = "Prepare MANIFEST file"
 
 
 def submit_manifest_to_ena(modeladmin, request, queryset):
-    from .tasks.process_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
     from .tasks.process_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
+    from .tasks.process_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
 
     for obj in queryset:
         chain = submit_targeted_sequences_to_ena_task.s(submission_id=obj.pk, do_test=False, do_validate=False).set(
@@ -304,8 +312,8 @@ submit_manifest_to_ena.short_description = "Submit MANIFEST file to ENA"
 
 
 def validate_manifest_at_ena(modeladmin, request, queryset):
-    from .tasks.process_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
     from .tasks.process_tasks.process_targeted_sequence_results import process_targeted_sequence_results_task
+    from .tasks.process_tasks.submit_targeted_sequence_to_ena import submit_targeted_sequences_to_ena_task
 
     for obj in queryset:
         chain = submit_targeted_sequences_to_ena_task.s(submission_id=obj.pk, do_test=False, do_validate=True).set(
@@ -318,9 +326,9 @@ validate_manifest_at_ena.short_description = "Validate MANIFEST file at ENA"
 
 
 def create_helpdesk_issue_manually(modeladmin, request, queryset):
+    from .tasks.jira_tasks.attach_to_submission_issue import attach_to_submission_issue_task
     from .tasks.jira_tasks.create_submission_issue import create_submission_issue_task
     from .tasks.jira_tasks.get_gfbio_helpdesk_username import get_gfbio_helpdesk_username_task
-    from .tasks.jira_tasks.attach_to_submission_issue import attach_to_submission_issue_task
     from .tasks.jira_tasks.jira_initial_comment import jira_initial_comment_task
 
     for obj in queryset:
@@ -414,14 +422,14 @@ class PrimaryDataFileAdmin(admin.ModelAdmin):
 
 
 def reparse_csv_metadata(modeladmin, request, queryset):
+    from .tasks.auditable_text_data_tasks.update_ena_submission_data import update_ena_submission_data_task
+    from .tasks.broker_object_tasks.create_broker_objects_from_submission_data import (
+        create_broker_objects_from_submission_data_task,
+    )
     from .tasks.submission_upload_tasks.clean_submission_for_update import clean_submission_for_update_task
     from .tasks.submission_upload_tasks.parse_csv_to_update_clean_submission import (
         parse_csv_to_update_clean_submission_task,
     )
-    from .tasks.broker_object_tasks.create_broker_objects_from_submission_data import (
-        create_broker_objects_from_submission_data_task,
-    )
-    from .tasks.auditable_text_data_tasks.update_ena_submission_data import update_ena_submission_data_task
 
     for obj in queryset:
         submission_upload_id = obj.id
@@ -438,6 +446,9 @@ def reparse_csv_metadata(modeladmin, request, queryset):
             ).set(countdown=SUBMISSION_DELAY)
             | update_ena_submission_data_task.s(
                 submission_upload_id=submission_upload_id,
+            ).set(countdown=SUBMISSION_DELAY)
+            | check_for_submittable_data_task.s(
+                submission_id=SubmissionUpload.objects.get_related_submission_id(submission_upload_id),
             ).set(countdown=SUBMISSION_DELAY)
         )
         rebuild_from_csv_metadata_chain()
