@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("submission_profile", "0016_fieldoption_description_fieldoption_help_link"),
+        ("submission_profile", "0020_alter_profile_name"),
     ]
 
     operations = [
