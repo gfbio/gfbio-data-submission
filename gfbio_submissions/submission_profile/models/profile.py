@@ -48,9 +48,7 @@ class Profile(TimeStampedModel):
     def all_fields(self):
         if self.inherit_fields_from is None:
             return self.fields.all()
-        return self.fields.all() | self.inherit_fields_from.fields.all()
+        return self.fields.all().union(self.inherit_fields_from.fields.all())
 
     def form_fields(self):
-        if self.inherit_fields_from is None:
-            return self.all_fields()
-        return self.all_fields() | self.inherit_fields_from.all_fields()
+        return self.all_fields().order_by("order")
