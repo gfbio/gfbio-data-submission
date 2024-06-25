@@ -54,13 +54,13 @@ const ProfileForm = (props) => {
     };
     console.log('FORM FIELDS ', profileData.form_fields);
     return (
-        <form onSubmit={form.onSubmit(handleSubmit)}>
+        <form onSubmit={form.onSubmit(handleSubmit)} className='submission-form'>
             <p>processing: {"" + isProcessing}</p>
             {profileData.form_fields.map((field, index) => (
                 <FormField key={index} field={field} form={form}></FormField>
             ))}
-            <Group justify="flex-end" mt="md">
-                <Button type="submit">Submit</Button>
+            <Group mt="md" className='mt-5'>
+                <Button className='submission-button' type="submit"><i class="fa fa-play mr-3"></i> Create Submission</Button>
             </Group>
         </form>
     );
