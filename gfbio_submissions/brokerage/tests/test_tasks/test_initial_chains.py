@@ -13,11 +13,11 @@ from gfbio_submissions.brokerage.tests.utils import _get_submission_request_data
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
-from .test_atax_tasks_and_chains import TestAtaxSubmissionTasks
 
 from ...configuration.settings import JIRA_ISSUE_URL, JIRA_USERNAME_URL_FULLNAME_TEMPLATE, JIRA_USERNAME_URL_TEMPLATE
 from ...models.submission import Submission
 from ...models.task_progress_report import TaskProgressReport
+from .test_atax_tasks_and_chains import TestAtaxSubmissionTasks
 
 
 class TestInitialChainTasks(TestCase):
@@ -108,8 +108,9 @@ class TestInitialChainTasks(TestCase):
             "tasks.trigger_submission_process",
             "tasks.check_issue_existing_for_submission_task",
             "tasks.check_on_hold_status_task",
+            "tasks.check_for_submittable_data_task",
         ]
-        self.assertEqual(7, len(task_reports))
+        self.assertEqual(8, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -144,8 +145,9 @@ class TestInitialChainTasks(TestCase):
             "tasks.trigger_submission_process",
             "tasks.check_issue_existing_for_submission_task",
             "tasks.check_on_hold_status_task",
+            "tasks.check_for_submittable_data_task",
         ]
-        self.assertEqual(7, len(task_reports))
+        self.assertEqual(8, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -180,9 +182,10 @@ class TestInitialChainTasks(TestCase):
             "tasks.check_on_hold_status_task",
             "tasks.update_helpdesk_ticket_task",
             "tasks.check_issue_existing_for_submission_task",
+            "tasks.check_for_submittable_data_task",
         ]
         tprs = TaskProgressReport.objects.exclude(task_name="tasks.update_helpdesk_ticket_task")
-        self.assertEqual(9, len(tprs))
+        self.assertEqual(10, len(tprs))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -211,9 +214,10 @@ class TestInitialChainTasks(TestCase):
             "tasks.check_for_molecular_content_in_submission_task",
             "tasks.trigger_submission_process",
             "tasks.check_issue_existing_for_submission_task",
-            "tasks.check_on_hold_status_task"
+            "tasks.check_on_hold_status_task",
+            "tasks.check_for_submittable_data_task",
         ]
-        self.assertEqual(7, len(task_reports))
+        self.assertEqual(8, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
 
@@ -266,8 +270,9 @@ class TestInitialChainTasks(TestCase):
             "tasks.update_helpdesk_ticket_task",
             "tasks.check_issue_existing_for_submission_task",
             "tasks.check_on_hold_status_task",
+            "tasks.check_for_submittable_data_task",
         ]
-        self.assertEqual(12, len(task_reports))
+        self.assertEqual(14, len(task_reports))
         for t in task_reports:
             # print(t.task_name)
             self.assertIn(t.task_name, expected_tasknames)
@@ -307,8 +312,9 @@ class TestInitialChainTasks(TestCase):
             "tasks.trigger_submission_process",
             "tasks.check_on_hold_status_task",
             "tasks.check_issue_existing_for_submission_task",
-            "tasks.atax_run_combination_task"
+            "tasks.atax_run_combination_task",
+            "tasks.check_for_submittable_data_task",
         ]
-        self.assertEqual(8, len(task_reports))
         for t in task_reports:
             self.assertIn(t.task_name, expected_tasknames)
+        self.assertEqual(9, len(task_reports))

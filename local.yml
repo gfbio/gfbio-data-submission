@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 volumes:
   local_postgres_data: {}
@@ -34,19 +34,12 @@ services:
     volumes:
       - local_postgres_data:/var/lib/postgresql/data
       - local_postgres_data_backups:/backups
-#    env_file:
-#      - ./.envs/.local/.postgres
-    environment:
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_DB=gfbio_submissions
-      - POSTGRES_USER=akUsfXheORQFVJjmQhhIIpiYVnMyUFMW
-      - POSTGRES_PASSWORD=5sjFNBelQNBy0kpF3JBtmklL9MbQnLfJvCXB4bXN8LpyFuGQnUcC4BjunVMi0XQo
+    env_file:
+      - ./.envs/.local/.postgres
     ports:
       - "5444:5432"
 
-# lorem ipsum ...
-
+  # lorem ipsum ...
 
   docs:
     image: gfbio_submissions_local_docs
@@ -54,8 +47,8 @@ services:
     build:
       context: .
       dockerfile: ./compose/local/docs/Dockerfile
-#    env_file:
-#      - ./.envs/.local/.django
+    env_file:
+      - ./.envs/.local/.django
     environment:
       - USE_DOCKER=yes
       - IPYTHONDIR=/app/.ipython
@@ -94,10 +87,10 @@ services:
     ports: []
     command: /start-celerybeat
 
-#  flower:
-#    <<: *django
-#    image: gfbio_submissions_local_flower
-#    container_name: flower
-#    ports:
-#      - "5555:5555"
-#    command: /start-flower
+  # flower:
+  #   <<: *django
+  #   image: gfbio_submissions_local_flower
+  #   container_name: flower
+  #   ports:
+  #     - "5555:5555"
+  #   command: /start-flower

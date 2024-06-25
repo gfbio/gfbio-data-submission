@@ -40,3 +40,56 @@
 /*.read-the-docs {*/
 /*  color: #888;*/
 /*}*/
+
+.collapsible-selector-container {
+  .btn-style {
+    &:hover {
+      background-color: white;
+    }
+
+    cursor: pointer;
+    border: 1px #ced4da solid;
+    background-color: #f8f8f8;
+    border-radius: 0.5rem;
+  }
+
+  .clickable-text {
+    &:hover {
+      color: #3cace4;
+    }
+
+    cursor: pointer;
+  }
+  
+  .clickable-row {
+    &:hover {
+      background-color: #f8f8f8;
+    }
+
+    cursor: pointer;
+    border-bottom: 1px #ced4da solid;
+  }
+}
+
+.mantine-Modal-root {
+
+  section {
+    padding: 0 !important;
+  }
+
+  .modal-dialog-body {
+    min-height: 4lh;
+  }
+
+  .modal-dialog-footer {
+    .btn {
+      height: 2rem;
+      margin-bottom: 0.25rem;
+      margin-top: 0.25rem;
+    }
+  }
+}
+
+.use-line-breaks {
+  white-space: pre-wrap;
+}

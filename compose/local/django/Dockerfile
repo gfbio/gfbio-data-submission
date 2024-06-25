@@ -55,7 +55,7 @@ COPY --from=python-build-stage /usr/src/app/wheels  /wheels/
 
 # use wheels to install python dependencies
 RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
-	&& rm -rf /wheels/
+  && rm -rf /wheels/
 
 
 
@@ -66,7 +66,7 @@ RUN sed -i 's/\r$//g' /install_java8_jre.sh
 RUN /install_java8_jre.sh
 
 ENV JAVA_HOME=/opt/java/openjdk \
-      PATH="/opt/java/openjdk/bin:$PATH"
+  PATH="/opt/java/openjdk/bin:$PATH"
 
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements /requirements
@@ -84,6 +84,10 @@ RUN chmod +x /entrypoint
 COPY ./compose/local/django/start /start
 RUN sed -i 's/\r$//g' /start
 RUN chmod +x /start
+
+COPY ./compose/local/django/start_debug /start_debug
+RUN sed -i 's/\r$//g' /start_debug
+RUN chmod +x /start_debug
 
 COPY ./compose/local/django/celery/worker/start /start-celeryworker
 RUN sed -i 's/\r$//g' /start-celeryworker
