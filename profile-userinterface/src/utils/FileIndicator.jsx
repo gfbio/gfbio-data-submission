@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import filesize from "filesize";
+import { Button, Checkbox, List, ListItem, Container } from "@mantine/core";
 
 const FileIndicator = ({
   fileUploads,
@@ -15,7 +16,7 @@ const FileIndicator = ({
       };
       let metaDataCheckButton = (
         <small className="file-name">
-          <input
+          <Checkbox
             type="checkbox"
             id={`primary${index}`}
             value={index}
@@ -30,9 +31,9 @@ const FileIndicator = ({
 
       return (
         <li key={index} className={"list-group-item file-upload"}>
-          <div className="d-flex justify-content-between align-items-center">
-            <div>{metaDataCheckButton}</div>
-            <div>
+          <Container className="d-flex justify-content-between align-items-center">
+            <Container>{metaDataCheckButton}</Container>
+            <Container>
               <small className="mr-5 file-size">{filesize(upload.size)}</small>
               <span className="pr-4 mr-3"></span>
               <button
@@ -44,8 +45,8 @@ const FileIndicator = ({
               >
                 <i className="fa fa-trash" aria-hidden="true"></i>
               </button>
-            </div>
-          </div>
+            </Container>
+          </Container>
 
           <div className="progress">
             <div

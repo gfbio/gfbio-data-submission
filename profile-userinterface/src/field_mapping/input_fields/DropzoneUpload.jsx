@@ -1,9 +1,9 @@
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import { Dropzone } from "@mantine/dropzone";
-import { Center, Text } from "@mantine/core";
-import UploadMessage from "./UploadMessage";
-import FileIndicator from "./FileIndicator";
+import { Box, Center, Text, Title, Container } from "@mantine/core";
+import UploadMessage from "../../utils/UploadMessage.jsx";
+import FileIndicator from "../../utils/FileIndicator.jsx";
 import { MAX_TOTAL_UPLOAD_SIZE, MAX_UPLOAD_ITEMS } from "../../settings.jsx";
 
 const DropzoneUpload = (props) => {
@@ -44,11 +44,7 @@ const DropzoneUpload = (props) => {
   };
 
   const removeFile = (index) => {
-    console.log("metadataindex:" + metadataIndex);
-    console.log("index:" + index);
-
     const updatedFiles = localFiles.filter((_, i) => i !== index);
-
     let newMetadataIndex = metadataIndex;
 
     if (metadataIndex === index) {
@@ -59,7 +55,6 @@ const DropzoneUpload = (props) => {
     setLocalFiles(updatedFiles);
     setMetadataIndex(newMetadataIndex);
     form.setFieldValue("files", updatedFiles);
-    console.log("aaafter delete: " + newMetadataIndex);
     const uploadLimitExceeded = !matchingUploadLimit(updatedFiles);
     setShowUploadLimitMessage(uploadLimitExceeded);
     onFilesChange(updatedFiles, uploadLimitExceeded, newMetadataIndex);
@@ -69,14 +64,23 @@ const DropzoneUpload = (props) => {
     <div>
       <header className="header header-left form-header-top">
         <h2 className="section-title">{title}</h2>
-        <p className="section-subtitle">{description}</p>
+        <Text className="section-subtitle">{description}</Text>
       </header>
+
+      <FileIndicator
+        fileUploads={localFiles}
+        handleRemove={removeFile}
+        metadataIndex={metadataIndex}
+        handleMetadataSelect={handleMetadataSelect}
+      />
+
       <UploadMessage showUploadLimitMessage={showUploadLimitMessage} />
 
       <Dropzone h={120} p={0} multiple onDrop={onDrop}>
         <Center h={120}>
           <Dropzone.Idle>
-            Try dropping some files here, or click to select files to upload.
+            Try <b>dropping</b> some files here, or <b>click</b> to select files
+            to upload.
           </Dropzone.Idle>
           <Dropzone.Accept>Drop files here...</Dropzone.Accept>
           <Dropzone.Reject>Files are invalid</Dropzone.Reject>
@@ -88,13 +92,6 @@ const DropzoneUpload = (props) => {
           {form.errors.files}
         </Text>
       )}
-
-      <FileIndicator
-        fileUploads={localFiles}
-        handleRemove={removeFile}
-        metadataIndex={metadataIndex}
-        handleMetadataSelect={handleMetadataSelect}
-      />
     </div>
   );
 };
