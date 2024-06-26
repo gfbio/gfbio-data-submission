@@ -38,7 +38,7 @@ const ProfileForm = (props) => {
     // },
     validate: (values) => {
       let field_types = profileData.form_fields.map(
-        (field) => field.field_type.type,
+        (field) => field.field_type.type
       );
       if (field_types.includes("data-url-field")) {
         return validateDataUrlField(values, profileData);
@@ -83,46 +83,44 @@ const ProfileForm = (props) => {
     }
     setProcessing(true);
     // TODO: fixed token value for local testing only
-    try {
-      const result = await postSubmission(
-        profileData.target,
-        localStorage.getItem("embargo"),
-        values,
+     postSubmission(
+    profileData.target,
+    localStorage.getItem("embargo"),
+    values
+  )
+  .then((result) => {
+     console.log('DATA ', result);
+    if (result && result.broker_submission_id) {
+      const brokerSubmissionId = result.broker_submission_id;
+      const fileUploadPromises = files.map((file, index) =>
+        handleFileUpload(file, brokerSubmissionId, index === metadataIndex)
       );
-      if (result && result.broker_submission_id) {
-        const brokerSubmissionId = result.broker_submission_id;
-        for (let i = 0; i < files.length; i++) {
-          await handleFileUpload(
-            files[i],
-            brokerSubmissionId,
-            i === metadataIndex,
-          );
-        }
-      } else {
-        console.error("broker_submission_id is missing in the response data.");
-      }
-    } catch (error) {
-      console.error("Submission error: ", error);
-    } finally {
-      setProcessing(false);
+      return Promise.all(fileUploadPromises);
+    } else {
+      console.error("broker_submission_id is missing in the response data.");
+      // Throw an error to trigger the catch block
+      throw new Error("broker_submission_id is missing in the response data.");
     }
-    // setProcessing(false);
-  };
+  })
+  .finally(() => {
+    setProcessing(false);
+  });
+};
   console.log("FORM FIELDS ", profileData.form_fields);
   return (
-    <form onSubmit={form.onSubmit(handleSubmit)}>
+    <form onSubmit={form.onSubmit(handleSubmit)} className="submission-form">
       <p>processing: {"" + isProcessing}</p>
       {profileData.form_fields.map((field, index) => (
         <FormField
           key={index}
           field={field}
           form={form}
-          onFilesChange={handleFilesChange}
-        />
+          onFilesChange={handleFilesChange}>
+        </FormField>
       ))}
-      <Group justify="flex-end" mt="md">
-        <Button type="submit">Submit</Button>
-      </Group>
+       <Group mt="md" className='mt-5'>
+                <Button className='submission-button' type="submit"><i class="fa fa-play mr-3"></i> Create Submission</Button>
+            </Group>
     </form>
   );
 };

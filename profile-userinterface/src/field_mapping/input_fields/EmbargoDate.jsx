@@ -6,11 +6,15 @@ import PropTypes from "prop-types";
 import SelectField from "./SelectField.jsx";
 
 const EmbargoDate = (props) => {
-    const {title, description, form, options, field_id} = props;
+    const {title, description, form, options, field_id, mandatory} = props;
 
     const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1)
     const initialDate = new Date();
     initialDate.setFullYear(today.getFullYear() + 1);
+    const maxDate = new Date();
+    maxDate.setFullYear(today.getFullYear() + 2);
 
     const [embargoDate, setEmbargoDate] = useState(initialDate);
     const [tmpEmbargoDate, setTempEmbargoDate] = useState(embargoDate);
@@ -31,7 +35,8 @@ const EmbargoDate = (props) => {
     const showEmbargoButton = () => {
         return (
             <Group>
-                <Button onClick={open} variant="default">
+                <Button onClick={open} variant="default" className='link-style'>
+                    <i className='icon ion-md-calendar align-top mr-2'></i>
                     Change embargo date
                 </Button>
             </Group>
@@ -55,42 +60,42 @@ const EmbargoDate = (props) => {
     return (
         <div>
             <header className="">
-                <h2 className="">{title}</h2>
+                <h2 className="">{title} {mandatory && ( <span class="mantine-InputWrapper-required mantine-TextInput-required">*</span>)}</h2>
                 <h4>{formattedEmbargoDate()}</h4>
                 {showEmbargoButton()}
             </header>
             <Modal opened={opened} onClose={close} title="Select embargo date" centered>
                 <Group justify="center">
-                    <Button variant="default" onClick={() => {
+                    <p className='my-3'>New Embargo: <b>{formattedEmbargoDate()}</b></p>
+                </Group>
+                <Group justify="center">
+                    <Button className='button-inverted blue-button' variant="default" onClick={() => {
                         addMonthsToInitialEmbargoDate(6)
                     }}>
                         6 months
                     </Button>
-                    <Button variant="default" onClick={() => {
+                    <Button className='button-inverted blue-button' variant="default" onClick={() => {
                         addMonthsToInitialEmbargoDate(12)
                     }}>
                         12 months
                     </Button>
-                    <Button variant="default" onClick={() => {
+                    <Button className='button-inverted blue-button' variant="default" onClick={() => {
                         addMonthsToInitialEmbargoDate(18)
                     }}>
                         18 months
                     </Button>
                 </Group>
-                <Group justify="center">
-                    <p>New Embargo: <b>{formattedEmbargoDate()}</b></p>
+                <Group className='pt-3 pb-5' justify="center">
+                    <DatePicker defaultDate={initialDate} minDate={tomorrow} maxDate={maxDate} value={embargoDate} onChange={setEmbargoDate}/>
                 </Group>
                 <Group justify="center">
-                    <DatePicker defaultDate={today} value={embargoDate} onChange={setEmbargoDate}/>
-                </Group>
-                <Group justify="center">
-                    <Button variant="default" onClick={() => {
+                    <Button className='button-inverted green-button' variant="default" onClick={() => {
                         setTempEmbargoDate(embargoDate);
                         close();
                     }}>
                         Accept
                     </Button>
-                    <Button variant="default" onClick={() => {
+                    <Button className='button-inverted red-button' variant="default" onClick={() => {
                         setEmbargoDate(tmpEmbargoDate);
                         close();
                     }}>
