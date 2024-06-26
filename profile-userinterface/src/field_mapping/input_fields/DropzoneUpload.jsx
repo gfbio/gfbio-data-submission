@@ -4,7 +4,7 @@ import {Dropzone} from '@mantine/dropzone';
 import {Center, CloseButton, Text} from '@mantine/core';
 
 const DropzoneUpload = (props) => {
-    const {title, description, form, field_id,} = props;
+    const {title, description, placeholder, form, field_id,} = props;
 
     const [localFiles, setLocalFiles] = useState([]);
 
@@ -24,7 +24,8 @@ const DropzoneUpload = (props) => {
     ));
 
     const localSelectedFiles = localFiles.map((file, index) => (
-        <Text key={file.name}>
+        <Text key={file.name} className='ml-4'>
+            <i class="icon ion-md-document green-text pr-2"></i>
             <b>{file.name}</b> ({(file.size / 1024).toFixed(2)} kb)
             <CloseButton
                 size="xs"
@@ -50,7 +51,18 @@ const DropzoneUpload = (props) => {
 
 
     return (
-        <>
+        <div>
+            {title && (<h2>{title}</h2>)}
+            { description && ( <label>{description}</label> ) }
+
+            {localSelectedFiles.length > 0 && (
+                <div className='mb-2 uploaded-files'>
+                    <Text mb={5} mt="md">
+                        Selected files:
+                    </Text>
+                    {localSelectedFiles}
+                </div>
+            )}
             <Dropzone
                 h={120}
                 p={0}
@@ -70,7 +82,7 @@ const DropzoneUpload = (props) => {
                 // onReject={() => form.setFieldError('files', 'Select images only')}
             >
                 <Center h={120}>
-                    <Dropzone.Idle>Drop files here</Dropzone.Idle>
+                    <Dropzone.Idle className="p-3">{ placeholder ? (<>{placeholder}</>) : (<>Drop files here</>) }</Dropzone.Idle>
                     <Dropzone.Accept>Drop files here</Dropzone.Accept>
                     <Dropzone.Reject>Files are invalid</Dropzone.Reject>
                 </Center>
@@ -81,16 +93,7 @@ const DropzoneUpload = (props) => {
                     {form.errors.files}
                 </Text>
             )}
-
-            {localSelectedFiles.length > 0 && (
-                <>
-                    <Text mb={5} mt="md">
-                        Selected files:
-                    </Text>
-                    {localSelectedFiles}
-                </>
-            )}
-        </>
+        </div>
     );
 }
 

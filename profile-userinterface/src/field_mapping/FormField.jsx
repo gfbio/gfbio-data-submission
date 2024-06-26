@@ -21,6 +21,7 @@ const FormField = ({ field, form }) => {
     mandatory: field.mandatory,
     options: field.options,
     field_id: field.field_id,
+    placeholder: field.placeholder,
     form: form,
   };
 

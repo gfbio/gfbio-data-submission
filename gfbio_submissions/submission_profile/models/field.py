@@ -31,6 +31,8 @@ class Field(TimeStampedModel):
                              help_text="Title of the field, as displayed in the rendered Form")
     description = models.TextField(default="", blank=True,
                                    help_text="Descriptive text, below the title in the rendered Form")
+    placeholder = models.TextField(default="", blank=True,
+                                   help_text="Descriptive text displayed within the input field unless it is filled out")
 
     mandatory = models.BooleanField(default=False)
     visible = models.BooleanField(default=True)
