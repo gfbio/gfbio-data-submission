@@ -4,7 +4,7 @@ function isValidUrl(url) {
 }
 
 export default function validateDataUrlField(values, profileData) {
-  let field = profileData.fields.find(
+  let field = profileData.form_fields.find(
     ({ field_type }) => field_type.type === "data-url-field"
   );
   let field_id = field.field_id;
