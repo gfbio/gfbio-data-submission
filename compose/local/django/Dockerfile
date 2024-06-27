@@ -22,7 +22,6 @@ COPY ./requirements .
 RUN pip wheel --wheel-dir /usr/src/app/wheels  \
   -r ${BUILD_ENVIRONMENT}.txt
 
-
 # Python 'run' stage
 FROM python as python-run-stage
 
@@ -59,6 +58,7 @@ RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
   && rm -rf /wheels/
 
 
+
 # Java
 COPY ./compose/local/django/install_java8_jre.sh /
 RUN chmod +x /install_java8_jre.sh
@@ -71,6 +71,11 @@ ENV JAVA_HOME=/opt/java/openjdk \
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements /requirements
 RUN pip install -r /requirements/local.txt
+
+COPY --chown=django:django abcd_converter-0.0.3.tar.gz ./abcd_converter-0.0.3.tar.gz
+RUN pip install ./abcd_converter-0.0.3.tar.gz
+
+# RUN pip install abcd-converter --index-url https://gitlab-pe.gwdg.de/api/v4/projects/26166/packages/pypi/simple
 
 COPY ./compose/production/django/entrypoint /entrypoint
 RUN sed -i 's/\r$//g' /entrypoint
