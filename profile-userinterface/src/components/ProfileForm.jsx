@@ -112,26 +112,40 @@ const ProfileForm = (props) => {
 
   console.log("FORM FIELDS ", profileData.form_fields);
   return (
-    <form onSubmit={form.onSubmit(handleSubmit)} className='submission-form container'>
-            <p>processing: {"" + isProcessing}</p>
-            <div className='row'>
-              <div className='col-md-9'>
-                {profileData.form_fields.filter(field => field.position == "main").map((field, index) => (
-                  <FormField key={index} field={field} form={form}></FormField>
-                ))}
-              </div>
-              <div className='col-md-3'>
-                {profileData.form_fields.filter(field => field.position == "sidebar").map((field, index) => (
-                    <FormField key={index} field={field} form={form} onFilesChange={handleFilesChange}></FormField>
-                ))}
-              </div>
-            </div>
-            <div className='row'>
-              <Group mt="md" className='mt-5 col-md-9'>
-                  <Button className='submission-button' type="submit"><i class="fa fa-play mr-3"></i> Create Submission</Button>
-              </Group>
-            </div>
-        </form>
+    <form
+      onSubmit={form.onSubmit(handleSubmit)}
+      className="submission-form container"
+    >
+      <p>processing: {"" + isProcessing}</p>
+      <div className="row">
+        <div className="col-md-9">
+          {profileData.form_fields
+            .filter((field) => field.position == "main")
+            .map((field, index) => (
+              <FormField key={index} field={field} form={form}></FormField>
+            ))}
+        </div>
+        <div className="col-md-3">
+          {profileData.form_fields
+            .filter((field) => field.position == "sidebar")
+            .map((field, index) => (
+              <FormField
+                key={index}
+                field={field}
+                form={form}
+                onFilesChange={handleFilesChange}
+              ></FormField>
+            ))}
+        </div>
+      </div>
+      <div className="row">
+        <Group mt="md" className="mt-5 col-md-9">
+          <Button className="submission-button" type="submit">
+            <i className="fa fa-play mr-3"></i> Create Submission
+          </Button>
+        </Group>
+      </div>
+    </form>
   );
 };
 
