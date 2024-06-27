@@ -38,7 +38,7 @@ const ProfileForm = (props) => {
     // },
     validate: (values) => {
       let field_types = profileData.form_fields.map(
-        (field) => field.field_type.type,
+        (field) => field.field_type.type
       );
       if (field_types.includes("data-url-field")) {
         return validateDataUrlField(values, profileData);

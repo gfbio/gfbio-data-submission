@@ -7,6 +7,7 @@ import InfoBox from "./input_fields/InfoBox.jsx";
 import MetadataTemplate from "./input_fields/MetadataTemplate.jsx";
 import MultiSelectCheckboxes from "./input_fields/MultiSelectCheckboxes.jsx";
 import MultiSelectDropdown from "./input_fields/MultiSelectDropdown.jsx";
+import RelatedPublications from "./input_fields/RelatedPublications.jsx";
 import SelectField from "./input_fields/SelectField.jsx";
 import TagsInputField from "./input_fields/TagsInputField.jsx";
 import TextArea from "./input_fields/TextArea.jsx";
@@ -57,6 +58,8 @@ const FormField = ({ field, form, onFilesChange }) => {
       return <TextField {...fieldParameters}></TextField>;
     case "tags-input":
       return <TagsInputField {...fieldParameters}></TagsInputField>;
+    case "related-publications":
+      return <RelatedPublications {...fieldParameters}></RelatedPublications>;
     default:
       return <TextField {...fieldParameters}></TextField>;
   }
