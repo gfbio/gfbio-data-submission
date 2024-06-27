@@ -38,7 +38,7 @@ const ProfileForm = (props) => {
     // },
     validate: (values) => {
       let field_types = profileData.form_fields.map(
-        (field) => field.field_type.type
+        (field) => field.field_type.type,
       );
       if (field_types.includes("data-url-field")) {
         return validateDataUrlField(values, profileData);
@@ -77,35 +77,39 @@ const ProfileForm = (props) => {
     }
   };
 
-  const handleSubmit = async (values) => {
+  const handleSubmit = (values) => {
     if (!form.isValid || uploadLimitExceeded) {
       return;
     }
     setProcessing(true);
     // TODO: fixed token value for local testing only
-     postSubmission(
-    profileData.target,
-    localStorage.getItem("embargo"),
-    values
-  )
-  .then((result) => {
-     console.log('DATA ', result);
-    if (result && result.broker_submission_id) {
-      const brokerSubmissionId = result.broker_submission_id;
-      const fileUploadPromises = files.map((file, index) =>
-        handleFileUpload(file, brokerSubmissionId, index === metadataIndex)
-      );
-      return Promise.all(fileUploadPromises);
-    } else {
-      console.error("broker_submission_id is missing in the response data.");
-      // Throw an error to trigger the catch block
-      throw new Error("broker_submission_id is missing in the response data.");
-    }
-  })
-  .finally(() => {
-    setProcessing(false);
-  });
-};
+
+    postSubmission(profileData.target, localStorage.getItem("embargo"), values)
+      .then((result) => {
+        if (result && result.broker_submission_id) {
+          const brokerSubmissionId = result.broker_submission_id;
+          const fileUploadPromises = files.map((file, index) =>
+            handleFileUpload(file, brokerSubmissionId, index === metadataIndex),
+          );
+          return Promise.all(fileUploadPromises);
+        } else {
+          console.error(
+            "broker_submission_id is missing in the response data.",
+          );
+          // Throw an error to trigger the catch block
+          throw new Error(
+            "broker_submission_id is missing in the response data.",
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Submission error: ", error);
+      })
+      .finally(() => {
+        setProcessing(false);
+      });
+  };
+
   console.log("FORM FIELDS ", profileData.form_fields);
   return (
     <form onSubmit={form.onSubmit(handleSubmit)} className="submission-form">
@@ -115,12 +119,14 @@ const ProfileForm = (props) => {
           key={index}
           field={field}
           form={form}
-          onFilesChange={handleFilesChange}>
-        </FormField>
+          onFilesChange={handleFilesChange}
+        ></FormField>
       ))}
-       <Group mt="md" className='mt-5'>
-                <Button className='submission-button' type="submit"><i class="fa fa-play mr-3"></i> Create Submission</Button>
-            </Group>
+      <Group mt="md" className="mt-5">
+        <Button className="submission-button" type="submit">
+          <i class="fa fa-play mr-3"></i> Create Submission
+        </Button>
+      </Group>
     </form>
   );
 };
