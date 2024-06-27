@@ -1,14 +1,20 @@
-import React, {useState} from 'react';
+import { Button, Group } from "@mantine/core";
+import { useForm } from "@mantine/form";
 import PropTypes from "prop-types";
-import {Button, Group} from '@mantine/core';
-import {useForm} from '@mantine/form';
-import FormField from "../field_mapping/FormField.jsx";
+import React, { useState } from "react";
 import postSubmission from "../api/postSubmission.jsx";
-
+import FormField from "../field_mapping/FormField.jsx";
+import validateDataUrlField from "../utils/DataUrlValidation.jsx";
 
 const ProfileForm = (props) => {
-    const {profileData, submissionData, isLoading, profileError, SubmissionError} = props;
-    const [isProcessing, setProcessing] = useState(false);
+  const {
+    profileData,
+    submissionData,
+    isLoading,
+    profileError,
+    SubmissionError,
+  } = props;
+  const [isProcessing, setProcessing] = useState(false);
 
   const form = useForm({
     mode: "uncontrolled",
@@ -28,7 +34,7 @@ const ProfileForm = (props) => {
     //         value.length < 2 ? 'Title is too short' : null,
     // },
     validate: (values) => {
-      let field_types = profileData.fields.map(
+      let field_types = profileData.form_fields.map(
         (field) => field.field_type.type
       );
       if (field_types.includes("data-url-field")) {
@@ -37,44 +43,50 @@ const ProfileForm = (props) => {
     },
   });
 
-    const handleSubmit = (values) => {
-        setProcessing(true);
-        // TODO: fixed token value for local testing only
-        postSubmission(
-            profileData.target,
-            localStorage.getItem('embargo'),
-            values)
-            .then((result) => {
-                console.log('DATA ', result);
-            })
-            .finally(() => {
-                setProcessing(false);
-            });
-        // setProcessing(false);
-    };
-    console.log('FORM FIELDS ', profileData.form_fields);
-    return (
-        <form onSubmit={form.onSubmit(handleSubmit)} className='submission-form container'>
-            <p>processing: {"" + isProcessing}</p>
-            <div className='row'>
-              <div className='col-md-9'>
-                {profileData.form_fields.filter(field => field.position == "main").map((field, index) => (
-                  <FormField key={index} field={field} form={form}></FormField>
-                ))}
-              </div>
-              <div className='col-md-3'>
-                {profileData.form_fields.filter(field => field.position == "sidebar").map((field, index) => (
-                    <FormField key={index} field={field} form={form}></FormField>
-                ))}
-              </div>
-            </div>
-            <div className='row'>
-              <Group mt="md" className='mt-5 col-md-9'>
-                  <Button className='submission-button' type="submit"><i class="fa fa-play mr-3"></i> Create Submission</Button>
-              </Group>
-            </div>
-        </form>
-    );
+  const handleSubmit = (values) => {
+    setProcessing(true);
+    // TODO: fixed token value for local testing only
+    postSubmission(profileData.target, localStorage.getItem("embargo"), values)
+      .then((result) => {
+        console.log("DATA ", result);
+      })
+      .finally(() => {
+        setProcessing(false);
+      });
+    // setProcessing(false);
+  };
+  console.log("FORM FIELDS ", profileData.form_fields);
+  return (
+    <form
+      onSubmit={form.onSubmit(handleSubmit)}
+      className="submission-form container"
+    >
+      <p>processing: {"" + isProcessing}</p>
+      <div className="row">
+        <div className="col-md-9">
+          {profileData.form_fields
+            .filter((field) => field.position == "main")
+            .map((field, index) => (
+              <FormField key={index} field={field} form={form}></FormField>
+            ))}
+        </div>
+        <div className="col-md-3">
+          {profileData.form_fields
+            .filter((field) => field.position == "sidebar")
+            .map((field, index) => (
+              <FormField key={index} field={field} form={form}></FormField>
+            ))}
+        </div>
+      </div>
+      <div className="row">
+        <Group mt="md" className="mt-5 col-md-9">
+          <Button className="submission-button" type="submit">
+            <i className="fa fa-play mr-3"></i> Create Submission
+          </Button>
+        </Group>
+      </div>
+    </form>
+  );
 };
 
 ProfileForm.propTypes = {
