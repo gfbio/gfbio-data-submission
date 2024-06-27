@@ -122,7 +122,12 @@ const ProfileForm = (props) => {
           {profileData.form_fields
             .filter((field) => field.position == "main")
             .map((field, index) => (
-              <FormField key={index} field={field} form={form}></FormField>
+              <FormField
+                key={index}
+                field={field}
+                form={form}
+                onFilesChange={handleFilesChange}
+              ></FormField>
             ))}
         </div>
         <div className="col-md-3">
@@ -135,6 +140,13 @@ const ProfileForm = (props) => {
                 form={form}
                 onFilesChange={handleFilesChange}
               ></FormField>
+            ))}
+        </div>
+        <div className="col-md-3">
+          {profileData.form_fields
+            .filter((field) => field.position == "sidebar")
+            .map((field, index) => (
+              <FormField key={index} field={field} form={form}></FormField>
             ))}
         </div>
       </div>
