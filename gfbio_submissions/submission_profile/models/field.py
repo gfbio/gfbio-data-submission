@@ -42,6 +42,11 @@ class Field(TimeStampedModel):
                                help_text="Comment text describing the field. This is optional. "
                                          "The information provided here WILL NOT BE SHOWN IN THE FORM")
 
+    position = models.CharField(max_length=7, default='main',
+                                choices=(('main', 'main'), ('sidebar', 'sidebar')),
+                                help_text="Position of the element in the Layout of the form")
+    order = models.IntegerField(default=100, help_text='Rank within in the elements in the layout-position')
+
     # TODO: test for inherited profiles
     # TODO: test for all field (inherited of inherited)
     # TODO: json import

@@ -39,7 +39,7 @@ class TestCSVParsing(TestCase):
                 submission=submission,
                 user=user,
                 meta_data=True,
-                file=SimpleUploadedFile("csv_files/upload_molecular_metadata.csv", data_file.read()),
+                file=SimpleUploadedFile(file_sub_path, data_file.read()),
             )
 
     @classmethod
