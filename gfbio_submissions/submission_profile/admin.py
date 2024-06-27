@@ -15,6 +15,8 @@ class FieldOptionInline(admin.TabularInline):
 
 class FieldAdmin(admin.ModelAdmin):
     inlines = [FieldOptionInline, ]
+    ordering = ["position", "order"]
+    list_display = ["__str__","position", "order"]
 
 admin.site.register(Profile)
 # admin.site.register(UserProfile)

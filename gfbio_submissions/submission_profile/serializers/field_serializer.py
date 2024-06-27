@@ -23,4 +23,6 @@ class FieldSerializer(serializers.ModelSerializer):
             "default",
             "options",
             "field_id",
+            "order",
+            "position",
         )
