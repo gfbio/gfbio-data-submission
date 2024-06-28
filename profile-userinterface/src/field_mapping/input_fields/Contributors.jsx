@@ -223,6 +223,7 @@ const Contributors = (props) => {
                         institution: "",
                         role: [],
                       });
+                      setEmailValid(false);
                     }}
                   >
                     Cancel
