@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import React from "react";
 import CollapsibleSelector from "./input_fields/CollapsibleSelector.jsx";
+import Contributors from "./input_fields/Contributors.jsx";
 import DropzoneUpload from "./input_fields/DropzoneUpload.jsx";
 import EmbargoDate from "./input_fields/EmbargoDate.jsx";
 import InfoBox from "./input_fields/InfoBox.jsx";
@@ -55,6 +56,8 @@ const FormField = ({ field, form }) => {
       return <TagsInputField {...fieldParameters}></TagsInputField>;
     case "related-publications":
       return <RelatedPublications {...fieldParameters}></RelatedPublications>;
+    case "contributors":
+      return <Contributors {...fieldParameters}></Contributors>;
     default:
       return <TextField {...fieldParameters}></TextField>;
   }
