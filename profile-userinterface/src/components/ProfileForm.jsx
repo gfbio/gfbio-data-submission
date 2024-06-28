@@ -2,6 +2,7 @@ import { Button, Group } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import PropTypes from "prop-types";
 import React, { useState } from "react";
+import postSubmission from "../api/postSubmission.jsx";
 import FormField from "../field_mapping/FormField.jsx";
 import validateDataUrlField from "../utils/DataUrlValidation.jsx";
 
@@ -43,20 +44,18 @@ const ProfileForm = (props) => {
   });
 
   const handleSubmit = (values) => {
-    // setProcessing(true);
-    // // TODO: fixed token value for local testing only
-    // postSubmission(profileData.target, localStorage.getItem("embargo"), values)
-    //   .then((result) => {
-    //     console.log("DATA ", result);
-    //   })
-    //   .finally(() => {
-    //     setProcessing(false);
-    //   });
-    // // setProcessing(false);
-    console.log("SUBMISSION DATA ", values);
+    setProcessing(true);
+    // TODO: fixed token value for local testing only
+    postSubmission(profileData.target, localStorage.getItem("embargo"), values)
+      .then((result) => {
+        console.log("DATA ", result);
+      })
+      .finally(() => {
+        setProcessing(false);
+      });
+    // setProcessing(false);
   };
   console.log("FORM FIELDS ", profileData.form_fields);
-
   return (
     <form
       onSubmit={form.onSubmit(handleSubmit)}
