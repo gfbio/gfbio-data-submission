@@ -1,9 +1,10 @@
+import React, { useState } from "react";
+import PropTypes from "prop-types";
 import { Button, Group } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import PropTypes from "prop-types";
-import React, { useState } from "react";
-import postSubmission from "../api/postSubmission.jsx";
 import FormField from "../field_mapping/FormField.jsx";
+import postSubmission from "../api/postSubmission.jsx";
+import createUploadFileChannel from "../api/createUploadFileChannel.jsx";
 import validateDataUrlField from "../utils/DataUrlValidation.jsx";
 
 const ProfileForm = (props) => {
@@ -15,7 +16,9 @@ const ProfileForm = (props) => {
     SubmissionError,
   } = props;
   const [isProcessing, setProcessing] = useState(false);
-
+  const [files, setFiles] = useState([]);
+  const [uploadLimitExceeded, setUploadLimitExceeded] = useState(false);
+  const [metadataIndex, setMetadataIndex] = useState(-1);
   const form = useForm({
     mode: "uncontrolled",
     name: "profile-form",
@@ -43,18 +46,70 @@ const ProfileForm = (props) => {
     },
   });
 
+  const handleFilesChange = (uploadedFiles, isValid, metaIndex) => {
+    form.setFieldValue("files", uploadedFiles);
+    setFiles(uploadedFiles);
+    setUploadLimitExceeded(isValid);
+    setMetadataIndex(metaIndex);
+  };
+
+  const handleFileUpload = async (file, brokerSubmissionId, isMetadata) => {
+    const attach_to_ticket = false;
+    const meta_data = isMetadata;
+    let token = "";
+    if (window.props !== undefined) {
+      token = window.props.token || "no-token-found";
+    }
+    try {
+      await createUploadFileChannel(
+        brokerSubmissionId,
+        file,
+        attach_to_ticket,
+        meta_data,
+        token,
+        (percentCompleted) => {
+          console.log(`Upload progress: ${percentCompleted}%`);
+        },
+      );
+      console.log("Upload complete");
+    } catch (error) {
+      console.error("Upload error: ", error);
+    }
+  };
+
   const handleSubmit = (values) => {
+    if (!form.isValid || uploadLimitExceeded) {
+      return;
+    }
     setProcessing(true);
     // TODO: fixed token value for local testing only
+
     postSubmission(profileData.target, localStorage.getItem("embargo"), values)
       .then((result) => {
-        console.log("DATA ", result);
+        if (result && result.broker_submission_id) {
+          const brokerSubmissionId = result.broker_submission_id;
+          const fileUploadPromises = files.map((file, index) =>
+            handleFileUpload(file, brokerSubmissionId, index === metadataIndex),
+          );
+          return Promise.all(fileUploadPromises);
+        } else {
+          console.error(
+            "broker_submission_id is missing in the response data.",
+          );
+          // Throw an error to trigger the catch block
+          throw new Error(
+            "broker_submission_id is missing in the response data.",
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Submission error: ", error);
       })
       .finally(() => {
         setProcessing(false);
       });
-    // setProcessing(false);
   };
+
   console.log("FORM FIELDS ", profileData.form_fields);
   return (
     <form
@@ -67,7 +122,24 @@ const ProfileForm = (props) => {
           {profileData.form_fields
             .filter((field) => field.position == "main")
             .map((field, index) => (
-              <FormField key={index} field={field} form={form}></FormField>
+              <FormField
+                key={index}
+                field={field}
+                form={form}
+                onFilesChange={handleFilesChange}
+              ></FormField>
+            ))}
+        </div>
+        <div className="col-md-3">
+          {profileData.form_fields
+            .filter((field) => field.position == "sidebar")
+            .map((field, index) => (
+              <FormField
+                key={index}
+                field={field}
+                form={form}
+                onFilesChange={handleFilesChange}
+              ></FormField>
             ))}
         </div>
         <div className="col-md-3">
