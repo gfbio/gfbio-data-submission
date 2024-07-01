@@ -14,7 +14,7 @@ import TagsInputField from "./input_fields/TagsInputField.jsx";
 import TextArea from "./input_fields/TextArea.jsx";
 import TextField from "./input_fields/TextField.jsx";
 
-const FormField = ({ field, form }) => {
+const FormField = ({ field, form, onFilesChange }) => {
   const fieldParameters = {
     title: field.title,
     description: field.description,
@@ -35,7 +35,12 @@ const FormField = ({ field, form }) => {
       return <SelectField {...fieldParameters}></SelectField>;
     case "file-upload":
       // TODO: Work in progress...
-      return <DropzoneUpload {...fieldParameters}></DropzoneUpload>;
+      return (
+        <DropzoneUpload
+          {...fieldParameters}
+          onFilesChange={onFilesChange}
+        ></DropzoneUpload>
+      );
     case "collapsible-selector":
       return <CollapsibleSelector {...fieldParameters}></CollapsibleSelector>;
     case "metadata-template":
@@ -66,6 +71,7 @@ const FormField = ({ field, form }) => {
 FormField.propTypes = {
   field: PropTypes.object.isRequired,
   form: PropTypes.object.isRequired,
+  onFilesChange: PropTypes.func.isRequired,
 };
 
 export default FormField;
