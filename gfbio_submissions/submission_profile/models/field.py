@@ -31,6 +31,8 @@ class Field(TimeStampedModel):
                              help_text="Title of the field, as displayed in the rendered Form")
     description = models.TextField(default="", blank=True,
                                    help_text="Descriptive text, below the title in the rendered Form")
+    placeholder = models.TextField(default="", blank=True,
+                                   help_text="Descriptive text displayed within the input field unless it is filled out")
 
     mandatory = models.BooleanField(default=False)
     visible = models.BooleanField(default=True)
@@ -39,6 +41,11 @@ class Field(TimeStampedModel):
     comment = models.TextField(default="", blank=True,
                                help_text="Comment text describing the field. This is optional. "
                                          "The information provided here WILL NOT BE SHOWN IN THE FORM")
+
+    position = models.CharField(max_length=7, default='main',
+                                choices=(('main', 'main'), ('sidebar', 'sidebar')),
+                                help_text="Position of the element in the Layout of the form")
+    order = models.IntegerField(default=100, help_text='Rank within in the elements in the layout-position')
 
     # TODO: test for inherited profiles
     # TODO: test for all field (inherited of inherited)

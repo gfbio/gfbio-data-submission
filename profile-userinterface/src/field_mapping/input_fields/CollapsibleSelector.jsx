@@ -4,7 +4,7 @@ import { Text, Collapse, Modal } from '@mantine/core';
 import PropTypes from "prop-types";
 
 const CollapsibleSelector = (props) => {
-    const {title, description, form, options, default_value, field_id,} = props;
+    const {title, description, form, options, default_value, field_id, mandatory, } = props;
 
     var default_opt = default_value ? options.map(o => o.option).filter(o => o == default_value) : null
     const [value, setValue] = useState(default_opt ? default_opt[0] : options[0].option);
@@ -14,7 +14,7 @@ const CollapsibleSelector = (props) => {
 
     return (
         <div className='collapsible-selector-container'>
-            { title && ( <label>{title}</label> ) }
+            { title && ( <h2>{title} {mandatory && ( <span class="mantine-InputWrapper-required mantine-TextInput-required">*</span>)}</h2> ) }
             { description && ( <label>{description}</label> ) }
             <div className='container'>
                 <div className='multi-select-row row btn-style' onClick={toggle}>

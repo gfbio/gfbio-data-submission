@@ -40,6 +40,8 @@ COPY ./requirements /requirements
 RUN pip install --no-cache-dir -r /requirements/production.txt \
     && rm -rf /requirements
 
+RUN pip install --no-cache-dir abcd-converter==0.0.3 --index-url https://gitlab-pe.gwdg.de/api/v4/projects/26166/packages/pypi/simple
+
 COPY ./compose/production/django/entrypoint /entrypoint
 RUN sed -i 's/\r$//g' /entrypoint
 RUN chmod +x /entrypoint
