@@ -23,7 +23,7 @@ const MetadataTemplate = () => {
 
   return (
     <div>
-      <h4>
+      <h2 className="omit-optional">
         Metadata Templates{" "}
         <HoverCard width={320} shadow="md" position="right" withArrow>
           <HoverCard.Target>
@@ -37,20 +37,22 @@ const MetadataTemplate = () => {
             </p>
           </HoverCard.Dropdown>
         </HoverCard>
-      </h4>
+      </h2>
       <ul className="list-group list-group-flush">
         {templates.map((template) => (
-          <li key={template.id} className="list-group-item">
+          <li key={template.id} className="list-group-item px-2 pt-0 pb-3 border-bottom-0 label-text">
             {template.name}
-            <br />
-            <a href={template.template_link} target="_blank">
-              <i className="fa fa-download" aria-hidden="true"></i> CSV Template
-            </a>
-            <br />
-            <a href={template.description_link} target="_blank">
-              <i className="fa fa-book" aria-hidden="true"></i> Template
-              Description
-            </a>
+            <div className="mt-3">
+              <a href={template.template_link} target="_blank" className="px-3">
+                <i className="fa fa-download pr-2" aria-hidden="true"></i> CSV Template
+              </a>
+            </div>
+            <div className="mt-3">
+              <a href={template.description_link} target="_blank" className="px-3">
+                <i className="fa fa-book pr-2" aria-hidden="true"></i> Template
+                Description
+              </a>
+            </div>
           </li>
         ))}
       </ul>

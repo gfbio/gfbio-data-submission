@@ -118,7 +118,7 @@ const ProfileForm = (props) => {
     >
       <p>processing: {"" + isProcessing}</p>
       <div className="row">
-        <div className="col-md-9">
+        <div className="col-md-9 main-col">
           {profileData.form_fields
             .filter((field) => field.position == "main")
             .map((field, index) => (
@@ -130,7 +130,7 @@ const ProfileForm = (props) => {
               ></FormField>
             ))}
         </div>
-        <div className="col-md-3">
+        <div className="col-md-3 side-col">
           {profileData.form_fields
             .filter((field) => field.position == "sidebar")
             .map((field, index) => (
@@ -140,13 +140,6 @@ const ProfileForm = (props) => {
                 form={form}
                 onFilesChange={handleFilesChange}
               ></FormField>
-            ))}
-        </div>
-        <div className="col-md-3">
-          {profileData.form_fields
-            .filter((field) => field.position == "sidebar")
-            .map((field, index) => (
-              <FormField key={index} field={field} form={form}></FormField>
             ))}
         </div>
       </div>
