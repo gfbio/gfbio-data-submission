@@ -321,6 +321,99 @@
     }
   }
 
+  .contributors {
+    .mantine-Card-root {
+      box-shadow: none;
+      border: 1px #d3d3d3 solid;
+      min-height: 100%;
+
+      .mantine-Grid-root {
+        color: #666;
+      }
+
+      h4 {
+        font-size: 1rem;
+      }
+
+      span.label {
+        font-size: 0.85rem;
+        line-height: 1.85rem;
+        padding-bottom: 1rem;
+        vertical-align: middle;
+        
+        button {
+          vertical-align: middle;
+        }
+      }
+    }
+
+    .contributor {
+      color: #3cace4;
+
+      .name {
+        cursor: pointer;
+
+        &:hover {
+          color: #ff8362;
+        }
+      }
+    }
+
+    button{
+       &.btn-blue:not([disabled]) {
+        background-color: #3cace4;
+        color: white;
+        border: solid 1px #3cace4;
+
+        &:hover {
+          background-color: white;
+          color: #3cace4;
+          border: solid 1px #3cace4;
+        }
+
+        * {
+          border: none;
+        }
+      }
+
+      &.btn-blue-outline:not([disabled]) {
+        background-color: white;
+        color: #3cace4;
+        border: solid 1px #3cace4;
+
+        &:hover {
+          background-color: #3cace4;
+          color: white;
+        }
+
+        * {
+          border: none;
+        }
+      }
+
+      &.btn-red-outline:not([disabled]) {
+        background-color: white;
+        color: #dc3545;
+        border: solid 1px #dc3545;
+  
+        &:hover {
+          background-color: #dc3545;
+          color: white;
+        }
+  
+        * {
+          border: none;
+        }
+      }
+
+      &.small-button {
+        font-weight: normal;
+        font-size: 0.875rem;
+        padding: 0;
+        height: 2rem;
+      }
+    }
+  }
 }
 
 .mantine-Modal-root {
