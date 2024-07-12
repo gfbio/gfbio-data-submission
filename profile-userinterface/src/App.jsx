@@ -8,8 +8,6 @@ import "./App.css";
 function App(props) {
   const base = props.baseUrl;
 
-  // Use props here
-
   return (
     <MantineProvider>
       <Link to={base}>My Submissions</Link>
