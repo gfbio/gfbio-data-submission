@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import { useDisclosure } from '@mantine/hooks';
 import { Text, Collapse, Modal } from '@mantine/core';
 import PropTypes from "prop-types";
@@ -8,7 +8,9 @@ const CollapsibleSelector = (props) => {
 
     var default_opt = default_value ? options.map(o => o.option).filter(o => o == default_value) : null
     const [value, setValue] = useState(default_opt ? default_opt[0] : options[0].option);
-    form.setFieldValue(field_id, value);
+    useEffect(() => {
+        form.setFieldValue(field_id, value);
+    }, []);
 
     const [opened, { toggle }] = useDisclosure(false);
 
