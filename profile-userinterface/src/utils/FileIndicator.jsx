@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import filesize from "filesize";
-import { Button, Checkbox, List, ListItem, Container } from "@mantine/core";
+import { Checkbox, HoverCard } from "@mantine/core";
 
 const FileIndicator = ({
   fileUploads,
@@ -12,32 +12,40 @@ const FileIndicator = ({
   const createScheduledUploadListElements = () => {
     return fileUploads.map((upload, index) => {
       let progressStyle = {
-        width: `${upload.progress || 0}%`,
+        width: `${upload.progress || 0}%`
       };
       let metaDataCheckButton = (
-        <small className="file-name">
-          <Checkbox
-            type="checkbox"
-            id={`primary${index}`}
-            value={index}
-            onChange={() => handleMetadataSelect(index)}
-            checked={index === metadataIndex}
-          />
-          <label htmlFor={`primary${index}`} className="metadata"></label>
-          <i className="icon ion-md-document pub"></i>
-          {upload.name}
-        </small>
+        <div className="container h-100">
+          <small className="file-name row h-100 pl-3">
+            <div className="col-1 d-flex justify-content-end align-items-center checkbox-col">
+              <Checkbox
+                type="checkbox"
+                id={`primary${index}`}
+                value={index}
+                onChange={() => handleMetadataSelect(index)}
+                checked={index === metadataIndex}
+              />
+            </div>
+            <div className="col-11 d-flex align-items-center">
+              <label htmlFor={`primary${index}`} className="metadata mb-0 w-100">
+                <i className="icon ion-md-document pub pr-2"></i>
+                {upload.name}
+              </label>
+            </div>
+          </small>
+        </div>
       );
 
       return (
-        <li key={index} className={"list-group-item file-upload"}>
-          <Container className="d-flex justify-content-between align-items-center">
-            <Container>{metaDataCheckButton}</Container>
-            <Container>
-              <small className="mr-5 file-size">{filesize(upload.size)}</small>
-              <span className="pr-4 mr-3"></span>
+        <div key={index} className="row small file-list my-1 py-2">
+          <div className="col-12 container">
+            <div className="row">
+              <div className="col-md-9">
+                {metaDataCheckButton}
+              </div>
+              <small className="col-2 file-size d-flex align-items-center">{filesize(upload.size)}</small>
               <button
-                className="btn btn-remove"
+                className="col-1 btn btn-remove d-flex justify-content-end"
                 onClick={(e) => {
                   e.preventDefault();
                   handleRemove(index);
@@ -45,20 +53,22 @@ const FileIndicator = ({
               >
                 <i className="fa fa-trash" aria-hidden="true"></i>
               </button>
-            </Container>
-          </Container>
-
-          <div className="progress">
-            <div
-              className="progress-bar"
-              role="progressbar"
-              style={progressStyle}
-              aria-valuenow={`${upload.progress || 0}`}
-              aria-valuemin="0"
-              aria-valuemax="100"
-            ></div>
+            </div>
+            <div className="row progress-row">
+              <div className="col-2"></div>
+              <div className="progress col-9">
+                <div
+                  className="progress-bar"
+                  role="progressbar"
+                  style={progressStyle}
+                  aria-valuenow={`${upload.progress || 0}`}
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                ></div>
+              </div>
+            </div>
           </div>
-        </li>
+        </div>
       );
     });
   };
@@ -66,20 +76,37 @@ const FileIndicator = ({
   const fileListElements = createScheduledUploadListElements();
 
   return (
-    <ul className="list-group list-group-flush">
-      {fileListElements.length > 0 && (
-        <li className="list-group-item file-upload mb-3">
-          <span className="upload-header">
-            Metadata
-            <i
-              className="icon ion-ios-help-circle-outline help align-bottom"
-              aria-hidden="true"
-            ></i>
-          </span>
-        </li>
-      )}
-      {fileListElements}
-    </ul>
+    <>
+      {
+        fileListElements.length > 0 && (
+          <div className="container mb-3">
+            <div className="row">
+              <div className="col-md-8">
+                <div className="container">
+                  <div className="row">
+                    <span className="pl-0 py-3 col-6 upload-header list-header">
+                      Metadata
+                      <HoverCard width={320} shadow="md" position="right" withArrow>
+                        <HoverCard.Target>
+                          <i className="fa fa-question-circle-o pl-2" aria-hidden="true"></i>
+                        </HoverCard.Target>
+                        <HoverCard.Dropdown>
+                          <p>
+                            select the primary metadata file, e.g. metadata
+                            template
+                          </p>
+                        </HoverCard.Dropdown>
+                      </HoverCard>
+                    </span>
+                  </div>
+                </div>  
+              </div>
+            </div>
+            {fileListElements}
+          </div>
+        )
+      }
+    </>
   );
 };
 

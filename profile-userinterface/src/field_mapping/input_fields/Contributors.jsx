@@ -16,6 +16,7 @@ import { useDisclosure } from "@mantine/hooks";
 import PropTypes from "prop-types";
 import { useState } from "react";
 import RolesInfo from "../../utils/ContributorsRoles";
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 const Contributors = (props) => {
   const { title, description, form, field_id } = props;
@@ -126,20 +127,64 @@ const Contributors = (props) => {
 
   return (
     <>
-      <div>
+      <div className="contributors">
         <Input.Label>{title}</Input.Label>
         <Input.Description>{description}</Input.Description>
         <Group justify="center" display={!opened ? "flex" : "none"}>
-          <Button onClick={toggle} color="blue">
+          <Button onClick={toggle} className="btn-blue-outline">
+            <i class="fa fa-plus pr-2"></i>
             Add Contributor
           </Button>
         </Group>
         <Collapse in={opened}>
-          <Grid gutter="lg">
-            <Grid.Col span={4}>
-              <Card shadow="xs" padding="sm">
-                <h4>Contributors List</h4>
-                <List
+          <Grid gutter="xs">
+            <Grid.Col span={{base: 12, md: 4, lg: 3}}>
+              <Card shadow="xs" padding="sm" className="h-100">
+                {contributors.length == 0 && <h4>Contributors List</h4>}
+                <DragDropContext
+                  className="h-100"
+                  onDragEnd={
+                    ({ destination, source }) => {
+                      if (!destination) {
+                        return
+                      }
+                      var contributors_reordered = [...contributors];
+                      var from = source.index;
+                      var dragged = contributors_reordered.splice(from, 1);
+                      contributors_reordered.splice(destination?.index || 0, 0, ...dragged);
+                      setContributors(contributors_reordered);
+                    }
+                  }
+                >
+                  <Droppable droppableId="dnd-list" direction="vertical" className="h-100">
+                    {(provided) => (
+                      <div {...provided.droppableProps} ref={provided.innerRef} className="h-100">
+                        {
+                          contributors.map((contributor, index) => (
+                            <Draggable key={contributor.email} index={index} draggableId={contributor.email}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  className="d-flex contributor"
+                                >
+                                  <div {...provided.dragHandleProps}>
+                                    <i class="fa fa-bars pr-2"></i>
+                                  </div>
+                                  <div key={contributor.email} onClick={() => handleEditContributor(contributor)} className="name">
+                                    <div>{index + 1}. {contributor.firstName} {contributor.lastName}</div>
+                                  </div>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))
+                        }
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+                <List display={"none"}
                   spacing="sm"
                   icon={
                     <ThemeIcon color="blue" variant="filled">
@@ -159,39 +204,40 @@ const Contributors = (props) => {
                 </List>
               </Card>
             </Grid.Col>
-            <Grid.Col span={8}>
-              <Card shadow="xs" padding="lg">
+            <Grid.Col span={{base: 12, md: 8, lg: 9}}>
+              <Card shadow="xs" padding="lg" className="pt-3">
                 <h4>
                   {editingContributor ? "Edit Contributor" : "Add Contributor"}
                 </h4>
                 <Grid gutter={"sm"} style={{ marginBottom: "1rem" }}>
-                  <Grid.Col span={3}>
-                    <span>First Name</span>
+                  <Grid.Col span={{ base: 12, xs: 3}}>
+                    <span className="label">First Name</span>
                     <TextInput
                       name="firstName"
                       value={newContributor.firstName}
                       onChange={handleInputChange}
                     />
                   </Grid.Col>
-                  <Grid.Col span={3}>
-                    <span>Last Name</span>
+                  <Grid.Col span={{ base: 12, xs: 3}}>
+                    <span className="label">Last Name</span>
                     <TextInput
                       name="lastName"
                       value={newContributor.lastName}
                       onChange={handleInputChange}
                     />
                   </Grid.Col>
-                  <Grid.Col span={6}>
-                    <span>Email</span>
+                  <Grid.Col span={{ base: 12, xs: 6}}>
+                    <span className="label">Email Address</span>
                     <TextInput
                       name="email"
                       autoComplete="email"
                       value={newContributor.email}
                       onChange={handleInputChange}
+                      placeholder="name@example.org"
                     />
                   </Grid.Col>
                   <Grid.Col span={12}>
-                    <span>Institution (optional)</span>
+                    <span className="label">Institution (optional)</span>
                     <TextInput
                       name="institution"
                       value={newContributor.institution}
@@ -199,7 +245,7 @@ const Contributors = (props) => {
                     />
                   </Grid.Col>
                   <Grid.Col span={12}>
-                    <span>
+                    <span className="label">
                       Contributor Role (optional)
                       <UnstyledButton
                         className="fa fa-question-circle-o"
@@ -224,23 +270,11 @@ const Contributors = (props) => {
                   </Grid.Col>
                 </Grid>
                 {editingContributor ? (
-                  <Grid>
-                    <Grid.Col span={4}>
+                  <Grid className="mt-5">
+                    <Grid.Col span={{ base: 12, md: 3}}>
                       <Button
                         fullWidth
-                        onClick={handleSaveContributor}
-                        disabled={
-                          !newContributor.firstName ||
-                          !newContributor.lastName ||
-                          !emailValid
-                        }
-                      >
-                        Save Changes
-                      </Button>
-                    </Grid.Col>
-                    <Grid.Col span={4}>
-                      <Button
-                        fullWidth
+                        className="btn-blue-outline small-button"
                         onClick={() => {
                           setEditingContributor(null);
                           setNewContributor({
@@ -256,21 +290,37 @@ const Contributors = (props) => {
                         Cancel
                       </Button>
                     </Grid.Col>
-                    <Grid.Col span={4}>
+                    <Grid.Col span={{ base: 12, md: 3}}>
                       <Button
                         fullWidth
+                        className="btn-red-outline small-button"
                         onClick={() =>
                           handleDeleteContributor(editingContributor)
                         }
-                        color="red"
                       >
-                        Delete
+                        Remove
+                      </Button>
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 0, md: 2}} className="d-none d-lg-block"></Grid.Col>
+                    <Grid.Col span={{ base: 12, md: 4}}>
+                      <Button
+                        fullWidth
+                        onClick={handleSaveContributor}
+                        className="btn-blue small-button"
+                        disabled={
+                          !newContributor.firstName ||
+                          !newContributor.lastName ||
+                          !emailValid
+                        }
+                      >
+                        Save
                       </Button>
                     </Grid.Col>
                   </Grid>
                 ) : (
                   <Button
                     onClick={handleAddContributor}
+                    className="btn-blue mt-5"
                     disabled={
                       !newContributor.firstName ||
                       !newContributor.lastName ||
