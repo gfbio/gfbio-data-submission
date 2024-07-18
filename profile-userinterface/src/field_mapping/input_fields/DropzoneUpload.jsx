@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import { Dropzone } from "@mantine/dropzone";
-import { Box, Center, Text, Title, Container } from "@mantine/core";
+import { Center, Text } from "@mantine/core";
 import UploadMessage from "../../utils/UploadMessage.jsx";
 import FileIndicator from "../../utils/FileIndicator.jsx";
 import { MAX_TOTAL_UPLOAD_SIZE, MAX_UPLOAD_ITEMS } from "../../settings.jsx";
@@ -61,11 +61,11 @@ const DropzoneUpload = (props) => {
   };
 
   return (
-    <div>
-      <header className="header header-left form-header-top">
-        <h2 className="section-title">{title}</h2>
-        <Text className="section-subtitle">{description}</Text>
-      </header>
+    <div className="file-upload">
+      <div>
+        <h2>{title}</h2>
+        <Text>{description}</Text>
+      </div>
 
       <FileIndicator
         fileUploads={localFiles}
