@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import App from "./App.jsx";
 import ProfileFormWrapper from "./components/ProfileFormWrapper.jsx";
 import SubmissionList from "./components/SubmissionList.jsx";
+import ErrorPage from "./components/errorPage.jsx";
 // import './index.css'
 
 let profileName = "generic";
@@ -17,6 +18,7 @@ const router = createBrowserRouter([
   {
     path: base,
     element: <App baseUrl={base} />,
+    errorElement: <ErrorPage />,
     children: [
       { index: true, element: <SubmissionList /> },
       { path: base + "form/", element: <ProfileFormWrapper /> },
