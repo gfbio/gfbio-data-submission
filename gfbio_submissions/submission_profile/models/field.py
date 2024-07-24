@@ -25,27 +25,28 @@ class Field(TimeStampedModel):
                                             "selecting between fields. e.g. 'generic_title' or 'molecular_embargo_date'")
     field_type = models.ForeignKey(FieldType, on_delete=models.CASCADE)
 
-    system_wide_mandatory = models.BooleanField(default=False)
-
     title = models.CharField(max_length=64, blank=False, null=False,
                              help_text="Title of the field, as displayed in the rendered Form")
     description = models.TextField(default="", blank=True,
                                    help_text="Descriptive text, below the title in the rendered Form")
-    placeholder = models.TextField(default="", blank=True,
-                                   help_text="Descriptive text displayed within the input field unless it is filled out")
-
-    mandatory = models.BooleanField(default=False)
-    visible = models.BooleanField(default=True)
-    default = models.TextField(max_length=64, blank=True, default="")
-
     comment = models.TextField(default="", blank=True,
                                help_text="Comment text describing the field. This is optional. "
                                          "The information provided here WILL NOT BE SHOWN IN THE FORM")
-
     position = models.CharField(max_length=7, default='main',
                                 choices=(('main', 'main'), ('sidebar', 'sidebar')),
                                 help_text="Position of the element in the Layout of the form")
     order = models.IntegerField(default=100, help_text='Rank within in the elements in the layout-position')
+
+    # ------------------------------------------------------------------------------
+    # TODO: this here is per user/system specific, all above will remain unchanged
+    # placeholder = models.TextField(default="", blank=True,
+    #                                help_text="Descriptive text displayed within the input field unless it is filled out")
+    system_wide_mandatory = models.BooleanField(default=False)
+    # mandatory = models.BooleanField(default=False)
+    # visible = models.BooleanField(default=True)
+    # default = models.TextField(max_length=64, blank=True, default="")
+
+    # ------------------------------------------------------------------------------
 
     # TODO: test for inherited profiles
     # TODO: test for all field (inherited of inherited)
@@ -68,7 +69,7 @@ class Field(TimeStampedModel):
             from .profile import Profile
             for profile in Profile.objects.all():
                 for s in Field.objects.filter(system_wide_mandatory=True):
-                    profile.profile_fields.add(s)
+                    profile.fields.add(s)
 
     def __str__(self):
         return self.field_name

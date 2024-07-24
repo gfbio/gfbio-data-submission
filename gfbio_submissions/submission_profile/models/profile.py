@@ -22,8 +22,9 @@ class Profile(TimeStampedModel):
     )
 
     # fields = models.ManyToManyField(Field, blank=True)
-    profile_fields = models.ManyToManyField(Field, blank=True, through="ProfileFieldExtension", related_name="profile_fields")
-    inherit_fields_from = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL)
+    # profile_fields = models.ManyToManyField(Field, blank=True, through="ProfileFieldExtension", related_name="profile_fields")
+
+    # inherit_fields_from = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL)
 
     # TODO: workflow field, sub models like preferences, chain of tasks etc.
     # TODO: owner ?
@@ -40,16 +41,37 @@ class Profile(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         super(Profile, self).save(*args, **kwargs)
-        for s in Field.objects.filter(system_wide_mandatory=True):
-            self.profile_fields.add(s)
+        # for s in Field.objects.filter(system_wide_mandatory=True):
+        #     self.fields.add(s)
+
+    def clone_for_user(self, user, name):
+        pk = self.pk
+        self.pk = None
+        self.user = user
+        self.name = name
+        # print(self.profilefieldextension_set.all())
+        self.save()
+        # print(self.pk , '  ', pk)
+        # TODO: move to manager with exception checks
+        original_profile = Profile.objects.get(pk=pk)
+        # print(original_profile.profilefieldextension_set.all())
+        for profile_field in original_profile.profilefieldextension_set.all():
+            # self.profilefieldextension_set.add(pfield)
+            # print('\tclone field ', pfield, ' from ', original_profile.pk, ' to ', self.pk)
+            profile_field.clone(profile=self)
+        # print(self.user.username)
+        return self
 
     def __str__(self):
+        if self.user:
+            return "{}_{}".format(self.user.username, self.name)
         return self.name
 
     def all_fields(self):
-        if self.inherit_fields_from is None:
-            return self.profile_fields.all()
-        return self.profile_fields.all().union(self.inherit_fields_from.profile_fields.all())
+        # if self.inherit_fields_from is None:
+        #     return self.fields.all()
+        # return self.fields.all().union(self.inherit_fields_from.profile_fields.all())
+        return self.fields.all()
 
     def form_fields(self):
         return self.all_fields().order_by("order")
