@@ -24,7 +24,7 @@ class TestField(TestCase):
         obj = Field.objects.create(field_name="mandatory", title="a title for a field", description="a text",
                                    system_wide_mandatory=True, field_type=self.field_type)
         self.assertTrue(obj.system_wide_mandatory)
-        # self.assertTrue(obj.mandatory)
+        self.assertTrue(obj.mandatory)
         # self.assertEqual(0, len(obj.profile_set.all()))
         self.assertEqual(0, len(obj.profilefieldextension_set.all()))
 

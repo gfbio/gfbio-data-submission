@@ -75,7 +75,8 @@ class Field(TimeStampedModel):
                     # profile.fields.add(s)
                     ProfileFieldExtension.objects.get_or_create(
                         field=s, profile=profile,
-                        defaults={"mandatory": True, "system_wide_mandatory": True}
+                        defaults={"mandatory": True, "system_wide_mandatory": True,
+                                  "placeholder": self.placeholder, "visible": self.visible, "default": self.default}
                     )
 
     def __str__(self):

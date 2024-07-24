@@ -10,9 +10,6 @@ class ProfileFieldExtension(TimeStampedModel):
     field = models.ForeignKey(Field, on_delete=models.CASCADE)
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
 
-    # default = models.TextField(max_length=64, blank=True, default="")
-    # extra_field_test = models.TextField(max_length=64, blank=True, default="")
-
     placeholder = models.TextField(default="", blank=True,
                                    help_text="Descriptive text displayed within the input field unless it is filled out")
     system_wide_mandatory = models.BooleanField(default=False)
