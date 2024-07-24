@@ -68,7 +68,7 @@ class Field(TimeStampedModel):
             from .profile import Profile
             for profile in Profile.objects.all():
                 for s in Field.objects.filter(system_wide_mandatory=True):
-                    profile.fields.add(s)
+                    profile.profile_fields.add(s)
 
     def __str__(self):
         return self.field_name

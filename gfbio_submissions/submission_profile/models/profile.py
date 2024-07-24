@@ -21,7 +21,8 @@ class Profile(TimeStampedModel):
         on_delete=models.CASCADE,
     )
 
-    fields = models.ManyToManyField(Field, blank=True)
+    # fields = models.ManyToManyField(Field, blank=True)
+    profile_fields = models.ManyToManyField(Field, blank=True, through="ProfileFieldExtension", related_name="profile_fields")
     inherit_fields_from = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL)
 
     # TODO: workflow field, sub models like preferences, chain of tasks etc.
@@ -40,15 +41,15 @@ class Profile(TimeStampedModel):
     def save(self, *args, **kwargs):
         super(Profile, self).save(*args, **kwargs)
         for s in Field.objects.filter(system_wide_mandatory=True):
-            self.fields.add(s)
+            self.profile_fields.add(s)
 
     def __str__(self):
         return self.name
 
     def all_fields(self):
         if self.inherit_fields_from is None:
-            return self.fields.all()
-        return self.fields.all().union(self.inherit_fields_from.fields.all())
+            return self.profile_fields.all()
+        return self.profile_fields.all().union(self.inherit_fields_from.profile_fields.all())
 
     def form_fields(self):
         return self.all_fields().order_by("order")

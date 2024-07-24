@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from pprint import pprint
 from unittest import skip
 
 from django.test import TestCase
@@ -24,7 +25,9 @@ class TestField(TestCase):
                                    system_wide_mandatory=True, field_type=self.field_type)
         self.assertTrue(obj.system_wide_mandatory)
         self.assertTrue(obj.mandatory)
-        self.assertEqual(0, len(obj.profile_set.all()))
+        pprint(Field.__dict__)
+        # self.assertEqual(0, len(obj.profile_set.all()))
+        self.assertEqual(0, len(obj.profilefieldextension_set.all()))
 
     def test_multiple_relations(self):
         obj_1 = Field.objects.create(title="field 1", description="", field_type=self.field_type)

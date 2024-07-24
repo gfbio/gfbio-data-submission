@@ -20,7 +20,7 @@ class TestProfileDetailView(TestCase):
         TestProfile.setUpTestData()
         profile = Profile.objects.create(name="generic", target="GENERIC")
         for f in Field.objects.all():
-            profile.fields.add(f)
+            profile.profile_fields.add(f)
 
         cls.user = User.objects.create_user(
             username="horst",
@@ -36,17 +36,17 @@ class TestProfileDetailView(TestCase):
 
         profile = Profile.objects.create(name="user-profile-1", target="GENERIC", user=cls.user)
         for f in Field.objects.all():
-            profile.fields.add(f)
+            profile.profile_fields.add(f)
 
         # TODO: will change due to removin user on system wide profile
         profile = Profile.objects.create(name="user-system-profile-1", target="GENERIC", user=cls.user,
                                          system_wide_profile=True)
         for f in Field.objects.all():
-            profile.fields.add(f)
+            profile.profile_fields.add(f)
 
         profile = Profile.objects.create(name="system-profile-x", target="GENERIC", system_wide_profile=True)
         for f in Field.objects.all():
-            profile.fields.add(f)
+            profile.profile_fields.add(f)
 
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION="Basic " + base64.b64encode(b"horst:password").decode("utf-8"))

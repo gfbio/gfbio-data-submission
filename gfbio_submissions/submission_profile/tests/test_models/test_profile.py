@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from pprint import pp, pprint
 from time import time
 from unittest import skip
 
@@ -53,7 +54,7 @@ class TestProfile(TestCase):
         self.field_1.system_wide_mandatory = True
         self.field_1.save()
         self.assertEqual(2, len(profile.all_fields()))
-        for f in profile.fields.all():
+        for f in profile.profile_fields.all():
             self.assertTrue(f.system_wide_mandatory)
 
     def test_profile_update_on_system_wide_mandatory_add(self):
@@ -64,7 +65,7 @@ class TestProfile(TestCase):
                                      description="you have to enter something here ...",
                                      field_type=self.field_type_1, system_wide_mandatory=True)
         self.assertEqual(2, len(profile.all_fields()))
-        for f in profile.fields.all():
+        for f in profile.profile_fields.all():
             self.assertTrue(f.system_wide_mandatory)
 
     @skip("switch on manually just to get an impression on performance")
@@ -76,7 +77,7 @@ class TestProfile(TestCase):
         self.field_1.system_wide_mandatory = True
         self.field_1.save()
         # for p in Profile.objects.all():
-        #     self.assertEqual(2, len(p.fields.filter(system_wide_mandatory=True)))
+        #     self.assertEqual(2, len(p.profile_fields.filter(system_wide_mandatory=True)))
         elapsed = time() - start
         print('elapsed time: {}'.format(round(elapsed, 4)))
 
@@ -91,29 +92,29 @@ class TestProfile(TestCase):
                              description="you have to enter something here ...",
                              field_type=self.field_type_1, system_wide_mandatory=True)
         # for p in Profile.objects.all():
-        #     self.assertEqual(2, len(p.fields.filter(system_wide_mandatory=True)))
+        #     self.assertEqual(2, len(p.profile_fields.filter(system_wide_mandatory=True)))
         elapsed = time() - start
         print('elapsed time: {}'.format(round(elapsed, 4)))
 
     def test_field_add_plus_save(self):
         profile = Profile.objects.create(name="profile-1")
-        profile.fields.add(self.field_1)
-        self.assertEqual(2, len(profile.fields.all()))
+        profile.profile_fields.add(self.field_1)
+        self.assertEqual(2, len(profile.profile_fields.all()))
         profile.target = ENA
         profile.save()
-        self.assertEqual(2, len(profile.fields.all()))
+        self.assertEqual(2, len(profile.profile_fields.all()))
 
     def test_fields(self):
         profile = Profile.objects.create(name="profile-1")
-        profile.fields.add(self.field_1)
-        profile.fields.add(self.field_2)
-        profile.fields.add(self.field_3)
+        profile.profile_fields.add(self.field_1)
+        profile.profile_fields.add(self.field_2)
+        profile.profile_fields.add(self.field_3)
         # 3 above plus 1 system wide mandatory field
-        self.assertEqual(4, len(profile.fields.all()))
+        self.assertEqual(4, len(profile.profile_fields.all()))
 
     def test_multi_add_fields(self):
         profile = Profile.objects.create(name="profile-1")
-        profile.fields.add(self.field_1)
-        profile.fields.add(self.field_1)
+        profile.profile_fields.add(self.field_1)
+        profile.profile_fields.add(self.field_1)
         # 1 above plus 1 system wide mandatory field
-        self.assertEqual(2, len(profile.fields.all()))
+        self.assertEqual(2, len(profile.profile_fields.all()))
