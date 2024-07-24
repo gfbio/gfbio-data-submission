@@ -3,6 +3,7 @@ from model_utils.models import TimeStampedModel
 
 from config.settings.base import AUTH_USER_MODEL
 from ..models.field import Field
+
 from ...brokerage.configuration.settings import GENERIC
 from ...brokerage.models.submission import Submission
 
@@ -41,8 +42,15 @@ class Profile(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         super(Profile, self).save(*args, **kwargs)
-        # for s in Field.objects.filter(system_wide_mandatory=True):
-        #     self.fields.add(s)
+        system_wide_mandatories = Field.objects.filter(system_wide_mandatory=True)
+        from .profile_field_extension import ProfileFieldExtension
+        for s in system_wide_mandatories:
+            # self.fields.add(s)
+            ProfileFieldExtension.objects.get_or_create(
+                field=s,
+                profile=self,
+                defaults={"mandatory": True, "system_wide_mandatory": True}
+            )
 
     def clone_for_user(self, user, name):
         pk = self.pk
@@ -71,7 +79,8 @@ class Profile(TimeStampedModel):
         # if self.inherit_fields_from is None:
         #     return self.fields.all()
         # return self.fields.all().union(self.inherit_fields_from.profile_fields.all())
-        return self.fields.all()
+        # return self.fields.all()
+        return self.profilefieldextension_set.all()
 
     def form_fields(self):
         return self.all_fields().order_by("order")

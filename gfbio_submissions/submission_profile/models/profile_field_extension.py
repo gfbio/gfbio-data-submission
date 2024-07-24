@@ -15,7 +15,7 @@ class ProfileFieldExtension(TimeStampedModel):
 
     placeholder = models.TextField(default="", blank=True,
                                    help_text="Descriptive text displayed within the input field unless it is filled out")
-    # system_wide_mandatory = models.BooleanField(default=False)
+    system_wide_mandatory = models.BooleanField(default=False)
     mandatory = models.BooleanField(default=False)
     visible = models.BooleanField(default=True)
     default = models.TextField(max_length=64, blank=True, default="")
