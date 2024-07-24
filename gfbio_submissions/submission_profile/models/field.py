@@ -39,13 +39,13 @@ class Field(TimeStampedModel):
 
     # ------------------------------------------------------------------------------
     # TODO: this here is per user/system specific, all above will remain unchanged
-    # placeholder = models.TextField(default="", blank=True,
-    #                                help_text="Descriptive text displayed within the input field unless it is filled out")
     system_wide_mandatory = models.BooleanField(default=False)
+    placeholder = models.TextField(default="", blank=True,
+                                   help_text="Descriptive text displayed within the input field unless it is filled out")
 
-    # mandatory = models.BooleanField(default=False)
-    # visible = models.BooleanField(default=True)
-    # default = models.TextField(max_length=64, blank=True, default="")
+    mandatory = models.BooleanField(default=False)
+    visible = models.BooleanField(default=True)
+    default = models.TextField(max_length=64, blank=True, default="")
 
     # ------------------------------------------------------------------------------
 
@@ -65,8 +65,8 @@ class Field(TimeStampedModel):
     def save(self, *args, **kwargs):
         super(Field, self).save(*args, **kwargs)
         if self.system_wide_mandatory:
+            self.mandatory = True
             system_wide_mandatories = Field.objects.filter(system_wide_mandatory=True)
-            # self.mandatory = True
             # prevent cyclic import error
             from .profile import Profile
             from .profile_field_extension import ProfileFieldExtension
