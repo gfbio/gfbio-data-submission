@@ -2,7 +2,7 @@
 import logging
 
 from ..configuration.settings import SUBMISSION_DELAY, ENA, ENA_PANGAEA, ATAX
-from ..tasks.atax_tasks.atax_run_combination_task import atax_run_combination_task
+# from ..tasks.atax_tasks.atax_run_combination_task import atax_run_combination_task
 from ..tasks.atax_tasks.validate_merged_atax_data import validate_merged_atax_data_task
 from gfbio_submissions.brokerage.tasks.submission_tasks.check_for_submittable_data import (
     check_for_submittable_data_task,
@@ -57,10 +57,11 @@ class SubmissionProcessHandler(object):
         return chain
 
     def add_alpha_taxonomic_data_tasks_to_chain(self, chain):
-        return (
-            chain
-            | atax_run_combination_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
-        )
+        # return (
+        #     chain
+        #     | atax_run_combination_task.s(submission_id=self.submission_id).set(countdown=SUBMISSION_DELAY)
+        # )
+        return chain
 
     def add_submittable_data_check_task_to_chain(self, chain):
         return chain | check_for_submittable_data_task.s(submission_id=self.submission_id).set(
