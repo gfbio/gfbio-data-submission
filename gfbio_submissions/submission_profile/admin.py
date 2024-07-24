@@ -16,7 +16,6 @@ class ProfileFieldExtensionInline(admin.StackedInline):
 
 class ProfileAdmin(admin.ModelAdmin):
     inlines = [ProfileFieldExtensionInline]
-    # model = Profile
     search_fields = ["user__username", "name"]
     list_filter = ["system_wide_profile", "target"]
     list_display = ["__str__", "system_wide_profile", "user", "target", ]
