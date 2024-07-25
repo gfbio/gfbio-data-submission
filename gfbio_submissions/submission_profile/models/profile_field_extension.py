@@ -2,6 +2,7 @@
 from django.db import models
 from model_utils.models import TimeStampedModel
 
+from ..managers.profile_field_extension_manager import ProfileFieldExtensionManager
 from ..models.field import Field
 from ..models.profile import Profile
 
@@ -16,6 +17,11 @@ class ProfileFieldExtension(TimeStampedModel):
     mandatory = models.BooleanField(default=False)
     visible = models.BooleanField(default=True)
     default = models.TextField(max_length=64, blank=True, default="")
+
+    # TODO: redundant to Field.order, clarify where used and get rid of one or the two
+    order = models.IntegerField(default=100, help_text='Rank within in the elements in the layout-position')
+
+    objects = ProfileFieldExtensionManager()
 
     def clone(self, profile):
         self.pk = None

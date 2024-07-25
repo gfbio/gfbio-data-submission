@@ -1,0 +1,24 @@
+# -*- coding: utf-8 -*-
+
+from django.db import models
+
+
+class ProfileFieldExtensionManager(models.Manager):
+
+    def add_from_field(self, field, profile):
+        mandatory = False
+        if field.system_wide_mandatory:
+            mandatory = True
+        self.get_or_create(
+            field=field,
+            profile=profile,
+            defaults={
+                "mandatory": mandatory,
+                "system_wide_mandatory": field.system_wide_mandatory,
+                "placeholder": field.placeholder,
+                "visible": field.visible,
+                "default": field.default,
+                # TODO: redundant to Field.order, clarify where used and get rid of one or the two
+                "order": field.order,
+            }
+        )

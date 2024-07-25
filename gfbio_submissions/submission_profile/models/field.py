@@ -7,16 +7,6 @@ from ..models.field_type import FieldType
 
 
 class Field(TimeStampedModel):
-    # TODO: Discussion:
-    #   to map a dynamic field to the related field in the submission data, a string is needed
-    #   that matches the backend json validaton. example:
-    #   a field that is representing the title in a GENERIC submission has to be sent {"title": <VALUE>}
-    #   option are:
-    #       1. the field_name is matching the actual field in the json data. e.g. field_name "title" for GENERIC title
-    #       2. an extra field is added here to the model, that describes "mapping_to" jsondata . like "title" but field_name can be different
-    #   in any case such an id has to be unique per profile to ensure proper form handling in the frontend.
-    #   if a profile with a field "title" inherits fields from another profile, that has also a field "title", an form error may occur.
-    #   but this will happen independent of option 1 or 2
 
     # TODO: in profile model. validator for unique-in-profile field_name (or mapping_to)
     #   https://docs.djangoproject.com/en/4.2/ref/validators/
@@ -35,6 +25,8 @@ class Field(TimeStampedModel):
     position = models.CharField(max_length=7, default='main',
                                 choices=(('main', 'main'), ('sidebar', 'sidebar')),
                                 help_text="Position of the element in the Layout of the form")
+
+    # TODO: redundant to ProfileFieldExtension.order, clarify where used and get rid of one or the two
     order = models.IntegerField(default=100, help_text='Rank within in the elements in the layout-position')
 
     # ------------------------------------------------------------------------------
@@ -49,19 +41,6 @@ class Field(TimeStampedModel):
 
     # ------------------------------------------------------------------------------
 
-    # TODO: test for inherited profiles
-    # TODO: test for all field (inherited of inherited)
-    # TODO: json import
-    # FIXME: initiale Idee war json file als profil config, und nutzer profile in datenbank
-    #   TODO: Begründung für Entscheidung gegen File (bzw. json field).
-    # TODO: wie profil mit nutzer verbinen ?
-    #   --> UserProfile model, über url anfragen bzw. in view nach user schauen ?
-    #   - wie basis auswählen ?
-    #   - wie felder auswählen ?
-    # TODO: how to add field-level validation (e.g. min length decsription) to frontend ?
-    #   - in frontend per field-widget (current ui has this) ?
-    #   - add this to backend to be changable dynamically ?
-
     def save(self, *args, **kwargs):
         super(Field, self).save(*args, **kwargs)
         if self.system_wide_mandatory:
@@ -73,11 +52,12 @@ class Field(TimeStampedModel):
             for profile in Profile.objects.all():
                 for s in system_wide_mandatories:
                     # profile.fields.add(s)
-                    ProfileFieldExtension.objects.get_or_create(
-                        field=s, profile=profile,
-                        defaults={"mandatory": True, "system_wide_mandatory": True,
-                                  "placeholder": self.placeholder, "visible": self.visible, "default": self.default}
-                    )
+                    # ProfileFieldExtension.objects.get_or_create(
+                    #     field=s, profile=profile,
+                    #     defaults={"mandatory": True, "system_wide_mandatory": True,
+                    #               "placeholder": self.placeholder, "visible": self.visible, "default": self.default}
+                    # )
+                    ProfileFieldExtension.objects.add_from_field(field=self, profile=profile)
 
     def __str__(self):
         return self.field_name

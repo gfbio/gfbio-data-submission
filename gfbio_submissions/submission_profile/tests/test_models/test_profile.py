@@ -180,11 +180,13 @@ class TestProfile(TestCase):
         # profile.profile_fields.add(self.field_1)
         # TODO: wrap in manager method (but Profile manager to get add like in M2M) with exceptions and return
         # TODO: this way basically self-explanatory. it says get or create ...
-        ProfileFieldExtension.objects.get_or_create(
-            field=self.field_1, profile=profile,
-        )
-        ProfileFieldExtension.objects.get_or_create(
-            field=self.field_1, profile=profile,
-        )
+        # ProfileFieldExtension.objects.get_or_create(
+        #     field=self.field_1, profile=profile,
+        # )
+        ProfileFieldExtension.objects.add_from_field(self.field_1, profile)
+        # ProfileFieldExtension.objects.get_or_create(
+        #     field=self.field_1, profile=profile,
+        # )
+        ProfileFieldExtension.objects.add_from_field(self.field_1, profile)
         # 1 above plus 1 system wide mandatory field
         self.assertEqual(2, len(profile.profilefieldextension_set.all()))

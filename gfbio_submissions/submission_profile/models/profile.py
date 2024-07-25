@@ -46,11 +46,13 @@ class Profile(TimeStampedModel):
         from .profile_field_extension import ProfileFieldExtension
         for s in system_wide_mandatories:
             # self.fields.add(s)
-            ProfileFieldExtension.objects.get_or_create(
-                field=s,
-                profile=self,
-                defaults={"mandatory": True, "system_wide_mandatory": True}
-            )
+            # ProfileFieldExtension.objects.get_or_create(
+            #     field=s,
+            #     profile=self,
+            #     defaults={"mandatory": True, "system_wide_mandatory": True}
+            # )
+            # print("Profile save ", s.__dict__)
+            ProfileFieldExtension.objects.add_from_field(field=s, profile=self)
 
     def clone_for_user(self, user, name):
         pk = self.pk
@@ -84,3 +86,4 @@ class Profile(TimeStampedModel):
 
     def form_fields(self):
         return self.all_fields().order_by("order")
+        # return self.all_fields()
