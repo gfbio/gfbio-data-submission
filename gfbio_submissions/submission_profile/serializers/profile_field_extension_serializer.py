@@ -6,13 +6,13 @@ from .field_type_serializer import FieldTypeSerializer
 from .field_option_serializer import FieldOptionSerializer
 from ..models.profile_field_extension import ProfileFieldExtension
 from ..models.field import Field
-from .profile_field_related_serializer import ProfileFieldRelatedSerializer
+from .field_related_serializer import FieldRelatedSerializer
 
 
 class ProfileFieldExtensionSerializer(serializers.ModelSerializer):
     # field_type = FieldTypeSerializer(read_only=True)
     # options = FieldOptionSerializer(read_only=True, many=True)
-    field = ProfileFieldRelatedSerializer(read_only=True)
+    field = FieldRelatedSerializer(read_only=True)
 
     class Meta:
         model = ProfileFieldExtension

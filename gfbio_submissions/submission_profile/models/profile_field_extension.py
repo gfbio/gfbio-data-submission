@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from pprint import pprint
+
 from django.db import models
 from model_utils.models import TimeStampedModel
 
@@ -22,6 +24,17 @@ class ProfileFieldExtension(TimeStampedModel):
     order = models.IntegerField(default=100, help_text='Rank within in the elements in the layout-position')
 
     objects = ProfileFieldExtensionManager()
+
+    def save(self, *args, **kwargs):
+        # initial, not an update
+        if self.pk is None:
+            self.mandatory = self.field.system_wide_mandatory
+            self.system_wide_mandatory = self.field.system_wide_mandatory
+            self.placeholder = self.field.placeholder
+            self.visible = self.field.visible
+            self.default = self.field.default
+            self.order = self.field.order
+        super(ProfileFieldExtension, self).save(*args, **kwargs)
 
     def clone(self, profile):
         self.pk = None
