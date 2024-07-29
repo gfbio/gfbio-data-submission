@@ -1,18 +1,7 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import getListOfSubmissions from "../api/getListOfSubmissions";
+import { Link, useLoaderData } from "react-router-dom";
 
 const SubmissionList = () => {
-  const [submissions, setSubmissions] = useState([]);
-
-  useEffect(() => {
-    const fetchSubmissions = async () => {
-      const submissionsList = await getListOfSubmissions();
-      setSubmissions(submissionsList);
-    };
-
-    fetchSubmissions();
-  }, []);
+  const { submissions } = useLoaderData();
 
   return (
     <div>

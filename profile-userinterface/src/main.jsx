@@ -5,6 +5,7 @@ import App from "./App.jsx";
 import ProfileFormWrapper from "./components/ProfileFormWrapper.jsx";
 import SubmissionList from "./components/SubmissionList.jsx";
 import ErrorPage from "./components/errorPage.jsx";
+import { loader as submissionsLoader } from "./utils/SubmissionsLoader.jsx";
 // import './index.css'
 
 let profileName = "generic";
@@ -20,7 +21,7 @@ const router = createBrowserRouter([
     element: <App baseUrl={base} />,
     errorElement: <ErrorPage />,
     children: [
-      { index: true, element: <SubmissionList /> },
+      { index: true, element: <SubmissionList />, loader: submissionsLoader },
       { path: base + "form/", element: <ProfileFormWrapper /> },
     ],
   },
