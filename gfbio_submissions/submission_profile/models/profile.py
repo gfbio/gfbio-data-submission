@@ -54,12 +54,16 @@ class Profile(TimeStampedModel):
             # print("Profile save ", s.__dict__)
             ProfileFieldExtension.objects.add_from_field(field=s, profile=self)
 
-    def clone_for_user(self, user, name):
+    def clone_for_user(self, user, name=None):
         pk = self.pk
         self.pk = None
         self.user = user
-        self.name = name
+        if name:
+            self.name = name
+        else:
+            self.name = "{}_profile".format(user.username)
         # print(self.profilefieldextension_set.all())
+        self.system_wide_profile = False
         self.save()
         # print(self.pk , '  ', pk)
         # TODO: move to manager with exception checks
@@ -73,8 +77,8 @@ class Profile(TimeStampedModel):
         return self
 
     def __str__(self):
-        if self.user:
-            return "{}_{}".format(self.user.username, self.name)
+        # if self.user:
+        #     return "{}_{}".format(self.user.username, self.name)
         return self.name
 
     def all_fields(self):

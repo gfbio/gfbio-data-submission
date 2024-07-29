@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth.models import AbstractUser
 from django.db import IntegrityError, models
 from django.db.models import BooleanField, CharField
@@ -7,6 +9,8 @@ from model_utils.models import TimeStampedModel
 
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.managers import CustomUserManager
+
+logger = logging.getLogger(__name__)
 
 
 class User(AbstractUser):
@@ -31,6 +35,17 @@ class User(AbstractUser):
     )
 
     objects = CustomUserManager()
+
+    def save(self, *args, **kwargs):
+        super(User, self).save(*args, **kwargs)
+        from gfbio_submissions.submission_profile.models.profile import Profile
+        if len(self.user_profile.all()) == 0:
+            try:
+                default_profile = Profile.objects.get(name="default")
+                self.user_profile.add(default_profile.clone_for_user(self))
+            except Profile.DoesNotExist:
+                logger.warning(
+                    "users | models.py | save() | Default profile does not exist. doing nothing now.")
 
     def get_absolute_url(self):
         return reverse("users:detail", kwargs={"username": self.username})
