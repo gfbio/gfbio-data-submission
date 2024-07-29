@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
-from pprint import pp, pprint
 from time import time
 from unittest import skip
 
 from django.test import TestCase
 
 from gfbio_submissions.brokerage.configuration.settings import ENA, GENERIC
+from gfbio_submissions.users.models import User
 from ...models import ProfileFieldExtension
 from ...models.field import Field
 from ...models.field_type import FieldType
 from ...models.profile import Profile
-from gfbio_submissions.users.models import User
 
 
 class TestProfile(TestCase):
@@ -58,21 +57,20 @@ class TestProfile(TestCase):
             field=self.field_1,
             profile=p1,
         )
+        self.assertEqual(1, len(p1.profilefieldextension_set.filter(system_wide_mandatory=True)))
+        self.assertEqual(1, len(p1.profilefieldextension_set.filter(system_wide_mandatory=False)))
+
         p2 = p1.clone_for_user(self.user, "p2")
         self.assertEqual(2, len(Profile.objects.all()))
 
         p1 = Profile.objects.get(name="profile-1")
-
         self.assertNotEqual(p1.profilefieldextension_set.all(), p2.profilefieldextension_set.all())
 
-        # pprint(p1.profilefieldextension_set.all())
-        # pprint(p2.profilefieldextension_set.all())
-        # for a in ProfileFieldExtension.objects.all():
-        #     pprint(a.__dict__)
+        self.assertEqual(1, len(p2.profilefieldextension_set.filter(system_wide_mandatory=True)))
+        self.assertEqual(1, len(p2.profilefieldextension_set.filter(system_wide_mandatory=False)))
 
     def test_profile_contains_system_wide_mandatory(self):
         obj = Profile.objects.create(name="profile-1")
-        # pprint(obj.profilefieldextension_set.all())
         self.assertEqual(1, len(obj.all_fields()))
         self.assertTrue(obj.all_fields().first().mandatory)
         self.assertTrue(obj.all_fields().first().system_wide_mandatory)
@@ -120,8 +118,6 @@ class TestProfile(TestCase):
             profile = Profile.objects.create(name="profile-{x}".format(x=i))
         self.field_1.system_wide_mandatory = True
         self.field_1.save()
-        # for p in Profile.objects.all():
-        #     self.assertEqual(2, len(p.profile_fields.filter(system_wide_mandatory=True)))
         elapsed = time() - start
         print('elapsed time: {}'.format(round(elapsed, 4)))
 
@@ -135,8 +131,6 @@ class TestProfile(TestCase):
                              title="Mandatory",
                              description="you have to enter something here ...",
                              field_type=self.field_type_1, system_wide_mandatory=True)
-        # for p in Profile.objects.all():
-        #     self.assertEqual(2, len(p.profile_fields.filter(system_wide_mandatory=True)))
         elapsed = time() - start
         print('elapsed time: {}'.format(round(elapsed, 4)))
 
@@ -154,18 +148,15 @@ class TestProfile(TestCase):
 
     def test_fields(self):
         profile = Profile.objects.create(name="profile-1")
-        # profile.profile_fields.add(self.field_1)
         # TODO: wrap in manager method (but Profile manager to get add like in M2M) with exceptions and return
         ProfileFieldExtension.objects.create(
             field=self.field_1,
             profile=profile,
         )
-        # profile.profile_fields.add(self.field_2)
         ProfileFieldExtension.objects.create(
             field=self.field_2,
             profile=profile,
         )
-        # profile.profile_fields.add(self.field_3)
         ProfileFieldExtension.objects.create(
             field=self.field_3,
             profile=profile,
@@ -176,17 +167,7 @@ class TestProfile(TestCase):
 
     def test_multi_add_fields(self):
         profile = Profile.objects.create(name="profile-1")
-        # profile.profile_fields.add(self.field_1)
-        # profile.profile_fields.add(self.field_1)
-        # TODO: wrap in manager method (but Profile manager to get add like in M2M) with exceptions and return
-        # TODO: this way basically self-explanatory. it says get or create ...
-        # ProfileFieldExtension.objects.get_or_create(
-        #     field=self.field_1, profile=profile,
-        # )
         ProfileFieldExtension.objects.add_from_field(self.field_1, profile)
-        # ProfileFieldExtension.objects.get_or_create(
-        #     field=self.field_1, profile=profile,
-        # )
         ProfileFieldExtension.objects.add_from_field(self.field_1, profile)
         # 1 above plus 1 system wide mandatory field
         self.assertEqual(2, len(profile.profilefieldextension_set.all()))

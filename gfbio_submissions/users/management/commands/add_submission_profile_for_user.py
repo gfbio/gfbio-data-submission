@@ -23,7 +23,6 @@ class Command(BaseCommand):
         for user in User.objects.all():
             if len(user.user_profile.all()) == 0:
                 cloned = default_profile.clone_for_user(user)
-                user.user_profile.add(cloned)
                 counter += 1
                 print('Added default profile for user: ', user.username, ' pk: ', user.pk)
         print("INFO: added default profile for users ", counter, " times")

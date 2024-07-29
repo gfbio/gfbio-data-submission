@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from pprint import pprint
 
 from django.db import models
 from model_utils.models import TimeStampedModel
@@ -42,11 +41,4 @@ class ProfileFieldExtension(TimeStampedModel):
         self.save()
 
     def __str__(self):
-        if self.profile.system_wide_profile:
-            return "system_wide_{}_{}".format(self.profile.name, self.field.field_name)
-        elif self.profile.user is not None:
-            return "{}_{}_{}".format(self.profile.user.username, self.profile.name, self.field.field_name)
-        else:
-            return "{}_{}".format(self.profile.name, self.field.field_name)
-
-
+        return "{}_{}".format(self.profile.name, self.field.field_name)

@@ -29,10 +29,15 @@ class FieldOptionInline(admin.TabularInline):
 class FieldAdmin(admin.ModelAdmin):
     inlines = [FieldOptionInline, ]
     ordering = ["position", "order"]
-    list_display = ["__str__", "position", "order"]
+    list_display = ["__str__", "position", "order", "mandatory", "system_wide_mandatory", "visible"]
+    list_filter = ["system_wide_mandatory", "mandatory", "visible"]
+
+
+class ProfileFieldExtensionAdmin(admin.ModelAdmin):
+    list_display = ["__str__", "profile", "field", "field"]
 
 
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(Field, FieldAdmin)
+admin.site.register(ProfileFieldExtension, ProfileFieldExtensionAdmin)
 admin.site.register(FieldType)
-admin.site.register(ProfileFieldExtension)
