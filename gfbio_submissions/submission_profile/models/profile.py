@@ -18,7 +18,7 @@ class Profile(TimeStampedModel):
         AUTH_USER_MODEL,
         null=True,
         blank=True,
-        related_name="user_profiles",
+        related_name="user_profile",
         on_delete=models.CASCADE,
     )
 

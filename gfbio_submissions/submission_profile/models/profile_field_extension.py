@@ -42,4 +42,11 @@ class ProfileFieldExtension(TimeStampedModel):
         self.save()
 
     def __str__(self):
-        return "{}_{}".format(self.profile.name, self.field.field_name)
+        if self.profile.system_wide_profile:
+            return "system_wide_{}_{}".format(self.profile.name, self.field.field_name)
+        elif self.profile.user is not None:
+            return "{}_{}_{}".format(self.profile.user.username, self.profile.name, self.field.field_name)
+        else:
+            return "{}_{}".format(self.profile.name, self.field.field_name)
+
+
