@@ -1,6 +1,9 @@
+import PropTypes from "prop-types";
 import { Link, useLoaderData } from "react-router-dom";
 
-const SubmissionList = () => {
+const SubmissionList = (props) => {
+  const baseUrl = props.baseUrl;
+  const formUrl = baseUrl + "form/";
   const { submissions } = useLoaderData();
 
   return (
@@ -10,7 +13,7 @@ const SubmissionList = () => {
           <div className="container my-auto">
             <div className="row no-gutters text-center">
               <div className="col-md-10 pl-3 align-middle">
-                <Link to="/form" className="nav-link list-start">
+                <Link to={formUrl} className="nav-link list-start">
                   <p>You have no submissions yet.</p>
                   <p>Start a new submission</p>
                 </Link>
@@ -44,7 +47,7 @@ const SubmissionList = () => {
                 <div className="row wrapping-row no-gutters">
                   <div className="col-md-10">
                     <Link
-                      to={"/form/" + submission.broker_submission_id}
+                      to={formUrl + submission.broker_submission_id}
                       className="row no-gutters"
                     >
                       <div className="col-md-8 col-sm-12 align-self-center">
@@ -63,7 +66,7 @@ const SubmissionList = () => {
 
                   <div className="col-md-2 col-sm-12 align-self-center actions">
                     <Link
-                      to={"/form/" + submission.broker_submission_id}
+                      to={formUrl + submission.broker_submission_id}
                       className="action h-100 d-inline-block pr-4 btn btn-link"
                     >
                       Edit
@@ -86,6 +89,10 @@ const SubmissionList = () => {
       )}
     </div>
   );
+};
+
+SubmissionList.propTypes = {
+  baseUrl: PropTypes.string,
 };
 
 export default SubmissionList;

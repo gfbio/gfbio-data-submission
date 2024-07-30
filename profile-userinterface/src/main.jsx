@@ -21,7 +21,11 @@ const router = createBrowserRouter([
     element: <App baseUrl={base} />,
     errorElement: <ErrorPage />,
     children: [
-      { index: true, element: <SubmissionList />, loader: submissionsLoader },
+      {
+        index: true,
+        element: <SubmissionList baseUrl={base} />,
+        loader: submissionsLoader,
+      },
       { path: base + "form/", element: <ProfileFormWrapper /> },
     ],
   },
