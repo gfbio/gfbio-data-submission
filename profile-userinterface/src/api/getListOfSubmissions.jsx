@@ -18,8 +18,8 @@ const getListOfSubmissions = async () => {
     return response.data;
   } catch (error) {
     console.error("Error retrieving list of submissions:", error);
-    throw error;
   }
+  return [];
 };
 
 export default getListOfSubmissions;
