@@ -32,6 +32,8 @@ const ProfileFormWrapper = () => {
         error2,
     } = useFetchProfileAndSubmission(profileName, brokerSubmissionId);
 
+    console.log("ProfileFormWrapper | data 1 (profileData )");
+    console.log(data1);
     // TODO: where display errors ? what actions if error ?
     return (
         <div>
