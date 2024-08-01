@@ -39,7 +39,7 @@ def atax_run_combination_task(
     spec_file = submission_upload_files.filter(file__icontains="specimen").first()
     measurements_file = submission_upload_files.filter(file__icontains="measurement").first()
     multimedia_file = submission_upload_files.filter(file__icontains="multimedia").first()
-    
+
     if not spec_file or not measurements_file or not multimedia_file:
         AbcdConversionResult.objects.create(
             submission = submission,
@@ -49,7 +49,7 @@ def atax_run_combination_task(
             logs = "",
         )
         return False
-    
+
     handlings = handlers.InOutHandler()
     handlings.dataProvider = DataFromSubmissionProvider(submission)
     handlings.resultFileHandler = ToFieldOutputter()
@@ -71,7 +71,7 @@ def atax_run_combination_task(
         )
     except Exception as exc:
         handlings.errorHandler.result.append(exc.with_traceback(None))
-        
+
         AbcdConversionResult.objects.create(
             submission = submission,
             atax_xml_valid = False,
@@ -79,8 +79,8 @@ def atax_run_combination_task(
             errors = handlings.errorHandler.result,
             logs = handlings.logHandler.result,
         )
-        
-        
+
+
     return atax_xml_valid
 
 
@@ -90,7 +90,7 @@ class ToFieldOutputter(handlers.Outputter):
 
     def handle(self, description, content):
         self.result.append({ "description": description, "content": content })
-        
+
 class DataFromSubmissionProvider(handlers.DataProvider):
     def __init__(self, submission):
         self.submission = submission

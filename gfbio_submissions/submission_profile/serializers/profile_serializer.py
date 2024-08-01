@@ -2,13 +2,14 @@
 from rest_framework import serializers
 
 from .field_serializer import FieldSerializer
+from .profile_field_extension_serializer import ProfileFieldExtensionSerializer
 from ..configuration.settings import SYSTEM_WIDE_PROFILE_NAME_PREFIX
 from ..models.profile import Profile
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    form_fields = FieldSerializer(many=True, read_only=True)
-
+    # form_fields = FieldSerializer(many=True, read_only=True)
+    form_fields = ProfileFieldExtensionSerializer(many=True, read_only=True)
     def validate_name(self, value):
         if value.lower().startswith(SYSTEM_WIDE_PROFILE_NAME_PREFIX):
             raise serializers.ValidationError(
