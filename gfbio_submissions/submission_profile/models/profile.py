@@ -17,38 +17,47 @@ class Profile(TimeStampedModel):
         AUTH_USER_MODEL,
         null=True,
         blank=True,
-        related_name="user_profiles",
+        related_name="user_profile",
         on_delete=models.CASCADE,
     )
-
-    fields = models.ManyToManyField(Field, blank=True)
-    inherit_fields_from = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL)
-
-    # TODO: workflow field, sub models like preferences, chain of tasks etc.
-    # TODO: owner ?
-    # TODO: language ? or in preferences
-    # TODO: general structure like, grid, menues, footer, general texts or descriptions
-    # TODO: global actions, buttons or similar
-    # TODO: global design ?
-
-    # TODO Brainstorming DASS-1942:
-    #   - at start of feature, nobody can create or mod profile, except via admin
 
     # TODO: validator for unique-in-profile field_name (or mapping_to)
     #   https://docs.djangoproject.com/en/4.2/ref/validators/
 
     def save(self, *args, **kwargs):
         super(Profile, self).save(*args, **kwargs)
-        for s in Field.objects.filter(system_wide_mandatory=True):
-            self.fields.add(s)
+        system_wide_mandatories = Field.objects.filter(system_wide_mandatory=True)
+        from .profile_field_extension import ProfileFieldExtension
+        for s in system_wide_mandatories:
+            ProfileFieldExtension.objects.add_from_field(field=s, profile=self)
+
+    def clone_for_user(self, user, name=None):
+        pk = self.pk
+        self.pk = None
+        self.user = user
+        if name:
+            self.name = name
+        else:
+            self.name = "{}_profile".format(user.username)
+        self.system_wide_profile = False
+        self.save()
+        # TODO: move to manager with exception checks
+        original_profile = Profile.objects.get(pk=pk)
+        # exclude system_wide_mandatory fields as they are added in self.save()
+        for profile_field in original_profile.profilefieldextension_set.exclude(system_wide_mandatory=True):
+            profile_field.clone(profile=self)
+        return self
 
     def __str__(self):
         return self.name
 
     def all_fields(self):
-        if self.inherit_fields_from is None:
-            return self.fields.all()
-        return self.fields.all().union(self.inherit_fields_from.fields.all())
+        # TODO: removed inheritance in DASS-1941 temporarily. discuss if needed at all
+        # if self.inherit_fields_from is None:
+        #     return self.fields.all()
+        # return self.fields.all().union(self.inherit_fields_from.profile_fields.all())
+        # return self.fields.all()
+        return self.profilefieldextension_set.all()
 
     def form_fields(self):
         return self.all_fields().order_by("order")

@@ -11,8 +11,12 @@
 1. set valid settings for access to server & api
 
         (...)  /profile-userinterface/settings.jsx
+                SERVER_ROOT = 'http://0.0.0.0:8000/'
 
-2. start local django devlopment server (in submissions root directory)
+        (...)  /profile-userinterface/src/main.jsx
+               const base = LOCAL_ROUTER_BASE_URL; 
+
+2. start local django development server (in submissions root directory)
 
         docker compose -f local.yml up
 3. start local vite server for access to js-app-root (in submissions-root/profile-userinterface/)

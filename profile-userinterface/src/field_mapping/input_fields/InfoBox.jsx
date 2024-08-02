@@ -103,7 +103,7 @@ const InfoBox = (props) => {
     return (
         <div className="info-box">
             <header className="">
-                <h2 className="ommit-optional">{title}</h2>
+                <h2 className="omit-optional">{title}</h2>
                 <p className=""/>
             </header>
             <div className="">

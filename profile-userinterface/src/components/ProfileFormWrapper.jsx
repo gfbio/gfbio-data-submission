@@ -35,7 +35,6 @@ const ProfileFormWrapper = () => {
     // TODO: where display errors ? what actions if error ?
     return (
         <div>
-            <h1>ProfileForm</h1>
             <ProfileWithErrorHandling profileData={data1} submissionData={data2} isLoading={isLoading}
                                       profileError={error1} submissionError={error2}/>
         </div>
