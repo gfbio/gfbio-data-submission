@@ -51,14 +51,15 @@ def atax_run_combination_task(
         )
         return False
 
+    error_handler = ToFieldOutputter()
     handlings = handlers.InOutHandler()
     handlings.dataProvider = DataFromSubmissionProvider(submission)
     handlings.resultFileHandler = ToFieldOutputter()
-    handlings.errorHandler = ToFieldOutputter()
-    handlings.warning_Handler = ToFieldOutputter()
+    handlings.errorHandler = error_handler
+    handlings.warning_handler = ToFieldOutputter()
     handlings.logHandler = ToFieldOutputter()
     handlings.singleFileHandler = ToFieldOutputter()
-    handlings.file_handler()
+    handlings.multimedia_validator = SubmissionMultimediaFileValidator(submission.id, handlings)
 
     atax_xml_valid = False
     try:
@@ -69,18 +70,18 @@ def atax_run_combination_task(
             submission = submission,
             atax_xml_valid = atax_xml_valid,
             xml = handlings.resultFileHandler.result[0]["content"],
-            errors = handlings.errorHandler.result,
+            errors = error_handler.result,
             warnings = handlings.warning_handler.result,
             logs = handlings.logHandler.result,
         )
     except Exception as exc:
-        handlings.errorHandler.result.append(exc.with_traceback(None))
+        error_handler.result.append(exc.with_traceback(None))
 
         AbcdConversionResult.objects.create(
             submission = submission,
             atax_xml_valid = False,
             xml = handlings.resultFileHandler.result[0]["content"] if len(handlings.resultFileHandler.result) > 0 else "",
-            errors = handlings.errorHandler.result,
+            errors = error_handler.result,
             warnings = handlings.warning_handler.result,
             logs = handlings.logHandler.result,
         )
@@ -111,10 +112,12 @@ class DataFromSubmissionProvider(handlers.DataProvider):
         return self.submission.created.strftime("%Y-%m-%dT%H:%M:%S")
 
 
-class FileHandler(file_validation.MultimediaFileValidatorInterface):
-    def __init__(self, submission_id):
-        self.submission_upload_list = SubmissionUpload.objects.filter(submission_id=submission_id).values_list("file", flat=True)
-        print(self.submission_upload_list)
+class SubmissionMultimediaFileValidator(file_validation.MultimediaFileValidatorInterface):
+    def __init__(self, submission_id, io_handler):
+        self.io_handler = io_handler
+        submission_upload_list = list(SubmissionUpload.objects.filter(submission_id=submission_id).values_list("file", flat=True).all())
+        self.submission_upload_list = [entry.split("/")[1] for entry in submission_upload_list]
+        print("Blubb:", self.submission_upload_list)
 
     def validate(self, file_name, format, row):
         if not file_name:
@@ -129,6 +132,6 @@ class FileHandler(file_validation.MultimediaFileValidatorInterface):
                 msg = f"File extension '{file_extension}' of {file_name} may not match the format description '{format}'."
                 self.io_handler.warning_handler.handle(msg, { "file": "multimedia", "row": row, "message": "Unrecognized file extension"})
 
-        if not file_name in self.submission_upload_list:
+        if not file_name.replace(" ", "_") in self.submission_upload_list:
             msg = f"File {file_name} in row {row} is missing it's corresponding file in the upload."
             self.io_handler.errorHandler.handle(msg, { "file": "multimedia", "row": row, "message": "File not found"})
