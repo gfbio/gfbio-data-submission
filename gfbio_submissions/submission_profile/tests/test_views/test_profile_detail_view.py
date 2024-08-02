@@ -70,7 +70,7 @@ class TestProfileDetailView(TestCase):
         response = self.client.get("/profile/profile/generic/")
         content = json.loads(response.content)
         # print(response.status_code)
-        # pprint(content)
+        pprint(content)
 
         keys = content.keys()
         self.assertIn("name", keys)
