@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-import math as m
 
 from config.celery_app import app
 from ...configuration.settings import SUBMISSION_MAX_RETRIES, SUBMISSION_RETRY_DELAY
@@ -8,7 +7,6 @@ from ...exceptions.transfer_exceptions import TransferServerError, TransferClien
 from ...models.submission import Submission
 from ...models.abcd_conversion_result import AbcdConversionResult
 from ...models.submission_upload import SubmissionUpload
-from ...models.task_progress_report import TaskProgressReport
 from ...tasks.submission_task import SubmissionTask
 
 from abcd_converter_gfbio_org import abcd_conversion, handlers, file_validation
@@ -117,7 +115,8 @@ class SubmissionMultimediaFileValidator(file_validation.MultimediaFileValidatorI
         self.io_handler = io_handler
         submission_upload_list = list(SubmissionUpload.objects.filter(submission_id=submission_id).values_list("file", flat=True).all())
         self.submission_upload_list = [entry.split("/")[1] for entry in submission_upload_list]
-        print("Blubb:", self.submission_upload_list)
+        self.file_extensions = file_validation.FILE_EXTENSIONS
+        self.file_extensions["image"].append("tif")
 
     def validate(self, file_name, format, row):
         if not file_name:
@@ -128,7 +127,7 @@ class SubmissionMultimediaFileValidator(file_validation.MultimediaFileValidatorI
             self.io_handler.warning_handler.handle(f"File in row {row} has no format.", { "file": "multimedia", "row": row, "message": "File has no format"})
         else:
             file_extension = file_name.rsplit(".")[1]
-            if (format.lower() not in file_validation.FILE_EXTENSIONS and format.lower() != file_extension.lower()) or (format.lower() in file_validation.FILE_EXTENSIONS and file_extension.lower() not in file_validation.FILE_EXTENSIONS[format.lower()]):
+            if (format.lower() not in self.file_extensions and format.lower() != file_extension.lower()) or (format.lower() in self.file_extensions and file_extension.lower() not in self.file_extensions[format.lower()]):
                 msg = f"File extension '{file_extension}' of {file_name} may not match the format description '{format}'."
                 self.io_handler.warning_handler.handle(msg, { "file": "multimedia", "row": row, "message": "Unrecognized file extension"})
 

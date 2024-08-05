@@ -33,17 +33,6 @@ from ...serializers.submission_serializer import SubmissionSerializer
 
 class TestCSVParsing(TestCase):
     @classmethod
-    def create_fake_submission_upload(cls, submission, user, file_sub_path):
-        with open(os.path.join(_get_test_data_dir_path(), "csv_files/molecular_metadata.csv"), "rb") as data_file:
-            return SubmissionUpload.objects.create(
-                submission=submission,
-                user=user,
-                meta_data=True,
-                file=SimpleUploadedFile(file_sub_path, data_file.read()),
-            )
-
-
-    @classmethod
     def create_csv_submission_upload(cls, submission, user, file_sub_path="csv_files/molecular_metadata.csv"):
         with open(os.path.join(_get_test_data_dir_path(), file_sub_path), "rb") as data_file:
             return SubmissionUpload.objects.create(
