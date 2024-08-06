@@ -24,6 +24,11 @@ class AbcdConversionResult(TimeStampedModel):
         blank=True,
         help_text="if errors occured during conversion they show here.",
     )
+    warnings = models.TextField(
+        default="",
+        blank=True,
+        help_text="if warnings occured during conversion they show here.",
+    )
     logs = models.TextField(
         default="",
         blank=True,
