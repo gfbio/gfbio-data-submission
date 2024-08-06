@@ -9,6 +9,9 @@ class ProfileFrontendView(TemplateView):
         context = super(ProfileFrontendView, self).get_context_data(*args, **kwargs)
 
         # print('KWARGS ', self.kwargs)
+        # TODO: anstatt namen des Profiesl aus der url/ req. zu holen
+        #   wird das Profil des users geladen (das gerade acitve ist).
+        #   Falls keines active ist oder der Nutzer keines hat  wird das "default" profile geladen.
 
         user = self.request.user
         # user_name = user.get_username()

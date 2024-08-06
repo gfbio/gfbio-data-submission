@@ -18,6 +18,11 @@ class TestProfileManager(TestCase):
             email="horst@horst.de",
             password="password",
         )
+        cls.user_2 = User.objects.create_user(
+            username="kevin",
+            email="kevin@kevin.de",
+            password="password",
+        )
         cls.field_type_1 = FieldType.objects.create(type="input-text")
         field_type_2 = FieldType.objects.create(type="select")
 
@@ -57,11 +62,28 @@ class TestProfileManager(TestCase):
         self.assertEqual(2, len(Profile.objects.filter(active_user_profile=False)))
 
     def test_activate_user_profile(self):
-        self.assertEqual(1, len(Profile.objects.filter(active_user_profile=True)))
-        active_pk = Profile.objects.filter(active_user_profile=True).first().pk
-        first_inactive_pk = Profile.objects.filter(active_user_profile=False).first().pk
+        self.assertEqual(1, len(Profile.objects.filter(user=self.user).filter(active_user_profile=True)))
+        active_pk = Profile.objects.filter(user=self.user).filter(active_user_profile=True).first().pk
+        first_inactive_pk = Profile.objects.filter(user=self.user).filter(active_user_profile=False).first().pk
         self.assertNotEqual(active_pk, first_inactive_pk)
         Profile.objects.activate_user_profile(first_inactive_pk)
         self.assertTrue(Profile.objects.get(pk=first_inactive_pk).active_user_profile)
         self.assertFalse(Profile.objects.get(pk=active_pk).active_user_profile)
         self.assertEqual(1, len(Profile.objects.filter(active_user_profile=True)))
+
+    def test_get_active_profile_double_entry(self):
+        Profile.objects.create(name="profile-2-1", user=self.user_2, active_user_profile=True)
+        Profile.objects.create(name="profile-2-2", user=self.user_2, active_user_profile=True)
+        self.assertEqual(2, len(Profile.objects.filter(user=self.user_2).filter(active_user_profile=True)))
+        active = Profile.objects.get_active_user_profile(user=self.user_2)
+        self.assertIsNone(active)
+
+    def test_get_active_profile_no_entry(self):
+        self.assertEqual(0, len(Profile.objects.filter(user=self.user_2).filter(active_user_profile=True)))
+        active = Profile.objects.get_active_user_profile(user=self.user_2)
+        self.assertIsNone(active)
+
+    def test_get_active_user_profile(self):
+        self.assertEqual(1, len(Profile.objects.filter(user=self.user).filter(active_user_profile=True)))
+        active = Profile.objects.get_active_user_profile(user=self.user)
+        self.assertIsInstance(active, Profile)
