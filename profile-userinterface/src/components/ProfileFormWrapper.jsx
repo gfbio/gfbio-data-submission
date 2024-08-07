@@ -11,7 +11,6 @@ const ProfileWithErrorHandling = withErrorHandling(ProfileWithLoading);
 
 const ProfileFormWrapper = () => {
   const brokerSubmissionId = useParams().brokerageId;
-  console.log("brokerSubmissionId", brokerSubmissionId);
   // TODO: add check and warning if necessary parmaters like token are not available
   // let profileName = 'generic';
   // if (window.props !== undefined) {

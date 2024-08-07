@@ -4,6 +4,15 @@ import React from "react";
 
 const TextField = (props) => {
   const { title, description, mandatory, form, field_id, placeholder } = props;
+  const submission = JSON.parse(localStorage.getItem("submission"));
+  let value = "";
+  if (Object.keys(submission).length > 0) {
+    const requirements = Object.keys(submission.data.requirements);
+    const key = field_id;
+    if (requirements.includes(key)) {
+      value = submission.data.requirements[key];
+    }
+  }
 
   return (
     <TextInput
@@ -13,6 +22,7 @@ const TextField = (props) => {
       key={form.key(field_id)}
       required={mandatory}
       {...form.getInputProps(field_id)}
+      value={value}
     />
   );
 };
