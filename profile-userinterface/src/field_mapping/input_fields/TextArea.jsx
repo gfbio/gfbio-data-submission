@@ -1,18 +1,12 @@
 import { Textarea } from "@mantine/core";
 import PropTypes from "prop-types";
 import React from "react";
+import { mapValueToField } from "../../utils/MapValueToField";
 
 const TextArea = (props) => {
   const { title, description, form, field_id, placeholder, mandatory } = props;
-  const submission = JSON.parse(localStorage.getItem("submission"));
-  let value = "";
-  if (Object.keys(submission).length > 0) {
-    const requirements = Object.keys(submission.data.requirements);
-    const key = field_id;
-    if (requirements.includes(key)) {
-      value = submission.data.requirements[key];
-    }
-  }
+
+  let value = mapValueToField(field_id);
 
   return (
     <Textarea
@@ -40,6 +34,7 @@ TextArea.propTypes = {
   form: PropTypes.object.isRequired,
   field_id: PropTypes.string.isRequired,
   placeholder: PropTypes.string,
+  mandatory: PropTypes.bool.isRequired,
 };
 
 export default TextArea;

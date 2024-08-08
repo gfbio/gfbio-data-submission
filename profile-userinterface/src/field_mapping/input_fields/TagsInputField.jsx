@@ -1,9 +1,15 @@
 import { TagsInput } from "@mantine/core";
 import PropTypes from "prop-types";
-import React from "react";
+import { mapValueToField } from "../../utils/MapValueToField";
 
 const TagsInputField = (props) => {
   const { title, description, mandatory, form, field_id, placeholder } = props;
+
+  let value = [];
+  const submissionValue = mapValueToField(field_id);
+  if (submissionValue !== "") {
+    value = submissionValue;
+  }
 
   return (
     <TagsInput
@@ -13,6 +19,7 @@ const TagsInputField = (props) => {
       key={form.key(field_id)}
       required={mandatory}
       {...form.getInputProps(field_id)}
+      value={value}
     />
   );
 };
