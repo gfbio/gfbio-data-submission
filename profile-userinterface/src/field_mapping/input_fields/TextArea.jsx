@@ -7,6 +7,7 @@ const TextArea = (props) => {
   const { title, description, form, field_id, placeholder, mandatory } = props;
 
   let value = mapValueToField(field_id);
+  form.setFieldValue(field_id, value);
 
   return (
     <Textarea

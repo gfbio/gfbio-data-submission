@@ -7,6 +7,7 @@ const TextField = (props) => {
   const { title, description, mandatory, form, field_id, placeholder } = props;
 
   const value = mapValueToField(field_id);
+  form.setFieldValue(field_id, value);
 
   return (
     <TextInput

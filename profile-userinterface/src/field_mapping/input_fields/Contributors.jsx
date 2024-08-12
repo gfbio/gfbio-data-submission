@@ -55,6 +55,7 @@ const Contributors = (props) => {
         institution: "",
         role: [],
       });
+      form.setFieldValue(field_id, []);
       if (opened) {
         toggle();
       }

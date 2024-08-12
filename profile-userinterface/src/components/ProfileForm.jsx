@@ -1,7 +1,7 @@
 import { Button, Group } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import PropTypes from "prop-types";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import createUploadFileChannel from "../api/createUploadFileChannel.jsx";
 import postSubmission from "../api/postSubmission.jsx";
 import FormField from "../field_mapping/FormField.jsx";
@@ -19,6 +19,8 @@ const ProfileForm = (props) => {
   const [files, setFiles] = useState([]);
   const [uploadLimitExceeded, setUploadLimitExceeded] = useState(false);
   const [metadataIndex, setMetadataIndex] = useState(-1);
+  const submission = JSON.parse(localStorage.getItem("submission"));
+
   const form = useForm({
     mode: "uncontrolled",
     name: "profile-form",
@@ -45,6 +47,15 @@ const ProfileForm = (props) => {
       }
     },
   });
+
+  useEffect(() => {
+    if (submission?.broker_submission_id) {
+      form.setFieldValue(
+        "broker_submission_id",
+        submission.broker_submission_id
+      );
+    }
+  }, [submission]);
 
   const handleFilesChange = (uploadedFiles, isValid, metaIndex) => {
     form.setFieldValue("files", uploadedFiles);
@@ -110,6 +121,22 @@ const ProfileForm = (props) => {
       });
   };
 
+  const createSubmitButton = () => {
+    if (submission?.broker_submission_id) {
+      return (
+        <Button className="submission-button" type="submit">
+          <i className="fa fa-forward mr-3"></i> Update Submission
+        </Button>
+      );
+    } else {
+      return (
+        <Button className="submission-button" type="submit">
+          <i className="fa fa-play mr-3"></i> Create Submission
+        </Button>
+      );
+    }
+  };
+
   return (
     <form
       onSubmit={form.onSubmit(handleSubmit)}
@@ -144,9 +171,7 @@ const ProfileForm = (props) => {
       </div>
       <div className="row">
         <Group mt="md" className="mt-5 col-md-9">
-          <Button className="submission-button" type="submit">
-            <i className="fa fa-play mr-3"></i> Create Submission
-          </Button>
+          {createSubmitButton()}
         </Group>
       </div>
     </form>
@@ -155,6 +180,7 @@ const ProfileForm = (props) => {
 
 ProfileForm.propTypes = {
   profileData: PropTypes.object.isRequired,
+  submissionData: PropTypes.object.isRequired,
 };
 
 export default ProfileForm;
