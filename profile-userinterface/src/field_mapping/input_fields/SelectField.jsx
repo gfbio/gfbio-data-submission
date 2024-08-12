@@ -26,7 +26,7 @@ const SelectField = (props) => {
     }
     setValue(initialOption);
     form.setFieldValue(field_id, initialOption);
-  }, [location, field_id, options, form]);
+  }, [location]);
 
   //TODO: this could be used for any field that deals with options
   const handleChange = (option) => {
