@@ -1,7 +1,6 @@
 export function mapValueToField(field_id) {
   let value = "";
   const submission = JSON.parse(localStorage.getItem("submission"));
-  console.log("submission", submission);
   if (Object.keys(submission).length === 0) {
     return value;
   }

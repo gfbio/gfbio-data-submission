@@ -1,10 +1,13 @@
 import { Checkbox } from "@mantine/core";
 import PropTypes from "prop-types";
 import { React, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { mapValueToField } from "../../utils/MapValueToField";
 
 const MultiSelectCheckboxes = (props) => {
   const { title, description, form, options, field_id, default_value } = props;
+  const location = useLocation();
+
   useEffect(() => {
     let initial_value = "";
     const value = mapValueToField(field_id);
@@ -14,7 +17,8 @@ const MultiSelectCheckboxes = (props) => {
       initial_value = default_value ? default_value.split(",") : [];
     }
     form.setFieldValue(field_id, initial_value);
-  }, []);
+  }, [location]);
+
   const mapped_options = options.map((opt) => opt.option);
 
   return (

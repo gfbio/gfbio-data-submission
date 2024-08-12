@@ -15,16 +15,17 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import PropTypes from "prop-types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import RolesInfo from "../../utils/ContributorsRoles";
 import { mapValueToField } from "../../utils/MapValueToField";
 
 const Contributors = (props) => {
   const { title, description, form, field_id } = props;
+  const location = useLocation();
+
   const prefillContributors = mapValueToField(field_id);
-  const [contributors, setContributors] = useState(
-    prefillContributors === "" ? [] : prefillContributors
-  );
+  const [contributors, setContributors] = useState([]);
   const [newContributor, setNewContributor] = useState({
     firstName: "",
     lastName: "",
@@ -35,8 +36,30 @@ const Contributors = (props) => {
   const [editingContributor, setEditingContributor] = useState(null);
   const [emailValid, setEmailValid] = useState(false);
 
-  const [opened, { toggle }] = useDisclosure(prefillContributors !== "");
+  const [opened, { toggle }] = useDisclosure(false);
   const [rolesInfoOpened, { open, close }] = useDisclosure(false);
+
+  useEffect(() => {
+    if (prefillContributors !== "") {
+      setContributors(prefillContributors);
+      form.setFieldValue(field_id, prefillContributors);
+      if (!opened) {
+        toggle();
+      }
+    } else {
+      setContributors([]);
+      setNewContributor({
+        firstName: "",
+        lastName: "",
+        emailAddress: "",
+        institution: "",
+        role: [],
+      });
+      if (opened) {
+        toggle();
+      }
+    }
+  }, [location]);
 
   const mainRoles = [
     "Author/Creator",

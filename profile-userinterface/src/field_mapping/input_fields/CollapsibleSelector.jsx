@@ -2,36 +2,46 @@ import { Collapse, Modal, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import PropTypes from "prop-types";
 import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { mapValueToField } from "../../utils/MapValueToField";
 
 const CollapsibleSelector = (props) => {
   const {
-    title,
-    description,
-    form,
+    field_id,
     options,
     default_value,
-    field_id,
+    form,
+    title,
     mandatory,
+    description,
   } = props;
+  const location = useLocation();
 
-  let default_opt = "";
-  const submissionValue = mapValueToField(field_id);
-  if (submissionValue !== "") {
-    default_opt = submissionValue
-      ? options.map((o) => o.option).filter((o) => o === submissionValue)
-      : null;
-  } else {
-    default_opt = default_value
-      ? options.map((o) => o.option).filter((o) => o === default_value)
-      : null;
-  }
+  const getDefaultOpt = () => {
+    const submissionValue = mapValueToField(field_id);
+    if (submissionValue !== "") {
+      return submissionValue
+        ? options.map((o) => o.option).filter((o) => o === submissionValue)
+        : null;
+    } else {
+      return default_value
+        ? options.map((o) => o.option).filter((o) => o === default_value)
+        : null;
+    }
+  };
+
   const [value, setValue] = useState(
-    default_opt ? default_opt[0] : options[0].option
+    getDefaultOpt() ? getDefaultOpt()[0] : options[0].option
   );
+
   useEffect(() => {
     form.setFieldValue(field_id, value);
-  }, []);
+  }, [value, form, field_id]);
+
+  useEffect(() => {
+    // Reset form state when URL changes
+    setValue(getDefaultOpt() ? getDefaultOpt()[0] : options[0].option);
+  }, [location]);
 
   const [opened, { toggle }] = useDisclosure(false);
 
@@ -41,7 +51,7 @@ const CollapsibleSelector = (props) => {
         <h2>
           {title}{" "}
           {mandatory && (
-            <span class="mantine-InputWrapper-required mantine-TextInput-required">
+            <span className="mantine-InputWrapper-required mantine-TextInput-required">
               *
             </span>
           )}
@@ -51,7 +61,7 @@ const CollapsibleSelector = (props) => {
       <div className="container">
         <div className="multi-select-row row btn-style" onClick={toggle}>
           <p className="col my-2 row-title">
-            <i class="fa fa-balance-scale mr-2"></i>
+            <i className="fa fa-balance-scale mr-2"></i>
             {value}
           </p>
           <p className="clickable-text col-auto text-right my-2">change</p>
