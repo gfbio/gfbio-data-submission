@@ -1,16 +1,19 @@
 import { Textarea } from "@mantine/core";
 import PropTypes from "prop-types";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { mapValueToField } from "../../utils/MapValueToField";
 
 const TextArea = (props) => {
   const { title, description, form, field_id, placeholder, mandatory } = props;
-
-  let value = mapValueToField(field_id);
+  const [value, setValue] = useState("");
+  const location = useLocation();
 
   useEffect(() => {
-    form.setFieldValue(field_id, value);
-  }, []);
+    const submissionValue = mapValueToField(field_id);
+    setValue(submissionValue);
+    form.setFieldValue(field_id, submissionValue);
+  }, [location]);
 
   return (
     <Textarea
