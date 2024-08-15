@@ -15,6 +15,9 @@ const FileIndicator = ({
     console.log("Local files:", fileUploads); // Log local files
     console.log("Server files:", fileUploadsFromServer); // Log server files
     const createUploadedListElements = () => {
+        if (!Array.isArray(fileUploadsFromServer)) {
+            return []; // Return an empty array if filesFromServer is not an array
+        }
         return fileUploadsFromServer.map((uploaded, index) => {
             const metaDataCheckButton = (
 
