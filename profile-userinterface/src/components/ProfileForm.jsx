@@ -1,7 +1,7 @@
 import { Button, Group } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import PropTypes from "prop-types";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import createUploadFileChannel from "../api/createUploadFileChannel.jsx";
 import postSubmission from "../api/postSubmission.jsx";
 import putSubmission from "../api/putSubmission.jsx";
@@ -48,12 +48,6 @@ const ProfileForm = (props) => {
             }
         },
     });
-
-    useEffect(() => {
-        if (submission?.broker_submission_id) {
-            form.setFieldValue("broker_submission_id", submission.broker_submission_id);
-        }
-    }, [submission]);
 
     const handleFilesChange = (uploadedFiles, isValid, metaIndex) => {
         form.setFieldValue("files", uploadedFiles);

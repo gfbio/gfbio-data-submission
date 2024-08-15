@@ -23,9 +23,9 @@ const SelectField = (props) => {
     if (submissionValue !== "") {
       initialOption = options.find((opt) => opt.option === submissionValue);
       initialOption = initialOption.option;
+      form.setFieldValue(field_id, initialOption);
     }
     setValue(initialOption);
-    form.setFieldValue(field_id, initialOption);
   }, [location]);
 
   //TODO: this could be used for any field that deals with options
