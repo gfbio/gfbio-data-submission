@@ -49,17 +49,17 @@ class TestProfileDetailView(TestCase):
             ProfileFieldExtension.objects.add_from_field(f, profile)
 
     def test_frontend_view_without_login(self):
-        response = self.client.get("/profile/profile/default/ui")
+        response = self.client.get("/profile/ui")
         self.assertEqual(301, response.status_code)
 
     def test_frontend_view_with_login(self):
         c = Client()
         c.login(username="kevin", password="password")
-        response = c.get("/profile/profile/default/ui/", {"username": "joe", "password": "password"})
+        response = c.get("/profile/ui/", {"username": "joe", "password": "password"})
         self.assertEqual(302, response.status_code)
 
     def test_frontend_view_with_staff_login(self):
         c = Client()
         c.login(username="joe", password="password")
-        response = c.get("/profile/profile/default/ui/", {"username": "joe", "password": "password"})
+        response = c.get("/profile/ui/", {"username": "joe", "password": "password"})
         self.assertEqual(200, response.status_code)
