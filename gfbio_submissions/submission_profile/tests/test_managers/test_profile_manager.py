@@ -87,3 +87,8 @@ class TestProfileManager(TestCase):
         self.assertEqual(1, len(Profile.objects.filter(user=self.user).filter(active_user_profile=True)))
         active = Profile.objects.get_active_user_profile(user=self.user)
         self.assertIsInstance(active, Profile)
+
+    def test_get_active_user_profile_name(self):
+        self.assertEqual(1, len(Profile.objects.filter(user=self.user).filter(active_user_profile=True)))
+        active = Profile.objects.get_active_user_profile_name(user=self.user)
+        self.assertEqual("profile-2", active)

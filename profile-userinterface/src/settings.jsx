@@ -6,12 +6,14 @@ export const SERVER_ROOT = '';
 //  and "npm run dev"
 export const LOCAL_ROUTER_BASE_URL = '/'
 
-export const PROFILE_URL_PREFIX = '/profile/profile/';
+export const PROFILE_URL_PREFIX = '/profile/';
 
+export const ROUTER_BASE_URL = PROFILE_URL_PREFIX + 'ui/'
 
 export const DEFAULT_PROFILE_NAME = 'default';
 
-export const PROFILE_URL = SERVER_ROOT + PROFILE_URL_PREFIX;
+//TODO: fix ugly url later
+export const PROFILE_URL = SERVER_ROOT + PROFILE_URL_PREFIX + 'profile/';
 
 export const SUBMISSIONS_API = SERVER_ROOT + '/api/submissions/';
 

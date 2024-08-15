@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from django.db import models
 
+from ..configuration.settings import DEFAULT_PROFILE_NAME
+
 
 class ProfileManager(models.Manager):
 
@@ -22,14 +24,13 @@ class ProfileManager(models.Manager):
             pass
         return active
 
-        # active = self.filter(user).filter(active_user_profile=True)
-        # if len(active) > 1:
-        #     # more than one active profile
-        #     pass
-        # elif len(active) == 0:
-        #     # no active profile
-        #     pass
-        # else:
-        #     pass
-        # return active
-
+    def get_active_user_profile_name(self, user):
+        active = DEFAULT_PROFILE_NAME
+        try:
+            p = self.filter(user=user).get(active_user_profile=True)
+            active = p.name
+        except self.model.MultipleObjectsReturned:
+            pass
+        except self.model.DoesNotExist:
+            pass
+        return active

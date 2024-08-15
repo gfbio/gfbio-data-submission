@@ -14,7 +14,7 @@ urlpatterns = [
         name="profile_detail",
     ),
     re_path(
-        route=r"^profile/(?P<name>\w+)/ui/",
+        route=r"^ui/",  # TODO: needed to shorten url to this, otherwise conflict with url above.
         view=staff_member_required(ProfileFrontendView.as_view()),
         name="profile_ui",
     ),
