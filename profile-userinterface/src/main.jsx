@@ -1,12 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import {createBrowserRouter, RouterProvider} from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import App from "./App.jsx";
 import ProfileFormWrapper from "./components/ProfileFormWrapper.jsx";
 import SubmissionList from "./components/SubmissionList.jsx";
 import ErrorPage from "./components/errorPage.jsx";
-import {loader as submissionsLoader} from "./utils/SubmissionsLoader.jsx";
-import {DEFAULT_PROFILE_NAME, PROFILE_URL_PREFIX} from "./settings.jsx";
+import { DEFAULT_PROFILE_NAME, PROFILE_URL_PREFIX } from "./settings.jsx";
+import { loader as submissionsLoader } from "./utils/SubmissionsLoader.jsx";
 // import './index.css'
 
 let profileName = DEFAULT_PROFILE_NAME;
@@ -32,7 +32,11 @@ const router = createBrowserRouter([
                 element: <SubmissionList baseUrl={base}/>,
                 loader: submissionsLoader,
             },
-            {path: base + "form/", element: <ProfileFormWrapper/>},
+            { path: base + "form/", element: <ProfileFormWrapper /> },
+            {
+                path: base + "form/:brokerageId/",
+                element: <ProfileFormWrapper />,
+            },
         ],
     },
 ]);
