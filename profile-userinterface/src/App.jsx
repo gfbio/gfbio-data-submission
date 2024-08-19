@@ -4,6 +4,7 @@ import "@mantine/dates/styles.css";
 import PropTypes from "prop-types";
 import { Link, Outlet } from "react-router-dom";
 import "./App.css";
+import ScrollToTop from "./components/ScrollToTop.jsx";
 
 function App(props) {
   const base = props.baseUrl;
@@ -20,6 +21,7 @@ function App(props) {
       </nav>
       <Divider my="xs" />
       <Outlet />
+      <ScrollToTop />
     </MantineProvider>
   );
 }
