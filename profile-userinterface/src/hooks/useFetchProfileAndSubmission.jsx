@@ -31,7 +31,7 @@ const useFetchProfileAndSubmission = (profileName, brokerSubmissionId) => {
         const fetchData = async () => {
             setLoading(true);
             await axios
-                .get(PROFILE_URL + profileName)
+                .get(PROFILE_URL + profileName, config)
                 .then((response) => {
                         setData1(response.data);
                         setProceed(true);

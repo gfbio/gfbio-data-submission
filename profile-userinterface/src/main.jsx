@@ -18,7 +18,7 @@ localStorage.setItem("profileName", profileName);
 
 // TODO: switch to LOCAL_ROUTER_BASE_URL for local development with hot reloading via, npm run dev
 //  and use PROFILE_URL_PREFIX etc. for django served app in dev & production
-const base = PROFILE_URL_PREFIX + profileName + "/ui/";
+const base = ROUTER_BASE_URL;
 // const base = LOCAL_ROUTER_BASE_URL;
 
 const router = createBrowserRouter([
