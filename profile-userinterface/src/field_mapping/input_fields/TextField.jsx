@@ -11,8 +11,10 @@ const TextField = (props) => {
 
   useEffect(() => {
     const submissionValue = mapValueToField(field_id);
-    setValue(submissionValue);
-    form.setFieldValue(field_id, submissionValue);
+    if (submissionValue !== "") {
+      setValue(submissionValue);
+      form.setFieldValue(field_id, submissionValue);
+    }
   }, [location]);
 
   return (

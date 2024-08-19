@@ -1,9 +1,10 @@
 import { Button, Group } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import PropTypes from "prop-types";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import createUploadFileChannel from "../api/createUploadFileChannel.jsx";
 import postSubmission from "../api/postSubmission.jsx";
+import putSubmission from "../api/putSubmission.jsx";
 import FormField from "../field_mapping/FormField.jsx";
 import validateDataUrlField from "../utils/DataUrlValidation.jsx";
 
@@ -48,12 +49,6 @@ const ProfileForm = (props) => {
         },
     });
 
-    useEffect(() => {
-        if (submission?.broker_submission_id) {
-            form.setFieldValue("broker_submission_id", submission.broker_submission_id);
-        }
-    }, [submission]);
-
     const handleFilesChange = (uploadedFiles, isValid, metaIndex) => {
         form.setFieldValue("files", uploadedFiles);
         setFiles(uploadedFiles);
@@ -91,10 +86,15 @@ const ProfileForm = (props) => {
         }
         setProcessing(true);
         // TODO: fixed token value for local testing only
-
-        postSubmission(profileData.target, localStorage.getItem("embargo"), values)
+        if (submission?.broker_submission_id) {
+            putSubmission(
+                submission.broker_submission_id,
+                profileData.target,
+                localStorage.getItem("embargo"),
+                values
+            )
             .then((result) => {
-                if (result && result.broker_submission_id) {
+                if (result?.broker_submission_id) {
                     const brokerSubmissionId = result.broker_submission_id;
                     const fileUploadPromises = files.map((file, index) =>
                         handleFileUpload(file, brokerSubmissionId, index === metadataIndex),
@@ -116,6 +116,32 @@ const ProfileForm = (props) => {
             .finally(() => {
                 setProcessing(false);
             });
+        } else {
+            postSubmission(profileData.target, localStorage.getItem("embargo"), values)
+                .then((result) => {
+                    if (result && result.broker_submission_id) {
+                        const brokerSubmissionId = result.broker_submission_id;
+                        const fileUploadPromises = files.map((file, index) =>
+                            handleFileUpload(file, brokerSubmissionId, index === metadataIndex),
+                        );
+                        return Promise.all(fileUploadPromises);
+                    } else {
+                        console.error(
+                            "broker_submission_id is missing in the response data.",
+                        );
+                        // Throw an error to trigger the catch block
+                        throw new Error(
+                            "broker_submission_id is missing in the response data.",
+                        );
+                    }
+                })
+                .catch((error) => {
+                    console.error("Submission error: ", error);
+                })
+                .finally(() => {
+                    setProcessing(false);
+                });
+        }
     };
 
     const createSubmitButton = () => {

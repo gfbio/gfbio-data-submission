@@ -37,14 +37,14 @@ function RelatedPublications(props) {
       const updatedList = [...publicationsList, publication];
       setPublicationsList(updatedList);
       setPublication("");
-      form.setFieldValue(field_id, updatedList.join(", "));
+      form.setFieldValue(field_id, updatedList);
     }
   };
 
   const handleRemovePublication = (publication) => {
     const updatedList = publicationsList.filter((item) => item !== publication);
     setPublicationsList(updatedList);
-    form.setFieldValue(field_id, updatedList.join(", "));
+    form.setFieldValue(field_id, updatedList);
   };
 
   return (
