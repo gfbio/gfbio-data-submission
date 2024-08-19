@@ -2,10 +2,12 @@ import { Button, Group } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import PropTypes from "prop-types";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import createUploadFileChannel from "../api/createUploadFileChannel.jsx";
 import postSubmission from "../api/postSubmission.jsx";
 import putSubmission from "../api/putSubmission.jsx";
 import FormField from "../field_mapping/FormField.jsx";
+import { ROUTER_BASE_URL } from "../settings.jsx";
 import validateDataUrlField from "../utils/DataUrlValidation.jsx";
 
 const ProfileForm = (props) => {
@@ -20,6 +22,9 @@ const ProfileForm = (props) => {
     const [files, setFiles] = useState([]);
     const [uploadLimitExceeded, setUploadLimitExceeded] = useState(false);
     const [metadataIndex, setMetadataIndex] = useState(-1);
+    
+    const navigate = useNavigate();
+    
     const submission = JSON.parse(localStorage.getItem("submission"));
 
     const form = useForm({
@@ -115,6 +120,7 @@ const ProfileForm = (props) => {
             })
             .finally(() => {
                 setProcessing(false);
+                navigate(ROUTER_BASE_URL, { state: { update: true } });
             });
         } else {
             postSubmission(profileData.target, localStorage.getItem("embargo"), values)

@@ -1,13 +1,19 @@
 import PropTypes from "prop-types";
-import { Link, useLoaderData } from "react-router-dom";
+import { Link, useLoaderData, useLocation } from "react-router-dom";
 
 const SubmissionList = (props) => {
   const baseUrl = props.baseUrl;
   const formUrl = baseUrl + "form/";
   const { submissions } = useLoaderData();
+  const { state } = useLocation();
 
   return (
     <div>
+      {state?.update && (
+        <div className="alert alert-success" role="alert">
+          Your submission was updated!
+        </div>
+      )}
       {submissions.length === 0 ? (
         <div className="list-start-wrapper d-flex">
           <div className="container my-auto">
