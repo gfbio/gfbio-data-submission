@@ -5,6 +5,8 @@ from django.shortcuts import redirect
 from django.views.generic import TemplateView
 from rest_framework.authtoken.models import Token
 
+from config.settings.base import LOGIN_REDIRECT_URL
+
 logger = logging.getLogger(__name__)
 
 
@@ -13,7 +15,7 @@ class HomeView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         if self.request.user.is_authenticated:
-            return redirect("/ui/submission/list")
+            return redirect(LOGIN_REDIRECT_URL)
         return super().get(request, *args, **kwargs)
 
 

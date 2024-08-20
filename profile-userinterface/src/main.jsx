@@ -5,7 +5,7 @@ import App from "./App.jsx";
 import ProfileFormWrapper from "./components/ProfileFormWrapper.jsx";
 import SubmissionList from "./components/SubmissionList.jsx";
 import ErrorPage from "./components/errorPage.jsx";
-import { DEFAULT_PROFILE_NAME, PROFILE_URL_PREFIX } from "./settings.jsx";
+import {DEFAULT_PROFILE_NAME, ROUTER_BASE_URL} from "./settings.jsx";
 import { loader as submissionsLoader } from "./utils/SubmissionsLoader.jsx";
 // import './index.css'
 
