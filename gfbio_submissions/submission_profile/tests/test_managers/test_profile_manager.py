@@ -73,10 +73,12 @@ class TestProfileManager(TestCase):
 
     def test_get_active_profile_double_entry(self):
         Profile.objects.create(name="profile-2-1", user=self.user_2, active_user_profile=True)
+        # Profile save takes care that there is only on active profile per user, in this case the last profile
+        # created with active_user_profile = True
         Profile.objects.create(name="profile-2-2", user=self.user_2, active_user_profile=True)
-        self.assertEqual(2, len(Profile.objects.filter(user=self.user_2).filter(active_user_profile=True)))
+        self.assertEqual(1, len(Profile.objects.filter(user=self.user_2).filter(active_user_profile=True)))
         active = Profile.objects.get_active_user_profile(user=self.user_2)
-        self.assertIsNone(active)
+        self.assertIsNotNone(active)
 
     def test_get_active_profile_no_entry(self):
         self.assertEqual(0, len(Profile.objects.filter(user=self.user_2).filter(active_user_profile=True)))

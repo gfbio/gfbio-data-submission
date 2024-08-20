@@ -178,7 +178,7 @@ const ProfileForm = (props) => {
             onSubmit={form.onSubmit(handleSubmit)}
             className="submission-form container"
         >
-            <p>processing: {"" + isProcessing}</p>
+            {/*<p>processing: {"" + isProcessing}</p>*/}
             <div className="row">
                 <div className="col-md-9 main-col">
                     {profileData.form_fields
