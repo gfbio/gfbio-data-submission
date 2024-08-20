@@ -23,6 +23,7 @@ class TargetDataCenterForm extends React.PureComponent {
     'SMNS – State Museum of Natural History Stuttgart',
     'SNSB – Staatliche Naturwissenschaftliche Sammlungen Bayerns – SNSB IT Center, München',
     'ZFMK – Zoological Research Museum Alexander Koenig – Leibniz Institute for Animal Biodiversity, Bonn',
+    'e!DAL-PGP – Plant Genomics and Phenomics Research Data Repository',
   ];
 
   dataCenterOptions = this.dataCenterList.map((center, index) => (
@@ -44,7 +45,7 @@ class TargetDataCenterForm extends React.PureComponent {
     return (
       <div>
         <header className="header header-left form-header-top">
-          <h2 className="section-title">Target Datacenter</h2>
+          <h2 className="section-title">Target Data Center</h2>
           <p className="section-subtitle">(optional)</p>
         </header>
         <Field name="data_center" component={this.renderDataCenterSelector} props={{ disabled: this.props.readOnly}}/>
