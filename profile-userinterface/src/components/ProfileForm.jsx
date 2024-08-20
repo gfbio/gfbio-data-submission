@@ -99,7 +99,9 @@ const ProfileForm = (props) => {
                     const fileUploadPromises = files.map((file, index) =>
                         handleFileUpload(file, brokerSubmissionId, index === metadataIndex),
                     );
-                    return Promise.all(fileUploadPromises);
+                    return Promise.all(fileUploadPromises).then(() => {
+                        window.location.href = "/profile/ui";
+                    });
                 } else {
                     console.error(
                         "broker_submission_id is missing in the response data.",
@@ -113,7 +115,8 @@ const ProfileForm = (props) => {
             .catch((error) => {
                 console.error("Submission error: ", error);
             })
-            .finally(() => {
+            .finally(async () => {
+                await new Promise(r => setTimeout(r, 2000)); //prevent submit-button from getting available before page-redirect
                 setProcessing(false);
             });
         } else {
@@ -124,7 +127,9 @@ const ProfileForm = (props) => {
                         const fileUploadPromises = files.map((file, index) =>
                             handleFileUpload(file, brokerSubmissionId, index === metadataIndex),
                         );
-                        return Promise.all(fileUploadPromises);
+                        return Promise.all(fileUploadPromises).then(() => {
+                            window.location.href = "/profile/ui";
+                        });
                     } else {
                         console.error(
                             "broker_submission_id is missing in the response data.",
@@ -138,14 +143,22 @@ const ProfileForm = (props) => {
                 .catch((error) => {
                     console.error("Submission error: ", error);
                 })
-                .finally(() => {
+                .finally(async () => {
+                    await new Promise(r => setTimeout(r, 2000)); //prevent submit-button from getting available before page-redirect
                     setProcessing(false);
                 });
         }
     };
 
     const createSubmitButton = () => {
-        if (submission?.broker_submission_id) {
+        if (isProcessing) {
+            return (
+                <Button className="submission-button disabled" type="submit" disabled>
+                    <i className="fa fa-gear mr-3"></i> Processing...
+                </Button>
+            );
+        }
+        else if (submission?.broker_submission_id) {
             return (
                 <Button className="submission-button" type="submit">
                     <i className="fa fa-forward mr-3"></i> Update Submission
