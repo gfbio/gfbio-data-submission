@@ -14,16 +14,16 @@ class TargetDataCenterForm extends React.PureComponent {
   dataCenterList = [
     'GFBio Data Centers - our curators will suggest the appropriate one(s)',
     'ENA – European Nucleotide Archive',
+    'e!DAL-PGP – Plant Genomics and Phenomics Research Data Repository',
     'PANGAEA – Data Publisher for Earth & Environmental Science',
-    'IPK - Leibniz Institute of Plant Genetics and Crop Plant Research',
     'BGBM – Botanic Garden and Botanical Museum Berlin, Freie Universität Berlin',
     'DSMZ – Leibniz Institute DSMZ – German Collection of Microorganisms and Cell Cultures, Braunschweig',
+    'LIB – Leibniz Institute for the Analysis of Biodiversity Change',
     'MfN – Leibniz Institute for Research on Evolution and Biodiversity, Berlin',
     'SGN – Senckenberg Gesellschaft für Naturforschung – Leibniz Institute, Frankfurt',
     'SMNS – State Museum of Natural History Stuttgart',
     'SNSB – Staatliche Naturwissenschaftliche Sammlungen Bayerns – SNSB IT Center, München',
     'ZFMK – Zoological Research Museum Alexander Koenig – Leibniz Institute for Animal Biodiversity, Bonn',
-    'e!DAL-PGP – Plant Genomics and Phenomics Research Data Repository',
   ];
 
   dataCenterOptions = this.dataCenterList.map((center, index) => (
