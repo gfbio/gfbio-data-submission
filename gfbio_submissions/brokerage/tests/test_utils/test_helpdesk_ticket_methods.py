@@ -104,10 +104,10 @@ class TestHelpDeskTicketMethods(TestCase):
         payload = gfbio_prepare_create_helpdesk_payload(site_config=site_config, submission=submission)
         self.assertNotIn("assignee", payload.keys())
 
-    def test_ipk_datacenter_assignee(self):
+    def test_lib_datacenter_assignee(self):
         with open(os.path.join(_get_test_data_dir_path(), "generic_data.json"), "r") as data_file:
             data = json.load(data_file)
-            data["requirements"]["data_center"] = "IPK - Leibniz Institute of Plant Genetics and Crop Plant Research"
+            data["requirements"]["data_center"] = "LIB – Leibniz Institute for the Analysis of Biodiversity Change"
 
         serializer = SubmissionSerializer(data={"target": "GENERIC", "release": True, "data": data})
         serializer.is_valid()
