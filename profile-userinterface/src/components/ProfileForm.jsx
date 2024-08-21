@@ -7,6 +7,7 @@ import postSubmission from "../api/postSubmission.jsx";
 import putSubmission from "../api/putSubmission.jsx";
 import FormField from "../field_mapping/FormField.jsx";
 import validateDataUrlField from "../utils/DataUrlValidation.jsx";
+import validateTextFields from "../utils/TextValidation.jsx"
 
 const ProfileForm = (props) => {
     const {
@@ -43,9 +44,12 @@ const ProfileForm = (props) => {
             let field_types = profileData.form_fields.map(
                 (form_field) => form_field.field.field_type.type
             );
+            var validations = {}
+            validateTextFields(values, profileData, validations);
             if (field_types.includes("data-url-field")) {
-                return validateDataUrlField(values, profileData);
+                validateDataUrlField(values, profileData, validations);
             }
+            return validations
         },
     });
 
