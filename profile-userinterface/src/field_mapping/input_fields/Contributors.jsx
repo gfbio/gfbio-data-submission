@@ -43,7 +43,7 @@ const Contributors = (props) => {
     if (prefillContributors !== "") {
       setContributors(prefillContributors);
       form.setFieldValue(field_id, prefillContributors);
-      if (!opened) {
+      if (!opened && prefillContributors.length > 0) {
         toggle();
       }
     } else {

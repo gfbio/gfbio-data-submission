@@ -5,7 +5,7 @@ import App from "./App.jsx";
 import ProfileFormWrapper from "./components/ProfileFormWrapper.jsx";
 import SubmissionList from "./components/SubmissionList.jsx";
 import ErrorPage from "./components/errorPage.jsx";
-import { DEFAULT_PROFILE_NAME, PROFILE_URL_PREFIX } from "./settings.jsx";
+import {DEFAULT_PROFILE_NAME, ROUTER_BASE_URL} from "./settings.jsx";
 import { loader as submissionsLoader } from "./utils/SubmissionsLoader.jsx";
 // import './index.css'
 
@@ -18,7 +18,7 @@ localStorage.setItem("profileName", profileName);
 
 // TODO: switch to LOCAL_ROUTER_BASE_URL for local development with hot reloading via, npm run dev
 //  and use PROFILE_URL_PREFIX etc. for django served app in dev & production
-const base = PROFILE_URL_PREFIX + profileName + "/ui/";
+const base = ROUTER_BASE_URL;
 // const base = LOCAL_ROUTER_BASE_URL;
 
 const router = createBrowserRouter([

@@ -2,6 +2,7 @@ from django.db import models
 from model_utils.models import TimeStampedModel
 
 from config.settings.base import AUTH_USER_MODEL
+from ..managers.profile_manager import ProfileManager
 from ..models.field import Field
 from ...brokerage.configuration.settings import GENERIC
 from ...brokerage.models.submission import Submission
@@ -23,9 +24,13 @@ class Profile(TimeStampedModel):
 
     # TODO: validator for unique-in-profile field_name (or mapping_to)
     #   https://docs.djangoproject.com/en/4.2/ref/validators/
+    active_user_profile = models.BooleanField(default=False)
 
+    objects = ProfileManager()
     def save(self, *args, **kwargs):
         super(Profile, self).save(*args, **kwargs)
+        if self.active_user_profile:
+            Profile.objects.filter(user=self.user).exclude(pk=self.pk).update(active_user_profile=False)
         system_wide_mandatories = Field.objects.filter(system_wide_mandatory=True)
         from .profile_field_extension import ProfileFieldExtension
         for s in system_wide_mandatories:
