@@ -43,7 +43,7 @@ class Profile(TimeStampedModel):
         if name:
             self.name = name
         else:
-            self.name = "{}_profile".format(user.username)
+            self.name = "user_id_{}_profile".format(user.pk)
         self.system_wide_profile = False
         self.save()
         # TODO: move to manager with exception checks
