@@ -542,3 +542,29 @@
 .modal-actions button {
   margin-left: 10px;
 }
+
+.success-message {
+  border: 1px solid #dee2e6;
+  border-radius: .25rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+
+  i {
+    font-size: 3.5rem;
+    color: rgba(129, 178, 72, .9);
+    display: block;
+  }
+
+  h4 {
+    font-weight: 300;
+    font-size: 1.25rem;
+    margin-bottom: .25rem;
+  }
+}
+
+.btn-green-inverted {
+  background-color: white;
+  color: #81B248 !important;
+  border-width: 1px;
+  border-color: #81B248;
+}

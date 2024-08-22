@@ -105,7 +105,7 @@ const ProfileForm = (props) => {
                         handleFileUpload(file, brokerSubmissionId, index === metadataIndex),
                     );
                     return Promise.all(fileUploadPromises).then(() => {
-                        window.location.href = "/profile/ui";
+                        navigate(ROUTER_BASE_URL, { state: { update: true } });
                     });
                 } else {
                     console.error(
@@ -123,18 +123,17 @@ const ProfileForm = (props) => {
             .finally(async () => {
                 await new Promise(r => setTimeout(r, 2000)); //prevent submit-button from getting available before page-redirect
                 setProcessing(false);
-                navigate(ROUTER_BASE_URL, { state: { update: true } });
             });
         } else {
             postSubmission(profileData.target, localStorage.getItem("embargo"), values)
                 .then((result) => {
-                    if (result && result.broker_submission_id) {
+                    if (result?.broker_submission_id) {
                         const brokerSubmissionId = result.broker_submission_id;
                         const fileUploadPromises = files.map((file, index) =>
                             handleFileUpload(file, brokerSubmissionId, index === metadataIndex),
                         );
                         return Promise.all(fileUploadPromises).then(() => {
-                            window.location.href = "/profile/ui";
+                            navigate(ROUTER_BASE_URL, { state: { create: true } });
                         });
                     } else {
                         console.error(
