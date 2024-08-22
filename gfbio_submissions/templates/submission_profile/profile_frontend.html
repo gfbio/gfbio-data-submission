@@ -7,11 +7,10 @@
 {% endblock extra_css %}
 
 {% block content %}
-
-  <h1>Profile Frontend</h1>
-   <script>
-        window.props = {{ parameters|safe }};
-    </script>
+  <h5><a href="/ui/submission/list">current (non-profile) submission-ui</a></h5>
+  <script>
+    window.props = {{ parameters|safe }};
+  </script>
   <div id="root"></div>
 
 {% endblock content %}

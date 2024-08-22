@@ -1,11 +1,42 @@
 import PropTypes from "prop-types";
+import React, { useState } from 'react';
 import { Link, useLoaderData, useLocation } from "react-router-dom";
+import deleteSubmission from '../api/deleteSubmission';
+import SimpleModal from './simpleModal';
 
+// SubmissionList component
 const SubmissionList = (props) => {
   const baseUrl = props.baseUrl;
   const formUrl = baseUrl + "form/";
-  const { submissions } = useLoaderData();
   const { state } = useLocation();
+  const { submissions: initialSubmissions } = useLoaderData();
+  const [submissions, setSubmissions] = useState(initialSubmissions);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [submissionToDelete, setSubmissionToDelete] = useState(null);
+
+  const handleDeleteClick = (submission) => {
+    setSubmissionToDelete(submission);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (submissionToDelete) {
+      try {
+        await deleteSubmission(submissionToDelete.broker_submission_id);
+        setSubmissions(submissions.filter(sub => sub.broker_submission_id !== submissionToDelete.broker_submission_id));
+      } catch (error) {
+        console.error("Error deleting submission:", error);
+        alert("Failed to delete submission. Please try again.");
+      }
+    }
+    setIsDeleteModalOpen(false);
+    setSubmissionToDelete(null);
+  };
+
+  const handleDeleteCancel = () => {
+    setIsDeleteModalOpen(false);
+    setSubmissionToDelete(null);
+  };
 
   return (
     <div>
@@ -59,17 +90,14 @@ const SubmissionList = (props) => {
                       <div className="col-md-8 col-sm-12 align-self-center">
                         <span>{submission.data.requirements.title}</span>
                       </div>
-
                       <div className="col-md-2 col-sm-12 align-self-center status">
                         <span>{submission.status}</span>
                       </div>
-
                       <div className="col-md-2 col-sm-12 align-self-center">
                         <span className="issue">{submission.issue}</span>
                       </div>
                     </Link>
                   </div>
-
                   <div className="col-md-2 col-sm-12 align-self-center actions">
                     <Link
                       to={formUrl + submission.broker_submission_id}
@@ -79,10 +107,7 @@ const SubmissionList = (props) => {
                     </Link>
                     <button
                       className="action h-100 d-inline-block btn btn-link"
-                      href=""
-                      onClick={(e) => {
-                        e.preventDefault();
-                      }}
+                      onClick={() => handleDeleteClick(submission)}
                     >
                       Delete
                     </button>
@@ -93,6 +118,12 @@ const SubmissionList = (props) => {
           </ul>
         </div>
       )}
+      <SimpleModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        itemName={submissionToDelete?.data.requirements.title || ""}
+      />
     </div>
   );
 };

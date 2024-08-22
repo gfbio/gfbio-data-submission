@@ -59,7 +59,7 @@
 
     cursor: pointer;
   }
-  
+
   .clickable-row {
     &:hover {
       background-color: #f8f8f8;
@@ -227,6 +227,25 @@
       color: #80b148;
       background-color: white;
     }
+
+    &.disabled, &.disabled:hover {
+      background-color: #6c757d;
+      border-color: #6c757d;
+      color: white;
+
+      i.fa {
+        animation: rotation 8s infinite linear;
+
+        @keyframes rotation {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(359deg);
+          }
+        }
+      }
+    }
   }
 
   .mantine-CheckboxGroup-root {
@@ -293,7 +312,7 @@
         position: relative;
         top: -1.2rem;
         left: 0.2rem;
-        
+
         path {
           color: #495057;
         }
@@ -340,7 +359,7 @@
         line-height: 1.85rem;
         padding-bottom: 1rem;
         vertical-align: middle;
-        
+
         button {
           vertical-align: middle;
         }
@@ -395,12 +414,12 @@
         background-color: white;
         color: #dc3545;
         border: solid 1px #dc3545;
-  
+
         &:hover {
           background-color: #dc3545;
           color: white;
         }
-  
+
         * {
           border: none;
         }
@@ -453,7 +472,7 @@
     &:not(:hover) {
       background: none !important;
     }
-    
+
     &:hover {
       color: white !important;
     }
@@ -493,4 +512,33 @@
   .use-line-breaks {
     white-space: pre-wrap;
   }
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  width: 300px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.modal-actions button {
+  margin-left: 10px;
 }
