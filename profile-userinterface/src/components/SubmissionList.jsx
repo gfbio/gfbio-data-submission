@@ -1,8 +1,8 @@
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import { Link, useLoaderData, useLocation } from "react-router-dom";
-// import deleteSubmission from "../api/deleteSubmission";
-// import SimpleModal from "./simpleModal";
+import deleteSubmission from "../api/deleteSubmission";
+import SimpleModal from "./simpleModal";
 
 // SubmissionList component
 const SubmissionList = (props) => {
@@ -42,7 +42,7 @@ const SubmissionList = (props) => {
   const handleDeleteConfirm = async () => {
     if (submissionToDelete) {
       try {
-        // await deleteSubmission(submissionToDelete.broker_submission_id);
+        await deleteSubmission(submissionToDelete.broker_submission_id);
         setSubmissions(
           submissions.filter(
             (sub) =>
@@ -161,12 +161,12 @@ const SubmissionList = (props) => {
           </ul>
         </div>
       )}
-      {/* <SimpleModal
+      <SimpleModal
         isOpen={isDeleteModalOpen}
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
         itemName={submissionToDelete?.data.requirements.title || ""}
-      /> */}
+      />
     </div>
   );
 };
