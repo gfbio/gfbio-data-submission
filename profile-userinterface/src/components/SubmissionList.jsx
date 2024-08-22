@@ -31,7 +31,6 @@ const SubmissionList = (props) => {
       setSuccessText("The Update of your data was successful.");
       setShowSuccessMessage(true);
     }
-    console.log("useEffect");
   }, [state]);
 
   const handleDeleteClick = (submission) => {
