@@ -25,9 +25,13 @@ const DropzoneUpload = (props) => {
 
     useEffect(() => {
         const fetchServerFiles = async () => {
+            const submission = JSON.parse(localStorage.getItem("submission"));
+            const brokerSubmissionId = submission.broker_submission_id;
+            if (!brokerSubmissionId) {
+
+                return;
+            }
             try {
-                const submission = JSON.parse(localStorage.getItem("submission"));
-                const brokerSubmissionId = submission.broker_submission_id || "";
                 const serverFileData = await getSubmissionUploads(brokerSubmissionId);
                 setFilesFromServer(serverFileData);
                 form.setFieldValue("serverFiles", serverFileData);
