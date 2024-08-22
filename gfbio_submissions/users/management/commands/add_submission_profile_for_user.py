@@ -12,7 +12,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         default_profile = None
         try:
-            default_profile = Profile.objects.get(name="default")
+            default_profile = Profile.objects.get(name="gfbio")
         except Profile.DoesNotExist:
             print("WARNING: Default profile does not exist. Cancel now ...")
             return None
