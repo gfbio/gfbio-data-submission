@@ -2,10 +2,12 @@ import { Button, Group } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import PropTypes from "prop-types";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import createUploadFileChannel from "../api/createUploadFileChannel.jsx";
 import postSubmission from "../api/postSubmission.jsx";
 import putSubmission from "../api/putSubmission.jsx";
 import FormField from "../field_mapping/FormField.jsx";
+import { ROUTER_BASE_URL } from "../settings.jsx";
 import validateDataUrlField from "../utils/DataUrlValidation.jsx";
 import validateTextFields from "../utils/TextValidation.jsx"
 
@@ -21,6 +23,7 @@ const ProfileForm = (props) => {
     const [files, setFiles] = useState([]);
     const [uploadLimitExceeded, setUploadLimitExceeded] = useState(false);
     const [metadataIndex, setMetadataIndex] = useState(-1);
+    const navigate = useNavigate();
     const submission = JSON.parse(localStorage.getItem("submission"));
 
     const form = useForm({
@@ -104,7 +107,7 @@ const ProfileForm = (props) => {
                         handleFileUpload(file, brokerSubmissionId, index === metadataIndex),
                     );
                     return Promise.all(fileUploadPromises).then(() => {
-                        window.location.href = "/profile/ui";
+                        navigate(ROUTER_BASE_URL, { state: { update: true } });
                     });
                 } else {
                     console.error(
@@ -126,13 +129,13 @@ const ProfileForm = (props) => {
         } else {
             postSubmission(profileData.target, localStorage.getItem("embargo"), values)
                 .then((result) => {
-                    if (result && result.broker_submission_id) {
+                    if (result?.broker_submission_id) {
                         const brokerSubmissionId = result.broker_submission_id;
                         const fileUploadPromises = files.map((file, index) =>
                             handleFileUpload(file, brokerSubmissionId, index === metadataIndex),
                         );
                         return Promise.all(fileUploadPromises).then(() => {
-                            window.location.href = "/profile/ui";
+                            navigate(ROUTER_BASE_URL, { state: { create: true } });
                         });
                     } else {
                         console.error(
