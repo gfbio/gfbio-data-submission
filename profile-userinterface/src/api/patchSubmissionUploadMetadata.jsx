@@ -1,8 +1,7 @@
 import axios from "axios";
 import { SUBMISSIONS_API, UPLOAD, UPLOAD_PATCH } from "../settings.jsx"; // Adjust import based on your setup
 
-const setMetaDataFlag = (brokerSubmissionId, fileKey, meta_data) => {
-
+const patchSubmissionUpload = (brokerSubmissionId, fileKey, data) => {
     let token = "";
     if (window.props !== undefined) {
         token = window.props.token || "no-token-found";
@@ -12,16 +11,9 @@ const setMetaDataFlag = (brokerSubmissionId, fileKey, meta_data) => {
             Authorization: `Token ${token}`,
         },
     };
-
-    // Prepare form data
-    let formData = new FormData();
-    formData.append("meta_data", meta_data);
-
-    // Construct the URL
     const url = `${SUBMISSIONS_API}${brokerSubmissionId}${UPLOAD}${UPLOAD_PATCH}${fileKey}/`;
 
-    // Make the PATCH request
-    return axios.patch(url, formData, config)
+    return axios.patch(url, data, config)
         .then(response => {
             console.log("RESPONSE: ", response);
             return response.data;
@@ -35,4 +27,4 @@ const setMetaDataFlag = (brokerSubmissionId, fileKey, meta_data) => {
         });
 };
 
-export default setMetaDataFlag;
+export default patchSubmissionUpload;

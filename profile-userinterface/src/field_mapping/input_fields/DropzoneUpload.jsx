@@ -7,7 +7,7 @@ import FileIndicator from "../../utils/FileIndicator.jsx";
 import { MAX_TOTAL_UPLOAD_SIZE, MAX_UPLOAD_ITEMS } from "../../settings.jsx";
 import getSubmissionUploads from "../../api/getSubmissionUploads";
 import deleteSubmissionUpload from "../../api/deleteSubmissionUpload.jsx";
-import setMetaDataFlag from "../../api/patchSubmissionUploadMetadata.jsx";
+import patchSubmissionUpload from "../../api/patchSubmissionUploadMetadata.jsx";
 
 const DropzoneUpload = (props) => {
     const {
@@ -54,7 +54,9 @@ const DropzoneUpload = (props) => {
             const fileKey = source === "server" ? filesFromServer[index]?.pk : null;
             if (fileKey) {
                 try {
-                    await setMetaDataFlag(brokerSubmissionId, fileKey, false); // Set meta_data to false
+                    let formData = new FormData();
+                    formData.append("meta_data", false);
+                    await patchSubmissionUpload(brokerSubmissionId, fileKey, formData);
                 } catch (error) {
                     console.error("Error updating metadata flag on server:", error);
                 }
@@ -66,7 +68,9 @@ const DropzoneUpload = (props) => {
                     const fileKey = filesFromServer[idx]?.pk;
                     if (fileKey) {
                         try {
-                            await setMetaDataFlag(brokerSubmissionId, fileKey, false); // Set meta_data to false
+                            let formData = new FormData();
+                            formData.append("meta_data", false);
+                            await patchSubmissionUpload(brokerSubmissionId, fileKey, formData);
                         } catch (error) {
                             console.error("Error updating metadata flag on server:", error);
                         }
@@ -77,7 +81,9 @@ const DropzoneUpload = (props) => {
                 const newFileKey = filesFromServer[index]?.pk;
                 if (newFileKey) {
                     try {
-                        await setMetaDataFlag(brokerSubmissionId, newFileKey, true); // Set meta_data to true
+                        let formData = new FormData();
+                        formData.append("meta_data", true);
+                        await patchSubmissionUpload(brokerSubmissionId, newFileKey, formData);
                     } catch (error) {
                         console.error("Error updating metadata flag on server:", error);
                     }
