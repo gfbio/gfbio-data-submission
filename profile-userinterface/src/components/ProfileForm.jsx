@@ -22,9 +22,7 @@ const ProfileForm = (props) => {
     const [files, setFiles] = useState([]);
     const [uploadLimitExceeded, setUploadLimitExceeded] = useState(false);
     const [metadataIndex, setMetadataIndex] = useState(-1);
-    
     const navigate = useNavigate();
-    
     const submission = JSON.parse(localStorage.getItem("submission"));
 
     const form = useForm({
