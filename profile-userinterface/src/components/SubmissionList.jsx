@@ -77,7 +77,7 @@ const SubmissionList = (props) => {
             </div>
             <div className="col-2">
               <button
-                className="btn-sm btn-block btn-green-inverted"
+                className="btn btn-sm btn-block btn-green-inverted"
                 onClick={() => setShowSuccessMessage(false)}
               >
                 Close
