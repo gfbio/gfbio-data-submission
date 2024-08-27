@@ -23,7 +23,6 @@ class TargetDataCenterForm extends React.PureComponent {
     'SGN – Senckenberg Gesellschaft für Naturforschung – Leibniz Institute, Frankfurt',
     'SMNS – State Museum of Natural History Stuttgart',
     'SNSB – Staatliche Naturwissenschaftliche Sammlungen Bayerns – SNSB IT Center, München',
-    'ZFMK – Zoological Research Museum Alexander Koenig – Leibniz Institute for Animal Biodiversity, Bonn',
   ];
 
   dataCenterOptions = this.dataCenterList.map((center, index) => (

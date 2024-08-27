@@ -356,7 +356,6 @@ GFBIO_DATACENTER_USER_MAPPINGS = getattr(
         "SGN – Senckenberg Gesellschaft für Naturforschung – Leibniz Institute, Frankfurt": "sgn",
         "SMNS – State Museum of Natural History Stuttgart": "smns",
         "SNSB – Staatliche Naturwissenschaftliche Sammlungen Bayerns – SNSB IT Center, München": "snsb",
-        "ZFMK – Zoological Research Museum Alexander Koenig – Leibniz Institute for Animal Biodiversity, Bonn": "zfmk",
     },
 )
 
