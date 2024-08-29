@@ -14,6 +14,7 @@ from gfbio_submissions.brokerage.utils.ena_taxon_queries import query_ena
 
 from ..configuration.settings import ATAX, ENA, ENA_PANGAEA, SUBMISSION_MIN_COLS
 from ..utils.schema_validation import validate_data_full
+from ..utils.encodings import sniff_encoding
 
 logger = logging.getLogger(__name__)
 
@@ -488,6 +489,14 @@ def parse_molecular_csv(csv_file):
     return molecular_requirements
 
 
+def parse_molecular_csv_with_encoding_detection(path):
+    encoding = sniff_encoding(path)
+    with open(
+        path, "r", encoding=encoding
+    ) as csv_file:
+        return parse_molecular_csv(csv_file)
+
+
 def check_minimum_header_cols(meta_data):
     with open(meta_data.file.path, "r") as file:
         line = file.readline()
@@ -581,10 +590,7 @@ def check_for_molecular_content(submission):
             return status, messages, check_performed
 
         meta_data_file = meta_data_files.first()
-        with open(meta_data_file.file.path, "r") as file:
-            molecular_requirements = parse_molecular_csv(
-                file,
-            )
+        molecular_requirements = parse_molecular_csv_with_encoding_detection(meta_data_file.file.path)
         submission.data.get("requirements", {}).update(molecular_requirements)
         path = os.path.join(os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json")
         valid, full_errors = validate_data_full(
