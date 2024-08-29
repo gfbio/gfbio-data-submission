@@ -13,7 +13,7 @@ from ...models.task_progress_report import TaskProgressReport
 logger = logging.getLogger(__name__)
 
 from ...tasks.submission_task import SubmissionTask
-from ...utils.csv import parse_molecular_csv
+from ...utils.csv import parse_molecular_csv_with_encoding_detection
 from ...utils.schema_validation import validate_data_full
 
 
@@ -45,10 +45,7 @@ def parse_csv_to_update_clean_submission_task(self, previous_task_result=None, s
 
     report.submission = submission_upload.submission
 
-    with open(submission_upload.file.path, "r") as file:
-        molecular_requirements = parse_molecular_csv(
-            file,
-        )
+    molecular_requirements = parse_molecular_csv_with_encoding_detection(submission_upload.file.path)
 
     path = os.path.join(os.getcwd(), "gfbio_submissions/brokerage/schemas/ena_requirements.json")
 
