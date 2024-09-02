@@ -13,8 +13,8 @@ from shortid import ShortId
 from gfbio_submissions.brokerage.utils.ena_taxon_queries import query_ena
 
 from ..configuration.settings import ATAX, ENA, ENA_PANGAEA, SUBMISSION_MIN_COLS
-from ..utils.schema_validation import validate_data_full
 from ..utils.encodings import sniff_encoding
+from ..utils.schema_validation import validate_data_full
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ unit_mapping = {
     "geographic location (longitude)": "DD",
     "Salinity": "psu",
     "salinity": "psu",
-    "temperature": "&#176;C",
+    "temperature": "&#186;C",
     "total depth of water column": "m",
 }
 
