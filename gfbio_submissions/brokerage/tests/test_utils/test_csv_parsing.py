@@ -260,7 +260,7 @@ class TestCSVParsing(TestCase):
                             [
                                 ("tag", "temperature"),
                                 ("value", "33"),
-                                ("units", "&#176;C"),
+                                ("units", "&#186;C"),
                             ]
                         ),
                     ],
@@ -335,7 +335,7 @@ class TestCSVParsing(TestCase):
                             [
                                 ("tag", "temperature"),
                                 ("value", "2"),
-                                ("units", "&#176;C"),
+                                ("units", "&#186;C"),
                             ]
                         ),
                     ],
@@ -411,7 +411,7 @@ class TestCSVParsing(TestCase):
                             [
                                 ("tag", "temperature"),
                                 ("value", "33"),
-                                ("units", "&#176;C"),
+                                ("units", "&#186;C"),
                             ]
                         ),
                     ],
@@ -487,7 +487,7 @@ class TestCSVParsing(TestCase):
                             [
                                 ("tag", "temperature"),
                                 ("value", "78"),
-                                ("units", "&#176;C"),
+                                ("units", "&#186;C"),
                             ]
                         ),
                     ],
@@ -563,7 +563,7 @@ class TestCSVParsing(TestCase):
                             [
                                 ("tag", "temperature"),
                                 ("value", "1"),
-                                ("units", "&#176;C"),
+                                ("units", "&#186;C"),
                             ]
                         ),
                     ],
