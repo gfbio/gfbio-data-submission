@@ -23,10 +23,11 @@ from pytz import timezone
 
 from gfbio_submissions.generic.utils import logged_requests
 from gfbio_submissions.resolve.models import Accession
+
 from ..configuration.settings import (
-    DEFAULT_ENA_CENTER_NAME,
-    DEFAULT_ENA_BROKER_NAME,
     CHECKLIST_ACCESSION_MAPPING,
+    DEFAULT_ENA_BROKER_NAME,
+    DEFAULT_ENA_CENTER_NAME,
     STATIC_SAMPLE_SCHEMA_LOCATION,
     SUBMISSION_DELAY,
 )
@@ -308,8 +309,10 @@ class Enalizer(object):
             if item.tag == "SAMPLE_ATTRIBUTES":
                 for atr in item.findall("./item"):
                     atr.tag = "SAMPLE_ATTRIBUTE"
-
-        return ET.tostring(root, encoding="utf-8", method="xml")
+        # remove xml encoding for temperature unit
+        bytestring = ET.tostring(root, encoding="utf-8", method="xml")
+        xmlstring = bytestring.decode("utf-8").replace("&amp;#186;C", "&#186;C")
+        return xmlstring.encode("utf-8")
 
     @staticmethod
     def create_subelement(root, element_name, data_dict):
@@ -934,12 +937,8 @@ def update_persistent_identifier_report_status():
                             )
 
                             from ..configuration.settings import SUBMISSION_DELAY
-                            from ..tasks.jira_tasks.notify_on_embargo_ended import (
-                                notify_on_embargo_ended_task,
-                            )
-                            from ..tasks.jira_tasks.jira_transition_issue import (
-                                jira_transition_issue_task,
-                            )
+                            from ..tasks.jira_tasks.jira_transition_issue import jira_transition_issue_task
+                            from ..tasks.jira_tasks.notify_on_embargo_ended import notify_on_embargo_ended_task
 
                             chain = notify_on_embargo_ended_task.s(submission_id=submission.pk).set(
                                 countdown=SUBMISSION_DELAY
@@ -980,9 +979,7 @@ def execute_update_accession_objects_chain(name_on_error=""):
     from ..tasks.ena_report_tasks.update_persistent_identifier_report_status import (
         update_persistent_identifier_report_status_task,
     )
-    from ..tasks.ena_report_tasks.update_resolver_accessions import (
-        update_resolver_accessions_task,
-    )
+    from ..tasks.ena_report_tasks.update_resolver_accessions import update_resolver_accessions_task
 
     (
         fetch_ena_reports_task.s().set(countdown=SUBMISSION_DELAY)
