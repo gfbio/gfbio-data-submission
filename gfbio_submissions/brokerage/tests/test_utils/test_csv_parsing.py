@@ -19,7 +19,7 @@ from gfbio_submissions.brokerage.utils.csv import (
     check_metadata_rule,
     check_minimum_header_cols,
     extract_sample,
-    parse_molecular_csv,
+    parse_molecular_csv_with_encoding_detection,
 )
 from gfbio_submissions.brokerage.utils.ena import prepare_ena_data
 from gfbio_submissions.brokerage.utils.schema_validation import validate_data_full
@@ -831,11 +831,11 @@ class TestCSVParsing(TestCase):
         ]
 
         for fn in file_names:
-            with open(os.path.join(_get_test_data_dir_path(), fn), "r") as data_file:
-                requirements = parse_molecular_csv(data_file)
-                requirements_keys = requirements.keys()
-                self.assertIn("experiments", requirements_keys)
-                self.assertIn("samples", requirements_keys)
+            path = os.path.join(_get_test_data_dir_path(), fn)
+            requirements = parse_molecular_csv_with_encoding_detection(path)
+            requirements_keys = requirements.keys()
+            self.assertIn("experiments", requirements_keys)
+            self.assertIn("samples", requirements_keys)
 
     def test_parse_environmental_package(self):
         file_names = [
@@ -850,28 +850,25 @@ class TestCSVParsing(TestCase):
         ]
 
         for fn in file_names:
-            with open(os.path.join(_get_test_data_dir_path(), fn), "r") as data_file:
-                requirements = parse_molecular_csv(data_file)
+            path = os.path.join(_get_test_data_dir_path(), fn)
+            requirements = parse_molecular_csv_with_encoding_detection(path)
 
-                requirements_keys = requirements.keys()
-                self.assertIn("samples", requirements_keys)
+            requirements_keys = requirements.keys()
+            self.assertIn("samples", requirements_keys)
 
-                for x in range(0, len(requirements["samples"])):
-                    for s in requirements.get("samples", [{}])[x].get("sample_attributes", []):
-                        tag = s.get("tag")
-                        if "environmental package" in tag:
-                            env_pack = s.get("value")
-                            self.assertEqual(env_pack.islower(), True)
+            for x in range(0, len(requirements["samples"])):
+                for s in requirements.get("samples", [{}])[x].get("sample_attributes", []):
+                    tag = s.get("tag")
+                    if "environmental package" in tag:
+                        env_pack = s.get("value")
+                        self.assertEqual(env_pack.islower(), True)
 
     def test_whitespaces_with_occasional_quotes(self):
-        with open(
-            os.path.join(
-                _get_test_data_dir_path(),
-                "csv_files/molecular_metadata_white_spaces.csv",
-            ),
-            "r",
-        ) as data_file:
-            requirements = parse_molecular_csv(data_file)
+        path = os.path.join(
+            _get_test_data_dir_path(),
+            "csv_files/molecular_metadata_white_spaces.csv",
+        )
+        requirements = parse_molecular_csv_with_encoding_detection(path)
         self.assertEqual(
             "Sample No. 1",
             requirements.get("samples", [{}])[0].get("sample_title", "no value"),
@@ -910,14 +907,11 @@ class TestCSVParsing(TestCase):
         self.assertTrue(valid)
 
     def test_whitespaces_all_double_quoted(self):
-        with open(
-            os.path.join(
-                _get_test_data_dir_path(),
-                "csv_files/molecular_metadata_double_quoting_white_spaces.csv",
-            ),
-            "r",
-        ) as data_file:
-            requirements = parse_molecular_csv(data_file)
+        path = os.path.join(
+            _get_test_data_dir_path(),
+            "csv_files/molecular_metadata_double_quoting_white_spaces.csv",
+        )
+        requirements = parse_molecular_csv_with_encoding_detection(path)
         self.assertEqual(
             "Sample No. 1",
             requirements.get("samples", [{}])[0].get("sample_title", "no value"),
@@ -956,14 +950,11 @@ class TestCSVParsing(TestCase):
         self.assertTrue(valid)
 
     def test_whitespaces_unquoted(self):
-        with open(
-            os.path.join(
-                _get_test_data_dir_path(),
-                "csv_files/molecular_metadata_no_quoting_white_spaces.csv",
-            ),
-            "r",
-        ) as data_file:
-            requirements = parse_molecular_csv(data_file)
+        path = os.path.join(
+            _get_test_data_dir_path(),
+            "csv_files/molecular_metadata_no_quoting_white_spaces.csv",
+        )
+        requirements = parse_molecular_csv_with_encoding_detection(path)
         self.assertEqual(
             "Sample No. 1",
             requirements.get("samples", [{}])[0].get("sample_title", "no value"),
@@ -1002,42 +993,33 @@ class TestCSVParsing(TestCase):
         self.assertTrue(valid)
 
     def test_parse_comma_with_some_quotes(self):
-        with open(
-            os.path.join(
-                _get_test_data_dir_path(),
-                "csv_files/mol_5_items_comma_some_double_quotes.csv",
-            ),
-            "r",
-        ) as data_file:
-            requirements = parse_molecular_csv(data_file)
+        path = os.path.join(
+            _get_test_data_dir_path(),
+            "csv_files/mol_5_items_comma_some_double_quotes.csv",
+        )
+        requirements = parse_molecular_csv_with_encoding_detection(path)
         requirements_keys = requirements.keys()
         self.assertIn("experiments", requirements_keys)
         self.assertIn("samples", requirements_keys)
         self.assertDictEqual(self.expected_parse_result, self._strip(requirements))
 
     def test_parse_comma_no_quotes_in_header(self):
-        with open(
-            os.path.join(
-                _get_test_data_dir_path(),
-                "csv_files/mol_5_items_comma_no_quoting_in_header.csv",
-            ),
-            "r",
-        ) as data_file:
-            requirements = parse_molecular_csv(data_file)
+        path = os.path.join(
+            _get_test_data_dir_path(),
+            "csv_files/mol_5_items_comma_no_quoting_in_header.csv",
+        )
+        requirements = parse_molecular_csv_with_encoding_detection(path)
         requirements_keys = requirements.keys()
         self.assertIn("experiments", requirements_keys)
         self.assertIn("samples", requirements_keys)
         self.assertDictEqual(self.expected_parse_result, self._strip(requirements))
 
     def test_parse_comma_with_empty_rows(self):
-        with open(
-            os.path.join(
-                _get_test_data_dir_path(),
-                "csv_files/mol_comma_with_empty_rows_cols.csv",
-            ),
-            "r",
-        ) as data_file:
-            requirements = parse_molecular_csv(data_file)
+        path = os.path.join(
+            _get_test_data_dir_path(),
+            "csv_files/mol_comma_with_empty_rows_cols.csv",
+        )
+        requirements = parse_molecular_csv_with_encoding_detection(path)
         requirements_keys = requirements.keys()
         self.assertIn("experiments", requirements_keys)
         self.assertIn("samples", requirements_keys)
@@ -1047,39 +1029,30 @@ class TestCSVParsing(TestCase):
         self.assertEqual(6, len(requirements.get("experiments", [])))
 
     def test_parse_semi_no_quoting(self):
-        with open(
-            os.path.join(_get_test_data_dir_path(), "csv_files/mol_5_items_semi_no_quoting.csv"),
-            "r",
-        ) as data_file:
-            requirements = parse_molecular_csv(data_file)
+        path = os.path.join(_get_test_data_dir_path(), "csv_files/mol_5_items_semi_no_quoting.csv")
+        requirements = parse_molecular_csv_with_encoding_detection(path)
         requirements_keys = requirements.keys()
         self.assertIn("experiments", requirements_keys)
         self.assertIn("samples", requirements_keys)
         self.assertDictEqual(self.expected_parse_result, self._strip(requirements))
 
     def test_parse_semi_double_quoting(self):
-        with open(
-            os.path.join(
-                _get_test_data_dir_path(),
-                "csv_files/mol_5_items_semi_double_quoting.csv",
-            ),
-            "r",
-        ) as data_file:
-            requirements = parse_molecular_csv(data_file)
+        path = os.path.join(
+            _get_test_data_dir_path(),
+            "csv_files/mol_5_items_semi_double_quoting.csv",
+        )
+        requirements = parse_molecular_csv_with_encoding_detection(path)
         requirements_keys = requirements.keys()
         self.assertIn("experiments", requirements_keys)
         self.assertIn("samples", requirements_keys)
         self.assertDictEqual(self.expected_parse_result, self._strip(requirements))
 
     def test_parse_real_world_example(self):
-        with open(
-            os.path.join(
-                _get_test_data_dir_path(),
-                "csv_files/PS99_sediment_gfbio_submission_form.csv",
-            ),
-            "r",
-        ) as data_file:
-            requirements = parse_molecular_csv(data_file)
+        path = os.path.join(
+            _get_test_data_dir_path(),
+            "csv_files/PS99_sediment_gfbio_submission_form.csv",
+        )
+        requirements = parse_molecular_csv_with_encoding_detection(path)
         self.assertEqual(7, len(requirements["samples"]))
         self.assertEqual(7, len(requirements["experiments"]))
 
@@ -1153,15 +1126,27 @@ class TestCSVParsing(TestCase):
 
     def test_parse_tab(self):
         self.maxDiff = None
-        with open(
-            os.path.join(_get_test_data_dir_path(), "csv_files/mol_5_items_tab.csv"),
-            "r",
-        ) as data_file:
-            requirements = parse_molecular_csv(data_file)
+        path = os.path.join(_get_test_data_dir_path(), "csv_files/mol_5_items_tab.csv")
+        requirements = parse_molecular_csv_with_encoding_detection(path)
         requirements_keys = requirements.keys()
         self.assertIn("experiments", requirements_keys)
         self.assertIn("samples", requirements_keys)
         self.assertDictEqual(self.expected_parse_result, self._strip(requirements))
+
+
+    def test_parse_with_bom(self):
+        test_files = [
+            os.path.join(_get_test_data_dir_path(), "csv_files/GFBIO_submission_with_UTF8-bom.csv"),
+            os.path.join(_get_test_data_dir_path(), "csv_files/GFBIO_submission_with_UTF16-BE.csv"),
+            os.path.join(_get_test_data_dir_path(), "csv_files/GFBIO_submission_with_UTF16-LE.csv"),
+            os.path.join(_get_test_data_dir_path(), "csv_files/GFBIO_submission_with_UTF8_no_BOM.csv")
+        ]
+        for path in test_files:
+            requirements = parse_molecular_csv_with_encoding_detection(path)
+            
+            assert "samples" in requirements
+            assert len(requirements["samples"]) == 1
+
 
     def test_check_for_molecular_content(self):
         submission = Submission.objects.first()
@@ -1210,7 +1195,7 @@ class TestCSVParsing(TestCase):
                 _get_test_data_dir_path(),
                 "csv_files/mol_5_items_semi_double_quoting.csv",
             ),
-            "r",
+            "r", encoding='utf-8-sig'
         ):
             submission = Submission.objects.first()
         submission.submissionupload_set.all().delete()
