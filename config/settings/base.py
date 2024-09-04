@@ -180,7 +180,7 @@ MEDIA_URL = "/media/"
 # UPLOAD LIMITS
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#file-upload-max-memory-size
-DATA_UPLOAD_MAX_MEMORY_SIZE = 20971520  # 10485760
+DATA_UPLOAD_MAX_MEMORY_SIZE = 31457280  # 10485760
 # 9069953
 
 # TEMPLATES
