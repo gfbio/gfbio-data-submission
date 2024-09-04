@@ -180,7 +180,7 @@ MEDIA_URL = "/media/"
 # UPLOAD LIMITS
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#file-upload-max-memory-size
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 5242880
+DATA_UPLOAD_MAX_MEMORY_SIZE = 20971520  # 10485760
 # 9069953
 
 # TEMPLATES
@@ -347,7 +347,6 @@ REST_FRAMEWORK = {
     # "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.coreapi.AutoSchema",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
-
 
 # By Default swagger ui is available only to admin user(s). You can change permission classes to change that
 # See more configuration options at https://drf-spectacular.readthedocs.io/en/latest/settings.html#settings
