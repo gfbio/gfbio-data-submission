@@ -1,14 +1,47 @@
-import React, {useState} from 'react';
-import { useDisclosure } from '@mantine/hooks';
-import { Text, Collapse, Modal } from '@mantine/core';
+import { Collapse, Modal, Text } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import PropTypes from "prop-types";
+import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { mapValueToField } from "../../utils/MapValueToField";
 
 const CollapsibleSelector = (props) => {
-    const {title, description, form, options, default_value, field_id, mandatory, } = props;
+    const {
+        field_id,
+        options,
+        default_value,
+        form,
+        title,
+        mandatory,
+        description,
+    } = props;
+    const location = useLocation();
 
-    var default_opt = default_value ? options.map(o => o.option).filter(o => o == default_value) : null
-    const [value, setValue] = useState(default_opt ? default_opt[0] : options[0].option);
-    form.setFieldValue(field_id, value);
+    const getDefaultOpt = () => {
+        const submissionValue = mapValueToField(field_id);
+        if (submissionValue !== "") {
+            return submissionValue
+                ? options.map((o) => o.option).filter((o) => o === submissionValue)
+                : null;
+        } else {
+            return default_value
+                ? options.map((o) => o.option).filter((o) => o === default_value)
+                : null;
+        }
+    };
+
+    const [value, setValue] = useState(
+        getDefaultOpt() ? getDefaultOpt()[0] : options[0].option
+    );
+
+    useEffect(() => {
+        form.setFieldValue(field_id, value);
+    }, [value]);
+
+    useEffect(() => {
+        // Reset form state when URL changes
+        setValue(getDefaultOpt() ? getDefaultOpt()[0] : options[0].option);
+    }, [location]);
 
     const [opened, { toggle }] = useDisclosure(false);
 
@@ -74,13 +107,13 @@ const CollapsibleSelector = (props) => {
     );
 }
 
-CollapsibleSelector.defaultProps = {}
+CollapsibleSelector.defaultProps = {};
 
 CollapsibleSelector.propTypes = {
     title: PropTypes.string.isRequired,
     description: PropTypes.string.isRequired,
     form: PropTypes.object.isRequired,
     field_id: PropTypes.string.isRequired,
-}
+};
 
 export default CollapsibleSelector;

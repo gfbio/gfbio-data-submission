@@ -116,7 +116,9 @@ AUTHENTICATION_BACKENDS = [
 AUTH_USER_MODEL = "users.User"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-redirect-url
 # LOGIN_REDIRECT_URL = "users:redirect"
-LOGIN_REDIRECT_URL = "/ui/submission/list"
+
+LOGIN_REDIRECT_URL = env.str("LOGIN_REDIRECT_URL", "/ui/submission/list")
+LOGOUT_REDIRECT_URL = "/"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-url
 LOGIN_URL = "account_login"
 
@@ -382,9 +384,6 @@ OIDC_OP_TOKEN_ENDPOINT = "https://keycloak.sso.gwdg.de/auth/realms/GFBio/protoco
 OIDC_OP_USER_ENDPOINT = "https://keycloak.sso.gwdg.de/auth/realms/GFBio/protocol/openid-connect/userinfo"
 
 OIDC_USE_NONCE = False  # Default:	True
-
-# LOGIN_REDIRECT_URL = "/ui/submission/list"
-LOGOUT_REDIRECT_URL = "/"
 
 # OIDC_RP_SCOPES = "openid email profile address phone goeId"
 # OIDC_USERNAME_ALGO = "gfbio_submissions.authentication.user_name.generate_username"

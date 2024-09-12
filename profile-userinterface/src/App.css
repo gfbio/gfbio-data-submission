@@ -59,7 +59,7 @@
 
     cursor: pointer;
   }
-  
+
   .clickable-row {
     &:hover {
       background-color: #f8f8f8;
@@ -106,6 +106,14 @@
     }
   }
 
+  .main-col {
+    padding-right: 30px;
+  }
+
+  .side-col {
+    padding-left: 0;
+  }
+
   div.mantine-Select-section, div.mantine-MultiSelect-section{
     font: normal normal normal 14px/1 FontAwesome;
 
@@ -120,7 +128,7 @@
 
   font-family: "Open Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
 
-  h1, h2, .mantine-InputWrapper-label, .mantine-Pill-root, input, textarea, .mantine-Dropzone-inner {
+  h1, h2, .mantine-InputWrapper-label, .mantine-Pill-root, input, textarea, .mantine-Dropzone-inner, .label-text {
     color: #495057;
   }
 
@@ -144,7 +152,7 @@
       font-size: 0;
     }
 
-    &:not(.ommit-optional):not(:has(span.mantine-InputWrapper-required))::after {
+    &:not(.omit-optional):not(:has(span.mantine-InputWrapper-required))::after {
       content: "(optional)";
       display: inline;
       font-size: .85rem;
@@ -219,10 +227,25 @@
       color: #80b148;
       background-color: white;
     }
-  }
 
-  .use-line-breaks {
-    white-space: pre-wrap;
+    &.disabled, &.disabled:hover {
+      background-color: #6c757d;
+      border-color: #6c757d;
+      color: white;
+
+      i.fa {
+        animation: rotation 8s infinite linear;
+
+        @keyframes rotation {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(359deg);
+          }
+        }
+      }
+    }
   }
 
   .mantine-CheckboxGroup-root {
@@ -262,6 +285,154 @@
   .green-text {
     color: #80b148;
   }
+
+  .file-upload {
+    .progress-row {
+      .progress {
+        height: 0.2rem;
+      }
+      display: none;
+    }
+
+    .checkbox-col {
+      border-right: #ccc 1px dashed;
+    }
+
+    .mantine-Checkbox-body {
+      .mantine-Checkbox-input {
+        height: 14px;
+        width: 14px;
+        border-radius: 8px;
+        border: 1px #495057 solid;
+        margin-top: 3px;
+        background: none;
+      }
+
+      svg {
+        position: relative;
+        top: -1.2rem;
+        left: 0.2rem;
+
+        path {
+          color: #495057;
+        }
+      }
+    }
+
+    .file-list, .list-header {
+      color: #495057
+    }
+
+    .file-list:hover {
+      background: #f8f8f8;
+    }
+
+    .ion-md-document, .btn-remove {
+      font-size: 18px;
+    }
+
+    .ion-md-document {
+      color: #80b148
+    }
+
+    .btn-remove {
+      color: orangered;
+    }
+  }
+
+  .contributors {
+    .mantine-Card-root {
+      box-shadow: none;
+      border: 1px #d3d3d3 solid;
+      min-height: 100%;
+
+      .mantine-Grid-root {
+        color: #666;
+      }
+
+      h4 {
+        font-size: 1rem;
+      }
+
+      span.label {
+        font-size: 0.85rem;
+        line-height: 1.85rem;
+        padding-bottom: 1rem;
+        vertical-align: middle;
+
+        button {
+          vertical-align: middle;
+        }
+      }
+    }
+
+    .contributor {
+      color: #3cace4;
+
+      .name {
+        cursor: pointer;
+
+        &:hover {
+          color: #ff8362;
+        }
+      }
+    }
+
+    button{
+       &.btn-blue:not([disabled]) {
+        background-color: #3cace4;
+        color: white;
+        border: solid 1px #3cace4;
+
+        &:hover {
+          background-color: white;
+          color: #3cace4;
+          border: solid 1px #3cace4;
+        }
+
+        * {
+          border: none;
+        }
+      }
+
+      &.btn-blue-outline:not([disabled]) {
+        background-color: white;
+        color: #3cace4;
+        border: solid 1px #3cace4;
+
+        &:hover {
+          background-color: #3cace4;
+          color: white;
+        }
+
+        * {
+          border: none;
+        }
+      }
+
+      &.btn-red-outline:not([disabled]) {
+        background-color: white;
+        color: #dc3545;
+        border: solid 1px #dc3545;
+
+        &:hover {
+          background-color: #dc3545;
+          color: white;
+        }
+
+        * {
+          border: none;
+        }
+      }
+
+      &.small-button {
+        font-weight: normal;
+        font-size: 0.875rem;
+        padding: 0;
+        height: 2rem;
+      }
+    }
+  }
 }
 
 .mantine-Modal-root {
@@ -281,10 +452,17 @@
   .mantine-Modal-content {
     border: 1px solid #d3d3d3;
     border-radius: 5px;
+    width: 90%;
+    max-width: 50rem;
 
     header {
       border-bottom: 1px solid #d3d3d3;
     }
+  }
+
+  .model-dialog-body {
+    padding-top: 1rem;
+    padding-bottom: 3rem;
   }
 
   button.button-inverted {
@@ -294,7 +472,7 @@
     &:not(:hover) {
       background: none !important;
     }
-    
+
     &:hover {
       color: white !important;
     }
@@ -330,4 +508,63 @@
       color: white;
     }
   }
+
+  .use-line-breaks {
+    white-space: pre-wrap;
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  width: 300px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.modal-actions button {
+  margin-left: 10px;
+}
+
+.success-message {
+  border: 1px solid #dee2e6;
+  border-radius: .25rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+
+  i {
+    font-size: 3.5rem;
+    color: rgba(129, 178, 72, .9);
+    display: block;
+  }
+
+  h4 {
+    font-weight: 300;
+    font-size: 1.25rem;
+    margin-bottom: .25rem;
+  }
+}
+
+.btn-green-inverted {
+  background-color: white;
+  color: #81B248 !important;
+  border-width: 1px;
+  border-color: #81B248;
 }

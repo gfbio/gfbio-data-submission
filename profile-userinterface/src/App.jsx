@@ -1,19 +1,33 @@
-import './App.css'
-import '@mantine/core/styles.css';
-import '@mantine/dates/styles.css';
-import {MantineProvider} from '@mantine/core';
-import ProfileFormWrapper from './components/ProfileFormWrapper.jsx';
-import {Route, Routes} from "react-router-dom";
+import { Divider, MantineProvider } from "@mantine/core";
+import "@mantine/core/styles.css";
+import "@mantine/dates/styles.css";
+import PropTypes from "prop-types";
+import { Link, Outlet } from "react-router-dom";
+import "./App.css";
+import ScrollToTop from "./components/ScrollToTop.jsx";
 
-function App() {
-    return (
-        <MantineProvider>
-            <Routes>
-                <Route path="/" element={<ProfileFormWrapper/>}/>
-                <Route path='/:brokerSubmissionId' element={<ProfileFormWrapper/>}/>
-            </Routes>
-        </MantineProvider>
-    )
+function App(props) {
+  const base = props.baseUrl;
+
+  return (
+    <MantineProvider>
+      <nav className="nav">
+        <Link to={base} className="nav-link">
+          My Submissions
+        </Link>
+        <Link to={base + "form/"} className="nav-link">
+          Create Submission
+        </Link>
+      </nav>
+      <Divider my="xs" />
+      <Outlet />
+      <ScrollToTop />
+    </MantineProvider>
+  );
 }
 
-export default App
+App.propTypes = {
+  baseUrl: PropTypes.string,
+};
+
+export default App;

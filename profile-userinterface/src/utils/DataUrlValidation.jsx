@@ -3,17 +3,15 @@ function isValidUrl(url) {
   return urlRegex.test(url);
 }
 
-export default function validateDataUrlField(values, profileData) {
+export default function validateDataUrlField(values, profileData, validations) {
   let field = profileData.form_fields.find(
-    ({ field_type }) => field_type.type === "data-url-field"
+    ({ field }) => field.field_type.type === "data-url-field"
   );
-  let field_id = field.field_id;
+  let field_id = field.field.field_id;
   let value = values[field_id];
-  if (field.mandatory === "true" || (value !== undefined && value !== "")) {
-    return {
-      [field_id]: isValidUrl(value) ? null : "Please enter a valid URL",
-    };
-  } else {
-    return null;
+  if (field.field.mandatory === "true" || (value !== undefined && value !== "")) {
+    if (!isValidUrl(value)) {
+      validations[field_id] = "Please enter a valid URL";
+    }
   }
 }
