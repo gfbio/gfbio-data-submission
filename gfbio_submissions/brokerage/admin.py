@@ -364,7 +364,7 @@ def combine_csvs_to_abcd(modeladmin, request, queryset):
     )
 
     chain()
-        
+
 combine_csvs_to_abcd.short_description = "Combine CSV-Files to ABCD-File"
 
 def atax_validate(modeladmin, request, queryset):
@@ -379,7 +379,7 @@ def atax_validate(modeladmin, request, queryset):
 
         chain()
 
-    
+
 
 
 atax_validate.short_description = "ATAX validate"
@@ -412,7 +412,8 @@ class SubmissionAdmin(admin.ModelAdmin):
         "status",
         "target",
     )
-    search_fields = ["broker_submission_id", "additionalreference__reference_key"]
+    # TODO: user username emaial
+    search_fields = ["broker_submission_id", "additionalreference__reference_key", "user__username", "user__email", "user__name"]
     inlines = (
         AuditableTextDataInlineAdmin,
         AdditionalReferenceInline,
