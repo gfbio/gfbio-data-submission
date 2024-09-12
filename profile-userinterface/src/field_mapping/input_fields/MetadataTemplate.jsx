@@ -17,7 +17,7 @@ const MetadataTemplate = () => {
       template_link:
         "https://species-id.net/o/media/1/1d/GFBio_data_submission_template.zip",
       description_link:
-        "https://gfbio.biowikifarm.net/wiki/Data_submission_templates_for_biodiversity,_ecological_and_collection_data",
+        "https://kb.gfbio.org/display/KB/ABCD+consensus+elements+for+data+publication",
     },
   ];
 
