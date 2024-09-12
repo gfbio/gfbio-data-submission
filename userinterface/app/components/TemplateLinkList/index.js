@@ -64,7 +64,7 @@ class TemplateLinkList extends React.PureComponent {
           </h5>
           <div>
             <a
-              href="https://species-id.net/o/media/1/1d/GFBio_data_submission_template.zip"
+              href="https://kb.gfbio.org/download/attachments/138937170/GFBio_data_submission_template_mc1216.xlsm?version=1&modificationDate=1709796572343&api=v2"
               className="list-group-item list-group-item-action metadata-link no-border"
               target="_blank"
             >

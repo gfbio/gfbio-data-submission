@@ -15,7 +15,7 @@ const MetadataTemplate = () => {
       id: "biodiversity_template",
       name: "Biodiversity, Ecological and Collection Data Template:",
       template_link:
-        "https://species-id.net/o/media/1/1d/GFBio_data_submission_template.zip",
+        "https://kb.gfbio.org/download/attachments/138937170/GFBio_data_submission_template_mc1216.xlsm?version=1&modificationDate=1709796572343&api=v2",
       description_link:
         "https://kb.gfbio.org/display/KB/ABCD+consensus+elements+for+data+publication",
     },
