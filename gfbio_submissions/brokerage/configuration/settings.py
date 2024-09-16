@@ -33,7 +33,6 @@ BASE_HOST_NAME = getattr(settings, "BASE_HOST_NAME", "submission.gfbio.org")
 
 BASIC_TYPE = getattr(settings, "BASIC_TYPE", {"type": "string", "minLength": 1})
 
-# TODO: check usage and find out if obsolete
 # GCDJ -> ENA ?
 CHECKLIST_ACCESSION_MAPPING = getattr(
     settings,

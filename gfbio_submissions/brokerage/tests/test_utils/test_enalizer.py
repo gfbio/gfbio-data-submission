@@ -182,6 +182,15 @@ class TestEnalizer(TestCase):
         k, sample_xml = data.get("SAMPLE")
         self.assertNotIn("<TAG>ENA-CHECKLIST</TAG>", sample_xml)
 
+    def test_sample_xml_checklist_mapping_no_package_found_messaging(self):
+        submission = Submission.objects.last()
+        enalizer = Enalizer(submission, "test-enalizer-sample")
+        data = enalizer.prepare_submission_data()
+        k, sample_xml = data.get("SAMPLE")
+        self.assertNotIn("<TAG>ENA-CHECKLIST</TAG>", sample_xml)
+        submission = Submission.objects.get(pk=submission.pk)
+        print('SUBMISSION STATUS ENDE TEST: ', submission.status, ' ', submission.id, ' ', submission.pk)
+
     def test_additional_no_renamed_checklist_attribute(self):
         submission = Submission.objects.last()
         enalizer = Enalizer(submission, "test-enalizer-sample")

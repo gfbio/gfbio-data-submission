@@ -11,6 +11,7 @@ import uuid
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
 from ftplib import FTP
+from pprint import pp
 from uuid import uuid4
 from xml.etree.ElementTree import Element, SubElement
 
@@ -23,6 +24,7 @@ from pytz import timezone
 
 from gfbio_submissions.generic.utils import logged_requests
 from gfbio_submissions.resolve.models import Accession
+from .email_curators import send_checklist_mapping_error_notification
 
 from ..configuration.settings import (
     CHECKLIST_ACCESSION_MAPPING,
@@ -34,6 +36,7 @@ from ..configuration.settings import (
 from ..models.auditable_text_data import AuditableTextData
 from ..models.ena_report import EnaReport
 from ..models.persistent_identifier import PersistentIdentifier
+from ..models.submission import Submission
 from ..utils.csv import find_correct_platform_and_model
 
 logger = logging.getLogger(__name__)
@@ -72,6 +75,8 @@ class Enalizer(object):
             self.center_name = submission.center_name.center_name
         else:
             self.center_name = DEFAULT_ENA_CENTER_NAME
+        self.submission_id = submission.id
+        self.samples_with_checklist_errors = []
 
     def _upper_case_dictionary(self, dictionary):
         if isinstance(dictionary, list):
@@ -128,6 +133,16 @@ class Enalizer(object):
             else:
                 result[key] = value
         return result
+
+    def set_submission_state_to_error(self):
+        try:
+            submission = Submission.objects.get(pk=self.submission_id)
+            submission.status = Submission.ERROR
+            submission.save()
+        except Submission.DoesNotExist:
+            logger.warning(
+                "ena.py | Enalizer | set_submission_state_to_error | Submission with pk {} does not exist".format(
+                    self.submission_id))
 
     def create_submission_xml(self, action="VALIDATE", hold_date=None, outgoing_request_id="add_outgoing_id"):
         logger.info(msg="Enalizer create_submission_xml. action={} hold_date={}".format(action, hold_date))
@@ -189,7 +204,7 @@ class Enalizer(object):
 
         return ET.tostring(root, encoding="utf-8", method="xml")
 
-    def append_environmental_package_attributes(self, sample_attributes):
+    def append_environmental_package_attributes(self, sample_attributes, sample_title, sample_alias):
         checklist_mappings_keys = CHECKLIST_ACCESSION_MAPPING.keys()
         checklist_mappings_keys = [s.lower() for s in checklist_mappings_keys]
         # only add add_checklist and renamed_additional_checklist for first occurence of environmental package
@@ -202,12 +217,31 @@ class Enalizer(object):
                 renamed_additional_checklist_value = s.get("value", "NO_VAL")
                 break
         for s in sample_attributes:
+            # print('\nappend_environmental_package_attributes | sample: ')
+            # pp(s)
+            value = s.get("value", "no_value_found")
             if (
                 s.get("tag", "no_tag_found") == "environmental package"
-                and s.get("value", "no_value_found") in checklist_mappings_keys
+                and value in checklist_mappings_keys
             ):
+                # print('\t environmental package found AND value in checklist_mappings_keys')
+                # print('\t\ttag', s.get("tag", "no_tag_found"), ' val ', s.get("value", "no_value_found"))
                 add_checklist = CHECKLIST_ACCESSION_MAPPING.get(s.get("value", ""), "")
+                # print('\t\tadd_checklist : ', add_checklist)
                 break
+            elif (
+                s.get("tag", "no_tag_found") == "environmental package"
+                and value not in checklist_mappings_keys
+            ):
+                print('\t environmental package found AND value NOT in checklist_mappings_keys')
+                print('\t\ttag', s.get("tag", "no_tag_found"), ' val ', value)
+                print('\t\t\tno mapping despite environmental package -> SET SUB: TO ERROR report sample id ', s)
+                print('\t\t\tsample title ', sample_title, ' sample alias ', sample_alias)
+                # TODO: no break, capture all errors of this kind, report title, wrong value for mapping and list of
+                #   valid mappings
+                self.samples_with_checklist_errors.append((sample_title, sample_alias, value))
+
+
         if "NO_VAL" not in renamed_additional_checklist_tag:
             sample_attributes.append(
                 OrderedDict(
@@ -224,6 +258,7 @@ class Enalizer(object):
             )
 
     def convert_sample(self, s, sample_index, sample_descriptor_platform_mappings):
+        print('convert sample  start, s ', s)
         sample_attributes = s.pop("sample_attributes", [])
         # lower case required columns
         lower_case_cols = ["investigation type", "library_layout"]
@@ -259,7 +294,10 @@ class Enalizer(object):
         res["description"] = s.pop("sample_description", "")
         res.update(s)
         if len(sample_attributes):
-            self.append_environmental_package_attributes(sample_attributes)
+            print('\n----------------------------------\nconvert_sample | SAMPLE ATTRIBUTES available, append environmental package attributes')
+            print('SAMPLE ', s)
+            self.append_environmental_package_attributes(sample_attributes, sample_title=res["title"],
+                                                         sample_alias=res["sample_alias"])
             res["sample_attributes"] = [
                 # {k.upper(): v for k, v in s.items()}
                 OrderedDict([(k.upper(), v) for k, v in s.items()])
@@ -290,7 +328,11 @@ class Enalizer(object):
         # TODO / FIXME: how deal with sample_alias ?
         samples = []
         index_for_sample = 0
+        print('\n\n#################   create_sample_xml   ####################')#
+        print('type self.sample ', type(self.sample))
         for s in self.sample:
+            print('sample aus self.sample ', type(s), ' | s: ')
+            pp(s)
             samples.append(self.convert_sample(s, index_for_sample, sample_descriptor_platform_mappings))
             index_for_sample += 1
 
@@ -560,6 +602,16 @@ class Enalizer(object):
             experiment_xml,
         ) = self.create_experiment_xml()
         sample_xml = self.create_sample_xml(sample_descriptor_platform_mappings=sample_descriptor_platform_mappings)
+
+        print('\n++++++++++++++++++++++++\nEND prepare_submission_data | sample_Xml created')
+        print('self.sample with errors')
+        pp(self.samples_with_checklist_errors)
+        if len(self.samples_with_checklist_errors):
+            print('SET SUB TO ERROR')
+            self.set_submission_state_to_error()
+            # TODO: email curators about sample errors
+            send_checklist_mapping_error_notification(self.samples_with_checklist_errors)
+
         if len(self.run):
             return {
                 "STUDY": ("study.xml", smart_str(self.create_study_xml())),
