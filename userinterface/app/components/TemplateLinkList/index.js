@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import Tooltip from 'react-bootstrap/Tooltip';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Tooltip from 'react-bootstrap/Tooltip';
 // import PropTypes from 'prop-types';
 // import styled from 'styled-components';
 
@@ -64,7 +64,7 @@ class TemplateLinkList extends React.PureComponent {
           </h5>
           <div>
             <a
-              href="https://species-id.net/o/media/1/1d/GFBio_data_submission_template.zip"
+              href="https://kb.gfbio.org/download/attachments/138937170/GFBio_data_submission_template_mc1216.xlsm?version=1&modificationDate=1709796572343&api=v2"
               className="list-group-item list-group-item-action metadata-link no-border"
               target="_blank"
             >
@@ -73,7 +73,7 @@ class TemplateLinkList extends React.PureComponent {
             </a>
 
             <a
-              href="https://gfbio.biowikifarm.net/wiki/Data_submission_templates_for_biodiversity,_ecological_and_collection_data"
+              href="https://kb.gfbio.org/display/KB/ABCD+consensus+elements+for+data+publication"
               className="list-group-item list-group-item-action metadata-link no-border"
               target="_blank"
             >
