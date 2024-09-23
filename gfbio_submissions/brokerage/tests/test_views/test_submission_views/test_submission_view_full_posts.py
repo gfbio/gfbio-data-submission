@@ -24,10 +24,10 @@ class TestSubmissionViewFullPosts(TestSubmissionView):
     @classmethod
     def tearDownClass(cls):
         super(TestSubmissionViewFullPosts, cls).tearDownClass()
-        [
-            shutil.rmtree(path="{0}{1}{2}".format(MEDIA_ROOT, os.sep, o), ignore_errors=False)
-            for o in os.listdir(MEDIA_ROOT)
-        ]
+        # [
+        #     shutil.rmtree(path="{0}{1}{2}".format(MEDIA_ROOT, os.sep, o), ignore_errors=False)
+        #     for o in os.listdir(MEDIA_ROOT)
+        # ]
 
     @responses.activate
     def test_empty_max_post(self):
