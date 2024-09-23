@@ -22,7 +22,6 @@ from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
-
 from ...configuration.settings import DEFAULT_ENA_CENTER_NAME
 from ...models.broker_object import BrokerObject
 from ...models.center_name import CenterName
@@ -189,7 +188,9 @@ class TestEnalizer(TestCase):
         k, sample_xml = data.get("SAMPLE")
         self.assertNotIn("<TAG>ENA-CHECKLIST</TAG>", sample_xml)
         submission = Submission.objects.get(pk=submission.pk)
-        print('SUBMISSION STATUS ENDE TEST: ', submission.status, ' ', submission.id, ' ', submission.pk)
+        self.assertEqual(Submission.ERROR, submission.status)
+        # whitespaces are stripped automatically, and value is put to lowercase
+        self.assertEqual(1, len(enalizer.samples_with_checklist_errors))
 
     def test_additional_no_renamed_checklist_attribute(self):
         submission = Submission.objects.last()

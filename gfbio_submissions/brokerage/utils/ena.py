@@ -11,7 +11,6 @@ import uuid
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
 from ftplib import FTP
-from pprint import pp
 from uuid import uuid4
 from xml.etree.ElementTree import Element, SubElement
 
@@ -25,7 +24,6 @@ from pytz import timezone
 from gfbio_submissions.generic.utils import logged_requests
 from gfbio_submissions.resolve.models import Accession
 from .email_curators import send_checklist_mapping_error_notification
-
 from ..configuration.settings import (
     CHECKLIST_ACCESSION_MAPPING,
     DEFAULT_ENA_BROKER_NAME,
@@ -217,30 +215,19 @@ class Enalizer(object):
                 renamed_additional_checklist_value = s.get("value", "NO_VAL")
                 break
         for s in sample_attributes:
-            # print('\nappend_environmental_package_attributes | sample: ')
-            # pp(s)
-            value = s.get("value", "no_value_found")
+            value = s.get("value", "no_value_found").strip().lower()
+            tag = s.get("tag", "no_tag_found")
             if (
-                s.get("tag", "no_tag_found") == "environmental package"
+                tag == "environmental package"
                 and value in checklist_mappings_keys
             ):
-                # print('\t environmental package found AND value in checklist_mappings_keys')
-                # print('\t\ttag', s.get("tag", "no_tag_found"), ' val ', s.get("value", "no_value_found"))
                 add_checklist = CHECKLIST_ACCESSION_MAPPING.get(s.get("value", ""), "")
-                # print('\t\tadd_checklist : ', add_checklist)
                 break
             elif (
-                s.get("tag", "no_tag_found") == "environmental package"
+                tag == "environmental package"
                 and value not in checklist_mappings_keys
             ):
-                print('\t environmental package found AND value NOT in checklist_mappings_keys')
-                print('\t\ttag', s.get("tag", "no_tag_found"), ' val ', value)
-                print('\t\t\tno mapping despite environmental package -> SET SUB: TO ERROR report sample id ', s)
-                print('\t\t\tsample title ', sample_title, ' sample alias ', sample_alias)
-                # TODO: no break, capture all errors of this kind, report title, wrong value for mapping and list of
-                #   valid mappings
                 self.samples_with_checklist_errors.append((sample_title, sample_alias, value))
-
 
         if "NO_VAL" not in renamed_additional_checklist_tag:
             sample_attributes.append(
@@ -258,7 +245,6 @@ class Enalizer(object):
             )
 
     def convert_sample(self, s, sample_index, sample_descriptor_platform_mappings):
-        print('convert sample  start, s ', s)
         sample_attributes = s.pop("sample_attributes", [])
         # lower case required columns
         lower_case_cols = ["investigation type", "library_layout"]
@@ -294,12 +280,9 @@ class Enalizer(object):
         res["description"] = s.pop("sample_description", "")
         res.update(s)
         if len(sample_attributes):
-            print('\n----------------------------------\nconvert_sample | SAMPLE ATTRIBUTES available, append environmental package attributes')
-            print('SAMPLE ', s)
             self.append_environmental_package_attributes(sample_attributes, sample_title=res["title"],
                                                          sample_alias=res["sample_alias"])
             res["sample_attributes"] = [
-                # {k.upper(): v for k, v in s.items()}
                 OrderedDict([(k.upper(), v) for k, v in s.items()])
                 for s in sample_attributes
             ]
@@ -328,11 +311,7 @@ class Enalizer(object):
         # TODO / FIXME: how deal with sample_alias ?
         samples = []
         index_for_sample = 0
-        print('\n\n#################   create_sample_xml   ####################')#
-        print('type self.sample ', type(self.sample))
         for s in self.sample:
-            print('sample aus self.sample ', type(s), ' | s: ')
-            pp(s)
             samples.append(self.convert_sample(s, index_for_sample, sample_descriptor_platform_mappings))
             index_for_sample += 1
 
@@ -603,14 +582,10 @@ class Enalizer(object):
         ) = self.create_experiment_xml()
         sample_xml = self.create_sample_xml(sample_descriptor_platform_mappings=sample_descriptor_platform_mappings)
 
-        print('\n++++++++++++++++++++++++\nEND prepare_submission_data | sample_Xml created')
-        print('self.sample with errors')
-        pp(self.samples_with_checklist_errors)
         if len(self.samples_with_checklist_errors):
-            print('SET SUB TO ERROR')
             self.set_submission_state_to_error()
             # TODO: email curators about sample errors
-            send_checklist_mapping_error_notification(self.samples_with_checklist_errors)
+            send_checklist_mapping_error_notification(self.submission_id, self.samples_with_checklist_errors)
 
         if len(self.run):
             return {
@@ -668,8 +643,8 @@ def store_ena_data_as_auditable_text_data(submission, data):
         filename, filecontent = data[d]
         logger.info(
             msg="store_ena_data_as_auditable_text_data create "
-            "AuditableTextData | submission_pk={0} filename={1}"
-            "".format(submission.pk, filename)
+                "AuditableTextData | submission_pk={0} filename={1}"
+                "".format(submission.pk, filename)
         )
         with transaction.atomic():
             AuditableTextData.objects.create(name=filename, submission=submission, text_data=filecontent)
@@ -909,12 +884,12 @@ def update_embargo_date_in_submissions(hold_date, study_pid):
                     submission.save()
                     logger.info(
                         msg="update_embargo_date_in_submissions | "
-                        "ENA hold date does not match Submission embargo | "
-                        "submission date: {} | "
-                        "submission id: {} | "
-                        "persistent_identifier_date: {} | "
-                        "persistent_identifier_id: {}"
-                        "".format(
+                            "ENA hold date does not match Submission embargo | "
+                            "submission date: {} | "
+                            "submission id: {} | "
+                            "persistent_identifier_date: {} | "
+                            "persistent_identifier_id: {}"
+                            "".format(
                             submission.embargo,
                             submission.broker_submission_id,
                             study.hold_date,
