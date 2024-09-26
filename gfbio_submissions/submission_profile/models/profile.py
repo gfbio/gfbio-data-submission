@@ -22,6 +22,8 @@ class Profile(TimeStampedModel):
         on_delete=models.CASCADE,
     )
 
+    fields = models.ManyToManyField(Field, through="ProfileField")
+
     # TODO: validator for unique-in-profile field_name (or mapping_to)
     #   https://docs.djangoproject.com/en/4.2/ref/validators/
     active_user_profile = models.BooleanField(default=False)
