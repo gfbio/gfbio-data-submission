@@ -27,31 +27,31 @@ class Profile(TimeStampedModel):
     active_user_profile = models.BooleanField(default=False)
 
     objects = ProfileManager()
-    def save(self, *args, **kwargs):
-        super(Profile, self).save(*args, **kwargs)
-        if self.active_user_profile:
-            Profile.objects.filter(user=self.user).exclude(pk=self.pk).update(active_user_profile=False)
-        system_wide_mandatories = Field.objects.filter(system_wide_mandatory=True)
-        from .profile_field_extension import ProfileFieldExtension
-        for s in system_wide_mandatories:
-            ProfileFieldExtension.objects.add_from_field(field=s, profile=self)
+    # def save(self, *args, **kwargs):
+    #     super(Profile, self).save(*args, **kwargs)
+    #     if self.active_user_profile:
+    #         Profile.objects.filter(user=self.user).exclude(pk=self.pk).update(active_user_profile=False)
+    #     system_wide_mandatories = Field.objects.filter(system_wide_mandatory=True)
+    #     from .profile_field_extension import ProfileFieldExtension
+    #     for s in system_wide_mandatories:
+    #         ProfileFieldExtension.objects.add_from_field(field=s, profile=self)
 
-    def clone_for_user(self, user, name=None):
-        pk = self.pk
-        self.pk = None
-        self.user = user
-        if name:
-            self.name = name
-        else:
-            self.name = "user_id_{}_profile".format(user.pk)
-        self.system_wide_profile = False
-        self.save()
-        # TODO: move to manager with exception checks
-        original_profile = Profile.objects.get(pk=pk)
-        # exclude system_wide_mandatory fields as they are added in self.save()
-        for profile_field in original_profile.profilefieldextension_set.exclude(system_wide_mandatory=True):
-            profile_field.clone(profile=self)
-        return self
+    # def clone_for_user(self, user, name=None):
+    #     pk = self.pk
+    #     self.pk = None
+    #     self.user = user
+    #     if name:
+    #         self.name = name
+    #     else:
+    #         self.name = "user_id_{}_profile".format(user.pk)
+    #     self.system_wide_profile = False
+    #     self.save()
+    #     # TODO: move to manager with exception checks
+    #     original_profile = Profile.objects.get(pk=pk)
+    #     # exclude system_wide_mandatory fields as they are added in self.save()
+    #     for profile_field in original_profile.profilefieldextension_set.exclude(system_wide_mandatory=True):
+    #         profile_field.clone(profile=self)
+    #     return self
 
     def __str__(self):
         return self.name
@@ -61,8 +61,8 @@ class Profile(TimeStampedModel):
         # if self.inherit_fields_from is None:
         #     return self.fields.all()
         # return self.fields.all().union(self.inherit_fields_from.profile_fields.all())
-        # return self.fields.all()
-        return self.profilefieldextension_set.all()
+        return self.fields.all()
+        # return self.profilefieldextension_set.all()
 
     def form_fields(self):
         return self.all_fields().order_by("order")

@@ -3,7 +3,7 @@
 from django.test import TestCase
 
 from gfbio_submissions.users.models import User
-from ...models import ProfileFieldExtension
+# from ...models import ProfileFieldExtension
 from ...models.field import Field
 from ...models.field_type import FieldType
 from ...models.profile import Profile
@@ -41,20 +41,20 @@ class TestProfileManager(TestCase):
                                                                field_type=cls.field_type_1,
                                                                system_wide_mandatory=True)
         p = Profile.objects.create(name="profile-1", user=cls.user)
-        ProfileFieldExtension.objects.add_from_field(
-            field=cls.field_1,
-            profile=p,
-        )
+        # ProfileFieldExtension.objects.add_from_field(
+        #     field=cls.field_1,
+        #     profile=p,
+        # )
         p = Profile.objects.create(name="profile-2", user=cls.user, active_user_profile=True)
-        ProfileFieldExtension.objects.add_from_field(
-            field=cls.field_1,
-            profile=p,
-        )
+        # ProfileFieldExtension.objects.add_from_field(
+        #     field=cls.field_1,
+        #     profile=p,
+        # )
         p = Profile.objects.create(name="profile-3", user=cls.user)
-        ProfileFieldExtension.objects.add_from_field(
-            field=cls.field_1,
-            profile=p,
-        )
+        # ProfileFieldExtension.objects.add_from_field(
+        #     field=cls.field_1,
+        #     profile=p,
+        # )
 
     def test_db_content(self):
         self.assertEqual(3, len(Profile.objects.all()))

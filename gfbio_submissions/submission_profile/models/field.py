@@ -36,17 +36,17 @@ class Field(TimeStampedModel):
     visible = models.BooleanField(default=True)
     default = models.TextField(max_length=64, blank=True, default="")
 
-    def save(self, *args, **kwargs):
-        super(Field, self).save(*args, **kwargs)
-        if self.system_wide_mandatory:
-            self.mandatory = True
-            system_wide_mandatories = Field.objects.filter(system_wide_mandatory=True)
-            # prevent cyclic import error
-            from .profile import Profile
-            from .profile_field_extension import ProfileFieldExtension
-            for profile in Profile.objects.all():
-                for s in system_wide_mandatories:
-                    ProfileFieldExtension.objects.add_from_field(field=self, profile=profile)
+    # def save(self, *args, **kwargs):
+    #     super(Field, self).save(*args, **kwargs)
+    #     if self.system_wide_mandatory:
+    #         self.mandatory = True
+    #         system_wide_mandatories = Field.objects.filter(system_wide_mandatory=True)
+    #         # prevent cyclic import error
+    #         from .profile import Profile
+    #         from .profile_field_extension import ProfileFieldExtension
+    #         for profile in Profile.objects.all():
+    #             for s in system_wide_mandatories:
+    #                 ProfileFieldExtension.objects.add_from_field(field=self, profile=profile)
 
     def __str__(self):
         return self.field_name

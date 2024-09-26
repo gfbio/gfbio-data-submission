@@ -26,7 +26,7 @@ class TestField(TestCase):
         self.assertTrue(obj.system_wide_mandatory)
         self.assertTrue(obj.mandatory)
         # self.assertEqual(0, len(obj.profile_set.all()))
-        self.assertEqual(0, len(obj.profilefieldextension_set.all()))
+        # self.assertEqual(0, len(obj.profilefieldextension_set.all()))
 
     def test_multiple_relations(self):
         obj_1 = Field.objects.create(title="field 1", description="", field_type=self.field_type)
