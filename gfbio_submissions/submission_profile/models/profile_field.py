@@ -57,5 +57,12 @@ class ProfileField(models.Model):
         #         self.visible = True
         #         self.default = self.field.default
 
+    def clone(self, profile, field):
+        self.pk = None
+        self.profile = profile
+        self.field = field
+        self.save()
+
+
     def __str__(self):
-        return self.field.field_name
+        return f"{self.pk}_{self.field.field_name}"

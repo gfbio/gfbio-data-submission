@@ -10,7 +10,7 @@ class Command(BaseCommand):
     help = "Create a submission profile for user, if user has not at least one submission profile assigned."
 
     def handle(self, *args, **kwargs):
-        print("WARNING: Profiles are currently refactored -> DASS-2101 ")
+        print("WARNING: Profiles are currently being refactored -> DASS-2101 . Nothing happens now. Exiting ...")
         # default_profile = None
         # try:
         #     default_profile = Profile.objects.get(name="gfbio")

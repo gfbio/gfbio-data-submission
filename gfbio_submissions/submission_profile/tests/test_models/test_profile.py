@@ -6,6 +6,7 @@ from django.test import TestCase
 
 from gfbio_submissions.brokerage.configuration.settings import ENA, GENERIC
 from gfbio_submissions.users.models import User
+from ...models import ProfileField
 # from ...models import ProfileFieldExtension
 from ...models.field import Field
 from ...models.field_type import FieldType
@@ -26,10 +27,10 @@ class TestProfile(TestCase):
 
         cls.field_1 = Field.objects.create(field_name="field_1", title="a text input",
                                            description="Lorem ipsum", field_type=cls.field_type_1)
-        cls.field_2 = Field.objects.create(field_name="field_1", title="a select field",
+        cls.field_2 = Field.objects.create(field_name="field_2", title="a select field",
                                            description="Dolor sit", field_type=field_type_2)
 
-        cls.field_3 = Field.objects.create(title="another text input",
+        cls.field_3 = Field.objects.create(field_name="field_3", title="another text input",
                                            description="Amet consectetur",
                                            field_type=cls.field_type_1)
 
@@ -44,30 +45,72 @@ class TestProfile(TestCase):
         self.assertIsInstance(obj, Profile)
         self.assertEqual("profile-1", obj.name)
 
-    # def test_clone(self):
-    #     p1 = Profile.objects.create(name="profile-1")
-    #     self.assertEqual("profile-1", p1.name)
-    #     # p2 = p1.clone_for_user(self.user, "p2")
-    #     self.assertEqual("p2", p2.name)
-    #     self.assertEqual(2, len(Profile.objects.all()))
+    def test_clone(self):
+        p1 = Profile.objects.create(name="profile-1")
+        self.assertEqual("profile-1", p1.name)
+        p2 = p1.clone_for_user(self.user, "p2")
+        self.assertEqual("p2", p2.name)
+        self.assertEqual(2, len(Profile.objects.all()))
 
-    # def test_clone_with_profile_field_extension(self):
-    #     p1 = Profile.objects.create(name="profile-1")
-    #     ProfileFieldExtension.objects.create(
-    #         field=self.field_1,
-    #         profile=p1,
-    #     )
-    #     self.assertEqual(1, len(p1.profilefieldextension_set.filter(system_wide_mandatory=True)))
-    #     self.assertEqual(1, len(p1.profilefieldextension_set.filter(system_wide_mandatory=False)))
-    #
-    #     p2 = p1.clone_for_user(self.user, "p2")
-    #     self.assertEqual(2, len(Profile.objects.all()))
-    #
-    #     p1 = Profile.objects.get(name="profile-1")
-    #     self.assertNotEqual(p1.profilefieldextension_set.all(), p2.profilefieldextension_set.all())
-    #
-    #     self.assertEqual(1, len(p2.profilefieldextension_set.filter(system_wide_mandatory=True)))
-    #     self.assertEqual(1, len(p2.profilefieldextension_set.filter(system_wide_mandatory=False)))
+    def test_clone_related_fields(self):
+        p1 = Profile.objects.create(name="profile-1")
+        ProfileField.objects.update_or_create(
+            profile=p1, field=self.field_1,
+            defaults={"default": "default for field_1 in p1"})
+        p1.fields.add(self.field_2)
+
+        self.assertEqual(1, Profile.objects.count())
+        self.assertEqual(4, Field.objects.count())
+        self.assertEqual(3, ProfileField.objects.count())
+
+        # 2 added plus on system_wide_mandatory
+        self.assertEqual(3, p1.fields.count())
+        self.assertEqual(3, p1.profilefield_set.count())
+        self.assertEqual(3, len(p1.all_fields()))
+        self.assertEqual(3, len(p1.form_fields()))
+
+        # clone returns new instance for convienince,
+        # but in general the cloning instance becomes the clone in the process
+        p2 = p1.clone_for_user(self.user, "p2")
+        # get p1 back again for further tests
+        p1 = Profile.objects.get(name="profile-1")
+
+        self.assertEqual(2, Profile.objects.count())
+        self.assertEqual(4, Field.objects.count())
+        self.assertEqual(6, ProfileField.objects.count())
+
+        self.assertEqual(p1.fields.count(), p2.fields.count())
+        self.assertEqual(p1.profilefield_set.count(), p2.profilefield_set.count())
+        self.assertEqual(len(p1.all_fields()), len(p2.all_fields()))
+        self.assertEqual(len(p1.form_fields()), len(p2.form_fields()))
+
+        for f in p2.fields.all():
+            self.assertIn(f, p1.fields.all())
+        for pf in p2.profilefield_set.all():
+            self.assertIn(pf.field, p1.fields.all())
+
+        p1_form_fields = p1.form_fields()
+        p2_form_fields = p2.form_fields()
+        for i in range(0, len(p2_form_fields)):
+            self.assertEqual(p2_form_fields[i].field.pk, p1_form_fields[i].field.pk)
+            self.assertGreater(p2_form_fields[i].pk, p1_form_fields[i].pk)
+            self.assertEqual(p2_form_fields[i].default, p1_form_fields[i].default)
+
+        # ProfileFieldExtension.objects.create(
+        #     field=self.field_1,
+        #     profile=p1,
+        # )
+        # self.assertEqual(1, len(p1.profilefieldextension_set.filter(system_wide_mandatory=True)))
+        # self.assertEqual(1, len(p1.profilefieldextension_set.filter(system_wide_mandatory=False)))
+        #
+        # p2 = p1.clone_for_user(self.user, "p2")
+        # self.assertEqual(2, len(Profile.objects.all()))
+        #
+        # p1 = Profile.objects.get(name="profile-1")
+        # self.assertNotEqual(p1.profilefieldextension_set.all(), p2.profilefieldextension_set.all())
+        #
+        # self.assertEqual(1, len(p2.profilefieldextension_set.filter(system_wide_mandatory=True)))
+        # self.assertEqual(1, len(p2.profilefieldextension_set.filter(system_wide_mandatory=False)))
 
     def test_profile_contains_system_wide_mandatory(self):
         obj = Profile.objects.create(name="profile-1")
