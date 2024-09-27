@@ -40,6 +40,5 @@ class TestProfileSerializer(TestCase):
         # FIXME: DASS-2101 adapt fields serialization to refactored models
         profile = Profile.objects.first()
         serializer = ProfileSerializer(profile)
-        json = JSONRenderer().render(serializer.data)
-        # data = json.loads(serializer.data)
-        pprint(json)
+        data = json.loads(JSONRenderer().render(serializer.data))
+        pprint(data)

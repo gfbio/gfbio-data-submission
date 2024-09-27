@@ -52,14 +52,15 @@ class TestProfileField(TestCase):
         #  Case 1:
         #       - profile p1 has been assigned 1 ProfileFields by ProfielField.create (with extra infos)
         #       - and one of the available fields has been assigned regularly via fields.add
+        #       - one is system_wide_mandatory
         #       - p1.profilefield_set gives always all 2 fields, in case of the last field (added as regular field)
         #         the through model extra information is showing default values
         #  Use in ui: always iterate ProfileFields, only when e.g. a default is needed, add a dedicated ProfileField
         #   for that relation
         p1 = Profile.objects.get(name="p1")
         self.assertEqual(4, len(Field.objects.all()))
-        self.assertEqual(2, len(p1.profilefield_set.all()))
-        self.assertEqual(2, len(p1.fields.all()))
+        self.assertEqual(3, len(p1.profilefield_set.all()))
+        self.assertEqual(3, len(p1.fields.all()))
         self.assertGreater(
             len(p1.profilefield_set.get(field__pk=self.f1.pk).default),
             len(p1.fields.get(pk=self.f1.pk).default)
@@ -72,10 +73,11 @@ class TestProfileField(TestCase):
         #       - in a second step I wanted to add a special default value for f1 and did so by createing a ProfileField
         #           with relations and default.
         p2 = Profile.objects.create(name="p2", user=self.user)
+        # system_wide_mandatory field is included in any case, compare setUp() above
         p2.fields.add(self.f1)
         p2.fields.add(self.f2)
-        self.assertEqual(2, len(p2.profilefield_set.all()))
-        self.assertEqual(2, len(p2.fields.all()))
+        self.assertEqual(3, len(p2.profilefield_set.all()))
+        self.assertEqual(3, len(p2.fields.all()))
 
         obj, created = ProfileField.objects.update_or_create(
             profile=p2, field=self.f1,
@@ -87,12 +89,12 @@ class TestProfileField(TestCase):
             defaults={"default": "more updated default for f1 in p2"})
         self.assertFalse(created)
 
-        self.assertEqual(2, len(p2.profilefield_set.all()))
-        self.assertEqual(2, len(p2.fields.all()))
+        self.assertEqual(3, len(p2.profilefield_set.all()))
+        self.assertEqual(3, len(p2.fields.all()))
 
         field_to_update = p2.profilefield_set.get(field_id=1)
         field_to_update.default = "direct updated default for f1 in p2"
         field_to_update.save()
 
-        self.assertEqual(2, len(p2.profilefield_set.all()))
-        self.assertEqual(2, len(p2.fields.all()))
+        self.assertEqual(3, len(p2.profilefield_set.all()))
+        self.assertEqual(3, len(p2.fields.all()))

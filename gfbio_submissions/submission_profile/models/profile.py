@@ -70,8 +70,10 @@ class Profile(TimeStampedModel):
         # if self.inherit_fields_from is None:
         #     return self.fields.all()
         # return self.fields.all().union(self.inherit_fields_from.profile_fields.all())
-        return self.fields.all()
         # return self.profilefieldextension_set.all()
+
+        # return self.fields.all()
+        return self.profilefield_set.all()
 
     def form_fields(self):
         return self.all_fields().order_by("order")
