@@ -43,6 +43,8 @@ class Field(TimeStampedModel):
         if self.system_wide_mandatory:
             # if system_wide_mandatory is true, so has to be mandatory
             self.mandatory = True
+            # if system_wide_mandatory is true, the field has to be visible
+            self.visible = True
 
         super(Field, self).save(*args, **kwargs)
 

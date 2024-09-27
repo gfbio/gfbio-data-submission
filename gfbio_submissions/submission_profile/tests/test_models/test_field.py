@@ -25,6 +25,7 @@ class TestField(TestCase):
                                    system_wide_mandatory=True, field_type=self.field_type)
         self.assertTrue(obj.system_wide_mandatory)
         self.assertTrue(obj.mandatory)
+        self.assertTrue(obj.visible)
         # self.assertEqual(0, len(obj.profile_set.all()))
         # self.assertEqual(0, len(obj.profilefieldextension_set.all()))
 
@@ -64,6 +65,7 @@ class TestField(TestCase):
         obj.save()
         self.assertTrue(obj.system_wide_mandatory)
         self.assertTrue(obj.mandatory)
+        self.assertTrue(obj.visible)
 
     # TODO: adapt test
     @skip("refactored field id")
