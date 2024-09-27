@@ -45,6 +45,8 @@ class Field(TimeStampedModel):
             self.mandatory = True
             # if system_wide_mandatory is true, the field has to be visible
             self.visible = True
+            # if system_wide_mandatory is true, the field is not allowed to have a default value
+            self.default = ""
 
         super(Field, self).save(*args, **kwargs)
 

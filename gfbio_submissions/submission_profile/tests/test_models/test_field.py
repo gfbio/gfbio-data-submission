@@ -53,19 +53,22 @@ class TestField(TestCase):
         obj = Field.objects.create(title="a title for a field", description="a text", field_type=self.field_type)
         self.assertEqual("", obj.default)
 
-    def test_system_wide_mandatory_field(self):
+    def test_system_wide_mandatory_field_initial_value(self):
         obj = Field.objects.create(title="a title for a field", description="a text", field_type=self.field_type)
         self.assertFalse(obj.system_wide_mandatory)
 
     def test_system_wide_mandatory_set(self):
-        obj = Field.objects.create(title="a title for a field", description="a text", field_type=self.field_type)
+        obj = Field.objects.create(title="a title for a field", description="a text", field_type=self.field_type,
+                                   default="Default")
         self.assertFalse(obj.system_wide_mandatory)
         self.assertFalse(obj.mandatory)
+        self.assertGreater(len(obj.default), 0)
         obj.system_wide_mandatory = True
         obj.save()
         self.assertTrue(obj.system_wide_mandatory)
         self.assertTrue(obj.mandatory)
         self.assertTrue(obj.visible)
+        self.assertEqual(0, len(obj.default))
 
     # TODO: adapt test
     @skip("refactored field id")

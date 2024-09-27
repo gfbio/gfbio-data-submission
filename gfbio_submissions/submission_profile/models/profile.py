@@ -31,18 +31,19 @@ class Profile(TimeStampedModel):
     objects = ProfileManager()
 
     def save(self, *args, **kwargs):
-        print('profile save')
+        # print('profile save')
         super(Profile, self).save(*args, **kwargs)
-    #     if self.active_user_profile:
-    #         Profile.objects.filter(user=self.user).exclude(pk=self.pk).update(active_user_profile=False)
+        #     if self.active_user_profile:
+        #         Profile.objects.filter(user=self.user).exclude(pk=self.pk).update(active_user_profile=False)
         # add system_wide_mandatory fields to this profile
         system_wide_mandatories = Field.objects.filter(system_wide_mandatory=True)
-    #     from .profile_field_extension import ProfileFieldExtension
-        print(system_wide_mandatories)
+        #     from .profile_field_extension import ProfileFieldExtension
+        #     print(system_wide_mandatories)
         for s in system_wide_mandatories:
-            print('add ', s)
+            # print('add ', s)
             self.fields.add(s)
-        print(self.fields.all())
+        # print(self.fields.all())
+
     #         ProfileFieldExtension.objects.add_from_field(field=s, profile=self)
 
     # def clone_for_user(self, user, name=None):

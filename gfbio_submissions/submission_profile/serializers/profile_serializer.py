@@ -9,6 +9,7 @@ from ..models.profile import Profile
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+    # FIXME: flatten json if possible. remove redundancies eg. order in field and profilefield
     # FIXME: DASS-2101 adapt fields serialization to refactored models
     form_fields = ProfileFieldSerializer(many=True, read_only=True)
     # form_fields = FieldSerializer(many=True, read_only=True)

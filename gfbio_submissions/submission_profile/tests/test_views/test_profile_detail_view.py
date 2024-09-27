@@ -70,7 +70,8 @@ class TestProfileDetailView(TestCase):
         response = self.client.get("/profile/profile/generic/")
         content = json.loads(response.content)
         # print(response.status_code)
-        pprint(content)
+        # print('CONTENT')
+        # pprint(content)
 
         keys = content.keys()
         self.assertIn("name", keys)
@@ -143,7 +144,6 @@ class TestProfileDetailView(TestCase):
 
         }, format="json")
         content = json.loads(response.content)
-        pprint(content)
         self.assertEqual(403, response.status_code)
 
     def test_put_on_user_owned_profile(self):
@@ -154,6 +154,16 @@ class TestProfileDetailView(TestCase):
         }, format="json")
         content = json.loads(response.content)
         self.assertEqual(200, response.status_code)
+        self.assertEqual("ENA", content.get("target", "no-target"))
+
+    def test_put_on_other_users_profile(self):
+        response = self.api_client_2.put("/profile/profile/user-profile-1/", {
+            "name": "user-profile-1",
+            "target": "ENA",
+
+        }, format="json")
+        content = json.loads(response.content)
+        self.assertEqual(403, response.status_code)
         self.assertEqual("ENA", content.get("target", "no-target"))
 
     def test_put_with_system_wide_prefix(self):
