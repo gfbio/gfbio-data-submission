@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from pprint import pprint
 
 from django.test import TestCase
 
@@ -65,6 +66,18 @@ class TestProfileField(TestCase):
             len(p1.profilefield_set.get(field__pk=self.f1.pk).default),
             len(p1.fields.get(pk=self.f1.pk).default)
         )
+
+    def test_relation_values(self):
+        p1 = Profile.objects.get(name="p1")
+        # print('p1.fields')
+        # for f in p1.fields.all():
+        #     print(f'\n-------- {type(f)} -- {f.pk}  ----------\n')
+        #     pprint(f.__dict__)
+
+        print('\n################\np1.profile_field_set')
+        for f in p1.profilefield_set.all():
+            print(f'\n-------- {type(f)} -- {f.pk}  ----------\n')
+            # pprint(f.__dict__)
 
     def test_update_for_profile_field(self):
         # TODO/Note:
