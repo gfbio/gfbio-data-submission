@@ -74,7 +74,7 @@ class TestProfile(TestCase):
         self.assertEqual(1, len(obj.fields.all()))
         self.assertEqual(1, len(obj.all_fields()))
         self.assertTrue(obj.all_fields().first().mandatory)
-        self.assertTrue(obj.all_fields().first().system_wide_mandatory)
+        self.assertTrue(obj.all_fields().first().field.system_wide_mandatory)
 
     def test_profile_multiple_saves(self):
         profile = Profile.objects.create(name="profile-1")
@@ -96,7 +96,7 @@ class TestProfile(TestCase):
         self.field_1.save()
         self.assertEqual(2, len(profile.all_fields()))
         for f in profile.all_fields():
-            self.assertTrue(f.system_wide_mandatory)
+            self.assertTrue(f.field.system_wide_mandatory)
         # for f in profile.profilefieldextension_set.all():
         #     self.assertTrue(f.system_wide_mandatory)
         #     self.assertTrue(f.mandatory)
@@ -110,7 +110,7 @@ class TestProfile(TestCase):
         self.field_1.save()
         self.assertTrue(self.field_1.system_wide_mandatory)
         for f in profile.all_fields():
-            self.assertTrue(f.system_wide_mandatory)
+            self.assertTrue(f.field.system_wide_mandatory)
 
     def test_profile_update_on_system_wide_mandatory_add(self):
         profile = Profile.objects.create(name="profile-1")
@@ -121,7 +121,7 @@ class TestProfile(TestCase):
                              field_type=self.field_type_1, system_wide_mandatory=True)
         self.assertEqual(2, len(profile.all_fields()))
         for f in profile.all_fields():
-            self.assertTrue(f.system_wide_mandatory)
+            self.assertTrue(f.field.system_wide_mandatory)
         # for f in profile.profilefieldextension_set.all():
         #     self.assertTrue(f.system_wide_mandatory)
         #     self.assertTrue(f.mandatory)

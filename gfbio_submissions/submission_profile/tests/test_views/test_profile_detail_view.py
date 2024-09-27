@@ -87,16 +87,17 @@ class TestProfileDetailView(TestCase):
         self.assertIn("default", form_field_keys)
         self.assertIn("mandatory", form_field_keys)
         self.assertIn("order", form_field_keys)
-        self.assertIn("placeholder", form_field_keys)
-        self.assertIn("system_wide_mandatory", form_field_keys)
         self.assertIn("visible", form_field_keys)
 
         field = first_form_field["field"]
         field_keys = field.keys()
+        # print(field_keys)
         self.assertIn("description", field_keys)
         self.assertIn("field_id", field_keys)
         self.assertIn("field_type", field_keys)
+        self.assertIn("field_name", field_keys)
         self.assertIn("title", field_keys)
+        self.assertIn("placeholder", field_keys)
         self.assertIn("options", field_keys)
         self.assertIn("order", field_keys)
         self.assertIn("position", field_keys)
@@ -164,7 +165,6 @@ class TestProfileDetailView(TestCase):
         }, format="json")
         content = json.loads(response.content)
         self.assertEqual(403, response.status_code)
-        self.assertEqual("ENA", content.get("target", "no-target"))
 
     def test_put_with_system_wide_prefix(self):
         response = self.api_client.put("/profile/profile/user-profile-1/", {

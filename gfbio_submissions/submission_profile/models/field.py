@@ -33,20 +33,24 @@ class Field(TimeStampedModel):
     placeholder = models.TextField(default="", blank=True,
                                    help_text="Descriptive text displayed within the input field unless it is filled out")
 
-    mandatory = models.BooleanField(default=False)
-    visible = models.BooleanField(default=True)
-    default = models.TextField(max_length=64, blank=True, default="")
+    # TODO: 3 fields below are basically extra information that can be modified by user (unless swm)
+    #   interface-wise this means to remove them here and use values provided by through-model,
+    #   otherwise the only way to copy these values to through model is via save(), which is not
+    #   executed unless create or admin add is triggered
+    # mandatory = models.BooleanField(default=False)
+    # visible = models.BooleanField(default=True)
+    # default = models.TextField(max_length=64, blank=True, default="")
 
     def save(self, *args, **kwargs):
         #     print("save ", self)
 
-        if self.system_wide_mandatory:
-            # if system_wide_mandatory is true, so has to be mandatory
-            self.mandatory = True
-            # if system_wide_mandatory is true, the field has to be visible
-            self.visible = True
-            # if system_wide_mandatory is true, the field is not allowed to have a default value
-            self.default = ""
+        # if self.system_wide_mandatory:
+        #     # if system_wide_mandatory is true, so has to be mandatory
+        #     self.mandatory = True
+        #     # if system_wide_mandatory is true, the field has to be visible
+        #     self.visible = True
+        #     # if system_wide_mandatory is true, the field is not allowed to have a default value
+        #     self.default = ""
 
         super(Field, self).save(*args, **kwargs)
 
@@ -55,7 +59,7 @@ class Field(TimeStampedModel):
         # prevent cyclic import error
         from .profile import Profile
         for profile in Profile.objects.filter(~Q(fields__id=self.id)):
-            print(profile)
+            # print(profile)
             profile.fields.add(self)
 
     # update ALL profiles to contain recent number of ALL system_wide_mandatory fields

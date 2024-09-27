@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from pprint import pprint
 
 from django.test import TestCase
 
@@ -39,7 +38,6 @@ class TestProfileField(TestCase):
             system_wide_mandatory=True)
 
         p1 = Profile.objects.create(name="p1")
-
         cls.pf1 = ProfileField.objects.create(
             field=cls.f1,
             profile=p1,
@@ -47,6 +45,7 @@ class TestProfileField(TestCase):
             default="f1 default for p1"
         )
         p1.fields.add(cls.f3)
+        # p1 contains field f1 via profileField, f3 via direct add of fields, mandatory because of swm constraint
 
     def test_db_relations(self):
         # TODO/Note:
@@ -64,20 +63,52 @@ class TestProfileField(TestCase):
         self.assertEqual(3, len(p1.fields.all()))
         self.assertGreater(
             len(p1.profilefield_set.get(field__pk=self.f1.pk).default),
-            len(p1.fields.get(pk=self.f1.pk).default)
+            0
         )
 
-    def test_relation_values(self):
-        p1 = Profile.objects.get(name="p1")
-        # print('p1.fields')
-        # for f in p1.fields.all():
-        #     print(f'\n-------- {type(f)} -- {f.pk}  ----------\n')
-        #     pprint(f.__dict__)
+    def test_values_on_create(self):
+        profile = Profile.objects.create(name="profile", user=self.user)
+        profile.fields.add(self.f1)
+        profile.fields.add(self.f2)
+        self.assertEqual(3, len(profile.profilefield_set.all()))
 
-        print('\n################\np1.profile_field_set')
-        for f in p1.profilefield_set.all():
-            print(f'\n-------- {type(f)} -- {f.pk}  ----------\n')
-            # pprint(f.__dict__)
+        profile_field_f1 = ProfileField.objects.create(
+            field=self.f1,
+            profile=profile,
+            visible=False,
+            default="f1 default for p1"
+        )
+        profile_field = profile.profilefield_set.get(pk=profile_field_f1.pk)
+        self.assertFalse(profile_field.visible)
+        self.assertGreater(len(profile_field.default), 0)
+
+        profile_field = profile.profilefield_set.get(field__pk=self.f2.pk)
+        self.assertTrue(profile_field.visible)
+        self.assertTrue(profile_field.mandatory)
+        self.assertEqual("", profile_field.default)
+
+    def test_update_system_wide_mandatory(self):
+        profile = Profile.objects.create(name="profile", user=self.user)
+        profile.fields.add(self.f1)
+        self.assertEqual(2, len(profile.profilefield_set.all()))
+        profile_field = profile.profilefield_set.get(field=self.mandatory_field)
+        profile_field.visible = False
+        profile_field.mandatory = False
+        profile_field.default = "new default"
+        profile_field.save()
+        self.assertTrue(profile_field.visible)
+
+    # def test_relation_values(self):
+    #     p1 = Profile.objects.get(name="p1")
+    #     # print('p1.fields')
+    #     # for f in p1.fields.all():
+    #     #     print(f'\n-------- {type(f)} -- {f.pk}  ----------\n')
+    #     #     pprint(f.__dict__)
+    #
+    #     print('\n################\np1.profile_field_set')
+    #     for f in p1.profilefield_set.all():
+    #         print(f'\n-------- {type(f)} -- {f.pk}  ----------\n')
+    #         # pprint(f.__dict__)
 
     def test_update_for_profile_field(self):
         # TODO/Note:
