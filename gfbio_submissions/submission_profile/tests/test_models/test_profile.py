@@ -33,7 +33,7 @@ class TestProfile(TestCase):
                                            description="Amet consectetur",
                                            field_type=cls.field_type_1)
 
-        cls.system_wide_mandatory_field = Field.objects.create(field_name="mandatory-field",
+        cls.system_wide_mandatory_field = Field.objects.create(field_name="system-wide-mandatory-field",
                                                                title="Mandatory",
                                                                description="you have to enter something here ...",
                                                                field_type=cls.field_type_1,
@@ -71,6 +71,7 @@ class TestProfile(TestCase):
 
     def test_profile_contains_system_wide_mandatory(self):
         obj = Profile.objects.create(name="profile-1")
+        self.assertEqual(1, len(obj.fields.all()))
         self.assertEqual(1, len(obj.all_fields()))
         self.assertTrue(obj.all_fields().first().mandatory)
         self.assertTrue(obj.all_fields().first().system_wide_mandatory)
@@ -94,9 +95,22 @@ class TestProfile(TestCase):
         self.field_1.system_wide_mandatory = True
         self.field_1.save()
         self.assertEqual(2, len(profile.all_fields()))
+        for f in profile.all_fields():
+            self.assertTrue(f.system_wide_mandatory)
         # for f in profile.profilefieldextension_set.all():
         #     self.assertTrue(f.system_wide_mandatory)
         #     self.assertTrue(f.mandatory)
+
+    def test_profile_update_system_wide_mandatory_already_contained(self):
+        profile = Profile.objects.create(name="profile-x")
+        self.assertFalse(self.field_1.system_wide_mandatory)
+        profile.fields.add(self.field_1)
+        self.assertEqual(2, len(profile.all_fields()))
+        self.field_1.system_wide_mandatory = True
+        self.field_1.save()
+        self.assertTrue(self.field_1.system_wide_mandatory)
+        for f in profile.all_fields():
+            self.assertTrue(f.system_wide_mandatory)
 
     def test_profile_update_on_system_wide_mandatory_add(self):
         profile = Profile.objects.create(name="profile-1")
@@ -106,6 +120,8 @@ class TestProfile(TestCase):
                              description="you have to enter something here ...",
                              field_type=self.field_type_1, system_wide_mandatory=True)
         self.assertEqual(2, len(profile.all_fields()))
+        for f in profile.all_fields():
+            self.assertTrue(f.system_wide_mandatory)
         # for f in profile.profilefieldextension_set.all():
         #     self.assertTrue(f.system_wide_mandatory)
         #     self.assertTrue(f.mandatory)

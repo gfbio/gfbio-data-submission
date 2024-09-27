@@ -19,3 +19,6 @@ class ProfileField(models.Model):
 
     # TODO: redundant to Field.order, clarify where used and get rid of one or the two
     order = models.IntegerField(default=100, help_text='Rank within in the elements in the layout-position')
+
+    # TODO: go through tests/views
+    #         compare list for reqs https://kb.gfbio.org/display/DASS/Submission+Profiles

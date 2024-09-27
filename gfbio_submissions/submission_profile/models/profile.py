@@ -29,13 +29,20 @@ class Profile(TimeStampedModel):
     active_user_profile = models.BooleanField(default=False)
 
     objects = ProfileManager()
-    # def save(self, *args, **kwargs):
-    #     super(Profile, self).save(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        print('profile save')
+        super(Profile, self).save(*args, **kwargs)
     #     if self.active_user_profile:
     #         Profile.objects.filter(user=self.user).exclude(pk=self.pk).update(active_user_profile=False)
-    #     system_wide_mandatories = Field.objects.filter(system_wide_mandatory=True)
+        # add system_wide_mandatory fields to this profile
+        system_wide_mandatories = Field.objects.filter(system_wide_mandatory=True)
     #     from .profile_field_extension import ProfileFieldExtension
-    #     for s in system_wide_mandatories:
+        print(system_wide_mandatories)
+        for s in system_wide_mandatories:
+            print('add ', s)
+            self.fields.add(s)
+        print(self.fields.all())
     #         ProfileFieldExtension.objects.add_from_field(field=s, profile=self)
 
     # def clone_for_user(self, user, name=None):
