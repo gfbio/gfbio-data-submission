@@ -13,7 +13,6 @@ class TestFieldTypeSerializer(TestCase):
         self.assertTrue(valid)
         serializer.save()
 
-
     def test_unique_type(self):
         serializer = FieldTypeSerializer(data={"type": "text-input", })
         serializer.is_valid()

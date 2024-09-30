@@ -16,16 +16,8 @@ class TestProfileDetailView(TestCase):
     def setUpTestData(cls):
         TestProfile.setUpTestData()
         profile = Profile.objects.create(name="generic", target="GENERIC")
-        # for f in Field.objects.all():
-        #     # profile.profile_fields.add(f)
-        #     ProfileFieldExtension.objects.add_from_field(f, profile)
 
         cls.user = User.objects.get(username="horst")
-        # cls.user = User.objects.create_user(
-        #     username="horst",
-        #     email="horst@horst.de",
-        #     password="password",
-        # )
 
         user_2 = User.objects.create_user(
             username="kevin",
@@ -34,21 +26,12 @@ class TestProfileDetailView(TestCase):
         )
 
         profile = Profile.objects.create(name="user-profile-1", target="GENERIC", user=cls.user)
-        # for f in Field.objects.all():
-        #     # profile.profile_fields.add(f)
-        #     ProfileFieldExtension.objects.add_from_field(f, profile)
 
         # TODO: will change due to removin user on system wide profile
         profile = Profile.objects.create(name="user-system-profile-1", target="GENERIC", user=cls.user,
                                          system_wide_profile=True)
-        # for f in Field.objects.all():
-        #     # profile.profile_fields.add(f)
-        #     ProfileFieldExtension.objects.add_from_field(f, profile)
 
         profile = Profile.objects.create(name="system-profile-x", target="GENERIC", system_wide_profile=True)
-        # for f in Field.objects.all():
-        #     # profile.profile_fields.add(f)
-        #     ProfileFieldExtension.objects.add_from_field(f, profile)
 
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION="Basic " + base64.b64encode(b"horst:password").decode("utf-8"))
@@ -65,9 +48,6 @@ class TestProfileDetailView(TestCase):
     def test_profile_content(self):
         response = self.client.get("/profile/profile/generic/")
         content = json.loads(response.content)
-        # print(response.status_code)
-        # print('CONTENT')
-        # pprint(content)
 
         keys = content.keys()
         self.assertIn("name", keys)
@@ -86,7 +66,6 @@ class TestProfileDetailView(TestCase):
 
         field = first_form_field["field"]
         field_keys = field.keys()
-        # print(field_keys)
         self.assertIn("description", field_keys)
         self.assertIn("field_id", field_keys)
         self.assertIn("field_type", field_keys)
@@ -139,7 +118,6 @@ class TestProfileDetailView(TestCase):
             "name": "generic-updated",
 
         }, format="json")
-        content = json.loads(response.content)
         self.assertEqual(403, response.status_code)
 
     def test_put_on_user_owned_profile(self):
@@ -158,7 +136,6 @@ class TestProfileDetailView(TestCase):
             "target": "ENA",
 
         }, format="json")
-        content = json.loads(response.content)
         self.assertEqual(403, response.status_code)
 
     def test_put_with_system_wide_prefix(self):
@@ -182,7 +159,6 @@ class TestProfileDetailView(TestCase):
             "target": "ENA",
 
         }, format="json")
-        content = json.loads(response.content)
         self.assertEqual(403, response.status_code)
         profile = Profile.objects.get(name="user-system-profile-1")
         self.assertEqual("GENERIC", profile.target)

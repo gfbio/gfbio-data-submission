@@ -35,10 +35,6 @@ class TestField(TestCase):
         obj = Field.objects.create(field_name="mandatory", title="a title for a field", description="a text",
                                    system_wide_mandatory=True, field_type=self.field_type)
         self.assertTrue(obj.system_wide_mandatory)
-        # self.assertTrue(obj.mandatory)
-        # self.assertTrue(obj.visible)
-        # self.assertEqual(0, len(obj.profile_set.all()))
-        # self.assertEqual(0, len(obj.profilefieldextension_set.all()))
 
     def test_multiple_relations(self):
         obj_1 = Field.objects.create(title="field 1", description="", field_type=self.field_type)
@@ -47,23 +43,6 @@ class TestField(TestCase):
         self.assertEqual("field 2", obj_2.title)
         self.assertEqual(obj_1.field_type, obj_2.field_type)
 
-    # def test_mandatory_field(self):
-    #     obj = Field.objects.create(title="a title for a field", description="a text", field_type=self.field_type)
-    #     self.assertFalse(obj.mandatory)
-    #     obj.mandatory = True
-    #     obj.save()
-    #     self.assertTrue(obj.mandatory)
-
-    # def test_visible_field(self):
-    #     obj = Field.objects.create(title="a title for a field", description="a text", field_type=self.field_type)
-    #     self.assertTrue(obj.visible)
-    #     obj.visible = False
-    #     self.assertFalse(obj.visible)
-
-    # def test_default_value(self):
-    #     obj = Field.objects.create(title="a title for a field", description="a text", field_type=self.field_type)
-    #     self.assertEqual("", obj.default)
-
     def test_system_wide_mandatory_field_initial_value(self):
         obj = Field.objects.create(title="a title for a field", description="a text", field_type=self.field_type)
         self.assertFalse(obj.system_wide_mandatory)
@@ -71,14 +50,9 @@ class TestField(TestCase):
     def test_system_wide_mandatory_set(self):
         obj = Field.objects.create(title="a title for a field", description="a text", field_type=self.field_type)
         self.assertFalse(obj.system_wide_mandatory)
-        # self.assertFalse(obj.mandatory)
-        # self.assertGreater(len(obj.default), 0)
         obj.system_wide_mandatory = True
         obj.save()
         self.assertTrue(obj.system_wide_mandatory)
-        # self.assertTrue(obj.mandatory)
-        # self.assertTrue(obj.visible)
-        # self.assertEqual(0, len(obj.default))
 
     # TODO: adapt test
     @skip("refactored field id")

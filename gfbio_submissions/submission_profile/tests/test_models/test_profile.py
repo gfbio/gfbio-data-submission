@@ -7,7 +7,6 @@ from django.test import TestCase
 from gfbio_submissions.brokerage.configuration.settings import ENA, GENERIC
 from gfbio_submissions.users.models import User
 from ...models import ProfileField
-# from ...models import ProfileFieldExtension
 from ...models.field import Field
 from ...models.field_type import FieldType
 from ...models.profile import Profile
@@ -118,8 +117,6 @@ class TestProfile(TestCase):
         p2.save()
         self.assertEqual(1, Profile.objects.filter(user=self.user).filter(active_user_profile=True).count())
 
-
-
     def test_profile_contains_system_wide_mandatory(self):
         obj = Profile.objects.create(name="profile-1")
         self.assertEqual(1, len(obj.fields.all()))
@@ -140,17 +137,11 @@ class TestProfile(TestCase):
     def test_profile_update_on_system_wide_mandatory_change(self):
         profile = Profile.objects.create(name="profile-1")
         self.assertEqual(1, len(profile.all_fields()))
-        # for f in profile.profilefieldextension_set.all():
-        #     self.assertTrue(f.system_wide_mandatory)
-        #     self.assertTrue(f.mandatory)
         self.field_1.system_wide_mandatory = True
         self.field_1.save()
         self.assertEqual(2, len(profile.all_fields()))
         for f in profile.all_fields():
             self.assertTrue(f.field.system_wide_mandatory)
-        # for f in profile.profilefieldextension_set.all():
-        #     self.assertTrue(f.system_wide_mandatory)
-        #     self.assertTrue(f.mandatory)
 
     def test_profile_update_system_wide_mandatory_already_contained(self):
         profile = Profile.objects.create(name="profile-x")
@@ -173,9 +164,6 @@ class TestProfile(TestCase):
         self.assertEqual(2, len(profile.all_fields()))
         for f in profile.all_fields():
             self.assertTrue(f.field.system_wide_mandatory)
-        # for f in profile.profilefieldextension_set.all():
-        #     self.assertTrue(f.system_wide_mandatory)
-        #     self.assertTrue(f.mandatory)
 
     @skip("switch on manually just to get an impression on performance")
     def test_large_number_of_profile_updates_on_system_wide_mandatory_change(self):
@@ -200,41 +188,3 @@ class TestProfile(TestCase):
                              field_type=self.field_type_1, system_wide_mandatory=True)
         elapsed = time() - start
         print('elapsed time: {}'.format(round(elapsed, 4)))
-
-    # def test_field_add_plus_save(self):
-    #     profile = Profile.objects.create(name="profile-1")
-    #     # profile.profile_fields.add(self.field_1)
-    #     ProfileFieldExtension.objects.create(
-    #         field=self.field_1,
-    #         profile=profile,
-    #     )
-    #     self.assertEqual(2, len(profile.profilefieldextension_set.all()))
-    #     profile.target = ENA
-    #     profile.save()
-    #     self.assertEqual(2, len(profile.profilefieldextension_set.all()))
-
-    # def test_fields(self):
-    #     profile = Profile.objects.create(name="profile-1")
-    #     # TODO: wrap in manager method (but Profile manager to get add like in M2M) with exceptions and return
-    #     ProfileFieldExtension.objects.create(
-    #         field=self.field_1,
-    #         profile=profile,
-    #     )
-    #     ProfileFieldExtension.objects.create(
-    #         field=self.field_2,
-    #         profile=profile,
-    #     )
-    #     ProfileFieldExtension.objects.create(
-    #         field=self.field_3,
-    #         profile=profile,
-    #     )
-    #
-    #     # 3 above plus 1 system wide mandatory field
-    #     self.assertEqual(4, len(profile.profilefieldextension_set.all()))
-
-    # def test_multi_add_fields(self):
-    #     profile = Profile.objects.create(name="profile-1")
-    #     ProfileFieldExtension.objects.add_from_field(self.field_1, profile)
-    #     ProfileFieldExtension.objects.add_from_field(self.field_1, profile)
-    #     # 1 above plus 1 system wide mandatory field
-    #     self.assertEqual(2, len(profile.profilefieldextension_set.all()))

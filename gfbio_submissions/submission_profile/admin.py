@@ -45,11 +45,6 @@ class FieldAdmin(admin.ModelAdmin):
     list_filter = ["system_wide_mandatory", ]
 
 
-# class ProfileFieldExtensionAdmin(admin.ModelAdmin):
-#     list_display = ["__str__", "profile", "field", "field"]
-
-
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(Field, FieldAdmin)
-# admin.site.register(ProfileField, ProfileFieldAdmin)
 admin.site.register(FieldType)
