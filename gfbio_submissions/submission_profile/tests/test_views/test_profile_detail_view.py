@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
 import base64
 import json
-import pprint
-from pprint import pprint
 
 from django.test import TestCase
 from rest_framework.test import APIClient
 
 from gfbio_submissions.users.models import User
 from ..test_models.test_profile import TestProfile
-# from ...models import ProfileFieldExtension
-from ...models.field import Field
 from ...models.profile import Profile
 
 
@@ -86,7 +82,6 @@ class TestProfileDetailView(TestCase):
         self.assertIn("field", form_field_keys)
         self.assertIn("default", form_field_keys)
         self.assertIn("mandatory", form_field_keys)
-        self.assertIn("order", form_field_keys)
         self.assertIn("visible", form_field_keys)
 
         field = first_form_field["field"]

@@ -15,7 +15,7 @@ from ...models.profile import Profile
 from django.test import Client
 
 
-class TestProfileDetailView(TestCase):
+class TestProfileFrontendView(TestCase):
 
     @classmethod
     def setUpTestData(cls):
