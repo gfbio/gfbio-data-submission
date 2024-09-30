@@ -32,9 +32,9 @@ class Profile(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         super(Profile, self).save(*args, **kwargs)
-        print('profile save ', self.name)
-        #     if self.active_user_profile:
-        #         Profile.objects.filter(user=self.user).exclude(pk=self.pk).update(active_user_profile=False)
+        # print('profile save ', self.name)
+        if self.active_user_profile:
+            Profile.objects.filter(user=self.user).exclude(pk=self.pk).update(active_user_profile=False)
         # add system_wide_mandatory fields to this profile
         system_wide_mandatories = Field.objects.filter(system_wide_mandatory=True)
         #     from .profile_field_extension import ProfileFieldExtension
@@ -62,8 +62,6 @@ class Profile(TimeStampedModel):
         original_profile = Profile.objects.get(pk=pk)
         for f in original_profile.profilefield_set.all():
             f.clone(profile=self, field=f.field)
-
-
 
             # self.profilefield_set.add(f)
         # print('original', original_profile.profilefield_set.all())

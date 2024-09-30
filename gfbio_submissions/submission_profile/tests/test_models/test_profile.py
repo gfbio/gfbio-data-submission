@@ -96,21 +96,29 @@ class TestProfile(TestCase):
             self.assertGreater(p2_form_fields[i].pk, p1_form_fields[i].pk)
             self.assertEqual(p2_form_fields[i].default, p1_form_fields[i].default)
 
-        # ProfileFieldExtension.objects.create(
-        #     field=self.field_1,
-        #     profile=p1,
-        # )
-        # self.assertEqual(1, len(p1.profilefieldextension_set.filter(system_wide_mandatory=True)))
-        # self.assertEqual(1, len(p1.profilefieldextension_set.filter(system_wide_mandatory=False)))
-        #
-        # p2 = p1.clone_for_user(self.user, "p2")
-        # self.assertEqual(2, len(Profile.objects.all()))
-        #
-        # p1 = Profile.objects.get(name="profile-1")
-        # self.assertNotEqual(p1.profilefieldextension_set.all(), p2.profilefieldextension_set.all())
-        #
-        # self.assertEqual(1, len(p2.profilefieldextension_set.filter(system_wide_mandatory=True)))
-        # self.assertEqual(1, len(p2.profilefieldextension_set.filter(system_wide_mandatory=False)))
+    def test_active_user_profile(self):
+        p0 = Profile.objects.create(name="profile-0", system_wide_profile=True)
+        p1 = Profile.objects.create(name="profile-1", user=self.user)
+        ProfileField.objects.update_or_create(
+            profile=p1, field=self.field_1,
+            defaults={"default": "default for field_1 in p1"})
+        p1.fields.add(self.field_2)
+
+        p2 = Profile.objects.create(name="profile-2", user=self.user)
+        p2.fields.add(self.field_3)
+
+        self.assertEqual(2, Profile.objects.filter(user=self.user).count())
+        self.assertEqual(0, Profile.objects.filter(user=self.user).filter(active_user_profile=True).count())
+
+        p1.active_user_profile = True
+        p1.save()
+        self.assertEqual(1, Profile.objects.filter(user=self.user).filter(active_user_profile=True).count())
+
+        p2.active_user_profile = True
+        p2.save()
+        self.assertEqual(1, Profile.objects.filter(user=self.user).filter(active_user_profile=True).count())
+
+
 
     def test_profile_contains_system_wide_mandatory(self):
         obj = Profile.objects.create(name="profile-1")
