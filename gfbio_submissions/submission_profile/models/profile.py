@@ -37,14 +37,8 @@ class Profile(TimeStampedModel):
             Profile.objects.filter(user=self.user).exclude(pk=self.pk).update(active_user_profile=False)
         # add system_wide_mandatory fields to this profile
         system_wide_mandatories = Field.objects.filter(system_wide_mandatory=True)
-        #     from .profile_field_extension import ProfileFieldExtension
-        #     print(system_wide_mandatories)
         for s in system_wide_mandatories:
-            # print('\tadd ', s)
             self.fields.add(s)
-        # print(self.fields.all())
-
-    #         ProfileFieldExtension.objects.add_from_field(field=s, profile=self)
 
     def clone_for_user(self, user, name=None):
         # clone returns a  new instance for convenience,
@@ -63,15 +57,6 @@ class Profile(TimeStampedModel):
         for f in original_profile.profilefield_set.all():
             f.clone(profile=self, field=f.field)
 
-            # self.profilefield_set.add(f)
-        # print('original', original_profile.profilefield_set.all())
-        # print('clone ', self.profilefield_set.all())
-        # # exclude system_wide_mandatory fields as they are added in self.save()
-        # for p in original_profile.profilefield_set.exclude(field__system_wide_mandatory=True):
-        #     self.profilefield_set.add(p)
-        # # for profile_field in original_profile.profilefieldextension_set.exclude(system_wide_mandatory=True):
-        # #     profile_field.clone(profile=self)
-        # print('clone ', self.profilefield_set.all())
         return self
 
     def __str__(self):
@@ -82,11 +67,8 @@ class Profile(TimeStampedModel):
         # if self.inherit_fields_from is None:
         #     return self.fields.all()
         # return self.fields.all().union(self.inherit_fields_from.profile_fields.all())
-        # return self.profilefieldextension_set.all()
 
-        # return self.fields.all()
         return self.profilefield_set.all()
 
     def form_fields(self):
-        # print('form_fields self.pk ', self.pk, ' self.name ', self.name, ' : ', self.all_fields().order_by("order") )
         return self.all_fields().order_by("field__order")

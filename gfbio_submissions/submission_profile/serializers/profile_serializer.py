@@ -12,8 +12,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     # FIXME: flatten json if possible. remove redundancies eg. order in field and profilefield
     # FIXME: DASS-2101 adapt fields serialization to refactored models
     form_fields = ProfileFieldSerializer(many=True, read_only=True)
-    # form_fields = FieldSerializer(many=True, read_only=True)
-    # form_fields = ProfileFieldExtensionSerializer(many=True, read_only=True)
+
     def validate_name(self, value):
         if value.lower().startswith(SYSTEM_WIDE_PROFILE_NAME_PREFIX):
             raise serializers.ValidationError(
