@@ -10,7 +10,7 @@ export const PROFILE_URL_PREFIX = "/profile/";
 
 export const ROUTER_BASE_URL = PROFILE_URL_PREFIX + "ui/";
 
-export const DEFAULT_PROFILE_NAME = "default";
+export const DEFAULT_PROFILE_NAME = "gfbio";
 
 //TODO: fix ugly url later
 export const PROFILE_URL = SERVER_ROOT + PROFILE_URL_PREFIX + "profile/";

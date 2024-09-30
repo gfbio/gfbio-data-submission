@@ -22,10 +22,9 @@ const FormField = ({formField, form, onFilesChange}) => {
         mandatory: formField.mandatory,
         options: formField.field.options,
         field_id: formField.field.field_id,
-        placeholder: formField.placeholder,
+        placeholder: formField.field.placeholder,
         form: form,
     };
-
 
     switch (formField.field.field_type.type) {
         case "text-field":

@@ -89,4 +89,4 @@ class Profile(TimeStampedModel):
 
     def form_fields(self):
         # print('form_fields self.pk ', self.pk, ' self.name ', self.name, ' : ', self.all_fields().order_by("order") )
-        return self.all_fields().order_by("order")
+        return self.all_fields().order_by("field__order")

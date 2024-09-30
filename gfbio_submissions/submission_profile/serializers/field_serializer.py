@@ -19,6 +19,7 @@ class FieldSerializer(serializers.ModelSerializer):
             "description",
             # "mandatory",
             "placeholder",
+            "system_wide_mandatory",
             # "visible",
             # "default",
             "options",

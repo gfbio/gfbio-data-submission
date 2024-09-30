@@ -13,6 +13,11 @@ class ProfileFieldSerializer(serializers.ModelSerializer):
     # complete field serialization
     field = FieldSerializer(read_only=True)
 
+    # def validate(self, data):
+    #     if data.get("field", None):
+    #
+    #     return data
+
     # TODO: add validation for
     #   - if system_wide_mandatory = True
     #       - mandatory must stay True too
@@ -27,5 +32,5 @@ class ProfileFieldSerializer(serializers.ModelSerializer):
             "mandatory",
             "visible",
             "default",
-            "order",
+            # "order",
         )
