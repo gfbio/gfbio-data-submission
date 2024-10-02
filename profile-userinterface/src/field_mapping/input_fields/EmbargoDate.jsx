@@ -1,16 +1,15 @@
-import React, {useEffect, useState} from 'react';
-import {Button, Group, Modal} from '@mantine/core';
-import {useDisclosure} from '@mantine/hooks';
-import {DatePicker} from '@mantine/dates';
+import { Button, Group, Modal } from "@mantine/core";
+import { DatePicker } from "@mantine/dates";
+import { useDisclosure } from "@mantine/hooks";
 import PropTypes from "prop-types";
-import SelectField from "./SelectField.jsx";
+import React, { useEffect, useState } from "react";
 
 const EmbargoDate = (props) => {
     const {title, description, form, options, field_id, mandatory} = props;
 
     const today = new Date();
     const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setDate(tomorrow.getDate() + 1);
     const initialDate = new Date();
     initialDate.setFullYear(today.getFullYear() + 1);
     const maxDate = new Date();
@@ -27,7 +26,15 @@ const EmbargoDate = (props) => {
     useEffect(() => {
         localStorage.setItem('embargo', embargoDate.toISOString().split('T')[0]);
     }, [embargoDate]);
-    // }
+
+    useEffect(() => {
+        const submission = JSON.parse(localStorage.getItem("submission"));
+        if (submission.embargo) {
+            setEmbargoDate(new Date(submission.embargo));
+        } else {
+            setEmbargoDate(initialDate);
+        }
+    }, [location]);
 
     // TODO: add logic for:
     //  Do not show button if at least one PID has status PUBLIC
@@ -35,19 +42,19 @@ const EmbargoDate = (props) => {
     const showEmbargoButton = () => {
         return (
             <Group>
-                <Button onClick={open} variant="default" className='link-style'>
-                    <i className='icon ion-md-calendar align-top mr-2'></i>
+                <Button onClick={open} variant="default" className="link-style">
+                    <i className="icon ion-md-calendar align-top mr-2"></i>
                     Change embargo date
                 </Button>
             </Group>
         );
-    }
+    };
 
     const addMonthsToInitialEmbargoDate = (months) => {
         const tmp = new Date(today);
         tmp.setMonth(today.getMonth() + months);
         setEmbargoDate(tmp);
-    }
+    };
 
     const formattedEmbargoDate = () => {
         return (
@@ -55,7 +62,7 @@ const EmbargoDate = (props) => {
             embargoDate.toLocaleString('default', {month: 'long'}) + ' ' +
             embargoDate.getFullYear().toString()
         );
-    }
+    };
 
     return (
         <div>
@@ -112,7 +119,7 @@ const EmbargoDate = (props) => {
 
 EmbargoDate.defaultProps = {
     // default: "",
-}
+};
 
 EmbargoDate.propTypes = {
     title: PropTypes.string.isRequired,
@@ -121,6 +128,6 @@ EmbargoDate.propTypes = {
     field_id: PropTypes.string.isRequired,
     // default: PropTypes.string,
     options: PropTypes.array,
-}
+};
 
 export default EmbargoDate;

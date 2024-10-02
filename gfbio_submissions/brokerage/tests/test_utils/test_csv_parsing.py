@@ -579,10 +579,10 @@ class TestCSVParsing(TestCase):
     @classmethod
     def tearDownClass(cls):
         super(TestCSVParsing, cls).tearDownClass()
-        [
-            shutil.rmtree(path="{0}{1}{2}".format(MEDIA_ROOT, os.sep, o), ignore_errors=False)
-            for o in os.listdir(MEDIA_ROOT)
-        ]
+        # [
+        #     shutil.rmtree(path="{0}{1}{2}".format(MEDIA_ROOT, os.sep, o), ignore_errors=False)
+        #     for o in os.listdir(MEDIA_ROOT)
+        # ]
 
     def test_extract_sample(self):
         row = OrderedDict(
@@ -1143,7 +1143,7 @@ class TestCSVParsing(TestCase):
         ]
         for path in test_files:
             requirements = parse_molecular_csv_with_encoding_detection(path)
-            
+
             assert "samples" in requirements
             assert len(requirements["samples"]) == 1
 

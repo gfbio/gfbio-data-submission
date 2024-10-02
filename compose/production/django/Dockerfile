@@ -74,7 +74,7 @@ COPY --from=python-build-stage /usr/src/app/wheels  /wheels/
 RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
   && rm -rf /wheels/
 
-RUN pip install abcd-converter==0.0.3 --index-url https://gitlab-pe.gwdg.de/api/v4/projects/26166/packages/pypi/simple
+RUN pip install abcd-converter==0.0.4 --index-url https://gitlab-pe.gwdg.de/api/v4/projects/26166/packages/pypi/simple
 
 COPY --chown=django:django ./compose/production/django/entrypoint /entrypoint
 RUN sed -i 's/\r$//g' /entrypoint

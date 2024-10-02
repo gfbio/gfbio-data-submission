@@ -6,7 +6,6 @@ from ...models.field_type import FieldType
 
 class TestFieldType(TestCase):
 
-
     def test_simple_instance_creation(self):
         obj = FieldType.objects.create(type="any")
         self.assertIsInstance(obj, FieldType)

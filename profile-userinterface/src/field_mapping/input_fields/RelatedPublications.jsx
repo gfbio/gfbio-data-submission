@@ -7,12 +7,26 @@ import {
   ThemeIcon,
 } from "@mantine/core";
 import PropTypes from "prop-types";
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { mapValueToField } from "../../utils/MapValueToField";
 
 function RelatedPublications(props) {
   const { title, description, mandatory, form, field_id, placeholder } = props;
+  const location = useLocation();
+
   const [publication, setPublication] = useState("");
   const [publicationsList, setPublicationsList] = useState([]);
+
+  useEffect(() => {
+    let initial_value = [];
+    const value = mapValueToField(field_id);
+    if (value !== "") {
+      initial_value = value;
+    }
+    form.setFieldValue(field_id, initial_value);
+    setPublicationsList(initial_value);
+  }, [location]);
 
   const handlePublicationChange = (event) => {
     setPublication(event.target.value);
@@ -23,14 +37,14 @@ function RelatedPublications(props) {
       const updatedList = [...publicationsList, publication];
       setPublicationsList(updatedList);
       setPublication("");
-      form.setFieldValue(field_id, updatedList.join(", "));
+      form.setFieldValue(field_id, updatedList);
     }
   };
 
   const handleRemovePublication = (publication) => {
     const updatedList = publicationsList.filter((item) => item !== publication);
     setPublicationsList(updatedList);
-    form.setFieldValue(field_id, updatedList.join(", "));
+    form.setFieldValue(field_id, updatedList);
   };
 
   return (

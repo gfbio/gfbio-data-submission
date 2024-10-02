@@ -72,8 +72,8 @@ ENV JAVA_HOME=/opt/java/openjdk \
 COPY ./requirements /requirements
 RUN pip install -r /requirements/local.txt
 
-COPY --chown=django:django abcd_converter-0.0.3.tar.gz ./abcd_converter-0.0.3.tar.gz
-RUN pip install ./abcd_converter-0.0.3.tar.gz
+COPY --chown=django:django abcd_converter-0.0.4.tar.gz ./abcd_converter-0.0.4.tar.gz
+RUN pip install ./abcd_converter-0.0.4.tar.gz
 
 # RUN pip install abcd-converter --index-url https://gitlab-pe.gwdg.de/api/v4/projects/26166/packages/pypi/simple
 

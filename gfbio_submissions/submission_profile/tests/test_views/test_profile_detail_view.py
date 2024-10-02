@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 import base64
 import json
-import pprint
-from pprint import pprint
 
 from django.test import TestCase
 from rest_framework.test import APIClient
 
 from gfbio_submissions.users.models import User
 from ..test_models.test_profile import TestProfile
-from ...models.field import Field
 from ...models.profile import Profile
 
 
@@ -19,14 +16,8 @@ class TestProfileDetailView(TestCase):
     def setUpTestData(cls):
         TestProfile.setUpTestData()
         profile = Profile.objects.create(name="generic", target="GENERIC")
-        for f in Field.objects.all():
-            profile.fields.add(f)
 
-        cls.user = User.objects.create_user(
-            username="horst",
-            email="horst@horst.de",
-            password="password",
-        )
+        cls.user = User.objects.get(username="horst")
 
         user_2 = User.objects.create_user(
             username="kevin",
@@ -35,18 +26,12 @@ class TestProfileDetailView(TestCase):
         )
 
         profile = Profile.objects.create(name="user-profile-1", target="GENERIC", user=cls.user)
-        for f in Field.objects.all():
-            profile.fields.add(f)
 
         # TODO: will change due to removin user on system wide profile
         profile = Profile.objects.create(name="user-system-profile-1", target="GENERIC", user=cls.user,
                                          system_wide_profile=True)
-        for f in Field.objects.all():
-            profile.fields.add(f)
 
         profile = Profile.objects.create(name="system-profile-x", target="GENERIC", system_wide_profile=True)
-        for f in Field.objects.all():
-            profile.fields.add(f)
 
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION="Basic " + base64.b64encode(b"horst:password").decode("utf-8"))
@@ -72,14 +57,25 @@ class TestProfileDetailView(TestCase):
         fields = content.get("form_fields", [])
         self.assertGreater(len(fields), 0)
 
-        first_field = fields[0]
-        keys = first_field.keys()
-        self.assertIn("description", keys)
-        self.assertIn("field_id", keys)
-        self.assertIn("field_type", keys)
-        self.assertIn("title", keys)
+        first_form_field = fields[0]
+        form_field_keys = first_form_field.keys()
+        self.assertIn("field", form_field_keys)
+        self.assertIn("default", form_field_keys)
+        self.assertIn("mandatory", form_field_keys)
+        self.assertIn("visible", form_field_keys)
 
-        self.assertIn("type", first_field.get("field_type", {}).keys())
+        field = first_form_field["field"]
+        field_keys = field.keys()
+        self.assertIn("description", field_keys)
+        self.assertIn("field_id", field_keys)
+        self.assertIn("field_type", field_keys)
+        self.assertIn("field_name", field_keys)
+        self.assertIn("title", field_keys)
+        self.assertIn("placeholder", field_keys)
+        self.assertIn("options", field_keys)
+        self.assertIn("order", field_keys)
+        self.assertIn("position", field_keys)
+        self.assertIn("type", field.get("field_type", {}).keys())
 
     def test_get_non_existing_profile(self):
         response = self.client.get("/profile/profile/foobar/")
@@ -122,8 +118,6 @@ class TestProfileDetailView(TestCase):
             "name": "generic-updated",
 
         }, format="json")
-        content = json.loads(response.content)
-        pprint(content)
         self.assertEqual(403, response.status_code)
 
     def test_put_on_user_owned_profile(self):
@@ -135,6 +129,14 @@ class TestProfileDetailView(TestCase):
         content = json.loads(response.content)
         self.assertEqual(200, response.status_code)
         self.assertEqual("ENA", content.get("target", "no-target"))
+
+    def test_put_on_other_users_profile(self):
+        response = self.api_client_2.put("/profile/profile/user-profile-1/", {
+            "name": "user-profile-1",
+            "target": "ENA",
+
+        }, format="json")
+        self.assertEqual(403, response.status_code)
 
     def test_put_with_system_wide_prefix(self):
         response = self.api_client.put("/profile/profile/user-profile-1/", {
@@ -157,7 +159,6 @@ class TestProfileDetailView(TestCase):
             "target": "ENA",
 
         }, format="json")
-        content = json.loads(response.content)
         self.assertEqual(403, response.status_code)
         profile = Profile.objects.get(name="user-system-profile-1")
         self.assertEqual("GENERIC", profile.target)

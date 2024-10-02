@@ -2,6 +2,6 @@
 !.coveragerc
 !.env
 !.pylintrc
-!abcd_converter-0.0.3.tar.gz
+!abcd_converter-0.0.4.tar.gz
 docs
 userinterface

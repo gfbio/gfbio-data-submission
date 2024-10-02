@@ -22,7 +22,6 @@ from gfbio_submissions.generic.models.request_log import RequestLog
 from gfbio_submissions.generic.models.resource_credential import ResourceCredential
 from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
 from gfbio_submissions.users.models import User
-
 from ...configuration.settings import DEFAULT_ENA_CENTER_NAME
 from ...models.broker_object import BrokerObject
 from ...models.center_name import CenterName
@@ -181,6 +180,17 @@ class TestEnalizer(TestCase):
         data = enalizer.prepare_submission_data()
         k, sample_xml = data.get("SAMPLE")
         self.assertNotIn("<TAG>ENA-CHECKLIST</TAG>", sample_xml)
+
+    def test_sample_xml_checklist_mapping_no_package_found_messaging(self):
+        submission = Submission.objects.last()
+        enalizer = Enalizer(submission, "test-enalizer-sample")
+        data = enalizer.prepare_submission_data()
+        k, sample_xml = data.get("SAMPLE")
+        self.assertNotIn("<TAG>ENA-CHECKLIST</TAG>", sample_xml)
+        submission = Submission.objects.get(pk=submission.pk)
+        self.assertEqual(Submission.ERROR, submission.status)
+        # whitespaces are stripped automatically, and value is put to lowercase
+        self.assertEqual(1, len(enalizer.samples_with_checklist_errors))
 
     def test_additional_no_renamed_checklist_attribute(self):
         submission = Submission.objects.last()

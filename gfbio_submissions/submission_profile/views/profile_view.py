@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-from rest_framework import permissions, mixins
-from rest_framework.generics import RetrieveAPIView, UpdateAPIView
 from rest_framework.authentication import TokenAuthentication, BasicAuthentication
+from rest_framework.generics import RetrieveAPIView, UpdateAPIView
 
 from ..models.profile import Profile
 from ..permissions.is_owner_and_non_system_wide import IsOwnerAndNonSystemWide

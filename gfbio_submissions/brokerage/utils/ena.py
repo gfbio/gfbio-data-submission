@@ -23,7 +23,7 @@ from pytz import timezone
 
 from gfbio_submissions.generic.utils import logged_requests
 from gfbio_submissions.resolve.models import Accession
-
+from .email_curators import send_checklist_mapping_error_notification
 from ..configuration.settings import (
     CHECKLIST_ACCESSION_MAPPING,
     DEFAULT_ENA_BROKER_NAME,
@@ -34,6 +34,7 @@ from ..configuration.settings import (
 from ..models.auditable_text_data import AuditableTextData
 from ..models.ena_report import EnaReport
 from ..models.persistent_identifier import PersistentIdentifier
+from ..models.submission import Submission
 from ..utils.csv import find_correct_platform_and_model
 
 logger = logging.getLogger(__name__)
@@ -72,6 +73,8 @@ class Enalizer(object):
             self.center_name = submission.center_name.center_name
         else:
             self.center_name = DEFAULT_ENA_CENTER_NAME
+        self.submission_id = submission.id
+        self.samples_with_checklist_errors = []
 
     def _upper_case_dictionary(self, dictionary):
         if isinstance(dictionary, list):
@@ -128,6 +131,16 @@ class Enalizer(object):
             else:
                 result[key] = value
         return result
+
+    def set_submission_state_to_error(self):
+        try:
+            submission = Submission.objects.get(pk=self.submission_id)
+            submission.status = Submission.ERROR
+            submission.save()
+        except Submission.DoesNotExist:
+            logger.warning(
+                "ena.py | Enalizer | set_submission_state_to_error | Submission with pk {} does not exist".format(
+                    self.submission_id))
 
     def create_submission_xml(self, action="VALIDATE", hold_date=None, outgoing_request_id="add_outgoing_id"):
         logger.info(msg="Enalizer create_submission_xml. action={} hold_date={}".format(action, hold_date))
@@ -189,7 +202,7 @@ class Enalizer(object):
 
         return ET.tostring(root, encoding="utf-8", method="xml")
 
-    def append_environmental_package_attributes(self, sample_attributes):
+    def append_environmental_package_attributes(self, sample_attributes, sample_title, sample_alias):
         checklist_mappings_keys = CHECKLIST_ACCESSION_MAPPING.keys()
         checklist_mappings_keys = [s.lower() for s in checklist_mappings_keys]
         # only add add_checklist and renamed_additional_checklist for first occurence of environmental package
@@ -202,12 +215,20 @@ class Enalizer(object):
                 renamed_additional_checklist_value = s.get("value", "NO_VAL")
                 break
         for s in sample_attributes:
+            value = s.get("value", "no_value_found").strip().lower()
+            tag = s.get("tag", "no_tag_found")
             if (
-                s.get("tag", "no_tag_found") == "environmental package"
-                and s.get("value", "no_value_found") in checklist_mappings_keys
+                tag == "environmental package"
+                and value in checklist_mappings_keys
             ):
                 add_checklist = CHECKLIST_ACCESSION_MAPPING.get(s.get("value", ""), "")
                 break
+            elif (
+                tag == "environmental package"
+                and value not in checklist_mappings_keys
+            ):
+                self.samples_with_checklist_errors.append((sample_title, sample_alias, value))
+
         if "NO_VAL" not in renamed_additional_checklist_tag:
             sample_attributes.append(
                 OrderedDict(
@@ -259,9 +280,9 @@ class Enalizer(object):
         res["description"] = s.pop("sample_description", "")
         res.update(s)
         if len(sample_attributes):
-            self.append_environmental_package_attributes(sample_attributes)
+            self.append_environmental_package_attributes(sample_attributes, sample_title=res["title"],
+                                                         sample_alias=res["sample_alias"])
             res["sample_attributes"] = [
-                # {k.upper(): v for k, v in s.items()}
                 OrderedDict([(k.upper(), v) for k, v in s.items()])
                 for s in sample_attributes
             ]
@@ -560,6 +581,12 @@ class Enalizer(object):
             experiment_xml,
         ) = self.create_experiment_xml()
         sample_xml = self.create_sample_xml(sample_descriptor_platform_mappings=sample_descriptor_platform_mappings)
+
+        if len(self.samples_with_checklist_errors):
+            self.set_submission_state_to_error()
+            # TODO: email curators about sample errors
+            send_checklist_mapping_error_notification(self.submission_id, self.samples_with_checklist_errors)
+
         if len(self.run):
             return {
                 "STUDY": ("study.xml", smart_str(self.create_study_xml())),
@@ -616,8 +643,8 @@ def store_ena_data_as_auditable_text_data(submission, data):
         filename, filecontent = data[d]
         logger.info(
             msg="store_ena_data_as_auditable_text_data create "
-            "AuditableTextData | submission_pk={0} filename={1}"
-            "".format(submission.pk, filename)
+                "AuditableTextData | submission_pk={0} filename={1}"
+                "".format(submission.pk, filename)
         )
         with transaction.atomic():
             AuditableTextData.objects.create(name=filename, submission=submission, text_data=filecontent)
@@ -857,12 +884,12 @@ def update_embargo_date_in_submissions(hold_date, study_pid):
                     submission.save()
                     logger.info(
                         msg="update_embargo_date_in_submissions | "
-                        "ENA hold date does not match Submission embargo | "
-                        "submission date: {} | "
-                        "submission id: {} | "
-                        "persistent_identifier_date: {} | "
-                        "persistent_identifier_id: {}"
-                        "".format(
+                            "ENA hold date does not match Submission embargo | "
+                            "submission date: {} | "
+                            "submission id: {} | "
+                            "persistent_identifier_date: {} | "
+                            "persistent_identifier_id: {}"
+                            "".format(
                             submission.embargo,
                             submission.broker_submission_id,
                             study.hold_date,
