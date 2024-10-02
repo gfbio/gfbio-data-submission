@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.db import models
+from django.db.models import Q
 from model_utils.models import TimeStampedModel
 
 from ..models.field_type import FieldType
@@ -25,28 +26,22 @@ class Field(TimeStampedModel):
                                 choices=(('main', 'main'), ('sidebar', 'sidebar')),
                                 help_text="Position of the element in the Layout of the form")
 
-    # TODO: redundant to ProfileFieldExtension.order, clarify where used and get rid of one or the two
     order = models.IntegerField(default=100, help_text='Rank within in the elements in the layout-position')
 
     system_wide_mandatory = models.BooleanField(default=False)
     placeholder = models.TextField(default="", blank=True,
                                    help_text="Descriptive text displayed within the input field unless it is filled out")
 
-    mandatory = models.BooleanField(default=False)
-    visible = models.BooleanField(default=True)
-    default = models.TextField(max_length=64, blank=True, default="")
-
     def save(self, *args, **kwargs):
         super(Field, self).save(*args, **kwargs)
+
+        # just add this field to ALL profiles, if system_wide_mandatory is True and the profile
+        #   does not already contain this field
+        # prevent cyclic import error
         if self.system_wide_mandatory:
-            self.mandatory = True
-            system_wide_mandatories = Field.objects.filter(system_wide_mandatory=True)
-            # prevent cyclic import error
             from .profile import Profile
-            from .profile_field_extension import ProfileFieldExtension
-            for profile in Profile.objects.all():
-                for s in system_wide_mandatories:
-                    ProfileFieldExtension.objects.add_from_field(field=self, profile=profile)
+            for profile in Profile.objects.filter(~Q(fields__id=self.id)):
+                profile.fields.add(self)
 
     def __str__(self):
         return self.field_name

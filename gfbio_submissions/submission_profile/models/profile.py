@@ -22,21 +22,27 @@ class Profile(TimeStampedModel):
         on_delete=models.CASCADE,
     )
 
+    fields = models.ManyToManyField(Field, through="ProfileField")
+
     # TODO: validator for unique-in-profile field_name (or mapping_to)
     #   https://docs.djangoproject.com/en/4.2/ref/validators/
     active_user_profile = models.BooleanField(default=False)
 
     objects = ProfileManager()
+
     def save(self, *args, **kwargs):
         super(Profile, self).save(*args, **kwargs)
+        # print('profile save ', self.name)
         if self.active_user_profile:
             Profile.objects.filter(user=self.user).exclude(pk=self.pk).update(active_user_profile=False)
+        # add system_wide_mandatory fields to this profile
         system_wide_mandatories = Field.objects.filter(system_wide_mandatory=True)
-        from .profile_field_extension import ProfileFieldExtension
         for s in system_wide_mandatories:
-            ProfileFieldExtension.objects.add_from_field(field=s, profile=self)
+            self.fields.add(s)
 
     def clone_for_user(self, user, name=None):
+        # clone returns a  new instance for convenience,
+        # but in general the cloning instance becomes the clone in the process
         pk = self.pk
         self.pk = None
         self.user = user
@@ -48,9 +54,9 @@ class Profile(TimeStampedModel):
         self.save()
         # TODO: move to manager with exception checks
         original_profile = Profile.objects.get(pk=pk)
-        # exclude system_wide_mandatory fields as they are added in self.save()
-        for profile_field in original_profile.profilefieldextension_set.exclude(system_wide_mandatory=True):
-            profile_field.clone(profile=self)
+        for f in original_profile.profilefield_set.all():
+            f.clone(profile=self, field=f.field)
+
         return self
 
     def __str__(self):
@@ -61,8 +67,8 @@ class Profile(TimeStampedModel):
         # if self.inherit_fields_from is None:
         #     return self.fields.all()
         # return self.fields.all().union(self.inherit_fields_from.profile_fields.all())
-        # return self.fields.all()
-        return self.profilefieldextension_set.all()
+
+        return self.profilefield_set.all()
 
     def form_fields(self):
-        return self.all_fields().order_by("order")
+        return self.all_fields().order_by("field__order")

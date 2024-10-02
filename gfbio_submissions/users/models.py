@@ -38,14 +38,14 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
         super(User, self).save(*args, **kwargs)
-        from gfbio_submissions.submission_profile.models.profile import Profile
-        if len(self.user_profile.all()) == 0:
-            try:
-                default_profile = Profile.objects.get(name="default")
-                self.user_profile.add(default_profile.clone_for_user(self))
-            except Profile.DoesNotExist:
-                logger.warning(
-                    "users | models.py | save() | Default profile does not exist. doing nothing now.")
+        # from gfbio_submissions.submission_profile.models.profile import Profile
+        # if len(self.user_profile.all()) == 0:
+        #     try:
+        #         default_profile = Profile.objects.get(name="default")
+        #         self.user_profile.add(default_profile.clone_for_user(self))
+        #     except Profile.DoesNotExist:
+        #         logger.warning(
+        #             "users | models.py | save() | Default profile does not exist. doing nothing now.")
 
     def get_absolute_url(self):
         return reverse("users:detail", kwargs={"username": self.username})

@@ -1,32 +1,23 @@
 # -*- coding: utf-8 -*-
 import base64
-import json
-import pprint
-from pprint import pprint
 
+from django.test import Client
 from django.test import TestCase
 from rest_framework.test import APIClient
 
 from gfbio_submissions.users.models import User
 from ..test_models.test_profile import TestProfile
-from ...models import ProfileFieldExtension
-from ...models.field import Field
 from ...models.profile import Profile
-from django.test import Client
 
 
-class TestProfileDetailView(TestCase):
+class TestProfileFrontendView(TestCase):
 
     @classmethod
     def setUpTestData(cls):
         TestProfile.setUpTestData()
 
         profile = Profile.objects.create(name="default", target="GENERIC")
-        for f in Field.objects.all():
-            # profile.profile_fields.add(f)
-            ProfileFieldExtension.objects.add_from_field(f, profile)
 
-        # cls.user = User.objects.get(username="horst")
         cls.user = User.objects.create_superuser(
             username="joe",
             email="joe@horst.de",
@@ -44,9 +35,6 @@ class TestProfileDetailView(TestCase):
         )
 
         profile = Profile.objects.create(name="user-profile-1", target="GENERIC", user=cls.user)
-        for f in Field.objects.all():
-            # profile.profile_fields.add(f)
-            ProfileFieldExtension.objects.add_from_field(f, profile)
 
     def test_frontend_view_without_login(self):
         response = self.client.get("/profile/ui")
