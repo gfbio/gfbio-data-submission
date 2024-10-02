@@ -38,9 +38,10 @@ class Field(TimeStampedModel):
         # just add this field to ALL profiles, if system_wide_mandatory is True and the profile
         #   does not already contain this field
         # prevent cyclic import error
-        from .profile import Profile
-        for profile in Profile.objects.filter(~Q(fields__id=self.id)):
-            profile.fields.add(self)
+        if self.system_wide_mandatory:
+            from .profile import Profile
+            for profile in Profile.objects.filter(~Q(fields__id=self.id)):
+                profile.fields.add(self)
 
     def __str__(self):
         return self.field_name
