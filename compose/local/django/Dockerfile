@@ -61,18 +61,8 @@ RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
   && rm -rf /wheels/
 
 # Java
-#COPY ./compose/local/django/install_java.sh /
-#RUN chmod +x /install_java.sh
-#RUN sed -i 's/\r$//g' /install_java.sh
-#RUN /install_java.sh
-
-#ENV JAVA_HOME=/opt/java/openjdk \
-#  PATH="/opt/java/openjdk/bin:$PATH"
-
 ENV JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
 ENV PATH="$JAVA_HOME/bin:$PATH"
-
-CMD ["java", "-version"]
 
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements /requirements

@@ -29,7 +29,7 @@ def submit_targeted_sequences_to_ena_task(
             "submission_id={1}".format(TaskProgressReport.CANCELLED, submission_id)
         )
         return TaskProgressReport.CANCELLED
-    if submission is None:
+    if submission is None or site_configuration is None:
         logger.warning(
             "tasks.py | submit_targeted_sequences_to_ena_task | "
             "no valid Submission available | "

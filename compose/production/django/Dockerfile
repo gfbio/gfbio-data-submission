@@ -34,6 +34,9 @@ ENV BUILD_ENV ${BUILD_ENVIRONMENT}
 
 WORKDIR ${APP_HOME}
 
+# java need this to be created
+RUN mkdir -p /usr/share/man/man1
+
 RUN addgroup --system django \
   && adduser --system --ingroup django django
 
@@ -45,6 +48,10 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   gettext \
   #
   dnsutils \
+  # needed for java
+  ca-certificates \
+  # java itself
+  openjdk-17-jdk \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
@@ -57,15 +64,9 @@ COPY --from=python-build-stage /usr/src/app/wheels  /wheels/
 RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
   && rm -rf /wheels/ \
 
-# Java (TODO: copied from local/django/Dockerfile during DASS-2095. has this ever been used in production ?)
-#COPY ./compose/local/django/install_java8_jre.sh /
-#RUN chmod +x /install_java8_jre.sh
-#RUN sed -i 's/\r$//g' /install_java8_jre.sh
-#RUN /install_java8_jre.sh
-#
-#ENV JAVA_HOME=/opt/java/openjdk \
-#  PATH="/opt/java/openjdk/bin:$PATH"
-
+# Java
+ENV JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
+ENV PATH="$JAVA_HOME/bin:$PATH"
 
 RUN pip install abcd-converter==0.0.4 --index-url https://gitlab-pe.gwdg.de/api/v4/projects/26166/packages/pypi/simple
 

@@ -202,19 +202,19 @@ submit_to_ena_test.short_description = "Submit to ENA test server"
 
 
 # TODO: maybe extra action for simple validate for testing
-def perform_assembly_submission(modeladmin, request, queryset):
-    for submission in queryset:
-        pass
-        # TODO do via chain
-        # TODO: colllect and preapre data task (ivo script)
-        # TODO: Register Study and samples (XML/Rest)
-        # TODO: Prepate CLI command, assemble files, prepare manifest file
-        # TODO: performe validate/submit
-        # TODO: track errors and/or output to respective folders and store
-        #  returned Accession to persistent identifier
-
-
-perform_assembly_submission.short_description = "Perform Assembly Submission"
+# def perform_assembly_submission(modeladmin, request, queryset):
+#     for submission in queryset:
+#         pass
+#         # TODO do via chain
+#         # TODO: colllect and preapre data task (ivo script)
+#         # TODO: Register Study and samples (XML/Rest)
+#         # TODO: Prepate CLI command, assemble files, prepare manifest file
+#         # TODO: performe validate/submit
+#         # TODO: track errors and/or output to respective folders and store
+#         #  returned Accession to persistent identifier
+#
+#
+# perform_assembly_submission.short_description = "Perform Assembly Submission"
 
 
 def modify_ena_objects_with_current_xml(modeladmin, request, queryset):
