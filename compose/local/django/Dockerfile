@@ -44,6 +44,10 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   libpq-dev \
   # Translations dependencies
   gettext \
+  # needed for java
+  ca-certificates \
+  # java itself
+  openjdk-17-jdk \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
@@ -52,21 +56,13 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 # copy python dependency wheels from python-build-stage
 COPY --from=python-build-stage /usr/src/app/wheels  /wheels/
 
-
 # use wheels to install python dependencies
 RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
   && rm -rf /wheels/
 
-
-
 # Java
-COPY ./compose/local/django/install_java8_jre.sh /
-RUN chmod +x /install_java8_jre.sh
-RUN sed -i 's/\r$//g' /install_java8_jre.sh
-RUN /install_java8_jre.sh
-
-ENV JAVA_HOME=/opt/java/openjdk \
-  PATH="/opt/java/openjdk/bin:$PATH"
+ENV JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
+ENV PATH="$JAVA_HOME/bin:$PATH"
 
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements /requirements

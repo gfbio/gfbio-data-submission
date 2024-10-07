@@ -59,7 +59,7 @@ def submit_targeted_sequences(username, password, submission, center_name="GFBIO
     command = [
         "java",
         "-jar",
-        "ena_webin_cli/webin-cli-3.0.0.jar",
+        "ena_webin_cli/webin-cli-8.0.0.jar",
         "-context",
         "sequence",
         "-username",
