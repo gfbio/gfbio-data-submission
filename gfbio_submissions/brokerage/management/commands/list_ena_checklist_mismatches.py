@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 
 from django.core.management.base import BaseCommand
 
+from config.settings.base import ADMIN_URL
 from gfbio_submissions.brokerage.models.auditable_text_data import AuditableTextData
 
 
@@ -26,6 +27,6 @@ class Command(BaseCommand):
                         print(
                             f'{a.submission.broker_submission_id}\t|\t',
                             f'{a.submission.additionalreference_set.filter(primary=True).first()}\t|\t',
-                            f'https://submissions.gfbio.org/OySnzAz9uKJsDiZAR60G9B7mg27Xg3Kb/brokerage/submission/{a.submission.pk}/\t|\t',
+                            f'https://submissions.gfbio.org/{ADMIN_URL}/brokerage/submission/{a.submission.pk}/\t|\t',
                             f'{(title.text if title is not None else "no title available")}'
                         )
