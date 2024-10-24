@@ -10,7 +10,7 @@ from .models.profile_field import ProfileField
 
 
 class ProfileFieldAdmin(admin.ModelAdmin):
-    list_display = ["__str__", "profile", "field", "system_wide_mandatory"]
+    list_display = ["__str__", "profile", "field",]
 
 
 class ProfileFieldInline(admin.TabularInline):

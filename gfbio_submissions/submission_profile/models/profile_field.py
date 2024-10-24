@@ -6,15 +6,21 @@ from .profile import Profile
 
 
 class ProfileField(models.Model):
-    field = models.ForeignKey(Field, on_delete=models.CASCADE)
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    field = models.ForeignKey(Field, on_delete=models.CASCADE, help_text="The corresponding Field of this instance")
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, help_text="The profile this field belongs to")
 
     # TODO: add helper text (admin) explaining swm implication
-    mandatory = models.BooleanField(default=True)
+    mandatory = models.BooleanField(default=True,
+                                    help_text="Whether this field is mandatory or not. If the 'field' is a "
+                                              "system-wide-mandatory field, the value cannot be set, thus is always True")
     # TODO: add helper text (admin) explaining swm implication
-    visible = models.BooleanField(default=True)
+    visible = models.BooleanField(default=True, help_text="Whether this field is visible or not."
+                                                          "If the 'field' is a system-wide-mandatory field, "
+                                                          "the value cannot be changed and will stay True ")
     # TODO: add helper text (admin) explaining swm implication
-    default = models.TextField(max_length=64, blank=True, default="")
+    default = models.TextField(max_length=64, blank=True, default="",
+                               help_text="The default value for this field. If the 'field' is a system-wide-mandatory "
+                                         "field, the value cannot be changed and will stay blank")
 
     # TODO: go through tests/views
     #         compare list for reqs https://kb.gfbio.org/display/DASS/Submission+Profiles

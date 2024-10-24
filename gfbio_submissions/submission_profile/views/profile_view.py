@@ -10,6 +10,6 @@ from ..serializers.profile_serializer import ProfileSerializer
 class ProfileDetailView(RetrieveAPIView, UpdateAPIView):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
-    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    authentication_classes = (BasicAuthentication, TokenAuthentication)
     permission_classes = (IsOwnerAndNonSystemWide, )
     lookup_field = "name"

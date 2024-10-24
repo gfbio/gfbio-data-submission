@@ -1,13 +1,15 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {createBrowserRouter, RouterProvider} from "react-router-dom";
 import App from "./App.jsx";
 import ProfileFormWrapper from "./components/ProfileFormWrapper.jsx";
 import SubmissionList from "./components/SubmissionList.jsx";
 import ErrorPage from "./components/errorPage.jsx";
-import { DEFAULT_PROFILE_NAME, ROUTER_BASE_URL, LOCAL_ROUTER_BASE_URL } from "./settings.jsx";
-import { loader as submissionsLoader } from "./utils/SubmissionsLoader.jsx";
-// import './index.css'
+
+// eslint-disable-next-line no-unused-vars
+import {DEFAULT_PROFILE_NAME, ROUTER_BASE_URL, LOCAL_ROUTER_BASE_URL} from "./settings.jsx";
+
+import {loader as submissionsLoader} from "./utils/SubmissionsLoader.jsx";
 
 let profileName = DEFAULT_PROFILE_NAME;
 if (window.props !== undefined) {
@@ -32,10 +34,10 @@ const router = createBrowserRouter([
                 element: <SubmissionList baseUrl={base}/>,
                 loader: submissionsLoader,
             },
-            { path: base + "form/", element: <ProfileFormWrapper /> },
+            {path: base + "form/", element: <ProfileFormWrapper/>},
             {
                 path: base + "form/:brokerageId/",
-                element: <ProfileFormWrapper />,
+                element: <ProfileFormWrapper/>,
             },
         ],
     },

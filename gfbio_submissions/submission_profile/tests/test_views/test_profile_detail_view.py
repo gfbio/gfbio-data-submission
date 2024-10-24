@@ -25,7 +25,7 @@ class TestProfileDetailView(TestCase):
             password="password",
         )
 
-        profile = Profile.objects.create(name="user-profile-1", target="GENERIC", user=cls.user)
+        profile = Profile.objects.create(name="user-profile-1", target="GENERIC", user=cls.user, active_user_profile=True)
 
         # TODO: will change due to removin user on system wide profile
         profile = Profile.objects.create(name="user-system-profile-1", target="GENERIC", user=cls.user,

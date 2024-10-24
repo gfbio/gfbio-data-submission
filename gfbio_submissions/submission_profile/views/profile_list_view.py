@@ -10,7 +10,7 @@ from ..serializers.profile_serializer import ProfileSerializer
 class ProfileListView(ListAPIView):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
-    authentication_classes = (TokenAuthentication, BasicAuthentication)
+    authentication_classes = (BasicAuthentication, TokenAuthentication)
 
     def get_queryset(self):
         user = self.request.user
