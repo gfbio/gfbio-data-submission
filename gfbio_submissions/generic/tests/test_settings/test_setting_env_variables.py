@@ -16,7 +16,6 @@ class EnvVariablesDefaultsTest(TestCase):
         self.assertTrue(type(admins) == list)
         self.assertIn("Marc Weber:mweber@gfbio.org", admins)
         self.assertIn("Ivaylo Kostadinov:ikostadi@gfbio.org", admins)
-        self.assertIn("Deniss Marinuks:d.marinuks@jacobs-university.de", admins)
 
     def test_default_admins(self):
         admins = ADMINS
@@ -24,7 +23,6 @@ class EnvVariablesDefaultsTest(TestCase):
             [
                 ("Marc Weber", "mweber@gfbio.org"),
                 ("Ivaylo Kostadinov", "ikostadi@gfbio.org"),
-                ("Deniss Marinuks", "d.marinuks@jacobs-university.de"),
             ],
             admins,
         )
