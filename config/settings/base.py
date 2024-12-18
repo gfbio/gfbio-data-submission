@@ -258,7 +258,6 @@ DJANGO_ADMINS = env.list(
     default=[
         "Marc Weber:mweber@gfbio.org",
         "Ivaylo Kostadinov:ikostadi@gfbio.org",
-        "Deniss Marinuks:d.marinuks@jacobs-university.de",
     ],
 )
 ADMINS = [("""{}""".format(x.split(":")[0]), "{}".format(x.split(":")[1])) for x in DJANGO_ADMINS]

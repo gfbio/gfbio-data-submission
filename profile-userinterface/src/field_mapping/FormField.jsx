@@ -19,6 +19,7 @@ const FormField = ({formField, form, onFilesChange}) => {
         title: formField.field.title,
         description: formField.field.description,
         default_value: formField.default,
+        visible: formField.visible,
         mandatory: formField.mandatory,
         options: formField.field.options,
         field_id: formField.field.field_id,
@@ -26,45 +27,47 @@ const FormField = ({formField, form, onFilesChange}) => {
         form: form,
     };
 
-    switch (formField.field.field_type.type) {
-        case "text-field":
-            return <TextField {...fieldParameters}></TextField>;
-        case "text-area":
-            return <TextArea {...fieldParameters}></TextArea>;
-        case "select-field":
-            return <SelectField {...fieldParameters}></SelectField>;
-        case "file-upload":
-            // TODO: Work in progress...
-            return (
-                <DropzoneUpload
-                    {...fieldParameters}
-                    onFilesChange={onFilesChange}
-                ></DropzoneUpload>
-            );
-        case "collapsible-selector":
-            return <CollapsibleSelector {...fieldParameters}></CollapsibleSelector>;
-        case "metadata-template":
-            return <MetadataTemplate {...fieldParameters}></MetadataTemplate>;
-        case "info-box":
-            return <InfoBox {...fieldParameters}></InfoBox>;
-        case "multiselect-checkboxes":
-            return (
-                <MultiSelectCheckboxes {...fieldParameters}></MultiSelectCheckboxes>
-            );
-        case "multiselect-dropdown":
-            return <MultiSelectDropdown {...fieldParameters}></MultiSelectDropdown>;
-        case "embargo-date-picker":
-            return <EmbargoDate {...fieldParameters}></EmbargoDate>;
-        case "data-url-field":
-            return <TextField {...fieldParameters}></TextField>;
-        case "tags-input":
-            return <TagsInputField {...fieldParameters}></TagsInputField>;
-        case "related-publications":
-            return <RelatedPublications {...fieldParameters}></RelatedPublications>;
-        case "contributors":
-            return <Contributors {...fieldParameters}></Contributors>;
-        default:
-            return <TextField {...fieldParameters}></TextField>;
+    if (formField.visible) {
+        switch (formField.field.field_type.type) {
+            case "text-field":
+                return <TextField {...fieldParameters}></TextField>;
+            case "text-area":
+                return <TextArea {...fieldParameters}></TextArea>;
+            case "select-field":
+                return <SelectField {...fieldParameters}></SelectField>;
+            case "file-upload":
+                // TODO: Work in progress...
+                return (
+                    <DropzoneUpload
+                        {...fieldParameters}
+                        onFilesChange={onFilesChange}
+                    ></DropzoneUpload>
+                );
+            case "collapsible-selector":
+                return <CollapsibleSelector {...fieldParameters}></CollapsibleSelector>;
+            case "metadata-template":
+                return <MetadataTemplate {...fieldParameters}></MetadataTemplate>;
+            case "info-box":
+                return <InfoBox {...fieldParameters}></InfoBox>;
+            case "multiselect-checkboxes":
+                return (
+                    <MultiSelectCheckboxes {...fieldParameters}></MultiSelectCheckboxes>
+                );
+            case "multiselect-dropdown":
+                return <MultiSelectDropdown {...fieldParameters}></MultiSelectDropdown>;
+            case "embargo-date-picker":
+                return <EmbargoDate {...fieldParameters}></EmbargoDate>;
+            case "data-url-field":
+                return <TextField {...fieldParameters}></TextField>;
+            case "tags-input":
+                return <TagsInputField {...fieldParameters}></TagsInputField>;
+            case "related-publications":
+                return <RelatedPublications {...fieldParameters}></RelatedPublications>;
+            case "contributors":
+                return <Contributors {...fieldParameters}></Contributors>;
+            default:
+                return <TextField {...fieldParameters}></TextField>;
+        }
     }
 };
 
