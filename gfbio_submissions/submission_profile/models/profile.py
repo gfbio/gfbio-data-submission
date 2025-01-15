@@ -62,6 +62,7 @@ class Profile(TimeStampedModel):
     def __str__(self):
         return self.name
 
+    # TODO: as @property ?
     def all_fields(self):
         # TODO: removed inheritance in DASS-1941 temporarily. discuss if needed at all
         # if self.inherit_fields_from is None:
@@ -70,5 +71,6 @@ class Profile(TimeStampedModel):
 
         return self.profilefield_set.all()
 
+    # TODO: as @property ?
     def form_fields(self):
         return self.all_fields().order_by("field__order")
