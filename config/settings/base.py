@@ -85,6 +85,7 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "drf_spectacular",
     "mozilla_django_oidc",
+    "dt_upload",
 ]
 
 LOCAL_APPS = [
@@ -415,3 +416,88 @@ def whitelist_api_endpoints_preprocessing_hook(endpoints):
 whitelist_api_endpoints_preprocessing_hook_func = whitelist_api_endpoints_preprocessing_hook
 
 IS_PROD_ENV = env.bool("IS_PROD_ENV", False)
+
+# Uploads
+# ------------------------------------------------------------------------------
+DATA_UPLOAD_MAX_MEMORY_SIZE = 800 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 800 * 1024 * 1024
+
+# Fallbacks
+# ------------------------------------------------------------------------------
+FALLBACK_CATEGORY_NAME = "unclassified"
+DEFAULT_COLLECTION_ID = 1  # specified via fixture
+
+# Django Imagekit
+# ------------------------------------------------------------------------------
+# IMAGEKIT_S3_NETWORK_RETRY_COUNT = 2  # number of retries for accessing thumbnails
+# IMAGEKIT_CACHEFILE_DIR = str(Path("CACHE") / "images")
+
+# Determine Environment
+DJANGO_ENV = env("DJANGO_ENV", default="development")
+DJANGO_UPLOAD_TOOLS_USE_CLIENTSIDE_UPLOAD = env.bool("DJANGO_UPLOAD_TOOLS_USE_CLIENTSIDE_UPLOAD", default=False)
+DJANGO_UPLOAD_TOOLS_USE_S3 = env.bool("DJANGO_UPLOAD_TOOLS_USE_S3", default=False)
+DJANGO_UPLOAD_TOOLS_USE_ARUNA = env.bool("DJANGO_UPLOAD_TOOLS_USE_ARUNA", default=False)
+DJANGO_UPLOAD_TOOLS_USE_SIGNAL_BACKUP = env.bool("DJANGO_UPLOAD_TOOLS_USE_SIGNAL_BACKUP", default=False)
+DJANGO_UPLOAD_TOOLS_USE_MODEL_BACKUP = env.bool("DJANGO_UPLOAD_TOOLS_USE_MODEL_BACKUP", default=False)
+DJANGO_UPLOAD_TOOLS_BACKUP_MODEL = env.str("DJANGO_UPLOAD_TOOLS_BACKUP_MODEL", default="dt_upload.DTUpload")
+DJANGO_UPLOAD_TOOLS_BACKUP_MODEL_FILE_FIELD = env.str(
+    "DJANGO_UPLOAD_TOOLS_BACKUP_MODEL_FILE_FIELD", default="upload_file"
+)
+DJANGO_UPLOAD_TOOLS_USE_REUPLOAD = env.bool("DJANGO_UPLOAD_TOOLS_USE_REUPLOAD", default=False)
+
+if DJANGO_UPLOAD_TOOLS_USE_S3:
+    # TODO: if s3 is used also elsewhere besides only for django-upload-tools, it may be a better idea to
+    #   use this in a more selective way. For this purpose it is ok to assign the settings only if
+    #   DJANGO_UPLOAD_TOOLS_USE_S3 is set to True (defaults to False)
+    # STORAGES
+    # ------------------------------------------------------------------------------
+
+    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
+    AWS_ACCESS_KEY_ID = env("DJANGO_AWS_ACCESS_KEY_ID", default=None)
+    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
+    AWS_SECRET_ACCESS_KEY = env("DJANGO_AWS_SECRET_ACCESS_KEY", default=None)
+    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
+    AWS_STORAGE_BUCKET_NAME = env("DJANGO_AWS_STORAGE_BUCKET_NAME", default=None)
+    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
+    AWS_S3_REGION_NAME = env("DJANGO_AWS_S3_REGION_NAME", default="default")
+    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
+    AWS_S3_ENDPOINT_URL = env("DJANGO_AWS_S3_ENDPOINT_URL", default=None)
+    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#cloudfront
+    aws_s3_domain = AWS_S3_ENDPOINT_URL or f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+
+    # MEDIA
+    # ------------------------------------------------------------------------------
+    DEFAULT_FILE_STORAGE = "dt_upload.utils.storages.MediaRootS3Boto3Storage"
+    MEDIA_URL = f"{aws_s3_domain}/"
+
+if DJANGO_UPLOAD_TOOLS_USE_ARUNA:
+    # STORAGES
+    # ------------------------------------------------------------------------------
+
+    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
+    AWS_ACCESS_KEY_ID = env("DJANGO_ARUNA_AWS_ACCESS_KEY_ID", default=None)
+    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
+    AWS_SECRET_ACCESS_KEY = env("DJANGO_ARUNA_AWS_SECRET_ACCESS_KEY", default=None)
+    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
+    AWS_STORAGE_BUCKET_NAME = env("DJANGO_ARUNA_AWS_STORAGE_BUCKET_NAME", default=None)
+    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
+    AWS_S3_ENDPOINT_URL = env("DJANGO_ARUNA_AWS_S3_ENDPOINT_URL", default=None)
+
+    # # MEDIA
+    # # ------------------------------------------------------------------------------
+    DEFAULT_FILE_STORAGE = "dt_upload.utils.storages.MediaRootS3Boto3Storage"
+    MEDIA_URL = f"{AWS_S3_ENDPOINT_URL}/"
+
+# END if DJANGO_UPLOAD_TOOLS_USE_ARUNA: +++++++++++++++++++++++++++++++++++++++++++
+
+if DJANGO_UPLOAD_TOOLS_USE_SIGNAL_BACKUP or DJANGO_UPLOAD_TOOLS_USE_MODEL_BACKUP:
+    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
+    BACKUP_AWS_ACCESS_KEY_ID = env("BACKUP_DJANGO_AWS_ACCESS_KEY_ID", default=None)
+    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
+    BACKUP_AWS_SECRET_ACCESS_KEY = env("BACKUP_DJANGO_AWS_SECRET_ACCESS_KEY", default=None)
+    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
+    BACKUP_AWS_STORAGE_BUCKET_NAME = env("BACKUP_DJANGO_AWS_STORAGE_BUCKET_NAME", default=None)
+    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
+    BACKUP_AWS_S3_ENDPOINT_URL = env("BACKUP_DJANGO_AWS_S3_ENDPOINT_URL", default=None)
+
+    BACKUP_MEDIA_URL = f"{BACKUP_AWS_S3_ENDPOINT_URL}/"
