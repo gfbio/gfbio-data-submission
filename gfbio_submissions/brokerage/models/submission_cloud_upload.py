@@ -56,7 +56,6 @@ class SubmissionCloudUpload(TimeStampedModel):
 
     file = models.OneToOneField('dt_upload.DTUpload', on_delete=models.CASCADE)
 
-
     def save(self, ignore_attach_to_ticket=False, *args, **kwargs):
         super(SubmissionCloudUpload, self).save(*args, **kwargs)
 
