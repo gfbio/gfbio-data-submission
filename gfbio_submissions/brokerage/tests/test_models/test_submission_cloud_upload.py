@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 from django.test import TestCase
 from dt_upload.tests.test_models import TestN4BUploadModel
 
@@ -7,7 +8,7 @@ from gfbio_submissions.users.models import User
 from ...models.submission import Submission
 
 
-class TestSubmissionUpload(TestCase):
+class TestSubmissionCloudUpload(TestCase):
     def setUp(self):
         self.user = User.objects.create(username="user1")
         self.submission = Submission.objects.create(user=self.user)
@@ -31,4 +32,3 @@ class TestSubmissionUpload(TestCase):
             " / {0}".format(self.submission.broker_submission_id),
             upload.__str__(),
         )
-
