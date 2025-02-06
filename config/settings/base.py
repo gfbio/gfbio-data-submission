@@ -210,6 +210,7 @@ TEMPLATES = [
                 "gfbio_submissions.utils.context_processors.settings_context",
                 "gfbio_submissions.users.context_processors.allauth_settings",
                 "gfbio_submissions.submission_ui.context_processors.prod_env",
+                "gfbio_submissions.submission_ui.context_processors.matomo_settings",
             ],
         },
     }

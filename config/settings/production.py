@@ -216,3 +216,7 @@ REST_SAFE_LIST_IPS += [
 # ------------------------------------------------------------------------------
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+
+# Matomo Settings
+# ------------------------------------------------------------------------------
+MATOMO_SITE_ID = env("MATOMO_SITE_ID", default="5")
