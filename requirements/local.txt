@@ -39,3 +39,6 @@ django-coverage-plugin==3.0.0  # https://github.com/nedbat/django_coverage_plugi
 pytest-django==4.5.2  # https://github.com/pytest-dev/pytest-django
 
 responses==0.22.0 # https://github.com/getsentry/responses
+
+moto==4.1.3  # https://github.com/getmoto/moto
+

@@ -31,7 +31,7 @@ class SubmissionUpload(TimeStampedModel):
         null=True,
         blank=True,
         related_name="user_uploads",
-        help_text="Owner of this SubmissionUpload. " "Same as related submission.user",
+        help_text="Owner of this SubmissionUpload. Same as related submission.user",
         on_delete=models.SET_NULL,
     )
 
