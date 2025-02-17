@@ -54,24 +54,24 @@ class SubmissionCloudUpload(TimeStampedModel):
     #  use DTUploads backend_md5. if this this turns out to be not feasible we switch to a dedicated md5 field
     # md5_checksum = models.CharField(blank=True, max_length=32, default="", help_text='MD5 checksum of "file"')
 
-    file = models.OneToOneField('dt_upload.DTUpload', on_delete=models.CASCADE)
+    # file = models.OneToOneField('dt_upload.DTUpload', on_delete=models.CASCADE)
 
     def save(self, ignore_attach_to_ticket=False, *args, **kwargs):
         super(SubmissionCloudUpload, self).save(*args, **kwargs)
-
-        # TODO: add a check for completeness/availability in cloud before starting this
-        #   or re-define workflow for attach e.g. meta-data
-        if self.attach_to_ticket and not ignore_attach_to_ticket:
-            from ..tasks.jira_tasks.attach_to_submission_issue import (
-                attach_to_submission_issue_task,
-            )
-            attach_to_submission_issue_task.apply_async(
-                kwargs={
-                    "submission_id": "{0}".format(self.submission.pk),
-                    "submission_upload_id": "{0}".format(self.pk),
-                },
-                countdown=SUBMISSION_UPLOAD_RETRY_DELAY,
-            )
+        #
+        # # TODO: add a check for completeness/availability in cloud before starting this
+        # #   or re-define workflow for attach e.g. meta-data
+        # if self.attach_to_ticket and not ignore_attach_to_ticket:
+        #     from ..tasks.jira_tasks.attach_to_submission_issue import (
+        #         attach_to_submission_issue_task,
+        #     )
+        #     attach_to_submission_issue_task.apply_async(
+        #         kwargs={
+        #             "submission_id": "{0}".format(self.submission.pk),
+        #             "submission_upload_id": "{0}".format(self.pk),
+        #         },
+        #         countdown=SUBMISSION_UPLOAD_RETRY_DELAY,
+        #     )
 
     def __str__(self):
         return f"{self.file.original_file_name} / {self.submission.broker_submission_id}"
