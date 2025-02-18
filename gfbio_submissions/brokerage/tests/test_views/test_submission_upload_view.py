@@ -3,6 +3,7 @@
 import json
 import os
 import shutil
+from pprint import pprint
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -156,6 +157,8 @@ class TestSubmissionUploadView(TestCase):
         reports_len = len(TaskProgressReport.objects.all())
         uploads_len = len(SubmissionUpload.objects.all())
         response = self.api_client.post(url, data, format="multipart")
+        print(response.status_code)
+        pprint(json.loads(response.content))
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn(b"broker_submission_id", response.content)

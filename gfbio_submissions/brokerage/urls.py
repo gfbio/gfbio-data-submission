@@ -11,6 +11,7 @@ from .views.submission_upload_patch_view import SubmissionUploadPatchView
 from .views.submission_upload_view import SubmissionUploadView
 from .views.submissions_view import SubmissionsView
 from .views.submission_report_view import SubmissionReportView
+from .views.submission_cloud_upload_view import SubmissionCloudUploadView
 
 app_name = "brokerage"
 urlpatterns = [
@@ -25,6 +26,13 @@ urlpatterns = [
         view=SubmissionUploadView.as_view(),
         name="submissions_upload",
     ),
+    # TODO: new cloud upload -----------------------------------------------------
+    re_path(
+        route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloudupload/$",
+        view=SubmissionCloudUploadView.as_view(),
+        name="submissions_cloud_upload",
+    ),
+    #TODO: new cloud upload -----------------------------------------------------
     re_path(
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/$",
         view=SubmissionUploadListView.as_view(),
