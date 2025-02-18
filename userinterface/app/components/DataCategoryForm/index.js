@@ -4,8 +4,8 @@
  *
  */
 
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
 import { Field } from 'redux-form/immutable';
 import { DATA_CATEGORY_PREFIX } from '../../containers/SubmissionForm/constants';
 // import PropTypes from 'prop-types';
@@ -21,24 +21,24 @@ class DataCategoryForm extends React.PureComponent {
           <p className="section-subtitle">(optional)</p>
         </header>
 
-        <div className="form-row">
+        <div className="row">
           <div className="form-group col-md-4">
-            <div className="custom-control custom-checkbox">
+            <div className="form-check">
               <Field
-                className="custom-control-input"
+                className="form-check-input custom-form-check-input"
                 name={`${DATA_CATEGORY_PREFIX}Algae & Protists`}
                 id="algaeProtists"
                 component="input"
                 type="checkbox"
                 disabled={this.props.readOnly}
               />
-              <label className="custom-control-label" htmlFor="algaeProtists">
+              <label className="form-check-label custom-control-label" htmlFor="algaeProtists">
                 Algae & Protists
               </label>
             </div>
-            <div className="custom-control custom-checkbox">
+            <div className="form-check">
               <Field
-                className="custom-control-input"
+                className="form-check-input custom-form-check-input"
                 name={`${DATA_CATEGORY_PREFIX}Bacteriology or Virology`}
                 id="bacteriologyOrVirology"
                 component="input"
@@ -46,30 +46,30 @@ class DataCategoryForm extends React.PureComponent {
                 disabled={this.props.readOnly}
               />
               <label
-                className="custom-control-label"
+                className="form-check-label custom-control-label"
                 htmlFor="bacteriologyOrVirology"
               >
                 Bacteriology or Virology
               </label>
             </div>
-            <div className="custom-control custom-checkbox">
+            <div className="form-check">
               <Field
-                className="custom-control-input"
+                className="form-check-input custom-form-check-input"
                 name={`${DATA_CATEGORY_PREFIX}Botany`}
                 id="botany"
                 component="input"
                 type="checkbox"
                 disabled={this.props.readOnly}
               />
-              <label className="custom-control-label" htmlFor="botany">
+              <label className="form-check-label custom-control-label" htmlFor="botany">
                 Botany
               </label>
             </div>
           </div>
           <div className="form-group col-md-4">
-            <div className="custom-control custom-checkbox">
+            <div className="form-check">
               <Field
-                className="custom-control-input"
+                className="form-check-input custom-form-check-input"
                 name={`${DATA_CATEGORY_PREFIX}Ecology & Environment`}
                 id="ecologyEnvironment"
                 component="input"
@@ -77,76 +77,76 @@ class DataCategoryForm extends React.PureComponent {
                 disabled={this.props.readOnly}
               />
               <label
-                className="custom-control-label"
+                className="form-check-label custom-control-label"
                 htmlFor="ecologyEnvironment"
               >
                 Ecology & Environment
               </label>
             </div>
-            <div className="custom-control custom-checkbox">
+            <div className="form-check">
               <Field
-                className="custom-control-input"
+                className="form-check-input custom-form-check-input"
                 name={`${DATA_CATEGORY_PREFIX}Geoscience`}
                 id="geoscience"
                 component="input"
                 type="checkbox"
                 disabled={this.props.readOnly}
               />
-              <label className="custom-control-label" htmlFor="geoscience">
+              <label className="form-check-label custom-control-label" htmlFor="geoscience">
                 Geoscience
               </label>
             </div>
-            <div className="custom-control custom-checkbox">
+            <div className="form-check">
               <Field
-                className="custom-control-input"
+                className="form-check-input custom-form-check-input"
                 name={`${DATA_CATEGORY_PREFIX}Microbiology`}
                 id="microbiology"
                 component="input"
                 type="checkbox"
                 disabled={this.props.readOnly}
               />
-              <label className="custom-control-label" htmlFor="microbiology">
+              <label className="form-check-label custom-control-label" htmlFor="microbiology">
                 Microbiology
               </label>
             </div>
           </div>
           <div className="form-group col-md-4">
-            <div className="custom-control custom-checkbox">
+            <div className="form-check">
               <Field
-                className="custom-control-input"
+                className="form-check-input custom-form-check-input"
                 name={`${DATA_CATEGORY_PREFIX}Mycology`}
                 id="mycology"
                 component="input"
                 type="checkbox"
                 disabled={this.props.readOnly}
               />
-              <label className="custom-control-label" htmlFor="mycology">
+              <label className="form-check-label custom-control-label" htmlFor="mycology">
                 Mycology
               </label>
             </div>
-            <div className="custom-control custom-checkbox">
+            <div className="form-check">
               <Field
-                className="custom-control-input"
+                className="form-check-input custom-form-check-input"
                 name={`${DATA_CATEGORY_PREFIX}Palaeontology`}
                 id="palaeontology"
                 component="input"
                 type="checkbox"
                 disabled={this.props.readOnly}
               />
-              <label className="custom-control-label" htmlFor="palaeontology">
+              <label className="form-check-label custom-control-label" htmlFor="palaeontology">
                 Palaeontology
               </label>
             </div>
-            <div className="custom-control custom-checkbox">
+            <div className="form-check">
               <Field
-                className="custom-control-input"
+                className="form-check-input custom-form-check-input"
                 name={`${DATA_CATEGORY_PREFIX}Zoology`}
                 id="zoology"
                 component="input"
                 type="checkbox"
                 disabled={this.props.readOnly}
               />
-              <label className="custom-control-label" htmlFor="zoology">
+              <label className="form-check-label custom-control-label" htmlFor="zoology">
                 Zoology
               </label>
             </div>

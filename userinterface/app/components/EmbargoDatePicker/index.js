@@ -7,22 +7,22 @@
 import React from 'react';
 import DatePicker from 'react-datepicker';
 
-import 'react-datepicker/dist/react-datepicker.css';
+import dateFormat from 'dateformat';
 import PropTypes from 'prop-types';
-import { createStructuredSelector } from 'reselect';
+import Button from 'react-bootstrap/Button';
+import Col from 'react-bootstrap/Col';
+import Container from 'react-bootstrap/Container';
+import Modal from 'react-bootstrap/Modal';
+import Row from 'react-bootstrap/Row';
+import 'react-datepicker/dist/react-datepicker.css';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import Modal from 'react-bootstrap/Modal';
-import Button from 'react-bootstrap/Button';
-import dateFormat from 'dateformat';
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
+import { createStructuredSelector } from 'reselect';
 import {
   closeEmbargoDialog,
   setEmbargoDate,
-  showEmbargoDialog,
   setFormChanged,
+  showEmbargoDialog,
 } from '../../containers/SubmissionForm/actions';
 import {
   makeSelectEmbargoDate,
@@ -77,7 +77,7 @@ class EmbargoDatePicker extends React.Component {
         </p>
         <Button
           variant="link"
-          className="btn-block btn-link-light-blue embargo-btn"
+          className="w-100 btn-link-light-blue embargo-btn"
           onClick={this.props.openEmbargoDialog}
         >
           <i className="icon ion-md-calendar align-top" />
@@ -103,7 +103,7 @@ class EmbargoDatePicker extends React.Component {
       return (
         <Button
           variant="link"
-          className="btn-block btn-link-light-blue embargo-btn"
+          className="w-100 btn-link-light-blue embargo-btn"
           onClick={() => {
             this.props.setFormChanged(true);
             this.props.setEmbargoDate(earliestEmbargoDate);
@@ -186,7 +186,7 @@ class EmbargoDatePicker extends React.Component {
                 <Col xs={12} md={4}>
                   <Button
                     variant="secondary"
-                    className="btn-sm btn-block btn-light-blue-inverted"
+                    className="btn-sm w-100 btn-light-blue-inverted"
                     onClick={() => setEmbargo(null, 6)}
                   >
                     6 months
@@ -195,7 +195,7 @@ class EmbargoDatePicker extends React.Component {
                 <Col xs={12} md={4}>
                   <Button
                     variant="secondary"
-                    className="btn-sm btn-block btn-light-blue-inverted"
+                    className="btn-sm w-100 btn-light-blue-inverted"
                     onClick={() => setEmbargo(null, 12)}
                   >
                     12 months
@@ -204,7 +204,7 @@ class EmbargoDatePicker extends React.Component {
                 <Col xs={12} md={4}>
                   <Button
                     variant="secondary"
-                    className="btn-sm btn-block btn-light-blue-inverted"
+                    className="btn-sm w-100 btn-light-blue-inverted"
                     onClick={() => setEmbargo(null, 18)}
                   >
                     18 months
@@ -240,7 +240,7 @@ class EmbargoDatePicker extends React.Component {
                 <Col xs={6} md={6}>
                   <Button
                     variant="secondary"
-                    className="btn-sm btn-block btn-green-inverted"
+                    className="btn-sm w-100 btn-green-inverted"
                     onClick={() => {
                       updateGlobalEmbargo();
                       this.props.closeEmbargoDialog();
@@ -252,7 +252,7 @@ class EmbargoDatePicker extends React.Component {
                 <Col xs={6} md={6}>
                   <Button
                     variant="secondary"
-                    className="btn-sm btn-block btn-red-inverted"
+                    className="btn-sm w-100 btn-red-inverted"
                     onClick={this.props.closeEmbargoDialog}
                   >
                     Cancel

@@ -337,6 +337,7 @@ tags
 gfbio_submissions/media/
 
 .pytest_cache/
+.cursor
 
 
 .ipython/

@@ -4,10 +4,9 @@
  *
  */
 
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
 import Collapse from 'react-bootstrap/Collapse';
-import Button from 'react-bootstrap/Button';
 
 // import styled from 'styled-components';
 
@@ -35,8 +34,8 @@ function UploadMessage(showUploadLimitMessage, dismissMessage) {
 
       <div className="form-group col-md-12">
         <div role="alert" className="fade alert alert-light show">
-          <div className="alert-heading h4"><i
-            className="fa  fa-bolt"></i> Upload limit exceeded
+          <div className="alert-heading h4">
+            <i className="fa fa-bolt"></i> Upload limit exceeded
           </div>
           <p>
             If you need to a upload more than 20 files, or more than 200 MB,

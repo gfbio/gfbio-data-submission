@@ -4,36 +4,36 @@
  *
  */
 
-import React from 'react';
-import { reduxForm } from 'redux-form/immutable';
-import PropTypes from 'prop-types';
-import ContributorsForm from 'components/ContributorsForm';
-import TargetDataCenterForm from 'components/TargetDataCenterForm';
-import DataCategoryForm from 'components/DataCategoryForm';
 import CommentForm from 'components/CommentForm';
-import LicenseSelectionForm from 'components/LicenseSelectionForm';
+import ContributorsForm from 'components/ContributorsForm';
+import DataCategoryForm from 'components/DataCategoryForm';
 import LegalRequirementsForm from 'components/LegalRequirementsForm';
+import LicenseSelectionForm from 'components/LicenseSelectionForm';
+import TargetDataCenterForm from 'components/TargetDataCenterForm';
+import PropTypes from 'prop-types';
+import React from 'react';
 import Alert from 'react-bootstrap/Alert';
-import NavigationPrompt from 'react-router-navigation-prompt';
-import Modal from 'react-bootstrap/Modal';
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
-import { createStructuredSelector } from 'reselect';
+import Col from 'react-bootstrap/Col';
+import Container from 'react-bootstrap/Container';
+import Modal from 'react-bootstrap/Modal';
+import Row from 'react-bootstrap/Row';
 import { connect } from 'react-redux';
-import TemplateLinkList from '../TemplateLinkList';
-import DatasetLabelForm from '../DatasetLabelForm';
-import DataUrlForm from '../DataUrlForm';
-import EmbargoDatePicker from '../EmbargoDatePicker';
-import RelatedPublicationsForm from '../RelatedPublicationsForm';
-import MinimalSubmissionForm from '../MinimalSubmissionForm';
-import SubmissionInfo from '../SubmissionInfo';
-import { makeSelectFormChanged } from '../../containers/SubmissionForm/selectors';
+import NavigationPrompt from 'react-router-navigation-prompt';
+import { reduxForm } from 'redux-form/immutable';
+import { createStructuredSelector } from 'reselect';
 import {
   resetForm,
   setFormChanged
 } from '../../containers/SubmissionForm/actions';
+import { makeSelectFormChanged } from '../../containers/SubmissionForm/selectors';
+import DatasetLabelForm from '../DatasetLabelForm';
+import DataUrlForm from '../DataUrlForm';
+import EmbargoDatePicker from '../EmbargoDatePicker';
+import MinimalSubmissionForm from '../MinimalSubmissionForm';
+import RelatedPublicationsForm from '../RelatedPublicationsForm';
+import SubmissionInfo from '../SubmissionInfo';
+import TemplateLinkList from '../TemplateLinkList';
 
 /* eslint-disable react/prefer-stateless-function */
 class FormWrapper extends React.PureComponent {
@@ -122,7 +122,7 @@ class FormWrapper extends React.PureComponent {
           {({ onConfirm, onCancel }) => (
             <Modal show onHide={onCancel} backdrop centered>
               <Modal.Header closeButton>
-                <Modal.Title className="pl-4">Leave this section ?</Modal.Title>
+                <Modal.Title className="ps-4">Leave this section ?</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <Container>
@@ -141,17 +141,17 @@ class FormWrapper extends React.PureComponent {
                     <Col xs={12} md={4}>
                       <Button
                         variant="secondary"
-                        className="btn-block btn-sm green"
+                        className="w-100 btn-sm green"
                         onClick={onCancel}
                       >
                         <i className="icon ion-md-close"/>
                         Cancel
                       </Button>
                     </Col>
-                    <Col xs={12} md={4} className="text-right">
+                    <Col xs={12} md={4} className="text-end">
                       <Button
                         variant="secondary"
-                        className="btn-block btn-sm btn-light-blue"
+                        className="w-100 btn-sm btn-light-blue"
                         onClick={this.props.handleSubmit(values =>
                           this.props.onSubmit({
                             ...values,
@@ -163,14 +163,12 @@ class FormWrapper extends React.PureComponent {
                         Save
                       </Button>
                     </Col>
-                    <Col xs={12} md={4} className="text-right">
+                    <Col xs={12} md={4} className="text-end">
                       <Button
                         variant="secondary"
-                        className="btn-block btn-sm red"
-                        // onClick={this.props.onDiscard}
+                        className="w-100 btn-sm red"
                         onClick={e => {
                           e.preventDefault();
-                          // this.props.onDiscard();
                           this.props.setFormChanged(false);
                           this.props.reset();
                           onConfirm();
@@ -296,13 +294,12 @@ class FormWrapper extends React.PureComponent {
 
               <div className="form-row">
                 <div className="form-group col-md-12">
-                  {/* {errors} */}
                   {this.props.saveSuccessMessage}
                   {this.props.submitErrorMessage}
                 </div>
               </div>
 
-              <div className="form-row mt-5">
+              <div className="row mt-5">
                 {/* TODO: commented to hide save button as defined in GFBIO-2584 */}
                 {/* <div className="form-group col-md-6"> */}
                 {/*  <button */}
@@ -326,7 +323,7 @@ class FormWrapper extends React.PureComponent {
                 <div className="form-group col-md-12">
                   <button
                     type="submit"
-                    className="btn btn-secondary btn-block green"
+                    className="btn btn-secondary w-100 green"
                     onClick={this.props.handleSubmit(values =>
                       this.props.onSubmit({
                         ...values,

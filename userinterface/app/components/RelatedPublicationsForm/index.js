@@ -4,20 +4,20 @@
  *
  */
 
-import React from 'react';
 import PropTypes from 'prop-types';
-import { createStructuredSelector } from 'reselect';
+import React from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import {
-  makeSelectCurrentRelatedPublication,
-  makeSelectRelatedPublications,
-} from '../../containers/SubmissionForm/selectors';
+import { createStructuredSelector } from 'reselect';
 import {
   addRelatedPublication,
   changeCurrentRelatedPublication,
   removeRelatedPublication,
 } from '../../containers/SubmissionForm/actions';
+import {
+  makeSelectCurrentRelatedPublication,
+  makeSelectRelatedPublications,
+} from '../../containers/SubmissionForm/selectors';
 // import styled from 'styled-components';
 
 /* eslint-disable react/prefer-stateless-function */
@@ -67,7 +67,7 @@ class RelatedPublicationsForm extends React.PureComponent {
       }
     });
 
-    let linkClasses = 'btn btn-secondary btn-block btn-light-blue-inverted';
+    let linkClasses = 'btn btn-secondary w-100 btn-light-blue-inverted';
     if (this.props.readOnly) {
       linkClasses += ' disabled';
     }
@@ -79,7 +79,7 @@ class RelatedPublicationsForm extends React.PureComponent {
           <p className="section-subtitle">(optional)</p>
         </header>
         <ul className="list-group list-group-flush">{publicationList}</ul>
-        <div className="form-row">
+        <div className="row">
           <div className="form-group col-md-10">
             <input
               className="form-control"

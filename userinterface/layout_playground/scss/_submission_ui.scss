@@ -115,11 +115,11 @@
 
 .drag-bars {
   color: $gfbio-light-blue;
-  margin-top: 10px;
-  margin-left: 18px;
-  margin-right: 10px;
-  position: absolute;
-  left: 0;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0.5rem;
+  cursor: grab;
 }
 
 .modal-body {
