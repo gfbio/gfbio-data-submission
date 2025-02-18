@@ -294,7 +294,7 @@
     <section id="mainSection">
       <div class="container">
         {# TODO: replace for clickable/removable messages OR remove completely  #}
-        {#  If you don't want to use messages, you can remove 'django.contrib.messages' from your INSTALLED_APPS, the MessageMiddleware line from MIDDLEWARE, and the messages context processor from TEMPLATES. #}
+        {#  If you don’t want to use messages, you can remove 'django.contrib.messages' from your INSTALLED_APPS, the MessageMiddleware line from MIDDLEWARE, and the messages context processor from TEMPLATES. #}
         {% if messages %}
           {% for message in messages %}
             <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show">
@@ -314,7 +314,7 @@
           </div> <!-- /row -->
           <div class="row">
             <div class="col">
-              <div style="height: 2000px;"> {% comment "" %} Spacer. height 2000px {% endcomment %}
+              <div style="height: 2000px;"> {% comment %} Spacer. height 2000px {% endcomment %}
               </div>
             </div>
           </div>
