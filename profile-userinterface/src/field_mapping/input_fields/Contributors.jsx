@@ -160,7 +160,7 @@ const Contributors = (props) => {
         <Input.Description>{description}</Input.Description>
         <Group justify="center" display={!opened ? "flex" : "none"}>
           <Button onClick={toggle} className="btn-blue-outline">
-            <i className="fa fa-plus pr-2"></i> Add Contributor
+            <i className="fa fa-plus pe-2"></i> Add Contributor
           </Button>
         </Group>
         <Collapse in={opened}>
@@ -209,7 +209,7 @@ const Contributors = (props) => {
                                 className="d-flex contributor"
                               >
                                 <div {...provided.dragHandleProps}>
-                                  <i class="fa fa-bars pr-2"></i>
+                                  <i className="fa fa-bars pe-2"></i>
                                 </div>
                                 <div
                                   key={contributor.emailAddress}

@@ -9,7 +9,7 @@ import putSubmission from "../api/putSubmission.jsx";
 import FormField from "../field_mapping/FormField.jsx";
 import { ROUTER_BASE_URL } from "../settings.jsx";
 import validateDataUrlField from "../utils/DataUrlValidation.jsx";
-import validateTextFields from "../utils/TextValidation.jsx"
+import validateTextFields from "../utils/TextValidation.jsx";
 
 const ProfileForm = (props) => {
     const {
@@ -161,20 +161,20 @@ const ProfileForm = (props) => {
         if (isProcessing) {
             return (
                 <Button className="submission-button disabled" type="submit" disabled>
-                    <i className="fa fa-gear mr-3"></i> Processing...
+                    <i className="fa fa-gear me-3"></i> Processing...
                 </Button>
             );
         }
         else if (submission?.broker_submission_id) {
             return (
                 <Button className="submission-button" type="submit">
-                    <i className="fa fa-forward mr-3"></i> Update Submission
+                    <i className="fa fa-forward me-3"></i> Update Submission
                 </Button>
             );
         } else {
             return (
                 <Button className="submission-button" type="submit">
-                    <i className="fa fa-play mr-3"></i> Create Submission
+                    <i className="fa fa-play me-3"></i> Create Submission
                 </Button>
             );
         }

@@ -77,7 +77,7 @@ const SubmissionList = (props) => {
             </div>
             <div className="col-2">
               <button
-                className="btn btn-sm btn-block btn-green-inverted"
+                className="btn btn-sm w-100 btn-green-inverted"
                 onClick={() => setShowSuccessMessage(false)}
               >
                 Close
@@ -90,8 +90,8 @@ const SubmissionList = (props) => {
       {submissions.length === 0 ? (
         <div className="list-start-wrapper d-flex">
           <div className="container my-auto">
-            <div className="row no-gutters text-center">
-              <div className="col-md-10 pl-3 align-middle">
+            <div className="row g-0 text-center">
+              <div className="col-md-10 ps-3 align-middle">
                 <Link to={formUrl} className="nav-link list-start">
                   <p>You have no submissions yet.</p>
                   <p>Start a new submission</p>
@@ -102,9 +102,9 @@ const SubmissionList = (props) => {
         </div>
       ) : (
         <div className="pt-3">
-          <div className="row no-gutters">
-            <div className="col-md-10 pl-3">
-              <div className="row no-gutters">
+          <div className="row g-0">
+            <div className="col-md-10 ps-3">
+              <div className="row g-0">
                 <div className="col-md-8 align-self-center">
                   <h6>Title</h6>
                 </div>
@@ -123,11 +123,11 @@ const SubmissionList = (props) => {
                 key={submission.broker_submission_id}
                 className="list-group-item"
               >
-                <div className="row wrapping-row no-gutters">
+                <div className="row wrapping-row g-0">
                   <div className="col-md-10">
                     <Link
                       to={formUrl + submission.broker_submission_id}
-                      className="row no-gutters"
+                      className="row g-0"
                     >
                       <div className="col-md-8 col-sm-12 align-self-center">
                         <span>{submission.data.requirements.title}</span>
@@ -143,7 +143,7 @@ const SubmissionList = (props) => {
                   <div className="col-md-2 col-sm-12 align-self-center actions">
                     <Link
                       to={formUrl + submission.broker_submission_id}
-                      className="action h-100 d-inline-block pr-4 btn btn-link"
+                      className="action h-100 d-inline-block pe-4 btn btn-link"
                     >
                       Edit
                     </Link>

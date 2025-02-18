@@ -43,7 +43,7 @@ const EmbargoDate = (props) => {
         return (
             <Group>
                 <Button onClick={open} variant="default" className="link-style">
-                    <i className="icon ion-md-calendar align-top mr-2"></i>
+                    <i className="icon ion-md-calendar align-top me-2"></i>
                     Change embargo date
                 </Button>
             </Group>
@@ -67,7 +67,7 @@ const EmbargoDate = (props) => {
     return (
         <div>
             <header className="">
-                <h2 className="">{title} {mandatory && ( <span class="mantine-InputWrapper-required mantine-TextInput-required">*</span>)}</h2>
+                <h2 className="">{title} {mandatory && ( <span className="mantine-InputWrapper-required mantine-TextInput-required">*</span>)}</h2>
                 <h4>{formattedEmbargoDate()}</h4>
                 {showEmbargoButton()}
             </header>
