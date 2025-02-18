@@ -1,39 +1,5 @@
 # -*- coding: utf-8 -*-
-import json
-import os
-import shutil
-from pprint import pprint
-from urllib.parse import urlparse
-from uuid import uuid4
 
-import responses
-from django.contrib.auth.models import Permission
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
-from django.urls import reverse
-from rest_framework import status
-from rest_framework.authtoken.models import Token
-from rest_framework.test import APIClient
-
-from config.settings.base import MEDIA_ROOT, MEDIA_URL
-from gfbio_submissions.brokerage.configuration.settings import (
-    GFBIO_HELPDESK_TICKET,
-    JIRA_ATTACHMENT_SUB_URL,
-    JIRA_ATTACHMENT_URL,
-    JIRA_ISSUE_URL,
-)
-from gfbio_submissions.brokerage.tests.utils import (
-    _create_submission_via_serializer,
-    _get_jira_attach_response,
-    _get_jira_issue_response,
-)
-from gfbio_submissions.generic.models.resource_credential import ResourceCredential
-from gfbio_submissions.generic.models.site_configuration import SiteConfiguration
-from ...models.submission_cloud_upload import SubmissionCloudUpload
-
-from ...models.submission import Submission
-from ...models.submission_upload import SubmissionUpload
-from ...models.task_progress_report import TaskProgressReport
 import json
 from pprint import pprint
 from unittest.mock import patch, MagicMock
@@ -42,10 +8,17 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
-from rest_framework.test import APIClient
-from botocore.exceptions import ClientError
-
 from dt_upload.models import backend_based_upload_models
+from rest_framework.test import APIClient
+
+from gfbio_submissions.brokerage.configuration.settings import (
+    GFBIO_HELPDESK_TICKET,
+)
+from gfbio_submissions.brokerage.tests.utils import (
+    _create_submission_via_serializer,
+)
+from ...models.submission import Submission
+from ...models.submission_cloud_upload import SubmissionCloudUpload
 
 User = get_user_model()
 
@@ -171,9 +144,169 @@ class TestSubmissionCloudUploadView(TestCase):
         # Assert S3 client called correctly
         self.s3_client_mock.create_multipart_upload.assert_called_once()
 
-        # TODO: next : integrate dtuplod viiew into submission urls to complete uload to s3transfer
+        # DONE: TODO: next : integrate dtuplod viiew into submission urls to complete uload to s3transfer
         # TODO: put more info about nextz step and part upload url into initial response of SCU objkect
+        # tODO: 500 & 400 from s3 views
 
+    def test_get_part_url(self):
+        file_upload = backend_based_upload_models.FileUploadRequest.objects.create(
+            original_filename=self.test_file_data["filename"],
+            file_key=self.mock_file_key,
+            file_type=self.test_file_data["filetype"],
+            status="PENDING",
+            user=self.user
+        )
 
+        multipart = backend_based_upload_models.MultiPartUpload.objects.create(
+            upload_id=self.mock_upload_id,
+            file_upload_request=file_upload,
+            parts_expected=self.test_file_data["total_parts"]
+        )
+        print(multipart.upload_id)
+        # Mock S3 generate_presigned_url response
+        mock_url = "https://test-bucket.s3.amazonaws.com/test-presigned-url"
+        self.s3_client_mock.generate_presigned_url.return_value = mock_url
 
+        # Make request for part URL
+        url = reverse("brokerage:submissions_cloud_upload_part", kwargs={"upload_id": self.mock_upload_id})
+        print(url)
+        response = self.client.post(url, {"part_number": 1}, format="json")
 
+        pprint(json.loads(response.content))
+        # Assert response
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["presigned_url"], mock_url)
+        self.assertEqual(response.data["part_number"], 1)
+
+        # Assert S3 client called correctly
+        self.s3_client_mock.generate_presigned_url.assert_called_once()
+
+    def test_complete_multipart_upload(self):
+        # Create test records
+        file_upload = backend_based_upload_models.FileUploadRequest.objects.create(
+            original_filename=self.test_file_data["filename"],
+            file_key=self.mock_file_key,
+            file_type=self.test_file_data["filetype"],
+            status="PENDING",
+            user=self.user
+        )
+
+        multipart = backend_based_upload_models.MultiPartUpload.objects.create(
+            upload_id=self.mock_upload_id,
+            file_upload_request=file_upload,
+            parts_expected=2
+        )
+
+        # Test parts data
+        parts_data = {
+            "parts": [
+                {"PartNumber": 1, "ETag": "'test-etag-1'"},
+                {"PartNumber": 2, "ETag": "'test-etag-2'"}
+            ]
+        }
+
+        # Mock S3 complete_multipart_upload response
+        self.s3_client_mock.complete_multipart_upload.return_value = {
+            "Location": "https://test-bucket.s3.amazonaws.com/test-file"
+        }
+
+        # Make request to complete upload
+        url = reverse("brokerage:submissions_cloud_upload_complete", kwargs={"upload_id": self.mock_upload_id})
+        response = self.client.put(url, parts_data, format="json")
+        print(response.content)
+
+        # Assert response
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status"], "completed")
+        self.assertIn("location", response.data)
+
+        # Assert database records updated
+        file_upload.refresh_from_db()
+        multipart.refresh_from_db()
+        self.assertEqual(file_upload.status, "COMPLETED")
+        self.assertIsNotNone(multipart.completed_at)
+
+        # Assert S3 client called correctly
+        self.s3_client_mock.complete_multipart_upload.assert_called_once()
+
+    def test_abort_multipart_upload(self):
+        """Test aborting a multipart upload"""
+        # Create test records
+        file_upload = backend_based_upload_models.FileUploadRequest.objects.create(
+            original_filename=self.test_file_data["filename"],
+            file_key=self.mock_file_key,
+            file_type=self.test_file_data["filetype"],
+            status="PENDING",
+            user=self.user
+        )
+
+        multipart = backend_based_upload_models.MultiPartUpload.objects.create(
+            upload_id=self.mock_upload_id,
+            file_upload_request=file_upload,
+            parts_expected=2
+        )
+
+        # Make request to abort upload
+        url = reverse("brokerage:submissions_cloud_upload_abort", kwargs={"upload_id": self.mock_upload_id})
+        response = self.client.delete(url)
+        print(response.content)
+
+        # Assert response
+        self.assertEqual(response.status_code, 204)
+
+        # Assert database records updated
+        file_upload.refresh_from_db()
+        self.assertEqual(file_upload.status, "FAILED")
+
+        # Assert S3 client called correctly
+        self.s3_client_mock.abort_multipart_upload.assert_called_once()
+
+    # def test_error_handling(self):
+    #     """Test error handling scenarios"""
+    #     # Test invalid upload ID
+    #     url = reverse("dt_upload:backend-multipart-part", kwargs={"upload_id": "invalid-id"})
+    #     response = self.client.post(url, {"part_number": 1}, format="json")
+    #     self.assertEqual(response.status_code, 404)
+    #
+    #     # Test S3 error handling
+    #     self.s3_client_mock.create_multipart_upload.side_effect = ClientError(
+    #         error_response={"Error": {"Code": "TestError", "Message": "Test error"}},
+    #         operation_name="CreateMultiPartUpload"
+    #     )
+    #
+    #     url = reverse("dt_upload:backend-multipart-start")
+    #     response = self.client.post(url, self.test_file_data, format="json")
+    #     self.assertEqual(response.status_code, 500)
+    #
+    # def test_validation(self):
+    #     """Test input validation"""
+    #     # Test missing required fields
+    #     url = reverse("dt_upload:backend-multipart-start")
+    #     invalid_data = self.test_file_data.copy()
+    #     del invalid_data["filename"]
+    #     response = self.client.post(url, invalid_data, format="json")
+    #     self.assertEqual(response.status_code, 400)
+    #
+    #     # Test invalid part number
+    #     url = reverse("dt_upload:backend-multipart-part", kwargs={"upload_id": self.mock_upload_id})
+    #     response = self.client.post(url, {"part_number": 0}, format="json")
+    #     self.assertEqual(response.status_code, 400)
+    #
+    # def test_concurrent_uploads(self):
+    #     """Test handling multiple concurrent uploads"""
+    #     # Create multiple upload requests
+    #     upload_ids = []
+    #     for i in range(3):
+    #         self.s3_client_mock.create_multipart_upload.return_value = {
+    #             "UploadId": f"test-upload-id-{i}"
+    #         }
+    #
+    #         url = reverse("dt_upload:backend-multipart-start")
+    #         response = self.client.post(url, self.test_file_data, format="json")
+    #         pprint(json.loads(response.content))
+    #         self.assertEqual(response.status_code, 201)
+    #         upload_ids.append(response.data["upload_id"])
+    #
+    #     # Verify all uploads are tracked
+    #     self.assertEqual(MultiPartUpload.objects.count(), 3)
+    #     self.assertEqual(FileUploadRequest.objects.count(), 3)

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.urls import re_path
+from django.urls import re_path, path
 from django.views.generic import TemplateView
 
 from .views.jira_issue_update_view import JiraIssueUpdateView
@@ -12,6 +12,7 @@ from .views.submission_upload_view import SubmissionUploadView
 from .views.submissions_view import SubmissionsView
 from .views.submission_report_view import SubmissionReportView
 from .views.submission_cloud_upload_view import SubmissionCloudUploadView
+from dt_upload.views import backend_based_upload_views
 
 app_name = "brokerage"
 urlpatterns = [
@@ -31,6 +32,22 @@ urlpatterns = [
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloudupload/$",
         view=SubmissionCloudUploadView.as_view(),
         name="submissions_cloud_upload",
+    ),
+    # TODO: integrate bsi like above or is this sufficient
+    path(
+        # route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloudupload/$",
+        route="submissions/cloudupload/<str:upload_id>/part/",
+        view=backend_based_upload_views.GetUploadPartURLView.as_view(),
+        name="submissions_cloud_upload_part",
+    ),
+    path(
+        route="backend/multipart/<str:upload_id>/complete/",
+        view=backend_based_upload_views.CompleteMultiPartUploadView.as_view(),
+        name="submissions_cloud_upload_complete"
+    ),
+    path(route="backend/multipart/<str:upload_id>/abort/",
+         view=backend_based_upload_views.AbortMultiPartUploadView.as_view(),
+         name="submissions_cloud_upload_abort"
     ),
     #TODO: new cloud upload -----------------------------------------------------
     re_path(

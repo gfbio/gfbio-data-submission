@@ -70,11 +70,11 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
         upload_serializer = backend_based_upload_serializers.MultipartUploadStartSerializer(data=request.data)
         upload_serializer.is_valid(raise_exception=True)
 
-        response_status, data = backend_based_upload_mixins.generate_multipart_upload_objects(request,
+        dt_upload_response_status, dt_upload_data = backend_based_upload_mixins.generate_multipart_upload_objects(request,
                                                                                               upload_serializer,
                                                                                               file_key_prefix=broker_submission_id)
-        print(response_status)
-        pprint(data)
+        # print(dt_upload_response_status)
+        # pprint(dt_upload_data)
 
         obj = self.perform_create(serializer, sub)
 
@@ -84,7 +84,9 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
         data_content["id"] = obj.pk
         data_content["broker_submission_id"] = sub.broker_submission_id
 
-        response = Response(data_content, status=status.HTTP_201_CREATED, headers=headers)
+
+
+        response = Response(data_content | dt_upload_data, status=status.HTTP_201_CREATED, headers=headers)
 
         with transaction.atomic():
             RequestLog.objects.create(
