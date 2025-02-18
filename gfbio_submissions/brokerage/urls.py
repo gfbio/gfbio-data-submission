@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 from django.urls import re_path, path
 from django.views.generic import TemplateView
+from dt_upload.views import backend_based_upload_views
 
 from .views.jira_issue_update_view import JiraIssueUpdateView
+from .views.submission_cloud_upload_view import SubmissionCloudUploadView, SubmissionCloudUploadPartURLView
 from .views.submission_comment_view import SubmissionCommentView
 from .views.submission_detail_view import SubmissionDetailView
+from .views.submission_report_view import SubmissionReportView
 from .views.submission_upload_detail_view import SubmissionUploadDetailView
 from .views.submission_upload_list_view import SubmissionUploadListView
 from .views.submission_upload_patch_view import SubmissionUploadPatchView
 from .views.submission_upload_view import SubmissionUploadView
 from .views.submissions_view import SubmissionsView
-from .views.submission_report_view import SubmissionReportView
-from .views.submission_cloud_upload_view import SubmissionCloudUploadView
-from dt_upload.views import backend_based_upload_views
 
 app_name = "brokerage"
 urlpatterns = [
@@ -37,7 +37,8 @@ urlpatterns = [
     path(
         # route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/cloudupload/$",
         route="submissions/cloudupload/<str:upload_id>/part/",
-        view=backend_based_upload_views.GetUploadPartURLView.as_view(),
+        # view=backend_based_upload_views.GetUploadPartURLView.as_view(),
+        view=SubmissionCloudUploadPartURLView.as_view(),
         name="submissions_cloud_upload_part",
     ),
     path(
@@ -48,8 +49,8 @@ urlpatterns = [
     path(route="backend/multipart/<str:upload_id>/abort/",
          view=backend_based_upload_views.AbortMultiPartUploadView.as_view(),
          name="submissions_cloud_upload_abort"
-    ),
-    #TODO: new cloud upload -----------------------------------------------------
+         ),
+    # TODO: new cloud upload -----------------------------------------------------
     re_path(
         route=r"submissions/(?P<broker_submission_id>[0-9a-z-]+)/uploads/$",
         view=SubmissionUploadListView.as_view(),

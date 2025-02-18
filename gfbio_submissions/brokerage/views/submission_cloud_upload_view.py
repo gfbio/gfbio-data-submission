@@ -3,6 +3,7 @@ from pprint import pprint
 from uuid import uuid4
 
 from django.db import transaction
+from dt_upload.models import FileUploadRequest
 from rest_framework import mixins, generics, permissions, status
 from rest_framework.authentication import TokenAuthentication, BasicAuthentication
 from rest_framework.response import Response
@@ -13,7 +14,7 @@ from ..models.submission_cloud_upload import SubmissionCloudUpload
 from ..permissions.is_owner_or_readonly import IsOwnerOrReadOnly
 from ..serializers.submission_cloud_upload_serializer import SubmissionCloudUploadSerializer
 
-from dt_upload.views import backend_based_upload_mixins
+from dt_upload.views import backend_based_upload_mixins, backend_based_upload_views
 from dt_upload.serializers import backend_based_upload_serializers
 
 
@@ -27,8 +28,8 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
     authentication_classes = (TokenAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
-    def perform_create(self, serializer, submission):
-        return serializer.save(user=self.request.user, submission=submission)
+    def perform_create(self, serializer, submission, file_upload_request):
+        return serializer.save(user=self.request.user, submission=submission, file_upload=file_upload_request)
 
     def create(self, request, *args, **kwargs):
         broker_submission_id = kwargs.get("broker_submission_id", uuid4())
@@ -67,24 +68,28 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        # TODO: try and except block
+        # TODO: refactor worker code to dedicated methods
         upload_serializer = backend_based_upload_serializers.MultipartUploadStartSerializer(data=request.data)
         upload_serializer.is_valid(raise_exception=True)
 
-        dt_upload_response_status, dt_upload_data = backend_based_upload_mixins.generate_multipart_upload_objects(request,
-                                                                                              upload_serializer,
-                                                                                              file_key_prefix=broker_submission_id)
-        # print(dt_upload_response_status)
-        # pprint(dt_upload_data)
+        dt_upload_response_status, dt_upload_data, file_upload_request = backend_based_upload_mixins.generate_multipart_upload_objects(
+            request,
+            upload_serializer,
+            file_key_prefix=broker_submission_id
+        )
+        print('DT RESPONSE IN VIEW -------------------------------')
+        print(dt_upload_response_status)
+        pprint(dt_upload_data)
+        print('FUR: ', file_upload_request)
 
-        obj = self.perform_create(serializer, sub)
+        obj = self.perform_create(serializer, sub, file_upload_request)
 
         headers = self.get_success_headers(serializer.data)
         data_content = dict(serializer.data)
         data_content.pop("submission", 0)
         data_content["id"] = obj.pk
         data_content["broker_submission_id"] = sub.broker_submission_id
-
-
 
         response = Response(data_content | dt_upload_data, status=status.HTTP_201_CREATED, headers=headers)
 
@@ -102,3 +107,10 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
+
+
+class SubmissionCloudUploadPartURLView(backend_based_upload_views.GetUploadPartURLView):
+    def create(self, request, *args, **kwargs):
+        response = super(SubmissionCloudUploadPartURLView, self).create(request, *args, **kwargs)
+        print('CUSTOM add to GetUploadPartURLView')
+        return response

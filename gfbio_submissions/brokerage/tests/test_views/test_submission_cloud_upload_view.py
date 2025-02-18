@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import json
+import os
+import tempfile
 from pprint import pprint
 from unittest.mock import patch, MagicMock
 
+from botocore.exceptions import ClientError
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -23,36 +26,8 @@ from ...models.submission_cloud_upload import SubmissionCloudUpload
 User = get_user_model()
 
 
-class TestSubmissionCloudUploadView(TestCase):
-
+class TestRealWorldSubmissionCloudUploadView(TestCase):
     def setUp(self):
-        # resource_cred = ResourceCredential.objects.create(
-        #     title="Resource Title",
-        #     url="https://www.example.com",
-        #     authentication_string="letMeIn",
-        # )
-        #
-        # self.site_config = SiteConfiguration.objects.create(
-        #     title="default",
-        #     release_submissions=False,
-        #     ena_server=resource_cred,
-        #     pangaea_token_server=resource_cred,
-        #     pangaea_jira_server=resource_cred,
-        #     helpdesk_server=resource_cred,
-        #     comment="Default configuration",
-        # )
-        # user = User.objects.create_user(username="horst", email="horst@horst.de", password="password")
-        # permissions = Permission.objects.filter(
-        #     content_type__app_label="brokerage", codename__endswith="submissioncloudupload"
-        # )
-        # # print(permissions)
-        # user.user_permissions.add(*permissions)
-        # user.site_configuration = self.site_config
-        # user.save()
-        # token = Token.objects.create(user=user)
-        # client = APIClient()
-        # client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
-        # self.api_client = client
         self.client = APIClient()
         self.user = User.objects.create_user(
             username="testuser",
@@ -60,11 +35,65 @@ class TestSubmissionCloudUploadView(TestCase):
         )
         self.client.force_authenticate(user=self.user)
 
-        # user = User.objects.create_user(username="kevin", email="kevin@kevin.de", password="secret", is_staff=True)
-        # token = Token.objects.create(user=user)
-        # client = APIClient()
-        # client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
-        # cls.other_api_client = client
+        submission = _create_submission_via_serializer()
+        submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="FAKE_KEY", primary=True)
+        _create_submission_via_serializer()
+
+    def test_upload_to_s3(self):
+        submission = Submission.objects.first()
+        url = reverse(
+            "brokerage:submissions_cloud_upload",
+            kwargs={"broker_submission_id": submission.broker_submission_id},
+        )
+        print(url)
+
+        file_size_mb = 10
+        file_size_bytes = file_size_mb * 1024 * 1024
+        part_size = 2
+        total_parts = int(file_size_mb / part_size)
+
+        with tempfile.NamedTemporaryFile(
+            delete=False) as tmp_file:
+            random_data = os.urandom(file_size_bytes)
+            tmp_file.write(random_data)
+            tmp_file_path = tmp_file.name
+
+        data = {
+            "filename": os.path.basename(tmp_file_path),
+            "filetype": "application/octet-stream",
+            "total_size": file_size_bytes,
+            "part_size": part_size * 1024 * 1024,  # x MB
+            "total_parts": total_parts
+        }
+        print(data)
+
+        print('SETTINGS ---------------------------------')
+        print('settings.DJANGO_UPLOAD_TOOLS_USE_S3', settings.DJANGO_UPLOAD_TOOLS_USE_S3)
+        print('AWS_ACCESS_KEY_ID',  settings.AWS_ACCESS_KEY_ID)
+        print('AWS_SECRET_ACCESS_KEY', settings.AWS_SECRET_ACCESS_KEY)
+        print('AWS_STORAGE_BUCKET_NAME', settings.AWS_STORAGE_BUCKET_NAME)
+        print('AWS_S3_REGION_NAME', settings.AWS_S3_REGION_NAME)
+        print('AWS_S3_ENDPOINT_URL', settings.AWS_S3_ENDPOINT_URL)
+        print('aws_s3_domain', settings.AWS_S3_DOMAIN)
+
+        response = self.client.post(url, data=data, format="json")
+        print('\nRESPONSE ----------------------------------------------------------')
+        print(response.status_code)
+        content = json.loads(response.content)
+        pprint(content)
+
+        os.remove(tmp_file_path)
+
+
+class TestSubmissionCloudUploadView(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username="testuser",
+            password="testpass123"
+        )
+        self.client.force_authenticate(user=self.user)
 
         submission = _create_submission_via_serializer()
         submission.additionalreference_set.create(type=GFBIO_HELPDESK_TICKET, reference_key="FAKE_KEY", primary=True)
@@ -104,42 +133,58 @@ class TestSubmissionCloudUploadView(TestCase):
             "UploadId": self.mock_upload_id
         }
         submission = Submission.objects.first()
-        print(submission.status)
         url = reverse(
             "brokerage:submissions_cloud_upload",
             kwargs={"broker_submission_id": submission.broker_submission_id},
         )
+
         print(url)
         data = self.test_file_data
         data["attach_to_ticket"] = False
         data["meta_data"] = True
+        print('DATA FOR INITIAL POST -------------------------------------------')
+        pprint(data)
+        print('-----------------------------------------------------------------')
         response = self.client.post(url, data=data, format="json")
         content = json.loads(response.content)
+        print('\nRESPONSE ----------------------------------------------------------')
         pprint(content)
+        print('-----------------------------------------------------------------')
 
         # SubmissionCloudUpload ------------------------------------------------
         self.assertEqual(201, response.status_code)
         self.assertEqual(str(submission.broker_submission_id),
                          content.get("broker_submission_id", "no-bsi"))
         self.assertEqual(1, len(SubmissionCloudUpload.objects.all()))
+        print('\nSCU OBJ  -----------------------------------------------------')
+        pprint(SubmissionCloudUpload.objects.first().__dict__)
 
         # DTUpload FileUploadRequest -------------------------------------------
         file_upload = backend_based_upload_models.FileUploadRequest.objects.first()
         self.assertIsNotNone(file_upload)
         self.assertEqual(file_upload.original_filename, self.test_file_data["filename"])
         self.assertEqual(file_upload.status, "PENDING")
+        # bsi in filekey
+        self.assertIn(str(submission.broker_submission_id), file_upload.file_key)
+        print('\nFILE UPLOAD REQUEST OBJ  -----------------------------------------------------')
+        pprint(file_upload.__dict__)
 
         # DTUpload MultiPartUpload -------------------------------------------
         multipart = backend_based_upload_models.MultiPartUpload.objects.first()
         self.assertIsNotNone(multipart)
         self.assertEqual(multipart.upload_id, self.mock_upload_id)
         self.assertEqual(multipart.parts_expected, self.test_file_data["total_parts"])
+        print('\nMULTIPART OBJ  -----------------------------------------------------')
+        pprint(multipart.__dict__)
 
         # DTUpload UploadPart -------------------------------------------
         upload_parts = backend_based_upload_models.UploadPart.objects.all()
         self.assertEqual(multipart.parts_expected, len(upload_parts))
+        print('\nUPLOAD PARTS OBJs  -----------------------------------------------------')
         for u in upload_parts:
             self.assertEqual(multipart, u.multipart_upload)
+            print('\n==================')
+            pprint(u.__dict__)
 
         # Assert S3 client called correctly
         self.s3_client_mock.create_multipart_upload.assert_called_once()
@@ -147,6 +192,9 @@ class TestSubmissionCloudUploadView(TestCase):
         # DONE: TODO: next : integrate dtuplod viiew into submission urls to complete uload to s3transfer
         # TODO: put more info about nextz step and part upload url into initial response of SCU objkect
         # tODO: 500 & 400 from s3 views
+        # TODO: custom views via inheritance work, maybe add bsi to views for consistency ? compare SubmissionCloudUploadPartURLView
+        # TODO: clean up Multipart / Parts Objects after success or abort ?
+        #   maybe even FileUploadRequest ?
 
     def test_get_part_url(self):
         file_upload = backend_based_upload_models.FileUploadRequest.objects.create(
@@ -213,6 +261,8 @@ class TestSubmissionCloudUploadView(TestCase):
         # Make request to complete upload
         url = reverse("brokerage:submissions_cloud_upload_complete", kwargs={"upload_id": self.mock_upload_id})
         response = self.client.put(url, parts_data, format="json")
+        print('RESPONSE -------------------------------------------------')
+        print(response.status_code)
         print(response.content)
 
         # Assert response
@@ -221,8 +271,12 @@ class TestSubmissionCloudUploadView(TestCase):
         self.assertIn("location", response.data)
 
         # Assert database records updated
+        print('\nFILE UPLOAD OBJ -----------------------------------------------------------')
         file_upload.refresh_from_db()
+        pprint(file_upload.__dict__)
+        print('\nMULTIPART OBJ -----------------------------------------------------------')
         multipart.refresh_from_db()
+        pprint(multipart.__dict__)
         self.assertEqual(file_upload.status, "COMPLETED")
         self.assertIsNotNone(multipart.completed_at)
 
@@ -261,23 +315,27 @@ class TestSubmissionCloudUploadView(TestCase):
         # Assert S3 client called correctly
         self.s3_client_mock.abort_multipart_upload.assert_called_once()
 
-    # def test_error_handling(self):
-    #     """Test error handling scenarios"""
-    #     # Test invalid upload ID
-    #     url = reverse("dt_upload:backend-multipart-part", kwargs={"upload_id": "invalid-id"})
-    #     response = self.client.post(url, {"part_number": 1}, format="json")
-    #     self.assertEqual(response.status_code, 404)
-    #
-    #     # Test S3 error handling
-    #     self.s3_client_mock.create_multipart_upload.side_effect = ClientError(
-    #         error_response={"Error": {"Code": "TestError", "Message": "Test error"}},
-    #         operation_name="CreateMultiPartUpload"
-    #     )
-    #
-    #     url = reverse("dt_upload:backend-multipart-start")
-    #     response = self.client.post(url, self.test_file_data, format="json")
-    #     self.assertEqual(response.status_code, 500)
-    #
+    def test_error_handling(self):
+        """Test error handling scenarios"""
+        # Test invalid upload ID
+        url = reverse("brokerage:submissions_cloud_upload_part", kwargs={"upload_id": "invalid-id"})
+        response = self.client.post(url, {"part_number": 1}, format="json")
+        self.assertEqual(response.status_code, 404)
+
+        # Test S3 error handling
+        self.s3_client_mock.create_multipart_upload.side_effect = ClientError(
+            error_response={"Error": {"Code": "TestError", "Message": "Test error"}},
+            operation_name="CreateMultiPartUpload"
+        )
+
+        submission = Submission.objects.first()
+        url = reverse(
+            "brokerage:submissions_cloud_upload",
+            kwargs={"broker_submission_id": submission.broker_submission_id},
+        )
+        response = self.client.post(url, self.test_file_data, format="json")
+        self.assertEqual(response.status_code, 500)
+
     # def test_validation(self):
     #     """Test input validation"""
     #     # Test missing required fields
