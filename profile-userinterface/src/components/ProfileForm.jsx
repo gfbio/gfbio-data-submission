@@ -47,6 +47,8 @@ const ProfileForm = (props) => {
 
     // Reset form dirty state after initial field loading
     useEffect(() => {
+        if (!submission) return; // Don't reset if submission isn't loaded yet
+
         // Wait for next tick to ensure all fields have loaded
         const timer = setTimeout(() => {
             form.resetDirty();
@@ -86,9 +88,8 @@ const ProfileForm = (props) => {
         setPendingNavigation(null);
     };
 
-    const handleLeaveSave = () => {
-        // Trigger the form's submit event
-        document.querySelector('form.submission-form').requestSubmit();
+    const handleLeaveSave = async () => {
+        handleSubmit(form.getValues());
         setShowLeaveDialog(false);
     };
 
@@ -138,6 +139,7 @@ const ProfileForm = (props) => {
         setProcessing(true);
         // TODO: fixed token value for local testing only
         if (submission?.broker_submission_id) {
+            console.log("values: ", values);
             putSubmission(
                 submission.broker_submission_id,
                 profileData.target,
@@ -151,6 +153,7 @@ const ProfileForm = (props) => {
                         handleFileUpload(file, brokerSubmissionId, index === metadataIndex),
                     );
                     return Promise.all(fileUploadPromises).then(() => {
+                        setShowLeaveDialog(false); // Close dialog after successful submission
                         navigate(pendingNavigation || ROUTER_BASE_URL);
                     });
                 } else {
@@ -179,6 +182,7 @@ const ProfileForm = (props) => {
                             handleFileUpload(file, brokerSubmissionId, index === metadataIndex),
                         );
                         return Promise.all(fileUploadPromises).then(() => {
+                            setShowLeaveDialog(false); // Close dialog after successful submission
                             navigate(pendingNavigation || ROUTER_BASE_URL);
                         });
                     } else {

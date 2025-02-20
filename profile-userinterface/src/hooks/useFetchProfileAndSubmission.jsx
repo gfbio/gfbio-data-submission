@@ -1,11 +1,10 @@
-import {useEffect, useState} from 'react';
 import axios from "axios";
-import {PROFILE_URL, SUBMISSIONS_API} from "../settings.jsx";
+import { useEffect, useState } from 'react';
+import { PROFILE_URL, SUBMISSIONS_API } from "../settings.jsx";
 
 const useFetchProfileAndSubmission = (profileName, brokerSubmissionId) => {
     const [data1, setData1] = useState([]);
     const [data2, setData2] = useState([]);
-    const [proceed, setProceed] = useState(false)
     const [isLoading, setLoading] = useState(true);
     const [error1, setError1] = useState(null);
     const [error2, setError2] = useState(null);
@@ -17,7 +16,11 @@ const useFetchProfileAndSubmission = (profileName, brokerSubmissionId) => {
         token = window.props.token || 'no-token-found';
     }
     if (brokerSubmissionId === undefined){
-        localStorage.setItem('submission', JSON.stringify({}));
+        localStorage.setItem('submission', JSON.stringify({
+            data: {
+                requirements: {}
+            }
+        }));
     }
 
     const config = {
@@ -28,61 +31,49 @@ const useFetchProfileAndSubmission = (profileName, brokerSubmissionId) => {
     };
 
     useEffect(() => {
+        let isMounted = true;
         const fetchData = async () => {
             setLoading(true);
-            await axios
-                .get(PROFILE_URL + profileName, config)
-                .then((response) => {
-                        setData1(response.data);
-                        setProceed(true);
-                    }
-                )
-                .catch((error) => {
-                        setError1(error);
-                    }
-                )
-                .finally(() => {
-                        setLoading(false);
-                    }
-                )
+            try {
+                // Fetch profile data
+                const profileResponse = await axios.get(PROFILE_URL + profileName, config);
+                if (!isMounted) return;
+                setData1(profileResponse.data);
+
+                // If we have a brokerSubmissionId, fetch submission data
+                if (brokerSubmissionId !== undefined) {
+                    const submissionResponse = await axios.get(SUBMISSIONS_API + brokerSubmissionId + '/', config);
+                    if (!isMounted) return;
+                    localStorage.setItem('submission', JSON.stringify(submissionResponse.data));
+                    setData2(submissionResponse.data);
+                }
+            } catch (error) {
+                if (!isMounted) return;
+                if (error.config.url.includes(PROFILE_URL)) {
+                    setError1(error);
+                } else {
+                    setError2(error);
+                }
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
+            }
         };
 
         fetchData();
 
-        // Cleanup function
         return () => {
-            // Cleanup logic if needed
+            isMounted = false;
+            if (brokerSubmissionId === undefined) {
+                localStorage.setItem('submission', JSON.stringify({
+                    data: {
+                        requirements: {}
+                    }
+                }));
+            }
         };
-    }, []);
-
-    useEffect(() => {
-        if (proceed && brokerSubmissionId !== undefined) {
-            const fetchData = async () => {
-                setLoading(true);
-                await axios
-                    .get(SUBMISSIONS_API + brokerSubmissionId + '/', config)
-                    .then((response) => {
-                            localStorage.setItem('submission', JSON.stringify(response.data));
-                            setData2(response.data);
-                        }
-                    )
-                    .catch((error) => {
-                            setError2(error);
-                        }
-                    )
-                    .finally(() => {
-                            setLoading(false);
-                        }
-                    )
-            };
-
-            fetchData();
-        }
-        // Cleanup function
-        return () => {
-            // Cleanup logic if needed
-        };
-    }, [proceed]);
+    }, [profileName, brokerSubmissionId]); // Only re-run if these change
 
     return {data1, data2, isLoading, error1, error2};
 };
