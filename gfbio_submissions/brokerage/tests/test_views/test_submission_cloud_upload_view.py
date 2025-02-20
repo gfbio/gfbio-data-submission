@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import json
+from dataclasses import dataclass
+from typing import List, Dict, Optional
 import os
+import requests
 import tempfile
 from pprint import pprint
 from unittest.mock import patch, MagicMock
@@ -11,7 +14,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
-from dt_upload.models import backend_based_upload_models
+from dt_upload.models import backend_based_upload_models, FileUploadRequest, MultiPartUpload
 from rest_framework.test import APIClient
 
 from gfbio_submissions.brokerage.configuration.settings import (
@@ -47,9 +50,9 @@ class TestRealWorldSubmissionCloudUploadView(TestCase):
         )
         print(url)
 
-        file_size_mb = 10
+        file_size_mb = 20
         file_size_bytes = file_size_mb * 1024 * 1024
-        part_size = 2
+        part_size = 5 # TODO:  2 zu klein fr s3 ?
         total_parts = int(file_size_mb / part_size)
 
         with tempfile.NamedTemporaryFile(
@@ -67,20 +70,126 @@ class TestRealWorldSubmissionCloudUploadView(TestCase):
         }
         print(data)
 
-        print('SETTINGS ---------------------------------')
-        print('settings.DJANGO_UPLOAD_TOOLS_USE_S3', settings.DJANGO_UPLOAD_TOOLS_USE_S3)
-        print('AWS_ACCESS_KEY_ID',  settings.AWS_ACCESS_KEY_ID)
-        print('AWS_SECRET_ACCESS_KEY', settings.AWS_SECRET_ACCESS_KEY)
-        print('AWS_STORAGE_BUCKET_NAME', settings.AWS_STORAGE_BUCKET_NAME)
-        print('AWS_S3_REGION_NAME', settings.AWS_S3_REGION_NAME)
-        print('AWS_S3_ENDPOINT_URL', settings.AWS_S3_ENDPOINT_URL)
-        print('aws_s3_domain', settings.AWS_S3_DOMAIN)
+        # print('SETTINGS ---------------------------------')
+        # print('settings.DJANGO_UPLOAD_TOOLS_USE_S3', settings.DJANGO_UPLOAD_TOOLS_USE_S3)
+        # print('AWS_ACCESS_KEY_ID',  settings.AWS_ACCESS_KEY_ID)
+        # print('AWS_SECRET_ACCESS_KEY', settings.AWS_SECRET_ACCESS_KEY)
+        # print('AWS_STORAGE_BUCKET_NAME', settings.AWS_STORAGE_BUCKET_NAME)
+        # print('AWS_S3_REGION_NAME', settings.AWS_S3_REGION_NAME)
+        # print('AWS_S3_ENDPOINT_URL', settings.AWS_S3_ENDPOINT_URL)
 
         response = self.client.post(url, data=data, format="json")
         print('\nRESPONSE ----------------------------------------------------------')
         print(response.status_code)
         content = json.loads(response.content)
         pprint(content)
+        parts = content["parts"]
+
+        # --------------------------------------------------------------------------------------
+        print("\nObjects ---------------------------------------------------------")
+        submission_cloud_upload = SubmissionCloudUpload.objects.get(submission=submission)
+        print(submission_cloud_upload)
+        file_upload = submission_cloud_upload.file_upload
+        print(file_upload)
+        multipart = MultiPartUpload.objects.get(file_upload_request=file_upload)
+        print(multipart)
+
+        # --------------------------------------------------------------------------------------
+
+        print("\nPart urls ---------------------------------------------------------")
+        url = reverse("brokerage:submissions_cloud_upload_part", kwargs={"upload_id": multipart.upload_id})
+        print(url)
+
+        # --------------------------------------------------------------------------------------
+
+        # as are the parts from the response
+        # for part in parts:
+        #     print('\n----------------\n\tget part url for: ', part)
+        #     response = self.client.post(url, part, format="json")
+        #     print('\tstatus code: ', response.status_code)
+        #     part_content = json.loads(response.content)
+        #     pprint(part_content)
+
+        # --------------------------------------------------------------------------------------
+
+        # TODO: for local file and to store information about part of actual file
+        @dataclass
+        class UploadPart:
+            part_number: int
+            start_byte: int
+            end_byte: int
+            etag: Optional[str] = None
+            completed: bool = False
+
+        f_parts = []
+        f_part_number = 1
+        f_size = os.path.getsize(tmp_file_path)
+        f_name = os.path.basename(tmp_file_path)
+        f_part_size = part_size * 1024 * 1024
+
+        # TODO: local determination of sstart and end bytes for local file parts
+        for start_byte in range(0, f_size, f_part_size):
+            end_byte = min(start_byte + f_part_size, f_size)
+            f_parts.append(UploadPart(
+                part_number=f_part_number,
+                start_byte=start_byte,
+                end_byte=end_byte
+            ))
+            f_part_number += 1
+        print("\nfile Parts ---------------------------------------------------------")
+        pprint(f_parts)
+
+        completed_parts = []
+        with open(tmp_file_path, 'rb') as file:
+            for f_part in f_parts:
+                print('\n----------------\n\tget part url for: ', f_part)
+                response = self.client.post(url, {'part_number': f_part.part_number}, format="json")
+                print('\tstatus code: ', response.status_code)
+                f_part_content = json.loads(response.content)
+                pprint(f_part_content)
+
+                presigned_url = f_part_content['presigned_url']
+                print('resigne url: ', presigned_url)
+
+                # Read the part data
+                file.seek(f_part.start_byte)
+                part_data = file.read(f_part.end_byte - f_part.start_byte)
+
+                # Upload the part
+                s3_response = requests.put(presigned_url, data=part_data)
+                # response.raise_for_status()
+                print('\ts3 response status: ', s3_response.status_code)
+                pprint(s3_response.content)
+                pprint(s3_response.headers)
+                etag = s3_response.headers['ETag'].strip('"')
+                print('etag: ', etag)
+                completed_parts.append({
+                    "PartNumber": f_part.part_number,
+                    "ETag": etag
+                })
+
+        # complete
+        print("\nComplete ---------------------------------------------------------")
+        pprint(completed_parts)
+        print(type(completed_parts))
+        data_for_complete = {'parts': completed_parts}
+        pprint(data_for_complete)
+        print(type(data_for_complete))
+        print(type(data_for_complete['parts'][0]))
+        url = reverse("brokerage:submissions_cloud_upload_complete", kwargs={"upload_id": multipart.upload_id})
+        response = self.client.put(url, data_for_complete, format="json")
+        print('RESPONSE -------------------------------------------------')
+        print(response.status_code)
+        print(response.content)
+        # --------------------------------------------------------------------------------------
+        file_upload.refresh_from_db()
+        print('\nFile upload request at end of process')
+        pprint(file_upload.__dict__)
+        submission_cloud_upload.refresh_from_db()
+        print('\nscu at end of process')
+        pprint(submission_cloud_upload.__dict__)
+        print('\n file location via scu')
+        print(submission_cloud_upload.file_upload.s3_location)
 
         os.remove(tmp_file_path)
 

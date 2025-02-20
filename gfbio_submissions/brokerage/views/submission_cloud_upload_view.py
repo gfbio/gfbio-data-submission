@@ -112,5 +112,5 @@ class SubmissionCloudUploadView(mixins.CreateModelMixin, generics.GenericAPIView
 class SubmissionCloudUploadPartURLView(backend_based_upload_views.GetUploadPartURLView):
     def create(self, request, *args, **kwargs):
         response = super(SubmissionCloudUploadPartURLView, self).create(request, *args, **kwargs)
-        print('CUSTOM add to GetUploadPartURLView')
+        # print('CUSTOM add to GetUploadPartURLView')
         return response

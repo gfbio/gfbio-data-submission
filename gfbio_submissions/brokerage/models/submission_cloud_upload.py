@@ -73,4 +73,4 @@ class SubmissionCloudUpload(TimeStampedModel):
         #     )
 
     def __str__(self):
-        return f"{self.file.original_file_name} / {self.submission.broker_submission_id}"
+        return f"{self.submission.broker_submission_id}-{self.file_upload.id}-{self.file_upload.status}"

@@ -42,11 +42,11 @@ urlpatterns = [
         name="submissions_cloud_upload_part",
     ),
     path(
-        route="backend/multipart/<str:upload_id>/complete/",
+        route="submissions/cloudupload/<str:upload_id>/complete/",
         view=backend_based_upload_views.CompleteMultiPartUploadView.as_view(),
         name="submissions_cloud_upload_complete"
     ),
-    path(route="backend/multipart/<str:upload_id>/abort/",
+    path(route="submissions/cloudupload/<str:upload_id>/abort/",
          view=backend_based_upload_views.AbortMultiPartUploadView.as_view(),
          name="submissions_cloud_upload_abort"
          ),
